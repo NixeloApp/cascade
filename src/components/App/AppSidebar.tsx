@@ -1,0 +1,719 @@
+/**
+ * App Sidebar
+ *
+ * Main navigation sidebar with collapsible sections for projects, documents, and teams.
+ * Supports favorites, recent items, workspace switching, and keyboard navigation.
+ * Integrates with organization context for multi-tenant navigation.
+ */
+
+import { api } from "@convex/_generated/api";
+import type { Doc, Id } from "@convex/_generated/dataModel";
+import { Link, type LinkProps, useLocation, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery } from "convex/react";
+import { useState } from "react";
+import { CreateTeamModal } from "@/components/CreateTeamModal";
+import { SidebarTeamItem } from "@/components/Sidebar/SidebarTeamItem";
+import { Button } from "@/components/ui/Button";
+import { Flex, FlexItem } from "@/components/ui/Flex";
+import { NavItem as NavItemBase } from "@/components/ui/NavItem";
+import { Tooltip, TooltipProvider } from "@/components/ui/Tooltip";
+import { Typography } from "@/components/ui/Typography";
+import { ROUTES } from "@/config/routes";
+import { useOrganization } from "@/hooks/useOrgContext";
+import { useSidebarState } from "@/hooks/useSidebarState";
+import {
+  BarChart3,
+  Bot,
+  Calendar,
+  ChevronDown,
+  ChevronRight,
+  Clock,
+  Copy,
+  FileText,
+  FolderKanban,
+  Home,
+  ListIcon,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Plus,
+  Puzzle,
+  Server,
+  Settings,
+  ShieldCheck,
+  X,
+} from "@/lib/icons";
+import { showError, showSuccess } from "@/lib/toast";
+import { cn } from "@/lib/utils";
+
+/**
+ * Main application sidebar with navigation, projects, and teams.
+ */
+export function AppSidebar() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { isCollapsed, isMobileOpen, toggleCollapse, closeMobile } = useSidebarState();
+
+  // Get organization from URL context
+  const { orgSlug, organizationName, organizationId } = useOrganization();
+
+  // All hooks must be called unconditionally
+  const isAdmin = useQuery(api.users.isOrganizationAdmin);
+  const showTimeTracking = isAdmin === true;
+
+  // Section expand states
+  const [docsExpanded, setDocsExpanded] = useState(true);
+  const [workspacesExpanded, setWorkspacesExpanded] = useState(true);
+  const [expandedWorkspaces, setExpandedWorkspaces] = useState<Set<string>>(new Set());
+  const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
+  const [createTeamWorkspace, setCreateTeamWorkspace] = useState<{
+    id: Id<"workspaces">;
+    slug: string;
+  } | null>(null);
+
+  // Data
+  const documentsResult = useQuery(api.documents.list, { limit: 11, organizationId });
+  const documents = documentsResult?.documents;
+  const workspaces = useQuery(api.workspaces.list, { organizationId });
+  const teams = useQuery(api.teams.getOrganizationTeams, { organizationId });
+  const myProjects = useQuery(api.dashboard.getMyProjects);
+  const defaultProject = myProjects?.[0];
+
+  // Group teams by workspace
+  const teamsByWorkspace = (() => {
+    const map = new Map<Id<"workspaces">, Doc<"teams">[]>();
+    if (!teams) return map;
+    for (const team of teams) {
+      const existing = map.get(team.workspaceId);
+      if (existing) {
+        existing.push(team);
+      } else {
+        map.set(team.workspaceId, [team]);
+      }
+    }
+    return map;
+  })();
+
+  // Mutations
+  const createDocument = useMutation(api.documents.create);
+  const createWorkspace = useMutation(api.workspaces.create);
+  // const createProject = useMutation(api.projects.createProject); // TODO: Add project creation UI
+
+  const isActive = (pathPart: string) => {
+    return location.pathname.includes(pathPart);
+  };
+
+  const handleCreateDocument = async () => {
+    try {
+      const { documentId } = await createDocument({
+        title: "Untitled Document",
+        isPublic: false,
+        organizationId,
+      });
+      navigate({
+        to: ROUTES.documents.detail.path,
+        params: { orgSlug, id: documentId },
+      });
+      showSuccess("Document created");
+      closeMobile();
+    } catch (error) {
+      showError(error, "Failed to create document");
+    }
+  };
+
+  const handleCreateWorkspace = async () => {
+    try {
+      const slug = `workspace-${Date.now().toString(36)}`;
+      await createWorkspace({
+        name: "New Workspace",
+        slug,
+        organizationId,
+      });
+      navigate({
+        to: ROUTES.workspaces.detail.path,
+        params: { orgSlug, workspaceSlug: slug },
+      });
+      showSuccess("Workspace created");
+      closeMobile();
+    } catch (error) {
+      showError(error, "Failed to create workspace");
+    }
+  };
+
+  const toggleWorkspace = (workspaceSlug: string) => {
+    setExpandedWorkspaces((prev) => {
+      const next = new Set(prev);
+      if (next.has(workspaceSlug)) {
+        next.delete(workspaceSlug);
+      } else {
+        next.add(workspaceSlug);
+      }
+      return next;
+    });
+  };
+
+  const toggleTeam = (teamSlug: string) => {
+    setExpandedTeams((prev) => {
+      const next = new Set(prev);
+      if (next.has(teamSlug)) {
+        next.delete(teamSlug);
+      } else {
+        next.add(teamSlug);
+      }
+      return next;
+    });
+  };
+
+  const handleNavClick = () => {
+    closeMobile();
+  };
+
+  // Determine if we should show the collapsed state
+  // On mobile (when open), we always want to show the expanded state
+  const showCollapsed = isCollapsed && !isMobileOpen;
+
+  return (
+    <TooltipProvider delayDuration={0}>
+      {/* Mobile overlay - clickable to close sidebar */}
+      {isMobileOpen && (
+        <Button
+          variant="unstyled"
+          className="fixed inset-0 bg-ui-bg-overlay z-40 lg:hidden cursor-default"
+          onClick={closeMobile}
+          onKeyDown={(e) => e.key === "Escape" && closeMobile()}
+          aria-label="Close sidebar"
+        />
+      )}
+
+      <aside
+        className={cn(
+          "fixed lg:relative z-50 lg:z-auto h-screen overflow-hidden",
+          "bg-ui-bg-sidebar",
+          "border-r border-ui-border",
+          "transition-default",
+          // Force full width on mobile, respect collapse on desktop
+          isCollapsed ? "lg:w-16 w-64" : "w-64",
+          isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        )}
+      >
+        <Flex direction="column" className="h-full">
+          {/* Header with organization name and collapse toggle */}
+          <Flex align="center" justify="between" className="p-4 border-b border-ui-border">
+            {!showCollapsed && (
+              <Tooltip content={organizationName}>
+                <Link to={ROUTES.dashboard.path} params={{ orgSlug }} onClick={handleNavClick}>
+                  <Typography variant="large" className="truncate max-w-40">
+                    {organizationName}
+                  </Typography>
+                </Link>
+              </Tooltip>
+            )}
+
+            {/* Desktop Toggle Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleCollapse}
+              className={cn("hidden lg:flex h-9 w-9", showCollapsed && "mx-auto")}
+              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {isCollapsed ? (
+                <PanelLeftOpen className="w-5 h-5" />
+              ) : (
+                <PanelLeftClose className="w-5 h-5" />
+              )}
+            </Button>
+
+            {/* Mobile Close Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={closeMobile}
+              className="lg:hidden h-9 w-9 text-ui-text-secondary"
+              aria-label="Close sidebar"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </Flex>
+
+          {/* Navigation */}
+          <FlexItem
+            as="nav"
+            className="flex-1 overflow-y-auto p-2 scrollbar-subtle"
+            aria-label="Main Navigation"
+          >
+            <ul className="flex flex-col gap-1 list-none">
+              {/* Dashboard */}
+              <NavItem
+                to={ROUTES.dashboard.path}
+                params={{ orgSlug }}
+                icon={Home}
+                label="Dashboard"
+                isActive={isActive("/dashboard")}
+                isCollapsed={showCollapsed}
+                onClick={handleNavClick}
+                data-tour="nav-dashboard"
+              />
+              {/* Issues */}
+              <NavItem
+                to={ROUTES.issues.list.path}
+                params={{ orgSlug }}
+                icon={ListIcon}
+                label="Issues"
+                isActive={isActive("/issues")}
+                isCollapsed={showCollapsed}
+                onClick={handleNavClick}
+                data-tour="nav-issues"
+              />
+              {/* Calendar - Links to first project's calendar */}
+              {defaultProject && (
+                <NavItem
+                  to={ROUTES.projects.calendar.path}
+                  params={{ orgSlug, key: defaultProject.key }}
+                  icon={Calendar}
+                  label="General"
+                  isActive={isActive("/calendar")}
+                  isCollapsed={showCollapsed}
+                  onClick={handleNavClick}
+                  data-tour="nav-calendar"
+                />
+              )}
+
+              {/* Products Section */}
+              {!showCollapsed && (
+                <li className="list-none">
+                  <Typography
+                    variant="small"
+                    color="tertiary"
+                    className="px-3 mt-4 mb-2 text-caption font-bold uppercase tracking-wider"
+                  >
+                    Products
+                  </Typography>
+                </li>
+              )}
+
+              <NavItem
+                to={ROUTES.assistant.path}
+                params={{ orgSlug }}
+                icon={Bot}
+                label="Assistant"
+                isActive={isActive("/assistant")}
+                isCollapsed={showCollapsed}
+                onClick={handleNavClick}
+              />
+              <NavItem
+                to={ROUTES.analytics.path}
+                params={{ orgSlug }}
+                icon={BarChart3}
+                label="Analytics"
+                isActive={isActive("/analytics")}
+                isCollapsed={showCollapsed}
+                onClick={handleNavClick}
+              />
+              <NavItem
+                to={ROUTES.authentication.path}
+                params={{ orgSlug }}
+                icon={ShieldCheck}
+                label="Authentication"
+                isActive={isActive("/authentication")}
+                isCollapsed={showCollapsed}
+                onClick={handleNavClick}
+              />
+              <NavItem
+                to={ROUTES.mcp.path}
+                params={{ orgSlug }}
+                icon={Server}
+                label="MCP Server"
+                isActive={isActive("/mcp-server")}
+                isCollapsed={showCollapsed}
+                onClick={handleNavClick}
+              />
+              <NavItem
+                to={ROUTES.addOns.path}
+                params={{ orgSlug }}
+                icon={Puzzle}
+                label="Add-ons"
+                isActive={isActive("/add-ons")}
+                isCollapsed={showCollapsed}
+                onClick={handleNavClick}
+              />
+              {/* Documents Section */}
+              <CollapsibleSection
+                icon={FileText}
+                label="Documents"
+                isExpanded={docsExpanded}
+                onToggle={() => setDocsExpanded(!docsExpanded)}
+                isActive={isActive("/documents")}
+                isCollapsed={showCollapsed}
+                onAdd={handleCreateDocument}
+                to={ROUTES.documents.list.path}
+                params={{ orgSlug }}
+                onClick={handleNavClick}
+                data-tour="nav-documents"
+              >
+                <li className="list-none">
+                  <NavSubItem
+                    to={ROUTES.documents.templates.path}
+                    params={{ orgSlug }}
+                    label="Templates"
+                    isActive={location.pathname.includes("/documents/templates")}
+                    onClick={handleNavClick}
+                    icon={Copy}
+                  />
+                </li>
+                <li className="h-px bg-ui-border my-1 mx-2 list-none" aria-hidden="true" />
+                {(documents ?? []).slice(0, 10).map((doc: Doc<"documents">) => (
+                  <li key={doc._id} className="list-none">
+                    <NavSubItem
+                      to={ROUTES.documents.detail.path}
+                      params={{ orgSlug, id: doc._id }}
+                      label={doc.title}
+                      isActive={location.pathname.includes(`/documents/${doc._id}`)}
+                      onClick={handleNavClick}
+                    />
+                  </li>
+                ))}
+                {(documents?.length ?? 0) > 10 && (
+                  <li className="list-none">
+                    <Typography variant="p" color="tertiary" className="px-3 py-1 text-xs">
+                      +{(documents?.length ?? 0) - 10} more
+                    </Typography>
+                  </li>
+                )}
+              </CollapsibleSection>
+              {/* Workspaces Section */}
+              <CollapsibleSection
+                icon={FolderKanban}
+                label="Workspaces"
+                isExpanded={workspacesExpanded}
+                onToggle={() => setWorkspacesExpanded(!workspacesExpanded)}
+                isActive={isActive("/workspaces")}
+                isCollapsed={showCollapsed}
+                onAdd={handleCreateWorkspace}
+                to={ROUTES.workspaces.list.path}
+                params={{ orgSlug }}
+                onClick={handleNavClick}
+                data-tour="nav-projects"
+              >
+                {workspaces?.map((workspace: Doc<"workspaces">) => {
+                  // O(1) lookup from pre-computed Map instead of O(T) filter
+                  const workspaceTeams = teamsByWorkspace.get(workspace._id) || [];
+                  const isWorkspaceExpanded = expandedWorkspaces.has(workspace.slug);
+
+                  return (
+                    <li key={workspace._id} className="ml-2 group list-none">
+                      {/* Workspace Item */}
+                      <Flex align="center" gap="xs">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => toggleWorkspace(workspace.slug)}
+                          className="h-6 w-6 p-0.5"
+                          aria-expanded={isWorkspaceExpanded}
+                          aria-label={
+                            isWorkspaceExpanded
+                              ? `Collapse ${workspace.name}`
+                              : `Expand ${workspace.name}`
+                          }
+                        >
+                          {isWorkspaceExpanded ? (
+                            <ChevronDown className="w-4 h-4" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4" />
+                          )}
+                        </Button>
+                        <NavSubItem
+                          to={ROUTES.workspaces.detail.path}
+                          params={{ orgSlug, workspaceSlug: workspace.slug }}
+                          label={workspace.name}
+                          isActive={location.pathname.includes(`/workspaces/${workspace.slug}`)}
+                          onClick={handleNavClick}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          reveal
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCreateTeamWorkspace({ id: workspace._id, slug: workspace.slug });
+                          }}
+                          className="h-6 w-6 p-1"
+                          aria-label="Create new team"
+                        >
+                          <Plus className="w-4 h-4 text-ui-text-tertiary" />
+                        </Button>
+                      </Flex>
+
+                      {/* Teams under workspace */}
+                      {isWorkspaceExpanded && (
+                        <ul className="list-none">
+                          {workspaceTeams.map((team: Doc<"teams">) => (
+                            <SidebarTeamItem
+                              key={team._id}
+                              team={team}
+                              workspaceSlug={workspace.slug}
+                              orgSlug={orgSlug}
+                              isExpanded={expandedTeams.has(team.slug)}
+                              onToggle={toggleTeam}
+                              onNavClick={handleNavClick}
+                            />
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                })}
+              </CollapsibleSection>
+              {/* Time Tracking (admin only) */}
+              {showTimeTracking && (
+                <NavItem
+                  to={ROUTES.timeTracking.path}
+                  params={{ orgSlug }}
+                  icon={Clock}
+                  label="Time Tracking"
+                  isActive={isActive("/time-tracking")}
+                  isCollapsed={showCollapsed}
+                  onClick={handleNavClick}
+                  data-tour="nav-timesheet"
+                />
+              )}
+            </ul>
+          </FlexItem>
+
+          {/* Bottom section - Settings */}
+          <div className="p-2 border-t border-ui-border">
+            <ul className="list-none">
+              <NavItem
+                to={ROUTES.settings.profile.path}
+                params={{ orgSlug }}
+                icon={Settings}
+                label="Settings"
+                isActive={isActive("/settings")}
+                isCollapsed={showCollapsed}
+                onClick={handleNavClick}
+                data-tour="nav-settings"
+              />
+            </ul>
+          </div>
+        </Flex>
+
+        <CreateTeamModal
+          isOpen={!!createTeamWorkspace}
+          onClose={() => setCreateTeamWorkspace(null)}
+          workspaceId={createTeamWorkspace?.id}
+          workspaceSlug={createTeamWorkspace?.slug}
+        />
+      </aside>
+    </TooltipProvider>
+  );
+}
+
+// Nav Item Component
+type NavItemProps = Omit<LinkProps, "to"> & {
+  to: LinkProps["to"];
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  isActive: boolean;
+  isCollapsed: boolean;
+  "data-tour"?: string;
+  onClick?: (event: React.MouseEvent) => void;
+};
+
+function NavItem({
+  icon: Icon,
+  label,
+  isActive,
+  isCollapsed,
+  "data-tour": dataTour,
+  to,
+  params,
+  search,
+  onClick,
+  ...props
+}: NavItemProps) {
+  const content = (
+    <NavItemBase asChild active={isActive} collapsed={isCollapsed} variant="bordered">
+      <Link
+        to={to}
+        params={params}
+        search={search}
+        onClick={onClick}
+        {...props}
+        data-tour={dataTour}
+        aria-label={isCollapsed ? label : undefined}
+      >
+        <Icon className="w-5 h-5 shrink-0" />
+        {!isCollapsed && label}
+      </Link>
+    </NavItemBase>
+  );
+
+  if (isCollapsed) {
+    return (
+      <li>
+        <Tooltip content={label} side="right">
+          {content}
+        </Tooltip>
+      </li>
+    );
+  }
+
+  return <li>{content}</li>;
+}
+
+// Collapsible Section Component
+// We use a union validation here: either it acts as a link (with valid to/params) or it doesn't.
+// CollapsibleSection Component
+type CollapsibleSectionProps = {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+  isActive: boolean;
+  isCollapsed: boolean;
+  onAdd: () => void;
+  onClick?: (event: React.MouseEvent) => void;
+  children: React.ReactNode;
+  "data-tour"?: string;
+} & (
+  | (Omit<LinkProps, "to"> & { to: LinkProps["to"] })
+  | { to?: never; params?: never; search?: never }
+);
+
+function CollapsibleSection({
+  icon: Icon,
+  label,
+  isExpanded,
+  onToggle,
+  isActive,
+  isCollapsed,
+  onAdd,
+  children,
+  "data-tour": dataTour,
+  ...props
+}: CollapsibleSectionProps) {
+  // Safe type narrowing check
+  const isLink = "to" in props && !!props.to;
+
+  if (isCollapsed) {
+    return (
+      <li>
+        <Tooltip content={label} side="right">
+          {isLink ? (
+            <NavItemBase
+              asChild
+              active={isActive}
+              size="sm"
+              className="justify-center"
+              aria-label={label}
+            >
+              <Link
+                {...props}
+                to={props.to}
+                params={props.params}
+                search={props.search}
+                data-tour={dataTour}
+              >
+                <Icon className="w-5 h-5" />
+              </Link>
+            </NavItemBase>
+          ) : (
+            <NavItemBase size="sm" className="justify-center">
+              <Icon className="w-5 h-5" />
+            </NavItemBase>
+          )}
+        </Tooltip>
+      </li>
+    );
+  }
+
+  return (
+    <li>
+      {/* Section header */}
+      <NavItemBase active={isActive} variant="bordered" className="group">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggle}
+          className="h-6 w-6 p-0.5"
+          aria-expanded={isExpanded}
+          aria-label={isExpanded ? `Collapse ${label}` : `Expand ${label}`}
+        >
+          {isExpanded ? (
+            <ChevronDown className="w-4 h-4 text-ui-text-tertiary" />
+          ) : (
+            <ChevronRight className="w-4 h-4 text-ui-text-tertiary" />
+          )}
+        </Button>
+        {isLink ? (
+          <Link
+            {...props}
+            to={props.to}
+            aria-current={isActive ? "page" : undefined}
+            className={cn(
+              "flex-1 flex items-center gap-2 text-sm font-medium transition-default",
+              isActive ? "text-ui-text" : "text-ui-text-secondary hover:text-ui-text",
+            )}
+          >
+            <Icon className="w-5 h-5" />
+            {label}
+          </Link>
+        ) : (
+          <Flex
+            align="center"
+            gap="sm"
+            className="flex-1 text-sm font-medium text-ui-text-secondary transition-default"
+          >
+            <Icon className="w-5 h-5" />
+            {label}
+          </Flex>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          reveal
+          onClick={(e) => {
+            e.stopPropagation();
+            onAdd();
+          }}
+          className="h-6 w-6 p-1"
+          aria-label={`Add new ${label.toLowerCase().slice(0, -1)}`}
+        >
+          <Plus className="w-4 h-4 text-ui-text-tertiary" />
+        </Button>
+      </NavItemBase>
+
+      {/* Section children */}
+      {isExpanded && <ul className="ml-4 mt-1 space-y-1 list-none">{children}</ul>}
+    </li>
+  );
+}
+
+// Sub-item Component
+type NavSubItemProps = Omit<LinkProps, "to"> & {
+  to: LinkProps["to"];
+  label: string;
+  isActive: boolean;
+  icon?: React.ComponentType<{ className?: string }>;
+  onClick?: (event: React.MouseEvent) => void;
+};
+
+function NavSubItem({
+  label,
+  isActive,
+  icon: Icon,
+  to,
+  params,
+  onClick,
+  ...props
+}: NavSubItemProps) {
+  return (
+    <Tooltip content={label}>
+      <NavItemBase asChild active={isActive} size="sm">
+        <Link to={to} params={params} {...props}>
+          {Icon && <Icon className="w-4 h-4 shrink-0" />}
+          <span className="truncate">{label}</span>
+        </Link>
+      </NavItemBase>
+    </Tooltip>
+  );
+}

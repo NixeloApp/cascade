@@ -15,8 +15,7 @@ import { ExportButton } from "@/components/ExportButton";
 import { type BoardFilters, FilterBar } from "@/components/FilterBar";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { PageContent, PageError } from "@/components/layout";
-import { SprintProgressBar } from "@/components/SprintProgressBar";
-import { SprintWorkload } from "@/components/SprintWorkload";
+import { SprintProgressBar, SprintWorkload } from "@/components/Sprints";
 import { Badge } from "@/components/ui/Badge";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import {

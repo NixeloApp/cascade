@@ -130,9 +130,9 @@ export function run() {
   }
 
   return {
-    pass: true, // Warn-only, doesn't fail CI
+    passed: true, // Warn-only, doesn't fail CI
     errors: 0,
     warnings: issues.length,
-    details: issues.length > 0 ? `${issues.length} unused parameter(s)` : null,
+    detail: issues.length > 0 ? `${issues.length} unused parameter(s)` : null,
   };
 }

@@ -27,8 +27,8 @@ import {
   groupIssuesBySwimlane,
 } from "@/lib/swimlane-utils";
 import { BulkOperationsBar } from "./BulkOperationsBar";
-import { CreateIssueModal } from "./CreateIssueModal";
 import type { BoardFilters, DateRangeFilter } from "./FilterBar";
+import { CreateIssueModal } from "./IssueDetail";
 import { IssueDetailViewer } from "./IssueDetailViewer";
 import { BoardToolbar } from "./Kanban/BoardToolbar";
 import { KanbanColumn } from "./Kanban/KanbanColumn";

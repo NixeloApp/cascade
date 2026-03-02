@@ -22,6 +22,16 @@ const CONFIG = {
 // Files to skip
 const SKIP_PATTERNS = [".test.", ".spec.", "index.ts", ".d.ts"];
 
+// Hooks that use Convex queries/mutations where errors are thrown (not returned)
+// These don't need explicit error state in return value
+const CONVEX_PATTERN_HOOKS = [
+  "useCurrentUser", // Simple Convex query wrapper
+  "useFuzzySearch", // Client-side search, async is for setup only
+  "useConfirmDialog", // Modal state, mutation is for actions not data
+  "usePaginatedIssues", // Convex query - errors thrown
+  "useSmartBoardData", // Convex query - errors thrown
+];
+
 export function run() {
   if (CONFIG.strictness === "off") {
     return {
@@ -97,6 +107,12 @@ export function run() {
       content.includes("await ");
 
     if (hasAsyncOperation) {
+      // Skip Convex pattern hooks that handle errors via thrown exceptions
+      const isConvexPatternHook = CONVEX_PATTERN_HOOKS.some((name) => fileName === name);
+      if (isConvexPatternHook) {
+        return; // Convex queries throw errors, no error state needed
+      }
+
       // Check if the hook returns loading state
       const hasLoadingState =
         content.includes("isLoading") ||

@@ -8,7 +8,7 @@
 
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
 import { Input } from "../ui/form/Input";
@@ -39,11 +39,11 @@ export function EmailVerificationForm({ email, onVerified, onResend }: EmailVeri
 
     void signIn("password", formData)
       .then(() => {
-        toast.success("Email verified successfully!");
+        showSuccess("Email verified successfully!");
         onVerified();
       })
       .catch((_error) => {
-        toast.error("Invalid code. Please try again.");
+        showError("Invalid code. Please try again.");
       })
       .finally(() => setSubmitting(false));
   };
@@ -62,7 +62,7 @@ export function EmailVerificationForm({ email, onVerified, onResend }: EmailVeri
       })
       .finally(() => {
         setResending(false);
-        toast.success("Verification code resent!");
+        showSuccess("Verification code resent!");
         onResend();
       });
   };

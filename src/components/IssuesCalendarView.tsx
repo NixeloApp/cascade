@@ -17,7 +17,7 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { Plus } from "@/lib/icons";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
-import { CreateIssueModal } from "./CreateIssueModal";
+import { CreateIssueModal } from "./IssueDetail";
 import { IssueDetailViewer } from "./IssueDetailViewer";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";

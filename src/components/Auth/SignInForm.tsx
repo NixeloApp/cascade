@@ -9,10 +9,10 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { Flex } from "@/components/ui/Flex";
 import { ROUTES } from "@/config/routes";
 import { TEST_IDS } from "@/lib/test-ids";
+import { showError } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/form/Input";
@@ -65,7 +65,7 @@ export function SignInForm() {
         const message = error.message.includes("Invalid password")
           ? "Invalid password. Please try again."
           : "Could not sign in. Please check your credentials.";
-        toast.error(message);
+        showError(message);
         setSubmitting(false);
       });
   };

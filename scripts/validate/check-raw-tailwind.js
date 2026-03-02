@@ -1,6 +1,7 @@
 /**
  * CHECK: Raw Tailwind
  * Flags raw Tailwind classes outside allowed directories.
+ * Also checks for component prop misuse (gap/spacing in className instead of props).
  * Part of Phase 7: Zero Raw Tailwind enforcement.
  *
  * @strictness STRICT - Blocks CI. ~40 files/dirs in allowlist for edge cases.
@@ -146,9 +147,100 @@ export function run() {
   const files = walkDir(SRC, { extensions: new Set([".tsx"]) });
   for (const f of files) checkFile(f);
 
+  // === Component Prop Misuse Check ===
+  // Detects when components use className with spacing classes instead of props
+  // This applies to ALL files, including allowed dirs, since it's about prop consistency
+  // Gap class to prop mapping (based on Flex/Stack gapClasses)
+  // Values > 8 have no direct prop and require custom className
+  const GAP_MAP = {
+    0: "none",
+    1: "xs",
+    2: "sm",
+    3: "md",
+    4: "lg",
+    6: "xl",
+    8: "2xl",
+    // Values 5, 7, 9+ have no direct prop equivalent
+  };
+
+  const COMPONENT_PROP_PATTERNS = [
+    // Flex with gap classes instead of gap prop
+    // Excludes responsive variants (sm:gap-4, md:gap-4, etc.) since those need className
+    // Excludes cases where component already has gap prop (responsive override pattern)
+    // Only matches whole numbers (gap-2, gap-4) not decimals (gap-0.5, gap-1.5)
+    {
+      pattern: /<Flex(?![^>]*\bgap=)[^>]*className=["'][^"']*(?<![a-z]:)\bgap-(\d+)(?!\.)\b/,
+      component: "Flex",
+      prop: "gap",
+    },
+    // Stack with gap classes instead of gap prop
+    {
+      pattern: /<Stack(?![^>]*\bgap=)[^>]*className=["'][^"']*(?<![a-z]:)\bgap-(\d+)(?!\.)\b/,
+      component: "Stack",
+      prop: "gap",
+    },
+    // Flex with space-x instead of gap prop
+    {
+      pattern: /<Flex(?![^>]*\bgap=)[^>]*className=["'][^"']*(?<![a-z]:)\bspace-x-(\d+)(?!\.)\b/,
+      component: "Flex",
+      prop: "gap",
+    },
+    // Stack with space-y instead of gap prop
+    {
+      pattern: /<Stack(?![^>]*\bgap=)[^>]*className=["'][^"']*(?<![a-z]:)\bspace-y-(\d+)(?!\.)\b/,
+      component: "Stack",
+      prop: "gap",
+    },
+  ];
+
+  const propViolations = [];
+
+  function checkComponentProps(filePath) {
+    // Skip test and story files
+    if (filePath.endsWith(".test.tsx") || filePath.endsWith(".stories.tsx")) return;
+    // Skip ui/ directory (these are the component definitions themselves)
+    const rel = relPath(filePath);
+    if (rel.includes("src/components/ui/")) return;
+
+    const content = fs.readFileSync(filePath, "utf-8");
+    const lines = content.split("\n");
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      // Skip if no className in this line
+      if (!line.includes("className")) continue;
+
+      for (const { pattern, component, prop } of COMPONENT_PROP_PATTERNS) {
+        const match = line.match(pattern);
+        if (match) {
+          const num = Number.parseInt(match[1], 10);
+          const propValue = GAP_MAP[num];
+          let replacement;
+          if (propValue) {
+            replacement = `<${component} ${prop}="${propValue}">`;
+          } else {
+            // No direct prop equivalent - keep as className but note it
+            replacement = `gap-${num} has no prop (max: 2xl=gap-8)`;
+          }
+          propViolations.push({
+            file: rel,
+            line: i + 1,
+            replacement,
+            snippet: line.trim().slice(0, 80),
+          });
+          break; // One violation per line is enough
+        }
+      }
+    }
+  }
+
+  for (const f of files) checkComponentProps(f);
+
   const messages = [];
+
+  // Raw Tailwind violations (errors - block CI)
   if (violations.length > 0) {
-    // Group by file
+    messages.push(`${c.red}Raw Tailwind violations:${c.reset}`);
     const byFile = {};
     for (const v of violations) {
       if (!byFile[v.file]) byFile[v.file] = [];
@@ -158,7 +250,6 @@ export function run() {
     for (const [file, items] of Object.entries(byFile).sort()) {
       messages.push(`  ${c.bold}${file}${c.reset} (${items.length})`);
       for (const item of items.slice(0, 3)) {
-        // Show max 3 per file
         messages.push(`    ${c.dim}L${item.line}${c.reset} → use ${item.replacement}`);
       }
       if (items.length > 3) {
@@ -167,13 +258,45 @@ export function run() {
     }
   }
 
-  // Phase 7 migration complete - this is now a hard check
-  // All edge cases are in ALLOWED_DIRS/ALLOWED_FILES, new violations should fail CI
+  // Component prop violations (warnings for now - track but don't block)
+  if (propViolations.length > 0) {
+    if (messages.length > 0) messages.push(""); // Add spacing
+    messages.push(`${c.yellow}Component prop misuse (use props instead of className):${c.reset}`);
+    const byFile = {};
+    for (const v of propViolations) {
+      if (!byFile[v.file]) byFile[v.file] = [];
+      byFile[v.file].push(v);
+    }
+
+    for (const [file, items] of Object.entries(byFile).sort()) {
+      messages.push(`  ${c.bold}${file}${c.reset} (${items.length})`);
+      for (const item of items.slice(0, 3)) {
+        messages.push(`    ${c.dim}L${item.line}${c.reset} → use ${item.replacement}`);
+      }
+      if (items.length > 3) {
+        messages.push(`    ${c.dim}... and ${items.length - 3} more${c.reset}`);
+      }
+    }
+  }
+
+  // Build result
+  const totalErrors = violations.length;
+  const totalWarnings = propViolations.length;
+  let detail = null;
+  if (totalErrors > 0 || totalWarnings > 0) {
+    const parts = [];
+    if (totalErrors > 0) parts.push(`${totalErrors} raw Tailwind violations`);
+    if (totalWarnings > 0) parts.push(`${totalWarnings} component prop issues`);
+    detail = parts.join(", ");
+  }
+
+  // Phase 7 migration complete - raw Tailwind is a hard check
+  // Component prop misuse is a warning (new check, needs baseline cleanup)
   return {
     passed: violations.length === 0,
     errors: violations.length,
-    warnings: 0,
-    detail: violations.length > 0 ? `${violations.length} raw Tailwind violations` : null,
+    warnings: propViolations.length,
+    detail,
     messages,
   };
 }

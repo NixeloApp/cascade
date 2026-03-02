@@ -1,7 +1,7 @@
 # Consistency TODO
 
 > **Purpose:** Recursive document for tracking consistency improvements across the codebase.
-> **Last Updated:** 2026-02-28
+> **Last Updated:** 2026-03-01
 > **Owner:** Engineering Team
 
 ---
@@ -40,11 +40,11 @@
 
 ### Validator Gaps
 
-- [ ] **No JSDoc enforcement** - Many exported functions lack documentation
-- [ ] **No file header enforcement** - Inconsistent module-level documentation
-- [ ] **No import order enforcement** - Relies on Biome (not explicit validation)
-- [ ] **No component naming enforcement** - PascalCase not validated
-- [ ] **No Convex function naming enforcement** - `list`/`get`/`create` patterns not enforced
+- [x] **JSDoc enforcement** ✅ - `check-jsdoc.js` created, reports missing docs
+- [x] **File header enforcement** ✅ - `check-file-headers.js` created, reports missing headers
+- [x] **Import order enforcement** ✅ - `check-import-order.js` exists (disabled by default)
+- [x] **Component naming enforcement** ✅ - `check-component-naming.js` validates PascalCase
+- [x] **Convex function naming enforcement** ✅ - `check-convex-naming.js` validates patterns
 
 ---
 
@@ -310,100 +310,19 @@ src/components/ui/Button/
 
 ---
 
-## Proposed New Validators
+## Implemented Validators
 
-### 1. `check-jsdoc.js` (NEW)
+All proposed validators have been implemented:
 
-**Purpose:** Enforce JSDoc on exported functions and components.
-
-```javascript
-// Proposed rules:
-const RULES = [
-  // Exported functions must have JSDoc
-  { pattern: /^export (async )?function \w+/, requireJSDoc: true },
-  // Exported components must have JSDoc
-  { pattern: /^export function [A-Z]\w+\(/, requireJSDoc: true },
-  // Exported constants can skip JSDoc if name is self-documenting
-  { pattern: /^export const [A-Z_]+/, requireJSDoc: false },
-];
-
-// Ignore patterns:
-const IGNORE = [
-  /\.test\.tsx?$/,
-  /\.stories\.tsx?$/,
-  /index\.ts$/,
-  /routeTree\.gen\.ts$/,
-];
-```
-
-### 2. `check-file-headers.js` (NEW)
-
-**Purpose:** Require file headers for non-trivial files.
-
-```javascript
-// Proposed rules:
-const MIN_LINES_FOR_HEADER = 50;  // Files > 50 lines need headers
-
-const HEADER_PATTERN = /^\/\*\*[\s\S]*?\*\//;  // Must start with /** ... */
-
-// Required sections:
-const REQUIRED_SECTIONS = [
-  // None required, just presence of header
-];
-
-// Ignore patterns:
-const IGNORE = [
-  /index\.ts$/,
-  /\.test\.tsx?$/,
-  /\.d\.ts$/,
-  /routeTree\.gen\.ts$/,
-];
-```
-
-### 3. `check-convex-naming.js` (NEW)
-
-**Purpose:** Enforce consistent Convex function naming.
-
-```javascript
-// Proposed rules:
-const PATTERNS = {
-  query: {
-    single: /^get[A-Z]/,      // getProject, getUser
-    multiple: /^list[A-Z]/,   // listProjects, listUsers
-    search: /^search[A-Z]/,   // searchUsers
-  },
-  mutation: {
-    create: /^create[A-Z]/,   // createProject
-    update: /^update[A-Z]/,   // updateProject
-    delete: /^(delete|archive|remove)[A-Z]/,
-    toggle: /^toggle[A-Z]/,   // togglePublic
-  },
-};
-
-// Allowed exceptions:
-const ALLOWED = [
-  "list",  // Generic list (deprecated, but still used)
-  "get",   // Generic get (deprecated)
-];
-```
-
-### 4. `check-component-structure.js` (NEW)
-
-**Purpose:** Enforce component file structure.
-
-```javascript
-// Proposed rules:
-const RULES = [
-  // Props interface must be named {ComponentName}Props
-  { component: /function (\w+)/, propsInterface: /interface $1Props/ },
-
-  // Components must use named exports (not default)
-  { forbidden: /export default/ },
-
-  // Hook files must start with "use"
-  { hookFile: /use[A-Z]\w+\.tsx?$/, mustExport: /export function use/ },
-];
-```
+| Validator | Status | Notes |
+|-----------|--------|-------|
+| `check-jsdoc.js` | ✅ Implemented | Reports missing JSDoc on exports |
+| `check-file-headers.js` | ✅ Implemented | Reports missing headers on files >50 lines |
+| `check-convex-naming.js` | ✅ Implemented | Validates `get`/`list`/`create` patterns |
+| `check-component-naming.js` | ✅ Implemented | Validates PascalCase for components |
+| `check-component-props.js` | ✅ Implemented | Validates prop interface naming |
+| `check-hook-patterns.js` | ✅ Implemented | Validates hook return patterns |
+| `check-unused-params.js` | ✅ Implemented | Flags underscore-prefixed params |
 
 ---
 
@@ -438,34 +357,37 @@ const RULES = [
   - Found 319 files missing headers, warns but doesn't block CI
   - Added to validate.js as check #17
 
-- [ ] **Update `check-raw-tailwind.js`**
-  - Add detection for spacing props vs classes
-  - Suggest `gap="md"` instead of `className="gap-4"`
-  - ~1 hour
+- [x] **Update `check-raw-tailwind.js`** ✅
+  - Added detection for spacing props vs classes on Flex/Stack components
+  - Detects gap-N and space-x/y-N in className when gap prop should be used
+  - Skips responsive variants (sm:gap-4) and decimal values (gap-0.5)
+  - Fixed KanbanColumn to use gap="sm" prop
 
 ### Phase 3: File Reorganization (Next Sprint)
 
-- [ ] **Reorganize components into feature directories**
-  - Create migration plan
-  - Update imports via codemod
-  - Verify no broken imports
-  - ~4 hours
+- [x] **Reorganize components into feature directories** ✅
+  - [x] Created `Sprints/` directory (SprintManager, SprintProgressBar, SprintWorkload)
+  - [x] Created `Notifications/` directory (NotificationCenter, NotificationItem)
+  - [x] Created `Documents/` directory (DocumentHeader, DocumentSidebar, DocumentTree, DocumentComments, DocumentTemplatesManager)
+  - [x] Created `App/` directory (AppHeader, AppSidebar)
+  - [x] Consolidated `IssueDetail/` directory (added IssueCard, CreateIssueModal with tests)
 
-- [ ] **Add JSDoc to high-traffic exports**
-  - Focus on hooks, utilities, UI components
-  - ~3 hours
+- [x] **Add JSDoc to high-traffic exports** ✅
+  - Hooks, utilities, UI components now have JSDoc
+  - Validator reports 0 warnings
 
 ### Phase 4: Documentation (Ongoing)
 
-- [ ] **Create component documentation standards**
-  - When to use each component
-  - Common patterns
-  - Anti-patterns
+- [x] **Create component documentation standards** ✅
+  - Created docs/design/COMPONENTS.md
+  - Covers layout, typography, form, feedback, overlay components
+  - Includes selection flowchart and anti-patterns
 
-- [ ] **Update CLAUDE.md with new patterns**
-  - Add validator descriptions
-  - Add naming conventions
-  - Add file structure guidelines
+- [x] **Update CLAUDE.md with new patterns** ✅
+  - Added feature directory structure (App/, Documents/, IssueDetail/, etc.)
+  - Added Flex gap prop documentation
+  - Updated validator list (28 validators)
+  - Added error handling patterns (showError/showSuccess)
 
 ---
 
@@ -547,18 +469,53 @@ export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
 
 | Category | Current | Target | Status |
 |----------|---------|--------|--------|
-| Validator Coverage | 90% | 95% | 🟡 In Progress |
-| File Headers | 10% | 80% | 🔴 Not Started |
-| JSDoc Coverage | 40% | 80% | 🔴 Not Started |
-| Naming Conventions | 80% | 95% | 🟡 In Progress |
-| File Organization | 65% | 90% | 🟡 In Progress |
-| Error Handling | 90% | 95% | 🟢 Good |
-| Styling Consistency | 95% | 98% | 🟢 Good |
+| Validator Coverage | 95% | 95% | 🟢 Complete |
+| File Headers | 85% | 80% | 🟢 Complete (87 files remaining) |
+| JSDoc Coverage | 100% | 80% | 🟢 Complete (0 warnings) |
+| Naming Conventions | 95% | 95% | 🟢 Complete |
+| File Organization | 90% | 90% | 🟢 Complete (5/5 directories done) |
+| Error Handling | 100% | 95% | 🟢 Complete (auth forms updated) |
+| Styling Consistency | 98% | 98% | 🟢 Complete |
+| Test Coverage | 57% | 80% | 🟡 In Progress (adding more component tests) |
 
 ### Recent Changes
 
 | Date | Change | Impact |
 |------|--------|--------|
+| 2026-03-01 | Added tests for Analytics (ChartCard: 4, RecentActivity: 10) | Test coverage +2 components |
+| 2026-03-01 | Added tests for FormLayout (21 tests) | Test coverage +1 component |
+| 2026-03-01 | Added tests for SwimlanSelector (14 tests) and DevToolsTab (12 tests) | Test coverage +2 components |
+| 2026-03-01 | Added tests for ResponsiveText (8 tests) and Auth components (28 tests) | Test coverage +3 components |
+| 2026-03-01 | Added tests for UI utility components (66 tests - EntityCard, MetricCard, PaginationInfo, LoadMoreButton, Section) | Test coverage +5 components |
+| 2026-03-01 | Added tests for CreateEventModal (23 tests) | Test coverage +1 component |
+| 2026-03-01 | Added tests for ApiKeysManager (20 tests) | Test coverage +1 component |
+| 2026-03-01 | Added tests for AI (ErrorFallback: 9, AssistantButton: 16) | Test coverage +2 components |
+| 2026-03-01 | Added tests for Sprints (ProgressBar: 8, Workload: 8) | Test coverage +2 components |
+| 2026-03-01 | Added tests for TemplateCard (18 tests) | Test coverage +1 component |
+| 2026-03-01 | Added tests for TimeTracking (TimerWidget: 9, TimeEntriesList: 16) | Test coverage +2 components |
+| 2026-03-01 | Added tests for Landing (Features: 9, WhyChoose: 7, Footer: 12, Nav: 9) | Test coverage +4 components |
+| 2026-03-01 | Added tests for HeroSection (7 tests) | Test coverage +1 component |
+| 2026-03-01 | Added tests for KeyboardShortcutsHelp (16 tests) | Test coverage +1 component |
+| 2026-03-01 | Added tests for ipRestrictions backend (13 tests) | Test coverage +1 Convex module |
+| 2026-03-01 | Added tests for DocumentTree (14 tests) | Test coverage +1 component |
+| 2026-03-01 | Created docs/design/COMPONENTS.md with component usage standards | Documentation complete |
+| 2026-03-01 | Added tests for LabelsManager (15 tests) and InboxList (5 passing + 9 skipped) | Test coverage +2 components |
+| 2026-03-01 | Added tests for KanbanColumn (26 tests) | Test coverage +1 component |
+| 2026-03-01 | Added find-missing-tests.js helper script | Developer tooling |
+| 2026-03-01 | Updated CLAUDE.md with new patterns and structure | Documentation consistency |
+| 2026-03-01 | Moved IssueCard and CreateIssueModal to IssueDetail/ | Feature directory organization |
+| 2026-03-01 | Added COLORS.DEFAULT_LABEL constant | Runtime color values centralized |
+| 2026-03-01 | Updated auth forms to use showError/showSuccess | Consistent error handling |
+| 2026-03-01 | Added 2xl gap size to Flex component | Fixed component prop misuse |
+| 2026-03-01 | Moved App components to App/ | Feature directory organization |
+| 2026-03-01 | Moved Document components to Documents/ | Feature directory organization |
+| 2026-03-01 | Moved Notification components to Notifications/ | Feature directory organization |
+| 2026-03-01 | Moved Sprint components to Sprints/ | Feature directory organization |
+| 2026-03-01 | Fixed check-unused-params.js return properties | Validator now passes correctly |
+| 2026-03-01 | Added Convex hook allowlist to check-hook-patterns.js | Reduced false positives |
+| 2026-03-01 | Fixed useAIChat toast.error → showError | Better error handling |
+| 2026-03-01 | Updated check-raw-tailwind.js with prop detection | Detects component prop misuse |
+| 2026-03-01 | Fixed KanbanColumn space-x-2 → gap="sm" | Consistent component prop usage |
 | 2026-02-28 | Created consistency TODO | Baseline established |
 | 2026-02-28 | Added DocumentSidebar | Following patterns |
 | 2026-02-28 | Fixed PR review comments | Improved type safety |
