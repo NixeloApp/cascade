@@ -142,3 +142,28 @@ Unblock by providing:
 **Next step**
 
 - Continue strict order to Priority `17` while waiting for launch operation confirmations listed in the blocker gate.
+
+### 2026-03-02 (Batch D)
+
+**Progress**
+
+- Revalidated repository-side launch prep remains stable and no additional local code/doc work is pending for this priority.
+
+**Validation**
+
+- `pnpm run typecheck` (pass)
+
+**Decisions**
+
+- Keep Priority `16` blocked until external launch operations produce verifiable links/config confirmations.
+
+**Blockers**
+
+- Unchanged external tasks:
+  - publish demo video and channel posts,
+  - enable Discussions / set up Discord,
+  - apply starter `good first issue` labels.
+
+**Next step**
+
+- Continue strict order to Priority `17` while awaiting blocker-gate confirmations.
