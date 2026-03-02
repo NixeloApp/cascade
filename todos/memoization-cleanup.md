@@ -284,3 +284,24 @@ Top targets:
 
 **Next step (strict order)**
 - Continue to Priority `16`: `todos/public-launch.md`.
+
+### 2026-03-02 (Priority 15, checkpoint refresh C)
+
+**Completed**
+- Revalidated memoization baseline again in strict-order cycle.
+
+**Validation**
+- Count snapshot from `src/`:
+  - total (`useMemo` + `useCallback` + `memo`): `45`
+  - `useMemo`: `2`
+  - `useCallback`: `33`
+  - `memo`: `10`
+
+**Decisions**
+- Keep Priority `15` operationally closed for prior cleanup scope while tracking current drift baseline.
+
+**Blockers**
+- Unchanged: compiler-healthcheck remains externally network-blocked (`EAI_AGAIN`) for deeper confidence-driven removals.
+
+**Next step (strict order)**
+- Continue to Priority `16`: `todos/public-launch.md`.
