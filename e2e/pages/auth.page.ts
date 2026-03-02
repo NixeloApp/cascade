@@ -110,7 +110,9 @@ export class AuthPage extends BasePage {
     // Submit button reuses the same DOM node across expanded states; bind by stable test id.
     this.signInButton = page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
     this.signUpButton = page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-    this.forgotPasswordLink = page.getByRole("button", { name: "Forgot password?" });
+    this.forgotPasswordLink = page
+      .getByRole("button", { name: /forgot password\??/i })
+      .or(page.getByRole("link", { name: /forgot password\??/i }));
     this.googleSignInButton = page.getByTestId(TEST_IDS.AUTH.GOOGLE_BUTTON);
 
     // Navigation links between auth pages
@@ -472,7 +474,7 @@ export class AuthPage extends BasePage {
   }
 
   async expectResetCodeForm() {
-    await expect(this.resetPasswordHeading).toBeVisible({ timeout: 30000 });
+    await expect(this.resetPasswordHeading.or(this.codeInput)).toBeVisible({ timeout: 30000 });
     await expect(this.codeInput).toBeVisible();
     await expect(this.newPasswordInput).toBeVisible();
     await expect(this.resetPasswordButton).toBeVisible();

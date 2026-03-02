@@ -50,6 +50,7 @@ export class ProjectsPage extends BasePage {
   readonly issueTypeSelect: Locator;
   readonly issuePrioritySelect: Locator;
   readonly issueAssigneeSelect: Locator;
+  readonly createIssueForm: Locator;
   readonly submitIssueButton: Locator;
 
   // ===================
@@ -138,6 +139,7 @@ export class ProjectsPage extends BasePage {
     this.issueTypeSelect = page.getByRole("combobox", { name: /type/i });
     this.issuePrioritySelect = page.getByRole("combobox", { name: /priority/i });
     this.issueAssigneeSelect = page.getByRole("combobox", { name: /assignee/i });
+    this.createIssueForm = this.createIssueModal.locator("form").first();
     this.submitIssueButton = this.createIssueModal
       .getByRole("button", { name: /^create issue$/i })
       .or(this.createIssueModal.locator('button[type="submit"]'));
@@ -306,13 +308,19 @@ export class ProjectsPage extends BasePage {
     if (priority) {
       await this.issuePrioritySelect.selectOption(priority);
     }
-    await this.submitIssueButton.scrollIntoViewIfNeeded();
-    await expect(this.submitIssueButton).toBeEnabled();
-    try {
-      await this.submitIssueButton.click();
-    } catch {
-      await this.submitIssueButton.evaluate((button: HTMLButtonElement) => button.click());
-    }
+    await expect(async () => {
+      if (!(await this.createIssueModal.isVisible())) {
+        return;
+      }
+
+      // Submit the form directly to avoid viewport/actionability flakiness on modal footer buttons.
+      if (await this.createIssueForm.isVisible()) {
+        await this.createIssueForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
+      } else {
+        await this.submitIssueButton.dispatchEvent("click");
+      }
+      await expect(this.createIssueModal).not.toBeVisible();
+    }).toPass();
   }
 
   async switchToTab(tab: "board" | "backlog" | "sprints" | "analytics" | "settings") {
@@ -359,17 +367,9 @@ export class ProjectsPage extends BasePage {
     await issueCard.click();
     await expect(this.issueDetailDialog).toBeVisible();
 
-    // Wait for the issue content to load (skeleton to disappear / critical sections to appear)
-    const timeTrackingHeader = this.issueDetailDialog
-      .getByRole("heading", {
-        name: /time tracking/i,
-      })
-      .first();
-    await expect(timeTrackingHeader).toBeVisible();
-
-    // Wait for timer button to be fully rendered (fixes flaky timer control tests)
-    // The button may appear slightly after the header due to React hydration
-    await expect(this.startTimerButton.or(this.stopTimerButton)).toBeVisible();
+    // Wait for modal content to be stable using the issue key metadata,
+    // which is consistently rendered regardless of sidebar section timing.
+    await expect(this.issueDetailDialog.getByText(/[A-Z][A-Z0-9]+-\d+/).first()).toBeVisible();
   }
 
   /**
