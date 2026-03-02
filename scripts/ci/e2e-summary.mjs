@@ -76,10 +76,11 @@ export function accumulateBySpec(report) {
 }
 
 export async function computeConsecutiveCleanRuns(env = process.env) {
+  const scanLimit = parseScanLimit(env);
   const mockHistoryPath = env.E2E_SUMMARY_MOCK_HISTORY_FILE;
   if (mockHistoryPath) {
     const mock = JSON.parse(fs.readFileSync(mockHistoryPath, "utf8"));
-    const runs = mock.workflow_runs || [];
+    const runs = (mock.workflow_runs || []).slice(0, scanLimit);
     const jobsByRun = mock.jobs_by_run || {};
     let streak = 0;
     let scannedRuns = 0;
@@ -116,7 +117,6 @@ export async function computeConsecutiveCleanRuns(env = process.env) {
     "User-Agent": "nixelo-e2e-summary",
   };
 
-  const scanLimit = parseScanLimit(env);
   const runs = [];
   let page = 1;
 
@@ -204,6 +204,8 @@ export async function buildSummaryLines(report, env = process.env) {
   const checkpointMode = streakSummary === null ? "fallback-local" : "history-derived";
   const scannedRuns = streakSummary?.scannedRuns ?? 0;
   const scanLimit = parseScanLimit(env);
+  const scanWindowPotentiallyTruncated =
+    checkpointMode === "history-derived" && scannedRuns === scanLimit && runStreak === scannedRuns;
 
   const lines = [];
   lines.push("## E2E Heatmap");
@@ -215,6 +217,11 @@ export async function buildSummaryLines(report, env = process.env) {
   lines.push(`- Error Rate: \`${errorRate}%\``);
   lines.push(`- Clean-Run Checkpoint: \`${runStreak}/${TREND_TARGET}\` (${checkpointMode})`);
   lines.push(`- Streak Scan Window: \`${scannedRuns}/${scanLimit}\` completed CI runs`);
+  if (scanWindowPotentiallyTruncated) {
+    lines.push(
+      "- Streak Coverage Note: `possibly-truncated` (increase `E2E_STREAK_SCAN_LIMIT` if needed)",
+    );
+  }
   lines.push("");
   lines.push("| Spec | Passed | Failed | Skipped | Flaky | TimedOut |");
   lines.push("|------|--------|--------|---------|-------|----------|");

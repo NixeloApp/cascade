@@ -661,3 +661,30 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
   - exact scan-window accounting (`scanned/limit`) in the summary
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
+### 2026-03-02 - Batch AA (completed scan-limit parity and truncation signaling)
+
+- Decision: align mock-history behavior with real API mode and make potential streak truncation explicit in summary output.
+- Change:
+  - updated `scripts/ci/e2e-summary.mjs`:
+    - mock-history path now respects `E2E_STREAK_SCAN_LIMIT` (same cap behavior as API path)
+    - added `Streak Coverage Note: possibly-truncated` when scan window is fully consumed while streak remains clean (`scanned == limit == streak`)
+  - updated `scripts/ci/test-e2e-summary.mjs`:
+    - added truncation-case assertion with `E2E_STREAK_SCAN_LIMIT=2`
+    - validates `Streak Scan Window: 2/2` and coverage note rendering
+- Validation:
+  - `pnpm run e2e:summary:self-test` => pass (fallback, history-derived, truncation-case)
+  - `pnpm run e2e:hard-rules` => pass (`0` timeout violations, selector baseline remains `0`)
+  - `pnpm exec biome check scripts/ci/e2e-summary.mjs scripts/ci/test-e2e-summary.mjs` => pass
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+  - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.

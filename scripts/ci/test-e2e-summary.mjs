@@ -48,6 +48,22 @@ async function runHistoryDerivedCase() {
   assert.match(output, /Streak Scan Window: `3\/250` completed CI runs/);
 }
 
+async function runScanLimitTruncationCase() {
+  const lines = await buildSummaryLines(
+    reportFixture,
+    makeEnv({
+      E2E_SUMMARY_MOCK_HISTORY_FILE: historyFixturePath,
+      E2E_STREAK_SCAN_LIMIT: "2",
+    }),
+  );
+  const output = lines.join("\n");
+
+  assert.match(output, /Clean-Run Checkpoint: `2\/5` \(history-derived\)/);
+  assert.match(output, /Streak Scan Window: `2\/2` completed CI runs/);
+  assert.match(output, /Streak Coverage Note: `possibly-truncated`/);
+}
+
 await runFallbackCase();
 await runHistoryDerivedCase();
+await runScanLimitTruncationCase();
 console.log("e2e-summary self-test passed");
