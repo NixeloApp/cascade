@@ -32,6 +32,7 @@ async function runFallbackCase() {
   assert.match(output, /Clean-Run Checkpoint: `1\/5` \(fallback-local\)/);
   assert.match(output, /Streak Scan Window: `0\/100` completed CI runs/);
   assert.match(output, /\| `e2e\/auth\.spec\.ts` \| 2 \| 0 \| 1 \| 0 \| 0 \|/);
+  assert.doesNotMatch(output, /Streak Coverage Note: `possibly-truncated`/);
 }
 
 async function runHistoryDerivedCase() {
@@ -46,6 +47,7 @@ async function runHistoryDerivedCase() {
 
   assert.match(output, /Clean-Run Checkpoint: `2\/5` \(history-derived\)/);
   assert.match(output, /Streak Scan Window: `3\/250` completed CI runs/);
+  assert.doesNotMatch(output, /Streak Coverage Note: `possibly-truncated`/);
 }
 
 async function runScanLimitTruncationCase() {
