@@ -99,3 +99,26 @@
 **Next step**
 
 - Audit current SSO implementation depth and close or split enterprise SSO tasks based on actual runtime support (configuration-only vs full sign-in flow).
+
+### 2026-03-02 (Batch B)
+
+**Progress**
+
+- Added OIDC provider presets in SSO configuration UI for:
+  - Google Workspace
+  - Microsoft Entra
+  - Okta
+- Exposed optional OIDC endpoint/scopes fields (authorization URL, token URL, user info URL, scopes).
+- Added preset regression tests in `src/lib/sso-oidc-presets.test.ts`.
+
+**Decisions**
+
+- Treated provider-specific enterprise SSO work as configuration-acceleration first (preset defaults) while full auth callback/runtime integration remains a separate step.
+
+**Blockers**
+
+- Full provider integrations still require runtime OIDC/SAML sign-in callback flows and enterprise validation environments.
+
+**Next step**
+
+- Implement and validate one full provider runtime flow end-to-end (recommended first: Google Workspace OIDC).

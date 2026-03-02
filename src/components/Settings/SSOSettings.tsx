@@ -22,6 +22,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { Key, Plus, Settings, Trash2 } from "@/lib/icons";
+import { getOidcPresetConfig, type OidcProviderPreset } from "@/lib/sso-oidc-presets";
 import { showError, showSuccess } from "@/lib/toast";
 
 interface SSOSettingsProps {
@@ -295,6 +296,10 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
   const [issuer, setIssuer] = useState("");
   const [clientId, setClientId] = useState("");
   const [clientSecret, setClientSecret] = useState("");
+  const [authorizationUrl, setAuthorizationUrl] = useState("");
+  const [tokenUrl, setTokenUrl] = useState("");
+  const [userInfoUrl, setUserInfoUrl] = useState("");
+  const [scopes, setScopes] = useState("");
 
   // Common fields
   const [domains, setDomains] = useState("");
@@ -312,6 +317,10 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
     if (connection.type === "oidc" && connection.oidcConfig) {
       setIssuer(connection.oidcConfig.issuer || "");
       setClientId(connection.oidcConfig.clientId || "");
+      setAuthorizationUrl(connection.oidcConfig.authorizationUrl || "");
+      setTokenUrl(connection.oidcConfig.tokenUrl || "");
+      setUserInfoUrl(connection.oidcConfig.userInfoUrl || "");
+      setScopes(connection.oidcConfig.scopes?.join(", ") || "");
     }
     // Initialize common fields
     setDomains(connection.verifiedDomains?.join(", ") || "");
@@ -323,6 +332,21 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
       .split(",")
       .map((d) => d.trim())
       .filter((d) => d.length > 0);
+
+  const applyOidcPreset = (preset: OidcProviderPreset) => {
+    const config = getOidcPresetConfig(preset);
+    setIssuer(config.issuer);
+    setAuthorizationUrl(config.authorizationUrl);
+    setTokenUrl(config.tokenUrl);
+    setUserInfoUrl(config.userInfoUrl);
+    setScopes(config.scopes.join(", "));
+  };
+
+  const parseScopes = () =>
+    scopes
+      .split(",")
+      .map((scope) => scope.trim())
+      .filter((scope) => scope.length > 0);
 
   // Save SAML configuration
   const saveSamlConfig = () =>
@@ -340,9 +364,17 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
     updateOidcConfig({
       connectionId,
       config: {
+        // Keep empty scopes as undefined to avoid storing noise.
+        scopes: (() => {
+          const parsed = parseScopes();
+          return parsed.length > 0 ? parsed : undefined;
+        })(),
         issuer: issuer || undefined,
         clientId: clientId || undefined,
         clientSecret: clientSecret || undefined,
+        authorizationUrl: authorizationUrl || undefined,
+        tokenUrl: tokenUrl || undefined,
+        userInfoUrl: userInfoUrl || undefined,
       },
     });
 
@@ -422,6 +454,28 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
           </>
         ) : (
           <>
+            <Stack gap="sm">
+              <Typography variant="label">Provider Presets</Typography>
+              <Flex wrap gap="sm">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => applyOidcPreset("google-workspace")}
+                >
+                  Google Workspace
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => applyOidcPreset("microsoft-entra")}
+                >
+                  Microsoft Entra
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => applyOidcPreset("okta")}>
+                  Okta
+                </Button>
+              </Flex>
+            </Stack>
             <Input
               label="Issuer URL"
               value={issuer}
@@ -440,6 +494,30 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
               onChange={(e) => setClientSecret(e.target.value)}
               placeholder="••••••••••••"
               type="password"
+            />
+            <Input
+              label="Authorization URL (optional)"
+              value={authorizationUrl}
+              onChange={(e) => setAuthorizationUrl(e.target.value)}
+              placeholder="https://provider.example.com/oauth2/v2.0/authorize"
+            />
+            <Input
+              label="Token URL (optional)"
+              value={tokenUrl}
+              onChange={(e) => setTokenUrl(e.target.value)}
+              placeholder="https://provider.example.com/oauth2/v2.0/token"
+            />
+            <Input
+              label="User Info URL (optional)"
+              value={userInfoUrl}
+              onChange={(e) => setUserInfoUrl(e.target.value)}
+              placeholder="https://provider.example.com/userinfo"
+            />
+            <Input
+              label="Scopes (comma-separated)"
+              value={scopes}
+              onChange={(e) => setScopes(e.target.value)}
+              placeholder="openid, profile, email"
             />
           </>
         )}
