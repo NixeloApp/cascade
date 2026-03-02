@@ -2,7 +2,7 @@
 
 > **Priority:** P3 (Post-MVP)
 > **Effort:** Medium
-> **Status:** In progress
+> **Status:** Blocked (external launch operations required)
 
 ---
 
@@ -114,3 +114,13 @@
 **Next step**
 
 - Run the first manual launch wave: record the demo, publish one channel post (HN or Reddit), then feed outcomes back into this todo with links and engagement notes.
+
+## Blocker Gate
+
+Remaining unchecked items require repository-admin actions or external platform posting that cannot be completed from local code changes alone.
+
+Unblock by providing:
+
+- Published links for at least one launch channel post and demo video.
+- Confirmation that GitHub Discussions is enabled and Discord is set up.
+- Confirmation that `good first issue` labels were applied to starter issues.
