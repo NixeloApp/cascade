@@ -173,6 +173,7 @@ async function runInterruptedResultCase() {
   const lines = await buildSummaryLines(interruptedReport, makeEnv());
   const output = lines.join("\n");
 
+  assert.match(output, /Clean-Run Checkpoint: `0\/5` \(fallback-local\)/);
   assert.match(
     output,
     /- Totals: `2 passed`, `0 failed`, `1 skipped`, `0 flaky`, `0 timedOut`, `1 interrupted`/,
@@ -196,6 +197,7 @@ async function runTimedOutResultCase() {
   const lines = await buildSummaryLines(timedOutReport, makeEnv());
   const output = lines.join("\n");
 
+  assert.match(output, /Clean-Run Checkpoint: `0\/5` \(fallback-local\)/);
   assert.match(
     output,
     /- Totals: `2 passed`, `0 failed`, `1 skipped`, `0 flaky`, `1 timedOut`, `0 interrupted`/,

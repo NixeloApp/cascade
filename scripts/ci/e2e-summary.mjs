@@ -234,7 +234,7 @@ export async function buildSummaryLines(report, env = process.env) {
   const executed = passed + failed;
   const errorRate = executed > 0 ? ((failed / executed) * 100).toFixed(2) : "0.00";
 
-  const cleanRun = failed === 0 && flaky === 0;
+  const cleanRun = failed === 0 && flaky === 0 && timedOut === 0 && interrupted === 0;
   const streakSummary = await computeConsecutiveCleanRuns(env);
   const runStreak = streakSummary?.streak ?? (cleanRun ? 1 : 0);
   const checkpointMode = streakSummary === null ? "fallback-local" : "history-derived";
