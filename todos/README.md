@@ -11,7 +11,7 @@ Central index for active roadmap and issue todos.
 
 | File | Status | Notes |
 |------|--------|-------|
-| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: OAuth targeted blockers are cleared (`20 passed / 0 failed / 1 skipped` across oauth-mocked+oauth-security); next required step is a clean full-suite baseline refresh |
+| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: latest full-suite baseline is clean (`151 passed / 0 failed / 4 skipped`, `155 total`); next is deterministic-wait hardening across passing specs |
 | [consistency-tracking.md](./consistency-tracking.md) | Active | Ongoing consistency enforcement + validator tracking |
 | [feature-gaps.md](./feature-gaps.md) | Active | Core gaps with partial completion |
 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Active | High-impact backend efficiency work |
@@ -87,4 +87,4 @@ Central index for active roadmap and issue todos.
 - `todos/TODO.md` is the lightweight entry file for this index.
 - Completed/archive todos were removed per current workflow.
 - Use this index as the source of truth for planning and status tracking.
-- Priority `01` update (2026-03-02): OAuth targeted rerun (`e2e/oauth-mocked.spec.ts` + `e2e/oauth-security.spec.ts`) is now `20 passed`, `0 failed`, `1 skipped` (`21 total`) after replacing flaky browser redirect interception with deterministic redirect/callback contract checks. Full-suite baseline is still the last clean `155 total` with `140 pass`, `11 fail`, `4 skipped` (`151` executed, `7.28%`); a post-fix full-suite rerun was started but not completed, so updated global totals are still pending.
+- Priority `01` update (2026-03-02): full-suite rerun after OAuth redirect/callback contract refactor is now `151 passed`, `0 failed`, `4 skipped` (`155 total`, `151 executed`, `0.00%` error rate). Next execution step is suite-wide deterministic-wait hardening (reduce/justify `waitForTimeout`, add shared state wait helpers, and re-validate with targeted + full-suite runs).

@@ -43,6 +43,16 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - Executed tests (`pass + fail`): `151`
 - Current full-suite error rate: `7.28%` (`11/151`)
 
+### Full Baseline Refresh (2026-03-02, latest full suite after OAuth contract refactor)
+
+- Command: `pnpm exec playwright test --reporter=line`
+- Total tests: `155`
+- Passed: `151`
+- Failed: `0`
+- Skipped: `4`
+- Executed tests (`pass + fail`): `151`
+- Current full-suite error rate: `0.00%` (`0/151`)
+
 ### Focused Validation Snapshot (2026-03-02, targeted suite)
 
 - Command: `pnpm exec playwright test e2e/activity-feed.spec.ts e2e/analytics.spec.ts e2e/issues.spec.ts e2e/auth.spec.ts --reporter=line`
@@ -307,6 +317,22 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
   - Net: `-9`
 - Additional check: started full-suite rerun after this change to refresh global baseline, but stopped before completion (no final suite totals recorded yet).
 
+### 2026-03-02 - Batch J (completed full-suite baseline refresh)
+
+- Decision: close the OAuth reliability loop by validating the entire suite after redirect/callback contract refactor.
+- Validation command: `pnpm exec playwright test --reporter=line`
+- Validation outcome: `151 passed`, `0 failed`, `4 skipped` (`155 total`, `151 executed`, `0.00%` error rate).
+- Global status:
+  - Previous full suite: `140 passed`, `11 failed`, `4 skipped` (`7.28%` error rate)
+  - Current full suite: `151 passed`, `0 failed`, `4 skipped` (`0.00%` error rate)
+  - Net change: `+11` passed, `-11` failed
+- Blockers:
+  - No active failing-spec blocker on current local baseline.
+  - Remaining work is standards hardening (eliminating weak waits and formalizing deterministic wait helpers across currently passing specs).
+
 ### Next Step (strictly next)
 
-- Run a clean full-suite pass (`pnpm exec playwright test --reporter=line`) to replace the old `140/11` baseline with post-Batch-I totals and recalculate global failure rate.
+- Start deterministic-wait hardening on currently passing specs:
+  - inventory remaining `waitForTimeout` usage and classify justified vs unjustified
+  - land first shared state-wait helpers (`waitForDashboardReady`, `waitForBoardLoaded`) and migrate high-churn specs
+  - rerun touched specs + one full-suite pass to confirm regression-free behavior
