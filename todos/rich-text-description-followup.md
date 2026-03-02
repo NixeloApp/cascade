@@ -1,5 +1,7 @@
 # Rich Text Description - Follow-up Improvements
 
+> **Status:** Complete
+
 Issue descriptions now support rich text editing via Plate.js. Some external integrations still expect plain text.
 
 ## Scope
@@ -100,3 +102,22 @@ Add backend helper to extract plain text from rich text JSON descriptions for in
 
 **Next step (strict order)**
 - Move to Priority `13`: `todos/sidebar-display-limits.md`.
+
+### 2026-03-02 (Priority 12, batch B)
+
+**Completed**
+- Reconfirmed Priority `12` as complete with no remaining unchecked milestones, blockers, or deferred items in scope.
+
+**Validation**
+- Prior batch validation set remains the source of truth for this completed scope:
+  - helper + integration tests (`86 passed`)
+  - `pnpm run typecheck` (pass)
+
+**Decisions**
+- No additional changes needed; this todo is closed and kept for historical traceability.
+
+**Blockers**
+- None.
+
+**Next step (strict order)**
+- Continue to Priority `13`: `todos/sidebar-display-limits.md`.
