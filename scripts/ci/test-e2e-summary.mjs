@@ -144,6 +144,28 @@ async function runInvalidScanLimitFallbackCase() {
   assert.doesNotMatch(output, /Streak Coverage Note: `possibly-truncated`/);
 }
 
+async function runNonPositiveScanLimitFallbackCase() {
+  const zeroLimitLines = await buildSummaryLines(
+    reportFixture,
+    makeEnv({
+      E2E_SUMMARY_MOCK_HISTORY_FILE: historyFixturePath,
+      E2E_STREAK_SCAN_LIMIT: "0",
+    }),
+  );
+  const zeroLimitOutput = zeroLimitLines.join("\n");
+  assert.match(zeroLimitOutput, /Streak Scan Window: `3\/100` completed CI runs/);
+
+  const negativeLimitLines = await buildSummaryLines(
+    reportFixture,
+    makeEnv({
+      E2E_SUMMARY_MOCK_HISTORY_FILE: historyFixturePath,
+      E2E_STREAK_SCAN_LIMIT: "-7",
+    }),
+  );
+  const negativeLimitOutput = negativeLimitLines.join("\n");
+  assert.match(negativeLimitOutput, /Streak Scan Window: `3\/100` completed CI runs/);
+}
+
 async function runMissingMockHistoryFileCase() {
   await assert.rejects(
     () =>
@@ -281,6 +303,7 @@ await runHistoryDerivedDirtyReportCase();
 await runHistoryDerivedFailingFirstCase();
 await runScanLimitTruncationCase();
 await runInvalidScanLimitFallbackCase();
+await runNonPositiveScanLimitFallbackCase();
 await runMissingMockHistoryFileCase();
 await runInvalidMockHistoryFileCase();
 await runUnreadableMockHistoryFileCase();

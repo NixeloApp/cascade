@@ -988,3 +988,28 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
   - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
+### 2026-03-02 - Batch AM (completed non-positive scan-limit fallback coverage)
+
+- Decision: extend scan-limit misconfiguration coverage to non-positive values, ensuring deterministic fallback behavior matches invalid-string handling.
+- Change:
+  - updated `scripts/ci/test-e2e-summary.mjs`:
+    - added `runNonPositiveScanLimitFallbackCase()`
+    - validates both `E2E_STREAK_SCAN_LIMIT=0` and `E2E_STREAK_SCAN_LIMIT=-7` fall back to default scan limit
+    - confirms scan-window output remains `3/100` in both cases
+- Validation:
+  - `pnpm run e2e:summary:self-test` => pass
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; timeout/networkidle violations: `0`; selector baseline remains `0`)
+  - `pnpm exec biome check scripts/ci/test-e2e-summary.mjs` => pass
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+  - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
