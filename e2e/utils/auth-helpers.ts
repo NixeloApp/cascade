@@ -143,8 +143,8 @@ export async function handleOnboardingOrDashboard(
   page: Page,
   autoCompleteOnboarding = true,
 ): Promise<boolean> {
-  // Wait for DOM to be ready
-  await page.waitForLoadState("domcontentloaded");
+  // Allow auth redirects to settle to either dashboard or onboarding route.
+  await page.waitForURL(urlPatterns.dashboardOrOnboarding, { timeout: 15000 }).catch(() => {});
 
   if (await isOnDashboard(page)) {
     console.log("✓ Already on dashboard");
@@ -546,7 +546,6 @@ export async function signUpUserViaUI(
 ): Promise<boolean> {
   try {
     await page.goto(`${baseURL}/signup`);
-    await page.waitForLoadState("domcontentloaded");
 
     // Check for onboarding or dashboard patterns (both old and new URL structures)
     if (urlPatterns.dashboardOrOnboarding.test(page.url())) {

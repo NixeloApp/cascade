@@ -750,6 +750,30 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
 
+### 2026-03-02 - Batch BQ (completed auth-helper domcontentloaded wait removal)
+
+- Decision: replace remaining auth-helper `domcontentloaded` waits with route-driven readiness, preserving onboarding/dashboard outcome checks.
+- Change:
+  - updated `e2e/utils/auth-helpers.ts`:
+    - `handleOnboardingOrDashboard(...)` now waits for dashboard/onboarding URL patterns via `page.waitForURL(...)` instead of `waitForLoadState("domcontentloaded")`
+    - removed post-`goto("/signup")` `waitForLoadState("domcontentloaded")` from `signUpUserViaUI(...)` (relies on existing route and form-state assertions)
+- Validation:
+  - `pnpm exec biome check e2e/utils/auth-helpers.ts` => pass
+  - `pnpm run e2e:hard-rules` => pass (`29` spec files scanned; timeout/networkidle/force/xpath/selector-baseline violations: `0`)
+  - `pnpm exec playwright test e2e/auth.spec.ts --reporter=line` => pass (`19 passed`)
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+  - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
 ### 2026-03-02 - Batch BL (completed RBAC role-flow domcontentloaded wait removal)
 
 - Decision: remove remaining `domcontentloaded` document-load waits from RBAC role-flow specs and rely on explicit route/UI outcome assertions.
