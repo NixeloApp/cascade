@@ -11,7 +11,7 @@ Central index for active roadmap and issue todos.
 
 | File | Status | Notes |
 |------|--------|-------|
-| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: CI summary logic is now extracted to `scripts/ci/e2e-summary.mjs` and locally validated against merged JSON artifacts; latest baseline remains clean (`151/0/4`) |
+| [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | P0 in progress: CI summary script now supports paginated streak history scanning (`100`-run default window, env-tunable) and local validation remains green |
 | [consistency-tracking.md](./consistency-tracking.md) | Active | Ongoing consistency enforcement + validator tracking |
 | [feature-gaps.md](./feature-gaps.md) | Active | Core gaps with partial completion |
 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Active | High-impact backend efficiency work |
@@ -87,4 +87,4 @@ Central index for active roadmap and issue todos.
 - `todos/TODO.md` is the lightweight entry file for this index.
 - Completed/archive todos were removed per current workflow.
 - Use this index as the source of truth for planning and status tracking.
-- Priority `01` update (2026-03-02): `e2e-summary` now calls versioned script `scripts/ci/e2e-summary.mjs` (instead of inline workflow code), preserving merged heatmap + streak checkpoint behavior and enabling local validation (`node scripts/ci/e2e-summary.mjs /tmp/playwright-e2e.clean.json`). Latest baseline remains `151 passed`, `0 failed`, `4 skipped` (`155 total`). Next is live PR validation of artifact merge + summary rendering in CI context.
+- Priority `01` update (2026-03-02): clean-streak query strategy was hardened with paginated run-history scanning in `scripts/ci/e2e-summary.mjs` (`50` per page, `100` run default scan window via `E2E_STREAK_SCAN_LIMIT`). Local summary validation remains green (`151 passed`, `0 failed`, `4 skipped` baseline artifact). Remaining step is real PR CI validation of `history-derived` checkpoint mode.

@@ -484,10 +484,28 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - Blockers:
   - history-derived mode still requires a real CI context to verify end-to-end behavior against Actions API and step summary rendering.
 
+### 2026-03-02 - Batch S (completed streak query window hardening with pagination)
+
+- Decision: reduce risk of clean-streak truncation on high-frequency branches by scanning a paginated history window instead of a single fixed page.
+- Change: `scripts/ci/e2e-summary.mjs`
+  - `computeConsecutiveCleanRuns()` now paginates through completed `ci.yml` runs:
+    - page size: `50`
+    - max scan window: `100` runs by default (`E2E_STREAK_SCAN_LIMIT` override)
+  - summary now prints scan window metadata:
+    - `Streak Scan Window: <N> completed CI runs`
+- Validation:
+  - local check command:
+    - `node scripts/ci/e2e-summary.mjs /tmp/playwright-e2e.clean.json`
+  - verified output includes:
+    - `Clean-Run Checkpoint: 1/5 (fallback-local)`
+    - `Streak Scan Window: 100 completed CI runs`
+- Blockers:
+  - still requires one real PR CI execution to confirm Actions API calls and rendered summary in `history-derived` mode.
+
 ### Next Step (strictly next)
 
 - Continue deterministic-wait hardening on currently passing specs:
-  - verify `e2e-summary` behavior on a real PR CI run (artifact download + merge + script execution + summary rendering)
-  - adjust history window/query strategy if streak truncation is observed on high-frequency branches
+  - verify `e2e-summary` behavior on a real PR CI run (artifact download + merge + script execution + summary rendering in `history-derived` mode)
+  - if needed after first PR validation, tune `E2E_STREAK_SCAN_LIMIT` from observed branch run density
   - keep CI per-spec heatmap summary as single source of truth for streak/heatmap visibility
   - apply helper contracts to any new/changed E2E files in upcoming PRs via review checklist enforcement

@@ -3,6 +3,8 @@
 import fs from "node:fs";
 
 const TREND_TARGET = 5;
+const DEFAULT_RUN_SCAN_LIMIT = 100;
+const RUNS_PAGE_SIZE = 50;
 
 function usage() {
   console.error("Usage: node scripts/ci/e2e-summary.mjs <merged-report.json>");
@@ -81,18 +83,40 @@ async function computeConsecutiveCleanRuns() {
     "User-Agent": "nixelo-e2e-summary",
   };
 
-  const runsResponse = await fetch(
-    `https://api.github.com/repos/${repo}/actions/workflows/ci.yml/runs?branch=${encodeURIComponent(
-      branch,
-    )}&status=completed&per_page=20`,
-    { headers },
-  );
-  if (!runsResponse.ok) {
-    return null;
+  const scanLimitRaw = Number.parseInt(process.env.E2E_STREAK_SCAN_LIMIT || "", 10);
+  const scanLimit =
+    Number.isFinite(scanLimitRaw) && scanLimitRaw > 0 ? scanLimitRaw : DEFAULT_RUN_SCAN_LIMIT;
+  const runs = [];
+  let page = 1;
+
+  while (runs.length < scanLimit) {
+    const runsResponse = await fetch(
+      `https://api.github.com/repos/${repo}/actions/workflows/ci.yml/runs?branch=${encodeURIComponent(
+        branch,
+      )}&status=completed&per_page=${RUNS_PAGE_SIZE}&page=${page}`,
+      { headers },
+    );
+    if (!runsResponse.ok) {
+      return null;
+    }
+
+    const runsPayload = await runsResponse.json();
+    const pageRuns = runsPayload.workflow_runs || [];
+    if (pageRuns.length === 0) {
+      break;
+    }
+
+    runs.push(...pageRuns);
+    if (pageRuns.length < RUNS_PAGE_SIZE) {
+      break;
+    }
+    page += 1;
   }
 
-  const runsPayload = await runsResponse.json();
-  const runs = runsPayload.workflow_runs || [];
+  if (runs.length > scanLimit) {
+    runs.length = scanLimit;
+  }
+
   let streak = 0;
 
   for (const run of runs) {
@@ -152,6 +176,9 @@ async function main() {
   const streakFromHistory = await computeConsecutiveCleanRuns();
   const runStreak = streakFromHistory ?? (cleanRun ? 1 : 0);
   const checkpointMode = streakFromHistory === null ? "fallback-local" : "history-derived";
+  const scanLimitRaw = Number.parseInt(process.env.E2E_STREAK_SCAN_LIMIT || "", 10);
+  const scanLimit =
+    Number.isFinite(scanLimitRaw) && scanLimitRaw > 0 ? scanLimitRaw : DEFAULT_RUN_SCAN_LIMIT;
 
   const lines = [];
   lines.push("## E2E Heatmap");
@@ -162,6 +189,7 @@ async function main() {
   lines.push(`- Executed: \`${executed}\` (pass + fail)`);
   lines.push(`- Error Rate: \`${errorRate}%\``);
   lines.push(`- Clean-Run Checkpoint: \`${runStreak}/${TREND_TARGET}\` (${checkpointMode})`);
+  lines.push(`- Streak Scan Window: \`${scanLimit}\` completed CI runs`);
   lines.push("");
   lines.push("| Spec | Passed | Failed | Skipped | Flaky | TimedOut |");
   lines.push("|------|--------|--------|---------|-------|----------|");
