@@ -88,7 +88,7 @@ Route: `/:orgSlug/calendar`
 
 - [x] Add `organizationId` to calendarEvents (blocker)
 - [x] Aggregate events from all workspaces
-- [ ] Color-code by workspace/team
+- [x] Color-code by workspace/team
 - [x] Add filtering controls
 
 ### 8. Workspace Calendar
@@ -131,7 +131,7 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
 - [x] `S2` Ship workspace backlog + workspace sprints routes with real queries
 - [x] `S3` Ship workspace wiki + team wiki data model/route support
 - [x] `S4` Replace team calendar stub with real data
-- [ ] `S5` Add org/workspace/team calendar aggregation + filters
+- [x] `S5` Add org/workspace/team calendar aggregation + filters
 
 ### Dependencies
 
@@ -298,3 +298,26 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
   - `S5` is not fully complete yet: workspace/team color-coding in organization calendar is still pending.
 - Next Step:
   - finish `S5` by implementing deterministic workspace/team color-coding in org/workspace calendar rendering.
+
+### 2026-03-02 - Batch G (completed S5 with deterministic scope color-coding)
+
+- Decision:
+  - complete `S5` by applying deterministic colors by scope ID (workspace/team) at render time in `CalendarView`, so grouped calendars remain visually distinct.
+- Change:
+  - updated `src/components/Calendar/CalendarView.tsx`:
+    - added `colorByScope` prop (`workspace` or `team`).
+    - added deterministic scope-color mapping (`scopeId` hash -> `PALETTE_COLORS`) and applies it to rendered events.
+  - updated scope routes:
+    - `src/routes/_auth/_app/$orgSlug/calendar.tsx` now selects color mode by active filter scope:
+      - org-wide: color by workspace
+      - workspace filtered: color by team
+      - team filtered: no additional recolor
+    - `src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/calendar.tsx` colors by team when showing all teams.
+- Validation:
+  - `pnpm exec biome check --write src/components/Calendar/CalendarView.tsx src/routes/_auth/_app/$orgSlug/calendar.tsx src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/calendar.tsx` => pass
+  - `pnpm run typecheck` => pass
+  - `pnpm test convex/calendarEvents.test.ts src/config/routes.test.ts` => pass (`63 passed`)
+- Blockers:
+  - none for calendar milestones; `S5` is complete.
+- Next Step:
+  - continue remaining `multi-level-views` scope: cross-team dependencies route (`/:orgSlug/workspaces/:workspaceSlug/dependencies`) and personal board (`/:orgSlug/my-issues`).

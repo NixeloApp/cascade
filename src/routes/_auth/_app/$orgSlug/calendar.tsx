@@ -42,6 +42,8 @@ function OrganizationCalendarPage() {
       : selectedWorkspaceId !== "all"
         ? "Workspace scope"
         : "Organization scope";
+  const colorByScope =
+    selectedTeamId !== "all" ? undefined : selectedWorkspaceId !== "all" ? "team" : "workspace";
 
   return (
     <Flex direction="column" className="h-full">
@@ -95,6 +97,7 @@ function OrganizationCalendarPage() {
         organizationId={organizationId}
         workspaceId={selectedWorkspaceId === "all" ? undefined : selectedWorkspaceId}
         teamId={selectedTeamId === "all" ? undefined : selectedTeamId}
+        colorByScope={colorByScope}
       />
     </Flex>
   );

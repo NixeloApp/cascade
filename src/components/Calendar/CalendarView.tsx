@@ -5,6 +5,7 @@ import { endOfDay, endOfMonth, endOfWeek, startOfDay, startOfMonth, startOfWeek 
 import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { CreateEventModal } from "./CreateEventModal";
+import { type EventColor, PALETTE_COLORS } from "./calendar-colors";
 import { EventDetailsModal } from "./EventDetailsModal";
 import { ShadcnCalendar } from "./shadcn-calendar/calendar";
 import { extractConvexId, toCalendarEvent } from "./shadcn-calendar/calendar-adapter";
@@ -42,6 +43,7 @@ interface CalendarViewProps {
   workspaceId?: Id<"workspaces">;
   projectId?: Id<"projects">;
   teamId?: Id<"teams">;
+  colorByScope?: "workspace" | "team";
 }
 
 /**
@@ -52,6 +54,7 @@ export function CalendarView({
   workspaceId,
   projectId,
   teamId,
+  colorByScope,
 }: CalendarViewProps): React.ReactElement {
   const [mode, setMode] = useState<Mode>("week");
   const [date, setDate] = useState(new Date());
@@ -108,7 +111,24 @@ export function CalendarView({
       : organizationId
         ? organizationScopedEvents
         : userScopedEvents;
-  const events: CalendarEvent[] = (rawEvents ?? []).map(toCalendarEvent);
+  const events: CalendarEvent[] = (rawEvents ?? []).map((rawEvent) => {
+    const base = toCalendarEvent(rawEvent);
+    const scopeId =
+      colorByScope === "workspace"
+        ? rawEvent.workspaceId
+        : colorByScope === "team"
+          ? rawEvent.teamId
+          : undefined;
+
+    if (!scopeId) {
+      return base;
+    }
+
+    return {
+      ...base,
+      color: pickScopeColor(scopeId.toString()),
+    };
+  });
 
   function handleEventClick(event: CalendarEvent): void {
     setSelectedEventId(extractConvexId(event as NixeloCalendarEvent));
@@ -142,4 +162,13 @@ export function CalendarView({
       )}
     </Flex>
   );
+}
+
+function pickScopeColor(scopeId: string): EventColor {
+  let hash = 0;
+  for (const char of scopeId) {
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  }
+
+  return PALETTE_COLORS[hash % PALETTE_COLORS.length] ?? "blue";
 }

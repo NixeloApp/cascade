@@ -76,6 +76,7 @@ function WorkspaceCalendarPage() {
       <CalendarView
         workspaceId={workspace._id}
         teamId={selectedTeamId === "all" ? undefined : selectedTeamId}
+        colorByScope={selectedTeamId === "all" ? "team" : undefined}
       />
     </Flex>
   );
