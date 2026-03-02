@@ -220,3 +220,14 @@ SLACK_OAUTH_ALERT_WEBHOOK_URL=https://hooks.slack.com/services/xxx
   - external monitoring destination is still undefined (DataDog/Grafana endpoint, credentials, owner).
 - Next Step:
   - when destination is provided, implement push integration + delivery validation; until then continue strict order at Priority `09`.
+
+### 2026-03-02 - Batch G (strict-order revalidation checkpoint)
+
+- Decision:
+  - keep Priority `08` blocked; no further repository-side implementation remains pending external destination selection.
+- Validation:
+  - `pnpm test convex/oauthHealthCheck.test.ts convex/featureFlags.test.ts` => pass (`17 passed`)
+- Blockers:
+  - external monitoring destination contract still missing (DataDog/Grafana endpoint, credentials, owner).
+- Next Step:
+  - once destination is provided, implement push integration + delivery validation; otherwise continue strict order to Priority `09`.
