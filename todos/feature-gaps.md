@@ -74,7 +74,7 @@ Extend webhook infrastructure to support Slack (currently only Pumble).
 ### Phase 3: Link Unfurling
 
 - [ ] Register URL patterns with Slack
-- [ ] Create unfurl handler returning issue details
+- [x] Create unfurl handler returning issue details ✅ 2026-03-02
 
 ---
 
@@ -242,3 +242,32 @@ Extend webhook infrastructure to support Slack (currently only Pumble).
   - Full command production enablement also depends on setting `SLACK_SIGNING_SECRET` in environment.
 - Next Step:
   - complete manual `/nixelo` command registration + signing-secret env setup, then move to `S3` link unfurling implementation.
+
+### 2026-03-02 - Batch F (Slack issue-link unfurl handler)
+
+- Decision:
+  - implement local unfurl backend now and keep Slack-side URL-pattern registration as an external blocker.
+- Change:
+  - added internal unfurl resolver `convex/slackUnfurl.ts`:
+    - resolves team context from `slackConnections`.
+    - extracts issue key from URL.
+    - enforces project access via `canAccessProject(...)`.
+    - returns issue-detail unfurl payload (title + status/priority/assignee metadata).
+  - added HTTP handler `convex/http/slackUnfurl.ts`:
+    - POST `/slack/unfurl` endpoint.
+    - verifies Slack request signatures via `SLACK_SIGNING_SECRET`.
+    - parses Slack unfurl payload and returns Slack `unfurls` response map.
+  - wired route in `convex/router.ts`:
+    - `POST /slack/unfurl`.
+  - added regression tests in `convex/slackUnfurl.test.ts`:
+    - positive issue-link unfurl path.
+    - null/no-key path.
+- Validation:
+  - `pnpm exec biome check --write convex/slackUnfurl.ts convex/http/slackUnfurl.ts convex/slackUnfurl.test.ts convex/router.ts` => pass
+  - `pnpm run typecheck` => pass
+  - `pnpm test convex/slackCommands.test.ts convex/slackUnfurl.test.ts convex/slack.test.ts` => pass (`11 passed`)
+  - `pnpm test convex/issues/mutations.test.ts` => pass (`24 passed`)
+- Blockers:
+  - Slack-side URL-pattern registration for unfurling is still manual/pending in Slack API dashboard.
+- Next Step:
+  - complete manual Slack-side registrations (slash command + URL unfurl patterns) and env setup to fully enable `S2/S3` in production.

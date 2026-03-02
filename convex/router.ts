@@ -43,6 +43,7 @@ import {
   handleCallback as handleSlackCallback,
   initiateAuth as initiateSlackAuth,
 } from "./http/slackOAuth";
+import { handleUnfurl } from "./http/slackUnfurl";
 
 const http = httpRouter();
 
@@ -108,6 +109,12 @@ http.route({
   path: "/slack/commands",
   method: "POST",
   handler: handleSlashCommand,
+});
+
+http.route({
+  path: "/slack/unfurl",
+  method: "POST",
+  handler: handleUnfurl,
 });
 
 // Auth wrapper routes (security)
