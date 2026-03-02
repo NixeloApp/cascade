@@ -163,6 +163,29 @@ async function runInvalidMockHistoryFileCase() {
   }
 }
 
+async function runUnreadableMockHistoryFileCase() {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "e2e-summary-unreadable-mock-"));
+  const unreadablePath = path.join(tempDir, "unreadable.json");
+  fs.writeFileSync(unreadablePath, "{}");
+  fs.chmodSync(unreadablePath, 0o000);
+
+  try {
+    await assert.rejects(
+      () =>
+        buildSummaryLines(
+          reportFixture,
+          makeEnv({
+            E2E_SUMMARY_MOCK_HISTORY_FILE: unreadablePath,
+          }),
+        ),
+      /E2E summary mock history file unreadable/,
+    );
+  } finally {
+    fs.chmodSync(unreadablePath, 0o600);
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+
 async function runMissingReportFileCase() {
   await assert.rejects(
     () => runSummary(path.join(__dirname, "fixtures", "does-not-exist-report.json"), makeEnv()),
@@ -185,6 +208,23 @@ async function runInvalidReportFileCase() {
   }
 }
 
+async function runUnreadableReportFileCase() {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "e2e-summary-unreadable-report-"));
+  const unreadablePath = path.join(tempDir, "unreadable-report.json");
+  fs.writeFileSync(unreadablePath, "{}");
+  fs.chmodSync(unreadablePath, 0o000);
+
+  try {
+    await assert.rejects(
+      () => runSummary(unreadablePath, makeEnv()),
+      /E2E summary report file unreadable/,
+    );
+  } finally {
+    fs.chmodSync(unreadablePath, 0o600);
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+
 await runFallbackCase();
 await runFallbackDirtyCase();
 await runHistoryDerivedCase();
@@ -193,6 +233,8 @@ await runHistoryDerivedFailingFirstCase();
 await runScanLimitTruncationCase();
 await runMissingMockHistoryFileCase();
 await runInvalidMockHistoryFileCase();
+await runUnreadableMockHistoryFileCase();
 await runMissingReportFileCase();
 await runInvalidReportFileCase();
+await runUnreadableReportFileCase();
 console.log("e2e-summary self-test passed");
