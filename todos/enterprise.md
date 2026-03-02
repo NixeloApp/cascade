@@ -270,3 +270,28 @@
 **Next step**
 
 - Continue strict-order execution to Priority `19` while waiting for enterprise unblock inputs.
+
+### 2026-03-02 (Batch I)
+
+**Progress**
+
+- Revalidated shipped enterprise slices in strict-order cycle; no repository-side changes were required.
+
+**Validation**
+
+- `pnpm test src/components/Landing/PricingSection.test.tsx src/lib/sso-discovery.test.ts src/lib/sso-oidc-presets.test.ts convex/sso.test.ts` (`17 passed`)
+
+**Decisions**
+
+- Keep Priority `18` blocked on external prerequisites; avoid speculative billing/IdP scaffolding without validation environments.
+
+**Blockers**
+
+- Unchanged external prerequisites:
+  - billing/provider decisions + credentials,
+  - IdP tenant/callback validation environments,
+  - tooling/infra ownership decisions for remaining enterprise lanes.
+
+**Next step**
+
+- Continue strict-order execution to Priority `19` while waiting for enterprise unblock inputs.
