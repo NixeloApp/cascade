@@ -1451,6 +1451,55 @@ const applicationTables = {
     .index("by_status_scheduled", ["status", "scheduledTime"]),
 
   // ===========================================================================
+  // AGENCY BILLING
+  // Clients and invoices for agency workflows.
+  // ===========================================================================
+
+  clients: defineTable({
+    organizationId: v.id("organizations"),
+    name: v.string(),
+    email: v.string(),
+    company: v.optional(v.string()),
+    address: v.optional(v.string()),
+    hourlyRate: v.optional(v.number()),
+    createdBy: v.id("users"),
+    updatedAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_organization_email", ["organizationId", "email"]),
+
+  invoices: defineTable({
+    organizationId: v.id("organizations"),
+    clientId: v.optional(v.id("clients")),
+    number: v.string(),
+    status: v.union(v.literal("draft"), v.literal("sent"), v.literal("paid"), v.literal("overdue")),
+    issueDate: v.number(),
+    dueDate: v.number(),
+    lineItems: v.array(
+      v.object({
+        description: v.string(),
+        quantity: v.number(),
+        rate: v.number(),
+        amount: v.number(),
+        timeEntryIds: v.optional(v.array(v.id("timeEntries"))),
+      }),
+    ),
+    subtotal: v.number(),
+    tax: v.optional(v.number()),
+    total: v.number(),
+    notes: v.optional(v.string()),
+    pdfUrl: v.optional(v.string()),
+    createdBy: v.id("users"),
+    sentAt: v.optional(v.number()),
+    paidAt: v.optional(v.number()),
+    updatedAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_status", ["organizationId", "status"])
+    .index("by_number", ["organizationId", "number"])
+    .index("by_organization_client", ["organizationId", "clientId"]),
+
+  // ===========================================================================
   // TIME TRACKING
   // Time entries, rates, profiles, compliance
   // ===========================================================================

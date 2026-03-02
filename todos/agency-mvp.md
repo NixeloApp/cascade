@@ -73,11 +73,10 @@ clients: defineTable({
 **Implementation:**
 
 #### Backend
-- [ ] Add `clients` table to schema
-- [ ] Add `invoices` table to schema
-- [ ] Create `convex/clients.ts` with CRUD operations
-- [ ] Create `convex/invoices.ts` with:
-  - `create` - Create draft invoice
+- [x] Add `clients` table to schema
+- [x] Add `invoices` table to schema
+- [x] Create `convex/clients.ts` with CRUD operations
+- [ ] Extend `convex/invoices.ts` beyond base CRUD with:
   - `generateFromTimeEntries` - Auto-populate from time tracking
   - `send` - Mark as sent, trigger email
   - `markPaid` - Update status
@@ -187,7 +186,7 @@ clientPortalTokens: defineTable({
 
 ### Milestones
 
-- [ ] `S1` Schema + backend foundation (`clients`, `invoices`, base CRUD)
+- [x] `S1` Schema + backend foundation (`clients`, `invoices`, base CRUD)
 - [ ] `S2` Invoice generation flow (from time entries + PDF + status lifecycle)
 - [ ] `S3` In-app invoice/client UI (list/detail/editor routes)
 - [ ] `S4` Client portal token model + read-only portal views + revocation
@@ -202,3 +201,15 @@ clientPortalTokens: defineTable({
 
 - Agencies can create clients, generate invoices from tracked time, and mark payment status.
 - Client magic-link portal works with scoped permissions and auditability.
+
+---
+
+## Progress Log
+
+### 2026-03-02 (Priority 11, batch A)
+
+- **Completed:** Implemented `S1` backend foundation for agency billing. Added `clients` and `invoices` schema tables (plus purge coverage), shipped `convex/clients.ts` and `convex/invoices.ts` with base CRUD, totals calculation, invoice number generation (`INV-YYYY-###`), org-scope enforcement, and regression tests in `convex/clients.test.ts` + `convex/invoices.test.ts`.
+- **Validation:** `pnpm run typecheck` (pass), `pnpm test convex/clients.test.ts convex/invoices.test.ts` (pass, 7/7 tests).
+- **Decisions:** Kept S1 scoped to schema + base CRUD only; advanced lifecycle features (`generateFromTimeEntries`, send/paid workflow, PDF output) intentionally deferred to `S2`.
+- **Blockers:** Convex codegen is currently network-blocked in this environment (`fetch failed`), so tests use `anyApi` function references instead of newly generated typed `api` entries.
+- **Next Step:** Start `S2` by implementing `generateFromTimeEntries` and invoice status transitions (`send`, `markPaid`) with tests, then add PDF generation path.

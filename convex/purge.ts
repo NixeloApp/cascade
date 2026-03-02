@@ -49,6 +49,8 @@ export const TABLES: TableNames[] = [
   "calendarConnections",
   "githubConnections",
   "slackConnections",
+  "clients",
+  "invoices",
   "githubRepositories",
   "githubPullRequests",
   "githubCommits",
