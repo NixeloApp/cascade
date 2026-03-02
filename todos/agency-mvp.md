@@ -2,7 +2,7 @@
 
 > **Priority:** P2
 > **Effort:** Large
-> **Status:** Backend partial, UI not started
+> **Status:** Core MVP shipped, polish follow-ups pending
 
 ---
 
@@ -142,7 +142,7 @@ clientPortalTokens: defineTable({
   - [x] `PortalHeader.tsx` - Minimal header without full nav
   - [x] `PortalProjectView.tsx` - Read-only project view
   - [x] `PortalTimeline.tsx` - Activity timeline
-- [ ] Create token management UI in client settings
+- [x] Create token management UI in client management surface
 
 **Security considerations:**
 - Tokens should be long, random strings (use `crypto.randomUUID()`)
@@ -155,18 +155,18 @@ clientPortalTokens: defineTable({
 ## Acceptance Criteria
 
 ### Invoicing
-- [ ] Can create, edit, send, and mark invoices as paid
-- [ ] Can generate invoices from time entries
-- [ ] PDF generation works
-- [ ] Invoice list shows status and totals
-- [ ] Client management CRUD works
+- [x] Can create, edit, send, and mark invoices as paid
+- [x] Can generate invoices from time entries
+- [x] PDF generation works
+- [x] Invoice list shows status and totals
+- [x] Client management CRUD works
 
 ### Client Portal
-- [ ] Clients can access via magic link
-- [ ] Portal shows only permitted projects
-- [ ] Portal is read-only (or comment-only if enabled)
-- [ ] Tokens can be revoked
-- [ ] Access is logged
+- [x] Clients can access via magic link
+- [x] Portal shows only permitted projects
+- [x] Portal is read-only (or comment-only if enabled)
+- [x] Tokens can be revoked
+- [x] Access is logged
 
 ---
 
@@ -189,7 +189,7 @@ clientPortalTokens: defineTable({
 - [x] `S1` Schema + backend foundation (`clients`, `invoices`, base CRUD)
 - [x] `S2` Invoice generation flow (from time entries + PDF + status lifecycle)
 - [x] `S3` In-app invoice/client UI (list/detail/editor routes)
-- [ ] `S4` Client portal token model + read-only portal views + revocation
+- [x] `S4` Client portal token model + read-only portal views + revocation
 
 ### Dependencies
 
@@ -245,3 +245,11 @@ clientPortalTokens: defineTable({
 - **Decisions:** Used a public mutation for `validateToken` so `lastAccessedAt` can be updated atomically during validation; rate limiting for token validation is enabled outside test env.
 - **Blockers:** Client settings token-management UI is still pending, and current portal routes use placeholder content until frontend wiring to `clientPortal` APIs is completed.
 - **Next Step:** Finish remaining S4 frontend work: wire token validation + scoped project/issues rendering in portal routes and add token-management controls under client settings.
+
+### 2026-03-02 (Priority 11, batch F)
+
+- **Completed:** Finished remaining S4 frontend integration. Portal entry/project routes now use live client-portal APIs (token validation, scoped project listing, scoped issue listing), and client-management UI now supports portal-link generation, token listing, and token revocation controls. Added route scaffolding/components and kept revocation workflow tied to admin client management.
+- **Validation:** `pnpm run generate:routes` (pass), `pnpm run typecheck` (pass), `pnpm test convex/clientPortal.test.ts src/config/routes.test.ts` (pass, 43 tests).
+- **Decisions:** Implemented token management in the client-management surface instead of nested settings sub-tab to keep portal controls close to client records and avoid duplicative navigation.
+- **Blockers:** None for core Agency MVP scope; remaining work is polish (branded PDF templates, deeper client-portal presentation, optional comment controls).
+- **Next Step:** Mark Priority 11 complete and continue strict order with Priority 12 (`rich-text-description-followup.md`).

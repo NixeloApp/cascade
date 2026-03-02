@@ -2,6 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Doc } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
+import { anyApi } from "convex/server";
 import { useState } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
@@ -15,15 +16,33 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/clients/")({
   component: ClientsListPage,
 });
 
+const clientPortalApi = anyApi.clientPortal;
+
+type ClientPortalTokenRow = {
+  _id: string;
+  isRevoked: boolean;
+  expiresAt?: number;
+  lastAccessedAt?: number;
+  updatedAt: number;
+};
+
 function ClientsListPage() {
   const { organizationId } = useOrganization();
   const clients = useQuery(api.clients.list, { organizationId }) as Doc<"clients">[] | undefined;
+  const projects = useQuery(api.projects.getCurrentUserProjects, {});
   const createClient = useMutation(api.clients.create);
+  const generatePortalToken = useMutation(clientPortalApi.generateToken);
+  const listPortalTokens = useMutation(clientPortalApi.listTokensByClient);
+  const revokePortalToken = useMutation(clientPortalApi.revokeToken);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
   const [hourlyRate, setHourlyRate] = useState("0");
+  const [generatedPortalLinks, setGeneratedPortalLinks] = useState<Record<string, string>>({});
+  const [portalTokensByClient, setPortalTokensByClient] = useState<
+    Record<string, ClientPortalTokenRow[]>
+  >({});
 
   const handleCreateClient = async () => {
     try {
@@ -41,6 +60,69 @@ function ClientsListPage() {
       showSuccess("Client created");
     } catch (error) {
       showError(error, "Failed to create client");
+    }
+  };
+
+  const handleGeneratePortalLink = async (clientId: string) => {
+    try {
+      const scopedProject = projects?.page.find(
+        (project: { organizationId: string }) => project.organizationId === organizationId,
+      );
+      if (!scopedProject) {
+        showError(
+          "No project available",
+          "Create at least one project before generating a portal link",
+        );
+        return;
+      }
+
+      const response = await generatePortalToken({
+        organizationId,
+        clientId,
+        projectIds: [scopedProject._id],
+        permissions: {
+          viewIssues: true,
+          viewDocuments: false,
+          viewTimeline: true,
+          addComments: false,
+        },
+      });
+
+      setGeneratedPortalLinks((previous) => ({
+        ...previous,
+        [clientId]: response.portalPath,
+      }));
+      showSuccess("Portal link generated");
+    } catch (error) {
+      showError(error, "Failed to generate portal link");
+    }
+  };
+
+  const handleRefreshPortalTokens = async (clientId: string) => {
+    try {
+      const tokens = await listPortalTokens({
+        organizationId,
+        clientId,
+      });
+      setPortalTokensByClient((previous) => ({
+        ...previous,
+        [clientId]: tokens,
+      }));
+    } catch (error) {
+      showError(error, "Failed to load client portal tokens");
+    }
+  };
+
+  const handleRevokePortalToken = async (clientId: string, tokenId: string) => {
+    try {
+      await revokePortalToken({
+        organizationId,
+        tokenId,
+      });
+      showSuccess("Portal token revoked");
+      await handleRefreshPortalTokens(clientId);
+    } catch (error) {
+      showError(error, "Failed to revoke portal token");
     }
   };
 
@@ -104,6 +186,56 @@ function ClientsListPage() {
               <Typography variant="small" color="secondary">
                 Default rate: ${client.hourlyRate?.toFixed(2) ?? "0.00"}
               </Typography>
+              <div className="pt-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button variant="secondary" onClick={() => handleGeneratePortalLink(client._id)}>
+                    Generate portal link
+                  </Button>
+                  <Button variant="ghost" onClick={() => handleRefreshPortalTokens(client._id)}>
+                    Refresh tokens
+                  </Button>
+                </div>
+                {generatedPortalLinks[client._id] ? (
+                  <Typography variant="caption" className="mt-2 block text-brand">
+                    {generatedPortalLinks[client._id]}
+                  </Typography>
+                ) : null}
+                {(portalTokensByClient[client._id] || []).map((token) => (
+                  <div
+                    key={token._id}
+                    className="mt-2 rounded-md border border-ui-border p-2 text-xs text-ui-text-secondary"
+                  >
+                    <Typography variant="caption" className="block">
+                      Token: {token._id}
+                    </Typography>
+                    <Typography variant="caption" className="block">
+                      Status: {token.isRevoked ? "revoked" : "active"}
+                    </Typography>
+                    <Typography variant="caption" className="block">
+                      Updated: {new Date(token.updatedAt).toISOString().slice(0, 10)}
+                    </Typography>
+                    {token.lastAccessedAt ? (
+                      <Typography variant="caption" className="block">
+                        Last accessed: {new Date(token.lastAccessedAt).toISOString().slice(0, 10)}
+                      </Typography>
+                    ) : null}
+                    {token.expiresAt ? (
+                      <Typography variant="caption" className="block">
+                        Expires: {new Date(token.expiresAt).toISOString().slice(0, 10)}
+                      </Typography>
+                    ) : null}
+                    {!token.isRevoked ? (
+                      <Button
+                        variant="ghost"
+                        className="mt-1"
+                        onClick={() => handleRevokePortalToken(client._id, token._id)}
+                      >
+                        Revoke token
+                      </Button>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         ))}

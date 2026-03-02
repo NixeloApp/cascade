@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "convex/react";
+import { anyApi } from "convex/server";
 import { PortalHeader } from "@/components/ClientPortal/PortalHeader";
 import { PortalTimeline } from "@/components/ClientPortal/PortalTimeline";
 import { PageLayout } from "@/components/layout";
@@ -9,8 +11,13 @@ export const Route = createFileRoute("/portal/$token/projects/$projectId")({
   component: ClientPortalProjectPage,
 });
 
+const clientPortalApi = anyApi.clientPortal;
+
 function ClientPortalProjectPage() {
-  const { projectId } = Route.useParams();
+  const { token, projectId } = Route.useParams();
+  const issues = useQuery(clientPortalApi.getIssuesForToken, { token, projectId }) as
+    | Array<{ _id: string; key: string; title: string; status: string; priority: string }>
+    | undefined;
 
   return (
     <PageLayout>
@@ -21,9 +28,23 @@ function ClientPortalProjectPage() {
             <CardTitle>Issues</CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
-            <Typography variant="small" color="secondary">
-              Issue data will render here once token validation and scoped issue queries are wired.
-            </Typography>
+            {issues && issues.length > 0 ? (
+              <div className="space-y-2">
+                {issues.map((issue) => (
+                  <div key={issue._id} className="rounded-lg border border-ui-border p-3">
+                    <Typography variant="small">{issue.key}</Typography>
+                    <Typography variant="small">{issue.title}</Typography>
+                    <Typography variant="caption" color="secondary">
+                      {issue.status} · {issue.priority}
+                    </Typography>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Typography variant="small" color="secondary">
+                No visible issues for this project.
+              </Typography>
+            )}
           </CardContent>
         </Card>
         <PortalTimeline
