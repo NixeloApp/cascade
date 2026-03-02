@@ -207,3 +207,21 @@ Option B: External worker (Cloudflare Worker, Vercel Edge) that calls Convex
 **Next step**
 
 - When prerequisites are provided, start `S4` by implementing schema + monitor CRUD with runner contract chosen up front.
+
+### 2026-03-02 (Batch B)
+
+**Progress**
+
+- Reconfirmed Priority `19` remains blocked with no additional repository-side actions possible before architecture decisions are supplied.
+
+**Decisions**
+
+- Kept this lane blocked and avoided partial schema/route scaffolding that could be invalidated by runner/routing direction changes.
+
+**Blockers**
+
+- Unchanged: runner model, public routing/domain strategy, and alert policy baseline decisions.
+
+**Next step**
+
+- Start `S4` immediately once prerequisites are provided; until then continue next strict-order cycle from Priority `01`.
