@@ -76,11 +76,11 @@ clients: defineTable({
 - [x] Add `clients` table to schema
 - [x] Add `invoices` table to schema
 - [x] Create `convex/clients.ts` with CRUD operations
-- [ ] Extend `convex/invoices.ts` beyond base CRUD with:
+- [x] Extend `convex/invoices.ts` beyond base CRUD with:
   - [x] `generateFromTimeEntries` - Auto-populate from time tracking
   - [x] `send` - Mark as sent, trigger email
   - [x] `markPaid` - Update status
-  - [ ] `generatePdf` - Create PDF (use react-pdf or similar)
+  - [x] `generatePdf` - Create PDF (use react-pdf or similar)
 
 #### Frontend
 - [ ] Create `src/routes/$orgSlug/invoices/index.tsx` - Invoice list
@@ -187,7 +187,7 @@ clientPortalTokens: defineTable({
 ### Milestones
 
 - [x] `S1` Schema + backend foundation (`clients`, `invoices`, base CRUD)
-- [ ] `S2` Invoice generation flow (from time entries + PDF + status lifecycle)
+- [x] `S2` Invoice generation flow (from time entries + PDF + status lifecycle)
 - [ ] `S3` In-app invoice/client UI (list/detail/editor routes)
 - [ ] `S4` Client portal token model + read-only portal views + revocation
 
@@ -221,3 +221,11 @@ clientPortalTokens: defineTable({
 - **Decisions:** Time-entry invoice generation is currently project/org-scoped only (entries without project linkage are excluded), to keep org-boundary checks deterministic.
 - **Blockers:** `generatePdf` remains open pending concrete PDF rendering/storage approach (`react-pdf` template + file upload/storage path) and outbound send-channel decision.
 - **Next Step:** Finish remaining `S2` PDF path (`generatePdf`) and wire `send` to email delivery event once provider/template contract is selected.
+
+### 2026-03-02 (Priority 11, batch C)
+
+- **Completed:** Closed remaining `S2` scope in `convex/invoices.ts`: added authenticated `generatePdf` action that renders invoice content into a stored PDF blob and persists `pdfUrl`; added send-channel wiring in `send` mutation to queue `internal.email.index.sendEmailAction` with invoice summary (subject/html/text) once status transitions to `sent`.
+- **Validation:** `pnpm run typecheck` (pass), `pnpm test convex/clients.test.ts convex/invoices.test.ts` (pass, 9/9 tests), including new PDF generation/access-control coverage.
+- **Decisions:** Implemented deterministic server-side minimal PDF generation (no new dependency install) due current network/codegen instability; retained explicit org-admin authorization for PDF generation and client-email requirement before sending.
+- **Blockers:** PDF output is currently a functional minimal template (summary-focused). Branded layout/theme templating is deferred to UI phase (`S3`) and PDF design pass.
+- **Next Step:** Move to `S3` invoice/client UI routes and editor components while keeping current backend contracts stable.

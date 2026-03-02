@@ -134,6 +134,11 @@ describe("invoices", () => {
 
     const now = Date.now();
     const startOfDay = new Date(now).setHours(0, 0, 0, 0);
+    const { clientId } = await asUser.mutation(clientsApi.create, {
+      organizationId,
+      name: "Lifecycle Client",
+      email: "lifecycle@example.com",
+    });
 
     await t.run(async (ctx) => {
       await ctx.db.insert("timeEntries", {
@@ -165,6 +170,7 @@ describe("invoices", () => {
 
     const generated = await asUser.mutation(invoicesApi.generateFromTimeEntries, {
       organizationId,
+      clientId,
       issueDate: now,
       dueDate: now + 7 * 86400000,
       startDate: startOfDay,
@@ -193,6 +199,7 @@ describe("invoices", () => {
       organizationId,
       invoiceId: generated.invoiceId,
     });
+    await t.finishInProgressScheduledFunctions();
     await asUser.mutation(invoicesApi.markPaid, {
       organizationId,
       invoiceId: generated.invoiceId,
@@ -213,5 +220,38 @@ describe("invoices", () => {
     });
     expect(linkedEntry?.billed).toBe(true);
     expect(linkedEntry?.invoiceId).toBe(generated.invoiceId);
+  });
+
+  it("generates invoice PDF URL for admins and rejects members", async () => {
+    const t = convexTest(schema, modules);
+    const { asUser, organizationId, userId: ownerId } = await createTestContext(t);
+
+    const { invoiceId } = await asUser.mutation(invoicesApi.create, {
+      organizationId,
+      issueDate: Date.now(),
+      dueDate: Date.now() + 7 * 86400000,
+      lineItems: [{ description: "PDF line", quantity: 1, rate: 99 }],
+    });
+
+    const pdfResult = await asUser.action(invoicesApi.generatePdf, {
+      organizationId,
+      invoiceId,
+    });
+    expect(pdfResult.success).toBe(true);
+    expect(pdfResult.pdfUrl).toContain("https://");
+
+    const withPdf = await asUser.query(invoicesApi.get, { organizationId, invoiceId });
+    expect(withPdf.pdfUrl).toBe(pdfResult.pdfUrl);
+
+    const memberId = await createTestUser(t, { name: "Viewer" });
+    await addUserToOrganization(t, organizationId, memberId, ownerId, "member");
+    const asMember = asAuthenticatedUser(t, memberId);
+
+    await expect(
+      asMember.action(invoicesApi.generatePdf, {
+        organizationId,
+        invoiceId,
+      }),
+    ).rejects.toThrow(/admin/i);
   });
 });

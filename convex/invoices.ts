@@ -4,11 +4,15 @@
  * Base CRUD for organization-scoped invoices.
  */
 
+import { Blob } from "node:buffer";
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
-import type { QueryCtx } from "./_generated/server";
+import { internal } from "./_generated/api";
+import type { Doc, Id } from "./_generated/dataModel";
+import { action, internalMutation, internalQuery, type QueryCtx } from "./_generated/server";
 import { organizationAdminMutation, organizationQuery } from "./customFunctions";
-import { conflict, notFound, validation } from "./lib/errors";
+import { conflict, forbidden, notFound, validation } from "./lib/errors";
+import { isOrganizationAdmin } from "./lib/organizationAccess";
 
 const invoiceStatusValidator = v.union(
   v.literal("draft"),
@@ -60,6 +64,119 @@ function calculateTotals(lineItems: ReturnType<typeof normalizeLineItems>, tax?:
     subtotal,
     total: subtotal + taxAmount,
   };
+}
+
+function formatCurrency(amount: number): string {
+  return `$${amount.toFixed(2)}`;
+}
+
+function buildInvoiceSummaryText(invoice: {
+  number: string;
+  issueDate: number;
+  dueDate: number;
+  lineItems: Array<{ description: string; quantity: number; rate: number; amount: number }>;
+  subtotal: number;
+  tax?: number;
+  total: number;
+  notes?: string;
+}) {
+  const lines = [
+    `Invoice ${invoice.number}`,
+    `Issued: ${new Date(invoice.issueDate).toISOString().slice(0, 10)}`,
+    `Due: ${new Date(invoice.dueDate).toISOString().slice(0, 10)}`,
+    "",
+    "Line Items:",
+    ...invoice.lineItems.map(
+      (line, index) =>
+        `${index + 1}. ${line.description} - ${line.quantity.toFixed(2)}h x ${formatCurrency(line.rate)} = ${formatCurrency(line.amount)}`,
+    ),
+    "",
+    `Subtotal: ${formatCurrency(invoice.subtotal)}`,
+    `Tax: ${formatCurrency(invoice.tax ?? 0)}`,
+    `Total: ${formatCurrency(invoice.total)}`,
+  ];
+
+  if (invoice.notes) {
+    lines.push("", `Notes: ${invoice.notes}`);
+  }
+
+  return lines.join("\n");
+}
+
+type InvoiceSummary = Pick<
+  Doc<"invoices">,
+  | "_id"
+  | "organizationId"
+  | "number"
+  | "issueDate"
+  | "dueDate"
+  | "lineItems"
+  | "subtotal"
+  | "tax"
+  | "total"
+  | "notes"
+>;
+
+function buildInvoiceEmailHtml(params: {
+  clientName?: string;
+  invoiceNumber: string;
+  dueDate: number;
+  total: number;
+  pdfUrl?: string;
+}) {
+  const greeting = params.clientName ? `Hi ${params.clientName},` : "Hello,";
+  const dueDate = new Date(params.dueDate).toISOString().slice(0, 10);
+  const pdfLine = params.pdfUrl
+    ? `<p><a href="${params.pdfUrl}">Download invoice PDF</a></p>`
+    : "<p>The invoice PDF will be available shortly.</p>";
+
+  return [
+    `<p>${greeting}</p>`,
+    `<p>Your invoice <strong>${params.invoiceNumber}</strong> is now available.</p>`,
+    `<p>Total: <strong>${formatCurrency(params.total)}</strong></p>`,
+    `<p>Due date: <strong>${dueDate}</strong></p>`,
+    pdfLine,
+    "<p>Thank you.</p>",
+  ].join("");
+}
+
+function buildMinimalPdfFromText(text: string): Blob {
+  const escapedText = text
+    .replaceAll("\\", "\\\\")
+    .replaceAll("(", "\\(")
+    .replaceAll(")", "\\)")
+    .split("\n");
+
+  const startY = 780;
+  const lineHeight = 16;
+  const content = escapedText
+    .map((line, index) => `BT /F1 12 Tf 50 ${startY - index * lineHeight} Td (${line}) Tj ET`)
+    .join("\n");
+
+  const objects = [
+    "1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj",
+    "2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj",
+    "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj",
+    "4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj",
+    `5 0 obj << /Length ${content.length} >> stream\n${content}\nendstream endobj`,
+  ];
+
+  let pdf = "%PDF-1.4\n";
+  const offsets: number[] = [0];
+  for (const object of objects) {
+    offsets.push(pdf.length);
+    pdf += `${object}\n`;
+  }
+
+  const xrefOffset = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n`;
+  pdf += "0000000000 65535 f \n";
+  for (let i = 1; i <= objects.length; i++) {
+    pdf += `${String(offsets[i]).padStart(10, "0")} 00000 n \n`;
+  }
+  pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+
+  return new Blob([pdf], { type: "application/pdf" });
 }
 
 async function assertClientInOrganization(
@@ -390,11 +507,152 @@ export const send = organizationAdminMutation({
       throw conflict("Paid invoices cannot be moved back to sent");
     }
 
+    if (!invoice.clientId) {
+      throw validation("invoiceId", "Invoice must have a client before sending");
+    }
+
+    const client = await ctx.db.get(invoice.clientId);
+    if (!client || client.organizationId !== ctx.organizationId || !client.email) {
+      throw validation("invoiceId", "Invoice client email is required for sending");
+    }
+
     const now = Date.now();
     await ctx.db.patch(args.invoiceId, {
       status: "sent",
       sentAt: invoice.sentAt ?? now,
       updatedAt: now,
+    });
+    if (!process.env.IS_TEST_ENV) {
+      await ctx.scheduler.runAfter(0, internal.email.index.sendEmailAction, {
+        to: client.email,
+        subject: `Invoice ${invoice.number} from Nixelo`,
+        html: buildInvoiceEmailHtml({
+          clientName: client.name,
+          invoiceNumber: invoice.number,
+          dueDate: invoice.dueDate,
+          total: invoice.total,
+          pdfUrl: invoice.pdfUrl,
+        }),
+        text: [
+          `Invoice ${invoice.number}`,
+          `Total: ${formatCurrency(invoice.total)}`,
+          `Due: ${new Date(invoice.dueDate).toISOString().slice(0, 10)}`,
+          invoice.pdfUrl ? `PDF: ${invoice.pdfUrl}` : "PDF: pending generation",
+        ].join("\n"),
+      });
+    }
+
+    return { success: true } as const;
+  },
+});
+
+export const generatePdf = action({
+  args: {
+    organizationId: v.id("organizations"),
+    invoiceId: v.id("invoices"),
+  },
+  returns: v.object({
+    success: v.literal(true),
+    pdfUrl: v.string(),
+  }),
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw forbidden();
+    }
+
+    const invoice = await ctx.runQuery(internal.invoices.getInvoiceForPdfGeneration, {
+      organizationId: args.organizationId,
+      invoiceId: args.invoiceId,
+      userId,
+    });
+
+    const summaryText = buildInvoiceSummaryText(invoice);
+    const pdfBlob = buildMinimalPdfFromText(summaryText);
+    const storageId = await ctx.storage.store(pdfBlob);
+    const pdfUrl = await ctx.storage.getUrl(storageId);
+    if (!pdfUrl) {
+      throw conflict("Unable to generate a public PDF URL for this invoice");
+    }
+
+    await ctx.runMutation(internal.invoices.setPdfUrlInternal, {
+      invoiceId: args.invoiceId,
+      pdfUrl,
+    });
+
+    return { success: true, pdfUrl } as const;
+  },
+});
+
+export const getInvoiceForPdfGeneration = internalQuery({
+  args: {
+    organizationId: v.id("organizations"),
+    invoiceId: v.id("invoices"),
+    userId: v.id("users"),
+  },
+  returns: v.object({
+    _id: v.id("invoices"),
+    organizationId: v.id("organizations"),
+    number: v.string(),
+    issueDate: v.number(),
+    dueDate: v.number(),
+    lineItems: v.array(
+      v.object({
+        description: v.string(),
+        quantity: v.number(),
+        rate: v.number(),
+        amount: v.number(),
+        timeEntryIds: v.optional(v.array(v.id("timeEntries"))),
+      }),
+    ),
+    subtotal: v.number(),
+    tax: v.optional(v.number()),
+    total: v.number(),
+    notes: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const isAdmin = await isOrganizationAdmin(ctx, args.organizationId, args.userId);
+    if (!isAdmin) {
+      throw forbidden("admin", "Only organization admins can generate invoice PDFs");
+    }
+
+    const invoice = await ctx.db.get(args.invoiceId);
+    if (!invoice || invoice.organizationId !== args.organizationId) {
+      throw notFound("invoice", args.invoiceId);
+    }
+
+    const invoiceSummary: InvoiceSummary = {
+      _id: invoice._id,
+      organizationId: invoice.organizationId,
+      number: invoice.number,
+      issueDate: invoice.issueDate,
+      dueDate: invoice.dueDate,
+      lineItems: invoice.lineItems,
+      subtotal: invoice.subtotal,
+      tax: invoice.tax,
+      total: invoice.total,
+      notes: invoice.notes,
+    };
+
+    return invoiceSummary;
+  },
+});
+
+export const setPdfUrlInternal = internalMutation({
+  args: {
+    invoiceId: v.id("invoices"),
+    pdfUrl: v.string(),
+  },
+  returns: v.object({ success: v.literal(true) }),
+  handler: async (ctx, args) => {
+    const invoice = await ctx.db.get(args.invoiceId);
+    if (!invoice) {
+      throw notFound("invoice", args.invoiceId);
+    }
+
+    await ctx.db.patch(args.invoiceId, {
+      pdfUrl: args.pdfUrl,
+      updatedAt: Date.now(),
     });
 
     return { success: true } as const;
