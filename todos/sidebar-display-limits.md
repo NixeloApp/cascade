@@ -37,8 +37,8 @@ Add `SIDEBAR_DISPLAY_LIMIT` constant (25) and use it for sidebar count queries.
 
 ### Milestones
 
-- [ ] `S1` Add sidebar list search trigger when result set exceeds display cap
-- [ ] `S1` Add explicit "Show all" affordance that routes to full list page
+- [x] `S1` Add sidebar list search trigger when result set exceeds display cap
+- [x] `S1` Add explicit "Show all" affordance that routes to full list page
 
 ### Dependencies
 
@@ -47,3 +47,38 @@ Add `SIDEBAR_DISPLAY_LIMIT` constant (25) and use it for sidebar count queries.
 ### Definition of Done
 
 - Sidebar remains low-bandwidth by default while users can still access complete lists.
+
+---
+
+## Progress Updates
+
+### 2026-03-02 (Priority 13, batch A)
+
+**Completed**
+- Implemented sidebar list follow-ups in `src/components/App/AppSidebar.tsx`:
+  - Added conditional sidebar search inputs:
+    - `Search documents` appears when document count exceeds `10`.
+    - `Search workspaces` appears when workspace count exceeds `25`.
+  - Added explicit "Show all" affordances:
+    - `Show all documents (N)` links to document list route.
+    - `Show all workspaces (N)` links to workspace list route.
+  - Added workspace empty-filter state message (`No matching workspaces`).
+  - Ensured `NavSubItem` forwards `onClick` to underlying link for consistent mobile-close behavior.
+- Added coverage in `src/components/App/AppSidebar.test.tsx`:
+  - Document search + show-all affordance behavior.
+  - Workspace search + show-all affordance behavior.
+
+**Validation**
+- `pnpm exec biome check --write src/components/App/AppSidebar.tsx src/components/App/AppSidebar.test.tsx`
+- `pnpm test src/components/App/AppSidebar.test.tsx src/config/routes.test.ts` (`50 passed`)
+- `pnpm run typecheck` (pass)
+
+**Decisions**
+- Applied the search trigger to high-noise sidebar lists (documents and workspaces) where display caps are enforced.
+- Used route-based "Show all" navigation instead of adding sidebar-local pagination UI.
+
+**Blockers**
+- None.
+
+**Next step (strict order)**
+- Move to Priority `14`: `todos/emoji-overhaul.md`.
