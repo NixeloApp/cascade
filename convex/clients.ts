@@ -90,11 +90,12 @@ export const update = organizationAdminMutation({
       throw notFound("client", args.clientId);
     }
 
-    if (args.email && args.email !== client.email) {
+    const newEmail = args.email;
+    if (newEmail && newEmail !== client.email) {
       const existing = await ctx.db
         .query("clients")
         .withIndex("by_organization_email", (q) =>
-          q.eq("organizationId", ctx.organizationId).eq("email", args.email),
+          q.eq("organizationId", ctx.organizationId).eq("email", newEmail),
         )
         .first();
       if (existing && existing._id !== args.clientId) {

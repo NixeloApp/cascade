@@ -301,7 +301,9 @@ describe("Pumble Integration", () => {
         userId,
       });
 
-      const payload = JSON.parse(String(mockSafeFetch.mock.calls.at(-1)?.[1]?.body));
+      const calls = mockSafeFetch.mock.calls;
+      const lastCall = calls[calls.length - 1];
+      const payload = JSON.parse(String(lastCall?.[1]?.body));
       expect(payload.attachments[0].text).toBe("First line\nSecond line");
       expect(payload.attachments[0].text).not.toContain('"type":"p"');
     });

@@ -12,8 +12,8 @@ import { forbidden, notFound } from "./lib/errors";
 import { rateLimit } from "./rateLimits";
 
 function buildPortalToken(): string {
-  const first = crypto.randomUUID().replaceAll("-", "");
-  const second = crypto.randomUUID().replaceAll("-", "");
+  const first = crypto.randomUUID().replace(/-/g, "");
+  const second = crypto.randomUUID().replace(/-/g, "");
   return `${first}${second}`;
 }
 

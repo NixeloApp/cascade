@@ -4,12 +4,11 @@
  * Base CRUD for organization-scoped invoices.
  */
 
-import { Blob } from "node:buffer";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
-import { action, internalMutation, internalQuery, type QueryCtx } from "./_generated/server";
+import { internalMutation, internalQuery, type QueryCtx } from "./_generated/server";
 import { organizationAdminMutation, organizationQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
@@ -36,7 +35,15 @@ type InvoiceLineItemInput = {
   timeEntryIds?: Id<"timeEntries">[];
 };
 
-function normalizeLineItems(lineItems: InvoiceLineItemInput[]) {
+type NormalizedLineItem = {
+  description: string;
+  quantity: number;
+  rate: number;
+  amount: number;
+  timeEntryIds?: Id<"timeEntries">[];
+};
+
+function normalizeLineItems(lineItems: InvoiceLineItemInput[]): NormalizedLineItem[] {
   return lineItems.map((item) => {
     if (item.quantity <= 0) {
       throw validation("lineItems", "Line item quantity must be greater than zero");
@@ -44,17 +51,20 @@ function normalizeLineItems(lineItems: InvoiceLineItemInput[]) {
     if (item.rate < 0) {
       throw validation("lineItems", "Line item rate must be zero or greater");
     }
-    return {
+    const result: NormalizedLineItem = {
       description: item.description,
       quantity: item.quantity,
       rate: item.rate,
       amount: item.quantity * item.rate,
-      timeEntryIds: item.timeEntryIds,
     };
+    if (item.timeEntryIds !== undefined) {
+      result.timeEntryIds = item.timeEntryIds;
+    }
+    return result;
   });
 }
 
-function calculateTotals(lineItems: ReturnType<typeof normalizeLineItems>, tax?: number) {
+function calculateTotals(lineItems: NormalizedLineItem[], tax?: number) {
   if (tax !== undefined && tax < 0) {
     throw validation("tax", "Tax must be zero or greater");
   }
@@ -141,45 +151,6 @@ function buildInvoiceEmailHtml(params: {
   ].join("");
 }
 
-function buildMinimalPdfFromText(text: string): Blob {
-  const escapedText = text
-    .replaceAll("\\", "\\\\")
-    .replaceAll("(", "\\(")
-    .replaceAll(")", "\\)")
-    .split("\n");
-
-  const startY = 780;
-  const lineHeight = 16;
-  const content = escapedText
-    .map((line, index) => `BT /F1 12 Tf 50 ${startY - index * lineHeight} Td (${line}) Tj ET`)
-    .join("\n");
-
-  const objects = [
-    "1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj",
-    "2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj",
-    "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj",
-    "4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj",
-    `5 0 obj << /Length ${content.length} >> stream\n${content}\nendstream endobj`,
-  ];
-
-  let pdf = "%PDF-1.4\n";
-  const offsets: number[] = [0];
-  for (const object of objects) {
-    offsets.push(pdf.length);
-    pdf += `${object}\n`;
-  }
-
-  const xrefOffset = pdf.length;
-  pdf += `xref\n0 ${objects.length + 1}\n`;
-  pdf += "0000000000 65535 f \n";
-  for (let i = 1; i <= objects.length; i++) {
-    pdf += `${String(offsets[i]).padStart(10, "0")} 00000 n \n`;
-  }
-  pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
-
-  return new Blob([pdf], { type: "application/pdf" });
-}
-
 async function assertClientInOrganization(
   ctx: Pick<QueryCtx, "db">,
   organizationId: Id<"organizations">,
@@ -234,10 +205,18 @@ async function getUnbilledBillableEntries(
       (projectId === undefined || entry.projectId === projectId),
   );
 
-  const projectIds = [...new Set(candidateEntries.map((entry) => entry.projectId).filter(Boolean))];
+  const projectIds = [
+    ...new Set(
+      candidateEntries
+        .map((entry) => entry.projectId)
+        .filter((id): id is Id<"projects"> => id !== undefined),
+    ),
+  ];
   const projects = await Promise.all(projectIds.map((id) => ctx.db.get(id)));
   const projectOrgMap = new Map(
-    projects.filter(Boolean).map((project) => [project._id, project.organizationId]),
+    projects
+      .filter((project): project is Doc<"projects"> => project !== null)
+      .map((project) => [project._id, project.organizationId]),
   );
 
   return candidateEntries.filter((entry) => {
@@ -316,11 +295,12 @@ export const list = organizationQuery({
       await assertClientInOrganization(ctx, ctx.organizationId, args.clientId);
     }
 
-    const invoices = args.status
+    const status = args.status;
+    const invoices = status
       ? await ctx.db
           .query("invoices")
           .withIndex("by_status", (q) =>
-            q.eq("organizationId", ctx.organizationId).eq("status", args.status),
+            q.eq("organizationId", ctx.organizationId).eq("status", status),
           )
           .order("desc")
           .take(BOUNDED_LIST_LIMIT)
@@ -549,43 +529,7 @@ export const send = organizationAdminMutation({
   },
 });
 
-export const generatePdf = action({
-  args: {
-    organizationId: v.id("organizations"),
-    invoiceId: v.id("invoices"),
-  },
-  returns: v.object({
-    success: v.literal(true),
-    pdfUrl: v.string(),
-  }),
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw forbidden();
-    }
-
-    const invoice = await ctx.runQuery(internal.invoices.getInvoiceForPdfGeneration, {
-      organizationId: args.organizationId,
-      invoiceId: args.invoiceId,
-      userId,
-    });
-
-    const summaryText = buildInvoiceSummaryText(invoice);
-    const pdfBlob = buildMinimalPdfFromText(summaryText);
-    const storageId = await ctx.storage.store(pdfBlob);
-    const pdfUrl = await ctx.storage.getUrl(storageId);
-    if (!pdfUrl) {
-      throw conflict("Unable to generate a public PDF URL for this invoice");
-    }
-
-    await ctx.runMutation(internal.invoices.setPdfUrlInternal, {
-      invoiceId: args.invoiceId,
-      pdfUrl,
-    });
-
-    return { success: true, pdfUrl } as const;
-  },
-});
+// generatePdf action moved to invoicesActions.ts (requires "use node")
 
 export const getInvoiceForPdfGeneration = internalQuery({
   args: {

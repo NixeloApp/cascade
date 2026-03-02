@@ -4,14 +4,35 @@
  * Handles `/nixelo` slash command requests from Slack.
  */
 
-import { createHmac } from "node:crypto";
 import { internal } from "../_generated/api";
 import { type ActionCtx, httpAction } from "../_generated/server";
 import { constantTimeEqual } from "../lib/apiAuth";
 import { getSlackSigningSecret, isSlackSigningSecretConfigured } from "../lib/env";
 import { escapeHtml } from "../lib/html";
 
-function verifySlackSignature(headers: Headers, rawBody: string): boolean {
+/**
+ * Compute HMAC-SHA256 using Web Crypto API.
+ * Returns hex-encoded digest.
+ */
+async function hmacSha256(key: string, message: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(key);
+  const messageData = encoder.encode(message);
+
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw",
+    keyData,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+
+  const signature = await crypto.subtle.sign("HMAC", cryptoKey, messageData);
+  const hashArray = Array.from(new Uint8Array(signature));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function verifySlackSignature(headers: Headers, rawBody: string): Promise<boolean> {
   if (!isSlackSigningSecretConfigured()) {
     return false;
   }
@@ -33,7 +54,8 @@ function verifySlackSignature(headers: Headers, rawBody: string): boolean {
   }
 
   const baseString = `v0:${timestamp}:${rawBody}`;
-  const expected = `v0=${createHmac("sha256", getSlackSigningSecret()).update(baseString).digest("hex")}`;
+  const hmac = await hmacSha256(getSlackSigningSecret(), baseString);
+  const expected = `v0=${hmac}`;
   return constantTimeEqual(signature, expected);
 }
 
@@ -52,7 +74,7 @@ export const handleSlashCommandHandler = async (ctx: ActionCtx, request: Request
   }
 
   const rawBody = await request.text();
-  if (!verifySlackSignature(request.headers, rawBody)) {
+  if (!(await verifySlackSignature(request.headers, rawBody))) {
     return new Response(
       JSON.stringify({
         response_type: "ephemeral",

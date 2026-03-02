@@ -30,7 +30,7 @@ function InvoiceDetailPage() {
   const updateInvoice = useMutation(api.invoices.update);
   const sendInvoice = useMutation(api.invoices.send);
   const markPaid = useMutation(api.invoices.markPaid);
-  const generatePdf = useAction(api.invoices.generatePdf);
+  const generatePdf = useAction(api.invoicesActions.generatePdf);
 
   if (!invoice) {
     return <PageContent isLoading>{null}</PageContent>;

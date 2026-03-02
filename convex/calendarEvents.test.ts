@@ -375,6 +375,9 @@ describe("calendarEvents", () => {
         if (!currentProject) {
           throw new Error("Project should exist");
         }
+        if (!currentProject.teamId) {
+          throw new Error("Project should have a teamId");
+        }
 
         await ctx.db.insert("teamMembers", {
           teamId: currentProject.teamId,
@@ -383,7 +386,7 @@ describe("calendarEvents", () => {
           addedBy: ownerId,
         });
 
-        return currentProject;
+        return { ...currentProject, teamId: currentProject.teamId };
       });
 
       const now = Date.now();
@@ -426,7 +429,10 @@ describe("calendarEvents", () => {
         if (!currentProject) {
           throw new Error("Project should exist");
         }
-        return currentProject;
+        if (!currentProject.teamId) {
+          throw new Error("Project should have a teamId");
+        }
+        return { ...currentProject, teamId: currentProject.teamId };
       });
 
       const now = Date.now();

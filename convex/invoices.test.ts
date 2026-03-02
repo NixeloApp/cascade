@@ -13,6 +13,7 @@ import {
 
 const clientsApi = anyApi.clients;
 const invoicesApi = anyApi.invoices;
+const invoicesActionsApi = anyApi.invoicesActions;
 
 describe("invoices", () => {
   it("creates invoices with computed totals and generated number", async () => {
@@ -233,7 +234,7 @@ describe("invoices", () => {
       lineItems: [{ description: "PDF line", quantity: 1, rate: 99 }],
     });
 
-    const pdfResult = await asUser.action(invoicesApi.generatePdf, {
+    const pdfResult = await asUser.action(invoicesActionsApi.generatePdf, {
       organizationId,
       invoiceId,
     });
@@ -248,7 +249,7 @@ describe("invoices", () => {
     const asMember = asAuthenticatedUser(t, memberId);
 
     await expect(
-      asMember.action(invoicesApi.generatePdf, {
+      asMember.action(invoicesActionsApi.generatePdf, {
         organizationId,
         invoiceId,
       }),
