@@ -225,6 +225,10 @@ export const ROUTES = {
       build: (orgSlug: string, key: string) => `/${orgSlug}/issues/${key}`,
     },
   },
+  myIssues: {
+    path: "/$orgSlug/my-issues" as const,
+    build: (orgSlug: string) => `/${orgSlug}/my-issues`,
+  },
 
   settings: {
     profile: {

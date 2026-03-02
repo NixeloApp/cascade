@@ -115,6 +115,11 @@ describe("ROUTES configuration", () => {
       expect(ROUTES.issues.detail.path).toBe("/$orgSlug/issues/$key");
       expect(ROUTES.issues.detail.build("acme", "PROJ-123")).toBe("/acme/issues/PROJ-123");
     });
+
+    it("should have correct my issues board route", () => {
+      expect(ROUTES.myIssues.path).toBe("/$orgSlug/my-issues");
+      expect(ROUTES.myIssues.build("acme")).toBe("/acme/my-issues");
+    });
   });
 
   describe("workspace routes", () => {

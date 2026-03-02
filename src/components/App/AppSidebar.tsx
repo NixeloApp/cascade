@@ -263,6 +263,15 @@ export function AppSidebar() {
                 data-tour="nav-issues"
               />
               <NavItem
+                to={ROUTES.myIssues.path}
+                params={{ orgSlug }}
+                icon={FolderKanban}
+                label="My Board"
+                isActive={isActive("/my-issues")}
+                isCollapsed={showCollapsed}
+                onClick={handleNavClick}
+              />
+              <NavItem
                 to={ROUTES.calendar.path}
                 params={{ orgSlug }}
                 icon={Calendar}

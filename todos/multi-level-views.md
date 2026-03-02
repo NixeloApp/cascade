@@ -55,8 +55,8 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/dependencies`
 
 Route: `/:orgSlug/my-issues`
 
-- [ ] Extend dashboard with board view toggle
-- [ ] Group by project or status
+- [x] Extend dashboard with board view toggle
+- [x] Group by project or status
 
 ---
 
@@ -348,3 +348,29 @@ Route: `/:orgSlug/workspaces/:workspaceSlug/teams/:teamSlug/calendar`
   - `react-flow` graph visualization for dependencies is still pending (current UI is a filtered dependency list).
 - Next Step:
   - complete the dependencies visualization requirement with a graph-based view, then implement Personal Board (`/:orgSlug/my-issues`).
+
+### 2026-03-02 - Batch I (personal board route with grouping toggle)
+
+- Decision:
+  - implement Personal Board as a dedicated route (`/:orgSlug/my-issues`) with explicit grouping toggles, instead of overloading the existing dashboard page.
+- Change:
+  - updated routing/navigation:
+    - added `ROUTES.myIssues` in `convex/shared/routes.ts`.
+    - added route `src/routes/_auth/_app/$orgSlug/my-issues.tsx`.
+    - added sidebar nav item `My Board` linking to `ROUTES.myIssues`.
+  - added Personal Board behavior:
+    - board columns group user-assigned issues by `status` or `project` via toggle.
+    - uses paginated source `api.dashboard.getMyIssues` and supports `Load more`.
+  - regenerated route tree:
+    - `pnpm run generate:routes` updated `src/routeTree.gen.ts`.
+  - updated tests:
+    - `src/config/routes.test.ts` covers `ROUTES.myIssues`.
+    - `src/components/App/AppSidebar.test.tsx` revalidated sidebar navigation behavior with new item.
+- Validation:
+  - `pnpm run generate:routes` => pass
+  - `pnpm run typecheck` => pass
+  - `pnpm test src/config/routes.test.ts src/components/App/AppSidebar.test.ts` => pass (`46 passed`)
+- Blockers:
+  - none for Personal Board scope.
+- Next Step:
+  - remaining `multi-level-views` blocker is the dependencies graph visualization requirement (`react-flow`) for cross-team dependencies.
