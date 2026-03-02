@@ -123,6 +123,30 @@ async function runHistoryDerivedDirtyReportCase() {
   assert.match(output, /Error Rate: `33.33%`/);
 }
 
+async function runHistoryDerivedFlakyReportCase() {
+  const flakyReport = {
+    ...reportFixture,
+    stats: {
+      ...reportFixture.stats,
+      expected: 2,
+      unexpected: 0,
+      skipped: 1,
+      flaky: 1,
+    },
+  };
+  const lines = await buildSummaryLines(
+    flakyReport,
+    makeEnv({
+      E2E_SUMMARY_MOCK_HISTORY_FILE: historyFixturePath,
+      E2E_STREAK_SCAN_LIMIT: "250",
+    }),
+  );
+  const output = lines.join("\n");
+
+  assert.match(output, /Clean-Run Checkpoint: `2\/5` \(history-derived\)/);
+  assert.match(output, /- Totals: `2 passed`, `0 failed`, `1 skipped`, `1 flaky`/);
+}
+
 async function runHistoryDerivedFailingFirstCase() {
   const lines = await buildSummaryLines(
     reportFixture,
@@ -425,6 +449,7 @@ await runFallbackDirtyCase();
 await runFallbackFlakyCase();
 await runHistoryDerivedCase();
 await runHistoryDerivedDirtyReportCase();
+await runHistoryDerivedFlakyReportCase();
 await runHistoryDerivedFailingFirstCase();
 await runScanLimitTruncationCase();
 await runInvalidScanLimitFallbackCase();
