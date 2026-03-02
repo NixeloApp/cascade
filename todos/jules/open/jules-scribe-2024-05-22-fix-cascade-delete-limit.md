@@ -88,3 +88,15 @@ Implement a safe way to cascade delete/soft-delete large numbers of children, li
   - none.
 - Next Step:
   - move to Priority `04` (`jules-librarian-2026-02-23-lodash-vulnerability.md`).
+
+### 2026-03-02 - Batch C (strict-order revalidation checkpoint)
+
+- Decision:
+  - keep this item resolved; no further code changes required after current regression rerun.
+- Validation:
+  - `pnpm test convex/lib/relationships.test.ts convex/lib/relationships_overflow.test.ts` => pass (`7 passed`)
+  - confirmed overflow coverage still enforces safe fanout behavior at `BOUNDED_DELETE_BATCH + 1` across delete/soft-delete/restore flows.
+- Blockers:
+  - none.
+- Next Step:
+  - continue strict order with Priority `04` (`jules-librarian-2026-02-23-lodash-vulnerability.md`).
