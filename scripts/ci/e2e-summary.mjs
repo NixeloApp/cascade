@@ -229,6 +229,7 @@ export async function buildSummaryLines(report, env = process.env) {
   const failed = Number(stats.unexpected || 0);
   const skipped = Number(stats.skipped || 0);
   const flaky = Number(stats.flaky || 0);
+  const timedOut = Number(stats.timedOut || 0);
   const interrupted = Number(stats.interrupted || 0);
   const executed = passed + failed;
   const errorRate = executed > 0 ? ((failed / executed) * 100).toFixed(2) : "0.00";
@@ -246,7 +247,7 @@ export async function buildSummaryLines(report, env = process.env) {
   lines.push("## E2E Heatmap");
   lines.push("");
   lines.push(
-    `- Totals: \`${passed} passed\`, \`${failed} failed\`, \`${skipped} skipped\`, \`${flaky} flaky\`, \`${interrupted} interrupted\``,
+    `- Totals: \`${passed} passed\`, \`${failed} failed\`, \`${skipped} skipped\`, \`${flaky} flaky\`, \`${timedOut} timedOut\`, \`${interrupted} interrupted\``,
   );
   lines.push(`- Executed: \`${executed}\` (pass + fail)`);
   lines.push(`- Error Rate: \`${errorRate}%\``);
