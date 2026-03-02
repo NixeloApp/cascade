@@ -53,6 +53,16 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
 - Executed tests (`pass + fail`): `151`
 - Current full-suite error rate: `0.00%` (`0/151`)
 
+### Full Baseline Refresh (2026-03-02, post-guardrail rerun)
+
+- Command: `pnpm exec playwright test --reporter=line > /tmp/playwright-e2e-line.log 2>&1`
+- Total tests: `155`
+- Passed: `151`
+- Failed: `0`
+- Skipped: `4`
+- Executed tests (`pass + fail`): `151`
+- Current full-suite error rate: `0.00%` (`0/151`)
+
 ### Focused Validation Snapshot (2026-03-02, targeted suite)
 
 - Command: `pnpm exec playwright test e2e/activity-feed.spec.ts e2e/analytics.spec.ts e2e/issues.spec.ts e2e/auth.spec.ts --reporter=line`
@@ -631,6 +641,30 @@ Make E2E tests deterministic, robust, and CI-trustworthy:
   - checkpoint mode: `history-derived`
   - expected clean-run streak progression in step summary
   - merged per-spec heatmap table from blob artifacts
+- If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
+- Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
+
+### 2026-03-02 - Batch AY (completed full-suite baseline rerun verification)
+
+- Decision: re-run the full E2E suite end-to-end after hard-rule expansion to confirm no reliability regression in executed tests.
+- Change:
+  - executed full suite:
+    - `pnpm exec playwright test --reporter=line > /tmp/playwright-e2e-line.log 2>&1`
+  - refreshed baseline section with current totals and error-rate snapshot.
+- Validation:
+  - full-suite outcome: `151 passed`, `0 failed`, `4 skipped` (`155` total)
+  - executed-test error rate remains `0.00%` (`0/151`)
+  - latest hard-rule gate remains clean (`pnpm run e2e:hard-rules`): timeout/networkidle/promise-sleep violations `0`, selector baseline `0`
+- Blockers:
+  - final end-to-end confirmation of live `history-derived` mode still requires one real PR CI run context.
+
+### Next Step (strictly next)
+
+- Execute one real PR CI run and confirm `e2e-summary` renders with:
+  - checkpoint mode: `history-derived`
+  - expected clean-run streak progression in step summary
+  - merged per-spec heatmap table from blob artifacts
+  - exact scan-window accounting (`scanned/limit`) and truncation note behavior when applicable
 - If summary output shows branch-history truncation, tune `E2E_STREAK_SCAN_LIMIT` based on observed run density and re-validate.
 - Keep selector baseline at `0` and continue helper-contract enforcement on any new E2E changes.
 
