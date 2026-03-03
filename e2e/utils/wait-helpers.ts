@@ -5,7 +5,7 @@
  * meaningful waits for specific conditions.
  */
 
-import type { Page } from "@playwright/test";
+import { type APIRequestContext, expect, type Page } from "@playwright/test";
 
 /**
  * Wait timeouts used across tests.
@@ -39,8 +39,8 @@ export async function waitForFormReady(page: Page, timeout = 5000): Promise<bool
     });
     return true;
   } catch {
-    // Fallback: wait for DOM to be ready if attribute not found
-    await page.waitForLoadState("domcontentloaded");
+    // Fallback: require full document readiness if form-ready attribute is absent.
+    await page.waitForFunction(() => document.readyState === "complete");
     return false;
   }
 }
@@ -66,8 +66,7 @@ export async function waitForAnimation(page: Page): Promise<void> {
  * Use this on cold starts when elements might not be interactive yet.
  */
 export async function waitForReactHydration(page: Page): Promise<void> {
-  // Wait for DOM to be ready
-  await page.waitForLoadState("domcontentloaded");
+  await page.waitForFunction(() => document.readyState === "complete");
 }
 
 /**
@@ -131,7 +130,7 @@ export async function waitForNavigation(page: Page, urlPattern?: RegExp): Promis
   if (urlPattern) {
     await page.waitForURL(urlPattern);
   }
-  await page.waitForLoadState("domcontentloaded");
+  await page.waitForFunction(() => document.readyState === "complete");
 }
 
 /**
@@ -150,4 +149,82 @@ export async function waitForClickable(
   } catch {
     return false;
   }
+}
+
+/**
+ * Wait for authenticated dashboard app shell to be interactive.
+ * This is the shared readiness contract for dashboard-adjacent specs.
+ */
+export async function waitForDashboardReady(page: Page): Promise<void> {
+  await page.waitForFunction(() => document.readyState === "complete");
+  await expect(page.getByRole("main").last()).toBeVisible();
+  await expect(page.getByRole("button", { name: /open command palette/i })).toBeVisible();
+  const loadingSpinner = page.getByLabel("Loading").or(page.locator("[data-loading-spinner]"));
+  await expect(loadingSpinner).not.toBeVisible();
+}
+
+/**
+ * Wait for project board route and board controls to become interactive.
+ */
+export async function waitForBoardLoaded(page: Page): Promise<void> {
+  await expect(page).toHaveURL(/\/projects\/[A-Z0-9-]+\/board/);
+  const projectBoard = page
+    .locator("[data-project-board]")
+    .or(page.getByRole("heading", { name: /kanban board|scrum board/i }));
+  const createIssueButton = page.getByRole("button", { name: /add issue/i }).first();
+  await expect(projectBoard).toBeVisible();
+  await expect(createIssueButton).toBeVisible();
+  await expect(createIssueButton).toBeEnabled();
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Wait for issue creation completion signal.
+ * The primary signal is modal dismissal; optional title assertion verifies board visibility.
+ */
+export async function waitForIssueCreateSuccess(
+  page: Page,
+  options?: { issueTitle?: string },
+): Promise<void> {
+  const createIssueModal = page
+    .getByRole("dialog")
+    .filter({ hasText: /create.*issue|new.*issue/i });
+  await expect(createIssueModal).not.toBeVisible();
+
+  if (options?.issueTitle) {
+    const titlePattern = new RegExp(escapeRegex(options.issueTitle), "i");
+    const issueCard = page
+      .getByRole("button", { name: titlePattern })
+      .or(page.getByText(options.issueTitle).first())
+      .first();
+    await expect(issueCard).toBeVisible();
+  }
+}
+
+/**
+ * Wait for OAuth auth endpoint redirect and return parsed contract fields.
+ */
+export async function waitForOAuthRedirectComplete(
+  request: APIRequestContext,
+  convexSiteUrl: string,
+): Promise<{ state: string; redirectUri: string; redirectUrl: URL }> {
+  const response = await request.get(`${convexSiteUrl}/google/auth`, {
+    maxRedirects: 0,
+  });
+  expect(response.status()).toBe(302);
+
+  const location = response.headers().location;
+  expect(location).toBeTruthy();
+
+  const redirectUrl = new URL(location as string);
+  const state = redirectUrl.searchParams.get("state");
+  const redirectUri = redirectUrl.searchParams.get("redirect_uri");
+
+  expect(state).toBeTruthy();
+  expect(redirectUri).toBeTruthy();
+
+  return { state: state as string, redirectUri: redirectUri as string, redirectUrl };
 }

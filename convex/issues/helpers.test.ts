@@ -37,6 +37,14 @@ describe("issue helpers", () => {
     it("should trim whitespace", () => {
       expect(getSearchContent("Title", "")).toBe("Title");
     });
+
+    it("should convert rich-text description JSON into searchable plain text", () => {
+      const richDescription = JSON.stringify([
+        { type: "p", children: [{ text: "First line" }] },
+        { type: "p", children: [{ text: "Second line" }] },
+      ]);
+      expect(getSearchContent("Title", richDescription)).toBe("Title First line Second line");
+    });
   });
 
   describe("trackFieldChange", () => {

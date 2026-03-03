@@ -175,7 +175,8 @@ export const rbacTest = base.extend<RbacFixtures>({
     const targetUrl = adminPage.url();
     if (targetUrl === "http://localhost:5555/" || targetUrl.endsWith("/signin")) {
       await adminPage.goto(`/${rbacOrgSlug}/dashboard`);
-      await adminPage.waitForLoadState("domcontentloaded");
+      await expect(adminPage).toHaveURL(/\/dashboard/);
+      await expect(adminPage.getByRole("navigation")).toBeVisible();
     }
     await use(new ProjectsPage(adminPage, rbacOrgSlug));
   },
@@ -198,7 +199,8 @@ export const rbacTest = base.extend<RbacFixtures>({
     const targetUrl = editorPage.url();
     if (targetUrl === "http://localhost:5555/" || targetUrl.endsWith("/signin")) {
       await editorPage.goto(`/${rbacOrgSlug}/dashboard`);
-      await editorPage.waitForLoadState("domcontentloaded");
+      await expect(editorPage).toHaveURL(/\/dashboard/);
+      await expect(editorPage.getByRole("navigation")).toBeVisible();
     }
     await use(new ProjectsPage(editorPage, rbacOrgSlug));
   },
@@ -221,7 +223,8 @@ export const rbacTest = base.extend<RbacFixtures>({
     const targetUrl = viewerPage.url();
     if (targetUrl === "http://localhost:5555/" || targetUrl.endsWith("/signin")) {
       await viewerPage.goto(`/${rbacOrgSlug}/dashboard`);
-      await viewerPage.waitForLoadState("domcontentloaded");
+      await expect(viewerPage).toHaveURL(/\/dashboard/);
+      await expect(viewerPage.getByRole("navigation")).toBeVisible();
     }
     await use(new ProjectsPage(viewerPage, rbacOrgSlug));
   },

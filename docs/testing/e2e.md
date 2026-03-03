@@ -18,6 +18,37 @@ pnpm e2e:headed
 pnpm e2e:debug
 ```
 
+## PR Review Checklist (E2E Reliability)
+
+Use this checklist for any PR that modifies `e2e/` specs, fixtures, page objects, or E2E utilities:
+
+- No `waitForTimeout` introduced in active E2E test flows
+- Wait strategy is state-based (`expect(...).toBeVisible`, `toHaveURL`, `toHaveCount`, `expect.poll`)
+- Shared helper contracts are reused where applicable:
+  - `waitForDashboardReady`
+  - `waitForBoardLoaded`
+  - `waitForIssueCreateSuccess`
+  - `waitForOAuthRedirectComplete`
+- Selectors prioritize semantic roles and test ids over brittle text/CSS-only locators
+- PR includes exact E2E command(s) run and pass/fail/skip outcomes
+
+Automated guard commands:
+
+```bash
+pnpm run e2e:hard-rules
+pnpm run e2e:hard-rules:self-test
+pnpm run e2e:summary:self-test
+```
+
+Current automated checks:
+- hard fail on `waitForTimeout(` in `*.spec.ts(x)` files
+- hard fail on `waitForLoadState("networkidle")` in `*.spec.ts(x)` files
+- baseline-aware regression check for brittle selector anti-patterns:
+  - `locator("text=...")` / `locator(\`text=...\`)`
+  - `:nth-child(...)` / `:nth-of-type(...)`
+
+Baseline file (temporary debt register): `scripts/ci/e2e-hard-rules-baseline.json`
+
 ## Configuration
 
 **File:** `playwright.config.ts`

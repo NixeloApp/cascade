@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { waitForDashboardReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -147,9 +148,13 @@ export class DashboardPage extends BasePage {
     this.workspacesSection = page.getByRole("heading", { name: /workspaces/i });
     this.recentActivitySection = page.getByText(/recent activity/i);
     this.quickStatsSection = page.getByText(/quick stats/i);
-    // Issue filter tabs: "Assigned (0)" and "Created (0)"
-    this.assignedTab = page.getByRole("button", { name: /filter assigned/i });
-    this.createdTab = page.getByRole("button", { name: /filter created/i });
+    // Issue filter tabs: tab role in Radix/Tabs, with button fallback for legacy markup.
+    this.assignedTab = page
+      .getByRole("tab", { name: /^assigned/i })
+      .or(page.getByRole("button", { name: /^assigned/i }));
+    this.createdTab = page
+      .getByRole("tab", { name: /^created/i })
+      .or(page.getByRole("button", { name: /^created/i }));
 
     // Modals - Command Palette (no aria-label, identify by input placeholder)
     this.commandPaletteInput = page.getByPlaceholder(/type a command/i);
@@ -225,8 +230,8 @@ export class DashboardPage extends BasePage {
         finalUrl,
         ". Retrying navigation once...",
       );
-      // Wait for auth state to settle by waiting for load state
-      await this.page.waitForLoadState("domcontentloaded");
+      // Wait for auth redirect chain to settle before retrying navigation
+      await this.page.waitForLoadState("load");
       await this.page.goto(dashboardUrl, { waitUntil: "domcontentloaded" });
       await this.waitForLoad();
       finalUrl = this.page.url(); // Update finalUrl after retry
@@ -262,7 +267,7 @@ export class DashboardPage extends BasePage {
     }
 
     await this.expectLoaded();
-    await this.waitForLoad();
+    await waitForDashboardReady(this.page);
     await expect(this.myIssuesSection).toBeVisible();
   }
 
@@ -281,15 +286,20 @@ export class DashboardPage extends BasePage {
     await tabs[tab].waitFor({ state: "visible" });
 
     // Click and wait for navigation if it's a link-based tab
-    const urlBefore = this.page.url();
     await tabs[tab].click();
 
-    // If it's a navigation tab, wait for URL to actually change or for load to complete
-    if (tab !== "dashboard" || !urlBefore.includes("/dashboard")) {
-      await this.page.waitForLoadState("domcontentloaded");
-    }
+    // Wait for the expected route segment rather than document-load state.
+    const tabPaths = {
+      dashboard: /\/dashboard/,
+      documents: /\/documents/,
+      workspaces: /\/workspaces/,
+      timesheet: /\/timesheet/,
+      calendar: /\/calendar/,
+      settings: /\/settings/,
+    };
+    await expect(this.page).toHaveURL(tabPaths[tab]);
 
-    await this.waitForLoad();
+    await waitForDashboardReady(this.page);
   }
 
   // ===================
@@ -297,9 +307,7 @@ export class DashboardPage extends BasePage {
   // ===================
 
   async openCommandPalette() {
-    await this.waitForLoad();
-    // Wait for command palette button to be actionable (indicates React hydration complete)
-    await this.commandPaletteButton.waitFor({ state: "visible" });
+    await waitForDashboardReady(this.page);
 
     // Use retry pattern - button click may not trigger event handler immediately after hydration
     await expect(async () => {
@@ -386,11 +394,7 @@ export class DashboardPage extends BasePage {
   }
 
   async openGlobalSearch() {
-    // Ensure page is hydrated first
-    await this.waitForLoad();
-
-    // Wait for search button to be ready
-    await this.globalSearchButton.waitFor({ state: "visible" });
+    await waitForDashboardReady(this.page);
 
     // Use retry pattern - click may not register immediately after page load
     await expect(async () => {
@@ -440,7 +444,15 @@ export class DashboardPage extends BasePage {
       assigned: this.assignedTab,
       created: this.createdTab,
     };
-    await tabs[filter].click();
+    await expect(async () => {
+      await expect(tabs[filter]).toBeVisible();
+      await expect(tabs[filter]).toBeEnabled();
+      await tabs[filter].click();
+
+      const ariaSelected = await tabs[filter].getAttribute("aria-selected");
+      const dataState = await tabs[filter].getAttribute("data-state");
+      expect(ariaSelected === "true" || dataState === "active").toBe(true);
+    }).toPass();
   }
 
   // ===================
@@ -468,9 +480,7 @@ export class DashboardPage extends BasePage {
   // ===================
 
   async pressCommandPaletteShortcut() {
-    await this.waitForLoad();
-    // Wait for command palette button to be actionable (indicates React hydration complete)
-    await this.commandPaletteButton.waitFor({ state: "visible" });
+    await waitForDashboardReady(this.page);
     // Use retry logic - keyboard events may not be captured immediately after hydration
     await expect(async () => {
       await this.page.keyboard.press("ControlOrMeta+k");

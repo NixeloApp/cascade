@@ -33,6 +33,8 @@
 import type { Page, Route } from "@playwright/test";
 import { expect } from "@playwright/test";
 
+const GOOGLE_OAUTH_HOST = "accounts.google.com";
+
 export interface GoogleOAuthMockOptions {
   /**
    * Test scenario name - becomes TEST_{scenario} code
@@ -86,9 +88,10 @@ export async function setupGoogleOAuthMock(
   options: GoogleOAuthMockOptions = {},
 ): Promise<void> {
   const { scenario = "user", shouldFail = false, errorType = "access_denied" } = options;
+  const context = page.context();
 
   // Intercept the callback request to inject the E2E API key header
-  await page.route("**/google/callback**", async (route: Route) => {
+  await context.route("**/google/callback**", async (route: Route) => {
     const request = route.request();
     const headers = {
       ...request.headers(),
@@ -98,8 +101,14 @@ export async function setupGoogleOAuthMock(
   });
 
   // Intercept the redirect to Google OAuth
-  await page.route("**/accounts.google.com/**", async (route: Route) => {
-    const url = new URL(route.request().url());
+  await context.route("**/*", async (route: Route) => {
+    const requestUrl = route.request().url();
+    if (!requestUrl.includes(GOOGLE_OAUTH_HOST)) {
+      await route.continue();
+      return;
+    }
+
+    const url = new URL(requestUrl);
 
     // Extract OAuth parameters
     const state = url.searchParams.get("state");
@@ -137,10 +146,13 @@ export async function setupGoogleOAuthMock(
 }
 
 /**
- * Clears all Google OAuth route mocks
+ * Clears Google OAuth route mocks specifically (not all routes)
  */
 export async function clearGoogleOAuthMock(page: Page): Promise<void> {
-  await page.unrouteAll({ behavior: "wait" });
+  const context = page.context();
+  // Unroute only the Google OAuth patterns we registered
+  await context.unroute("**/google/callback**");
+  await context.unroute("**/*", (route) => route.request().url().includes(GOOGLE_OAUTH_HOST));
 }
 
 /**
@@ -182,9 +194,10 @@ export async function setupGoogleCalendarOAuthMock(
   } = {},
 ): Promise<void> {
   const { scenario = "calendar", shouldFail = false } = options;
+  const context = page.context();
 
   // Intercept the callback request to inject the E2E API key header
-  await page.route("**/google/callback**", async (route: Route) => {
+  await context.route("**/google/callback**", async (route: Route) => {
     const request = route.request();
     const headers = {
       ...request.headers(),
@@ -194,8 +207,14 @@ export async function setupGoogleCalendarOAuthMock(
   });
 
   // Intercept the calendar OAuth redirect
-  await page.route("**/accounts.google.com/**", async (route: Route) => {
-    const url = new URL(route.request().url());
+  await context.route("**/*", async (route: Route) => {
+    const requestUrl = route.request().url();
+    if (!requestUrl.includes(GOOGLE_OAUTH_HOST)) {
+      await route.continue();
+      return;
+    }
+
+    const url = new URL(requestUrl);
     const state = url.searchParams.get("state");
     const redirectUri = url.searchParams.get("redirect_uri");
 

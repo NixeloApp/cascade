@@ -36,7 +36,6 @@ const BASE_URL = process.env.BASE_URL || "http://localhost:5555";
 const CONVEX_URL = process.env.VITE_CONVEX_URL || "";
 const SPECS_BASE_DIR = path.join(process.cwd(), "docs", "design", "specs", "pages");
 const FALLBACK_SCREENSHOT_DIR = path.join(process.cwd(), "e2e", "screenshots");
-const SETTLE_MS = 2000;
 
 // Map page identifiers to their spec folder names
 // Pages with specs get screenshots in their spec folder
@@ -189,13 +188,35 @@ async function takeScreenshot(
   } catch {
     // networkidle often times out on real-time apps -- page is still usable
   }
-  await page.waitForTimeout(SETTLE_MS);
+  await waitForScreenshotReady(page);
   await page.screenshot({ path: screenshotPath });
   totalScreenshots++;
 
   // Show relative path for clarity
   const relativePath = path.relative(process.cwd(), screenshotPath);
   console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}`);
+}
+
+async function waitForScreenshotReady(page: Page): Promise<void> {
+  await page.waitForFunction(() => document.readyState === "complete");
+  await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
+
+  // App shell loading indicator may appear during route/query transitions.
+  const loadingSpinner = page
+    .getByLabel("Loading")
+    .or(page.locator("[data-loading-spinner]"))
+    .first();
+  await loadingSpinner.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
+
+  // Wait two animation frames so paint/layout settles before screenshot.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => resolve());
+        });
+      }),
+  );
 }
 
 async function discoverFirstHref(page: Page, pattern: RegExp): Promise<string | null> {
@@ -275,7 +296,7 @@ async function autoLogin(page: Page): Promise<string | null> {
     return null;
   }
 
-  await page.waitForTimeout(2000);
+  await waitForScreenshotReady(page);
   const orgSlug = new URL(page.url()).pathname.split("/").filter(Boolean)[0];
   console.log(`    Logged in. Org: ${orgSlug}`);
   return orgSlug;
@@ -356,7 +377,7 @@ async function screenshotFilledStates(
     try {
       await page.goto(`${BASE_URL}${calendarUrl}`, { waitUntil: "networkidle", timeout: 15000 });
     } catch {}
-    await page.waitForTimeout(SETTLE_MS);
+    await waitForScreenshotReady(page);
 
     // Calendar view-mode screenshots: day, week, month
     const calendarModeTestIds = {
@@ -368,7 +389,7 @@ async function screenshotFilledStates(
       const toggleItem = page.getByTestId(calendarModeTestIds[mode]);
       if ((await toggleItem.count()) > 0) {
         await toggleItem.first().click();
-        await page.waitForTimeout(SETTLE_MS);
+        await waitForScreenshotReady(page);
       }
       const n = nextIndex(p);
       const num = String(n).padStart(2, "0");
@@ -384,7 +405,7 @@ async function screenshotFilledStates(
     const weekToggle = page.getByTestId(TEST_IDS.CALENDAR.MODE_WEEK);
     if ((await weekToggle.count()) > 0) {
       await weekToggle.first().click();
-      await page.waitForTimeout(SETTLE_MS);
+      await waitForScreenshotReady(page);
     }
     // Events are rendered as tabIndex={0} divs with event titles
     const eventEl = page
@@ -392,7 +413,12 @@ async function screenshotFilledStates(
       .filter({ hasText: /Sprint Planning|Design Review|Focus Time|Standup/i });
     if ((await eventEl.count()) > 0) {
       await eventEl.first().click();
-      await page.waitForTimeout(SETTLE_MS);
+      await page
+        .getByRole("dialog")
+        .first()
+        .waitFor({ state: "visible", timeout: 5000 })
+        .catch(() => {});
+      await waitForScreenshotReady(page);
       const n = nextIndex(p);
       const num = String(n).padStart(2, "0");
       const screenshotPath = getScreenshotPath(p, "calendar-event-modal");
@@ -403,7 +429,11 @@ async function screenshotFilledStates(
 
       // Close the modal via Escape
       await page.keyboard.press("Escape");
-      await page.waitForTimeout(500);
+      await page
+        .getByRole("dialog")
+        .first()
+        .waitFor({ state: "hidden", timeout: 5000 })
+        .catch(() => {});
     }
   }
 
@@ -441,7 +471,7 @@ async function screenshotFilledStates(
   await page
     .goto(`${BASE_URL}/${orgSlug}/documents`, { waitUntil: "domcontentloaded", timeout: 15000 })
     .catch(() => {});
-  await page.waitForTimeout(SETTLE_MS);
+  await waitForScreenshotReady(page);
   const docId = await discoverFirstHref(page, /\/documents\/([a-z0-9]+)/);
   if (docId) {
     await takeScreenshot(page, p, "document-editor", `/${orgSlug}/documents/${docId}`);
@@ -506,7 +536,7 @@ async function captureForConfig(
         (u) => /\/[^/]+\/(dashboard|projects|issues)/.test(new URL(u).pathname),
         { timeout: 15000 },
       );
-      await page.waitForTimeout(1500);
+      await waitForScreenshotReady(page);
 
       // Empty states (before seed data is visible in this context)
       await screenshotEmptyStates(page, orgSlug);

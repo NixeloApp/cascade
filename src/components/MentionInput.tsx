@@ -17,6 +17,9 @@ import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
 import { Command, CommandItem, CommandList } from "./ui/Command";
 import { Flex } from "./ui/Flex";
+import { IconButton } from "./ui/IconButton";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
+import { Tooltip } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
 
 interface MentionInputProps {
@@ -29,6 +32,8 @@ interface MentionInputProps {
   /** Enable markdown preview toggle */
   enablePreview?: boolean;
 }
+
+const COMMENT_EMOJIS = ["😀", "👍", "❤️", "🔥", "🎉", "✅", "🚀", "👀"] as const;
 
 /** Textarea with @mention autocomplete and markdown preview toggle. */
 export function MentionInput({
@@ -45,6 +50,7 @@ export function MentionInput({
   const [cursorPosition, setCursorPosition] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [isEmojiOpen, setIsEmojiOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const members = useQuery(api.projectMembers.list, { projectId });
@@ -160,28 +166,77 @@ export function MentionInput({
     }
   };
 
+  const insertEmoji = (emoji: string) => {
+    const selectionStart = textareaRef.current?.selectionStart ?? value.length;
+    const selectionEnd = textareaRef.current?.selectionEnd ?? selectionStart;
+    const newValue = value.slice(0, selectionStart) + emoji + value.slice(selectionEnd);
+
+    onChange(newValue);
+    extractMentions(newValue);
+    setIsEmojiOpen(false);
+
+    const nextCursorPos = selectionStart + emoji.length;
+    setCursorPosition(nextCursorPos);
+
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(nextCursorPos, nextCursorPos);
+      }
+    }, 0);
+  };
+
   return (
     <div className="relative">
       {/* Write/Preview Toggle */}
       {enablePreview && (
-        <Flex gap="xs" className="mb-2">
-          <Button
-            variant={isPreviewMode ? "ghost" : "secondary"}
-            size="sm"
-            onClick={() => setIsPreviewMode(false)}
-          >
-            <Pencil className="w-3.5 h-3.5 mr-1" />
-            Write
-          </Button>
-          <Button
-            variant={isPreviewMode ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setIsPreviewMode(true)}
-            disabled={!value.trim()}
-          >
-            <Eye className="w-3.5 h-3.5 mr-1" />
-            Preview
-          </Button>
+        <Flex justify="between" align="center" className="mb-2">
+          <Flex gap="xs">
+            <Button
+              variant={isPreviewMode ? "ghost" : "secondary"}
+              size="sm"
+              onClick={() => setIsPreviewMode(false)}
+            >
+              <Pencil className="w-3.5 h-3.5 mr-1" />
+              Write
+            </Button>
+            <Button
+              variant={isPreviewMode ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setIsPreviewMode(true)}
+              disabled={!value.trim()}
+            >
+              <Eye className="w-3.5 h-3.5 mr-1" />
+              Preview
+            </Button>
+          </Flex>
+
+          <Popover open={isEmojiOpen} onOpenChange={setIsEmojiOpen}>
+            <Tooltip content="Insert emoji">
+              <PopoverTrigger asChild>
+                <IconButton size="sm" aria-label="Insert emoji" disabled={isPreviewMode}>
+                  <span aria-hidden="true">😊</span>
+                </IconButton>
+              </PopoverTrigger>
+            </Tooltip>
+            <PopoverContent side="bottom" align="end" className="w-auto p-2">
+              <Flex gap="xs" wrap>
+                {COMMENT_EMOJIS.map((emoji) => (
+                  <Tooltip key={emoji} content={emoji}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => insertEmoji(emoji)}
+                      aria-label={`Insert ${emoji}`}
+                      className="h-8 w-8"
+                    >
+                      {emoji}
+                    </Button>
+                  </Tooltip>
+                ))}
+              </Flex>
+            </PopoverContent>
+          </Popover>
         </Flex>
       )}
 
@@ -205,6 +260,8 @@ export function MentionInput({
           value={value}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
+          onClick={(event) => setCursorPosition(event.currentTarget.selectionStart)}
+          onKeyUp={(event) => setCursorPosition(event.currentTarget.selectionStart)}
           placeholder={placeholder}
           className={cn(
             "w-full px-3 py-2 border border-ui-border rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring bg-ui-bg text-ui-text resize-none overflow-hidden",

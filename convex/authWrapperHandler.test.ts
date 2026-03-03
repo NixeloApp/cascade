@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { internal } from "./_generated/api";
 import { securePasswordResetHandler } from "./authWrapper";
+import { shouldRunInlineForE2E } from "./lib/envDetection";
 
 // Mock logger
 vi.mock("./lib/logger", () => ({
@@ -48,6 +49,7 @@ describe("securePasswordResetHandler", () => {
     vi.clearAllMocks();
     mockCtx = {
       runMutation: vi.fn(),
+      runAction: vi.fn(),
     };
     mockRequest = {
       json: vi.fn().mockResolvedValue({ email: "test@example.com" }),
@@ -105,6 +107,7 @@ describe("securePasswordResetHandler", () => {
     mockRequest.json = vi.fn().mockResolvedValue({ email: "  TeSt@ExAmPlE.CoM  " });
 
     mockCtx.runMutation.mockResolvedValue(undefined);
+    mockCtx.runAction.mockResolvedValue(undefined);
 
     const response = await securePasswordResetHandler(mockCtx, mockRequest);
 
@@ -112,10 +115,17 @@ describe("securePasswordResetHandler", () => {
     const body = await response.json();
     expect(body.success).toBe(true);
 
-    // Verify schedulePasswordReset called with normalized email
-    expect(mockCtx.runMutation).toHaveBeenCalledWith(internal.authWrapper.schedulePasswordReset, {
-      email: "test@example.com",
-    });
+    // In CI/E2E mode, uses runAction(performPasswordReset) inline
+    // In production mode, uses runMutation(schedulePasswordReset) async
+    if (shouldRunInlineForE2E()) {
+      expect(mockCtx.runAction).toHaveBeenCalledWith(internal.authWrapper.performPasswordReset, {
+        email: "test@example.com",
+      });
+    } else {
+      expect(mockCtx.runMutation).toHaveBeenCalledWith(internal.authWrapper.schedulePasswordReset, {
+        email: "test@example.com",
+      });
+    }
   });
 
   it("should fallback to 127.0.0.1 if IP is missing in test environment", async () => {

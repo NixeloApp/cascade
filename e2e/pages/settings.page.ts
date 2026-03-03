@@ -234,7 +234,7 @@ export class SettingsPage extends BasePage {
     const currentUrl = new URL(this.page.url());
     currentUrl.searchParams.set("tab", tabParam);
     await this.page.goto(currentUrl.toString());
-    await this.page.waitForLoadState("domcontentloaded");
+    await this.page.waitForFunction(() => document.readyState === "complete");
 
     // For admin tab, wait for the tab to appear (requires isOrganizationAdmin query)
     const waitTimeout = tab === "admin" ? 60000 : 30000;

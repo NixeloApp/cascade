@@ -50,7 +50,7 @@ interface Issue {
     name: string;
     image?: string;
   } | null;
-  labels: { name: string; color: string }[];
+  labels: { name: string; color: string; description?: string }[];
   storyPoints?: number;
   updatedAt: number;
 }
@@ -385,14 +385,25 @@ export const IssueCard = memo(function IssueCard({
         {display.labels && issue.labels.length > 0 && (
           <Flex wrap gap="xs" className="mb-2">
             {issue.labels.slice(0, 3).map((label) => (
-              <Badge
-                key={label.name}
-                size="sm"
-                className="text-brand-foreground"
-                style={{ backgroundColor: label.color }}
-              >
-                {label.name}
-              </Badge>
+              <Tooltip key={label.name} content={label.description || label.name}>
+                <Flex
+                  as="span"
+                  inline
+                  align="center"
+                  justify="center"
+                  onClick={handleClick}
+                  className="pointer-events-auto rounded-sm cursor-default"
+                  aria-hidden="true"
+                >
+                  <Badge
+                    size="sm"
+                    className="text-brand-foreground cursor-help"
+                    style={{ backgroundColor: label.color }}
+                  >
+                    {label.name}
+                  </Badge>
+                </Flex>
+              </Tooltip>
             ))}
             {issue.labels.length > 3 && (
               <Tooltip

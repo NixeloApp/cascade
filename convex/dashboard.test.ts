@@ -257,6 +257,36 @@ describe("Dashboard", () => {
       const result = await asUser.query(api.dashboard.getMyProjects, {});
 
       expect(result[0].myIssues).toBe(3);
+      expect(result[0].totalIssues).toBe(3);
+      await t.finishInProgressScheduledFunctions();
+    });
+
+    it("should keep totalIssues in sync after soft delete", async () => {
+      const t = convexTest(schema, modules);
+      const { userId, organizationId, asUser } = await createTestContext(t);
+
+      const projectId = await createProjectInOrganization(t, userId, organizationId, {
+        name: "Issue Sync Project",
+        key: "SYNC",
+      });
+
+      const issue1 = await createTestIssue(t, projectId, userId, {
+        title: "Issue 1",
+        assigneeId: userId,
+      });
+      const issue2 = await createTestIssue(t, projectId, userId, {
+        title: "Issue 2",
+        assigneeId: userId,
+      });
+      await createTestIssue(t, projectId, userId, { title: "Issue 3", assigneeId: userId });
+
+      await asUser.mutation(api.issues.bulkDelete, {
+        issueIds: [issue1, issue2],
+      });
+
+      const result = await asUser.query(api.dashboard.getMyProjects, {});
+      expect(result[0].totalIssues).toBe(1);
+      expect(result[0].myIssues).toBe(1);
       await t.finishInProgressScheduledFunctions();
     });
 
@@ -543,6 +573,56 @@ describe("Dashboard", () => {
       const result = await asUser.query(api.dashboard.getMyRecentActivity, { limit: 5 });
 
       expect(result.length).toBeLessThanOrEqual(5);
+      await t.finishInProgressScheduledFunctions();
+    });
+
+    it("should exclude activity from projects where user is not a member", async () => {
+      const t = convexTest(schema, modules);
+      const { userId, organizationId, asUser } = await createTestContext(t);
+      const otherUserId = await createTestUser(t, { name: "Other User" });
+
+      await asUser.mutation(api.organizations.addMember, {
+        organizationId,
+        userId: otherUserId,
+        role: "member",
+      });
+
+      const memberProjectId = await createProjectInOrganization(t, userId, organizationId, {
+        name: "Member Project",
+        key: "MP",
+      });
+      const otherProjectId = await createProjectInOrganization(t, otherUserId, organizationId, {
+        name: "Other Project",
+        key: "OP",
+      });
+
+      const memberIssueId = await createTestIssue(t, memberProjectId, userId, {
+        title: "Visible activity issue",
+      });
+      const otherIssueId = await createTestIssue(t, otherProjectId, otherUserId, {
+        title: "Hidden activity issue",
+      });
+
+      await t.run(async (ctx) => {
+        await ctx.db.insert("issueActivity", {
+          issueId: memberIssueId,
+          userId,
+          action: "commented",
+          newValue: "Visible comment",
+        });
+        await ctx.db.insert("issueActivity", {
+          issueId: otherIssueId,
+          userId: otherUserId,
+          action: "commented",
+          newValue: "Hidden comment",
+        });
+      });
+
+      const result = await asUser.query(api.dashboard.getMyRecentActivity, {});
+      const issueTitles = result.map((activity) => activity.issueTitle);
+
+      expect(issueTitles).toContain("Visible activity issue");
+      expect(issueTitles).not.toContain("Hidden activity issue");
       await t.finishInProgressScheduledFunctions();
     });
   });

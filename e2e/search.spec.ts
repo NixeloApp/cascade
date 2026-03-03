@@ -143,12 +143,12 @@ test.describe("Global Search", () => {
     await expect(searchResults).toBeVisible();
 
     // Verify "All" tab is active by default and shows count
-    const allTab = page.getByRole("button", { name: /^all/i });
+    const allTab = page.getByRole("tab", { name: /^all/i });
     await expect(allTab).toBeVisible();
     console.log("✓ All tab visible");
 
     // Click on "Issues" tab
-    const issuesTab = page.getByRole("button", { name: /^issues/i });
+    const issuesTab = page.getByRole("tab", { name: /^issues/i });
     await expect(issuesTab).toBeVisible();
     await issuesTab.click();
 
@@ -157,7 +157,7 @@ test.describe("Global Search", () => {
     console.log("✓ Issue visible in Issues tab");
 
     // Click on "Documents" tab
-    const documentsTab = page.getByRole("button", { name: /^documents/i });
+    const documentsTab = page.getByRole("tab", { name: /^documents/i });
     await expect(documentsTab).toBeVisible();
     await documentsTab.click();
 
@@ -200,7 +200,7 @@ test.describe("Global Search", () => {
 
     // Check that tabs show counts (e.g., "Issues (1)")
     // The count appears as "(N)" after the tab label
-    const issuesTabWithCount = page.getByRole("button", { name: /issues.*\(\d+\)/i });
+    const issuesTabWithCount = page.getByRole("tab", { name: /issues.*\(\d+\)/i });
     await expect(issuesTabWithCount).toBeVisible();
     console.log("✓ Issues tab shows count");
 

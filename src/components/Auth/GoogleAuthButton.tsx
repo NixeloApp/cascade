@@ -6,9 +6,12 @@
  * Displays Google logo with configurable text.
  */
 
+import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
+import { useQuery } from "convex/react";
 import { TEST_IDS } from "@/lib/test-ids";
 import { Button } from "../ui/Button";
+import { Typography } from "../ui/Typography";
 
 interface GoogleAuthButtonProps {
   redirectTo?: string;
@@ -20,6 +23,26 @@ interface GoogleAuthButtonProps {
  */
 export function GoogleAuthButton({ redirectTo, text }: GoogleAuthButtonProps) {
   const { signIn } = useAuthActions();
+  const isGoogleAuthEnabled = useQuery(api.featureFlags.isGoogleAuthEnabled);
+  const isDisabled = isGoogleAuthEnabled === false;
+
+  if (isDisabled) {
+    return (
+      <div className="w-full">
+        <Button
+          variant="secondary"
+          className="w-full px-4 py-3 gap-3"
+          disabled
+          data-testid={TEST_IDS.AUTH.GOOGLE_BUTTON}
+        >
+          Google sign-in temporarily unavailable
+        </Button>
+        <Typography variant="caption" color="secondary" className="mt-2 block text-center">
+          Use email sign-in while OAuth recovery is in progress.
+        </Typography>
+      </div>
+    );
+  }
 
   return (
     <Button

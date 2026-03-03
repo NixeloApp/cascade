@@ -69,33 +69,39 @@ export default defineConfig({
     navigationTimeout: 15 * 1000,
   },
 
-  // Test projects for different browsers/scenarios
-  projects: [
-    // Desktop browsers
-    {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
-    },
-    // Uncomment for cross-browser testing
-    // {
-    //   name: "firefox",
-    //   use: { ...devices["Desktop Firefox"] },
-    // },
-    // {
-    //   name: "webkit",
-    //   use: { ...devices["Desktop Safari"] },
-    // },
-
-    // Mobile viewports
-    // {
-    //   name: "mobile-chrome",
-    //   use: { ...devices["Pixel 5"] },
-    // },
-    // {
-    //   name: "mobile-safari",
-    //   use: { ...devices["iPhone 12"] },
-    // },
-  ],
+  // Test projects for different browsers/scenarios.
+  // Keep default CI/local path chromium-only, and opt into broader coverage with:
+  // E2E_CROSS_BROWSER=1
+  projects:
+    process.env.E2E_CROSS_BROWSER === "1"
+      ? [
+          {
+            name: "chromium",
+            use: { ...devices["Desktop Chrome"] },
+          },
+          {
+            name: "firefox",
+            use: { ...devices["Desktop Firefox"] },
+          },
+          {
+            name: "webkit",
+            use: { ...devices["Desktop Safari"] },
+          },
+          {
+            name: "mobile-chrome",
+            use: { ...devices["Pixel 5"] },
+          },
+          {
+            name: "mobile-safari",
+            use: { ...devices["iPhone 12"] },
+          },
+        ]
+      : [
+          {
+            name: "chromium",
+            use: { ...devices["Desktop Chrome"] },
+          },
+        ],
 
   // Web server configuration
   // Starts BOTH frontend (Vite) AND backend (Convex) for E2E tests

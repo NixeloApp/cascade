@@ -50,6 +50,11 @@ describe("ROUTES configuration", () => {
       expect(ROUTES.dashboard.build("acme")).toBe("/acme/dashboard");
     });
 
+    it("should build organization calendar route with orgSlug", () => {
+      expect(ROUTES.calendar.path).toBe("/$orgSlug/calendar");
+      expect(ROUTES.calendar.build("acme")).toBe("/acme/calendar");
+    });
+
     it("should build time tracking route with orgSlug", () => {
       expect(ROUTES.timeTracking.path).toBe("/$orgSlug/time-tracking");
       expect(ROUTES.timeTracking.build("acme")).toBe("/acme/time-tracking");
@@ -110,6 +115,23 @@ describe("ROUTES configuration", () => {
       expect(ROUTES.issues.detail.path).toBe("/$orgSlug/issues/$key");
       expect(ROUTES.issues.detail.build("acme", "PROJ-123")).toBe("/acme/issues/PROJ-123");
     });
+
+    it("should have correct my issues board route", () => {
+      expect(ROUTES.myIssues.path).toBe("/$orgSlug/my-issues");
+      expect(ROUTES.myIssues.build("acme")).toBe("/acme/my-issues");
+    });
+
+    it("should have correct invoice list/detail routes", () => {
+      expect(ROUTES.invoices.list.path).toBe("/$orgSlug/invoices");
+      expect(ROUTES.invoices.list.build("acme")).toBe("/acme/invoices");
+      expect(ROUTES.invoices.detail.path).toBe("/$orgSlug/invoices/$invoiceId");
+      expect(ROUTES.invoices.detail.build("acme", "inv123")).toBe("/acme/invoices/inv123");
+    });
+
+    it("should have correct client list route", () => {
+      expect(ROUTES.clients.list.path).toBe("/$orgSlug/clients");
+      expect(ROUTES.clients.list.build("acme")).toBe("/acme/clients");
+    });
   });
 
   describe("workspace routes", () => {
@@ -132,10 +154,26 @@ describe("ROUTES configuration", () => {
       );
     });
 
+    it("should have correct workspace calendar route", () => {
+      expect(ROUTES.workspaces.calendar.path).toBe("/$orgSlug/workspaces/$workspaceSlug/calendar");
+      expect(ROUTES.workspaces.calendar.build("acme", "engineering")).toBe(
+        "/acme/workspaces/engineering/calendar",
+      );
+    });
+
     it("should have correct workspace wiki route", () => {
       expect(ROUTES.workspaces.wiki.path).toBe("/$orgSlug/workspaces/$workspaceSlug/wiki");
       expect(ROUTES.workspaces.wiki.build("acme", "engineering")).toBe(
         "/acme/workspaces/engineering/wiki",
+      );
+    });
+
+    it("should have correct workspace dependencies route", () => {
+      expect(ROUTES.workspaces.dependencies.path).toBe(
+        "/$orgSlug/workspaces/$workspaceSlug/dependencies",
+      );
+      expect(ROUTES.workspaces.dependencies.build("acme", "engineering")).toBe(
+        "/acme/workspaces/engineering/dependencies",
       );
     });
 

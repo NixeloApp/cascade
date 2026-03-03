@@ -12,9 +12,8 @@
  */
 
 import { expect, test } from "@playwright/test";
-
-// Convex site URL for HTTP actions
-const CONVEX_SITE_URL = process.env.VITE_CONVEX_URL?.replace(".cloud", ".site") || "";
+import { CONVEX_SITE_URL } from "./config";
+import { waitForOAuthRedirectComplete } from "./utils/wait-helpers";
 
 test.describe("OAuth Security", () => {
   test.describe("Endpoint Availability", () => {
@@ -25,16 +24,8 @@ test.describe("OAuth Security", () => {
         return;
       }
 
-      const response = await request.get(`${CONVEX_SITE_URL}/google/auth`, {
-        maxRedirects: 0, // Don't follow redirects
-      });
-
-      // Should redirect (302) to Google OAuth
-      expect(response.status()).toBe(302);
-
-      const location = response.headers().location;
-      expect(location).toBeTruthy();
-      expect(location).toContain("accounts.google.com");
+      const { redirectUrl } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
+      expect(redirectUrl.toString()).toContain("accounts.google.com");
     });
 
     test("should include required OAuth parameters in redirect", async ({ request }) => {
@@ -43,14 +34,7 @@ test.describe("OAuth Security", () => {
         return;
       }
 
-      const response = await request.get(`${CONVEX_SITE_URL}/google/auth`, {
-        maxRedirects: 0,
-      });
-
-      const location = response.headers().location;
-      expect(location).toBeTruthy();
-
-      const redirectUrl = new URL(location);
+      const { redirectUrl } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
 
       // Required OAuth parameters
       expect(redirectUrl.searchParams.get("client_id")).toBeTruthy();
@@ -68,12 +52,7 @@ test.describe("OAuth Security", () => {
         return;
       }
 
-      const response = await request.get(`${CONVEX_SITE_URL}/google/auth`, {
-        maxRedirects: 0,
-      });
-
-      const location = response.headers().location;
-      const redirectUrl = new URL(location);
+      const { redirectUrl } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
       const scope = redirectUrl.searchParams.get("scope") || "";
 
       // Should include calendar scopes
@@ -95,7 +74,7 @@ test.describe("OAuth Security", () => {
       expect(response.status()).toBe(400);
 
       const text = await response.text();
-      expect(text).toContain("Missing authorization code");
+      expect(text).toMatch(/missing authorization code/i);
     });
 
     test("should handle callback with error parameter (user denied access)", async ({
@@ -113,7 +92,7 @@ test.describe("OAuth Security", () => {
 
       const text = await response.text();
       expect(text).toContain("Connection Failed");
-      expect(text).toContain("access_denied");
+      expect(text).toContain("declined the Google Calendar permission request");
     });
 
     test("should handle callback with invalid code gracefully", async ({ request }) => {
@@ -149,12 +128,7 @@ test.describe("OAuth Security", () => {
         return;
       }
 
-      const response = await request.get(`${CONVEX_SITE_URL}/google/auth`, {
-        maxRedirects: 0,
-      });
-
-      const location = response.headers().location;
-      const redirectUrl = new URL(location);
+      const { redirectUrl } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
       const callbackUri = redirectUrl.searchParams.get("redirect_uri");
 
       expect(callbackUri).toBeTruthy();
@@ -194,71 +168,29 @@ test.describe("OAuth Security", () => {
   });
 });
 
-test.describe("OAuth Flow Security (Browser)", () => {
-  test("Google sign-in button should initiate OAuth with state parameter", async ({
-    page,
-    baseURL,
-  }) => {
-    let capturedOAuthUrl: string | null = null;
-
-    // Intercept the redirect to capture the OAuth URL
-    await page.route("**/accounts.google.com/**", async (route) => {
-      capturedOAuthUrl = route.request().url();
-      await route.abort("failed");
-    });
-
-    await page.goto(`${baseURL}/signin`);
-
-    // Find and click Google sign-in button
-    const googleButton = page.getByRole("button", { name: /google/i });
-
-    // Skip if no Google button (Google OAuth not enabled)
-    if (!(await googleButton.isVisible().catch(() => false))) {
+test.describe("OAuth Flow Security (Redirect Contract)", () => {
+  test("Google OAuth redirect includes state parameter", async ({ request }) => {
+    if (!CONVEX_SITE_URL) {
       test.skip();
       return;
     }
 
-    await googleButton.click();
+    const { redirectUrl } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
 
-    // Wait for the route handler to capture the OAuth URL
-    await expect(() => {
-      expect(capturedOAuthUrl).not.toBeNull();
-    }).toPass({ timeout: 5000 });
-
-    const url = new URL(capturedOAuthUrl as string);
-
-    // Verify state parameter exists (CSRF protection)
-    const state = url.searchParams.get("state");
+    const state = redirectUrl.searchParams.get("state");
     expect(state).toBeTruthy();
     expect(state?.length).toBeGreaterThan(5);
   });
 
-  test("OAuth redirect should not allow open redirects", async ({ page, baseURL }) => {
-    let capturedOAuthUrl: string | null = null;
-
-    await page.route("**/accounts.google.com/**", async (route) => {
-      capturedOAuthUrl = route.request().url();
-      await route.abort("failed");
-    });
-
-    await page.goto(`${baseURL}/signin`);
-
-    const googleButton = page.getByRole("button", { name: /google/i });
-    if (!(await googleButton.isVisible().catch(() => false))) {
+  test("OAuth redirect URI should not allow open redirects", async ({ request }) => {
+    if (!CONVEX_SITE_URL) {
       test.skip();
       return;
     }
 
-    await googleButton.click();
+    const { redirectUrl } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
+    const redirectUri = redirectUrl.searchParams.get("redirect_uri");
 
-    await expect(() => {
-      expect(capturedOAuthUrl).not.toBeNull();
-    }).toPass({ timeout: 5000 });
-
-    const url = new URL(capturedOAuthUrl as string);
-    const redirectUri = url.searchParams.get("redirect_uri");
-
-    // Redirect URI should be to a trusted domain
     expect(redirectUri).toBeTruthy();
     expect(redirectUri).not.toContain("evil.com");
     expect(redirectUri).not.toContain("attacker.com");

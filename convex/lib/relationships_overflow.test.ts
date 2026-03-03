@@ -3,13 +3,12 @@ import { describe, expect, it } from "vitest";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import { BOUNDED_DELETE_BATCH } from "./boundedQueries";
-import { cascadeDelete } from "./relationships";
+import { cascadeDelete, cascadeRestore, cascadeSoftDelete } from "./relationships";
 
 describe("Relationship Cascade Operations - Overflow", () => {
-  it("should fail to delete all children if count > BOUNDED_DELETE_BATCH", async () => {
+  async function setupProjectWithIssues(issueCount: number) {
     const t = convexTest(schema, modules);
 
-    // 1. Setup Data
     const userId = await t.run(async (ctx) => {
       return ctx.db.insert("users", {
         name: "Test User",
@@ -58,12 +57,8 @@ describe("Relationship Cascade Operations - Overflow", () => {
       });
     });
 
-    // Create BOUNDED_DELETE_BATCH + 1 issues
-    const numIssues = BOUNDED_DELETE_BATCH + 1;
-
-    // Create in batches of 50 to avoid hitting limits during setup if any
     await t.run(async (ctx) => {
-      for (let i = 0; i < numIssues; i++) {
+      for (let i = 0; i < issueCount; i++) {
         await ctx.db.insert("issues", {
           title: `Issue ${i}`,
           projectId,
@@ -85,7 +80,13 @@ describe("Relationship Cascade Operations - Overflow", () => {
       }
     });
 
-    // Verify count before delete
+    return { t, userId, projectId };
+  }
+
+  it("should cascade hard delete all children even when count > BOUNDED_DELETE_BATCH", async () => {
+    const numIssues = BOUNDED_DELETE_BATCH + 1;
+    const { t, projectId } = await setupProjectWithIssues(numIssues);
+
     const countBefore = await t.run(async (ctx) => {
       return (
         await ctx.db
@@ -96,17 +97,12 @@ describe("Relationship Cascade Operations - Overflow", () => {
     });
     expect(countBefore).toBe(numIssues);
 
-    // 2. Execute cascade delete
-    // Should now throw an error because of overflow
-    await expect(
-      t.run(async (ctx) => {
-        await cascadeDelete(ctx, "projects", projectId);
-        // Manually delete the parent
-        await ctx.db.delete(projectId);
-      }),
-    ).rejects.toThrow(/Cannot cascade delete: projects .* has too many issues records/);
+    await t.run(async (ctx) => {
+      await cascadeDelete(ctx, "projects", projectId);
+      await ctx.db.delete(projectId);
+    });
 
-    // 3. Verify no deletion happened (transaction aborted)
+    const projectAfter = await t.run(async (ctx) => ctx.db.get(projectId));
     const countAfter = await t.run(async (ctx) => {
       return (
         await ctx.db
@@ -116,7 +112,62 @@ describe("Relationship Cascade Operations - Overflow", () => {
       ).length;
     });
 
-    // Expect all issues to remain because the transaction threw
-    expect(countAfter).toBe(numIssues);
+    expect(projectAfter).toBeNull();
+    expect(countAfter).toBe(0);
+  });
+
+  it("should cascade soft delete all children even when count > BOUNDED_DELETE_BATCH", async () => {
+    const numIssues = BOUNDED_DELETE_BATCH + 1;
+    const { t, userId, projectId } = await setupProjectWithIssues(numIssues);
+    const now = Date.now();
+
+    await t.run(async (ctx) => {
+      await cascadeSoftDelete(ctx, "projects", projectId, userId, now);
+      await ctx.db.patch(projectId, { isDeleted: true, deletedAt: now, deletedBy: userId });
+    });
+
+    const deletedIssueCount = await t.run(async (ctx) => {
+      return (
+        await ctx.db
+          .query("issues")
+          .withIndex("by_project", (q) => q.eq("projectId", projectId))
+          .filter((q) => q.eq(q.field("isDeleted"), true))
+          .collect()
+      ).length;
+    });
+
+    expect(deletedIssueCount).toBe(numIssues);
+  });
+
+  it("should cascade restore all children even when count > BOUNDED_DELETE_BATCH", async () => {
+    const numIssues = BOUNDED_DELETE_BATCH + 1;
+    const { t, userId, projectId } = await setupProjectWithIssues(numIssues);
+    const now = Date.now();
+
+    await t.run(async (ctx) => {
+      await cascadeSoftDelete(ctx, "projects", projectId, userId, now);
+      await ctx.db.patch(projectId, { isDeleted: true, deletedAt: now, deletedBy: userId });
+    });
+
+    await t.run(async (ctx) => {
+      await cascadeRestore(ctx, "projects", projectId);
+      await ctx.db.patch(projectId, {
+        isDeleted: undefined,
+        deletedAt: undefined,
+        deletedBy: undefined,
+      });
+    });
+
+    const restoredIssueCount = await t.run(async (ctx) => {
+      return (
+        await ctx.db
+          .query("issues")
+          .withIndex("by_project", (q) => q.eq("projectId", projectId))
+          .filter((q) => q.neq(q.field("isDeleted"), true))
+          .collect()
+      ).length;
+    });
+
+    expect(restoredIssueCount).toBe(numIssues);
   });
 });

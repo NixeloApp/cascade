@@ -88,10 +88,7 @@ test.describe("Permission Cascade", () => {
     // Navigate to workspaces
     await workspacesPage.goto();
 
-    // Verify the workspaces list loads
-    await page.waitForLoadState("domcontentloaded");
-
-    // User should see either workspaces or empty state
+    // User should see either workspaces or empty state.
     // Both are valid depending on organization setup
     const workspacesList = page.locator("main");
     await expect(workspacesList).toBeVisible();
@@ -107,10 +104,7 @@ test.describe("Permission Cascade", () => {
     // Navigate to projects
     await projectsPage.goto();
 
-    // Verify the projects page loads
-    await page.waitForLoadState("domcontentloaded");
-
-    // User should see either projects or empty state
+    // User should see either projects or empty state.
     const projectsList = page.locator("main");
     await expect(projectsList).toBeVisible();
     console.log("✓ Projects page accessible");
@@ -124,7 +118,6 @@ test.describe("Permission Cascade", () => {
   test("accessing non-existent project shows error", async ({ page, orgSlug }) => {
     // Try to access a project that doesn't exist
     await page.goto(`/${orgSlug}/projects/NONEXISTENT/board`);
-    await page.waitForLoadState("domcontentloaded");
 
     // Wait for the "Project Not Found" heading
     const notFoundHeading = page.getByRole("heading", { name: /project not found/i });
@@ -199,7 +192,6 @@ test.describe("Permission Cascade", () => {
 
     if (await membersTab.isVisible().catch(() => false)) {
       await membersTab.click();
-      await page.waitForLoadState("domcontentloaded");
 
       // Verify members list or table is visible
       const membersList = page.getByRole("table").or(page.locator("[data-members-list]"));

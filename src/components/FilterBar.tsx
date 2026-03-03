@@ -406,7 +406,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
           <Search className="absolute left-2 w-4 h-4 text-ui-text-tertiary pointer-events-none" />
           <Input
             type="text"
-            placeholder="Search issues..."
+            placeholder="Search or use status:done priority:high"
             value={filters.query ?? ""}
             onChange={handleSearchChange}
             className="h-8 pl-8 pr-3 w-48"

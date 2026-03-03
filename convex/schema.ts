@@ -129,6 +129,9 @@ const applicationTables = {
     ),
     oidcConfig: v.optional(
       v.object({
+        provider: v.optional(
+          v.union(v.literal("google-workspace"), v.literal("microsoft-entra"), v.literal("okta")),
+        ),
         issuer: v.optional(v.string()),
         clientId: v.optional(v.string()),
         clientSecret: v.optional(v.string()),
@@ -154,6 +157,17 @@ const applicationTables = {
     .index("by_domain", ["domain"])
     .index("by_connection", ["connectionId"])
     .index("by_organization", ["organizationId"]),
+
+  featureFlags: defineTable({
+    name: v.string(),
+    enabled: v.boolean(),
+    description: v.optional(v.string()),
+    reason: v.optional(v.string()),
+    updatedAt: v.number(),
+    updatedBy: v.optional(v.id("users")),
+  })
+    .index("by_name", ["name"])
+    .index("by_enabled", ["enabled"]),
 
   invites: defineTable({
     email: v.string(),
@@ -298,6 +312,7 @@ const applicationTables = {
     // Hierarchy - every doc belongs to an org, optionally scoped to workspace/project
     organizationId: v.id("organizations"),
     workspaceId: v.optional(v.id("workspaces")),
+    teamId: v.optional(v.id("teams")),
     projectId: v.optional(v.id("projects")),
     // Nested pages - parent document and sibling order
     parentId: v.optional(v.id("documents")),
@@ -320,6 +335,7 @@ const applicationTables = {
     .index("by_public", ["isPublic"])
     .index("by_organization", ["organizationId"])
     .index("by_workspace", ["workspaceId"])
+    .index("by_team", ["teamId"])
     .index("by_project", ["projectId"])
     .index("by_creator_public_updated", ["createdBy", "isPublic", "updatedAt"])
     .index("by_deleted", ["isDeleted"])
@@ -335,7 +351,14 @@ const applicationTables = {
     ])
     .searchIndex("search_title", {
       searchField: "title",
-      filterFields: ["isPublic", "createdBy", "organizationId", "workspaceId", "projectId"],
+      filterFields: [
+        "isPublic",
+        "createdBy",
+        "organizationId",
+        "workspaceId",
+        "teamId",
+        "projectId",
+      ],
     }),
 
   documentVersions: defineTable({
@@ -385,7 +408,17 @@ const applicationTables = {
     name: v.string(),
     description: v.optional(v.string()),
     category: v.string(), // "meeting", "planning", "design", "engineering"
-    icon: v.string(),
+    icon: v.union(
+      v.string(),
+      v.object({
+        type: v.literal("lucide"),
+        name: v.string(),
+      }),
+      v.object({
+        type: v.literal("emoji"),
+        value: v.string(),
+      }),
+    ),
     content: blockNoteContent,
     isBuiltIn: v.boolean(),
     isPublic: v.boolean(),
@@ -501,6 +534,7 @@ const applicationTables = {
     .index("by_team_status_deleted", ["teamId", "status", "isDeleted"])
     .index("by_deleted", ["isDeleted"])
     .index("by_project_deleted", ["projectId", "isDeleted"])
+    .index("by_project_priority_deleted", ["projectId", "priority", "isDeleted"])
     .index("by_project_assignee", ["projectId", "assigneeId", "isDeleted"])
     .index("by_project_assignee_status", ["projectId", "assigneeId", "status", "isDeleted"])
     .index("by_project_reporter", ["projectId", "reporterId", "isDeleted"])
@@ -529,11 +563,18 @@ const applicationTables = {
     .index("by_project_type", ["projectId", "type"])
     .index("by_project_type_deleted", ["projectId", "type", "isDeleted"]),
 
+  projectIssueStats: defineTable({
+    projectId: v.id("projects"),
+    totalIssues: v.number(),
+    updatedAt: v.number(),
+  }).index("by_project", ["projectId"]),
+
   issueComments: defineTable({
     issueId: v.id("issues"),
     authorId: v.id("users"),
     content: v.string(),
     mentions: v.array(v.id("users")),
+    attachments: v.optional(v.array(v.id("_storage"))),
     updatedAt: v.number(),
     isDeleted: v.optional(v.boolean()),
     deletedAt: v.optional(v.number()),
@@ -642,6 +683,7 @@ const applicationTables = {
     projectId: v.id("projects"),
     groupId: v.optional(v.id("labelGroups")),
     name: v.string(),
+    description: v.optional(v.string()),
     color: v.string(), // Hex: "#3B82F6"
     displayOrder: v.optional(v.number()),
     createdBy: v.id("users"),
@@ -920,6 +962,9 @@ const applicationTables = {
     organizerId: v.id("users"),
     attendeeIds: v.array(v.id("users")),
     externalAttendees: v.optional(v.array(v.string())),
+    organizationId: v.optional(v.id("organizations")),
+    workspaceId: v.optional(v.id("workspaces")),
+    teamId: v.optional(v.id("teams")),
     projectId: v.optional(v.id("projects")),
     issueId: v.optional(v.id("issues")),
     status: calendarStatuses,
@@ -933,6 +978,9 @@ const applicationTables = {
   })
     .index("by_organizer", ["organizerId", "startTime"])
     .index("by_attendee_start", ["attendeeIds", "startTime"])
+    .index("by_organization", ["organizationId"])
+    .index("by_workspace", ["workspaceId"])
+    .index("by_team", ["teamId"])
     .index("by_project", ["projectId"])
     .index("by_issue", ["issueId"])
     .index("by_start_time", ["startTime"])
@@ -940,7 +988,14 @@ const applicationTables = {
     .index("by_required", ["isRequired"])
     .searchIndex("search_title", {
       searchField: "title",
-      filterFields: ["organizerId", "projectId", "status"],
+      filterFields: [
+        "organizerId",
+        "organizationId",
+        "workspaceId",
+        "teamId",
+        "projectId",
+        "status",
+      ],
     }),
 
   meetingAttendance: defineTable({
@@ -1093,6 +1148,24 @@ const applicationTables = {
   })
     .index("by_user", ["userId"])
     .index("by_github_user", ["githubUserId"]),
+
+  slackConnections: defineTable({
+    userId: v.id("users"),
+    teamId: v.string(),
+    teamName: v.string(),
+    accessToken: v.string(),
+    botUserId: v.optional(v.string()),
+    scope: v.optional(v.string()),
+    incomingWebhookUrl: v.optional(v.string()),
+    incomingWebhookChannel: v.optional(v.string()),
+    isActive: v.boolean(),
+    messagesSent: v.optional(v.number()),
+    lastMessageAt: v.optional(v.number()),
+    lastError: v.optional(v.string()),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_team", ["teamId"]),
 
   githubRepositories: defineTable({
     projectId: v.id("projects"),
@@ -1390,6 +1463,77 @@ const applicationTables = {
     .index("by_scheduled_time", ["scheduledTime"])
     .index("by_next_attempt", ["nextAttemptAt"])
     .index("by_status_scheduled", ["status", "scheduledTime"]),
+
+  // ===========================================================================
+  // AGENCY BILLING
+  // Clients and invoices for agency workflows.
+  // ===========================================================================
+
+  clients: defineTable({
+    organizationId: v.id("organizations"),
+    name: v.string(),
+    email: v.string(),
+    company: v.optional(v.string()),
+    address: v.optional(v.string()),
+    hourlyRate: v.optional(v.number()),
+    createdBy: v.id("users"),
+    updatedAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_organization_email", ["organizationId", "email"]),
+
+  invoices: defineTable({
+    organizationId: v.id("organizations"),
+    clientId: v.optional(v.id("clients")),
+    number: v.string(),
+    status: v.union(v.literal("draft"), v.literal("sent"), v.literal("paid"), v.literal("overdue")),
+    issueDate: v.number(),
+    dueDate: v.number(),
+    lineItems: v.array(
+      v.object({
+        description: v.string(),
+        quantity: v.number(),
+        rate: v.number(),
+        amount: v.number(),
+        timeEntryIds: v.optional(v.array(v.id("timeEntries"))),
+      }),
+    ),
+    subtotal: v.number(),
+    tax: v.optional(v.number()),
+    total: v.number(),
+    notes: v.optional(v.string()),
+    pdfUrl: v.optional(v.string()),
+    createdBy: v.id("users"),
+    sentAt: v.optional(v.number()),
+    paidAt: v.optional(v.number()),
+    updatedAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_status", ["organizationId", "status"])
+    .index("by_number", ["organizationId", "number"])
+    .index("by_organization_client", ["organizationId", "clientId"]),
+
+  clientPortalTokens: defineTable({
+    organizationId: v.id("organizations"),
+    clientId: v.id("clients"),
+    token: v.string(),
+    projectIds: v.array(v.id("projects")),
+    permissions: v.object({
+      viewIssues: v.boolean(),
+      viewDocuments: v.boolean(),
+      viewTimeline: v.boolean(),
+      addComments: v.boolean(),
+    }),
+    expiresAt: v.optional(v.number()),
+    lastAccessedAt: v.optional(v.number()),
+    isRevoked: v.boolean(),
+    revokedAt: v.optional(v.number()),
+    createdBy: v.id("users"),
+    updatedAt: v.number(),
+  })
+    .index("by_token", ["token"])
+    .index("by_client", ["clientId"])
+    .index("by_organization", ["organizationId"]),
 
   // ===========================================================================
   // TIME TRACKING

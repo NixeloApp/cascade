@@ -96,7 +96,11 @@ export const authenticatedTest = base.extend<AuthFixtures>({
       // 4. Navigate to the intended destination
       const destination = orgSlug ? `/${orgSlug}/dashboard` : "/";
       await page.goto(destination);
-      await page.waitForLoadState("domcontentloaded");
+      if (orgSlug) {
+        await expect(page).toHaveURL(/\/dashboard/);
+      } else {
+        await expect(page).toHaveURL(/\/$/);
+      }
     };
 
     await use(authenticate);
@@ -195,7 +199,7 @@ export const onboardingTest = base.extend<AuthFixtures>({
 
       // 4. Ensure we are at /onboarding
       await page.goto(onboardingUrl);
-      await page.waitForLoadState("domcontentloaded");
+      await expect(page).toHaveURL(/\/onboarding/);
     };
 
     await use(authenticate);

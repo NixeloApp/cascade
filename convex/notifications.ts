@@ -6,6 +6,7 @@
  * Integrates with email digests for offline notification delivery.
  */
 
+import type { FilterBuilder, GenericTableInfo } from "convex/server";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { asyncMap } from "convex-helpers";
@@ -18,15 +19,22 @@ import { requireOwned } from "./lib/errors";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 
-/** Get paginated notifications for the current user, optionally filtered to unread only. */
+/** Get paginated notifications for the current user, optionally filtered to unread only or by type. */
 export const list = authenticatedQuery({
   args: {
     paginationOpts: paginationOptsValidator,
     onlyUnread: v.optional(v.boolean()),
+    types: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const onlyUnread = args.onlyUnread ?? false;
+    const types = args.types;
     const now = Date.now();
+
+    // Build type filter function if types are specified
+    const typeFilter = types
+      ? (q: FilterBuilder<GenericTableInfo>) => q.or(...types.map((t) => q.eq(q.field("type"), t)))
+      : null;
 
     const results = await fetchPaginatedQuery<Doc<"notifications">>(ctx, {
       paginationOpts: args.paginationOpts,
@@ -44,6 +52,8 @@ export const list = authenticatedQuery({
                 q.neq(q.field("isArchived"), true),
                 // Filter out currently snoozed notifications
                 q.or(q.eq(q.field("snoozedUntil"), undefined), q.lt(q.field("snoozedUntil"), now)),
+                // Filter by notification type if specified
+                typeFilter ? typeFilter(q) : true,
               ),
             );
         }
@@ -55,6 +65,8 @@ export const list = authenticatedQuery({
               q.neq(q.field("isArchived"), true),
               // Filter out currently snoozed notifications
               q.or(q.eq(q.field("snoozedUntil"), undefined), q.lt(q.field("snoozedUntil"), now)),
+              // Filter by notification type if specified
+              typeFilter ? typeFilter(q) : true,
             ),
           );
       },

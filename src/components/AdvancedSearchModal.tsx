@@ -10,7 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
 import { useQuery } from "convex/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Typography } from "@/components/ui/Typography";
 import { ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { FilterCheckboxGroup } from "./AdvancedSearchModal/FilterCheckboxGroup";
@@ -27,7 +27,7 @@ import { Stack } from "./ui/Stack";
 interface AdvancedSearchModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectIssue: (issueId: Id<"issues">) => void;
+  onSelectIssue: (issueId: Id<"issues">, projectId: Id<"projects">) => void;
 }
 
 /**
@@ -44,11 +44,6 @@ export function AdvancedSearchModal({
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [offset, setOffset] = useState(0);
   const LIMIT = 50;
-
-  // Reset offset when query or filters change
-  useEffect(() => {
-    setOffset(0);
-  }, []);
 
   // Use server-side filtering
   const searchResult = useQuery(
@@ -69,8 +64,8 @@ export function AdvancedSearchModal({
   const total = searchResult?.total ?? 0;
   const hasMore = (searchResult?.page?.length ?? 0) === LIMIT;
 
-  const handleSelectIssue = (issueId: Id<"issues">) => {
-    onSelectIssue(issueId);
+  const handleSelectIssue = (issueId: Id<"issues">, projectId: Id<"projects">) => {
+    onSelectIssue(issueId, projectId);
     onOpenChange(false);
     setSearchQuery("");
     setSelectedType([]);
@@ -84,6 +79,7 @@ export function AdvancedSearchModal({
   };
 
   const toggleFilter = (value: string, array: string[], setter: (arr: string[]) => void) => {
+    setOffset(0);
     if (array.includes(value)) {
       setter(array.filter((v) => v !== value));
     } else {
@@ -108,7 +104,10 @@ export function AdvancedSearchModal({
         <Input
           label="Search Issues"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setOffset(0);
+          }}
           placeholder="Search by title, key, or description..."
           autoFocus
           helperText="Type at least 2 characters to search"
@@ -122,7 +121,7 @@ export function AdvancedSearchModal({
             selectedValues={selectedType}
             onToggle={(type) => toggleFilter(type, selectedType, setSelectedType)}
             renderLabel={(type) => (
-              <Flex align="center" gap="xs">
+              <Flex align="center" gap="xs" as="span">
                 <Icon icon={ISSUE_TYPE_ICONS[type]} size="sm" />
                 <span>{type}</span>
               </Flex>
@@ -161,6 +160,7 @@ export function AdvancedSearchModal({
                   setSelectedType([]);
                   setSelectedPriority([]);
                   setSelectedStatus([]);
+                  setOffset(0);
                 }}
               >
                 Clear Filters

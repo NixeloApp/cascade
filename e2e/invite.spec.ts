@@ -17,9 +17,6 @@ test.describe("Invite Page", () => {
     // Navigate to invite page with a fake token
     await page.goto("/invite/invalid-token-12345");
 
-    // Wait for loading to complete
-    await page.waitForLoadState("domcontentloaded");
-
     // Should show "Invalid Invitation" heading
     await expect(page.getByRole("heading", { name: /invalid invitation/i })).toBeVisible();
 
@@ -56,28 +53,25 @@ test.describe("Invite Page", () => {
     // We use Promise.race to catch the loading state before it resolves to invalid
     await page.goto("/invite/test-loading-state", { waitUntil: "commit" });
 
-    // Either we see loading or it already resolved to invalid (depends on speed)
-    // At minimum the page should load without errors
-    await page.waitForLoadState("domcontentloaded");
-
-    // Page should show either loading or invalid state
-    const hasLoading = await page
-      .getByText(/loading invitation/i)
-      .isVisible()
-      .catch(() => false);
-    const hasInvalid = await page
-      .getByRole("heading", { name: /invalid invitation/i })
-      .isVisible()
-      .catch(() => false);
-
-    // One of them should be true
-    expect(hasLoading || hasInvalid).toBe(true);
+    // Page should show either loading or invalid state.
+    await expect
+      .poll(async () => {
+        const hasLoading = await page
+          .getByText(/loading invitation/i)
+          .isVisible()
+          .catch(() => false);
+        const hasInvalid = await page
+          .getByRole("heading", { name: /invalid invitation/i })
+          .isVisible()
+          .catch(() => false);
+        return hasLoading || hasInvalid;
+      })
+      .toBe(true);
   });
 
   test("invite page shows branding on invalid token page", async ({ page }) => {
     // Navigate to invite page (even invalid tokens show the page layout)
     await page.goto("/invite/branding-test-token");
-    await page.waitForLoadState("domcontentloaded");
 
     // Wait for the invalid state to fully render
     await expect(page.getByRole("heading", { name: /invalid invitation/i })).toBeVisible();

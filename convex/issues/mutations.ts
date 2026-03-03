@@ -7,6 +7,7 @@
  */
 
 import { type Infer, v } from "convex/values";
+import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import {
@@ -15,9 +16,11 @@ import {
   issueViewerMutation,
   projectEditorMutation,
 } from "../customFunctions";
+import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { validate } from "../lib/constrainedValidators";
-import { conflict, validation } from "../lib/errors";
-import { softDeleteFields } from "../lib/softDeleteHelpers";
+import { conflict, forbidden, validation } from "../lib/errors";
+import { syncProjectIssueStats } from "../lib/projectIssueStats";
+import { notDeleted, softDeleteFields } from "../lib/softDeleteHelpers";
 import { assertIsProjectAdmin, canAccessProject } from "../projectAccess";
 import { enforceRateLimit } from "../rateLimits";
 import { issueTypesWithSubtask, workflowCategories } from "../validators";
@@ -40,6 +43,42 @@ import {
   resolveLabelNames,
   validateParentIssue,
 } from "./helpers";
+
+async function hasSlackDestinationsForProject(
+  ctx: MutationCtx,
+  projectId: Id<"projects">,
+): Promise<boolean> {
+  const project = await ctx.db.get(projectId);
+  if (!project || project.isDeleted) {
+    return false;
+  }
+
+  const ownerConnection = await ctx.db
+    .query("slackConnections")
+    .withIndex("by_user", (q) => q.eq("userId", project.createdBy))
+    .first();
+  if (ownerConnection?.isActive && ownerConnection.incomingWebhookUrl) {
+    return true;
+  }
+
+  const members = await ctx.db
+    .query("projectMembers")
+    .withIndex("by_project", (q) => q.eq("projectId", projectId))
+    .filter(notDeleted)
+    .take(BOUNDED_LIST_LIMIT);
+
+  for (const member of members) {
+    const connection = await ctx.db
+      .query("slackConnections")
+      .withIndex("by_user", (q) => q.eq("userId", member.userId))
+      .first();
+    if (connection?.isActive && connection.incomingWebhookUrl) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 const createIssueArgs = {
   title: v.string(),
@@ -169,6 +208,14 @@ async function createIssueImpl(
     userId: ctx.userId,
     action: "created",
   });
+  await syncProjectIssueStats(ctx, ctx.projectId);
+  if (await hasSlackDestinationsForProject(ctx, ctx.projectId)) {
+    await ctx.scheduler.runAfter(0, internal.slack.sendIssueNotification, {
+      issueId,
+      event: "issue.created",
+      userId: ctx.userId,
+    });
+  }
 
   return { issueId, key: issueKey };
 }
@@ -331,6 +378,26 @@ export const update = issueMutation({
           }),
         ),
       );
+
+      if (await hasSlackDestinationsForProject(ctx, ctx.issue.projectId)) {
+        await ctx.scheduler.runAfter(0, internal.slack.sendIssueNotification, {
+          issueId: ctx.issue._id,
+          event: "issue.updated",
+          userId: ctx.userId,
+        });
+
+        if (
+          args.assigneeId !== undefined &&
+          args.assigneeId !== ctx.issue.assigneeId &&
+          args.assigneeId !== null
+        ) {
+          await ctx.scheduler.runAfter(0, internal.slack.sendIssueNotification, {
+            issueId: ctx.issue._id,
+            event: "issue.assigned",
+            userId: ctx.userId,
+          });
+        }
+      }
     }
 
     return { success: true } as const;
@@ -351,18 +418,30 @@ export const addComment = issueViewerMutation({
   args: {
     content: v.string(),
     mentions: v.optional(v.array(v.id("users"))),
+    attachments: v.optional(v.array(v.id("_storage"))),
   },
   returns: v.object({ commentId: v.id("issueComments") }),
   handler: async (ctx, args) => {
     // Rate limit: 120 comments per minute per user with burst of 20
     const now = Date.now();
     const mentions = args.mentions || [];
+    const attachments = args.attachments || [];
+
+    if (attachments.length > 0) {
+      const issueAttachments = new Set((ctx.issue.attachments || []).map((id) => id.toString()));
+      for (const storageId of attachments) {
+        if (!issueAttachments.has(storageId.toString())) {
+          throw forbidden("Attachment does not belong to this issue");
+        }
+      }
+    }
 
     const commentId = await ctx.db.insert("issueComments", {
       issueId: ctx.issue._id,
       authorId: ctx.userId,
       content: args.content,
       mentions,
+      attachments,
       updatedAt: now,
     });
 
@@ -383,6 +462,14 @@ export const addComment = issueViewerMutation({
       issue: ctx.issue,
       project: ctx.project,
     });
+
+    if (await hasSlackDestinationsForProject(ctx, ctx.projectId)) {
+      await ctx.scheduler.runAfter(0, internal.slack.sendIssueNotification, {
+        issueId: ctx.issue._id,
+        event: "comment.created",
+        userId: ctx.userId,
+      });
+    }
 
     return { commentId };
   },
@@ -563,10 +650,12 @@ export const bulkDelete = authenticatedMutation({
   },
   returns: v.object({ deleted: v.number() }),
   handler: async (ctx, args) => {
+    const touchedProjectIds = new Set<Id<"projects">>();
     const result = await performBulkUpdate(
       ctx,
       args.issueIds,
-      async () => {
+      async (issue) => {
+        touchedProjectIds.add(issue.projectId);
         return {
           patch: softDeleteFields(ctx.userId),
           activity: {
@@ -575,6 +664,10 @@ export const bulkDelete = authenticatedMutation({
         };
       },
       assertIsProjectAdmin,
+    );
+
+    await Promise.all(
+      Array.from(touchedProjectIds).map((projectId) => syncProjectIssueStats(ctx, projectId)),
     );
 
     return { deleted: result.updated };

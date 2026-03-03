@@ -12,7 +12,7 @@ import { Link } from "@tanstack/react-router";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { isThisWeek, isToday, isYesterday } from "date-fns";
 import { Bell, ExternalLink } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -84,25 +84,17 @@ export function NotificationCenter() {
   const [filter, setFilter] = useState<NotificationFilter>("all");
   const orgContext = useOrganizationOptional();
 
+  // Filter by type on the backend for proper pagination
+  const typeFilter = FILTER_TYPE_MAP[filter];
   const { results: notificationsRaw } = usePaginatedQuery(
     api.notifications.list,
-    {},
-    { initialNumItems: 50 }, // Fetch more to allow client-side filtering
+    { types: typeFilter ?? undefined },
+    { initialNumItems: 50 },
   );
-  const allNotifications = notificationsRaw as NotificationWithActor[];
-
-  // Filter notifications based on selected filter
-  const notifications = useMemo(() => {
-    if (!allNotifications) return [];
-    const typeFilter = FILTER_TYPE_MAP[filter];
-    if (!typeFilter) return allNotifications;
-    return allNotifications.filter((n) => typeFilter.includes(n.type));
-  }, [allNotifications, filter]);
+  const notifications = (notificationsRaw ?? []) as NotificationWithActor[];
 
   // Group notifications by date
-  const groupedNotifications = useMemo(() => {
-    return groupNotificationsByDate(notifications);
-  }, [notifications]);
+  const groupedNotifications = groupNotificationsByDate(notifications);
 
   // Ordered groups for display
   const orderedGroups: DateGroup[] = ["today", "yesterday", "this_week", "older"];

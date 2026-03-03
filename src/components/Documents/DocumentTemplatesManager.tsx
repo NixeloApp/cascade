@@ -20,6 +20,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { IconPicker, TemplateIcon, toTemplateIconString } from "@/components/ui/IconPicker";
 import { Label } from "@/components/ui/Label";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
@@ -38,7 +39,7 @@ const templateSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string(),
   category: z.enum(categories),
-  icon: z.string().min(1, "Icon is required").max(2),
+  icon: z.string().min(1, "Icon is required"),
   isPublic: z.boolean(),
 });
 
@@ -74,7 +75,7 @@ export function DocumentTemplatesManager({
       name: "",
       description: "",
       category: "planning" as (typeof categories)[number],
-      icon: "📄",
+      icon: "lucide:FileText",
       isPublic: false,
     },
     validators: { onChange: templateSchema },
@@ -140,14 +141,23 @@ export function DocumentTemplatesManager({
     name: string;
     description?: string;
     category: string;
-    icon: string;
+    icon:
+      | string
+      | {
+          type: "lucide";
+          name: string;
+        }
+      | {
+          type: "emoji";
+          value: string;
+        };
     isPublic: boolean;
   }) => {
     setEditingId(template._id);
     form.setFieldValue("name", template.name);
     form.setFieldValue("description", template.description || "");
     form.setFieldValue("category", template.category as (typeof categories)[number]);
-    form.setFieldValue("icon", template.icon);
+    form.setFieldValue("icon", toTemplateIconString(template.icon));
     form.setFieldValue("isPublic", template.isPublic);
     setShowModal(true);
   };
@@ -243,7 +253,7 @@ export function DocumentTemplatesManager({
                     >
                       <Flex align="start" gap="md">
                         <Typography variant="h2" as="span">
-                          {template.icon}
+                          <TemplateIcon value={template.icon} className="w-7 h-7" />
                         </Typography>
                         <FlexItem flex="1">
                           <Stack gap="xs">
@@ -287,7 +297,7 @@ export function DocumentTemplatesManager({
                           className="flex items-start gap-3 flex-1 text-left h-auto"
                         >
                           <Typography variant="h3" as="span">
-                            {template.icon}
+                            <TemplateIcon value={template.icon} className="w-6 h-6" />
                           </Typography>
                           <FlexItem flex="1">
                             <Stack gap="xs">
@@ -320,6 +330,7 @@ export function DocumentTemplatesManager({
                             variant="ghost"
                             size="sm"
                             onClick={() => startEdit(template)}
+                            aria-label={`Edit template ${template.name}`}
                             leftIcon={
                               <svg
                                 aria-hidden="true"
@@ -341,6 +352,7 @@ export function DocumentTemplatesManager({
                             variant="ghost"
                             size="sm"
                             onClick={() => setDeleteConfirm(template._id)}
+                            aria-label={`Delete template ${template.name}`}
                             leftIcon={
                               <svg
                                 aria-hidden="true"
@@ -398,13 +410,20 @@ export function DocumentTemplatesManager({
 
               <form.Field name="icon">
                 {(field) => (
-                  <FormInput
-                    field={field}
-                    label="Icon (Emoji)"
-                    placeholder="📄"
-                    maxLength={2}
-                    required
-                  />
+                  <Stack gap="sm">
+                    <Label htmlFor="template-icon-picker">Icon</Label>
+                    <div id="template-icon-picker">
+                      <IconPicker
+                        value={(field.state.value as string) || "lucide:FileText"}
+                        onChange={(nextValue) => field.handleChange(nextValue)}
+                      />
+                    </div>
+                    {field.state.meta.errors.length > 0 && (
+                      <Typography variant="small" color="error">
+                        {field.state.meta.errors[0]?.message}
+                      </Typography>
+                    )}
+                  </Stack>
                 )}
               </form.Field>
             </Grid>

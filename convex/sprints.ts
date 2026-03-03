@@ -7,6 +7,7 @@
  */
 
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import {
   projectEditorMutation,
   projectQuery,
@@ -16,6 +17,18 @@ import {
 import { efficientCount } from "./lib/boundedQueries";
 import { MAX_PAGE_SIZE, MAX_SPRINT_ISSUES } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
+import { DAY } from "./lib/timeUtils";
+
+function getNextSprintName(currentName: string): string {
+  const match = currentName.match(/(\d+)(?!.*\d)/);
+  if (!match) {
+    return `${currentName} 2`;
+  }
+  const currentNumber = Number.parseInt(match[1], 10);
+  const nextNumber = Number.isNaN(currentNumber) ? 2 : currentNumber + 1;
+  const index = match.index ?? currentName.lastIndexOf(match[1]);
+  return `${currentName.slice(0, index)}${nextNumber}${currentName.slice(index + match[1].length)}`.trim();
+}
 
 /**
  * Create a new sprint
@@ -188,14 +201,43 @@ export const startSprint = sprintMutation({
  * Requires editor role on project
  */
 export const completeSprint = sprintMutation({
-  args: {},
-  returns: v.object({ success: v.literal(true) }),
-  handler: async (ctx) => {
+  args: {
+    autoCreateNext: v.optional(v.boolean()),
+  },
+  returns: v.object({
+    success: v.literal(true),
+    nextSprintId: v.optional(v.id("sprints")),
+  }),
+  handler: async (ctx, args) => {
+    let nextSprintId: Id<"sprints"> | undefined;
+    const now = Date.now();
+
     await ctx.db.patch(ctx.sprint._id, {
       status: "completed",
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
-    return { success: true } as const;
+
+    if (args.autoCreateNext && ctx.sprint.startDate && ctx.sprint.endDate) {
+      const sprintDuration = Math.max(ctx.sprint.endDate - ctx.sprint.startDate, DAY);
+      const nextStartDate = ctx.sprint.endDate + DAY;
+      const nextEndDate = nextStartDate + sprintDuration;
+      const createdSprintId = await ctx.db.insert("sprints", {
+        projectId: ctx.projectId,
+        name: getNextSprintName(ctx.sprint.name),
+        goal: undefined,
+        startDate: nextStartDate,
+        endDate: nextEndDate,
+        status: "future",
+        createdBy: ctx.userId,
+        updatedAt: now,
+      });
+      nextSprintId = createdSprintId;
+    }
+
+    return {
+      success: true,
+      nextSprintId,
+    } as const;
   },
 });
 

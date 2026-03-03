@@ -46,6 +46,12 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
+  // Mark app as hydrated for E2E tests (best practice: single global indicator)
+  // This fires after React hydration completes, making it safe for tests to interact
+  useEffect(() => {
+    document.body.classList.add("app-hydrated");
+  }, []);
+
   // Register service worker for PWA (client-side only, production only)
   useEffect(() => {
     // DO NOT register service worker in E2E tests as it can interfere with LocalStorage/Auth

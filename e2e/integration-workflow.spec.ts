@@ -87,7 +87,7 @@ test.describe("Integration Workflows", () => {
       await calendarTab.waitFor({ state: "visible" });
       await calendarTab.click();
       await expect(page).toHaveURL(/\/calendar/);
-      await page.waitForLoadState("domcontentloaded");
+      await expect(calendarTab).toHaveAttribute("aria-current", "page");
       console.log("✓ Navigated to calendar");
 
       // Switch to Timesheet
@@ -95,7 +95,8 @@ test.describe("Integration Workflows", () => {
       await timesheetTab.waitFor({ state: "visible" });
       await timesheetTab.click();
       await expect(page).toHaveURL(/\/timesheet/);
-      await page.waitForLoadState("domcontentloaded");
+      await expect(timesheetTab).toHaveAttribute("aria-current", "page");
+      await expect(page.getByRole("tab", { name: /time entries/i })).toBeVisible();
       console.log("✓ Navigated to timesheet");
 
       // Switch back to Board

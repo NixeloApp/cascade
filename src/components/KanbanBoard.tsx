@@ -18,6 +18,7 @@ import { useBoardDragAndDrop } from "@/hooks/useBoardDragAndDrop";
 import { useBoardHistory } from "@/hooks/useBoardHistory";
 import { useListNavigation } from "@/hooks/useListNavigation";
 import { useSmartBoardData } from "@/hooks/useSmartBoardData";
+import { matchesBoardQuery, parseBoardQuery } from "@/lib/board-query-language";
 import { type CardDisplayOptions, DEFAULT_CARD_DISPLAY } from "@/lib/card-display-utils";
 import type { IssueType } from "@/lib/issue-utils";
 import type { SwimlanGroupBy } from "@/lib/swimlane-utils";
@@ -72,16 +73,6 @@ function matchesLabelsFilter(issue: EnrichedIssue, labelNames?: BoardFilters["la
   return issue.labels?.some((label) => labelNames.includes(label.name)) ?? false;
 }
 
-/** Check if issue matches search query (searches title, key, and description) */
-function matchesSearchQuery(issue: EnrichedIssue, query?: string): boolean {
-  if (!query?.trim()) return true;
-  const searchTerm = query.toLowerCase().trim();
-  const titleMatch = issue.title.toLowerCase().includes(searchTerm);
-  const keyMatch = issue.key.toLowerCase().includes(searchTerm);
-  const descriptionMatch = issue.description?.toLowerCase().includes(searchTerm) ?? false;
-  return titleMatch || keyMatch || descriptionMatch;
-}
-
 /** Convert ISO date string to start-of-day timestamp */
 function dateStringToTimestamp(dateStr: string, endOfDay = false): number {
   // Parse date parts manually to avoid timezone issues with new Date("YYYY-MM-DD")
@@ -114,10 +105,11 @@ function matchesDateRange(timestamp: number | undefined, range?: DateRangeFilter
 /** Apply client-side filters to issues */
 function applyFilters(issues: EnrichedIssue[], filters?: BoardFilters): EnrichedIssue[] {
   if (!filters) return issues;
+  const parsedQuery = parseBoardQuery(filters.query);
 
   return issues.filter(
     (issue) =>
-      matchesSearchQuery(issue, filters.query) &&
+      matchesBoardQuery(issue, parsedQuery) &&
       matchesTypeFilter(issue, filters.type) &&
       matchesPriorityFilter(issue, filters.priority) &&
       matchesAssigneeFilter(issue, filters.assigneeId) &&

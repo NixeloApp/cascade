@@ -15,6 +15,7 @@ import { CreateTeamModal } from "@/components/CreateTeamModal";
 import { SidebarTeamItem } from "@/components/Sidebar/SidebarTeamItem";
 import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Input } from "@/components/ui/Input";
 import { NavItem as NavItemBase } from "@/components/ui/NavItem";
 import { Tooltip, TooltipProvider } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
@@ -29,6 +30,7 @@ import {
   ChevronRight,
   Clock,
   Copy,
+  CreditCard,
   FileText,
   FolderKanban,
   Home,
@@ -40,6 +42,7 @@ import {
   Server,
   Settings,
   ShieldCheck,
+  Users,
   X,
 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
@@ -48,6 +51,9 @@ import { cn } from "@/lib/utils";
 /**
  * Main application sidebar with navigation, projects, and teams.
  */
+const DOCUMENT_DISPLAY_LIMIT = 10;
+const WORKSPACE_DISPLAY_LIMIT = 25;
+
 export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -65,6 +71,8 @@ export function AppSidebar() {
   const [workspacesExpanded, setWorkspacesExpanded] = useState(true);
   const [expandedWorkspaces, setExpandedWorkspaces] = useState<Set<string>>(new Set());
   const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
+  const [documentSearch, setDocumentSearch] = useState("");
+  const [workspaceSearch, setWorkspaceSearch] = useState("");
   const [createTeamWorkspace, setCreateTeamWorkspace] = useState<{
     id: Id<"workspaces">;
     slug: string;
@@ -75,8 +83,27 @@ export function AppSidebar() {
   const documents = documentsResult?.documents;
   const workspaces = useQuery(api.workspaces.list, { organizationId });
   const teams = useQuery(api.teams.getOrganizationTeams, { organizationId });
-  const myProjects = useQuery(api.dashboard.getMyProjects);
-  const defaultProject = myProjects?.[0];
+
+  const allDocuments = documents ?? [];
+  const allWorkspaces = workspaces ?? [];
+  const showDocumentSearch = allDocuments.length > DOCUMENT_DISPLAY_LIMIT;
+  const showWorkspaceSearch = allWorkspaces.length > WORKSPACE_DISPLAY_LIMIT;
+
+  const filteredDocuments =
+    showDocumentSearch && documentSearch.trim()
+      ? allDocuments.filter((doc) =>
+          doc.title.toLowerCase().includes(documentSearch.trim().toLowerCase()),
+        )
+      : allDocuments;
+  const displayedDocuments = filteredDocuments.slice(0, DOCUMENT_DISPLAY_LIMIT);
+
+  const filteredWorkspaces =
+    showWorkspaceSearch && workspaceSearch.trim()
+      ? allWorkspaces.filter((workspace) =>
+          workspace.name.toLowerCase().includes(workspaceSearch.trim().toLowerCase()),
+        )
+      : allWorkspaces;
+  const displayedWorkspaces = filteredWorkspaces.slice(0, WORKSPACE_DISPLAY_LIMIT);
 
   // Group teams by workspace
   const teamsByWorkspace = (() => {
@@ -264,19 +291,43 @@ export function AppSidebar() {
                 onClick={handleNavClick}
                 data-tour="nav-issues"
               />
-              {/* Calendar - Links to first project's calendar */}
-              {defaultProject && (
-                <NavItem
-                  to={ROUTES.projects.calendar.path}
-                  params={{ orgSlug, key: defaultProject.key }}
-                  icon={Calendar}
-                  label="General"
-                  isActive={isActive("/calendar")}
-                  isCollapsed={showCollapsed}
-                  onClick={handleNavClick}
-                  data-tour="nav-calendar"
-                />
-              )}
+              <NavItem
+                to={ROUTES.myIssues.path}
+                params={{ orgSlug }}
+                icon={FolderKanban}
+                label="My Board"
+                isActive={isActive("/my-issues")}
+                isCollapsed={showCollapsed}
+                onClick={handleNavClick}
+              />
+              <NavItem
+                to={ROUTES.invoices.list.path}
+                params={{ orgSlug }}
+                icon={CreditCard}
+                label="Invoices"
+                isActive={isActive("/invoices")}
+                isCollapsed={showCollapsed}
+                onClick={handleNavClick}
+              />
+              <NavItem
+                to={ROUTES.clients.list.path}
+                params={{ orgSlug }}
+                icon={Users}
+                label="Clients"
+                isActive={isActive("/clients")}
+                isCollapsed={showCollapsed}
+                onClick={handleNavClick}
+              />
+              <NavItem
+                to={ROUTES.calendar.path}
+                params={{ orgSlug }}
+                icon={Calendar}
+                label="General"
+                isActive={isActive("/calendar")}
+                isCollapsed={showCollapsed}
+                onClick={handleNavClick}
+                data-tour="nav-calendar"
+              />
 
               {/* Products Section */}
               {!showCollapsed && (
@@ -361,7 +412,17 @@ export function AppSidebar() {
                   />
                 </li>
                 <li className="h-px bg-ui-border my-1 mx-2 list-none" aria-hidden="true" />
-                {(documents ?? []).slice(0, 10).map((doc: Doc<"documents">) => (
+                {showDocumentSearch && (
+                  <li className="list-none px-2 pb-1">
+                    <Input
+                      value={documentSearch}
+                      onChange={(event) => setDocumentSearch(event.target.value)}
+                      placeholder="Search documents"
+                      aria-label="Search documents"
+                    />
+                  </li>
+                )}
+                {displayedDocuments.map((doc: Doc<"documents">) => (
                   <li key={doc._id} className="list-none">
                     <NavSubItem
                       to={ROUTES.documents.detail.path}
@@ -372,11 +433,15 @@ export function AppSidebar() {
                     />
                   </li>
                 ))}
-                {(documents?.length ?? 0) > 10 && (
+                {showDocumentSearch && (
                   <li className="list-none">
-                    <Typography variant="p" color="tertiary" className="px-3 py-1 text-xs">
-                      +{(documents?.length ?? 0) - 10} more
-                    </Typography>
+                    <NavSubItem
+                      to={ROUTES.documents.list.path}
+                      params={{ orgSlug }}
+                      label={`Show all documents (${allDocuments.length})`}
+                      isActive={location.pathname.includes("/documents")}
+                      onClick={handleNavClick}
+                    />
                   </li>
                 )}
               </CollapsibleSection>
@@ -394,7 +459,17 @@ export function AppSidebar() {
                 onClick={handleNavClick}
                 data-tour="nav-projects"
               >
-                {workspaces?.map((workspace: Doc<"workspaces">) => {
+                {showWorkspaceSearch && (
+                  <li className="list-none px-2 pb-1">
+                    <Input
+                      value={workspaceSearch}
+                      onChange={(event) => setWorkspaceSearch(event.target.value)}
+                      placeholder="Search workspaces"
+                      aria-label="Search workspaces"
+                    />
+                  </li>
+                )}
+                {displayedWorkspaces.map((workspace: Doc<"workspaces">) => {
                   // O(1) lookup from pre-computed Map instead of O(T) filter
                   const workspaceTeams = teamsByWorkspace.get(workspace._id) || [];
                   const isWorkspaceExpanded = expandedWorkspaces.has(workspace.slug);
@@ -462,6 +537,24 @@ export function AppSidebar() {
                     </li>
                   );
                 })}
+                {showWorkspaceSearch && filteredWorkspaces.length === 0 && (
+                  <li className="list-none">
+                    <Typography variant="caption" color="tertiary" className="px-3 py-1">
+                      No matching workspaces
+                    </Typography>
+                  </li>
+                )}
+                {showWorkspaceSearch && (
+                  <li className="list-none">
+                    <NavSubItem
+                      to={ROUTES.workspaces.list.path}
+                      params={{ orgSlug }}
+                      label={`Show all workspaces (${allWorkspaces.length})`}
+                      isActive={location.pathname.includes("/workspaces")}
+                      onClick={handleNavClick}
+                    />
+                  </li>
+                )}
               </CollapsibleSection>
               {/* Time Tracking (admin only) */}
               {showTimeTracking && (
@@ -709,7 +802,7 @@ function NavSubItem({
   return (
     <Tooltip content={label}>
       <NavItemBase asChild active={isActive} size="sm">
-        <Link to={to} params={params} {...props}>
+        <Link to={to} params={params} onClick={onClick} {...props}>
           {Icon && <Icon className="w-4 h-4 shrink-0" />}
           <span className="truncate">{label}</span>
         </Link>

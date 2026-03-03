@@ -18,6 +18,7 @@ import { batchFetchIssues, batchFetchProjects, batchFetchUsers } from "./lib/bat
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { validate } from "./lib/constrainedValidators";
 import { generateOTP } from "./lib/crypto";
+import { isE2ESafeEnvironment } from "./lib/envDetection";
 import { conflict, validation } from "./lib/errors";
 import { logger } from "./lib/logger";
 import { getOrganizationMemberships, hasSharedOrganization } from "./lib/organizationAccess";
@@ -598,14 +599,9 @@ export const sendVerificationEmailAction = internalAction({
   handler: async (ctx, args) => {
     const { email, token, isTestUser } = args;
     const isTestEmail = email.endsWith("@inbox.mailtrap.io");
-    const isSafeEnvironment =
-      process.env.NODE_ENV === "development" ||
-      process.env.NODE_ENV === "test" ||
-      !!process.env.CI ||
-      !!process.env.E2E_TEST_MODE;
 
     // Store OTPs for test emails ONLY if they are test users
-    if (isTestEmail && isSafeEnvironment && isTestUser) {
+    if (isTestEmail && isE2ESafeEnvironment() && isTestUser) {
       try {
         await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token });
       } catch (e) {

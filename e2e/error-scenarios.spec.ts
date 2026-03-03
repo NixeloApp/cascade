@@ -15,20 +15,21 @@ test.describe("Unauthenticated Access", () => {
   test("redirects to signin when accessing protected route", async ({ page }) => {
     // Try to access dashboard without auth
     await page.goto("/some-org/dashboard");
-    await page.waitForLoadState("domcontentloaded");
 
-    // Should redirect to signin or show landing
-    // (Depends on implementation - check for either)
-    const isOnSignin = await page
-      .getByRole("heading", { name: /welcome back|sign in/i })
-      .isVisible()
-      .catch(() => false);
-    const isOnLanding = await page
-      .getByRole("heading", { name: /revolutionize/i })
-      .isVisible()
-      .catch(() => false);
-
-    expect(isOnSignin || isOnLanding).toBe(true);
+    // Should redirect to signin or show landing.
+    await expect
+      .poll(async () => {
+        const isOnSignin = await page
+          .getByRole("heading", { name: /welcome back|sign in/i })
+          .isVisible()
+          .catch(() => false);
+        const isOnLanding = await page
+          .getByRole("heading", { name: /revolutionize/i })
+          .isVisible()
+          .catch(() => false);
+        return isOnSignin || isOnLanding;
+      })
+      .toBe(true);
   });
 });
 
@@ -48,7 +49,6 @@ authenticatedTest.describe("Non-existent Resources", () => {
       // Navigate to a non-existent project
       const orgSlug = new URL(page.url()).pathname.split("/")[1];
       await page.goto(`/${orgSlug}/projects/NONEXISTENT99999/board`);
-      await page.waitForLoadState("domcontentloaded");
 
       // Should show project not found heading
       await expect(page.getByRole("heading", { name: /project not found/i })).toBeVisible();
@@ -62,7 +62,6 @@ authenticatedTest.describe("Non-existent Resources", () => {
     // Navigate to a non-existent document (invalid ID triggers error boundary)
     const orgSlug = new URL(page.url()).pathname.split("/")[1];
     await page.goto(`/${orgSlug}/documents/jf77777777777777777`);
-    await page.waitForLoadState("domcontentloaded");
 
     // Should show error boundary or document not found
     // Note: Error page uses plain text, not headings
@@ -80,7 +79,6 @@ authenticatedTest.describe("Non-existent Resources", () => {
       // Navigate to a non-existent issue
       const orgSlug = new URL(page.url()).pathname.split("/")[1];
       await page.goto(`/${orgSlug}/issues/FAKE-99999`);
-      await page.waitForLoadState("domcontentloaded");
 
       // Should show issue not found or error heading
       await expect(

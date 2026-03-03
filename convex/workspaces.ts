@@ -229,14 +229,15 @@ export const deleteWorkspace = authenticatedMutation({
       );
     }
 
-    // Check if workspace has teams or projects
+    // Check if workspace has teams or projects (soft-deleted items are ignored)
     const teams = await ctx.db
       .query("teams")
       .withIndex("by_workspace", (q) => q.eq("workspaceId", args.id))
+      .filter(notDeleted)
       .first();
 
     if (teams) {
-      throw conflict("Cannot delete workspace with teams");
+      throw conflict("Cannot delete workspace with active teams");
     }
 
     const projects = await ctx.db
@@ -286,6 +287,202 @@ export const getWorkspaceStats = workspaceQuery({
 
 /** @deprecated Use getWorkspaceStats instead */
 export const getStats = getWorkspaceStats;
+
+/**
+ * List backlog issues for a workspace across all projects.
+ * Backlog is defined as non-deleted issues that are not assigned to a sprint and not done.
+ */
+export const getBacklogIssues = workspaceQuery({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const rawLimit = args.limit ?? 200;
+    const limit = Math.min(Math.max(rawLimit, 1), BOUNDED_LIST_LIMIT * 5);
+
+    // Fetch more issues than the limit to account for filtering
+    // This ensures we return enough backlog items even after filtering
+    const FETCH_MULTIPLIER = 3;
+    const fetchLimit = Math.min(limit * FETCH_MULTIPLIER, BOUNDED_LIST_LIMIT * 10);
+
+    const issues = await ctx.db
+      .query("issues")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", ctx.workspaceId))
+      .filter(notDeleted)
+      .take(fetchLimit);
+
+    return issues
+      .filter((issue) => issue.sprintId === undefined && issue.status !== "done")
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .slice(0, limit);
+  },
+});
+
+/**
+ * List active sprints for all projects in a workspace.
+ */
+export const getActiveSprints = workspaceQuery({
+  args: {},
+  handler: async (ctx) => {
+    const projects = await ctx.db
+      .query("projects")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", ctx.workspaceId))
+      .filter(notDeleted)
+      .take(BOUNDED_LIST_LIMIT);
+
+    const sprintsWithProject = await Promise.all(
+      projects.map(async (project) => {
+        const sprints = await ctx.db
+          .query("sprints")
+          .withIndex("by_project", (q) => q.eq("projectId", project._id))
+          .filter((q) => q.eq(q.field("status"), "active"))
+          .take(BOUNDED_LIST_LIMIT);
+
+        const enriched = await Promise.all(
+          sprints.map(async (sprint) => {
+            // Use larger limit for counting to avoid undercount on large sprints
+            const MAX_SPRINT_ISSUE_COUNT = 2000;
+            const issueCount = (
+              await ctx.db
+                .query("issues")
+                .withIndex("by_sprint", (q) => q.eq("sprintId", sprint._id))
+                .filter(notDeleted)
+                .take(MAX_SPRINT_ISSUE_COUNT)
+            ).length;
+            return {
+              ...sprint,
+              issueCount,
+              projectId: project._id,
+              projectName: project.name,
+              projectKey: project.key,
+            };
+          }),
+        );
+
+        return enriched;
+      }),
+    );
+
+    return sprintsWithProject
+      .flat()
+      .sort(
+        (a, b) => (a.endDate ?? Number.POSITIVE_INFINITY) - (b.endDate ?? Number.POSITIVE_INFINITY),
+      );
+  },
+});
+
+/**
+ * List cross-team blocking dependencies for issues in a workspace.
+ */
+export const getCrossTeamDependencies = workspaceQuery({
+  args: {
+    teamId: v.optional(v.id("teams")),
+    status: v.optional(v.string()),
+    priority: v.optional(v.string()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const rawLimit = args.limit ?? 200;
+    const limit = Math.min(Math.max(rawLimit, 1), BOUNDED_LIST_LIMIT * 5);
+
+    const workspaceIssues = await ctx.db
+      .query("issues")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", ctx.workspaceId))
+      .filter(notDeleted)
+      .take(limit);
+
+    const issueMap = new Map(workspaceIssues.map((issue) => [issue._id, issue]));
+
+    const outgoingLinksArrays = await Promise.all(
+      workspaceIssues.map((issue) =>
+        ctx.db
+          .query("issueLinks")
+          .withIndex("by_from_issue", (q) => q.eq("fromIssueId", issue._id))
+          .filter((q) => q.eq(q.field("linkType"), "blocks"))
+          .take(BOUNDED_LIST_LIMIT),
+      ),
+    );
+
+    const dependencies = outgoingLinksArrays
+      .flat()
+      .map((link) => {
+        const fromIssue = issueMap.get(link.fromIssueId);
+        const toIssue = issueMap.get(link.toIssueId);
+        if (!(fromIssue && toIssue)) {
+          return null;
+        }
+
+        if (!fromIssue.teamId || !toIssue.teamId || fromIssue.teamId === toIssue.teamId) {
+          return null;
+        }
+        const fromTeamId = fromIssue.teamId;
+        const toTeamId = toIssue.teamId;
+
+        if (args.teamId && fromTeamId !== args.teamId && toTeamId !== args.teamId) {
+          return null;
+        }
+        if (args.status && fromIssue.status !== args.status && toIssue.status !== args.status) {
+          return null;
+        }
+        if (
+          args.priority &&
+          fromIssue.priority !== args.priority &&
+          toIssue.priority !== args.priority
+        ) {
+          return null;
+        }
+
+        return {
+          linkId: link._id,
+          fromIssue,
+          toIssue,
+          fromTeamId,
+          toTeamId,
+          updatedAt: Math.max(fromIssue.updatedAt, toIssue.updatedAt),
+        };
+      })
+      .filter((dependency): dependency is NonNullable<typeof dependency> => dependency !== null)
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .slice(0, limit);
+
+    // Batch load teams - they're already unique IDs from the Set
+    const teamIds = [
+      ...new Set(
+        dependencies.flatMap((dependency) => [dependency.fromTeamId, dependency.toTeamId]),
+      ),
+    ];
+    // Batch fetch all teams in parallel (already deduped)
+    const teams = await Promise.all(teamIds.map((teamId) => ctx.db.get(teamId)));
+    const teamNameById = new Map(
+      teams
+        .filter((team): team is NonNullable<typeof team> => team !== null)
+        .map((team) => [team._id, team.name]),
+    );
+
+    return dependencies.map((dependency) => ({
+      linkId: dependency.linkId,
+      fromIssue: {
+        _id: dependency.fromIssue._id,
+        key: dependency.fromIssue.key,
+        title: dependency.fromIssue.title,
+        status: dependency.fromIssue.status,
+        priority: dependency.fromIssue.priority,
+        teamId: dependency.fromTeamId,
+        teamName: teamNameById.get(dependency.fromTeamId) ?? "Unknown Team",
+      },
+      toIssue: {
+        _id: dependency.toIssue._id,
+        key: dependency.toIssue.key,
+        title: dependency.toIssue.title,
+        status: dependency.toIssue.status,
+        priority: dependency.toIssue.priority,
+        teamId: dependency.toTeamId,
+        teamName: teamNameById.get(dependency.toTeamId) ?? "Unknown Team",
+      },
+      updatedAt: dependency.updatedAt,
+    }));
+  },
+});
 
 // =============================================================================
 // Workspace Members
@@ -421,23 +618,27 @@ export const getWorkspaceMembers = workspaceQuery({
       .filter(notDeleted)
       .take(MAX_PAGE_SIZE);
 
-    // Fetch user details for each membership
-    const members = await Promise.all(
-      memberships.map(async (membership) => {
-        const user = await ctx.db.get(membership.userId);
-        return {
-          ...membership,
-          user: user
-            ? {
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                image: user.image,
-              }
-            : null,
-        };
-      }),
+    // Batch fetch user details to avoid N+1 queries
+    const userIds = [...new Set(memberships.map((m) => m.userId))];
+    const users = await Promise.all(userIds.map((userId) => ctx.db.get(userId)));
+    const userMap = new Map(
+      users.filter((u): u is NonNullable<typeof u> => u !== null).map((u) => [u._id, u]),
     );
+
+    const members = memberships.map((membership) => {
+      const user = userMap.get(membership.userId);
+      return {
+        ...membership,
+        user: user
+          ? {
+              _id: user._id,
+              name: user.name,
+              email: user.email,
+              image: user.image,
+            }
+          : null,
+      };
+    });
 
     return members;
   },

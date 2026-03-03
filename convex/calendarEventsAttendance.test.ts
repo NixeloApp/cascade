@@ -11,7 +11,8 @@ describe("Calendar Events Attendance", () => {
   async function createCalendarEvent(
     t: ReturnType<typeof convexTest>,
     organizerId: Id<"users">,
-    _organizationId: Id<"organizations">,
+    organizationId: Id<"organizations">,
+    workspaceId: Id<"workspaces">,
     options: {
       title?: string;
       attendeeIds?: Id<"users">[];
@@ -31,6 +32,8 @@ describe("Calendar Events Attendance", () => {
         endTime: options.endTime ?? now + HOUR, // 1 hour
         updatedAt: now,
         // Required fields
+        organizationId,
+        workspaceId,
         allDay: false,
         eventType: "meeting",
         status: "confirmed",
@@ -42,10 +45,10 @@ describe("Calendar Events Attendance", () => {
   describe("markAttendance", () => {
     it("should mark attendance as organizer", async () => {
       const t = convexTest(schema, modules);
-      const { userId, organizationId, asUser } = await createTestContext(t);
+      const { userId, organizationId, workspaceId, asUser } = await createTestContext(t);
       const attendeeId = await createTestUser(t, { name: "Attendee" });
 
-      const eventId = await createCalendarEvent(t, userId, organizationId, {
+      const eventId = await createCalendarEvent(t, userId, organizationId, workspaceId, {
         title: "Team Meeting",
         attendeeIds: [attendeeId],
         isRequired: true,
@@ -68,10 +71,10 @@ describe("Calendar Events Attendance", () => {
 
     it("should update existing attendance record", async () => {
       const t = convexTest(schema, modules);
-      const { userId, organizationId, asUser } = await createTestContext(t);
+      const { userId, organizationId, workspaceId, asUser } = await createTestContext(t);
       const attendeeId = await createTestUser(t, { name: "Attendee" });
 
-      const eventId = await createCalendarEvent(t, userId, organizationId, {
+      const eventId = await createCalendarEvent(t, userId, organizationId, workspaceId, {
         attendeeIds: [attendeeId],
         isRequired: true,
       });
@@ -105,11 +108,11 @@ describe("Calendar Events Attendance", () => {
 
     it("should reject non-organizer from marking attendance", async () => {
       const t = convexTest(schema, modules);
-      const { userId, organizationId } = await createTestContext(t);
+      const { userId, organizationId, workspaceId } = await createTestContext(t);
       const organizerId = await createTestUser(t, { name: "Organizer" });
       const attendeeId = await createTestUser(t, { name: "Attendee", email: "attendee@test.com" });
 
-      const eventId = await createCalendarEvent(t, organizerId, organizationId, {
+      const eventId = await createCalendarEvent(t, organizerId, organizationId, workspaceId, {
         attendeeIds: [attendeeId, userId],
         isRequired: true,
       });
@@ -127,10 +130,10 @@ describe("Calendar Events Attendance", () => {
 
     it("should reject marking attendance for non-existent event", async () => {
       const t = convexTest(schema, modules);
-      const { userId, organizationId, asUser } = await createTestContext(t);
+      const { userId, organizationId, workspaceId, asUser } = await createTestContext(t);
 
       // Create and delete event to get valid non-existent ID
-      const eventId = await createCalendarEvent(t, userId, organizationId);
+      const eventId = await createCalendarEvent(t, userId, organizationId, workspaceId);
       await t.run(async (ctx) => ctx.db.delete(eventId));
 
       await expect(
@@ -144,9 +147,9 @@ describe("Calendar Events Attendance", () => {
 
     it("should reject unauthenticated users", async () => {
       const t = convexTest(schema, modules);
-      const { userId, organizationId } = await createTestContext(t);
+      const { userId, organizationId, workspaceId } = await createTestContext(t);
 
-      const eventId = await createCalendarEvent(t, userId, organizationId);
+      const eventId = await createCalendarEvent(t, userId, organizationId, workspaceId);
 
       await expect(
         t.mutation(api.calendarEventsAttendance.markAttendance, {
@@ -161,11 +164,11 @@ describe("Calendar Events Attendance", () => {
   describe("getAttendance", () => {
     it("should return attendance for organizer", async () => {
       const t = convexTest(schema, modules);
-      const { userId, organizationId, asUser } = await createTestContext(t);
+      const { userId, organizationId, workspaceId, asUser } = await createTestContext(t);
       const attendee1 = await createTestUser(t, { name: "Attendee 1" });
       const attendee2 = await createTestUser(t, { name: "Attendee 2", email: "att2@test.com" });
 
-      const eventId = await createCalendarEvent(t, userId, organizationId, {
+      const eventId = await createCalendarEvent(t, userId, organizationId, workspaceId, {
         title: "Team Standup",
         attendeeIds: [attendee1, attendee2],
         isRequired: true,
@@ -196,10 +199,10 @@ describe("Calendar Events Attendance", () => {
 
     it("should return null for non-organizer", async () => {
       const t = convexTest(schema, modules);
-      const { userId, organizationId } = await createTestContext(t);
+      const { userId, organizationId, workspaceId } = await createTestContext(t);
       const organizerId = await createTestUser(t, { name: "Organizer" });
 
-      const eventId = await createCalendarEvent(t, organizerId, organizationId, {
+      const eventId = await createCalendarEvent(t, organizerId, organizationId, workspaceId, {
         attendeeIds: [userId],
       });
 
@@ -213,10 +216,10 @@ describe("Calendar Events Attendance", () => {
 
     it("should return null for non-existent event", async () => {
       const t = convexTest(schema, modules);
-      const { userId, organizationId, asUser } = await createTestContext(t);
+      const { userId, organizationId, workspaceId, asUser } = await createTestContext(t);
 
       // Create and delete event
-      const eventId = await createCalendarEvent(t, userId, organizationId);
+      const eventId = await createCalendarEvent(t, userId, organizationId, workspaceId);
       await t.run(async (ctx) => ctx.db.delete(eventId));
 
       const result = await asUser.query(api.calendarEventsAttendance.getAttendance, { eventId });
@@ -225,9 +228,9 @@ describe("Calendar Events Attendance", () => {
 
     it("should reject unauthenticated users", async () => {
       const t = convexTest(schema, modules);
-      const { userId, organizationId } = await createTestContext(t);
+      const { userId, organizationId, workspaceId } = await createTestContext(t);
 
-      const eventId = await createCalendarEvent(t, userId, organizationId);
+      const eventId = await createCalendarEvent(t, userId, organizationId, workspaceId);
 
       await expect(
         t.query(api.calendarEventsAttendance.getAttendance, { eventId }),
@@ -238,13 +241,13 @@ describe("Calendar Events Attendance", () => {
   describe("getUserAttendanceHistory", () => {
     it("should return attendance history for a user", async () => {
       const t = convexTest(schema, modules);
-      const { userId, organizationId, asUser } = await createTestContext(t);
+      const { userId, organizationId, workspaceId, asUser } = await createTestContext(t);
       const attendeeId = await createTestUser(t, { name: "Attendee" });
 
       const now = Date.now();
 
       // Create events at different times
-      const event1 = await createCalendarEvent(t, userId, organizationId, {
+      const event1 = await createCalendarEvent(t, userId, organizationId, workspaceId, {
         title: "Morning Standup",
         attendeeIds: [attendeeId],
         isRequired: true,
@@ -252,7 +255,7 @@ describe("Calendar Events Attendance", () => {
         endTime: now - DAY + HOUR,
       });
 
-      const event2 = await createCalendarEvent(t, userId, organizationId, {
+      const event2 = await createCalendarEvent(t, userId, organizationId, workspaceId, {
         title: "Sprint Review",
         attendeeIds: [attendeeId],
         isRequired: true,
@@ -287,7 +290,7 @@ describe("Calendar Events Attendance", () => {
 
     it("should filter by date range", async () => {
       const t = convexTest(schema, modules);
-      const { userId, organizationId, asUser } = await createTestContext(t);
+      const { userId, organizationId, workspaceId, asUser } = await createTestContext(t);
       const attendeeId = await createTestUser(t, { name: "Attendee" });
 
       const now = Date.now();
@@ -295,13 +298,13 @@ describe("Calendar Events Attendance", () => {
       const twoWeeksAgo = now - 14 * DAY;
 
       // Create events at different times
-      const recentEvent = await createCalendarEvent(t, userId, organizationId, {
+      const recentEvent = await createCalendarEvent(t, userId, organizationId, workspaceId, {
         title: "Recent Meeting",
         attendeeIds: [attendeeId],
         startTime: now - DAY, // 1 day ago
       });
 
-      const oldEvent = await createCalendarEvent(t, userId, organizationId, {
+      const oldEvent = await createCalendarEvent(t, userId, organizationId, workspaceId, {
         title: "Old Meeting",
         attendeeIds: [attendeeId],
         startTime: twoWeeksAgo,
@@ -355,21 +358,21 @@ describe("Calendar Events Attendance", () => {
   describe("getAttendanceReport", () => {
     it("should return summary of attendance for required meetings", async () => {
       const t = convexTest(schema, modules);
-      const { userId, organizationId, asUser } = await createTestContext(t);
+      const { userId, organizationId, workspaceId, asUser } = await createTestContext(t);
       const attendee1 = await createTestUser(t, { name: "Employee 1" });
       const attendee2 = await createTestUser(t, { name: "Employee 2", email: "emp2@test.com" });
 
       const now = Date.now();
 
       // Create required meetings
-      const event1 = await createCalendarEvent(t, userId, organizationId, {
+      const event1 = await createCalendarEvent(t, userId, organizationId, workspaceId, {
         title: "All Hands",
         attendeeIds: [attendee1, attendee2],
         isRequired: true,
         startTime: now - DAY,
       });
 
-      const event2 = await createCalendarEvent(t, userId, organizationId, {
+      const event2 = await createCalendarEvent(t, userId, organizationId, workspaceId, {
         title: "Team Sync",
         attendeeIds: [attendee1, attendee2],
         isRequired: true,
@@ -377,7 +380,7 @@ describe("Calendar Events Attendance", () => {
       });
 
       // Create non-required meeting (should not be counted)
-      await createCalendarEvent(t, userId, organizationId, {
+      await createCalendarEvent(t, userId, organizationId, workspaceId, {
         title: "Optional Social",
         attendeeIds: [attendee1, attendee2],
         isRequired: false,
@@ -430,7 +433,7 @@ describe("Calendar Events Attendance", () => {
 
     it("should filter report by date range", async () => {
       const t = convexTest(schema, modules);
-      const { userId, organizationId, asUser } = await createTestContext(t);
+      const { userId, organizationId, workspaceId, asUser } = await createTestContext(t);
       const attendeeId = await createTestUser(t, { name: "Employee" });
 
       const now = Date.now();
@@ -438,14 +441,14 @@ describe("Calendar Events Attendance", () => {
       const twoWeeksAgo = now - 14 * DAY;
 
       // Create events at different times
-      await createCalendarEvent(t, userId, organizationId, {
+      await createCalendarEvent(t, userId, organizationId, workspaceId, {
         title: "Recent Required",
         attendeeIds: [attendeeId],
         isRequired: true,
         startTime: now - DAY,
       });
 
-      await createCalendarEvent(t, userId, organizationId, {
+      await createCalendarEvent(t, userId, organizationId, workspaceId, {
         title: "Old Required",
         attendeeIds: [attendeeId],
         isRequired: true,
@@ -463,10 +466,10 @@ describe("Calendar Events Attendance", () => {
 
     it("should count unmarked attendance as notMarked", async () => {
       const t = convexTest(schema, modules);
-      const { userId, organizationId, asUser } = await createTestContext(t);
+      const { userId, organizationId, workspaceId, asUser } = await createTestContext(t);
       const attendeeId = await createTestUser(t, { name: "Employee" });
 
-      await createCalendarEvent(t, userId, organizationId, {
+      await createCalendarEvent(t, userId, organizationId, workspaceId, {
         title: "Meeting Without Marking",
         attendeeIds: [attendeeId],
         isRequired: true,

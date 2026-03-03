@@ -100,6 +100,19 @@ describe("GlobalSearch", () => {
     expect(screen.getByText("All")).toBeInTheDocument();
     expect(screen.getByText("Issues")).toBeInTheDocument();
     expect(screen.getByText("Documents")).toBeInTheDocument();
+    expect(screen.getByText(/Shortcuts:/i)).toBeInTheDocument();
+  });
+
+  it("should open advanced search modal from footer action", async () => {
+    const user = userEvent.setup();
+    render(<GlobalSearch />);
+
+    await user.click(screen.getByRole("button"));
+    await user.click(screen.getByRole("button", { name: /Advanced Search/i }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Search Issues/i)).toBeInTheDocument();
+    });
   });
 
   it("should filter by tab selection", async () => {
@@ -178,6 +191,55 @@ describe("GlobalSearch", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Type at least 2 characters to search/i)).toBeInTheDocument();
+    });
+  });
+
+  it("should parse shortcuts and pass issue filters to search query", async () => {
+    const user = userEvent.setup();
+    (useQuery as any).mockReturnValue({ page: [], results: [], total: 0, hasMore: false });
+
+    render(<GlobalSearch />);
+
+    await user.click(screen.getByRole("button"));
+    const searchInput = screen.getByPlaceholderText(/Search issues and documents/i);
+    await user.type(searchInput, "type:bug status:done priority:high label:frontend @me auth");
+
+    await waitFor(() => {
+      const calls = (useQuery as any).mock.calls as unknown[][];
+      const hasShortcutIssueCall = calls.some((call) => {
+        const args = call[1] as Record<string, unknown> | "skip" | undefined;
+        return (
+          args !== "skip" &&
+          args?.query === "auth" &&
+          args?.assigneeId === "me" &&
+          Array.isArray(args?.type) &&
+          args.type.includes("bug") &&
+          Array.isArray(args?.status) &&
+          args.status.includes("done") &&
+          Array.isArray(args?.priority) &&
+          args.priority.includes("high") &&
+          Array.isArray(args?.labels) &&
+          args.labels.includes("frontend")
+        );
+      });
+      expect(hasShortcutIssueCall).toBe(true);
+    });
+  });
+
+  it("should prompt for non-shortcut text when query only has shortcuts", async () => {
+    const user = userEvent.setup();
+    (useQuery as any).mockReturnValue({ page: [], results: [], total: 0, hasMore: false });
+
+    render(<GlobalSearch />);
+
+    await user.click(screen.getByRole("button"));
+    const searchInput = screen.getByPlaceholderText(/Search issues and documents/i);
+    await user.type(searchInput, "type:bug @me");
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Add at least 2 non-shortcut characters to search/i),
+      ).toBeInTheDocument();
     });
   });
 

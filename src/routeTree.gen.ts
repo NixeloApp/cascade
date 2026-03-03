@@ -15,16 +15,20 @@ import { Route as SigninRouteImport } from './routes/signin'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PortalTokenRouteImport } from './routes/portal.$token'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as AuthOnboardingRouteImport } from './routes/_auth/onboarding'
 import { Route as AuthAppRouteRouteImport } from './routes/_auth/_app/route'
 import { Route as AuthAppAppRouteImport } from './routes/_auth/_app/app'
 import { Route as AuthAppOrgSlugRouteRouteImport } from './routes/_auth/_app/$orgSlug/route'
 import { Route as AuthAppOrgSlugIndexRouteImport } from './routes/_auth/_app/$orgSlug/index'
+import { Route as PortalTokenProjectsProjectIdRouteImport } from './routes/portal.$token.projects.$projectId'
 import { Route as AuthAppOrgSlugTimeTrackingRouteImport } from './routes/_auth/_app/$orgSlug/time-tracking'
 import { Route as AuthAppOrgSlugNotificationsRouteImport } from './routes/_auth/_app/$orgSlug/notifications'
+import { Route as AuthAppOrgSlugMyIssuesRouteImport } from './routes/_auth/_app/$orgSlug/my-issues'
 import { Route as AuthAppOrgSlugMcpServerRouteImport } from './routes/_auth/_app/$orgSlug/mcp-server'
 import { Route as AuthAppOrgSlugDashboardRouteImport } from './routes/_auth/_app/$orgSlug/dashboard'
+import { Route as AuthAppOrgSlugCalendarRouteImport } from './routes/_auth/_app/$orgSlug/calendar'
 import { Route as AuthAppOrgSlugAuthenticationRouteImport } from './routes/_auth/_app/$orgSlug/authentication'
 import { Route as AuthAppOrgSlugAssistantRouteImport } from './routes/_auth/_app/$orgSlug/assistant'
 import { Route as AuthAppOrgSlugAnalyticsRouteImport } from './routes/_auth/_app/$orgSlug/analytics'
@@ -33,16 +37,24 @@ import { Route as AuthAppOrgSlugWorkspacesIndexRouteImport } from './routes/_aut
 import { Route as AuthAppOrgSlugSettingsIndexRouteImport } from './routes/_auth/_app/$orgSlug/settings/index'
 import { Route as AuthAppOrgSlugProjectsIndexRouteImport } from './routes/_auth/_app/$orgSlug/projects/index'
 import { Route as AuthAppOrgSlugIssuesIndexRouteImport } from './routes/_auth/_app/$orgSlug/issues/index'
+import { Route as AuthAppOrgSlugInvoicesIndexRouteImport } from './routes/_auth/_app/$orgSlug/invoices/index'
 import { Route as AuthAppOrgSlugDocumentsIndexRouteImport } from './routes/_auth/_app/$orgSlug/documents/index'
+import { Route as AuthAppOrgSlugClientsIndexRouteImport } from './routes/_auth/_app/$orgSlug/clients/index'
 import { Route as AuthAppOrgSlugSettingsProfileRouteImport } from './routes/_auth/_app/$orgSlug/settings/profile'
 import { Route as AuthAppOrgSlugIssuesKeyRouteImport } from './routes/_auth/_app/$orgSlug/issues/$key'
+import { Route as AuthAppOrgSlugInvoicesInvoiceIdRouteImport } from './routes/_auth/_app/$orgSlug/invoices/$invoiceId'
 import { Route as AuthAppOrgSlugDocumentsTemplatesRouteImport } from './routes/_auth/_app/$orgSlug/documents/templates'
 import { Route as AuthAppOrgSlugDocumentsIdRouteImport } from './routes/_auth/_app/$orgSlug/documents/$id'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/route'
 import { Route as AuthAppOrgSlugProjectsKeyRouteRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/route'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/index'
 import { Route as AuthAppOrgSlugProjectsKeyIndexRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/index'
+import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/wiki'
+import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings'
+import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/dependencies'
+import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/calendar'
+import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog'
 import { Route as AuthAppOrgSlugProjectsKeyTimesheetRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/timesheet'
 import { Route as AuthAppOrgSlugProjectsKeySprintsRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/sprints'
 import { Route as AuthAppOrgSlugProjectsKeySettingsRouteImport } from './routes/_auth/_app/$orgSlug/projects/$key/settings'
@@ -57,6 +69,7 @@ import { Route as AuthAppOrgSlugProjectsKeyActivityRouteImport } from './routes/
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsIndexRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/index'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/route'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugIndexRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/index'
+import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugCalendarRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar'
 import { Route as AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugBoardRouteImport } from './routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/board'
@@ -90,6 +103,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PortalTokenRoute = PortalTokenRouteImport.update({
+  id: '/portal/$token',
+  path: '/portal/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
@@ -119,6 +137,12 @@ const AuthAppOrgSlugIndexRoute = AuthAppOrgSlugIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthAppOrgSlugRouteRoute,
 } as any)
+const PortalTokenProjectsProjectIdRoute =
+  PortalTokenProjectsProjectIdRouteImport.update({
+    id: '/projects/$projectId',
+    path: '/projects/$projectId',
+    getParentRoute: () => PortalTokenRoute,
+  } as any)
 const AuthAppOrgSlugTimeTrackingRoute =
   AuthAppOrgSlugTimeTrackingRouteImport.update({
     id: '/time-tracking',
@@ -131,6 +155,11 @@ const AuthAppOrgSlugNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthAppOrgSlugRouteRoute,
   } as any)
+const AuthAppOrgSlugMyIssuesRoute = AuthAppOrgSlugMyIssuesRouteImport.update({
+  id: '/my-issues',
+  path: '/my-issues',
+  getParentRoute: () => AuthAppOrgSlugRouteRoute,
+} as any)
 const AuthAppOrgSlugMcpServerRoute = AuthAppOrgSlugMcpServerRouteImport.update({
   id: '/mcp-server',
   path: '/mcp-server',
@@ -139,6 +168,11 @@ const AuthAppOrgSlugMcpServerRoute = AuthAppOrgSlugMcpServerRouteImport.update({
 const AuthAppOrgSlugDashboardRoute = AuthAppOrgSlugDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthAppOrgSlugRouteRoute,
+} as any)
+const AuthAppOrgSlugCalendarRoute = AuthAppOrgSlugCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
   getParentRoute: () => AuthAppOrgSlugRouteRoute,
 } as any)
 const AuthAppOrgSlugAuthenticationRoute =
@@ -186,10 +220,22 @@ const AuthAppOrgSlugIssuesIndexRoute =
     path: '/issues/',
     getParentRoute: () => AuthAppOrgSlugRouteRoute,
   } as any)
+const AuthAppOrgSlugInvoicesIndexRoute =
+  AuthAppOrgSlugInvoicesIndexRouteImport.update({
+    id: '/invoices/',
+    path: '/invoices/',
+    getParentRoute: () => AuthAppOrgSlugRouteRoute,
+  } as any)
 const AuthAppOrgSlugDocumentsIndexRoute =
   AuthAppOrgSlugDocumentsIndexRouteImport.update({
     id: '/documents/',
     path: '/documents/',
+    getParentRoute: () => AuthAppOrgSlugRouteRoute,
+  } as any)
+const AuthAppOrgSlugClientsIndexRoute =
+  AuthAppOrgSlugClientsIndexRouteImport.update({
+    id: '/clients/',
+    path: '/clients/',
     getParentRoute: () => AuthAppOrgSlugRouteRoute,
   } as any)
 const AuthAppOrgSlugSettingsProfileRoute =
@@ -203,6 +249,12 @@ const AuthAppOrgSlugIssuesKeyRoute = AuthAppOrgSlugIssuesKeyRouteImport.update({
   path: '/issues/$key',
   getParentRoute: () => AuthAppOrgSlugRouteRoute,
 } as any)
+const AuthAppOrgSlugInvoicesInvoiceIdRoute =
+  AuthAppOrgSlugInvoicesInvoiceIdRouteImport.update({
+    id: '/invoices/$invoiceId',
+    path: '/invoices/$invoiceId',
+    getParentRoute: () => AuthAppOrgSlugRouteRoute,
+  } as any)
 const AuthAppOrgSlugDocumentsTemplatesRoute =
   AuthAppOrgSlugDocumentsTemplatesRouteImport.update({
     id: '/documents/templates',
@@ -239,10 +291,40 @@ const AuthAppOrgSlugProjectsKeyIndexRoute =
     path: '/',
     getParentRoute: () => AuthAppOrgSlugProjectsKeyRouteRoute,
   } as any)
+const AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute =
+  AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRouteImport.update({
+    id: '/wiki',
+    path: '/wiki',
+    getParentRoute: () => AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute,
+  } as any)
+const AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute =
+  AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRouteImport.update({
+    id: '/sprints',
+    path: '/sprints',
+    getParentRoute: () => AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute,
+  } as any)
 const AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute =
   AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRouteImport.update({
     id: '/settings',
     path: '/settings',
+    getParentRoute: () => AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute,
+  } as any)
+const AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRoute =
+  AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRouteImport.update({
+    id: '/dependencies',
+    path: '/dependencies',
+    getParentRoute: () => AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute,
+  } as any)
+const AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRoute =
+  AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRouteImport.update({
+    id: '/calendar',
+    path: '/calendar',
+    getParentRoute: () => AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute,
+  } as any)
+const AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute =
+  AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRouteImport.update({
+    id: '/backlog',
+    path: '/backlog',
     getParentRoute: () => AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute,
   } as any)
 const AuthAppOrgSlugProjectsKeyTimesheetRoute =
@@ -330,6 +412,13 @@ const AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugIndexRoute =
     getParentRoute: () =>
       AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRoute,
   } as any)
+const AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRoute =
+  AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRouteImport.update({
+    id: '/wiki',
+    path: '/wiki',
+    getParentRoute: () =>
+      AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRoute,
+  } as any)
 const AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRoute =
   AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRouteImport.update({
     id: '/settings',
@@ -360,24 +449,31 @@ export interface FileRoutesByFullPath {
   '/verify-2fa': typeof Verify2faRoute
   '/onboarding': typeof AuthOnboardingRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/portal/$token': typeof PortalTokenRouteWithChildren
   '/$orgSlug': typeof AuthAppOrgSlugRouteRouteWithChildren
   '/app': typeof AuthAppAppRoute
   '/$orgSlug/add-ons': typeof AuthAppOrgSlugAddOnsRoute
   '/$orgSlug/analytics': typeof AuthAppOrgSlugAnalyticsRoute
   '/$orgSlug/assistant': typeof AuthAppOrgSlugAssistantRoute
   '/$orgSlug/authentication': typeof AuthAppOrgSlugAuthenticationRoute
+  '/$orgSlug/calendar': typeof AuthAppOrgSlugCalendarRoute
   '/$orgSlug/dashboard': typeof AuthAppOrgSlugDashboardRoute
   '/$orgSlug/mcp-server': typeof AuthAppOrgSlugMcpServerRoute
+  '/$orgSlug/my-issues': typeof AuthAppOrgSlugMyIssuesRoute
   '/$orgSlug/notifications': typeof AuthAppOrgSlugNotificationsRoute
   '/$orgSlug/time-tracking': typeof AuthAppOrgSlugTimeTrackingRoute
+  '/portal/$token/projects/$projectId': typeof PortalTokenProjectsProjectIdRoute
   '/$orgSlug/': typeof AuthAppOrgSlugIndexRoute
   '/$orgSlug/projects/$key': typeof AuthAppOrgSlugProjectsKeyRouteRouteWithChildren
   '/$orgSlug/workspaces/$workspaceSlug': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteWithChildren
   '/$orgSlug/documents/$id': typeof AuthAppOrgSlugDocumentsIdRoute
   '/$orgSlug/documents/templates': typeof AuthAppOrgSlugDocumentsTemplatesRoute
+  '/$orgSlug/invoices/$invoiceId': typeof AuthAppOrgSlugInvoicesInvoiceIdRoute
   '/$orgSlug/issues/$key': typeof AuthAppOrgSlugIssuesKeyRoute
   '/$orgSlug/settings/profile': typeof AuthAppOrgSlugSettingsProfileRoute
+  '/$orgSlug/clients/': typeof AuthAppOrgSlugClientsIndexRoute
   '/$orgSlug/documents/': typeof AuthAppOrgSlugDocumentsIndexRoute
+  '/$orgSlug/invoices/': typeof AuthAppOrgSlugInvoicesIndexRoute
   '/$orgSlug/issues/': typeof AuthAppOrgSlugIssuesIndexRoute
   '/$orgSlug/projects/': typeof AuthAppOrgSlugProjectsIndexRoute
   '/$orgSlug/settings/': typeof AuthAppOrgSlugSettingsIndexRoute
@@ -393,7 +489,12 @@ export interface FileRoutesByFullPath {
   '/$orgSlug/projects/$key/settings': typeof AuthAppOrgSlugProjectsKeySettingsRoute
   '/$orgSlug/projects/$key/sprints': typeof AuthAppOrgSlugProjectsKeySprintsRoute
   '/$orgSlug/projects/$key/timesheet': typeof AuthAppOrgSlugProjectsKeyTimesheetRoute
+  '/$orgSlug/workspaces/$workspaceSlug/backlog': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute
+  '/$orgSlug/workspaces/$workspaceSlug/calendar': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRoute
+  '/$orgSlug/workspaces/$workspaceSlug/dependencies': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRoute
   '/$orgSlug/workspaces/$workspaceSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute
+  '/$orgSlug/workspaces/$workspaceSlug/sprints': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute
+  '/$orgSlug/workspaces/$workspaceSlug/wiki': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute
   '/$orgSlug/projects/$key/': typeof AuthAppOrgSlugProjectsKeyIndexRoute
   '/$orgSlug/workspaces/$workspaceSlug/': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute
   '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRouteWithChildren
@@ -401,6 +502,7 @@ export interface FileRoutesByFullPath {
   '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/board': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugBoardRoute
   '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugCalendarRoute
   '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRoute
+  '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRoute
   '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugIndexRoute
 }
 export interface FileRoutesByTo {
@@ -411,21 +513,28 @@ export interface FileRoutesByTo {
   '/verify-2fa': typeof Verify2faRoute
   '/onboarding': typeof AuthOnboardingRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/portal/$token': typeof PortalTokenRouteWithChildren
   '/app': typeof AuthAppAppRoute
   '/$orgSlug/add-ons': typeof AuthAppOrgSlugAddOnsRoute
   '/$orgSlug/analytics': typeof AuthAppOrgSlugAnalyticsRoute
   '/$orgSlug/assistant': typeof AuthAppOrgSlugAssistantRoute
   '/$orgSlug/authentication': typeof AuthAppOrgSlugAuthenticationRoute
+  '/$orgSlug/calendar': typeof AuthAppOrgSlugCalendarRoute
   '/$orgSlug/dashboard': typeof AuthAppOrgSlugDashboardRoute
   '/$orgSlug/mcp-server': typeof AuthAppOrgSlugMcpServerRoute
+  '/$orgSlug/my-issues': typeof AuthAppOrgSlugMyIssuesRoute
   '/$orgSlug/notifications': typeof AuthAppOrgSlugNotificationsRoute
   '/$orgSlug/time-tracking': typeof AuthAppOrgSlugTimeTrackingRoute
+  '/portal/$token/projects/$projectId': typeof PortalTokenProjectsProjectIdRoute
   '/$orgSlug': typeof AuthAppOrgSlugIndexRoute
   '/$orgSlug/documents/$id': typeof AuthAppOrgSlugDocumentsIdRoute
   '/$orgSlug/documents/templates': typeof AuthAppOrgSlugDocumentsTemplatesRoute
+  '/$orgSlug/invoices/$invoiceId': typeof AuthAppOrgSlugInvoicesInvoiceIdRoute
   '/$orgSlug/issues/$key': typeof AuthAppOrgSlugIssuesKeyRoute
   '/$orgSlug/settings/profile': typeof AuthAppOrgSlugSettingsProfileRoute
+  '/$orgSlug/clients': typeof AuthAppOrgSlugClientsIndexRoute
   '/$orgSlug/documents': typeof AuthAppOrgSlugDocumentsIndexRoute
+  '/$orgSlug/invoices': typeof AuthAppOrgSlugInvoicesIndexRoute
   '/$orgSlug/issues': typeof AuthAppOrgSlugIssuesIndexRoute
   '/$orgSlug/projects': typeof AuthAppOrgSlugProjectsIndexRoute
   '/$orgSlug/settings': typeof AuthAppOrgSlugSettingsIndexRoute
@@ -441,13 +550,19 @@ export interface FileRoutesByTo {
   '/$orgSlug/projects/$key/settings': typeof AuthAppOrgSlugProjectsKeySettingsRoute
   '/$orgSlug/projects/$key/sprints': typeof AuthAppOrgSlugProjectsKeySprintsRoute
   '/$orgSlug/projects/$key/timesheet': typeof AuthAppOrgSlugProjectsKeyTimesheetRoute
+  '/$orgSlug/workspaces/$workspaceSlug/backlog': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute
+  '/$orgSlug/workspaces/$workspaceSlug/calendar': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRoute
+  '/$orgSlug/workspaces/$workspaceSlug/dependencies': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRoute
   '/$orgSlug/workspaces/$workspaceSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute
+  '/$orgSlug/workspaces/$workspaceSlug/sprints': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute
+  '/$orgSlug/workspaces/$workspaceSlug/wiki': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute
   '/$orgSlug/projects/$key': typeof AuthAppOrgSlugProjectsKeyIndexRoute
   '/$orgSlug/workspaces/$workspaceSlug': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute
   '/$orgSlug/workspaces/$workspaceSlug/teams': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsIndexRoute
   '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/board': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugBoardRoute
   '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugCalendarRoute
   '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRoute
+  '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRoute
   '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugIndexRoute
 }
 export interface FileRoutesById {
@@ -461,24 +576,31 @@ export interface FileRoutesById {
   '/_auth/_app': typeof AuthAppRouteRouteWithChildren
   '/_auth/onboarding': typeof AuthOnboardingRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/portal/$token': typeof PortalTokenRouteWithChildren
   '/_auth/_app/$orgSlug': typeof AuthAppOrgSlugRouteRouteWithChildren
   '/_auth/_app/app': typeof AuthAppAppRoute
   '/_auth/_app/$orgSlug/add-ons': typeof AuthAppOrgSlugAddOnsRoute
   '/_auth/_app/$orgSlug/analytics': typeof AuthAppOrgSlugAnalyticsRoute
   '/_auth/_app/$orgSlug/assistant': typeof AuthAppOrgSlugAssistantRoute
   '/_auth/_app/$orgSlug/authentication': typeof AuthAppOrgSlugAuthenticationRoute
+  '/_auth/_app/$orgSlug/calendar': typeof AuthAppOrgSlugCalendarRoute
   '/_auth/_app/$orgSlug/dashboard': typeof AuthAppOrgSlugDashboardRoute
   '/_auth/_app/$orgSlug/mcp-server': typeof AuthAppOrgSlugMcpServerRoute
+  '/_auth/_app/$orgSlug/my-issues': typeof AuthAppOrgSlugMyIssuesRoute
   '/_auth/_app/$orgSlug/notifications': typeof AuthAppOrgSlugNotificationsRoute
   '/_auth/_app/$orgSlug/time-tracking': typeof AuthAppOrgSlugTimeTrackingRoute
+  '/portal/$token/projects/$projectId': typeof PortalTokenProjectsProjectIdRoute
   '/_auth/_app/$orgSlug/': typeof AuthAppOrgSlugIndexRoute
   '/_auth/_app/$orgSlug/projects/$key': typeof AuthAppOrgSlugProjectsKeyRouteRouteWithChildren
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteWithChildren
   '/_auth/_app/$orgSlug/documents/$id': typeof AuthAppOrgSlugDocumentsIdRoute
   '/_auth/_app/$orgSlug/documents/templates': typeof AuthAppOrgSlugDocumentsTemplatesRoute
+  '/_auth/_app/$orgSlug/invoices/$invoiceId': typeof AuthAppOrgSlugInvoicesInvoiceIdRoute
   '/_auth/_app/$orgSlug/issues/$key': typeof AuthAppOrgSlugIssuesKeyRoute
   '/_auth/_app/$orgSlug/settings/profile': typeof AuthAppOrgSlugSettingsProfileRoute
+  '/_auth/_app/$orgSlug/clients/': typeof AuthAppOrgSlugClientsIndexRoute
   '/_auth/_app/$orgSlug/documents/': typeof AuthAppOrgSlugDocumentsIndexRoute
+  '/_auth/_app/$orgSlug/invoices/': typeof AuthAppOrgSlugInvoicesIndexRoute
   '/_auth/_app/$orgSlug/issues/': typeof AuthAppOrgSlugIssuesIndexRoute
   '/_auth/_app/$orgSlug/projects/': typeof AuthAppOrgSlugProjectsIndexRoute
   '/_auth/_app/$orgSlug/settings/': typeof AuthAppOrgSlugSettingsIndexRoute
@@ -494,7 +616,12 @@ export interface FileRoutesById {
   '/_auth/_app/$orgSlug/projects/$key/settings': typeof AuthAppOrgSlugProjectsKeySettingsRoute
   '/_auth/_app/$orgSlug/projects/$key/sprints': typeof AuthAppOrgSlugProjectsKeySprintsRoute
   '/_auth/_app/$orgSlug/projects/$key/timesheet': typeof AuthAppOrgSlugProjectsKeyTimesheetRoute
+  '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute
+  '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/calendar': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRoute
+  '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/dependencies': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute
+  '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute
+  '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/wiki': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute
   '/_auth/_app/$orgSlug/projects/$key/': typeof AuthAppOrgSlugProjectsKeyIndexRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRouteWithChildren
@@ -502,6 +629,7 @@ export interface FileRoutesById {
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/board': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugBoardRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugCalendarRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRoute
+  '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRoute
   '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/': typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugIndexRoute
 }
 export interface FileRouteTypes {
@@ -514,24 +642,31 @@ export interface FileRouteTypes {
     | '/verify-2fa'
     | '/onboarding'
     | '/invite/$token'
+    | '/portal/$token'
     | '/$orgSlug'
     | '/app'
     | '/$orgSlug/add-ons'
     | '/$orgSlug/analytics'
     | '/$orgSlug/assistant'
     | '/$orgSlug/authentication'
+    | '/$orgSlug/calendar'
     | '/$orgSlug/dashboard'
     | '/$orgSlug/mcp-server'
+    | '/$orgSlug/my-issues'
     | '/$orgSlug/notifications'
     | '/$orgSlug/time-tracking'
+    | '/portal/$token/projects/$projectId'
     | '/$orgSlug/'
     | '/$orgSlug/projects/$key'
     | '/$orgSlug/workspaces/$workspaceSlug'
     | '/$orgSlug/documents/$id'
     | '/$orgSlug/documents/templates'
+    | '/$orgSlug/invoices/$invoiceId'
     | '/$orgSlug/issues/$key'
     | '/$orgSlug/settings/profile'
+    | '/$orgSlug/clients/'
     | '/$orgSlug/documents/'
+    | '/$orgSlug/invoices/'
     | '/$orgSlug/issues/'
     | '/$orgSlug/projects/'
     | '/$orgSlug/settings/'
@@ -547,7 +682,12 @@ export interface FileRouteTypes {
     | '/$orgSlug/projects/$key/settings'
     | '/$orgSlug/projects/$key/sprints'
     | '/$orgSlug/projects/$key/timesheet'
+    | '/$orgSlug/workspaces/$workspaceSlug/backlog'
+    | '/$orgSlug/workspaces/$workspaceSlug/calendar'
+    | '/$orgSlug/workspaces/$workspaceSlug/dependencies'
     | '/$orgSlug/workspaces/$workspaceSlug/settings'
+    | '/$orgSlug/workspaces/$workspaceSlug/sprints'
+    | '/$orgSlug/workspaces/$workspaceSlug/wiki'
     | '/$orgSlug/projects/$key/'
     | '/$orgSlug/workspaces/$workspaceSlug/'
     | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug'
@@ -555,6 +695,7 @@ export interface FileRouteTypes {
     | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/board'
     | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar'
     | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings'
+    | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki'
     | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -565,21 +706,28 @@ export interface FileRouteTypes {
     | '/verify-2fa'
     | '/onboarding'
     | '/invite/$token'
+    | '/portal/$token'
     | '/app'
     | '/$orgSlug/add-ons'
     | '/$orgSlug/analytics'
     | '/$orgSlug/assistant'
     | '/$orgSlug/authentication'
+    | '/$orgSlug/calendar'
     | '/$orgSlug/dashboard'
     | '/$orgSlug/mcp-server'
+    | '/$orgSlug/my-issues'
     | '/$orgSlug/notifications'
     | '/$orgSlug/time-tracking'
+    | '/portal/$token/projects/$projectId'
     | '/$orgSlug'
     | '/$orgSlug/documents/$id'
     | '/$orgSlug/documents/templates'
+    | '/$orgSlug/invoices/$invoiceId'
     | '/$orgSlug/issues/$key'
     | '/$orgSlug/settings/profile'
+    | '/$orgSlug/clients'
     | '/$orgSlug/documents'
+    | '/$orgSlug/invoices'
     | '/$orgSlug/issues'
     | '/$orgSlug/projects'
     | '/$orgSlug/settings'
@@ -595,13 +743,19 @@ export interface FileRouteTypes {
     | '/$orgSlug/projects/$key/settings'
     | '/$orgSlug/projects/$key/sprints'
     | '/$orgSlug/projects/$key/timesheet'
+    | '/$orgSlug/workspaces/$workspaceSlug/backlog'
+    | '/$orgSlug/workspaces/$workspaceSlug/calendar'
+    | '/$orgSlug/workspaces/$workspaceSlug/dependencies'
     | '/$orgSlug/workspaces/$workspaceSlug/settings'
+    | '/$orgSlug/workspaces/$workspaceSlug/sprints'
+    | '/$orgSlug/workspaces/$workspaceSlug/wiki'
     | '/$orgSlug/projects/$key'
     | '/$orgSlug/workspaces/$workspaceSlug'
     | '/$orgSlug/workspaces/$workspaceSlug/teams'
     | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/board'
     | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar'
     | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings'
+    | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki'
     | '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug'
   id:
     | '__root__'
@@ -614,24 +768,31 @@ export interface FileRouteTypes {
     | '/_auth/_app'
     | '/_auth/onboarding'
     | '/invite/$token'
+    | '/portal/$token'
     | '/_auth/_app/$orgSlug'
     | '/_auth/_app/app'
     | '/_auth/_app/$orgSlug/add-ons'
     | '/_auth/_app/$orgSlug/analytics'
     | '/_auth/_app/$orgSlug/assistant'
     | '/_auth/_app/$orgSlug/authentication'
+    | '/_auth/_app/$orgSlug/calendar'
     | '/_auth/_app/$orgSlug/dashboard'
     | '/_auth/_app/$orgSlug/mcp-server'
+    | '/_auth/_app/$orgSlug/my-issues'
     | '/_auth/_app/$orgSlug/notifications'
     | '/_auth/_app/$orgSlug/time-tracking'
+    | '/portal/$token/projects/$projectId'
     | '/_auth/_app/$orgSlug/'
     | '/_auth/_app/$orgSlug/projects/$key'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug'
     | '/_auth/_app/$orgSlug/documents/$id'
     | '/_auth/_app/$orgSlug/documents/templates'
+    | '/_auth/_app/$orgSlug/invoices/$invoiceId'
     | '/_auth/_app/$orgSlug/issues/$key'
     | '/_auth/_app/$orgSlug/settings/profile'
+    | '/_auth/_app/$orgSlug/clients/'
     | '/_auth/_app/$orgSlug/documents/'
+    | '/_auth/_app/$orgSlug/invoices/'
     | '/_auth/_app/$orgSlug/issues/'
     | '/_auth/_app/$orgSlug/projects/'
     | '/_auth/_app/$orgSlug/settings/'
@@ -647,7 +808,12 @@ export interface FileRouteTypes {
     | '/_auth/_app/$orgSlug/projects/$key/settings'
     | '/_auth/_app/$orgSlug/projects/$key/sprints'
     | '/_auth/_app/$orgSlug/projects/$key/timesheet'
+    | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog'
+    | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/calendar'
+    | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/dependencies'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings'
+    | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints'
+    | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/wiki'
     | '/_auth/_app/$orgSlug/projects/$key/'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug'
@@ -655,6 +821,7 @@ export interface FileRouteTypes {
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/board'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings'
+    | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki'
     | '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/'
   fileRoutesById: FileRoutesById
 }
@@ -666,6 +833,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   Verify2faRoute: typeof Verify2faRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  PortalTokenRoute: typeof PortalTokenRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -712,6 +880,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/portal/$token': {
+      id: '/portal/$token'
+      path: '/portal/$token'
+      fullPath: '/portal/$token'
+      preLoaderRoute: typeof PortalTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/invite/$token': {
       id: '/invite/$token'
       path: '/invite/$token'
@@ -754,6 +929,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppOrgSlugIndexRouteImport
       parentRoute: typeof AuthAppOrgSlugRouteRoute
     }
+    '/portal/$token/projects/$projectId': {
+      id: '/portal/$token/projects/$projectId'
+      path: '/projects/$projectId'
+      fullPath: '/portal/$token/projects/$projectId'
+      preLoaderRoute: typeof PortalTokenProjectsProjectIdRouteImport
+      parentRoute: typeof PortalTokenRoute
+    }
     '/_auth/_app/$orgSlug/time-tracking': {
       id: '/_auth/_app/$orgSlug/time-tracking'
       path: '/time-tracking'
@@ -768,6 +950,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppOrgSlugNotificationsRouteImport
       parentRoute: typeof AuthAppOrgSlugRouteRoute
     }
+    '/_auth/_app/$orgSlug/my-issues': {
+      id: '/_auth/_app/$orgSlug/my-issues'
+      path: '/my-issues'
+      fullPath: '/$orgSlug/my-issues'
+      preLoaderRoute: typeof AuthAppOrgSlugMyIssuesRouteImport
+      parentRoute: typeof AuthAppOrgSlugRouteRoute
+    }
     '/_auth/_app/$orgSlug/mcp-server': {
       id: '/_auth/_app/$orgSlug/mcp-server'
       path: '/mcp-server'
@@ -780,6 +969,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/$orgSlug/dashboard'
       preLoaderRoute: typeof AuthAppOrgSlugDashboardRouteImport
+      parentRoute: typeof AuthAppOrgSlugRouteRoute
+    }
+    '/_auth/_app/$orgSlug/calendar': {
+      id: '/_auth/_app/$orgSlug/calendar'
+      path: '/calendar'
+      fullPath: '/$orgSlug/calendar'
+      preLoaderRoute: typeof AuthAppOrgSlugCalendarRouteImport
       parentRoute: typeof AuthAppOrgSlugRouteRoute
     }
     '/_auth/_app/$orgSlug/authentication': {
@@ -838,11 +1034,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppOrgSlugIssuesIndexRouteImport
       parentRoute: typeof AuthAppOrgSlugRouteRoute
     }
+    '/_auth/_app/$orgSlug/invoices/': {
+      id: '/_auth/_app/$orgSlug/invoices/'
+      path: '/invoices'
+      fullPath: '/$orgSlug/invoices/'
+      preLoaderRoute: typeof AuthAppOrgSlugInvoicesIndexRouteImport
+      parentRoute: typeof AuthAppOrgSlugRouteRoute
+    }
     '/_auth/_app/$orgSlug/documents/': {
       id: '/_auth/_app/$orgSlug/documents/'
       path: '/documents'
       fullPath: '/$orgSlug/documents/'
       preLoaderRoute: typeof AuthAppOrgSlugDocumentsIndexRouteImport
+      parentRoute: typeof AuthAppOrgSlugRouteRoute
+    }
+    '/_auth/_app/$orgSlug/clients/': {
+      id: '/_auth/_app/$orgSlug/clients/'
+      path: '/clients'
+      fullPath: '/$orgSlug/clients/'
+      preLoaderRoute: typeof AuthAppOrgSlugClientsIndexRouteImport
       parentRoute: typeof AuthAppOrgSlugRouteRoute
     }
     '/_auth/_app/$orgSlug/settings/profile': {
@@ -857,6 +1067,13 @@ declare module '@tanstack/react-router' {
       path: '/issues/$key'
       fullPath: '/$orgSlug/issues/$key'
       preLoaderRoute: typeof AuthAppOrgSlugIssuesKeyRouteImport
+      parentRoute: typeof AuthAppOrgSlugRouteRoute
+    }
+    '/_auth/_app/$orgSlug/invoices/$invoiceId': {
+      id: '/_auth/_app/$orgSlug/invoices/$invoiceId'
+      path: '/invoices/$invoiceId'
+      fullPath: '/$orgSlug/invoices/$invoiceId'
+      preLoaderRoute: typeof AuthAppOrgSlugInvoicesInvoiceIdRouteImport
       parentRoute: typeof AuthAppOrgSlugRouteRoute
     }
     '/_auth/_app/$orgSlug/documents/templates': {
@@ -901,11 +1118,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppOrgSlugProjectsKeyIndexRouteImport
       parentRoute: typeof AuthAppOrgSlugProjectsKeyRouteRoute
     }
+    '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/wiki': {
+      id: '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/wiki'
+      path: '/wiki'
+      fullPath: '/$orgSlug/workspaces/$workspaceSlug/wiki'
+      preLoaderRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRouteImport
+      parentRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute
+    }
+    '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints': {
+      id: '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints'
+      path: '/sprints'
+      fullPath: '/$orgSlug/workspaces/$workspaceSlug/sprints'
+      preLoaderRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRouteImport
+      parentRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute
+    }
     '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings': {
       id: '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings'
       path: '/settings'
       fullPath: '/$orgSlug/workspaces/$workspaceSlug/settings'
       preLoaderRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRouteImport
+      parentRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute
+    }
+    '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/dependencies': {
+      id: '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/dependencies'
+      path: '/dependencies'
+      fullPath: '/$orgSlug/workspaces/$workspaceSlug/dependencies'
+      preLoaderRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRouteImport
+      parentRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute
+    }
+    '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/calendar': {
+      id: '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/calendar'
+      path: '/calendar'
+      fullPath: '/$orgSlug/workspaces/$workspaceSlug/calendar'
+      preLoaderRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRouteImport
+      parentRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute
+    }
+    '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog': {
+      id: '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog'
+      path: '/backlog'
+      fullPath: '/$orgSlug/workspaces/$workspaceSlug/backlog'
+      preLoaderRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRouteImport
       parentRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute
     }
     '/_auth/_app/$orgSlug/projects/$key/timesheet': {
@@ -1006,6 +1258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugIndexRouteImport
       parentRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRoute
     }
+    '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki': {
+      id: '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki'
+      path: '/wiki'
+      fullPath: '/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki'
+      preLoaderRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRouteImport
+      parentRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRoute
+    }
     '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings': {
       id: '/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings'
       path: '/settings'
@@ -1079,6 +1338,7 @@ interface AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRouteChildren {
   AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugBoardRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugBoardRoute
   AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugCalendarRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugCalendarRoute
   AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRoute
+  AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRoute
   AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugIndexRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugIndexRoute
 }
 
@@ -1090,6 +1350,8 @@ const AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRouteChildren: Auth
       AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugCalendarRoute,
     AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRoute:
       AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugSettingsRoute,
+    AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRoute:
+      AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugWikiRoute,
     AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugIndexRoute:
       AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugIndexRoute,
   }
@@ -1100,7 +1362,12 @@ const AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRouteWithChildren =
   )
 
 interface AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteChildren {
+  AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute
+  AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRoute
+  AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRoute
   AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute
+  AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute
+  AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute
   AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute
   AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRouteWithChildren
   AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsIndexRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsIndexRoute
@@ -1108,8 +1375,18 @@ interface AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteChildren {
 
 const AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteChildren: AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteChildren =
   {
+    AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute:
+      AuthAppOrgSlugWorkspacesWorkspaceSlugBacklogRoute,
+    AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRoute:
+      AuthAppOrgSlugWorkspacesWorkspaceSlugCalendarRoute,
+    AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRoute:
+      AuthAppOrgSlugWorkspacesWorkspaceSlugDependenciesRoute,
     AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute:
       AuthAppOrgSlugWorkspacesWorkspaceSlugSettingsRoute,
+    AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute:
+      AuthAppOrgSlugWorkspacesWorkspaceSlugSprintsRoute,
+    AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute:
+      AuthAppOrgSlugWorkspacesWorkspaceSlugWikiRoute,
     AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute:
       AuthAppOrgSlugWorkspacesWorkspaceSlugIndexRoute,
     AuthAppOrgSlugWorkspacesWorkspaceSlugTeamsTeamSlugRouteRoute:
@@ -1128,8 +1405,10 @@ interface AuthAppOrgSlugRouteRouteChildren {
   AuthAppOrgSlugAnalyticsRoute: typeof AuthAppOrgSlugAnalyticsRoute
   AuthAppOrgSlugAssistantRoute: typeof AuthAppOrgSlugAssistantRoute
   AuthAppOrgSlugAuthenticationRoute: typeof AuthAppOrgSlugAuthenticationRoute
+  AuthAppOrgSlugCalendarRoute: typeof AuthAppOrgSlugCalendarRoute
   AuthAppOrgSlugDashboardRoute: typeof AuthAppOrgSlugDashboardRoute
   AuthAppOrgSlugMcpServerRoute: typeof AuthAppOrgSlugMcpServerRoute
+  AuthAppOrgSlugMyIssuesRoute: typeof AuthAppOrgSlugMyIssuesRoute
   AuthAppOrgSlugNotificationsRoute: typeof AuthAppOrgSlugNotificationsRoute
   AuthAppOrgSlugTimeTrackingRoute: typeof AuthAppOrgSlugTimeTrackingRoute
   AuthAppOrgSlugIndexRoute: typeof AuthAppOrgSlugIndexRoute
@@ -1137,9 +1416,12 @@ interface AuthAppOrgSlugRouteRouteChildren {
   AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRoute: typeof AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteWithChildren
   AuthAppOrgSlugDocumentsIdRoute: typeof AuthAppOrgSlugDocumentsIdRoute
   AuthAppOrgSlugDocumentsTemplatesRoute: typeof AuthAppOrgSlugDocumentsTemplatesRoute
+  AuthAppOrgSlugInvoicesInvoiceIdRoute: typeof AuthAppOrgSlugInvoicesInvoiceIdRoute
   AuthAppOrgSlugIssuesKeyRoute: typeof AuthAppOrgSlugIssuesKeyRoute
   AuthAppOrgSlugSettingsProfileRoute: typeof AuthAppOrgSlugSettingsProfileRoute
+  AuthAppOrgSlugClientsIndexRoute: typeof AuthAppOrgSlugClientsIndexRoute
   AuthAppOrgSlugDocumentsIndexRoute: typeof AuthAppOrgSlugDocumentsIndexRoute
+  AuthAppOrgSlugInvoicesIndexRoute: typeof AuthAppOrgSlugInvoicesIndexRoute
   AuthAppOrgSlugIssuesIndexRoute: typeof AuthAppOrgSlugIssuesIndexRoute
   AuthAppOrgSlugProjectsIndexRoute: typeof AuthAppOrgSlugProjectsIndexRoute
   AuthAppOrgSlugSettingsIndexRoute: typeof AuthAppOrgSlugSettingsIndexRoute
@@ -1151,8 +1433,10 @@ const AuthAppOrgSlugRouteRouteChildren: AuthAppOrgSlugRouteRouteChildren = {
   AuthAppOrgSlugAnalyticsRoute: AuthAppOrgSlugAnalyticsRoute,
   AuthAppOrgSlugAssistantRoute: AuthAppOrgSlugAssistantRoute,
   AuthAppOrgSlugAuthenticationRoute: AuthAppOrgSlugAuthenticationRoute,
+  AuthAppOrgSlugCalendarRoute: AuthAppOrgSlugCalendarRoute,
   AuthAppOrgSlugDashboardRoute: AuthAppOrgSlugDashboardRoute,
   AuthAppOrgSlugMcpServerRoute: AuthAppOrgSlugMcpServerRoute,
+  AuthAppOrgSlugMyIssuesRoute: AuthAppOrgSlugMyIssuesRoute,
   AuthAppOrgSlugNotificationsRoute: AuthAppOrgSlugNotificationsRoute,
   AuthAppOrgSlugTimeTrackingRoute: AuthAppOrgSlugTimeTrackingRoute,
   AuthAppOrgSlugIndexRoute: AuthAppOrgSlugIndexRoute,
@@ -1162,9 +1446,12 @@ const AuthAppOrgSlugRouteRouteChildren: AuthAppOrgSlugRouteRouteChildren = {
     AuthAppOrgSlugWorkspacesWorkspaceSlugRouteRouteWithChildren,
   AuthAppOrgSlugDocumentsIdRoute: AuthAppOrgSlugDocumentsIdRoute,
   AuthAppOrgSlugDocumentsTemplatesRoute: AuthAppOrgSlugDocumentsTemplatesRoute,
+  AuthAppOrgSlugInvoicesInvoiceIdRoute: AuthAppOrgSlugInvoicesInvoiceIdRoute,
   AuthAppOrgSlugIssuesKeyRoute: AuthAppOrgSlugIssuesKeyRoute,
   AuthAppOrgSlugSettingsProfileRoute: AuthAppOrgSlugSettingsProfileRoute,
+  AuthAppOrgSlugClientsIndexRoute: AuthAppOrgSlugClientsIndexRoute,
   AuthAppOrgSlugDocumentsIndexRoute: AuthAppOrgSlugDocumentsIndexRoute,
+  AuthAppOrgSlugInvoicesIndexRoute: AuthAppOrgSlugInvoicesIndexRoute,
   AuthAppOrgSlugIssuesIndexRoute: AuthAppOrgSlugIssuesIndexRoute,
   AuthAppOrgSlugProjectsIndexRoute: AuthAppOrgSlugProjectsIndexRoute,
   AuthAppOrgSlugSettingsIndexRoute: AuthAppOrgSlugSettingsIndexRoute,
@@ -1202,6 +1489,18 @@ const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
   AuthRouteRouteChildren,
 )
 
+interface PortalTokenRouteChildren {
+  PortalTokenProjectsProjectIdRoute: typeof PortalTokenProjectsProjectIdRoute
+}
+
+const PortalTokenRouteChildren: PortalTokenRouteChildren = {
+  PortalTokenProjectsProjectIdRoute: PortalTokenProjectsProjectIdRoute,
+}
+
+const PortalTokenRouteWithChildren = PortalTokenRoute._addFileChildren(
+  PortalTokenRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRouteRoute: AuthRouteRouteWithChildren,
@@ -1210,6 +1509,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   Verify2faRoute: Verify2faRoute,
   InviteTokenRoute: InviteTokenRoute,
+  PortalTokenRoute: PortalTokenRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

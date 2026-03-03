@@ -28,13 +28,9 @@ export abstract class BasePage {
 
   /**
    * Wait for page to be fully loaded and React to be hydrated
-   * Using 'domcontentloaded' instead of 'networkidle' because Convex
-   * keeps WebSocket connections active, preventing networkidle from resolving
+   * We avoid networkidle because Convex keeps WebSocket connections active.
    */
   async waitForLoad() {
-    // Wait for DOM content to load
-    await this.page.waitForLoadState("domcontentloaded");
-
     // Wait for scripts to load and execute
     await this.page.waitForLoadState("load");
 
@@ -84,7 +80,7 @@ export abstract class BasePage {
     if (url) {
       await this.page.waitForURL(url);
     } else {
-      await this.page.waitForLoadState("domcontentloaded");
+      await this.page.waitForFunction(() => document.readyState === "complete");
     }
   }
 

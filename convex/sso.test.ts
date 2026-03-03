@@ -51,6 +51,32 @@ describe("SSO Functionality", () => {
     expect(connection?.samlConfig).toMatchObject(samlConfig);
   });
 
+  it("should update OIDC configuration with provider metadata", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await createTestUser(t);
+    const { organizationId } = await createOrganizationAdmin(t, userId);
+    const asAdmin = asAuthenticatedUser(t, userId);
+
+    const { connectionId } = await asAdmin.mutation(api.sso.create, {
+      organizationId,
+      type: "oidc",
+      name: "Google Workspace",
+    });
+
+    await asAdmin.mutation(api.sso.updateOidcConfig, {
+      connectionId,
+      config: {
+        provider: "google-workspace",
+        issuer: "https://accounts.google.com",
+        clientId: "google-client-id",
+      },
+    });
+
+    const connection = await asAdmin.query(api.sso.get, { connectionId });
+    expect(connection?.oidcConfig?.provider).toBe("google-workspace");
+    expect(connection?.oidcConfig?.issuer).toBe("https://accounts.google.com");
+  });
+
   it("should validate configuration before enabling", async () => {
     const t = convexTest(schema, modules);
     const userId = await createTestUser(t);
@@ -173,6 +199,42 @@ describe("SSO Functionality", () => {
     });
     expect(result2).not.toBeNull();
     expect(result2?.connectionId).toEqual(connectionId);
+  });
+
+  it("should include OIDC provider metadata when resolving domain", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await createTestUser(t);
+    const { organizationId } = await createOrganizationAdmin(t, userId);
+    const asAdmin = asAuthenticatedUser(t, userId);
+
+    const { connectionId } = await asAdmin.mutation(api.sso.create, {
+      organizationId,
+      type: "oidc",
+      name: "Google Workspace",
+    });
+
+    await asAdmin.mutation(api.sso.updateOidcConfig, {
+      connectionId,
+      config: {
+        provider: "google-workspace",
+        issuer: "https://accounts.google.com",
+        clientId: "client-id",
+      },
+    });
+
+    await asAdmin.mutation(api.sso.updateDomains, {
+      connectionId,
+      domains: ["example.com"],
+    });
+
+    await asAdmin.mutation(api.sso.setEnabled, {
+      connectionId,
+      isEnabled: true,
+    });
+
+    const result = await t.query(api.sso.getForDomain, { domain: "example.com" });
+    expect(result).not.toBeNull();
+    expect(result?.oidcProvider).toBe("google-workspace");
   });
 
   it("should remove SSO connection and associated domains", async () => {

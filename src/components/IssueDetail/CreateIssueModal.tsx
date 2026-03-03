@@ -11,7 +11,7 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
 import { useForm } from "@tanstack/react-form";
 import { useAction, useMutation, useQuery } from "convex/react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { DuplicateDetection } from "@/components/DuplicateDetection";
 import { IssueDescriptionEditor } from "@/components/IssueDescriptionEditor";
@@ -223,7 +223,7 @@ export function CreateIssueModal({
   });
 
   // Restore draft handler
-  const handleRestoreDraft = useCallback(() => {
+  const handleRestoreDraft = () => {
     if (!draft) return;
     form.setFieldValue("title", draft.title);
     form.setFieldValue("description", draft.description);
@@ -238,13 +238,13 @@ export function CreateIssueModal({
     setEditorKey((k) => k + 1);
     setDraftDismissed(true);
     showSuccess("Draft restored");
-  }, [draft, form]);
+  };
 
   // Discard draft handler
-  const handleDiscardDraft = useCallback(() => {
+  const handleDiscardDraft = () => {
     clearDraft();
     setDraftDismissed(true);
-  }, [clearDraft]);
+  };
 
   // Save draft when form values change
   useEffect(() => {

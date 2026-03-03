@@ -1,7 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
-import { WEEK } from "./lib/timeUtils";
+import { DAY, WEEK } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -588,7 +588,7 @@ describe("Sprints", () => {
       // Complete the sprint
       const result = await asUser.mutation(api.sprints.completeSprint, { sprintId });
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, nextSprintId: undefined });
 
       const sprint = await t.run(async (ctx) => {
         return await ctx.db.get(sprintId);
@@ -611,7 +611,7 @@ describe("Sprints", () => {
       // Complete without starting
       const result = await asUser.mutation(api.sprints.completeSprint, { sprintId });
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, nextSprintId: undefined });
 
       const sprint = await t.run(async (ctx) => {
         return await ctx.db.get(sprintId);
@@ -652,7 +652,7 @@ describe("Sprints", () => {
       const asMember = asAuthenticatedUser(t, member);
       const result = await asMember.mutation(api.sprints.completeSprint, { sprintId });
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, nextSprintId: undefined });
 
       const sprint = await t.run(async (ctx) => {
         return await ctx.db.get(sprintId);
@@ -714,6 +714,41 @@ describe("Sprints", () => {
       await expect(async () => {
         await asUser.mutation(api.sprints.completeSprint, { sprintId });
       }).rejects.toThrow("Sprint not found");
+    });
+
+    it("should auto-create the next sprint with incremented name and carried duration", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId);
+      const asUser = asAuthenticatedUser(t, userId);
+
+      const startDate = Date.now();
+      const endDate = startDate + 2 * WEEK;
+      const { sprintId } = await asUser.mutation(api.sprints.create, {
+        projectId,
+        name: "Sprint 3",
+        startDate,
+        endDate,
+      });
+
+      const result = await asUser.mutation(api.sprints.completeSprint, {
+        sprintId,
+        autoCreateNext: true,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.nextSprintId).toBeDefined();
+
+      const completed = await t.run(async (ctx) => ctx.db.get(sprintId));
+      const nextSprint = await t.run(async (ctx) =>
+        result.nextSprintId ? ctx.db.get(result.nextSprintId) : null,
+      );
+
+      expect(completed?.status).toBe("completed");
+      expect(nextSprint?.name).toBe("Sprint 4");
+      expect(nextSprint?.status).toBe("future");
+      expect(nextSprint?.startDate).toBe(endDate + DAY);
+      expect(nextSprint?.endDate).toBe(endDate + DAY + (endDate - startDate));
     });
   });
 });

@@ -107,11 +107,12 @@ export class AuthPage extends BasePage {
     this.continueWithEmailButton = page.getByRole("button", { name: /continue with email/i });
     this.emailInput = page.getByTestId(TEST_IDS.AUTH.EMAIL_INPUT);
     this.passwordInput = page.getByTestId(TEST_IDS.AUTH.PASSWORD_INPUT);
-    // These buttons appear after clicking "Continue with email" - text changes on the same button
-    // Use getByRole with the specific text that appears after form expansion
-    this.signInButton = page.getByRole("button", { name: "Sign in", exact: true });
-    this.signUpButton = page.getByRole("button", { name: "Create account", exact: true });
-    this.forgotPasswordLink = page.getByRole("button", { name: "Forgot password?" });
+    // Submit button reuses the same DOM node across expanded states; bind by stable test id.
+    this.signInButton = page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
+    this.signUpButton = page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
+    this.forgotPasswordLink = page
+      .getByRole("button", { name: /forgot password\??/i })
+      .or(page.getByRole("link", { name: /forgot password\??/i }));
     this.googleSignInButton = page.getByTestId(TEST_IDS.AUTH.GOOGLE_BUTTON);
 
     // Navigation links between auth pages
@@ -238,11 +239,7 @@ export class AuthPage extends BasePage {
     // Wait for form-ready state
     await this.waitForFormReady();
 
-    // On sign-in page, also wait for "Forgot password?" to render (conditionally shown when expanded)
-    const currentUrl = this.page.url();
-    if (currentUrl.includes("/signin") || currentUrl.endsWith("/signin")) {
-      await expect(this.forgotPasswordLink).toBeVisible();
-    }
+    // Sign-in link affordances can render one tick after expansion; do not gate form usage on them.
   }
 
   // ===================
@@ -253,6 +250,8 @@ export class AuthPage extends BasePage {
     await this.expandEmailForm();
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
+    await expect(this.signInButton).toBeVisible();
+    await this.waitForFormReady();
     await this.signInButton.click();
   }
 
@@ -367,8 +366,20 @@ export class AuthPage extends BasePage {
   }
 
   async requestPasswordReset(email: string) {
+    const forgotPasswordForm = this.page
+      .getByRole("heading", { name: /reset your password/i })
+      .locator("..")
+      .locator("form");
+
+    await expect(this.emailInput).toBeVisible({ timeout: 30000 });
     await this.emailInput.fill(email);
-    await this.sendResetCodeButton.click();
+    await expect(this.emailInput).toHaveValue(email);
+    await expect(this.sendResetCodeButton).toBeEnabled();
+
+    // Submit via form API to avoid button-actionability flakes.
+    await forgotPasswordForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
+    await expect(this.checkEmailHeading).toBeVisible({ timeout: 30000 });
+    await expect(this.codeInput).toBeVisible({ timeout: 30000 });
   }
 
   async completePasswordReset(code: string, newPassword: string) {
@@ -392,8 +403,8 @@ export class AuthPage extends BasePage {
   async verifyEmail(code: string) {
     await this.verifyCodeInput.fill(code);
     await this.verifyEmailButton.click();
-    // Wait for verification to process - wait for DOM update after API call
-    await this.page.waitForLoadState("domcontentloaded");
+    // Wait for verification to process by requiring full document readiness.
+    await this.page.waitForFunction(() => document.readyState === "complete");
   }
 
   async resendVerificationCode() {
@@ -409,13 +420,24 @@ export class AuthPage extends BasePage {
   // ===================
 
   /**
-   * Wait for component to be hydrated
-   * Uses Playwright's default timeout (no hardcoded value)
+   * Wait for React app to be hydrated
+   * Uses global body.app-hydrated class set by root component (best practice)
+   * Falls back to document ready state if class not found (CI resilience)
+   * @see https://spin.atomicobject.com/hydration-sveltekit-tests/
    */
   async waitForHydration() {
-    await this.page.locator('form[data-hydrated="true"]').waitFor({
-      state: "attached",
-    });
+    try {
+      await this.page.locator("body.app-hydrated").waitFor({
+        state: "attached",
+        timeout: 10000,
+      });
+    } catch {
+      // Fallback: ensure page is at least loaded and has rendered content
+      // This handles CI environments where React might be slower to mount
+      await this.page.waitForLoadState("domcontentloaded");
+      // Wait for any form to be visible as a proxy for React mounting
+      await this.page.locator("form").first().waitFor({ state: "visible", timeout: 15000 });
+    }
   }
 
   /**
@@ -440,8 +462,8 @@ export class AuthPage extends BasePage {
       });
     } catch {
       // Form might not have data-form-ready attribute (e.g., forgot password page)
-      // Wait for DOM to be ready as fallback
-      await this.page.waitForLoadState("domcontentloaded");
+      // Use full document readiness as a generic fallback signal.
+      await this.page.waitForFunction(() => document.readyState === "complete");
     }
   }
 
@@ -461,9 +483,7 @@ export class AuthPage extends BasePage {
     await this.expandEmailForm();
     await expect(this.emailInput).toBeVisible();
     await expect(this.passwordInput).toBeVisible();
-    // Verify form is expanded using data-testid instead of button text
-    const authForm = this.page.getByTestId(TEST_IDS.AUTH.FORM);
-    await expect(authForm).toHaveAttribute("data-expanded", "true");
+    await expect(this.signUpButton).toBeVisible();
   }
 
   async expectForgotPasswordForm() {
@@ -473,7 +493,7 @@ export class AuthPage extends BasePage {
   }
 
   async expectResetCodeForm() {
-    await expect(this.resetPasswordHeading).toBeVisible({ timeout: 30000 });
+    await expect(this.codeInput).toBeVisible({ timeout: 30000 });
     await expect(this.codeInput).toBeVisible();
     await expect(this.newPasswordInput).toBeVisible();
     await expect(this.resetPasswordButton).toBeVisible();

@@ -5,12 +5,19 @@ import type { Id } from "./_generated/dataModel";
 import { HOUR, MINUTE, SECOND } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createTestContext, createTestUser } from "./testUtils";
+import {
+  asAuthenticatedUser,
+  createOrganizationAdmin,
+  createTestContext,
+  createTestUser,
+} from "./testUtils";
 
 describe("Event Reminders", () => {
   async function createCalendarEvent(
     t: ReturnType<typeof convexTest>,
     organizerId: Id<"users">,
+    organizationId: Id<"organizations">,
+    workspaceId: Id<"workspaces">,
     options: {
       title?: string;
       startTime?: number;
@@ -22,6 +29,8 @@ describe("Event Reminders", () => {
     return await t.run(async (ctx) => {
       const now = Date.now();
       return await ctx.db.insert("calendarEvents", {
+        organizationId,
+        workspaceId,
         organizerId,
         title: options.title ?? "Test Event",
         startTime: options.startTime ?? now + HOUR, // 1 hour from now
@@ -39,9 +48,9 @@ describe("Event Reminders", () => {
   describe("create", () => {
     it("should create a reminder for event organizer", async () => {
       const t = convexTest(schema, modules);
-      const { userId, asUser } = await createTestContext(t);
+      const { userId, organizationId, workspaceId, asUser } = await createTestContext(t);
 
-      const eventId = await createCalendarEvent(t, userId);
+      const eventId = await createCalendarEvent(t, userId, organizationId, workspaceId);
 
       const { reminderId } = await asUser.mutation(api.eventReminders.create, {
         eventId,
@@ -60,9 +69,10 @@ describe("Event Reminders", () => {
     it("should create a reminder for event attendee", async () => {
       const t = convexTest(schema, modules);
       const organizerId = await createTestUser(t, { name: "Organizer" });
+      const { organizationId, workspaceId } = await createOrganizationAdmin(t, organizerId);
       const attendeeId = await createTestUser(t, { name: "Attendee", email: "attendee@test.com" });
 
-      const eventId = await createCalendarEvent(t, organizerId, {
+      const eventId = await createCalendarEvent(t, organizerId, organizationId, workspaceId, {
         attendeeIds: [attendeeId],
       });
 
@@ -79,9 +89,10 @@ describe("Event Reminders", () => {
     it("should reject reminder from non-participant", async () => {
       const t = convexTest(schema, modules);
       const organizerId = await createTestUser(t, { name: "Organizer" });
+      const { organizationId, workspaceId } = await createOrganizationAdmin(t, organizerId);
       const outsiderId = await createTestUser(t, { name: "Outsider", email: "outsider@test.com" });
 
-      const eventId = await createCalendarEvent(t, organizerId);
+      const eventId = await createCalendarEvent(t, organizerId, organizationId, workspaceId);
 
       const asOutsider = asAuthenticatedUser(t, outsiderId);
       await expect(
@@ -95,9 +106,9 @@ describe("Event Reminders", () => {
 
     it("should update existing reminder instead of creating duplicate", async () => {
       const t = convexTest(schema, modules);
-      const { userId, asUser } = await createTestContext(t);
+      const { userId, organizationId, workspaceId, asUser } = await createTestContext(t);
 
-      const eventId = await createCalendarEvent(t, userId);
+      const eventId = await createCalendarEvent(t, userId, organizationId, workspaceId);
 
       // Create first reminder
       const { reminderId: reminderId1 } = await asUser.mutation(api.eventReminders.create, {
@@ -123,11 +134,13 @@ describe("Event Reminders", () => {
   describe("createDefaultReminders", () => {
     it("should create default 15-minute email reminder", async () => {
       const t = convexTest(schema, modules);
-      const { userId } = await createTestContext(t);
+      const { userId, organizationId, workspaceId } = await createTestContext(t);
 
       const now = Date.now();
       const startTime = now + HOUR; // 1 hour from now
-      const eventId = await createCalendarEvent(t, userId, { startTime });
+      const eventId = await createCalendarEvent(t, userId, organizationId, workspaceId, {
+        startTime,
+      });
 
       await t.mutation(internal.eventReminders.createDefaultReminders, {
         eventId,
@@ -149,10 +162,12 @@ describe("Event Reminders", () => {
 
     it("should not create reminder for past events", async () => {
       const t = convexTest(schema, modules);
-      const { userId } = await createTestContext(t);
+      const { userId, organizationId, workspaceId } = await createTestContext(t);
 
       const startTime = Date.now() - MINUTE; // 1 minute ago
-      const eventId = await createCalendarEvent(t, userId, { startTime });
+      const eventId = await createCalendarEvent(t, userId, organizationId, workspaceId, {
+        startTime,
+      });
 
       await t.mutation(internal.eventReminders.createDefaultReminders, {
         eventId,
@@ -174,9 +189,9 @@ describe("Event Reminders", () => {
   describe("listByEvent", () => {
     it("should return reminders for event participant", async () => {
       const t = convexTest(schema, modules);
-      const { userId, asUser } = await createTestContext(t);
+      const { userId, organizationId, workspaceId, asUser } = await createTestContext(t);
 
-      const eventId = await createCalendarEvent(t, userId);
+      const eventId = await createCalendarEvent(t, userId, organizationId, workspaceId);
 
       await asUser.mutation(api.eventReminders.create, {
         eventId,
@@ -194,9 +209,10 @@ describe("Event Reminders", () => {
     it("should return empty for non-participant", async () => {
       const t = convexTest(schema, modules);
       const organizerId = await createTestUser(t, { name: "Organizer" });
+      const { organizationId, workspaceId } = await createOrganizationAdmin(t, organizerId);
       const outsiderId = await createTestUser(t, { name: "Outsider", email: "outsider@test.com" });
 
-      const eventId = await createCalendarEvent(t, organizerId);
+      const eventId = await createCalendarEvent(t, organizerId, organizationId, workspaceId);
 
       const asOutsider = asAuthenticatedUser(t, outsiderId);
       const reminders = await asOutsider.query(api.eventReminders.listByEvent, {
@@ -210,9 +226,9 @@ describe("Event Reminders", () => {
   describe("remove", () => {
     it("should delete own reminder", async () => {
       const t = convexTest(schema, modules);
-      const { userId, asUser } = await createTestContext(t);
+      const { userId, organizationId, workspaceId, asUser } = await createTestContext(t);
 
-      const eventId = await createCalendarEvent(t, userId);
+      const eventId = await createCalendarEvent(t, userId, organizationId, workspaceId);
       const { reminderId } = await asUser.mutation(api.eventReminders.create, {
         eventId,
         reminderType: "email",
@@ -228,9 +244,10 @@ describe("Event Reminders", () => {
     it("should reject deleting other user's reminder", async () => {
       const t = convexTest(schema, modules);
       const user1Id = await createTestUser(t, { name: "User 1" });
+      const { organizationId, workspaceId } = await createOrganizationAdmin(t, user1Id);
       const user2Id = await createTestUser(t, { name: "User 2", email: "user2@test.com" });
 
-      const eventId = await createCalendarEvent(t, user1Id, {
+      const eventId = await createCalendarEvent(t, user1Id, organizationId, workspaceId, {
         attendeeIds: [user2Id],
       });
 
@@ -251,11 +268,13 @@ describe("Event Reminders", () => {
   describe("processDueReminders", () => {
     it("should process due reminders and create notifications", async () => {
       const t = convexTest(schema, modules);
-      const { userId } = await createTestContext(t);
+      const { userId, organizationId, workspaceId } = await createTestContext(t);
 
       const now = Date.now();
       const startTime = now + HOUR; // 1 hour from now
-      const eventId = await createCalendarEvent(t, userId, { startTime });
+      const eventId = await createCalendarEvent(t, userId, organizationId, workspaceId, {
+        startTime,
+      });
 
       // Create an in-app reminder that is already due
       await t.run(async (ctx) => {
@@ -289,11 +308,11 @@ describe("Event Reminders", () => {
 
     it("should skip cancelled events", async () => {
       const t = convexTest(schema, modules);
-      const { userId } = await createTestContext(t);
+      const { userId, organizationId, workspaceId } = await createTestContext(t);
 
       const now = Date.now();
       const startTime = now + HOUR;
-      const eventId = await createCalendarEvent(t, userId, {
+      const eventId = await createCalendarEvent(t, userId, organizationId, workspaceId, {
         startTime,
         status: "cancelled",
       });
@@ -318,13 +337,15 @@ describe("Event Reminders", () => {
 
     it("should delete reminders for deleted events", async () => {
       const t = convexTest(schema, modules);
-      const { userId } = await createTestContext(t);
+      const { userId, organizationId, workspaceId } = await createTestContext(t);
 
       const now = Date.now();
       const startTime = now + HOUR;
 
       // Create a real event then delete it
-      const eventId = await createCalendarEvent(t, userId, { startTime });
+      const eventId = await createCalendarEvent(t, userId, organizationId, workspaceId, {
+        startTime,
+      });
 
       const reminderId = await t.run(async (ctx) => {
         return await ctx.db.insert("eventReminders", {
@@ -357,9 +378,10 @@ describe("Event Reminders", () => {
     it("should remove all reminders when event is deleted", async () => {
       const t = convexTest(schema, modules);
       const user1Id = await createTestUser(t, { name: "User 1" });
+      const { organizationId, workspaceId } = await createOrganizationAdmin(t, user1Id);
       const user2Id = await createTestUser(t, { name: "User 2", email: "user2@test.com" });
 
-      const eventId = await createCalendarEvent(t, user1Id, {
+      const eventId = await createCalendarEvent(t, user1Id, organizationId, workspaceId, {
         attendeeIds: [user2Id],
       });
 
@@ -396,11 +418,11 @@ describe("Event Reminders", () => {
   describe("updateForEventTimeChange", () => {
     it("should update scheduled times when event is rescheduled", async () => {
       const t = convexTest(schema, modules);
-      const { userId, asUser } = await createTestContext(t);
+      const { userId, organizationId, workspaceId, asUser } = await createTestContext(t);
 
       const now = Date.now();
       const originalStartTime = now + HOUR; // 1 hour
-      const eventId = await createCalendarEvent(t, userId, {
+      const eventId = await createCalendarEvent(t, userId, organizationId, workspaceId, {
         startTime: originalStartTime,
       });
 

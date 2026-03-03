@@ -95,6 +95,13 @@ describe("AppSidebar Accessibility", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (useQuery as any).mockImplementation(mockUseQueryImplementation);
+    vi.mocked(useSidebarState).mockReturnValue({
+      isCollapsed: false,
+      isMobileOpen: false,
+      toggleCollapse: vi.fn(),
+      closeMobile: vi.fn(),
+      toggleMobile: vi.fn(),
+    });
   });
 
   it("adds aria-current='page' to active Dashboard link", () => {
@@ -207,6 +214,63 @@ describe("AppSidebar Accessibility", () => {
 
     const documentsLink = screen.getByRole("link", { name: "Documents" });
     expect(documentsLink).toHaveAttribute("aria-label", "Documents");
+  });
+
+  it("shows document search and show-all affordance when document count exceeds sidebar cap", async () => {
+    const user = userEvent.setup();
+    (useLocation as any).mockReturnValue({ pathname: "/demo-org/dashboard" });
+    (useQuery as any).mockImplementation((query: string) => {
+      if (query === "documents.list") {
+        return {
+          documents: Array.from({ length: 12 }).map((_, index) => ({
+            _id: `doc-${index + 1}`,
+            title: `Document ${index + 1}`,
+            isPublic: false,
+          })),
+        };
+      }
+      if (query === "workspaces.list" || query === "teams.getOrganizationTeams") return [];
+      if (query === "users.isOrganizationAdmin") return false;
+      return undefined;
+    });
+
+    render(<AppSidebar />);
+
+    expect(screen.getByLabelText("Search documents")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Show all documents (12)" })).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Search documents"), "12");
+
+    expect(screen.getByRole("link", { name: "Document 12" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Document 1" })).not.toBeInTheDocument();
+  });
+
+  it("shows workspace search and show-all affordance when workspace count exceeds sidebar cap", async () => {
+    const user = userEvent.setup();
+    (useLocation as any).mockReturnValue({ pathname: "/demo-org/dashboard" });
+    (useQuery as any).mockImplementation((query: string) => {
+      if (query === "workspaces.list") {
+        return Array.from({ length: 27 }).map((_, index) => ({
+          _id: `workspace-${index + 1}`,
+          name: `Workspace ${index + 1}`,
+          slug: `workspace-${index + 1}`,
+        }));
+      }
+      if (query === "teams.getOrganizationTeams") return [];
+      if (query === "documents.list") return { documents: [] };
+      if (query === "users.isOrganizationAdmin") return false;
+      return undefined;
+    });
+
+    render(<AppSidebar />);
+
+    expect(screen.getByLabelText("Search workspaces")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Show all workspaces (27)" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Workspace 26" })).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Search workspaces"), "26");
+
+    expect(screen.getByRole("link", { name: "Workspace 26" })).toBeInTheDocument();
   });
 
   describe("AppSidebar Mobile Behavior", () => {

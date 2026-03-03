@@ -12,6 +12,8 @@ import { useQuery } from "convex/react";
 import { useState } from "react";
 import { HourComplianceDashboard } from "./Admin/HourComplianceDashboard";
 import { IpRestrictionsSettings } from "./Admin/IpRestrictionsSettings";
+import { OAuthFeatureFlagSettings } from "./Admin/OAuthFeatureFlagSettings";
+import { OAuthHealthDashboard } from "./Admin/OAuthHealthDashboard";
 import { OrganizationSettings } from "./Admin/OrganizationSettings";
 import { UserManagement } from "./Admin/UserManagement";
 import { UserTypeManager } from "./Admin/UserTypeManager";
@@ -24,6 +26,7 @@ import { OfflineTab } from "./Settings/OfflineTab";
 import { PreferencesTab } from "./Settings/PreferencesTab";
 import { ProfileTab } from "./Settings/ProfileTab";
 import { PumbleIntegration } from "./Settings/PumbleIntegration";
+import { SlackIntegration } from "./Settings/SlackIntegration";
 import { TwoFactorSettings } from "./Settings/TwoFactorSettings";
 import { Stack } from "./ui/Stack";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/Tabs";
@@ -113,6 +116,7 @@ function IntegrationsTab() {
   return (
     <Stack gap="lg">
       <GitHubIntegration />
+      <SlackIntegration />
       <GoogleCalendarIntegration />
       <PumbleIntegration />
     </Stack>
@@ -123,6 +127,8 @@ function AdminTab() {
   return (
     <Stack gap="xl">
       <OrganizationSettings />
+      <OAuthHealthDashboard />
+      <OAuthFeatureFlagSettings />
       <IpRestrictionsSettings />
       <UserManagement />
       <UserTypeManager />

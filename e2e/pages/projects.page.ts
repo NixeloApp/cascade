@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { waitForBoardLoaded, waitForIssueCreateSuccess } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -23,6 +24,7 @@ export class ProjectsPage extends BasePage {
   // Locators - Create Project Form
   // ===================
   readonly createProjectForm: Locator;
+  readonly templateOptionButtons: Locator;
   readonly projectNameInput: Locator;
   readonly projectKeyInput: Locator;
   readonly projectDescriptionInput: Locator;
@@ -49,6 +51,7 @@ export class ProjectsPage extends BasePage {
   readonly issueTypeSelect: Locator;
   readonly issuePrioritySelect: Locator;
   readonly issueAssigneeSelect: Locator;
+  readonly createIssueForm: Locator;
   readonly submitIssueButton: Locator;
 
   // ===================
@@ -96,8 +99,11 @@ export class ProjectsPage extends BasePage {
     this.createProjectForm = page.getByRole("dialog");
 
     // Template selection
-    // We'll pick the first template by default or look for specific one
-    // const templateButton = this.createProjectForm.getByRole("button").filter({ hasText: "Software Project" });
+    // Select from stable modal content instead of hardcoding template display names
+    this.templateOptionButtons = page
+      .getByTestId(TEST_IDS.PROJECT.CREATE_MODAL)
+      .locator("li")
+      .getByRole("button");
 
     this.projectNameInput = page.getByTestId(TEST_IDS.PROJECT.NAME_INPUT);
     this.projectKeyInput = page.getByTestId(TEST_IDS.PROJECT.KEY_INPUT);
@@ -134,7 +140,10 @@ export class ProjectsPage extends BasePage {
     this.issueTypeSelect = page.getByRole("combobox", { name: /type/i });
     this.issuePrioritySelect = page.getByRole("combobox", { name: /priority/i });
     this.issueAssigneeSelect = page.getByRole("combobox", { name: /assignee/i });
-    this.submitIssueButton = this.createIssueModal.getByRole("button", { name: /create|submit/i });
+    this.createIssueForm = this.createIssueModal.locator("form").first();
+    this.submitIssueButton = this.createIssueModal
+      .getByRole("button", { name: /^create issue$/i })
+      .or(this.createIssueModal.locator('button[type="submit"]'));
 
     // Project tabs - rendered as links in route.tsx
     this.boardTab = page.getByRole("link", { name: /^Board$/ });
@@ -198,8 +207,7 @@ export class ProjectsPage extends BasePage {
     await this.openCreateProjectForm();
 
     try {
-      // Use retry pattern to wait for templates to load and select one
-      // This handles: spinner appearing/disappearing, template query completing, React hydration
+      // Use retry pattern to handle modal reopen/hydration/template loading races.
       await expect(async () => {
         // Recovery: If modal closed (flakiness), re-open it
         if (!(await this.createProjectForm.isVisible())) {
@@ -207,21 +215,20 @@ export class ProjectsPage extends BasePage {
           await expect(this.createProjectForm).toBeVisible();
         }
 
-        // Wait for loading spinner to disappear (templates fetching from Convex)
-        const spinner = this.createProjectForm.locator(".animate-spin");
-        await expect(spinner).not.toBeVisible();
-
-        // Find and click the Software Development template
-        const template = this.createProjectForm.getByRole("heading", {
-          name: /Software Development/i,
+        const configureHeading = this.createProjectForm.getByRole("heading", {
+          name: /configure project/i,
         });
-        await expect(template).toBeVisible();
-        await template.click();
+        if (await configureHeading.isVisible()) {
+          return;
+        }
+
+        // Wait for at least one template card and select the first available option.
+        // Template names are content-managed and should not be hardcoded in E2E selectors.
+        await expect(this.templateOptionButtons.first()).toBeVisible();
+        await this.templateOptionButtons.first().click();
 
         // Verify we proceeded to configuration step
-        await expect(
-          this.createProjectForm.getByRole("heading", { name: "Configure Project" }),
-        ).toBeVisible();
+        await expect(configureHeading).toBeVisible();
       }).toPass();
 
       // Step 2: Fill in project details
@@ -302,7 +309,21 @@ export class ProjectsPage extends BasePage {
     if (priority) {
       await this.issuePrioritySelect.selectOption(priority);
     }
-    await this.submitIssueButton.click();
+    await expect(async () => {
+      if (!(await this.createIssueModal.isVisible())) {
+        return;
+      }
+
+      // Submit the form directly to avoid viewport/actionability flakiness on modal footer buttons.
+      if (await this.createIssueForm.isVisible()) {
+        await this.createIssueForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
+      } else {
+        await this.submitIssueButton.dispatchEvent("click");
+      }
+      await expect(this.createIssueModal).not.toBeVisible();
+    }).toPass();
+
+    await waitForIssueCreateSuccess(this.page, { issueTitle: title });
   }
 
   async switchToTab(tab: "board" | "backlog" | "sprints" | "analytics" | "settings") {
@@ -349,17 +370,9 @@ export class ProjectsPage extends BasePage {
     await issueCard.click();
     await expect(this.issueDetailDialog).toBeVisible();
 
-    // Wait for the issue content to load (skeleton to disappear / critical sections to appear)
-    const timeTrackingHeader = this.issueDetailDialog
-      .getByRole("heading", {
-        name: /time tracking/i,
-      })
-      .first();
-    await expect(timeTrackingHeader).toBeVisible();
-
-    // Wait for timer button to be fully rendered (fixes flaky timer control tests)
-    // The button may appear slightly after the header due to React hydration
-    await expect(this.startTimerButton.or(this.stopTimerButton)).toBeVisible();
+    // Wait for modal content to be stable using the issue key metadata,
+    // which is consistently rendered regardless of sidebar section timing.
+    await expect(this.issueDetailDialog.getByText(/[A-Z][A-Z0-9]+-\d+/).first()).toBeVisible();
   }
 
   /**
@@ -419,8 +432,7 @@ export class ProjectsPage extends BasePage {
 
   /** Wait for board to be fully interactive */
   async waitForBoardInteractive() {
-    await expect(this.projectBoard).toBeVisible();
-    await expect(this.createIssueButton).toBeEnabled();
+    await waitForBoardLoaded(this.page);
   }
 
   async expectProjectCount(count: number) {

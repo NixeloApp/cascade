@@ -15,6 +15,7 @@ interface SearchResult {
   title: string;
   type: IssueTypeWithSubtask;
   priority: IssuePriority;
+  projectId: Id<"projects">;
 }
 
 interface SearchResultsListProps {
@@ -22,7 +23,7 @@ interface SearchResultsListProps {
   results: SearchResult[];
   total: number;
   hasMore: boolean;
-  onSelectIssue: (issueId: Id<"issues">) => void;
+  onSelectIssue: (issueId: Id<"issues">, projectId: Id<"projects">) => void;
   onLoadMore: () => void;
 }
 
@@ -74,7 +75,7 @@ export function SearchResultsList({
           <Button
             variant="unstyled"
             key={issue._id}
-            onClick={() => onSelectIssue(issue._id)}
+            onClick={() => onSelectIssue(issue._id, issue.projectId)}
             className="w-full p-4 hover:bg-ui-bg-secondary transition-colors text-left h-auto rounded-none"
           >
             <Flex gap="md" align="start">

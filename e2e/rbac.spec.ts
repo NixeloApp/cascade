@@ -40,8 +40,6 @@ rbacTest(
     // 2. Verify board is visible - check for board element or project key in URL
     // URL should be like /:orgSlug/projects/:projectKey/board
     await expect(adminPage).toHaveURL(/\/projects\/.*\/board/);
-    // Wait for the board content to load
-    await adminPage.waitForLoadState("domcontentloaded");
     console.log("✓ Admin can view project board");
 
     // 3. Verify create issue button is visible
@@ -61,7 +59,6 @@ rbacTest(
     // Verify we actually reached the settings page
     try {
       await expect(adminPage).toHaveURL(/.*\/settings/);
-      await adminPage.waitForLoadState("domcontentloaded");
       await expect(adminPage.getByRole("heading", { name: /project settings/i })).toBeVisible();
       console.log("✓ Admin can access project settings page");
     } catch (e) {
@@ -74,7 +71,6 @@ rbacTest(
 
     // 6. Navigate back to board and check sprints
     await clientSideNavigate(adminPage, `/${rbacOrgSlug}/projects/${rbacProjectKey}/board`);
-    await adminPage.waitForLoadState("domcontentloaded");
 
     const sprintsTab = adminPage
       .getByRole("tab", { name: /sprint/i })
@@ -83,7 +79,6 @@ rbacTest(
     const sprintsTabCount = await sprintsTab.count();
     if (sprintsTabCount > 0) {
       await sprintsTab.click();
-      await adminPage.waitForLoadState("domcontentloaded");
 
       const createSprintButton = adminPage.getByRole("button", {
         name: /create sprint|new sprint/i,
@@ -102,7 +97,6 @@ rbacTest(
     const analyticsTabCount = await analyticsTab.count();
     if (analyticsTabCount > 0) {
       await analyticsTab.click();
-      await adminPage.waitForLoadState("domcontentloaded");
 
       const analyticsContent = adminPage.getByText(/overview|metrics|velocity/i);
       await expect(analyticsContent.first()).toBeVisible();
@@ -128,7 +122,6 @@ rbacTest(
 
     // 2. Verify board is visible - check for project name heading
     await expect(editorPage).toHaveURL(/\/projects\/.*\/board/);
-    await editorPage.waitForLoadState("domcontentloaded");
     console.log("✓ Editor can view project board");
 
     // 3. Verify create issue button is visible (editors can create issues)
@@ -155,7 +148,6 @@ rbacTest(
     }
 
     await clientSideNavigate(editorPage, `/${rbacOrgSlug}/projects/${rbacProjectKey}/settings`);
-    await editorPage.waitForLoadState("domcontentloaded");
 
     // Wait for redirect to board
     await editorPage.waitForURL(`**/projects/${rbacProjectKey}/board`);
@@ -164,8 +156,6 @@ rbacTest(
     console.log("✓ Editor is redirected from settings to board");
 
     // 6. Check sprints access (already on board page after redirect)
-    await editorPage.waitForLoadState("domcontentloaded");
-
     const sprintsTab = editorPage
       .getByRole("tab", { name: /sprint/i })
       .or(editorPage.getByRole("link", { name: /sprint/i }));
@@ -173,7 +163,6 @@ rbacTest(
     const sprintsTabCount = await sprintsTab.count();
     if (sprintsTabCount > 0) {
       await sprintsTab.click();
-      await editorPage.waitForLoadState("domcontentloaded");
 
       const createSprintButton = editorPage.getByRole("button", {
         name: /create sprint|new sprint/i,
@@ -192,7 +181,6 @@ rbacTest(
     const analyticsTabCount = await analyticsTab.count();
     if (analyticsTabCount > 0) {
       await analyticsTab.click();
-      await editorPage.waitForLoadState("domcontentloaded");
 
       const analyticsContent = editorPage.getByText(/overview|metrics|velocity/i);
       await expect(analyticsContent.first()).toBeVisible();
@@ -239,7 +227,6 @@ rbacTest(
 
     // 5. Try to access settings directly - should redirect to board
     await clientSideNavigate(viewerPage, `/${rbacOrgSlug}/projects/${rbacProjectKey}/settings`);
-    await viewerPage.waitForLoadState("domcontentloaded");
 
     // Wait for redirect to board
     await viewerPage.waitForURL(`**/projects/${rbacProjectKey}/board`);
@@ -248,8 +235,6 @@ rbacTest(
     console.log("✓ Viewer is redirected from settings to board");
 
     // 6. Check analytics access (viewers can view analytics - already on board page after redirect)
-    await viewerPage.waitForLoadState("domcontentloaded");
-
     const analyticsTab = viewerPage
       .getByRole("tab", { name: /analytics/i })
       .or(viewerPage.getByRole("link", { name: /analytics/i }));
@@ -257,7 +242,6 @@ rbacTest(
     const analyticsTabCount = await analyticsTab.count();
     if (analyticsTabCount > 0) {
       await analyticsTab.click();
-      await viewerPage.waitForLoadState("domcontentloaded");
 
       const analyticsContent = viewerPage.getByText(/overview|metrics|velocity/i);
       await expect(analyticsContent.first()).toBeVisible();

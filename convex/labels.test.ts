@@ -17,6 +17,7 @@ describe("Labels", () => {
         projectId,
         name: "Bug",
         color: "#EF4444",
+        description: "Critical production issues",
       });
 
       expect(labelId).toBeDefined();
@@ -25,6 +26,7 @@ describe("Labels", () => {
       expect(labels).toHaveLength(1);
       expect(labels[0].name).toBe("Bug");
       expect(labels[0].color).toBe("#EF4444");
+      expect(labels[0].description).toBe("Critical production issues");
     });
 
     it("should prevent duplicate label names in same project", async () => {
@@ -123,6 +125,35 @@ describe("Labels", () => {
 
       const labels = await asUser.query(api.labels.list, { projectId });
       expect(labels[0].color).toBe("#3B82F6");
+    });
+
+    it("should update and clear label description", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId);
+
+      const asUser = asAuthenticatedUser(t, userId);
+      const { labelId } = await asUser.mutation(api.labels.createLabel, {
+        projectId,
+        name: "Needs Docs",
+        color: "#EF4444",
+      });
+
+      await asUser.mutation(api.labels.update, {
+        id: labelId,
+        description: "Needs better documentation",
+      });
+
+      let labels = await asUser.query(api.labels.list, { projectId });
+      expect(labels[0].description).toBe("Needs better documentation");
+
+      await asUser.mutation(api.labels.update, {
+        id: labelId,
+        description: null,
+      });
+
+      labels = await asUser.query(api.labels.list, { projectId });
+      expect(labels[0].description).toBeUndefined();
     });
 
     it("should prevent renaming to existing label name", async () => {

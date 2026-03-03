@@ -259,6 +259,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   }, [selectedIndex]);
 
   // Create issue index map for dependency line rendering
+  // Memoized to avoid O(n) recomputation on every render
   const issueIndexMap = useMemo(() => {
     if (!filteredIssues) return new Map<string, number>();
     const map = new Map<string, number>();
@@ -269,6 +270,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   }, [filteredIssues]);
 
   // Calculate dependency lines for "blocks" relationships
+  // Memoized to avoid O(links) recomputation on every render
   const dependencyLines = useMemo((): DependencyLine[] => {
     if (!showDependencies || !issueLinks?.links || !filteredIssues) return [];
 

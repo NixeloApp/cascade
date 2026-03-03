@@ -5,6 +5,7 @@ import {
   Footer,
   HeroSection,
   NavHeader,
+  PricingSection,
   WhyChooseSection,
 } from "@/components/Landing";
 
@@ -30,6 +31,7 @@ function LandingPage() {
         <NavHeader />
         <HeroSection />
         <FeaturesSection />
+        <PricingSection />
         <WhyChooseSection />
         <Footer />
       </div>

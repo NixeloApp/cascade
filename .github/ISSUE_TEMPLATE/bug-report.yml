@@ -1,0 +1,65 @@
+name: Bug report
+description: Report a reproducible bug in Nixelo.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this. Please include enough detail for us to reproduce quickly.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Clear one-paragraph description of the problem.
+      placeholder: What happened, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Ordered steps with exact actions and values when possible.
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: What should have happened?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: What actually happened?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      description: App version, image tag, or git SHA tested.
+      placeholder: main@abcdef1
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: Browser, OS, deployment mode, and relevant env setup.
+      placeholder: Chrome 133, macOS 14.4, self-hosted Docker, local Convex
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Paste stack traces or attach screenshots/video if available.
+      render: shell

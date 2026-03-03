@@ -4,6 +4,7 @@ import { internal } from "./_generated/api";
 import { sendEmail } from "./email";
 import type { ConvexAuthContext } from "./lib/authTypes";
 import { generateOTP } from "./lib/crypto";
+import { isE2ESafeEnvironment } from "./lib/envDetection";
 import { isAppError } from "./lib/errors";
 import { logger } from "./lib/logger";
 
@@ -39,14 +40,8 @@ async function checkRateLimit(ctx: ConvexAuthContext, email: string) {
 
 async function storeTestResetOtp(ctx: ConvexAuthContext, email: string, token: string) {
   const isTestEmail = email.endsWith("@inbox.mailtrap.io");
-  const isSafeEnvironment =
-    process.env.NODE_ENV === "development" ||
-    process.env.NODE_ENV === "test" ||
-    !!process.env.CI ||
-    !!process.env.E2E_TEST_MODE ||
-    !!process.env.E2E_API_KEY;
 
-  if (isTestEmail && isSafeEnvironment && ctx?.runMutation) {
+  if (isTestEmail && isE2ESafeEnvironment() && ctx?.runMutation) {
     try {
       await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token, type: "reset" });
     } catch (e) {

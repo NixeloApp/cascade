@@ -12,6 +12,7 @@ import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { decrypt, encrypt } from "./lib/encryption";
 import { notFound } from "./lib/errors";
+import { getUserWorkspaceContext } from "./lib/workspaceAccess";
 import { syncDirections } from "./validators";
 
 /** Connect a Google Calendar account via OAuth. Encrypts tokens before storage. Called from HTTP action. */
@@ -290,12 +291,21 @@ export const syncFromGoogle = mutation({
       return { imported: 0 };
     }
 
+    // Get user's workspace context - required for calendar events
+    const workspaceContext = await getUserWorkspaceContext(ctx, connection.userId);
+    if (!workspaceContext) {
+      // User has no workspace, skip importing
+      return { imported: 0 };
+    }
+
     const now = Date.now();
 
     // Insert all events in parallel
     await Promise.all(
       args.events.map((event) =>
         ctx.db.insert("calendarEvents", {
+          organizationId: workspaceContext.organizationId,
+          workspaceId: workspaceContext.workspaceId,
           title: event.title,
           description: event.description,
           startTime: event.startTime,

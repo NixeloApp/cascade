@@ -87,7 +87,6 @@ test.describe("Onboarding Wizard", () => {
 
     // Wait for navigation to dashboard
     await page.waitForURL(/\/[^/]+\/dashboard/);
-    await page.waitForLoadState("domcontentloaded");
 
     // Wait for dashboard to finish loading — use test ID to avoid matching multiple headings
     await expect(page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING)).toBeVisible();
@@ -179,7 +178,6 @@ test.describe("Onboarding - Team Member Flow", () => {
 
     // Wait for navigation to dashboard
     await page.waitForURL(/\/[^/]+\/dashboard/);
-    await page.waitForLoadState("domcontentloaded");
 
     // Wait for dashboard to finish loading — use test ID to avoid matching multiple headings
     await expect(page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING)).toBeVisible();

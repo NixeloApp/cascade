@@ -184,6 +184,56 @@ export const loginTestUserEndpoint = httpAction(async (ctx: ActionCtx, request: 
 });
 
 /**
+ * Trigger password reset OTP dispatch for a test user
+ * POST /e2e/request-password-reset
+ * Body: { email: string }
+ */
+export const requestPasswordResetEndpoint = httpAction(async (ctx: ActionCtx, request: Request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { email } = body;
+
+    if (!email) {
+      return new Response(JSON.stringify({ error: "Missing email" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!isTestEmail(email)) {
+      return new Response(
+        JSON.stringify({ error: "Only test emails allowed (@inbox.mailtrap.io)" }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+
+    await ctx.runAction(api.auth.signIn, {
+      provider: "password",
+      params: {
+        email,
+        flow: "reset",
+      },
+    });
+
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ success: false, error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+/**
  * Internal mutation to create test user with full auth credentials
  */
 export const createTestUserInternal = internalMutation({
@@ -3193,6 +3243,8 @@ export const seedScreenshotDataInternal = internalMutation({
         const endTime = todayMs + cal.dayOffset * DAY + cal.endHour * HOUR + cal.endMin * MINUTE;
 
         await ctx.db.insert("calendarEvents", {
+          organizationId: orgId,
+          workspaceId,
           title: cal.title,
           description: cal.description,
           startTime,

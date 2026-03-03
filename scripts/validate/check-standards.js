@@ -132,7 +132,7 @@ export function run() {
     const content = fs.readFileSync(filePath, "utf-8");
     const sourceFile = ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest, true);
 
-    function visit(node) {
+    function visit(node, ancestors = []) {
       // Typography tags
       if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
         const tagName = node.tagName.getText();
@@ -167,14 +167,27 @@ export function run() {
         // Allow in test files, download links, and files with external links
         // Note: <a> inside <Button asChild> is allowed (Button handles the anchor)
         if (tagName === "a") {
-          // Check if this <a> is inside a Button with asChild (look at parent opening tag)
-          const ancestors = node.ancestors || [];
-          const isInsideButtonAsChild = ancestors.some(
-            (ancestor) =>
-              ancestor.type === "element" &&
-              ancestor.name === "Button" &&
-              ancestor.attributes?.some((attr) => attr.name.name === "asChild"),
-          );
+          // Check if this <a> is inside a Button with asChild (look at parent JsxElement nodes)
+          const isInsideButtonAsChild = ancestors.some((ancestor) => {
+            // Handle JsxElement (has openingElement property)
+            if (ts.isJsxElement(ancestor)) {
+              const opening = ancestor.openingElement;
+              const ancestorTagName = opening.tagName.getText();
+              if (ancestorTagName !== "Button") return false;
+              return opening.attributes.properties.some(
+                (prop) => ts.isJsxAttribute(prop) && prop.name.getText() === "asChild",
+              );
+            }
+            // Handle JsxSelfClosingElement (self-closing Button asChild)
+            if (ts.isJsxSelfClosingElement(ancestor)) {
+              const ancestorTagName = ancestor.tagName.getText();
+              if (ancestorTagName !== "Button") return false;
+              return ancestor.attributes.properties.some(
+                (prop) => ts.isJsxAttribute(prop) && prop.name.getText() === "asChild",
+              );
+            }
+            return false;
+          });
 
           const isAllowed =
             isInsideButtonAsChild ||
@@ -300,10 +313,16 @@ export function run() {
         }
       }
 
-      ts.forEachChild(node, visit);
+      // Track JsxElement and JsxSelfClosingElement as ancestors for child traversal
+      // JsxElement contains the openingElement which we check for Button asChild
+      const updatedAncestors =
+        ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node)
+          ? [...ancestors, node]
+          : ancestors;
+      ts.forEachChild(node, (child) => visit(child, updatedAncestors));
     }
 
-    visit(sourceFile);
+    visit(sourceFile, []);
   }
 
   const files = walkDir(SRC_DIR, { extensions: new Set([".tsx"]) });

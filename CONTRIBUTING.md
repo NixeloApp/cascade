@@ -168,6 +168,15 @@ describe("function", () => {
 
 Look for issues labeled `good first issue` - these are great for getting started.
 
+Maintainer criteria for applying `good first issue`:
+
+- Clear reproduction context and acceptance criteria exist in the issue body.
+- Scope is realistically completable in one focused session.
+- Required files/areas are already identified.
+- A maintainer is available to review quickly.
+
+When adding a starter issue, also add `help wanted`.
+
 ### Feature Ideas
 
 - Slack integration
@@ -184,8 +193,8 @@ Look for issues labeled `good first issue` - these are great for getting started
 
 ## Getting Help
 
-- Open an issue for bugs or questions
-- Join our Discord (link in README)
+- Open an issue for bugs or questions using the GitHub templates
+- Use GitHub Discussions for product ideas and Q&A when enabled
 - Tag maintainers in PRs for review
 
 ## Code of Conduct

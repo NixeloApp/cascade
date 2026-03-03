@@ -38,11 +38,35 @@ describe("Export", () => {
       const csv = await asUser.query(api.export.exportIssuesCSV, { projectId });
 
       expect(typeof csv).toBe("string");
-      expect(csv).toContain("Key,Title,Type,Status,Priority");
+      expect(csv).toContain("Key,Title,Description,Type,Status,Priority");
       expect(csv).toContain("EXP-1");
       expect(csv).toContain("EXP-2");
       expect(csv).toContain("Test Issue 1");
       expect(csv).toContain("Test Issue 2");
+    });
+
+    it("should export rich-text descriptions as plain text in CSV", async () => {
+      const t = convexTest(schema, modules);
+      const { userId, organizationId, asUser } = await createTestContext(t);
+
+      const projectId = await createProjectInOrganization(t, userId, organizationId, {
+        name: "CSV Description Project",
+        key: "CDP",
+      });
+
+      await createTestIssue(t, projectId, userId, {
+        title: "Rich CSV Issue",
+        description: JSON.stringify([
+          { type: "p", children: [{ text: "Line 1" }] },
+          { type: "p", children: [{ text: "Line 2" }] },
+        ]),
+      });
+
+      const csv = await asUser.query(api.export.exportIssuesCSV, { projectId });
+
+      expect(csv).toContain('"Line 1');
+      expect(csv).toContain('Line 2"');
+      expect(csv).not.toContain('"type":"p"');
     });
 
     it("should filter by sprint when sprintId provided", async () => {
@@ -207,6 +231,30 @@ describe("Export", () => {
       expect(data.issues[0].assigneeName).toBeDefined();
       expect(data.issues[0].reporterName).toBeDefined();
       expect(data.issues[0].statusName).toBeDefined();
+    });
+
+    it("should export rich-text descriptions as plain text in JSON", async () => {
+      const t = convexTest(schema, modules);
+      const { userId, organizationId, asUser } = await createTestContext(t);
+
+      const projectId = await createProjectInOrganization(t, userId, organizationId, {
+        name: "JSON Description Project",
+        key: "JDP",
+      });
+
+      await createTestIssue(t, projectId, userId, {
+        title: "Rich JSON Issue",
+        description: JSON.stringify([
+          { type: "p", children: [{ text: "Alpha" }] },
+          { type: "p", children: [{ text: "Beta" }] },
+        ]),
+      });
+
+      const jsonString = await asUser.query(api.export.exportIssuesJSON, { projectId });
+      const data = JSON.parse(jsonString);
+
+      expect(data.issues[0].description).toBe("Alpha\nBeta");
+      expect(data.issues[0].description).not.toContain('"type":"p"');
     });
   });
 

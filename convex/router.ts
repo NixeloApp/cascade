@@ -23,6 +23,7 @@ import {
   nukeAllE2EWorkspacesEndpoint,
   nukeAllTestUsersEndpoint,
   nukeTimersEndpoint,
+  requestPasswordResetEndpoint,
   resetOnboardingEndpoint,
   resetTestWorkspaceEndpoint,
   seedScreenshotDataEndpoint,
@@ -37,6 +38,12 @@ import {
   listRepos as listGitHubRepos,
 } from "./http/githubOAuth";
 import { handleCallback, initiateAuth, triggerSync } from "./http/googleOAuth";
+import { handleSlashCommand } from "./http/slackCommands";
+import {
+  handleCallback as handleSlackCallback,
+  initiateAuth as initiateSlackAuth,
+} from "./http/slackOAuth";
+import { handleUnfurl } from "./http/slackUnfurl";
 
 const http = httpRouter();
 
@@ -85,6 +92,31 @@ http.route({
   handler: listGitHubRepos,
 });
 
+// Slack OAuth routes (for workspace notifications integration)
+http.route({
+  path: "/slack/auth",
+  method: "GET",
+  handler: initiateSlackAuth,
+});
+
+http.route({
+  path: "/slack/callback",
+  method: "GET",
+  handler: handleSlackCallback,
+});
+
+http.route({
+  path: "/slack/commands",
+  method: "POST",
+  handler: handleSlashCommand,
+});
+
+http.route({
+  path: "/slack/unfurl",
+  method: "POST",
+  handler: handleUnfurl,
+});
+
 // Auth wrapper routes (security)
 http.route({
   path: "/auth/request-reset",
@@ -112,6 +144,13 @@ http.route({
   path: "/e2e/login-test-user",
   method: "POST",
   handler: loginTestUserEndpoint,
+});
+
+// Trigger password reset dispatch for a test user
+http.route({
+  path: "/e2e/request-password-reset",
+  method: "POST",
+  handler: requestPasswordResetEndpoint,
 });
 
 // Get latest OTP for a test user

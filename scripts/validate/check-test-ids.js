@@ -7,6 +7,7 @@
  * Rules:
  * 1. In src/components: data-testid must use TEST_IDS.X.Y (not string literals)
  * 2. In e2e tests: getByTestId must use TEST_IDS.X.Y (not string literals)
+ * 3. In e2e specs: getByTestId should be in page objects, not directly in spec files
  *
  * @strictness STRICT - Blocks CI. Test IDs must use centralized constants.
  */
@@ -28,12 +29,19 @@ export function run() {
   ];
 
   let errorCount = 0;
+  let warnCount = 0;
   const messages = [];
 
   function reportError(filePath, line, col, message) {
     const rel = relPath(filePath);
     messages.push(`  ${c.red}ERROR${c.reset} ${rel}:${line}:${col} - ${message}`);
     errorCount++;
+  }
+
+  function reportWarn(filePath, line, col, message) {
+    const rel = relPath(filePath);
+    messages.push(`  ${c.yellow}WARN${c.reset} ${rel}:${line}:${col} - ${message}`);
+    warnCount++;
   }
 
   /**
@@ -160,18 +168,61 @@ export function run() {
     checkComponentFile(file);
   }
 
+  // Directories where getByTestId is allowed (page objects, helpers)
+  const ALLOWED_TESTID_DIRS = ["/pages/", "/fixtures/", "/utils/", "/locators/"];
+
+  /**
+   * Check if getByTestId is used directly in spec files (should be in page objects)
+   * NOTE: This is a warning, not error - gradual migration to page object pattern
+   */
+  function checkTestIdLocation(filePath) {
+    const rel = relPath(filePath);
+    // Only check spec files
+    if (!rel.endsWith(".spec.ts")) return;
+
+    const content = fs.readFileSync(filePath, "utf-8");
+    const sourceFile = ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest, true);
+
+    function visit(node) {
+      if (ts.isCallExpression(node)) {
+        const expr = node.expression;
+        if (ts.isPropertyAccessExpression(expr) && expr.name.getText() === "getByTestId") {
+          const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
+          reportWarn(
+            filePath,
+            line + 1,
+            character + 1,
+            `getByTestId() should be in page objects (e2e/pages/), not in spec files`,
+          );
+        }
+      }
+      ts.forEachChild(node, visit);
+    }
+
+    visit(sourceFile);
+  }
+
   // Check E2E test files
   const e2eFiles = walkDir(E2E_DIR, { extensions: new Set([".ts"]) });
   for (const file of e2eFiles) {
-    // Skip locator factory files - they define helpers, not hardcoded strings
-    if (file.includes("/locators/")) continue;
+    const rel = relPath(file);
+    // Skip allowed directories for constant checks
+    if (ALLOWED_TESTID_DIRS.some((d) => rel.includes(d))) {
+      checkE2EFile(file); // Still check for TEST_IDS constants
+      continue;
+    }
     checkE2EFile(file);
+    checkTestIdLocation(file);
   }
+
+  const detail = [];
+  if (errorCount > 0) detail.push(`${errorCount} error(s)`);
+  if (warnCount > 0) detail.push(`${warnCount} warning(s)`);
 
   return {
     passed: errorCount === 0,
     errors: errorCount,
-    detail: errorCount > 0 ? `${errorCount} error(s)` : undefined,
+    detail: detail.length > 0 ? detail.join(", ") : undefined,
     messages: messages.length > 0 ? messages : undefined,
   };
 }

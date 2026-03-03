@@ -11,6 +11,8 @@ describe("Event Reminders - listUpcoming", () => {
   async function createCalendarEvent(
     t: TestConvex<typeof schema>,
     organizerId: Id<"users">,
+    organizationId: Id<"organizations">,
+    workspaceId: Id<"workspaces">,
     options: {
       title?: string;
       startTime?: number;
@@ -22,6 +24,8 @@ describe("Event Reminders - listUpcoming", () => {
     return await t.run(async (ctx) => {
       const now = Date.now();
       return await ctx.db.insert("calendarEvents", {
+        organizationId,
+        workspaceId,
         organizerId,
         title: options.title ?? "Test Event",
         startTime: options.startTime ?? now + HOUR, // 1 hour from now
@@ -38,12 +42,14 @@ describe("Event Reminders - listUpcoming", () => {
 
   it("should return upcoming reminders within the next week", async () => {
     const t = convexTest(schema, modules);
-    const { userId, asUser } = await createTestContext(t);
+    const { userId, organizationId, workspaceId, asUser } = await createTestContext(t);
 
     const now = Date.now();
     // Event in 2 days
     const startTime = now + 2 * DAY;
-    const eventId = await createCalendarEvent(t, userId, { startTime });
+    const eventId = await createCalendarEvent(t, userId, organizationId, workspaceId, {
+      startTime,
+    });
 
     // Create reminder 15 mins before (so scheduledFor is now + 2 days - 15 mins, which is < 1 week)
     const { reminderId } = await asUser.mutation(api.eventReminders.create, {
@@ -61,13 +67,15 @@ describe("Event Reminders - listUpcoming", () => {
 
   it("should filter out past, distant future, and sent reminders", async () => {
     const t = convexTest(schema, modules);
-    const { userId, asUser } = await createTestContext(t);
+    const { userId, organizationId, workspaceId, asUser } = await createTestContext(t);
 
     const now = Date.now();
 
     // 1. Past reminder (scheduled 1 hour ago)
     // Create event starting now, reminder 1 hour before -> scheduled 1 hour ago
-    const pastEventId = await createCalendarEvent(t, userId, { startTime: now });
+    const pastEventId = await createCalendarEvent(t, userId, organizationId, workspaceId, {
+      startTime: now,
+    });
     await asUser.mutation(api.eventReminders.create, {
       eventId: pastEventId,
       reminderType: "email",
@@ -76,7 +84,9 @@ describe("Event Reminders - listUpcoming", () => {
 
     // 2. Distant future reminder (scheduled 8 days from now)
     // Create event in 9 days, reminder 1 day before -> scheduled 8 days from now
-    const distantEventId = await createCalendarEvent(t, userId, { startTime: now + 9 * DAY });
+    const distantEventId = await createCalendarEvent(t, userId, organizationId, workspaceId, {
+      startTime: now + 9 * DAY,
+    });
     await asUser.mutation(api.eventReminders.create, {
       eventId: distantEventId,
       reminderType: "email",
@@ -84,7 +94,9 @@ describe("Event Reminders - listUpcoming", () => {
     });
 
     // 3. Sent reminder (scheduled tomorrow but sent)
-    const sentEventId = await createCalendarEvent(t, userId, { startTime: now + 1 * DAY });
+    const sentEventId = await createCalendarEvent(t, userId, organizationId, workspaceId, {
+      startTime: now + 1 * DAY,
+    });
     const { reminderId: sentReminderId } = await asUser.mutation(api.eventReminders.create, {
       eventId: sentEventId,
       reminderType: "email",
@@ -101,11 +113,13 @@ describe("Event Reminders - listUpcoming", () => {
 
   it("should filter out reminders for deleted events", async () => {
     const t = convexTest(schema, modules);
-    const { userId, asUser } = await createTestContext(t);
+    const { userId, organizationId, workspaceId, asUser } = await createTestContext(t);
 
     const now = Date.now();
     const startTime = now + 2 * DAY;
-    const eventId = await createCalendarEvent(t, userId, { startTime });
+    const eventId = await createCalendarEvent(t, userId, organizationId, workspaceId, {
+      startTime,
+    });
 
     await asUser.mutation(api.eventReminders.create, {
       eventId,

@@ -120,6 +120,24 @@ export class TestUserService {
   }
 
   /**
+   * Trigger password reset OTP dispatch for a test user
+   */
+  async requestPasswordReset(email: string): Promise<boolean> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.requestPasswordReset, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ email }),
+      });
+      const result = await response.json();
+      return response.ok && result.success === true;
+    } catch (error) {
+      console.warn(`  ⚠️ Failed to request password reset for ${email}:`, error);
+      return false;
+    }
+  }
+
+  /**
    * Verify a test user's email via E2E API
    */
   async verifyTestUser(email: string): Promise<boolean> {

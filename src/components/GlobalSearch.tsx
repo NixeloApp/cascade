@@ -9,10 +9,13 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
+import { useState } from "react";
+import { AdvancedSearchModal } from "@/components/AdvancedSearchModal";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { useSearchKeyboard, useSearchPagination } from "@/hooks/useGlobalSearch";
 import { Search } from "@/lib/icons";
+import { parseIssueSearchShortcuts } from "@/lib/search-shortcuts";
 import { TEST_IDS } from "@/lib/test-ids";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
@@ -96,6 +99,7 @@ function getHasMore(
 // Search list content component - renders based on query/loading state
 function SearchListContent({
   query,
+  hasShortcuts,
   isLoading,
   filteredResults,
   hasMore,
@@ -104,6 +108,7 @@ function SearchListContent({
   onLoadMore,
 }: {
   query: string;
+  hasShortcuts: boolean;
   isLoading: boolean;
   filteredResults: SearchResult[];
   hasMore: boolean;
@@ -114,7 +119,9 @@ function SearchListContent({
   if (query.length < 2) {
     return (
       <Typography variant="small" color="secondary" className="text-center">
-        Type at least 2 characters to search
+        {hasShortcuts
+          ? "Add at least 2 non-shortcut characters to search"
+          : "Type at least 2 characters to search"}
       </Typography>
     );
   }
@@ -234,18 +241,29 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
 
 /** Global command palette for searching issues and documents across the app. */
 export function GlobalSearch() {
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const { isOpen, setIsOpen } = useSearchKeyboard();
   const { query, setQuery, activeTab, setActiveTab, issueOffset, documentOffset, limit, loadMore } =
     useSearchPagination(isOpen);
+  const parsedSearch = parseIssueSearchShortcuts(query);
+  const effectiveQuery = parsedSearch.textQuery;
+  const shouldSearch = effectiveQuery.length >= 2;
 
   // Search when query changes
   const issueSearchResult = useQuery(
     api.issues.search,
-    query.length >= 2 ? { query, limit, offset: issueOffset } : "skip",
+    shouldSearch
+      ? {
+          query: effectiveQuery,
+          limit,
+          offset: issueOffset,
+          ...parsedSearch.filters,
+        }
+      : "skip",
   );
   const documentSearchResult = useQuery(
     api.documents.search,
-    query.length >= 2 ? { query, limit, offset: documentOffset } : "skip",
+    shouldSearch ? { query: effectiveQuery, limit, offset: documentOffset } : "skip",
   );
 
   const issueResults = issueSearchResult?.page ?? [];
@@ -256,8 +274,9 @@ export function GlobalSearch() {
   const documentHasMore = documentSearchResult?.hasMore ?? false;
 
   // Get filtered results based on active tab
-  const filteredResults =
-    query.length >= 2 ? getFilteredResults(activeTab, issueResults, documentResults) : [];
+  const filteredResults = shouldSearch
+    ? getFilteredResults(activeTab, issueResults, documentResults)
+    : [];
 
   const totalCount = getTotalCount(activeTab, issueTotal, documentTotal);
   const hasMore = getHasMore(activeTab, issueHasMore, documentHasMore);
@@ -267,7 +286,7 @@ export function GlobalSearch() {
   };
 
   const isLoading =
-    query.length >= 2 && (issueSearchResult === undefined || documentSearchResult === undefined);
+    shouldSearch && (issueSearchResult === undefined || documentSearchResult === undefined);
 
   return (
     <>
@@ -338,7 +357,8 @@ export function GlobalSearch() {
 
           <CommandList className="max-h-80 sm:max-h-96">
             <SearchListContent
-              query={query}
+              query={effectiveQuery}
+              hasShortcuts={parsedSearch.hasShortcuts}
               isLoading={isLoading}
               filteredResults={filteredResults}
               hasMore={hasMore}
@@ -348,9 +368,27 @@ export function GlobalSearch() {
             />
           </CommandList>
 
+          <Typography
+            variant="meta"
+            className="px-3 py-2 border-t border-ui-border text-ui-text-tertiary"
+          >
+            Shortcuts: <code>type:bug</code> <code>status:done</code> <code>priority:high</code>{" "}
+            <code>label:frontend</code> <code>@me</code>
+          </Typography>
+
           {/* Footer */}
           <Flex align="center" justify="between" className="border-t border-ui-border">
             <Flex align="center" gap="lg">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setIsOpen(false);
+                  setIsAdvancedOpen(true);
+                }}
+              >
+                Advanced Search
+              </Button>
               <ShortcutHint keys="up+down">Navigate</ShortcutHint>
               <ShortcutHint keys="Enter">Open</ShortcutHint>
             </Flex>
@@ -358,6 +396,16 @@ export function GlobalSearch() {
           </Flex>
         </Command>
       </CommandDialog>
+
+      {isAdvancedOpen ? (
+        <AdvancedSearchModal
+          open={isAdvancedOpen}
+          onOpenChange={setIsAdvancedOpen}
+          onSelectIssue={(issueId, projectId) => {
+            window.location.href = `/project/${projectId}?issue=${issueId}`;
+          }}
+        />
+      ) : null}
     </>
   );
 }

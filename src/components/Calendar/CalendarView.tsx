@@ -5,6 +5,7 @@ import { endOfDay, endOfMonth, endOfWeek, startOfDay, startOfMonth, startOfWeek 
 import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { CreateEventModal } from "./CreateEventModal";
+import { type EventColor, PALETTE_COLORS } from "./calendar-colors";
 import { EventDetailsModal } from "./EventDetailsModal";
 import { ShadcnCalendar } from "./shadcn-calendar/calendar";
 import { extractConvexId, toCalendarEvent } from "./shadcn-calendar/calendar-adapter";
@@ -37,7 +38,24 @@ function getDateRange(date: Date, mode: Mode): { startDate: number; endDate: num
 /**
  * Main calendar view with day/week/month modes and event management.
  */
-export function CalendarView(): React.ReactElement {
+interface CalendarViewProps {
+  organizationId?: Id<"organizations">;
+  workspaceId?: Id<"workspaces">;
+  projectId?: Id<"projects">;
+  teamId?: Id<"teams">;
+  colorByScope?: "workspace" | "team";
+}
+
+/**
+ * Main calendar view with day/week/month modes and event management.
+ */
+export function CalendarView({
+  organizationId,
+  workspaceId,
+  projectId,
+  teamId,
+  colorByScope,
+}: CalendarViewProps): React.ReactElement {
   const [mode, setMode] = useState<Mode>("week");
   const [date, setDate] = useState(new Date());
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -45,12 +63,72 @@ export function CalendarView(): React.ReactElement {
 
   const { startDate, endDate } = getDateRange(date, mode);
 
-  const rawEvents = useQuery(api.calendarEvents.listByDateRange, {
-    startDate,
-    endDate,
-  });
+  const userScopedEvents = useQuery(
+    api.calendarEvents.listByDateRange,
+    teamId || workspaceId || organizationId
+      ? "skip"
+      : {
+          startDate,
+          endDate,
+          projectId,
+        },
+  );
+  const organizationScopedEvents = useQuery(
+    api.calendarEvents.listByOrganizationDateRange,
+    organizationId && !workspaceId && !teamId
+      ? {
+          organizationId,
+          startDate,
+          endDate,
+        }
+      : "skip",
+  );
+  const workspaceScopedEvents = useQuery(
+    api.calendarEvents.listByWorkspaceDateRange,
+    workspaceId && !teamId
+      ? {
+          workspaceId,
+          startDate,
+          endDate,
+        }
+      : "skip",
+  );
+  const teamScopedEvents = useQuery(
+    api.calendarEvents.listByTeamDateRange,
+    teamId
+      ? {
+          teamId,
+          startDate,
+          endDate,
+        }
+      : "skip",
+  );
 
-  const events: CalendarEvent[] = (rawEvents ?? []).map(toCalendarEvent);
+  const rawEvents = teamId
+    ? teamScopedEvents
+    : workspaceId
+      ? workspaceScopedEvents
+      : organizationId
+        ? organizationScopedEvents
+        : userScopedEvents;
+  const events: CalendarEvent[] = (rawEvents ?? []).map((rawEvent) => {
+    const base = toCalendarEvent(rawEvent);
+    const scopeId =
+      colorByScope === "workspace"
+        ? rawEvent.workspaceId
+        : colorByScope === "team"
+          ? rawEvent.teamId
+          : undefined;
+
+    if (!scopeId) {
+      return base;
+    }
+
+    return {
+      ...base,
+      color: pickScopeColor(scopeId.toString()),
+    };
+  });
 
   function handleEventClick(event: CalendarEvent): void {
     setSelectedEventId(extractConvexId(event as NixeloCalendarEvent));
@@ -72,6 +150,7 @@ export function CalendarView(): React.ReactElement {
         open={showCreateModal}
         onOpenChange={setShowCreateModal}
         defaultDate={date}
+        projectId={projectId}
       />
 
       {selectedEventId && (
@@ -83,4 +162,13 @@ export function CalendarView(): React.ReactElement {
       )}
     </Flex>
   );
+}
+
+function pickScopeColor(scopeId: string): EventColor {
+  let hash = 0;
+  for (const char of scopeId) {
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  }
+
+  return PALETTE_COLORS[hash % PALETTE_COLORS.length] ?? "blue";
 }

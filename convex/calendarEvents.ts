@@ -12,8 +12,12 @@ import { internalQuery, type QueryCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchUsers } from "./lib/batchHelpers";
 import { forbidden, notFound, validation } from "./lib/errors";
+import { isOrganizationAdmin, isOrganizationMember } from "./lib/organizationAccess";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
+import { getTeamRole } from "./lib/teamAccess";
 import { DAY, WEEK } from "./lib/timeUtils";
+import { isWorkspaceMember } from "./lib/workspaceAccess";
+import { canAccessProject } from "./projectAccess";
 import { type CalendarEventColor, calendarEventColors, calendarStatuses } from "./validators";
 
 /**
@@ -46,6 +50,9 @@ function buildEventUpdateObject(args: {
   eventType?: "meeting" | "deadline" | "timeblock" | "personal";
   attendeeIds?: Id<"users">[];
   externalAttendees?: string[];
+  organizationId?: Id<"organizations">;
+  workspaceId?: Id<"workspaces">;
+  teamId?: Id<"teams">;
   projectId?: Id<"projects">;
   issueId?: Id<"issues">;
   status?: "confirmed" | "tentative" | "cancelled";
@@ -70,6 +77,9 @@ function buildEventUpdateObject(args: {
   addFieldIfDefined(updates, "allDay", args.allDay);
   addFieldIfDefined(updates, "location", args.location);
   addFieldIfDefined(updates, "externalAttendees", args.externalAttendees);
+  addFieldIfDefined(updates, "organizationId", args.organizationId);
+  addFieldIfDefined(updates, "workspaceId", args.workspaceId);
+  addFieldIfDefined(updates, "teamId", args.teamId);
   addFieldIfDefined(updates, "projectId", args.projectId);
   addFieldIfDefined(updates, "issueId", args.issueId);
   addFieldIfDefined(updates, "isRecurring", args.isRecurring);
@@ -79,6 +89,62 @@ function buildEventUpdateObject(args: {
   addFieldIfDefined(updates, "color", args.color);
 
   return updates;
+}
+
+/**
+ * Validate and resolve project/issue scope within a workspace.
+ * Ensures project/issue belong to the specified workspace.
+ */
+/**
+ * Resolve and validate project/issue scope for calendar events.
+ * Returns the resolved scope IDs from the project chain.
+ * Verifies the user has access to the project before returning scope.
+ */
+async function resolveEventScope(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  projectId?: Id<"projects">,
+  issueId?: Id<"issues">,
+): Promise<{
+  organizationId?: Id<"organizations">;
+  workspaceId?: Id<"workspaces">;
+  teamId?: Id<"teams">;
+  projectId?: Id<"projects">;
+  issueId?: Id<"issues">;
+}> {
+  let resolvedProjectId = projectId;
+
+  if (issueId) {
+    const issue = await ctx.db.get(issueId);
+    if (!issue) throw notFound("issue", issueId);
+
+    if (projectId && issue.projectId !== projectId) {
+      throw validation("issueId", "Issue does not belong to the provided project");
+    }
+
+    resolvedProjectId = issue.projectId;
+  }
+
+  if (!resolvedProjectId) {
+    return { projectId: undefined, issueId };
+  }
+
+  const project = await ctx.db.get(resolvedProjectId);
+  if (!project) throw notFound("project", resolvedProjectId);
+
+  // Verify user has access to the project before allowing scope derivation
+  const hasAccess = await canAccessProject(ctx, resolvedProjectId, userId);
+  if (!hasAccess) {
+    throw forbidden("project", "You do not have access to this project");
+  }
+
+  return {
+    organizationId: project.organizationId,
+    workspaceId: project.workspaceId,
+    teamId: project.teamId,
+    projectId: resolvedProjectId,
+    issueId,
+  };
 }
 
 // Helper: Get events where user is organizer or attendee in a date range
@@ -138,6 +204,23 @@ async function getUserEventsInRange(
   return uniqueEvents.sort((a, b) => a.startTime - b.startTime);
 }
 
+async function enrichEventsWithOrganizers(
+  ctx: QueryCtx,
+  events: Awaited<ReturnType<typeof getUserEventsInRange>>,
+) {
+  const organizerIds = [...new Set(events.map((event) => event.organizerId))];
+  const organizerMap = await batchFetchUsers(ctx, organizerIds);
+
+  return events.map((event) => {
+    const organizer = organizerMap.get(event.organizerId);
+    return {
+      ...event,
+      organizerName: organizer?.name,
+      organizerEmail: organizer?.email,
+    };
+  });
+}
+
 // Create a new calendar event
 export const create = authenticatedMutation({
   args: {
@@ -173,6 +256,8 @@ export const create = authenticatedMutation({
     }
 
     const now = Date.now();
+    // Resolve scope from project/issue if provided (verifies user has project access)
+    const scope = await resolveEventScope(ctx, ctx.userId, args.projectId, args.issueId);
 
     const eventId = await ctx.db.insert("calendarEvents", {
       title: args.title,
@@ -185,8 +270,11 @@ export const create = authenticatedMutation({
       organizerId: ctx.userId,
       attendeeIds: args.attendeeIds || [],
       externalAttendees: args.externalAttendees,
-      projectId: args.projectId,
-      issueId: args.issueId,
+      organizationId: scope.organizationId,
+      workspaceId: scope.workspaceId,
+      teamId: scope.teamId,
+      projectId: scope.projectId,
+      issueId: scope.issueId,
       status: args.status || "confirmed",
       isRecurring: args.isRecurring ?? false,
       recurrenceRule: args.recurrenceRule,
@@ -242,21 +330,134 @@ export const listByDateRange = authenticatedQuery({
       ? events.filter((event) => event.projectId === args.projectId)
       : events;
 
-    // Batch fetch organizers to avoid N+1
-    const organizerIds = [...new Set(filteredEvents.map((e) => e.organizerId))];
-    const organizerMap = await batchFetchUsers(ctx, organizerIds);
+    return await enrichEventsWithOrganizers(ctx, filteredEvents);
+  },
+});
 
-    // Enrich with organizer details
-    const enrichedEvents = filteredEvents.map((event) => {
-      const organizer = organizerMap.get(event.organizerId);
-      return {
-        ...event,
-        organizerName: organizer?.name,
-        organizerEmail: organizer?.email,
-      };
-    });
+// List team events for a date range (team members + org admins)
+export const listByTeamDateRange = authenticatedQuery({
+  args: {
+    teamId: v.id("teams"),
+    startDate: v.number(),
+    endDate: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const team = await ctx.db.get(args.teamId);
+    if (!team || team.isDeleted) {
+      return [];
+    }
 
-    return enrichedEvents;
+    const [teamRole, orgAdmin] = await Promise.all([
+      getTeamRole(ctx, args.teamId, ctx.userId),
+      isOrganizationAdmin(ctx, team.organizationId, ctx.userId),
+    ]);
+
+    if (!(teamRole || orgAdmin)) {
+      return [];
+    }
+
+    const events = await ctx.db
+      .query("calendarEvents")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .filter((q) =>
+        q.and(
+          q.gte(q.field("startTime"), args.startDate),
+          q.lte(q.field("startTime"), args.endDate),
+        ),
+      )
+      .take(MAX_PAGE_SIZE);
+
+    const sortedEvents = events.sort((a, b) => a.startTime - b.startTime);
+    return await enrichEventsWithOrganizers(ctx, sortedEvents);
+  },
+});
+
+// List workspace events for a date range (workspace members + org admins)
+export const listByWorkspaceDateRange = authenticatedQuery({
+  args: {
+    workspaceId: v.id("workspaces"),
+    startDate: v.number(),
+    endDate: v.number(),
+    teamId: v.optional(v.id("teams")),
+  },
+  handler: async (ctx, args) => {
+    const workspace = await ctx.db.get(args.workspaceId);
+    if (!workspace) {
+      return [];
+    }
+
+    const [workspaceMember, orgAdmin] = await Promise.all([
+      isWorkspaceMember(ctx, args.workspaceId, ctx.userId),
+      isOrganizationAdmin(ctx, workspace.organizationId, ctx.userId),
+    ]);
+
+    if (!(workspaceMember || orgAdmin)) {
+      return [];
+    }
+
+    // Use team-specific query when teamId is provided to avoid filtering after limit
+    const events = args.teamId
+      ? await ctx.db
+          .query("calendarEvents")
+          .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+          .filter((q) =>
+            q.and(
+              q.eq(q.field("workspaceId"), args.workspaceId),
+              q.gte(q.field("startTime"), args.startDate),
+              q.lte(q.field("startTime"), args.endDate),
+            ),
+          )
+          .take(MAX_PAGE_SIZE)
+      : await ctx.db
+          .query("calendarEvents")
+          .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
+          .filter((q) =>
+            q.and(
+              q.gte(q.field("startTime"), args.startDate),
+              q.lte(q.field("startTime"), args.endDate),
+            ),
+          )
+          .take(MAX_PAGE_SIZE);
+
+    const sortedEvents = events.sort((a, b) => a.startTime - b.startTime);
+    return await enrichEventsWithOrganizers(ctx, sortedEvents);
+  },
+});
+
+// List organization events for a date range (organization members)
+export const listByOrganizationDateRange = authenticatedQuery({
+  args: {
+    organizationId: v.id("organizations"),
+    startDate: v.number(),
+    endDate: v.number(),
+    workspaceId: v.optional(v.id("workspaces")),
+    teamId: v.optional(v.id("teams")),
+  },
+  handler: async (ctx, args) => {
+    const member = await isOrganizationMember(ctx, args.organizationId, ctx.userId);
+    if (!member) {
+      return [];
+    }
+
+    const events = await ctx.db
+      .query("calendarEvents")
+      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+      .filter((q) =>
+        q.and(
+          q.gte(q.field("startTime"), args.startDate),
+          q.lte(q.field("startTime"), args.endDate),
+        ),
+      )
+      .take(MAX_PAGE_SIZE);
+
+    const filteredByWorkspace = args.workspaceId
+      ? events.filter((event) => event.workspaceId === args.workspaceId)
+      : events;
+    const filteredEvents = args.teamId
+      ? filteredByWorkspace.filter((event) => event.teamId === args.teamId)
+      : filteredByWorkspace;
+    const sortedEvents = filteredEvents.sort((a, b) => a.startTime - b.startTime);
+    return await enrichEventsWithOrganizers(ctx, sortedEvents);
   },
 });
 
@@ -283,25 +484,11 @@ export const listMine = authenticatedQuery({
       ? events
       : events.filter((event) => event.status !== "cancelled");
 
-    // Batch fetch organizers to avoid N+1
-    const organizerIds = [...new Set(filteredEvents.map((e) => e.organizerId))];
-    const organizerMap = await batchFetchUsers(ctx, organizerIds);
-
-    // Enrich with organizer details
-    const enrichedEvents = filteredEvents.map((event) => {
-      const organizer = organizerMap.get(event.organizerId);
-      return {
-        ...event,
-        organizerName: organizer?.name,
-        organizerEmail: organizer?.email,
-      };
-    });
-
-    return enrichedEvents;
+    return await enrichEventsWithOrganizers(ctx, filteredEvents);
   },
 });
 
-// Update an existing event
+// Update an existing event (requires workspace membership)
 export const update = authenticatedMutation({
   args: {
     id: v.id("calendarEvents"),
@@ -340,6 +527,17 @@ export const update = authenticatedMutation({
       throw forbidden("organizer", "Only the event organizer can update this event");
     }
 
+    // For workspace-scoped events, verify membership
+    if (event.workspaceId && event.organizationId) {
+      const [workspaceMember, orgAdmin] = await Promise.all([
+        isWorkspaceMember(ctx, event.workspaceId, ctx.userId),
+        isOrganizationAdmin(ctx, event.organizationId, ctx.userId),
+      ]);
+      if (!(workspaceMember || orgAdmin)) {
+        throw forbidden("member", "You must be a workspace member to update this event");
+      }
+    }
+
     // Validate times if provided
     const startTime = args.startTime ?? event.startTime;
     const endTime = args.endTime ?? event.endTime;
@@ -348,7 +546,23 @@ export const update = authenticatedMutation({
     }
 
     // Build update object using helper
-    const updates = buildEventUpdateObject(args);
+    let updates = buildEventUpdateObject(args);
+    if (args.projectId !== undefined || args.issueId !== undefined) {
+      const scope = await resolveEventScope(
+        ctx,
+        ctx.userId,
+        args.projectId ?? event.projectId,
+        args.issueId ?? event.issueId,
+      );
+      updates = {
+        ...updates,
+        organizationId: scope.organizationId,
+        workspaceId: scope.workspaceId,
+        teamId: scope.teamId,
+        projectId: scope.projectId,
+        issueId: scope.issueId,
+      };
+    }
     await ctx.db.patch(args.id, updates);
 
     return { success: true, eventId: args.id } as const;
@@ -366,6 +580,17 @@ export const remove = authenticatedMutation({
     // Only organizer can delete event
     if (event.organizerId !== ctx.userId) {
       throw forbidden("organizer", "Only the event organizer can delete this event");
+    }
+
+    // For workspace-scoped events, verify membership
+    if (event.workspaceId && event.organizationId) {
+      const [workspaceMember, orgAdmin] = await Promise.all([
+        isWorkspaceMember(ctx, event.workspaceId, ctx.userId),
+        isOrganizationAdmin(ctx, event.organizationId, ctx.userId),
+      ]);
+      if (!(workspaceMember || orgAdmin)) {
+        throw forbidden("member", "You must be a workspace member to delete this event");
+      }
     }
 
     await ctx.db.delete(args.id);
@@ -391,21 +616,7 @@ export const getUpcoming = authenticatedQuery({
     // Limit results
     const limitedEvents = args.limit ? visibleEvents.slice(0, args.limit) : visibleEvents;
 
-    // Batch fetch organizers to avoid N+1
-    const organizerIds = [...new Set(limitedEvents.map((e) => e.organizerId))];
-    const organizerMap = await batchFetchUsers(ctx, organizerIds);
-
-    // Enrich with organizer details
-    const enrichedEvents = limitedEvents.map((event) => {
-      const organizer = organizerMap.get(event.organizerId);
-      return {
-        ...event,
-        organizerName: organizer?.name,
-        organizerEmail: organizer?.email,
-      };
-    });
-
-    return enrichedEvents;
+    return await enrichEventsWithOrganizers(ctx, limitedEvents);
   },
 });
 

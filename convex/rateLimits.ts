@@ -8,16 +8,12 @@ import { RateLimiter } from "@convex-dev/rate-limiter";
 
 import { components } from "./_generated/api";
 import type { ActionCtx, MutationCtx } from "./_generated/server";
+import { isTestEnvironment } from "./lib/envDetection";
 import { rateLimited } from "./lib/errors";
 import { HOUR, MINUTE } from "./lib/timeUtils";
 
 // Helper to detect test/dev/CI environments for relaxed rate limits
-const isTestEnv =
-  process.env.NODE_ENV === "test" ||
-  process.env.NODE_ENV === "development" ||
-  process.env.E2E_TEST_MODE ||
-  process.env.CI ||
-  process.env.IS_TEST_ENV;
+const isTestEnv = isTestEnvironment();
 
 const rateLimitConfig = {
   // AI Chat: 10 messages per minute per user
@@ -40,6 +36,9 @@ const rateLimitConfig = {
 
   // API Endpoints: General rate limit
   apiEndpoint: { kind: "fixed window", rate: 100, period: MINUTE }, // 100/min
+
+  // Client portal token validation: limit brute-force token probing
+  clientPortalValidation: { kind: "fixed window", rate: 30, period: MINUTE },
 
   // Password Reset (IP-based): Strict limit to prevent spam/DoS
   // Increased capacity/rate significantly for test/CI environments where all traffic may share one IP (localhost/runner)

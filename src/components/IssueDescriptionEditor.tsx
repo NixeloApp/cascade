@@ -8,7 +8,6 @@
 
 import type { Value } from "platejs";
 import { Plate, PlateContent, usePlateEditor } from "platejs/react";
-import { useCallback, useMemo } from "react";
 import { Card } from "@/components/ui/Card";
 import {
   getInitialValue,
@@ -92,7 +91,7 @@ export function IssueDescriptionEditor({
   testId,
 }: IssueDescriptionEditorProps) {
   // Parse initial value (handles both JSON and plain text)
-  const initialValue = useMemo(() => parseInitialValue(value), [value]);
+  const initialValue = parseInitialValue(value);
 
   // Create editor with lightweight plugins
   const editor = usePlateEditor({
@@ -101,20 +100,17 @@ export function IssueDescriptionEditor({
   });
 
   // Handle content changes
-  const handleChange = useCallback(
-    ({ value: newValue }: { value: Value }) => {
-      if (onChange) {
-        // Serialize to JSON for storage
-        // If empty, send empty string to allow clearing
-        if (isEmptyValue(newValue)) {
-          onChange("");
-        } else {
-          onChange(serializeValue(newValue));
-        }
+  const handleChange = ({ value: newValue }: { value: Value }) => {
+    if (onChange) {
+      // Serialize to JSON for storage
+      // If empty, send empty string to allow clearing
+      if (isEmptyValue(newValue)) {
+        onChange("");
+      } else {
+        onChange(serializeValue(newValue));
       }
-    },
-    [onChange],
-  );
+    }
+  };
 
   return (
     <Card
@@ -157,7 +153,7 @@ export function IssueDescriptionReadOnly({
   testId?: string;
 }) {
   // Parse value (handles both JSON and plain text)
-  const parsedValue = useMemo(() => parseInitialValue(value), [value]);
+  const parsedValue = parseInitialValue(value);
 
   // Create read-only editor (must be called unconditionally for React hooks rules)
   const editor = usePlateEditor({
