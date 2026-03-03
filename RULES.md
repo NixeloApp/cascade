@@ -10,6 +10,7 @@ Generic development rules and conventions for AI assistants. Project-specific de
 - **NEVER** use `>/dev/null`, `2>/dev/null`, `2>nul`, or any null redirect (creates junk `nul` files on Windows)
 - **NEVER** commit secrets or credentials
 - **NEVER** update the git config
+- **NEVER** offer obviously bad options when asking questions. If one option is clearly correct, just do it. Don't present "options" where one is sensible and another is nonsensical just to appear balanced.
 
 ---
 
