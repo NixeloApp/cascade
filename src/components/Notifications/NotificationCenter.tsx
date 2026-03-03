@@ -84,18 +84,14 @@ export function NotificationCenter() {
   const [filter, setFilter] = useState<NotificationFilter>("all");
   const orgContext = useOrganizationOptional();
 
+  // Filter by type on the backend for proper pagination
+  const typeFilter = FILTER_TYPE_MAP[filter];
   const { results: notificationsRaw } = usePaginatedQuery(
     api.notifications.list,
-    {},
-    { initialNumItems: 50 }, // Fetch more to allow client-side filtering
+    { types: typeFilter ?? undefined },
+    { initialNumItems: 50 },
   );
-  const allNotifications = (notificationsRaw ?? []) as NotificationWithActor[];
-
-  // Filter notifications based on selected filter
-  const typeFilter = FILTER_TYPE_MAP[filter];
-  const notifications = !typeFilter
-    ? allNotifications
-    : allNotifications.filter((notification) => typeFilter.includes(notification.type));
+  const notifications = (notificationsRaw ?? []) as NotificationWithActor[];
 
   // Group notifications by date
   const groupedNotifications = groupNotificationsByDate(notifications);
