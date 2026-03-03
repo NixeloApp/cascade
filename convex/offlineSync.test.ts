@@ -7,6 +7,16 @@ import { modules } from "./testSetup.test-helper";
 import { createTestContext, createTestUser } from "./testUtils";
 
 describe("offlineSync", () => {
+  const queueOfflineIssueMutation = async (
+    asUser: Awaited<ReturnType<typeof createTestContext>>["asUser"],
+    issueId: string,
+  ) => {
+    return await asUser.mutation(api.offlineSync.queueMutation, {
+      mutationType: "issues.update",
+      mutationArgs: JSON.stringify({ id: issueId }),
+    });
+  };
+
   test("autoRetryFailed retries eligible items and archives max attempts", async () => {
     // Pass modules explicitly to convexTest
     const t = convexTest(schema, modules);
@@ -86,10 +96,7 @@ describe("offlineSync", () => {
     const t = convexTest(schema, modules);
     const { asUser } = await createTestContext(t);
 
-    const queueId = await asUser.mutation(api.offlineSync.queueMutation, {
-      mutationType: "issues.update",
-      mutationArgs: '{"id": "issue-1"}',
-    });
+    const queueId = await queueOfflineIssueMutation(asUser, "issue-1");
 
     expect(queueId).toBeDefined();
 
@@ -105,10 +112,7 @@ describe("offlineSync", () => {
     const userId2 = await createTestUser(t);
     const asUser2 = t.withIdentity({ subject: userId2 });
 
-    const queueId = await asUser.mutation(api.offlineSync.queueMutation, {
-      mutationType: "issues.update",
-      mutationArgs: '{"id": "issue-1"}',
-    });
+    const queueId = await queueOfflineIssueMutation(asUser, "issue-1");
 
     await asUser.mutation(api.offlineSync.markSyncing, { queueId });
 
@@ -146,10 +150,7 @@ describe("offlineSync", () => {
     const t = convexTest(schema, modules);
     const { asUser } = await createTestContext(t);
 
-    const queueId1 = await asUser.mutation(api.offlineSync.queueMutation, {
-      mutationType: "issues.update",
-      mutationArgs: '{"id": "issue-1"}',
-    });
+    const queueId1 = await queueOfflineIssueMutation(asUser, "issue-1");
 
     await asUser.mutation(api.offlineSync.markFailed, {
       queueId: queueId1,
@@ -165,10 +166,7 @@ describe("offlineSync", () => {
     });
     // queueId1 is now failed
 
-    const queueId2 = await asUser.mutation(api.offlineSync.queueMutation, {
-      mutationType: "issues.update",
-      mutationArgs: '{"id": "issue-2"}',
-    });
+    const queueId2 = await queueOfflineIssueMutation(asUser, "issue-2");
     await asUser.mutation(api.offlineSync.markCompleted, { queueId: queueId2 });
 
     // Fast forward to make item old enough
@@ -192,10 +190,7 @@ describe("offlineSync", () => {
     const { asUser } = await createTestContext(t);
     const now = Date.now();
 
-    const queueId = await asUser.mutation(api.offlineSync.queueMutation, {
-      mutationType: "issues.update",
-      mutationArgs: '{"id": "issue-1"}',
-    });
+    const queueId = await queueOfflineIssueMutation(asUser, "issue-1");
 
     const items = await asUser.query(api.offlineSync.listQueue);
     expect(items.length).toBe(1);
