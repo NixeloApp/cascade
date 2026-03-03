@@ -222,12 +222,13 @@ describe("Workspaces", () => {
           createdBy: userId,
           updatedAt: Date.now(),
           isPrivate: false,
+          isDeleted: false,
         });
       });
 
       await expect(async () => {
         await asUser.mutation(api.workspaces.remove, { id: workspaceId });
-      }).rejects.toThrow("Cannot delete workspace with teams");
+      }).rejects.toThrow("Cannot delete workspace with active teams");
     });
 
     it("should deny deleting workspace with projects", async () => {
