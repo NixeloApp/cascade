@@ -31,6 +31,7 @@
  *  27. Test coverage        — critical files should have corresponding tests
  *  28. Time constants       — enforces use of timeUtils constants instead of magic numbers
  *  29. Unused parameters    — flags underscore-prefixed unused params (remove or use them)
+ *  30. Weak assertions      — toBeDefined(), toBeTruthy(), {} as Type in tests
  *
  * Exit code 1 if any check reports errors. Some checks are warn-only and do not affect exit code.
  *
@@ -68,6 +69,7 @@ import { run as runTypeSafetyCheck } from "./validate/check-type-safety.js";
 import { run as runTypeConsistencyCheck } from "./validate/check-types.js";
 import { run as runUIPatternsCheck } from "./validate/check-ui-patterns.js";
 import { run as runUnusedParamsCheck } from "./validate/check-unused-params.js";
+import { run as runWeakAssertionsCheck } from "./validate/check-weak-assertions.js";
 import { c } from "./validate/utils.js";
 
 const checks = [
@@ -101,6 +103,7 @@ const checks = [
   { name: "Test coverage", fn: runTestCoverageCheck },
   { name: "Time constants", fn: runTimeConstantsCheck },
   { name: "Unused parameters", fn: runUnusedParamsCheck },
+  { name: "Weak assertions", fn: runWeakAssertionsCheck },
 ];
 
 console.log(`\n${c.bold}Running validation...${c.reset}\n`);
