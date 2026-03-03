@@ -5,13 +5,15 @@ import { api, internal } from "./_generated/api";
 import { DAY, HOUR } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createTestUser } from "./testUtils";
+import { asAuthenticatedUser, createOrganizationAdmin, createTestUser } from "./testUtils";
 
 describe("Google Calendar Integration", () => {
   it("should connect, sync, and disconnect Google Calendar", async () => {
     const t = convexTest(schema, modules);
     register(t);
     const userId = await createTestUser(t);
+    // User needs workspace context for calendar events to be created on sync
+    await createOrganizationAdmin(t, userId);
     const asUser = asAuthenticatedUser(t, userId);
 
     // 1. Connect Google Calendar

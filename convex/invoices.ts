@@ -136,16 +136,30 @@ async function generateInvoiceNumber(
   ctx: Pick<QueryCtx, "db">,
   organizationId: Id<"organizations">,
 ) {
-  // Use bounded query to count invoices - cap at reasonable limit for sequence calculation
-  const MAX_INVOICE_COUNT = 10000;
+  const year = new Date().getUTCFullYear();
+  const yearPrefix = `INV-${year}-`;
+
+  // Find max sequence for current year by checking existing invoice numbers
+  const MAX_INVOICE_SCAN = 1000;
   const invoices = await ctx.db
     .query("invoices")
     .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
-    .take(MAX_INVOICE_COUNT);
+    .take(MAX_INVOICE_SCAN);
 
-  const sequence = invoices.length + 1;
-  const year = new Date().getUTCFullYear();
-  return `INV-${year}-${String(sequence).padStart(3, "0")}`;
+  // Extract sequence numbers from invoices matching current year pattern
+  let maxSequence = 0;
+  for (const invoice of invoices) {
+    if (invoice.number.startsWith(yearPrefix)) {
+      const sequencePart = invoice.number.slice(yearPrefix.length);
+      const sequence = Number.parseInt(sequencePart, 10);
+      if (!Number.isNaN(sequence) && sequence > maxSequence) {
+        maxSequence = sequence;
+      }
+    }
+  }
+
+  const nextSequence = maxSequence + 1;
+  return `${yearPrefix}${String(nextSequence).padStart(3, "0")}`;
 }
 
 async function getUnbilledBillableEntries(
@@ -156,10 +170,32 @@ async function getUnbilledBillableEntries(
   userId?: Id<"users">,
   projectId?: Id<"projects">,
 ) {
-  const entries = await ctx.db
-    .query("timeEntries")
-    .withIndex("by_date", (q) => q.gte("date", startDate).lte("date", endDate))
-    .take(BOUNDED_LIST_LIMIT);
+  // Use more specific indexes to avoid filtering after limit
+  // This prevents missing entries when other orgs have many entries in the date range
+  let entries: Doc<"timeEntries">[];
+  if (projectId) {
+    // Best case: filter by project first (org-scoped)
+    entries = await ctx.db
+      .query("timeEntries")
+      .withIndex("by_project_date", (q) =>
+        q.eq("projectId", projectId).gte("date", startDate).lte("date", endDate),
+      )
+      .take(BOUNDED_LIST_LIMIT);
+  } else if (userId) {
+    // Second best: filter by user first
+    entries = await ctx.db
+      .query("timeEntries")
+      .withIndex("by_user_date", (q) =>
+        q.eq("userId", userId).gte("date", startDate).lte("date", endDate),
+      )
+      .take(BOUNDED_LIST_LIMIT);
+  } else {
+    // Fallback: general date query with larger limit
+    entries = await ctx.db
+      .query("timeEntries")
+      .withIndex("by_date", (q) => q.gte("date", startDate).lte("date", endDate))
+      .take(BOUNDED_LIST_LIMIT * 5);
+  }
 
   const candidateEntries = entries.filter(
     (entry) =>
@@ -407,6 +443,18 @@ export const generateFromTimeEntries = organizationAdminMutation({
     );
     const totals = calculateTotals(lineItems, args.tax);
     const number = await generateInvoiceNumber(ctx, ctx.organizationId);
+
+    // Check uniqueness before inserting (same check as create mutation)
+    const existing = await ctx.db
+      .query("invoices")
+      .withIndex("by_number", (q) =>
+        q.eq("organizationId", ctx.organizationId).eq("number", number),
+      )
+      .first();
+    if (existing) {
+      throw conflict("Invoice number collision, please retry");
+    }
+
     const now = Date.now();
 
     const invoiceId = await ctx.db.insert("invoices", {

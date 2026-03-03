@@ -6,7 +6,7 @@ import type { Id } from "./_generated/dataModel";
 import { DAY, HOUR, MINUTE } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { createTestUser, expectThrowsAsync } from "./testUtils";
+import { createOrganizationAdmin, createTestUser, expectThrowsAsync } from "./testUtils";
 
 describe("Bookings", () => {
   beforeEach(() => {
@@ -74,6 +74,8 @@ describe("Bookings", () => {
   it("should create a booking successfully", async () => {
     const t = convexTest(schema, modules);
     const hostId = await createTestUser(t, { name: "Host" });
+    // Host needs workspace context for calendar events to be created
+    await createOrganizationAdmin(t, hostId);
     await setupFullAvailability(t, hostId);
     await createBookingPage(t, hostId, "test-page");
 

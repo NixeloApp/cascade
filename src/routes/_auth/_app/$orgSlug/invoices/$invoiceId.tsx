@@ -41,10 +41,15 @@ function InvoiceDetailPage() {
   ) => {
     setIsSavingEditor(true);
     try {
+      // Merge timeEntryIds from original line items to preserve time entry links
+      const lineItemsWithEntryIds = lineItems.map((line, index) => ({
+        ...line,
+        timeEntryIds: invoice.lineItems[index]?.timeEntryIds,
+      }));
       await updateInvoice({
         organizationId,
         invoiceId: typedInvoiceId,
-        lineItems,
+        lineItems: lineItemsWithEntryIds,
       });
       showSuccess("Invoice line items saved");
     } catch (error) {

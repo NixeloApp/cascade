@@ -12,12 +12,36 @@ import {
   createTestUser,
 } from "./testUtils";
 
+// Helper to set up workspace context for calendar event tests
+async function setupCalendarTestContext(t: ReturnType<typeof convexTest>) {
+  const userId = await createTestUser(t);
+  const { organizationId, workspaceId } = await createOrganizationAdmin(t, userId);
+  const asUser = asAuthenticatedUser(t, userId);
+  return { userId, organizationId, workspaceId, asUser };
+}
+
+// Helper to set up multi-user workspace context
+async function setupMultiUserCalendarContext(t: ReturnType<typeof convexTest>) {
+  const organizerId = await createTestUser(t, { name: "Organizer" });
+  const attendeeId = await createTestUser(t, { name: "Attendee" });
+  const { organizationId, workspaceId } = await createOrganizationAdmin(t, organizerId);
+  await addUserToOrganization(t, organizationId, attendeeId, organizerId);
+  // Add attendee to workspace
+  const asOrganizer = asAuthenticatedUser(t, organizerId);
+  await asOrganizer.mutation(api.workspaces.addMember, {
+    workspaceId,
+    userId: attendeeId,
+    role: "member",
+  });
+  const asAttendee = asAuthenticatedUser(t, attendeeId);
+  return { organizerId, attendeeId, organizationId, workspaceId, asOrganizer, asAttendee };
+}
+
 describe("calendarEvents", () => {
   describe("create", () => {
     it("should create a calendar event", async () => {
       const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const asUser = asAuthenticatedUser(t, userId);
+      const { userId, workspaceId, asUser } = await setupCalendarTestContext(t);
 
       const now = Date.now();
       const { eventId } = await asUser.mutation(api.calendarEvents.create, {
@@ -40,8 +64,7 @@ describe("calendarEvents", () => {
 
     it("should reject event where endTime is before startTime", async () => {
       const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const asUser = asAuthenticatedUser(t, userId);
+      const { workspaceId, asUser } = await setupCalendarTestContext(t);
 
       const now = Date.now();
       await expect(
@@ -57,9 +80,8 @@ describe("calendarEvents", () => {
 
     it("should create event with all optional fields", async () => {
       const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
+      const { workspaceId, asUser } = await setupCalendarTestContext(t);
       const attendeeId = await createTestUser(t, { name: "Attendee" });
-      const asUser = asAuthenticatedUser(t, userId);
 
       const now = Date.now();
       const { eventId } = await asUser.mutation(api.calendarEvents.create, {
@@ -94,8 +116,7 @@ describe("calendarEvents", () => {
   describe("get", () => {
     it("should return event for organizer", async () => {
       const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const asUser = asAuthenticatedUser(t, userId);
+      const { workspaceId, asUser } = await setupCalendarTestContext(t);
 
       const now = Date.now();
       const { eventId } = await asUser.mutation(api.calendarEvents.create, {
@@ -114,10 +135,8 @@ describe("calendarEvents", () => {
 
     it("should return event for attendee", async () => {
       const t = convexTest(schema, modules);
-      const organizerId = await createTestUser(t, { name: "Organizer" });
-      const attendeeId = await createTestUser(t, { name: "Attendee" });
-      const asOrganizer = asAuthenticatedUser(t, organizerId);
-      const asAttendee = asAuthenticatedUser(t, attendeeId);
+      const { workspaceId, attendeeId, asOrganizer, asAttendee } =
+        await setupMultiUserCalendarContext(t);
 
       const now = Date.now();
       const { eventId } = await asOrganizer.mutation(api.calendarEvents.create, {
@@ -136,9 +155,8 @@ describe("calendarEvents", () => {
 
     it("should return null for non-participant", async () => {
       const t = convexTest(schema, modules);
-      const organizerId = await createTestUser(t, { name: "Organizer" });
+      const { workspaceId, asOrganizer } = await setupMultiUserCalendarContext(t);
       const otherUserId = await createTestUser(t, { name: "Other" });
-      const asOrganizer = asAuthenticatedUser(t, organizerId);
       const asOther = asAuthenticatedUser(t, otherUserId);
 
       const now = Date.now();
@@ -158,8 +176,7 @@ describe("calendarEvents", () => {
   describe("update", () => {
     it("should allow organizer to update event", async () => {
       const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const asUser = asAuthenticatedUser(t, userId);
+      const { workspaceId, asUser } = await setupCalendarTestContext(t);
 
       const now = Date.now();
       const { eventId } = await asUser.mutation(api.calendarEvents.create, {
@@ -184,10 +201,8 @@ describe("calendarEvents", () => {
 
     it("should reject update from non-organizer", async () => {
       const t = convexTest(schema, modules);
-      const organizerId = await createTestUser(t, { name: "Organizer" });
-      const attendeeId = await createTestUser(t, { name: "Attendee" });
-      const asOrganizer = asAuthenticatedUser(t, organizerId);
-      const asAttendee = asAuthenticatedUser(t, attendeeId);
+      const { workspaceId, attendeeId, asOrganizer, asAttendee } =
+        await setupMultiUserCalendarContext(t);
 
       const now = Date.now();
       const { eventId } = await asOrganizer.mutation(api.calendarEvents.create, {
@@ -209,8 +224,7 @@ describe("calendarEvents", () => {
 
     it("should validate times on update", async () => {
       const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const asUser = asAuthenticatedUser(t, userId);
+      const { workspaceId, asUser } = await setupCalendarTestContext(t);
 
       const now = Date.now();
       const { eventId } = await asUser.mutation(api.calendarEvents.create, {
@@ -234,8 +248,7 @@ describe("calendarEvents", () => {
   describe("remove", () => {
     it("should allow organizer to delete event", async () => {
       const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const asUser = asAuthenticatedUser(t, userId);
+      const { workspaceId, asUser } = await setupCalendarTestContext(t);
 
       const now = Date.now();
       const { eventId } = await asUser.mutation(api.calendarEvents.create, {
@@ -255,10 +268,8 @@ describe("calendarEvents", () => {
 
     it("should reject delete from non-organizer", async () => {
       const t = convexTest(schema, modules);
-      const organizerId = await createTestUser(t, { name: "Organizer" });
-      const attendeeId = await createTestUser(t, { name: "Attendee" });
-      const asOrganizer = asAuthenticatedUser(t, organizerId);
-      const asAttendee = asAuthenticatedUser(t, attendeeId);
+      const { workspaceId, attendeeId, asOrganizer, asAttendee } =
+        await setupMultiUserCalendarContext(t);
 
       const now = Date.now();
       const { eventId } = await asOrganizer.mutation(api.calendarEvents.create, {
@@ -279,8 +290,7 @@ describe("calendarEvents", () => {
   describe("listByDateRange", () => {
     it("should return events in date range", async () => {
       const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const asUser = asAuthenticatedUser(t, userId);
+      const { workspaceId, asUser } = await setupCalendarTestContext(t);
 
       const now = Date.now();
 
@@ -322,10 +332,9 @@ describe("calendarEvents", () => {
 
     it("should only show events user is part of", async () => {
       const t = convexTest(schema, modules);
-      const user1Id = await createTestUser(t, { name: "User 1" });
-      const user2Id = await createTestUser(t, { name: "User 2" });
-      const asUser1 = asAuthenticatedUser(t, user1Id);
-      const asUser2 = asAuthenticatedUser(t, user2Id);
+      // Each user gets their own workspace
+      const { workspaceId: ws1, asUser: asUser1 } = await setupCalendarTestContext(t);
+      const { workspaceId: ws2, asUser: asUser2 } = await setupCalendarTestContext(t);
 
       const now = Date.now();
 
@@ -375,8 +384,8 @@ describe("calendarEvents", () => {
         if (!currentProject) {
           throw new Error("Project should exist");
         }
-        if (!currentProject.teamId) {
-          throw new Error("Project should have a teamId");
+        if (!currentProject.teamId || !currentProject.workspaceId) {
+          throw new Error("Project should have a teamId and workspaceId");
         }
 
         await ctx.db.insert("teamMembers", {
@@ -386,10 +395,23 @@ describe("calendarEvents", () => {
           addedBy: ownerId,
         });
 
-        return { ...currentProject, teamId: currentProject.teamId };
+        // Add member to the project's workspace
+        await ctx.db.insert("workspaceMembers", {
+          workspaceId: currentProject.workspaceId,
+          userId: memberId,
+          role: "member",
+          addedBy: ownerId,
+        });
+
+        return {
+          ...currentProject,
+          teamId: currentProject.teamId,
+          workspaceId: currentProject.workspaceId,
+        };
       });
 
       const now = Date.now();
+      // Use the project to scope the event
       await asOwner.mutation(api.calendarEvents.create, {
         title: "Project Planning",
         startTime: now + DAY,
@@ -429,13 +451,18 @@ describe("calendarEvents", () => {
         if (!currentProject) {
           throw new Error("Project should exist");
         }
-        if (!currentProject.teamId) {
-          throw new Error("Project should have a teamId");
+        if (!currentProject.teamId || !currentProject.workspaceId) {
+          throw new Error("Project should have a teamId and workspaceId");
         }
-        return { ...currentProject, teamId: currentProject.teamId };
+        return {
+          ...currentProject,
+          teamId: currentProject.teamId,
+          workspaceId: currentProject.workspaceId,
+        };
       });
 
       const now = Date.now();
+      // Use the project to scope the event
       await asOwner.mutation(api.calendarEvents.create, {
         title: "Restricted Team Event",
         startTime: now + DAY,
@@ -583,8 +610,7 @@ describe("calendarEvents", () => {
   describe("listMine", () => {
     it("should return user's events with default date range", async () => {
       const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const asUser = asAuthenticatedUser(t, userId);
+      const { workspaceId, asUser } = await setupCalendarTestContext(t);
 
       const now = Date.now();
 
@@ -603,8 +629,7 @@ describe("calendarEvents", () => {
 
     it("should exclude cancelled events by default", async () => {
       const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const asUser = asAuthenticatedUser(t, userId);
+      const { workspaceId, asUser } = await setupCalendarTestContext(t);
 
       const now = Date.now();
 
@@ -627,8 +652,7 @@ describe("calendarEvents", () => {
 
     it("should include cancelled events when requested", async () => {
       const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const asUser = asAuthenticatedUser(t, userId);
+      const { workspaceId, asUser } = await setupCalendarTestContext(t);
 
       const now = Date.now();
 
@@ -653,10 +677,8 @@ describe("calendarEvents", () => {
 
     it("should include events where user is attendee", async () => {
       const t = convexTest(schema, modules);
-      const organizerId = await createTestUser(t, { name: "Organizer" });
-      const attendeeId = await createTestUser(t, { name: "Attendee" });
-      const asOrganizer = asAuthenticatedUser(t, organizerId);
-      const asAttendee = asAuthenticatedUser(t, attendeeId);
+      const { workspaceId, attendeeId, asOrganizer, asAttendee } =
+        await setupMultiUserCalendarContext(t);
 
       const now = Date.now();
 
@@ -677,8 +699,7 @@ describe("calendarEvents", () => {
   describe("getUpcoming", () => {
     it("should return events in next 7 days", async () => {
       const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const asUser = asAuthenticatedUser(t, userId);
+      const { workspaceId, asUser } = await setupCalendarTestContext(t);
 
       const now = Date.now();
 
@@ -705,8 +726,7 @@ describe("calendarEvents", () => {
 
     it("should respect limit parameter", async () => {
       const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const asUser = asAuthenticatedUser(t, userId);
+      const { workspaceId, asUser } = await setupCalendarTestContext(t);
 
       const now = Date.now();
 
@@ -727,8 +747,7 @@ describe("calendarEvents", () => {
 
     it("should exclude cancelled events", async () => {
       const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const asUser = asAuthenticatedUser(t, userId);
+      const { workspaceId, asUser } = await setupCalendarTestContext(t);
 
       const now = Date.now();
 
@@ -751,8 +770,7 @@ describe("calendarEvents", () => {
 
     it("should sort events by start time", async () => {
       const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const asUser = asAuthenticatedUser(t, userId);
+      const { workspaceId, asUser } = await setupCalendarTestContext(t);
 
       const now = Date.now();
 
@@ -791,8 +809,7 @@ describe("calendarEvents", () => {
   describe("event types", () => {
     it("should support all event types", async () => {
       const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const asUser = asAuthenticatedUser(t, userId);
+      const { workspaceId, asUser } = await setupCalendarTestContext(t);
 
       const now = Date.now();
       const types = ["meeting", "deadline", "timeblock", "personal"] as const;
@@ -815,8 +832,7 @@ describe("calendarEvents", () => {
   describe("all-day events", () => {
     it("should handle all-day events", async () => {
       const t = convexTest(schema, modules);
-      const userId = await createTestUser(t);
-      const asUser = asAuthenticatedUser(t, userId);
+      const { workspaceId, asUser } = await setupCalendarTestContext(t);
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);

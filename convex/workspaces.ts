@@ -340,12 +340,14 @@ export const getActiveSprints = workspaceQuery({
 
         const enriched = await Promise.all(
           sprints.map(async (sprint) => {
+            // Use larger limit for counting to avoid undercount on large sprints
+            const MAX_SPRINT_ISSUE_COUNT = 2000;
             const issueCount = (
               await ctx.db
                 .query("issues")
                 .withIndex("by_sprint", (q) => q.eq("sprintId", sprint._id))
                 .filter(notDeleted)
-                .take(BOUNDED_LIST_LIMIT)
+                .take(MAX_SPRINT_ISSUE_COUNT)
             ).length;
             return {
               ...sprint,

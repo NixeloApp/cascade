@@ -16,6 +16,7 @@ import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { validate, validateEmail } from "./lib/constrainedValidators";
 import { conflict, notFound, rateLimited, requireOwned, validation } from "./lib/errors";
 import { DAY, HOUR, MINUTE } from "./lib/timeUtils";
+import { getUserWorkspaceContext } from "./lib/workspaceAccess";
 import { bookerAnswers } from "./validators";
 
 /**
@@ -205,27 +206,32 @@ export const createBooking = mutation({
       updatedAt: now,
     });
 
-    // If auto-confirm, create calendar event
+    // If auto-confirm, create calendar event (if host has workspace context)
     if (!page.requiresConfirmation) {
-      const eventId = await ctx.db.insert("calendarEvents", {
-        title: `${page.title} with ${args.bookerName}`,
-        description: `Booked via ${args.bookingPageSlug}`,
-        startTime: args.startTime,
-        endTime,
-        allDay: false,
-        location: page.locationDetails,
-        eventType: "meeting",
-        organizerId: page.userId,
-        attendeeIds: [],
-        externalAttendees: [args.bookerEmail],
-        status: "confirmed",
-        isRecurring: false,
-        meetingUrl: page.location === "zoom" ? page.locationDetails : undefined,
-        updatedAt: now,
-      });
+      const workspaceContext = await getUserWorkspaceContext(ctx, page.userId);
+      if (workspaceContext) {
+        const eventId = await ctx.db.insert("calendarEvents", {
+          organizationId: workspaceContext.organizationId,
+          workspaceId: workspaceContext.workspaceId,
+          title: `${page.title} with ${args.bookerName}`,
+          description: `Booked via ${args.bookingPageSlug}`,
+          startTime: args.startTime,
+          endTime,
+          allDay: false,
+          location: page.locationDetails,
+          eventType: "meeting",
+          organizerId: page.userId,
+          attendeeIds: [],
+          externalAttendees: [args.bookerEmail],
+          status: "confirmed",
+          isRecurring: false,
+          meetingUrl: page.location === "zoom" ? page.locationDetails : undefined,
+          updatedAt: now,
+        });
 
-      // Link booking to calendar event
-      await ctx.db.patch(bookingId, { calendarEventId: eventId });
+        // Link booking to calendar event
+        await ctx.db.patch(bookingId, { calendarEventId: eventId });
+      }
     }
 
     return { bookingId };
@@ -384,32 +390,38 @@ export const confirmBooking = authenticatedMutation({
       throw validation("status", "Only pending bookings can be confirmed");
     }
 
-    // Create calendar event
+    // Create calendar event (if host has workspace context)
     const page = await ctx.db.get(booking.bookingPageId);
     if (!page) throw notFound("bookingPage", booking.bookingPageId);
 
     const now = Date.now();
+    let calendarEventId: Id<"calendarEvents"> | undefined;
 
-    const eventId = await ctx.db.insert("calendarEvents", {
-      title: `${page.title} with ${booking.bookerName}`,
-      description: `Booked via ${page.slug}`,
-      startTime: booking.startTime,
-      endTime: booking.endTime,
-      allDay: false,
-      location: booking.locationDetails,
-      eventType: "meeting",
-      organizerId: ctx.userId,
-      attendeeIds: [],
-      externalAttendees: [booking.bookerEmail],
-      status: "confirmed",
-      isRecurring: false,
-      meetingUrl: page.location === "zoom" ? page.locationDetails : undefined,
-      updatedAt: now,
-    });
+    const workspaceContext = await getUserWorkspaceContext(ctx, ctx.userId);
+    if (workspaceContext) {
+      calendarEventId = await ctx.db.insert("calendarEvents", {
+        organizationId: workspaceContext.organizationId,
+        workspaceId: workspaceContext.workspaceId,
+        title: `${page.title} with ${booking.bookerName}`,
+        description: `Booked via ${page.slug}`,
+        startTime: booking.startTime,
+        endTime: booking.endTime,
+        allDay: false,
+        location: booking.locationDetails,
+        eventType: "meeting",
+        organizerId: ctx.userId,
+        attendeeIds: [],
+        externalAttendees: [booking.bookerEmail],
+        status: "confirmed",
+        isRecurring: false,
+        meetingUrl: page.location === "zoom" ? page.locationDetails : undefined,
+        updatedAt: now,
+      });
+    }
 
     await ctx.db.patch(args.id, {
       status: "confirmed",
-      calendarEventId: eventId,
+      calendarEventId,
       updatedAt: now,
     });
 

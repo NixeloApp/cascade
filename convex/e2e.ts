@@ -3243,6 +3243,8 @@ export const seedScreenshotDataInternal = internalMutation({
         const endTime = todayMs + cal.dayOffset * DAY + cal.endHour * HOUR + cal.endMin * MINUTE;
 
         await ctx.db.insert("calendarEvents", {
+          organizationId: orgId,
+          workspaceId,
           title: cal.title,
           description: cal.description,
           startTime,

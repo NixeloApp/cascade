@@ -90,16 +90,24 @@ function buildEventUpdateObject(args: {
   return updates;
 }
 
-async function resolveScopeFromProjectOrIssue(
+/**
+ * Validate and resolve project/issue scope within a workspace.
+ * Ensures project/issue belong to the specified workspace.
+ */
+/**
+ * Resolve and validate project/issue scope for calendar events.
+ * Returns the resolved scope IDs from the project chain.
+ */
+async function resolveEventScope(
   ctx: QueryCtx,
   projectId?: Id<"projects">,
   issueId?: Id<"issues">,
 ): Promise<{
-  projectId?: Id<"projects">;
-  issueId?: Id<"issues">;
   organizationId?: Id<"organizations">;
   workspaceId?: Id<"workspaces">;
   teamId?: Id<"teams">;
+  projectId?: Id<"projects">;
+  issueId?: Id<"issues">;
 }> {
   let resolvedProjectId = projectId;
 
@@ -115,21 +123,18 @@ async function resolveScopeFromProjectOrIssue(
   }
 
   if (!resolvedProjectId) {
-    return {
-      projectId: resolvedProjectId,
-      issueId,
-    };
+    return { projectId: undefined, issueId };
   }
 
   const project = await ctx.db.get(resolvedProjectId);
   if (!project) throw notFound("project", resolvedProjectId);
 
   return {
-    projectId: resolvedProjectId,
-    issueId,
     organizationId: project.organizationId,
     workspaceId: project.workspaceId,
     teamId: project.teamId,
+    projectId: resolvedProjectId,
+    issueId,
   };
 }
 
@@ -242,7 +247,8 @@ export const create = authenticatedMutation({
     }
 
     const now = Date.now();
-    const scope = await resolveScopeFromProjectOrIssue(ctx, args.projectId, args.issueId);
+    // Resolve scope from project/issue if provided
+    const scope = await resolveEventScope(ctx, args.projectId, args.issueId);
 
     const eventId = await ctx.db.insert("calendarEvents", {
       title: args.title,
@@ -380,21 +386,31 @@ export const listByWorkspaceDateRange = authenticatedQuery({
       return [];
     }
 
-    const events = await ctx.db
-      .query("calendarEvents")
-      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
-      .filter((q) =>
-        q.and(
-          q.gte(q.field("startTime"), args.startDate),
-          q.lte(q.field("startTime"), args.endDate),
-        ),
-      )
-      .take(MAX_PAGE_SIZE);
+    // Use team-specific query when teamId is provided to avoid filtering after limit
+    const events = args.teamId
+      ? await ctx.db
+          .query("calendarEvents")
+          .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+          .filter((q) =>
+            q.and(
+              q.eq(q.field("workspaceId"), args.workspaceId),
+              q.gte(q.field("startTime"), args.startDate),
+              q.lte(q.field("startTime"), args.endDate),
+            ),
+          )
+          .take(MAX_PAGE_SIZE)
+      : await ctx.db
+          .query("calendarEvents")
+          .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
+          .filter((q) =>
+            q.and(
+              q.gte(q.field("startTime"), args.startDate),
+              q.lte(q.field("startTime"), args.endDate),
+            ),
+          )
+          .take(MAX_PAGE_SIZE);
 
-    const filteredEvents = args.teamId
-      ? events.filter((event) => event.teamId === args.teamId)
-      : events;
-    const sortedEvents = filteredEvents.sort((a, b) => a.startTime - b.startTime);
+    const sortedEvents = events.sort((a, b) => a.startTime - b.startTime);
     return await enrichEventsWithOrganizers(ctx, sortedEvents);
   },
 });
@@ -463,7 +479,7 @@ export const listMine = authenticatedQuery({
   },
 });
 
-// Update an existing event
+// Update an existing event (requires workspace membership)
 export const update = authenticatedMutation({
   args: {
     id: v.id("calendarEvents"),
@@ -502,6 +518,17 @@ export const update = authenticatedMutation({
       throw forbidden("organizer", "Only the event organizer can update this event");
     }
 
+    // For workspace-scoped events, verify membership
+    if (event.workspaceId && event.organizationId) {
+      const [workspaceMember, orgAdmin] = await Promise.all([
+        isWorkspaceMember(ctx, event.workspaceId, ctx.userId),
+        isOrganizationAdmin(ctx, event.organizationId, ctx.userId),
+      ]);
+      if (!(workspaceMember || orgAdmin)) {
+        throw forbidden("member", "You must be a workspace member to update this event");
+      }
+    }
+
     // Validate times if provided
     const startTime = args.startTime ?? event.startTime;
     const endTime = args.endTime ?? event.endTime;
@@ -512,7 +539,7 @@ export const update = authenticatedMutation({
     // Build update object using helper
     let updates = buildEventUpdateObject(args);
     if (args.projectId !== undefined || args.issueId !== undefined) {
-      const scope = await resolveScopeFromProjectOrIssue(
+      const scope = await resolveEventScope(
         ctx,
         args.projectId ?? event.projectId,
         args.issueId ?? event.issueId,
@@ -543,6 +570,17 @@ export const remove = authenticatedMutation({
     // Only organizer can delete event
     if (event.organizerId !== ctx.userId) {
       throw forbidden("organizer", "Only the event organizer can delete this event");
+    }
+
+    // For workspace-scoped events, verify membership
+    if (event.workspaceId && event.organizationId) {
+      const [workspaceMember, orgAdmin] = await Promise.all([
+        isWorkspaceMember(ctx, event.workspaceId, ctx.userId),
+        isOrganizationAdmin(ctx, event.organizationId, ctx.userId),
+      ]);
+      if (!(workspaceMember || orgAdmin)) {
+        throw forbidden("member", "You must be a workspace member to delete this event");
+      }
     }
 
     await ctx.db.delete(args.id);

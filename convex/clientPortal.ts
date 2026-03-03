@@ -147,8 +147,14 @@ export const validateToken = mutation({
   ),
   handler: async (ctx, args) => {
     if (!process.env.IS_TEST_ENV) {
+      // Rate limit by token prefix to prevent brute-forcing a specific token
       await rateLimit(ctx, "clientPortalValidation", {
-        key: `portal:${args.token.slice(0, 16)}`,
+        key: `portal:${args.token.slice(0, 8)}`,
+        throws: true,
+      });
+      // Also apply a global rate limit to prevent enumeration attacks with random tokens
+      await rateLimit(ctx, "clientPortalValidation", {
+        key: "portal:global",
         throws: true,
       });
     }

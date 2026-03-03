@@ -14,10 +14,11 @@ import { action } from "./_generated/server";
 import { conflict, forbidden } from "./lib/errors";
 
 function formatCurrency(amount: number): string {
+  // Invoice amounts are stored in dollars (not cents), so no division needed
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-  }).format(amount / 100);
+  }).format(amount);
 }
 
 function buildInvoiceSummaryText(invoice: {
