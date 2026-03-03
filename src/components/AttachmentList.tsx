@@ -127,7 +127,7 @@ function AttachmentItem({
         </FlexItem>
         <Flex
           gap="xs"
-          className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-default"
+          className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 focus:opacity-100 transition-opacity duration-default"
         >
           <Tooltip content="Download attachment">
             <Button variant="ghost" size="sm" asChild>
