@@ -252,21 +252,6 @@ export const create = projectEditorMutation({
   },
 });
 
-/**
- * Update the status of an issue.
- *
- * This mutation handles:
- * - Updating the issue's status to a specific workflow state.
- * - Reordering the issue within the new column.
- * - Optimistic locking to prevent concurrent overwrite issues.
- * - Activity logging.
- *
- * @param newStatus - The ID of the new status (workflow state).
- * @param newOrder - The new order position within the column.
- * @param expectedVersion - The expected current version of the issue (for optimistic locking).
- * @returns Object with a boolean indicating success.
- * @throws {ConvexError} "Conflict" if the expected version does not match.
- */
 export const updateStatus = issueMutation({
   args: {
     newStatus: v.string(),
@@ -284,26 +269,6 @@ export const updateStatus = issueMutation({
   },
 });
 
-/**
- * Update the status of an issue based on a workflow category.
- *
- * Instead of specifying a specific status ID, this mutation finds the correct
- * state within the project's workflow based on the provided category (e.g., "todo", "done").
- *
- * This mutation handles:
- * - Looking up the correct workflow state ID for the given category.
- * - Updating the issue's status to that workflow state.
- * - Reordering the issue within the new column.
- * - Optimistic locking to prevent concurrent overwrite issues.
- * - Activity logging.
- *
- * @param category - The workflow category to move the issue to.
- * @param newOrder - The new order position within the column.
- * @param expectedVersion - The expected current version of the issue (for optimistic locking).
- * @returns Object with a boolean indicating success.
- * @throws {ConvexError} "Validation" if no workflow state matches the category.
- * @throws {ConvexError} "Conflict" if the expected version does not match.
- */
 export const updateStatusByCategory = issueMutation({
   args: {
     category: workflowCategories,
@@ -333,32 +298,6 @@ export const updateStatusByCategory = issueMutation({
   },
 });
 
-/**
- * Update an issue's general properties.
- *
- * This mutation handles:
- * - Validating new values (title length, dates, estimation).
- * - Updating properties like title, description, priority, assignee, and dates.
- * - Tracking and saving activity logs for every changed field.
- * - Handling email notifications if the assignee has changed.
- * - Sending Slack notifications if configured.
- * - Optimistic locking and version incrementing.
- *
- * @param expectedVersion - The expected current version of the issue (for optimistic locking).
- * @param title - The new issue title (optional).
- * @param description - The new issue description (optional).
- * @param priority - The new issue priority (optional).
- * @param assigneeId - The new assignee (optional, null to unassign).
- * @param labels - The new set of labels (optional).
- * @param type - The new issue type (optional).
- * @param startDate - The new start date timestamp (optional).
- * @param dueDate - The new due date timestamp (optional).
- * @param estimatedHours - The new estimate in hours (optional).
- * @param storyPoints - The new estimate in story points (optional).
- * @returns Object with a boolean indicating success.
- * @throws {ConvexError} "Conflict" if the expected version does not match.
- * @throws {ConvexError} "Validation" if input constraints are not met.
- */
 export const update = issueMutation({
   args: {
     title: v.optional(v.string()),

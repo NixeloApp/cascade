@@ -180,7 +180,7 @@ export function NotificationItem({
       <Flex
         direction="column"
         gap="xs"
-        className="shrink-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 focus:opacity-100 transition-opacity"
+        className="shrink-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
       >
         {!notification.isRead && (
           <Tooltip content="Mark as read">
