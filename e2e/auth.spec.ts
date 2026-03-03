@@ -236,7 +236,9 @@ test.describe("Integration", () => {
     const shellVisible = await appShell.isVisible({ timeout: 10000 }).catch(() => false);
 
     if (!shellVisible) {
-      console.log("[Test] First UI sign-in attempt did not reach app shell, trying API-assisted recovery...");
+      console.log(
+        "[Test] First UI sign-in attempt did not reach app shell, trying API-assisted recovery...",
+      );
       // Don't retry UI sign-in - user might already be authenticated but stuck on wrong page
       // Use API helper which navigates to /app gateway and handles auth state properly
       await trySignInUser(page, process.env.BASE_URL || "http://localhost:5555", {
