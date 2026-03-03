@@ -41,7 +41,6 @@
     "e2e:ui": "playwright test --ui",
     "e2e:headed": "playwright test --headed",
     "e2e:debug": "playwright test --debug",
-    "e2e:hard-rules": "node scripts/ci/check-e2e-hard-rules.mjs",
     "e2e:setup-auth": "node node_modules/tsx/dist/cli.mjs e2e/setup-auth.ts",
     "e2e:cross-browser:smoke": "E2E_CROSS_BROWSER=1 playwright test e2e/landing.spec.ts --workers=1 --reporter=line",
     "screenshots": "node --env-file=.env.local node_modules/.pnpm/tsx@4.21.0/node_modules/tsx/dist/cli.mjs e2e/screenshot-pages.ts",
@@ -62,8 +61,7 @@
     "setup:auth": "node scripts/setup_auth.js",
     "auth:manual": "node scripts/manual_handshake.js",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build",
-    "e2e:hard-rules:self-test": "node scripts/ci/test-e2e-hard-rules.mjs"
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.35",

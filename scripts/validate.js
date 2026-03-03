@@ -11,25 +11,26 @@
  *   7. Type safety          — flags unsafe type assertions and lint suppressions
  *   8. Emoji usage          — finds emoji that should be replaced with Lucide icons
  *   9. Test ID constants    — ensures data-testid uses TEST_IDS constants, not strings
- *  10. E2E quality          — catches broad selectors, networkidle, waitForSelector
- *  11. UI patterns          — DialogDescription in dialogs, AuthPageLayout for auth pages
- *  12. Route constants      — use ROUTES from @/config/routes instead of hardcoded paths
- *  13. Convex patterns      — Envelope Pattern returns, security checks, test destructuring
- *  14. Convex naming        — function naming conventions (get/list/create/update/delete)
- *  15. Component naming     — PascalCase components, {Component}Props interfaces
- *  16. Component props      — consistent prop naming across components
- *  17. Duplicate components — detect components with same name in different directories
- *  18. Interactive Tailwind — hover:/focus: should be in CVA components, not scattered
- *  19. Tailwind consistency — duration tokens, focus rings, disabled states, z-index, group-hover
- *  20. JSDoc coverage       — exported functions/components should have JSDoc documentation
- *  21. File headers         — non-trivial files (>50 lines) should have documentation headers
- *  22. Import order         — imports should follow standard grouping order
- *  23. Import paths         — validates import path conventions
- *  24. Hook patterns        — custom hooks should follow consistent patterns
- *  25. Async patterns       — consistent error handling in async operations
- *  26. Test coverage        — critical files should have corresponding tests
- *  27. Time constants       — enforces use of timeUtils constants instead of magic numbers
- *  28. Unused parameters    — flags underscore-prefixed unused params (remove or use them)
+ *  10. E2E hard rules       — waitForTimeout, Promise sleep, force:true, XPath, page.$
+ *  11. E2E quality          — catches broad selectors, networkidle, waitForSelector
+ *  12. UI patterns          — DialogDescription in dialogs, AuthPageLayout for auth pages
+ *  13. Route constants      — use ROUTES from @/config/routes instead of hardcoded paths
+ *  14. Convex patterns      — Envelope Pattern returns, security checks, test destructuring
+ *  15. Convex naming        — function naming conventions (get/list/create/update/delete)
+ *  16. Component naming     — PascalCase components, {Component}Props interfaces
+ *  17. Component props      — consistent prop naming across components
+ *  18. Duplicate components — detect components with same name in different directories
+ *  19. Interactive Tailwind — hover:/focus: should be in CVA components, not scattered
+ *  20. Tailwind consistency — duration tokens, focus rings, disabled states, z-index, group-hover
+ *  21. JSDoc coverage       — exported functions/components should have JSDoc documentation
+ *  22. File headers         — non-trivial files (>50 lines) should have documentation headers
+ *  23. Import order         — imports should follow standard grouping order
+ *  24. Import paths         — validates import path conventions
+ *  25. Hook patterns        — custom hooks should follow consistent patterns
+ *  26. Async patterns       — consistent error handling in async operations
+ *  27. Test coverage        — critical files should have corresponding tests
+ *  28. Time constants       — enforces use of timeUtils constants instead of magic numbers
+ *  29. Unused parameters    — flags underscore-prefixed unused params (remove or use them)
  *
  * Exit code 1 if any check reports errors. Some checks are warn-only and do not affect exit code.
  *
@@ -46,6 +47,7 @@ import { run as runComponentPropsCheck } from "./validate/check-component-props.
 import { run as runConvexNamingCheck } from "./validate/check-convex-naming.js";
 import { run as runConvexPatternsCheck } from "./validate/check-convex-patterns.js";
 import { run as runDuplicateComponentsCheck } from "./validate/check-duplicate-components.js";
+import { run as runE2EHardRulesCheck } from "./validate/check-e2e-hard-rules.js";
 import { run as runE2EQualityCheck } from "./validate/check-e2e-quality.js";
 import { run as runEmojiCheck } from "./validate/check-emoji.js";
 import { run as runFileHeadersCheck } from "./validate/check-file-headers.js";
@@ -79,6 +81,7 @@ const checks = [
   { name: "Type safety", fn: runTypeSafetyCheck },
   { name: "Emoji usage", fn: runEmojiCheck },
   { name: "Test ID constants", fn: runTestIdsCheck },
+  { name: "E2E hard rules", fn: runE2EHardRulesCheck },
   { name: "E2E quality", fn: runE2EQualityCheck },
   { name: "UI patterns", fn: runUIPatternsCheck },
   { name: "Route constants", fn: runRouteConstantsCheck },
