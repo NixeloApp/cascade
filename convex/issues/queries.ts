@@ -1062,7 +1062,7 @@ export const listByTeamSmart = authenticatedQuery({
         // Batch query: Promise.all handles parallelism
         return ctx.db
           .query("issues")
-          .withIndex("by_team_status_deleted", (q) =>
+          .withIndex("by_team_status_deleted_order", (q) =>
             q.eq("teamId", args.teamId).eq("status", state.id).lt("isDeleted", true),
           )
           .order("asc");
