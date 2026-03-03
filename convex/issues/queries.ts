@@ -1062,8 +1062,9 @@ export const listByTeamSmart = authenticatedQuery({
         // Batch query: Promise.all handles parallelism
         return ctx.db
           .query("issues")
-          .withIndex("by_team_status", (q) => q.eq("teamId", args.teamId).eq("status", state.id))
-          .filter(notDeleted)
+          .withIndex("by_team_status_deleted", (q) =>
+            q.eq("teamId", args.teamId).eq("status", state.id).lt("isDeleted", true),
+          )
           .order("asc");
       },
       DEFAULT_PAGE_SIZE,
@@ -1609,8 +1610,9 @@ async function fetchProjectIssuesOptimized(
     return await safeCollect(
       ctx.db
         .query("issues")
-        .withIndex("by_project_status", (q) => q.eq("projectId", projectId).eq("status", status))
-        .filter(notDeleted)
+        .withIndex("by_project_status_deleted", (q) =>
+          q.eq("projectId", projectId).eq("status", status).lt("isDeleted", true),
+        )
         .order("desc"),
       fetchLimit,
       "issue search by project status",
@@ -1621,8 +1623,7 @@ async function fetchProjectIssuesOptimized(
   return await safeCollect(
     ctx.db
       .query("issues")
-      .withIndex("by_project", (q) => q.eq("projectId", projectId))
-      .filter(notDeleted)
+      .withIndex("by_project_deleted", (q) => q.eq("projectId", projectId).lt("isDeleted", true))
       .order("desc"),
     fetchLimit,
     "issue search by project",

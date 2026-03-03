@@ -51,3 +51,7 @@ Modified `convex/projectAccess.ts` to wrap the `computeProjectAccess` logic with
 ## 2025-05-26 - Optimization of Active Issue Lists
 **Learning:** Queries like `listSelectableIssues` and `listRoadmapIssues` were fetching issues by type and then filtering out soft-deleted items in memory (`.filter(notDeleted)`). While effective for small datasets, this forces a scan of deleted issues, which can be significant in long-running projects.
 **Action:** Added `by_project_type_deleted` index (`["projectId", "type", "isDeleted"]`) to `issues` table. Updated queries to use `.lt("isDeleted", true)` in the index range scan. This allows the database to skip deleted items entirely during the scan, improving latency for issue pickers and roadmap views.
+
+## 2026-03-03 - Optimization of queries that filter soft-deleted documents
+**Learning:** In queries like `listByTeamSmart` and `fetchProjectIssuesOptimized`, `.filter(notDeleted)` was used for in-memory filtering. While it works for smaller datasets, scaling means it requires fetching and processing deleted documents in memory which leads to a performance hit.
+**Action:** Pushed the soft-delete filtering down to the database index level by updating `.withIndex` calls to use their respective `_deleted` suffix index versions (e.g., `by_team_status_deleted`, `by_project_status_deleted`, `by_project_deleted`). This avoids unnecessary scanning and memory allocation for deleted issues.
