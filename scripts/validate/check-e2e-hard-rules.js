@@ -138,17 +138,27 @@ export function run() {
   );
 
   // Report violations
-  const reportViolation = (category, v) => {
-    messages.push(`  ${c.red}ERROR${c.reset} [${category}] ${v.file}:${v.line} - ${v.text}`);
-  };
-
-  violations.timeout.forEach((v) => reportViolation("waitForTimeout", v));
-  violations.promiseSleep.forEach((v) => reportViolation("Promise sleep", v));
-  violations.networkIdle.forEach((v) => reportViolation("networkidle", v));
-  violations.querySelector.forEach((v) => reportViolation("page.$/$$", v));
-  violations.forcedAction.forEach((v) => reportViolation("force:true", v));
-  violations.xpath.forEach((v) => reportViolation("XPath", v));
-  newAntiPatterns.forEach((v) => reportViolation(`selector:${v.type}`, v));
+  for (const v of violations.timeout) {
+    messages.push(`  ${c.red}ERROR${c.reset} [waitForTimeout] ${v.file}:${v.line} - ${v.text}`);
+  }
+  for (const v of violations.promiseSleep) {
+    messages.push(`  ${c.red}ERROR${c.reset} [Promise sleep] ${v.file}:${v.line} - ${v.text}`);
+  }
+  for (const v of violations.networkIdle) {
+    messages.push(`  ${c.red}ERROR${c.reset} [networkidle] ${v.file}:${v.line} - ${v.text}`);
+  }
+  for (const v of violations.querySelector) {
+    messages.push(`  ${c.red}ERROR${c.reset} [page.$/$$] ${v.file}:${v.line} - ${v.text}`);
+  }
+  for (const v of violations.forcedAction) {
+    messages.push(`  ${c.red}ERROR${c.reset} [force:true] ${v.file}:${v.line} - ${v.text}`);
+  }
+  for (const v of violations.xpath) {
+    messages.push(`  ${c.red}ERROR${c.reset} [XPath] ${v.file}:${v.line} - ${v.text}`);
+  }
+  for (const v of newAntiPatterns) {
+    messages.push(`  ${c.red}ERROR${c.reset} [selector:${v.type}] ${v.file}:${v.line} - ${v.text}`);
+  }
 
   const errorCount =
     violations.timeout.length +

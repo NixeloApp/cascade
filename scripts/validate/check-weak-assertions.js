@@ -44,10 +44,7 @@ const WEAK_PATTERNS = [
 ];
 
 export function run() {
-  const TEST_DIRS = [
-    path.join(ROOT, "convex"),
-    path.join(ROOT, "src"),
-  ];
+  const TEST_DIRS = [path.join(ROOT, "convex"), path.join(ROOT, "src")];
 
   let errorCount = 0;
   let warnCount = 0;

@@ -108,15 +108,17 @@ export const listByUser = authenticatedQuery({
       .withIndex("by_assignee", (q) => q.eq("assigneeId", ctx.userId).lt("isDeleted", true))
       .paginate(args.paginationOpts);
 
-    // Filter by project access
+    // Filter by project access (parallel checks for better performance)
     const projectIds = [...new Set(assignedResult.page.map((i) => i.projectId))];
-    const accessibleProjects = new Set<string>();
-
-    for (const projectId of projectIds) {
-      if (await canAccessProject(ctx, projectId as Id<"projects">, ctx.userId)) {
-        accessibleProjects.add(projectId);
-      }
-    }
+    const accessResults = await Promise.all(
+      projectIds.map(async (projectId) => ({
+        projectId,
+        canAccess: await canAccessProject(ctx, projectId as Id<"projects">, ctx.userId),
+      })),
+    );
+    const accessibleProjects = new Set<string>(
+      accessResults.filter((r) => r.canAccess).map((r) => r.projectId),
+    );
 
     const filteredIssues = assignedResult.page.filter((i) => accessibleProjects.has(i.projectId));
 
