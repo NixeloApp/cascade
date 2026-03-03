@@ -264,7 +264,7 @@ export function ListItemActions({
       className={cn(
         "shrink-0 flex items-center gap-1",
         showOnHover &&
-          "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 focus:opacity-100 transition-opacity",
+          "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity",
         className,
       )}
       {...props}

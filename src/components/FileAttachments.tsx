@@ -237,7 +237,7 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
                 <Flex
                   align="center"
                   gap="xs"
-                  className="shrink-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 focus:opacity-100 transition-opacity"
+                  className="shrink-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
                 >
                   {attachment.url && (
                     <Tooltip content="Download">
