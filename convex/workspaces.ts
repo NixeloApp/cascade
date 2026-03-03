@@ -229,14 +229,15 @@ export const deleteWorkspace = authenticatedMutation({
       );
     }
 
-    // Check if workspace has teams or projects
+    // Check if workspace has teams or projects (soft-deleted items are ignored)
     const teams = await ctx.db
       .query("teams")
       .withIndex("by_workspace", (q) => q.eq("workspaceId", args.id))
+      .filter(notDeleted)
       .first();
 
     if (teams) {
-      throw conflict("Cannot delete workspace with teams");
+      throw conflict("Cannot delete workspace with active teams");
     }
 
     const projects = await ctx.db
