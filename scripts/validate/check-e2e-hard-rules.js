@@ -74,7 +74,10 @@ export function run() {
         violations.timeout.push({ file, line: lineNum, text: trimmed });
       }
 
-      if (line.includes('waitForLoadState("networkidle"') || line.includes("waitForLoadState('networkidle'")) {
+      if (
+        line.includes('waitForLoadState("networkidle"') ||
+        line.includes("waitForLoadState('networkidle'")
+      ) {
         violations.networkIdle.push({ file, line: lineNum, text: trimmed });
       }
 
@@ -86,18 +89,30 @@ export function run() {
         violations.forcedAction.push({ file, line: lineNum, text: trimmed });
       }
 
-      if (line.includes("xpath=") || line.includes("//") && line.includes("locator(")) {
-        if (line.includes("xpath=") || /locator\s*\(\s*['"`]\/\//.test(line)) {
-          violations.xpath.push({ file, line: lineNum, text: trimmed });
-        }
+      if (/locator\(\s*["'`](?:xpath=|\/\/)/.test(line)) {
+        violations.xpath.push({ file, line: lineNum, text: trimmed });
       }
 
-      if (trimmed.includes('locator("text=') || trimmed.includes("locator('text=") || trimmed.includes("locator(`text=")) {
-        violations.selectorAntiPattern.push({ file, line: lineNum, type: "text-engine", text: trimmed });
+      if (
+        trimmed.includes('locator("text=') ||
+        trimmed.includes("locator('text=") ||
+        trimmed.includes("locator(`text=")
+      ) {
+        violations.selectorAntiPattern.push({
+          file,
+          line: lineNum,
+          type: "locator-text-engine",
+          text: trimmed,
+        });
       }
 
       if (trimmed.includes(":nth-child(") || trimmed.includes(":nth-of-type(")) {
-        violations.selectorAntiPattern.push({ file, line: lineNum, type: "nth-selector", text: trimmed });
+        violations.selectorAntiPattern.push({
+          file,
+          line: lineNum,
+          type: "locator-nth-selector",
+          text: trimmed,
+        });
       }
     });
 
@@ -116,10 +131,10 @@ export function run() {
     baseline = JSON.parse(fs.readFileSync(BASELINE_PATH, "utf8"));
   }
   const known = new Set(
-    (baseline.selectorAntiPatterns ?? []).map((e) => `${e.file}:${e.line}:${e.type}`)
+    (baseline.selectorAntiPatterns ?? []).map((e) => `${e.file}:${e.line}:${e.type}`),
   );
   const newAntiPatterns = violations.selectorAntiPattern.filter(
-    (e) => !known.has(`${e.file}:${e.line}:${e.type}`)
+    (e) => !known.has(`${e.file}:${e.line}:${e.type}`),
   );
 
   // Report violations
