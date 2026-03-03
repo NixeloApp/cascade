@@ -63,7 +63,6 @@
     "auth:manual": "node scripts/manual_handshake.js",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "e2e:summary:self-test": "node scripts/ci/test-e2e-summary.mjs",
     "e2e:hard-rules:self-test": "node scripts/ci/test-e2e-hard-rules.mjs"
   },
   "dependencies": {
