@@ -85,13 +85,14 @@ function NotificationsPage() {
   const [activeTab, setActiveTab] = useState<"inbox" | "archived">("inbox");
   const orgContext = useOrganizationOptional();
 
-  // Active notifications
+  // Active notifications - filter by type on the backend for proper pagination
+  const typeFilter = FILTER_TYPE_MAP[filter];
   const { results: notificationsRaw } = usePaginatedQuery(
     api.notifications.list,
-    {},
+    { types: typeFilter ?? undefined },
     { initialNumItems: 100 },
   );
-  const allNotifications = (notificationsRaw ?? []) as NotificationWithActor[];
+  const notifications = (notificationsRaw ?? []) as NotificationWithActor[];
 
   // Archived notifications
   const archivedNotifications = useQuery(api.notifications.listArchived, {});
@@ -106,13 +107,6 @@ function NotificationsPage() {
   const unarchiveNotification = useMutation(api.notifications.unarchiveNotification);
   const archiveAllNotifications = useMutation(api.notifications.archiveAllNotifications);
   const removeNotification = useMutation(api.notifications.softDeleteNotification);
-
-  // Filter notifications based on selected filter
-  const typeFilter = FILTER_TYPE_MAP[filter];
-  const baseNotifications = allNotifications ?? [];
-  const notifications = !typeFilter
-    ? baseNotifications
-    : baseNotifications.filter((notification) => typeFilter.includes(notification.type));
 
   // Ordered groups for display
   const orderedGroups: DateGroup[] = ["today", "yesterday", "this_week", "older"];
