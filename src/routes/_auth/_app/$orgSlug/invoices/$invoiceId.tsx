@@ -129,6 +129,7 @@ function InvoiceDetailPage() {
             description: line.description,
             quantity: line.quantity,
             rate: line.rate,
+            timeEntryIds: line.timeEntryIds,
           }))}
           onSave={saveLineItems}
           isSaving={isSavingEditor}

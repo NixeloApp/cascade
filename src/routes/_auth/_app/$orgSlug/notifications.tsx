@@ -109,9 +109,10 @@ function NotificationsPage() {
 
   // Filter notifications based on selected filter
   const typeFilter = FILTER_TYPE_MAP[filter];
+  const baseNotifications = allNotifications ?? [];
   const notifications = !typeFilter
-    ? allNotifications
-    : allNotifications.filter((notification) => typeFilter.includes(notification.type));
+    ? baseNotifications
+    : baseNotifications.filter((notification) => typeFilter.includes(notification.type));
 
   // Ordered groups for display
   const orderedGroups: DateGroup[] = ["today", "yesterday", "this_week", "older"];

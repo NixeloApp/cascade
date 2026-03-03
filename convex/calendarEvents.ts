@@ -17,6 +17,7 @@ import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { getTeamRole } from "./lib/teamAccess";
 import { DAY, WEEK } from "./lib/timeUtils";
 import { isWorkspaceMember } from "./lib/workspaceAccess";
+import { canAccessProject } from "./projectAccess";
 import { type CalendarEventColor, calendarEventColors, calendarStatuses } from "./validators";
 
 /**
@@ -97,9 +98,11 @@ function buildEventUpdateObject(args: {
 /**
  * Resolve and validate project/issue scope for calendar events.
  * Returns the resolved scope IDs from the project chain.
+ * Verifies the user has access to the project before returning scope.
  */
 async function resolveEventScope(
   ctx: QueryCtx,
+  userId: Id<"users">,
   projectId?: Id<"projects">,
   issueId?: Id<"issues">,
 ): Promise<{
@@ -128,6 +131,12 @@ async function resolveEventScope(
 
   const project = await ctx.db.get(resolvedProjectId);
   if (!project) throw notFound("project", resolvedProjectId);
+
+  // Verify user has access to the project before allowing scope derivation
+  const hasAccess = await canAccessProject(ctx, resolvedProjectId, userId);
+  if (!hasAccess) {
+    throw forbidden("project", "You do not have access to this project");
+  }
 
   return {
     organizationId: project.organizationId,
@@ -247,8 +256,8 @@ export const create = authenticatedMutation({
     }
 
     const now = Date.now();
-    // Resolve scope from project/issue if provided
-    const scope = await resolveEventScope(ctx, args.projectId, args.issueId);
+    // Resolve scope from project/issue if provided (verifies user has project access)
+    const scope = await resolveEventScope(ctx, ctx.userId, args.projectId, args.issueId);
 
     const eventId = await ctx.db.insert("calendarEvents", {
       title: args.title,
@@ -541,6 +550,7 @@ export const update = authenticatedMutation({
     if (args.projectId !== undefined || args.issueId !== undefined) {
       const scope = await resolveEventScope(
         ctx,
+        ctx.userId,
         args.projectId ?? event.projectId,
         args.issueId ?? event.issueId,
       );
