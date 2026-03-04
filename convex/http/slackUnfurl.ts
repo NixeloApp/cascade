@@ -8,7 +8,6 @@ import { internal } from "../_generated/api";
 import { type ActionCtx, httpAction } from "../_generated/server";
 import { constantTimeEqual } from "../lib/apiAuth";
 import { getSlackSigningSecret, isSlackSigningSecretConfigured } from "../lib/env";
-import { escapeHtml } from "../lib/html";
 
 const MAX_UNFURL_PAYLOAD_LENGTH = 10000;
 const MAX_UNFURL_LINKS = 25;
@@ -181,9 +180,9 @@ export const handleUnfurlHandler = async (ctx: ActionCtx, request: Request) => {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unfurl failed";
-    return new Response(JSON.stringify({ error: escapeHtml(message) }), {
+  } catch {
+    // Security: avoid leaking internal backend details to Slack.
+    return new Response(JSON.stringify({ error: "Unfurl failed. Please try again later." }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });

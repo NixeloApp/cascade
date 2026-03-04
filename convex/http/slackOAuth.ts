@@ -281,8 +281,8 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
         },
       },
     );
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "OAuth callback failed";
+  } catch {
+    // Security: avoid leaking internal backend details.
     return new Response(
       `
       <!DOCTYPE html>
@@ -290,7 +290,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
         <head><title>Slack - Error</title></head>
         <body style="font-family: system-ui; max-width: 560px; margin: 60px auto; text-align: center;">
           <h1>Connection Failed</h1>
-          <p>${escapeHtml(message)}</p>
+          <p>Something went wrong. Please try again later.</p>
           <button onclick="window.close()">Close Window</button>
         </body>
       </html>

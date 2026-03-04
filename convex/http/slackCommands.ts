@@ -203,7 +203,7 @@ export const handleSlashCommandHandler = async (ctx: ActionCtx, request: Request
         headers: { "Content-Type": "application/json" },
       },
     );
-  } catch (_error) {
+  } catch {
     return new Response(
       JSON.stringify({
         response_type: "ephemeral",
