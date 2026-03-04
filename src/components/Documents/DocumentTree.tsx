@@ -114,7 +114,7 @@ export function DocumentTree({
   }
 
   return (
-    <Flex direction="column" className="overflow-y-auto" justify="start">
+    <Flex direction="column" className="overflow-y-auto">
       {onCreateDocument && (
         <Button
           variant="ghost"

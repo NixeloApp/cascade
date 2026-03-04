@@ -146,7 +146,7 @@ export function SignUpForm() {
             showEmailForm ? "grid-rows-[1fr] opacity-100 mb-3" : "grid-rows-[0fr] opacity-0",
           )}
         >
-          <Flex direction="column" className="overflow-hidden gap-form-field" justify="start">
+          <Flex direction="column" className="overflow-hidden gap-form-field">
             <Input
               type="email"
               name="email"

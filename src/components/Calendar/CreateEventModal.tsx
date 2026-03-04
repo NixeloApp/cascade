@@ -148,7 +148,7 @@ export function CreateEventModal({
       >
         <form.Subscribe selector={(state) => state.values}>
           {({ eventType, allDay, isRequired }) => (
-            <Flex direction="column" gap="lg" className="p-6" justify="start">
+            <Flex direction="column" gap="lg" className="p-6">
               {/* Title */}
               <form.Field name="title">
                 {(field) => (

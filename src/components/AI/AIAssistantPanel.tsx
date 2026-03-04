@@ -67,7 +67,7 @@ export function AIAssistantPanel({ projectId, isOpen, onClose }: AIAssistantPane
         <>
           {/* Custom gradient header */}
           <div className="p-4 border-b border-ui-border bg-linear-to-r from-brand to-accent">
-            <Flex direction="column" gap="sm" className="text-left" justify="start">
+            <Flex direction="column" gap="sm" className="text-left">
               <Flex align="center" gap="md">
                 <Icon icon={Bot} size="lg" />
                 <div>

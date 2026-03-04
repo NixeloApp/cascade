@@ -71,13 +71,7 @@ function RoleCard({
         />
       </div>
 
-      <Flex
-        direction="column"
-        align="center"
-        gap="xl"
-        className="text-center relative z-10"
-        justify="start"
-      >
+      <Flex direction="column" align="center" gap="xl" className="text-center relative z-10">
         <div
           className={cn(
             "p-5 rounded-xl transition-all duration-default",

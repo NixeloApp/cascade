@@ -107,7 +107,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
         gap="lg"
         className="sm:flex-row sm:items-center"
       >
-        <Flex direction="column" className="flex-1 w-full sm:w-auto" justify="start">
+        <Flex direction="column" className="flex-1 w-full sm:w-auto">
           <Flex wrap align="center" gap="sm" className="mb-2">
             <Typography variant="h5">{sprint.name}</Typography>
             <Badge size="md" className={getStatusColor(sprint.status)}>
@@ -150,12 +150,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
           )}
         </Flex>
         {canEdit && (
-          <Flex
-            direction="column"
-            gap="sm"
-            className="sm:flex-row w-full sm:w-auto"
-            justify="start"
-          >
+          <Flex direction="column" gap="sm" className="sm:flex-row w-full sm:w-auto">
             {sprint.status === "future" && (
               <Button onClick={() => void onStartSprint(sprint._id)} variant="success" size="sm">
                 Start Sprint
@@ -461,7 +456,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
             {/* Custom date inputs (shown when "Custom" is selected) */}
             {selectedPreset === "custom" && (
               <Stack gap="md">
-                <Flex direction="column" gap="md" className="sm:flex-row" justify="start">
+                <Flex direction="column" gap="md" className="sm:flex-row">
                   <FlexItem flex="1">
                     <Input
                       label="Start Date"
@@ -492,7 +487,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
               </Stack>
             )}
 
-            <Flex direction="column" gap="sm" className="sm:flex-row" justify="start">
+            <Flex direction="column" gap="sm" className="sm:flex-row">
               <Button type="submit" variant="primary">
                 Create Sprint
               </Button>
@@ -744,7 +739,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
 
               {/* Custom date inputs */}
               {startPreset === "custom" && (
-                <Flex direction="column" gap="md" className="sm:flex-row" justify="start">
+                <Flex direction="column" gap="md" className="sm:flex-row">
                   <FlexItem flex="1">
                     <Input
                       label="Start Date"

@@ -21,7 +21,7 @@ export function UnifiedCalendarView({ projectId }: UnifiedCalendarViewProps) {
   const [viewType, setViewType] = useState<ViewType>("calendar");
 
   return (
-    <Flex direction="column" className="h-full" justify="start">
+    <Flex direction="column" className="h-full">
       {/* View Switcher */}
       <div className="border-b border-ui-border px-3 sm:px-6 py-3 bg-ui-bg">
         <ToggleGroup

@@ -128,7 +128,7 @@ function SearchListContent({
 
   if (isLoading) {
     return (
-      <Flex direction="column" align="center" className="text-ui-text-secondary" justify="start">
+      <Flex direction="column" align="center" className="text-ui-text-secondary">
         <div className="inline-block w-6 h-6 border-2 border-brand-ring border-t-transparent rounded-full animate-spin mb-2" />
         <Typography variant="small">Searching...</Typography>
       </Flex>
@@ -138,7 +138,7 @@ function SearchListContent({
   return (
     <>
       <CommandEmpty data-testid={TEST_IDS.GLOBAL_SEARCH.NO_RESULTS}>
-        <Flex direction="column" align="center" justify="start">
+        <Flex direction="column" align="center">
           <Icon icon={Search} size="xl" className="mb-4" />
           <Typography variant="label">No results found</Typography>
         </Flex>

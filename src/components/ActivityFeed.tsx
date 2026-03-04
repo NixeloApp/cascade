@@ -172,13 +172,7 @@ export function ActivityFeed({ projectId, limit = 50, compact = false }: Activit
   }
 
   return (
-    <Flex
-      direction="column"
-      gap="none"
-      className="relative"
-      data-testid={TEST_IDS.ACTIVITY.FEED}
-      justify="start"
-    >
+    <Flex direction="column" gap="none" className="relative" data-testid={TEST_IDS.ACTIVITY.FEED}>
       {/* Timeline line */}
       {!compact && activities.length > 1 && (
         <div className="absolute left-3 top-6 bottom-6 w-px bg-ui-border" />

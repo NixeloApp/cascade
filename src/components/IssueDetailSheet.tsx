@@ -63,7 +63,7 @@ export function IssueDetailSheet({
 
   // Custom header with issue metadata
   const header = (
-    <Flex direction="column" gap="sm" className="p-6 border-b border-ui-border" justify="start">
+    <Flex direction="column" gap="sm" className="p-6 border-b border-ui-border">
       {/* Issue key and priority */}
       <Flex align="center" gap="sm">
         <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="lg" />

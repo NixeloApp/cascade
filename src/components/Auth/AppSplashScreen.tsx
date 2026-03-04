@@ -18,7 +18,7 @@ export function AppSplashScreen({ message }: { message?: string }) {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-125 h-125 bg-landing-accent/10 rounded-full blur-glow" />
       </div>
 
-      <Flex direction="column" align="center" gap="2xl" className="relative" justify="start">
+      <Flex direction="column" align="center" gap="2xl" className="relative">
         {/* Animated Logo Container */}
         <div className="relative">
           <div className="absolute inset-0 bg-landing-accent/20 rounded-full blur-2xl animate-pulse" />
@@ -33,7 +33,6 @@ export function AppSplashScreen({ message }: { message?: string }) {
           align="center"
           gap="xl"
           className="animate-in fade-in slide-in-from-bottom-4 duration-enter-slow delay-300 fill-mode-both"
-          justify="start"
         >
           {/* Minimal high-end loader - Always show to indicate activity */}
           <div className="w-32 h-0.5 bg-white/5 rounded-full overflow-hidden">

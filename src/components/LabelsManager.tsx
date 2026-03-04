@@ -276,7 +276,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
               }}
             />
           ) : (
-            <Flex direction="column" gap="lg" justify="start">
+            <Flex direction="column" gap="lg">
               {labelGroups.map((group) => {
                 const groupKey = group._id ?? "ungrouped";
                 const isCollapsed = collapsedGroups.has(groupKey);
@@ -366,11 +366,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
 
                     {/* Labels in Group */}
                     {!isCollapsed && group.labels.length > 0 && (
-                      <Flex
-                        direction="column"
-                        className="divide-y divide-ui-border"
-                        justify="start"
-                      >
+                      <Flex direction="column" className="divide-y divide-ui-border">
                         {group.labels.map((label) => (
                           <Card
                             key={label._id}
@@ -468,7 +464,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
         }
       >
         <form id="label-form" onSubmit={handleLabelSubmit}>
-          <Flex direction="column" gap="lg" justify="start">
+          <Flex direction="column" gap="lg">
             <Input
               label="Label Name"
               value={labelForm.formData.name}
@@ -550,7 +546,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
         }
       >
         <form id="group-form" onSubmit={handleGroupSubmit}>
-          <Flex direction="column" gap="lg" justify="start">
+          <Flex direction="column" gap="lg">
             <Input
               label="Group Name"
               value={groupForm.formData.name}

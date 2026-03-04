@@ -24,14 +24,13 @@ export function IssueDetailLayout({
   if (!issue) return null;
 
   return (
-    <Flex direction="column" className="h-full bg-ui-bg" justify="start">
+    <Flex direction="column" className="h-full bg-ui-bg">
       {header}
 
       <FlexItem flex="1" className="overflow-auto">
         <Flex
           direction="column"
           className="max-w-400 mx-auto md:flex-row bg-ui-bg-elevated border border-ui-border rounded-lg shadow-card m-4"
-          justify="start"
         >
           <IssueDetailContent
             issueId={issue._id}

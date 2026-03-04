@@ -78,7 +78,7 @@ export function PasswordStrengthIndicator({ password, className }: PasswordStren
   const textColor = STRENGTH_TEXT_COLORS[score];
 
   return (
-    <Flex direction="column" gap="xs" className={className} justify="start">
+    <Flex direction="column" gap="xs" className={className}>
       {/* Strength bar */}
       <Flex gap="xs" className="w-full">
         {[0, 1, 2, 3].map((segment) => (

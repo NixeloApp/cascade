@@ -135,7 +135,7 @@ export function CalendarView({
   }
 
   return (
-    <Flex direction="column" className="h-full" data-calendar justify="start">
+    <Flex direction="column" className="h-full" data-calendar>
       <ShadcnCalendar
         events={events}
         mode={mode}

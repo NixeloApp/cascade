@@ -235,15 +235,6 @@ export function run() {
       prop: "justify",
       tokenType: "stack-unsupported-justify",
     },
-    // Prefer Stack for plain vertical Flex layouts
-    // Only flag when no Flex-specific props that Stack can't represent are present.
-    {
-      pattern:
-        /<Flex(?![^>]*\bjustify=)(?![^>]*\bwrap=)(?![^>]*\binline=)[^>]*\bdirection=["']column["'][^>]*>/,
-      component: "Flex",
-      prop: "direction",
-      tokenType: "prefer-stack",
-    },
   ];
 
   const propViolations = [];
@@ -287,9 +278,6 @@ export function run() {
           } else if (tokenType === "stack-unsupported-justify") {
             replacement =
               'Stack does not support justify-*; use <Flex direction="column" justify="..."> or a wrapper';
-          } else if (tokenType === "prefer-stack") {
-            replacement =
-              "Prefer <Stack ...> for vertical layouts; keep Flex only when you need justify/wrap/inline";
           }
           propViolations.push({
             file: rel,

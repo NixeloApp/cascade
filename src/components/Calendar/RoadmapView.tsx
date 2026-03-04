@@ -129,14 +129,13 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
   };
 
   return (
-    <Flex direction="column" className="h-full bg-ui-bg" justify="start">
+    <Flex direction="column" className="h-full bg-ui-bg">
       {/* Header */}
       <div className="border-b border-ui-border p-3 sm:p-4">
         <Flex
           direction="column"
           gap="md"
           className="sm:flex-row items-stretch sm:items-center justify-between sm:gap-4"
-          justify="start"
         >
           <Flex gap="lg" align="center" className="gap-2 sm:gap-4">
             <Button variant="secondary" size="sm" onClick={handleToday}>

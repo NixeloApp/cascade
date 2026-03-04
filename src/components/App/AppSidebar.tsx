@@ -222,7 +222,7 @@ export function AppSidebar() {
           isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
       >
-        <Flex direction="column" className="h-full" justify="start">
+        <Flex direction="column" className="h-full">
           {/* Header with organization name and collapse toggle */}
           <Flex align="center" justify="between" className="p-4 border-b border-ui-border">
             {!showCollapsed && (

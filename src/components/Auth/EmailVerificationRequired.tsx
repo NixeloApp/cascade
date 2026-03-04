@@ -84,7 +84,7 @@ export function EmailVerificationRequired() {
         </Button>
       </form>
 
-      <Flex direction="column" align="center" gap="sm" className="mt-6" justify="start">
+      <Flex direction="column" align="center" gap="sm" className="mt-6">
         <AuthLinkButton onClick={handleResend} disabled={resending}>
           {resending ? "Sending..." : "Resend code"}
         </AuthLinkButton>
