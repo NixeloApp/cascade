@@ -161,7 +161,8 @@ describe("securePasswordResetHandler", () => {
       }),
     );
 
-    const lastCall = vi.mocked(logger.error).mock.calls.at(-1);
+    const calls = vi.mocked(logger.error).mock.calls;
+    const lastCall = calls[calls.length - 1];
     const loggedError = lastCall?.[1]?.error;
     const errorMessage =
       typeof loggedError === "object" &&
