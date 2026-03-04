@@ -307,28 +307,30 @@ function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogPr
   // Common fields
   const [domains, setDomains] = useState("");
 
-  // Initialize fields when connection loads
+  // Initialize SAML fields from connection
+  useEffect(() => {
+    if (connection?.type !== "saml" || !connection.samlConfig) return;
+    setIdpEntityId(connection.samlConfig.idpEntityId || "");
+    setIdpSsoUrl(connection.samlConfig.idpSsoUrl || "");
+    setIdpCertificate(connection.samlConfig.idpCertificate || "");
+  }, [connection]);
+
+  // Initialize OIDC fields from connection
+  useEffect(() => {
+    if (connection?.type !== "oidc" || !connection.oidcConfig) return;
+    const cfg = connection.oidcConfig;
+    setOidcProvider(cfg.provider);
+    setIssuer(cfg.issuer || "");
+    setClientId(cfg.clientId || "");
+    setAuthorizationUrl(cfg.authorizationUrl || "");
+    setTokenUrl(cfg.tokenUrl || "");
+    setUserInfoUrl(cfg.userInfoUrl || "");
+    setScopes(cfg.scopes?.join(", ") || "");
+  }, [connection]);
+
+  // Initialize domains from connection
   useEffect(() => {
     if (!connection) return;
-
-    // Initialize SAML fields
-    if (connection.type === "saml" && connection.samlConfig) {
-      setIdpEntityId(connection.samlConfig.idpEntityId || "");
-      setIdpSsoUrl(connection.samlConfig.idpSsoUrl || "");
-      setIdpCertificate(connection.samlConfig.idpCertificate || "");
-    }
-
-    // Initialize OIDC fields
-    if (connection.type === "oidc" && connection.oidcConfig) {
-      setOidcProvider(connection.oidcConfig.provider);
-      setIssuer(connection.oidcConfig.issuer || "");
-      setClientId(connection.oidcConfig.clientId || "");
-      setAuthorizationUrl(connection.oidcConfig.authorizationUrl || "");
-      setTokenUrl(connection.oidcConfig.tokenUrl || "");
-      setUserInfoUrl(connection.oidcConfig.userInfoUrl || "");
-      setScopes(connection.oidcConfig.scopes?.join(", ") || "");
-    }
-
     setDomains(connection.verifiedDomains?.join(", ") || "");
   }, [connection]);
 
