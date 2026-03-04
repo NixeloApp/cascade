@@ -189,12 +189,91 @@ async function takeScreenshot(
     // networkidle often times out on real-time apps -- page is still usable
   }
   await waitForScreenshotReady(page);
+  await waitForExpectedContent(page, url, name);
+  await waitForScreenshotReady(page);
   await page.screenshot({ path: screenshotPath });
   totalScreenshots++;
 
   // Show relative path for clarity
   const relativePath = path.relative(process.cwd(), screenshotPath);
   console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}`);
+}
+
+function isProjectBoardUrl(url: string): boolean {
+  return /\/projects\/[^/]+\/board$/.test(url);
+}
+
+function isProjectCalendarUrl(url: string): boolean {
+  return /\/projects\/[^/]+\/calendar$/.test(url);
+}
+
+function isProjectSettingsUrl(url: string): boolean {
+  return /\/projects\/[^/]+\/settings$/.test(url);
+}
+
+async function waitForCalendarReady(page: Page): Promise<boolean> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      await page.getByTestId(TEST_IDS.CALENDAR.MODE_WEEK).first().waitFor({
+        state: "visible",
+        timeout: 8000,
+      });
+      await page.locator("[data-calendar]").first().waitFor({
+        state: "visible",
+        timeout: 4000,
+      });
+      await page
+        .locator(".animate-shimmer")
+        .first()
+        .waitFor({ state: "hidden", timeout: 4000 })
+        .catch(() => {});
+      return true;
+    } catch {
+      if (attempt === 0) {
+        await page
+          .goto(page.url(), { waitUntil: "domcontentloaded", timeout: 15000 })
+          .catch(() => {});
+        await waitForScreenshotReady(page);
+      }
+    }
+  }
+  return false;
+}
+
+async function waitForExpectedContent(page: Page, url: string, name: string): Promise<void> {
+  if (isProjectBoardUrl(url)) {
+    await page
+      .getByTestId(TEST_IDS.BOARD.COLUMN)
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .locator(".animate-shimmer")
+      .first()
+      .waitFor({ state: "hidden", timeout: 4000 })
+      .catch(() => {});
+    return;
+  }
+
+  if (isProjectSettingsUrl(url)) {
+    await page
+      .getByRole("heading", { name: "Project Settings" })
+      .first()
+      .waitFor({
+        state: "visible",
+        timeout: 12000,
+      })
+      .catch(() => {});
+    return;
+  }
+
+  if (
+    isProjectCalendarUrl(url) ||
+    name === "calendar-event-modal" ||
+    /^calendar-(day|week|month)$/.test(name)
+  ) {
+    await waitForCalendarReady(page);
+  }
 }
 
 async function waitForScreenshotReady(page: Page): Promise<void> {
@@ -378,62 +457,67 @@ async function screenshotFilledStates(
       await page.goto(`${BASE_URL}${calendarUrl}`, { waitUntil: "networkidle", timeout: 15000 });
     } catch {}
     await waitForScreenshotReady(page);
+    const isCalendarReady = await waitForCalendarReady(page);
+    if (!isCalendarReady) {
+      console.log("    ⚠️  [filled] calendar not ready, skipping mode-specific screenshots");
+    } else {
+      // Calendar view-mode screenshots: day, week, month
+      const calendarModeTestIds = {
+        day: TEST_IDS.CALENDAR.MODE_DAY,
+        week: TEST_IDS.CALENDAR.MODE_WEEK,
+        month: TEST_IDS.CALENDAR.MODE_MONTH,
+      } as const;
+      for (const mode of ["day", "week", "month"] as const) {
+        const toggleItem = page.getByTestId(calendarModeTestIds[mode]);
+        if ((await toggleItem.count()) > 0) {
+          await toggleItem.first().click();
+          await waitForScreenshotReady(page);
+          await waitForCalendarReady(page);
+        }
+        const n = nextIndex(p);
+        const num = String(n).padStart(2, "0");
+        const screenshotPath = getScreenshotPath(p, `calendar-${mode}`);
+        await page.screenshot({ path: screenshotPath });
+        totalScreenshots++;
+        const relativePath = path.relative(process.cwd(), screenshotPath);
+        console.log(`    ${num}  [${p}] calendar-${mode} → ${relativePath}`);
+      }
 
-    // Calendar view-mode screenshots: day, week, month
-    const calendarModeTestIds = {
-      day: TEST_IDS.CALENDAR.MODE_DAY,
-      week: TEST_IDS.CALENDAR.MODE_WEEK,
-      month: TEST_IDS.CALENDAR.MODE_MONTH,
-    } as const;
-    for (const mode of ["day", "week", "month"] as const) {
-      const toggleItem = page.getByTestId(calendarModeTestIds[mode]);
-      if ((await toggleItem.count()) > 0) {
-        await toggleItem.first().click();
+      // Event details modal screenshot — click first visible calendar event
+      // Switch back to week view for the modal screenshot (events are most visible)
+      const weekToggle = page.getByTestId(TEST_IDS.CALENDAR.MODE_WEEK);
+      if ((await weekToggle.count()) > 0) {
+        await weekToggle.first().click();
         await waitForScreenshotReady(page);
       }
-      const n = nextIndex(p);
-      const num = String(n).padStart(2, "0");
-      const screenshotPath = getScreenshotPath(p, `calendar-${mode}`);
-      await page.screenshot({ path: screenshotPath });
-      totalScreenshots++;
-      const relativePath = path.relative(process.cwd(), screenshotPath);
-      console.log(`    ${num}  [${p}] calendar-${mode} → ${relativePath}`);
-    }
+      // Events are rendered as tabIndex={0} divs with event titles
+      const eventEl = page
+        .locator("[tabindex='0']")
+        .filter({ hasText: /Sprint Planning|Design Review|Focus Time|Standup/i });
+      if ((await eventEl.count()) > 0) {
+        await eventEl.first().click();
+        await page
+          .getByRole("dialog")
+          .first()
+          .waitFor({ state: "visible", timeout: 5000 })
+          .catch(() => {});
+        await waitForScreenshotReady(page);
+        const n = nextIndex(p);
+        const num = String(n).padStart(2, "0");
+        const screenshotPath = getScreenshotPath(p, "calendar-event-modal");
+        await page.screenshot({ path: screenshotPath });
+        totalScreenshots++;
+        const relativePath = path.relative(process.cwd(), screenshotPath);
+        console.log(`    ${num}  [${p}] calendar-event-modal → ${relativePath}`);
 
-    // Event details modal screenshot — click first visible calendar event
-    // Switch back to week view for the modal screenshot (events are most visible)
-    const weekToggle = page.getByTestId(TEST_IDS.CALENDAR.MODE_WEEK);
-    if ((await weekToggle.count()) > 0) {
-      await weekToggle.first().click();
-      await waitForScreenshotReady(page);
-    }
-    // Events are rendered as tabIndex={0} divs with event titles
-    const eventEl = page
-      .locator("[tabindex='0']")
-      .filter({ hasText: /Sprint Planning|Design Review|Focus Time|Standup/i });
-    if ((await eventEl.count()) > 0) {
-      await eventEl.first().click();
-      await page
-        .getByRole("dialog")
-        .first()
-        .waitFor({ state: "visible", timeout: 5000 })
-        .catch(() => {});
-      await waitForScreenshotReady(page);
-      const n = nextIndex(p);
-      const num = String(n).padStart(2, "0");
-      const screenshotPath = getScreenshotPath(p, "calendar-event-modal");
-      await page.screenshot({ path: screenshotPath });
-      totalScreenshots++;
-      const relativePath = path.relative(process.cwd(), screenshotPath);
-      console.log(`    ${num}  [${p}] calendar-event-modal → ${relativePath}`);
-
-      // Close the modal via Escape
-      await page.keyboard.press("Escape");
-      await page
-        .getByRole("dialog")
-        .first()
-        .waitFor({ state: "hidden", timeout: 5000 })
-        .catch(() => {});
+        // Close the modal via Escape
+        await page.keyboard.press("Escape");
+        await page
+          .getByRole("dialog")
+          .first()
+          .waitFor({ state: "hidden", timeout: 5000 })
+          .catch(() => {});
+      }
     }
   }
 

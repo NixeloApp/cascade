@@ -5,19 +5,19 @@
 
 ## P0 - Blockers (fix first)
 
-- [ ] Calendar pages are captured in loading state instead of actual UI.
+- [x] Calendar pages are captured in loading state instead of actual UI. (fixed 2026-03-04)
   - Evidence: `docs/design/specs/pages/11-calendar/screenshots/desktop-light-day.png`
   - Evidence: `docs/design/specs/pages/11-calendar/screenshots/desktop-light-week.png`
   - Evidence: `docs/design/specs/pages/11-calendar/screenshots/desktop-light-month.png`
   - Evidence: `docs/design/specs/pages/11-calendar/screenshots/mobile-light-month.png`
   - Expected: stable loaded calendar content before snapshot.
 
-- [ ] Project board captures skeleton loaders instead of loaded cards on tablet/mobile.
+- [x] Project board captures skeleton loaders instead of loaded cards on tablet/mobile. (fixed 2026-03-04)
   - Evidence: `docs/design/specs/pages/06-board/screenshots/tablet-light.png`
   - Evidence: `docs/design/specs/pages/06-board/screenshots/mobile-light.png`
   - Expected: real board content in visual baseline screenshots.
 
-- [ ] Project settings tablet capture shows only spinner for full page.
+- [x] Project settings tablet capture shows only spinner for full page. (fixed 2026-03-04)
   - Evidence: `docs/design/specs/pages/12-settings/screenshots/tablet-light-project.png`
   - Expected: settings form loaded before screenshot.
 
