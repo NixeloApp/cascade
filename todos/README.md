@@ -38,7 +38,7 @@ These are direct correctness/security/data-integrity issues and should be priori
 | Growth features | [growth-features.md](./growth-features.md) | 16/18 | Most internal implementation complete | Outlook app setup prerequisites | Complete Microsoft app registration/scopes/tenant config |
 | Enterprise features | [enterprise.md](./enterprise.md) | 6/22 | Foundation tasks underway | Billing + IdP + infra prerequisites | Finalize dependency decisions and split MVP vs post-MVP |
 | Uptime monitoring | [uptime-monitoring.md](./uptime-monitoring.md) | 0/32 | Planning/spec stage | Architecture/infrastructure decisions not made | Decide runner/check architecture and incident model first |
-| Dependency vulnerability | [jules-librarian-2026-02-23-lodash-vulnerability.md](./jules/open/jules-librarian-2026-02-23-lodash-vulnerability.md) | 0/3 | Actionable upgrade path identified | npm registry DNS (`EAI_AGAIN`) | Upgrade `@boxyhq/saml-jackson` once registry available |
+| Dependency vulnerability | [jules-librarian-2026-02-23-lodash-vulnerability.md](./jules/open/jules-librarian-2026-02-23-lodash-vulnerability.md) | 0/3 | Upstream-blocked (no patched version) | Upstream release | Monitor `@boxyhq/saml-jackson` releases for patched version |
 
 ## Operational Baselines
 
@@ -52,7 +52,7 @@ These are direct correctness/security/data-integrity issues and should be priori
 
 | Blocker Type | Affected Tracks | Practical Unblock Owner |
 |---|---|---|
-| Registry/DNS (`registry.npmjs.org`) | Dependency vulnerability, multi-level views | Infra/network owner |
+| Upstream dependency releases | Dependency vulnerability | Upstream maintainers |
 | Slack app/dashboard setup | Feature gaps, Slack integration defects | Integrations owner |
 | Monitoring destination decision | OAuth monitoring finalization | Platform/ops owner |
 | External launch operations | Public launch | Product marketing + community |

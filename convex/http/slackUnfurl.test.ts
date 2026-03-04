@@ -5,6 +5,23 @@ import { buildSlackSignedRequest } from "./testUtils";
 
 const SLACK_UNFURL_URL = "https://api.convex.dev/slack/unfurl";
 
+// Boundary constants for validation tests
+const MAX_PAYLOAD_SIZE = 10000;
+const MAX_LINK_COUNT = 25;
+
+/** Create a minimal ActionCtx mock with the methods used by the handler */
+function createMockActionCtx(overrides?: { runQuery?: ReturnType<typeof vi.fn> }): ActionCtx {
+  return {
+    runQuery: overrides?.runQuery ?? vi.fn(),
+    runMutation: vi.fn(),
+    runAction: vi.fn(),
+    scheduler: { runAfter: vi.fn(), runAt: vi.fn(), cancel: vi.fn() },
+    auth: { getUserIdentity: vi.fn() },
+    storage: { getUrl: vi.fn(), generateUploadUrl: vi.fn(), delete: vi.fn(), get: vi.fn() },
+    vectorSearch: vi.fn(),
+  } as unknown as ActionCtx;
+}
+
 async function buildSignedRequest(body: string, secret: string): Promise<Request> {
   return buildSlackSignedRequest({
     url: SLACK_UNFURL_URL,
@@ -27,8 +44,8 @@ describe("Slack Unfurl HTTP Handler", () => {
 
   it("should reject oversized unfurl payload", async () => {
     const runQuery = vi.fn();
-    const ctx = { runQuery } as unknown as ActionCtx;
-    const oversizePayload = "x".repeat(10001);
+    const ctx = createMockActionCtx({ runQuery });
+    const oversizePayload = "x".repeat(MAX_PAYLOAD_SIZE + 1);
     const body = new URLSearchParams({ payload: oversizePayload }).toString();
     const request = await buildSignedRequest(body, signingSecret);
 
@@ -42,8 +59,8 @@ describe("Slack Unfurl HTTP Handler", () => {
 
   it("should reject unfurl payloads with too many links", async () => {
     const runQuery = vi.fn();
-    const ctx = { runQuery } as unknown as ActionCtx;
-    const links = Array.from({ length: 26 }, (_, i) => ({
+    const ctx = createMockActionCtx({ runQuery });
+    const links = Array.from({ length: MAX_LINK_COUNT + 1 }, (_, i) => ({
       url: `https://nixelo.app/issues/ABC-${i + 1}`,
     }));
     const body = new URLSearchParams({
@@ -65,7 +82,7 @@ describe("Slack Unfurl HTTP Handler", () => {
 
   it("should escape parse errors for malformed payload JSON", async () => {
     const runQuery = vi.fn();
-    const ctx = { runQuery } as unknown as ActionCtx;
+    const ctx = createMockActionCtx({ runQuery });
     const malformed =
       '{"team_id":"T-1","user_id":"U-1","links":[{"url":"https://nixelo.app/issues/ABC-1"}';
     const body = new URLSearchParams({ payload: malformed }).toString();
@@ -81,7 +98,7 @@ describe("Slack Unfurl HTTP Handler", () => {
 
   it("should reject requests missing Slack signature headers", async () => {
     const runQuery = vi.fn();
-    const ctx = { runQuery } as unknown as ActionCtx;
+    const ctx = createMockActionCtx({ runQuery });
     const body = new URLSearchParams({
       payload: JSON.stringify({
         team_id: "T-OK",

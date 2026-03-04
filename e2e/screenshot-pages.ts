@@ -469,10 +469,19 @@ async function screenshotFilledStates(
       } as const;
       for (const mode of ["day", "week", "month"] as const) {
         const toggleItem = page.getByTestId(calendarModeTestIds[mode]);
-        if ((await toggleItem.count()) > 0) {
-          await toggleItem.first().click();
-          await waitForScreenshotReady(page);
-          await waitForCalendarReady(page);
+        // Retry up to 3 times if toggle not found
+        for (let attempt = 0; attempt < 3; attempt++) {
+          if ((await toggleItem.count()) > 0) break;
+          await page.waitForTimeout(500);
+        }
+        if ((await toggleItem.count()) === 0) {
+          throw new Error(`[${p}] calendar-${mode} toggle not found after retries`);
+        }
+        await toggleItem.first().click();
+        await waitForScreenshotReady(page);
+        const modeReady = await waitForCalendarReady(page);
+        if (!modeReady) {
+          throw new Error(`[${p}] calendar-${mode} not ready after mode switch`);
         }
         const n = nextIndex(p);
         const num = String(n).padStart(2, "0");
@@ -494,30 +503,24 @@ async function screenshotFilledStates(
       const eventEl = page
         .locator("[tabindex='0']")
         .filter({ hasText: /Sprint Planning|Design Review|Focus Time|Standup/i });
-      if ((await eventEl.count()) > 0) {
-        await eventEl.first().click();
-        await page
-          .getByRole("dialog")
-          .first()
-          .waitFor({ state: "visible", timeout: 5000 })
-          .catch(() => {});
-        await waitForScreenshotReady(page);
-        const n = nextIndex(p);
-        const num = String(n).padStart(2, "0");
-        const screenshotPath = getScreenshotPath(p, "calendar-event-modal");
-        await page.screenshot({ path: screenshotPath });
-        totalScreenshots++;
-        const relativePath = path.relative(process.cwd(), screenshotPath);
-        console.log(`    ${num}  [${p}] calendar-event-modal → ${relativePath}`);
-
-        // Close the modal via Escape
-        await page.keyboard.press("Escape");
-        await page
-          .getByRole("dialog")
-          .first()
-          .waitFor({ state: "hidden", timeout: 5000 })
-          .catch(() => {});
+      if ((await eventEl.count()) === 0) {
+        throw new Error(`[${p}] No calendar events found for modal screenshot`);
       }
+      await eventEl.first().click();
+      const dialog = page.getByRole("dialog").first();
+      await dialog.waitFor({ state: "visible", timeout: 5000 });
+      await waitForScreenshotReady(page);
+      const n = nextIndex(p);
+      const num = String(n).padStart(2, "0");
+      const screenshotPath = getScreenshotPath(p, "calendar-event-modal");
+      await page.screenshot({ path: screenshotPath });
+      totalScreenshots++;
+      const relativePath = path.relative(process.cwd(), screenshotPath);
+      console.log(`    ${num}  [${p}] calendar-event-modal → ${relativePath}`);
+
+      // Close the modal via Escape
+      await page.keyboard.press("Escape");
+      await dialog.waitFor({ state: "hidden", timeout: 5000 });
     }
   }
 

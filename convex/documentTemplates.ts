@@ -781,10 +781,13 @@ export const initializeBuiltInTemplates = internalMutation({
   },
 });
 
+const DEFAULT_MIGRATION_PAGE_SIZE = 200;
+const MAX_MIGRATION_PAGE_SIZE = 500;
+
 /**
  * Migration: convert legacy string icon values to structured icon objects.
  *
- * Run repeatedly until `migrated` is `0`.
+ * Run repeatedly until `cursor` is `null` (not until `migrated` is `0`).
  */
 export const migrateLegacyIconStrings = internalMutation({
   args: {
@@ -797,7 +800,8 @@ export const migrateLegacyIconStrings = internalMutation({
     migrated: v.number(),
   }),
   handler: async (ctx, args) => {
-    const limit = args.limit ?? 200;
+    const requestedLimit = Math.trunc(args.limit ?? DEFAULT_MIGRATION_PAGE_SIZE);
+    const limit = Math.min(Math.max(requestedLimit, 1), MAX_MIGRATION_PAGE_SIZE);
     const { page, continueCursor, isDone } = await ctx.db
       .query("documentTemplates")
       .paginate({ cursor: args.cursor ?? null, numItems: limit });
