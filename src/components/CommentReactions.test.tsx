@@ -2,12 +2,19 @@ import type { Id } from "@convex/_generated/dataModel";
 import { cleanup, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { showError } from "@/lib/toast";
 import { render } from "@/test/custom-render";
 import { CommentReactions } from "./CommentReactions";
 
+const mockToggleReaction = vi.fn();
+
 // Mock convex/react
 vi.mock("convex/react", () => ({
-  useMutation: () => vi.fn(),
+  useMutation: () => mockToggleReaction,
+}));
+
+vi.mock("@/lib/toast", () => ({
+  showError: vi.fn(),
 }));
 
 describe("CommentReactions", () => {
@@ -71,5 +78,24 @@ describe("CommentReactions", () => {
     // However, finding by role tooltip can be tricky if multiple exist.
     // But logically only one should be open at a time.
     // Let's just check the first one or ensure text content.
+  });
+
+  it("shows an error toast when reaction update fails", async () => {
+    const user = userEvent.setup();
+    const error = new Error("Mutation failed");
+    mockToggleReaction.mockRejectedValueOnce(error);
+
+    render(
+      <CommentReactions
+        commentId={commentId}
+        reactions={mockReactions}
+        currentUserId={currentUserId}
+      />,
+    );
+
+    const thumbsUp = screen.getByRole("button", { name: "👍 reaction, 1 vote" });
+    await user.click(thumbsUp);
+
+    expect(showError).toHaveBeenCalledWith(error, "Failed to update reaction");
   });
 });

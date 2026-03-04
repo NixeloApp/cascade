@@ -64,6 +64,7 @@ describe("SlackIntegration", () => {
 
     await waitFor(() =>
       expect(mockConnectSlack).toHaveBeenCalledWith({
+        slackUserId: undefined,
         teamId: "T123",
         teamName: "Nixelo Team",
         accessToken: "xoxb-test",

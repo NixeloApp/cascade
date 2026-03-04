@@ -31,6 +31,7 @@ function getAllowedOrigins(): Set<string> {
 }
 
 interface SlackConnectionData {
+  slackUserId?: string;
   teamId: string;
   teamName: string;
   accessToken: string;
@@ -63,6 +64,7 @@ export function SlackIntegration() {
       setIsConnecting(true);
       try {
         await connectSlack({
+          slackUserId: data.slackUserId,
           teamId: data.teamId,
           teamName: data.teamName,
           accessToken: data.accessToken,

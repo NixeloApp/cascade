@@ -1,5 +1,5 @@
 /**
- * GitHub OAuth HTTP Handlers
+ * GitHub OAuth HTTP Handler
  *
  * HTTP endpoints for GitHub OAuth 2.0 authentication flow.
  * Handles authorization redirect, callback processing, and token exchange.
@@ -437,6 +437,7 @@ export const handleCallback = httpAction(handleCallbackHandler);
  *
  * Requirements:
  * - User must be authenticated in the Convex app.
+ * - Request must include `Authorization: Bearer <sessionId>`.
  * - User must have previously connected their GitHub account via the OAuth flow.
  *
  * Flow:
@@ -447,7 +448,7 @@ export const handleCallback = httpAction(handleCallbackHandler);
  * 5. Transforms the GitHub API response into a simplified format for the frontend.
  *
  * @param ctx - Convex action context
- * @param _request - The incoming HTTP request (unused)
+ * @param request - Incoming HTTP request used to read the bearer session token.
  * @returns A JSON Response containing the list of repositories or an error message.
  */
 export const listReposHandler = async (ctx: ActionCtx, request: Request) => {
@@ -522,10 +523,13 @@ export const listReposHandler = async (ctx: ActionCtx, request: Request) => {
     try {
       const json = await reposResponse.json();
       if (!Array.isArray(json)) {
-        throw new Error("GitHub repositories response is not an array");
+        throw validation("github", "GitHub repositories response is not an array");
       }
       repos = json;
     } catch (_e) {
+      if (isAppError(_e)) {
+        throw _e;
+      }
       throw validation("github", "Invalid JSON response from GitHub repositories endpoint");
     }
 
@@ -552,6 +556,12 @@ export const listReposHandler = async (ctx: ActionCtx, request: Request) => {
   }
 };
 
+/**
+ * Normalize repository-listing failures into a stable JSON HTTP response shape.
+ *
+ * App errors are mapped to semantic HTTP statuses; unknown failures default to 500.
+ * This keeps `/github/repos` consumers independent from internal thrown error types.
+ */
 const handleListReposError = (error: unknown) => {
   logger.error("GitHub listRepos error:", { error });
   let status = 500;

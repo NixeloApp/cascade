@@ -1151,6 +1151,7 @@ const applicationTables = {
 
   slackConnections: defineTable({
     userId: v.id("users"),
+    slackUserId: v.optional(v.string()),
     teamId: v.string(),
     teamName: v.string(),
     accessToken: v.string(),
@@ -1165,7 +1166,8 @@ const applicationTables = {
     updatedAt: v.number(),
   })
     .index("by_user", ["userId"])
-    .index("by_team", ["teamId"]),
+    .index("by_team", ["teamId"])
+    .index("by_team_slack_user_active_updated", ["teamId", "slackUserId", "isActive", "updatedAt"]),
 
   githubRepositories: defineTable({
     projectId: v.id("projects"),

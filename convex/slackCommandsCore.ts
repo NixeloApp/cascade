@@ -12,9 +12,17 @@ import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { syncProjectIssueStats } from "./lib/projectIssueStats";
 import { notDeleted } from "./lib/softDeleteHelpers";
 
+/**
+ * Execute a `/nixelo` slash command and always return a structured command response.
+ *
+ * Contract note:
+ * this mutation is used by Slack HTTP handlers, so command/user errors should be surfaced
+ * as `{ ok: false, message }` instead of throwing whenever possible.
+ */
 export const executeCommand = internalMutation({
   args: {
     teamId: v.string(),
+    callerSlackUserId: v.string(),
     text: v.string(),
   },
   returns: v.object({
@@ -31,7 +39,7 @@ export const executeCommand = internalMutation({
       };
     }
 
-    const context = await resolveTeamContext(ctx, args.teamId);
+    const context = await resolveTeamContext(ctx, args.teamId, args.callerSlackUserId);
     if (!context) {
       return {
         ok: false,
@@ -48,8 +56,15 @@ export const executeCommand = internalMutation({
       if (!title) {
         return { ok: false, message: "Usage: `/nixelo create <title>`" };
       }
-      const result = await createIssueFromCommand(ctx, context.userId, title);
-      return { ok: true, message: `Created issue ${result.key}: ${result.title}` };
+      try {
+        const result = await createIssueFromCommand(ctx, context.userId, title);
+        return { ok: true, message: `Created issue ${result.key}: ${result.title}` };
+      } catch (error) {
+        return {
+          ok: false,
+          message: error instanceof Error ? error.message : "Failed to create issue.",
+        };
+      }
     }
 
     if (command === "search") {
@@ -95,23 +110,29 @@ export const executeCommand = internalMutation({
 async function resolveTeamContext(
   ctx: MutationCtx,
   teamId: string,
+  callerSlackUserId: string,
 ): Promise<{ userId: Id<"users"> } | null> {
-  const connections = await ctx.db
+  const activeConnection = await ctx.db
     .query("slackConnections")
-    .withIndex("by_team", (q) => q.eq("teamId", teamId))
-    .take(20);
+    .withIndex("by_team_slack_user_active_updated", (q) =>
+      q.eq("teamId", teamId).eq("slackUserId", callerSlackUserId).eq("isActive", true),
+    )
+    .order("desc")
+    .first();
 
-  const active = connections
-    .filter((connection) => connection.isActive)
-    .sort((a, b) => b.updatedAt - a.updatedAt)[0];
-
-  if (!active) {
+  if (!activeConnection) {
     return null;
   }
 
-  return { userId: active.userId };
+  return { userId: activeConnection.userId };
 }
 
+/**
+ * Create an issue on the caller's default project.
+ *
+ * @throws Error when no project is available, the project is unavailable, or the caller
+ * doesn't have permission to create issues in that project.
+ */
 async function createIssueFromCommand(
   ctx: MutationCtx,
   userId: Id<"users">,
@@ -184,37 +205,62 @@ async function searchIssuesForCommand(
 ): Promise<Array<{ issueId: Id<"issues">; key: string; title: string }>> {
   const projectIds = await listUserProjectIds(ctx, userId);
   const normalizedQuery = query.toLowerCase();
-  const results: Array<{ issueId: Id<"issues">; key: string; title: string; updatedAt: number }> =
-    [];
+  const issuesByProject = await Promise.all(
+    projectIds.map((projectId) =>
+      ctx.db
+        .query("issues")
+        .withIndex("by_project_deleted", (q) => q.eq("projectId", projectId).lt("isDeleted", true))
+        .order("desc")
+        .take(20),
+    ),
+  );
 
-  for (const projectId of projectIds) {
-    const issues = await ctx.db
-      .query("issues")
-      .withIndex("by_project_deleted", (q) => q.eq("projectId", projectId).lt("isDeleted", true))
-      .order("desc")
-      .take(20);
-
+  const topResults: Array<{
+    issueId: Id<"issues">;
+    key: string;
+    title: string;
+    updatedAt: number;
+  }> = [];
+  for (const issues of issuesByProject) {
     for (const issue of issues) {
       const matches =
         issue.key.toLowerCase().includes(normalizedQuery) ||
         issue.title.toLowerCase().includes(normalizedQuery);
       if (matches) {
-        results.push({
+        topResults.push({
           issueId: issue._id,
           key: issue.key,
           title: issue.title,
           updatedAt: issue.updatedAt,
         });
+
+        if (topResults.length > 5) {
+          let oldestIndex = 0;
+          for (let index = 1; index < topResults.length; index++) {
+            if (topResults[index].updatedAt < topResults[oldestIndex].updatedAt) {
+              oldestIndex = index;
+            }
+          }
+          topResults.splice(oldestIndex, 1);
+        }
       }
     }
   }
 
-  return results
+  return topResults
     .sort((a, b) => b.updatedAt - a.updatedAt)
-    .slice(0, 5)
     .map(({ issueId, key, title }) => ({ issueId, key, title }));
 }
 
+/**
+ * Assign an issue from slash-command input and always return a command response payload.
+ *
+ * Contract:
+ * - User/project/permission lookup failures are returned as `{ ok: false, message }`.
+ * - Successful assignment returns `{ ok: true, message }` with the updated assignee.
+ * - This helper avoids throwing for expected command/user errors so Slack handlers can
+ *   consistently render user-facing responses.
+ */
 async function assignIssueFromCommand(
   ctx: MutationCtx,
   actorUserId: Id<"users">,
@@ -278,8 +324,20 @@ async function pickProjectForUser(
   ctx: MutationCtx,
   userId: Id<"users">,
 ): Promise<Id<"projects"> | null> {
-  const projects = await listUserProjectIds(ctx, userId);
-  return projects[0] ?? null;
+  const memberships = await ctx.db
+    .query("projectMembers")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .filter(notDeleted)
+    .take(BOUNDED_LIST_LIMIT);
+
+  // Security/authorization hardening: only select projects where the caller can write.
+  for (const membership of memberships) {
+    if (membership.role !== "viewer") {
+      return membership.projectId;
+    }
+  }
+
+  return null;
 }
 
 async function listUserProjectIds(

@@ -3,6 +3,10 @@ import { internal } from "../_generated/api";
 import type { ActionCtx } from "../_generated/server";
 import { handleCallbackHandler, initiateAuthHandler, listReposHandler } from "./githubOAuth";
 
+const GITHUB_AUTH_URL = "https://api.convex.dev/github/auth";
+const GITHUB_CALLBACK_URL = "https://api.convex.dev/github/callback";
+const GITHUB_REPOS_URL = "https://api.convex.dev/github/repos";
+
 // Mock environment variables
 const MOCK_ENV = {
   GITHUB_CLIENT_ID: "mock-client-id",
@@ -20,7 +24,7 @@ Object.defineProperty(global.crypto, "randomUUID", {
   value: vi.fn().mockReturnValue(MOCK_STATE),
 });
 
-describe("GitHub OAuth HTTP Handlers", () => {
+describe("GitHub OAuth HTTP Handler", () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
@@ -35,7 +39,7 @@ describe("GitHub OAuth HTTP Handlers", () => {
 
   describe("initiateAuthHandler", () => {
     it("should redirect to GitHub OAuth page with correct params", async () => {
-      const request = new Request("https://api.convex.dev/github/auth");
+      const request = new Request(GITHUB_AUTH_URL);
       const ctx = {} as ActionCtx;
 
       const response = await initiateAuthHandler(ctx, request);
@@ -44,8 +48,10 @@ describe("GitHub OAuth HTTP Handlers", () => {
       const location = response.headers.get("Location");
       expect(location).toBeDefined();
 
-      // biome-ignore lint/style/noNonNullAssertion: testing convenience
-      const url = new URL(location!);
+      if (!location) {
+        throw new Error("Expected Location header");
+      }
+      const url = new URL(location);
       expect(url.origin).toBe("https://github.com");
       expect(url.pathname).toBe("/login/oauth/authorize");
       expect(url.searchParams.get("client_id")).toBe(MOCK_ENV.GITHUB_CLIENT_ID);
@@ -63,7 +69,7 @@ describe("GitHub OAuth HTTP Handlers", () => {
 
     it("should return 500 if environment variables are missing", async () => {
       process.env.GITHUB_CLIENT_ID = "";
-      const request = new Request("https://api.convex.dev/github/auth");
+      const request = new Request(GITHUB_AUTH_URL);
       const ctx = {} as ActionCtx;
 
       const response = await initiateAuthHandler(ctx, request);
@@ -77,14 +83,11 @@ describe("GitHub OAuth HTTP Handlers", () => {
   describe("handleCallbackHandler", () => {
     it("should exchange code for tokens and return success HTML", async () => {
       const code = "valid-code";
-      const request = new Request(
-        `https://api.convex.dev/github/callback?code=${code}&state=${MOCK_STATE}`,
-        {
-          headers: {
-            Cookie: `github-oauth-state=${MOCK_STATE}`,
-          },
+      const request = new Request(`${GITHUB_CALLBACK_URL}?code=${code}&state=${MOCK_STATE}`, {
+        headers: {
+          Cookie: `github-oauth-state=${MOCK_STATE}`,
         },
-      );
+      });
       const ctx = {} as ActionCtx;
 
       // Mock token exchange response
@@ -130,7 +133,7 @@ describe("GitHub OAuth HTTP Handlers", () => {
 
     it("should return error HTML if user denied access", async () => {
       const request = new Request(
-        `https://api.convex.dev/github/callback?error=access_denied&error_description=User+denied`,
+        `${GITHUB_CALLBACK_URL}?error=access_denied&error_description=User+denied`,
       );
       const ctx = {} as ActionCtx;
 
@@ -143,14 +146,11 @@ describe("GitHub OAuth HTTP Handlers", () => {
     });
 
     it("should return error HTML if state does not match", async () => {
-      const request = new Request(
-        `https://api.convex.dev/github/callback?code=valid-code&state=mismatch-state`,
-        {
-          headers: {
-            Cookie: `github-oauth-state=${MOCK_STATE}`,
-          },
+      const request = new Request(`${GITHUB_CALLBACK_URL}?code=valid-code&state=mismatch-state`, {
+        headers: {
+          Cookie: `github-oauth-state=${MOCK_STATE}`,
         },
-      );
+      });
       const ctx = {} as ActionCtx;
 
       const response = await handleCallbackHandler(ctx, request);
@@ -161,14 +161,11 @@ describe("GitHub OAuth HTTP Handlers", () => {
     });
 
     it("should return error HTML if token exchange fails", async () => {
-      const request = new Request(
-        `https://api.convex.dev/github/callback?code=bad-code&state=${MOCK_STATE}`,
-        {
-          headers: {
-            Cookie: `github-oauth-state=${MOCK_STATE}`,
-          },
+      const request = new Request(`${GITHUB_CALLBACK_URL}?code=bad-code&state=${MOCK_STATE}`, {
+        headers: {
+          Cookie: `github-oauth-state=${MOCK_STATE}`,
         },
-      );
+      });
       const ctx = {} as ActionCtx;
 
       // Mock token exchange failure
@@ -188,7 +185,7 @@ describe("GitHub OAuth HTTP Handlers", () => {
   describe("listReposHandler", () => {
     it("should return 401 if Authorization header is missing", async () => {
       const ctx = { runQuery: vi.fn() } as unknown as ActionCtx;
-      const request = new Request("https://api.convex.dev/github/repos");
+      const request = new Request(GITHUB_REPOS_URL);
 
       const response = await listReposHandler(ctx, request);
 
@@ -199,7 +196,7 @@ describe("GitHub OAuth HTTP Handlers", () => {
 
     it("should return 401 if session is invalid", async () => {
       const ctx = { runQuery: vi.fn() } as unknown as ActionCtx;
-      const request = new Request("https://api.convex.dev/github/repos", {
+      const request = new Request(GITHUB_REPOS_URL, {
         headers: { Authorization: "Bearer invalid-token" },
       });
 
@@ -220,7 +217,7 @@ describe("GitHub OAuth HTTP Handlers", () => {
         runQuery: vi.fn(),
         runMutation: vi.fn(),
       } as unknown as ActionCtx;
-      const request = new Request("https://api.convex.dev/github/repos", {
+      const request = new Request(GITHUB_REPOS_URL, {
         headers: { Authorization: "Bearer valid-token" },
       });
 
@@ -280,7 +277,7 @@ describe("GitHub OAuth HTTP Handlers", () => {
         runQuery: vi.fn(),
         runMutation: vi.fn(),
       } as unknown as ActionCtx;
-      const request = new Request("https://api.convex.dev/github/repos", {
+      const request = new Request(GITHUB_REPOS_URL, {
         headers: { Authorization: "Bearer valid-token" },
       });
 
@@ -301,7 +298,7 @@ describe("GitHub OAuth HTTP Handlers", () => {
         runQuery: vi.fn(),
         runMutation: vi.fn(),
       } as unknown as ActionCtx;
-      const request = new Request("https://api.convex.dev/github/repos", {
+      const request = new Request(GITHUB_REPOS_URL, {
         headers: { Authorization: "Bearer valid-token" },
       });
 
