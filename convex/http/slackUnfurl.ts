@@ -68,8 +68,14 @@ interface SlackUnfurlPayload {
 }
 
 function extractIssueKeyFromUrl(url: string): string | null {
-  const match = url.match(/([A-Z][A-Z0-9]+-\d+)/);
-  return match ? match[1] : null;
+  try {
+    const parsed = new URL(url);
+    // Only match issue keys in /issues/:key routes to avoid false positives
+    const match = parsed.pathname.match(/\/issues\/([A-Z][A-Z0-9]+-\d+)(?:\/|$)/);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
 }
 
 export const handleUnfurlHandler = async (ctx: ActionCtx, request: Request) => {

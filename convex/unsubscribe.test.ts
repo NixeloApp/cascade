@@ -5,6 +5,9 @@ import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestUser } from "./testUtils";
 
+// Token length constant for test assertions and generation
+const HEX_TOKEN_LENGTH = 64;
+
 describe("Unsubscribe", () => {
   describe("generateToken", () => {
     it("should generate a token for authenticated user", async () => {
@@ -16,7 +19,7 @@ describe("Unsubscribe", () => {
 
       expect(token).toBeDefined();
       expect(typeof token).toBe("string");
-      expect(token.length).toBe(64); // 32 bytes = 64 hex characters
+      expect(token.length).toBe(HEX_TOKEN_LENGTH); // 32 bytes = 64 hex characters
     });
 
     it("should store token in database", async () => {
@@ -95,7 +98,7 @@ describe("Unsubscribe", () => {
       const userId = await createTestUser(t);
 
       // Manually insert a token to verify query retrieval works
-      const manualToken = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+      const manualToken = "a".repeat(HEX_TOKEN_LENGTH);
       await t.run(async (ctx) => {
         await ctx.db.insert("unsubscribeTokens", {
           userId,

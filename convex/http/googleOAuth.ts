@@ -11,6 +11,7 @@ import { api, internal } from "../_generated/api";
 import { type ActionCtx, httpAction } from "../_generated/server";
 import { constantTimeEqual } from "../lib/apiAuth";
 import {
+  getConvexSiteUrl,
   getGoogleClientId,
   getGoogleClientSecret,
   isGoogleOAuthConfigured,
@@ -207,18 +208,19 @@ interface GoogleCalendarEvent {
 const getGoogleOAuthConfig = () => {
   const clientId = getGoogleClientId();
   const clientSecret = getGoogleClientSecret();
+  const convexSiteUrl = getConvexSiteUrl();
 
-  if (!(isGoogleOAuthConfigured() && clientId && clientSecret)) {
+  if (!(isGoogleOAuthConfigured() && clientId && clientSecret && convexSiteUrl)) {
     throw validation(
       "oauth",
-      "Google OAuth not configured. Set AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET.",
+      "Google OAuth not configured. Set AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET, and CONVEX_SITE_URL.",
     );
   }
   return {
     clientId,
     clientSecret,
     // Must use CONVEX_SITE_URL - this is a Convex HTTP action, not a frontend route
-    redirectUri: `${process.env.CONVEX_SITE_URL}/google/callback`,
+    redirectUri: `${convexSiteUrl}/google/callback`,
     scopes: [
       "https://www.googleapis.com/auth/calendar",
       "https://www.googleapis.com/auth/calendar.events",

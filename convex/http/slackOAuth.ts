@@ -239,9 +239,33 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     const config = getSlackOAuthConfig();
     const tokenData = await exchangeCodeForToken(code, config);
 
+    // Validate required fields for slash commands and unfurls
+    if (!tokenData.authed_user?.id || !tokenData.team?.id || !tokenData.access_token) {
+      return new Response(
+        `
+        <!DOCTYPE html>
+        <html>
+          <head><title>Slack - Error</title></head>
+          <body style="font-family: system-ui; max-width: 560px; margin: 60px auto; text-align: center;">
+            <h1>Connection Failed</h1>
+            <p>Missing required authorization data from Slack. Please try again.</p>
+            <button onclick="window.close()">Close Window</button>
+          </body>
+        </html>
+        `,
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "text/html",
+            "Set-Cookie": "slack-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+          },
+        },
+      );
+    }
+
     const connectionData = {
-      slackUserId: tokenData.authed_user?.id,
-      teamId: tokenData.team?.id,
+      slackUserId: tokenData.authed_user.id,
+      teamId: tokenData.team.id,
       teamName: tokenData.team?.name,
       accessToken: tokenData.access_token,
       botUserId: tokenData.bot_user_id,

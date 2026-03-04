@@ -41,7 +41,10 @@ export const generateToken = mutation({
 });
 
 /**
- * Get user ID from unsubscribe token
+ * Check if an unsubscribe token is valid.
+ *
+ * Returns `true` if the token exists, is not expired, and has not been used.
+ * Returns `null` otherwise. Does not expose user information.
  */
 export const getUserFromToken = query({
   args: { token: v.string() },
@@ -74,6 +77,7 @@ export const getUserFromToken = query({
  */
 export const unsubscribe = mutation({
   args: { token: v.string() },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
     if (!isValidUnsubscribeTokenFormat(args.token)) {
       throw validation("token", "Invalid unsubscribe token");
@@ -128,7 +132,7 @@ export const unsubscribe = mutation({
       });
     }
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 

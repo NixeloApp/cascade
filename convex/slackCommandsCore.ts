@@ -11,6 +11,7 @@ import { generateIssueKey, getSearchContent, issueKeyExists } from "./issues/hel
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { syncProjectIssueStats } from "./lib/projectIssueStats";
 import { notDeleted } from "./lib/softDeleteHelpers";
+import { hasMinimumRole } from "./rbac";
 
 /**
  * Execute a `/nixelo` slash command and always return a structured command response.
@@ -112,7 +113,8 @@ async function resolveTeamContext(
   teamId: string,
   callerSlackUserId: string,
 ): Promise<{ userId: Id<"users"> } | null> {
-  const activeConnection = await ctx.db
+  // Try exact match first (new connections with slackUserId).
+  const exactMatch = await ctx.db
     .query("slackConnections")
     .withIndex("by_team_slack_user_active_updated", (q) =>
       q.eq("teamId", teamId).eq("slackUserId", callerSlackUserId).eq("isActive", true),
@@ -120,11 +122,23 @@ async function resolveTeamContext(
     .order("desc")
     .first();
 
-  if (!activeConnection) {
-    return null;
+  if (exactMatch) {
+    return { userId: exactMatch.userId };
   }
 
-  return { userId: activeConnection.userId };
+  // Fallback: legacy connections without slackUserId (use most recent active for this team).
+  const legacyMatch = await ctx.db
+    .query("slackConnections")
+    .withIndex("by_team", (q) => q.eq("teamId", teamId))
+    .order("desc")
+    .filter((q) => q.and(q.eq(q.field("isActive"), true), q.eq(q.field("slackUserId"), undefined)))
+    .first();
+
+  if (legacyMatch) {
+    return { userId: legacyMatch.userId };
+  }
+
+  return null;
 }
 
 /**
@@ -330,11 +344,17 @@ async function pickProjectForUser(
     .filter(notDeleted)
     .take(BOUNDED_LIST_LIMIT);
 
-  // Security/authorization hardening: only select projects where the caller can write.
+  // Security/authorization hardening: only select projects where the caller can write
+  // and the project still exists.
   for (const membership of memberships) {
-    if (membership.role !== "viewer") {
-      return membership.projectId;
+    if (!hasMinimumRole(membership.role, "editor")) {
+      continue;
     }
+    const project = await ctx.db.get(membership.projectId);
+    if (!project || project.isDeleted) {
+      continue;
+    }
+    return membership.projectId;
   }
 
   return null;

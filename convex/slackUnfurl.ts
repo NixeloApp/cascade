@@ -24,13 +24,27 @@ export const getIssueUnfurl = internalQuery({
     v.null(),
   ),
   handler: async (ctx, args) => {
-    const activeConnection = await ctx.db
+    // Try exact match first (new connections with slackUserId).
+    let activeConnection = await ctx.db
       .query("slackConnections")
       .withIndex("by_team_slack_user_active_updated", (q) =>
         q.eq("teamId", args.teamId).eq("slackUserId", args.callerSlackUserId).eq("isActive", true),
       )
       .order("desc")
       .first();
+
+    // Fallback: legacy connections without slackUserId.
+    if (!activeConnection) {
+      activeConnection = await ctx.db
+        .query("slackConnections")
+        .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+        .order("desc")
+        .filter((q) =>
+          q.and(q.eq(q.field("isActive"), true), q.eq(q.field("slackUserId"), undefined)),
+        )
+        .first();
+    }
+
     if (!activeConnection) {
       return null;
     }

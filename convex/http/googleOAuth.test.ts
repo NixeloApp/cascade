@@ -65,12 +65,12 @@ describe("Google OAuth HTTP Handler", () => {
     // Default config
     vi.mocked(envLib.getGoogleClientId).mockReturnValue("test-client-id");
     vi.mocked(envLib.getGoogleClientSecret).mockReturnValue("test-client-secret");
+    vi.mocked(envLib.getConvexSiteUrl).mockReturnValue("https://test.convex.site");
     vi.mocked(envLib.isGoogleOAuthConfigured).mockReturnValue(true);
-    process.env.CONVEX_SITE_URL = "https://test.convex.site";
   });
 
   afterEach(() => {
-    delete process.env.CONVEX_SITE_URL;
+    vi.resetAllMocks();
   });
 
   describe("initiateAuthHandler", () => {

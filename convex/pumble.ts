@@ -28,8 +28,9 @@ import { notDeleted } from "./lib/softDeleteHelpers";
 function isValidPumbleWebhookUrl(webhookUrl: string): boolean {
   try {
     const url = new URL(webhookUrl);
-    // Ensure the host is exactly pumble.com or a subdomain of pumble.com
-    return url.hostname === "pumble.com" || url.hostname.endsWith(".pumble.com");
+    // Require HTTPS and valid Pumble host without credentials
+    const isPumbleHost = url.hostname === "pumble.com" || url.hostname.endsWith(".pumble.com");
+    return url.protocol === "https:" && isPumbleHost && !url.username && !url.password;
   } catch {
     return false;
   }
