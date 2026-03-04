@@ -246,6 +246,42 @@ export function run() {
     },
   ];
 
+  // Baseline existing intentional/legacy uses of Flex column layouts.
+  // Keep warnings focused on new occurrences outside this list.
+  const PREFER_STACK_BASELINE = new Set([
+    "src/components/AI/AIAssistantPanel.tsx",
+    "src/components/AI/AIChat.tsx",
+    "src/components/AI/AISuggestionsPanel.tsx",
+    "src/components/ActivityFeed.tsx",
+    "src/components/App/AppSidebar.tsx",
+    "src/components/Auth/AppSplashScreen.tsx",
+    "src/components/Auth/EmailVerificationRequired.tsx",
+    "src/components/Auth/PasswordStrengthIndicator.tsx",
+    "src/components/Auth/SignInForm.tsx",
+    "src/components/Auth/SignUpForm.tsx",
+    "src/components/Calendar/CalendarView.tsx",
+    "src/components/Calendar/CreateEventModal.tsx",
+    "src/components/Calendar/RoadmapView.tsx",
+    "src/components/Calendar/UnifiedCalendarView.tsx",
+    "src/components/Calendar/shadcn-calendar/body/day/calendar-body-margin-day-margin.tsx",
+    "src/components/Calendar/shadcn-calendar/header/date/calendar-header-date-icon.tsx",
+    "src/components/CreateProjectFromTemplate.tsx",
+    "src/components/Dashboard/MyIssuesList.tsx",
+    "src/components/Documents/DocumentTree.tsx",
+    "src/components/GlobalSearch.tsx",
+    "src/components/IssueDetail/IssueDetailLayout.tsx",
+    "src/components/IssueDetailSheet.tsx",
+    "src/components/KanbanBoard.tsx",
+    "src/components/LabelsManager.tsx",
+    "src/components/Onboarding/OnboardingChecklist.tsx",
+    "src/components/Onboarding/RoleSelector.tsx",
+    "src/components/Plate/SlashMenu.tsx",
+    "src/components/PlateEditor.tsx",
+    "src/components/RoadmapView.tsx",
+    "src/components/Sprints/SprintManager.tsx",
+    "src/components/VersionHistory.tsx",
+  ]);
+
   const propViolations = [];
 
   function checkComponentProps(filePath) {
@@ -266,6 +302,10 @@ export function run() {
       for (const { pattern, component, prop, tokenType } of COMPONENT_PROP_PATTERNS) {
         const match = line.match(pattern);
         if (match) {
+          if (tokenType === "prefer-stack" && PREFER_STACK_BASELINE.has(rel)) {
+            continue;
+          }
+
           let replacement = "";
 
           if (tokenType === "gap" || !tokenType) {
