@@ -94,7 +94,8 @@ export const handleSlashCommandHandler = async (ctx: ActionCtx, request: Request
   }
 
   const rawBody = await request.text();
-  if (rawBody.length > MAX_SLASH_COMMAND_BODY_LENGTH) {
+  const rawBodyBytes = new TextEncoder().encode(rawBody).byteLength;
+  if (rawBodyBytes > MAX_SLASH_COMMAND_BODY_LENGTH) {
     return new Response(
       JSON.stringify({
         response_type: "ephemeral",
