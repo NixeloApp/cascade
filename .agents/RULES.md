@@ -1,6 +1,6 @@
-# Jules Agent Rules
+# Agent Orchestration Rules
 
-**All Jules agents MUST follow these rules. Violations will cause PRs to be rejected.**
+**All orchestration agents MUST follow these rules. Violations will cause PRs to be rejected.**
 
 ## 🚫 Forbidden Code Patterns
 
