@@ -135,6 +135,8 @@ export function DocumentTree({
             size="sm"
             className="w-full justify-start px-2 py-1.5 text-ui-text-secondary hover:text-ui-text"
             onClick={() => setFavoritesExpanded((prev) => !prev)}
+            aria-expanded={favoritesExpanded}
+            aria-controls="favorites-documents-list"
           >
             {favoritesExpanded ? (
               <ChevronDown className="w-3.5 h-3.5 mr-1" />
@@ -146,7 +148,12 @@ export function DocumentTree({
           </Button>
 
           {favoritesExpanded && (
-            <Stack gap="none">
+            <Stack
+              id="favorites-documents-list"
+              role="region"
+              aria-label="Favorites documents"
+              gap="none"
+            >
               {favorites.map((doc) => (
                 <Link
                   key={doc._id}
@@ -168,6 +175,7 @@ export function DocumentTree({
                     <Typography
                       variant={selectedId === doc._id ? "label" : "small"}
                       className="truncate"
+                      title={doc.title || "Untitled"}
                     >
                       {doc.title || "Untitled"}
                     </Typography>
@@ -199,6 +207,8 @@ export function DocumentTree({
             size="sm"
             className="w-full justify-start px-2 py-1.5 text-ui-text-tertiary hover:text-ui-text"
             onClick={() => setArchivedExpanded((prev) => !prev)}
+            aria-expanded={archivedExpanded}
+            aria-controls="archived-documents-list"
           >
             {archivedExpanded ? (
               <ChevronDown className="w-3.5 h-3.5 mr-1" />
@@ -213,7 +223,12 @@ export function DocumentTree({
           </Button>
 
           {archivedExpanded && (
-            <Stack gap="none">
+            <Stack
+              id="archived-documents-list"
+              role="region"
+              aria-label="Archived documents"
+              gap="none"
+            >
               {archived.map((doc) => (
                 <Link
                   key={doc._id}
@@ -235,6 +250,7 @@ export function DocumentTree({
                     <Typography
                       variant={selectedId === doc._id ? "label" : "small"}
                       className="truncate"
+                      title={doc.title || "Untitled"}
                     >
                       {doc.title || "Untitled"}
                     </Typography>
@@ -256,6 +272,43 @@ interface TreeNodeItemProps {
   selectedId?: Id<"documents">;
   onCreateDocument?: (parentId?: Id<"documents">) => void;
   depth: number;
+}
+
+function ExpandToggle({
+  hasChildren,
+  isExpanded,
+  title,
+  onToggle,
+}: {
+  hasChildren: boolean;
+  isExpanded: boolean;
+  title: string;
+  onToggle: (e: React.MouseEvent) => void;
+}) {
+  if (!hasChildren) {
+    return <FlexItem as="span" aria-hidden shrink={false} className="h-5 w-5" />;
+  }
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={onToggle}
+      className="h-5 w-5 p-0.5"
+      aria-label={`${isExpanded ? "Collapse" : "Expand"} ${title}`}
+      aria-expanded={isExpanded}
+    >
+      {isExpanded ? (
+        <ChevronDown className="w-3.5 h-3.5" />
+      ) : (
+        <ChevronRight className="w-3.5 h-3.5" />
+      )}
+    </Button>
+  );
+}
+
+function DocumentIcon({ hasChildren, isExpanded }: { hasChildren: boolean; isExpanded: boolean }) {
+  const IconComponent = hasChildren && isExpanded ? FolderOpen : File;
+  return <IconComponent className="w-4 h-4 shrink-0 text-ui-text-tertiary" />;
 }
 
 function TreeNodeItem({
@@ -304,30 +357,21 @@ function TreeNodeItem({
           )}
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
         >
-          {/* Expand/collapse toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleToggle}
-            className={cn("h-5 w-5 p-0.5", !node.hasChildren && "invisible")}
-          >
-            {isExpanded ? (
-              <ChevronDown className="w-3.5 h-3.5" />
-            ) : (
-              <ChevronRight className="w-3.5 h-3.5" />
-            )}
-          </Button>
-
-          {/* Document icon */}
-          {node.hasChildren && isExpanded ? (
-            <FolderOpen className="w-4 h-4 shrink-0 text-ui-text-tertiary" />
-          ) : (
-            <File className="w-4 h-4 shrink-0 text-ui-text-tertiary" />
-          )}
+          <ExpandToggle
+            hasChildren={node.hasChildren}
+            isExpanded={isExpanded}
+            title={node.title || "Untitled"}
+            onToggle={handleToggle}
+          />
+          <DocumentIcon hasChildren={node.hasChildren} isExpanded={isExpanded} />
 
           {/* Title */}
           <FlexItem flex="1" className="min-w-0">
-            <Typography variant={isSelected ? "label" : "small"} className="truncate">
+            <Typography
+              variant={isSelected ? "label" : "small"}
+              className="truncate"
+              title={node.title || "Untitled"}
+            >
               {node.title || "Untitled"}
             </Typography>
           </FlexItem>
@@ -335,7 +379,13 @@ function TreeNodeItem({
           {/* Actions menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" reveal onClick={(e) => e.preventDefault()}>
+              <Button
+                variant="ghost"
+                size="sm"
+                reveal
+                onClick={(e) => e.preventDefault()}
+                aria-label={`Open actions for ${node.title || "Untitled"}`}
+              >
                 <Icon icon={MoreHorizontal} size="sm" />
               </Button>
             </DropdownMenuTrigger>

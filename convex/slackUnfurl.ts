@@ -6,17 +6,13 @@
 
 import { v } from "convex/values";
 import { internalQuery } from "./_generated/server";
-import { notDeleted } from "./lib/softDeleteHelpers";
 import { canAccessProject } from "./projectAccess";
-
-function extractIssueKeyFromUrl(url: string): string | null {
-  const match = url.match(/([A-Z][A-Z0-9]+-\d+)/);
-  return match ? match[1] : null;
-}
 
 export const getIssueUnfurl = internalQuery({
   args: {
     teamId: v.string(),
+    callerSlackUserId: v.string(),
+    issueKey: v.string(),
     url: v.string(),
   },
   returns: v.union(
@@ -28,29 +24,36 @@ export const getIssueUnfurl = internalQuery({
     v.null(),
   ),
   handler: async (ctx, args) => {
-    const connections = await ctx.db
+    // Try exact match first (new connections with slackUserId).
+    let activeConnection = await ctx.db
       .query("slackConnections")
-      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
-      .take(20);
+      .withIndex("by_team_slack_user_active_updated", (q) =>
+        q.eq("teamId", args.teamId).eq("slackUserId", args.callerSlackUserId).eq("isActive", true),
+      )
+      .order("desc")
+      .first();
 
-    const activeConnection = connections
-      .filter((connection) => connection.isActive)
-      .sort((a, b) => b.updatedAt - a.updatedAt)[0];
+    // Fallback: legacy connections without slackUserId.
     if (!activeConnection) {
-      return null;
+      activeConnection = await ctx.db
+        .query("slackConnections")
+        .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+        .order("desc")
+        .filter((q) =>
+          q.and(q.eq(q.field("isActive"), true), q.eq(q.field("slackUserId"), undefined)),
+        )
+        .first();
     }
 
-    const issueKey = extractIssueKeyFromUrl(args.url);
-    if (!issueKey) {
+    if (!activeConnection) {
       return null;
     }
 
     const issue = await ctx.db
       .query("issues")
-      .withIndex("by_key", (q) => q.eq("key", issueKey))
-      .filter(notDeleted)
+      .withIndex("by_key", (q) => q.eq("key", args.issueKey))
       .first();
-    if (!issue) {
+    if (!issue || issue.isDeleted) {
       return null;
     }
 

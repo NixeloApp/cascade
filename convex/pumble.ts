@@ -8,7 +8,7 @@
 
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
-import type { Doc, Id } from "./_generated/dataModel";
+import type { Id } from "./_generated/dataModel";
 import { type ActionCtx, action, internalMutation } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
@@ -24,6 +24,35 @@ import { notDeleted } from "./lib/softDeleteHelpers";
  * Send messages and notifications to Pumble channels via incoming webhooks.
  * Pumble is a team communication platform similar to Slack.
  */
+
+function isValidPumbleWebhookUrl(webhookUrl: string): boolean {
+  try {
+    const url = new URL(webhookUrl);
+    // Require HTTPS and valid Pumble host without credentials
+    const isPumbleHost = url.hostname === "pumble.com" || url.hostname.endsWith(".pumble.com");
+    return url.protocol === "https:" && isPumbleHost && !url.username && !url.password;
+  } catch {
+    return false;
+  }
+}
+
+const pumbleWebhookResponse = v.object({
+  _id: v.id("pumbleWebhooks"),
+  _creationTime: v.number(),
+  userId: v.id("users"),
+  projectId: v.optional(v.id("projects")),
+  name: v.string(),
+  webhookUrl: v.string(),
+  events: v.array(v.string()),
+  isActive: v.boolean(),
+  sendMentions: v.boolean(),
+  sendAssignments: v.boolean(),
+  sendStatusChanges: v.boolean(),
+  messagesSent: v.number(),
+  lastMessageAt: v.optional(v.number()),
+  lastError: v.optional(v.string()),
+  updatedAt: v.number(),
+});
 
 /**
  * Add a new Pumble webhook
@@ -41,13 +70,7 @@ export const addWebhook = authenticatedMutation({
   returns: v.object({ webhookId: v.id("pumbleWebhooks") }),
   handler: async (ctx, args) => {
     // Validate webhook URL
-    try {
-      const url = new URL(args.webhookUrl);
-      // Ensure the host is exactly pumble.com or a subdomain of pumble.com
-      if (url.hostname !== "pumble.com" && !url.hostname.endsWith(".pumble.com")) {
-        throw new Error();
-      }
-    } catch {
+    if (!isValidPumbleWebhookUrl(args.webhookUrl)) {
       throw validation("webhookUrl", "Invalid Pumble webhook URL. Must be a valid pumble.com URL.");
     }
 
@@ -92,6 +115,7 @@ export const addWebhook = authenticatedMutation({
  */
 export const listWebhooks = authenticatedQuery({
   args: {},
+  returns: v.array(pumbleWebhookResponse),
   handler: async (ctx) => {
     return await ctx.db
       .query("pumbleWebhooks")
@@ -106,6 +130,7 @@ export const listWebhooks = authenticatedQuery({
  */
 export const getWebhook = authenticatedQuery({
   args: { webhookId: v.id("pumbleWebhooks") },
+  returns: v.union(v.null(), pumbleWebhookResponse),
   handler: async (ctx, args) => {
     const webhook = await ctx.db.get(args.webhookId);
     if (!webhook) return null;
@@ -147,13 +172,7 @@ export const updateWebhook = authenticatedMutation({
     } = { updatedAt: Date.now() };
     if (args.name !== undefined) updates.name = args.name;
     if (args.webhookUrl !== undefined) {
-      try {
-        const url = new URL(args.webhookUrl);
-        // Ensure the host is exactly pumble.com or a subdomain of pumble.com
-        if (url.hostname !== "pumble.com" && !url.hostname.endsWith(".pumble.com")) {
-          throw new Error();
-        }
-      } catch {
+      if (!isValidPumbleWebhookUrl(args.webhookUrl)) {
         throw validation(
           "webhookUrl",
           "Invalid Pumble webhook URL. Must be a valid pumble.com URL.",
@@ -326,10 +345,10 @@ export const sendIssueNotification = action({
     if (!issue) return;
 
     // Find active webhooks for this project
-    const webhooks = (await ctx.runQuery(api.pumble.listWebhooks, {})) as Doc<"pumbleWebhooks">[];
+    const webhooks = await ctx.runQuery(api.pumble.listWebhooks, {});
 
     const activeWebhooks = webhooks.filter(
-      (w: Doc<"pumbleWebhooks">) =>
+      (w) =>
         w.isActive &&
         w.events.includes(args.event) &&
         (!w.projectId || w.projectId === issue.projectId),

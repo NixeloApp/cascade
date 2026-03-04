@@ -16,6 +16,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Plus } from "@/lib/icons";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
+import { showError } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { CreateIssueModal } from "./IssueDetail";
 import { IssueDetailViewer } from "./IssueDetailViewer";
@@ -30,6 +31,51 @@ interface IssuesCalendarViewProps {
   projectId: Id<"projects">;
   sprintId?: Id<"sprints">;
   canEdit?: boolean;
+}
+
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+const PRIORITY_LEGEND_ITEMS = [
+  { label: "Highest", className: "bg-status-error" },
+  { label: "High", className: "bg-status-warning" },
+  { label: "Medium", className: "bg-accent-ring" },
+  { label: "Low", className: "bg-brand-ring" },
+  { label: "Lowest", className: "bg-ui-text-secondary" },
+] as const;
+const DAY_CELL_HEIGHT_CLASS = "min-h-32 md:min-h-24";
+const MAX_VISIBLE_ISSUES_PER_DAY = 3;
+
+function getMonthRangeTimestamps(year: number, month: number): { from: number; to: number } {
+  const start = new Date(year, month, 1, 0, 0, 0, 0);
+  const end = new Date(year, month + 1, 0, 23, 59, 59, 999);
+  return { from: start.getTime(), to: end.getTime() };
+}
+
+function getDayDateKey(year: number, month: number, day: number): string {
+  return new Date(year, month, day).toDateString();
+}
+
+function getDayDueTimestamp(year: number, month: number, day: number): number {
+  // Set to end of day (23:59:59.999) for due date.
+  return new Date(year, month, day, 23, 59, 59, 999).getTime();
+}
+
+function shiftMonth(date: Date, delta: number): Date {
+  return new Date(date.getFullYear(), date.getMonth() + delta, 1);
+}
+
+function groupIssuesByDate(issues: Doc<"issues">[] | undefined): Record<string, Doc<"issues">[]> {
+  const byDate: Record<string, Doc<"issues">[]> = {};
+  issues?.forEach((issue) => {
+    if (!issue.dueDate) return;
+    const dateKey = new Date(issue.dueDate).toDateString();
+    if (!byDate[dateKey]) byDate[dateKey] = [];
+    byDate[dateKey].push(issue);
+  });
+  return byDate;
+}
+
+function isSameCalendarDay(date: Date, year: number, month: number, day: number): boolean {
+  return date.getFullYear() === year && date.getMonth() === month && date.getDate() === day;
 }
 
 /**
@@ -65,19 +111,7 @@ export function IssuesCalendarView({
   const firstDayOfMonth = firstDay.getDay(); // 0 = Sunday
   const daysInMonth = lastDay.getDate();
 
-  // Start from the beginning of the first week row
-  // (subtract days to get to previous Sunday if needed, though here we just render empty cells,
-  // but for data fetching we might want to include them if we were rendering them)
-  // The current UI renders empty cells for previous month days:
-  // for (let i = 0; i < firstDayOfMonth; i++) { ... }
-  // So we strictly need data starting from the 1st of the month.
-  // However, to be safe and cover full days, we use start of 1st day to end of last day.
-
-  const start = new Date(year, month, 1, 0, 0, 0, 0);
-  const end = new Date(year, month + 1, 0, 23, 59, 59, 999);
-
-  const startTimestamp = start.getTime();
-  const endTimestamp = end.getTime();
+  const { from: startTimestamp, to: endTimestamp } = getMonthRangeTimestamps(year, month);
 
   const issues = useQuery(api.issues.listIssuesByDateRange, {
     projectId,
@@ -86,46 +120,18 @@ export function IssuesCalendarView({
     to: endTimestamp,
   });
 
-  // Group issues by date
-  const issuesByDate = (() => {
-    const byDate: Record<string, typeof issues> = {};
-    issues?.forEach((issue: Doc<"issues">) => {
-      if (issue.dueDate) {
-        const dateKey = new Date(issue.dueDate).toDateString();
-        if (!byDate[dateKey]) byDate[dateKey] = [];
-        byDate[dateKey].push(issue);
-      }
-    });
-    return byDate;
-  })();
+  const issuesByDate = groupIssuesByDate(issues);
 
-  const previousMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
-  };
-
-  const nextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  const navigateMonth = (delta: number) => {
+    setCurrentDate(shiftMonth(currentDate, delta));
   };
 
   const today = new Date();
-  const isToday = (day: number) => {
-    return (
-      day === today.getDate() &&
-      currentDate.getMonth() === today.getMonth() &&
-      currentDate.getFullYear() === today.getFullYear()
-    );
-  };
+  const isToday = (day: number) => isSameCalendarDay(today, year, month, day);
 
-  const getIssuesForDay = (day: number) => {
-    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    const dateKey = date.toDateString();
-    return issuesByDate[dateKey] || [];
-  };
-
-  const getDayTimestamp = (day: number) => {
-    // Set to end of day (23:59:59.999) for due date
-    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day, 23, 59, 59, 999);
-    return date.getTime();
+  const resetDragState = () => {
+    setDraggedIssue(null);
+    setDragOverDay(null);
   };
 
   // Drag and drop handlers for rescheduling issues
@@ -137,8 +143,7 @@ export function IssuesCalendarView({
   };
 
   const handleDragEnd = () => {
-    setDraggedIssue(null);
-    setDragOverDay(null);
+    resetDragState();
   };
 
   const handleDragOver = (e: React.DragEvent, day: number) => {
@@ -156,18 +161,17 @@ export function IssuesCalendarView({
     e.preventDefault();
     if (!canEdit || !draggedIssue) return;
 
-    const newDueDate = getDayTimestamp(day);
+    const newDueDate = getDayDueTimestamp(year, month, day);
     try {
       await updateIssue({
         issueId: draggedIssue,
         dueDate: newDueDate,
       });
-    } catch {
-      // Error handling - mutation will show toast on failure
+    } catch (error) {
+      showError(error, "Failed to reschedule issue");
     }
 
-    setDraggedIssue(null);
-    setDragOverDay(null);
+    resetDragState();
   };
 
   // Generate calendar grid
@@ -175,20 +179,23 @@ export function IssuesCalendarView({
   // Add empty cells for days before first day of month
   for (let i = 0; i < firstDayOfMonth; i++) {
     calendarDays.push(
-      <div key={`empty-${i}`} className="min-h-32 md:min-h-24 bg-ui-bg-secondary" />,
+      <div key={`empty-${i}`} className={cn(DAY_CELL_HEIGHT_CLASS, "bg-ui-bg-secondary")} />,
     );
   }
   // Add cells for each day of the month
   for (let day = 1; day <= daysInMonth; day++) {
-    const dayIssues = getIssuesForDay(day);
+    const dayDueTimestamp = getDayDueTimestamp(year, month, day);
+    const dayIssues = issuesByDate[getDayDateKey(year, month, day)] || [];
     const isTodayDate = isToday(day);
 
     calendarDays.push(
       // biome-ignore lint/a11y/noStaticElementInteractions: Calendar cells are drag-drop targets; interaction is via child buttons
       <div
         key={day}
+        data-testid={`calendar-day-${day}`}
         className={cn(
-          "group min-h-32 md:min-h-24 border border-ui-border p-2 transition-colors",
+          "group border border-ui-border p-2 transition-colors",
+          DAY_CELL_HEIGHT_CLASS,
           isTodayDate ? "bg-brand-indigo-track" : "bg-ui-bg",
           dragOverDay === day && "bg-brand-subtle ring-2 ring-inset ring-brand-ring",
         )}
@@ -214,7 +221,7 @@ export function IssuesCalendarView({
                 <IconButton
                   variant="ghost"
                   size="xs"
-                  onClick={() => setCreateForDate(getDayTimestamp(day))}
+                  onClick={() => setCreateForDate(dayDueTimestamp)}
                   aria-label={`Create issue for ${day}`}
                   className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 transition-opacity"
                 >
@@ -231,7 +238,7 @@ export function IssuesCalendarView({
         </Flex>
 
         <Stack gap="xs">
-          {(dayIssues ?? []).slice(0, 3).map((issue: Doc<"issues">) => (
+          {(dayIssues ?? []).slice(0, MAX_VISIBLE_ISSUES_PER_DAY).map((issue: Doc<"issues">) => (
             <Tooltip
               key={issue._id}
               content={canEdit ? `${issue.title} - Drag to reschedule` : issue.title}
@@ -267,9 +274,9 @@ export function IssuesCalendarView({
               </Button>
             </Tooltip>
           ))}
-          {dayIssues.length > 3 && (
+          {dayIssues.length > MAX_VISIBLE_ISSUES_PER_DAY && (
             <Typography variant="caption" color="secondary" className="pl-1.5">
-              +{dayIssues.length - 3} more
+              +{dayIssues.length - MAX_VISIBLE_ISSUES_PER_DAY} more
             </Typography>
           )}
         </Stack>
@@ -300,7 +307,7 @@ export function IssuesCalendarView({
             <Button
               variant="ghost"
               size="sm"
-              onClick={previousMonth}
+              onClick={() => navigateMonth(-1)}
               className="min-w-11 min-h-11 sm:min-w-0 sm:min-h-0"
               aria-label="Previous month"
             >
@@ -329,7 +336,7 @@ export function IssuesCalendarView({
             <Button
               variant="ghost"
               size="sm"
-              onClick={nextMonth}
+              onClick={() => navigateMonth(1)}
               className="min-w-11 min-h-11 sm:min-w-0 sm:min-h-0"
               aria-label="Next month"
             >
@@ -366,7 +373,7 @@ export function IssuesCalendarView({
         <Card padding="none" className="overflow-hidden min-w-160">
           {/* Weekday Headers */}
           <Grid cols={7} className="bg-ui-bg-secondary border-b border-ui-border">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+            {WEEKDAY_LABELS.map((day) => (
               <Typography key={day} variant="label" className="p-2 text-center text-ui-text">
                 {day}
               </Typography>
@@ -380,36 +387,14 @@ export function IssuesCalendarView({
 
       {/* Legend */}
       <Flex align="center" gap="xl" className="mt-4">
-        <Flex align="center" gap="sm">
-          <div className="w-3 h-3 rounded-full bg-status-error" />
-          <Typography variant="small" color="secondary">
-            Highest
-          </Typography>
-        </Flex>
-        <Flex align="center" gap="sm">
-          <div className="w-3 h-3 rounded-full bg-status-warning" />
-          <Typography variant="small" color="secondary">
-            High
-          </Typography>
-        </Flex>
-        <Flex align="center" gap="sm">
-          <div className="w-3 h-3 rounded-full bg-accent-ring" />
-          <Typography variant="small" color="secondary">
-            Medium
-          </Typography>
-        </Flex>
-        <Flex align="center" gap="sm">
-          <div className="w-3 h-3 rounded-full bg-brand-ring" />
-          <Typography variant="small" color="secondary">
-            Low
-          </Typography>
-        </Flex>
-        <Flex align="center" gap="sm">
-          <div className="w-3 h-3 rounded-full bg-ui-text-secondary" />
-          <Typography variant="small" color="secondary">
-            Lowest
-          </Typography>
-        </Flex>
+        {PRIORITY_LEGEND_ITEMS.map((item) => (
+          <Flex key={item.label} align="center" gap="sm">
+            <div className={cn("w-3 h-3 rounded-full", item.className)} />
+            <Typography variant="small" color="secondary">
+              {item.label}
+            </Typography>
+          </Flex>
+        ))}
       </Flex>
 
       {/* Issue Detail */}

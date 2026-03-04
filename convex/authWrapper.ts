@@ -15,6 +15,7 @@ import {
   type MutationCtx,
 } from "./_generated/server";
 import { shouldRunInlineForE2E, shouldUseFallbacks } from "./lib/envDetection";
+import { validation } from "./lib/errors";
 import { logger } from "./lib/logger";
 import { getClientIp } from "./lib/ssrf";
 import { rateLimit } from "./rateLimits";
@@ -113,7 +114,12 @@ export const checkAuthRateLimit = internalMutation({
 
 /**
  * Secure password reset request handler
- * Exported for testing purposes
+ * Exported for testing purposes.
+ *
+ * Response contract:
+ * - Returns `429` only for IP-based abuse limits (`{ success: false, error: "Rate limit exceeded" }`).
+ * - Returns `200 { success: true }` for invalid/missing email input, email-based rate limits,
+ *   and unexpected errors to avoid user/account enumeration signals.
  */
 export const securePasswordResetHandler = async (ctx: ActionCtx, request: Request) => {
   try {
@@ -127,7 +133,7 @@ export const securePasswordResetHandler = async (ctx: ActionCtx, request: Reques
       } else {
         // If we can't determine IP in production, we can't safely rate limit.
         // Rejecting the request is safer than allowing a potential bypass or DoS via shared bucket.
-        throw new Error("Could not determine client IP for security-sensitive action");
+        throw validation("clientIp", "Could not determine client IP for security-sensitive action");
       }
     }
 

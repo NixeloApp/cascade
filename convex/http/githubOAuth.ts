@@ -1,5 +1,5 @@
 /**
- * GitHub OAuth HTTP Handlers
+ * GitHub OAuth HTTP Handler
  *
  * HTTP endpoints for GitHub OAuth 2.0 authentication flow.
  * Handles authorization redirect, callback processing, and token exchange.
@@ -430,6 +430,33 @@ const handleOAuthError = (error: unknown) => {
  */
 export const handleCallback = httpAction(handleCallbackHandler);
 
+function jsonResponse(data: unknown, status: number): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function extractBearerToken(request: Request): string | undefined {
+  const authHeader = request.headers.get("Authorization");
+  return authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
+}
+
+async function parseGitHubErrorMessage(response: Response): Promise<string> {
+  try {
+    const text = await response.text();
+    try {
+      const errorBody = JSON.parse(text);
+      return errorBody.message || "Failed to fetch repositories";
+    } catch {
+      return text || "Failed to fetch repositories";
+    }
+  } catch (e) {
+    logger.error("Failed to read error response body:", { error: e });
+    return "Failed to fetch repositories";
+  }
+}
+
 /**
  * List user's GitHub repositories handler
  *
@@ -437,6 +464,7 @@ export const handleCallback = httpAction(handleCallbackHandler);
  *
  * Requirements:
  * - User must be authenticated in the Convex app.
+ * - Request must include `Authorization: Bearer <sessionId>`.
  * - User must have previously connected their GitHub account via the OAuth flow.
  *
  * Flow:
@@ -447,45 +475,26 @@ export const handleCallback = httpAction(handleCallbackHandler);
  * 5. Transforms the GitHub API response into a simplified format for the frontend.
  *
  * @param ctx - Convex action context
- * @param _request - The incoming HTTP request (unused)
+ * @param request - Incoming HTTP request used to read the bearer session token.
  * @returns A JSON Response containing the list of repositories or an error message.
  */
 export const listReposHandler = async (ctx: ActionCtx, request: Request) => {
   try {
-    // Authenticate the user from the Bearer token
-    const authHeader = request.headers.get("Authorization");
-    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
-
+    const token = extractBearerToken(request);
     if (!token) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
-    // Verify session and get user ID
     const userId = await ctx.runQuery(internal.auth.verifySession, { sessionId: token });
-
     if (!userId) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
-    // Get decrypted tokens for API call (internal mutation uses userId)
-    const tokens = await ctx.runMutation(internal.github.getDecryptedGitHubTokens, {
-      userId,
-    });
-
+    const tokens = await ctx.runMutation(internal.github.getDecryptedGitHubTokens, { userId });
     if (!tokens) {
-      return new Response(JSON.stringify({ error: "Not connected to GitHub" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Not connected to GitHub" }, 400);
     }
 
-    // Fetch repositories from GitHub API
     const reposResponse = await fetchWithTimeout(
       "https://api.github.com/user/repos?sort=updated&per_page=100",
       {
@@ -499,33 +508,19 @@ export const listReposHandler = async (ctx: ActionCtx, request: Request) => {
     );
 
     if (!reposResponse.ok) {
-      let errorMessage = "Failed to fetch repositories";
-      try {
-        const text = await reposResponse.text();
-        try {
-          const errorBody = JSON.parse(text);
-          errorMessage = errorBody.message || errorMessage;
-        } catch {
-          errorMessage = text || errorMessage;
-        }
-      } catch (e) {
-        logger.error("Failed to read error response body:", { error: e });
-      }
-
-      return new Response(JSON.stringify({ error: errorMessage }), {
-        status: reposResponse.status,
-        headers: { "Content-Type": "application/json" },
-      });
+      const errorMessage = await parseGitHubErrorMessage(reposResponse);
+      return jsonResponse({ error: errorMessage }, reposResponse.status);
     }
 
     let repos: unknown[];
     try {
       const json = await reposResponse.json();
       if (!Array.isArray(json)) {
-        throw new Error("GitHub repositories response is not an array");
+        throw validation("github", "GitHub repositories response is not an array");
       }
       repos = json;
     } catch (_e) {
+      if (isAppError(_e)) throw _e;
       throw validation("github", "Invalid JSON response from GitHub repositories endpoint");
     }
 
@@ -543,15 +538,18 @@ export const listReposHandler = async (ctx: ActionCtx, request: Request) => {
       };
     });
 
-    return new Response(JSON.stringify({ repos: simplifiedRepos }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonResponse({ repos: simplifiedRepos }, 200);
   } catch (error) {
     return handleListReposError(error);
   }
 };
 
+/**
+ * Normalize repository-listing failures into a stable JSON HTTP response shape.
+ *
+ * App errors are mapped to semantic HTTP statuses; unknown failures default to 500.
+ * This keeps `/github/repos` consumers independent from internal thrown error types.
+ */
 const handleListReposError = (error: unknown) => {
   logger.error("GitHub listRepos error:", { error });
   let status = 500;

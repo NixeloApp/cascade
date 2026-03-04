@@ -209,7 +209,7 @@ export function AIChat({ projectId, chatId: initialChatId, onChatCreated }: AICh
                 />
               ))}
             {isSending && (
-              <Flex justify="start">
+              <Flex>
                 <div className="bg-ui-bg-secondary rounded-lg px-4 py-3">
                   <Flex align="center" gap="sm">
                     <Flex gap="xs">

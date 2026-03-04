@@ -108,14 +108,14 @@ export function AutomationRulesManager({ projectId }: AutomationRulesManagerProp
       ) : rules.length === 0 ? (
         <Card>
           <CardBody>
-            <Stack align="center" gap="sm" className="min-h-32 justify-center">
+            <Flex direction="column" align="center" justify="center" gap="sm" className="min-h-32">
               <Typography variant="small" color="secondary">
                 No automation rules yet
               </Typography>
               <Typography variant="caption">
                 Create your first rule to automate repetitive tasks
               </Typography>
-            </Stack>
+            </Flex>
           </CardBody>
         </Card>
       ) : (

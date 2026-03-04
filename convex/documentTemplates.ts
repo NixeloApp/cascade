@@ -780,34 +780,3 @@ export const initializeBuiltInTemplates = internalMutation({
     return { message: `Created ${builtInTemplates.length} built-in templates` };
   },
 });
-
-/**
- * Migration: convert legacy string icon values to structured icon objects.
- *
- * Run repeatedly until `migrated` is `0`.
- */
-export const migrateLegacyIconStrings = internalMutation({
-  args: {
-    limit: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
-    const limit = args.limit ?? 200;
-    const templates = await ctx.db.query("documentTemplates").take(limit);
-
-    let migrated = 0;
-    for (const template of templates) {
-      if (typeof template.icon !== "string") {
-        continue;
-      }
-      await ctx.db.patch(template._id, {
-        icon: normalizeTemplateIcon(template.icon),
-      });
-      migrated += 1;
-    }
-
-    return {
-      scanned: templates.length,
-      migrated,
-    };
-  },
-});

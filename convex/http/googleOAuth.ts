@@ -1,5 +1,5 @@
 /**
- * Google OAuth HTTP Handlers
+ * Google OAuth HTTP Handler
  *
  * HTTP endpoints for Google OAuth 2.0 authentication flow.
  * Handles authorization redirect, callback processing, and token exchange.
@@ -11,6 +11,7 @@ import { api, internal } from "../_generated/api";
 import { type ActionCtx, httpAction } from "../_generated/server";
 import { constantTimeEqual } from "../lib/apiAuth";
 import {
+  getConvexSiteUrl,
   getGoogleClientId,
   getGoogleClientSecret,
   isGoogleOAuthConfigured,
@@ -33,7 +34,12 @@ class HttpError extends Error {
   }
 }
 
-/** Helper to fetch JSON with timeout and error handling */
+/**
+ * Fetch and parse JSON with timeout and normalized error behavior for OAuth calls.
+ *
+ * @throws {HttpError} When the upstream HTTP response is non-2xx.
+ * @throws {ConvexError} "oauth" validation error when the response body is not valid JSON.
+ */
 async function fetchJSON<T>(url: string, init?: RequestInit, timeoutMs = 10000): Promise<T> {
   const response = await fetchWithTimeout(url, init, timeoutMs);
   const text = await response.text();
@@ -45,7 +51,7 @@ async function fetchJSON<T>(url: string, init?: RequestInit, timeoutMs = 10000):
   try {
     return JSON.parse(text) as T;
   } catch {
-    throw new Error(`Invalid JSON response from ${url}`);
+    throw validation("oauth", `Invalid JSON response from ${url}`);
   }
 }
 
@@ -90,7 +96,11 @@ function getErrorPageHtml(
  * Validate E2E API key for TEST_* codes
  * Same security pattern as other /e2e/* endpoints
  *
- * Returns false if invalid (logs warning), true if valid
+ * Contract:
+ * - In non-local environments, `E2E_API_KEY` + matching `x-e2e-api-key` header is required.
+ * - Localhost is explicitly allowed when no API key is configured to keep local E2E flows usable.
+ *
+ * Returns false if invalid (logs warning), true if valid.
  */
 function validateE2EApiKey(request: Request): boolean {
   const apiKey = process.env.E2E_API_KEY;
@@ -188,22 +198,29 @@ interface GoogleCalendarEvent {
   attendees?: GoogleCalendarAttendee[];
 }
 
-// OAuth configuration - throws if not configured
+/**
+ * Build Google OAuth runtime configuration from environment.
+ *
+ * Uses `CONVEX_SITE_URL` (not frontend origin) because callback handling runs as a Convex HTTP action.
+ *
+ * @throws {ConvexError} "oauth" validation error when Google OAuth env vars are missing.
+ */
 const getGoogleOAuthConfig = () => {
   const clientId = getGoogleClientId();
   const clientSecret = getGoogleClientSecret();
+  const convexSiteUrl = getConvexSiteUrl();
 
-  if (!(isGoogleOAuthConfigured() && clientId && clientSecret)) {
+  if (!(isGoogleOAuthConfigured() && clientId && clientSecret && convexSiteUrl)) {
     throw validation(
       "oauth",
-      "Google OAuth not configured. Set AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET.",
+      "Google OAuth not configured. Set AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET, and CONVEX_SITE_URL.",
     );
   }
   return {
     clientId,
     clientSecret,
     // Must use CONVEX_SITE_URL - this is a Convex HTTP action, not a frontend route
-    redirectUri: `${process.env.CONVEX_SITE_URL}/google/callback`,
+    redirectUri: `${convexSiteUrl}/google/callback`,
     scopes: [
       "https://www.googleapis.com/auth/calendar",
       "https://www.googleapis.com/auth/calendar.events",

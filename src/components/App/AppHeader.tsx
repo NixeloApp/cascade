@@ -30,8 +30,8 @@ export function AppHeader({ onShowCommandPalette, onShowShortcutsHelp }: AppHead
   const { isMobileOpen, toggleMobile } = useSidebarState();
 
   return (
-    <header className="sticky top-0 z-40 bg-ui-bg/80 backdrop-blur-md border-b border-ui-border/50 px-4 sm:px-6 py-3 flex justify-between items-center gap-2 transition-all duration-default">
-      <Flex align="center" gap="sm" className="sm:gap-4">
+    <header className="sticky top-0 z-40 bg-ui-bg/85 backdrop-blur-md border-b border-ui-border/70 px-3 sm:px-6 py-2.5 sm:py-3 flex justify-between items-center gap-2 transition-all duration-default">
+      <Flex align="center" gap="sm" className="sm:gap-3">
         {/* Mobile Hamburger Menu */}
         <Button
           variant="ghost"
@@ -45,13 +45,13 @@ export function AppHeader({ onShowCommandPalette, onShowShortcutsHelp }: AppHead
         </Button>
       </Flex>
 
-      <Flex align="center" gap="sm" className="sm:gap-3 shrink-0">
+      <Flex align="center" gap="xs" className="sm:gap-2 shrink-0">
         {onShowCommandPalette && (
           <Button
             variant="secondary"
             size="sm"
             onClick={onShowCommandPalette}
-            className="gap-2 px-2 sm:px-3 text-xs sm:text-sm"
+            className="h-9 gap-1.5 px-2 sm:px-3 text-xs sm:text-sm"
             aria-label="Open command palette"
             data-tour="command-palette"
           >

@@ -4,6 +4,10 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    // Stub VITE_CONVEX_URL for frontend component tests that depend on it
+    "import.meta.env.VITE_CONVEX_URL": JSON.stringify("https://test.convex.cloud"),
+  },
   test: {
     globals: true,
     environment: "jsdom",

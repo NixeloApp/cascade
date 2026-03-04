@@ -1,7 +1,9 @@
 /**
- * Slack OAuth HTTP Handlers
+ * Slack OAuth HTTP Handler
  *
- * OAuth endpoints for connecting Slack workspace integrations.
+ * HTTP endpoints for Slack OAuth 2.0 authentication flow.
+ * Handles authorization redirect, callback processing, and token exchange.
+ * Integrates with Slack API for workspace connection setup.
  */
 
 import { type ActionCtx, httpAction } from "../_generated/server";
@@ -15,6 +17,9 @@ import {
 import { upstream, validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { escapeHtml, escapeScriptJson } from "../lib/html";
+
+const MAX_OAUTH_PARAM_LENGTH = 1024;
+const MAX_OAUTH_ERROR_LENGTH = 200;
 
 const getSlackOAuthConfig = () => {
   const clientId = getSlackClientId();
@@ -78,6 +83,9 @@ interface SlackTokenResponse {
   access_token?: string;
   scope?: string;
   bot_user_id?: string;
+  authed_user?: {
+    id?: string;
+  };
   team?: {
     id?: string;
     name?: string;
@@ -125,6 +133,29 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
   const state = url.searchParams.get("state");
   const error = url.searchParams.get("error");
 
+  if (error && error.length > MAX_OAUTH_ERROR_LENGTH) {
+    return new Response(
+      `
+      <!DOCTYPE html>
+      <html>
+        <head><title>Slack - Error</title></head>
+        <body style="font-family: system-ui; max-width: 560px; margin: 60px auto; text-align: center;">
+          <h1>Connection Failed</h1>
+          <p>Slack OAuth request was invalid.</p>
+          <button onclick="window.close()">Close Window</button>
+        </body>
+      </html>
+      `,
+      {
+        status: 400,
+        headers: {
+          "Content-Type": "text/html",
+          "Set-Cookie": "slack-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+        },
+      },
+    );
+  }
+
   if (error) {
     return new Response(
       `
@@ -154,6 +185,33 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     .find((chunk) => chunk.trim().startsWith("slack-oauth-state="))
     ?.split("=")[1];
 
+  if (
+    (code && code.length > MAX_OAUTH_PARAM_LENGTH) ||
+    (state && state.length > MAX_OAUTH_PARAM_LENGTH) ||
+    (storedState && storedState.length > MAX_OAUTH_PARAM_LENGTH)
+  ) {
+    return new Response(
+      `
+      <!DOCTYPE html>
+      <html>
+        <head><title>Slack - Error</title></head>
+        <body style="font-family: system-ui; max-width: 560px; margin: 60px auto; text-align: center;">
+          <h1>Connection Failed</h1>
+          <p>Invalid OAuth state.</p>
+          <button onclick="window.close()">Close Window</button>
+        </body>
+      </html>
+      `,
+      {
+        status: 400,
+        headers: {
+          "Content-Type": "text/html",
+          "Set-Cookie": "slack-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+        },
+      },
+    );
+  }
+
   if (!code || !state || !storedState || !constantTimeEqual(state, storedState)) {
     return new Response(
       `
@@ -181,8 +239,33 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
     const config = getSlackOAuthConfig();
     const tokenData = await exchangeCodeForToken(code, config);
 
+    // Validate required fields for slash commands and unfurls
+    if (!tokenData.authed_user?.id || !tokenData.team?.id || !tokenData.access_token) {
+      return new Response(
+        `
+        <!DOCTYPE html>
+        <html>
+          <head><title>Slack - Error</title></head>
+          <body style="font-family: system-ui; max-width: 560px; margin: 60px auto; text-align: center;">
+            <h1>Connection Failed</h1>
+            <p>Missing required authorization data from Slack. Please try again.</p>
+            <button onclick="window.close()">Close Window</button>
+          </body>
+        </html>
+        `,
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "text/html",
+            "Set-Cookie": "slack-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+          },
+        },
+      );
+    }
+
     const connectionData = {
-      teamId: tokenData.team?.id,
+      slackUserId: tokenData.authed_user.id,
+      teamId: tokenData.team.id,
       teamName: tokenData.team?.name,
       accessToken: tokenData.access_token,
       botUserId: tokenData.bot_user_id,
@@ -222,8 +305,8 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
         },
       },
     );
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "OAuth callback failed";
+  } catch {
+    // Security: avoid leaking internal backend details.
     return new Response(
       `
       <!DOCTYPE html>
@@ -231,7 +314,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
         <head><title>Slack - Error</title></head>
         <body style="font-family: system-ui; max-width: 560px; margin: 60px auto; text-align: center;">
           <h1>Connection Failed</h1>
-          <p>${escapeHtml(message)}</p>
+          <p>Something went wrong. Please try again later.</p>
           <button onclick="window.close()">Close Window</button>
         </body>
       </html>

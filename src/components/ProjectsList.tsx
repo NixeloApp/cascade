@@ -60,6 +60,7 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
           icon={Folder}
           title="No projects yet"
           description="Create your first project to organize work"
+          className="min-h-96 rounded-container border border-dashed border-ui-border-secondary bg-ui-bg-soft shadow-soft"
           action={
             <Button variant="primary" onClick={onCreateClick}>
               + Create Project

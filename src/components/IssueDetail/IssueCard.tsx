@@ -266,9 +266,8 @@ export const IssueCard = memo(function IssueCard({
   };
 
   return (
-    <div
+    <article
       ref={cardRef}
-      role="article"
       data-testid={TEST_IDS.ISSUE.CARD}
       className={cn(
         "group relative w-full text-left bg-ui-bg-soft p-2 sm:p-3 rounded-container",
@@ -480,6 +479,6 @@ export const IssueCard = memo(function IssueCard({
           </Flex>
         )}
       </div>
-    </div>
+    </article>
   );
 }, areIssuePropsEqual);

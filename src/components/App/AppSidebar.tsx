@@ -54,6 +54,308 @@ import { cn } from "@/lib/utils";
 const DOCUMENT_DISPLAY_LIMIT = 10;
 const WORKSPACE_DISPLAY_LIMIT = 25;
 
+function createSetToggle<T extends string>(
+  setter: React.Dispatch<React.SetStateAction<Set<T>>>,
+): (key: T) => void {
+  return (key: T) => {
+    setter((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+}
+
+function filterItems<T extends { name?: string; title?: string }>(
+  items: T[],
+  search: string,
+  field: "name" | "title",
+): T[] {
+  const trimmed = search.trim().toLowerCase();
+  if (!trimmed) return items;
+  return items.filter((item) => {
+    const value = field === "name" ? item.name : (item as { title?: string }).title;
+    return value?.toLowerCase().includes(trimmed);
+  });
+}
+
+function groupTeamsByWorkspace(
+  teams: Doc<"teams">[] | undefined,
+): Map<Id<"workspaces">, Doc<"teams">[]> {
+  const map = new Map<Id<"workspaces">, Doc<"teams">[]>();
+  if (!teams) return map;
+  for (const team of teams) {
+    const existing = map.get(team.workspaceId);
+    if (existing) existing.push(team);
+    else map.set(team.workspaceId, [team]);
+  }
+  return map;
+}
+
+// Sub-item Component (defined early as it's used by other components)
+type NavSubItemProps = Omit<LinkProps, "to"> & {
+  to: LinkProps["to"];
+  label: string;
+  isActive: boolean;
+  icon?: React.ComponentType<{ className?: string }>;
+  onClick?: (event: React.MouseEvent) => void;
+};
+
+function NavSubItem({
+  label,
+  isActive,
+  icon: Icon,
+  to,
+  params,
+  onClick,
+  ...props
+}: NavSubItemProps) {
+  return (
+    <Tooltip content={label}>
+      <NavItemBase asChild active={isActive} size="sm">
+        <Link to={to} params={params} onClick={onClick} {...props}>
+          {Icon && <Icon className="w-4 h-4 shrink-0" />}
+          <span className="truncate">{label}</span>
+        </Link>
+      </NavItemBase>
+    </Tooltip>
+  );
+}
+
+interface WorkspacesSectionContentProps {
+  workspaces: Doc<"workspaces">[];
+  filteredCount: number;
+  totalCount: number;
+  showSearch: boolean;
+  searchValue: string;
+  onSearchChange: (value: string) => void;
+  teamsByWorkspace: Map<Id<"workspaces">, Doc<"teams">[]>;
+  expandedWorkspaces: Set<string>;
+  expandedTeams: Set<string>;
+  onToggleWorkspace: (slug: string) => void;
+  onToggleTeam: (slug: string) => void;
+  orgSlug: string;
+  location: { pathname: string };
+  onNavClick: () => void;
+  onCreateTeam: (workspace: { id: Id<"workspaces">; slug: string }) => void;
+}
+
+function WorkspacesSectionContent({
+  workspaces,
+  filteredCount,
+  totalCount,
+  showSearch,
+  searchValue,
+  onSearchChange,
+  teamsByWorkspace,
+  expandedWorkspaces,
+  expandedTeams,
+  onToggleWorkspace,
+  onToggleTeam,
+  orgSlug,
+  location,
+  onNavClick,
+  onCreateTeam,
+}: WorkspacesSectionContentProps) {
+  return (
+    <>
+      {showSearch && (
+        <li className="list-none px-2 pb-1">
+          <Input
+            value={searchValue}
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder="Search workspaces"
+            aria-label="Search workspaces"
+          />
+        </li>
+      )}
+      {workspaces.map((workspace: Doc<"workspaces">) => (
+        <WorkspaceNavItem
+          key={workspace._id}
+          workspace={workspace}
+          orgSlug={orgSlug}
+          teams={teamsByWorkspace.get(workspace._id) || []}
+          isExpanded={expandedWorkspaces.has(workspace.slug)}
+          expandedTeams={expandedTeams}
+          onToggleWorkspace={onToggleWorkspace}
+          onToggleTeam={onToggleTeam}
+          onNavClick={onNavClick}
+          onCreateTeam={onCreateTeam}
+          location={location}
+        />
+      ))}
+      {showSearch && filteredCount === 0 && (
+        <li className="list-none">
+          <Typography variant="caption" color="tertiary" className="px-3 py-1">
+            No matching workspaces
+          </Typography>
+        </li>
+      )}
+      {showSearch && (
+        <li className="list-none">
+          <NavSubItem
+            to={ROUTES.workspaces.list.path}
+            params={{ orgSlug }}
+            label={`Show all workspaces (${totalCount})`}
+            isActive={location.pathname.includes("/workspaces")}
+            onClick={onNavClick}
+          />
+        </li>
+      )}
+    </>
+  );
+}
+
+interface WorkspaceNavItemProps {
+  workspace: Doc<"workspaces">;
+  orgSlug: string;
+  teams: Doc<"teams">[];
+  isExpanded: boolean;
+  expandedTeams: Set<string>;
+  onToggleWorkspace: (slug: string) => void;
+  onToggleTeam: (slug: string) => void;
+  onNavClick: () => void;
+  onCreateTeam: (workspace: { id: Id<"workspaces">; slug: string }) => void;
+  location: { pathname: string };
+}
+
+interface DocumentsSectionContentProps {
+  documents: Doc<"documents">[];
+  totalCount: number;
+  showSearch: boolean;
+  searchValue: string;
+  onSearchChange: (value: string) => void;
+  orgSlug: string;
+  location: { pathname: string };
+  onNavClick: () => void;
+}
+
+function DocumentsSectionContent({
+  documents,
+  totalCount,
+  showSearch,
+  searchValue,
+  onSearchChange,
+  orgSlug,
+  location,
+  onNavClick,
+}: DocumentsSectionContentProps) {
+  return (
+    <>
+      <li className="list-none">
+        <NavSubItem
+          to={ROUTES.documents.templates.path}
+          params={{ orgSlug }}
+          label="Templates"
+          isActive={location.pathname.includes("/documents/templates")}
+          onClick={onNavClick}
+          icon={Copy}
+        />
+      </li>
+      <li className="h-px bg-ui-border my-1 mx-2 list-none" aria-hidden="true" />
+      {showSearch && (
+        <li className="list-none px-2 pb-1">
+          <Input
+            value={searchValue}
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder="Search documents"
+            aria-label="Search documents"
+          />
+        </li>
+      )}
+      {documents.map((doc: Doc<"documents">) => (
+        <li key={doc._id} className="list-none">
+          <NavSubItem
+            to={ROUTES.documents.detail.path}
+            params={{ orgSlug, id: doc._id }}
+            label={doc.title}
+            isActive={location.pathname.includes(`/documents/${doc._id}`)}
+            onClick={onNavClick}
+          />
+        </li>
+      ))}
+      {showSearch && (
+        <li className="list-none">
+          <NavSubItem
+            to={ROUTES.documents.list.path}
+            params={{ orgSlug }}
+            label={`Show all documents (${totalCount})`}
+            isActive={location.pathname.includes("/documents")}
+            onClick={onNavClick}
+          />
+        </li>
+      )}
+    </>
+  );
+}
+
+function WorkspaceNavItem({
+  workspace,
+  orgSlug,
+  teams,
+  isExpanded,
+  expandedTeams,
+  onToggleWorkspace,
+  onToggleTeam,
+  onNavClick,
+  onCreateTeam,
+  location,
+}: WorkspaceNavItemProps) {
+  return (
+    <li className="ml-2 group list-none">
+      <Flex align="center" gap="xs">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onToggleWorkspace(workspace.slug)}
+          className="h-6 w-6 p-0.5"
+          aria-expanded={isExpanded}
+          aria-label={isExpanded ? `Collapse ${workspace.name}` : `Expand ${workspace.name}`}
+        >
+          {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+        </Button>
+        <NavSubItem
+          to={ROUTES.workspaces.detail.path}
+          params={{ orgSlug, workspaceSlug: workspace.slug }}
+          label={workspace.name}
+          isActive={location.pathname.includes(`/workspaces/${workspace.slug}`)}
+          onClick={onNavClick}
+        />
+        <Button
+          variant="ghost"
+          size="icon"
+          reveal
+          onClick={(e) => {
+            e.stopPropagation();
+            onCreateTeam({ id: workspace._id, slug: workspace.slug });
+          }}
+          className="h-6 w-6 p-1"
+          aria-label="Create new team"
+        >
+          <Plus className="w-4 h-4 text-ui-text-tertiary" />
+        </Button>
+      </Flex>
+
+      {isExpanded && (
+        <ul className="list-none">
+          {teams.map((team: Doc<"teams">) => (
+            <SidebarTeamItem
+              key={team._id}
+              team={team}
+              workspaceSlug={workspace.slug}
+              orgSlug={orgSlug}
+              isExpanded={expandedTeams.has(team.slug)}
+              onToggle={onToggleTeam}
+              onNavClick={onNavClick}
+            />
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+}
+
 export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -89,36 +391,17 @@ export function AppSidebar() {
   const showDocumentSearch = allDocuments.length > DOCUMENT_DISPLAY_LIMIT;
   const showWorkspaceSearch = allWorkspaces.length > WORKSPACE_DISPLAY_LIMIT;
 
-  const filteredDocuments =
-    showDocumentSearch && documentSearch.trim()
-      ? allDocuments.filter((doc) =>
-          doc.title.toLowerCase().includes(documentSearch.trim().toLowerCase()),
-        )
-      : allDocuments;
+  const filteredDocuments = showDocumentSearch
+    ? filterItems(allDocuments, documentSearch, "title")
+    : allDocuments;
   const displayedDocuments = filteredDocuments.slice(0, DOCUMENT_DISPLAY_LIMIT);
 
-  const filteredWorkspaces =
-    showWorkspaceSearch && workspaceSearch.trim()
-      ? allWorkspaces.filter((workspace) =>
-          workspace.name.toLowerCase().includes(workspaceSearch.trim().toLowerCase()),
-        )
-      : allWorkspaces;
+  const filteredWorkspaces = showWorkspaceSearch
+    ? filterItems(allWorkspaces, workspaceSearch, "name")
+    : allWorkspaces;
   const displayedWorkspaces = filteredWorkspaces.slice(0, WORKSPACE_DISPLAY_LIMIT);
 
-  // Group teams by workspace
-  const teamsByWorkspace = (() => {
-    const map = new Map<Id<"workspaces">, Doc<"teams">[]>();
-    if (!teams) return map;
-    for (const team of teams) {
-      const existing = map.get(team.workspaceId);
-      if (existing) {
-        existing.push(team);
-      } else {
-        map.set(team.workspaceId, [team]);
-      }
-    }
-    return map;
-  })();
+  const teamsByWorkspace = groupTeamsByWorkspace(teams);
 
   // Mutations
   const createDocument = useMutation(api.documents.create);
@@ -166,29 +449,8 @@ export function AppSidebar() {
     }
   };
 
-  const toggleWorkspace = (workspaceSlug: string) => {
-    setExpandedWorkspaces((prev) => {
-      const next = new Set(prev);
-      if (next.has(workspaceSlug)) {
-        next.delete(workspaceSlug);
-      } else {
-        next.add(workspaceSlug);
-      }
-      return next;
-    });
-  };
-
-  const toggleTeam = (teamSlug: string) => {
-    setExpandedTeams((prev) => {
-      const next = new Set(prev);
-      if (next.has(teamSlug)) {
-        next.delete(teamSlug);
-      } else {
-        next.add(teamSlug);
-      }
-      return next;
-    });
-  };
+  const toggleWorkspace = createSetToggle(setExpandedWorkspaces);
+  const toggleTeam = createSetToggle(setExpandedTeams);
 
   const handleNavClick = () => {
     closeMobile();
@@ -214,7 +476,7 @@ export function AppSidebar() {
       <aside
         className={cn(
           "fixed lg:relative z-50 lg:z-auto h-screen overflow-hidden",
-          "bg-ui-bg-sidebar",
+          "bg-linear-to-b from-ui-bg-sidebar to-ui-bg-secondary",
           "border-r border-ui-border",
           "transition-default",
           // Force full width on mobile, respect collapse on desktop
@@ -401,49 +663,16 @@ export function AppSidebar() {
                 onClick={handleNavClick}
                 data-tour="nav-documents"
               >
-                <li className="list-none">
-                  <NavSubItem
-                    to={ROUTES.documents.templates.path}
-                    params={{ orgSlug }}
-                    label="Templates"
-                    isActive={location.pathname.includes("/documents/templates")}
-                    onClick={handleNavClick}
-                    icon={Copy}
-                  />
-                </li>
-                <li className="h-px bg-ui-border my-1 mx-2 list-none" aria-hidden="true" />
-                {showDocumentSearch && (
-                  <li className="list-none px-2 pb-1">
-                    <Input
-                      value={documentSearch}
-                      onChange={(event) => setDocumentSearch(event.target.value)}
-                      placeholder="Search documents"
-                      aria-label="Search documents"
-                    />
-                  </li>
-                )}
-                {displayedDocuments.map((doc: Doc<"documents">) => (
-                  <li key={doc._id} className="list-none">
-                    <NavSubItem
-                      to={ROUTES.documents.detail.path}
-                      params={{ orgSlug, id: doc._id }}
-                      label={doc.title}
-                      isActive={location.pathname.includes(`/documents/${doc._id}`)}
-                      onClick={handleNavClick}
-                    />
-                  </li>
-                ))}
-                {showDocumentSearch && (
-                  <li className="list-none">
-                    <NavSubItem
-                      to={ROUTES.documents.list.path}
-                      params={{ orgSlug }}
-                      label={`Show all documents (${allDocuments.length})`}
-                      isActive={location.pathname.includes("/documents")}
-                      onClick={handleNavClick}
-                    />
-                  </li>
-                )}
+                <DocumentsSectionContent
+                  documents={displayedDocuments}
+                  totalCount={allDocuments.length}
+                  showSearch={showDocumentSearch}
+                  searchValue={documentSearch}
+                  onSearchChange={setDocumentSearch}
+                  orgSlug={orgSlug}
+                  location={location}
+                  onNavClick={handleNavClick}
+                />
               </CollapsibleSection>
               {/* Workspaces Section */}
               <CollapsibleSection
@@ -459,102 +688,23 @@ export function AppSidebar() {
                 onClick={handleNavClick}
                 data-tour="nav-projects"
               >
-                {showWorkspaceSearch && (
-                  <li className="list-none px-2 pb-1">
-                    <Input
-                      value={workspaceSearch}
-                      onChange={(event) => setWorkspaceSearch(event.target.value)}
-                      placeholder="Search workspaces"
-                      aria-label="Search workspaces"
-                    />
-                  </li>
-                )}
-                {displayedWorkspaces.map((workspace: Doc<"workspaces">) => {
-                  // O(1) lookup from pre-computed Map instead of O(T) filter
-                  const workspaceTeams = teamsByWorkspace.get(workspace._id) || [];
-                  const isWorkspaceExpanded = expandedWorkspaces.has(workspace.slug);
-
-                  return (
-                    <li key={workspace._id} className="ml-2 group list-none">
-                      {/* Workspace Item */}
-                      <Flex align="center" gap="xs">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => toggleWorkspace(workspace.slug)}
-                          className="h-6 w-6 p-0.5"
-                          aria-expanded={isWorkspaceExpanded}
-                          aria-label={
-                            isWorkspaceExpanded
-                              ? `Collapse ${workspace.name}`
-                              : `Expand ${workspace.name}`
-                          }
-                        >
-                          {isWorkspaceExpanded ? (
-                            <ChevronDown className="w-4 h-4" />
-                          ) : (
-                            <ChevronRight className="w-4 h-4" />
-                          )}
-                        </Button>
-                        <NavSubItem
-                          to={ROUTES.workspaces.detail.path}
-                          params={{ orgSlug, workspaceSlug: workspace.slug }}
-                          label={workspace.name}
-                          isActive={location.pathname.includes(`/workspaces/${workspace.slug}`)}
-                          onClick={handleNavClick}
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          reveal
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setCreateTeamWorkspace({ id: workspace._id, slug: workspace.slug });
-                          }}
-                          className="h-6 w-6 p-1"
-                          aria-label="Create new team"
-                        >
-                          <Plus className="w-4 h-4 text-ui-text-tertiary" />
-                        </Button>
-                      </Flex>
-
-                      {/* Teams under workspace */}
-                      {isWorkspaceExpanded && (
-                        <ul className="list-none">
-                          {workspaceTeams.map((team: Doc<"teams">) => (
-                            <SidebarTeamItem
-                              key={team._id}
-                              team={team}
-                              workspaceSlug={workspace.slug}
-                              orgSlug={orgSlug}
-                              isExpanded={expandedTeams.has(team.slug)}
-                              onToggle={toggleTeam}
-                              onNavClick={handleNavClick}
-                            />
-                          ))}
-                        </ul>
-                      )}
-                    </li>
-                  );
-                })}
-                {showWorkspaceSearch && filteredWorkspaces.length === 0 && (
-                  <li className="list-none">
-                    <Typography variant="caption" color="tertiary" className="px-3 py-1">
-                      No matching workspaces
-                    </Typography>
-                  </li>
-                )}
-                {showWorkspaceSearch && (
-                  <li className="list-none">
-                    <NavSubItem
-                      to={ROUTES.workspaces.list.path}
-                      params={{ orgSlug }}
-                      label={`Show all workspaces (${allWorkspaces.length})`}
-                      isActive={location.pathname.includes("/workspaces")}
-                      onClick={handleNavClick}
-                    />
-                  </li>
-                )}
+                <WorkspacesSectionContent
+                  workspaces={displayedWorkspaces}
+                  filteredCount={filteredWorkspaces.length}
+                  totalCount={allWorkspaces.length}
+                  showSearch={showWorkspaceSearch}
+                  searchValue={workspaceSearch}
+                  onSearchChange={setWorkspaceSearch}
+                  teamsByWorkspace={teamsByWorkspace}
+                  expandedWorkspaces={expandedWorkspaces}
+                  expandedTeams={expandedTeams}
+                  onToggleWorkspace={toggleWorkspace}
+                  onToggleTeam={toggleTeam}
+                  orgSlug={orgSlug}
+                  location={location}
+                  onNavClick={handleNavClick}
+                  onCreateTeam={setCreateTeamWorkspace}
+                />
               </CollapsibleSection>
               {/* Time Tracking (admin only) */}
               {showTimeTracking && (
@@ -778,35 +928,5 @@ function CollapsibleSection({
       {/* Section children */}
       {isExpanded && <ul className="ml-4 mt-1 space-y-1 list-none">{children}</ul>}
     </li>
-  );
-}
-
-// Sub-item Component
-type NavSubItemProps = Omit<LinkProps, "to"> & {
-  to: LinkProps["to"];
-  label: string;
-  isActive: boolean;
-  icon?: React.ComponentType<{ className?: string }>;
-  onClick?: (event: React.MouseEvent) => void;
-};
-
-function NavSubItem({
-  label,
-  isActive,
-  icon: Icon,
-  to,
-  params,
-  onClick,
-  ...props
-}: NavSubItemProps) {
-  return (
-    <Tooltip content={label}>
-      <NavItemBase asChild active={isActive} size="sm">
-        <Link to={to} params={params} onClick={onClick} {...props}>
-          {Icon && <Icon className="w-4 h-4 shrink-0" />}
-          <span className="truncate">{label}</span>
-        </Link>
-      </NavItemBase>
-    </Tooltip>
   );
 }

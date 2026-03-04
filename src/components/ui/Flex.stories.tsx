@@ -65,7 +65,7 @@ function Box({ children, size = "md" }: { children?: React.ReactNode; size?: "sm
 
 export const DirectionRow: Story = {
   render: () => (
-    <Flex direction="row" gap="md">
+    <Flex gap="md">
       <Box>1</Box>
       <Box>2</Box>
       <Box>3</Box>
@@ -198,7 +198,7 @@ export const AlignBaseline: Story = {
 
 export const JustifyStart: Story = {
   render: () => (
-    <Flex justify="start" gap="md" className="bg-ui-bg-secondary p-4">
+    <Flex gap="md" className="bg-ui-bg-secondary p-4">
       <Box>1</Box>
       <Box>2</Box>
       <Box>3</Box>

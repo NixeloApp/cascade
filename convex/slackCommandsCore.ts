@@ -11,10 +11,19 @@ import { generateIssueKey, getSearchContent, issueKeyExists } from "./issues/hel
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { syncProjectIssueStats } from "./lib/projectIssueStats";
 import { notDeleted } from "./lib/softDeleteHelpers";
+import { hasMinimumRole } from "./rbac";
 
+/**
+ * Execute a `/nixelo` slash command and always return a structured command response.
+ *
+ * Contract note:
+ * this mutation is used by Slack HTTP handlers, so command/user errors should be surfaced
+ * as `{ ok: false, message }` instead of throwing whenever possible.
+ */
 export const executeCommand = internalMutation({
   args: {
     teamId: v.string(),
+    callerSlackUserId: v.string(),
     text: v.string(),
   },
   returns: v.object({
@@ -31,7 +40,7 @@ export const executeCommand = internalMutation({
       };
     }
 
-    const context = await resolveTeamContext(ctx, args.teamId);
+    const context = await resolveTeamContext(ctx, args.teamId, args.callerSlackUserId);
     if (!context) {
       return {
         ok: false,
@@ -43,75 +52,119 @@ export const executeCommand = internalMutation({
     const [subcommand, ...rest] = commandText.split(/\s+/);
     const command = subcommand.toLowerCase();
 
-    if (command === "create") {
-      const title = rest.join(" ").trim();
-      if (!title) {
-        return { ok: false, message: "Usage: `/nixelo create <title>`" };
-      }
-      const result = await createIssueFromCommand(ctx, context.userId, title);
-      return { ok: true, message: `Created issue ${result.key}: ${result.title}` };
+    switch (command) {
+      case "create":
+        return handleCreateCommand(ctx, context.userId, rest);
+      case "search":
+        return handleSearchCommand(ctx, context.userId, rest);
+      case "assign":
+        return handleAssignCommand(ctx, context.userId, rest);
+      default:
+        return {
+          ok: false,
+          message:
+            "Unknown subcommand. Supported: `create`, `search`, `assign`.\nExample: `/nixelo search onboarding`",
+        };
     }
-
-    if (command === "search") {
-      const query = rest.join(" ").trim();
-      if (!query) {
-        return { ok: false, message: "Usage: `/nixelo search <query>`" };
-      }
-
-      const result = await searchIssuesForCommand(ctx, context.userId, query);
-      if (result.length === 0) {
-        return { ok: true, message: `No issues found for "${query}".` };
-      }
-
-      return {
-        ok: true,
-        message: result.map((issue) => `${issue.key} - ${issue.title}`).join("\n"),
-      };
-    }
-
-    if (command === "assign") {
-      const [issueKey, ...assigneeParts] = rest;
-      const assigneeName = assigneeParts.join(" ").trim().replace(/^@/, "");
-      if (!issueKey || !assigneeName) {
-        return { ok: false, message: "Usage: `/nixelo assign <ISSUE-123> <name>`" };
-      }
-
-      return await assignIssueFromCommand(
-        ctx,
-        context.userId,
-        issueKey.toUpperCase(),
-        assigneeName,
-      );
-    }
-
-    return {
-      ok: false,
-      message:
-        "Unknown subcommand. Supported: `create`, `search`, `assign`.\nExample: `/nixelo search onboarding`",
-    };
   },
 });
+
+type CommandResponse = { ok: boolean; message: string };
+
+async function handleCreateCommand(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  args: string[],
+): Promise<CommandResponse> {
+  const title = args.join(" ").trim();
+  if (!title) {
+    return { ok: false, message: "Usage: `/nixelo create <title>`" };
+  }
+  try {
+    const result = await createIssueFromCommand(ctx, userId, title);
+    return { ok: true, message: `Created issue ${result.key}: ${result.title}` };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Failed to create issue.",
+    };
+  }
+}
+
+async function handleSearchCommand(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  args: string[],
+): Promise<CommandResponse> {
+  const query = args.join(" ").trim();
+  if (!query) {
+    return { ok: false, message: "Usage: `/nixelo search <query>`" };
+  }
+
+  const result = await searchIssuesForCommand(ctx, userId, query);
+  if (result.length === 0) {
+    return { ok: true, message: `No issues found for "${query}".` };
+  }
+
+  return {
+    ok: true,
+    message: result.map((issue) => `${issue.key} - ${issue.title}`).join("\n"),
+  };
+}
+
+async function handleAssignCommand(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  args: string[],
+): Promise<CommandResponse> {
+  const [issueKey, ...assigneeParts] = args;
+  const assigneeName = assigneeParts.join(" ").trim().replace(/^@/, "");
+  if (!issueKey || !assigneeName) {
+    return { ok: false, message: "Usage: `/nixelo assign <ISSUE-123> <name>`" };
+  }
+
+  return assignIssueFromCommand(ctx, userId, issueKey.toUpperCase(), assigneeName);
+}
 
 async function resolveTeamContext(
   ctx: MutationCtx,
   teamId: string,
+  callerSlackUserId: string,
 ): Promise<{ userId: Id<"users"> } | null> {
-  const connections = await ctx.db
+  // Try exact match first (new connections with slackUserId).
+  const exactMatch = await ctx.db
     .query("slackConnections")
-    .withIndex("by_team", (q) => q.eq("teamId", teamId))
-    .take(20);
+    .withIndex("by_team_slack_user_active_updated", (q) =>
+      q.eq("teamId", teamId).eq("slackUserId", callerSlackUserId).eq("isActive", true),
+    )
+    .order("desc")
+    .first();
 
-  const active = connections
-    .filter((connection) => connection.isActive)
-    .sort((a, b) => b.updatedAt - a.updatedAt)[0];
-
-  if (!active) {
-    return null;
+  if (exactMatch) {
+    return { userId: exactMatch.userId };
   }
 
-  return { userId: active.userId };
+  // Fallback: legacy connections without slackUserId (use most recent active for this team).
+  const legacyMatch = await ctx.db
+    .query("slackConnections")
+    .withIndex("by_team", (q) => q.eq("teamId", teamId))
+    .order("desc")
+    .filter((q) => q.and(q.eq(q.field("isActive"), true), q.eq(q.field("slackUserId"), undefined)))
+    .first();
+
+  if (legacyMatch) {
+    return { userId: legacyMatch.userId };
+  }
+
+  return null;
 }
 
+/**
+ * Create an issue on the caller's default project.
+ *
+ * @throws Error when no project is available, the project is unavailable, or the caller
+ * doesn't have permission to create issues in that project.
+ */
 async function createIssueFromCommand(
   ctx: MutationCtx,
   userId: Id<"users">,
@@ -177,6 +230,16 @@ async function createIssueFromCommand(
   return { issueId, key, title };
 }
 
+function issueMatchesQuery(
+  issue: { key: string; title: string },
+  normalizedQuery: string,
+): boolean {
+  return (
+    issue.key.toLowerCase().includes(normalizedQuery) ||
+    issue.title.toLowerCase().includes(normalizedQuery)
+  );
+}
+
 async function searchIssuesForCommand(
   ctx: MutationCtx,
   userId: Id<"users">,
@@ -184,37 +247,44 @@ async function searchIssuesForCommand(
 ): Promise<Array<{ issueId: Id<"issues">; key: string; title: string }>> {
   const projectIds = await listUserProjectIds(ctx, userId);
   const normalizedQuery = query.toLowerCase();
-  const results: Array<{ issueId: Id<"issues">; key: string; title: string; updatedAt: number }> =
-    [];
 
-  for (const projectId of projectIds) {
-    const issues = await ctx.db
-      .query("issues")
-      .withIndex("by_project_deleted", (q) => q.eq("projectId", projectId).lt("isDeleted", true))
-      .order("desc")
-      .take(20);
+  const issuesByProject = await Promise.all(
+    projectIds.map((projectId) =>
+      ctx.db
+        .query("issues")
+        .withIndex("by_project_deleted", (q) => q.eq("projectId", projectId).lt("isDeleted", true))
+        .order("desc")
+        .take(20),
+    ),
+  );
 
-    for (const issue of issues) {
-      const matches =
-        issue.key.toLowerCase().includes(normalizedQuery) ||
-        issue.title.toLowerCase().includes(normalizedQuery);
-      if (matches) {
-        results.push({
-          issueId: issue._id,
-          key: issue.key,
-          title: issue.title,
-          updatedAt: issue.updatedAt,
-        });
-      }
-    }
-  }
+  // Flatten and filter matching issues
+  const allMatches = issuesByProject
+    .flat()
+    .filter((issue) => issueMatchesQuery(issue, normalizedQuery))
+    .map((issue) => ({
+      issueId: issue._id,
+      key: issue.key,
+      title: issue.title,
+      updatedAt: issue.updatedAt,
+    }));
 
-  return results
+  // Sort by most recent and take top 5
+  return allMatches
     .sort((a, b) => b.updatedAt - a.updatedAt)
     .slice(0, 5)
     .map(({ issueId, key, title }) => ({ issueId, key, title }));
 }
 
+/**
+ * Assign an issue from slash-command input and always return a command response payload.
+ *
+ * Contract:
+ * - User/project/permission lookup failures are returned as `{ ok: false, message }`.
+ * - Successful assignment returns `{ ok: true, message }` with the updated assignee.
+ * - This helper avoids throwing for expected command/user errors so Slack handlers can
+ *   consistently render user-facing responses.
+ */
 async function assignIssueFromCommand(
   ctx: MutationCtx,
   actorUserId: Id<"users">,
@@ -278,8 +348,26 @@ async function pickProjectForUser(
   ctx: MutationCtx,
   userId: Id<"users">,
 ): Promise<Id<"projects"> | null> {
-  const projects = await listUserProjectIds(ctx, userId);
-  return projects[0] ?? null;
+  const memberships = await ctx.db
+    .query("projectMembers")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .filter(notDeleted)
+    .take(BOUNDED_LIST_LIMIT);
+
+  // Security/authorization hardening: only select projects where the caller can write
+  // and the project still exists.
+  for (const membership of memberships) {
+    if (!hasMinimumRole(membership.role, "editor")) {
+      continue;
+    }
+    const project = await ctx.db.get(membership.projectId);
+    if (!project || project.isDeleted) {
+      continue;
+    }
+    return membership.projectId;
+  }
+
+  return null;
 }
 
 async function listUserProjectIds(

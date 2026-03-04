@@ -15,9 +15,9 @@ import { Typography } from "./Typography";
 const cardVariants = cva("border transition-default", {
   variants: {
     variant: {
-      default: "bg-ui-bg border-ui-border shadow-card",
-      elevated: "bg-ui-bg border-transparent shadow-card-hover",
-      soft: "bg-ui-bg-soft border-transparent",
+      default: "bg-ui-bg border-ui-border shadow-soft",
+      elevated: "bg-ui-bg border-ui-border-secondary shadow-card",
+      soft: "bg-ui-bg-soft border-ui-border shadow-soft",
       interactive:
         "bg-ui-bg border-ui-border hover:bg-ui-bg-hover hover:border-ui-border-secondary cursor-pointer",
       outline: "bg-transparent border-ui-border",

@@ -632,13 +632,24 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
           {/* Timeline Body (Virtualized) */}
           <FlexItem flex="1">
             {filteredIssues.length === 0 ? (
-              <Card padding="xl" className="text-center">
-                <Stack gap="xs" align="center">
+              <Card
+                variant="soft"
+                padding="xl"
+                className="m-6 min-h-96 border border-dashed border-ui-border-secondary text-center"
+              >
+                <Flex
+                  direction="column"
+                  gap="sm"
+                  align="center"
+                  justify="center"
+                  className="min-h-80"
+                >
+                  <Typography variant="h4">Roadmap is ready for planning</Typography>
                   <Typography color="secondary">No issues with due dates to display</Typography>
                   <Typography variant="small" color="secondary">
-                    Add due dates to issues to see them on the roadmap
+                    Add due dates in your board or backlog to populate this timeline view.
                   </Typography>
-                </Stack>
+                </Flex>
               </Card>
             ) : (
               <div className="relative">

@@ -97,12 +97,12 @@ export function CustomFieldsManager({ projectId }: CustomFieldsManagerProps) {
       ) : customFields.length === 0 ? (
         <Card>
           <CardBody>
-            <Stack align="center" gap="md" className="min-h-32 justify-center">
+            <Flex direction="column" align="center" justify="center" gap="md" className="min-h-32">
               <Icon icon={ClipboardList} size="xl" className="text-ui-text-tertiary" />
               <Typography variant="small" color="secondary">
                 No custom fields yet. Add your first field to get started.
               </Typography>
-            </Stack>
+            </Flex>
           </CardBody>
         </Card>
       ) : (

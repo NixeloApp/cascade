@@ -46,6 +46,56 @@ const ALLOWED_TYPES = [
   "application/json",
 ];
 
+function validateFile(file: File): void {
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(`"${file.name}" is too large (max 10MB).`);
+  }
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    throw new Error(`"${file.name}" has an unsupported file type.`);
+  }
+}
+
+async function uploadSingleFile(
+  file: File,
+  issueId: Id<"issues">,
+  generateUploadUrl: () => Promise<string>,
+  attachToIssue: (args: {
+    issueId: Id<"issues">;
+    storageId: Id<"_storage">;
+    filename: string;
+    contentType: string;
+    size: number;
+  }) => Promise<{ success: boolean; error?: string }>,
+): Promise<PendingAttachment> {
+  validateFile(file);
+
+  const uploadUrl = await generateUploadUrl();
+  const uploadResponse = await fetch(uploadUrl, {
+    method: "POST",
+    headers: { "Content-Type": file.type },
+    body: file,
+  });
+
+  if (!uploadResponse.ok) {
+    throw new Error(`Upload failed for "${file.name}".`);
+  }
+
+  const { storageId } = (await uploadResponse.json()) as { storageId: Id<"_storage"> };
+  const attachResult = await attachToIssue({
+    issueId,
+    storageId,
+    filename: file.name,
+    contentType: file.type,
+    size: file.size,
+  });
+
+  if (!attachResult.success) {
+    throw new Error(attachResult.error);
+  }
+
+  return { storageId, filename: file.name };
+}
+
 /** Comment thread for an issue with reactions and mention support. */
 export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
   const [newComment, setNewComment] = useState("");
@@ -72,43 +122,11 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
 
     setIsUploadingAttachment(true);
     try {
-      const uploadedAttachments: PendingAttachment[] = [];
-
-      for (const file of Array.from(files)) {
-        if (file.size > MAX_FILE_SIZE) {
-          throw new Error(`"${file.name}" is too large (max 10MB).`);
-        }
-
-        if (!ALLOWED_TYPES.includes(file.type)) {
-          throw new Error(`"${file.name}" has an unsupported file type.`);
-        }
-
-        const uploadUrl = await generateUploadUrl();
-        const uploadResponse = await fetch(uploadUrl, {
-          method: "POST",
-          headers: { "Content-Type": file.type },
-          body: file,
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error(`Upload failed for "${file.name}".`);
-        }
-
-        const { storageId } = (await uploadResponse.json()) as { storageId: Id<"_storage"> };
-        const attachResult = await attachToIssue({
-          issueId,
-          storageId,
-          filename: file.name,
-          contentType: file.type,
-          size: file.size,
-        });
-
-        if (!attachResult.success) {
-          throw new Error(attachResult.error);
-        }
-
-        uploadedAttachments.push({ storageId, filename: file.name });
-      }
+      const uploadedAttachments = await Promise.all(
+        Array.from(files).map((file) =>
+          uploadSingleFile(file, issueId, generateUploadUrl, attachToIssue),
+        ),
+      );
 
       setCommentAttachments((prev) => [...prev, ...uploadedAttachments]);
       showSuccess(

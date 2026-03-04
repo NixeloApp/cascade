@@ -96,7 +96,7 @@ export const addMessage = authenticatedMutation({
     // Verify chat ownership
     const chat = await ctx.db.get(args.chatId);
     if (!chat) {
-      throw new Error("Chat not found");
+      throw notFound("chat", args.chatId);
     }
     requireOwned(chat, ctx.userId, "chat");
 

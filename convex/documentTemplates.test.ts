@@ -498,33 +498,4 @@ describe("Document Templates", () => {
       expect(result.message).toContain("already exist");
     });
   });
-
-  describe("migrateLegacyIconStrings", () => {
-    it("converts legacy string icons to structured values", async () => {
-      const t = convexTest(schema, modules);
-      const { asUser } = await createTestContext(t);
-
-      const { templateId } = await asUser.mutation(api.documentTemplates.create, {
-        name: "Legacy Icon Template",
-        category: "migration",
-        icon: "📄",
-        content: sampleContent,
-        isPublic: false,
-      });
-
-      // Simulate legacy row shape to validate migration behavior.
-      await t.run(async (ctx) => {
-        await ctx.db.patch(templateId, { icon: "📄" });
-      });
-
-      const result = await t.mutation(internal.documentTemplates.migrateLegacyIconStrings, {
-        limit: 50,
-      });
-
-      expect(result.migrated).toBeGreaterThanOrEqual(1);
-
-      const stored = await t.run(async (ctx) => await ctx.db.get(templateId));
-      expect(stored?.icon).toEqual({ type: "emoji", value: "📄" });
-    });
-  });
 });

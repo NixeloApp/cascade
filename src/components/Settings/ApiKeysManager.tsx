@@ -504,12 +504,12 @@ function UsageStatsModal({
       }
     >
       {!stats ? (
-        <Stack gap="sm" align="center" className="min-h-32 justify-center">
+        <Flex direction="column" gap="sm" align="center" justify="center" className="min-h-32">
           <LoadingSpinner size="lg" />
           <Typography variant="small" color="tertiary">
             Loading statistics...
           </Typography>
-        </Stack>
+        </Flex>
       ) : (
         <Stack gap="lg">
           {/* Overview Stats */}

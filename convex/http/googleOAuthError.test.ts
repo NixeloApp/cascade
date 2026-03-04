@@ -4,6 +4,8 @@ import * as envLib from "../lib/env";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { handleCallbackHandler } from "./googleOAuth";
 
+const GOOGLE_CALLBACK_URL = "https://api.convex.site/google/callback";
+
 // Mock env library
 vi.mock("../lib/env", () => ({
   getGoogleClientId: vi.fn(),
@@ -24,7 +26,7 @@ vi.mock("../_generated/api", () => ({
   internal: {},
 }));
 
-describe("Google OAuth Error Handling", () => {
+describe("Google OAuth Error HTTP Handler", () => {
   const mockCtx = {
     runQuery: vi.fn(),
     runMutation: vi.fn(),
@@ -34,12 +36,12 @@ describe("Google OAuth Error Handling", () => {
     vi.resetAllMocks();
     vi.mocked(envLib.getGoogleClientId).mockReturnValue("test-client-id");
     vi.mocked(envLib.getGoogleClientSecret).mockReturnValue("test-client-secret");
+    vi.mocked(envLib.getConvexSiteUrl).mockReturnValue("https://test.convex.site");
     vi.mocked(envLib.isGoogleOAuthConfigured).mockReturnValue(true);
-    process.env.CONVEX_SITE_URL = "https://test.convex.site";
   });
 
   afterEach(() => {
-    delete process.env.CONVEX_SITE_URL;
+    vi.resetAllMocks();
   });
 
   it("should log error details when token exchange fails", async () => {
@@ -57,10 +59,9 @@ describe("Google OAuth Error Handling", () => {
       text: async () => errorBody,
     } as Response);
 
-    const request = new Request(
-      "https://api.convex.site/google/callback?code=auth_code&state=valid_state",
-    );
-    request.headers.set("Cookie", "google-oauth-state=valid_state");
+    const request = new Request(`${GOOGLE_CALLBACK_URL}?code=auth_code&state=valid_state`, {
+      headers: { Cookie: "google-oauth-state=valid_state" },
+    });
 
     const response = await handleCallbackHandler(mockCtx, request);
 

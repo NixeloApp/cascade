@@ -10,7 +10,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { BOUNDED_LIST_LIMIT, BOUNDED_SELECT_LIMIT } from "./lib/boundedQueries";
 import { conflict, forbidden, notFound, unauthenticated, validation } from "./lib/errors";
 
@@ -611,58 +611,6 @@ export const getForDomain = query({
       type: matchingConn.type,
       name: matchingConn.name,
       oidcProvider: matchingConn.oidcConfig?.provider,
-    };
-  },
-});
-
-/**
- * Migration: Populate ssoDomains table from ssoConnections.
- * Should be run once.
- */
-export const migrateSSODomains = internalMutation({
-  args: {
-    cursor: v.optional(v.string()),
-    batchSize: v.optional(v.number()),
-  },
-  returns: v.object({
-    cursor: v.union(v.string(), v.null()),
-    processed: v.number(),
-  }),
-  handler: async (ctx, args) => {
-    const batchSize = args.batchSize ?? 100;
-
-    const { page, continueCursor, isDone } = await ctx.db
-      .query("ssoConnections")
-      .paginate({ cursor: args.cursor ?? null, numItems: batchSize });
-
-    let processed = 0;
-
-    for (const connection of page) {
-      if (!connection.verifiedDomains) continue;
-
-      await Promise.all(
-        connection.verifiedDomains.map(async (domain) => {
-          // Check if already exists to be idempotent
-          const existing = await ctx.db
-            .query("ssoDomains")
-            .withIndex("by_domain", (q) => q.eq("domain", domain))
-            .first();
-
-          if (!existing) {
-            await ctx.db.insert("ssoDomains", {
-              domain,
-              connectionId: connection._id,
-              organizationId: connection.organizationId,
-            });
-          }
-        }),
-      );
-      processed++;
-    }
-
-    return {
-      cursor: isDone ? null : continueCursor,
-      processed,
     };
   },
 });

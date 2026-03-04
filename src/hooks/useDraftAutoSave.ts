@@ -44,6 +44,13 @@ interface UseDraftAutoSaveReturn<T> {
   draftTimestamp: number | null;
 }
 
+function logDraftStorageError(operation: "load" | "save", storageKey: string, error: unknown) {
+  console.warn(`Draft auto-save ${operation} failed`, {
+    storageKey,
+    error,
+  });
+}
+
 /**
  * Hook for auto-saving form drafts to localStorage.
  * Prevents data loss when modals are accidentally closed.
@@ -79,9 +86,10 @@ export function useDraftAutoSave<T>({
           localStorage.removeItem(storageKey);
         }
       }
-    } catch {
+    } catch (error) {
       // Invalid stored data, clear it
       localStorage.removeItem(storageKey);
+      logDraftStorageError("load", storageKey, error);
     }
   }, [storageKey, enabled]);
 
@@ -106,9 +114,9 @@ export function useDraftAutoSave<T>({
           setHasDraft(true);
           setDraft(data);
           setDraftTimestamp(draftData.timestamp);
-        } catch {
+        } catch (error) {
           // localStorage might be full or unavailable
-          console.warn("Failed to save draft to localStorage");
+          logDraftStorageError("save", storageKey, error);
         }
       }, debounceMs);
     },

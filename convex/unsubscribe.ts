@@ -6,10 +6,16 @@
 
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { unauthenticated, validation } from "./lib/errors";
 import { MONTH } from "./lib/timeUtils";
+
+const UNSUBSCRIBE_TOKEN_REGEX = /^[a-f0-9]{64}$/;
+
+function isValidUnsubscribeTokenFormat(token: string): boolean {
+  // Security: fail closed on malformed tokens to reduce abuse surface on public token endpoints.
+  return UNSUBSCRIBE_TOKEN_REGEX.test(token);
+}
 
 /**
  * Generate a unique unsubscribe token for a user
@@ -35,17 +41,26 @@ export const generateToken = mutation({
 });
 
 /**
- * Get user ID from unsubscribe token
+ * Check if an unsubscribe token is valid.
+ *
+ * Returns `true` if the token exists, is not expired, and has not been used.
+ * Returns `null` otherwise. Does not expose user information.
  */
 export const getUserFromToken = query({
   args: { token: v.string() },
-  handler: async (ctx, args): Promise<Id<"users"> | null> => {
+  returns: v.union(v.null(), v.literal(true)),
+  handler: async (ctx, args): Promise<true | null> => {
+    if (!isValidUnsubscribeTokenFormat(args.token)) {
+      return null;
+    }
+
     const tokenRecord = await ctx.db
       .query("unsubscribeTokens")
       .withIndex("by_token", (q) => q.eq("token", args.token))
       .first();
 
     if (!tokenRecord) return null;
+    if (tokenRecord.usedAt !== undefined) return null;
 
     // Check if token is expired (30 days)
     const thirtyDaysAgo = Date.now() - MONTH;
@@ -53,7 +68,7 @@ export const getUserFromToken = query({
       return null;
     }
 
-    return tokenRecord.userId;
+    return true;
   },
 });
 
@@ -62,7 +77,12 @@ export const getUserFromToken = query({
  */
 export const unsubscribe = mutation({
   args: { token: v.string() },
+  returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
+    if (!isValidUnsubscribeTokenFormat(args.token)) {
+      throw validation("token", "Invalid unsubscribe token");
+    }
+
     // Find token
     const tokenRecord = await ctx.db
       .query("unsubscribeTokens")
@@ -77,6 +97,9 @@ export const unsubscribe = mutation({
     const thirtyDaysAgo = Date.now() - MONTH;
     if (tokenRecord._creationTime < thirtyDaysAgo) {
       throw validation("token", "Unsubscribe link has expired");
+    }
+    if (tokenRecord.usedAt !== undefined) {
+      throw validation("token", "Unsubscribe link has already been used");
     }
 
     // Mark token as used
@@ -109,7 +132,7 @@ export const unsubscribe = mutation({
       });
     }
 
-    return { success: true };
+    return { success: true } as const;
   },
 });
 
