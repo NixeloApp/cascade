@@ -214,7 +214,7 @@ export function AppSidebar() {
       <aside
         className={cn(
           "fixed lg:relative z-50 lg:z-auto h-screen overflow-hidden",
-          "bg-ui-bg-sidebar",
+          "bg-linear-to-b from-ui-bg-sidebar to-ui-bg-secondary",
           "border-r border-ui-border",
           "transition-default",
           // Force full width on mobile, respect collapse on desktop

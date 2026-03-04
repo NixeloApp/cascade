@@ -23,27 +23,27 @@
 
 ## P1 - Major UX/visual consistency gaps
 
-- [ ] Align visual language between marketing and app shell.
+- [x] Align visual language between marketing and app shell. (fixed 2026-03-04)
   - Evidence: high-contrast/glossy hero (`docs/design/specs/pages/01-landing/screenshots/desktop-light.png`) vs very flat app surfaces (`docs/design/specs/pages/04-dashboard/screenshots/desktop-light.png`).
   - Problem: feels like two unrelated products.
 
-- [ ] Improve contrast for secondary text and muted borders in light mode.
+- [x] Improve contrast for secondary text and muted borders in light mode. (fixed 2026-03-04)
   - Evidence: dashboard metadata and sidebar labels are very faint (`docs/design/specs/pages/04-dashboard/screenshots/desktop-light.png`).
   - Evidence: project/settings descriptive text is low legibility (`docs/design/specs/pages/05-projects/screenshots/desktop-light.png`, `docs/design/specs/pages/12-settings/screenshots/desktop-light-project.png`).
 
-- [ ] Reduce excessive empty canvas in core app pages.
+- [x] Reduce excessive empty canvas in core app pages. (fixed 2026-03-04)
   - Evidence: large unstructured whitespace in projects and roadmap views (`docs/design/specs/pages/05-projects/screenshots/desktop-light.png`, `e2e/screenshots/desktop-light-filled-project-demo-roadmap.png`).
   - Expected: clearer layout framing and empty-state composition.
 
 ## P2 - Polish and responsive improvements
 
-- [ ] Tighten mobile top bar density and consistency.
+- [x] Tighten mobile top bar density and consistency. (fixed 2026-03-04)
   - Evidence: action/search cluster feels cramped and icon spacing is uneven (`docs/design/specs/pages/04-dashboard/screenshots/mobile-light.png`, `docs/design/specs/pages/06-board/screenshots/mobile-light.png`).
 
-- [ ] Normalize CTA hierarchy and button styling across pages.
+- [x] Normalize CTA hierarchy and button styling across pages. (fixed 2026-03-04)
   - Evidence: marketing CTAs are bold cyan pills, while app primary actions are mostly purple and visually subtler (`docs/design/specs/pages/01-landing/screenshots/desktop-light.png`, `docs/design/specs/pages/05-projects/screenshots/desktop-light.png`).
 
-- [ ] Standardize card elevation/border treatment across modules.
+- [x] Standardize card elevation/border treatment across modules. (fixed 2026-03-04)
   - Evidence: dashboard cards, time tracking rows, and settings sections use different border/elevation intensity (`docs/design/specs/pages/04-dashboard/screenshots/desktop-light.png`, `e2e/screenshots/desktop-light-empty-time-tracking.png`, `docs/design/specs/pages/12-settings/screenshots/desktop-light-project.png`).
 
 ## Notes

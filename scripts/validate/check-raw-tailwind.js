@@ -196,6 +196,54 @@ export function run() {
       component: "Stack",
       prop: "gap",
     },
+    // Flex with align classes instead of align prop
+    {
+      pattern:
+        /<Flex(?![^>]*\balign=)[^>]*className=["'][^"']*(?<![a-z]:)\bitems-(start|center|end|stretch|baseline)\b/,
+      component: "Flex",
+      prop: "align",
+      tokenType: "align",
+    },
+    // Flex with justify classes instead of justify prop
+    {
+      pattern:
+        /<Flex(?![^>]*\bjustify=)[^>]*className=["'][^"']*(?<![a-z]:)\bjustify-(start|center|end|between|around|evenly)\b/,
+      component: "Flex",
+      prop: "justify",
+      tokenType: "justify",
+    },
+    // Flex with direction classes instead of direction prop
+    {
+      pattern: /<Flex(?![^>]*\bdirection=)[^>]*className=["'][^"']*(?<![a-z]:)\bflex-(row|col)\b/,
+      component: "Flex",
+      prop: "direction",
+      tokenType: "direction",
+    },
+    // Stack with items-* should use align prop
+    {
+      pattern:
+        /<Stack(?![^>]*\balign=)[^>]*className=["'][^"']*(?<![a-z]:)\bitems-(start|center|end|stretch)\b/,
+      component: "Stack",
+      prop: "align",
+      tokenType: "align",
+    },
+    // Stack should not use justify-* (no justify prop on Stack)
+    {
+      pattern:
+        /<Stack[^>]*className=["'][^"']*(?<![a-z]:)\bjustify-(start|center|end|between|around|evenly)\b/,
+      component: "Stack",
+      prop: "justify",
+      tokenType: "stack-unsupported-justify",
+    },
+    // Prefer Stack for plain vertical Flex layouts
+    // Only flag when no Flex-specific props that Stack can't represent are present.
+    {
+      pattern:
+        /<Flex(?![^>]*\bjustify=)(?![^>]*\bwrap=)(?![^>]*\binline=)[^>]*\bdirection=["']column["'][^>]*>/,
+      component: "Flex",
+      prop: "direction",
+      tokenType: "prefer-stack",
+    },
   ];
 
   const propViolations = [];
@@ -215,17 +263,33 @@ export function run() {
       // Skip if no className in this line
       if (!line.includes("className")) continue;
 
-      for (const { pattern, component, prop } of COMPONENT_PROP_PATTERNS) {
+      for (const { pattern, component, prop, tokenType } of COMPONENT_PROP_PATTERNS) {
         const match = line.match(pattern);
         if (match) {
-          const num = Number.parseInt(match[1], 10);
-          const propValue = GAP_MAP[num];
-          let replacement;
-          if (propValue) {
-            replacement = `<${component} ${prop}="${propValue}">`;
-          } else {
-            // No direct prop equivalent - keep as className but note it
-            replacement = `gap-${num} has no prop (max: 2xl=gap-8)`;
+          let replacement = "";
+
+          if (tokenType === "gap" || !tokenType) {
+            const num = Number.parseInt(match[1], 10);
+            const propValue = GAP_MAP[num];
+            if (propValue) {
+              replacement = `<${component} ${prop}="${propValue}">`;
+            } else {
+              // No direct prop equivalent - keep as className but note it
+              replacement = `gap-${num} has no prop (max: 2xl=gap-8)`;
+            }
+          } else if (tokenType === "align") {
+            replacement = `<${component} ${prop}="${match[1]}">`;
+          } else if (tokenType === "justify") {
+            replacement = `<${component} ${prop}="${match[1]}">`;
+          } else if (tokenType === "direction") {
+            const directionValue = match[1] === "col" ? "column" : "row";
+            replacement = `<${component} ${prop}="${directionValue}">`;
+          } else if (tokenType === "stack-unsupported-justify") {
+            replacement =
+              'Stack does not support justify-*; use <Flex direction="column" justify="..."> or a wrapper';
+          } else if (tokenType === "prefer-stack") {
+            replacement =
+              "Prefer <Stack ...> for vertical layouts; keep Flex only when you need justify/wrap/inline";
           }
           propViolations.push({
             file: rel,

@@ -130,14 +130,14 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
       {connections.length === 0 ? (
         <Card>
           <CardBody>
-            <Stack align="center" gap="md" className="min-h-32 justify-center">
+            <Flex direction="column" align="center" justify="center" gap="md" className="min-h-32">
               <Icon icon={Key} size="xl" className="text-ui-text-tertiary" />
               <Typography variant="small" color="secondary" className="text-center">
                 No SSO connections configured.
                 <br />
                 Add a SAML or OIDC connection to enable enterprise sign-in.
               </Typography>
-            </Stack>
+            </Flex>
           </CardBody>
         </Card>
       ) : (

@@ -226,7 +226,7 @@ function OrganizationLayoutInner() {
         >
           Skip to content
         </a>
-        <Flex className="h-screen overflow-hidden bg-ui-bg-secondary">
+        <Flex className="h-screen overflow-hidden app-shell-bg">
           {/* Unified sidebar */}
           <AppSidebar />
 
@@ -242,7 +242,7 @@ function OrganizationLayoutInner() {
             <FlexItem
               as="main"
               flex="1"
-              className="overflow-auto bg-ui-bg scrollbar-subtle"
+              className="overflow-auto app-page-surface scrollbar-subtle"
               id="main-content"
               tabIndex={-1}
             >

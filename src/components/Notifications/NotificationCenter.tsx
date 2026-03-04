@@ -161,11 +161,11 @@ export function NotificationCenter() {
           <Button
             variant="ghost"
             size="icon"
-            className="relative"
+            className="relative h-9 w-9"
             aria-label={dynamicLabel}
             data-testid={TEST_IDS.HEADER.NOTIFICATION_BUTTON}
           >
-            <Bell className="w-6 h-6" />
+            <Bell className="w-5 h-5" />
             {/* Unread Badge */}
             {unreadCount != null && unreadCount > 0 && (
               <Badge

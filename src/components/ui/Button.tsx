@@ -18,9 +18,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-brand text-brand-foreground hover:bg-brand-hover focus-visible:ring-brand-ring",
+          "bg-linear-to-r from-landing-accent to-landing-accent-teal text-brand-foreground shadow-sm hover:shadow-md hover:brightness-105 focus-visible:ring-brand-ring",
         secondary:
-          "bg-ui-bg text-ui-text border border-ui-border hover:bg-ui-bg-secondary hover:border-ui-border-secondary focus-visible:ring-brand-ring",
+          "bg-ui-bg text-ui-text border border-ui-border shadow-soft hover:bg-ui-bg-secondary hover:border-ui-border-secondary focus-visible:ring-brand-ring",
         success:
           "bg-status-success text-brand-foreground hover:bg-status-success/90 focus-visible:ring-status-success",
         danger:

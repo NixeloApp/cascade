@@ -106,7 +106,7 @@ describe("CreateEventModal", () => {
 
       const meetingButton = screen.getByRole("button", { name: /meeting/i });
       // Primary variant indicates selection
-      expect(meetingButton).toHaveClass("bg-brand");
+      expect(meetingButton).toHaveClass("bg-linear-to-r");
     });
 
     it("should change event type when clicking different type", async () => {
@@ -116,7 +116,7 @@ describe("CreateEventModal", () => {
       await user.click(screen.getByRole("button", { name: /deadline/i }));
 
       const deadlineButton = screen.getByRole("button", { name: /deadline/i });
-      expect(deadlineButton).toHaveClass("bg-brand");
+      expect(deadlineButton).toHaveClass("bg-linear-to-r");
     });
 
     it("should show meeting URL input only for meeting type", () => {

@@ -64,26 +64,26 @@
   /* --- Surface (8 vars) --- */
   /* Near-black dark mode (#08090a) instead of gray (#111827) */
   --color-ui-bg: light-dark(var(--p-white), #08090a);
-  --color-ui-bg-secondary: light-dark(var(--p-gray-50), #0f1011);
+  --color-ui-bg-secondary: light-dark(#f6f8fc, #0f1011);
   --color-ui-bg-tertiary: light-dark(var(--p-gray-100), #161718);
   --color-ui-bg-elevated: light-dark(var(--p-white), #0f1011);
   --color-ui-bg-overlay: light-dark(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.8));
   --color-ui-bg-sidebar: light-dark(#f8f9fb, #0a0b0c);
   /* Ultra-soft background for cards/sections (nearly transparent) */
-  --color-ui-bg-soft: light-dark(var(--p-gray-50), rgba(255, 255, 255, 0.03));
+  --color-ui-bg-soft: light-dark(#f3f6fb, rgba(255, 255, 255, 0.03));
   --color-ui-bg-hover: light-dark(var(--p-gray-100), rgba(255, 255, 255, 0.05));
 
   /* --- Text (4 vars) --- */
   /* Opacity-based hierarchy in dark mode for premium feel */
   --color-ui-text: light-dark(var(--p-gray-900), #ffffff);
-  --color-ui-text-secondary: light-dark(var(--p-gray-500), rgba(255, 255, 255, 0.7));
-  --color-ui-text-tertiary: light-dark(var(--p-gray-400), rgba(255, 255, 255, 0.5));
+  --color-ui-text-secondary: light-dark(var(--p-gray-600), rgba(255, 255, 255, 0.74));
+  --color-ui-text-tertiary: light-dark(var(--p-gray-500), rgba(255, 255, 255, 0.58));
   --color-ui-text-inverse: light-dark(var(--p-white), #08090a);
 
   /* --- Border (4 vars) --- */
   /* Ultra-subtle borders in dark mode - nearly invisible */
-  --color-ui-border: light-dark(var(--p-gray-200), rgba(255, 255, 255, 0.07));
-  --color-ui-border-secondary: light-dark(var(--p-gray-300), rgba(255, 255, 255, 0.15));
+  --color-ui-border: light-dark(var(--p-gray-300), rgba(255, 255, 255, 0.1));
+  --color-ui-border-secondary: light-dark(var(--p-gray-400), rgba(255, 255, 255, 0.2));
   --color-ui-border-focus: light-dark(var(--p-indigo-600), var(--p-indigo-400));
   --color-ui-border-error: light-dark(var(--p-red-500), var(--p-red-400));
 
@@ -841,6 +841,23 @@ body {
   box-shadow: var(--shadow-card-hover);
 }
 
+/* App shell visual layer (keeps product UI consistent with landing depth) */
+.app-shell-bg {
+  background:
+    radial-gradient(circle at top center, color-mix(in oklab, var(--color-brand) 10%, transparent), transparent 60%),
+    var(--color-ui-bg-secondary);
+}
+
+/* Page surface layer used by main app routes */
+.app-page-surface {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-brand) 4%, var(--color-ui-bg)) 0%,
+      var(--color-ui-bg) 220px
+    );
+}
+
 /* Premium scrollbar styling (uses scrollbar tokens from @theme) */
 .scrollbar-subtle {
   scrollbar-width: thin;
@@ -899,4 +916,3 @@ body {
 .transition-slow {
   transition: all var(--duration-slow) ease;
 }
-

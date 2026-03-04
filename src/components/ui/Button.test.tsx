@@ -36,7 +36,8 @@ describe("Button", () => {
     it("applies primary variant by default", () => {
       render(<Button data-testid="btn">Primary</Button>);
       const btn = screen.getByTestId("btn");
-      expect(btn.className).toContain("bg-brand");
+      expect(btn.className).toContain("bg-linear-to-r");
+      expect(btn.className).toContain("from-landing-accent");
     });
 
     it("applies secondary variant", () => {
@@ -324,7 +325,7 @@ describe("Button", () => {
 
     it("returns default classes when no options provided", () => {
       const classes = buttonVariants();
-      expect(classes).toContain("bg-brand");
+      expect(classes).toContain("bg-linear-to-r");
       expect(classes).toContain("h-10");
     });
   });
