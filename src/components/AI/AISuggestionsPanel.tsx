@@ -42,7 +42,7 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
   }
 
   return (
-    <Flex direction="column" className="h-full bg-ui-bg">
+    <Flex direction="column" className="h-full bg-ui-bg" justify="start">
       {/* Action Bar */}
       <div className="p-3 sm:p-4 border-b border-ui-border bg-ui-bg-secondary">
         <Button
@@ -96,7 +96,7 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
       {/* Suggestions List */}
       <FlexItem flex="1" className="overflow-y-auto p-3 sm:p-4">
         {!suggestions ? (
-          <Flex direction="column" gap="md">
+          <Flex direction="column" gap="md" justify="start">
             <Skeleton className="h-24 w-full" />
             <Skeleton className="h-24 w-full" />
             <Skeleton className="h-24 w-full" />
@@ -115,7 +115,7 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
             </div>
           </Flex>
         ) : (
-          <Flex direction="column" gap="md">
+          <Flex direction="column" gap="md" justify="start">
             {suggestions.map((suggestion) => (
               <SuggestionCard
                 key={suggestion._id}

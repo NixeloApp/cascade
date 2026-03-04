@@ -376,7 +376,7 @@ export function SlashMenu() {
                   className="px-2 py-2 mx-1 rounded transition-default cursor-pointer aria-selected:bg-ui-bg-hover"
                 >
                   <item.icon className="mr-3 h-4 w-4 text-ui-text-secondary" />
-                  <Flex direction="column" className="gap-0.5">
+                  <Flex direction="column" className="gap-0.5" justify="start">
                     <Typography variant="label" className="text-sm font-medium text-ui-text">
                       {item.label}
                     </Typography>

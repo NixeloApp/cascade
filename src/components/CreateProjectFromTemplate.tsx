@@ -139,7 +139,12 @@ export function CreateProjectFromTemplate({
       size="xl"
       footer={
         step === "configure" ? (
-          <Flex direction="column" gap="sm" className="sm:flex-row sm:justify-between w-full">
+          <Flex
+            direction="column"
+            gap="sm"
+            className="sm:flex-row sm:justify-between w-full"
+            justify="start"
+          >
             <Button
               onClick={handleBack}
               variant="secondary"

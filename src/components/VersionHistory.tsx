@@ -184,7 +184,7 @@ export function VersionHistory({
                       Loading versions for comparison...
                     </Typography>
                   ) : (
-                    <Flex direction="column" gap="md" className="lg:flex-row">
+                    <Flex direction="column" gap="md" className="lg:flex-row" justify="start">
                       <FlexItem flex="1">
                         <Typography variant="caption" className="mb-2 block">
                           Older: v{leftVersion?.version} {leftVersion?.title}

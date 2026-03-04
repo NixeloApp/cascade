@@ -11,9 +11,13 @@ export function CalendarBodyMarginDayMargin({
   className?: string;
 }): React.ReactElement {
   return (
-    <Flex direction="column" className={cn("sticky left-0 w-12 bg-ui-bg z-10", className)}>
+    <Flex
+      direction="column"
+      className={cn("sticky left-0 w-12 bg-ui-bg z-10", className)}
+      justify="start"
+    >
       <div className="sticky top-0 left-0 h-calendar-day-margin bg-ui-bg z-20 border-b border-ui-border" />
-      <Flex direction="column" className="sticky left-0 w-12 bg-ui-bg z-10">
+      <Flex direction="column" className="sticky left-0 w-12 bg-ui-bg z-10" justify="start">
         {hours.map((hour) => (
           <div key={hour} className="relative h-32 first:mt-0">
             {hour !== 0 && (

@@ -161,7 +161,7 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
   // Loading state
   if (document === undefined || userId === undefined) {
     return (
-      <Flex direction="column" className="h-full bg-ui-bg">
+      <Flex direction="column" className="h-full bg-ui-bg" justify="start">
         <Card padding="lg" radius="none" className="border-x-0 border-t-0">
           <Stack gap="md">
             <Flex align="center" justify="between">
@@ -215,7 +215,7 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
   }
 
   return (
-    <Flex direction="column" className="h-full bg-ui-bg">
+    <Flex direction="column" className="h-full bg-ui-bg" justify="start">
       {/* Document Header */}
       <DocumentHeader
         document={document}

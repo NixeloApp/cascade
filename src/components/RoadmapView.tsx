@@ -452,7 +452,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   if (!(project && filteredIssues && epics)) {
     return (
       <PageLayout fullHeight className="overflow-hidden">
-        <Flex direction="column" className="h-full">
+        <Flex direction="column" className="h-full" justify="start">
           {/* Skeleton Header */}
           <Flex align="center" justify="between" className="mb-6 shrink-0">
             <Stack gap="xs">
@@ -527,7 +527,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
 
   return (
     <PageLayout fullHeight className="overflow-hidden">
-      <Flex direction="column" className="h-full">
+      <Flex direction="column" className="h-full" justify="start">
         {/* Header */}
         <Flex align="center" justify="between" className="mb-6 shrink-0">
           <Stack gap="xs">

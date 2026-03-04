@@ -86,7 +86,7 @@ export function MyIssuesList({
   const isLoadingMore = status === "LoadingMore";
 
   return (
-    <Flex direction="column" className="h-full">
+    <Flex direction="column" className="h-full" justify="start">
       <Card padding="lg" radius="none" variant="ghost" className="pb-2">
         <Stack gap="xs">
           <Typography variant="h3" data-testid={TEST_IDS.DASHBOARD.FEED_HEADING}>
@@ -126,7 +126,7 @@ export function MyIssuesList({
         </TabsList>
       </Tabs>
       <Card padding="md" radius="none" variant="ghost" className="flex-1 overflow-hidden">
-        <Flex direction="column" className="h-full">
+        <Flex direction="column" className="h-full" justify="start">
           {!displayIssues ? (
             /* Loading skeleton */
             <SkeletonList items={5} />
@@ -146,6 +146,7 @@ export function MyIssuesList({
               gap="xs"
               className="flex-1 overflow-y-auto pr-2 custom-scrollbar"
               ref={issueNavigation.listRef}
+              justify="start"
             >
               {displayIssues.map((issue, index) => (
                 <Button

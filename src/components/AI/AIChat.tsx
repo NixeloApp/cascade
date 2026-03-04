@@ -159,11 +159,11 @@ export function AIChat({ projectId, chatId: initialChatId, onChatCreated }: AICh
   }
 
   return (
-    <Flex direction="column" className="h-full bg-ui-bg">
+    <Flex direction="column" className="h-full bg-ui-bg" justify="start">
       {/* Messages Area */}
-      <Flex direction="column" gap="lg" className="flex-1 overflow-y-auto p-4">
+      <Flex direction="column" gap="lg" className="flex-1 overflow-y-auto p-4" justify="start">
         {!messages ? (
-          <Flex direction="column" gap="lg">
+          <Flex direction="column" gap="lg" justify="start">
             <Skeleton className="h-16 w-3/4" />
             <Skeleton className="h-16 w-2/3 ml-auto" />
             <Skeleton className="h-20 w-3/4" />
@@ -178,7 +178,7 @@ export function AIChat({ projectId, chatId: initialChatId, onChatCreated }: AICh
               <Typography variant="muted" className="mb-4">
                 Ask me anything about your project, or use natural language commands.
               </Typography>
-              <Flex direction="column" gap="xs">
+              <Flex direction="column" gap="xs" justify="start">
                 <Typography variant="meta">
                   <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> "What's our team
                   velocity?"

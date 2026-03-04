@@ -147,7 +147,13 @@ export function OnboardingChecklist() {
 
       {/* Checklist Items - Mintlify-inspired with cleaner spacing */}
       {isExpanded && (
-        <Flex id="onboarding-checklist-items" direction="column" gap="sm" className="p-4">
+        <Flex
+          id="onboarding-checklist-items"
+          direction="column"
+          gap="sm"
+          className="p-4"
+          justify="start"
+        >
           {items.map((item, index) => (
             <Flex
               key={item.id}
