@@ -27,6 +27,7 @@
 | File | Notes |
 |------|-------|
 | [consistency-tracking.md](./consistency-tracking.md) | 41 strict errors; monthly snapshot |
+| [visual-inconsistencies-2026-03-04.md](./visual-inconsistencies-2026-03-04.md) | Screenshot-based UI inconsistency audit (176 captures) |
 
 ---
 
