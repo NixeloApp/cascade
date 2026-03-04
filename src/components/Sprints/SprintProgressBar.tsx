@@ -18,43 +18,36 @@ interface SprintProgressBarProps {
   className?: string;
 }
 
-export function SprintProgressBar({ projectId, sprintId, className }: SprintProgressBarProps) {
-  const counts = useQuery(api.issues.getIssueCounts, {
-    projectId,
-    sprintId,
-  });
+type IssueCounts = Record<string, { total: number } | unknown>;
+type WorkflowState = { id: string; category: string };
 
-  const project = useQuery(api.projects.getProject, { id: projectId });
+function calculateProgress(
+  counts: IssueCounts,
+  workflowStates: WorkflowState[],
+): { percent: number; done: number; total: number } {
+  const doneStates = new Set(workflowStates.filter((s) => s.category === "done").map((s) => s.id));
 
-  let progress: { percent: number; done: number; total: number } | null = null;
-  if (counts && project?.workflowStates) {
-    // Group workflow states by category
-    const doneStates = project.workflowStates.filter((s) => s.category === "done").map((s) => s.id);
+  let total = 0;
+  let done = 0;
 
-    // Calculate totals
-    let total = 0;
-    let done = 0;
-
-    for (const [statusId, statusCounts] of Object.entries(counts)) {
-      if (typeof statusCounts === "object" && statusCounts && "total" in statusCounts) {
-        const count = (statusCounts as { total: number }).total;
-        total += count;
-        if (doneStates.includes(statusId)) {
-          done += count;
-        }
-      }
-    }
-
-    if (total === 0) {
-      progress = { percent: 0, done: 0, total: 0 };
-    } else {
-      progress = {
-        percent: Math.round((done / total) * 100),
-        done,
-        total,
-      };
+  for (const [statusId, statusCounts] of Object.entries(counts)) {
+    if (typeof statusCounts === "object" && statusCounts && "total" in statusCounts) {
+      const count = (statusCounts as { total: number }).total;
+      total += count;
+      if (doneStates.has(statusId)) done += count;
     }
   }
+
+  if (total === 0) return { percent: 0, done: 0, total: 0 };
+  return { percent: Math.round((done / total) * 100), done, total };
+}
+
+export function SprintProgressBar({ projectId, sprintId, className }: SprintProgressBarProps) {
+  const counts = useQuery(api.issues.getIssueCounts, { projectId, sprintId });
+  const project = useQuery(api.projects.getProject, { id: projectId });
+
+  const progress =
+    counts && project?.workflowStates ? calculateProgress(counts, project.workflowStates) : null;
 
   if (!progress || progress.total === 0) {
     return null;

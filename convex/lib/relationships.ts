@@ -326,55 +326,77 @@ export const RELATIONSHIPS: Relationship[] = [
   },
 ];
 
-async function handleDeleteRelation(ctx: MutationCtx, rel: Relationship, recordId: Id<TableNames>) {
-  if (rel.onDelete === "cascade") {
-    while (true) {
-      const children = await (ctx.db as unknown as GenericDatabaseWriter<AnyDataModel>)
-        .query(rel.child)
-        .withIndex(rel.index, (q) => q.eq(rel.foreignKey, recordId))
-        .take(BOUNDED_DELETE_BATCH);
+async function handleCascadeDelete(
+  ctx: MutationCtx,
+  rel: Relationship,
+  recordId: Id<TableNames>,
+): Promise<void> {
+  while (true) {
+    const children = await (ctx.db as unknown as GenericDatabaseWriter<AnyDataModel>)
+      .query(rel.child)
+      .withIndex(rel.index, (q) => q.eq(rel.foreignKey, recordId))
+      .take(BOUNDED_DELETE_BATCH);
 
-      if (children.length === 0) break;
+    if (children.length === 0) break;
 
-      // Recursively delete children
-      for (const child of children) {
-        // Recursion needs a cast because TS can't prove child[rel.child] matches the recursion
-        await cascadeDelete(ctx, rel.child, child._id as Id<TableNames>);
-        await ctx.db.delete(child._id as Id<TableNames>);
-      }
+    for (const child of children) {
+      await cascadeDelete(ctx, rel.child, child._id as Id<TableNames>);
+      await ctx.db.delete(child._id as Id<TableNames>);
     }
-  } else if (rel.onDelete === "set_null") {
-    while (true) {
-      const children = await (ctx.db as unknown as GenericDatabaseWriter<AnyDataModel>)
-        .query(rel.child)
-        .withIndex(rel.index, (q) => q.eq(rel.foreignKey, recordId))
-        .take(BOUNDED_DELETE_BATCH);
+  }
+}
 
-      if (children.length === 0) break;
+async function handleSetNullDelete(
+  ctx: MutationCtx,
+  rel: Relationship,
+  recordId: Id<TableNames>,
+): Promise<void> {
+  while (true) {
+    const children = await (ctx.db as unknown as GenericDatabaseWriter<AnyDataModel>)
+      .query(rel.child)
+      .withIndex(rel.index, (q) => q.eq(rel.foreignKey, recordId))
+      .take(BOUNDED_DELETE_BATCH);
 
-      // Set foreign key to null instead of deleting
-      for (const child of children) {
-        await ctx.db.patch(
+    if (children.length === 0) break;
+
+    await Promise.all(
+      children.map((child) =>
+        ctx.db.patch(
           child._id as Id<TableNames>,
           {
             [rel.foreignKey]: undefined,
           } as Record<string, unknown>,
-        );
-      }
-    }
-  } else if (rel.onDelete === "restrict") {
-    const children = await (ctx.db as unknown as GenericDatabaseWriter<AnyDataModel>)
-      .query(rel.child)
-      .withIndex(rel.index, (q) => q.eq(rel.foreignKey, recordId))
-      .take(1);
+        ),
+      ),
+    );
+  }
+}
 
-    // Don't allow delete if children exist
-    if (children.length > 0) {
-      throw conflict(
-        `Cannot delete ${rel.parent} ${recordId}: ${children.length} ` +
-          `${rel.child} record(s) still reference it`,
-      );
-    }
+async function handleRestrictDelete(
+  ctx: MutationCtx,
+  rel: Relationship,
+  recordId: Id<TableNames>,
+): Promise<void> {
+  const children = await (ctx.db as unknown as GenericDatabaseWriter<AnyDataModel>)
+    .query(rel.child)
+    .withIndex(rel.index, (q) => q.eq(rel.foreignKey, recordId))
+    .take(1);
+
+  if (children.length > 0) {
+    throw conflict(
+      `Cannot delete ${rel.parent} ${recordId}: ${children.length} ` +
+        `${rel.child} record(s) still reference it`,
+    );
+  }
+}
+
+async function handleDeleteRelation(ctx: MutationCtx, rel: Relationship, recordId: Id<TableNames>) {
+  if (rel.onDelete === "cascade") {
+    await handleCascadeDelete(ctx, rel, recordId);
+  } else if (rel.onDelete === "set_null") {
+    await handleSetNullDelete(ctx, rel, recordId);
+  } else if (rel.onDelete === "restrict") {
+    await handleRestrictDelete(ctx, rel, recordId);
   }
 }
 

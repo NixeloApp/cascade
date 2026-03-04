@@ -274,6 +274,43 @@ interface TreeNodeItemProps {
   depth: number;
 }
 
+function ExpandToggle({
+  hasChildren,
+  isExpanded,
+  title,
+  onToggle,
+}: {
+  hasChildren: boolean;
+  isExpanded: boolean;
+  title: string;
+  onToggle: (e: React.MouseEvent) => void;
+}) {
+  if (!hasChildren) {
+    return <FlexItem as="span" aria-hidden shrink={false} className="h-5 w-5" />;
+  }
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={onToggle}
+      className="h-5 w-5 p-0.5"
+      aria-label={`${isExpanded ? "Collapse" : "Expand"} ${title}`}
+      aria-expanded={isExpanded}
+    >
+      {isExpanded ? (
+        <ChevronDown className="w-3.5 h-3.5" />
+      ) : (
+        <ChevronRight className="w-3.5 h-3.5" />
+      )}
+    </Button>
+  );
+}
+
+function DocumentIcon({ hasChildren, isExpanded }: { hasChildren: boolean; isExpanded: boolean }) {
+  const IconComponent = hasChildren && isExpanded ? FolderOpen : File;
+  return <IconComponent className="w-4 h-4 shrink-0 text-ui-text-tertiary" />;
+}
+
 function TreeNodeItem({
   node,
   organizationId,
@@ -320,32 +357,13 @@ function TreeNodeItem({
           )}
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
         >
-          {/* Expand/collapse toggle */}
-          {node.hasChildren ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleToggle}
-              className="h-5 w-5 p-0.5"
-              aria-label={`${isExpanded ? "Collapse" : "Expand"} ${node.title || "Untitled"}`}
-              aria-expanded={isExpanded}
-            >
-              {isExpanded ? (
-                <ChevronDown className="w-3.5 h-3.5" />
-              ) : (
-                <ChevronRight className="w-3.5 h-3.5" />
-              )}
-            </Button>
-          ) : (
-            <FlexItem as="span" aria-hidden shrink={false} className="h-5 w-5" />
-          )}
-
-          {/* Document icon */}
-          {node.hasChildren && isExpanded ? (
-            <FolderOpen className="w-4 h-4 shrink-0 text-ui-text-tertiary" />
-          ) : (
-            <File className="w-4 h-4 shrink-0 text-ui-text-tertiary" />
-          )}
+          <ExpandToggle
+            hasChildren={node.hasChildren}
+            isExpanded={isExpanded}
+            title={node.title || "Untitled"}
+            onToggle={handleToggle}
+          />
+          <DocumentIcon hasChildren={node.hasChildren} isExpanded={isExpanded} />
 
           {/* Title */}
           <FlexItem flex="1" className="min-w-0">

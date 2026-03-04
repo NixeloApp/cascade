@@ -408,6 +408,33 @@ function matchesDocumentFilters(
   return matchesDateRange(doc._creationTime, filters.dateFrom, filters.dateTo);
 }
 
+async function hasOrgAccess(
+  ctx: QueryCtx & { userId: Id<"users"> },
+  organizationId: Id<"organizations">,
+  myOrgIds?: Set<string>,
+): Promise<boolean> {
+  if (myOrgIds) {
+    return myOrgIds.has(organizationId);
+  }
+  const membership = await ctx.db
+    .query("organizationMembers")
+    .withIndex("by_organization_user", (q) =>
+      q.eq("organizationId", organizationId).eq("userId", ctx.userId),
+    )
+    .first();
+  return !!membership;
+}
+
+async function hasTeamAccess(
+  ctx: QueryCtx & { userId: Id<"users"> },
+  teamId: Id<"teams">,
+  organizationId: Id<"organizations">,
+): Promise<boolean> {
+  const isOrgAdmin = await isOrganizationAdmin(ctx, organizationId, ctx.userId);
+  if (isOrgAdmin) return true;
+  return isTeamMember(ctx, teamId, ctx.userId);
+}
+
 // Helper: Check if user has access to view document
 async function canAccessDocument(
   ctx: QueryCtx & { userId: Id<"users"> },
@@ -421,7 +448,6 @@ async function canAccessDocument(
   myOrgIds?: Set<string>,
 ): Promise<boolean> {
   // Security: Always verify container access first, even for the creator.
-  // This ensures that removed members lose access to their creations.
 
   // 1. Check Project Access (if linked)
   if (doc.projectId) {
@@ -429,45 +455,16 @@ async function canAccessDocument(
     if (!canProject) return false;
   }
 
-  // Team-scoped documents require team membership (or org admin).
+  // 2. Team-scoped documents require team membership (or org admin).
   if (doc.teamId) {
-    const isOrgAdmin = await isOrganizationAdmin(ctx, doc.organizationId, ctx.userId);
-    if (!isOrgAdmin) {
-      const hasTeamAccess = await isTeamMember(ctx, doc.teamId, ctx.userId);
-      if (!hasTeamAccess) return false;
-    }
+    if (!(await hasTeamAccess(ctx, doc.teamId, doc.organizationId))) return false;
+  } else if (!(await hasOrgAccess(ctx, doc.organizationId, myOrgIds))) {
+    // 3. Check Organization Access (if NOT linked to a project/team)
+    return false;
   }
 
-  // 2. Check Organization Access (if NOT linked to a project)
-  // Note: canAccessProject already handles org admin checks, so we only need explicit org check here
-  else {
-    let hasOrgAccess = false;
-    if (myOrgIds) {
-      hasOrgAccess = myOrgIds.has(doc.organizationId);
-    } else {
-      const membership = await ctx.db
-        .query("organizationMembers")
-        .withIndex("by_organization_user", (q) =>
-          q.eq("organizationId", doc.organizationId).eq("userId", ctx.userId),
-        )
-        .first();
-      hasOrgAccess = !!membership;
-    }
-
-    if (!hasOrgAccess) return false;
-  }
-
-  // 3. Check Document Permissions
-  // If we reached here, the user has access to the CONTAINER (Project or Org).
-
-  // Creator always has access (within valid container)
-  if (doc.createdBy === ctx.userId) return true;
-
-  // Public documents are accessible (within valid container)
-  if (doc.isPublic) return true;
-
-  // Otherwise, deny (e.g. private document created by someone else)
-  return false;
+  // 4. Check Document Permissions - user has container access
+  return doc.createdBy === ctx.userId || doc.isPublic;
 }
 
 async function validateOrganizationMembership(

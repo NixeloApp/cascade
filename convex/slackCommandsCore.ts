@@ -52,61 +52,79 @@ export const executeCommand = internalMutation({
     const [subcommand, ...rest] = commandText.split(/\s+/);
     const command = subcommand.toLowerCase();
 
-    if (command === "create") {
-      const title = rest.join(" ").trim();
-      if (!title) {
-        return { ok: false, message: "Usage: `/nixelo create <title>`" };
-      }
-      try {
-        const result = await createIssueFromCommand(ctx, context.userId, title);
-        return { ok: true, message: `Created issue ${result.key}: ${result.title}` };
-      } catch (error) {
+    switch (command) {
+      case "create":
+        return handleCreateCommand(ctx, context.userId, rest);
+      case "search":
+        return handleSearchCommand(ctx, context.userId, rest);
+      case "assign":
+        return handleAssignCommand(ctx, context.userId, rest);
+      default:
         return {
           ok: false,
-          message: error instanceof Error ? error.message : "Failed to create issue.",
+          message:
+            "Unknown subcommand. Supported: `create`, `search`, `assign`.\nExample: `/nixelo search onboarding`",
         };
-      }
     }
-
-    if (command === "search") {
-      const query = rest.join(" ").trim();
-      if (!query) {
-        return { ok: false, message: "Usage: `/nixelo search <query>`" };
-      }
-
-      const result = await searchIssuesForCommand(ctx, context.userId, query);
-      if (result.length === 0) {
-        return { ok: true, message: `No issues found for "${query}".` };
-      }
-
-      return {
-        ok: true,
-        message: result.map((issue) => `${issue.key} - ${issue.title}`).join("\n"),
-      };
-    }
-
-    if (command === "assign") {
-      const [issueKey, ...assigneeParts] = rest;
-      const assigneeName = assigneeParts.join(" ").trim().replace(/^@/, "");
-      if (!issueKey || !assigneeName) {
-        return { ok: false, message: "Usage: `/nixelo assign <ISSUE-123> <name>`" };
-      }
-
-      return await assignIssueFromCommand(
-        ctx,
-        context.userId,
-        issueKey.toUpperCase(),
-        assigneeName,
-      );
-    }
-
-    return {
-      ok: false,
-      message:
-        "Unknown subcommand. Supported: `create`, `search`, `assign`.\nExample: `/nixelo search onboarding`",
-    };
   },
 });
+
+type CommandResponse = { ok: boolean; message: string };
+
+async function handleCreateCommand(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  args: string[],
+): Promise<CommandResponse> {
+  const title = args.join(" ").trim();
+  if (!title) {
+    return { ok: false, message: "Usage: `/nixelo create <title>`" };
+  }
+  try {
+    const result = await createIssueFromCommand(ctx, userId, title);
+    return { ok: true, message: `Created issue ${result.key}: ${result.title}` };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Failed to create issue.",
+    };
+  }
+}
+
+async function handleSearchCommand(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  args: string[],
+): Promise<CommandResponse> {
+  const query = args.join(" ").trim();
+  if (!query) {
+    return { ok: false, message: "Usage: `/nixelo search <query>`" };
+  }
+
+  const result = await searchIssuesForCommand(ctx, userId, query);
+  if (result.length === 0) {
+    return { ok: true, message: `No issues found for "${query}".` };
+  }
+
+  return {
+    ok: true,
+    message: result.map((issue) => `${issue.key} - ${issue.title}`).join("\n"),
+  };
+}
+
+async function handleAssignCommand(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  args: string[],
+): Promise<CommandResponse> {
+  const [issueKey, ...assigneeParts] = args;
+  const assigneeName = assigneeParts.join(" ").trim().replace(/^@/, "");
+  if (!issueKey || !assigneeName) {
+    return { ok: false, message: "Usage: `/nixelo assign <ISSUE-123> <name>`" };
+  }
+
+  return assignIssueFromCommand(ctx, userId, issueKey.toUpperCase(), assigneeName);
+}
 
 async function resolveTeamContext(
   ctx: MutationCtx,
@@ -212,6 +230,16 @@ async function createIssueFromCommand(
   return { issueId, key, title };
 }
 
+function issueMatchesQuery(
+  issue: { key: string; title: string },
+  normalizedQuery: string,
+): boolean {
+  return (
+    issue.key.toLowerCase().includes(normalizedQuery) ||
+    issue.title.toLowerCase().includes(normalizedQuery)
+  );
+}
+
 async function searchIssuesForCommand(
   ctx: MutationCtx,
   userId: Id<"users">,
@@ -219,6 +247,7 @@ async function searchIssuesForCommand(
 ): Promise<Array<{ issueId: Id<"issues">; key: string; title: string }>> {
   const projectIds = await listUserProjectIds(ctx, userId);
   const normalizedQuery = query.toLowerCase();
+
   const issuesByProject = await Promise.all(
     projectIds.map((projectId) =>
       ctx.db
@@ -229,40 +258,21 @@ async function searchIssuesForCommand(
     ),
   );
 
-  const topResults: Array<{
-    issueId: Id<"issues">;
-    key: string;
-    title: string;
-    updatedAt: number;
-  }> = [];
-  for (const issues of issuesByProject) {
-    for (const issue of issues) {
-      const matches =
-        issue.key.toLowerCase().includes(normalizedQuery) ||
-        issue.title.toLowerCase().includes(normalizedQuery);
-      if (matches) {
-        topResults.push({
-          issueId: issue._id,
-          key: issue.key,
-          title: issue.title,
-          updatedAt: issue.updatedAt,
-        });
+  // Flatten and filter matching issues
+  const allMatches = issuesByProject
+    .flat()
+    .filter((issue) => issueMatchesQuery(issue, normalizedQuery))
+    .map((issue) => ({
+      issueId: issue._id,
+      key: issue.key,
+      title: issue.title,
+      updatedAt: issue.updatedAt,
+    }));
 
-        if (topResults.length > 5) {
-          let oldestIndex = 0;
-          for (let index = 1; index < topResults.length; index++) {
-            if (topResults[index].updatedAt < topResults[oldestIndex].updatedAt) {
-              oldestIndex = index;
-            }
-          }
-          topResults.splice(oldestIndex, 1);
-        }
-      }
-    }
-  }
-
-  return topResults
+  // Sort by most recent and take top 5
+  return allMatches
     .sort((a, b) => b.updatedAt - a.updatedAt)
+    .slice(0, 5)
     .map(({ issueId, key, title }) => ({ issueId, key, title }));
 }
 

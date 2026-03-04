@@ -54,6 +54,45 @@ import { cn } from "@/lib/utils";
 const DOCUMENT_DISPLAY_LIMIT = 10;
 const WORKSPACE_DISPLAY_LIMIT = 25;
 
+function createSetToggle<T extends string>(
+  setter: React.Dispatch<React.SetStateAction<Set<T>>>,
+): (key: T) => void {
+  return (key: T) => {
+    setter((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+}
+
+function filterItems<T extends { name?: string; title?: string }>(
+  items: T[],
+  search: string,
+  field: "name" | "title",
+): T[] {
+  const trimmed = search.trim().toLowerCase();
+  if (!trimmed) return items;
+  return items.filter((item) => {
+    const value = field === "name" ? item.name : (item as { title?: string }).title;
+    return value?.toLowerCase().includes(trimmed);
+  });
+}
+
+function groupTeamsByWorkspace(
+  teams: Doc<"teams">[] | undefined,
+): Map<Id<"workspaces">, Doc<"teams">[]> {
+  const map = new Map<Id<"workspaces">, Doc<"teams">[]>();
+  if (!teams) return map;
+  for (const team of teams) {
+    const existing = map.get(team.workspaceId);
+    if (existing) existing.push(team);
+    else map.set(team.workspaceId, [team]);
+  }
+  return map;
+}
+
 export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -89,36 +128,17 @@ export function AppSidebar() {
   const showDocumentSearch = allDocuments.length > DOCUMENT_DISPLAY_LIMIT;
   const showWorkspaceSearch = allWorkspaces.length > WORKSPACE_DISPLAY_LIMIT;
 
-  const filteredDocuments =
-    showDocumentSearch && documentSearch.trim()
-      ? allDocuments.filter((doc) =>
-          doc.title.toLowerCase().includes(documentSearch.trim().toLowerCase()),
-        )
-      : allDocuments;
+  const filteredDocuments = showDocumentSearch
+    ? filterItems(allDocuments, documentSearch, "title")
+    : allDocuments;
   const displayedDocuments = filteredDocuments.slice(0, DOCUMENT_DISPLAY_LIMIT);
 
-  const filteredWorkspaces =
-    showWorkspaceSearch && workspaceSearch.trim()
-      ? allWorkspaces.filter((workspace) =>
-          workspace.name.toLowerCase().includes(workspaceSearch.trim().toLowerCase()),
-        )
-      : allWorkspaces;
+  const filteredWorkspaces = showWorkspaceSearch
+    ? filterItems(allWorkspaces, workspaceSearch, "name")
+    : allWorkspaces;
   const displayedWorkspaces = filteredWorkspaces.slice(0, WORKSPACE_DISPLAY_LIMIT);
 
-  // Group teams by workspace
-  const teamsByWorkspace = (() => {
-    const map = new Map<Id<"workspaces">, Doc<"teams">[]>();
-    if (!teams) return map;
-    for (const team of teams) {
-      const existing = map.get(team.workspaceId);
-      if (existing) {
-        existing.push(team);
-      } else {
-        map.set(team.workspaceId, [team]);
-      }
-    }
-    return map;
-  })();
+  const teamsByWorkspace = groupTeamsByWorkspace(teams);
 
   // Mutations
   const createDocument = useMutation(api.documents.create);
@@ -166,29 +186,8 @@ export function AppSidebar() {
     }
   };
 
-  const toggleWorkspace = (workspaceSlug: string) => {
-    setExpandedWorkspaces((prev) => {
-      const next = new Set(prev);
-      if (next.has(workspaceSlug)) {
-        next.delete(workspaceSlug);
-      } else {
-        next.add(workspaceSlug);
-      }
-      return next;
-    });
-  };
-
-  const toggleTeam = (teamSlug: string) => {
-    setExpandedTeams((prev) => {
-      const next = new Set(prev);
-      if (next.has(teamSlug)) {
-        next.delete(teamSlug);
-      } else {
-        next.add(teamSlug);
-      }
-      return next;
-    });
-  };
+  const toggleWorkspace = createSetToggle(setExpandedWorkspaces);
+  const toggleTeam = createSetToggle(setExpandedTeams);
 
   const handleNavClick = () => {
     closeMobile();

@@ -78,72 +78,73 @@ function extractIssueKeyFromUrl(url: string): string | null {
   }
 }
 
+function jsonError(message: string, status: number): Response {
+  return new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+type PayloadValidation =
+  | { ok: true; payload: SlackUnfurlPayload; teamId: string; callerSlackUserId: string }
+  | { ok: false; response: Response };
+
+function validatePayload(payloadRaw: string | null): PayloadValidation {
+  if (!payloadRaw) {
+    return { ok: false, response: jsonError("Missing payload.", 400) };
+  }
+  if (payloadRaw.length > MAX_UNFURL_PAYLOAD_LENGTH) {
+    return { ok: false, response: jsonError("Payload is too large.", 400) };
+  }
+
+  const payload = JSON.parse(payloadRaw) as SlackUnfurlPayload;
+  const teamId = payload.team_id;
+  const callerSlackUserId = payload.user_id;
+
+  if (!teamId) {
+    return { ok: false, response: jsonError("Missing team_id.", 400) };
+  }
+  if (!callerSlackUserId) {
+    return { ok: false, response: jsonError("Missing user_id.", 400) };
+  }
+
+  const links = payload.links || [];
+  if (links.length > MAX_UNFURL_LINKS) {
+    return { ok: false, response: jsonError("Too many links in unfurl payload.", 400) };
+  }
+
+  return { ok: true, payload, teamId, callerSlackUserId };
+}
+
 export const handleUnfurlHandler = async (ctx: ActionCtx, request: Request) => {
   if (!isSlackSigningSecretConfigured()) {
-    return new Response(JSON.stringify({ error: "Slack signing secret is not configured." }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonError("Slack signing secret is not configured.", 500);
   }
 
   const rawBody = await request.text();
   if (!(await verifySlackSignature(request.headers, rawBody))) {
-    return new Response(JSON.stringify({ error: "Invalid Slack signature." }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonError("Invalid Slack signature.", 401);
   }
 
   const params = new URLSearchParams(rawBody);
   const payloadRaw = params.get("payload");
-  if (!payloadRaw) {
-    return new Response(JSON.stringify({ error: "Missing payload." }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-  if (payloadRaw.length > MAX_UNFURL_PAYLOAD_LENGTH) {
-    return new Response(JSON.stringify({ error: "Payload is too large." }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
 
   try {
-    const payload = JSON.parse(payloadRaw) as SlackUnfurlPayload;
-    const teamId = payload.team_id;
-    const callerSlackUserId = payload.user_id;
-    if (!teamId) {
-      return new Response(JSON.stringify({ error: "Missing team_id." }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-    if (!callerSlackUserId) {
-      return new Response(JSON.stringify({ error: "Missing user_id." }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+    const validation = validatePayload(payloadRaw);
+    if (!validation.ok) {
+      return validation.response;
     }
 
+    const { payload, teamId, callerSlackUserId } = validation;
     const links = payload.links || [];
-    if (links.length > MAX_UNFURL_LINKS) {
-      return new Response(JSON.stringify({ error: "Too many links in unfurl payload." }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
 
     const urlToIssueKey = new Map<string, string>();
     for (const link of links) {
-      if (!link.url) {
-        continue;
-      }
+      if (!link.url) continue;
       const issueKey = extractIssueKeyFromUrl(link.url);
-      if (!issueKey) {
-        continue;
+      if (issueKey) {
+        urlToIssueKey.set(link.url, issueKey);
       }
-      urlToIssueKey.set(link.url, issueKey);
     }
     const resolvedLinks = await Promise.all(
       Array.from(urlToIssueKey.entries()).map(async ([url, issueKey]) => {
@@ -165,21 +166,11 @@ export const handleUnfurlHandler = async (ctx: ActionCtx, request: Request) => {
       }),
     );
 
-    const unfurls: Record<
-      string,
-      {
-        title: string;
-        text: string;
-      }
-    > = {};
+    const unfurls: Record<string, { title: string; text: string }> = {};
     for (const link of resolvedLinks) {
-      if (!link) {
-        continue;
+      if (link) {
+        unfurls[link.url] = { title: link.title, text: link.text };
       }
-      unfurls[link.url] = {
-        title: link.title,
-        text: link.text,
-      };
     }
 
     return new Response(JSON.stringify({ unfurls }), {
@@ -188,10 +179,7 @@ export const handleUnfurlHandler = async (ctx: ActionCtx, request: Request) => {
     });
   } catch {
     // Security: avoid leaking internal backend details to Slack.
-    return new Response(JSON.stringify({ error: "Unfurl failed. Please try again later." }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonError("Unfurl failed. Please try again later.", 500);
   }
 };
 

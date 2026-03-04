@@ -14,6 +14,35 @@ import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { conflict, notFound, validation } from "./lib/errors";
 import { assertCanEditProject } from "./projectAccess";
 
+async function assertLabelNameUnique(
+  ctx: MutationCtx,
+  projectId: Id<"projects">,
+  newName: string,
+  currentName: string,
+): Promise<void> {
+  if (newName === currentName) return;
+
+  const existing = await ctx.db
+    .query("labels")
+    .withIndex("by_project_name", (q) => q.eq("projectId", projectId).eq("name", newName))
+    .first();
+
+  if (existing) {
+    throw conflict("Label with this name already exists");
+  }
+}
+
+async function assertGroupBelongsToProject(
+  ctx: MutationCtx,
+  groupId: Id<"labelGroups">,
+  projectId: Id<"projects">,
+): Promise<void> {
+  const group = await ctx.db.get(groupId);
+  if (!group || group.projectId !== projectId) {
+    throw validation("groupId", "Label group not found or belongs to a different project");
+  }
+}
+
 // Shared implementation
 async function createLabelImpl(
   ctx: MutationCtx & { userId: Id<"users">; projectId: Id<"projects"> },
@@ -125,33 +154,16 @@ export const update = authenticatedMutation({
   handler: async (ctx, args) => {
     const label = await ctx.db.get(args.id);
     if (!label) throw notFound("label", args.id);
+    if (!label.projectId) throw validation("projectId", "Label has no project");
 
-    if (!label.projectId) {
-      throw validation("projectId", "Label has no project");
-    }
-
-    // Check if user can edit project
     await assertCanEditProject(ctx, label.projectId, ctx.userId);
 
-    // If name is changing, check for duplicates
-    if (args.name && args.name !== label.name) {
-      const newName = args.name;
-      const existing = await ctx.db
-        .query("labels")
-        .withIndex("by_project_name", (q) => q.eq("projectId", label.projectId).eq("name", newName))
-        .first();
-
-      if (existing) {
-        throw conflict("Label with this name already exists");
-      }
+    if (args.name) {
+      await assertLabelNameUnique(ctx, label.projectId, args.name, label.name);
     }
 
-    // If groupId is provided (not undefined), verify it belongs to the same project
     if (args.groupId !== undefined && args.groupId !== null) {
-      const group = await ctx.db.get(args.groupId);
-      if (!group || group.projectId !== label.projectId) {
-        throw validation("groupId", "Label group not found or belongs to a different project");
-      }
+      await assertGroupBelongsToProject(ctx, args.groupId, label.projectId);
     }
 
     const updates: Partial<typeof label> = {};

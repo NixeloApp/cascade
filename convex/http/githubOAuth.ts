@@ -430,6 +430,33 @@ const handleOAuthError = (error: unknown) => {
  */
 export const handleCallback = httpAction(handleCallbackHandler);
 
+function jsonResponse(data: unknown, status: number): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function extractBearerToken(request: Request): string | undefined {
+  const authHeader = request.headers.get("Authorization");
+  return authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
+}
+
+async function parseGitHubErrorMessage(response: Response): Promise<string> {
+  try {
+    const text = await response.text();
+    try {
+      const errorBody = JSON.parse(text);
+      return errorBody.message || "Failed to fetch repositories";
+    } catch {
+      return text || "Failed to fetch repositories";
+    }
+  } catch (e) {
+    logger.error("Failed to read error response body:", { error: e });
+    return "Failed to fetch repositories";
+  }
+}
+
 /**
  * List user's GitHub repositories handler
  *
@@ -453,40 +480,21 @@ export const handleCallback = httpAction(handleCallbackHandler);
  */
 export const listReposHandler = async (ctx: ActionCtx, request: Request) => {
   try {
-    // Authenticate the user from the Bearer token
-    const authHeader = request.headers.get("Authorization");
-    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
-
+    const token = extractBearerToken(request);
     if (!token) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
-    // Verify session and get user ID
     const userId = await ctx.runQuery(internal.auth.verifySession, { sessionId: token });
-
     if (!userId) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
-    // Get decrypted tokens for API call (internal mutation uses userId)
-    const tokens = await ctx.runMutation(internal.github.getDecryptedGitHubTokens, {
-      userId,
-    });
-
+    const tokens = await ctx.runMutation(internal.github.getDecryptedGitHubTokens, { userId });
     if (!tokens) {
-      return new Response(JSON.stringify({ error: "Not connected to GitHub" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Not connected to GitHub" }, 400);
     }
 
-    // Fetch repositories from GitHub API
     const reposResponse = await fetchWithTimeout(
       "https://api.github.com/user/repos?sort=updated&per_page=100",
       {
@@ -500,23 +508,8 @@ export const listReposHandler = async (ctx: ActionCtx, request: Request) => {
     );
 
     if (!reposResponse.ok) {
-      let errorMessage = "Failed to fetch repositories";
-      try {
-        const text = await reposResponse.text();
-        try {
-          const errorBody = JSON.parse(text);
-          errorMessage = errorBody.message || errorMessage;
-        } catch {
-          errorMessage = text || errorMessage;
-        }
-      } catch (e) {
-        logger.error("Failed to read error response body:", { error: e });
-      }
-
-      return new Response(JSON.stringify({ error: errorMessage }), {
-        status: reposResponse.status,
-        headers: { "Content-Type": "application/json" },
-      });
+      const errorMessage = await parseGitHubErrorMessage(reposResponse);
+      return jsonResponse({ error: errorMessage }, reposResponse.status);
     }
 
     let repos: unknown[];
@@ -527,9 +520,7 @@ export const listReposHandler = async (ctx: ActionCtx, request: Request) => {
       }
       repos = json;
     } catch (_e) {
-      if (isAppError(_e)) {
-        throw _e;
-      }
+      if (isAppError(_e)) throw _e;
       throw validation("github", "Invalid JSON response from GitHub repositories endpoint");
     }
 
@@ -547,10 +538,7 @@ export const listReposHandler = async (ctx: ActionCtx, request: Request) => {
       };
     });
 
-    return new Response(JSON.stringify({ repos: simplifiedRepos }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonResponse({ repos: simplifiedRepos }, 200);
   } catch (error) {
     return handleListReposError(error);
   }

@@ -24,6 +24,52 @@ import { bookerAnswers } from "./validators";
  * Supports confirmation workflow and calendar integration
  */
 
+async function enforceBookingRateLimit(ctx: MutationCtx, email: string): Promise<void> {
+  if (process.env.IS_TEST_ENV) return;
+
+  try {
+    await ctx.runMutation(components.rateLimiter.lib.rateLimit, {
+      name: `createBooking:${email}`,
+      config: { kind: "token bucket", rate: 10, period: MINUTE, capacity: 3 },
+      throws: true,
+    });
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message.includes("Rate limit")) {
+      throw rateLimited();
+    }
+    throw e;
+  }
+}
+
+function assertMinimumNotice(startTime: number, minimumNotice: number): void {
+  const hoursUntilMeeting = (startTime - Date.now()) / HOUR;
+  if (hoursUntilMeeting < minimumNotice) {
+    throw validation("startTime", `Requires at least ${minimumNotice} hours notice`);
+  }
+}
+
+async function findConflictingBooking(
+  ctx: MutationCtx,
+  hostId: Id<"users">,
+  startTime: number,
+  endTime: number,
+) {
+  return ctx.db
+    .query("bookings")
+    .withIndex("by_host", (q) => q.eq("hostId", hostId))
+    .filter((q) =>
+      q.and(
+        q.or(q.eq(q.field("status"), "pending"), q.eq(q.field("status"), "confirmed")),
+        q.or(
+          q.and(q.lte(q.field("startTime"), startTime), q.gt(q.field("endTime"), startTime)),
+          q.and(q.lt(q.field("startTime"), endTime), q.gte(q.field("endTime"), endTime)),
+          q.and(q.gte(q.field("startTime"), startTime), q.lte(q.field("endTime"), endTime)),
+        ),
+      ),
+    )
+    .first();
+}
+
 /** Parse "HH:MM" to minutes since midnight, or null if invalid. */
 function parseTimeToMinutes(time: string): number | null {
   const parts = time.split(":");
@@ -113,33 +159,11 @@ export const createBooking = mutation({
     timezone: v.string(),
   },
   handler: async (ctx, args) => {
-    // Rate limit by email: 10 bookings per minute per email (prevents spam)
-    // Use single atomic mutation to avoid TOCTOU race condition
-    if (!process.env.IS_TEST_ENV) {
-      try {
-        await ctx.runMutation(components.rateLimiter.lib.rateLimit, {
-          name: `createBooking:${args.bookerEmail}`,
-          config: {
-            kind: "token bucket",
-            rate: 10,
-            period: MINUTE,
-            capacity: 3,
-          },
-          throws: true,
-        });
-      } catch (e: unknown) {
-        if (e instanceof Error && e.message.includes("Rate limit")) {
-          throw rateLimited();
-        }
-        throw e;
-      }
-    }
+    await enforceBookingRateLimit(ctx, args.bookerEmail);
 
-    // Validate input
     validateEmail(args.bookerEmail);
     validate.name(args.bookerName, "bookerName");
 
-    // Get booking page
     const page = await ctx.db
       .query("bookingPages")
       .withIndex("by_slug", (q) => q.eq("slug", args.bookingPageSlug))
@@ -149,41 +173,19 @@ export const createBooking = mutation({
       throw notFound("bookingPage");
     }
 
-    // Security: Validate that the requested time falls within host's availability
     await validateAvailability(ctx, page.userId, args.startTime, page.duration);
 
-    // Calculate end time
     const endTime = args.startTime + page.duration * MINUTE;
-
-    // Check minimum notice
     const now = Date.now();
-    const hoursUntilMeeting = (args.startTime - now) / HOUR;
-    if (hoursUntilMeeting < page.minimumNotice) {
-      throw validation("startTime", `Requires at least ${page.minimumNotice} hours notice`);
-    }
 
-    // Check if slot is still available (only need to find one conflict)
-    const conflictingBooking = await ctx.db
-      .query("bookings")
-      .withIndex("by_host", (q) => q.eq("hostId", page.userId))
-      .filter((q) =>
-        q.and(
-          q.or(q.eq(q.field("status"), "pending"), q.eq(q.field("status"), "confirmed")),
-          q.or(
-            // New booking starts during existing booking
-            q.and(
-              q.lte(q.field("startTime"), args.startTime),
-              q.gt(q.field("endTime"), args.startTime),
-            ),
-            // New booking ends during existing booking
-            q.and(q.lt(q.field("startTime"), endTime), q.gte(q.field("endTime"), endTime)),
-            // New booking completely contains existing booking
-            q.and(q.gte(q.field("startTime"), args.startTime), q.lte(q.field("endTime"), endTime)),
-          ),
-        ),
-      )
-      .first();
+    assertMinimumNotice(args.startTime, page.minimumNotice);
 
+    const conflictingBooking = await findConflictingBooking(
+      ctx,
+      page.userId,
+      args.startTime,
+      endTime,
+    );
     if (conflictingBooking) {
       throw conflict("This time slot is no longer available");
     }
