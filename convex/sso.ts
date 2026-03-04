@@ -10,7 +10,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { BOUNDED_LIST_LIMIT, BOUNDED_SELECT_LIMIT } from "./lib/boundedQueries";
 import { conflict, forbidden, notFound, unauthenticated, validation } from "./lib/errors";
 
