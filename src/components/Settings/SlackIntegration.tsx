@@ -20,6 +20,16 @@ import { Typography } from "../ui/Typography";
 const CONVEX_URL = import.meta.env.VITE_CONVEX_URL as string;
 const SLACK_AUTH_URL = `${CONVEX_URL?.replace(".cloud", ".site")}/slack/auth`;
 
+function getAllowedOrigins(): Set<string> {
+  const allowed = new Set<string>([window.location.origin]);
+  try {
+    allowed.add(new URL(SLACK_AUTH_URL).origin);
+  } catch {
+    // Ignore malformed auth URL and fall back to same-origin only.
+  }
+  return allowed;
+}
+
 interface SlackConnectionData {
   teamId: string;
   teamName: string;
@@ -38,8 +48,10 @@ export function SlackIntegration() {
   const [isDisconnecting, setIsDisconnecting] = useState(false);
 
   useEffect(() => {
+    const allowedOrigins = getAllowedOrigins();
+
     const handleMessage = async (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) {
+      if (!allowedOrigins.has(event.origin)) {
         return;
       }
 
