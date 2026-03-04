@@ -18,7 +18,7 @@ import {
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { encrypt } from "./lib/encryption";
-import { forbidden } from "./lib/errors";
+import { forbidden, validation } from "./lib/errors";
 import { logger } from "./lib/logger";
 import { safeFetch } from "./lib/safeFetch";
 import { notDeleted } from "./lib/softDeleteHelpers";
@@ -46,6 +46,7 @@ function isSlackWebhookUrl(url: string): boolean {
 /** Save or update Slack OAuth connection for current user. */
 export const connectSlack = authenticatedMutation({
   args: {
+    slackUserId: v.optional(v.string()),
     teamId: v.string(),
     teamName: v.string(),
     accessToken: v.string(),
@@ -57,7 +58,7 @@ export const connectSlack = authenticatedMutation({
   returns: v.object({ success: v.literal(true), connectionId: v.id("slackConnections") }),
   handler: async (ctx, args) => {
     if (args.incomingWebhookUrl && !isSlackWebhookUrl(args.incomingWebhookUrl)) {
-      throw new Error("Invalid Slack incoming webhook URL");
+      throw validation("incomingWebhookUrl", "Invalid Slack incoming webhook URL");
     }
 
     const encryptedAccessToken = await encrypt(args.accessToken);
@@ -70,6 +71,7 @@ export const connectSlack = authenticatedMutation({
 
     if (existing) {
       await ctx.db.patch(existing._id, {
+        slackUserId: args.slackUserId,
         teamId: args.teamId,
         teamName: args.teamName,
         accessToken: encryptedAccessToken,
@@ -88,6 +90,7 @@ export const connectSlack = authenticatedMutation({
 
     const connectionId = await ctx.db.insert("slackConnections", {
       userId: ctx.userId,
+      slackUserId: args.slackUserId,
       teamId: args.teamId,
       teamName: args.teamName,
       accessToken: encryptedAccessToken,
@@ -135,6 +138,14 @@ export const sendMessage = action({
   },
 });
 
+/**
+ * Deliver a message to Slack for a specific connection.
+ *
+ * Behavior contract:
+ * - Missing/inactive destinations are treated as no-op success.
+ * - Delivery stats are updated for both success and failure paths.
+ * - Failures are rethrown after stats update so callers can choose retry/log policy.
+ */
 export const deliverMessageInternal = internalAction({
   args: {
     connectionId: v.id("slackConnections"),
@@ -160,7 +171,7 @@ export const deliverMessageInternal = internalAction({
 
       if (!response.ok) {
         const errorBody = await response.text();
-        throw new Error(`Slack webhook failed: ${response.status} ${errorBody}`);
+        throw validation("slack", `Slack webhook failed: ${response.status} ${errorBody}`);
       }
 
       await ctx.runMutation(internal.slack.updateDeliveryStats, {
@@ -231,6 +242,12 @@ export const sendIssueNotification = internalAction({
   },
 });
 
+/**
+ * Resolve a Slack connection into a delivery-safe destination.
+ *
+ * Returns `null` when the connection is missing, inactive, or has no incoming webhook URL.
+ * Callers use this to treat non-deliverable connections as no-op instead of hard failures.
+ */
 export const getConnectionForDelivery = internalQuery({
   args: { connectionId: v.id("slackConnections") },
   returns: v.union(
@@ -255,6 +272,14 @@ export const getConnectionForDelivery = internalQuery({
   },
 });
 
+/**
+ * Update per-connection Slack delivery telemetry.
+ *
+ * Contract:
+ * - Always returns success (missing connections are treated as no-op).
+ * - Increments `messagesSent` only for successful deliveries.
+ * - Preserves `lastMessageAt` on failures while recording `lastError`.
+ */
 export const updateDeliveryStats = internalMutation({
   args: {
     connectionId: v.id("slackConnections"),
@@ -428,6 +453,7 @@ export const getConnection = authenticatedQuery({
       _id: connection._id,
       _creationTime: connection._creationTime,
       userId: connection.userId,
+      slackUserId: connection.slackUserId,
       teamId: connection.teamId,
       teamName: connection.teamName,
       botUserId: connection.botUserId,

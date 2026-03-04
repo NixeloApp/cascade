@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api, internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestContext, createTestUser } from "./testUtils";
@@ -525,6 +526,47 @@ describe("Document Templates", () => {
 
       const stored = await t.run(async (ctx) => await ctx.db.get(templateId));
       expect(stored?.icon).toEqual({ type: "emoji", value: "📄" });
+    });
+
+    it("supports cursor pagination so later legacy rows are migrated", async () => {
+      const t = convexTest(schema, modules);
+      const { asUser } = await createTestContext(t);
+
+      const ids: Id<"documentTemplates">[] = [];
+      for (let index = 0; index < 3; index++) {
+        const { templateId } = await asUser.mutation(api.documentTemplates.create, {
+          name: `Legacy Batch ${index}`,
+          category: "migration",
+          icon: "lucide:FileText",
+          content: sampleContent,
+          isPublic: false,
+        });
+        ids.push(templateId);
+      }
+
+      await t.run(async (ctx) => {
+        for (const id of ids) {
+          await ctx.db.patch(id, { icon: "📄" });
+        }
+      });
+
+      let cursor: string | null = null;
+      let totalMigrated = 0;
+      for (let index = 0; index < 3; index++) {
+        const result = await t.mutation(internal.documentTemplates.migrateLegacyIconStrings, {
+          cursor: cursor ?? undefined,
+          limit: 1,
+        });
+        totalMigrated += result.migrated;
+        cursor = result.cursor;
+      }
+
+      expect(totalMigrated).toBeGreaterThanOrEqual(3);
+
+      for (const id of ids) {
+        const stored = await t.run(async (ctx) => await ctx.db.get(id));
+        expect(stored?.icon).toEqual({ type: "emoji", value: "📄" });
+      }
     });
   });
 });

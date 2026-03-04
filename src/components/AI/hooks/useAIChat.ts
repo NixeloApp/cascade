@@ -88,8 +88,8 @@ export function useAIChat({
       await navigator.clipboard.writeText(content);
       setCopiedMessageId(messageId);
       setTimeout(() => setCopiedMessageId(null), 2000);
-    } catch {
-      // Silently fail if clipboard access is denied
+    } catch (error) {
+      showError(error, "Failed to copy response");
     }
   }
 

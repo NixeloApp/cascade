@@ -4,6 +4,10 @@ import * as envLib from "../lib/env";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { handleCallbackHandler, initiateAuthHandler, triggerSyncHandler } from "./googleOAuth";
 
+const GOOGLE_AUTH_URL = "https://api.convex.site/google/auth";
+const GOOGLE_CALLBACK_URL = "https://api.convex.site/google/callback";
+const GOOGLE_SYNC_URL = "https://api.convex.site/google/sync";
+
 // Mock env library
 vi.mock("../lib/env", () => ({
   getGoogleClientId: vi.fn(),
@@ -50,7 +54,7 @@ vi.mock("../_generated/api", () => ({
   },
 }));
 
-describe("Google OAuth Flow", () => {
+describe("Google OAuth HTTP Handler", () => {
   const mockCtx = {
     runQuery: vi.fn(),
     runMutation: vi.fn(),
@@ -71,7 +75,7 @@ describe("Google OAuth Flow", () => {
 
   describe("initiateAuthHandler", () => {
     it("should redirect to Google with correct parameters", async () => {
-      const request = new Request("https://api.convex.site/google/auth");
+      const request = new Request(GOOGLE_AUTH_URL);
       const response = await initiateAuthHandler(mockCtx, request);
 
       expect(response).toBeInstanceOf(Response);
@@ -82,8 +86,10 @@ describe("Google OAuth Flow", () => {
       expect(location).toBeDefined();
       expect(setCookie).toBeDefined();
 
-      // biome-ignore lint/style/noNonNullAssertion: testing convenience
-      const url = new URL(location!);
+      if (!location) {
+        throw new Error("Expected Location header");
+      }
+      const url = new URL(location);
       const state = url.searchParams.get("state");
 
       expect(url.origin).toBe("https://accounts.google.com");
@@ -101,7 +107,7 @@ describe("Google OAuth Flow", () => {
     it("should return error if not configured", async () => {
       vi.mocked(envLib.isGoogleOAuthConfigured).mockReturnValue(false);
 
-      const request = new Request("https://api.convex.site/google/auth");
+      const request = new Request(GOOGLE_AUTH_URL);
       const response = await initiateAuthHandler(mockCtx, request);
 
       expect(response.status).toBe(500);
@@ -112,7 +118,7 @@ describe("Google OAuth Flow", () => {
 
   describe("handleCallbackHandler", () => {
     it("should return HTML error if error param exists", async () => {
-      const request = new Request("https://api.convex.site/google/callback?error=access_denied");
+      const request = new Request(`${GOOGLE_CALLBACK_URL}?error=access_denied`);
       const response = await handleCallbackHandler(mockCtx, request);
 
       expect(response.status).toBe(400);
@@ -127,10 +133,9 @@ describe("Google OAuth Flow", () => {
         throw new Error("Missing required environment variable: AUTH_GOOGLE_ID");
       });
 
-      const request = new Request(
-        "https://api.convex.site/google/callback?code=some_code&state=valid_state",
-      );
-      request.headers.set("Cookie", "google-oauth-state=valid_state");
+      const request = new Request(`${GOOGLE_CALLBACK_URL}?code=some_code&state=valid_state`, {
+        headers: { Cookie: "google-oauth-state=valid_state" },
+      });
       const response = await handleCallbackHandler(mockCtx, request);
 
       expect(response.status).toBe(500);
@@ -140,17 +145,18 @@ describe("Google OAuth Flow", () => {
     });
 
     it("should return 400 if state is missing or invalid", async () => {
-      let request = new Request("https://api.convex.site/google/callback?code=some_code");
+      let request = new Request(`${GOOGLE_CALLBACK_URL}?code=some_code`);
       let response = await handleCallbackHandler(mockCtx, request);
       expect(response.status).toBe(400);
       expect(await response.text()).toContain("Invalid state");
 
-      request = new Request("https://api.convex.site/google/callback?code=some_code&state=val");
+      request = new Request(`${GOOGLE_CALLBACK_URL}?code=some_code&state=val`);
       response = await handleCallbackHandler(mockCtx, request);
       expect(response.status).toBe(400);
 
-      request = new Request("https://api.convex.site/google/callback?code=some_code&state=val1");
-      request.headers.set("Cookie", "google-oauth-state=val2");
+      request = new Request(`${GOOGLE_CALLBACK_URL}?code=some_code&state=val1`, {
+        headers: { Cookie: "google-oauth-state=val2" },
+      });
       response = await handleCallbackHandler(mockCtx, request);
       expect(response.status).toBe(400);
     });
@@ -170,10 +176,9 @@ describe("Google OAuth Flow", () => {
         mockOkResponse({ email: "test@example.com" }),
       );
 
-      const request = new Request(
-        "https://api.convex.site/google/callback?code=auth_code&state=valid_state",
-      );
-      request.headers.set("Cookie", "google-oauth-state=valid_state");
+      const request = new Request(`${GOOGLE_CALLBACK_URL}?code=auth_code&state=valid_state`, {
+        headers: { Cookie: "google-oauth-state=valid_state" },
+      });
       const response = await handleCallbackHandler(mockCtx, request);
 
       expect(response.status).toBe(200);
@@ -199,10 +204,9 @@ describe("Google OAuth Flow", () => {
     it("should handle token exchange failure", async () => {
       vi.mocked(fetchWithTimeout).mockResolvedValueOnce(mockErrorResponse(400, "invalid_grant"));
 
-      const request = new Request(
-        "https://api.convex.site/google/callback?code=auth_code&state=valid_state",
-      );
-      request.headers.set("Cookie", "google-oauth-state=valid_state");
+      const request = new Request(`${GOOGLE_CALLBACK_URL}?code=auth_code&state=valid_state`, {
+        headers: { Cookie: "google-oauth-state=valid_state" },
+      });
       const response = await handleCallbackHandler(mockCtx, request);
 
       expect(response.status).toBe(500);
@@ -223,10 +227,9 @@ describe("Google OAuth Flow", () => {
       // User info fetch fails
       vi.mocked(fetchWithTimeout).mockResolvedValueOnce(mockErrorResponse(401, "unauthorized"));
 
-      const request = new Request(
-        "https://api.convex.site/google/callback?code=auth_code&state=valid_state",
-      );
-      request.headers.set("Cookie", "google-oauth-state=valid_state");
+      const request = new Request(`${GOOGLE_CALLBACK_URL}?code=auth_code&state=valid_state`, {
+        headers: { Cookie: "google-oauth-state=valid_state" },
+      });
       const response = await handleCallbackHandler(mockCtx, request);
 
       expect(response.status).toBe(500);
@@ -239,7 +242,7 @@ describe("Google OAuth Flow", () => {
     it("should return error if not connected", async () => {
       vi.mocked(mockCtx.runQuery).mockResolvedValue(null);
 
-      const request = new Request("https://api.convex.site/google/sync", { method: "POST" });
+      const request = new Request(GOOGLE_SYNC_URL, { method: "POST" });
       const response = await triggerSyncHandler(mockCtx, request);
 
       expect(response.status).toBe(400);
@@ -250,7 +253,7 @@ describe("Google OAuth Flow", () => {
     it("should return error if sync is disabled", async () => {
       vi.mocked(mockCtx.runQuery).mockResolvedValue({ _id: "conn1", syncEnabled: false });
 
-      const request = new Request("https://api.convex.site/google/sync", { method: "POST" });
+      const request = new Request(GOOGLE_SYNC_URL, { method: "POST" });
       const response = await triggerSyncHandler(mockCtx, request);
 
       expect(response.status).toBe(400);
@@ -262,7 +265,7 @@ describe("Google OAuth Flow", () => {
       vi.mocked(mockCtx.runQuery).mockResolvedValue({ _id: "conn1", syncEnabled: true });
       vi.mocked(mockCtx.runMutation).mockResolvedValue(null);
 
-      const request = new Request("https://api.convex.site/google/sync", { method: "POST" });
+      const request = new Request(GOOGLE_SYNC_URL, { method: "POST" });
       const response = await triggerSyncHandler(mockCtx, request);
 
       expect(response.status).toBe(500);
@@ -289,7 +292,7 @@ describe("Google OAuth Flow", () => {
         }),
       );
 
-      const request = new Request("https://api.convex.site/google/sync", { method: "POST" });
+      const request = new Request(GOOGLE_SYNC_URL, { method: "POST" });
       const response = await triggerSyncHandler(mockCtx, request);
 
       expect(response.status).toBe(200);
@@ -317,7 +320,7 @@ describe("Google OAuth Flow", () => {
         mockErrorResponse(500, "Internal Server Error"),
       );
 
-      const request = new Request("https://api.convex.site/google/sync", { method: "POST" });
+      const request = new Request(GOOGLE_SYNC_URL, { method: "POST" });
       const response = await triggerSyncHandler(mockCtx, request);
 
       expect(response.status).toBe(500);
@@ -341,7 +344,7 @@ describe("Google OAuth Flow", () => {
         mockErrorResponse(403, JSON.stringify(googleError)),
       );
 
-      const request = new Request("https://api.convex.site/google/sync", { method: "POST" });
+      const request = new Request(GOOGLE_SYNC_URL, { method: "POST" });
       const response = await triggerSyncHandler(mockCtx, request);
 
       expect(response.status).toBe(403);

@@ -61,6 +61,7 @@ import type * as http_googleOAuth from "../http/googleOAuth.js";
 import type * as http_slackCommands from "../http/slackCommands.js";
 import type * as http_slackOAuth from "../http/slackOAuth.js";
 import type * as http_slackUnfurl from "../http/slackUnfurl.js";
+import type * as http_testUtils from "../http/testUtils.js";
 import type * as inbox from "../inbox.js";
 import type * as internal_ai from "../internal/ai.js";
 import type * as invites from "../invites.js";
@@ -229,6 +230,7 @@ declare const fullApi: ApiFromModules<{
   "http/slackCommands": typeof http_slackCommands;
   "http/slackOAuth": typeof http_slackOAuth;
   "http/slackUnfurl": typeof http_slackUnfurl;
+  "http/testUtils": typeof http_testUtils;
   inbox: typeof inbox;
   "internal/ai": typeof internal_ai;
   invites: typeof invites;

@@ -1,6 +1,8 @@
 import type { Id } from "@convex/_generated/dataModel";
+import { act, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { showError } from "@/lib/toast";
 import { render, screen } from "@/test/custom-render";
 import { IssuesCalendarView } from "./IssuesCalendarView";
 
@@ -16,10 +18,15 @@ vi.mock("@convex/_generated/api", () => ({
 
 // Mock Convex React
 const mockUseQuery = vi.fn();
-const mockUseMutation = vi.fn(() => vi.fn());
+const mockUpdateIssue = vi.fn();
+const mockUseMutation = vi.fn(() => mockUpdateIssue);
 vi.mock("convex/react", () => ({
   useQuery: (query: unknown, args: unknown) => mockUseQuery(query, args),
   useMutation: () => mockUseMutation(),
+}));
+
+vi.mock("@/lib/toast", () => ({
+  showError: vi.fn(),
 }));
 
 // Mock Utils
@@ -41,6 +48,7 @@ describe("IssuesCalendarView", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUpdateIssue.mockResolvedValue(undefined);
   });
 
   it("should render calendar header and navigation", () => {
@@ -106,5 +114,49 @@ describe("IssuesCalendarView", () => {
         }),
       ).toBeInTheDocument();
     }
+  });
+
+  it("shows an error toast when rescheduling fails", async () => {
+    const today = new Date();
+    const todayDay = today.getDate();
+    const issueDate = today.getTime();
+    const error = new Error("Update failed");
+    mockUpdateIssue.mockRejectedValueOnce(error);
+
+    const mockIssue = {
+      _id: "issue-1" as Id<"issues">,
+      title: "Draggable Issue",
+      type: "bug",
+      priority: "high",
+      dueDate: issueDate,
+    };
+
+    mockUseQuery.mockReturnValue([mockIssue]);
+    render(<IssuesCalendarView projectId={projectId} />);
+
+    const issueButton = screen.getByText("Draggable Issue").closest("button");
+    expect(issueButton).toBeInTheDocument();
+    const dayCell = screen.getByTestId(`calendar-day-${todayDay}`);
+
+    const dataTransfer = {
+      effectAllowed: "move",
+      dropEffect: "move",
+      setData: vi.fn(),
+      getData: vi.fn(),
+    };
+
+    if (issueButton) {
+      await act(async () => {
+        fireEvent.dragStart(issueButton, { dataTransfer });
+      });
+      await act(async () => {
+        await Promise.resolve();
+      });
+      await act(async () => {
+        fireEvent.drop(dayCell, { dataTransfer });
+      });
+    }
+
+    expect(showError).toHaveBeenCalledWith(error, "Failed to reschedule issue");
   });
 });

@@ -4,6 +4,8 @@ import * as envLib from "../lib/env";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { handleCallbackHandler } from "./githubOAuth";
 
+const GITHUB_CALLBACK_URL = "https://api.convex.site/github/callback";
+
 // Mock dependencies
 vi.mock("../lib/fetchWithTimeout", () => ({
   fetchWithTimeout: vi.fn(),
@@ -17,7 +19,7 @@ vi.mock("../lib/env", () => ({
   getConvexSiteUrl: vi.fn(),
 }));
 
-describe("GitHub OAuth Error Handling", () => {
+describe("GitHub OAuth Error HTTP Handler", () => {
   let mockCtx: ActionCtx;
   let consoleSpy: ReturnType<typeof vi.spyOn>;
   const mockErrorResponse = {
@@ -56,9 +58,7 @@ describe("GitHub OAuth Error Handling", () => {
       text: async () => JSON.stringify(mockErrorResponse),
     } as Response);
 
-    const request = new Request(
-      "https://api.convex.site/github/callback?code=bad_code&state=valid_state",
-    );
+    const request = new Request(`${GITHUB_CALLBACK_URL}?code=bad_code&state=valid_state`);
     request.headers.set("Cookie", "github-oauth-state=valid_state");
 
     const response = await handleCallbackHandler(mockCtx, request);
@@ -95,9 +95,7 @@ describe("GitHub OAuth Error Handling", () => {
       text: async () => JSON.stringify({ message: "Bad credentials" }),
     } as Response);
 
-    const request = new Request(
-      "https://api.convex.site/github/callback?code=valid_code&state=valid_state",
-    );
+    const request = new Request(`${GITHUB_CALLBACK_URL}?code=valid_code&state=valid_state`);
     request.headers.set("Cookie", "github-oauth-state=valid_state");
 
     const response = await handleCallbackHandler(mockCtx, request);

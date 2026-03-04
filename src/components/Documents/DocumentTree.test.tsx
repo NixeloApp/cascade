@@ -28,6 +28,7 @@ const mockData = {
   archived: undefined as { _id: Id<"documents">; title: string }[] | undefined,
   children: undefined as TreeNode[] | undefined,
 };
+let limitedQueryCallCount = 0;
 
 interface TreeNode {
   _id: Id<"documents">;
@@ -50,11 +51,10 @@ vi.mock("convex/react", () => ({
     if (argsObj && "parentId" in argsObj) {
       return argsObj.parentId === undefined ? mockData.rootDocs : mockData.children;
     }
-    // listFavorites
+    // listFavorites/listArchived both use { organizationId, limit }
     if (argsObj && "limit" in argsObj && !("parentId" in argsObj)) {
-      // Distinguish favorites from archived by checking the call order isn't reliable
-      // Just return based on what's set
-      return mockData.favorites;
+      limitedQueryCallCount += 1;
+      return limitedQueryCallCount % 2 === 1 ? mockData.favorites : mockData.archived;
     }
     return undefined;
   }),
@@ -96,6 +96,7 @@ describe("DocumentTree", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    limitedQueryCallCount = 0;
     mockData.rootDocs = undefined;
     mockData.favorites = undefined;
     mockData.archived = undefined;
@@ -156,8 +157,8 @@ describe("DocumentTree", () => {
 
       render(<DocumentTree {...defaultProps} />);
 
-      expect(screen.getByText("First Doc")).toBeInTheDocument();
-      expect(screen.getByText("Second Doc")).toBeInTheDocument();
+      expect(screen.getByText("First Doc")).toHaveAttribute("title", "First Doc");
+      expect(screen.getByText("Second Doc")).toHaveAttribute("title", "Second Doc");
     });
 
     it("should show 'Untitled' for documents without title", () => {
@@ -167,7 +168,7 @@ describe("DocumentTree", () => {
 
       render(<DocumentTree {...defaultProps} />);
 
-      expect(screen.getByText("Untitled")).toBeInTheDocument();
+      expect(screen.getByText("Untitled")).toHaveAttribute("title", "Untitled");
     });
 
     it("should highlight selected document", () => {
@@ -216,7 +217,7 @@ describe("DocumentTree", () => {
       render(<DocumentTree {...defaultProps} />);
 
       expect(screen.getByText("Favorites")).toBeInTheDocument();
-      expect(screen.getByText("Favorite Doc")).toBeInTheDocument();
+      expect(screen.getByText("Favorite Doc")).toHaveAttribute("title", "Favorite Doc");
     });
 
     it("should not render Favorites section when no favorites", () => {
@@ -239,18 +240,154 @@ describe("DocumentTree", () => {
 
       render(<DocumentTree {...defaultProps} />);
 
+      const favoritesToggle = screen.getByRole("button", { name: /favorites/i });
+      expect(favoritesToggle).toHaveAttribute("aria-expanded", "true");
+      expect(favoritesToggle).toHaveAttribute("aria-controls", "favorites-documents-list");
+      expect(screen.getByRole("region", { name: /favorites documents/i })).toBeInTheDocument();
+      expect(document.getElementById("favorites-documents-list")).toBeInTheDocument();
+
       // Initially expanded
       expect(screen.getByText("Favorite Doc")).toBeInTheDocument();
 
       // Click to collapse
-      await user.click(screen.getByRole("button", { name: /favorites/i }));
+      await user.click(favoritesToggle);
 
       // Should hide the favorite doc
       expect(screen.queryByText("Favorite Doc")).not.toBeInTheDocument();
+      expect(favoritesToggle).toHaveAttribute("aria-expanded", "false");
+      expect(
+        screen.queryByRole("region", { name: /favorites documents/i }),
+      ).not.toBeInTheDocument();
+      expect(document.getElementById("favorites-documents-list")).not.toBeInTheDocument();
+    });
+
+    it("should toggle Favorites section with keyboard", async () => {
+      const user = userEvent.setup();
+      setupMocks({
+        rootDocs: [createMockDocument()],
+        favorites: [{ _id: "fav-1" as Id<"documents">, title: "Favorite Doc" }],
+      });
+
+      render(<DocumentTree {...defaultProps} />);
+
+      const favoritesToggle = screen.getByRole("button", { name: /favorites/i });
+      favoritesToggle.focus();
+      expect(favoritesToggle).toHaveFocus();
+      expect(favoritesToggle).toHaveAttribute("aria-expanded", "true");
+
+      await user.keyboard("{Enter}");
+      expect(favoritesToggle).toHaveFocus();
+      expect(favoritesToggle).toHaveAttribute("aria-expanded", "false");
+      expect(screen.queryByText("Favorite Doc")).not.toBeInTheDocument();
+
+      await user.keyboard(" ");
+      expect(favoritesToggle).toHaveFocus();
+      expect(favoritesToggle).toHaveAttribute("aria-expanded", "true");
+      expect(screen.getByText("Favorite Doc")).toBeInTheDocument();
+    });
+
+    it("should show Untitled tooltip for favorite documents without title", () => {
+      setupMocks({
+        rootDocs: [createMockDocument()],
+        favorites: [{ _id: "fav-1" as Id<"documents">, title: "" }],
+      });
+
+      render(<DocumentTree {...defaultProps} />);
+
+      expect(screen.getByText("Untitled")).toHaveAttribute("title", "Untitled");
+    });
+  });
+
+  describe("Archived Section", () => {
+    it("should toggle Archived section when clicked", async () => {
+      const user = userEvent.setup();
+      setupMocks({
+        rootDocs: [createMockDocument()],
+        favorites: [],
+        archived: [{ _id: "arch-1" as Id<"documents">, title: "Archived Doc" }],
+      });
+
+      render(<DocumentTree {...defaultProps} />);
+
+      const archivedToggle = screen.getByRole("button", { name: /archived/i });
+      expect(archivedToggle).toHaveAttribute("aria-expanded", "false");
+      expect(archivedToggle).toHaveAttribute("aria-controls", "archived-documents-list");
+      expect(document.getElementById("archived-documents-list")).not.toBeInTheDocument();
+
+      await user.click(archivedToggle);
+
+      expect(archivedToggle).toHaveAttribute("aria-expanded", "true");
+      expect(document.getElementById("archived-documents-list")).toBeInTheDocument();
+      expect(screen.getByRole("region", { name: /archived documents/i })).toBeInTheDocument();
+      expect(screen.getByText("Archived Doc")).toBeInTheDocument();
+    });
+
+    it("should toggle Archived section with keyboard", async () => {
+      const user = userEvent.setup();
+      setupMocks({
+        rootDocs: [createMockDocument()],
+        favorites: [],
+        archived: [{ _id: "arch-1" as Id<"documents">, title: "Archived Doc" }],
+      });
+
+      render(<DocumentTree {...defaultProps} />);
+
+      const archivedToggle = screen.getByRole("button", { name: /archived/i });
+      archivedToggle.focus();
+      expect(archivedToggle).toHaveFocus();
+      expect(archivedToggle).toHaveAttribute("aria-expanded", "false");
+
+      await user.keyboard("{Enter}");
+      expect(archivedToggle).toHaveFocus();
+      expect(archivedToggle).toHaveAttribute("aria-expanded", "true");
+      expect(screen.getByText("Archived Doc")).toBeInTheDocument();
+
+      await user.keyboard(" ");
+      expect(archivedToggle).toHaveFocus();
+      expect(archivedToggle).toHaveAttribute("aria-expanded", "false");
+      expect(screen.queryByText("Archived Doc")).not.toBeInTheDocument();
+    });
+
+    it("should show Untitled tooltip for archived documents without title", async () => {
+      const user = userEvent.setup();
+      setupMocks({
+        rootDocs: [createMockDocument()],
+        favorites: [],
+        archived: [{ _id: "arch-1" as Id<"documents">, title: "" }],
+      });
+
+      render(<DocumentTree {...defaultProps} />);
+
+      const archivedToggle = screen.getByRole("button", { name: /archived/i });
+      await user.click(archivedToggle);
+
+      expect(screen.getByText("Untitled")).toHaveAttribute("title", "Untitled");
     });
   });
 
   describe("Tree Node Expansion", () => {
+    it("should expose accessible labels and expanded state for tree node controls", async () => {
+      const user = userEvent.setup();
+      setupMocks({
+        rootDocs: [createMockDocument({ hasChildren: true, title: "Parent Doc" })],
+      });
+
+      render(<DocumentTree {...defaultProps} />);
+
+      const toggleButton = screen.getByRole("button", { name: "Expand Parent Doc" });
+      expect(toggleButton).toHaveAttribute("aria-expanded", "false");
+
+      await user.click(toggleButton);
+
+      expect(screen.getByRole("button", { name: "Collapse Parent Doc" })).toHaveAttribute(
+        "aria-expanded",
+        "true",
+      );
+      expect(
+        screen.getByRole("button", { name: "Open actions for Parent Doc" }),
+      ).toBeInTheDocument();
+    });
+
     it("should show expand button for documents with children", () => {
       setupMocks({
         rootDocs: [createMockDocument({ hasChildren: true, title: "Parent Doc" })],
@@ -270,9 +407,9 @@ describe("DocumentTree", () => {
 
       render(<DocumentTree {...defaultProps} />);
 
-      // The expand button should be invisible (has invisible class)
-      const doc = screen.getByText("Leaf Doc");
-      expect(doc).toBeInTheDocument();
+      expect(screen.getByText("Leaf Doc")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Expand Leaf Doc" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Collapse Leaf Doc" })).not.toBeInTheDocument();
     });
   });
 });

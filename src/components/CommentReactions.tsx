@@ -11,6 +11,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { Smile } from "lucide-react";
 import { useState } from "react";
+import { showError } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import type { ReactionInfo } from "../../convex/lib/issueHelpers";
 import { Button } from "./ui/Button";
@@ -36,8 +37,8 @@ export function CommentReactions({ commentId, reactions, currentUserId }: Commen
     try {
       await toggleReaction({ commentId, emoji });
       setIsOpen(false);
-    } catch {
-      // Silently fail - UI shows current state
+    } catch (error) {
+      showError(error, "Failed to update reaction");
     }
   };
 

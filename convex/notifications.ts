@@ -15,7 +15,7 @@ import { internalMutation, internalQuery } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchIssues, batchFetchUsers } from "./lib/batchHelpers";
 import { boundedCount } from "./lib/boundedQueries";
-import { requireOwned } from "./lib/errors";
+import { requireOwned, validation } from "./lib/errors";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 
@@ -219,7 +219,7 @@ export const snoozeNotification = authenticatedMutation({
 
     // Validate snooze time is in the future
     if (args.snoozedUntil <= Date.now()) {
-      throw new Error("Snooze time must be in the future");
+      throw validation("snoozedUntil", "Snooze time must be in the future");
     }
 
     await ctx.db.patch(args.id, {

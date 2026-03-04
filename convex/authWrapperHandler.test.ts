@@ -157,11 +157,26 @@ describe("securePasswordResetHandler", () => {
     expect(logger.error).toHaveBeenCalledWith(
       "Secure password reset failed",
       expect.objectContaining({
-        error: expect.objectContaining({
-          message: "Could not determine client IP for security-sensitive action",
-        }),
+        error: expect.anything(),
       }),
     );
+
+    const lastCall = vi.mocked(logger.error).mock.calls.at(-1);
+    const loggedError = lastCall?.[1]?.error;
+    const errorMessage =
+      typeof loggedError === "object" &&
+      loggedError !== null &&
+      "data" in loggedError &&
+      typeof loggedError.data === "object" &&
+      loggedError.data !== null &&
+      "message" in loggedError.data &&
+      typeof loggedError.data.message === "string"
+        ? loggedError.data.message
+        : loggedError instanceof Error
+          ? loggedError.message
+          : "";
+
+    expect(errorMessage).toBe("Could not determine client IP for security-sensitive action");
 
     // Restore env
     vi.unstubAllEnvs();

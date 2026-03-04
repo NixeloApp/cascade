@@ -1,5 +1,5 @@
 /**
- * Google OAuth HTTP Handlers
+ * Google OAuth HTTP Handler
  *
  * HTTP endpoints for Google OAuth 2.0 authentication flow.
  * Handles authorization redirect, callback processing, and token exchange.
@@ -33,7 +33,12 @@ class HttpError extends Error {
   }
 }
 
-/** Helper to fetch JSON with timeout and error handling */
+/**
+ * Fetch and parse JSON with timeout and normalized error behavior for OAuth calls.
+ *
+ * @throws {HttpError} When the upstream HTTP response is non-2xx.
+ * @throws {ConvexError} "oauth" validation error when the response body is not valid JSON.
+ */
 async function fetchJSON<T>(url: string, init?: RequestInit, timeoutMs = 10000): Promise<T> {
   const response = await fetchWithTimeout(url, init, timeoutMs);
   const text = await response.text();
@@ -45,7 +50,7 @@ async function fetchJSON<T>(url: string, init?: RequestInit, timeoutMs = 10000):
   try {
     return JSON.parse(text) as T;
   } catch {
-    throw new Error(`Invalid JSON response from ${url}`);
+    throw validation("oauth", `Invalid JSON response from ${url}`);
   }
 }
 
@@ -90,7 +95,11 @@ function getErrorPageHtml(
  * Validate E2E API key for TEST_* codes
  * Same security pattern as other /e2e/* endpoints
  *
- * Returns false if invalid (logs warning), true if valid
+ * Contract:
+ * - In non-local environments, `E2E_API_KEY` + matching `x-e2e-api-key` header is required.
+ * - Localhost is explicitly allowed when no API key is configured to keep local E2E flows usable.
+ *
+ * Returns false if invalid (logs warning), true if valid.
  */
 function validateE2EApiKey(request: Request): boolean {
   const apiKey = process.env.E2E_API_KEY;
@@ -188,7 +197,13 @@ interface GoogleCalendarEvent {
   attendees?: GoogleCalendarAttendee[];
 }
 
-// OAuth configuration - throws if not configured
+/**
+ * Build Google OAuth runtime configuration from environment.
+ *
+ * Uses `CONVEX_SITE_URL` (not frontend origin) because callback handling runs as a Convex HTTP action.
+ *
+ * @throws {ConvexError} "oauth" validation error when Google OAuth env vars are missing.
+ */
 const getGoogleOAuthConfig = () => {
   const clientId = getGoogleClientId();
   const clientSecret = getGoogleClientSecret();

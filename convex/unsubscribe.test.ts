@@ -58,7 +58,7 @@ describe("Unsubscribe", () => {
   });
 
   describe("getUserFromToken", () => {
-    it("should return user ID for valid token", async () => {
+    it("should return true for valid token", async () => {
       const t = convexTest(schema, modules);
       const userId = await createTestUser(t);
       const asUser = asAuthenticatedUser(t, userId);
@@ -67,7 +67,7 @@ describe("Unsubscribe", () => {
 
       const result = await t.query(api.unsubscribe.getUserFromToken, { token });
 
-      expect(result).toBe(userId);
+      expect(result).toBe(true);
     });
 
     it("should return null for non-existent token", async () => {
@@ -80,12 +80,22 @@ describe("Unsubscribe", () => {
       expect(result).toBeNull();
     });
 
-    it("should return userId for manually-inserted token", async () => {
+    it("should return null for malformed token format", async () => {
+      const t = convexTest(schema, modules);
+
+      const result = await t.query(api.unsubscribe.getUserFromToken, {
+        token: "INVALID_TOKEN",
+      });
+
+      expect(result).toBeNull();
+    });
+
+    it("should return true for manually-inserted token", async () => {
       const t = convexTest(schema, modules);
       const userId = await createTestUser(t);
 
       // Manually insert a token to verify query retrieval works
-      const manualToken = "manual-token-12345";
+      const manualToken = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
       await t.run(async (ctx) => {
         await ctx.db.insert("unsubscribeTokens", {
           userId,
@@ -98,7 +108,19 @@ describe("Unsubscribe", () => {
       // _creationTime is set automatically. Expiration is tested via E2E.
       const result = await t.query(api.unsubscribe.getUserFromToken, { token: manualToken });
 
-      expect(result).toBe(userId);
+      expect(result).toBe(true);
+    });
+
+    it("should return null for used token", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const asUser = asAuthenticatedUser(t, userId);
+
+      const token = await asUser.mutation(api.unsubscribe.generateToken, {});
+      await t.mutation(api.unsubscribe.unsubscribe, { token });
+
+      const result = await t.query(api.unsubscribe.getUserFromToken, { token });
+      expect(result).toBeNull();
     });
   });
 
@@ -199,6 +221,27 @@ describe("Unsubscribe", () => {
       await expect(
         t.mutation(api.unsubscribe.unsubscribe, { token: "invalid-token" }),
       ).rejects.toThrow(/invalid.*token/i);
+    });
+
+    it("should reject malformed token format", async () => {
+      const t = convexTest(schema, modules);
+
+      await expect(
+        t.mutation(api.unsubscribe.unsubscribe, { token: "INVALID_TOKEN" }),
+      ).rejects.toThrow(/invalid.*token/i);
+    });
+
+    it("should reject reused token", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const asUser = asAuthenticatedUser(t, userId);
+
+      const token = await asUser.mutation(api.unsubscribe.generateToken, {});
+      await t.mutation(api.unsubscribe.unsubscribe, { token });
+
+      await expect(t.mutation(api.unsubscribe.unsubscribe, { token })).rejects.toThrow(
+        /already.*used/i,
+      );
     });
   });
 

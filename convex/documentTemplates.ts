@@ -788,14 +788,22 @@ export const initializeBuiltInTemplates = internalMutation({
  */
 export const migrateLegacyIconStrings = internalMutation({
   args: {
+    cursor: v.optional(v.string()),
     limit: v.optional(v.number()),
   },
+  returns: v.object({
+    cursor: v.union(v.string(), v.null()),
+    scanned: v.number(),
+    migrated: v.number(),
+  }),
   handler: async (ctx, args) => {
     const limit = args.limit ?? 200;
-    const templates = await ctx.db.query("documentTemplates").take(limit);
+    const { page, continueCursor, isDone } = await ctx.db
+      .query("documentTemplates")
+      .paginate({ cursor: args.cursor ?? null, numItems: limit });
 
     let migrated = 0;
-    for (const template of templates) {
+    for (const template of page) {
       if (typeof template.icon !== "string") {
         continue;
       }
@@ -806,7 +814,8 @@ export const migrateLegacyIconStrings = internalMutation({
     }
 
     return {
-      scanned: templates.length,
+      cursor: isDone ? null : continueCursor,
+      scanned: page.length,
       migrated,
     };
   },
