@@ -332,4 +332,50 @@ describe("clientPortal", () => {
       }),
     ).rejects.toThrow(/one year/i);
   });
+
+  it("accepts valid future portal token expiry values within one year", async () => {
+    const t = convexTest(schema, modules);
+    const { asUser, organizationId, userId } = await createTestContext(t);
+
+    const { clientId } = await asUser.mutation(clientsApi.create, {
+      organizationId,
+      name: "Valid Expiry Client",
+      email: "valid-expiry@example.com",
+    });
+
+    const projectId = await createProjectInOrganization(t, userId, organizationId, {
+      name: "Valid Expiry Scope",
+      key: "VES",
+    });
+
+    const now = Date.now();
+
+    const atLimit = await asUser.mutation(clientPortalApi.generateToken, {
+      organizationId,
+      clientId,
+      projectIds: [projectId],
+      permissions: {
+        viewIssues: true,
+        viewDocuments: false,
+        viewTimeline: false,
+        addComments: false,
+      },
+      expiresAt: now + 365 * DAY,
+    });
+    expect(atLimit.success).toBe(true);
+
+    const nearTerm = await asUser.mutation(clientPortalApi.generateToken, {
+      organizationId,
+      clientId,
+      projectIds: [projectId],
+      permissions: {
+        viewIssues: true,
+        viewDocuments: false,
+        viewTimeline: false,
+        addComments: false,
+      },
+      expiresAt: now + DAY,
+    });
+    expect(nearTerm.success).toBe(true);
+  });
 });
