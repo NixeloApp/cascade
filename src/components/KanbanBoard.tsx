@@ -214,12 +214,15 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
   });
   const focusedIssueId = allIssues[selectedIndex]?._id;
 
-  const boardOptions = {
-    projectId,
-    teamId,
-    sprintId,
-    doneColumnDays: 14,
-  };
+  const boardOptions = useMemo(
+    () => ({
+      projectId,
+      teamId,
+      sprintId,
+      doneColumnDays: 14,
+    }),
+    [projectId, teamId, sprintId],
+  );
 
   const { handleIssueDrop, handleIssueReorder } = useBoardDragAndDrop({
     allIssues,
