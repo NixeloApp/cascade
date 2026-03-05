@@ -44,6 +44,22 @@ function isTokenExpired(expiresAt?: number): boolean {
   return typeof expiresAt === "number" && expiresAt <= Date.now();
 }
 
+function normalizePortalRequesterKey(requesterKey?: string): string {
+  if (!requesterKey) return "anonymous";
+  const normalized = requesterKey.trim().toLowerCase();
+  if (!normalized) return "anonymous";
+  return normalized.slice(0, 64);
+}
+
+export function getPortalValidationRateLimitKeys(token: string, requesterKey?: string) {
+  const requesterBucket = normalizePortalRequesterKey(requesterKey);
+  const tokenPrefix = token.slice(0, 8);
+  return {
+    requester: `portal:req:${requesterBucket}`,
+    token: `portal:req:${requesterBucket}:token:${tokenPrefix}`,
+  };
+}
+
 async function resolveTokenContext(ctx: { db: QueryCtx["db"] | MutationCtx["db"] }, token: string) {
   const portalToken = await ctx.db
     .query("clientPortalTokens")
@@ -127,6 +143,7 @@ export const generateToken = organizationAdminMutation({
 export const validateToken = mutation({
   args: {
     token: v.string(),
+    requesterKey: v.optional(v.string()),
   },
   returns: v.union(
     v.null(),
@@ -147,14 +164,15 @@ export const validateToken = mutation({
   ),
   handler: async (ctx, args) => {
     if (!process.env.IS_TEST_ENV) {
-      // Rate limit by token prefix to prevent brute-forcing a specific token
+      const rateLimitKeys = getPortalValidationRateLimitKeys(args.token, args.requesterKey);
+      // Rate limit per requester to prevent brute-force bypass via random token rotation
       await rateLimit(ctx, "clientPortalValidation", {
-        key: `portal:${args.token.slice(0, 8)}`,
+        key: rateLimitKeys.requester,
         throws: true,
       });
-      // Also apply a global rate limit to prevent enumeration attacks with random tokens
+      // Also apply a token-prefix bucket scoped to requester to deter focused token probing.
       await rateLimit(ctx, "clientPortalValidation", {
-        key: "portal:global",
+        key: rateLimitKeys.token,
         throws: true,
       });
     }

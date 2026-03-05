@@ -14,6 +14,26 @@ export const Route = createFileRoute("/portal/$token")({
 });
 
 const clientPortalApi = anyApi.clientPortal;
+const PORTAL_REQUESTER_KEY_STORAGE = "nixelo-portal-requester-key";
+
+function getPortalRequesterKey(): string {
+  if (typeof window === "undefined") {
+    return "server";
+  }
+
+  try {
+    const existing = window.localStorage.getItem(PORTAL_REQUESTER_KEY_STORAGE);
+    if (existing && existing.trim().length > 0) {
+      return existing;
+    }
+
+    const generated = crypto.randomUUID().replace(/-/g, "");
+    window.localStorage.setItem(PORTAL_REQUESTER_KEY_STORAGE, generated);
+    return generated;
+  } catch {
+    return "browser";
+  }
+}
 
 function ClientPortalEntryPage() {
   const { token } = Route.useParams();
@@ -29,7 +49,7 @@ function ClientPortalEntryPage() {
 
     void (async () => {
       try {
-        const validated = await validateToken({ token });
+        const validated = await validateToken({ token, requesterKey: getPortalRequesterKey() });
         if (isMounted) {
           setValidatedClientName(validated?.clientName ?? null);
         }

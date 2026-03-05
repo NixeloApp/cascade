@@ -1,6 +1,7 @@
 import { anyApi } from "convex/server";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
+import { getPortalValidationRateLimitKeys } from "./clientPortal";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -17,6 +18,18 @@ const clientsApi = anyApi.clients;
 const clientPortalApi = anyApi.clientPortal;
 
 describe("clientPortal", () => {
+  it("builds requester-scoped portal validation rate-limit keys", () => {
+    expect(getPortalValidationRateLimitKeys("abcdefgh12345678", "Client-Session-1")).toEqual({
+      requester: "portal:req:client-session-1",
+      token: "portal:req:client-session-1:token:abcdefgh",
+    });
+
+    expect(getPortalValidationRateLimitKeys("xyz", "   ")).toEqual({
+      requester: "portal:req:anonymous",
+      token: "portal:req:anonymous:token:xyz",
+    });
+  });
+
   it("allows org admin to generate, validate, and revoke portal tokens", async () => {
     const t = convexTest(schema, modules);
     const { asUser, organizationId, userId } = await createTestContext(t);
