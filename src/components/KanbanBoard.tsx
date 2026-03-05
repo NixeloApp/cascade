@@ -103,9 +103,12 @@ function matchesDateRange(timestamp: number | undefined, range?: DateRangeFilter
 }
 
 /** Apply client-side filters to issues */
-function applyFilters(issues: EnrichedIssue[], filters?: BoardFilters): EnrichedIssue[] {
+function applyFilters(
+  issues: EnrichedIssue[],
+  filters: BoardFilters | undefined,
+  parsedQuery: ReturnType<typeof parseBoardQuery>,
+): EnrichedIssue[] {
   if (!filters) return issues;
-  const parsedQuery = parseBoardQuery(filters.query);
 
   return issues.filter(
     (issue) =>
@@ -168,9 +171,10 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
 
   // Apply filters to issues
   const filteredIssuesByStatus = useMemo(() => {
+    const parsedQuery = parseBoardQuery(filters?.query);
     const result: Record<string, EnrichedIssue[]> = {};
     for (const [status, issues] of Object.entries(issuesByStatus)) {
-      result[status] = applyFilters(issues, filters);
+      result[status] = applyFilters(issues, filters, parsedQuery);
     }
     return result;
   }, [issuesByStatus, filters]);
