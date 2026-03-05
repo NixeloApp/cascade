@@ -56,7 +56,6 @@ Note:
 | `pnpm e2e:headed` | `playwright test --headed` |
 | `pnpm e2e:debug` | `playwright test --debug` |
 | `pnpm e2e:cross-browser:smoke` | `E2E_CROSS_BROWSER=1 playwright test e2e/landing.spec.ts --workers=1 --reporter=line` |
-| `pnpm e2e:setup-auth` | `node node_modules/tsx/dist/cli.mjs e2e/setup-auth.ts` |
 | `pnpm screenshots` | `node --env-file=.env.local node_modules/.pnpm/tsx@4.21.0/node_modules/tsx/dist/cli.mjs e2e/screenshot-pages.ts` |
 
 ## PR Review Checklist (E2E Reliability)
