@@ -262,12 +262,38 @@ describe("Hybrid Search Integration", () => {
 
       const { result } = renderHook(() => useUserFuzzySearch(malformedData));
 
-      // Should still work with valid entries
+      // Should still find valid entries
       await act(async () => {
         result.current.search("john");
       });
 
-      expect(result.current.results.length).toBeGreaterThan(0);
+      await waitFor(
+        () => {
+          expect(result.current.isDebouncing).toBe(false);
+        },
+        { timeout: 500 },
+      );
+
+      await waitFor(() => {
+        expect(result.current.results).toHaveLength(1);
+        expect(result.current.results[0]?.item._id).toBe("1");
+      });
+
+      // Missing fields should not create false-positive matches
+      await act(async () => {
+        result.current.search("missing");
+      });
+
+      await waitFor(
+        () => {
+          expect(result.current.isDebouncing).toBe(false);
+        },
+        { timeout: 500 },
+      );
+
+      await waitFor(() => {
+        expect(result.current.results).toHaveLength(0);
+      });
     });
 
     it("should recover from search errors", async () => {
