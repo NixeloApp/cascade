@@ -193,19 +193,29 @@ describe("InboxList", () => {
       expect(screen.getByRole("button", { name: /accept/i })).toBeInTheDocument();
     });
 
-    // SKIPPED: Requires issues query to return snoozed issue data
-    it.skip("should render snoozed issues with snooze badge", () => {
+    it("should render snoozed issues with snooze badge", () => {
       const issues = [
         createMockInboxIssue({
           status: "snoozed",
           snoozedUntil: Date.now() + 86400000,
+          issue: {
+            _id: "issue-1" as Id<"issues">,
+            _creationTime: Date.now(),
+            key: "BUG-456",
+            title: "Snoozed issue",
+            status: "todo",
+            priority: "medium",
+            type: "bug",
+          } as Doc<"issues">,
         }),
       ];
-      setupMocks(issues, createMockCounts({ snoozed: 1 }));
+      setupMocks(issues, createMockCounts({ open: 1, snoozed: 1 }));
 
       render(<InboxList projectId={"proj-1" as Id<"projects">} />);
 
-      expect(screen.getByText("Snoozed")).toBeInTheDocument();
+      expect(screen.getByText("BUG-456")).toBeInTheDocument();
+      expect(screen.getByText("Snoozed issue")).toBeInTheDocument();
+      expect(screen.getByText(/Until /i)).toBeInTheDocument();
     });
 
     it("should render multiple issues", () => {
