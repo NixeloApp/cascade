@@ -12,7 +12,9 @@ import { v } from "convex/values";
 import { issueActivityFields, issuesFields, projectsFields } from "./schemaFields";
 import {
   attendanceStatuses,
+  auditActions,
   auditMetadata,
+  auditTargetTypes,
   automationActionTypes,
   automationActionValue,
   automationTriggers,
@@ -1766,10 +1768,10 @@ const applicationTables = {
   // ===========================================================================
 
   auditLogs: defineTable({
-    action: v.string(), // "team.create", "project.delete"
+    action: auditActions,
     actorId: v.optional(v.id("users")),
     targetId: v.string(),
-    targetType: v.string(), // "team", "project", "user"
+    targetType: auditTargetTypes,
     metadata: v.optional(auditMetadata),
     timestamp: v.number(),
   })

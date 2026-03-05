@@ -1,14 +1,15 @@
 import type { FunctionReference } from "convex/server";
+import type { Infer } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { isTest } from "../testConfig";
-import type { AuditMetadata } from "../validators";
+import type { AuditMetadata, auditActions, auditTargetTypes } from "../validators";
 
 export interface AuditLogArgs {
-  action: string;
+  action: Infer<typeof auditActions>;
   actorId?: Id<"users">;
   targetId: string;
-  targetType: string;
+  targetType: Infer<typeof auditTargetTypes>;
   metadata?: AuditMetadata;
 }
 

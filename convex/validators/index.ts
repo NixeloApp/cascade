@@ -38,6 +38,43 @@ export const issueActivityActions = literals(
   "started_watching",
   "stopped_watching",
 );
+export const auditActions = literals(
+  "api_key.created",
+  "api_key.revoked",
+  "organization.member_added",
+  "organization.member_role_changed",
+  "organization.member_removed",
+  "project_created",
+  "project_updated",
+  "project_deleted",
+  "project_restored",
+  "workflow_updated",
+  "member_added",
+  "member_role_updated",
+  "member_removed",
+  "team.create",
+  "team.update",
+  "team.softDelete",
+  "team.restore",
+  "team.member.add",
+  "team.member.updateRole",
+  "team.member.remove",
+  "webhook_created",
+  "webhook_updated",
+  "webhook_deleted",
+  "test",
+);
+export const auditTargetTypes = literals(
+  "apiKey",
+  "user",
+  "project",
+  "projects",
+  "team",
+  "webhook",
+  "webhooks",
+  "organization",
+  "test",
+);
 
 // Roles
 export const projectRoles = literals("admin", "editor", "viewer");
