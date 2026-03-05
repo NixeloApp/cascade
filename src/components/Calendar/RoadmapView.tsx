@@ -11,7 +11,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { DAY } from "@convex/lib/timeUtils";
 import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Typography } from "@/components/ui/Typography";
 import { ChevronLeft, ChevronRight } from "@/lib/icons";
 import { cn } from "@/lib/utils";
@@ -25,6 +25,26 @@ interface RoadmapViewProps {
 }
 
 type TimeScale = "week" | "month" | "quarter";
+type BaseRoadmapItem = {
+  id: string;
+  title: string;
+  startDate: number;
+  endDate: number;
+  status: string;
+};
+
+type SprintRoadmapItem = BaseRoadmapItem & {
+  type: "sprint";
+};
+
+type IssueRoadmapItem = BaseRoadmapItem & {
+  type: "issue";
+  dueDate: number;
+  issueType: string;
+  priority?: string;
+};
+
+type RoadmapItem = SprintRoadmapItem | IssueRoadmapItem;
 
 /**
  * Timeline/Gantt-style roadmap view showing issues and sprints on a timeline.
@@ -49,31 +69,32 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
   type Sprint = NonNullable<FunctionReturnType<typeof api.sprints.listByProject>>[number];
   type Issue = NonNullable<FunctionReturnType<typeof api.issues.listRoadmapIssues>>[number];
 
-  // Map to roadmap items (no filtering needed - backend already filtered)
-  const roadmapItems = [
-    ...(sprints?.map((sprint: Sprint) => ({
-      type: "sprint" as const,
-      id: sprint._id,
-      title: sprint.name,
-      startDate: sprint.startDate as number,
-      endDate: sprint.endDate as number,
-      status: sprint.status,
-    })) || []),
-    ...(issues?.map((issue: Issue) => ({
-      type: "issue" as const,
-      id: issue._id,
-      title: `${issue.key}: ${issue.title}`,
-      dueDate: issue.dueDate as number,
-      startDate: issue._creationTime,
-      endDate: issue.dueDate as number,
-      issueType: issue.type,
-      priority: issue.priority,
-      status: issue.status,
-    })) || []),
-  ];
+  const sortedItems = useMemo(() => {
+    // Map to roadmap items (no filtering needed - backend already filtered)
+    const roadmapItems: RoadmapItem[] = [
+      ...(sprints?.map((sprint: Sprint) => ({
+        type: "sprint" as const,
+        id: sprint._id,
+        title: sprint.name,
+        startDate: sprint.startDate as number,
+        endDate: sprint.endDate as number,
+        status: sprint.status,
+      })) || []),
+      ...(issues?.map((issue: Issue) => ({
+        type: "issue" as const,
+        id: issue._id,
+        title: `${issue.key}: ${issue.title}`,
+        dueDate: issue.dueDate as number,
+        startDate: issue._creationTime,
+        endDate: issue.dueDate as number,
+        issueType: issue.type,
+        priority: issue.priority,
+        status: issue.status,
+      })) || []),
+    ];
 
-  // Sort by start date
-  const sortedItems = roadmapItems.sort((a, b) => a.startDate - b.startDate);
+    return roadmapItems.slice().sort((a, b) => a.startDate - b.startDate);
+  }, [issues, sprints]);
 
   const handlePrevious = () => {
     const newDate = new Date(currentDate);
