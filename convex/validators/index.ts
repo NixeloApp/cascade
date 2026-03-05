@@ -82,6 +82,7 @@ export const syncDirections = literals("import", "export", "bidirectional");
 export const calendarProviders = literals("google", "outlook");
 export const cancelledByOptions = literals("host", "booker");
 export const ssoConnectionTypes = literals("saml", "oidc");
+export const oidcProviders = literals("google-workspace", "microsoft-entra", "okta");
 
 // User Preferences
 export const emailDigests = literals("none", "daily", "weekly");

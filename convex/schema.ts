@@ -42,6 +42,7 @@ import {
   linkTypes,
   meetingPlatforms,
   meetingStatuses,
+  oidcProviders,
   organizationRoles,
   periodTypes,
   personas,
@@ -138,9 +139,7 @@ const applicationTables = {
     ),
     oidcConfig: v.optional(
       v.object({
-        provider: v.optional(
-          v.union(v.literal("google-workspace"), v.literal("microsoft-entra"), v.literal("okta")),
-        ),
+        provider: v.optional(oidcProviders),
         issuer: v.optional(v.string()),
         clientId: v.optional(v.string()),
         clientSecret: v.optional(v.string()),
