@@ -345,44 +345,58 @@ export async function processOfflineQueue() {
   const pending = await offlineDB.getPendingMutations();
 
   for (const mutation of pending) {
-    if (!mutation.id) {
-      console.warn("[offline] Skipping queued mutation without id", {
-        mutationType: mutation.mutationType,
-        timestamp: mutation.timestamp,
-      });
-      continue;
-    }
+    await processQueuedMutation(mutation);
+  }
+}
 
-    try {
-      await offlineDB.updateMutationStatus(mutation.id, "syncing");
+function getNextFailureStatus(attempts: number): "failed" | "pending" {
+  return attempts >= 3 ? "failed" : "pending";
+}
 
-      // Parse mutation args
-      const _args = JSON.parse(mutation.mutationArgs);
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
 
-      // Mark as synced
-      await offlineDB.updateMutationStatus(mutation.id, "synced");
-    } catch (error) {
-      const shouldFail = mutation.attempts >= 3;
-      console.warn("[offline] Failed to process queued mutation", {
-        id: mutation.id,
-        mutationType: mutation.mutationType,
-        attempts: mutation.attempts,
-        nextStatus: shouldFail ? "failed" : "pending",
-        error,
-      });
-      try {
-        await offlineDB.updateMutationStatus(
-          mutation.id,
-          shouldFail ? "failed" : "pending",
-          error instanceof Error ? error.message : String(error),
-        );
-      } catch (statusError) {
-        console.warn("[offline] Failed to persist queued mutation failure status", {
-          id: mutation.id,
-          mutationType: mutation.mutationType,
-          statusError,
-        });
-      }
-    }
+async function persistMutationFailureStatus(
+  mutation: OfflineMutation,
+  nextStatus: "failed" | "pending",
+  error: unknown,
+): Promise<void> {
+  if (!mutation.id) return;
+
+  try {
+    await offlineDB.updateMutationStatus(mutation.id, nextStatus, getErrorMessage(error));
+  } catch (statusError) {
+    console.warn("[offline] Failed to persist queued mutation failure status", {
+      id: mutation.id,
+      mutationType: mutation.mutationType,
+      statusError,
+    });
+  }
+}
+
+async function processQueuedMutation(mutation: OfflineMutation): Promise<void> {
+  if (!mutation.id) {
+    console.warn("[offline] Skipping queued mutation without id", {
+      mutationType: mutation.mutationType,
+      timestamp: mutation.timestamp,
+    });
+    return;
+  }
+
+  try {
+    await offlineDB.updateMutationStatus(mutation.id, "syncing");
+    const _args = JSON.parse(mutation.mutationArgs);
+    await offlineDB.updateMutationStatus(mutation.id, "synced");
+  } catch (error) {
+    const nextStatus = getNextFailureStatus(mutation.attempts);
+    console.warn("[offline] Failed to process queued mutation", {
+      id: mutation.id,
+      mutationType: mutation.mutationType,
+      attempts: mutation.attempts,
+      nextStatus,
+      error,
+    });
+    await persistMutationFailureStatus(mutation, nextStatus, error);
   }
 }
