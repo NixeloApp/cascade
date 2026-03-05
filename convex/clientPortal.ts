@@ -88,7 +88,7 @@ async function resolveTokenContext(ctx: { db: QueryCtx["db"] | MutationCtx["db"]
     portalToken.projectIds.map((projectId) => ctx.db.get(projectId)),
   );
   const availableProjects = projects.filter(
-    (project): project is NonNullable<typeof project> => !!project,
+    (project): project is NonNullable<typeof project> => !!project && project.isDeleted !== true,
   );
 
   return {
@@ -207,7 +207,7 @@ export const validateToken = mutation({
       clientId: context.portalToken.clientId,
       clientName: context.client.name,
       permissions: context.portalToken.permissions,
-      projectIds: context.portalToken.projectIds,
+      projectIds: context.projects.map((project) => project._id),
       expiresAt: context.portalToken.expiresAt,
     };
   },
@@ -265,7 +265,7 @@ export const getIssuesForToken = query({
       return [];
     }
 
-    if (!context.portalToken.projectIds.includes(args.projectId)) {
+    if (!context.projects.some((project) => project._id === args.projectId)) {
       return [];
     }
 

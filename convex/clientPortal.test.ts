@@ -186,4 +186,57 @@ describe("clientPortal", () => {
     });
     expect(projects).toEqual([]);
   });
+
+  it("excludes soft-deleted projects from portal token access", async () => {
+    const t = convexTest(schema, modules);
+    const { asUser, organizationId, userId } = await createTestContext(t);
+
+    const { clientId } = await asUser.mutation(clientsApi.create, {
+      organizationId,
+      name: "Archived Project Client",
+      email: "archived@example.com",
+    });
+
+    const activeProjectId = await createProjectInOrganization(t, userId, organizationId, {
+      name: "Active",
+      key: "ACT",
+    });
+    const archivedProjectId = await createProjectInOrganization(t, userId, organizationId, {
+      name: "Archived",
+      key: "ARC",
+    });
+
+    await t.run(async (ctx) => {
+      await ctx.db.patch(archivedProjectId, { isDeleted: true });
+    });
+
+    const generated = await asUser.mutation(clientPortalApi.generateToken, {
+      organizationId,
+      clientId,
+      projectIds: [activeProjectId, archivedProjectId],
+      permissions: {
+        viewIssues: true,
+        viewDocuments: false,
+        viewTimeline: false,
+        addComments: false,
+      },
+    });
+
+    const validated = await t.mutation(clientPortalApi.validateToken, {
+      token: generated.token,
+    });
+    expect(validated?.projectIds).toEqual([activeProjectId]);
+
+    const listedProjects = await t.query(clientPortalApi.getProjectsForToken, {
+      token: generated.token,
+    });
+    expect(listedProjects).toHaveLength(1);
+    expect(listedProjects[0]?._id).toBe(activeProjectId);
+
+    const hiddenIssues = await t.query(clientPortalApi.getIssuesForToken, {
+      token: generated.token,
+      projectId: archivedProjectId,
+    });
+    expect(hiddenIssues).toEqual([]);
+  });
 });
