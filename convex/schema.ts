@@ -34,6 +34,7 @@ import {
   inboxIssueSources,
   inboxIssueStatuses,
   inviteRoles,
+  invoiceStatuses,
   issuePriorities,
   issueTypes,
   linkTypes,
@@ -1485,7 +1486,7 @@ const applicationTables = {
     organizationId: v.id("organizations"),
     clientId: v.optional(v.id("clients")),
     number: v.string(),
-    status: v.union(v.literal("draft"), v.literal("sent"), v.literal("paid"), v.literal("overdue")),
+    status: invoiceStatuses,
     issueDate: v.number(),
     dueDate: v.number(),
     lineItems: v.array(

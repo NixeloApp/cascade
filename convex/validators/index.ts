@@ -47,6 +47,7 @@ export const inboxIssueStatuses = literals(
 export const inboxIssueSources = literals("in_app", "form", "email", "api");
 export const webhookStatuses = literals("success", "failed", "retrying");
 export const webhookResultStatuses = literals("success", "failed"); // For execution results
+export const invoiceStatuses = literals("draft", "sent", "paid", "overdue");
 export const calendarStatuses = literals("confirmed", "tentative", "cancelled");
 export const calendarEventColors = literals(
   "blue",
