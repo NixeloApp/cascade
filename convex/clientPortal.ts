@@ -42,6 +42,9 @@ async function assertProjectsForOrganization(
   if (projects.some((project) => !project || project.organizationId !== organizationId)) {
     throw forbidden("admin", "All portal projects must belong to the same organization");
   }
+  if (projects.some((project) => project?.isDeleted === true)) {
+    throw forbidden("admin", "Portal access cannot include deleted projects");
+  }
 }
 
 function isTokenExpired(expiresAt?: number): boolean {

@@ -206,10 +206,6 @@ describe("clientPortal", () => {
       key: "ARC",
     });
 
-    await t.run(async (ctx) => {
-      await ctx.db.patch(archivedProjectId, { isDeleted: true });
-    });
-
     const generated = await asUser.mutation(clientPortalApi.generateToken, {
       organizationId,
       clientId,
@@ -220,6 +216,10 @@ describe("clientPortal", () => {
         viewTimeline: false,
         addComments: false,
       },
+    });
+
+    await t.run(async (ctx) => {
+      await ctx.db.patch(archivedProjectId, { isDeleted: true });
     });
 
     const validated = await t.mutation(clientPortalApi.validateToken, {
@@ -238,5 +238,43 @@ describe("clientPortal", () => {
       projectId: archivedProjectId,
     });
     expect(hiddenIssues).toEqual([]);
+  });
+
+  it("rejects token generation when any requested project is deleted", async () => {
+    const t = convexTest(schema, modules);
+    const { asUser, organizationId, userId } = await createTestContext(t);
+
+    const { clientId } = await asUser.mutation(clientsApi.create, {
+      organizationId,
+      name: "Deleted Project Client",
+      email: "deleted-project@example.com",
+    });
+
+    const activeProjectId = await createProjectInOrganization(t, userId, organizationId, {
+      name: "Active Scope",
+      key: "ASC",
+    });
+    const deletedProjectId = await createProjectInOrganization(t, userId, organizationId, {
+      name: "Deleted Scope",
+      key: "DSC",
+    });
+
+    await t.run(async (ctx) => {
+      await ctx.db.patch(deletedProjectId, { isDeleted: true });
+    });
+
+    await expect(
+      asUser.mutation(clientPortalApi.generateToken, {
+        organizationId,
+        clientId,
+        projectIds: [activeProjectId, deletedProjectId],
+        permissions: {
+          viewIssues: true,
+          viewDocuments: false,
+          viewTimeline: false,
+          addComments: false,
+        },
+      }),
+    ).rejects.toThrow(/deleted projects/i);
   });
 });
