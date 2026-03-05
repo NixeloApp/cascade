@@ -182,10 +182,8 @@ describe("Slack integration", () => {
       issueId,
       content: "Trigger comment notification",
     });
-    // Run finishInProgressScheduledFunctions multiple times to ensure all nested
-    // scheduled work completes (sendIssueNotification -> deliverMessageInternal)
-    await t.finishInProgressScheduledFunctions();
-    await t.finishInProgressScheduledFunctions();
+    // Drain all nested scheduled work to avoid timing-related flakiness.
+    await t.finishAllScheduledFunctions(() => {});
 
     expect(mockSafeFetch).toHaveBeenCalled();
   });
