@@ -20,6 +20,9 @@ import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { escapeHtml, escapeScriptJson } from "../lib/html";
 import { logger } from "../lib/logger";
 
+const OAUTH_STATE_COOKIE_NAME = "github-oauth-state";
+const OAUTH_STATE_COOKIE_BASE_ATTRIBUTES = "Path=/; HttpOnly; Secure; SameSite=Lax";
+
 /**
  * GitHub OAuth Integration
  *
@@ -109,7 +112,7 @@ export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
       status: 302,
       headers: {
         Location: authUrl.toString(),
-        "Set-Cookie": `github-oauth-state=${state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`,
+        "Set-Cookie": buildOAuthStateCookie(state),
       },
     }),
   );
@@ -272,7 +275,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
         status: 400,
         headers: {
           "Content-Type": "text/html",
-          "Set-Cookie": `github-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+          "Set-Cookie": clearOAuthStateCookie(),
         },
       },
     );
@@ -282,7 +285,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
   const cookieHeader = request.headers.get("Cookie");
   const storedState = cookieHeader
     ?.split(";")
-    .find((c) => c.trim().startsWith("github-oauth-state="))
+    .find((c) => c.trim().startsWith(`${OAUTH_STATE_COOKIE_NAME}=`))
     ?.split("=")[1];
 
   if (!code || !state || !storedState || !constantTimeEqual(state, storedState)) {
@@ -351,7 +354,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
         status: 200,
         headers: {
           "Content-Type": "text/html",
-          "Set-Cookie": `github-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+          "Set-Cookie": clearOAuthStateCookie(),
         },
       },
     );
@@ -398,7 +401,7 @@ const handleOAuthError = (error: unknown) => {
       status,
       headers: {
         "Content-Type": "text/html",
-        "Set-Cookie": `github-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+        "Set-Cookie": clearOAuthStateCookie(),
       },
     },
   );
@@ -580,4 +583,12 @@ function getAppErrorStatusCode(code: string, fallback: number): number {
     default:
       return fallback;
   }
+}
+
+function buildOAuthStateCookie(value: string, maxAgeSeconds = 3600): string {
+  return `${OAUTH_STATE_COOKIE_NAME}=${value}; ${OAUTH_STATE_COOKIE_BASE_ATTRIBUTES}; Max-Age=${maxAgeSeconds}`;
+}
+
+function clearOAuthStateCookie(): string {
+  return buildOAuthStateCookie("", 0);
 }
