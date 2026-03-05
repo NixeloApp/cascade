@@ -144,8 +144,8 @@ async function exchangeCodeForTokens(
     let errorText = "Unknown error";
     try {
       errorText = await tokenResponse.text();
-    } catch (_e) {
-      // Ignore text reading errors
+    } catch (error) {
+      logger.warn("GitHub OAuth warning: Failed to read token error response text", { error });
     }
     logger.error("GitHub OAuth error: Failed to exchange code", { errorText });
     throw upstream("GitHub", "Failed to exchange authorization code");
@@ -154,8 +154,8 @@ async function exchangeCodeForTokens(
   let tokens: Record<string, unknown>;
   try {
     tokens = (await tokenResponse.json()) as Record<string, unknown>;
-  } catch (_e) {
-    logger.error("GitHub OAuth error: Invalid JSON response");
+  } catch (error) {
+    logger.error("GitHub OAuth error: Invalid JSON response", { error });
     throw upstream("GitHub", "Invalid response from GitHub");
   }
 
@@ -181,8 +181,8 @@ async function fetchGitHubUserInfo(accessToken: string) {
     let errorText = "Unknown error";
     try {
       errorText = await userResponse.text();
-    } catch (_e) {
-      // Ignore text reading errors
+    } catch (error) {
+      logger.warn("GitHub OAuth warning: Failed to read user-info error response text", { error });
     }
     logger.error("GitHub OAuth error: Failed to get user info", { errorText });
     throw upstream("GitHub", "Failed to retrieve user info");
@@ -191,8 +191,8 @@ async function fetchGitHubUserInfo(accessToken: string) {
   let userInfo: Record<string, unknown>;
   try {
     userInfo = (await userResponse.json()) as Record<string, unknown>;
-  } catch (_e) {
-    logger.error("GitHub OAuth error: Invalid user info JSON");
+  } catch (error) {
+    logger.error("GitHub OAuth error: Invalid user info JSON", { error });
     throw upstream("GitHub", "Invalid response from GitHub");
   }
 
