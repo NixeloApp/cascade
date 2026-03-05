@@ -896,7 +896,7 @@ const applicationTables = {
     emailComments: v.boolean(),
     emailStatusChanges: v.boolean(),
     emailDigest: emailDigests,
-    digestDay: v.optional(v.string()), // "monday", etc.
+    digestDay: v.optional(weekDays),
     digestTime: v.optional(v.string()), // "09:00"
     // Push notification preferences (Cal.com parity)
     pushEnabled: v.optional(v.boolean()), // Master toggle for push notifications
