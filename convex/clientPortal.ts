@@ -59,6 +59,7 @@ export function getPortalValidationRateLimitKeys(token: string, requesterKey?: s
   const requesterBucket = normalizePortalRequesterKey(requesterKey);
   const tokenPrefix = token.slice(0, 8);
   return {
+    global: "portal:global",
     requester: `portal:req:${requesterBucket}`,
     token: `portal:req:${requesterBucket}:token:${tokenPrefix}`,
   };
@@ -176,6 +177,11 @@ export const validateToken = mutation({
       // Rate limit per requester to prevent brute-force bypass via random token rotation
       await rateLimit(ctx, "clientPortalValidation", {
         key: rateLimitKeys.requester,
+        throws: true,
+      });
+      // Keep a global bucket to cap total validation attempts across rotated requester keys.
+      await rateLimit(ctx, "clientPortalValidation", {
+        key: rateLimitKeys.global,
         throws: true,
       });
       // Also apply a token-prefix bucket scoped to requester to deter focused token probing.

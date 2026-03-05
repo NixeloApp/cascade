@@ -20,11 +20,13 @@ const clientPortalApi = anyApi.clientPortal;
 describe("clientPortal", () => {
   it("builds requester-scoped portal validation rate-limit keys", () => {
     expect(getPortalValidationRateLimitKeys("abcdefgh12345678", "Client-Session-1")).toEqual({
+      global: "portal:global",
       requester: "portal:req:client-session-1",
       token: "portal:req:client-session-1:token:abcdefgh",
     });
 
     expect(getPortalValidationRateLimitKeys("xyz", "   ")).toEqual({
+      global: "portal:global",
       requester: "portal:req:anonymous",
       token: "portal:req:anonymous:token:xyz",
     });
