@@ -111,6 +111,30 @@ describe("calendarEvents", () => {
       expect(event?.isRecurring).toBe(true);
       expect(event?.meetingUrl).toBe("https://meet.example.com/abc");
     });
+
+    it("should reject creating project-scoped event for inaccessible project", async () => {
+      const t = convexTest(schema, modules);
+      const ownerId = await createTestUser(t, { name: "Owner" });
+      const attackerId = await createTestUser(t, { name: "Attacker" });
+      const asAttacker = asAuthenticatedUser(t, attackerId);
+
+      const { organizationId: ownerOrgId } = await createOrganizationAdmin(t, ownerId);
+      const projectId = await createProjectInOrganization(t, ownerId, ownerOrgId, {
+        name: "Owner Project",
+        key: "OWN",
+      });
+      const now = Date.now();
+      await expect(
+        asAttacker.mutation(api.calendarEvents.create, {
+          title: "Unauthorized Project Event",
+          startTime: now + HOUR,
+          endTime: now + 2 * HOUR,
+          allDay: false,
+          eventType: "meeting",
+          projectId,
+        }),
+      ).rejects.toThrow(/FORBIDDEN|access to this project|Not authorized/);
+    });
   });
 
   describe("get", () => {
