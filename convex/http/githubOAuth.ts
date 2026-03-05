@@ -366,27 +366,7 @@ const handleOAuthError = (error: unknown) => {
 
   if (isAppError(error)) {
     errorMessage = error.data.message || errorMessage;
-    switch (error.data.code) {
-      case "VALIDATION":
-      case "CONFLICT":
-        status = 400;
-        break;
-      case "UNAUTHENTICATED":
-        status = 401;
-        break;
-      case "FORBIDDEN":
-        status = 403;
-        break;
-      case "NOT_FOUND":
-        status = 404;
-        break;
-      case "RATE_LIMITED":
-        status = 429;
-        break;
-      case "UPSTREAM":
-        status = 502;
-        break;
-    }
+    status = getAppErrorStatusCode(error.data.code, status);
   } else if (error instanceof Error) {
     errorMessage = error.message;
   }
@@ -558,11 +538,7 @@ const handleListReposError = (error: unknown) => {
 
   if (isAppError(error)) {
     message = error.data.message || message;
-    if (error.data.code === "VALIDATION") status = 400;
-    else if (error.data.code === "UNAUTHENTICATED") status = 401;
-    else if (error.data.code === "FORBIDDEN") status = 403;
-    else if (error.data.code === "NOT_FOUND") status = 404;
-    else if (error.data.code === "RATE_LIMITED") status = 429;
+    status = getAppErrorStatusCode(error.data.code, status);
   } else if (error instanceof Error) {
     message = error.message;
   }
@@ -585,3 +561,23 @@ const handleListReposError = (error: unknown) => {
  * This is called after authentication to fetch available repos
  */
 export const listRepos = httpAction(listReposHandler);
+
+function getAppErrorStatusCode(code: string, fallback: number): number {
+  switch (code) {
+    case "VALIDATION":
+    case "CONFLICT":
+      return 400;
+    case "UNAUTHENTICATED":
+      return 401;
+    case "FORBIDDEN":
+      return 403;
+    case "NOT_FOUND":
+      return 404;
+    case "RATE_LIMITED":
+      return 429;
+    case "UPSTREAM":
+      return 502;
+    default:
+      return fallback;
+  }
+}
