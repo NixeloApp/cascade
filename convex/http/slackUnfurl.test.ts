@@ -118,6 +118,86 @@ describe("Slack Unfurl HTTP Handler", () => {
     expect(runQuery).not.toHaveBeenCalled();
   });
 
+  it("should reject payloads with team_id containing surrounding whitespace", async () => {
+    const runQuery = vi.fn();
+    const ctx = createMockActionCtx({ runQuery });
+    const body = new URLSearchParams({
+      payload: JSON.stringify({
+        team_id: " T-OK ",
+        user_id: "U-OK",
+        links: [{ url: "https://nixelo.app/issues/ABC-1" }],
+      }),
+    }).toString();
+    const request = await buildSignedRequest(body, signingSecret);
+
+    const response = await handleUnfurlHandler(ctx, request);
+    const payload = (await response.json()) as { error: string };
+
+    expect(response.status).toBe(400);
+    expect(payload.error).toContain("Invalid team_id");
+    expect(runQuery).not.toHaveBeenCalled();
+  });
+
+  it("should reject payloads with team_id containing control characters", async () => {
+    const runQuery = vi.fn();
+    const ctx = createMockActionCtx({ runQuery });
+    const body = new URLSearchParams({
+      payload: JSON.stringify({
+        team_id: "T-OK\n",
+        user_id: "U-OK",
+        links: [{ url: "https://nixelo.app/issues/ABC-1" }],
+      }),
+    }).toString();
+    const request = await buildSignedRequest(body, signingSecret);
+
+    const response = await handleUnfurlHandler(ctx, request);
+    const payload = (await response.json()) as { error: string };
+
+    expect(response.status).toBe(400);
+    expect(payload.error).toContain("Invalid team_id");
+    expect(runQuery).not.toHaveBeenCalled();
+  });
+
+  it("should reject payloads with user_id containing surrounding whitespace", async () => {
+    const runQuery = vi.fn();
+    const ctx = createMockActionCtx({ runQuery });
+    const body = new URLSearchParams({
+      payload: JSON.stringify({
+        team_id: "T-OK",
+        user_id: " U-OK ",
+        links: [{ url: "https://nixelo.app/issues/ABC-1" }],
+      }),
+    }).toString();
+    const request = await buildSignedRequest(body, signingSecret);
+
+    const response = await handleUnfurlHandler(ctx, request);
+    const payload = (await response.json()) as { error: string };
+
+    expect(response.status).toBe(400);
+    expect(payload.error).toContain("Invalid user_id");
+    expect(runQuery).not.toHaveBeenCalled();
+  });
+
+  it("should reject payloads with user_id containing control characters", async () => {
+    const runQuery = vi.fn();
+    const ctx = createMockActionCtx({ runQuery });
+    const body = new URLSearchParams({
+      payload: JSON.stringify({
+        team_id: "T-OK",
+        user_id: "U-OK\n",
+        links: [{ url: "https://nixelo.app/issues/ABC-1" }],
+      }),
+    }).toString();
+    const request = await buildSignedRequest(body, signingSecret);
+
+    const response = await handleUnfurlHandler(ctx, request);
+    const payload = (await response.json()) as { error: string };
+
+    expect(response.status).toBe(400);
+    expect(payload.error).toContain("Invalid user_id");
+    expect(runQuery).not.toHaveBeenCalled();
+  });
+
   it("should reject payloads with oversized link URLs", async () => {
     const runQuery = vi.fn();
     const ctx = createMockActionCtx({ runQuery });

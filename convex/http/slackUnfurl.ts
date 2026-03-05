@@ -15,6 +15,19 @@ const MAX_SLACK_TEAM_ID_LENGTH = 64;
 const MAX_SLACK_USER_ID_LENGTH = 64;
 const MAX_UNFURL_URL_LENGTH = 2048;
 
+function isInvalidSlackId(value: string): boolean {
+  if (value.trim() !== value || /\s/.test(value)) {
+    return true;
+  }
+  for (let i = 0; i < value.length; i += 1) {
+    const code = value.charCodeAt(i);
+    if (code < 32 || code === 127) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /**
  * Compute HMAC-SHA256 using Web Crypto API.
  * Returns hex-encoded digest.
@@ -130,6 +143,12 @@ function validateTeamAndUserIds(
     return { ok: false, response: jsonError("Invalid team_id.", 400) };
   }
   if (callerSlackUserId.length > MAX_SLACK_USER_ID_LENGTH) {
+    return { ok: false, response: jsonError("Invalid user_id.", 400) };
+  }
+  if (isInvalidSlackId(teamId)) {
+    return { ok: false, response: jsonError("Invalid team_id.", 400) };
+  }
+  if (isInvalidSlackId(callerSlackUserId)) {
     return { ok: false, response: jsonError("Invalid user_id.", 400) };
   }
   return { ok: true, teamId, callerSlackUserId };
