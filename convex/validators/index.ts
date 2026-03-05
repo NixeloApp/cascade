@@ -68,10 +68,8 @@ export const auditTargetTypes = literals(
   "apiKey",
   "user",
   "project",
-  "projects",
   "team",
   "webhook",
-  "webhooks",
   "organization",
   "test",
 );

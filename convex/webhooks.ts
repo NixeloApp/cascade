@@ -56,7 +56,7 @@ export const createWebhook = projectAdminMutation({
       action: "webhook_created",
       actorId: ctx.userId,
       targetId: webhookId,
-      targetType: "webhooks",
+      targetType: "webhook",
       metadata: {
         projectId: ctx.projectId,
         name: args.name,
@@ -127,7 +127,7 @@ export const updateWebhook = authenticatedMutation({
       action: "webhook_updated",
       actorId: ctx.userId,
       targetId: args.id,
-      targetType: "webhooks",
+      targetType: "webhook",
       metadata: updates,
     });
 
@@ -155,7 +155,7 @@ export const softDeleteWebhook = authenticatedMutation({
       action: "webhook_deleted",
       actorId: ctx.userId,
       targetId: args.id,
-      targetType: "webhooks",
+      targetType: "webhook",
     });
 
     return { success: true, deleted: true } as const;
