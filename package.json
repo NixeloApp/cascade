@@ -23,7 +23,7 @@
     "biome:check": "biome check .",
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "typecheck": "node node_modules/typescript/bin/tsc -b . --noEmit",
+    "typecheck": "tsc -b . --noEmit",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
