@@ -171,10 +171,9 @@ export abstract class BasePage {
   abstract goto(): Promise<void>;
 
   // Waits for DOM + React hydration (checks __reactFiber on elements)
-  // Uses 'domcontentloaded' instead of 'networkidle' because Convex
+  // Uses 'load' + React hydration check; avoid 'networkidle' because Convex
   // keeps WebSocket connections active, preventing networkidle from resolving
   async waitForLoad() {
-    await this.page.waitForLoadState("domcontentloaded");
     await this.page.waitForLoadState("load");
     await this.page.waitForFunction(() => {
       const elements = document.querySelectorAll("a, button");
