@@ -337,7 +337,9 @@ describe("Hybrid Search Integration", () => {
 
       const { result } = renderHook(() => useUserFuzzySearch(data));
 
-      result.current.search("john");
+      await act(async () => {
+        result.current.search("john");
+      });
 
       // Wait for debounce (useUserFuzzySearch has debounce: 100ms)
       await waitFor(
