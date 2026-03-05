@@ -11,6 +11,20 @@ import { DAY, WEEK } from "@convex/lib/timeUtils";
 const DB_NAME = "NixeloOfflineDB";
 const DB_VERSION = 1;
 
+interface SyncManager {
+  register(tag: string): Promise<void>;
+}
+
+interface ServiceWorkerRegistrationWithSync extends ServiceWorkerRegistration {
+  sync: SyncManager;
+}
+
+function hasRegistrationSync(
+  registration: ServiceWorkerRegistration,
+): registration is ServiceWorkerRegistrationWithSync {
+  return "sync" in registration;
+}
+
 export interface OfflineMutation {
   id?: number;
   mutationType: string;
@@ -250,26 +264,27 @@ export class OfflineStatusManager {
 
     // Trigger sync when coming back online
     if ("serviceWorker" in navigator && this.hasSyncManager()) {
-      navigator.serviceWorker.ready
-        .then((registration) => {
-          // Background Sync API - not in standard TypeScript libs
-          interface SyncManager {
-            register(tag: string): Promise<void>;
-          }
-          interface ServiceWorkerRegistrationWithSync extends ServiceWorkerRegistration {
-            sync: SyncManager;
-          }
-          return (registration as ServiceWorkerRegistrationWithSync).sync
-            .register("sync-mutations")
-            .catch((error: unknown) => {
-              console.warn("[offline] Failed to register background sync", { error });
-            });
-        })
-        .catch((error: unknown) => {
-          console.warn("[offline] Failed waiting for service worker readiness", { error });
-        });
+      this.scheduleBackgroundSync();
     }
   };
+
+  private scheduleBackgroundSync(): void {
+    navigator.serviceWorker.ready
+      .then((registration) => this.registerBackgroundSync(registration))
+      .catch((error: unknown) => {
+        console.warn("[offline] Failed waiting for service worker readiness", { error });
+      });
+  }
+
+  private registerBackgroundSync(registration: ServiceWorkerRegistration): Promise<void> {
+    if (!hasRegistrationSync(registration)) {
+      return Promise.resolve();
+    }
+
+    return registration.sync.register("sync-mutations").catch((error: unknown) => {
+      console.warn("[offline] Failed to register background sync", { error });
+    });
+  }
 
   private hasSyncManager(): boolean {
     return "sync" in ServiceWorkerRegistration.prototype;
