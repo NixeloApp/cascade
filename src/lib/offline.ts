@@ -268,7 +268,11 @@ export class OfflineStatusManager {
         interface ServiceWorkerRegistrationWithSync extends ServiceWorkerRegistration {
           sync: SyncManager;
         }
-        return (registration as ServiceWorkerRegistrationWithSync).sync.register("sync-mutations");
+        return (registration as ServiceWorkerRegistrationWithSync).sync
+          .register("sync-mutations")
+          .catch((error: unknown) => {
+            console.warn("[offline] Failed to register background sync", { error });
+          });
       });
     }
   };
