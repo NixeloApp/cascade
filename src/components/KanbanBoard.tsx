@@ -12,7 +12,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import type { WorkflowState } from "@convex/shared/types";
 import { useQuery } from "convex/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useBoardDragAndDrop } from "@/hooks/useBoardDragAndDrop";
 import { useBoardHistory } from "@/hooks/useBoardHistory";
@@ -167,15 +167,18 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
   const { historyStack, redoStack, handleUndo, handleRedo, pushAction } = useBoardHistory();
 
   // Apply filters to issues
-  const filteredIssuesByStatus = (() => {
+  const filteredIssuesByStatus = useMemo(() => {
     const result: Record<string, EnrichedIssue[]> = {};
     for (const [status, issues] of Object.entries(issuesByStatus)) {
       result[status] = applyFilters(issues, filters);
     }
     return result;
-  })();
+  }, [issuesByStatus, filters]);
 
-  const allIssues = Object.values(filteredIssuesByStatus).flat();
+  const allIssues = useMemo(
+    () => Object.values(filteredIssuesByStatus).flat(),
+    [filteredIssuesByStatus],
+  );
 
   // Keyboard Navigation
   const { selectedIndex } = useListNavigation({
@@ -253,9 +256,34 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
   };
 
   // Swimlane grouping
-  const swimlaneIssues = groupIssuesBySwimlane(filteredIssuesByStatus, swimlaneGroupBy);
+  const swimlaneIssues = useMemo(
+    () => groupIssuesBySwimlane(filteredIssuesByStatus, swimlaneGroupBy),
+    [filteredIssuesByStatus, swimlaneGroupBy],
+  );
 
-  const swimlaneConfigs = getSwimlanConfigs(swimlaneGroupBy, allIssues);
+  const swimlaneConfigs = useMemo(
+    () => getSwimlanConfigs(swimlaneGroupBy, allIssues),
+    [swimlaneGroupBy, allIssues],
+  );
+
+  // Determine Workflow States
+  const workflowStates = useMemo((): WorkflowState[] => {
+    if (isProjectMode && project) {
+      return [...project.workflowStates].sort(
+        (a: { order: number }, b: { order: number }) => a.order - b.order,
+      );
+    }
+
+    if (isTeamMode && smartWorkflowStates) {
+      return smartWorkflowStates.map((s) => ({
+        ...s,
+        description: "",
+        order: s.order,
+      }));
+    }
+
+    return [];
+  }, [isProjectMode, project, isTeamMode, smartWorkflowStates]);
 
   // Loading State
   const isLoading = isLoadingIssues || (isProjectMode && !project);
@@ -287,21 +315,6 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
         </Flex>
       </FlexItem>
     );
-  }
-
-  // Determine Workflow States
-  let workflowStates: WorkflowState[] = [];
-
-  if (isProjectMode && project) {
-    workflowStates = project.workflowStates.sort(
-      (a: { order: number }, b: { order: number }) => a.order - b.order,
-    );
-  } else if (isTeamMode && smartWorkflowStates) {
-    workflowStates = smartWorkflowStates.map((s) => ({
-      ...s,
-      description: "",
-      order: s.order,
-    }));
   }
 
   const canEdit = isProjectMode ? project?.userRole !== "viewer" : true;
