@@ -81,6 +81,7 @@ export const serviceTypes = literals("transcription", "email", "sms", "ai");
 export const syncDirections = literals("import", "export", "bidirectional");
 export const calendarProviders = literals("google", "outlook");
 export const cancelledByOptions = literals("host", "booker");
+export const bookingStatuses = literals("pending", "confirmed", "cancelled", "completed");
 export const ssoConnectionTypes = literals("saml", "oidc");
 export const oidcProviders = literals("google-workspace", "microsoft-entra", "okta");
 
