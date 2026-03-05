@@ -89,8 +89,11 @@ Baseline file (temporary debt register): `scripts/ci/e2e-hard-rules-baseline.jso
 
 ## Architecture
 
-```
+```text
 e2e/
+├── .auth/                      # Generated auth/session storage state for workers
+│   └── *.json
+│
 ├── fixtures/                   # Test fixtures
 │   ├── index.ts               # Exports all fixtures
 │   ├── test.fixture.ts        # Base fixtures (page objects)
@@ -113,6 +116,8 @@ e2e/
 ├── utils/                      # Test utilities
 │   ├── index.ts               # Exports all utilities
 │   ├── auth-helpers.ts        # Authentication helpers
+│   ├── google-oauth-mock.ts   # OAuth mocking helpers
+│   ├── google-oauth-programmatic.ts # Programmatic OAuth helpers
 │   ├── helpers.ts             # General helpers
 │   ├── otp-helpers.ts         # OTP verification via E2E API
 │   ├── routes.ts              # Route utilities
@@ -120,28 +125,47 @@ e2e/
 │   ├── test-user-service.ts   # Test user CRUD service
 │   └── wait-helpers.ts        # Async wait utilities
 │
+├── locators/                   # Shared selector contracts
+│   ├── index.ts
+│   └── auth.locators.ts
+│
 ├── settings/                   # Nested spec directories
 │   └── billing.spec.ts        # Billing settings tests
 │
+├── README.md                   # E2E suite conventions and guidance
 ├── config.ts                   # Test configuration (users, endpoints)
 ├── global-setup.ts            # Pre-test setup (creates users, seeds data)
 ├── global-teardown.ts         # Post-test cleanup
+├── globals.d.ts               # E2E-specific TS global types
+├── screenshot-pages.ts        # Screenshot helper script
 │
-│── # Test specs (representative examples)
+├── # Test specs (representative examples)
+├── activity-feed.spec.ts      # Activity feed flows
+├── analytics.spec.ts          # Analytics dashboard flows
 ├── auth.spec.ts               # Authentication tests
 ├── auth-comprehensive.spec.ts # Extended auth flow tests
+├── board-drag-drop.spec.ts    # Board drag-and-drop interactions
 ├── calendar.spec.ts           # Calendar tests
 ├── dashboard.spec.ts          # Dashboard tests
+├── dev-tools-test-account.spec.ts # Dev test-account tooling
 ├── documents.spec.ts          # Document management tests
 ├── error-scenarios.spec.ts    # Error handling tests
 ├── integration-workflow.spec.ts # Cross-feature workflow tests
+├── invite.spec.ts             # Invite flow coverage (legacy path)
 ├── invites.spec.ts            # User invitation tests
+├── issue-detail-page.spec.ts  # Issue detail interactions
 ├── issues.spec.ts             # Issue management tests
 ├── landing.spec.ts            # Landing page tests
+├── oauth-mocked.spec.ts       # OAuth mocked authentication flows
+├── oauth-security.spec.ts     # OAuth security scenarios
 ├── onboarding.spec.ts         # Onboarding flow tests
+├── permission-cascade.spec.ts # Permission propagation checks
 ├── rbac.spec.ts               # Role-based access control tests
+├── roadmap.spec.ts            # Roadmap feature flows
+├── search.spec.ts             # Search behavior checks
 ├── signout.spec.ts            # Sign-out flow tests
 ├── sprints.spec.ts            # Sprint management tests
+├── teams.spec.ts              # Team management flows
 ├── time-tracking.spec.ts      # Time tracking tests
 └── workspaces-org.spec.ts     # Workspace/org management tests
 ```
