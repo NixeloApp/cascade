@@ -53,7 +53,12 @@ function isTokenExpired(expiresAt?: number): boolean {
 
 function normalizePortalRequesterKey(requesterKey?: string): string {
   if (!requesterKey) return "anonymous";
-  const normalized = requesterKey.trim().toLowerCase();
+  const normalized = requesterKey
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
   if (!normalized) return "anonymous";
   return normalized.slice(0, 64);
 }

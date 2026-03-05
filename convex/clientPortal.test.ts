@@ -30,6 +30,12 @@ describe("clientPortal", () => {
       requester: "portal:req:anonymous",
       token: "portal:req:anonymous:token:xyz",
     });
+
+    expect(getPortalValidationRateLimitKeys("abcdef12", " Client Session !@# 42 ")).toEqual({
+      global: "portal:global",
+      requester: "portal:req:client_session_42",
+      token: "portal:req:client_session_42:token:abcdef12",
+    });
   });
 
   it("allows org admin to generate, validate, and revoke portal tokens", async () => {
