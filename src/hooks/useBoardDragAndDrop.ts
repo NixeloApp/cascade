@@ -10,7 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import { useMutation } from "convex/react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { showError } from "@/lib/toast";
 import { optimisticBoardUpdate } from "./boardOptimisticUpdates";
 import type { BoardAction } from "./useBoardHistory";
@@ -68,9 +68,15 @@ export function useBoardDragAndDrop({
 
   const rawUpdateStatus = useMutation(api.issues.updateStatus);
 
-  const optimisticUpdate = optimisticBoardUpdate(boardOptions, isTeamMode);
+  const optimisticUpdate = useMemo(
+    () => optimisticBoardUpdate(boardOptions, isTeamMode),
+    [boardOptions, isTeamMode],
+  );
 
-  const updateIssueStatus = rawUpdateStatus.withOptimisticUpdate(optimisticUpdate);
+  const updateIssueStatus = useMemo(
+    () => rawUpdateStatus.withOptimisticUpdate(optimisticUpdate),
+    [rawUpdateStatus, optimisticUpdate],
+  );
 
   const updateStatusByCategory = useMutation(api.issues.updateStatusByCategory);
 
