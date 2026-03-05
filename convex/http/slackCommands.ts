@@ -14,6 +14,19 @@ const MAX_SLASH_COMMAND_BODY_LENGTH = 12000;
 const MAX_SLACK_TEAM_ID_LENGTH = 64;
 const MAX_SLACK_USER_ID_LENGTH = 64;
 
+function isInvalidSlackId(value: string): boolean {
+  if (value.trim() !== value || /\s/.test(value)) {
+    return true;
+  }
+  for (let i = 0; i < value.length; i += 1) {
+    const code = value.charCodeAt(i);
+    if (code < 32 || code === 127) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /**
  * Compute HMAC-SHA256 using Web Crypto API.
  * Returns hex-encoded digest.
@@ -163,6 +176,30 @@ export const handleSlashCommandHandler = async (ctx: ActionCtx, request: Request
     );
   }
   if (callerSlackUserId.length > MAX_SLACK_USER_ID_LENGTH) {
+    return new Response(
+      JSON.stringify({
+        response_type: "ephemeral",
+        text: "Invalid user_id in Slack command payload.",
+      }),
+      {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
+  if (isInvalidSlackId(teamId)) {
+    return new Response(
+      JSON.stringify({
+        response_type: "ephemeral",
+        text: "Invalid team_id in Slack command payload.",
+      }),
+      {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
+  if (isInvalidSlackId(callerSlackUserId)) {
     return new Response(
       JSON.stringify({
         response_type: "ephemeral",
