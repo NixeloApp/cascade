@@ -83,15 +83,12 @@ const getGitHubOAuthConfig = () => {
 export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
   if (!isGitHubOAuthConfigured()) {
     return Promise.resolve(
-      new Response(
-        JSON.stringify({
+      jsonResponse(
+        {
           error:
             "GitHub OAuth not configured. Please set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET environment variables.",
-        }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
         },
+        500,
       ),
     );
   }
@@ -546,15 +543,7 @@ const handleListReposError = (error: unknown) => {
     message = error.message;
   }
 
-  return new Response(
-    JSON.stringify({
-      error: message,
-    }),
-    {
-      status,
-      headers: { "Content-Type": "application/json" },
-    },
-  );
+  return jsonResponse({ error: message }, status);
 };
 
 /**
