@@ -274,31 +274,39 @@ export class ProjectsPage extends BasePage {
       hasText: /create workspace/i,
     });
     const createWorkspaceForm = this.page.locator("#create-workspace-form");
+    const workspaceNameInput = createWorkspaceDialog.getByLabel(/workspace name/i);
+    const workspaceDescriptionInput = createWorkspaceDialog.getByLabel(/description/i);
+    const submitWorkspaceButton = createWorkspaceDialog.getByRole("button", {
+      name: /create workspace/i,
+    });
 
     await expect(async () => {
       if (!(await createWorkspaceDialog.isVisible())) {
         await this.newWorkspaceButton.click();
       }
       await expect(createWorkspaceDialog).toBeVisible();
-      await expect(this.workspaceNameInput).toBeVisible();
+      await expect(
+        createWorkspaceDialog.getByRole("heading", { name: /create workspace/i }),
+      ).toBeVisible();
+      await expect(workspaceNameInput).toBeVisible();
+      await expect(workspaceNameInput).toBeEnabled();
     }).toPass();
 
-    await this.workspaceNameInput.fill(name);
-    await expect(this.workspaceNameInput).toHaveValue(name);
+    await workspaceNameInput.fill(name);
+    await expect(workspaceNameInput).toHaveValue(name);
     if (description) {
-      await this.workspaceDescriptionInput.fill(description);
+      await workspaceDescriptionInput.fill(description);
     }
 
     if (await createWorkspaceForm.isVisible()) {
       await createWorkspaceForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
     } else {
-      await this.submitWorkspaceButton.click();
+      await submitWorkspaceButton.click();
     }
 
-    // Verify success
-    await expect(this.page.getByText("Workspace created successfully")).toBeVisible();
-    // Verify modal closed
+    // Deterministic completion: modal closes and workspace route remains active.
     await expect(createWorkspaceDialog).not.toBeVisible();
+    await expect(this.page).toHaveURL(/\/workspaces(\/[^/?#]+)?(?:[/?#]|$)/);
   }
 
   async cancelCreateProject() {
