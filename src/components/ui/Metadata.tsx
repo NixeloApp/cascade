@@ -153,14 +153,8 @@ export function MetadataTimestamp({
 }: MetadataTimestampProps) {
   const { size } = useMetadataContext();
 
-  let dateObj: Date;
-  try {
-    dateObj = date instanceof Date ? date : new Date(date);
-    // Check if date is valid
-    if (Number.isNaN(dateObj.getTime())) {
-      throw new Error("Invalid date");
-    }
-  } catch (_e) {
+  const dateObj = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(dateObj.getTime())) {
     // Render fallback for invalid dates
     return (
       <span className={cn("text-ui-text-tertiary", size === "xs" ? "text-xs" : "text-sm")}>
