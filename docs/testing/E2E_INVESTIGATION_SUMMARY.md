@@ -1,5 +1,9 @@
 # E2E Test Investigation & Fixes - Final Summary
 
+> Historical note: this file documents a one-time 2026-01-10 investigation.
+> Current E2E policy is in `docs/testing/e2e.md` and `todos/e2e-reliability-overhaul.md`:
+> run the full suite locally and use binary pass/fail (no summary/history gates).
+
 **Date**: 2026-01-10  
 **Branch**: `nxet`  
 **Duration**: ~4 hours  

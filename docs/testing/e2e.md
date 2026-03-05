@@ -2,6 +2,14 @@
 
 End-to-end testing for Nixelo using [Playwright](https://playwright.dev/).
 
+## Reliability Policy
+
+- Local full-suite run output is the source of truth:
+  - `pnpm exec playwright test --reporter=line`
+- Acceptance is binary:
+  - `100% pass` or `not 100% pass`
+- Do not use summary/history-derived gates to decide E2E status.
+
 ## Quick Start
 
 ```bash
