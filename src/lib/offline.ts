@@ -31,6 +31,20 @@ export interface CachedData {
 class OfflineDB {
   private db: IDBDatabase | null = null;
 
+  private async runCachedDataWrite<T>(
+    operation: (store: IDBObjectStore) => IDBRequest<T>,
+  ): Promise<void> {
+    const db = await this.open();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(["cachedData"], "readwrite");
+      const store = transaction.objectStore("cachedData");
+      const request = operation(store);
+
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
   open(): Promise<IDBDatabase> {
     if (this.db) return Promise.resolve(this.db);
 
@@ -164,19 +178,13 @@ class OfflineDB {
 
   // Cache operations
   async setCachedData(key: string, data: unknown): Promise<void> {
-    const db = await this.open();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(["cachedData"], "readwrite");
-      const store = transaction.objectStore("cachedData");
-      const request = store.put({
+    return this.runCachedDataWrite((store) =>
+      store.put({
         key,
         data,
         timestamp: Date.now(),
-      });
-
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
+      }),
+    );
   }
 
   async getCachedData(key: string): Promise<unknown | null> {
@@ -195,15 +203,7 @@ class OfflineDB {
   }
 
   async deleteCachedData(key: string): Promise<void> {
-    const db = await this.open();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(["cachedData"], "readwrite");
-      const store = transaction.objectStore("cachedData");
-      const request = store.delete(key);
-
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
+    return this.runCachedDataWrite((store) => store.delete(key));
   }
 
   async clearOldCache(olderThan?: number): Promise<number> {
