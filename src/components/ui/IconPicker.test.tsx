@@ -45,7 +45,8 @@ describe("IconPicker", () => {
     render(<IconPicker value={`${LUCIDE_ICON_PREFIX}FileText`} onChange={onChange} />);
 
     const firstButton = screen.getByLabelText("Select File Text icon");
-    firstButton.focus();
+    await user.click(firstButton);
+    onChange.mockClear();
     await user.keyboard("{ArrowRight}{Enter}");
 
     expect(onChange).toHaveBeenCalledWith(`${LUCIDE_ICON_PREFIX}BookOpen`);
