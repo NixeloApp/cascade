@@ -37,6 +37,9 @@ pnpm e2e:headed
 
 # Debug mode with inspector
 pnpm e2e:debug
+
+# Cross-browser smoke run (opt-in project matrix)
+pnpm e2e:cross-browser:smoke
 ```
 
 ## PR Review Checklist (E2E Reliability)
