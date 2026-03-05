@@ -283,4 +283,36 @@ describe("Slack Unfurl HTTP Handler", () => {
     expect(payload.error).toBe("Invalid Slack signature.");
     expect(runQuery).not.toHaveBeenCalled();
   });
+
+  it("should unfurl only unique issue links and ignore non-issue links", async () => {
+    const issueUrl = "https://nixelo.app/issues/ABC-1";
+    const nonIssueUrl = "https://nixelo.app/projects/ABC";
+    const runQuery = vi.fn(async () => ({
+      title: "ABC-1 title",
+      text: "ABC-1 text",
+    }));
+    const ctx = createMockActionCtx({ runQuery });
+    const body = new URLSearchParams({
+      payload: JSON.stringify({
+        team_id: "T-OK",
+        user_id: "U-OK",
+        links: [{ url: issueUrl }, { url: issueUrl }, { url: nonIssueUrl }, {}],
+      }),
+    }).toString();
+    const request = await buildSignedRequest(body, signingSecret);
+
+    const response = await handleUnfurlHandler(ctx, request);
+    const payload = (await response.json()) as {
+      unfurls: Record<string, { title: string; text: string }>;
+    };
+
+    expect(response.status).toBe(200);
+    expect(runQuery).toHaveBeenCalledTimes(1);
+    expect(payload.unfurls).toEqual({
+      [issueUrl]: {
+        title: "ABC-1 title",
+        text: "ABC-1 text",
+      },
+    });
+  });
 });
