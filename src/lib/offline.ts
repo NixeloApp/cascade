@@ -31,6 +31,36 @@ export interface CachedData {
 class OfflineDB {
   private db: IDBDatabase | null = null;
 
+  private async runStoreCleanup<T>(
+    storeName: "mutations" | "cachedData",
+    shouldDelete: (value: T) => boolean,
+  ): Promise<number> {
+    const db = await this.open();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([storeName], "readwrite");
+      const store = transaction.objectStore(storeName);
+      const request = store.openCursor();
+      let deleted = 0;
+
+      request.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
+        if (!cursor) {
+          resolve(deleted);
+          return;
+        }
+
+        const value = cursor.value as T;
+        if (shouldDelete(value)) {
+          cursor.delete();
+          deleted++;
+        }
+        cursor.continue();
+      };
+
+      request.onerror = () => reject(request.error);
+    });
+  }
+
   private async runCachedDataWrite<T>(
     operation: (store: IDBObjectStore) => IDBRequest<T>,
   ): Promise<void> {
@@ -149,31 +179,14 @@ class OfflineDB {
   }
 
   async clearSyncedMutations(olderThan?: number): Promise<number> {
-    const db = await this.open();
     const cutoff = olderThan || Date.now() - DAY;
-
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(["mutations"], "readwrite");
-      const store = transaction.objectStore("mutations");
-      const request = store.openCursor();
-      let deleted = 0;
-
-      request.onsuccess = (event) => {
-        const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
-        if (cursor) {
-          const mutation = cursor.value as OfflineMutation;
-          if (mutation.status === "synced" && mutation.syncedAt && mutation.syncedAt < cutoff) {
-            cursor.delete();
-            deleted++;
-          }
-          cursor.continue();
-        } else {
-          resolve(deleted);
-        }
-      };
-
-      request.onerror = () => reject(request.error);
-    });
+    return this.runStoreCleanup<OfflineMutation>(
+      "mutations",
+      (mutation) =>
+        mutation.status === "synced" &&
+        mutation.syncedAt !== undefined &&
+        mutation.syncedAt < cutoff,
+    );
   }
 
   // Cache operations
@@ -207,31 +220,8 @@ class OfflineDB {
   }
 
   async clearOldCache(olderThan?: number): Promise<number> {
-    const db = await this.open();
     const cutoff = olderThan || Date.now() - WEEK;
-
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(["cachedData"], "readwrite");
-      const store = transaction.objectStore("cachedData");
-      const request = store.openCursor();
-      let deleted = 0;
-
-      request.onsuccess = (event) => {
-        const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
-        if (cursor) {
-          const cached = cursor.value as CachedData;
-          if (cached.timestamp < cutoff) {
-            cursor.delete();
-            deleted++;
-          }
-          cursor.continue();
-        } else {
-          resolve(deleted);
-        }
-      };
-
-      request.onerror = () => reject(request.error);
-    });
+    return this.runStoreCleanup<CachedData>("cachedData", (cached) => cached.timestamp < cutoff);
   }
 }
 
