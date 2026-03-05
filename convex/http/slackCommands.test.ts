@@ -58,6 +58,25 @@ describe("Slack Slash Command HTTP Handler", () => {
     expect(runMutation).not.toHaveBeenCalled();
   });
 
+  it("should reject slash command text with control characters", async () => {
+    const runMutation = vi.fn();
+    const ctx = { runMutation } as unknown as ActionCtx;
+    const body = new URLSearchParams({
+      team_id: "T-OK",
+      user_id: "U-OK",
+      text: "create\nissue",
+    }).toString();
+    const request = await buildSignedRequest(body, signingSecret);
+
+    const response = await handleSlashCommandHandler(ctx, request);
+    const payload = (await response.json()) as { response_type: string; text: string };
+
+    expect(response.status).toBe(400);
+    expect(payload.response_type).toBe("ephemeral");
+    expect(payload.text).toContain("invalid characters");
+    expect(runMutation).not.toHaveBeenCalled();
+  });
+
   it("should reject oversized slash command body", async () => {
     const runMutation = vi.fn();
     const ctx = { runMutation } as unknown as ActionCtx;

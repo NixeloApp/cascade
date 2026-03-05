@@ -27,6 +27,16 @@ function isInvalidSlackId(value: string): boolean {
   return false;
 }
 
+function hasControlCharacters(value: string): boolean {
+  for (let i = 0; i < value.length; i += 1) {
+    const code = value.charCodeAt(i);
+    if (code < 32 || code === 127) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /**
  * Compute HMAC-SHA256 using Web Crypto API.
  * Returns hex-encoded digest.
@@ -216,6 +226,18 @@ export const handleSlashCommandHandler = async (ctx: ActionCtx, request: Request
       JSON.stringify({
         response_type: "ephemeral",
         text: "Command text is too long.",
+      }),
+      {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
+  if (hasControlCharacters(text)) {
+    return new Response(
+      JSON.stringify({
+        response_type: "ephemeral",
+        text: "Command text contains invalid characters.",
       }),
       {
         status: 400,
