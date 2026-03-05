@@ -33,7 +33,7 @@ describe("Hybrid Search Integration", () => {
 
       // Should still find John due to fuzzy matching
       await waitFor(() => {
-        expect(result.current.results.length).toBeGreaterThan(0);
+        expect(result.current.results.some((entry) => entry.item.name === "John Doe")).toBe(true);
       });
     });
 
