@@ -47,6 +47,7 @@ import {
   proseMirrorSnapshot,
   prStates,
   rateTypes,
+  reminderTypes,
   serviceTypes,
   simplePriorities,
   sprintStatuses,
@@ -1012,7 +1013,7 @@ const applicationTables = {
   eventReminders: defineTable({
     eventId: v.id("calendarEvents"),
     userId: v.id("users"), // User to remind
-    reminderType: v.union(v.literal("email"), v.literal("push"), v.literal("in_app")),
+    reminderType: reminderTypes,
     minutesBefore: v.number(), // e.g., 15, 30, 60, 1440 (1 day)
     scheduledFor: v.number(), // Computed: event.startTime - minutesBefore * 60 * 1000
     sent: v.boolean(), // Has reminder been sent?
