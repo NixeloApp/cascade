@@ -247,8 +247,17 @@ describe("Hybrid Search Integration", () => {
         result.current.search("nixelo");
       });
 
-      expect(result.current.results.length).toBeGreaterThan(0);
-      expect(result.current.results[0].item.name).toContain("Nixelo");
+      await waitFor(
+        () => {
+          expect(result.current.isDebouncing).toBe(false);
+        },
+        { timeout: 500 },
+      );
+
+      await waitFor(() => {
+        expect(result.current.results).toHaveLength(1);
+        expect(result.current.results[0]?.item.name).toBe("Nixelo");
+      });
     });
   });
 
