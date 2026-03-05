@@ -351,25 +351,19 @@ export const getTeamVelocity = projectQuery({
     const doneStates = new Set(doneStateIds);
 
     // Batch fetch issues for all sprints in parallel (not sequential)
-    const sprintIds = completedSprints.map((s) => s._id);
     const sprintIssuesArrays = await Promise.all(
-      sprintIds.map((sprintId) =>
+      completedSprints.map((sprint) =>
         ctx.db
           .query("issues")
-          .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId))
+          .withIndex("by_sprint", (q) => q.eq("sprintId", sprint._id))
           .filter(notDeleted)
           .take(MAX_SPRINT_ISSUES),
       ),
     );
 
-    // Build sprint issues map
-    const sprintIssuesMap = new Map(
-      sprintIds.map((id, i) => [id.toString(), sprintIssuesArrays[i]]),
-    );
-
     // Calculate velocity data using pre-fetched issues (no N+1)
-    const velocityData = completedSprints.map((sprint) => {
-      const sprintIssues = sprintIssuesMap.get(sprint._id.toString()) || [];
+    const velocityData = completedSprints.map((sprint, index) => {
+      const sprintIssues = sprintIssuesArrays[index] || [];
 
       let completedPoints = 0;
       let issuesCompleted = 0;
