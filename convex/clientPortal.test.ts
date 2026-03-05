@@ -20,16 +20,17 @@ const clientPortalApi = anyApi.clientPortal;
 
 describe("clientPortal", () => {
   it("builds requester-scoped portal validation rate-limit keys", () => {
-    expect(getPortalValidationRateLimitKeys("abcdefgh12345678", "Client-Session-1")).toEqual({
+    expect(getPortalValidationRateLimitKeys("abcdef0012345678", "Client-Session-1")).toEqual({
       global: "portal:global",
       requester: "portal:req:client-session-1",
-      token: "portal:req:client-session-1:token:abcdefgh",
+      token: "portal:req:client-session-1:token:abcdef00",
     });
 
+    // Non-hex tokens get sanitized to "invalid"
     expect(getPortalValidationRateLimitKeys("xyz", "   ")).toEqual({
       global: "portal:global",
       requester: "portal:req:anonymous",
-      token: "portal:req:anonymous:token:xyz",
+      token: "portal:req:anonymous:token:invalid",
     });
 
     expect(getPortalValidationRateLimitKeys("abcdef12", " Client Session !@# 42 ")).toEqual({

@@ -291,10 +291,31 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
     [filteredIssuesByStatus, swimlaneGroupBy],
   );
 
-  const swimlaneConfigs = useMemo(
-    () => getSwimlanConfigs(swimlaneGroupBy, allIssues),
-    [swimlaneGroupBy, allIssues],
-  );
+  const swimlaneConfigs = useMemo(() => {
+    // Build assignees Map for swimlane display names
+    const assigneesMap = new Map<Id<"users">, { name?: string; image?: string }>();
+    for (const issue of allIssues) {
+      if (issue.assignee) {
+        assigneesMap.set(issue.assignee._id, {
+          name: issue.assignee.name,
+          image: issue.assignee.image,
+        });
+      }
+    }
+
+    // Build unique labels array for swimlane colors
+    const labelsMap = new Map<string, { name: string; color: string }>();
+    for (const issue of allIssues) {
+      for (const label of issue.labels) {
+        if (!labelsMap.has(label.name)) {
+          labelsMap.set(label.name, { name: label.name, color: label.color });
+        }
+      }
+    }
+    const labels = Array.from(labelsMap.values());
+
+    return getSwimlanConfigs(swimlaneGroupBy, allIssues, assigneesMap, labels);
+  }, [swimlaneGroupBy, allIssues]);
 
   // Determine Workflow States
   const workflowStates = useMemo((): WorkflowState[] => {

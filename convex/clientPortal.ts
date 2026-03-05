@@ -80,7 +80,11 @@ function normalizePortalRequesterKey(requesterKey?: string): string {
 
 export function getPortalValidationRateLimitKeys(token: string, requesterKey?: string) {
   const requesterBucket = normalizePortalRequesterKey(requesterKey);
-  const tokenPrefix = token.slice(0, 8);
+  const tokenPrefix =
+    token
+      .slice(0, 8)
+      .toLowerCase()
+      .replace(/[^a-f0-9]/g, "") || "invalid";
   return {
     global: "portal:global",
     requester: `portal:req:${requesterBucket}`,
