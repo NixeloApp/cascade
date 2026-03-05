@@ -22,6 +22,8 @@ import { logger } from "../lib/logger";
 
 const OAUTH_STATE_COOKIE_NAME = "github-oauth-state";
 const OAUTH_STATE_COOKIE_BASE_ATTRIBUTES = "Path=/; HttpOnly; Secure; SameSite=Lax";
+const GITHUB_FETCH_REPOS_ERROR_MESSAGE = "Failed to fetch repositories";
+const GITHUB_LIST_REPOS_ERROR_MESSAGE = "Failed to list repositories";
 
 /**
  * GitHub OAuth Integration
@@ -428,7 +430,7 @@ async function parseGitHubErrorMessage(response: Response): Promise<string> {
     return parseGitHubErrorBodyMessage(text);
   } catch (e) {
     logger.error("Failed to read error response body:", { error: e });
-    return "Failed to fetch repositories";
+    return GITHUB_FETCH_REPOS_ERROR_MESSAGE;
   }
 }
 
@@ -441,7 +443,7 @@ function parseGitHubErrorBodyMessage(text: string): string {
   } catch {
     // Fall through to text fallback
   }
-  return text || "Failed to fetch repositories";
+  return text || GITHUB_FETCH_REPOS_ERROR_MESSAGE;
 }
 
 /**
@@ -541,7 +543,7 @@ export const listReposHandler = async (ctx: ActionCtx, request: Request) => {
 const handleListReposError = (error: unknown) => {
   logger.error("GitHub listRepos error:", { error });
   let status = 500;
-  let message = "Failed to list repositories";
+  let message = GITHUB_LIST_REPOS_ERROR_MESSAGE;
 
   if (isAppError(error)) {
     message = error.data.message || message;
