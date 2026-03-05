@@ -170,4 +170,18 @@ describe("clientPortal", () => {
     expect(visible[0]?.title).toBe("Visible issue");
     expect(hidden).toHaveLength(0);
   });
+
+  it("rejects malformed portal tokens without returning context", async () => {
+    const t = convexTest(schema, modules);
+
+    const validated = await t.mutation(clientPortalApi.validateToken, {
+      token: "not-a-valid-portal-token",
+    });
+    expect(validated).toBeNull();
+
+    const projects = await t.query(clientPortalApi.getProjectsForToken, {
+      token: "not-a-valid-portal-token",
+    });
+    expect(projects).toEqual([]);
+  });
 });

@@ -17,6 +17,10 @@ function buildPortalToken(): string {
   return `${first}${second}`;
 }
 
+function isPortalTokenFormat(token: string): boolean {
+  return /^[a-f0-9]{64}$/i.test(token);
+}
+
 async function assertClientForOrganization(
   db: QueryCtx["db"] | MutationCtx["db"],
   organizationId: Id<"organizations">,
@@ -61,6 +65,10 @@ export function getPortalValidationRateLimitKeys(token: string, requesterKey?: s
 }
 
 async function resolveTokenContext(ctx: { db: QueryCtx["db"] | MutationCtx["db"] }, token: string) {
+  if (!isPortalTokenFormat(token)) {
+    return null;
+  }
+
   const portalToken = await ctx.db
     .query("clientPortalTokens")
     .withIndex("by_token", (q) => q.eq("token", token))
