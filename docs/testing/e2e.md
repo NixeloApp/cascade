@@ -205,8 +205,8 @@ export class AuthPage extends BasePage {
   readonly passwordInput: Locator;
   readonly submitButton: Locator;
 
-  constructor(page: Page) {
-    super(page);
+  constructor(page: Page, orgSlug: string) {
+    super(page, orgSlug);
     this.emailInput = page.getByPlaceholder("Email");
     this.passwordInput = page.getByPlaceholder("Password");
     this.submitButton = page.getByRole("button", { name: /sign (in|up)/i });
@@ -236,15 +236,17 @@ Fixtures provide page objects to tests automatically.
 import { test as base } from "@playwright/test";
 import { AuthPage, DashboardPage, LandingPage } from "../pages";
 
+const PUBLIC_ORG_PLACEHOLDER = "__public__";
+
 export const test = base.extend<TestFixtures>({
   landingPage: async ({ page }, use) => {
-    await use(new LandingPage(page));
+    await use(new LandingPage(page, PUBLIC_ORG_PLACEHOLDER));
   },
   authPage: async ({ page }, use) => {
-    await use(new AuthPage(page));
+    await use(new AuthPage(page, PUBLIC_ORG_PLACEHOLDER));
   },
   dashboardPage: async ({ page }, use) => {
-    await use(new DashboardPage(page));
+    await use(new DashboardPage(page, PUBLIC_ORG_PLACEHOLDER));
   },
 });
 ```
