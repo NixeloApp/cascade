@@ -51,6 +51,7 @@ import {
   serviceTypes,
   simplePriorities,
   sprintStatuses,
+  ssoConnectionTypes,
   syncDirections,
   teamRoles,
   webhookStatuses,
@@ -117,7 +118,7 @@ const applicationTables = {
 
   ssoConnections: defineTable({
     organizationId: v.id("organizations"),
-    type: v.union(v.literal("saml"), v.literal("oidc")),
+    type: ssoConnectionTypes,
     name: v.string(), // "Okta", "Azure AD", "Google Workspace"
     isEnabled: v.boolean(),
     samlConfig: v.optional(

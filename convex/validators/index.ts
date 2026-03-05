@@ -80,6 +80,7 @@ export const serviceTypes = literals("transcription", "email", "sms", "ai");
 export const syncDirections = literals("import", "export", "bidirectional");
 export const calendarProviders = literals("google", "outlook");
 export const cancelledByOptions = literals("host", "booker");
+export const ssoConnectionTypes = literals("saml", "oidc");
 
 // User Preferences
 export const emailDigests = literals("none", "daily", "weekly");
