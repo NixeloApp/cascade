@@ -23,6 +23,7 @@ import {
   assertCanEditProject,
   assertIsProjectAdmin,
 } from "./projectAccess";
+import { customFieldTypes } from "./validators";
 
 /**
  * Validate that a string represents a valid number.
@@ -93,16 +94,7 @@ export const create = projectAdminMutation({
   args: {
     name: v.string(),
     fieldKey: v.string(),
-    fieldType: v.union(
-      v.literal("text"),
-      v.literal("number"),
-      v.literal("select"),
-      v.literal("multiselect"),
-      v.literal("date"),
-      v.literal("checkbox"),
-      v.literal("url"),
-      v.literal("user"),
-    ),
+    fieldType: customFieldTypes,
     options: v.optional(v.array(v.string())),
     isRequired: v.boolean(),
     description: v.optional(v.string()),

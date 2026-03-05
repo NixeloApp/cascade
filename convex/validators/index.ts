@@ -103,6 +103,16 @@ export const weekDays = literals(
   "saturday",
   "sunday",
 );
+export const customFieldTypes = literals(
+  "text",
+  "number",
+  "select",
+  "multiselect",
+  "date",
+  "checkbox",
+  "url",
+  "user",
+);
 
 // Meeting Bot
 export const meetingPlatforms = literals("google_meet", "zoom", "teams", "other");

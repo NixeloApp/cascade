@@ -30,6 +30,7 @@ import {
   cancelledByOptions,
   chatRoles,
   ciStatuses,
+  customFieldTypes,
   dashboardLayout,
   emailDigests,
   employmentTypes,
@@ -773,16 +774,7 @@ const applicationTables = {
     projectId: v.id("projects"),
     name: v.string(),
     fieldKey: v.string(), // "customer_id"
-    fieldType: v.union(
-      v.literal("text"),
-      v.literal("number"),
-      v.literal("select"),
-      v.literal("multiselect"),
-      v.literal("date"),
-      v.literal("checkbox"),
-      v.literal("url"),
-      v.literal("user"),
-    ),
+    fieldType: customFieldTypes,
     options: v.optional(v.array(v.string())), // For select/multiselect
     isRequired: v.boolean(),
     description: v.optional(v.string()),
