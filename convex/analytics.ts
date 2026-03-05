@@ -3,7 +3,7 @@
  */
 
 import { v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { projectQuery, sprintQuery } from "./customFunctions";
 import { batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { efficientCount } from "./lib/boundedQueries";
@@ -432,11 +432,26 @@ export const getRecentActivity = projectQuery({
       ),
     );
 
-    // Flatten, sort by creation time, and take top limit
-    const allActivities = activitiesArrays
-      .flat()
-      .sort((a, b) => b._creationTime - a._creationTime)
-      .slice(0, limit);
+    // Keep only the top `limit` newest activities to avoid sorting large flattened arrays.
+    const allActivities: Doc<"issueActivity">[] = [];
+    for (const activities of activitiesArrays) {
+      for (const activity of activities) {
+        let insertIndex = 0;
+        while (
+          insertIndex < allActivities.length &&
+          allActivities[insertIndex]._creationTime >= activity._creationTime
+        ) {
+          insertIndex += 1;
+        }
+        if (insertIndex >= limit) {
+          continue;
+        }
+        allActivities.splice(insertIndex, 0, activity);
+        if (allActivities.length > limit) {
+          allActivities.pop();
+        }
+      }
+    }
 
     // Create issue map from fetched issues
     const issueMap = new Map(issues.map((i) => [i._id, i]));
