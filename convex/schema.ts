@@ -20,6 +20,7 @@ import {
   boardTypes,
   bookerAnswers,
   bookingFieldTypes,
+  bookingLocations,
   botJobStatuses,
   calendarEventColors,
   calendarEventTypes,
@@ -1051,14 +1052,7 @@ const applicationTables = {
     bufferTimeAfter: v.number(),
     minimumNotice: v.number(), // Hours
     maxBookingsPerDay: v.optional(v.number()),
-    location: v.union(
-      v.literal("phone"),
-      v.literal("zoom"),
-      v.literal("meet"),
-      v.literal("teams"),
-      v.literal("in-person"),
-      v.literal("custom"),
-    ),
+    location: bookingLocations,
     locationDetails: v.optional(v.string()),
     questions: v.optional(
       v.array(
