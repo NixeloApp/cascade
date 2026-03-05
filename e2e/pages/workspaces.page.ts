@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
-import { createWorkspaceFromDialog } from "../utils/wait-helpers";
+import { createWorkspaceFromDialog, getWorkspaceDialogElements } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -73,20 +73,15 @@ export class WorkspacesPage extends BasePage {
     // Wait for button to be ready - use first() to get the header button (not empty state)
     const createButton = this.newWorkspaceButton.first();
     await createButton.waitFor({ state: "visible" });
-    const createWorkspaceDialog = this.page.getByRole("dialog").filter({
-      hasText: /create workspace/i,
-    });
-    const workspaceNameInput = createWorkspaceDialog.getByLabel(/workspace name/i);
-    const workspaceDescriptionInput = createWorkspaceDialog.getByLabel(/description/i);
-    const submitWorkspaceButton = createWorkspaceDialog.getByRole("button", {
-      name: /create workspace/i,
-    });
+    const { dialog, descriptionInput, nameInput, submitButton } = getWorkspaceDialogElements(
+      this.page,
+    );
 
     await createWorkspaceFromDialog({
-      dialog: createWorkspaceDialog,
-      nameInput: workspaceNameInput,
-      descriptionInput: workspaceDescriptionInput,
-      submitButton: submitWorkspaceButton,
+      dialog,
+      nameInput,
+      descriptionInput,
+      submitButton,
       workspaceName: name,
       workspaceDescription: description,
       openDialog: async () => {

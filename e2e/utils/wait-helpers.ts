@@ -215,6 +215,30 @@ type WorkspaceCreationDialogOptions = {
   openDialog: () => Promise<void>;
 };
 
+export type WorkspaceDialogElements = {
+  dialog: Locator;
+  nameInput: Locator;
+  descriptionInput: Locator;
+  submitButton: Locator;
+  createForm: Locator;
+};
+
+/**
+ * Shared selector contract for the create-workspace modal.
+ */
+export function getWorkspaceDialogElements(page: Page): WorkspaceDialogElements {
+  const dialog = page.getByRole("dialog").filter({
+    hasText: /create workspace/i,
+  });
+  return {
+    dialog,
+    nameInput: dialog.getByLabel(/workspace name/i),
+    descriptionInput: dialog.getByLabel(/description/i),
+    submitButton: dialog.getByRole("button", { name: /create workspace/i }),
+    createForm: page.locator("#create-workspace-form"),
+  };
+}
+
 /**
  * Deterministically create a workspace through the "Create Workspace" modal dialog.
  * Shared by page objects to avoid duplicated retry/open/fill/submit logic.

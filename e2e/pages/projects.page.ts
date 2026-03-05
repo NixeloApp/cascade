@@ -3,6 +3,7 @@ import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import {
   createWorkspaceFromDialog,
+  getWorkspaceDialogElements,
   waitForBoardLoaded,
   waitForIssueCreateSuccess,
 } from "../utils/wait-helpers";
@@ -264,22 +265,15 @@ export class ProjectsPage extends BasePage {
     await this.page.locator("nav").getByText("Workspaces", { exact: true }).click();
     await this.page.waitForURL(/\/workspaces/, { timeout: 30000 });
 
-    const createWorkspaceDialog = this.page.getByRole("dialog").filter({
-      hasText: /create workspace/i,
-    });
-    const createWorkspaceForm = this.page.locator("#create-workspace-form");
-    const workspaceNameInput = createWorkspaceDialog.getByLabel(/workspace name/i);
-    const workspaceDescriptionInput = createWorkspaceDialog.getByLabel(/description/i);
-    const submitWorkspaceButton = createWorkspaceDialog.getByRole("button", {
-      name: /create workspace/i,
-    });
+    const { dialog, createForm, descriptionInput, nameInput, submitButton } =
+      getWorkspaceDialogElements(this.page);
 
     await createWorkspaceFromDialog({
-      dialog: createWorkspaceDialog,
-      nameInput: workspaceNameInput,
-      descriptionInput: workspaceDescriptionInput,
-      submitButton: submitWorkspaceButton,
-      createForm: createWorkspaceForm,
+      dialog,
+      nameInput,
+      descriptionInput,
+      submitButton,
+      createForm,
       workspaceName: name,
       workspaceDescription: description,
       openDialog: async () => {
