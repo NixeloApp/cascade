@@ -45,7 +45,7 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 
 | Priority | File | Progress | State | Main Blocker |
 |---|---|---:|---|---|
-| P0 | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | `5/33` | Blocked | Need live PR CI evidence run |
+| P0 | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | `5/33` | In Progress | Finish deterministic waits/selectors and keep local full suite green |
 | P1 | [multi-level-views.md](./multi-level-views.md) | `36/37` | Blocked | External package install/DNS for final validation |
 | P2 | [feature-gaps.md](./feature-gaps.md) | `16/21` | Blocked | Slack dashboard setup/registration |
 | P2 | [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) | `20/21` | Blocked | Monitoring destination decision |
@@ -61,7 +61,6 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 | Blocker | Affected Files |
 |---|---|
 | Slack app/dashboard actions | [feature-gaps.md](./feature-gaps.md), [slack-integration-issues.md](./slack-integration-issues.md) |
-| CI evidence capture | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) |
 | Monitoring destination decision | [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) |
 | Convex dashboard metric capture | [bandwidth_optimization.md](./bandwidth_optimization.md) |
 | Accessibility QA capacity | [emoji-overhaul.md](./emoji-overhaul.md) |

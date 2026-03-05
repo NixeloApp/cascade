@@ -37,7 +37,6 @@ Automated guard commands:
 ```bash
 pnpm run e2e:hard-rules
 pnpm run e2e:hard-rules:self-test
-pnpm run e2e:summary:self-test
 ```
 
 Current automated checks:
