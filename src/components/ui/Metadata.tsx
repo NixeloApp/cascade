@@ -107,14 +107,8 @@ export function MetadataItem({
 }: MetadataItemProps) {
   const { size } = useMetadataContext();
 
-  const sizeClass = size === "xs" ? "text-xs" : "text-sm";
-  const hideClass = hideBelow
-    ? {
-        sm: "hidden sm:inline-flex",
-        md: "hidden md:inline-flex",
-        lg: "hidden lg:inline-flex",
-      }[hideBelow]
-    : "";
+  const sizeClass = getMetadataSizeClass(size);
+  const hideClass = getMetadataHideClass(hideBelow, true);
 
   return (
     <span
@@ -167,14 +161,8 @@ export function MetadataTimestamp({
   const displayText =
     format === "relative" ? formatRelativeTime(dateObj) : formatAbsoluteTime(dateObj);
 
-  const sizeClass = size === "xs" ? "text-xs" : "text-sm";
-  const hideClass = hideBelow
-    ? {
-        sm: "hidden sm:inline",
-        md: "hidden md:inline",
-        lg: "hidden lg:inline",
-      }[hideBelow]
-    : "";
+  const sizeClass = getMetadataSizeClass(size);
+  const hideClass = getMetadataHideClass(hideBelow, false);
 
   return (
     <time
@@ -228,4 +216,24 @@ function formatAbsoluteTime(date: Date): string {
     day: "numeric",
     year: date.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
   });
+}
+
+function getMetadataSizeClass(size: "xs" | "sm"): "text-xs" | "text-sm" {
+  return size === "xs" ? "text-xs" : "text-sm";
+}
+
+function getMetadataHideClass(hideBelow: "sm" | "md" | "lg" | undefined, useFlex: boolean): string {
+  if (!hideBelow) return "";
+  if (useFlex) {
+    return {
+      sm: "hidden sm:inline-flex",
+      md: "hidden md:inline-flex",
+      lg: "hidden lg:inline-flex",
+    }[hideBelow];
+  }
+  return {
+    sm: "hidden sm:inline",
+    md: "hidden md:inline",
+    lg: "hidden lg:inline",
+  }[hideBelow];
 }
