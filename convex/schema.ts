@@ -62,6 +62,7 @@ import {
   ssoConnectionTypes,
   syncDirections,
   teamRoles,
+  themes,
   webhookStatuses,
   weekDays,
   workflowCategories,
@@ -1739,7 +1740,7 @@ const applicationTables = {
   userSettings: defineTable({
     userId: v.id("users"),
     dashboardLayout: v.optional(dashboardLayout),
-    theme: v.optional(v.string()), // "light", "dark", "system"
+    theme: v.optional(themes),
     sidebarCollapsed: v.optional(v.boolean()),
     emailNotifications: v.optional(v.boolean()),
     desktopNotifications: v.optional(v.boolean()),
