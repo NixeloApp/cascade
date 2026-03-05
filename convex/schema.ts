@@ -58,6 +58,7 @@ import {
   syncDirections,
   teamRoles,
   webhookStatuses,
+  weekDays,
   workflowCategories,
   workspaceRoles,
 } from "./validators";
@@ -1023,15 +1024,7 @@ const applicationTables = {
 
   availabilitySlots: defineTable({
     userId: v.id("users"),
-    dayOfWeek: v.union(
-      v.literal("monday"),
-      v.literal("tuesday"),
-      v.literal("wednesday"),
-      v.literal("thursday"),
-      v.literal("friday"),
-      v.literal("saturday"),
-      v.literal("sunday"),
-    ),
+    dayOfWeek: weekDays,
     startTime: v.string(), // "09:00"
     endTime: v.string(), // "17:00"
     isActive: v.boolean(),

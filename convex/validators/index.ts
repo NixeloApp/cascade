@@ -92,6 +92,15 @@ export const personas = literals("team_lead", "team_member");
 // Booking
 export const bookingFieldTypes = literals("text", "email", "phone");
 export const bookingLocations = literals("phone", "zoom", "meet", "teams", "in-person", "custom");
+export const weekDays = literals(
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+);
 
 // Meeting Bot
 export const meetingPlatforms = literals("google_meet", "zoom", "teams", "other");
