@@ -92,7 +92,9 @@ type PayloadValidation =
   | { ok: true; payload: SlackUnfurlPayload; teamId: string; callerSlackUserId: string }
   | { ok: false; response: Response };
 
-function validatePayload(payloadRaw: string | null): PayloadValidation {
+function parsePayload(
+  payloadRaw: string | null,
+): { ok: true; payload: SlackUnfurlPayload } | PayloadValidation {
   if (!payloadRaw) {
     return { ok: false, response: jsonError("Missing payload.", 400) };
   }
@@ -110,10 +112,14 @@ function validatePayload(payloadRaw: string | null): PayloadValidation {
     return { ok: false, response: jsonError("Invalid payload.", 400) };
   }
 
-  const payload = parsedPayload as SlackUnfurlPayload;
+  return { ok: true, payload: parsedPayload as SlackUnfurlPayload };
+}
+
+function validateTeamAndUserIds(
+  payload: SlackUnfurlPayload,
+): { ok: true; teamId: string; callerSlackUserId: string } | PayloadValidation {
   const teamId = payload.team_id;
   const callerSlackUserId = payload.user_id;
-
   if (!teamId) {
     return { ok: false, response: jsonError("Missing team_id.", 400) };
   }
@@ -126,7 +132,10 @@ function validatePayload(payloadRaw: string | null): PayloadValidation {
   if (callerSlackUserId.length > MAX_SLACK_USER_ID_LENGTH) {
     return { ok: false, response: jsonError("Invalid user_id.", 400) };
   }
+  return { ok: true, teamId, callerSlackUserId };
+}
 
+function validateLinks(payload: SlackUnfurlPayload): PayloadValidation | { ok: true } {
   if (payload.links !== undefined && !Array.isArray(payload.links)) {
     return { ok: false, response: jsonError("Invalid links payload.", 400) };
   }
@@ -146,8 +155,31 @@ function validatePayload(payloadRaw: string | null): PayloadValidation {
       return { ok: false, response: jsonError("Link URL is too long.", 400) };
     }
   }
+  return { ok: true };
+}
 
-  return { ok: true, payload, teamId, callerSlackUserId };
+function validatePayload(payloadRaw: string | null): PayloadValidation {
+  const parsed = parsePayload(payloadRaw);
+  if (!parsed.ok) {
+    return parsed;
+  }
+
+  const identity = validateTeamAndUserIds(parsed.payload);
+  if (!identity.ok) {
+    return identity;
+  }
+
+  const links = validateLinks(parsed.payload);
+  if (!links.ok) {
+    return links;
+  }
+
+  return {
+    ok: true,
+    payload: parsed.payload,
+    teamId: identity.teamId,
+    callerSlackUserId: identity.callerSlackUserId,
+  };
 }
 
 export const handleUnfurlHandler = async (ctx: ActionCtx, request: Request) => {
