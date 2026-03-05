@@ -140,6 +140,7 @@ export const emailDigests = literals("none", "daily", "weekly");
 export const digestFrequencies = literals("daily", "weekly"); // Without "none"
 export const personas = literals("team_lead", "team_member");
 export const themes = literals("light", "dark", "system");
+export const otpCodeTypes = literals("verification", "reset");
 
 // Booking
 export const bookingFieldTypes = literals("text", "email", "phone");

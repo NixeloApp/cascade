@@ -22,7 +22,7 @@ import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { logger } from "./lib/logger";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { DAY, HOUR, MINUTE, MONTH, SECOND, WEEK } from "./lib/timeUtils";
-import type { CalendarEventColor } from "./validators";
+import { type CalendarEventColor, otpCodeTypes } from "./validators";
 
 // Test user expiration (1 hour - for garbage collection)
 const TEST_USER_EXPIRATION_MS = HOUR;
@@ -1720,7 +1720,7 @@ export const storeTestOtp = internalMutation({
   args: {
     email: v.string(),
     code: v.string(),
-    type: v.optional(v.string()),
+    type: v.optional(otpCodeTypes),
   },
   handler: async (ctx, args) => {
     // Only allow test emails
@@ -1775,7 +1775,7 @@ export const storeTestOtp = internalMutation({
  * Reads from testOtpCodes table which stores plaintext codes for E2E testing.
  */
 export const getLatestOTP = internalQuery({
-  args: { email: v.string(), type: v.optional(v.string()) },
+  args: { email: v.string(), type: v.optional(otpCodeTypes) },
   handler: async (ctx, args) => {
     // Only allow test emails
     if (!isTestEmail(args.email)) {

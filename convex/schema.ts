@@ -49,6 +49,7 @@ import {
   meetingStatuses,
   oidcProviders,
   organizationRoles,
+  otpCodeTypes,
   periodTypes,
   personas,
   projectRoles,
@@ -1818,7 +1819,7 @@ const applicationTables = {
   testOtpCodes: defineTable({
     email: v.string(),
     code: v.string(),
-    type: v.optional(v.string()), // "verification" | "reset"
+    type: v.optional(otpCodeTypes),
     expiresAt: v.number(),
   })
     .index("by_email", ["email"])
