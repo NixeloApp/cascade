@@ -80,7 +80,7 @@ function groupNotificationsByDate(
 }
 
 function NotificationsPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [bulkActionLoading, setBulkActionLoading] = useState<"markAll" | "archiveAll" | null>(null);
   const [filter, setFilter] = useState<NotificationFilter>("all");
   const [activeTab, setActiveTab] = useState<"inbox" | "archived">("inbox");
   const orgContext = useOrganizationOptional();
@@ -136,24 +136,26 @@ function NotificationsPage() {
   };
 
   const handleMarkAllAsRead = async () => {
-    setIsLoading(true);
+    if (bulkActionLoading) return;
+    setBulkActionLoading("markAll");
     try {
       await markAllAsRead({});
     } catch (error) {
       showError(error, "Failed to mark all notifications as read");
     } finally {
-      setIsLoading(false);
+      setBulkActionLoading(null);
     }
   };
 
   const handleArchiveAll = async () => {
-    setIsLoading(true);
+    if (bulkActionLoading) return;
+    setBulkActionLoading("archiveAll");
     try {
       await archiveAllNotifications({});
     } catch (error) {
       showError(error, "Failed to archive all notifications");
     } finally {
-      setIsLoading(false);
+      setBulkActionLoading(null);
     }
   };
 
@@ -246,7 +248,8 @@ function NotificationsPage() {
                 variant="ghost"
                 size="sm"
                 onClick={handleMarkAllAsRead}
-                isLoading={isLoading}
+                isLoading={bulkActionLoading === "markAll"}
+                disabled={bulkActionLoading !== null}
                 leftIcon={<CheckCheck className="h-4 w-4" />}
               >
                 Mark all read
@@ -257,7 +260,8 @@ function NotificationsPage() {
                 variant="ghost"
                 size="sm"
                 onClick={handleArchiveAll}
-                isLoading={isLoading}
+                isLoading={bulkActionLoading === "archiveAll"}
+                disabled={bulkActionLoading !== null}
                 leftIcon={<Archive className="h-4 w-4" />}
               >
                 Archive all
