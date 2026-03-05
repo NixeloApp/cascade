@@ -50,6 +50,7 @@ export const webhookResultStatuses = literals("success", "failed"); // For execu
 export const invoiceStatuses = literals("draft", "sent", "paid", "overdue");
 export const reminderTypes = literals("email", "push", "in_app");
 export const calendarStatuses = literals("confirmed", "tentative", "cancelled");
+export const calendarEventTypes = literals("meeting", "deadline", "timeblock", "personal");
 export const calendarEventColors = literals(
   "blue",
   "red",
