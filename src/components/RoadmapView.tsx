@@ -47,6 +47,7 @@ const TIMELINE_SPANS: { value: TimelineSpan; label: string }[] = [
   { value: 6, label: "6 Months" },
   { value: 12, label: "1 Year" },
 ];
+const DAY_MS = 1000 * 60 * 60 * 24;
 
 /** Dependency line data for rendering SVG arrows */
 interface DependencyLine {
@@ -97,33 +98,37 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   type RoadmapIssue = FunctionReturnType<typeof api.issues.listRoadmapIssues>[number];
   type Epic = NonNullable<FunctionReturnType<typeof api.issues.listEpics>>[number];
 
-  const today = new Date();
-  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const endDate = new Date(today.getFullYear(), today.getMonth() + timelineSpan, 0);
-
-  // Generate timeline columns based on selected span
-  const timelineMonths: Date[] = [];
-  for (let i = 0; i < timelineSpan; i++) {
-    timelineMonths.push(new Date(today.getFullYear(), today.getMonth() + i, 1));
-  }
-
-  const totalDays = Math.floor(
-    (endDate.getTime() - startOfMonth.getTime()) / (1000 * 60 * 60 * 24),
-  );
-
-  function getPositionOnTimeline(date: number) {
-    const issueDate = new Date(date);
-    const daysSinceStart = Math.floor(
-      (issueDate.getTime() - startOfMonth.getTime()) / (1000 * 60 * 60 * 24),
+  const { startOfMonth, timelineMonths, totalDays } = useMemo(() => {
+    const today = new Date();
+    const start = new Date(today.getFullYear(), today.getMonth(), 1);
+    const end = new Date(today.getFullYear(), today.getMonth() + timelineSpan, 0);
+    const months = Array.from(
+      { length: timelineSpan },
+      (_, index) => new Date(today.getFullYear(), today.getMonth() + index, 1),
     );
-    return (daysSinceStart / totalDays) * 100;
-  }
+    const days = Math.max(1, Math.floor((end.getTime() - start.getTime()) / DAY_MS));
+
+    return {
+      startOfMonth: start,
+      timelineMonths: months,
+      totalDays: days,
+    };
+  }, [timelineSpan]);
+
+  const getPositionOnTimeline = useCallback(
+    (date: number) => {
+      const issueDate = new Date(date);
+      const daysSinceStart = Math.floor((issueDate.getTime() - startOfMonth.getTime()) / DAY_MS);
+      return (daysSinceStart / totalDays) * 100;
+    },
+    [startOfMonth, totalDays],
+  );
 
   // Convert percentage position back to timestamp
   const getDateFromPosition = useCallback(
     (percent: number) => {
       const days = Math.round((percent / 100) * totalDays);
-      const date = new Date(startOfMonth.getTime() + days * 24 * 60 * 60 * 1000);
+      const date = new Date(startOfMonth.getTime() + days * DAY_MS);
       // Set to end of day for due dates
       date.setHours(23, 59, 59, 999);
       return date.getTime();
