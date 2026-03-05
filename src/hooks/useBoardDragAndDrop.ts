@@ -79,6 +79,10 @@ export function useBoardDragAndDrop({
   );
 
   const updateStatusByCategory = useMutation(api.issues.updateStatusByCategory);
+  const issueById = useMemo(
+    () => new Map(allIssues.map((issue) => [issue._id, issue])),
+    [allIssues],
+  );
 
   /**
    * Handle drag state changes from IssueCard
@@ -98,7 +102,7 @@ export function useBoardDragAndDrop({
         return;
       }
 
-      const issue = allIssues.find((i) => i._id === issueId);
+      const issue = issueById.get(issueId);
       if (!issue) return;
 
       // Calculate new order (append to end of target column)
@@ -137,7 +141,7 @@ export function useBoardDragAndDrop({
       }
     },
     [
-      allIssues,
+      issueById,
       issuesByStatus,
       updateIssueStatus,
       updateStatusByCategory,
@@ -158,8 +162,8 @@ export function useBoardDragAndDrop({
       targetStatus: string,
       edge: "top" | "bottom",
     ) => {
-      const draggedIssue = allIssues.find((i) => i._id === draggedIssueId);
-      const targetIssue = allIssues.find((i) => i._id === targetIssueId);
+      const draggedIssue = issueById.get(draggedIssueId);
+      const targetIssue = issueById.get(targetIssueId);
       if (!draggedIssue || !targetIssue) return;
 
       const issuesInTargetStatus = issuesByStatus[targetStatus] || [];
@@ -200,7 +204,7 @@ export function useBoardDragAndDrop({
       }
     },
     [
-      allIssues,
+      issueById,
       issuesByStatus,
       updateIssueStatus,
       updateStatusByCategory,
