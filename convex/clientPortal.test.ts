@@ -37,6 +37,14 @@ describe("clientPortal", () => {
       requester: "portal:req:client_session_42",
       token: "portal:req:client_session_42:token:abcdef12",
     });
+
+    expect(
+      getPortalValidationRateLimitKeys("deadbeef00", `${"A".repeat(80)}-suffix`),
+    ).toMatchObject({
+      global: "portal:global",
+      requester: `portal:req:${"a".repeat(64)}`,
+      token: `portal:req:${"a".repeat(64)}:token:deadbeef`,
+    });
   });
 
   it("allows org admin to generate, validate, and revoke portal tokens", async () => {
