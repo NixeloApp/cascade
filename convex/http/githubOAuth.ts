@@ -425,16 +425,23 @@ function extractBearerToken(request: Request): string | undefined {
 async function parseGitHubErrorMessage(response: Response): Promise<string> {
   try {
     const text = await response.text();
-    try {
-      const errorBody = JSON.parse(text);
-      return errorBody.message || "Failed to fetch repositories";
-    } catch {
-      return text || "Failed to fetch repositories";
-    }
+    return parseGitHubErrorBodyMessage(text);
   } catch (e) {
     logger.error("Failed to read error response body:", { error: e });
     return "Failed to fetch repositories";
   }
+}
+
+function parseGitHubErrorBodyMessage(text: string): string {
+  try {
+    const errorBody = JSON.parse(text) as Record<string, unknown>;
+    if (typeof errorBody.message === "string" && errorBody.message.trim().length > 0) {
+      return errorBody.message;
+    }
+  } catch {
+    // Fall through to text fallback
+  }
+  return text || "Failed to fetch repositories";
 }
 
 /**
