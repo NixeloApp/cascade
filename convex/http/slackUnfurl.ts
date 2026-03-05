@@ -11,6 +11,9 @@ import { getSlackSigningSecret, isSlackSigningSecretConfigured } from "../lib/en
 
 const MAX_UNFURL_PAYLOAD_LENGTH = 10000;
 const MAX_UNFURL_LINKS = 25;
+const MAX_SLACK_TEAM_ID_LENGTH = 64;
+const MAX_SLACK_USER_ID_LENGTH = 64;
+const MAX_UNFURL_URL_LENGTH = 2048;
 
 /**
  * Compute HMAC-SHA256 using Web Crypto API.
@@ -97,7 +100,17 @@ function validatePayload(payloadRaw: string | null): PayloadValidation {
     return { ok: false, response: jsonError("Payload is too large.", 400) };
   }
 
-  const payload = JSON.parse(payloadRaw) as SlackUnfurlPayload;
+  let parsedPayload: unknown;
+  try {
+    parsedPayload = JSON.parse(payloadRaw);
+  } catch {
+    return { ok: false, response: jsonError("Malformed payload JSON.", 400) };
+  }
+  if (!parsedPayload || typeof parsedPayload !== "object") {
+    return { ok: false, response: jsonError("Invalid payload.", 400) };
+  }
+
+  const payload = parsedPayload as SlackUnfurlPayload;
   const teamId = payload.team_id;
   const callerSlackUserId = payload.user_id;
 
@@ -107,10 +120,31 @@ function validatePayload(payloadRaw: string | null): PayloadValidation {
   if (!callerSlackUserId) {
     return { ok: false, response: jsonError("Missing user_id.", 400) };
   }
+  if (teamId.length > MAX_SLACK_TEAM_ID_LENGTH) {
+    return { ok: false, response: jsonError("Invalid team_id.", 400) };
+  }
+  if (callerSlackUserId.length > MAX_SLACK_USER_ID_LENGTH) {
+    return { ok: false, response: jsonError("Invalid user_id.", 400) };
+  }
+
+  if (payload.links !== undefined && !Array.isArray(payload.links)) {
+    return { ok: false, response: jsonError("Invalid links payload.", 400) };
+  }
 
   const links = payload.links || [];
   if (links.length > MAX_UNFURL_LINKS) {
     return { ok: false, response: jsonError("Too many links in unfurl payload.", 400) };
+  }
+  for (const link of links) {
+    if (!link || typeof link !== "object") {
+      return { ok: false, response: jsonError("Invalid link payload.", 400) };
+    }
+    if (link.url !== undefined && typeof link.url !== "string") {
+      return { ok: false, response: jsonError("Invalid link URL.", 400) };
+    }
+    if (typeof link.url === "string" && link.url.length > MAX_UNFURL_URL_LENGTH) {
+      return { ok: false, response: jsonError("Link URL is too long.", 400) };
+    }
   }
 
   return { ok: true, payload, teamId, callerSlackUserId };

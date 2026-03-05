@@ -8,6 +8,8 @@ const SLACK_UNFURL_URL = "https://api.convex.dev/slack/unfurl";
 // Boundary constants for validation tests
 const MAX_PAYLOAD_SIZE = 10000;
 const MAX_LINK_COUNT = 25;
+const MAX_SLACK_ID_LENGTH = 64;
+const MAX_URL_LENGTH = 2048;
 
 /** Create a minimal ActionCtx mock with the methods used by the handler */
 function createMockActionCtx(overrides?: { runQuery?: ReturnType<typeof vi.fn> }): ActionCtx {
@@ -80,7 +82,7 @@ describe("Slack Unfurl HTTP Handler", () => {
     expect(runQuery).not.toHaveBeenCalled();
   });
 
-  it("should escape parse errors for malformed payload JSON", async () => {
+  it("should reject malformed payload JSON", async () => {
     const runQuery = vi.fn();
     const ctx = createMockActionCtx({ runQuery });
     const malformed =
@@ -91,8 +93,48 @@ describe("Slack Unfurl HTTP Handler", () => {
     const response = await handleUnfurlHandler(ctx, request);
     const payload = (await response.json()) as { error: string };
 
-    expect(response.status).toBe(500);
-    expect(payload.error).not.toContain("<");
+    expect(response.status).toBe(400);
+    expect(payload.error).toContain("Malformed payload JSON");
+    expect(runQuery).not.toHaveBeenCalled();
+  });
+
+  it("should reject payloads with oversized team/user IDs", async () => {
+    const runQuery = vi.fn();
+    const ctx = createMockActionCtx({ runQuery });
+    const body = new URLSearchParams({
+      payload: JSON.stringify({
+        team_id: "T".repeat(MAX_SLACK_ID_LENGTH + 1),
+        user_id: "U".repeat(MAX_SLACK_ID_LENGTH + 1),
+        links: [{ url: "https://nixelo.app/issues/ABC-1" }],
+      }),
+    }).toString();
+    const request = await buildSignedRequest(body, signingSecret);
+
+    const response = await handleUnfurlHandler(ctx, request);
+    const payload = (await response.json()) as { error: string };
+
+    expect(response.status).toBe(400);
+    expect(payload.error).toMatch(/Invalid team_id|Invalid user_id/);
+    expect(runQuery).not.toHaveBeenCalled();
+  });
+
+  it("should reject payloads with oversized link URLs", async () => {
+    const runQuery = vi.fn();
+    const ctx = createMockActionCtx({ runQuery });
+    const body = new URLSearchParams({
+      payload: JSON.stringify({
+        team_id: "T-OK",
+        user_id: "U-OK",
+        links: [{ url: `https://nixelo.app/issues/${"A".repeat(MAX_URL_LENGTH + 1)}` }],
+      }),
+    }).toString();
+    const request = await buildSignedRequest(body, signingSecret);
+
+    const response = await handleUnfurlHandler(ctx, request);
+    const payload = (await response.json()) as { error: string };
+
+    expect(response.status).toBe(400);
+    expect(payload.error).toContain("Link URL is too long");
     expect(runQuery).not.toHaveBeenCalled();
   });
 
