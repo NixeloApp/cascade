@@ -210,6 +210,25 @@ describe("Slack Slash Command HTTP Handler", () => {
     expect(runMutation).not.toHaveBeenCalled();
   });
 
+  it("should reject team_id with control characters", async () => {
+    const runMutation = vi.fn();
+    const ctx = { runMutation } as unknown as ActionCtx;
+    const body = new URLSearchParams({
+      team_id: "T-OK\n",
+      user_id: "U-OK",
+      text: "create test",
+    }).toString();
+    const request = await buildSignedRequest(body, signingSecret);
+
+    const response = await handleSlashCommandHandler(ctx, request);
+    const payload = (await response.json()) as { response_type: string; text: string };
+
+    expect(response.status).toBe(400);
+    expect(payload.response_type).toBe("ephemeral");
+    expect(payload.text).toContain("Invalid team_id");
+    expect(runMutation).not.toHaveBeenCalled();
+  });
+
   it("should reject requests missing Slack signature headers", async () => {
     const runMutation = vi.fn();
     const ctx = { runMutation } as unknown as ActionCtx;
