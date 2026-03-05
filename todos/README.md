@@ -3,67 +3,93 @@
 > **Last Updated:** 2026-03-04  
 > **Scope:** `todos/*.md` + `todos/jules/open/*.md`
 
-This is the control-plane view of all todo docs: what is urgent, what is blocked, what is in flight, and what should be executed next.
+Canonical control plane for all todo docs: what to do first, what is blocked externally, and what is already done.
 
 ## Portfolio Snapshot
 
-- Total markdown todo files: `21`
-- Checkbox progress across tracked plans: `156 done / 105 open`
-- Highest-risk unresolved queue: calendar access control, invoicing integrity, Slack authorization path
+- Total todo markdown files (including control files): `21`
+- Tracked execution docs (excluding `README.md` and `TODO.md`): `19`
+- Checkbox rollup across tracked docs: `156 done / 108 open / 1 in-progress`
+- Highest-risk unresolved queue: calendar access control, invoice integrity, Slack auth/scoping
 
-## Immediate Engineering Queue (P1/P2 Defects)
+## Current Focus
 
-These are direct correctness/security/data-integrity issues and should be prioritized before post-launch feature work.
+1. P1 correctness/security defects:
+   - [calendar-access-control.md](./calendar-access-control.md)
+   - [invoice-system-issues.md](./invoice-system-issues.md)
+   - [slack-integration-issues.md](./slack-integration-issues.md)
+2. P2 correctness-at-scale defects:
+   - [query-filter-ordering.md](./query-filter-ordering.md)
+   - [security-and-migration.md](./security-and-migration.md)
+   - [performance-issues.md](./performance-issues.md)
+3. Near-complete blocked tracks (minimal remaining in-repo scope):
+   - [bandwidth_optimization.md](./bandwidth_optimization.md) (`14/16`)
+   - [multi-level-views.md](./multi-level-views.md) (`36/37`)
+   - [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) (`20/21`)
+   - [growth-features.md](./growth-features.md) (`16/18`)
 
-| Priority | Area | File | Risk | Recommended Next Action |
-|---|---|---|---|---|
-| P1 | Calendar access control | [calendar-access-control.md](./calendar-access-control.md) | Cross-scope event injection via insufficient project access validation | Add `canAccessProject()` gate in scope resolver + regression test |
-| P1 | Invoicing integrity | [invoice-system-issues.md](./invoice-system-issues.md) | Orphaned billed entries, duplicate numbering, incomplete entry selection | Fix deletion unlinking + numbering + scoped fetch + linkage persistence |
-| P1 | Slack auth/scoping | [slack-integration-issues.md](./slack-integration-issues.md) | Cross-org leakage / privilege mismatch in slash/unfurl flows | Enforce caller identity and org-scoped Slack connection model |
-| P2 | Query correctness at scale | [query-filter-ordering.md](./query-filter-ordering.md) | Silent truncation from filtering after `take(limit)` | Move filtering into indexed query path; add >limit dataset tests |
-| P2 | Security + migration hygiene | [security-and-migration.md](./security-and-migration.md) | Rate-limit bypass pattern and partial migration risk | Re-key limiter by requester identity; paginate migration with cursor |
-| P2 | Performance | [performance-issues.md](./performance-issues.md) | Incorrect counts and avoidable recomputation hot paths | Fix bounded count semantics + memoize roadmap derivations |
+## Active Todos
 
-## Active Workstreams (Execution Plans)
+### Critical Defect Docs
 
-| Track | File | Progress | Current State | Main Blocker | Next Unblock |
-|---|---|---:|---|---|---|
-| E2E reliability | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | 5/33 | Core hardening done, reliability closure pending | Need live PR CI run/history-derived summary | Run full CI on fresh PR, then close remaining flaky buckets |
-| Bandwidth optimization | [bandwidth_optimization.md](./bandwidth_optimization.md) | 14/16 | Major query/payload work complete | Missing Convex dashboard metrics capture | Capture before/after metrics and publish final report |
-| Multi-level views | [multi-level-views.md](./multi-level-views.md) | 36/37 | Feature work mostly complete | External install/DNS for final dependency graph validation | Re-run install + dependency graph validation after DNS recovery |
-| OAuth monitoring finalization | [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) | 20/21 | Product-side controls mostly complete | Monitoring destination decision (DataDog/Grafana) | Decide destination and wire production sinks |
-| Feature gaps | [feature-gaps.md](./feature-gaps.md) | 16/21 | Comments/attachments implemented; Slack phases partially open | Slack dashboard registration and secrets | Complete Slack app setup and finalize slash/unfurl paths |
-| Emoji overhaul | [emoji-overhaul.md](./emoji-overhaul.md) | 10/16 | Component/audit work done | Manual WCAG/screen-reader pass pending | Run accessibility checklist and close compliance gap |
-| Public launch | [public-launch.md](./public-launch.md) | 1/13 | Mostly planning stage | External launch ops/channels | Convert launch checklist into dated GTM runbook |
-| Growth features | [growth-features.md](./growth-features.md) | 16/18 | Most internal implementation complete | Outlook app setup prerequisites | Complete Microsoft app registration/scopes/tenant config |
-| Enterprise features | [enterprise.md](./enterprise.md) | 6/22 | Foundation tasks underway | Billing + IdP + infra prerequisites | Finalize dependency decisions and split MVP vs post-MVP |
-| Uptime monitoring | [uptime-monitoring.md](./uptime-monitoring.md) | 0/32 | Planning/spec stage | Architecture/infrastructure decisions not made | Decide runner/check architecture and incident model first |
-| Dependency vulnerability | [jules-librarian-2026-02-23-lodash-vulnerability.md](./jules/open/jules-librarian-2026-02-23-lodash-vulnerability.md) | 0/3 | Upstream-blocked (no patched version) | Upstream release | Monitor `@boxyhq/saml-jackson` releases for patched version |
+| Priority | File | Problem Class | Next Action |
+|---|---|---|---|
+| P1 | [calendar-access-control.md](./calendar-access-control.md) | Cross-scope event injection risk | Gate scope derivation with `canAccessProject()` and add regression test |
+| P1 | [invoice-system-issues.md](./invoice-system-issues.md) | Billing data integrity and numbering collisions | Fix unlinking, uniqueness, scoped fetch, and line-item linkage |
+| P1 | [slack-integration-issues.md](./slack-integration-issues.md) | Cross-org leakage / caller-identity mismatch | Pass Slack caller identity end-to-end and enforce org scoping |
+| P2 | [query-filter-ordering.md](./query-filter-ordering.md) | Result truncation from filter-after-limit | Move filtering into indexed query paths and add >limit tests |
+| P2 | [security-and-migration.md](./security-and-migration.md) | Rate-limit bypass + partial migration completion | Re-key rate limiter and paginate/filter migration |
+| P2 | [performance-issues.md](./performance-issues.md) | Incorrect counts and recomputation overhead | Fix project totals and memoize roadmap derivations |
 
-## Operational Baselines
+### Execution Tracks (Implementation Plans)
 
-| File | Role | Status |
+| Priority | File | Progress | State | Main Blocker |
+|---|---|---:|---|---|
+| P0 | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | `5/33` | In Progress | Finish deterministic waits/selectors and keep local full suite green |
+| P1 | [multi-level-views.md](./multi-level-views.md) | `36/37` | Blocked | External package install/DNS for final validation |
+| P2 | [feature-gaps.md](./feature-gaps.md) | `16/21` | Blocked | Slack dashboard setup/registration |
+| P2 | [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) | `20/21` | Blocked | Monitoring destination decision |
+| P2 | [bandwidth_optimization.md](./bandwidth_optimization.md) | `14/16` | Blocked | Manual Convex dashboard metrics capture |
+| P2 | [emoji-overhaul.md](./emoji-overhaul.md) | `10/16` | Blocked | Manual accessibility QA |
+| P3 | [public-launch.md](./public-launch.md) | `1/13` | Blocked | External launch operations |
+| P3 | [uptime-monitoring.md](./uptime-monitoring.md) | `0/32` | Blocked | Architecture and infra decisions not finalized |
+| P4 | [growth-features.md](./growth-features.md) | `16/18` | Blocked | Outlook integration prerequisites |
+| P4 | [enterprise.md](./enterprise.md) | `6/22` | Blocked | Billing/IdP/infrastructure dependencies |
+
+## Blocked By External Dependencies
+
+| Blocker | Affected Files |
+|---|---|
+| Slack app/dashboard actions | [feature-gaps.md](./feature-gaps.md), [slack-integration-issues.md](./slack-integration-issues.md) |
+| Monitoring destination decision | [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) |
+| Convex dashboard metric capture | [bandwidth_optimization.md](./bandwidth_optimization.md) |
+| Accessibility QA capacity | [emoji-overhaul.md](./emoji-overhaul.md) |
+| Outlook app setup | [growth-features.md](./growth-features.md) |
+| Enterprise procurement/decisions | [enterprise.md](./enterprise.md), [uptime-monitoring.md](./uptime-monitoring.md) |
+| Launch ops channels | [public-launch.md](./public-launch.md) |
+| Upstream dependency release | [jules-librarian-2026-02-23-lodash-vulnerability.md](./jules/open/jules-librarian-2026-02-23-lodash-vulnerability.md) |
+
+## Completed Baselines
+
+| File | Role | State |
 |---|---|---|
-| [consistency-tracking.md](./consistency-tracking.md) | Validator/standards debt ledger and rollout history | Ongoing operational tracking |
-| [visual-inconsistencies-2026-03-04.md](./visual-inconsistencies-2026-03-04.md) | Screenshot-based visual audit baseline (176 captures) | All checklist items completed on 2026-03-04 |
-| [TODO.md](./TODO.md) | Legacy quick-link stub | Kept for compatibility; not authoritative |
+| [visual-inconsistencies-2026-03-04.md](./visual-inconsistencies-2026-03-04.md) | Screenshot audit baseline (176 captures) | Checklist complete on 2026-03-04 |
+| [consistency-tracking.md](./consistency-tracking.md) | Standards/validator ledger | Operational tracking ongoing (`23/23` checklist complete) |
 
-## Cross-Track Blocker Matrix
+## Jules Issues (Open)
 
-| Blocker Type | Affected Tracks | Practical Unblock Owner |
-|---|---|---|
-| Upstream dependency releases | Dependency vulnerability | Upstream maintainers |
-| Slack app/dashboard setup | Feature gaps, Slack integration defects | Integrations owner |
-| Monitoring destination decision | OAuth monitoring finalization | Platform/ops owner |
-| External launch operations | Public launch | Product marketing + community |
-| Microsoft app prerequisites | Growth features | Integrations owner |
-| Billing/IdP/tooling procurement | Enterprise | Product + platform leadership |
-| Manual accessibility QA bandwidth | Emoji overhaul | Design/QA |
-| CI evidence capture | E2E reliability overhaul | QA/CI owner |
+| File | Progress | State | Next Unblock |
+|---|---:|---|---|
+| [jules-librarian-2026-02-23-lodash-vulnerability.md](./jules/open/jules-librarian-2026-02-23-lodash-vulnerability.md) | `0/3` | Blocked on upstream (`@boxyhq/saml-jackson` latest is still `1.52.2`) | Upgrade when upstream ships a non-vulnerable transitive path |
+
+## Control Files
+
+- [TODO.md](./TODO.md): quick links only (non-authoritative)
+- [README.md](./README.md): authoritative portfolio view
 
 ## Suggested Execution Order
 
-1. Close P1 correctness/security docs first: calendar, invoice, Slack integration.
-2. Resolve P2 data-quality/perf docs: query filter ordering, security+migration, performance.
-3. Unblock and close near-finished tracks with low remaining scope: bandwidth, multi-level views, OAuth monitoring, growth.
-4. Then tackle strategic/post-launch tracks: public-launch, enterprise, uptime.
+1. Fix all P1 defect docs first: calendar access, invoices, Slack integration.
+2. Close P2 correctness docs next: query filtering, security/migration, performance.
+3. Unblock and close near-complete tracks: bandwidth, multi-level views, OAuth monitoring, growth.
+4. Then execute strategic tracks: public launch, enterprise, uptime.

@@ -34,6 +34,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
+import { HOUR, WEEK } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
 export interface NotificationWithActor extends Doc<"notifications"> {
@@ -80,10 +81,10 @@ function getNotificationIcon(type: string) {
  */
 /** Snooze duration options */
 const SNOOZE_OPTIONS = [
-  { label: "1 hour", duration: 60 * 60 * 1000 },
-  { label: "3 hours", duration: 3 * 60 * 60 * 1000 },
+  { label: "1 hour", duration: HOUR },
+  { label: "3 hours", duration: 3 * HOUR },
   { label: "Tomorrow 9am", duration: null }, // Special handling
-  { label: "Next week", duration: 7 * 24 * 60 * 60 * 1000 },
+  { label: "Next week", duration: WEEK },
 ];
 
 /** Calculate snooze until time for "Tomorrow 9am" */
@@ -180,7 +181,7 @@ export function NotificationItem({
       <Flex
         direction="column"
         gap="xs"
-        className="shrink-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
+        className="shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity"
       >
         {!notification.isRead && (
           <Tooltip content="Mark as read">

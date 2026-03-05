@@ -36,12 +36,10 @@ import { cn } from "@/lib/utils";
 
 interface MetadataContextValue {
   size: "xs" | "sm";
-  separator: string;
 }
 
 const MetadataContext = createContext<MetadataContextValue>({
   size: "xs",
-  separator: "•",
 });
 
 function useMetadataContext() {
@@ -81,7 +79,7 @@ export function Metadata({
   });
 
   return (
-    <MetadataContext.Provider value={{ size, separator }}>
+    <MetadataContext.Provider value={{ size }}>
       <div className={cn("flex items-center flex-wrap", gapClass, className)} {...props}>
         {childrenWithSeparators}
       </div>
@@ -107,14 +105,8 @@ export function MetadataItem({
 }: MetadataItemProps) {
   const { size } = useMetadataContext();
 
-  const sizeClass = size === "xs" ? "text-xs" : "text-sm";
-  const hideClass = hideBelow
-    ? {
-        sm: "hidden sm:inline-flex",
-        md: "hidden md:inline-flex",
-        lg: "hidden lg:inline-flex",
-      }[hideBelow]
-    : "";
+  const sizeClass = getMetadataSizeClass(size);
+  const hideClass = getMetadataHideClass(hideBelow, true);
 
   return (
     <span
@@ -153,14 +145,8 @@ export function MetadataTimestamp({
 }: MetadataTimestampProps) {
   const { size } = useMetadataContext();
 
-  let dateObj: Date;
-  try {
-    dateObj = date instanceof Date ? date : new Date(date);
-    // Check if date is valid
-    if (Number.isNaN(dateObj.getTime())) {
-      throw new Error("Invalid date");
-    }
-  } catch (_e) {
+  const dateObj = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(dateObj.getTime())) {
     // Render fallback for invalid dates
     return (
       <span className={cn("text-ui-text-tertiary", size === "xs" ? "text-xs" : "text-sm")}>
@@ -173,14 +159,8 @@ export function MetadataTimestamp({
   const displayText =
     format === "relative" ? formatRelativeTime(dateObj) : formatAbsoluteTime(dateObj);
 
-  const sizeClass = size === "xs" ? "text-xs" : "text-sm";
-  const hideClass = hideBelow
-    ? {
-        sm: "hidden sm:inline",
-        md: "hidden md:inline",
-        lg: "hidden lg:inline",
-      }[hideBelow]
-    : "";
+  const sizeClass = getMetadataSizeClass(size);
+  const hideClass = getMetadataHideClass(hideBelow, false);
 
   return (
     <time
@@ -198,7 +178,7 @@ export function MetadataTimestamp({
 
 function MetadataSeparator({ children }: { children: React.ReactNode }) {
   const { size } = useMetadataContext();
-  const sizeClass = size === "xs" ? "text-xs" : "text-sm";
+  const sizeClass = getMetadataSizeClass(size);
 
   return (
     <span className={cn("text-ui-text-quaternary select-none", sizeClass)} aria-hidden="true">
@@ -234,4 +214,25 @@ function formatAbsoluteTime(date: Date): string {
     day: "numeric",
     year: date.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
   });
+}
+
+function getMetadataSizeClass(size: "xs" | "sm"): "text-xs" | "text-sm" {
+  return size === "xs" ? "text-xs" : "text-sm";
+}
+
+const FLEX_HIDE_CLASSES = {
+  sm: "hidden sm:inline-flex",
+  md: "hidden md:inline-flex",
+  lg: "hidden lg:inline-flex",
+} as const;
+
+const INLINE_HIDE_CLASSES = {
+  sm: "hidden sm:inline",
+  md: "hidden md:inline",
+  lg: "hidden lg:inline",
+} as const;
+
+function getMetadataHideClass(hideBelow: "sm" | "md" | "lg" | undefined, useFlex: boolean): string {
+  if (!hideBelow) return "";
+  return useFlex ? FLEX_HIDE_CLASSES[hideBelow] : INLINE_HIDE_CLASSES[hideBelow];
 }

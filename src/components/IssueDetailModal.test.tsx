@@ -291,7 +291,8 @@ describe("IssueDetailModal", () => {
 
     // Focus within the dialog first, then press Escape
     const dialog = screen.getByRole("dialog");
-    dialog.focus();
+    await user.click(dialog);
+    mockOnOpenChange.mockClear();
     await user.keyboard("{Escape}");
 
     expect(mockOnOpenChange).toHaveBeenCalledWith(false);

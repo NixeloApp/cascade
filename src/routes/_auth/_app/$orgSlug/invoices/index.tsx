@@ -11,6 +11,7 @@ import { Grid } from "@/components/ui/Grid";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { WEEK } from "@/lib/time";
 import { showError, showSuccess } from "@/lib/toast";
 
 type InvoiceStatusFilter = "all" | "draft" | "sent" | "paid" | "overdue";
@@ -38,7 +39,7 @@ function InvoicesListPage() {
       await createInvoice({
         organizationId,
         issueDate: Date.now(),
-        dueDate: Date.now() + 7 * 86400000,
+        dueDate: Date.now() + WEEK,
         lineItems: [{ description: "New line item", quantity: 1, rate: 0 }],
       });
       showSuccess("Draft invoice created");

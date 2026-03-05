@@ -175,7 +175,7 @@ export function ProfileHeader({
           <Button
             variant="ghost"
             size="icon"
-            className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-ui-bg border border-ui-border shadow-sm opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 transition-opacity"
+            className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-ui-bg border border-ui-border shadow-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:focus:opacity-100 transition-opacity"
             onClick={onAvatarClick}
           >
             <Camera className="h-4 w-4" />
@@ -325,7 +325,7 @@ export function ProfileContent({ userId }: ProfileContentProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="absolute bottom-2 right-2 h-8 px-3 rounded-full bg-ui-bg/80 border border-ui-border shadow-sm backdrop-blur-sm opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 transition-opacity"
+            className="absolute bottom-2 right-2 h-8 px-3 rounded-full bg-ui-bg/80 border border-ui-border shadow-sm backdrop-blur-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:focus:opacity-100 transition-opacity"
             onClick={() => setShowCoverImageModal(true)}
           >
             <ImageIcon className="h-4 w-4 mr-2" />

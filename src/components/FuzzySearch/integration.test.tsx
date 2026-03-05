@@ -33,7 +33,7 @@ describe("Hybrid Search Integration", () => {
 
       // Should still find John due to fuzzy matching
       await waitFor(() => {
-        expect(result.current.results.length).toBeGreaterThan(0);
+        expect(result.current.results.some((entry) => entry.item.name === "John Doe")).toBe(true);
       });
     });
 
@@ -227,7 +227,7 @@ describe("Hybrid Search Integration", () => {
 
       // Should find John despite typo
       const johnResult = result.current.results.find((r) => r.item?.name?.includes("John"));
-      expect(johnResult?.item.name).toBeDefined();
+      expect(johnResult?.item.name).toBe("John Doe");
     });
 
     it("should support project switcher pattern", async () => {
@@ -247,8 +247,17 @@ describe("Hybrid Search Integration", () => {
         result.current.search("nixelo");
       });
 
-      expect(result.current.results.length).toBeGreaterThan(0);
-      expect(result.current.results[0].item.name).toContain("Nixelo");
+      await waitFor(
+        () => {
+          expect(result.current.isDebouncing).toBe(false);
+        },
+        { timeout: 500 },
+      );
+
+      await waitFor(() => {
+        expect(result.current.results).toHaveLength(1);
+        expect(result.current.results[0]?.item.name).toBe("Nixelo");
+      });
     });
   });
 
@@ -256,18 +265,44 @@ describe("Hybrid Search Integration", () => {
     it("should handle malformed data gracefully", async () => {
       const malformedData = [
         { _id: "1", name: "John", email: "john@example.com" },
-        { _id: "2" } as any, // Missing name and email
+        { _id: "2" }, // Missing name and email
         { _id: "3", name: "Jane", email: "jane@example.com" },
       ];
 
       const { result } = renderHook(() => useUserFuzzySearch(malformedData));
 
-      // Should still work with valid entries
+      // Should still find valid entries
       await act(async () => {
         result.current.search("john");
       });
 
-      expect(result.current.results.length).toBeGreaterThan(0);
+      await waitFor(
+        () => {
+          expect(result.current.isDebouncing).toBe(false);
+        },
+        { timeout: 500 },
+      );
+
+      await waitFor(() => {
+        expect(result.current.results).toHaveLength(1);
+        expect(result.current.results[0]?.item._id).toBe("1");
+      });
+
+      // Missing fields should not create false-positive matches
+      await act(async () => {
+        result.current.search("missing");
+      });
+
+      await waitFor(
+        () => {
+          expect(result.current.isDebouncing).toBe(false);
+        },
+        { timeout: 500 },
+      );
+
+      await waitFor(() => {
+        expect(result.current.results).toHaveLength(0);
+      });
     });
 
     it("should recover from search errors", async () => {
@@ -337,7 +372,9 @@ describe("Hybrid Search Integration", () => {
 
       const { result } = renderHook(() => useUserFuzzySearch(data));
 
-      result.current.search("john");
+      await act(async () => {
+        result.current.search("john");
+      });
 
       // Wait for debounce (useUserFuzzySearch has debounce: 100ms)
       await waitFor(

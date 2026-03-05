@@ -12,7 +12,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import type { WorkflowState } from "@convex/shared/types";
 import { useQuery } from "convex/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useBoardDragAndDrop } from "@/hooks/useBoardDragAndDrop";
 import { useBoardHistory } from "@/hooks/useBoardHistory";
@@ -86,26 +86,47 @@ function dateStringToTimestamp(dateStr: string, endOfDay = false): number {
   return date.getTime();
 }
 
+interface DateRangeBounds {
+  from?: number;
+  to?: number;
+}
+
+function normalizeDateRangeBounds(range?: DateRangeFilter): DateRangeBounds | undefined {
+  if (!range?.from && !range?.to) return undefined;
+  return {
+    from: range.from ? dateStringToTimestamp(range.from) : undefined,
+    to: range.to ? dateStringToTimestamp(range.to, true) : undefined,
+  };
+}
+
 /** Check if a timestamp falls within a date range */
-function matchesDateRange(timestamp: number | undefined, range?: DateRangeFilter): boolean {
+function matchesDateRange(timestamp: number | undefined, range?: DateRangeBounds): boolean {
   if (!range?.from && !range?.to) return true;
   if (timestamp === undefined) return false;
 
-  if (range.from) {
-    const fromTs = dateStringToTimestamp(range.from);
-    if (timestamp < fromTs) return false;
+  if (range.from !== undefined && timestamp < range.from) {
+    return false;
   }
-  if (range.to) {
-    const toTs = dateStringToTimestamp(range.to, true);
-    if (timestamp > toTs) return false;
+
+  if (range.to !== undefined && timestamp > range.to) {
+    return false;
   }
+
   return true;
 }
 
 /** Apply client-side filters to issues */
-function applyFilters(issues: EnrichedIssue[], filters?: BoardFilters): EnrichedIssue[] {
+function applyFilters(
+  issues: EnrichedIssue[],
+  filters: BoardFilters | undefined,
+  parsedQuery: ReturnType<typeof parseBoardQuery>,
+  dateRanges: {
+    dueDate?: DateRangeBounds;
+    startDate?: DateRangeBounds;
+    createdAt?: DateRangeBounds;
+  },
+): EnrichedIssue[] {
   if (!filters) return issues;
-  const parsedQuery = parseBoardQuery(filters.query);
 
   return issues.filter(
     (issue) =>
@@ -114,9 +135,9 @@ function applyFilters(issues: EnrichedIssue[], filters?: BoardFilters): Enriched
       matchesPriorityFilter(issue, filters.priority) &&
       matchesAssigneeFilter(issue, filters.assigneeId) &&
       matchesLabelsFilter(issue, filters.labels) &&
-      matchesDateRange(issue.dueDate, filters.dueDate) &&
-      matchesDateRange(issue.startDate, filters.startDate) &&
-      matchesDateRange(issue._creationTime, filters.createdAt),
+      matchesDateRange(issue.dueDate, dateRanges.dueDate) &&
+      matchesDateRange(issue.startDate, dateRanges.startDate) &&
+      matchesDateRange(issue._creationTime, dateRanges.createdAt),
   );
 }
 
@@ -167,15 +188,24 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
   const { historyStack, redoStack, handleUndo, handleRedo, pushAction } = useBoardHistory();
 
   // Apply filters to issues
-  const filteredIssuesByStatus = (() => {
+  const filteredIssuesByStatus = useMemo(() => {
+    const parsedQuery = parseBoardQuery(filters?.query);
+    const dateRanges = {
+      dueDate: normalizeDateRangeBounds(filters?.dueDate),
+      startDate: normalizeDateRangeBounds(filters?.startDate),
+      createdAt: normalizeDateRangeBounds(filters?.createdAt),
+    };
     const result: Record<string, EnrichedIssue[]> = {};
     for (const [status, issues] of Object.entries(issuesByStatus)) {
-      result[status] = applyFilters(issues, filters);
+      result[status] = applyFilters(issues, filters, parsedQuery, dateRanges);
     }
     return result;
-  })();
+  }, [issuesByStatus, filters]);
 
-  const allIssues = Object.values(filteredIssuesByStatus).flat();
+  const allIssues = useMemo(
+    () => Object.values(filteredIssuesByStatus).flat(),
+    [filteredIssuesByStatus],
+  );
 
   // Keyboard Navigation
   const { selectedIndex } = useListNavigation({
@@ -184,12 +214,15 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
   });
   const focusedIssueId = allIssues[selectedIndex]?._id;
 
-  const boardOptions = {
-    projectId,
-    teamId,
-    sprintId,
-    doneColumnDays: 14,
-  };
+  const boardOptions = useMemo(
+    () => ({
+      projectId,
+      teamId,
+      sprintId,
+      doneColumnDays: 14,
+    }),
+    [projectId, teamId, sprintId],
+  );
 
   const { handleIssueDrop, handleIssueReorder } = useBoardDragAndDrop({
     allIssues,
@@ -253,9 +286,55 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
   };
 
   // Swimlane grouping
-  const swimlaneIssues = groupIssuesBySwimlane(filteredIssuesByStatus, swimlaneGroupBy);
+  const swimlaneIssues = useMemo(
+    () => groupIssuesBySwimlane(filteredIssuesByStatus, swimlaneGroupBy),
+    [filteredIssuesByStatus, swimlaneGroupBy],
+  );
 
-  const swimlaneConfigs = getSwimlanConfigs(swimlaneGroupBy, allIssues);
+  const swimlaneConfigs = useMemo(() => {
+    // Build assignees Map for swimlane display names
+    const assigneesMap = new Map<Id<"users">, { name?: string; image?: string }>();
+    for (const issue of allIssues) {
+      if (issue.assignee) {
+        assigneesMap.set(issue.assignee._id, {
+          name: issue.assignee.name,
+          image: issue.assignee.image,
+        });
+      }
+    }
+
+    // Build unique labels array for swimlane colors
+    const labelsMap = new Map<string, { name: string; color: string }>();
+    for (const issue of allIssues) {
+      for (const label of issue.labels) {
+        if (!labelsMap.has(label.name)) {
+          labelsMap.set(label.name, { name: label.name, color: label.color });
+        }
+      }
+    }
+    const labels = Array.from(labelsMap.values());
+
+    return getSwimlanConfigs(swimlaneGroupBy, allIssues, assigneesMap, labels);
+  }, [swimlaneGroupBy, allIssues]);
+
+  // Determine Workflow States
+  const workflowStates = useMemo((): WorkflowState[] => {
+    if (isProjectMode && project) {
+      return [...project.workflowStates].sort(
+        (a: { order: number }, b: { order: number }) => a.order - b.order,
+      );
+    }
+
+    if (isTeamMode && smartWorkflowStates) {
+      return smartWorkflowStates.map((s) => ({
+        ...s,
+        description: "",
+        order: s.order,
+      }));
+    }
+
+    return [];
+  }, [isProjectMode, project, isTeamMode, smartWorkflowStates]);
 
   // Loading State
   const isLoading = isLoadingIssues || (isProjectMode && !project);
@@ -287,21 +366,6 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
         </Flex>
       </FlexItem>
     );
-  }
-
-  // Determine Workflow States
-  let workflowStates: WorkflowState[] = [];
-
-  if (isProjectMode && project) {
-    workflowStates = project.workflowStates.sort(
-      (a: { order: number }, b: { order: number }) => a.order - b.order,
-    );
-  } else if (isTeamMode && smartWorkflowStates) {
-    workflowStates = smartWorkflowStates.map((s) => ({
-      ...s,
-      description: "",
-      order: s.order,
-    }));
   }
 
   const canEdit = isProjectMode ? project?.userRole !== "viewer" : true;

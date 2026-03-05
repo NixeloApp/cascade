@@ -48,6 +48,8 @@ docs/design/specs/pages/*/screenshots/*.png
 
 # Test output and temporary files
 *.txt
+!.agents/*.txt
+!**/.agents/*.txt
 
 .vercel
 

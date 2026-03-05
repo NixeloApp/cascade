@@ -244,7 +244,6 @@ pnpm run dev:frontend  # Start Vite
 | `testing/unit.md`                      | Vitest unit testing, component testing         |
 | `testing/backend.md`                   | Convex function testing with convex-test       |
 | `testing/E2E_SIGNIN_FLAKINESS.md`      | Auth flow debugging notes                      |
-| `testing/E2E_INVESTIGATION_SUMMARY.md` | E2E test investigation                         |
 | `testing/UNIT-TEST-INVESTIGATION.md`   | Unit test investigation                        |
 
 **Test Commands:**

@@ -33,6 +33,7 @@ export const nullableOrganizationRoles = nullable(organizationRoles); // For ret
 export const workspaceRoles = literals("admin", "editor", "member");
 export const teamRoles = literals("admin", "member");
 export const inviteRoles = literals("user", "superAdmin");
+export const inviteStatuses = literals("pending", "accepted", "revoked", "expired");
 export const chatRoles = literals("user", "assistant", "system");
 
 // Statuses
@@ -47,7 +48,10 @@ export const inboxIssueStatuses = literals(
 export const inboxIssueSources = literals("in_app", "form", "email", "api");
 export const webhookStatuses = literals("success", "failed", "retrying");
 export const webhookResultStatuses = literals("success", "failed"); // For execution results
+export const invoiceStatuses = literals("draft", "sent", "paid", "overdue");
+export const reminderTypes = literals("email", "push", "in_app");
 export const calendarStatuses = literals("confirmed", "tentative", "cancelled");
+export const calendarEventTypes = literals("meeting", "deadline", "timeblock", "personal");
 export const calendarEventColors = literals(
   "blue",
   "red",
@@ -78,6 +82,9 @@ export const serviceTypes = literals("transcription", "email", "sms", "ai");
 export const syncDirections = literals("import", "export", "bidirectional");
 export const calendarProviders = literals("google", "outlook");
 export const cancelledByOptions = literals("host", "booker");
+export const bookingStatuses = literals("pending", "confirmed", "cancelled", "completed");
+export const ssoConnectionTypes = literals("saml", "oidc");
+export const oidcProviders = literals("google-workspace", "microsoft-entra", "okta");
 
 // User Preferences
 export const emailDigests = literals("none", "daily", "weekly");
@@ -86,6 +93,26 @@ export const personas = literals("team_lead", "team_member");
 
 // Booking
 export const bookingFieldTypes = literals("text", "email", "phone");
+export const bookingLocations = literals("phone", "zoom", "meet", "teams", "in-person", "custom");
+export const weekDays = literals(
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+);
+export const customFieldTypes = literals(
+  "text",
+  "number",
+  "select",
+  "multiselect",
+  "date",
+  "checkbox",
+  "url",
+  "user",
+);
 
 // Meeting Bot
 export const meetingPlatforms = literals("google_meet", "zoom", "teams", "other");

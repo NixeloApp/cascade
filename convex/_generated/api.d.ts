@@ -107,6 +107,7 @@ import type * as lib_rateLimiter from "../lib/rateLimiter.js";
 import type * as lib_relationships from "../lib/relationships.js";
 import type * as lib_richText from "../lib/richText.js";
 import type * as lib_safeFetch from "../lib/safeFetch.js";
+import type * as lib_slackValidation from "../lib/slackValidation.js";
 import type * as lib_softDeleteHelpers from "../lib/softDeleteHelpers.js";
 import type * as lib_ssrf from "../lib/ssrf.js";
 import type * as lib_teamAccess from "../lib/teamAccess.js";
@@ -275,6 +276,7 @@ declare const fullApi: ApiFromModules<{
   "lib/relationships": typeof lib_relationships;
   "lib/richText": typeof lib_richText;
   "lib/safeFetch": typeof lib_safeFetch;
+  "lib/slackValidation": typeof lib_slackValidation;
   "lib/softDeleteHelpers": typeof lib_softDeleteHelpers;
   "lib/ssrf": typeof lib_ssrf;
   "lib/teamAccess": typeof lib_teamAccess;

@@ -20,6 +20,11 @@ import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { escapeHtml, escapeScriptJson } from "../lib/html";
 import { logger } from "../lib/logger";
 
+const OAUTH_STATE_COOKIE_NAME = "github-oauth-state";
+const OAUTH_STATE_COOKIE_BASE_ATTRIBUTES = "Path=/; HttpOnly; Secure; SameSite=Lax";
+const GITHUB_FETCH_REPOS_ERROR_MESSAGE = "Failed to fetch repositories";
+const GITHUB_LIST_REPOS_ERROR_MESSAGE = "Failed to list repositories";
+
 /**
  * GitHub OAuth Integration
  *
@@ -80,15 +85,12 @@ const getGitHubOAuthConfig = () => {
 export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
   if (!isGitHubOAuthConfigured()) {
     return Promise.resolve(
-      new Response(
-        JSON.stringify({
+      jsonResponse(
+        {
           error:
             "GitHub OAuth not configured. Please set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET environment variables.",
-        }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
         },
+        500,
       ),
     );
   }
@@ -109,7 +111,7 @@ export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
       status: 302,
       headers: {
         Location: authUrl.toString(),
-        "Set-Cookie": `github-oauth-state=${state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`,
+        "Set-Cookie": buildOAuthStateCookie(state),
       },
     }),
   );
@@ -144,8 +146,8 @@ async function exchangeCodeForTokens(
     let errorText = "Unknown error";
     try {
       errorText = await tokenResponse.text();
-    } catch (_e) {
-      // Ignore text reading errors
+    } catch (error) {
+      logger.warn("GitHub OAuth warning: Failed to read token error response text", { error });
     }
     logger.error("GitHub OAuth error: Failed to exchange code", { errorText });
     throw upstream("GitHub", "Failed to exchange authorization code");
@@ -154,8 +156,8 @@ async function exchangeCodeForTokens(
   let tokens: Record<string, unknown>;
   try {
     tokens = (await tokenResponse.json()) as Record<string, unknown>;
-  } catch (_e) {
-    logger.error("GitHub OAuth error: Invalid JSON response");
+  } catch (error) {
+    logger.error("GitHub OAuth error: Invalid JSON response", { error });
     throw upstream("GitHub", "Invalid response from GitHub");
   }
 
@@ -181,8 +183,8 @@ async function fetchGitHubUserInfo(accessToken: string) {
     let errorText = "Unknown error";
     try {
       errorText = await userResponse.text();
-    } catch (_e) {
-      // Ignore text reading errors
+    } catch (error) {
+      logger.warn("GitHub OAuth warning: Failed to read user-info error response text", { error });
     }
     logger.error("GitHub OAuth error: Failed to get user info", { errorText });
     throw upstream("GitHub", "Failed to retrieve user info");
@@ -191,8 +193,8 @@ async function fetchGitHubUserInfo(accessToken: string) {
   let userInfo: Record<string, unknown>;
   try {
     userInfo = (await userResponse.json()) as Record<string, unknown>;
-  } catch (_e) {
-    logger.error("GitHub OAuth error: Invalid user info JSON");
+  } catch (error) {
+    logger.error("GitHub OAuth error: Invalid user info JSON", { error });
     throw upstream("GitHub", "Invalid response from GitHub");
   }
 
@@ -272,7 +274,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
         status: 400,
         headers: {
           "Content-Type": "text/html",
-          "Set-Cookie": `github-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+          "Set-Cookie": clearOAuthStateCookie(),
         },
       },
     );
@@ -282,7 +284,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
   const cookieHeader = request.headers.get("Cookie");
   const storedState = cookieHeader
     ?.split(";")
-    .find((c) => c.trim().startsWith("github-oauth-state="))
+    .find((c) => c.trim().startsWith(`${OAUTH_STATE_COOKIE_NAME}=`))
     ?.split("=")[1];
 
   if (!code || !state || !storedState || !constantTimeEqual(state, storedState)) {
@@ -351,7 +353,7 @@ export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) =
         status: 200,
         headers: {
           "Content-Type": "text/html",
-          "Set-Cookie": `github-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+          "Set-Cookie": clearOAuthStateCookie(),
         },
       },
     );
@@ -366,27 +368,7 @@ const handleOAuthError = (error: unknown) => {
 
   if (isAppError(error)) {
     errorMessage = error.data.message || errorMessage;
-    switch (error.data.code) {
-      case "VALIDATION":
-      case "CONFLICT":
-        status = 400;
-        break;
-      case "UNAUTHENTICATED":
-        status = 401;
-        break;
-      case "FORBIDDEN":
-        status = 403;
-        break;
-      case "NOT_FOUND":
-        status = 404;
-        break;
-      case "RATE_LIMITED":
-        status = 429;
-        break;
-      case "UPSTREAM":
-        status = 502;
-        break;
-    }
+    status = getAppErrorStatusCode(error.data.code, status);
   } else if (error instanceof Error) {
     errorMessage = error.message;
   }
@@ -418,7 +400,7 @@ const handleOAuthError = (error: unknown) => {
       status,
       headers: {
         "Content-Type": "text/html",
-        "Set-Cookie": `github-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+        "Set-Cookie": clearOAuthStateCookie(),
       },
     },
   );
@@ -445,16 +427,23 @@ function extractBearerToken(request: Request): string | undefined {
 async function parseGitHubErrorMessage(response: Response): Promise<string> {
   try {
     const text = await response.text();
-    try {
-      const errorBody = JSON.parse(text);
-      return errorBody.message || "Failed to fetch repositories";
-    } catch {
-      return text || "Failed to fetch repositories";
-    }
+    return parseGitHubErrorBodyMessage(text);
   } catch (e) {
     logger.error("Failed to read error response body:", { error: e });
-    return "Failed to fetch repositories";
+    return GITHUB_FETCH_REPOS_ERROR_MESSAGE;
   }
+}
+
+function parseGitHubErrorBodyMessage(text: string): string {
+  try {
+    const errorBody = JSON.parse(text) as Record<string, unknown>;
+    if (typeof errorBody.message === "string" && errorBody.message.trim().length > 0) {
+      return errorBody.message;
+    }
+  } catch {
+    // Fall through to text fallback
+  }
+  return text || GITHUB_FETCH_REPOS_ERROR_MESSAGE;
 }
 
 /**
@@ -519,8 +508,9 @@ export const listReposHandler = async (ctx: ActionCtx, request: Request) => {
         throw validation("github", "GitHub repositories response is not an array");
       }
       repos = json;
-    } catch (_e) {
-      if (isAppError(_e)) throw _e;
+    } catch (error) {
+      if (isAppError(error)) throw error;
+      logger.error("GitHub OAuth error: Invalid repositories JSON response", { error });
       throw validation("github", "Invalid JSON response from GitHub repositories endpoint");
     }
 
@@ -553,28 +543,16 @@ export const listReposHandler = async (ctx: ActionCtx, request: Request) => {
 const handleListReposError = (error: unknown) => {
   logger.error("GitHub listRepos error:", { error });
   let status = 500;
-  let message = "Failed to list repositories";
+  let message = GITHUB_LIST_REPOS_ERROR_MESSAGE;
 
   if (isAppError(error)) {
     message = error.data.message || message;
-    if (error.data.code === "VALIDATION") status = 400;
-    else if (error.data.code === "UNAUTHENTICATED") status = 401;
-    else if (error.data.code === "FORBIDDEN") status = 403;
-    else if (error.data.code === "NOT_FOUND") status = 404;
-    else if (error.data.code === "RATE_LIMITED") status = 429;
+    status = getAppErrorStatusCode(error.data.code, status);
   } else if (error instanceof Error) {
     message = error.message;
   }
 
-  return new Response(
-    JSON.stringify({
-      error: message,
-    }),
-    {
-      status,
-      headers: { "Content-Type": "application/json" },
-    },
-  );
+  return jsonResponse({ error: message }, status);
 };
 
 /**
@@ -584,3 +562,31 @@ const handleListReposError = (error: unknown) => {
  * This is called after authentication to fetch available repos
  */
 export const listRepos = httpAction(listReposHandler);
+
+function getAppErrorStatusCode(code: string, fallback: number): number {
+  switch (code) {
+    case "VALIDATION":
+    case "CONFLICT":
+      return 400;
+    case "UNAUTHENTICATED":
+      return 401;
+    case "FORBIDDEN":
+      return 403;
+    case "NOT_FOUND":
+      return 404;
+    case "RATE_LIMITED":
+      return 429;
+    case "UPSTREAM":
+      return 502;
+    default:
+      return fallback;
+  }
+}
+
+function buildOAuthStateCookie(value: string, maxAgeSeconds = 3600): string {
+  return `${OAUTH_STATE_COOKIE_NAME}=${value}; ${OAUTH_STATE_COOKIE_BASE_ATTRIBUTES}; Max-Age=${maxAgeSeconds}`;
+}
+
+function clearOAuthStateCookie(): string {
+  return buildOAuthStateCookie("", 0);
+}

@@ -3,14 +3,26 @@
  */
 
 import { v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { projectQuery, sprintQuery } from "./customFunctions";
 import { batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { efficientCount } from "./lib/boundedQueries";
 import { logQueryPayloadTelemetry } from "./lib/payloadTelemetry";
-import { MAX_PAGE_SIZE, MAX_SPRINT_ISSUES, MAX_VELOCITY_SPRINTS } from "./lib/queryLimits";
+import {
+  clampLimit,
+  MAX_PAGE_SIZE,
+  MAX_SPRINT_ISSUES,
+  MAX_VELOCITY_SPRINTS,
+} from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { DAY } from "./lib/timeUtils";
+
+// Helper: Build Set of done-state IDs from workflow states
+function getDoneStates(workflowStates: Array<{ id: string; category: string }>): Set<string> {
+  return new Set(
+    workflowStates.filter((state) => state.category === "done").map((state) => state.id),
+  );
+}
 
 // Helper: Build issues by status from workflow states and counts
 function buildIssuesByStatus(
@@ -152,14 +164,15 @@ export const getProjectAnalytics = projectQuery({
     const userMap = await batchFetchUsers(ctx, countedAssigneeIds);
 
     const issuesByAssignee: Record<string, { count: number; name: string }> = {};
+    let assignedKnownCount = 0;
     for (const [assigneeId, count] of Object.entries(assigneeCounts)) {
+      assignedKnownCount += count;
       issuesByAssignee[assigneeId] = {
         count,
         name: getUserName(userMap.get(assigneeId as Id<"users">)),
       };
     }
 
-    const assignedKnownCount = Object.values(assigneeCounts).reduce((sum, count) => sum + count, 0);
     const totalAssignedCount = Math.max(0, totalIssues - unassignedCount);
     const unknownAssignedCount = Math.max(0, totalAssignedCount - assignedKnownCount);
     if (unknownAssignedCount > 0) {
@@ -203,20 +216,21 @@ export const getSprintBurndown = sprintQuery({
       .filter(notDeleted)
       .take(MAX_SPRINT_ISSUES);
 
-    // Calculate total points (using storyPoints, fallback to estimatedHours)
-    const totalPoints = sprintIssues.reduce(
-      (sum, issue) => sum + (issue.storyPoints || issue.estimatedHours || 0),
-      0,
-    );
-
     // Get done states
-    const doneStates = ctx.project.workflowStates
-      .filter((s) => s.category === "done")
-      .map((s) => s.id);
+    const doneStates = getDoneStates(ctx.project.workflowStates);
 
-    const completedPoints = sprintIssues
-      .filter((issue) => doneStates.includes(issue.status))
-      .reduce((sum, issue) => sum + (issue.storyPoints || issue.estimatedHours || 0), 0);
+    // Single pass over sprint issues for totals/completion counts.
+    let totalPoints = 0;
+    let completedPoints = 0;
+    let completedIssues = 0;
+    for (const issue of sprintIssues) {
+      const points = issue.storyPoints || issue.estimatedHours || 0;
+      totalPoints += points;
+      if (doneStates.has(issue.status)) {
+        completedPoints += points;
+        completedIssues += 1;
+      }
+    }
 
     const remainingPoints = totalPoints - completedPoints;
 
@@ -241,7 +255,7 @@ export const getSprintBurndown = sprintQuery({
         remainingPoints,
         progressPercentage,
         totalIssues: sprintIssues.length,
-        completedIssues: sprintIssues.filter((i) => doneStates.includes(i.status)).length,
+        completedIssues,
         idealBurndown,
         daysElapsed,
         totalDays,
@@ -254,7 +268,7 @@ export const getSprintBurndown = sprintQuery({
       remainingPoints,
       progressPercentage,
       totalIssues: sprintIssues.length,
-      completedIssues: sprintIssues.filter((i) => doneStates.includes(i.status)).length,
+      completedIssues,
       idealBurndown: [],
       daysElapsed: 0,
       totalDays: 0,
@@ -277,16 +291,14 @@ export const getSprintAssigneeBreakdown = sprintQuery({
       .take(MAX_SPRINT_ISSUES);
 
     // Get done states
-    const doneStates = ctx.project.workflowStates
-      .filter((s) => s.category === "done")
-      .map((s) => s.id);
+    const doneStates = getDoneStates(ctx.project.workflowStates);
 
     // Count issues by assignee
     const assigneeCounts: Record<string, { total: number; done: number }> = {};
     const unassigned = { total: 0, done: 0 };
 
     for (const issue of sprintIssues) {
-      const isDone = doneStates.includes(issue.status);
+      const isDone = doneStates.has(issue.status);
       if (issue.assigneeId) {
         if (!assigneeCounts[issue.assigneeId]) {
           assigneeCounts[issue.assigneeId] = { total: 0, done: 0 };
@@ -343,48 +355,45 @@ export const getTeamVelocity = projectQuery({
       .take(MAX_VELOCITY_SPRINTS);
 
     // Get done states
-    const doneStates = ctx.project.workflowStates
-      .filter((s) => s.category === "done")
-      .map((s) => s.id);
+    const doneStates = getDoneStates(ctx.project.workflowStates);
 
     // Batch fetch issues for all sprints in parallel (not sequential)
-    const sprintIds = completedSprints.map((s) => s._id);
     const sprintIssuesArrays = await Promise.all(
-      sprintIds.map((sprintId) =>
+      completedSprints.map((sprint) =>
         ctx.db
           .query("issues")
-          .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId))
+          .withIndex("by_sprint", (q) => q.eq("sprintId", sprint._id))
           .filter(notDeleted)
           .take(MAX_SPRINT_ISSUES),
       ),
     );
 
-    // Build sprint issues map
-    const sprintIssuesMap = new Map(
-      sprintIds.map((id, i) => [id.toString(), sprintIssuesArrays[i]]),
-    );
-
     // Calculate velocity data using pre-fetched issues (no N+1)
-    const velocityData = completedSprints.map((sprint) => {
-      const sprintIssues = sprintIssuesMap.get(sprint._id.toString()) || [];
+    let totalCompletedPoints = 0;
+    const velocityData = completedSprints.map((sprint, index) => {
+      const sprintIssues = sprintIssuesArrays[index] || [];
 
-      const completedPoints = sprintIssues
-        .filter((issue) => doneStates.includes(issue.status))
-        .reduce((sum, issue) => sum + (issue.storyPoints || issue.estimatedHours || 0), 0);
+      let completedPoints = 0;
+      let issuesCompleted = 0;
+      for (const issue of sprintIssues) {
+        if (doneStates.has(issue.status)) {
+          completedPoints += issue.storyPoints || issue.estimatedHours || 0;
+          issuesCompleted += 1;
+        }
+      }
+      totalCompletedPoints += completedPoints;
 
       return {
         sprintName: sprint.name,
         sprintId: sprint._id,
         points: completedPoints,
-        issuesCompleted: sprintIssues.filter((i) => doneStates.includes(i.status)).length,
+        issuesCompleted,
       };
     });
 
     // Calculate average velocity
     const avgVelocity =
-      velocityData.length > 0
-        ? Math.round(velocityData.reduce((sum, v) => sum + v.points, 0) / velocityData.length)
-        : 0;
+      velocityData.length > 0 ? Math.round(totalCompletedPoints / velocityData.length) : 0;
 
     return {
       velocityData: velocityData.reverse(), // Oldest first for chart
@@ -400,7 +409,7 @@ export const getTeamVelocity = projectQuery({
 export const getRecentActivity = projectQuery({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const limit = args.limit || 20;
+    const limit = clampLimit(args.limit, 20);
 
     // Optimization: Fetch top recently updated issues for the project
     // This avoids scanning the global issueActivity table and filtering in memory
@@ -421,17 +430,32 @@ export const getRecentActivity = projectQuery({
       ),
     );
 
-    // Flatten, sort by creation time, and take top limit
-    const allActivities = activitiesArrays
-      .flat()
-      .sort((a, b) => b._creationTime - a._creationTime)
-      .slice(0, limit);
+    // Keep only the top `limit` newest activities to avoid sorting large flattened arrays.
+    const allActivities: Doc<"issueActivity">[] = [];
+    for (const activities of activitiesArrays) {
+      for (const activity of activities) {
+        let insertIndex = 0;
+        while (
+          insertIndex < allActivities.length &&
+          allActivities[insertIndex]._creationTime >= activity._creationTime
+        ) {
+          insertIndex += 1;
+        }
+        if (insertIndex >= limit) {
+          continue;
+        }
+        allActivities.splice(insertIndex, 0, activity);
+        if (allActivities.length > limit) {
+          allActivities.pop();
+        }
+      }
+    }
 
     // Create issue map from fetched issues
     const issueMap = new Map(issues.map((i) => [i._id, i]));
 
     // Batch fetch users
-    const userIds = allActivities.map((a) => a.userId);
+    const userIds = [...new Set(allActivities.map((a) => a.userId))];
     const userMap = await batchFetchUsers(ctx, userIds);
 
     // Enrich

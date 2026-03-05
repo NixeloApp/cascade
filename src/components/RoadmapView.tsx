@@ -8,6 +8,7 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import { DAY } from "@convex/lib/timeUtils";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -47,7 +48,6 @@ const TIMELINE_SPANS: { value: TimelineSpan; label: string }[] = [
   { value: 6, label: "6 Months" },
   { value: 12, label: "1 Year" },
 ];
-
 /** Dependency line data for rendering SVG arrows */
 interface DependencyLine {
   fromX: number;
@@ -97,33 +97,37 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   type RoadmapIssue = FunctionReturnType<typeof api.issues.listRoadmapIssues>[number];
   type Epic = NonNullable<FunctionReturnType<typeof api.issues.listEpics>>[number];
 
-  const today = new Date();
-  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const endDate = new Date(today.getFullYear(), today.getMonth() + timelineSpan, 0);
-
-  // Generate timeline columns based on selected span
-  const timelineMonths: Date[] = [];
-  for (let i = 0; i < timelineSpan; i++) {
-    timelineMonths.push(new Date(today.getFullYear(), today.getMonth() + i, 1));
-  }
-
-  const totalDays = Math.floor(
-    (endDate.getTime() - startOfMonth.getTime()) / (1000 * 60 * 60 * 24),
-  );
-
-  function getPositionOnTimeline(date: number) {
-    const issueDate = new Date(date);
-    const daysSinceStart = Math.floor(
-      (issueDate.getTime() - startOfMonth.getTime()) / (1000 * 60 * 60 * 24),
+  const { startOfMonth, timelineMonths, totalDays } = useMemo(() => {
+    const today = new Date();
+    const start = new Date(today.getFullYear(), today.getMonth(), 1);
+    const end = new Date(today.getFullYear(), today.getMonth() + timelineSpan, 0);
+    const months = Array.from(
+      { length: timelineSpan },
+      (_, index) => new Date(today.getFullYear(), today.getMonth() + index, 1),
     );
-    return (daysSinceStart / totalDays) * 100;
-  }
+    const days = Math.max(1, Math.floor((end.getTime() - start.getTime()) / DAY));
+
+    return {
+      startOfMonth: start,
+      timelineMonths: months,
+      totalDays: days,
+    };
+  }, [timelineSpan]);
+
+  const getPositionOnTimeline = useCallback(
+    (date: number) => {
+      const issueDate = new Date(date);
+      const daysSinceStart = Math.floor((issueDate.getTime() - startOfMonth.getTime()) / DAY);
+      return (daysSinceStart / totalDays) * 100;
+    },
+    [startOfMonth, totalDays],
+  );
 
   // Convert percentage position back to timestamp
   const getDateFromPosition = useCallback(
     (percent: number) => {
       const days = Math.round((percent / 100) * totalDays);
-      const date = new Date(startOfMonth.getTime() + days * 24 * 60 * 60 * 1000);
+      const date = new Date(startOfMonth.getTime() + days * DAY);
       // Set to end of day for due dates
       date.setHours(23, 59, 59, 999);
       return date.getTime();
@@ -241,7 +245,6 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-    // biome-ignore lint/correctness/useExhaustiveDependencies: getPositionOnTimeline uses component-level timeRange which is stable
   }, [resizing, getDateFromPosition, getPositionOnTimeline, updateIssue]);
 
   // Keyboard navigation
@@ -279,9 +282,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     // Inline position calculator using closure over totalDays and startOfMonth
     const getPos = (date: number) => {
       const issueDate = new Date(date);
-      const daysSinceStart = Math.floor(
-        (issueDate.getTime() - startOfMonth.getTime()) / (1000 * 60 * 60 * 24),
-      );
+      const daysSinceStart = Math.floor((issueDate.getTime() - startOfMonth.getTime()) / DAY);
       return (daysSinceStart / totalDays) * 100;
     };
 

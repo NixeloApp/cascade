@@ -12,6 +12,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Clock, RotateCcw } from "@/lib/icons";
+import { DAY, HOUR, MINUTE } from "@/lib/time";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
@@ -28,9 +29,9 @@ import { Typography } from "./ui/Typography";
  * Returns null if diff is >= 7 days
  */
 function getRelativeTimeString(diffMs: number): string | null {
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
+  const diffMins = Math.floor(diffMs / MINUTE);
+  const diffHours = Math.floor(diffMs / HOUR);
+  const diffDays = Math.floor(diffMs / DAY);
 
   if (diffMins < 1) return "Just now";
   if (diffMins < 60) return `${diffMins} ${diffMins === 1 ? "minute" : "minutes"} ago`;

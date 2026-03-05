@@ -2,10 +2,31 @@
 
 End-to-end testing for Nixelo using [Playwright](https://playwright.dev/).
 
+## Reliability Policy
+
+- Local full-suite run output is the source of truth:
+  - `pnpm exec playwright test --reporter=line`
+- Acceptance is binary:
+  - `100% pass` or `not 100% pass`
+- Do not use summary/history-derived gates to decide E2E status.
+
+### Required Gate Command
+
+Use this command when validating E2E status for a PR or local release gate:
+
+```bash
+pnpm exec playwright test --reporter=line
+```
+
+Decision rule:
+- If all tests pass, E2E status is `100% pass`.
+- If any test fails, times out, or is interrupted, E2E status is `not 100% pass`.
+- Do not derive E2E status from historical dashboards, pass-rate summaries, or trend reports.
+
 ## Quick Start
 
 ```bash
-# Run all E2E tests (headless)
+# Run full E2E suite via project script
 pnpm e2e
 
 # Interactive UI mode (recommended for development)
@@ -16,7 +37,26 @@ pnpm e2e:headed
 
 # Debug mode with inspector
 pnpm e2e:debug
+
+# Cross-browser smoke run (opt-in project matrix)
+pnpm e2e:cross-browser:smoke
 ```
+
+Note:
+- `pnpm e2e` maps to `playwright test` (default reporter behavior from Playwright config).
+- For release/PR reliability gating, use the Required Gate Command exactly:
+  - `pnpm exec playwright test --reporter=line`
+
+### Script Mapping
+
+| Script | Underlying command |
+| ------ | ------------------ |
+| `pnpm e2e` | `playwright test` |
+| `pnpm e2e:ui` | `playwright test --ui` |
+| `pnpm e2e:headed` | `playwright test --headed` |
+| `pnpm e2e:debug` | `playwright test --debug` |
+| `pnpm e2e:cross-browser:smoke` | `E2E_CROSS_BROWSER=1 playwright test e2e/landing.spec.ts --workers=1 --reporter=line` |
+| `pnpm screenshots` | `tsx --env-file=.env.local e2e/screenshot-pages.ts` |
 
 ## PR Review Checklist (E2E Reliability)
 
@@ -37,7 +77,6 @@ Automated guard commands:
 ```bash
 pnpm run e2e:hard-rules
 pnpm run e2e:hard-rules:self-test
-pnpm run e2e:summary:self-test
 ```
 
 Current automated checks:
@@ -58,7 +97,7 @@ Baseline file (temporary debt register): `scripts/ci/e2e-hard-rules-baseline.jso
 | Setting  | Local                   | CI                      |
 | -------- | ----------------------- | ----------------------- |
 | Base URL | `http://localhost:5555` | `http://localhost:5555` |
-| Browser  | Chromium                | Chromium                |
+| Browsers | Chromium by default; Chromium + Firefox + WebKit + mobile when `E2E_CROSS_BROWSER=1` | Chromium by default; Chromium + Firefox + WebKit + mobile when `E2E_CROSS_BROWSER=1` |
 | Workers  | 4                       | 4                       |
 | Retries  | 0                       | 2                       |
 | Parallel | Yes (fullyParallel)     | Yes (fullyParallel)     |
@@ -82,8 +121,11 @@ Baseline file (temporary debt register): `scripts/ci/e2e-hard-rules-baseline.jso
 
 ## Architecture
 
-```
+```text
 e2e/
+├── .auth/                      # Generated auth/session storage state for workers
+│   └── *.json
+│
 ├── fixtures/                   # Test fixtures
 │   ├── index.ts               # Exports all fixtures
 │   ├── test.fixture.ts        # Base fixtures (page objects)
@@ -106,6 +148,8 @@ e2e/
 ├── utils/                      # Test utilities
 │   ├── index.ts               # Exports all utilities
 │   ├── auth-helpers.ts        # Authentication helpers
+│   ├── google-oauth-mock.ts   # OAuth mocking helpers
+│   ├── google-oauth-programmatic.ts # Programmatic OAuth helpers
 │   ├── helpers.ts             # General helpers
 │   ├── otp-helpers.ts         # OTP verification via E2E API
 │   ├── routes.ts              # Route utilities
@@ -113,28 +157,47 @@ e2e/
 │   ├── test-user-service.ts   # Test user CRUD service
 │   └── wait-helpers.ts        # Async wait utilities
 │
+├── locators/                   # Shared selector contracts
+│   ├── index.ts
+│   └── auth.locators.ts
+│
 ├── settings/                   # Nested spec directories
 │   └── billing.spec.ts        # Billing settings tests
 │
+├── README.md                   # E2E suite conventions and guidance
 ├── config.ts                   # Test configuration (users, endpoints)
 ├── global-setup.ts            # Pre-test setup (creates users, seeds data)
 ├── global-teardown.ts         # Post-test cleanup
+├── globals.d.ts               # E2E-specific TS global types
+├── screenshot-pages.ts        # Screenshot helper script
 │
-│── # Test specs (20 files)
+├── # Test specs (representative examples)
+├── activity-feed.spec.ts      # Activity feed flows
+├── analytics.spec.ts          # Analytics dashboard flows
 ├── auth.spec.ts               # Authentication tests
 ├── auth-comprehensive.spec.ts # Extended auth flow tests
+├── board-drag-drop.spec.ts    # Board drag-and-drop interactions
 ├── calendar.spec.ts           # Calendar tests
 ├── dashboard.spec.ts          # Dashboard tests
+├── dev-tools-test-account.spec.ts # Dev test-account tooling
 ├── documents.spec.ts          # Document management tests
 ├── error-scenarios.spec.ts    # Error handling tests
 ├── integration-workflow.spec.ts # Cross-feature workflow tests
+├── invite.spec.ts             # Invite flow coverage (legacy path)
 ├── invites.spec.ts            # User invitation tests
+├── issue-detail-page.spec.ts  # Issue detail interactions
 ├── issues.spec.ts             # Issue management tests
 ├── landing.spec.ts            # Landing page tests
+├── oauth-mocked.spec.ts       # OAuth mocked authentication flows
+├── oauth-security.spec.ts     # OAuth security scenarios
 ├── onboarding.spec.ts         # Onboarding flow tests
+├── permission-cascade.spec.ts # Permission propagation checks
 ├── rbac.spec.ts               # Role-based access control tests
+├── roadmap.spec.ts            # Roadmap feature flows
+├── search.spec.ts             # Search behavior checks
 ├── signout.spec.ts            # Sign-out flow tests
 ├── sprints.spec.ts            # Sprint management tests
+├── teams.spec.ts              # Team management flows
 ├── time-tracking.spec.ts      # Time tracking tests
 └── workspaces-org.spec.ts     # Workspace/org management tests
 ```
@@ -164,10 +227,9 @@ export abstract class BasePage {
   abstract goto(): Promise<void>;
 
   // Waits for DOM + React hydration (checks __reactFiber on elements)
-  // Uses 'domcontentloaded' instead of 'networkidle' because Convex
+  // Uses 'load' + React hydration check; avoid 'networkidle' because Convex
   // keeps WebSocket connections active, preventing networkidle from resolving
   async waitForLoad() {
-    await this.page.waitForLoadState("domcontentloaded");
     await this.page.waitForLoadState("load");
     await this.page.waitForFunction(() => {
       const elements = document.querySelectorAll("a, button");
@@ -198,8 +260,8 @@ export class AuthPage extends BasePage {
   readonly passwordInput: Locator;
   readonly submitButton: Locator;
 
-  constructor(page: Page) {
-    super(page);
+  constructor(page: Page, orgSlug: string) {
+    super(page, orgSlug);
     this.emailInput = page.getByPlaceholder("Email");
     this.passwordInput = page.getByPlaceholder("Password");
     this.submitButton = page.getByRole("button", { name: /sign (in|up)/i });
@@ -229,15 +291,17 @@ Fixtures provide page objects to tests automatically.
 import { test as base } from "@playwright/test";
 import { AuthPage, DashboardPage, LandingPage } from "../pages";
 
+const PUBLIC_ORG_PLACEHOLDER = "__public__";
+
 export const test = base.extend<TestFixtures>({
   landingPage: async ({ page }, use) => {
-    await use(new LandingPage(page));
+    await use(new LandingPage(page, PUBLIC_ORG_PLACEHOLDER));
   },
   authPage: async ({ page }, use) => {
-    await use(new AuthPage(page));
+    await use(new AuthPage(page, PUBLIC_ORG_PLACEHOLDER));
   },
   dashboardPage: async ({ page }, use) => {
-    await use(new DashboardPage(page));
+    await use(new DashboardPage(page, PUBLIC_ORG_PLACEHOLDER));
   },
 });
 ```

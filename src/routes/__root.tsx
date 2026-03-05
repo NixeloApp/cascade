@@ -31,8 +31,8 @@ if (typeof window !== "undefined") {
       // Expose convex client globally for E2E testing
       window.__convex_test_client = convex;
     }
-  } catch (_e) {
-    // Convex Init Failed - fail silently on server or log appropriately if needed
+  } catch (error) {
+    console.warn("[app] Failed to initialize Convex client", { error });
   }
 }
 

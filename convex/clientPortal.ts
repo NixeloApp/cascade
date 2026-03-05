@@ -9,12 +9,17 @@ import type { Id } from "./_generated/dataModel";
 import { type MutationCtx, mutation, type QueryCtx, query } from "./_generated/server";
 import { organizationAdminMutation } from "./customFunctions";
 import { forbidden, notFound } from "./lib/errors";
+import { DAY } from "./lib/timeUtils";
 import { rateLimit } from "./rateLimits";
 
 function buildPortalToken(): string {
   const first = crypto.randomUUID().replace(/-/g, "");
   const second = crypto.randomUUID().replace(/-/g, "");
   return `${first}${second}`;
+}
+
+function isPortalTokenFormat(token: string): boolean {
+  return /^[a-f0-9]{64}$/i.test(token);
 }
 
 async function assertClientForOrganization(
@@ -38,13 +43,60 @@ async function assertProjectsForOrganization(
   if (projects.some((project) => !project || project.organizationId !== organizationId)) {
     throw forbidden("admin", "All portal projects must belong to the same organization");
   }
+  if (projects.some((project) => project?.isDeleted === true)) {
+    throw forbidden("admin", "Portal access cannot include deleted projects");
+  }
 }
 
 function isTokenExpired(expiresAt?: number): boolean {
   return typeof expiresAt === "number" && expiresAt <= Date.now();
 }
 
+const MAX_PORTAL_TOKEN_TTL = 365 * DAY;
+
+function assertPortalExpiry(expiresAt: number | undefined, now: number) {
+  if (expiresAt === undefined) return;
+
+  if (expiresAt <= now) {
+    throw forbidden("admin", "Portal token expiry must be in the future");
+  }
+
+  if (expiresAt > now + MAX_PORTAL_TOKEN_TTL) {
+    throw forbidden("admin", "Portal token expiry cannot exceed one year");
+  }
+}
+
+function normalizePortalRequesterKey(requesterKey?: string): string {
+  if (!requesterKey) return "anonymous";
+  const normalized = requesterKey
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  if (!normalized) return "anonymous";
+  return normalized.slice(0, 64);
+}
+
+export function getPortalValidationRateLimitKeys(token: string, requesterKey?: string) {
+  const requesterBucket = normalizePortalRequesterKey(requesterKey);
+  const tokenPrefix =
+    token
+      .slice(0, 8)
+      .toLowerCase()
+      .replace(/[^a-f0-9]/g, "") || "invalid";
+  return {
+    global: "portal:global",
+    requester: `portal:req:${requesterBucket}`,
+    token: `portal:req:${requesterBucket}:token:${tokenPrefix}`,
+  };
+}
+
 async function resolveTokenContext(ctx: { db: QueryCtx["db"] | MutationCtx["db"] }, token: string) {
+  if (!isPortalTokenFormat(token)) {
+    return null;
+  }
+
   const portalToken = await ctx.db
     .query("clientPortalTokens")
     .withIndex("by_token", (q) => q.eq("token", token))
@@ -63,7 +115,7 @@ async function resolveTokenContext(ctx: { db: QueryCtx["db"] | MutationCtx["db"]
     portalToken.projectIds.map((projectId) => ctx.db.get(projectId)),
   );
   const availableProjects = projects.filter(
-    (project): project is NonNullable<typeof project> => !!project,
+    (project): project is NonNullable<typeof project> => !!project && project.isDeleted !== true,
   );
 
   return {
@@ -101,6 +153,7 @@ export const generateToken = organizationAdminMutation({
 
     const token = buildPortalToken();
     const now = Date.now();
+    assertPortalExpiry(args.expiresAt, now);
     const tokenId = await ctx.db.insert("clientPortalTokens", {
       organizationId: ctx.organizationId,
       clientId: args.clientId,
@@ -127,6 +180,7 @@ export const generateToken = organizationAdminMutation({
 export const validateToken = mutation({
   args: {
     token: v.string(),
+    requesterKey: v.optional(v.string()),
   },
   returns: v.union(
     v.null(),
@@ -147,14 +201,20 @@ export const validateToken = mutation({
   ),
   handler: async (ctx, args) => {
     if (!process.env.IS_TEST_ENV) {
-      // Rate limit by token prefix to prevent brute-forcing a specific token
+      const rateLimitKeys = getPortalValidationRateLimitKeys(args.token, args.requesterKey);
+      // Rate limit per requester to prevent brute-force bypass via random token rotation
       await rateLimit(ctx, "clientPortalValidation", {
-        key: `portal:${args.token.slice(0, 8)}`,
+        key: rateLimitKeys.requester,
         throws: true,
       });
-      // Also apply a global rate limit to prevent enumeration attacks with random tokens
+      // Keep a global bucket to cap total validation attempts across rotated requester keys.
       await rateLimit(ctx, "clientPortalValidation", {
-        key: "portal:global",
+        key: rateLimitKeys.global,
+        throws: true,
+      });
+      // Also apply a token-prefix bucket scoped to requester to deter focused token probing.
+      await rateLimit(ctx, "clientPortalValidation", {
+        key: rateLimitKeys.token,
         throws: true,
       });
     }
@@ -175,7 +235,7 @@ export const validateToken = mutation({
       clientId: context.portalToken.clientId,
       clientName: context.client.name,
       permissions: context.portalToken.permissions,
-      projectIds: context.portalToken.projectIds,
+      projectIds: context.projects.map((project) => project._id),
       expiresAt: context.portalToken.expiresAt,
     };
   },
@@ -233,7 +293,7 @@ export const getIssuesForToken = query({
       return [];
     }
 
-    if (!context.portalToken.projectIds.includes(args.projectId)) {
+    if (!context.projects.some((project) => project._id === args.projectId)) {
       return [];
     }
 

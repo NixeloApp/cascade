@@ -8,11 +8,47 @@ import { internal } from "../_generated/api";
 import { type ActionCtx, httpAction } from "../_generated/server";
 import { constantTimeEqual } from "../lib/apiAuth";
 import { getSlackSigningSecret, isSlackSigningSecretConfigured } from "../lib/env";
+import { isInvalidSlackId } from "../lib/slackValidation";
 
 const MAX_SLASH_COMMAND_TEXT_LENGTH = 2000;
 const MAX_SLASH_COMMAND_BODY_LENGTH = 12000;
 const MAX_SLACK_TEAM_ID_LENGTH = 64;
 const MAX_SLACK_USER_ID_LENGTH = 64;
+
+type SlashCommandResponseType = "ephemeral" | "in_channel";
+
+interface SlashCommandPayload {
+  teamId: string;
+  callerSlackUserId: string;
+  text: string;
+}
+
+function createSlackJsonResponse(
+  text: string,
+  status: number,
+  responseType: SlashCommandResponseType = "ephemeral",
+): Response {
+  return new Response(
+    JSON.stringify({
+      response_type: responseType,
+      text,
+    }),
+    {
+      status,
+      headers: { "Content-Type": "application/json" },
+    },
+  );
+}
+
+function hasControlCharacters(value: string): boolean {
+  for (let i = 0; i < value.length; i += 1) {
+    const code = value.charCodeAt(i);
+    if (code < 32 || code === 127) {
+      return true;
+    }
+  }
+  return false;
+}
 
 /**
  * Compute HMAC-SHA256 using Web Crypto API.
@@ -63,6 +99,50 @@ async function verifySlackSignature(headers: Headers, rawBody: string): Promise<
   return constantTimeEqual(signature, expected);
 }
 
+function validateSlackPayloadId(
+  value: string,
+  fieldName: "team_id" | "user_id",
+  maxLength: number,
+): string | null {
+  if (!value) {
+    return `Missing ${fieldName} in Slack command payload.`;
+  }
+  if (value.length > maxLength || isInvalidSlackId(value)) {
+    return `Invalid ${fieldName} in Slack command payload.`;
+  }
+  return null;
+}
+
+function parseAndValidateSlashCommandPayload(rawBody: string): SlashCommandPayload | Response {
+  const params = new URLSearchParams(rawBody);
+  const teamId = params.get("team_id") || "";
+  const callerSlackUserId = params.get("user_id") || "";
+  const text = params.get("text") || "";
+
+  const teamIdError = validateSlackPayloadId(teamId, "team_id", MAX_SLACK_TEAM_ID_LENGTH);
+  if (teamIdError) {
+    return createSlackJsonResponse(teamIdError, 400);
+  }
+
+  const userIdError = validateSlackPayloadId(
+    callerSlackUserId,
+    "user_id",
+    MAX_SLACK_USER_ID_LENGTH,
+  );
+  if (userIdError) {
+    return createSlackJsonResponse(userIdError, 400);
+  }
+
+  if (text.length > MAX_SLASH_COMMAND_TEXT_LENGTH) {
+    return createSlackJsonResponse("Command text is too long.", 400);
+  }
+  if (hasControlCharacters(text)) {
+    return createSlackJsonResponse("Command text contains invalid characters.", 400);
+  }
+
+  return { teamId, callerSlackUserId, text };
+}
+
 /**
  * Validate and process Slack `/nixelo` slash command requests.
  *
@@ -81,112 +161,25 @@ async function verifySlackSignature(headers: Headers, rawBody: string): Promise<
  */
 export const handleSlashCommandHandler = async (ctx: ActionCtx, request: Request) => {
   if (!isSlackSigningSecretConfigured()) {
-    return new Response(
-      JSON.stringify({
-        response_type: "ephemeral",
-        text: "Slack signing secret is not configured.",
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return createSlackJsonResponse("Slack signing secret is not configured.", 500);
   }
 
   const rawBody = await request.text();
   const rawBodyBytes = new TextEncoder().encode(rawBody).byteLength;
   if (rawBodyBytes > MAX_SLASH_COMMAND_BODY_LENGTH) {
-    return new Response(
-      JSON.stringify({
-        response_type: "ephemeral",
-        text: "Request body is too large.",
-      }),
-      {
-        status: 413,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return createSlackJsonResponse("Request body is too large.", 413);
   }
 
   if (!(await verifySlackSignature(request.headers, rawBody))) {
-    return new Response(
-      JSON.stringify({
-        response_type: "ephemeral",
-        text: "Invalid Slack signature.",
-      }),
-      {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return createSlackJsonResponse("Invalid Slack signature.", 401);
   }
 
-  const params = new URLSearchParams(rawBody);
-  const teamId = params.get("team_id") || "";
-  const callerSlackUserId = params.get("user_id") || "";
-  const text = params.get("text") || "";
-
-  if (!teamId) {
-    return new Response(
-      JSON.stringify({
-        response_type: "ephemeral",
-        text: "Missing team_id in Slack command payload.",
-      }),
-      {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
-  }
-  if (!callerSlackUserId) {
-    return new Response(
-      JSON.stringify({
-        response_type: "ephemeral",
-        text: "Missing user_id in Slack command payload.",
-      }),
-      {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
-  }
-  if (teamId.length > MAX_SLACK_TEAM_ID_LENGTH) {
-    return new Response(
-      JSON.stringify({
-        response_type: "ephemeral",
-        text: "Invalid team_id in Slack command payload.",
-      }),
-      {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
-  }
-  if (callerSlackUserId.length > MAX_SLACK_USER_ID_LENGTH) {
-    return new Response(
-      JSON.stringify({
-        response_type: "ephemeral",
-        text: "Invalid user_id in Slack command payload.",
-      }),
-      {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
-  }
-  if (text.length > MAX_SLASH_COMMAND_TEXT_LENGTH) {
-    return new Response(
-      JSON.stringify({
-        response_type: "ephemeral",
-        text: "Command text is too long.",
-      }),
-      {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+  const payload = parseAndValidateSlashCommandPayload(rawBody);
+  if (payload instanceof Response) {
+    return payload;
   }
 
+  const { teamId, callerSlackUserId, text } = payload;
   try {
     const result = await ctx.runMutation(internal.slackCommandsCore.executeCommand, {
       teamId,
@@ -194,28 +187,10 @@ export const handleSlashCommandHandler = async (ctx: ActionCtx, request: Request
       text,
     });
 
-    return new Response(
-      JSON.stringify({
-        response_type: result.ok ? "in_channel" : "ephemeral",
-        text: result.message,
-      }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return createSlackJsonResponse(result.message, 200, result.ok ? "in_channel" : "ephemeral");
   } catch {
-    return new Response(
-      JSON.stringify({
-        response_type: "ephemeral",
-        // Security: avoid leaking internal backend details to Slack users.
-        text: "Slash command failed. Please try again later.",
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    // Security: avoid leaking internal backend details to Slack users.
+    return createSlackJsonResponse("Slash command failed. Please try again later.", 500);
   }
 };
 

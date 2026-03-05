@@ -9,6 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
+import { useMemo } from "react";
 import { PageHeader, PageLayout } from "@/components/layout";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
@@ -61,45 +62,65 @@ export function AnalyticsDashboard({ projectId }: Props) {
     limit: 10,
   });
 
-  const statusChartData = analytics
-    ? Object.entries(analytics.issuesByStatus).map(([status, count]) => ({
-        label: status,
-        value: count,
-      }))
-    : [];
+  const statusChartData = useMemo(
+    () =>
+      analytics
+        ? Object.entries(analytics.issuesByStatus).map(([status, count]) => ({
+            label: status,
+            value: count,
+          }))
+        : [],
+    [analytics],
+  );
 
-  const typeChartData = analytics
-    ? [
-        { label: "Task", value: analytics.issuesByType.task },
-        { label: "Bug", value: analytics.issuesByType.bug },
-        { label: "Story", value: analytics.issuesByType.story },
-        { label: "Epic", value: analytics.issuesByType.epic },
-      ]
-    : [];
+  const typeChartData = useMemo(
+    () =>
+      analytics
+        ? [
+            { label: "Task", value: analytics.issuesByType.task },
+            { label: "Bug", value: analytics.issuesByType.bug },
+            { label: "Story", value: analytics.issuesByType.story },
+            { label: "Epic", value: analytics.issuesByType.epic },
+          ]
+        : [],
+    [analytics],
+  );
 
-  const priorityChartData = analytics
-    ? [
-        { label: "Highest", value: analytics.issuesByPriority.highest },
-        { label: "High", value: analytics.issuesByPriority.high },
-        { label: "Medium", value: analytics.issuesByPriority.medium },
-        { label: "Low", value: analytics.issuesByPriority.low },
-        { label: "Lowest", value: analytics.issuesByPriority.lowest },
-      ]
-    : [];
+  const priorityChartData = useMemo(
+    () =>
+      analytics
+        ? [
+            { label: "Highest", value: analytics.issuesByPriority.highest },
+            { label: "High", value: analytics.issuesByPriority.high },
+            { label: "Medium", value: analytics.issuesByPriority.medium },
+            { label: "Low", value: analytics.issuesByPriority.low },
+            { label: "Lowest", value: analytics.issuesByPriority.lowest },
+          ]
+        : [],
+    [analytics],
+  );
 
-  const velocityChartData = velocity
-    ? velocity.velocityData.map((v) => ({
-        label: v.sprintName,
-        value: v.points,
-      }))
-    : [];
+  const velocityChartData = useMemo(
+    () =>
+      velocity
+        ? velocity.velocityData.map((v) => ({
+            label: v.sprintName,
+            value: v.points,
+          }))
+        : [],
+    [velocity],
+  );
 
-  const assigneeChartData = analytics
-    ? Object.values(analytics.issuesByAssignee).map((a) => ({
-        label: a.name,
-        value: a.count,
-      }))
-    : [];
+  const assigneeChartData = useMemo(
+    () =>
+      analytics
+        ? Object.values(analytics.issuesByAssignee).map((a) => ({
+            label: a.name,
+            value: a.count,
+          }))
+        : [],
+    [analytics],
+  );
 
   if (!(analytics && velocity)) {
     return (

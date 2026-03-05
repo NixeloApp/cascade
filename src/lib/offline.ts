@@ -11,6 +11,20 @@ import { DAY, WEEK } from "@convex/lib/timeUtils";
 const DB_NAME = "NixeloOfflineDB";
 const DB_VERSION = 1;
 
+interface SyncManager {
+  register(tag: string): Promise<void>;
+}
+
+interface ServiceWorkerRegistrationWithSync extends ServiceWorkerRegistration {
+  sync: SyncManager;
+}
+
+function hasRegistrationSync(
+  registration: ServiceWorkerRegistration,
+): registration is ServiceWorkerRegistrationWithSync {
+  return "sync" in registration;
+}
+
 export interface OfflineMutation {
   id?: number;
   mutationType: string;
@@ -30,6 +44,50 @@ export interface CachedData {
 
 class OfflineDB {
   private db: IDBDatabase | null = null;
+
+  private async runStoreCleanup<T>(
+    storeName: "mutations" | "cachedData",
+    shouldDelete: (value: T) => boolean,
+  ): Promise<number> {
+    const db = await this.open();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([storeName], "readwrite");
+      const store = transaction.objectStore(storeName);
+      const request = store.openCursor();
+      let deleted = 0;
+
+      request.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
+        if (!cursor) {
+          resolve(deleted);
+          return;
+        }
+
+        const value = cursor.value as T;
+        if (shouldDelete(value)) {
+          cursor.delete();
+          deleted++;
+        }
+        cursor.continue();
+      };
+
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  private async runCachedDataWrite<T>(
+    operation: (store: IDBObjectStore) => IDBRequest<T>,
+  ): Promise<void> {
+    const db = await this.open();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(["cachedData"], "readwrite");
+      const store = transaction.objectStore("cachedData");
+      const request = operation(store);
+
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
 
   open(): Promise<IDBDatabase> {
     if (this.db) return Promise.resolve(this.db);
@@ -135,48 +193,25 @@ class OfflineDB {
   }
 
   async clearSyncedMutations(olderThan?: number): Promise<number> {
-    const db = await this.open();
     const cutoff = olderThan || Date.now() - DAY;
-
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(["mutations"], "readwrite");
-      const store = transaction.objectStore("mutations");
-      const request = store.openCursor();
-      let deleted = 0;
-
-      request.onsuccess = (event) => {
-        const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
-        if (cursor) {
-          const mutation = cursor.value as OfflineMutation;
-          if (mutation.status === "synced" && mutation.syncedAt && mutation.syncedAt < cutoff) {
-            cursor.delete();
-            deleted++;
-          }
-          cursor.continue();
-        } else {
-          resolve(deleted);
-        }
-      };
-
-      request.onerror = () => reject(request.error);
-    });
+    return this.runStoreCleanup<OfflineMutation>(
+      "mutations",
+      (mutation) =>
+        mutation.status === "synced" &&
+        mutation.syncedAt !== undefined &&
+        mutation.syncedAt < cutoff,
+    );
   }
 
   // Cache operations
   async setCachedData(key: string, data: unknown): Promise<void> {
-    const db = await this.open();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(["cachedData"], "readwrite");
-      const store = transaction.objectStore("cachedData");
-      const request = store.put({
+    return this.runCachedDataWrite((store) =>
+      store.put({
         key,
         data,
         timestamp: Date.now(),
-      });
-
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
+      }),
+    );
   }
 
   async getCachedData(key: string): Promise<unknown | null> {
@@ -195,43 +230,12 @@ class OfflineDB {
   }
 
   async deleteCachedData(key: string): Promise<void> {
-    const db = await this.open();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(["cachedData"], "readwrite");
-      const store = transaction.objectStore("cachedData");
-      const request = store.delete(key);
-
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
+    return this.runCachedDataWrite((store) => store.delete(key));
   }
 
   async clearOldCache(olderThan?: number): Promise<number> {
-    const db = await this.open();
     const cutoff = olderThan || Date.now() - WEEK;
-
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(["cachedData"], "readwrite");
-      const store = transaction.objectStore("cachedData");
-      const request = store.openCursor();
-      let deleted = 0;
-
-      request.onsuccess = (event) => {
-        const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
-        if (cursor) {
-          const cached = cursor.value as CachedData;
-          if (cached.timestamp < cutoff) {
-            cursor.delete();
-            deleted++;
-          }
-          cursor.continue();
-        } else {
-          resolve(deleted);
-        }
-      };
-
-      request.onerror = () => reject(request.error);
-    });
+    return this.runStoreCleanup<CachedData>("cachedData", (cached) => cached.timestamp < cutoff);
   }
 }
 
@@ -259,22 +263,35 @@ export class OfflineStatusManager {
     this.notifyListeners();
 
     // Trigger sync when coming back online
-    if ("serviceWorker" in navigator && this.hasSyncManager()) {
-      navigator.serviceWorker.ready.then((registration) => {
-        // Background Sync API - not in standard TypeScript libs
-        interface SyncManager {
-          register(tag: string): Promise<void>;
-        }
-        interface ServiceWorkerRegistrationWithSync extends ServiceWorkerRegistration {
-          sync: SyncManager;
-        }
-        return (registration as ServiceWorkerRegistrationWithSync).sync.register("sync-mutations");
-      });
+    if (this.canScheduleBackgroundSync()) {
+      this.scheduleBackgroundSync();
     }
   };
 
+  private scheduleBackgroundSync(): void {
+    navigator.serviceWorker.ready
+      .then((registration) => this.registerBackgroundSync(registration))
+      .catch((error: unknown) => {
+        console.warn("[offline] Failed waiting for service worker readiness", { error });
+      });
+  }
+
+  private registerBackgroundSync(registration: ServiceWorkerRegistration): Promise<void> {
+    if (!hasRegistrationSync(registration)) {
+      return Promise.resolve();
+    }
+
+    return registration.sync.register("sync-mutations").catch((error: unknown) => {
+      console.warn("[offline] Failed to register background sync", { error });
+    });
+  }
+
   private hasSyncManager(): boolean {
     return "sync" in ServiceWorkerRegistration.prototype;
+  }
+
+  private canScheduleBackgroundSync(): boolean {
+    return "serviceWorker" in navigator && this.hasSyncManager();
   }
 
   private handleOffline = () => {
@@ -337,22 +354,63 @@ export async function processOfflineQueue() {
   const pending = await offlineDB.getPendingMutations();
 
   for (const mutation of pending) {
-    if (!mutation.id) continue;
+    await processQueuedMutation(mutation);
+  }
+}
 
-    try {
-      await offlineDB.updateMutationStatus(mutation.id, "syncing");
+function getNextFailureStatus(attempts: number): "failed" | "pending" {
+  return attempts >= 3 ? "failed" : "pending";
+}
 
-      // Parse mutation args
-      const _args = JSON.parse(mutation.mutationArgs);
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
 
-      // Mark as synced
-      await offlineDB.updateMutationStatus(mutation.id, "synced");
-    } catch (error) {
-      await offlineDB.updateMutationStatus(
-        mutation.id,
-        mutation.attempts >= 3 ? "failed" : "pending",
-        error instanceof Error ? error.message : String(error),
-      );
-    }
+function validateQueuedMutationArgs(rawArgs: string): void {
+  // Parse stored payload to ensure queued entry is not corrupt before syncing.
+  JSON.parse(rawArgs);
+}
+
+async function persistMutationFailureStatus(
+  mutation: OfflineMutation,
+  nextStatus: "failed" | "pending",
+  error: unknown,
+): Promise<void> {
+  if (!mutation.id) return;
+
+  try {
+    await offlineDB.updateMutationStatus(mutation.id, nextStatus, getErrorMessage(error));
+  } catch (statusError) {
+    console.warn("[offline] Failed to persist queued mutation failure status", {
+      id: mutation.id,
+      mutationType: mutation.mutationType,
+      statusError,
+    });
+  }
+}
+
+async function processQueuedMutation(mutation: OfflineMutation): Promise<void> {
+  if (!mutation.id) {
+    console.warn("[offline] Skipping queued mutation without id", {
+      mutationType: mutation.mutationType,
+      timestamp: mutation.timestamp,
+    });
+    return;
+  }
+
+  try {
+    await offlineDB.updateMutationStatus(mutation.id, "syncing");
+    validateQueuedMutationArgs(mutation.mutationArgs);
+    await offlineDB.updateMutationStatus(mutation.id, "synced");
+  } catch (error) {
+    const nextStatus = getNextFailureStatus(mutation.attempts);
+    console.warn("[offline] Failed to process queued mutation", {
+      id: mutation.id,
+      mutationType: mutation.mutationType,
+      attempts: mutation.attempts,
+      nextStatus,
+      error,
+    });
+    await persistMutationFailureStatus(mutation, nextStatus, error);
   }
 }

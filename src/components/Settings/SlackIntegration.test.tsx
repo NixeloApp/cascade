@@ -97,4 +97,33 @@ describe("SlackIntegration", () => {
 
     await waitFor(() => expect(mockConnectSlack).not.toHaveBeenCalled());
   });
+
+  it("ignores malformed slack-connected payload from allowed origin", async () => {
+    const user = userEvent.setup();
+    render(<SlackIntegration />);
+
+    await user.click(screen.getByRole("button", { name: "Connect Slack" }));
+
+    expect(window.open).toHaveBeenCalledTimes(1);
+    const authUrl = vi.mocked(window.open).mock.calls[0]?.[0];
+    expect(typeof authUrl).toBe("string");
+    const popupOrigin = new URL(String(authUrl)).origin;
+
+    await act(async () => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          origin: popupOrigin,
+          data: {
+            type: "slack-connected",
+            data: {
+              teamId: "T123",
+              teamName: "Nixelo Team",
+            },
+          },
+        }),
+      );
+    });
+
+    await waitFor(() => expect(mockConnectSlack).not.toHaveBeenCalled());
+  });
 });

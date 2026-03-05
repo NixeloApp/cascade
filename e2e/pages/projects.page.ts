@@ -270,19 +270,35 @@ export class ProjectsPage extends BasePage {
     await this.page.locator("nav").getByText("Workspaces", { exact: true }).click();
     await this.page.waitForURL(/\/workspaces/, { timeout: 30000 });
 
-    await this.page.getByRole("button", { name: "+ Create Workspace" }).click();
+    const createWorkspaceDialog = this.page.getByRole("dialog").filter({
+      hasText: /create workspace/i,
+    });
+    const createWorkspaceForm = this.page.locator("#create-workspace-form");
 
-    await this.workspaceNameInput.waitFor({ state: "visible" });
+    await expect(async () => {
+      if (!(await createWorkspaceDialog.isVisible())) {
+        await this.newWorkspaceButton.click();
+      }
+      await expect(createWorkspaceDialog).toBeVisible();
+      await expect(this.workspaceNameInput).toBeVisible();
+    }).toPass();
+
     await this.workspaceNameInput.fill(name);
+    await expect(this.workspaceNameInput).toHaveValue(name);
     if (description) {
       await this.workspaceDescriptionInput.fill(description);
     }
-    await this.submitWorkspaceButton.click();
+
+    if (await createWorkspaceForm.isVisible()) {
+      await createWorkspaceForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
+    } else {
+      await this.submitWorkspaceButton.click();
+    }
 
     // Verify success
     await expect(this.page.getByText("Workspace created successfully")).toBeVisible();
     // Verify modal closed
-    await expect(this.page.getByRole("dialog")).not.toBeVisible();
+    await expect(createWorkspaceDialog).not.toBeVisible();
   }
 
   async cancelCreateProject() {

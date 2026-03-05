@@ -3,6 +3,12 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@/test/custom-render";
 
+// Test constants for magic number replacement
+const OPEN_TAB_COUNT = 7;
+const CLOSED_TAB_COUNT = 10;
+const ONE_DAY_MS = 86400000;
+const MIN_EXPECTED_CHECKBOXES = 2;
+
 // Types needed before mocks
 interface InboxIssueWithDetails {
   _id: Id<"inboxIssues">;
@@ -23,6 +29,8 @@ interface InboxIssueWithDetails {
 
 function createMockCounts(overrides = {}) {
   return {
+    open: 0,
+    closed: 0,
     pending: 0,
     snoozed: 0,
     accepted: 0,
@@ -33,29 +41,24 @@ function createMockCounts(overrides = {}) {
 }
 
 /**
- * MOCK LIMITATION: InboxList calls useQuery twice (api.inbox.list and api.inbox.getCounts).
- * The current mock uses call-order tracking (odd/even) to return different values,
- * but React re-renders cause unpredictable call counts across tests.
- *
- * Tests that depend on BOTH queries returning correct values are skipped.
- * Tests that only need loading state (undefined) or don't care about counts work fine.
- *
- * Proper fix would require:
- * - Mocking at the Convex API level (api.inbox.list vs api.inbox.getCounts)
- * - Using convex-test utilities for proper query mocking
- * - Or restructuring the component to use a single combined query
+ * InboxList calls two queries with different args shapes:
+ * - list: { projectId, tab }
+ * - getCounts: { projectId }
+ * Route mock responses based on args instead of call order so rerenders stay stable.
  */
 const mockData = {
   inboxIssues: undefined as InboxIssueWithDetails[] | undefined,
   counts: undefined as ReturnType<typeof createMockCounts> | undefined,
 };
 
-let queryCallIndex = 0;
-
 vi.mock("convex/react", () => ({
-  useQuery: vi.fn(() => {
-    const index = queryCallIndex++;
-    return index % 2 === 0 ? mockData.inboxIssues : mockData.counts;
+  useQuery: vi.fn((_query: unknown, args: unknown) => {
+    const queryArgs = args as { tab?: "open" | "closed"; projectId?: Id<"projects"> } | "skip";
+    if (queryArgs === "skip") return undefined;
+    if (queryArgs && typeof queryArgs === "object" && "tab" in queryArgs) {
+      return mockData.inboxIssues;
+    }
+    return mockData.counts;
   }),
   useMutation: vi.fn(() => vi.fn()),
 }));
@@ -105,7 +108,6 @@ function setupMocks(
   issues: InboxIssueWithDetails[] | undefined,
   counts: ReturnType<typeof createMockCounts> | undefined,
 ) {
-  queryCallIndex = 0;
   mockData.inboxIssues = issues;
   mockData.counts = counts;
 }
@@ -113,7 +115,6 @@ function setupMocks(
 describe("InboxList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    queryCallIndex = 0;
     mockData.inboxIssues = undefined;
     mockData.counts = undefined;
   });
@@ -129,15 +130,15 @@ describe("InboxList", () => {
   });
 
   describe("Empty State", () => {
-    // SKIPPED: Requires both queries to return correct values (issues=[], counts={...})
-    // but call-order mock is unreliable due to React re-renders
-    it.skip("should render empty state when no inbox issues", () => {
+    it("should render empty state when no inbox issues", () => {
       setupMocks([], createMockCounts());
 
       render(<InboxList projectId={"proj-1" as Id<"projects">} />);
 
-      expect(screen.getByText("Inbox empty")).toBeInTheDocument();
-      expect(screen.getByText(/no issues waiting for triage/i)).toBeInTheDocument();
+      expect(screen.getByText("No pending items")).toBeInTheDocument();
+      expect(
+        screen.getByText("All inbox issues have been triaged. New submissions will appear here."),
+      ).toBeInTheDocument();
     });
   });
 
@@ -151,16 +152,17 @@ describe("InboxList", () => {
       expect(screen.getByRole("tab", { name: /closed/i })).toBeInTheDocument();
     });
 
-    // SKIPPED: Requires counts query to return specific values for tab badges
-    it.skip("should show counts in tab labels", () => {
-      setupMocks([], createMockCounts({ pending: 5, snoozed: 2, accepted: 10 }));
+    it("should show counts in tab labels", () => {
+      setupMocks([], createMockCounts({ open: OPEN_TAB_COUNT, closed: CLOSED_TAB_COUNT }));
 
       render(<InboxList projectId={"proj-1" as Id<"projects">} />);
 
-      // Open tab shows pending + snoozed count
-      expect(screen.getByRole("tab", { name: /open.*7/i })).toBeInTheDocument();
-      // Closed tab shows closed counts
-      expect(screen.getByRole("tab", { name: /closed.*10/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("tab", { name: new RegExp(`open.*${OPEN_TAB_COUNT}`, "i") }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("tab", { name: new RegExp(`closed.*${CLOSED_TAB_COUNT}`, "i") }),
+      ).toBeInTheDocument();
     });
 
     it("should switch tabs when clicked", async () => {
@@ -177,8 +179,7 @@ describe("InboxList", () => {
   });
 
   describe("Issue Display", () => {
-    // SKIPPED: Requires issues query to return specific issue data
-    it.skip("should render pending inbox issues", () => {
+    it("should render pending inbox issues", () => {
       const issues = [
         createMockInboxIssue({
           status: "pending",
@@ -193,28 +194,38 @@ describe("InboxList", () => {
           } as Doc<"issues">,
         }),
       ];
-      setupMocks(issues, createMockCounts({ pending: 1 }));
+      setupMocks(issues, createMockCounts({ open: 1, pending: 1 }));
 
       render(<InboxList projectId={"proj-1" as Id<"projects">} />);
 
       expect(screen.getByText("BUG-123")).toBeInTheDocument();
       expect(screen.getByText("Login button not working")).toBeInTheDocument();
-      expect(screen.getByText("Pending")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /accept/i })).toBeInTheDocument();
     });
 
-    // SKIPPED: Requires issues query to return snoozed issue data
-    it.skip("should render snoozed issues with snooze badge", () => {
+    it("should render snoozed issues with snooze badge", () => {
       const issues = [
         createMockInboxIssue({
           status: "snoozed",
-          snoozedUntil: Date.now() + 86400000,
+          snoozedUntil: Date.now() + ONE_DAY_MS,
+          issue: {
+            _id: "issue-1" as Id<"issues">,
+            _creationTime: Date.now(),
+            key: "BUG-456",
+            title: "Snoozed issue",
+            status: "todo",
+            priority: "medium",
+            type: "bug",
+          } as Doc<"issues">,
         }),
       ];
-      setupMocks(issues, createMockCounts({ snoozed: 1 }));
+      setupMocks(issues, createMockCounts({ open: 1, snoozed: 1 }));
 
       render(<InboxList projectId={"proj-1" as Id<"projects">} />);
 
-      expect(screen.getByText("Snoozed")).toBeInTheDocument();
+      expect(screen.getByText("BUG-456")).toBeInTheDocument();
+      expect(screen.getByText("Snoozed issue")).toBeInTheDocument();
+      expect(screen.getByText(/Until /i)).toBeInTheDocument();
     });
 
     it("should render multiple issues", () => {
@@ -243,25 +254,25 @@ describe("InboxList", () => {
   });
 
   describe("Selection", () => {
-    // SKIPPED: Requires issues to render for checkbox to appear
-    it.skip("should show checkboxes for pending issues", () => {
+    it("should show checkboxes for pending issues", () => {
       const issues = [createMockInboxIssue({ status: "pending" })];
-      setupMocks(issues, createMockCounts({ pending: 1 }));
+      setupMocks(issues, createMockCounts({ open: 1, pending: 1 }));
 
       render(<InboxList projectId={"proj-1" as Id<"projects">} />);
 
-      expect(screen.getByRole("checkbox")).toBeInTheDocument();
+      expect(screen.getAllByRole("checkbox").length).toBeGreaterThanOrEqual(
+        MIN_EXPECTED_CHECKBOXES,
+      );
     });
 
-    // SKIPPED: Requires issues to render for checkbox interaction
-    it.skip("should toggle selection when checkbox is clicked", async () => {
+    it("should toggle selection when checkbox is clicked", async () => {
       const user = userEvent.setup();
       const issues = [createMockInboxIssue({ status: "pending" })];
-      setupMocks(issues, createMockCounts({ pending: 1 }));
+      setupMocks(issues, createMockCounts({ open: 1, pending: 1 }));
 
       render(<InboxList projectId={"proj-1" as Id<"projects">} />);
 
-      const checkbox = screen.getByRole("checkbox");
+      const checkbox = screen.getAllByRole("checkbox")[1];
       await user.click(checkbox);
 
       expect(checkbox).toBeChecked();
@@ -269,22 +280,21 @@ describe("InboxList", () => {
   });
 
   describe("Bulk Actions", () => {
-    // SKIPPED: Requires issues to render for selection and bulk actions
-    it.skip("should show bulk action buttons when items are selected", async () => {
+    it("should show bulk action buttons when items are selected", async () => {
       const user = userEvent.setup();
       const issues = [createMockInboxIssue({ status: "pending" })];
-      setupMocks(issues, createMockCounts({ pending: 1 }));
+      setupMocks(issues, createMockCounts({ open: 1, pending: 1 }));
 
       render(<InboxList projectId={"proj-1" as Id<"projects">} />);
 
       // Select an item
-      const checkbox = screen.getByRole("checkbox");
+      const checkbox = screen.getAllByRole("checkbox")[1];
       await user.click(checkbox);
 
       // Bulk action buttons should appear
-      expect(screen.getByRole("button", { name: /accept/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /decline/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /snooze/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /accept all/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /decline all/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /snooze 1 week/i })).toBeInTheDocument();
     });
 
     // SKIPPED: Requires issues to render for bulk accept flow

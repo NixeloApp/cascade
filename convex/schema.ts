@@ -11,6 +11,7 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { issueActivityFields, issuesFields, projectsFields } from "./schemaFields";
 import {
+  attendanceStatuses,
   auditMetadata,
   automationActionTypes,
   automationActionValue,
@@ -19,33 +20,50 @@ import {
   boardTypes,
   bookerAnswers,
   bookingFieldTypes,
+  bookingLocations,
+  bookingStatuses,
   botJobStatuses,
   calendarEventColors,
+  calendarEventTypes,
   calendarProviders,
   calendarStatuses,
   cancelledByOptions,
   chatRoles,
   ciStatuses,
+  customFieldTypes,
   dashboardLayout,
   emailDigests,
   employmentTypes,
+  freeUnitTypes,
   inboxIssueSources,
   inboxIssueStatuses,
   inviteRoles,
+  inviteStatuses,
+  invoiceStatuses,
   issuePriorities,
   issueTypes,
   linkTypes,
   meetingPlatforms,
   meetingStatuses,
+  oidcProviders,
+  organizationRoles,
   periodTypes,
   personas,
   projectRoles,
   proseMirrorSnapshot,
   prStates,
+  rateTypes,
+  reminderTypes,
+  serviceTypes,
   simplePriorities,
   sprintStatuses,
+  ssoConnectionTypes,
+  syncDirections,
+  teamRoles,
   webhookStatuses,
+  weekDays,
   workflowCategories,
+  workspaceRoles,
 } from "./validators";
 
 // =============================================================================
@@ -94,11 +112,7 @@ const applicationTables = {
   organizationMembers: defineTable({
     organizationId: v.id("organizations"),
     userId: v.id("users"),
-    role: v.union(
-      v.literal("owner"), // Full control, can't be removed
-      v.literal("admin"), // Manage members, settings, billing
-      v.literal("member"), // Use organization resources
-    ),
+    role: organizationRoles, // Full org membership role set
     addedBy: v.id("users"),
     joinedAt: v.optional(v.number()),
   })
@@ -111,7 +125,7 @@ const applicationTables = {
 
   ssoConnections: defineTable({
     organizationId: v.id("organizations"),
-    type: v.union(v.literal("saml"), v.literal("oidc")),
+    type: ssoConnectionTypes,
     name: v.string(), // "Okta", "Azure AD", "Google Workspace"
     isEnabled: v.boolean(),
     samlConfig: v.optional(
@@ -129,9 +143,7 @@ const applicationTables = {
     ),
     oidcConfig: v.optional(
       v.object({
-        provider: v.optional(
-          v.union(v.literal("google-workspace"), v.literal("microsoft-entra"), v.literal("okta")),
-        ),
+        provider: v.optional(oidcProviders),
         issuer: v.optional(v.string()),
         clientId: v.optional(v.string()),
         clientSecret: v.optional(v.string()),
@@ -178,12 +190,7 @@ const applicationTables = {
     invitedBy: v.id("users"),
     token: v.string(),
     expiresAt: v.number(),
-    status: v.union(
-      v.literal("pending"),
-      v.literal("accepted"),
-      v.literal("revoked"),
-      v.literal("expired"),
-    ),
+    status: inviteStatuses,
     acceptedBy: v.optional(v.id("users")),
     acceptedAt: v.optional(v.number()),
     revokedBy: v.optional(v.id("users")),
@@ -229,11 +236,7 @@ const applicationTables = {
   workspaceMembers: defineTable({
     workspaceId: v.id("workspaces"),
     userId: v.id("users"),
-    role: v.union(
-      v.literal("admin"), // Manage workspace settings and members
-      v.literal("editor"), // Create/edit workspace-level content
-      v.literal("member"), // View workspace resources
-    ),
+    role: workspaceRoles,
     addedBy: v.id("users"),
     isDeleted: v.optional(v.boolean()),
     deletedAt: v.optional(v.number()),
@@ -284,10 +287,7 @@ const applicationTables = {
   teamMembers: defineTable({
     teamId: v.id("teams"),
     userId: v.id("users"),
-    role: v.union(
-      v.literal("admin"), // Manage team members and settings
-      v.literal("member"),
-    ),
+    role: teamRoles,
     addedBy: v.id("users"),
     isDeleted: v.optional(v.boolean()),
     deletedAt: v.optional(v.number()),
@@ -774,16 +774,7 @@ const applicationTables = {
     projectId: v.id("projects"),
     name: v.string(),
     fieldKey: v.string(), // "customer_id"
-    fieldType: v.union(
-      v.literal("text"),
-      v.literal("number"),
-      v.literal("select"),
-      v.literal("multiselect"),
-      v.literal("date"),
-      v.literal("checkbox"),
-      v.literal("url"),
-      v.literal("user"),
-    ),
+    fieldType: customFieldTypes,
     options: v.optional(v.array(v.string())), // For select/multiselect
     isRequired: v.boolean(),
     description: v.optional(v.string()),
@@ -953,12 +944,7 @@ const applicationTables = {
     endTime: v.number(),
     allDay: v.boolean(),
     location: v.optional(v.string()),
-    eventType: v.union(
-      v.literal("meeting"),
-      v.literal("deadline"),
-      v.literal("timeblock"),
-      v.literal("personal"),
-    ),
+    eventType: calendarEventTypes,
     organizerId: v.id("users"),
     attendeeIds: v.array(v.id("users")),
     externalAttendees: v.optional(v.array(v.string())),
@@ -1001,7 +987,7 @@ const applicationTables = {
   meetingAttendance: defineTable({
     eventId: v.id("calendarEvents"),
     userId: v.id("users"),
-    status: v.union(v.literal("present"), v.literal("tardy"), v.literal("absent")),
+    status: attendanceStatuses,
     markedBy: v.id("users"),
     markedAt: v.number(),
     notes: v.optional(v.string()),
@@ -1014,7 +1000,7 @@ const applicationTables = {
   eventReminders: defineTable({
     eventId: v.id("calendarEvents"),
     userId: v.id("users"), // User to remind
-    reminderType: v.union(v.literal("email"), v.literal("push"), v.literal("in_app")),
+    reminderType: reminderTypes,
     minutesBefore: v.number(), // e.g., 15, 30, 60, 1440 (1 day)
     scheduledFor: v.number(), // Computed: event.startTime - minutesBefore * 60 * 1000
     sent: v.boolean(), // Has reminder been sent?
@@ -1027,15 +1013,7 @@ const applicationTables = {
 
   availabilitySlots: defineTable({
     userId: v.id("users"),
-    dayOfWeek: v.union(
-      v.literal("monday"),
-      v.literal("tuesday"),
-      v.literal("wednesday"),
-      v.literal("thursday"),
-      v.literal("friday"),
-      v.literal("saturday"),
-      v.literal("sunday"),
-    ),
+    dayOfWeek: weekDays,
     startTime: v.string(), // "09:00"
     endTime: v.string(), // "17:00"
     isActive: v.boolean(),
@@ -1055,14 +1033,7 @@ const applicationTables = {
     bufferTimeAfter: v.number(),
     minimumNotice: v.number(), // Hours
     maxBookingsPerDay: v.optional(v.number()),
-    location: v.union(
-      v.literal("phone"),
-      v.literal("zoom"),
-      v.literal("meet"),
-      v.literal("teams"),
-      v.literal("in-person"),
-      v.literal("custom"),
-    ),
+    location: bookingLocations,
     locationDetails: v.optional(v.string()),
     questions: v.optional(
       v.array(
@@ -1096,12 +1067,7 @@ const applicationTables = {
     timezone: v.string(),
     location: v.string(),
     locationDetails: v.optional(v.string()),
-    status: v.union(
-      v.literal("pending"),
-      v.literal("confirmed"),
-      v.literal("cancelled"),
-      v.literal("completed"),
-    ),
+    status: bookingStatuses,
     cancelledBy: v.optional(cancelledByOptions),
     cancellationReason: v.optional(v.string()),
     calendarEventId: v.optional(v.id("calendarEvents")),
@@ -1123,7 +1089,7 @@ const applicationTables = {
     refreshToken: v.optional(v.string()),
     expiresAt: v.optional(v.number()),
     syncEnabled: v.boolean(),
-    syncDirection: v.union(v.literal("import"), v.literal("export"), v.literal("bidirectional")),
+    syncDirection: syncDirections,
     lastSyncAt: v.optional(v.number()),
     updatedAt: v.number(),
   })
@@ -1488,7 +1454,7 @@ const applicationTables = {
     organizationId: v.id("organizations"),
     clientId: v.optional(v.id("clients")),
     number: v.string(),
-    status: v.union(v.literal("draft"), v.literal("sent"), v.literal("paid"), v.literal("overdue")),
+    status: invoiceStatuses,
     issueDate: v.number(),
     dueDate: v.number(),
     lineItems: v.array(
@@ -1591,7 +1557,7 @@ const applicationTables = {
     currency: v.string(),
     effectiveFrom: v.number(),
     effectiveTo: v.optional(v.number()),
-    rateType: v.union(v.literal("internal"), v.literal("billable")),
+    rateType: rateTypes,
     setBy: v.id("users"),
     notes: v.optional(v.string()),
     updatedAt: v.number(),
@@ -1605,7 +1571,7 @@ const applicationTables = {
 
   userProfiles: defineTable({
     userId: v.id("users"),
-    employmentType: v.union(v.literal("employee"), v.literal("contractor"), v.literal("intern")),
+    employmentType: employmentTypes,
     maxHoursPerWeek: v.optional(v.number()),
     maxHoursPerDay: v.optional(v.number()),
     requiresApproval: v.optional(v.boolean()),
@@ -1729,12 +1695,7 @@ const applicationTables = {
   // ===========================================================================
 
   serviceUsage: defineTable({
-    serviceType: v.union(
-      v.literal("transcription"),
-      v.literal("email"),
-      v.literal("sms"),
-      v.literal("ai"),
-    ),
+    serviceType: serviceTypes,
     provider: v.string(),
     month: v.string(), // "2025-11"
     unitsUsed: v.number(),
@@ -1750,15 +1711,10 @@ const applicationTables = {
     .index("by_provider_month", ["provider", "month"]),
 
   serviceProviders: defineTable({
-    serviceType: v.union(
-      v.literal("transcription"),
-      v.literal("email"),
-      v.literal("sms"),
-      v.literal("ai"),
-    ),
+    serviceType: serviceTypes,
     provider: v.string(),
     freeUnitsPerMonth: v.number(),
-    freeUnitsType: v.union(v.literal("monthly"), v.literal("one_time"), v.literal("yearly")),
+    freeUnitsType: freeUnitTypes,
     oneTimeUnitsRemaining: v.optional(v.number()),
     costPerUnit: v.number(), // Cents
     unitType: v.string(), // "minute", "email", etc.

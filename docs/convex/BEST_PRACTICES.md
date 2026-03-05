@@ -107,6 +107,36 @@ snapshot: v.any(),
 settings: v.any(), // Bad - define the shape instead
 ```
 
+### Shared Enum Validators
+
+Prefer shared enum validators from `convex/validators` when the same value set appears in multiple places (schema fields, mutation/query args, return validators).
+
+```typescript
+// ✅ DO: Define once in convex/validators/index.ts
+export const customFieldTypes = literals(
+  "text",
+  "number",
+  "select",
+  "multiselect",
+  "date",
+  "checkbox",
+  "url",
+  "user",
+);
+
+// ✅ DO: Reuse in schema + function args
+fieldType: customFieldTypes,
+```
+
+```typescript
+// ❌ DON'T: Duplicate literal unions in multiple files
+fieldType: v.union(
+  v.literal("text"),
+  v.literal("number"),
+  // ...
+),
+```
+
 ### Soft Delete Pattern
 
 Always use soft delete for user data:

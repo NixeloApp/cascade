@@ -223,7 +223,7 @@ export function IssuesCalendarView({
                   size="xs"
                   onClick={() => setCreateForDate(dayDueTimestamp)}
                   aria-label={`Create issue for ${day}`}
-                  className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 transition-opacity"
+                  className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:focus:opacity-100 transition-opacity"
                 >
                   <Plus className="w-3 h-3" />
                 </IconButton>
