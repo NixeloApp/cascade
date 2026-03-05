@@ -47,6 +47,16 @@ Note:
 - For release/PR reliability gating, use the Required Gate Command exactly:
   - `pnpm exec playwright test --reporter=line`
 
+### Script Mapping
+
+| Script | Underlying command |
+| ------ | ------------------ |
+| `pnpm e2e` | `playwright test` |
+| `pnpm e2e:ui` | `playwright test --ui` |
+| `pnpm e2e:headed` | `playwright test --headed` |
+| `pnpm e2e:debug` | `playwright test --debug` |
+| `pnpm e2e:cross-browser:smoke` | `E2E_CROSS_BROWSER=1 playwright test e2e/landing.spec.ts --workers=1 --reporter=line` |
+
 ## PR Review Checklist (E2E Reliability)
 
 Use this checklist for any PR that modifies `e2e/` specs, fixtures, page objects, or E2E utilities:
