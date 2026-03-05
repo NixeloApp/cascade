@@ -10,6 +10,7 @@ import { v } from "convex/values";
 import { api } from "../_generated/api";
 import { type ActionCtx, action } from "../_generated/server";
 import { unauthenticated } from "../lib/errors";
+import { logger } from "../lib/logger";
 import { getAIConfig } from "./config";
 import { type AIMessage, callAI } from "./providers";
 
@@ -173,7 +174,8 @@ Format your response as JSON with keys: description, priority, priorityReason, l
         response.content,
       ];
       suggestions = JSON.parse(jsonMatch[1] || response.content) as Record<string, unknown>;
-    } catch (_error) {
+    } catch (error) {
+      logger.warn("AI suggestion response was not valid JSON, returning raw content", { error });
       suggestions = { raw: response.content };
     }
 
@@ -274,7 +276,10 @@ Format as JSON with keys: healthScore (0-100), risks (array), recommendations (a
         response.content,
       ];
       insights = JSON.parse(jsonMatch[1] || response.content) as Record<string, unknown>;
-    } catch (_error) {
+    } catch (error) {
+      logger.warn("AI project insights response was not valid JSON, returning raw content", {
+        error,
+      });
       insights = { raw: response.content };
     }
 
