@@ -8,7 +8,12 @@ import { projectQuery, sprintQuery } from "./customFunctions";
 import { batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { efficientCount } from "./lib/boundedQueries";
 import { logQueryPayloadTelemetry } from "./lib/payloadTelemetry";
-import { MAX_PAGE_SIZE, MAX_SPRINT_ISSUES, MAX_VELOCITY_SPRINTS } from "./lib/queryLimits";
+import {
+  clampLimit,
+  MAX_PAGE_SIZE,
+  MAX_SPRINT_ISSUES,
+  MAX_VELOCITY_SPRINTS,
+} from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { DAY } from "./lib/timeUtils";
 
@@ -402,7 +407,7 @@ export const getTeamVelocity = projectQuery({
 export const getRecentActivity = projectQuery({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const limit = args.limit || 20;
+    const limit = clampLimit(args.limit, 20);
 
     // Optimization: Fetch top recently updated issues for the project
     // This avoids scanning the global issueActivity table and filtering in memory
@@ -433,7 +438,7 @@ export const getRecentActivity = projectQuery({
     const issueMap = new Map(issues.map((i) => [i._id, i]));
 
     // Batch fetch users
-    const userIds = allActivities.map((a) => a.userId);
+    const userIds = [...new Set(allActivities.map((a) => a.userId))];
     const userMap = await batchFetchUsers(ctx, userIds);
 
     // Enrich
