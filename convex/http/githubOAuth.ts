@@ -519,8 +519,9 @@ export const listReposHandler = async (ctx: ActionCtx, request: Request) => {
         throw validation("github", "GitHub repositories response is not an array");
       }
       repos = json;
-    } catch (_e) {
-      if (isAppError(_e)) throw _e;
+    } catch (error) {
+      if (isAppError(error)) throw error;
+      logger.error("GitHub OAuth error: Invalid repositories JSON response", { error });
       throw validation("github", "Invalid JSON response from GitHub repositories endpoint");
     }
 
