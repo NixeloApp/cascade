@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { createWorkspaceFromDialog } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -8,9 +9,6 @@ import { BasePage } from "./base.page";
  */
 export class WorkspacesPage extends BasePage {
   readonly newWorkspaceButton: Locator;
-  readonly workspaceNameInput: Locator;
-  readonly workspaceDescriptionInput: Locator;
-  readonly submitWorkspaceButton: Locator;
   readonly workspaceList: Locator;
   readonly workspaceCards: Locator;
 
@@ -21,9 +19,6 @@ export class WorkspacesPage extends BasePage {
     this.newWorkspaceButton = page.getByRole("button", {
       name: /\+ Create Workspace|Create Workspace/i,
     });
-    this.workspaceNameInput = page.locator("#workspace-name");
-    this.workspaceDescriptionInput = page.locator("#workspace-description");
-    this.submitWorkspaceButton = page.getByRole("button", { name: /create workspace/i });
     this.workspaceList = page.getByRole("main").locator("a[href*='/workspaces/']").locator("..");
     this.workspaceCards = page.locator("a[href*='/workspaces/']");
   }
@@ -78,50 +73,29 @@ export class WorkspacesPage extends BasePage {
     // Wait for button to be ready - use first() to get the header button (not empty state)
     const createButton = this.newWorkspaceButton.first();
     await createButton.waitFor({ state: "visible" });
+    const createWorkspaceDialog = this.page.getByRole("dialog").filter({
+      hasText: /create workspace/i,
+    });
+    const workspaceNameInput = createWorkspaceDialog.getByLabel(/workspace name/i);
+    const workspaceDescriptionInput = createWorkspaceDialog.getByLabel(/description/i);
+    const submitWorkspaceButton = createWorkspaceDialog.getByRole("button", {
+      name: /create workspace/i,
+    });
 
-    // Click and retry until modal opens
-    await expect(async () => {
-      // Press Escape first to clear any existing modal state
-      await this.page.keyboard.press("Escape");
-      await createButton.scrollIntoViewIfNeeded();
-      await createButton.click();
-      // Wait for modal dialog to appear
-      const modal = this.page.getByRole("dialog");
-      await expect(modal).toBeVisible();
-    }).toPass();
-
-    // Fill and submit with retry - handles form timing issues
-    await expect(async () => {
-      // Ensure input is ready
-      await expect(this.workspaceNameInput).toBeVisible();
-      await expect(this.workspaceNameInput).toBeEnabled();
-
-      // Fill with name
-      await this.workspaceNameInput.fill(name);
-
-      // Verify the value was filled correctly
-      await expect(this.workspaceNameInput).toHaveValue(name);
-
-      if (description) {
-        await expect(this.workspaceDescriptionInput).toBeVisible();
-        await expect(this.workspaceDescriptionInput).toBeEnabled();
-        await this.workspaceDescriptionInput.fill(description);
-      }
-
-      // Submit
-      await this.submitWorkspaceButton.click();
-
-      // Wait for success toast
-      await expect(
-        this.page
-          .getByText(/workspace created/i)
-          .or(this.page.locator("[data-sonner-toast]"))
-          .first(),
-      ).toBeVisible();
-    }).toPass();
-
-    // Wait for modal to close (name input disappears)
-    await expect(this.workspaceNameInput).not.toBeVisible();
+    await createWorkspaceFromDialog({
+      dialog: createWorkspaceDialog,
+      nameInput: workspaceNameInput,
+      descriptionInput: workspaceDescriptionInput,
+      submitButton: submitWorkspaceButton,
+      workspaceName: name,
+      workspaceDescription: description,
+      openDialog: async () => {
+        // Press Escape first to clear any existing modal state
+        await this.page.keyboard.press("Escape");
+        await createButton.scrollIntoViewIfNeeded();
+        await createButton.click();
+      },
+    });
 
     // After workspace creation, the page may redirect to the workspace detail page
     // Wait for either the workspace to appear in the list OR the workspace detail page to load

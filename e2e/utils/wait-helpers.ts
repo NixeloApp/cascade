@@ -5,7 +5,7 @@
  * meaningful waits for specific conditions.
  */
 
-import { type APIRequestContext, expect, type Page } from "@playwright/test";
+import { type APIRequestContext, expect, type Locator, type Page } from "@playwright/test";
 
 /**
  * Wait timeouts used across tests.
@@ -202,6 +202,61 @@ export async function waitForIssueCreateSuccess(
       .first();
     await expect(issueCard).toBeVisible();
   }
+}
+
+type WorkspaceCreationDialogOptions = {
+  dialog: Locator;
+  nameInput: Locator;
+  descriptionInput?: Locator;
+  submitButton: Locator;
+  createForm?: Locator;
+  workspaceName: string;
+  workspaceDescription?: string;
+  openDialog: () => Promise<void>;
+};
+
+/**
+ * Deterministically create a workspace through the "Create Workspace" modal dialog.
+ * Shared by page objects to avoid duplicated retry/open/fill/submit logic.
+ */
+export async function createWorkspaceFromDialog(
+  options: WorkspaceCreationDialogOptions,
+): Promise<void> {
+  const {
+    dialog,
+    nameInput,
+    descriptionInput,
+    submitButton,
+    createForm,
+    workspaceName,
+    workspaceDescription,
+    openDialog,
+  } = options;
+
+  await expect(async () => {
+    if (!(await dialog.isVisible())) {
+      await openDialog();
+    }
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: /create workspace/i })).toBeVisible();
+    await expect(nameInput).toBeVisible();
+    await expect(nameInput).toBeEnabled();
+  }).toPass();
+
+  await nameInput.fill(workspaceName);
+  await expect(nameInput).toHaveValue(workspaceName);
+
+  if (workspaceDescription && descriptionInput) {
+    await descriptionInput.fill(workspaceDescription);
+  }
+
+  if (createForm && (await createForm.isVisible())) {
+    await createForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
+  } else {
+    await submitButton.click();
+  }
+
+  await expect(dialog).not.toBeVisible();
 }
 
 /**

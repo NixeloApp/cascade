@@ -1,7 +1,11 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { waitForBoardLoaded, waitForIssueCreateSuccess } from "../utils/wait-helpers";
+import {
+  createWorkspaceFromDialog,
+  waitForBoardLoaded,
+  waitForIssueCreateSuccess,
+} from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -70,11 +74,6 @@ export class ProjectsPage extends BasePage {
   readonly startTimerButton: Locator;
   readonly stopTimerButton: Locator;
   readonly timerStoppedToast: Locator;
-
-  // Workspace creation
-  readonly workspaceNameInput: Locator;
-  readonly workspaceDescriptionInput: Locator;
-  readonly submitWorkspaceButton: Locator;
 
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
@@ -157,11 +156,6 @@ export class ProjectsPage extends BasePage {
     this.startTimerButton = this.issueDetailDialog.getByRole("button", { name: "Start Timer" });
     this.stopTimerButton = this.issueDetailDialog.getByRole("button", { name: /stop timer|stop/i });
     this.timerStoppedToast = page.getByText(/Timer stopped/i);
-
-    // Workspace creation
-    this.workspaceNameInput = page.getByLabel(/workspace name/i);
-    this.workspaceDescriptionInput = page.getByLabel(/description/i);
-    this.submitWorkspaceButton = page.getByRole("button", { name: /create workspace/i });
   }
 
   /**
@@ -280,32 +274,20 @@ export class ProjectsPage extends BasePage {
       name: /create workspace/i,
     });
 
-    await expect(async () => {
-      if (!(await createWorkspaceDialog.isVisible())) {
+    await createWorkspaceFromDialog({
+      dialog: createWorkspaceDialog,
+      nameInput: workspaceNameInput,
+      descriptionInput: workspaceDescriptionInput,
+      submitButton: submitWorkspaceButton,
+      createForm: createWorkspaceForm,
+      workspaceName: name,
+      workspaceDescription: description,
+      openDialog: async () => {
         await this.newWorkspaceButton.click();
-      }
-      await expect(createWorkspaceDialog).toBeVisible();
-      await expect(
-        createWorkspaceDialog.getByRole("heading", { name: /create workspace/i }),
-      ).toBeVisible();
-      await expect(workspaceNameInput).toBeVisible();
-      await expect(workspaceNameInput).toBeEnabled();
-    }).toPass();
-
-    await workspaceNameInput.fill(name);
-    await expect(workspaceNameInput).toHaveValue(name);
-    if (description) {
-      await workspaceDescriptionInput.fill(description);
-    }
-
-    if (await createWorkspaceForm.isVisible()) {
-      await createWorkspaceForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
-    } else {
-      await submitWorkspaceButton.click();
-    }
+      },
+    });
 
     // Deterministic completion: modal closes and workspace route remains active.
-    await expect(createWorkspaceDialog).not.toBeVisible();
     await expect(this.page).toHaveURL(/\/workspaces(\/[^/?#]+)?(?:[/?#]|$)/);
   }
 
