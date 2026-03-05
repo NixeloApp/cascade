@@ -185,6 +185,12 @@ describe("Slack integration", () => {
     // Drain all nested scheduled work to avoid timing-related flakiness.
     await t.finishAllScheduledFunctions(() => {});
 
-    expect(mockSafeFetch).toHaveBeenCalled();
+    expect(mockSafeFetch).toHaveBeenCalledWith(
+      "https://hooks.slack.com/services/T/B/comment",
+      expect.objectContaining({
+        method: "POST",
+        body: expect.stringContaining("SLC-1: Comment hook"),
+      }),
+    );
   });
 });
