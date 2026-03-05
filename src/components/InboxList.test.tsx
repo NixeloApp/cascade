@@ -253,15 +253,14 @@ describe("InboxList", () => {
       expect(screen.getAllByRole("checkbox").length).toBeGreaterThanOrEqual(2);
     });
 
-    // SKIPPED: Requires issues to render for checkbox interaction
-    it.skip("should toggle selection when checkbox is clicked", async () => {
+    it("should toggle selection when checkbox is clicked", async () => {
       const user = userEvent.setup();
       const issues = [createMockInboxIssue({ status: "pending" })];
-      setupMocks(issues, createMockCounts({ pending: 1 }));
+      setupMocks(issues, createMockCounts({ open: 1, pending: 1 }));
 
       render(<InboxList projectId={"proj-1" as Id<"projects">} />);
 
-      const checkbox = screen.getByRole("checkbox");
+      const checkbox = screen.getAllByRole("checkbox")[1];
       await user.click(checkbox);
 
       expect(checkbox).toBeChecked();
