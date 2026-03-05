@@ -2,6 +2,7 @@ import { anyApi } from "convex/server";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { getPortalValidationRateLimitKeys } from "./clientPortal";
+import { DAY } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -282,5 +283,53 @@ describe("clientPortal", () => {
         },
       }),
     ).rejects.toThrow(/deleted projects/i);
+  });
+
+  it("rejects portal token expiry values that are past or too far in the future", async () => {
+    const t = convexTest(schema, modules);
+    const { asUser, organizationId, userId } = await createTestContext(t);
+
+    const { clientId } = await asUser.mutation(clientsApi.create, {
+      organizationId,
+      name: "Expiry Validation Client",
+      email: "expiry@example.com",
+    });
+
+    const projectId = await createProjectInOrganization(t, userId, organizationId, {
+      name: "Expiry Scope",
+      key: "EXP",
+    });
+
+    const now = Date.now();
+
+    await expect(
+      asUser.mutation(clientPortalApi.generateToken, {
+        organizationId,
+        clientId,
+        projectIds: [projectId],
+        permissions: {
+          viewIssues: true,
+          viewDocuments: false,
+          viewTimeline: false,
+          addComments: false,
+        },
+        expiresAt: now - 1,
+      }),
+    ).rejects.toThrow(/in the future/i);
+
+    await expect(
+      asUser.mutation(clientPortalApi.generateToken, {
+        organizationId,
+        clientId,
+        projectIds: [projectId],
+        permissions: {
+          viewIssues: true,
+          viewDocuments: false,
+          viewTimeline: false,
+          addComments: false,
+        },
+        expiresAt: now + 366 * DAY,
+      }),
+    ).rejects.toThrow(/one year/i);
   });
 });

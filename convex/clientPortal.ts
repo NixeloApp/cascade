@@ -9,6 +9,7 @@ import type { Id } from "./_generated/dataModel";
 import { type MutationCtx, mutation, type QueryCtx, query } from "./_generated/server";
 import { organizationAdminMutation } from "./customFunctions";
 import { forbidden, notFound } from "./lib/errors";
+import { DAY } from "./lib/timeUtils";
 import { rateLimit } from "./rateLimits";
 
 function buildPortalToken(): string {
@@ -49,6 +50,20 @@ async function assertProjectsForOrganization(
 
 function isTokenExpired(expiresAt?: number): boolean {
   return typeof expiresAt === "number" && expiresAt <= Date.now();
+}
+
+const MAX_PORTAL_TOKEN_TTL = 365 * DAY;
+
+function assertPortalExpiry(expiresAt: number | undefined, now: number) {
+  if (expiresAt === undefined) return;
+
+  if (expiresAt <= now) {
+    throw forbidden("admin", "Portal token expiry must be in the future");
+  }
+
+  if (expiresAt > now + MAX_PORTAL_TOKEN_TTL) {
+    throw forbidden("admin", "Portal token expiry cannot exceed one year");
+  }
 }
 
 function normalizePortalRequesterKey(requesterKey?: string): string {
@@ -134,6 +149,7 @@ export const generateToken = organizationAdminMutation({
 
     const token = buildPortalToken();
     const now = Date.now();
+    assertPortalExpiry(args.expiresAt, now);
     const tokenId = await ctx.db.insert("clientPortalTokens", {
       organizationId: ctx.organizationId,
       clientId: args.clientId,
