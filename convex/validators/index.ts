@@ -65,7 +65,7 @@ export const auditActions = literals(
   "test",
 );
 export const auditTargetTypes = literals(
-  "apiKey",
+  "api_key",
   "user",
   "project",
   "team",
