@@ -24,6 +24,20 @@ export const issuePriorities = literals("lowest", "low", "medium", "high", "high
 export const simplePriorities = literals("low", "medium", "high");
 export const boardTypes = literals("kanban", "scrum");
 export const workflowCategories = literals("todo", "inprogress", "done");
+export const issueActivityActions = literals(
+  "created",
+  "updated",
+  "commented",
+  "archived",
+  "restored",
+  "deleted",
+  "attached",
+  "removed",
+  "linked",
+  "unlinked",
+  "started_watching",
+  "stopped_watching",
+);
 
 // Roles
 export const projectRoles = literals("admin", "editor", "viewer");

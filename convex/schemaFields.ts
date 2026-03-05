@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import {
   boardTypes,
+  issueActivityActions,
   issuePriorities,
   issueTypesWithSubtask,
   workflowCategories,
@@ -88,7 +89,7 @@ export const issuesFields = {
 export const issueActivityFields = {
   issueId: v.id("issues"),
   userId: v.id("users"),
-  action: v.string(), // "created", "updated", "commented", "assigned", etc.
+  action: issueActivityActions,
   field: v.optional(v.string()), // Field that was changed
   oldValue: v.optional(v.string()),
   newValue: v.optional(v.string()),
