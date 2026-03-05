@@ -33,6 +33,7 @@ export const nullableOrganizationRoles = nullable(organizationRoles); // For ret
 export const workspaceRoles = literals("admin", "editor", "member");
 export const teamRoles = literals("admin", "member");
 export const inviteRoles = literals("user", "superAdmin");
+export const inviteStatuses = literals("pending", "accepted", "revoked", "expired");
 export const chatRoles = literals("user", "assistant", "system");
 
 // Statuses
