@@ -93,6 +93,19 @@ Make E2E tests deterministic and locally verifiable with one rule: run the full 
 - [ ] Core flows (`auth`, `issue create/edit`, `board drag/drop`, `docs`, `search`) are stable.
 - [ ] E2E authoring standard is documented and enforced in reviews.
 
+## Blocker Update (2026-03-04)
+
+- Local full-suite run command:
+  - `pnpm exec playwright test --reporter=line`
+- Concrete failure observed during run:
+  - `e2e/analytics.spec.ts:26:3` (`Analytics Dashboard › analytics page displays key metrics`)
+  - timeout waiting for workspace-create modal input:
+    - `projects.page.ts:275` `workspaceNameInput.waitFor({ state: "visible" })`
+- Blocker classification:
+  - Active test reliability failure (not a summary/reporting artifact).
+- Next step:
+  - harden workspace-create flow in `e2e/pages/projects.page.ts` with deterministic modal readiness signal before filling fields, then rerun full local suite.
+
 ## Related Files
 
 - `playwright.config.ts`
