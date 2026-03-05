@@ -8,6 +8,7 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import { DAY } from "@convex/lib/timeUtils";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -47,8 +48,6 @@ const TIMELINE_SPANS: { value: TimelineSpan; label: string }[] = [
   { value: 6, label: "6 Months" },
   { value: 12, label: "1 Year" },
 ];
-const DAY_MS = 1000 * 60 * 60 * 24;
-
 /** Dependency line data for rendering SVG arrows */
 interface DependencyLine {
   fromX: number;
@@ -106,7 +105,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
       { length: timelineSpan },
       (_, index) => new Date(today.getFullYear(), today.getMonth() + index, 1),
     );
-    const days = Math.max(1, Math.floor((end.getTime() - start.getTime()) / DAY_MS));
+    const days = Math.max(1, Math.floor((end.getTime() - start.getTime()) / DAY));
 
     return {
       startOfMonth: start,
@@ -118,7 +117,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   const getPositionOnTimeline = useCallback(
     (date: number) => {
       const issueDate = new Date(date);
-      const daysSinceStart = Math.floor((issueDate.getTime() - startOfMonth.getTime()) / DAY_MS);
+      const daysSinceStart = Math.floor((issueDate.getTime() - startOfMonth.getTime()) / DAY);
       return (daysSinceStart / totalDays) * 100;
     },
     [startOfMonth, totalDays],
@@ -128,7 +127,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   const getDateFromPosition = useCallback(
     (percent: number) => {
       const days = Math.round((percent / 100) * totalDays);
-      const date = new Date(startOfMonth.getTime() + days * DAY_MS);
+      const date = new Date(startOfMonth.getTime() + days * DAY);
       // Set to end of day for due dates
       date.setHours(23, 59, 59, 999);
       return date.getTime();
@@ -283,9 +282,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     // Inline position calculator using closure over totalDays and startOfMonth
     const getPos = (date: number) => {
       const issueDate = new Date(date);
-      const daysSinceStart = Math.floor(
-        (issueDate.getTime() - startOfMonth.getTime()) / (1000 * 60 * 60 * 24),
-      );
+      const daysSinceStart = Math.floor((issueDate.getTime() - startOfMonth.getTime()) / DAY);
       return (daysSinceStart / totalDays) * 100;
     };
 
