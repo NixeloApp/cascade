@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { type OfflineMutation, offlineDB, offlineStatus } from "../lib/offline";
 
+function logOfflineError(operation: string, error: unknown) {
+  console.warn(`[offline] ${operation}`, { error });
+}
+
 /**
  * Hook to track online/offline status
  */
@@ -34,7 +38,8 @@ export function useOfflineSyncStatus() {
           setPending(mutations);
           setIsLoading(false);
         }
-      } catch (_error) {
+      } catch (error) {
+        logOfflineError("load pending sync mutations failed", error);
         if (mounted) {
           setIsLoading(false);
         }
@@ -72,8 +77,8 @@ export function useOfflineQueue() {
     try {
       const mutations = await offlineDB.getPendingMutations();
       setQueue(mutations);
-    } catch (_error) {
-      // Silently ignore errors when refreshing queue - queue will remain in current state
+    } catch (error) {
+      logOfflineError("refresh queue failed", error);
     } finally {
       setIsLoading(false);
     }
