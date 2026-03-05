@@ -37,6 +37,7 @@ import {
   linkTypes,
   meetingPlatforms,
   meetingStatuses,
+  organizationRoles,
   periodTypes,
   personas,
   projectRoles,
@@ -44,8 +45,10 @@ import {
   prStates,
   simplePriorities,
   sprintStatuses,
+  teamRoles,
   webhookStatuses,
   workflowCategories,
+  workspaceRoles,
 } from "./validators";
 
 // =============================================================================
@@ -94,11 +97,7 @@ const applicationTables = {
   organizationMembers: defineTable({
     organizationId: v.id("organizations"),
     userId: v.id("users"),
-    role: v.union(
-      v.literal("owner"), // Full control, can't be removed
-      v.literal("admin"), // Manage members, settings, billing
-      v.literal("member"), // Use organization resources
-    ),
+    role: organizationRoles, // Full org membership role set
     addedBy: v.id("users"),
     joinedAt: v.optional(v.number()),
   })
@@ -229,11 +228,7 @@ const applicationTables = {
   workspaceMembers: defineTable({
     workspaceId: v.id("workspaces"),
     userId: v.id("users"),
-    role: v.union(
-      v.literal("admin"), // Manage workspace settings and members
-      v.literal("editor"), // Create/edit workspace-level content
-      v.literal("member"), // View workspace resources
-    ),
+    role: workspaceRoles,
     addedBy: v.id("users"),
     isDeleted: v.optional(v.boolean()),
     deletedAt: v.optional(v.number()),
@@ -284,10 +279,7 @@ const applicationTables = {
   teamMembers: defineTable({
     teamId: v.id("teams"),
     userId: v.id("users"),
-    role: v.union(
-      v.literal("admin"), // Manage team members and settings
-      v.literal("member"),
-    ),
+    role: teamRoles,
     addedBy: v.id("users"),
     isDeleted: v.optional(v.boolean()),
     deletedAt: v.optional(v.number()),
