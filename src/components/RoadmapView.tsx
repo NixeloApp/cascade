@@ -246,7 +246,6 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-    // biome-ignore lint/correctness/useExhaustiveDependencies: getPositionOnTimeline uses component-level timeRange which is stable
   }, [resizing, getDateFromPosition, getPositionOnTimeline, updateIssue]);
 
   // Keyboard navigation
