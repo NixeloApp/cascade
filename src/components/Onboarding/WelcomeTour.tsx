@@ -39,8 +39,8 @@ export function WelcomeTour({ onComplete, onSkip }: WelcomeTourProps) {
         if (mounted) {
           setDriverFn(() => driver);
         }
-      } catch (_error) {
-        // Fail silently
+      } catch (error) {
+        console.warn("[onboarding] Failed to lazy-load Driver.js tour", { error });
       }
     };
 

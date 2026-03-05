@@ -43,8 +43,8 @@ export function LazyPostHog({ apiKey, options, children }: LazyPostHogProps) {
         if (mounted) {
           setPostHogProvider(() => Provider);
         }
-      } catch (_error) {
-        // Fail silently
+      } catch (error) {
+        console.warn("[analytics] Failed to lazy-load PostHog provider", { error });
       }
     };
 
