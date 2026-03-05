@@ -263,7 +263,7 @@ export class OfflineStatusManager {
     this.notifyListeners();
 
     // Trigger sync when coming back online
-    if ("serviceWorker" in navigator && this.hasSyncManager()) {
+    if (this.canScheduleBackgroundSync()) {
       this.scheduleBackgroundSync();
     }
   };
@@ -288,6 +288,10 @@ export class OfflineStatusManager {
 
   private hasSyncManager(): boolean {
     return "sync" in ServiceWorkerRegistration.prototype;
+  }
+
+  private canScheduleBackgroundSync(): boolean {
+    return "serviceWorker" in navigator && this.hasSyncManager();
   }
 
   private handleOffline = () => {
