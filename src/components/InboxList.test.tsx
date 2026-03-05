@@ -268,22 +268,21 @@ describe("InboxList", () => {
   });
 
   describe("Bulk Actions", () => {
-    // SKIPPED: Requires issues to render for selection and bulk actions
-    it.skip("should show bulk action buttons when items are selected", async () => {
+    it("should show bulk action buttons when items are selected", async () => {
       const user = userEvent.setup();
       const issues = [createMockInboxIssue({ status: "pending" })];
-      setupMocks(issues, createMockCounts({ pending: 1 }));
+      setupMocks(issues, createMockCounts({ open: 1, pending: 1 }));
 
       render(<InboxList projectId={"proj-1" as Id<"projects">} />);
 
       // Select an item
-      const checkbox = screen.getByRole("checkbox");
+      const checkbox = screen.getAllByRole("checkbox")[1];
       await user.click(checkbox);
 
       // Bulk action buttons should appear
-      expect(screen.getByRole("button", { name: /accept/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /decline/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /snooze/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /accept all/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /decline all/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /snooze 1 week/i })).toBeInTheDocument();
     });
 
     // SKIPPED: Requires issues to render for bulk accept flow
