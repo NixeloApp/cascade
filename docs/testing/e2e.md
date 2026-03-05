@@ -127,7 +127,7 @@ e2e/
 ├── global-setup.ts            # Pre-test setup (creates users, seeds data)
 ├── global-teardown.ts         # Post-test cleanup
 │
-│── # Test specs (20 files)
+│── # Test specs (representative examples)
 ├── auth.spec.ts               # Authentication tests
 ├── auth-comprehensive.spec.ts # Extended auth flow tests
 ├── calendar.spec.ts           # Calendar tests
