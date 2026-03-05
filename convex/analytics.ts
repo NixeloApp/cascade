@@ -209,21 +209,24 @@ export const getSprintBurndown = sprintQuery({
       .filter(notDeleted)
       .take(MAX_SPRINT_ISSUES);
 
-    // Calculate total points (using storyPoints, fallback to estimatedHours)
-    const totalPoints = sprintIssues.reduce(
-      (sum, issue) => sum + (issue.storyPoints || issue.estimatedHours || 0),
-      0,
-    );
-
     // Get done states
     const doneStateIds = ctx.project.workflowStates
       .filter((s) => s.category === "done")
       .map((s) => s.id);
     const doneStates = new Set(doneStateIds);
 
-    const completedPoints = sprintIssues
-      .filter((issue) => doneStates.has(issue.status))
-      .reduce((sum, issue) => sum + (issue.storyPoints || issue.estimatedHours || 0), 0);
+    // Single pass over sprint issues for totals/completion counts.
+    let totalPoints = 0;
+    let completedPoints = 0;
+    let completedIssues = 0;
+    for (const issue of sprintIssues) {
+      const points = issue.storyPoints || issue.estimatedHours || 0;
+      totalPoints += points;
+      if (doneStates.has(issue.status)) {
+        completedPoints += points;
+        completedIssues += 1;
+      }
+    }
 
     const remainingPoints = totalPoints - completedPoints;
 
@@ -248,7 +251,7 @@ export const getSprintBurndown = sprintQuery({
         remainingPoints,
         progressPercentage,
         totalIssues: sprintIssues.length,
-        completedIssues: sprintIssues.filter((i) => doneStates.has(i.status)).length,
+        completedIssues,
         idealBurndown,
         daysElapsed,
         totalDays,
@@ -261,7 +264,7 @@ export const getSprintBurndown = sprintQuery({
       remainingPoints,
       progressPercentage,
       totalIssues: sprintIssues.length,
-      completedIssues: sprintIssues.filter((i) => doneStates.has(i.status)).length,
+      completedIssues,
       idealBurndown: [],
       daysElapsed: 0,
       totalDays: 0,
