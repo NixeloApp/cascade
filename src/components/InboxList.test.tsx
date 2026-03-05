@@ -23,6 +23,8 @@ interface InboxIssueWithDetails {
 
 function createMockCounts(overrides = {}) {
   return {
+    open: 0,
+    closed: 0,
     pending: 0,
     snoozed: 0,
     accepted: 0,
@@ -144,15 +146,12 @@ describe("InboxList", () => {
       expect(screen.getByRole("tab", { name: /closed/i })).toBeInTheDocument();
     });
 
-    // SKIPPED: Requires counts query to return specific values for tab badges
-    it.skip("should show counts in tab labels", () => {
-      setupMocks([], createMockCounts({ pending: 5, snoozed: 2, accepted: 10 }));
+    it("should show counts in tab labels", () => {
+      setupMocks([], createMockCounts({ open: 7, closed: 10 }));
 
       render(<InboxList projectId={"proj-1" as Id<"projects">} />);
 
-      // Open tab shows pending + snoozed count
       expect(screen.getByRole("tab", { name: /open.*7/i })).toBeInTheDocument();
-      // Closed tab shows closed counts
       expect(screen.getByRole("tab", { name: /closed.*10/i })).toBeInTheDocument();
     });
 
