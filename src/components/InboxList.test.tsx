@@ -244,14 +244,13 @@ describe("InboxList", () => {
   });
 
   describe("Selection", () => {
-    // SKIPPED: Requires issues to render for checkbox to appear
-    it.skip("should show checkboxes for pending issues", () => {
+    it("should show checkboxes for pending issues", () => {
       const issues = [createMockInboxIssue({ status: "pending" })];
-      setupMocks(issues, createMockCounts({ pending: 1 }));
+      setupMocks(issues, createMockCounts({ open: 1, pending: 1 }));
 
       render(<InboxList projectId={"proj-1" as Id<"projects">} />);
 
-      expect(screen.getByRole("checkbox")).toBeInTheDocument();
+      expect(screen.getAllByRole("checkbox").length).toBeGreaterThanOrEqual(2);
     });
 
     // SKIPPED: Requires issues to render for checkbox interaction
