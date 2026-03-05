@@ -345,7 +345,13 @@ export async function processOfflineQueue() {
   const pending = await offlineDB.getPendingMutations();
 
   for (const mutation of pending) {
-    if (!mutation.id) continue;
+    if (!mutation.id) {
+      console.warn("[offline] Skipping queued mutation without id", {
+        mutationType: mutation.mutationType,
+        timestamp: mutation.timestamp,
+      });
+      continue;
+    }
 
     try {
       await offlineDB.updateMutationStatus(mutation.id, "syncing");
