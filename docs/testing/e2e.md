@@ -78,7 +78,7 @@ Baseline file (temporary debt register): `scripts/ci/e2e-hard-rules-baseline.jso
 | Setting  | Local                   | CI                      |
 | -------- | ----------------------- | ----------------------- |
 | Base URL | `http://localhost:5555` | `http://localhost:5555` |
-| Browser  | Chromium                | Chromium                |
+| Projects | Chromium by default; Chromium + Firefox + WebKit + mobile when `E2E_CROSS_BROWSER=1` | Chromium by default; Chromium + Firefox + WebKit + mobile when `E2E_CROSS_BROWSER=1` |
 | Workers  | 4                       | 4                       |
 | Retries  | 0                       | 2                       |
 | Parallel | Yes (fullyParallel)     | Yes (fullyParallel)     |
