@@ -370,11 +370,19 @@ export async function processOfflineQueue() {
         nextStatus: shouldFail ? "failed" : "pending",
         error,
       });
-      await offlineDB.updateMutationStatus(
-        mutation.id,
-        shouldFail ? "failed" : "pending",
-        error instanceof Error ? error.message : String(error),
-      );
+      try {
+        await offlineDB.updateMutationStatus(
+          mutation.id,
+          shouldFail ? "failed" : "pending",
+          error instanceof Error ? error.message : String(error),
+        );
+      } catch (statusError) {
+        console.warn("[offline] Failed to persist queued mutation failure status", {
+          id: mutation.id,
+          mutationType: mutation.mutationType,
+          statusError,
+        });
+      }
     }
   }
 }
