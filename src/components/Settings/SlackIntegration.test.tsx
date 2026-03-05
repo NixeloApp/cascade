@@ -104,7 +104,9 @@ describe("SlackIntegration", () => {
 
     await user.click(screen.getByRole("button", { name: "Connect Slack" }));
 
+    expect(window.open).toHaveBeenCalledTimes(1);
     const authUrl = vi.mocked(window.open).mock.calls[0]?.[0];
+    expect(typeof authUrl).toBe("string");
     const popupOrigin = new URL(String(authUrl)).origin;
 
     await act(async () => {

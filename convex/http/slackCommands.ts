@@ -8,6 +8,7 @@ import { internal } from "../_generated/api";
 import { type ActionCtx, httpAction } from "../_generated/server";
 import { constantTimeEqual } from "../lib/apiAuth";
 import { getSlackSigningSecret, isSlackSigningSecretConfigured } from "../lib/env";
+import { isInvalidSlackId } from "../lib/slackValidation";
 
 const MAX_SLASH_COMMAND_TEXT_LENGTH = 2000;
 const MAX_SLASH_COMMAND_BODY_LENGTH = 12000;
@@ -37,19 +38,6 @@ function createSlackJsonResponse(
       headers: { "Content-Type": "application/json" },
     },
   );
-}
-
-function isInvalidSlackId(value: string): boolean {
-  if (value.trim() !== value || /\s/.test(value)) {
-    return true;
-  }
-  for (let i = 0; i < value.length; i += 1) {
-    const code = value.charCodeAt(i);
-    if (code < 32 || code === 127) {
-      return true;
-    }
-  }
-  return false;
 }
 
 function hasControlCharacters(value: string): boolean {

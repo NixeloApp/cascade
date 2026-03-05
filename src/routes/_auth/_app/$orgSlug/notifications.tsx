@@ -25,7 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Typography } from "@/components/ui/Typography";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Inbox } from "@/lib/icons";
-import { showError } from "@/lib/toast";
+import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/notifications")({
@@ -140,6 +140,7 @@ function NotificationsPage() {
     setBulkActionLoading("markAll");
     try {
       await markAllAsRead({});
+      showSuccess("All notifications marked as read");
     } catch (error) {
       showError(error, "Failed to mark all notifications as read");
     } finally {
@@ -152,6 +153,7 @@ function NotificationsPage() {
     setBulkActionLoading("archiveAll");
     try {
       await archiveAllNotifications({});
+      showSuccess("All notifications archived");
     } catch (error) {
       showError(error, "Failed to archive all notifications");
     } finally {

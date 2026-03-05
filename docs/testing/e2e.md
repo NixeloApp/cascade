@@ -56,7 +56,7 @@ Note:
 | `pnpm e2e:headed` | `playwright test --headed` |
 | `pnpm e2e:debug` | `playwright test --debug` |
 | `pnpm e2e:cross-browser:smoke` | `E2E_CROSS_BROWSER=1 playwright test e2e/landing.spec.ts --workers=1 --reporter=line` |
-| `pnpm screenshots` | `node --env-file=.env.local node_modules/.pnpm/tsx@4.21.0/node_modules/tsx/dist/cli.mjs e2e/screenshot-pages.ts` |
+| `pnpm screenshots` | `node --env-file=.env.local tsx e2e/screenshot-pages.ts` |
 
 ## PR Review Checklist (E2E Reliability)
 
@@ -97,7 +97,7 @@ Baseline file (temporary debt register): `scripts/ci/e2e-hard-rules-baseline.jso
 | Setting  | Local                   | CI                      |
 | -------- | ----------------------- | ----------------------- |
 | Base URL | `http://localhost:5555` | `http://localhost:5555` |
-| Projects | Chromium by default; Chromium + Firefox + WebKit + mobile when `E2E_CROSS_BROWSER=1` | Chromium by default; Chromium + Firefox + WebKit + mobile when `E2E_CROSS_BROWSER=1` |
+| Browsers | Chromium by default; Chromium + Firefox + WebKit + mobile when `E2E_CROSS_BROWSER=1` | Chromium by default; Chromium + Firefox + WebKit + mobile when `E2E_CROSS_BROWSER=1` |
 | Workers  | 4                       | 4                       |
 | Retries  | 0                       | 2                       |
 | Parallel | Yes (fullyParallel)     | Yes (fullyParallel)     |

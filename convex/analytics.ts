@@ -17,6 +17,13 @@ import {
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { DAY } from "./lib/timeUtils";
 
+// Helper: Build Set of done-state IDs from workflow states
+function getDoneStates(workflowStates: Array<{ id: string; category: string }>): Set<string> {
+  return new Set(
+    workflowStates.filter((state) => state.category === "done").map((state) => state.id),
+  );
+}
+
 // Helper: Build issues by status from workflow states and counts
 function buildIssuesByStatus(
   workflowStates: { id: string }[],
@@ -210,10 +217,7 @@ export const getSprintBurndown = sprintQuery({
       .take(MAX_SPRINT_ISSUES);
 
     // Get done states
-    const doneStateIds = ctx.project.workflowStates
-      .filter((s) => s.category === "done")
-      .map((s) => s.id);
-    const doneStates = new Set(doneStateIds);
+    const doneStates = getDoneStates(ctx.project.workflowStates);
 
     // Single pass over sprint issues for totals/completion counts.
     let totalPoints = 0;
@@ -287,10 +291,7 @@ export const getSprintAssigneeBreakdown = sprintQuery({
       .take(MAX_SPRINT_ISSUES);
 
     // Get done states
-    const doneStateIds = ctx.project.workflowStates
-      .filter((s) => s.category === "done")
-      .map((s) => s.id);
-    const doneStates = new Set(doneStateIds);
+    const doneStates = getDoneStates(ctx.project.workflowStates);
 
     // Count issues by assignee
     const assigneeCounts: Record<string, { total: number; done: number }> = {};
@@ -354,10 +355,7 @@ export const getTeamVelocity = projectQuery({
       .take(MAX_VELOCITY_SPRINTS);
 
     // Get done states
-    const doneStateIds = ctx.project.workflowStates
-      .filter((s) => s.category === "done")
-      .map((s) => s.id);
-    const doneStates = new Set(doneStateIds);
+    const doneStates = getDoneStates(ctx.project.workflowStates);
 
     // Batch fetch issues for all sprints in parallel (not sequential)
     const sprintIssuesArrays = await Promise.all(

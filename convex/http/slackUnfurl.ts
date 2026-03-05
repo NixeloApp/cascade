@@ -8,25 +8,14 @@ import { internal } from "../_generated/api";
 import { type ActionCtx, httpAction } from "../_generated/server";
 import { constantTimeEqual } from "../lib/apiAuth";
 import { getSlackSigningSecret, isSlackSigningSecretConfigured } from "../lib/env";
+import { isInvalidSlackId } from "../lib/slackValidation";
 
 const MAX_UNFURL_PAYLOAD_LENGTH = 10000;
+const MAX_UNFURL_BODY_LENGTH = 12000;
 const MAX_UNFURL_LINKS = 25;
 const MAX_SLACK_TEAM_ID_LENGTH = 64;
 const MAX_SLACK_USER_ID_LENGTH = 64;
 const MAX_UNFURL_URL_LENGTH = 2048;
-
-function isInvalidSlackId(value: string): boolean {
-  if (value.trim() !== value || /\s/.test(value)) {
-    return true;
-  }
-  for (let i = 0; i < value.length; i += 1) {
-    const code = value.charCodeAt(i);
-    if (code < 32 || code === 127) {
-      return true;
-    }
-  }
-  return false;
-}
 
 /**
  * Compute HMAC-SHA256 using Web Crypto API.
@@ -133,10 +122,10 @@ function validateTeamAndUserIds(
 ): { ok: true; teamId: string; callerSlackUserId: string } | PayloadValidation {
   const teamId = payload.team_id;
   const callerSlackUserId = payload.user_id;
-  if (!teamId) {
+  if (!teamId || typeof teamId !== "string") {
     return { ok: false, response: jsonError("Missing team_id.", 400) };
   }
-  if (!callerSlackUserId) {
+  if (!callerSlackUserId || typeof callerSlackUserId !== "string") {
     return { ok: false, response: jsonError("Missing user_id.", 400) };
   }
   if (teamId.length > MAX_SLACK_TEAM_ID_LENGTH) {
@@ -207,6 +196,10 @@ export const handleUnfurlHandler = async (ctx: ActionCtx, request: Request) => {
   }
 
   const rawBody = await request.text();
+  const rawBodyBytes = new TextEncoder().encode(rawBody).byteLength;
+  if (rawBodyBytes > MAX_UNFURL_BODY_LENGTH) {
+    return jsonError("Request body is too large.", 413);
+  }
   if (!(await verifySlackSignature(request.headers, rawBody))) {
     return jsonError("Invalid Slack signature.", 401);
   }

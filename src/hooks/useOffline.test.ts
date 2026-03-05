@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor } from "@/test/custom-render";
 import { useOfflineQueue, useOfflineSyncStatus } from "./useOffline";
 
@@ -16,9 +16,16 @@ vi.mock("../lib/offline", () => ({
   },
 }));
 
+/** Expected count when offline queue is empty or fetch fails */
+const EMPTY_QUEUE_COUNT = 0;
+
 describe("useOffline reliability", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("logs warning and keeps queue stable when refresh fails", async () => {
@@ -47,7 +54,7 @@ describe("useOffline reliability", () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(result.current.count).toBe(0);
+    expect(result.current.count).toBe(EMPTY_QUEUE_COUNT);
     expect(warnSpy).toHaveBeenCalledWith("[offline] load pending sync mutations failed", {
       error: expect.any(Error),
     });

@@ -11,6 +11,9 @@ const MAX_LINK_COUNT = 25;
 const MAX_SLACK_ID_LENGTH = 64;
 const MAX_URL_LENGTH = 2048;
 
+/** Slack signature window in seconds (5 minutes + 1 second margin) */
+const STALE_SIGNATURE_WINDOW_SECONDS = 301;
+
 /** Create a minimal ActionCtx mock with the methods used by the handler */
 function createMockActionCtx(overrides?: { runQuery?: ReturnType<typeof vi.fn> }): ActionCtx {
   return {
@@ -315,14 +318,13 @@ describe("Slack Unfurl HTTP Handler", () => {
         links: [{ url: "https://nixelo.app/issues/ABC-1" }],
       }),
     }).toString();
-    const request = await buildSignedRequest(body, signingSecret);
-    const staleTimestamp = `${Math.floor(Date.now() / 1000) - 301}`;
-    const staleRequest = new Request(request.url, {
-      method: request.method,
-      headers: new Headers(request.headers),
+    const staleTimestamp = Math.floor(Date.now() / 1000) - STALE_SIGNATURE_WINDOW_SECONDS;
+    const staleRequest = await buildSlackSignedRequest({
+      url: SLACK_UNFURL_URL,
       body,
+      secret: signingSecret,
+      timestamp: staleTimestamp,
     });
-    staleRequest.headers.set("x-slack-request-timestamp", staleTimestamp);
 
     const response = await handleUnfurlHandler(ctx, staleRequest);
     const payload = (await response.json()) as { error: string };

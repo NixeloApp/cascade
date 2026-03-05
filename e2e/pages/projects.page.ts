@@ -270,7 +270,6 @@ export class ProjectsPage extends BasePage {
     await this.page.locator("nav").getByText("Workspaces", { exact: true }).click();
     await this.page.waitForURL(/\/workspaces/, { timeout: 30000 });
 
-    const createWorkspaceButton = this.page.getByRole("button", { name: "+ Create Workspace" });
     const createWorkspaceDialog = this.page.getByRole("dialog").filter({
       hasText: /create workspace/i,
     });
@@ -278,7 +277,7 @@ export class ProjectsPage extends BasePage {
 
     await expect(async () => {
       if (!(await createWorkspaceDialog.isVisible())) {
-        await createWorkspaceButton.click();
+        await this.newWorkspaceButton.click();
       }
       await expect(createWorkspaceDialog).toBeVisible();
       await expect(this.workspaceNameInput).toBeVisible();

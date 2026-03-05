@@ -3,6 +3,12 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@/test/custom-render";
 
+// Test constants for magic number replacement
+const OPEN_TAB_COUNT = 7;
+const CLOSED_TAB_COUNT = 10;
+const ONE_DAY_MS = 86400000;
+const MIN_EXPECTED_CHECKBOXES = 2;
+
 // Types needed before mocks
 interface InboxIssueWithDetails {
   _id: Id<"inboxIssues">;
@@ -147,12 +153,16 @@ describe("InboxList", () => {
     });
 
     it("should show counts in tab labels", () => {
-      setupMocks([], createMockCounts({ open: 7, closed: 10 }));
+      setupMocks([], createMockCounts({ open: OPEN_TAB_COUNT, closed: CLOSED_TAB_COUNT }));
 
       render(<InboxList projectId={"proj-1" as Id<"projects">} />);
 
-      expect(screen.getByRole("tab", { name: /open.*7/i })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: /closed.*10/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("tab", { name: new RegExp(`open.*${OPEN_TAB_COUNT}`, "i") }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("tab", { name: new RegExp(`closed.*${CLOSED_TAB_COUNT}`, "i") }),
+      ).toBeInTheDocument();
     });
 
     it("should switch tabs when clicked", async () => {
@@ -197,7 +207,7 @@ describe("InboxList", () => {
       const issues = [
         createMockInboxIssue({
           status: "snoozed",
-          snoozedUntil: Date.now() + 86400000,
+          snoozedUntil: Date.now() + ONE_DAY_MS,
           issue: {
             _id: "issue-1" as Id<"issues">,
             _creationTime: Date.now(),
@@ -250,7 +260,9 @@ describe("InboxList", () => {
 
       render(<InboxList projectId={"proj-1" as Id<"projects">} />);
 
-      expect(screen.getAllByRole("checkbox").length).toBeGreaterThanOrEqual(2);
+      expect(screen.getAllByRole("checkbox").length).toBeGreaterThanOrEqual(
+        MIN_EXPECTED_CHECKBOXES,
+      );
     });
 
     it("should toggle selection when checkbox is clicked", async () => {
