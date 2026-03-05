@@ -357,6 +357,11 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+function validateQueuedMutationArgs(rawArgs: string): void {
+  // Parse stored payload to ensure queued entry is not corrupt before syncing.
+  JSON.parse(rawArgs);
+}
+
 async function persistMutationFailureStatus(
   mutation: OfflineMutation,
   nextStatus: "failed" | "pending",
@@ -386,7 +391,7 @@ async function processQueuedMutation(mutation: OfflineMutation): Promise<void> {
 
   try {
     await offlineDB.updateMutationStatus(mutation.id, "syncing");
-    const _args = JSON.parse(mutation.mutationArgs);
+    validateQueuedMutationArgs(mutation.mutationArgs);
     await offlineDB.updateMutationStatus(mutation.id, "synced");
   } catch (error) {
     const nextStatus = getNextFailureStatus(mutation.attempts);
