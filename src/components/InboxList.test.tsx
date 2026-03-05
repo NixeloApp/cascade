@@ -169,8 +169,7 @@ describe("InboxList", () => {
   });
 
   describe("Issue Display", () => {
-    // SKIPPED: Requires issues query to return specific issue data
-    it.skip("should render pending inbox issues", () => {
+    it("should render pending inbox issues", () => {
       const issues = [
         createMockInboxIssue({
           status: "pending",
@@ -185,13 +184,13 @@ describe("InboxList", () => {
           } as Doc<"issues">,
         }),
       ];
-      setupMocks(issues, createMockCounts({ pending: 1 }));
+      setupMocks(issues, createMockCounts({ open: 1, pending: 1 }));
 
       render(<InboxList projectId={"proj-1" as Id<"projects">} />);
 
       expect(screen.getByText("BUG-123")).toBeInTheDocument();
       expect(screen.getByText("Login button not working")).toBeInTheDocument();
-      expect(screen.getByText("Pending")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /accept/i })).toBeInTheDocument();
     });
 
     // SKIPPED: Requires issues query to return snoozed issue data
