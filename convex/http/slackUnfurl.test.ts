@@ -158,6 +158,26 @@ describe("Slack Unfurl HTTP Handler", () => {
     expect(runQuery).not.toHaveBeenCalled();
   });
 
+  it("should reject payloads with non-string link URL values", async () => {
+    const runQuery = vi.fn();
+    const ctx = createMockActionCtx({ runQuery });
+    const body = new URLSearchParams({
+      payload: JSON.stringify({
+        team_id: "T-OK",
+        user_id: "U-OK",
+        links: [{ url: 12345 }],
+      }),
+    }).toString();
+    const request = await buildSignedRequest(body, signingSecret);
+
+    const response = await handleUnfurlHandler(ctx, request);
+    const payload = (await response.json()) as { error: string };
+
+    expect(response.status).toBe(400);
+    expect(payload.error).toContain("Invalid link URL");
+    expect(runQuery).not.toHaveBeenCalled();
+  });
+
   it("should reject requests missing Slack signature headers", async () => {
     const runQuery = vi.fn();
     const ctx = createMockActionCtx({ runQuery });
