@@ -157,14 +157,15 @@ export const getProjectAnalytics = projectQuery({
     const userMap = await batchFetchUsers(ctx, countedAssigneeIds);
 
     const issuesByAssignee: Record<string, { count: number; name: string }> = {};
+    let assignedKnownCount = 0;
     for (const [assigneeId, count] of Object.entries(assigneeCounts)) {
+      assignedKnownCount += count;
       issuesByAssignee[assigneeId] = {
         count,
         name: getUserName(userMap.get(assigneeId as Id<"users">)),
       };
     }
 
-    const assignedKnownCount = Object.values(assigneeCounts).reduce((sum, count) => sum + count, 0);
     const totalAssignedCount = Math.max(0, totalIssues - unassignedCount);
     const unknownAssignedCount = Math.max(0, totalAssignedCount - assignedKnownCount);
     if (unknownAssignedCount > 0) {
