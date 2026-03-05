@@ -352,9 +352,17 @@ export async function processOfflineQueue() {
       // Mark as synced
       await offlineDB.updateMutationStatus(mutation.id, "synced");
     } catch (error) {
+      const shouldFail = mutation.attempts >= 3;
+      console.warn("[offline] Failed to process queued mutation", {
+        id: mutation.id,
+        mutationType: mutation.mutationType,
+        attempts: mutation.attempts,
+        nextStatus: shouldFail ? "failed" : "pending",
+        error,
+      });
       await offlineDB.updateMutationStatus(
         mutation.id,
-        mutation.attempts >= 3 ? "failed" : "pending",
+        shouldFail ? "failed" : "pending",
         error instanceof Error ? error.message : String(error),
       );
     }
