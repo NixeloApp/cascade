@@ -10,10 +10,23 @@ End-to-end testing for Nixelo using [Playwright](https://playwright.dev/).
   - `100% pass` or `not 100% pass`
 - Do not use summary/history-derived gates to decide E2E status.
 
+### Required Gate Command
+
+Use this command when validating E2E status for a PR or local release gate:
+
+```bash
+pnpm exec playwright test --reporter=line
+```
+
+Decision rule:
+- If all tests pass, E2E status is `100% pass`.
+- If any test fails, times out, or is interrupted, E2E status is `not 100% pass`.
+- Do not derive E2E status from historical dashboards, pass-rate summaries, or trend reports.
+
 ## Quick Start
 
 ```bash
-# Run all E2E tests (headless)
+# Run full E2E suite via project script
 pnpm e2e
 
 # Interactive UI mode (recommended for development)
