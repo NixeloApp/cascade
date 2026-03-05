@@ -32,7 +32,6 @@ e2e/
 │   └── index.ts
 ├── utils/              # Test utilities
 ├── auth.spec.ts        # Authentication tests
-├── setup-auth.ts       # Auth state setup script
 └── README.md
 ```
 
@@ -52,21 +51,10 @@ test("can sign in", async ({ authPage }) => {
 
 ## Authentication State
 
-For tests requiring logged-in users:
+Authenticated E2E tests do not require a separate manual setup script.
+Auth state is handled by fixtures and runtime helpers (for example `ensureAuthenticated` in authenticated tests).
 
-### 1. Create auth state (one-time setup)
-
-```bash
-# Start dev server first
-pnpm dev
-
-# In another terminal, run setup
-pnpm e2e:setup-auth
-```
-
-This opens a browser where you manually log in. The session is saved to `e2e/.auth/user.json`.
-
-### 2. Use in tests
+### Usage in tests
 
 ```typescript
 import { authenticatedTest, expect } from "./fixtures";

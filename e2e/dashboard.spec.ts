@@ -4,7 +4,7 @@ import { expect, authenticatedTest as test } from "./fixtures";
  * Dashboard E2E Tests
  *
  * Tests for authenticated user experience.
- * Requires auth state to be set up first: pnpm e2e:setup-auth
+ * Auth state is managed by authenticated fixtures and ensureAuthenticated().
  *
  * Uses serial mode to prevent auth token rotation issues between tests.
  * Convex uses single-use refresh tokens - when Test 1 refreshes tokens,
