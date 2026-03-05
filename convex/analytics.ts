@@ -367,6 +367,7 @@ export const getTeamVelocity = projectQuery({
     );
 
     // Calculate velocity data using pre-fetched issues (no N+1)
+    let totalCompletedPoints = 0;
     const velocityData = completedSprints.map((sprint, index) => {
       const sprintIssues = sprintIssuesArrays[index] || [];
 
@@ -378,6 +379,7 @@ export const getTeamVelocity = projectQuery({
           issuesCompleted += 1;
         }
       }
+      totalCompletedPoints += completedPoints;
 
       return {
         sprintName: sprint.name,
@@ -389,9 +391,7 @@ export const getTeamVelocity = projectQuery({
 
     // Calculate average velocity
     const avgVelocity =
-      velocityData.length > 0
-        ? Math.round(velocityData.reduce((sum, v) => sum + v.points, 0) / velocityData.length)
-        : 0;
+      velocityData.length > 0 ? Math.round(totalCompletedPoints / velocityData.length) : 0;
 
     return {
       velocityData: velocityData.reverse(), // Oldest first for chart
