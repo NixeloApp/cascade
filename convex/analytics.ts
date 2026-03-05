@@ -210,12 +210,13 @@ export const getSprintBurndown = sprintQuery({
     );
 
     // Get done states
-    const doneStates = ctx.project.workflowStates
+    const doneStateIds = ctx.project.workflowStates
       .filter((s) => s.category === "done")
       .map((s) => s.id);
+    const doneStates = new Set(doneStateIds);
 
     const completedPoints = sprintIssues
-      .filter((issue) => doneStates.includes(issue.status))
+      .filter((issue) => doneStates.has(issue.status))
       .reduce((sum, issue) => sum + (issue.storyPoints || issue.estimatedHours || 0), 0);
 
     const remainingPoints = totalPoints - completedPoints;
@@ -241,7 +242,7 @@ export const getSprintBurndown = sprintQuery({
         remainingPoints,
         progressPercentage,
         totalIssues: sprintIssues.length,
-        completedIssues: sprintIssues.filter((i) => doneStates.includes(i.status)).length,
+        completedIssues: sprintIssues.filter((i) => doneStates.has(i.status)).length,
         idealBurndown,
         daysElapsed,
         totalDays,
@@ -254,7 +255,7 @@ export const getSprintBurndown = sprintQuery({
       remainingPoints,
       progressPercentage,
       totalIssues: sprintIssues.length,
-      completedIssues: sprintIssues.filter((i) => doneStates.includes(i.status)).length,
+      completedIssues: sprintIssues.filter((i) => doneStates.has(i.status)).length,
       idealBurndown: [],
       daysElapsed: 0,
       totalDays: 0,
@@ -277,16 +278,17 @@ export const getSprintAssigneeBreakdown = sprintQuery({
       .take(MAX_SPRINT_ISSUES);
 
     // Get done states
-    const doneStates = ctx.project.workflowStates
+    const doneStateIds = ctx.project.workflowStates
       .filter((s) => s.category === "done")
       .map((s) => s.id);
+    const doneStates = new Set(doneStateIds);
 
     // Count issues by assignee
     const assigneeCounts: Record<string, { total: number; done: number }> = {};
     const unassigned = { total: 0, done: 0 };
 
     for (const issue of sprintIssues) {
-      const isDone = doneStates.includes(issue.status);
+      const isDone = doneStates.has(issue.status);
       if (issue.assigneeId) {
         if (!assigneeCounts[issue.assigneeId]) {
           assigneeCounts[issue.assigneeId] = { total: 0, done: 0 };
@@ -343,9 +345,10 @@ export const getTeamVelocity = projectQuery({
       .take(MAX_VELOCITY_SPRINTS);
 
     // Get done states
-    const doneStates = ctx.project.workflowStates
+    const doneStateIds = ctx.project.workflowStates
       .filter((s) => s.category === "done")
       .map((s) => s.id);
+    const doneStates = new Set(doneStateIds);
 
     // Batch fetch issues for all sprints in parallel (not sequential)
     const sprintIds = completedSprints.map((s) => s._id);
@@ -368,15 +371,20 @@ export const getTeamVelocity = projectQuery({
     const velocityData = completedSprints.map((sprint) => {
       const sprintIssues = sprintIssuesMap.get(sprint._id.toString()) || [];
 
-      const completedPoints = sprintIssues
-        .filter((issue) => doneStates.includes(issue.status))
-        .reduce((sum, issue) => sum + (issue.storyPoints || issue.estimatedHours || 0), 0);
+      let completedPoints = 0;
+      let issuesCompleted = 0;
+      for (const issue of sprintIssues) {
+        if (doneStates.has(issue.status)) {
+          completedPoints += issue.storyPoints || issue.estimatedHours || 0;
+          issuesCompleted += 1;
+        }
+      }
 
       return {
         sprintName: sprint.name,
         sprintId: sprint._id,
         points: completedPoints,
-        issuesCompleted: sprintIssues.filter((i) => doneStates.includes(i.status)).length,
+        issuesCompleted,
       };
     });
 
