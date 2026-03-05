@@ -86,19 +86,32 @@ function dateStringToTimestamp(dateStr: string, endOfDay = false): number {
   return date.getTime();
 }
 
+interface DateRangeBounds {
+  from?: number;
+  to?: number;
+}
+
+function normalizeDateRangeBounds(range?: DateRangeFilter): DateRangeBounds | undefined {
+  if (!range?.from && !range?.to) return undefined;
+  return {
+    from: range.from ? dateStringToTimestamp(range.from) : undefined,
+    to: range.to ? dateStringToTimestamp(range.to, true) : undefined,
+  };
+}
+
 /** Check if a timestamp falls within a date range */
-function matchesDateRange(timestamp: number | undefined, range?: DateRangeFilter): boolean {
+function matchesDateRange(timestamp: number | undefined, range?: DateRangeBounds): boolean {
   if (!range?.from && !range?.to) return true;
   if (timestamp === undefined) return false;
 
-  if (range.from) {
-    const fromTs = dateStringToTimestamp(range.from);
-    if (timestamp < fromTs) return false;
+  if (range.from !== undefined && timestamp < range.from) {
+    return false;
   }
-  if (range.to) {
-    const toTs = dateStringToTimestamp(range.to, true);
-    if (timestamp > toTs) return false;
+
+  if (range.to !== undefined && timestamp > range.to) {
+    return false;
   }
+
   return true;
 }
 
@@ -107,6 +120,11 @@ function applyFilters(
   issues: EnrichedIssue[],
   filters: BoardFilters | undefined,
   parsedQuery: ReturnType<typeof parseBoardQuery>,
+  dateRanges: {
+    dueDate?: DateRangeBounds;
+    startDate?: DateRangeBounds;
+    createdAt?: DateRangeBounds;
+  },
 ): EnrichedIssue[] {
   if (!filters) return issues;
 
@@ -117,9 +135,9 @@ function applyFilters(
       matchesPriorityFilter(issue, filters.priority) &&
       matchesAssigneeFilter(issue, filters.assigneeId) &&
       matchesLabelsFilter(issue, filters.labels) &&
-      matchesDateRange(issue.dueDate, filters.dueDate) &&
-      matchesDateRange(issue.startDate, filters.startDate) &&
-      matchesDateRange(issue._creationTime, filters.createdAt),
+      matchesDateRange(issue.dueDate, dateRanges.dueDate) &&
+      matchesDateRange(issue.startDate, dateRanges.startDate) &&
+      matchesDateRange(issue._creationTime, dateRanges.createdAt),
   );
 }
 
@@ -172,9 +190,14 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
   // Apply filters to issues
   const filteredIssuesByStatus = useMemo(() => {
     const parsedQuery = parseBoardQuery(filters?.query);
+    const dateRanges = {
+      dueDate: normalizeDateRangeBounds(filters?.dueDate),
+      startDate: normalizeDateRangeBounds(filters?.startDate),
+      createdAt: normalizeDateRangeBounds(filters?.createdAt),
+    };
     const result: Record<string, EnrichedIssue[]> = {};
     for (const [status, issues] of Object.entries(issuesByStatus)) {
-      result[status] = applyFilters(issues, filters, parsedQuery);
+      result[status] = applyFilters(issues, filters, parsedQuery, dateRanges);
     }
     return result;
   }, [issuesByStatus, filters]);
