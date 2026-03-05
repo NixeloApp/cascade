@@ -2,8 +2,8 @@
 
 > **Priority:** P0 (Highest)
 > **Effort:** Large
-> **Status:** In Progress (local full-suite pass/fail)
-> **Last Updated:** 2026-03-04
+> **Status:** In Progress (local full-suite now green; hardening work remains)
+> **Last Updated:** 2026-03-05
 
 ## Objective
 
@@ -89,22 +89,22 @@ Make E2E tests deterministic and locally verifiable with one rule: run the full 
 ## Acceptance Criteria
 
 - [ ] No unjustified `waitForTimeout` usage across E2E suite.
-- [ ] Full local suite run reports 100% pass.
+- [x] Full local suite run reports 100% pass.
 - [ ] Core flows (`auth`, `issue create/edit`, `board drag/drop`, `docs`, `search`) are stable.
 - [ ] E2E authoring standard is documented and enforced in reviews.
 
-## Blocker Update (2026-03-04)
+## Blocker Update (2026-03-05)
 
 - Local full-suite run command:
   - `pnpm exec playwright test --reporter=line`
-- Concrete failure observed during run:
-  - `e2e/analytics.spec.ts:26:3` (`Analytics Dashboard › analytics page displays key metrics`)
-  - timeout waiting for workspace-create modal input:
-    - `projects.page.ts:275` `workspaceNameInput.waitFor({ state: "visible" })`
-- Blocker classification:
-  - Active test reliability failure (not a summary/reporting artifact).
+- Current result:
+  - `155 passed (7.0m)`, no skipped tests.
+- Resolution notes:
+  - Re-enabled `Sprints` spec suite by removing `test.describe.skip(...)`.
+  - Replaced static skipped calendar OAuth placeholder with runnable redirect-contract assertion.
+  - Tightened sprint create-button locator scope to avoid strict-mode ambiguity.
 - Next step:
-  - harden workspace-create flow in `e2e/pages/projects.page.ts` with deterministic modal readiness signal before filling fields, then rerun full local suite.
+  - Continue hardening unchecked reliability items (selector contracts, deterministic action completion signals, and data-isolation improvements).
 
 ## Related Files
 

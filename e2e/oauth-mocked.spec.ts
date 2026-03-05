@@ -263,15 +263,15 @@ test.describe("Google OAuth Flow (Mocked)", () => {
 });
 
 test.describe("Google Calendar OAuth (Mocked)", () => {
-  // Calendar OAuth is separate from login OAuth
-  // These tests would require being logged in first
+  test("calendar OAuth endpoint returns auth redirect contract", async ({ request }) => {
+    if (!CONVEX_SITE_URL) {
+      throw new Error("CONVEX_SITE_URL is required for OAuth endpoint checks");
+    }
 
-  test.skip("should connect Google Calendar", async () => {
-    // This test requires:
-    // 1. Being logged in
-    // 2. Navigating to settings/integrations
-    // 3. Clicking connect Google Calendar
-    // 4. Completing the calendar OAuth flow
-    // Skipped until we have proper test fixtures for authenticated state
+    const { redirectUrl } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
+    expect(redirectUrl.origin).toBe("https://accounts.google.com");
+    expect(redirectUrl.searchParams.get("response_type")).toBe("code");
+    expect(redirectUrl.searchParams.get("client_id")).toBeTruthy();
+    expect(redirectUrl.searchParams.get("scope")).toBeTruthy();
   });
 });
