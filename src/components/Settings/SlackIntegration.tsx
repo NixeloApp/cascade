@@ -41,6 +41,60 @@ interface SlackConnectionData {
   incomingWebhookChannel?: string;
 }
 
+const MAX_SLACK_OAUTH_FIELD_LENGTH = 512;
+
+function isOptionalValidString(value: unknown): value is string | undefined {
+  return (
+    value === undefined ||
+    (typeof value === "string" && value.length > 0 && value.length <= MAX_SLACK_OAUTH_FIELD_LENGTH)
+  );
+}
+
+function parseSlackConnectionData(value: unknown): SlackConnectionData | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const teamId = candidate.teamId;
+  const teamName = candidate.teamName;
+  const accessToken = candidate.accessToken;
+  if (
+    typeof teamId !== "string" ||
+    teamId.length === 0 ||
+    teamId.length > MAX_SLACK_OAUTH_FIELD_LENGTH ||
+    typeof teamName !== "string" ||
+    teamName.length === 0 ||
+    teamName.length > MAX_SLACK_OAUTH_FIELD_LENGTH ||
+    typeof accessToken !== "string" ||
+    accessToken.length === 0 ||
+    accessToken.length > MAX_SLACK_OAUTH_FIELD_LENGTH
+  ) {
+    return null;
+  }
+
+  if (
+    !isOptionalValidString(candidate.slackUserId) ||
+    !isOptionalValidString(candidate.botUserId) ||
+    !isOptionalValidString(candidate.scope) ||
+    !isOptionalValidString(candidate.incomingWebhookUrl) ||
+    !isOptionalValidString(candidate.incomingWebhookChannel)
+  ) {
+    return null;
+  }
+
+  return {
+    teamId,
+    teamName,
+    accessToken,
+    slackUserId: candidate.slackUserId,
+    botUserId: candidate.botUserId,
+    scope: candidate.scope,
+    incomingWebhookUrl: candidate.incomingWebhookUrl,
+    incomingWebhookChannel: candidate.incomingWebhookChannel,
+  };
+}
+
 export function SlackIntegration() {
   const slackConnection = useQuery(api.slack.getConnection);
   const connectSlack = useMutation(api.slack.connectSlack);
@@ -60,7 +114,10 @@ export function SlackIntegration() {
         return;
       }
 
-      const data = event.data.data as SlackConnectionData;
+      const data = parseSlackConnectionData(event.data?.data);
+      if (!data) {
+        return;
+      }
       setIsConnecting(true);
       try {
         await connectSlack({
