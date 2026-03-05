@@ -11,6 +11,7 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { issueActivityFields, issuesFields, projectsFields } from "./schemaFields";
 import {
+  attendanceStatuses,
   auditMetadata,
   automationActionTypes,
   automationActionValue,
@@ -29,6 +30,7 @@ import {
   dashboardLayout,
   emailDigests,
   employmentTypes,
+  freeUnitTypes,
   inboxIssueSources,
   inboxIssueStatuses,
   inviteRoles,
@@ -43,8 +45,11 @@ import {
   projectRoles,
   proseMirrorSnapshot,
   prStates,
+  rateTypes,
+  serviceTypes,
   simplePriorities,
   sprintStatuses,
+  syncDirections,
   teamRoles,
   webhookStatuses,
   workflowCategories,
@@ -993,7 +998,7 @@ const applicationTables = {
   meetingAttendance: defineTable({
     eventId: v.id("calendarEvents"),
     userId: v.id("users"),
-    status: v.union(v.literal("present"), v.literal("tardy"), v.literal("absent")),
+    status: attendanceStatuses,
     markedBy: v.id("users"),
     markedAt: v.number(),
     notes: v.optional(v.string()),
@@ -1115,7 +1120,7 @@ const applicationTables = {
     refreshToken: v.optional(v.string()),
     expiresAt: v.optional(v.number()),
     syncEnabled: v.boolean(),
-    syncDirection: v.union(v.literal("import"), v.literal("export"), v.literal("bidirectional")),
+    syncDirection: syncDirections,
     lastSyncAt: v.optional(v.number()),
     updatedAt: v.number(),
   })
@@ -1583,7 +1588,7 @@ const applicationTables = {
     currency: v.string(),
     effectiveFrom: v.number(),
     effectiveTo: v.optional(v.number()),
-    rateType: v.union(v.literal("internal"), v.literal("billable")),
+    rateType: rateTypes,
     setBy: v.id("users"),
     notes: v.optional(v.string()),
     updatedAt: v.number(),
@@ -1597,7 +1602,7 @@ const applicationTables = {
 
   userProfiles: defineTable({
     userId: v.id("users"),
-    employmentType: v.union(v.literal("employee"), v.literal("contractor"), v.literal("intern")),
+    employmentType: employmentTypes,
     maxHoursPerWeek: v.optional(v.number()),
     maxHoursPerDay: v.optional(v.number()),
     requiresApproval: v.optional(v.boolean()),
@@ -1721,12 +1726,7 @@ const applicationTables = {
   // ===========================================================================
 
   serviceUsage: defineTable({
-    serviceType: v.union(
-      v.literal("transcription"),
-      v.literal("email"),
-      v.literal("sms"),
-      v.literal("ai"),
-    ),
+    serviceType: serviceTypes,
     provider: v.string(),
     month: v.string(), // "2025-11"
     unitsUsed: v.number(),
@@ -1742,15 +1742,10 @@ const applicationTables = {
     .index("by_provider_month", ["provider", "month"]),
 
   serviceProviders: defineTable({
-    serviceType: v.union(
-      v.literal("transcription"),
-      v.literal("email"),
-      v.literal("sms"),
-      v.literal("ai"),
-    ),
+    serviceType: serviceTypes,
     provider: v.string(),
     freeUnitsPerMonth: v.number(),
-    freeUnitsType: v.union(v.literal("monthly"), v.literal("one_time"), v.literal("yearly")),
+    freeUnitsType: freeUnitTypes,
     oneTimeUnitsRemaining: v.optional(v.number()),
     costPerUnit: v.number(), // Cents
     unitType: v.string(), // "minute", "email", etc.
