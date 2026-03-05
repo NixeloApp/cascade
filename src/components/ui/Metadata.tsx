@@ -36,12 +36,10 @@ import { cn } from "@/lib/utils";
 
 interface MetadataContextValue {
   size: "xs" | "sm";
-  separator: string;
 }
 
 const MetadataContext = createContext<MetadataContextValue>({
   size: "xs",
-  separator: "•",
 });
 
 function useMetadataContext() {
@@ -81,7 +79,7 @@ export function Metadata({
   });
 
   return (
-    <MetadataContext.Provider value={{ size, separator }}>
+    <MetadataContext.Provider value={{ size }}>
       <div className={cn("flex items-center flex-wrap", gapClass, className)} {...props}>
         {childrenWithSeparators}
       </div>
@@ -180,7 +178,7 @@ export function MetadataTimestamp({
 
 function MetadataSeparator({ children }: { children: React.ReactNode }) {
   const { size } = useMetadataContext();
-  const sizeClass = size === "xs" ? "text-xs" : "text-sm";
+  const sizeClass = getMetadataSizeClass(size);
 
   return (
     <span className={cn("text-ui-text-quaternary select-none", sizeClass)} aria-hidden="true">
@@ -222,18 +220,19 @@ function getMetadataSizeClass(size: "xs" | "sm"): "text-xs" | "text-sm" {
   return size === "xs" ? "text-xs" : "text-sm";
 }
 
+const FLEX_HIDE_CLASSES = {
+  sm: "hidden sm:inline-flex",
+  md: "hidden md:inline-flex",
+  lg: "hidden lg:inline-flex",
+} as const;
+
+const INLINE_HIDE_CLASSES = {
+  sm: "hidden sm:inline",
+  md: "hidden md:inline",
+  lg: "hidden lg:inline",
+} as const;
+
 function getMetadataHideClass(hideBelow: "sm" | "md" | "lg" | undefined, useFlex: boolean): string {
   if (!hideBelow) return "";
-  if (useFlex) {
-    return {
-      sm: "hidden sm:inline-flex",
-      md: "hidden md:inline-flex",
-      lg: "hidden lg:inline-flex",
-    }[hideBelow];
-  }
-  return {
-    sm: "hidden sm:inline",
-    md: "hidden md:inline",
-    lg: "hidden lg:inline",
-  }[hideBelow];
+  return useFlex ? FLEX_HIDE_CLASSES[hideBelow] : INLINE_HIDE_CLASSES[hideBelow];
 }
