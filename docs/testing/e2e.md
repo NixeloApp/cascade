@@ -42,6 +42,11 @@ pnpm e2e:debug
 pnpm e2e:cross-browser:smoke
 ```
 
+Note:
+- `pnpm e2e` maps to `playwright test` (default reporter behavior from Playwright config).
+- For release/PR reliability gating, use the Required Gate Command exactly:
+  - `pnpm exec playwright test --reporter=line`
+
 ## PR Review Checklist (E2E Reliability)
 
 Use this checklist for any PR that modifies `e2e/` specs, fixtures, page objects, or E2E utilities:
