@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { EnrichedIssue } from "../../convex/lib/issueHelpers";
 
 // Type for the smart query return data
@@ -313,20 +313,24 @@ export function useSmartBoardData({
     setLoadMoreCursor(undefined);
   }
 
-  // Build issues by status
-  const issuesByStatus = mergeIssuesByStatus(smartData?.issuesByStatus, additionalDoneIssues);
+  const issuesByStatus = useMemo(
+    () => mergeIssuesByStatus(smartData?.issuesByStatus, additionalDoneIssues),
+    [smartData?.issuesByStatus, additionalDoneIssues],
+  );
 
-  // Build status counts from countsData.byStatus
-  const statusCounts = calculateStatusCounts(countsData, issuesByStatus);
+  const statusCounts = useMemo(
+    () => calculateStatusCounts(countsData, issuesByStatus),
+    [countsData, issuesByStatus],
+  );
 
-  // Find done statuses that have more items to load
-  const doneStatusesWithMore = findDoneStatusesWithMore(statusCounts);
+  const doneStatusesWithMore = useMemo(
+    () => findDoneStatusesWithMore(statusCounts),
+    [statusCounts],
+  );
 
-  // Calculate total hidden done count from accurate statusCounts
-  const hiddenDoneCount = calculateHiddenDoneCount(statusCounts);
+  const hiddenDoneCount = useMemo(() => calculateHiddenDoneCount(statusCounts), [statusCounts]);
 
-  // Helper for loadMoreDone
-  const findOldestIssue = useCallback(() => {
+  const oldestIssueCursor = useMemo(() => {
     const allLoadedIssues = getAllLoadedIssues(additionalDoneIssues, smartData);
     if (allLoadedIssues.length === 0) return undefined;
 
@@ -343,9 +347,9 @@ export function useSmartBoardData({
 
       loadingRef.current = true;
       setIsLoadingMore(true);
-      setLoadMoreCursor(findOldestIssue());
+      setLoadMoreCursor(oldestIssueCursor);
     },
-    [isLoadingMore, findOldestIssue],
+    [isLoadingMore, oldestIssueCursor],
   );
 
   return {
