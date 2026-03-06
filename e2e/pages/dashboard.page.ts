@@ -78,6 +78,9 @@ export class DashboardPage extends BasePage {
   readonly globalSearchDocumentsTab: Locator;
   readonly timeEntryModal: Locator;
   readonly timeEntryBillableCheckbox: Locator;
+  readonly appErrorHeading: Locator;
+  readonly appErrorDetailsSummary: Locator;
+  readonly appErrorDetailsMessage: Locator;
 
   // ===================
   // Locators - Notifications
@@ -193,6 +196,9 @@ export class DashboardPage extends BasePage {
     this.timeEntryBillableCheckbox = this.timeEntryModal.getByRole("checkbox", {
       name: /billable/i,
     });
+    this.appErrorHeading = page.getByRole("heading", { name: "500" });
+    this.appErrorDetailsSummary = page.getByText(/view error details/i);
+    this.appErrorDetailsMessage = page.locator("details pre");
 
     // Notifications panel
     this.notificationPanel = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_PANEL);
@@ -426,10 +432,12 @@ export class DashboardPage extends BasePage {
 
     // Use retry pattern - click may not register immediately after page load
     await expect(async () => {
+      await this.throwIfAppErrorVisible();
       await this.closeGlobalSearchIfOpen();
 
       // Click the search button directly (keyboard shortcut conflicts with command palette)
       await this.globalSearchButton.click();
+      await this.throwIfAppErrorVisible();
 
       // Check if modal opened AND input is ready
       await expect(this.globalSearchModal).toBeVisible();
@@ -441,6 +449,23 @@ export class DashboardPage extends BasePage {
       await this.globalSearchInput.focus();
       await expect(this.globalSearchInput).toBeVisible();
     }).toPass();
+  }
+
+  private async throwIfAppErrorVisible() {
+    if (!(await this.appErrorHeading.isVisible().catch(() => false))) {
+      return;
+    }
+
+    const detailsVisible = await this.appErrorDetailsMessage.isVisible().catch(() => false);
+    if (!detailsVisible) {
+      await this.appErrorDetailsSummary.click().catch(() => {});
+    }
+
+    const errorDetails = (
+      await this.appErrorDetailsMessage.textContent().catch(() => null)
+    )?.trim();
+    const suffix = errorDetails ? `: ${errorDetails}` : "";
+    throw new Error(`App error boundary visible${suffix}`);
   }
 
   async openTimeEntryModal() {
