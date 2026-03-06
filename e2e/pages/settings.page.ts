@@ -423,8 +423,14 @@ export class SettingsPage extends BasePage {
     const row = this.getInviteRow(email);
     await expect(row).toBeVisible();
 
-    this.page.once("dialog", (dialog) => dialog.accept());
+    // Click revoke button to open confirm dialog
     await row.getByRole("button", { name: /revoke/i }).click();
+
+    // Confirm in the ConfirmDialog
+    const confirmDialog = this.page.getByRole("alertdialog");
+    await expect(confirmDialog).toBeVisible();
+    await confirmDialog.getByRole("button", { name: /revoke/i }).click();
+
     await this.expectInviteRevoked(email);
   }
 
