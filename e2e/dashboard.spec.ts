@@ -65,9 +65,7 @@ test.describe("Dashboard Tests", () => {
     test("can open and close via button", async ({ dashboardPage }) => {
       await dashboardPage.goto();
       await dashboardPage.openCommandPalette();
-      await expect(dashboardPage.commandPalette).toBeVisible();
       await dashboardPage.closeCommandPalette();
-      await expect(dashboardPage.commandPalette).not.toBeVisible();
     });
   });
 
@@ -97,15 +95,13 @@ test.describe("Dashboard Tests", () => {
     test("can open and close", async ({ dashboardPage }) => {
       await dashboardPage.goto();
       await dashboardPage.openGlobalSearch();
-      await expect(dashboardPage.globalSearchModal).toBeVisible();
       await dashboardPage.closeGlobalSearch();
-      await expect(dashboardPage.globalSearchModal).not.toBeVisible();
     });
 
     test("can open via keyboard shortcut", async ({ dashboardPage }) => {
       await dashboardPage.goto();
       await dashboardPage.openGlobalSearchWithShortcut();
-      await expect(dashboardPage.globalSearchModal).toBeVisible();
+      await dashboardPage.closeGlobalSearchWithEscape();
     });
   });
 
@@ -113,15 +109,13 @@ test.describe("Dashboard Tests", () => {
     test("can open and close via button", async ({ dashboardPage }) => {
       await dashboardPage.goto();
       await dashboardPage.openShortcutsHelp();
-      await expect(dashboardPage.shortcutsModal).toBeVisible();
       await dashboardPage.closeShortcutsHelp();
-      await expect(dashboardPage.shortcutsModal).not.toBeVisible();
     });
 
     test("can open via keyboard shortcut", async ({ dashboardPage }) => {
       await dashboardPage.goto();
       await dashboardPage.pressShortcutsHelpShortcut();
-      await expect(dashboardPage.shortcutsModal).toBeVisible();
+      await dashboardPage.closeShortcutsHelp();
     });
   });
 

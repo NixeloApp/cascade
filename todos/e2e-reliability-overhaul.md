@@ -105,6 +105,7 @@ This is the concrete "what's left" list for reliability hardening after the late
    - issue-detail dialog close assertions now go through `ProjectsPage.closeIssueDetail()` in the touched modal consumers.
    - global-search close assertions in `search.spec.ts` now go through `DashboardPage` helpers instead of spec-level `Escape` handling.
    - time-entry modal open/close in billing settings now goes through `DashboardPage` helpers instead of spec-level dialog handling.
+   - dashboard modal smoke tests now rely on page-object open/close helpers, and shortcut-open tests close their modals before exit.
    - next target: remaining non-project modal close patterns in other specs/page objects.
 2. Selector contract completion:
    - `pnpm run validate` now passes with no `Test ID constants` warnings.
@@ -132,6 +133,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - Issue-detail modal close flows now go through `ProjectsPage.closeIssueDetail()`, so touched specs do not inline `Escape` plus dialog-hidden waits after edits.
 - Global-search close flows now go through `DashboardPage.closeGlobalSearchWithEscape()` or `DashboardPage.closeGlobalSearch()`, so touched search specs no longer manage modal teardown directly.
 - Billing settings now open and close the header time-entry modal through `DashboardPage`, so the spec only asserts billable checkbox behavior instead of dialog mechanics.
+- Dashboard modal smoke tests no longer duplicate open/close visibility assertions that the corresponding `DashboardPage` helpers already guarantee.
 
 ## Latest Targeted Hardening Evidence
 
@@ -155,6 +157,8 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `7 passed (2.4m)`
 - `pnpm exec playwright test e2e/settings/billing.spec.ts --reporter=line --workers=1`
   - `2 passed (22.5s)`
+- `pnpm exec playwright test e2e/dashboard.spec.ts --reporter=line --workers=1`
+  - `11 passed (1.6m)`
 - `pnpm exec playwright test e2e/board-drag-drop.spec.ts e2e/time-tracking.spec.ts e2e/search.spec.ts e2e/activity-feed.spec.ts e2e/analytics.spec.ts e2e/integration-workflow.spec.ts --reporter=line --workers=1`
   - `26 passed (9.2m)`
 
