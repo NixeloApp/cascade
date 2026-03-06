@@ -46,9 +46,6 @@ test.describe("Documents", () => {
 
       // Create new document
       await documentsPage.createNewDocument();
-
-      // Editor should be visible
-      await documentsPage.expectEditorVisible();
     });
   });
 
@@ -60,7 +57,6 @@ test.describe("Documents", () => {
 
       // Create a new document first
       await documentsPage.createNewDocument();
-      await documentsPage.expectEditorVisible();
 
       const updatedTitle = `E2E Title ${Date.now()}`;
       await documentsPage.editDocumentTitle(updatedTitle);

@@ -90,8 +90,12 @@ export class DocumentsPage extends BasePage {
   // ===================
 
   async createNewDocument() {
-    await this.newDocumentButton.click();
-    await expect(this.page).toHaveURL(/\/documents\/[^/]+$/);
+    await expect(async () => {
+      await this.newDocumentButton.click();
+      await expect(this.page).toHaveURL(/\/documents\/[^/]+$/);
+    }).toPass();
+
+    await this.expectEditorVisible();
   }
 
   async openTemplateModal() {
@@ -107,6 +111,7 @@ export class DocumentsPage extends BasePage {
       project: this.projectBriefTemplate,
     };
     await buttons[template].click();
+    await this.expectEditorVisible();
   }
 
   async searchDocuments(query: string) {
