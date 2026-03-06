@@ -335,10 +335,7 @@ export class DashboardPage extends BasePage {
 
     // Use retry pattern - button click may not trigger event handler immediately after hydration
     await expect(async () => {
-      // Close any existing command palette first (in case it's in an inconsistent state)
-      if (await this.commandPalette.isVisible().catch(() => false)) {
-        await this.page.keyboard.press("Escape");
-      }
+      await this.closeCommandPaletteIfOpen();
       // Click to open command palette
       await this.commandPaletteButton.click();
       // Wait for dialog animation to complete (Radix Dialog has opening animation)
@@ -352,18 +349,25 @@ export class DashboardPage extends BasePage {
 
   async closeCommandPalette() {
     await expect(async () => {
-      if (!(await this.commandPalette.isVisible())) return;
-      // Focus input to ensure keyboard environment is captured
-      await this.commandPaletteInput.click().catch(() => {});
-      await this.page.keyboard.press("Escape");
-
-      // Fallback: click top-left corner (backdrop) if escape fails
-      if (await this.commandPalette.isVisible()) {
-        await this.page.mouse.click(0, 0);
-      }
-
+      await this.closeCommandPaletteIfOpen();
       await expect(this.commandPalette).not.toBeVisible();
     }).toPass();
+  }
+
+  async closeCommandPaletteIfOpen() {
+    if (!(await this.commandPalette.isVisible().catch(() => false))) {
+      return;
+    }
+
+    // Focus input to ensure keyboard events target the active dialog before Escape.
+    await this.commandPaletteInput.click().catch(() => {});
+    await this.page.keyboard.press("Escape");
+
+    if (await this.commandPalette.isVisible().catch(() => false)) {
+      await this.page.mouse.click(0, 0);
+    }
+
+    await expect(this.commandPalette).not.toBeVisible();
   }
 
   async openShortcutsHelp() {
@@ -422,8 +426,7 @@ export class DashboardPage extends BasePage {
 
     // Use retry pattern - click may not register immediately after page load
     await expect(async () => {
-      // Close any existing modals first by pressing Escape
-      await this.page.keyboard.press("Escape");
+      await this.closeGlobalSearchIfOpen();
 
       // Click the search button directly (keyboard shortcut conflicts with command palette)
       await this.globalSearchButton.click();
@@ -442,6 +445,7 @@ export class DashboardPage extends BasePage {
     await waitForDashboardReady(this.page);
 
     await expect(async () => {
+      await this.closeTimeEntryModalIfOpen();
       await expect(this.headerStartTimerButton).toBeVisible();
       await this.headerStartTimerButton.click();
       await expect(this.timeEntryModal).toBeVisible();
@@ -449,24 +453,24 @@ export class DashboardPage extends BasePage {
   }
 
   async closeGlobalSearch() {
-    // If modal is not visible, nothing to close
+    await expect(async () => {
+      await this.closeGlobalSearchIfOpen();
+      await expect(this.globalSearchModal).not.toBeVisible();
+    }).toPass();
+  }
+
+  async closeGlobalSearchIfOpen() {
     if (!(await this.globalSearchModal.isVisible().catch(() => false))) {
       return;
     }
 
-    // Use retry pattern to handle timing variability
-    await expect(async () => {
-      // Try pressing Escape to close
-      await this.page.keyboard.press("Escape");
+    await this.page.keyboard.press("Escape");
 
-      // Check if still visible - if so, try clicking outside
-      if (await this.globalSearchModal.isVisible().catch(() => false)) {
-        await this.page.mouse.click(10, 10);
-      }
+    if (await this.globalSearchModal.isVisible().catch(() => false)) {
+      await this.page.mouse.click(10, 10);
+    }
 
-      // Verify closed
-      await expect(this.globalSearchModal).not.toBeVisible();
-    }).toPass();
+    await expect(this.globalSearchModal).not.toBeVisible();
   }
 
   async closeGlobalSearchWithEscape() {
@@ -477,6 +481,15 @@ export class DashboardPage extends BasePage {
 
   async closeTimeEntryModal() {
     await expect(this.timeEntryModal).toBeVisible();
+    await this.closeTimeEntryModalIfOpen();
+    await expect(this.timeEntryModal).not.toBeVisible();
+  }
+
+  async closeTimeEntryModalIfOpen() {
+    if (!(await this.timeEntryModal.isVisible().catch(() => false))) {
+      return;
+    }
+
     await this.page.keyboard.press("Escape");
     await expect(this.timeEntryModal).not.toBeVisible();
   }
@@ -485,6 +498,7 @@ export class DashboardPage extends BasePage {
     await waitForDashboardReady(this.page);
 
     await expect(async () => {
+      await this.closeGlobalSearchIfOpen();
       await this.page.keyboard.press("ControlOrMeta+k");
       await expect(this.globalSearchModal).toBeVisible();
       await expect(this.globalSearchInput).toBeVisible();
