@@ -181,6 +181,13 @@ Full-suite evidence in this TODO is considered stale if older than 24 hours.
 - Targeted validation:
   - `pnpm exec playwright test e2e/integration-workflow.spec.ts --reporter=line --workers=1`
   - `4 passed (1.7m)`
+- Moved the remaining search-result badge assertion out of `e2e/search.spec.ts` and into `DashboardPage.getGlobalSearchResultType(...)`, so the dedicated search suite no longer reaches into `getByTestId(...)` directly.
+- Root cause note:
+  - the search spec still owned one low-level test-id lookup, which violated the page-object selector hierarchy and made selector churn leak into spec files.
+  - centralizing that lookup in `DashboardPage` keeps search selector contracts in one place and matches the reliability rules enforced elsewhere in the suite.
+- Targeted validation:
+  - `pnpm exec playwright test e2e/search.spec.ts --reporter=line --workers=1`
+  - `7 passed (2.2m)`
 
 ## Historical Resolution Notes (2026-03-05)
 

@@ -509,6 +509,10 @@ export class DashboardPage extends BasePage {
     return this.globalSearchResultItems.filter({ hasText: title });
   }
 
+  getGlobalSearchResultType(title: string): Locator {
+    return this.getGlobalSearchResult(title).getByTestId(TEST_IDS.SEARCH.RESULT_TYPE);
+  }
+
   // ===================
   // Actions - Dashboard Content
   // ===================

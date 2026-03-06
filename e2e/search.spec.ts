@@ -1,4 +1,3 @@
-import { TEST_IDS } from "../src/lib/test-ids";
 import { expect, authenticatedTest as test } from "./fixtures";
 import { testUserService } from "./utils/test-user-service";
 
@@ -52,7 +51,7 @@ test.describe("Global Search", () => {
     console.log("✓ Issue found in search results");
 
     // Verify result shows issue type badge (lowercase "issue" from result.type)
-    await expect(issueResult.getByTestId(TEST_IDS.SEARCH.RESULT_TYPE)).toHaveText("issue");
+    await expect(dashboardPage.getGlobalSearchResultType(uniqueSearchTerm)).toHaveText("issue");
     console.log("✓ Issue badge visible");
 
     // Close search
