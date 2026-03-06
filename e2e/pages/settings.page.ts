@@ -321,13 +321,21 @@ export class SettingsPage extends BasePage {
     await inviteBtn.scrollIntoViewIfNeeded();
 
     // Retry pattern handles potential element detachment during re-renders
-    // Press Escape first to ensure any open modals are closed
     await expect(async () => {
-      await this.page.keyboard.press("Escape");
+      await this.closeInviteUserModalIfOpen();
       await expect(inviteBtn).toBeEnabled();
       await inviteBtn.click();
       await expect(this.inviteUserModal).toBeVisible();
     }).toPass();
+  }
+
+  async closeInviteUserModalIfOpen() {
+    if (!(await this.inviteUserModal.isVisible().catch(() => false))) {
+      return;
+    }
+
+    await this.page.keyboard.press("Escape");
+    await expect(this.inviteUserModal).not.toBeVisible();
   }
 
   async inviteUser(email: string, role?: string) {
