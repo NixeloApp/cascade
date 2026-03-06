@@ -22,7 +22,6 @@ import { Button } from "./ui/Button";
 import {
   Command,
   CommandDialog,
-  CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
@@ -147,12 +146,17 @@ function SearchListContent({
 
   return (
     <>
-      <CommandEmpty data-testid={TEST_IDS.GLOBAL_SEARCH.NO_RESULTS}>
-        <Flex direction="column" align="center">
+      {filteredResults.length === 0 && (
+        <Flex
+          direction="column"
+          align="center"
+          data-testid={TEST_IDS.GLOBAL_SEARCH.NO_RESULTS}
+          className="text-ui-text-secondary"
+        >
           <Icon icon={Search} size="xl" className="mb-4" />
           <Typography variant="label">No results found</Typography>
         </Flex>
-      </CommandEmpty>
+      )}
       {filteredResults.length > 0 && (
         <CommandGroup data-testid={TEST_IDS.SEARCH.RESULTS_GROUP}>
           {filteredResults.map((result) => (
