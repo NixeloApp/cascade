@@ -517,6 +517,12 @@ export class ProjectsPage extends BasePage {
     await expect(this.issueDetailDialog.getByText(/[A-Z][A-Z0-9]+-\d+/).first()).toBeVisible();
   }
 
+  async closeIssueDetail() {
+    await expect(this.issueDetailDialog).toBeVisible();
+    await this.page.keyboard.press("Escape");
+    await expect(this.issueDetailDialog).not.toBeVisible();
+  }
+
   async editIssueTitle(nextTitle: string) {
     await expect(this.issueDetailEditButton).toBeVisible();
     await this.issueDetailEditButton.click();

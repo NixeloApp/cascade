@@ -102,7 +102,8 @@ This is the concrete "what's left" list for reliability hardening after the late
    - `createIssue()` now owns modal-close/success completion, and duplicate modal-close waits were removed from touched consumers.
    - issue title edit guards now cover both the detail modal and the direct issue page route.
    - issue description/priority edit guards now cover both the detail modal and the direct issue page route.
-   - next target: any remaining dialog-open/dialog-close assertions that are still duplicated in specs.
+   - issue-detail dialog close assertions now go through `ProjectsPage.closeIssueDetail()` in the touched modal consumers.
+   - next target: remaining repeated dialog-open expectations and non-project modal close patterns in other specs/page objects.
 2. Selector contract completion:
    - `pnpm run validate` now passes with no `Test ID constants` warnings.
    - continue replacing brittle text/CSS fallbacks opportunistically when modifying critical specs.
@@ -126,6 +127,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `createIssue()` owns the completion signal, so touched specs now assert the user-visible outcome instead of re-checking modal closure.
 - Issue metadata edit coverage now uses stable detail selectors for description content and case-insensitive priority assertions, so the modal test guards both persistence and UI presentation without brittle text casing.
 - Standalone issue-detail route interactions now go through `IssueDetailPage`, so direct-route specs no longer reach into `getByTestId()` from the spec body for description edit assertions.
+- Issue-detail modal close flows now go through `ProjectsPage.closeIssueDetail()`, so touched specs do not inline `Escape` plus dialog-hidden waits after edits.
 
 ## Latest Targeted Hardening Evidence
 
@@ -143,6 +145,8 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `5 passed (3.0m)`
 - `pnpm exec playwright test e2e/issue-detail-page.spec.ts --reporter=line --workers=1`
   - `5 passed (3.0m)`
+- `pnpm exec playwright test e2e/issues.spec.ts e2e/integration-workflow.spec.ts --reporter=line --workers=1`
+  - `9 passed (4.9m)`
 - `pnpm exec playwright test e2e/board-drag-drop.spec.ts e2e/time-tracking.spec.ts e2e/search.spec.ts e2e/activity-feed.spec.ts e2e/analytics.spec.ts e2e/integration-workflow.spec.ts --reporter=line --workers=1`
   - `26 passed (9.2m)`
 

@@ -58,8 +58,7 @@ test.describe("Integration Workflows", () => {
       console.log("✓ Issue detail panel opened");
 
       // Step 9: Close issue detail (press Escape or click outside)
-      await page.keyboard.press("Escape");
-      await expect(detailPanel).not.toBeVisible();
+      await projectsPage.closeIssueDetail();
       console.log("✓ Issue detail panel closed");
 
       console.log("\n✅ Project management workflow completed successfully");
