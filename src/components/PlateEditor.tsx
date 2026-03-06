@@ -11,7 +11,7 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import type { Value } from "platejs";
 import { Plate, PlateContent, usePlateEditor } from "platejs/react";
 import { useState } from "react";
@@ -42,7 +42,11 @@ interface PlateEditorProps {
  */
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Editor component with multiple document operations and state management
 export function PlateEditor({ documentId }: PlateEditorProps) {
-  const document = useQuery(api.documents.getDocument, { id: documentId });
+  const { isAuthenticated } = useConvexAuth();
+  const document = useQuery(
+    api.documents.getDocument,
+    isAuthenticated ? { id: documentId } : "skip",
+  );
   const updateTitle = useMutation(api.documents.updateTitle);
   const togglePublic = useMutation(api.documents.togglePublic);
   const toggleFavorite = useMutation(api.documents.toggleFavorite);
@@ -50,11 +54,17 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
   const unarchiveDocument = useMutation(api.documents.unarchiveDocument);
   const lockDocument = useMutation(api.documents.lockDocument);
   const unlockDocument = useMutation(api.documents.unlockDocument);
-  const isFavorite = useQuery(api.documents.isFavorite, { documentId });
-  const isArchived = useQuery(api.documents.isArchived, { documentId });
-  const lockStatus = useQuery(api.documents.getLockStatus, { documentId });
-  const userId = useQuery(api.presence.getUserId);
-  const versionCount = useQuery(api.documentVersions.getVersionCount, { documentId });
+  const isFavorite = useQuery(api.documents.isFavorite, isAuthenticated ? { documentId } : "skip");
+  const isArchived = useQuery(api.documents.isArchived, isAuthenticated ? { documentId } : "skip");
+  const lockStatus = useQuery(
+    api.documents.getLockStatus,
+    isAuthenticated ? { documentId } : "skip",
+  );
+  const userId = useQuery(api.presence.getUserId, isAuthenticated ? undefined : "skip");
+  const versionCount = useQuery(
+    api.documentVersions.getVersionCount,
+    isAuthenticated ? { documentId } : "skip",
+  );
 
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [showMoveDialog, setShowMoveDialog] = useState(false);

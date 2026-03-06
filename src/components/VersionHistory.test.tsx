@@ -6,6 +6,7 @@ import { render, screen, waitFor } from "@/test/custom-render";
 import { VersionHistory } from "./VersionHistory";
 
 vi.mock("convex/react", () => ({
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   useMutation: vi.fn(),
   useQuery: vi.fn(),
 }));

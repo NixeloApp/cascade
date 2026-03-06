@@ -8,7 +8,7 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
@@ -35,6 +35,7 @@ export function MoveDocumentDialog({
   currentProjectId,
   organizationId,
 }: MoveDocumentDialogProps) {
+  const { isAuthenticated } = useConvexAuth();
   const [selectedProjectId, setSelectedProjectId] = useState<Id<"projects"> | "">(
     currentProjectId || "",
   );
@@ -47,7 +48,10 @@ export function MoveDocumentDialog({
     }
   }, [open, currentProjectId]);
 
-  const projects = useQuery(api.projects.getCurrentUserProjects, { organizationId });
+  const projects = useQuery(
+    api.projects.getCurrentUserProjects,
+    open && isAuthenticated ? { organizationId } : "skip",
+  );
   const moveToProject = useMutation(api.documents.moveToProject);
 
   const handleMove = async () => {
