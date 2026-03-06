@@ -67,11 +67,14 @@ export class ProjectsPage extends BasePage {
   readonly projectTabs: Locator;
   readonly boardTab: Locator;
   readonly backlogTab: Locator;
+  readonly calendarTab: Locator;
+  readonly timesheetTab: Locator;
   readonly roadmapTab: Locator;
   readonly sprintsTab: Locator;
   readonly activityTab: Locator;
   readonly analyticsTab: Locator;
   readonly settingsTab: Locator;
+  readonly timesheetEntriesTab: Locator;
   readonly sprintsPageHeader: Locator;
   readonly createSprintButton: Locator;
   readonly sprintsEmptyState: Locator;
@@ -189,11 +192,14 @@ export class ProjectsPage extends BasePage {
     this.projectTabs = page.getByRole("navigation", { name: "Tabs" }).or(page.getByLabel("Tabs"));
     this.boardTab = this.projectTabs.getByRole("link", { name: /^Board$/ });
     this.backlogTab = this.projectTabs.getByRole("link", { name: /^Backlog$/ });
+    this.calendarTab = this.projectTabs.getByRole("link", { name: /^Calendar$/ });
+    this.timesheetTab = this.projectTabs.getByRole("link", { name: /^Timesheet$/ });
     this.roadmapTab = this.projectTabs.getByRole("link", { name: /^Roadmap$/ });
     this.sprintsTab = this.projectTabs.getByRole("link", { name: /^Sprints$/ });
     this.activityTab = this.projectTabs.getByRole("link", { name: /^Activity$/ });
     this.analyticsTab = this.projectTabs.getByRole("link", { name: /^Analytics$/ });
     this.settingsTab = this.projectTabs.getByRole("link", { name: /^Settings$/ });
+    this.timesheetEntriesTab = page.getByRole("tab", { name: /time entries/i });
     this.sprintsPageHeader = page.getByRole("heading", { name: /sprint management/i });
     this.createSprintButton = page.getByRole("button", { name: /^create sprint$/i }).first();
     this.sprintsEmptyState = page.getByText(/no sprints yet/i);
@@ -251,11 +257,22 @@ export class ProjectsPage extends BasePage {
   }
 
   getProjectTab(
-    tab: "board" | "backlog" | "roadmap" | "sprints" | "activity" | "analytics" | "settings",
+    tab:
+      | "board"
+      | "backlog"
+      | "calendar"
+      | "timesheet"
+      | "roadmap"
+      | "sprints"
+      | "activity"
+      | "analytics"
+      | "settings",
   ) {
     const tabs = {
       board: this.boardTab,
       backlog: this.backlogTab,
+      calendar: this.calendarTab,
+      timesheet: this.timesheetTab,
       roadmap: this.roadmapTab,
       sprints: this.sprintsTab,
       activity: this.activityTab,
@@ -459,7 +476,16 @@ export class ProjectsPage extends BasePage {
   }
 
   async switchToTab(
-    tab: "board" | "backlog" | "roadmap" | "sprints" | "activity" | "analytics" | "settings",
+    tab:
+      | "board"
+      | "backlog"
+      | "calendar"
+      | "timesheet"
+      | "roadmap"
+      | "sprints"
+      | "activity"
+      | "analytics"
+      | "settings",
   ) {
     const tabLocator = this.getProjectTab(tab);
 
@@ -476,6 +502,8 @@ export class ProjectsPage extends BasePage {
     const tabPaths = {
       board: /\/board(?:[/?#]|$)/,
       backlog: /\/backlog(?:[/?#]|$)/,
+      calendar: /\/calendar(?:[/?#]|$)/,
+      timesheet: /\/timesheet(?:[/?#]|$)/,
       roadmap: /\/roadmap(?:[/?#]|$)/,
       sprints: /\/sprints(?:[/?#]|$)/,
       activity: /\/activity(?:[/?#]|$)/,
@@ -496,8 +524,17 @@ export class ProjectsPage extends BasePage {
       return;
     }
 
+    if (tab === "calendar") {
+      return;
+    }
+
     if (tab === "backlog") {
       await this.expectBacklogLoaded();
+      return;
+    }
+
+    if (tab === "timesheet") {
+      await this.expectTimesheetLoaded();
       return;
     }
 
@@ -522,11 +559,35 @@ export class ProjectsPage extends BasePage {
   }
 
   async isProjectTabVisible(
-    tab: "board" | "backlog" | "roadmap" | "sprints" | "activity" | "analytics" | "settings",
+    tab:
+      | "board"
+      | "backlog"
+      | "calendar"
+      | "timesheet"
+      | "roadmap"
+      | "sprints"
+      | "activity"
+      | "analytics"
+      | "settings",
   ) {
     return this.getProjectTab(tab)
       .isVisible()
       .catch(() => false);
+  }
+
+  async expectProjectTabCurrent(
+    tab:
+      | "board"
+      | "backlog"
+      | "calendar"
+      | "timesheet"
+      | "roadmap"
+      | "sprints"
+      | "activity"
+      | "analytics"
+      | "settings",
+  ) {
+    await expect(this.getProjectTab(tab)).toHaveAttribute("aria-current", "page");
   }
 
   async expectAnalyticsLoaded() {
@@ -576,6 +637,11 @@ export class ProjectsPage extends BasePage {
     await expect(this.page).toHaveURL(/\/backlog(?:[/?#]|$)/);
     await expect(this.boardColumns.first()).toBeVisible();
     await expect(this.getBoardColumn("Backlog")).toBeVisible();
+  }
+
+  async expectTimesheetLoaded() {
+    await expect(this.page).toHaveURL(/\/timesheet(?:[/?#]|$)/);
+    await expect(this.timesheetEntriesTab).toBeVisible();
   }
 
   async expectRoadmapLoaded() {

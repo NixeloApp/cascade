@@ -78,31 +78,20 @@ test.describe("Integration Workflows", () => {
       await expect(page).toHaveURL(/\/board/);
       console.log("✓ On board tab");
 
-      // Project tabs are in the Tabs landmark - scope selectors to avoid matching sidebar nav
-      const projectTabs = page.getByLabel("Tabs");
-
-      // Switch to Calendar - wait for tab to be visible first
-      const calendarTab = projectTabs.getByRole("link", { name: /calendar/i });
-      await calendarTab.waitFor({ state: "visible" });
-      await calendarTab.click();
-      await expect(page).toHaveURL(/\/calendar/);
-      await expect(calendarTab).toHaveAttribute("aria-current", "page");
+      // Switch to Calendar
+      await projectsPage.switchToTab("calendar");
+      await projectsPage.expectProjectTabCurrent("calendar");
       console.log("✓ Navigated to calendar");
 
       // Switch to Timesheet
-      const timesheetTab = projectTabs.getByRole("link", { name: /timesheet/i });
-      await timesheetTab.waitFor({ state: "visible" });
-      await timesheetTab.click();
-      await expect(page).toHaveURL(/\/timesheet/);
-      await expect(timesheetTab).toHaveAttribute("aria-current", "page");
-      await expect(page.getByRole("tab", { name: /time entries/i })).toBeVisible();
+      await projectsPage.switchToTab("timesheet");
+      await projectsPage.expectProjectTabCurrent("timesheet");
+      await projectsPage.expectTimesheetLoaded();
       console.log("✓ Navigated to timesheet");
 
       // Switch back to Board
-      const boardTab = projectTabs.getByRole("link", { name: /board/i });
-      await boardTab.waitFor({ state: "visible" });
-      await boardTab.click();
-      await expect(page).toHaveURL(/\/board/);
+      await projectsPage.switchToTab("board");
+      await projectsPage.expectProjectTabCurrent("board");
       console.log("✓ Navigated back to board");
 
       console.log("\n✅ Tab navigation workflow completed successfully");
