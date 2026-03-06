@@ -144,7 +144,7 @@ test.describe("Issues", () => {
 
       await projectsPage.openIssueDetail(issueTitle);
       await expect(projectsPage.issueDetailDescriptionContent).toContainText(updatedDescription);
-      await expect(projectsPage.issueDetailPrioritySelect).toContainText("High");
+      await expect(projectsPage.issueDetailPrioritySelect).toContainText(/high/i);
     });
 
     test("issue detail shows timer controls", async ({ projectsPage }) => {

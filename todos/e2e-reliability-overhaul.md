@@ -120,8 +120,10 @@ This is the concrete "what's left" list for reliability hardening after the late
 
 - Project-tab navigation is scoped to the project tab strip to avoid collisions with global navigation links.
 - `createProject()` now retries `click -> /projects/[KEY]/board` to absorb modal/hydration redirect races.
+- `createProject()` now scopes to the active project modal, waits for modal-close plus success toast, and falls back to direct board navigation when the client-side redirect lags after a confirmed create.
 - Issue-detail URL specs now read the issue key from `TEST_IDS.ISSUE.KEY` via `ProjectsPage`, not by parsing the card `aria-label`.
 - `createIssue()` owns the completion signal, so touched specs now assert the user-visible outcome instead of re-checking modal closure.
+- Issue metadata edit coverage now uses stable detail selectors for description content and case-insensitive priority assertions, so the modal test guards both persistence and UI presentation without brittle text casing.
 
 ## Latest Targeted Hardening Evidence
 
@@ -134,7 +136,9 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `pnpm exec playwright test e2e/issues.spec.ts e2e/issue-detail-page.spec.ts --reporter=line --workers=1`
   - superseded by the dedicated issue-edit runs below
 - `pnpm exec playwright test e2e/issues.spec.ts --reporter=line --workers=1`
-  - `4 passed (1.9m)`
+  - superseded by the current issues hardening rerun below
+- `pnpm exec playwright test e2e/issues.spec.ts --reporter=line --workers=1`
+  - `5 passed (3.0m)`
 - `pnpm exec playwright test e2e/issue-detail-page.spec.ts --reporter=line --workers=1`
   - `4 passed (1.7m)`
 - `pnpm exec playwright test e2e/board-drag-drop.spec.ts e2e/time-tracking.spec.ts e2e/search.spec.ts e2e/activity-feed.spec.ts e2e/analytics.spec.ts e2e/integration-workflow.spec.ts --reporter=line --workers=1`

@@ -6,6 +6,7 @@
  */
 
 import { type APIRequestContext, expect, type Locator, type Page } from "@playwright/test";
+import { TEST_IDS } from "../../src/lib/test-ids";
 
 /**
  * Wait timeouts used across tests.
@@ -210,6 +211,23 @@ export async function waitForIssueUpdateSuccess(page: Page): Promise<void> {
     .filter({ hasText: /issue updated/i })
     .first();
   await expect(issueUpdatedToast).toBeVisible();
+}
+
+/**
+ * Wait for project creation completion signal.
+ * The modal must close and the success toast must appear.
+ */
+export async function waitForProjectCreateSuccess(page: Page): Promise<void> {
+  const createProjectModal = page
+    .getByRole("dialog")
+    .filter({ has: page.getByTestId(TEST_IDS.PROJECT.CREATE_MODAL) });
+  const projectCreatedToast = page
+    .locator("[data-sonner-toast][data-type='success']")
+    .filter({ hasText: /project created successfully/i })
+    .first();
+
+  await expect(createProjectModal).not.toBeVisible();
+  await expect(projectCreatedToast).toBeVisible();
 }
 
 type WorkspaceCreationDialogOptions = {

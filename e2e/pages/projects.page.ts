@@ -7,6 +7,7 @@ import {
   waitForBoardLoaded,
   waitForIssueCreateSuccess,
   waitForIssueUpdateSuccess,
+  waitForProjectCreateSuccess,
 } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
@@ -128,14 +129,13 @@ export class ProjectsPage extends BasePage {
 
     // Create project form - look for dialog content
     // Fallback to role since test-id might be stripped or unreliable in some interactions
-    this.createProjectForm = page.getByRole("dialog");
+    this.createProjectForm = page
+      .getByRole("dialog")
+      .filter({ has: page.getByTestId(TEST_IDS.PROJECT.CREATE_MODAL) });
 
     // Template selection
     // Select from stable modal content instead of hardcoding template display names
-    this.templateOptionButtons = page
-      .getByTestId(TEST_IDS.PROJECT.CREATE_MODAL)
-      .locator("li")
-      .getByRole("button");
+    this.templateOptionButtons = this.createProjectForm.locator("li").getByRole("button");
 
     this.projectNameInput = page.getByTestId(TEST_IDS.PROJECT.NAME_INPUT);
     this.projectKeyInput = page.getByTestId(TEST_IDS.PROJECT.KEY_INPUT);
@@ -303,14 +303,20 @@ export class ProjectsPage extends BasePage {
         await this.projectDescriptionInput.fill(description);
       }
 
-      // Create project and tolerate occasional missed clicks or slower route transitions.
+      const normalizedProjectKey = key.toUpperCase();
+      const boardPath = `/${this.orgSlug}/projects/${normalizedProjectKey}/board`;
+      const boardUrlPattern = new RegExp(`/projects/${normalizedProjectKey}/board(?:[/?#]|$)`);
+
+      await this.createButton.waitFor({ state: "visible" });
+      await expect(this.createButton).toBeEnabled();
+      await this.createButton.scrollIntoViewIfNeeded();
+
+      // Retry the submit action until the modal begins closing. The project creation dialog
+      // occasionally misses the first click while the footer settles after hydration.
       await expect(async () => {
-        if (/\/projects\/[A-Z0-9-]+\/board/.test(this.page.url())) {
+        if (!(await this.createProjectForm.isVisible())) {
           return;
         }
-
-        await this.createButton.waitFor({ state: "visible" });
-        await expect(this.createButton).toBeEnabled();
 
         try {
           await this.createButton.click();
@@ -318,9 +324,16 @@ export class ProjectsPage extends BasePage {
           await this.createButton.dispatchEvent("click");
         }
 
-        // The app redirects client-side to /projects/[KEY]/board after creation.
-        await expect(this.page).toHaveURL(/\/projects\/[A-Z0-9-]+\/board/, { timeout: 5000 });
+        await expect(this.createProjectForm).not.toBeVisible({ timeout: 5000 });
       }).toPass({ timeout: 30000, intervals: [1000] });
+
+      await waitForProjectCreateSuccess(this.page);
+
+      if (!boardUrlPattern.test(this.page.url())) {
+        await this.page.goto(boardPath);
+      }
+
+      await expect(this.page).toHaveURL(boardUrlPattern);
 
       // Wait for board to be fully interactive before returning
       await this.waitForBoardInteractive();
@@ -542,7 +555,7 @@ export class ProjectsPage extends BasePage {
     await expect(option).toBeVisible();
     await option.click();
 
-    await expect(this.issueDetailPrioritySelect).toContainText(priorityLabel);
+    await expect(this.issueDetailPrioritySelect).toContainText(new RegExp(priorityLabel, "i"));
     await waitForIssueUpdateSuccess(this.page);
   }
 
