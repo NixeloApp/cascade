@@ -371,18 +371,12 @@ export class AuthPage extends BasePage {
   }
 
   async requestPasswordReset(email: string) {
-    const forgotPasswordForm = this.page
-      .getByRole("heading", { name: /reset your password/i })
-      .locator("..")
-      .locator("form");
-
     await expect(this.emailInput).toBeVisible({ timeout: 30000 });
     await this.emailInput.fill(email);
     await expect(this.emailInput).toHaveValue(email);
     await expect(this.sendResetCodeButton).toBeEnabled();
 
-    // Submit via form API to avoid button-actionability flakes.
-    await forgotPasswordForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
+    await this.sendResetCodeButton.click();
     await expect(this.checkEmailHeading).toBeVisible({ timeout: 30000 });
     await expect(this.codeInput).toBeVisible({ timeout: 30000 });
   }

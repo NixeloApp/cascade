@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/form/Input";
 import { ROUTES } from "@/config/routes";
 import { getConvexSiteUrl } from "@/lib/convex";
 import { TEST_IDS } from "@/lib/test-ids";
-import { showSuccess } from "@/lib/toast";
+import { showError, showSuccess } from "@/lib/toast";
 
 export const Route = createFileRoute("/forgot-password")({
   component: ForgotPasswordRoute,
@@ -35,19 +35,24 @@ function ForgotPasswordPage() {
     const formEmail = formData.get("email") as string;
 
     try {
-      await fetch(`${getConvexSiteUrl()}/auth/request-reset`, {
+      const response = await fetch(`${getConvexSiteUrl()}/auth/request-reset`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: formEmail }),
       });
-    } catch {
-      // Ignore network errors
-    }
 
-    setEmail(formEmail);
-    setShowReset(true);
-    showSuccess("If an account exists, you'll receive a reset code");
-    setSubmitting(false);
+      if (!response.ok) {
+        throw new Error(`Password reset request failed with status ${response.status}`);
+      }
+
+      setEmail(formEmail);
+      setShowReset(true);
+      showSuccess("Check your email for the reset code");
+    } catch {
+      showError("Could not send reset code. Please check your email.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (showReset) {

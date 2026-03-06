@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { internal } from "./_generated/api";
-import { securePasswordResetHandler } from "./authWrapper";
+import { securePasswordResetHandler, securePasswordResetPreflightHandler } from "./authWrapper";
 import { shouldRunInlineForE2E } from "./lib/envDetection";
 import { logger } from "./lib/logger";
 
@@ -233,5 +233,44 @@ describe("securePasswordResetHandler", () => {
     expect(runMutationMock).toHaveBeenCalledWith(internal.authWrapper.checkPasswordResetRateLimit, {
       ip: "1.2.3.4",
     });
+  });
+
+  it("should include CORS headers for allowed app origin", async () => {
+    vi.stubEnv("SITE_URL", "http://localhost:5555");
+    const request = createRequest(
+      { email: "test@example.com" },
+      { Origin: "http://localhost:5555" },
+    );
+
+    runMutationMock.mockResolvedValue(undefined);
+    runActionMock.mockResolvedValue(undefined);
+
+    const response = await securePasswordResetHandler(mockCtx, request);
+
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe("http://localhost:5555");
+    expect(response.headers.get("Access-Control-Allow-Methods")).toBe("POST, OPTIONS");
+    expect(response.headers.get("Access-Control-Allow-Headers")).toBe("Content-Type");
+
+    vi.unstubAllEnvs();
+  });
+
+  it("should answer preflight requests for allowed app origin", async () => {
+    vi.stubEnv("SITE_URL", "http://localhost:5555");
+    const request = new Request("https://example.com/api/auth/reset", {
+      method: "OPTIONS",
+      headers: {
+        Origin: "http://localhost:5555",
+        "Access-Control-Request-Method": "POST",
+      },
+    });
+
+    const response = await securePasswordResetPreflightHandler(mockCtx, request);
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe("http://localhost:5555");
+    expect(response.headers.get("Access-Control-Allow-Methods")).toBe("POST, OPTIONS");
+    expect(response.headers.get("Access-Control-Allow-Headers")).toBe("Content-Type");
+
+    vi.unstubAllEnvs();
   });
 });
