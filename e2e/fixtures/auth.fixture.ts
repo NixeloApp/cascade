@@ -69,11 +69,17 @@ export const authenticatedTest = base.extend<AuthFixtures>({
   skipAuthSave: [true, { option: true }],
 
   ensureAuthenticated: async ({ page, orgSlug }, use, testInfo) => {
+    let didAuthenticateThisTest = false;
+
     // Determine the base URL from the current context or config
     // Since we are starting fresh, page.url() might be about:blank
     const baseURL = process.env.BASE_URL || "http://localhost:5555";
 
     const authenticate = async () => {
+      if (didAuthenticateThisTest) {
+        return;
+      }
+
       // 1. Clear any existing state (redundant if new context, but safe)
       await page.context().clearCookies();
 
@@ -101,6 +107,8 @@ export const authenticatedTest = base.extend<AuthFixtures>({
       } else {
         await expect(page).toHaveURL(/\/$/);
       }
+
+      didAuthenticateThisTest = true;
     };
 
     await use(authenticate);
@@ -173,10 +181,16 @@ export const onboardingTest = base.extend<AuthFixtures>({
   skipAuthSave: [true, { option: true }],
 
   ensureAuthenticated: async ({ page }, use, testInfo) => {
+    let didAuthenticateThisTest = false;
+
     const baseURL = process.env.BASE_URL || "http://localhost:5555";
     const onboardingUrl = "/onboarding";
 
     const authenticate = async () => {
+      if (didAuthenticateThisTest) {
+        return;
+      }
+
       // 1. Clear any existing state
       await page.context().clearCookies();
 
@@ -200,6 +214,8 @@ export const onboardingTest = base.extend<AuthFixtures>({
       // 4. Ensure we are at /onboarding
       await page.goto(onboardingUrl);
       await expect(page).toHaveURL(/\/onboarding/);
+
+      didAuthenticateThisTest = true;
     };
 
     await use(authenticate);
