@@ -451,6 +451,12 @@ export class DashboardPage extends BasePage {
     }).toPass();
   }
 
+  async closeGlobalSearchWithEscape() {
+    await expect(this.globalSearchModal).toBeVisible();
+    await this.page.keyboard.press("Escape");
+    await expect(this.globalSearchModal).not.toBeVisible();
+  }
+
   async openGlobalSearchWithShortcut() {
     await waitForDashboardReady(this.page);
 

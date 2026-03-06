@@ -168,23 +168,16 @@ test.describe("Global Search", () => {
     await dashboardPage.closeGlobalSearch();
   });
 
-  test("can close search with Escape key", async ({ dashboardPage, page }) => {
+  test("can close search with Escape key", async ({ dashboardPage }) => {
     await dashboardPage.goto();
     await dashboardPage.expectLoaded();
     await dashboardPage.openGlobalSearch();
 
-    // Verify modal is open
-    await expect(dashboardPage.globalSearchModal).toBeVisible();
-
-    // Press Escape
-    await page.keyboard.press("Escape");
-
-    // Modal should close
-    await expect(dashboardPage.globalSearchModal).not.toBeVisible();
+    await dashboardPage.closeGlobalSearchWithEscape();
     console.log("✓ Search closed with Escape key");
   });
 
-  test("can open search with keyboard shortcut", async ({ dashboardPage, page }) => {
+  test("can open search with keyboard shortcut", async ({ dashboardPage }) => {
     await dashboardPage.goto();
     await dashboardPage.expectLoaded();
 
@@ -195,6 +188,6 @@ test.describe("Global Search", () => {
     console.log("✓ Search opened with keyboard shortcut");
 
     // Close it
-    await page.keyboard.press("Escape");
+    await dashboardPage.closeGlobalSearchWithEscape();
   });
 });
