@@ -125,18 +125,23 @@ Full-suite evidence in this TODO is considered stale if older than 24 hours.
   - latest run outcome, duration, and skip count
   - immediate next action when not 100% pass
 
-## Blocker Update (2026-03-05)
+## Latest Verified Full-Suite Evidence
 
-- Local full-suite run command:
+- Run command:
   - `pnpm exec playwright test --reporter=line`
-- Current result:
-  - `155 passed (7.0m)`, no skipped tests.
-- Resolution notes:
-  - Re-enabled `Sprints` spec suite by removing `test.describe.skip(...)`.
-  - Replaced static skipped calendar OAuth placeholder with runnable redirect-contract assertion.
-  - Tightened sprint create-button locator scope to avoid strict-mode ambiguity.
-- Next step:
-  - Continue hardening unchecked reliability items (selector contracts, deterministic action completion signals, and data-isolation improvements).
+- Run date:
+  - `2026-03-05`
+- Outcome:
+  - `155 passed (7.0m)`, `0 skipped`
+- Gate interpretation:
+  - this is a historical green run; refresh is required when evidence is older than 24 hours (see `Evidence Freshness Guard`).
+
+## Historical Resolution Notes (2026-03-05)
+
+- Re-enabled `Sprints` spec suite by removing `test.describe.skip(...)`.
+- Replaced static skipped calendar OAuth placeholder with runnable redirect-contract assertion.
+- Tightened sprint create-button locator scope to avoid strict-mode ambiguity.
+- Follow-up focus remains: selector contracts, deterministic completion signals, and data-isolation hardening.
 
 ## Related Files
 
