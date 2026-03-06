@@ -7,7 +7,7 @@
  */
 
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
@@ -29,12 +29,17 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
   const { signIn } = useAuthActions();
   const [submitting, setSubmitting] = useState(false);
   const [newPassword, setNewPassword] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const submitReset = () => {
+    const form = formRef.current;
+    if (!form || submitting) {
+      return;
+    }
+
     setSubmitting(true);
 
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData(form);
     formData.set("email", email);
     formData.set("flow", "reset-verification");
 
@@ -49,6 +54,20 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
       .finally(() => setSubmitting(false));
   };
 
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    submitReset();
+  };
+
+  const handleKeyDownCapture = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    if (e.key !== "Enter") {
+      return;
+    }
+
+    e.preventDefault();
+    submitReset();
+  };
+
   return (
     <div className="w-full">
       <Typography variant="h2" className="text-xl font-semibold mb-4">
@@ -57,7 +76,12 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
       <Typography variant="p" color="secondary" className="mb-4 text-sm">
         We sent a code to <strong>{email}</strong>. Enter it below with your new password.
       </Typography>
-      <form className="flex flex-col gap-form-field" onSubmit={handleSubmit}>
+      <form
+        ref={formRef}
+        className="flex flex-col gap-form-field"
+        onSubmit={handleSubmit}
+        onKeyDownCapture={handleKeyDownCapture}
+      >
         <Input
           type="text"
           name="code"
@@ -79,11 +103,12 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
         />
         <PasswordStrengthIndicator password={newPassword} className="-mt-2" />
         <Button
-          type="submit"
+          type="button"
           size="lg"
           className="w-full"
           disabled={submitting}
           data-testid={TEST_IDS.AUTH.RESET_SUBMIT_BUTTON}
+          onClick={submitReset}
         >
           {submitting ? "Resetting..." : "Reset password"}
         </Button>

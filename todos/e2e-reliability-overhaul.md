@@ -156,6 +156,16 @@ Full-suite evidence in this TODO is considered stale if older than 24 hours.
   - `3 passed (1.6m)`
   - `pnpm exec playwright test e2e/documents.spec.ts --reporter=line --workers=1`
   - `4 passed (1.2m)`
+- Hardened the forgot-password/reset flow against route remounts during auth HTTP responses by making the reset step URL-backed (`/forgot-password?step=reset&email=...`) instead of local component state.
+- Removed native submit races from the password-reset request and reset-code forms by using explicit button-driven submission plus Enter-key handlers, and added a hydration wait before the forgot-password page object interacts with the form.
+- Root cause note:
+  - the forgot-password route could successfully request a reset OTP while remounting before React local state committed, so Playwright stayed on the initial form even though the backend had already generated a code.
+  - storing the step in the URL makes the UI deterministic across remounts and gives the test a stable completion signal (`Check your email` heading + reset-code input).
+- Targeted validation:
+  - `pnpm exec playwright test e2e/auth.spec.ts -g "password reset flow sends code and allows reset" --reporter=line --workers=1`
+  - `1 passed (17.9s)`
+  - `pnpm exec playwright test e2e/auth.spec.ts --reporter=line --workers=1`
+  - `19 passed (2.0m)`
 
 ## Historical Resolution Notes (2026-03-05)
 

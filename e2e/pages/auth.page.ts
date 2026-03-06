@@ -186,6 +186,7 @@ export class AuthPage extends BasePage {
   async gotoForgotPassword() {
     await this.page.goto("/forgot-password");
     await this.forgotPasswordHeading.waitFor({ state: "visible", timeout: 15000 });
+    await this.waitForHydration();
     await this.emailInput.waitFor({ state: "visible" });
   }
 
