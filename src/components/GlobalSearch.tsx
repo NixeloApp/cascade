@@ -10,6 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { useState } from "react";
+import type { FocusOutsideEvent } from "@radix-ui/react-dismissable-layer";
 import { AdvancedSearchModal } from "@/components/AdvancedSearchModal";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
@@ -302,6 +303,11 @@ export function GlobalSearch() {
   const isLoading =
     shouldSearch && (issueSearchResult === undefined || documentSearchResult === undefined);
 
+  const handleFocusOutside = (event: FocusOutsideEvent) => {
+    // Keep the palette open when cmdk momentarily drops focus during result-list transitions.
+    event.preventDefault();
+  };
+
   return (
     <>
       {/* Search Button */}
@@ -333,7 +339,11 @@ export function GlobalSearch() {
       </Button>
 
       {/* Search Modal */}
-      <CommandDialog open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
+      <CommandDialog
+        open={isOpen}
+        onOpenChange={(open) => !open && setIsOpen(false)}
+        onFocusOutside={handleFocusOutside}
+      >
         <Command data-testid={TEST_IDS.SEARCH.MODAL} className="bg-ui-bg" shouldFilter={false}>
           <CommandInput
             placeholder="Search issues and documents..."

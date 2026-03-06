@@ -31,6 +31,7 @@ interface CommandDialogProps {
   children: React.ReactNode;
   title?: string;
   description?: string;
+  onFocusOutside?: React.ComponentProps<typeof Dialog>["onFocusOutside"];
 }
 
 /**
@@ -42,6 +43,7 @@ function CommandDialog({
   children,
   title = "Search",
   description = "Search for issues, documents, and more",
+  onFocusOutside,
 }: CommandDialogProps) {
   return (
     <Dialog
@@ -49,6 +51,7 @@ function CommandDialog({
       onOpenChange={onOpenChange}
       title={title}
       description={description}
+      onFocusOutside={onFocusOutside}
       className="overflow-hidden p-0 bg-ui-bg-elevated border-ui-border animate-scale-in"
     >
       <Command className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-ui-text-secondary [&_[cmdk-group-heading]]: [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
