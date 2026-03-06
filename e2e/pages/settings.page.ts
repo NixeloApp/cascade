@@ -88,6 +88,7 @@ export class SettingsPage extends BasePage {
   readonly organizationNameInput: Locator;
   readonly requiresTimeApprovalSwitch: Locator;
   readonly saveSettingsButton: Locator;
+  readonly organizationSettingsHeading: Locator;
 
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
@@ -178,6 +179,9 @@ export class SettingsPage extends BasePage {
     this.inviteTable = page.getByTestId(TEST_IDS.INVITE.TABLE);
 
     // Admin - Organization Settings
+    this.organizationSettingsHeading = page.getByRole("heading", {
+      name: /organization settings/i,
+    });
     this.organizationNameInput = page.locator("#orgName");
     this.requiresTimeApprovalSwitch = page.getByTestId(TEST_IDS.SETTINGS.TIME_APPROVAL_SWITCH);
     this.saveSettingsButton = page.getByTestId(TEST_IDS.SETTINGS.SAVE_BUTTON);
@@ -259,9 +263,7 @@ export class SettingsPage extends BasePage {
 
     // For admin tab, also verify the admin content is actually visible
     if (tab === "admin") {
-      await this.page
-        .getByRole("heading", { name: /organization settings/i })
-        .waitFor({ state: "visible" });
+      await this.organizationSettingsHeading.waitFor({ state: "visible" });
     }
 
     await this.waitForLoad();
@@ -319,9 +321,7 @@ export class SettingsPage extends BasePage {
 
   async openInviteUserModal() {
     // Wait for the Admin tab content to be fully loaded - wait for heading to be visible
-    await this.page
-      .getByRole("heading", { name: /organization settings/i })
-      .waitFor({ state: "visible" });
+    await this.organizationSettingsHeading.waitFor({ state: "visible" });
 
     // Use the first "Invite User" button (header one, not empty state one)
     const inviteBtn = this.inviteUserButton.first();
@@ -459,6 +459,25 @@ export class SettingsPage extends BasePage {
     await expect(this.notificationPreferences).toBeVisible();
   }
 
+  async isAdminTabVisible() {
+    return this.adminTab.isVisible().catch(() => false);
+  }
+
+  async expectAdminTabHidden() {
+    await expect(this.adminTab).not.toBeVisible();
+  }
+
+  async expectAdminSettingsLoaded() {
+    await this.organizationSettingsHeading.waitFor({ state: "visible" });
+    await expect(this.organizationNameInput).toBeVisible();
+    await expect(this.requiresTimeApprovalSwitch).toBeVisible();
+  }
+
+  async expectAdminContentHidden() {
+    await expect(this.organizationSettingsHeading).not.toBeVisible();
+    await expect(this.organizationNameInput).not.toBeVisible();
+  }
+
   async updateOrganizationName(name: string) {
     if (name) {
       await this.organizationNameInput.fill(name);
@@ -526,5 +545,16 @@ export class SettingsPage extends BasePage {
   async expectOrganizationName(name: string) {
     await this.organizationNameInput.waitFor({ state: "visible" });
     await expect(this.organizationNameInput).toHaveValue(name);
+  }
+
+  async expectOrganizationNameVisible(name: string) {
+    await expect(this.page.getByText(name, { exact: false }).first()).toBeVisible();
+  }
+
+  async expectTimeApprovalEnabled(enabled: boolean) {
+    await expect(this.requiresTimeApprovalSwitch).toHaveAttribute(
+      "aria-checked",
+      enabled ? "true" : "false",
+    );
   }
 }
