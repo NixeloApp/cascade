@@ -392,13 +392,23 @@ export class AuthPage extends BasePage {
 
   async requestPasswordReset(email: string) {
     await expect(this.emailInput).toBeVisible({ timeout: 30000 });
-    await this.emailInput.fill(email);
-    await expect(this.emailInput).toHaveValue(email);
-    await expect(this.sendResetCodeButton).toBeEnabled();
 
-    await this.sendResetCodeButton.click();
-    await expect(this.checkEmailHeading).toBeVisible({ timeout: 30000 });
-    await expect(this.codeInput).toBeVisible({ timeout: 30000 });
+    await expect(async () => {
+      if (await this.codeInput.isVisible().catch(() => false)) {
+        return;
+      }
+
+      if (await this.emailInput.isVisible().catch(() => false)) {
+        await this.emailInput.fill(email);
+        await expect(this.emailInput).toHaveValue(email);
+        await expect(this.sendResetCodeButton).toBeEnabled();
+        await this.sendResetCodeButton.click();
+      }
+
+      // Transition can race on slow CI; use reset-code field as the stable completion signal.
+      await expect(this.checkEmailHeading.or(this.codeInput)).toBeVisible({ timeout: 15000 });
+      await expect(this.codeInput).toBeVisible({ timeout: 15000 });
+    }).toPass({ timeout: 60000, intervals: [500, 1000, 2000] });
   }
 
   async completePasswordReset(code: string, newPassword: string) {

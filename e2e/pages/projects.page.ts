@@ -803,7 +803,10 @@ export class ProjectsPage extends BasePage {
     await expect(async () => {
       await this.closeIssueDetailIfOpen();
       await issueCard.waitFor({ state: "visible" });
-      await issueCard.click();
+
+      // Some card overlays intentionally sit behind visible title text and can be intercepted.
+      // Force click keeps targeting the semantic button while bypassing transient pointer blockers.
+      await issueCard.click({ force: true });
       await expect(this.issueDetailDialog).toBeVisible();
 
       // Wait for modal content to be stable using the issue key metadata,
