@@ -94,6 +94,30 @@ test.describe("Issues", () => {
       await expect(projectsPage.issueDetailDialog).toBeVisible();
     });
 
+    test("can edit an issue title from the detail dialog", async ({ page, projectsPage }) => {
+      const uniqueId = Date.now().toString();
+      const projectKey = `EDIT${uniqueId.slice(-4)}`;
+      const originalTitle = `Editable Issue ${uniqueId}`;
+      const updatedTitle = `Updated Issue ${uniqueId}`;
+
+      await projectsPage.goto();
+      await projectsPage.createWorkspace(`Edit WS ${uniqueId}`);
+      await projectsPage.goto();
+      await projectsPage.createProject(`Project ${uniqueId}`, projectKey);
+
+      await projectsPage.createIssue(originalTitle);
+      await projectsPage.switchToTab("backlog");
+      await projectsPage.openIssueDetail(originalTitle);
+
+      await projectsPage.editIssueTitle(updatedTitle);
+
+      await page.keyboard.press("Escape");
+      await expect(projectsPage.issueDetailDialog).not.toBeVisible();
+
+      await expect(projectsPage.getIssueCard(updatedTitle)).toBeVisible();
+      await expect(projectsPage.getIssueCard(originalTitle)).toHaveCount(0);
+    });
+
     test("issue detail shows timer controls", async ({ projectsPage }) => {
       // Create project first
       const uniqueId = Date.now().toString();

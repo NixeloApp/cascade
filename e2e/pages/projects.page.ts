@@ -97,6 +97,9 @@ export class ProjectsPage extends BasePage {
   // Locators - Issue Detail Dialog
   // ===================
   readonly issueDetailDialog: Locator;
+  readonly issueDetailEditButton: Locator;
+  readonly issueDetailTitleInput: Locator;
+  readonly issueDetailSaveChangesButton: Locator;
   readonly startTimerButton: Locator;
   readonly stopTimerButton: Locator;
   readonly timerStoppedToast: Locator;
@@ -202,6 +205,11 @@ export class ProjectsPage extends BasePage {
     // Issue detail dialog
     // Issue detail dialog - distinct from Create Issue modal
     this.issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
+    this.issueDetailEditButton = this.issueDetailDialog.getByRole("button", { name: /^Edit$/ });
+    this.issueDetailTitleInput = this.issueDetailDialog.getByPlaceholder("Issue title");
+    this.issueDetailSaveChangesButton = this.issueDetailDialog.getByRole("button", {
+      name: /save changes/i,
+    });
     this.startTimerButton = this.issueDetailDialog.getByRole("button", { name: "Start Timer" });
     this.stopTimerButton = this.issueDetailDialog.getByRole("button", { name: /stop timer|stop/i });
     this.timerStoppedToast = page.getByText(/Timer stopped/i);
@@ -483,6 +491,20 @@ export class ProjectsPage extends BasePage {
     // Wait for modal content to be stable using the issue key metadata,
     // which is consistently rendered regardless of sidebar section timing.
     await expect(this.issueDetailDialog.getByText(/[A-Z][A-Z0-9]+-\d+/).first()).toBeVisible();
+  }
+
+  async editIssueTitle(nextTitle: string) {
+    await expect(this.issueDetailEditButton).toBeVisible();
+    await this.issueDetailEditButton.click();
+
+    await expect(this.issueDetailTitleInput).toBeVisible();
+    await this.issueDetailTitleInput.fill(nextTitle);
+    await expect(this.issueDetailTitleInput).toHaveValue(nextTitle);
+
+    await this.issueDetailSaveChangesButton.click();
+
+    await expect(this.issueDetailTitleInput).not.toBeVisible();
+    await expect(this.issueDetailDialog.getByRole("heading", { name: nextTitle })).toBeVisible();
   }
 
   /**
