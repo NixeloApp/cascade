@@ -118,7 +118,8 @@ This is the concrete "what's left" list for reliability hardening after the late
    - documents coverage now uses `DocumentsPage.createNewDocument()` as the completion boundary for URL change plus editor readiness, so touched docs specs no longer duplicate editor hydration assertions after every create step.
    - roadmap coverage now goes through `ProjectsPage` helpers for route readiness, current-month visibility, and epic-filter state instead of mixing direct tab navigation with inline timeline/filter lookups in the spec body.
    - sprint/backlog coverage now goes through `ProjectsPage` helpers for route-specific ready state, so `sprints.spec.ts` no longer mixes page-object tab switching with raw page-level heading/button assertions.
-   - next target: move repeated analytics metric/chart visibility checks behind `ProjectsPage` helpers so `analytics.spec.ts` stops reasserting the same loaded sections from the spec body.
+   - analytics coverage now goes through `ProjectsPage` helpers for route readiness, metric/chart visibility, total-issue count parsing, and empty-sprint messaging instead of reasserting those same sections from the spec body.
+   - next target: align `rbac.spec.ts` with `ProjectsPage` helpers for project-tab availability and route-specific readiness so role checks stop mixing raw `page.getByRole()` tab lookups with inline analytics/sprint assertions.
 2. Selector contract completion:
    - `pnpm run validate` now passes with no `Test ID constants` warnings.
    - continue replacing brittle text/CSS fallbacks opportunistically when modifying critical specs.
@@ -159,6 +160,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `DocumentsPage.createNewDocument()` now owns the post-create URL and editor-ready checks, after the docs rerun confirmed the spec no longer needs to reassert editor hydration separately after every new-document action.
 - `roadmap.spec.ts` now relies on `ProjectsPage` for roadmap route readiness, current-month visibility, and epic-filter state, after moving the remaining timeline/filter checks out of the spec body confirmed the route-specific controls can be treated as a single page-object contract.
 - `switchToTab("sprints")` and `switchToTab("backlog")` now finish on `ProjectsPage` route-specific ready checks, after the dedicated rerun confirmed `sprints.spec.ts` no longer needs raw heading/button assertions to prove the sprint manager and backlog board finished loading.
+- `analytics.spec.ts` now relies on `ProjectsPage` for analytics route readiness, metric/chart visibility, total-issue parsing, and empty-sprint messaging, after the targeted rerun confirmed the dashboard-specific loaded sections can be asserted as page-object contracts instead of repeated spec-local checks.
 
 ## Latest Targeted Hardening Evidence
 
@@ -210,6 +212,8 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `3 passed (1.6m)`
 - `pnpm exec playwright test e2e/sprints.spec.ts --reporter=line --workers=1`
   - `3 passed (2.0m)`
+- `pnpm exec playwright test e2e/analytics.spec.ts --reporter=line --workers=1`
+  - `5 passed (3.1m)`
 - `pnpm exec playwright test e2e/board-drag-drop.spec.ts e2e/time-tracking.spec.ts e2e/search.spec.ts e2e/activity-feed.spec.ts e2e/analytics.spec.ts e2e/integration-workflow.spec.ts --reporter=line --workers=1`
   - `26 passed (9.2m)`
 

@@ -37,18 +37,8 @@ test.describe("Analytics Dashboard", () => {
     await projectsPage.switchToTab("analytics");
     console.log("✓ Navigated to analytics page");
 
-    // Verify key metric cards are visible
-    await expect(projectsPage.analyticsTotalIssuesMetric).toBeVisible();
-    console.log("✓ Total Issues metric card visible");
-
-    await expect(projectsPage.analyticsUnassignedMetric).toBeVisible();
-    console.log("✓ Unassigned metric card visible");
-
-    await expect(projectsPage.analyticsAvgVelocityMetric).toBeVisible();
-    console.log("✓ Avg Velocity metric card visible");
-
-    await expect(projectsPage.analyticsCompletedSprintsMetric).toBeVisible();
-    console.log("✓ Completed Sprints metric card visible");
+    await projectsPage.expectAnalyticsMetricsVisible();
+    console.log("✓ Analytics metric cards visible");
   });
 
   test("analytics page displays chart sections", async ({ projectsPage }) => {
@@ -64,21 +54,8 @@ test.describe("Analytics Dashboard", () => {
 
     await projectsPage.switchToTab("analytics");
 
-    // Verify chart cards are visible
-    await expect(projectsPage.analyticsIssuesByStatusChart).toBeVisible();
-    console.log("✓ Issues by Status chart visible");
-
-    await expect(projectsPage.analyticsIssuesByTypeChart).toBeVisible();
-    console.log("✓ Issues by Type chart visible");
-
-    await expect(projectsPage.analyticsIssuesByPriorityChart).toBeVisible();
-    console.log("✓ Issues by Priority chart visible");
-
-    // Team Velocity chart - may need to scroll into view
-    // Note: ChartCard uses Typography variant="large" which renders <p>, not a heading
-    await projectsPage.analyticsTeamVelocityChart.scrollIntoViewIfNeeded();
-    await expect(projectsPage.analyticsTeamVelocityChart).toBeVisible();
-    console.log("✓ Team Velocity chart visible");
+    await projectsPage.expectAnalyticsChartsVisible();
+    console.log("✓ Analytics chart sections visible");
   });
 
   test("analytics shows correct issue count after creating issues", async ({ projectsPage }) => {
@@ -100,10 +77,7 @@ test.describe("Analytics Dashboard", () => {
 
     await projectsPage.switchToTab("analytics");
 
-    // Find the Total Issues metric by stable test id and parse the displayed number.
-    await expect(projectsPage.analyticsTotalIssuesMetric).toBeVisible();
-    const valueText = (await projectsPage.analyticsTotalIssuesMetric.textContent()) ?? "";
-    const issueCount = Number.parseInt(valueText.match(/\d+/)?.[0] ?? "0", 10);
+    const issueCount = await projectsPage.getAnalyticsTotalIssuesCount();
     expect(issueCount).toBeGreaterThanOrEqual(3);
     console.log(`✓ Total Issues count (${issueCount}) reflects created issues`);
   });
@@ -123,8 +97,7 @@ test.describe("Analytics Dashboard", () => {
 
     await projectsPage.switchToTab("analytics");
 
-    // Verify "No completed sprints yet" message in velocity chart
-    await expect(projectsPage.analyticsNoCompletedSprintsMessage).toBeVisible();
+    await projectsPage.expectAnalyticsNoCompletedSprintsVisible();
     console.log("✓ 'No completed sprints yet' message displayed");
   });
 
@@ -141,12 +114,7 @@ test.describe("Analytics Dashboard", () => {
 
     await projectsPage.switchToTab("analytics");
 
-    // Verify page header
-    await expect(projectsPage.analyticsPageHeader).toBeVisible();
-    console.log("✓ Analytics Dashboard header visible");
-
-    // Verify page description
-    await expect(projectsPage.analyticsPageDescription).toBeVisible();
-    console.log("✓ Page description visible");
+    await projectsPage.expectAnalyticsHeaderAndDescriptionVisible();
+    console.log("✓ Analytics page header and description visible");
   });
 });

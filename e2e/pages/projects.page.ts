@@ -499,9 +499,46 @@ export class ProjectsPage extends BasePage {
     }
 
     if (tab === "analytics") {
-      await expect(this.analyticsPageHeader).toBeVisible();
-      await expect(this.analyticsTotalIssuesMetric).toBeVisible();
+      await this.expectAnalyticsLoaded();
     }
+  }
+
+  async expectAnalyticsLoaded() {
+    await expect(this.page).toHaveURL(/\/analytics(?:[/?#]|$)/);
+    await expect(this.analyticsPageHeader).toBeVisible();
+    await expect(this.analyticsTotalIssuesMetric).toBeVisible();
+  }
+
+  async expectAnalyticsMetricsVisible() {
+    await this.expectAnalyticsLoaded();
+    await expect(this.analyticsUnassignedMetric).toBeVisible();
+    await expect(this.analyticsAvgVelocityMetric).toBeVisible();
+    await expect(this.analyticsCompletedSprintsMetric).toBeVisible();
+  }
+
+  async expectAnalyticsChartsVisible() {
+    await this.expectAnalyticsLoaded();
+    await expect(this.analyticsIssuesByStatusChart).toBeVisible();
+    await expect(this.analyticsIssuesByTypeChart).toBeVisible();
+    await expect(this.analyticsIssuesByPriorityChart).toBeVisible();
+    await this.analyticsTeamVelocityChart.scrollIntoViewIfNeeded();
+    await expect(this.analyticsTeamVelocityChart).toBeVisible();
+  }
+
+  async getAnalyticsTotalIssuesCount() {
+    await this.expectAnalyticsLoaded();
+    const valueText = (await this.analyticsTotalIssuesMetric.textContent()) ?? "";
+    return Number.parseInt(valueText.match(/\d+/)?.[0] ?? "0", 10);
+  }
+
+  async expectAnalyticsNoCompletedSprintsVisible() {
+    await this.expectAnalyticsLoaded();
+    await expect(this.analyticsNoCompletedSprintsMessage).toBeVisible();
+  }
+
+  async expectAnalyticsHeaderAndDescriptionVisible() {
+    await this.expectAnalyticsLoaded();
+    await expect(this.analyticsPageDescription).toBeVisible();
   }
 
   async expectBacklogLoaded() {
