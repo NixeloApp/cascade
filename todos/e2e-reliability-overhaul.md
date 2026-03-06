@@ -131,6 +131,8 @@ This is the concrete "what's left" list for reliability hardening after the late
    - `teams.spec.ts` now goes through `WorkspacesPage` helpers for workspace opening, teams-tab navigation, teams-page readiness, and empty-vs-teams state detection instead of branching on raw headings, workspace cards, and `Teams` links in the spec body.
    - `dashboard.spec.ts` now goes through `DashboardPage` helpers for main-section visibility, issue-filter visibility, and notification-panel visibility instead of asserting those raw locators from the spec body.
    - `onboarding.spec.ts` now goes through `OnboardingPage` for onboarding-route readiness, skip-to-dashboard completion, project-create completion, and dashboard-route readiness instead of mixing spec-level `waitForURL()` and dashboard-heading waits into the flow.
+   - current blocker: onboarding role selection is still not deterministic under mixed-worker pressure. The mixed repro `pnpm exec playwright test e2e/onboarding.spec.ts e2e/issue-detail-page.spec.ts --reporter=line --workers=2` still stalls on the role-select screen for `can select team lead role` or `can select team member role`, even after the page object now retries through route errors/connection readiness and the UI now recovers from rejected async role-selection callbacks instead of staying permanently pending.
+   - next step: instrument the onboarding role-selection path with explicit diagnostics for the post-click state (`aria-pressed`, `disabled`, toast/error visibility, console errors, and mutation failure surface) and harden the actual transition contract in the app instead of extending page-object retries further.
    - `issue-detail-page.spec.ts` now goes through `IssueDetailPage` for route-ready assertions, issue-not-found assertions, and breadcrumb navigation back to the project board instead of repeating direct URL, error-state, and route-return checks from the spec body.
    - `error-scenarios.spec.ts` now goes through `ProjectsPage`, `DocumentsPage`, and `IssueDetailPage` for authenticated non-existent project/document/issue checks instead of repeating route navigation and error-state assertions directly in the spec body.
    - `error-scenarios.spec.ts` now goes through `LandingPage.expectLandingOrSignInPage()` for the unauthenticated protected-route redirect check instead of polling raw headings from the spec body.
@@ -330,6 +332,14 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `2 passed (600ms)`
 - `pnpm exec playwright test e2e/workspaces-org.spec.ts --reporter=line --workers=1`
   - `5 passed (50.1s)`
+- `pnpm exec playwright test e2e/issue-detail-page.spec.ts -g "can edit issue description and priority from the direct issue detail page" --reporter=line --workers=1`
+  - `1 passed (1.3m)`
+- `pnpm vitest run src/components/Onboarding/RoleSelector.test.tsx`
+  - `1 passed (1.30s)`
+- `node node_modules/typescript/bin/tsc -b . --noEmit`
+  - `pass`
+- `pnpm exec playwright test e2e/onboarding.spec.ts e2e/issue-detail-page.spec.ts --reporter=line --workers=2`
+  - `1 failed before interruption`; blocker remains onboarding role selection in `e2e/onboarding.spec.ts` under mixed-worker load, while the direct issue-detail edit path continued to pass in isolated reruns
 
 ## Evidence Freshness Guard
 
