@@ -1,5 +1,7 @@
+import { TEST_IDS } from "../src/lib/test-ids";
 import { expect, authenticatedTest as test } from "./fixtures";
 import { testUserService } from "./utils/test-user-service";
+import { waitForIssueUpdateSuccess } from "./utils/wait-helpers";
 
 /**
  * Issue Detail Page E2E Tests
@@ -128,6 +130,68 @@ test.describe("Issue Detail Page", () => {
     await projectsPage.switchToTab("backlog");
     await expect(projectsPage.getIssueCard(updatedTitle)).toBeVisible();
     await expect(projectsPage.getIssueCard(originalTitle)).toHaveCount(0);
+  });
+
+  test("can edit issue description and priority from the direct issue detail page", async ({
+    projectsPage,
+    page,
+    orgSlug,
+  }) => {
+    const uniqueId = Date.now().toString();
+    const projectKey = `IMET${uniqueId.slice(-4)}`;
+    const issueTitle = `Direct Metadata Issue ${uniqueId}`;
+    const updatedDescription = `Direct metadata description ${uniqueId}`;
+
+    await projectsPage.goto();
+    await projectsPage.createWorkspace(`Issue Metadata WS ${uniqueId}`);
+    await projectsPage.goto();
+    await projectsPage.createProject(`Issue Metadata Project ${uniqueId}`, projectKey);
+    await projectsPage.createIssue(issueTitle);
+    await projectsPage.switchToTab("backlog");
+
+    await expect(projectsPage.getIssueCard(issueTitle)).toBeVisible();
+    const issueKey = await projectsPage.getIssueKey(issueTitle);
+    await expect(issueKey).toMatch(new RegExp(`${projectKey}-\\d+`));
+
+    await page.goto(`/${orgSlug}/issues/${issueKey}`);
+
+    const editIssueButton = page.getByRole("button", { name: /edit issue/i });
+    const issueDescriptionEditor = page.getByTestId(TEST_IDS.ISSUE.DESCRIPTION_EDITOR);
+    const issueDescriptionContent = page.getByTestId(TEST_IDS.ISSUE.DESCRIPTION_CONTENT);
+    const saveChangesButton = page.getByRole("button", { name: /save changes/i });
+    const prioritySelect = page.getByLabel("Change priority");
+
+    await expect(async () => {
+      if (!(await issueDescriptionEditor.isVisible().catch(() => false))) {
+        await editIssueButton.click();
+      }
+
+      await expect(issueDescriptionEditor).toBeVisible();
+      await issueDescriptionEditor.fill(updatedDescription);
+      await expect(saveChangesButton).toBeVisible();
+      await saveChangesButton.click();
+      await expect(issueDescriptionEditor).not.toBeVisible();
+      await expect(editIssueButton).toBeVisible();
+    }).toPass({ timeout: 20000, intervals: [1000] });
+
+    await waitForIssueUpdateSuccess(page);
+    await expect(issueDescriptionContent).toContainText(updatedDescription);
+
+    await prioritySelect.click();
+    const highOption = page.getByRole("option", { name: /^High$/i });
+    await expect(highOption).toBeVisible();
+    await highOption.click();
+
+    await expect(prioritySelect).toContainText(/high/i);
+    await waitForIssueUpdateSuccess(page);
+
+    await page.getByRole("link", { name: new RegExp(projectKey, "i") }).click();
+    await expect(page).toHaveURL(/\/projects\/.*\/board/);
+
+    await projectsPage.switchToTab("backlog");
+    await projectsPage.openIssueDetail(issueTitle);
+    await expect(projectsPage.issueDetailDescriptionContent).toContainText(updatedDescription);
+    await expect(projectsPage.issueDetailPrioritySelect).toContainText(/high/i);
   });
 
   test("issue detail page has breadcrumb back to project", async ({
