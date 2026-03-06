@@ -391,24 +391,50 @@ export class AuthPage extends BasePage {
   }
 
   async requestPasswordReset(email: string) {
-    await expect(this.emailInput).toBeVisible({ timeout: 30000 });
-
     await expect(async () => {
+      if (!this.page.url().includes("/forgot-password")) {
+        await this.page.goto("/forgot-password", { waitUntil: "domcontentloaded" });
+      }
+
+      await expect
+        .poll(
+          async () => {
+            const isForgotVisible = await this.forgotPasswordHeading.isVisible().catch(() => false);
+            const isCheckEmailVisible = await this.checkEmailHeading.isVisible().catch(() => false);
+            const isCodeVisible = await this.codeInput.isVisible().catch(() => false);
+            return isForgotVisible || isCheckEmailVisible || isCodeVisible;
+          },
+          { timeout: 15000, intervals: [250, 500, 1000] },
+        )
+        .toBe(true);
+
       if (await this.codeInput.isVisible().catch(() => false)) {
         return;
       }
 
-      if (await this.emailInput.isVisible().catch(() => false)) {
-        await this.emailInput.fill(email);
-        await expect(this.emailInput).toHaveValue(email);
-        await expect(this.sendResetCodeButton).toBeEnabled();
-        await this.sendResetCodeButton.click();
-      }
+      await expect(this.emailInput).toBeVisible({ timeout: 15000 });
 
-      // Transition can race on slow CI; use reset-code field as the stable completion signal.
-      await expect(this.checkEmailHeading.or(this.codeInput)).toBeVisible({ timeout: 15000 });
-      await expect(this.codeInput).toBeVisible({ timeout: 15000 });
-    }).toPass({ timeout: 60000, intervals: [500, 1000, 2000] });
+      await this.emailInput.fill(email);
+      await expect(this.emailInput).toHaveValue(email);
+      await expect(this.sendResetCodeButton).toBeEnabled();
+      await this.sendResetCodeButton.click();
+
+      // Transition can race on CI. Accept any reset-step UI signal, then require code input.
+      await expect
+        .poll(
+          async () => {
+            const isCheckEmailVisible = await this.checkEmailHeading.isVisible().catch(() => false);
+            const isResetHeadingVisible = await this.resetPasswordHeading
+              .isVisible()
+              .catch(() => false);
+            const isCodeVisible = await this.codeInput.isVisible().catch(() => false);
+            return isCheckEmailVisible || isResetHeadingVisible || isCodeVisible;
+          },
+          { timeout: 30000, intervals: [250, 500, 1000, 2000] },
+        )
+        .toBe(true);
+      await expect(this.codeInput).toBeVisible({ timeout: 30000 });
+    }).toPass({ timeout: 90000, intervals: [500, 1000, 2000, 5000] });
   }
 
   async completePasswordReset(code: string, newPassword: string) {

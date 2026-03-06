@@ -53,8 +53,8 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
         showSuccess("Password reset successfully!");
         onSuccess();
       })
-      .catch((_error) => {
-        showError("Invalid code or password. Please try again.");
+      .catch((error) => {
+        showError(error, "Password reset");
       })
       .finally(() => setSubmitting(false));
   };
@@ -62,15 +62,6 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     submitReset();
-  };
-
-  const handleKeyDownCapture = (e: React.KeyboardEvent<HTMLFormElement>) => {
-    if (e.key !== "Enter") {
-      return;
-    }
-
-    e.preventDefault();
-    formRef.current?.requestSubmit();
   };
 
   return (
@@ -81,12 +72,7 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
       <Typography variant="p" color="secondary" className="mb-4 text-sm">
         We sent a code to <strong>{email}</strong>. Enter it below with your new password.
       </Typography>
-      <form
-        ref={formRef}
-        className="flex flex-col gap-form-field"
-        onSubmit={handleSubmit}
-        onKeyDownCapture={handleKeyDownCapture}
-      >
+      <form ref={formRef} className="flex flex-col gap-form-field" onSubmit={handleSubmit}>
         <Input
           type="text"
           name="code"

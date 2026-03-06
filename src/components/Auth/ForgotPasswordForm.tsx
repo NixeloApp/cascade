@@ -34,32 +34,32 @@ export function ForgotPasswordForm({ onCodeSent, onBack }: ForgotPasswordFormPro
       return;
     }
 
-    setSubmitting(true);
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
 
     const formData = new FormData(form);
-    const email = formData.get("email") as string;
+    const emailValue = formData.get("email");
+    if (typeof emailValue !== "string" || !emailValue.trim()) {
+      return;
+    }
+
+    setSubmitting(true);
+
     formData.set("flow", "reset");
 
     void signIn("password", formData)
       .then(() => {
-        onCodeSent(email);
+        onCodeSent(emailValue);
       })
-      .catch((_error) => {
-        showError("Could not send reset code. Please check your email.");
+      .catch((error) => {
+        showError(error, "Password reset request");
       })
       .finally(() => setSubmitting(false));
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    submitResetRequest();
-  };
-
-  const handleKeyDownCapture = (e: React.KeyboardEvent<HTMLFormElement>) => {
-    if (e.key !== "Enter") {
-      return;
-    }
-
     e.preventDefault();
     submitResetRequest();
   };
@@ -72,12 +72,7 @@ export function ForgotPasswordForm({ onCodeSent, onBack }: ForgotPasswordFormPro
       <Typography variant="p" color="secondary" className="mb-4 text-sm">
         Enter your email and we'll send you a code to reset your password.
       </Typography>
-      <form
-        ref={formRef}
-        className="flex flex-col gap-form-field"
-        onSubmit={handleSubmit}
-        onKeyDownCapture={handleKeyDownCapture}
-      >
+      <form ref={formRef} className="flex flex-col gap-form-field" onSubmit={handleSubmit}>
         <Input
           type="email"
           name="email"
@@ -85,13 +80,7 @@ export function ForgotPasswordForm({ onCodeSent, onBack }: ForgotPasswordFormPro
           required
           data-testid={TEST_IDS.AUTH.EMAIL_INPUT}
         />
-        <Button
-          type="button"
-          size="lg"
-          className="w-full"
-          disabled={submitting}
-          onClick={submitResetRequest}
-        >
+        <Button type="submit" size="lg" className="w-full" disabled={submitting}>
           {submitting ? "Sending..." : "Send reset code"}
         </Button>
         <AuthLinkButton onClick={onBack}>Back to sign in</AuthLinkButton>

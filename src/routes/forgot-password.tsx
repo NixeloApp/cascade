@@ -69,8 +69,8 @@ function ForgotPasswordPage() {
           step: "reset",
         },
       });
-    } catch {
-      showError("Could not send reset code. Please check your email.");
+    } catch (error) {
+      showError(error, "Password reset request");
     } finally {
       setSubmitting(false);
     }
@@ -79,15 +79,6 @@ function ForgotPasswordPage() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     void submitResetRequest();
-  };
-
-  const handleKeyDownCapture = (e: React.KeyboardEvent<HTMLFormElement>) => {
-    if (e.key !== "Enter") {
-      return;
-    }
-
-    e.preventDefault();
-    formRef.current?.requestSubmit();
   };
 
   if (search.step === "reset" && email) {
@@ -124,12 +115,7 @@ function ForgotPasswordPage() {
         </>
       }
     >
-      <form
-        ref={formRef}
-        className="flex flex-col gap-4"
-        onSubmit={handleSubmit}
-        onKeyDownCapture={handleKeyDownCapture}
-      >
+      <form ref={formRef} className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <Input
           type="email"
           name="email"
