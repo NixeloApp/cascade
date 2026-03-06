@@ -295,13 +295,11 @@ export function TimeEntryModal({
   defaultMode = "log",
   billingEnabled,
 }: TimeEntryModalProps) {
-  const { isAuthenticated } = useConvexAuth();
+  const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
+  const canUseTimeEntry = open && isAuthenticated && !isAuthLoading;
   const createTimeEntry = useMutation(api.timeTracking.createTimeEntry);
   const startTimerMutation = useMutation(api.timeTracking.startTimer);
-  const projects = useQuery(
-    api.projects.getCurrentUserProjects,
-    open && isAuthenticated ? {} : "skip",
-  );
+  const projects = useQuery(api.projects.getCurrentUserProjects, canUseTimeEntry ? {} : "skip");
 
   const { state, actions, computed } = useTimeEntryForm({
     initialProjectId,
@@ -312,7 +310,7 @@ export function TimeEntryModal({
 
   const projectIssues = useQuery(
     api.issues.listSelectableIssues,
-    open && isAuthenticated && state.projectId ? { projectId: state.projectId } : "skip",
+    canUseTimeEntry && state.projectId ? { projectId: state.projectId } : "skip",
   );
 
   const handleStartTimer = async () => {
@@ -396,7 +394,9 @@ export function TimeEntryModal({
             type="submit"
             form="time-entry-form"
             variant="primary"
-            disabled={!computed.isTimerMode && computed.effectiveDuration <= 0}
+            disabled={
+              !canUseTimeEntry || (!computed.isTimerMode && computed.effectiveDuration <= 0)
+            }
             leftIcon={computed.isTimerMode ? <Play className="w-4 h-4" /> : undefined}
           >
             {computed.isTimerMode ? "Start Timer" : "Log Time"}

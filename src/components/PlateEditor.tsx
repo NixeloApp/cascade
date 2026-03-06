@@ -42,7 +42,7 @@ interface PlateEditorProps {
  */
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Editor component with multiple document operations and state management
 export function PlateEditor({ documentId }: PlateEditorProps) {
-  const { isAuthenticated } = useConvexAuth();
+  const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
   const document = useQuery(
     api.documents.getDocument,
     isAuthenticated ? { id: documentId } : "skip",
@@ -168,8 +168,8 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
     }
   };
 
-  // Loading state
-  if (document === undefined || userId === undefined) {
+  // Loading state - while auth is loading or while authenticated and data is loading
+  if (isAuthLoading || (isAuthenticated && (document === undefined || userId === undefined))) {
     return (
       <Flex direction="column" className="h-full bg-ui-bg">
         <Card padding="lg" radius="none" className="border-x-0 border-t-0">
@@ -196,8 +196,19 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
     );
   }
 
-  // Document not found
-  if (document === null) {
+  // User not authenticated - check before document null check
+  if (!isAuthenticated || !userId) {
+    return (
+      <Flex align="center" justify="center" className="h-full">
+        <Typography className="text-ui-text-secondary">
+          Please sign in to view this document.
+        </Typography>
+      </Flex>
+    );
+  }
+
+  // Document not found (or still loading after auth check - shouldn't happen but satisfies TypeScript)
+  if (!document) {
     return (
       <Flex align="center" justify="center" className="h-full">
         <Stack gap="md" align="center" className="text-center">
@@ -209,17 +220,6 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
             Go back
           </Button>
         </Stack>
-      </Flex>
-    );
-  }
-
-  // User not authenticated
-  if (!userId) {
-    return (
-      <Flex align="center" justify="center" className="h-full">
-        <Typography className="text-ui-text-secondary">
-          Please sign in to view this document.
-        </Typography>
       </Flex>
     );
   }
