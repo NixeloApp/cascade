@@ -72,6 +72,10 @@ export class ProjectsPage extends BasePage {
   readonly activityTab: Locator;
   readonly analyticsTab: Locator;
   readonly settingsTab: Locator;
+  readonly sprintsPageHeader: Locator;
+  readonly createSprintButton: Locator;
+  readonly sprintsEmptyState: Locator;
+  readonly sprintCards: Locator;
 
   // ===================
   // Locators - Activity Feed
@@ -189,6 +193,10 @@ export class ProjectsPage extends BasePage {
     this.activityTab = this.projectTabs.getByRole("link", { name: /^Activity$/ });
     this.analyticsTab = this.projectTabs.getByRole("link", { name: /^Analytics$/ });
     this.settingsTab = this.projectTabs.getByRole("link", { name: /^Settings$/ });
+    this.sprintsPageHeader = page.getByRole("heading", { name: /sprint management/i });
+    this.createSprintButton = page.getByRole("button", { name: /^create sprint$/i }).first();
+    this.sprintsEmptyState = page.getByText(/no sprints yet/i);
+    this.sprintCards = page.getByTestId(TEST_IDS.SPRINT.CARD);
 
     // Activity feed
     this.activityPageHeader = page.getByRole("heading", { name: /project activity/i });
@@ -475,8 +483,18 @@ export class ProjectsPage extends BasePage {
       return;
     }
 
+    if (tab === "backlog") {
+      await this.expectBacklogLoaded();
+      return;
+    }
+
     if (tab === "roadmap") {
       await this.expectRoadmapLoaded();
+      return;
+    }
+
+    if (tab === "sprints") {
+      await this.expectSprintsLoaded();
       return;
     }
 
@@ -484,6 +502,12 @@ export class ProjectsPage extends BasePage {
       await expect(this.analyticsPageHeader).toBeVisible();
       await expect(this.analyticsTotalIssuesMetric).toBeVisible();
     }
+  }
+
+  async expectBacklogLoaded() {
+    await expect(this.page).toHaveURL(/\/backlog(?:[/?#]|$)/);
+    await expect(this.boardColumns.first()).toBeVisible();
+    await expect(this.getBoardColumn("Backlog")).toBeVisible();
   }
 
   async expectRoadmapLoaded() {
@@ -502,10 +526,46 @@ export class ProjectsPage extends BasePage {
     return (await this.roadmapEpicFilter.isVisible().catch(() => false)) ? "visible" : "hidden";
   }
 
+  async expectSprintsLoaded() {
+    await expect(this.page).toHaveURL(/\/sprints(?:[/?#]|$)/);
+    await expect(this.sprintsPageHeader).toBeVisible();
+
+    if (await this.createSprintButton.isVisible().catch(() => false)) {
+      return;
+    }
+
+    if (await this.sprintsEmptyState.isVisible().catch(() => false)) {
+      return;
+    }
+
+    if (
+      await this.sprintCards
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
+      return;
+    }
+
+    await expect(
+      this.createSprintButton.or(this.sprintsEmptyState).or(this.sprintCards.first()),
+    ).toBeVisible();
+  }
+
+  async expectCreateSprintVisible() {
+    await this.expectSprintsLoaded();
+    await expect(this.createSprintButton).toBeVisible();
+  }
+
   async getActivityPageState(): Promise<"empty" | "entries"> {
     await expect(this.activityPageHeader).toBeVisible();
 
-    if (await this.activityEntries.first().isVisible().catch(() => false)) {
+    if (
+      await this.activityEntries
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
       return "entries";
     }
 
@@ -515,7 +575,12 @@ export class ProjectsPage extends BasePage {
 
     await expect(this.activityEmptyState.or(this.activityEntries.first())).toBeVisible();
 
-    return (await this.activityEntries.first().isVisible().catch(() => false)) ? "entries" : "empty";
+    return (await this.activityEntries
+      .first()
+      .isVisible()
+      .catch(() => false))
+      ? "entries"
+      : "empty";
   }
 
   async expectActivityEntriesVisible() {
@@ -530,7 +595,9 @@ export class ProjectsPage extends BasePage {
 
   async expectActivityIssueKeyVisible(projectKey: string) {
     await this.expectActivityEntriesVisible();
-    await expect(this.activityFeed.getByText(new RegExp(`${projectKey}-\\d+`)).first()).toBeVisible();
+    await expect(
+      this.activityFeed.getByText(new RegExp(`${projectKey}-\\d+`)).first(),
+    ).toBeVisible();
   }
 
   async expectActivityEntryActionVisible(actionPattern: RegExp) {
@@ -542,7 +609,9 @@ export class ProjectsPage extends BasePage {
   async expectActivityRelativeTimestampVisible() {
     await this.expectActivityEntriesVisible();
     await expect(
-      this.activityFeed.getByText(/just now|seconds? ago|minutes? ago|hours? ago|days? ago/i).first(),
+      this.activityFeed
+        .getByText(/just now|seconds? ago|minutes? ago|hours? ago|days? ago/i)
+        .first(),
     ).toBeVisible();
   }
 

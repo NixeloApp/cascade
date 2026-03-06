@@ -1,4 +1,4 @@
-import { expect, authenticatedTest as test } from "./fixtures";
+import { authenticatedTest as test } from "./fixtures";
 
 /**
  * Sprints E2E Tests
@@ -13,11 +13,7 @@ test.describe("Sprints", () => {
   });
 
   test.describe("Sprint Navigation", () => {
-    test("can navigate to sprints tab in project", async ({
-      dashboardPage,
-      projectsPage,
-      page,
-    }) => {
+    test("can navigate to sprints tab in project", async ({ dashboardPage, projectsPage }) => {
       await dashboardPage.goto();
       await dashboardPage.expectLoaded();
       // Use direct URL navigation to access projects
@@ -30,16 +26,10 @@ test.describe("Sprints", () => {
       await projectsPage.expectBoardVisible();
 
       await projectsPage.switchToTab("sprints");
-
-      // Verify Sprints heading is visible (state-based UI, URL doesn't change)
-      await expect(page.getByRole("heading", { name: /sprint management/i })).toBeVisible();
+      await projectsPage.expectSprintsLoaded();
     });
 
-    test("sprints tab shows sprint management UI", async ({
-      dashboardPage,
-      projectsPage,
-      page,
-    }) => {
+    test("sprints tab shows sprint management UI", async ({ dashboardPage, projectsPage }) => {
       await dashboardPage.goto();
       await dashboardPage.expectLoaded();
       // Use direct URL navigation to access projects
@@ -53,23 +43,12 @@ test.describe("Sprints", () => {
 
       // Navigate to sprints tab
       await projectsPage.switchToTab("sprints");
-
-      // Verify create sprint button is visible
-      await expect(
-        page
-          .getByRole("main")
-          .getByRole("button", { name: /create sprint/i })
-          .first(),
-      ).toBeVisible();
+      await projectsPage.expectCreateSprintVisible();
     });
   });
 
   test.describe("Backlog Navigation", () => {
-    test("can navigate to backlog tab in project", async ({
-      dashboardPage,
-      projectsPage,
-      page,
-    }) => {
+    test("can navigate to backlog tab in project", async ({ dashboardPage, projectsPage }) => {
       await dashboardPage.goto();
       await dashboardPage.expectLoaded();
       // Use direct URL navigation to access projects
@@ -85,8 +64,7 @@ test.describe("Sprints", () => {
       // Check for button enabled state as proxy for existence and interactivity
       // Note: This relies on the specific UI implementation of the backlog tab/button
       await projectsPage.switchToTab("backlog");
-      // Verify Backlog UI element is visible (the column heading)
-      await expect(page.getByRole("heading", { name: "Backlog", exact: true })).toBeVisible();
+      await projectsPage.expectBacklogLoaded();
     });
   });
 });
