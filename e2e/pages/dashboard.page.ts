@@ -232,8 +232,14 @@ export class DashboardPage extends BasePage {
     // Check if already on dashboard - skip navigation to avoid token rotation
     const currentUrl = this.page.url();
     if (currentUrl.includes(`/${this.orgSlug}/dashboard`)) {
-      // Already on dashboard, just verify it's loaded
-      const isLoaded = await this.commandPaletteButton.isVisible().catch(() => false);
+      // Already on dashboard: give the existing app shell a chance to finish
+      // hydrating before forcing a second navigation.
+      await this.page.waitForLoadState("domcontentloaded");
+      const isLoaded = await this.commandPaletteButton
+        .waitFor({ state: "visible", timeout: 5000 })
+        .then(() => true)
+        .catch(() => false);
+
       if (isLoaded) {
         // Even if already on page, ensure it's hydrated before returning
         await this.waitForLoad();

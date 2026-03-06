@@ -131,10 +131,10 @@ export const authenticatedTest = base.extend<AuthFixtures>({
       await injectAuthTokens(page, loginResult.token, loginResult.refreshToken);
 
       // 4. Navigate to the intended destination
-      const destination = orgSlug ? `/${orgSlug}/dashboard` : "/";
+      const destination = orgSlug ? "/app" : "/";
       await page.goto(destination, { waitUntil: "domcontentloaded" });
       if (orgSlug) {
-        await expect(page).toHaveURL(/\/dashboard/);
+        await expect(page).toHaveURL(new RegExp(`/${orgSlug}/dashboard(?:\\?.*)?$`));
       } else {
         await expect(page).toHaveURL(/\/$/);
       }
