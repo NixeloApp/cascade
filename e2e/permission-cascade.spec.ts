@@ -1,4 +1,5 @@
 import { expect, authenticatedTest as test } from "./fixtures";
+import { createTestNamespace } from "./utils/test-helpers";
 import { testUserService } from "./utils/test-user-service";
 
 /**
@@ -28,9 +29,9 @@ test.describe("Permission Cascade", () => {
     console.log("✓ Admin settings accessible");
   });
 
-  test("org owner can create workspaces", async ({ workspacesPage }) => {
-    const timestamp = Date.now();
-    const workspaceName = `Cascade WS ${timestamp}`;
+  test("org owner can create workspaces", async ({ workspacesPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const workspaceName = namespace.name("Cascade WS");
 
     // Navigate to workspaces
     await workspacesPage.goto();
@@ -43,10 +44,10 @@ test.describe("Permission Cascade", () => {
     console.log("✓ Workspace visible");
   });
 
-  test("org owner can create projects in any workspace", async ({ projectsPage }) => {
-    const timestamp = Date.now();
-    const workspaceName = `Project WS ${timestamp}`;
-    const projectKey = `CASC${timestamp.toString().slice(-4)}`;
+  test("org owner can create projects in any workspace", async ({ projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const workspaceName = namespace.name("Project WS");
+    const projectKey = namespace.projectKey("CASC");
 
     // Create workspace first
     await projectsPage.goto();
@@ -54,7 +55,7 @@ test.describe("Permission Cascade", () => {
 
     // Go back to projects and create a project
     await projectsPage.goto();
-    await projectsPage.createProject(`Cascade Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Cascade Project"), projectKey);
 
     await projectsPage.expectBoardVisible();
     console.log("✓ Created project as org owner in workspace");
@@ -84,15 +85,15 @@ test.describe("Permission Cascade", () => {
     console.log("✓ Shows 'Project Not Found' error for non-existent project");
   });
 
-  test("project settings require appropriate permissions", async ({ projectsPage }) => {
-    const timestamp = Date.now();
-    const projectKey = `PERM${timestamp.toString().slice(-4)}`;
+  test("project settings require appropriate permissions", async ({ projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("PERM");
 
     // Create a project
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Perm Test WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Perm Test WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Perm Test Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Perm Test Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
 
     // Admin (owner) should see settings tab
@@ -105,9 +106,11 @@ test.describe("Permission Cascade", () => {
     console.log("✓ Can access project settings as owner");
   });
 
-  test("workspace settings are accessible to workspace members", async ({ workspacesPage }) => {
-    const timestamp = Date.now();
-    const workspaceName = `Settings WS ${timestamp}`;
+  test("workspace settings are accessible to workspace members", async ({
+    workspacesPage,
+  }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const workspaceName = namespace.name("Settings WS");
 
     // Create a workspace - this navigates to the workspace detail page after creation
     await workspacesPage.goto();

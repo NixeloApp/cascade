@@ -1,4 +1,5 @@
 import { expect, authenticatedTest as test } from "./fixtures";
+import { createTestNamespace } from "./utils/test-helpers";
 
 /**
  * Integration Workflow E2E Tests
@@ -21,18 +22,18 @@ test.describe("Integration Workflows", () => {
     test("complete project lifecycle: create project, add issues, manage on board", async ({
       projectsPage,
       page,
-    }) => {
-      const timestamp = Date.now();
-      const projectName = `Integration Test ${timestamp}`;
-      const projectKey = `INT${timestamp.toString().slice(-4)}`;
-      const issueTitle = `Integration Issue ${timestamp}`;
+    }, testInfo) => {
+      const namespace = createTestNamespace(testInfo);
+      const projectName = namespace.name("Integration Test");
+      const projectKey = namespace.projectKey("INT");
+      const issueTitle = namespace.name("Integration Issue");
 
       // Step 1: Navigate to projects
       await projectsPage.goto();
       await expect(page).toHaveURL(/\/projects/);
 
       // Step 2: Create a workspace (needed for project)
-      await projectsPage.createWorkspace(`Int WS ${timestamp}`);
+      await projectsPage.createWorkspace(namespace.name("Int WS"));
 
       // Step 3: Go back to projects and create a new project (waits for board)
       await projectsPage.goto();
@@ -64,15 +65,15 @@ test.describe("Integration Workflows", () => {
       console.log("\n✅ Project management workflow completed successfully");
     });
 
-    test("navigate between project tabs", async ({ projectsPage, page }) => {
-      const timestamp = Date.now();
-      const projectKey = `NAV${timestamp.toString().slice(-4)}`;
+    test("navigate between project tabs", async ({ projectsPage, page }, testInfo) => {
+      const namespace = createTestNamespace(testInfo);
+      const projectKey = namespace.projectKey("NAV");
 
       // Create project (waits for board to be interactive)
       await projectsPage.goto();
-      await projectsPage.createWorkspace(`Nav WS ${timestamp}`);
+      await projectsPage.createWorkspace(namespace.name("Nav WS"));
       await projectsPage.goto();
-      await projectsPage.createProject(`Nav Test ${timestamp}`, projectKey);
+      await projectsPage.createProject(namespace.name("Nav Test"), projectKey);
 
       // Verify we're on board
       await expect(page).toHaveURL(/\/board/);
@@ -99,16 +100,19 @@ test.describe("Integration Workflows", () => {
   });
 
   test.describe("Dashboard Workflow", () => {
-    test("dashboard shows issues after creating them", async ({ dashboardPage, projectsPage }) => {
-      const timestamp = Date.now();
-      const projectKey = `DWF${timestamp.toString().slice(-4)}`;
-      const issueTitle = `Dashboard WF Issue ${timestamp}`;
+    test("dashboard shows issues after creating them", async ({
+      dashboardPage,
+      projectsPage,
+    }, testInfo) => {
+      const namespace = createTestNamespace(testInfo);
+      const projectKey = namespace.projectKey("DWF");
+      const issueTitle = namespace.name("Dashboard WF Issue");
 
       // Create a project and issue
       await projectsPage.goto();
-      await projectsPage.createWorkspace(`DWF WS ${timestamp}`);
+      await projectsPage.createWorkspace(namespace.name("DWF WS"));
       await projectsPage.goto();
-      await projectsPage.createProject(`Dashboard WF ${timestamp}`, projectKey);
+      await projectsPage.createProject(namespace.name("Dashboard WF"), projectKey);
       await projectsPage.waitForBoardInteractive();
       await projectsPage.createIssue(issueTitle);
       console.log("✓ Issue created for dashboard workflow test");
@@ -134,16 +138,19 @@ test.describe("Integration Workflows", () => {
   });
 
   test.describe("Search Workflow", () => {
-    test("can search for issues using global search", async ({ dashboardPage, projectsPage }) => {
-      const timestamp = Date.now();
-      const projectKey = `SRC${timestamp.toString().slice(-4)}`;
-      const uniqueSearchTerm = `UniqueSearch${timestamp}`;
+    test("can search for issues using global search", async ({
+      dashboardPage,
+      projectsPage,
+    }, testInfo) => {
+      const namespace = createTestNamespace(testInfo);
+      const projectKey = namespace.projectKey("SRC");
+      const uniqueSearchTerm = namespace.token("unique-search");
 
       // Create a project with a uniquely named issue
       await projectsPage.goto();
-      await projectsPage.createWorkspace(`Search WS ${timestamp}`);
+      await projectsPage.createWorkspace(namespace.name("Search WS"));
       await projectsPage.goto();
-      await projectsPage.createProject(`Search Test ${timestamp}`, projectKey);
+      await projectsPage.createProject(namespace.name("Search Test"), projectKey);
       await projectsPage.waitForBoardInteractive();
       await projectsPage.createIssue(`Issue ${uniqueSearchTerm}`);
       console.log("✓ Issue created with unique search term");
