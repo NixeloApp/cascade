@@ -33,6 +33,9 @@ export class DocumentsPage extends BasePage {
   readonly editorContent: Locator;
   readonly documentTitle: Locator;
   readonly documentTitleInput: Locator;
+  readonly appErrorHeading: Locator;
+  readonly appErrorDetailsSummary: Locator;
+  readonly appErrorDetailsMessage: Locator;
 
   // ===================
   // Locators - Delete Confirmation
@@ -69,6 +72,9 @@ export class DocumentsPage extends BasePage {
     this.editorContent = this.editor;
     this.documentTitle = page.getByTestId(TEST_IDS.DOCUMENT.TITLE);
     this.documentTitleInput = page.getByTestId(TEST_IDS.DOCUMENT.TITLE_INPUT);
+    this.appErrorHeading = page.getByRole("heading", { name: "500" });
+    this.appErrorDetailsSummary = page.getByText(/view error details/i);
+    this.appErrorDetailsMessage = page.locator("details pre");
 
     // Delete confirmation
     this.deleteConfirmDialog = page.getByRole("dialog").filter({ hasText: /delete|confirm/i });
@@ -177,15 +183,7 @@ export class DocumentsPage extends BasePage {
     await this.page.waitForFunction(() => document.readyState === "complete");
 
     // Check for React error boundary
-    const errorBoundary = this.page.locator("text=/Something went wrong/i");
-    const hasError = await errorBoundary.isVisible().catch(() => false);
-    if (hasError) {
-      const errorMsg = await this.page
-        .locator("code")
-        .textContent()
-        .catch(() => "Unknown error");
-      throw new Error(`React error boundary displayed: ${errorMsg}`);
-    }
+    await this.throwIfAppErrorVisible();
 
     // Handle "Initialize Document" empty state if present (for new documents)
     const initButton = this.page.getByRole("button", { name: /initialize.*document/i });
@@ -196,6 +194,23 @@ export class DocumentsPage extends BasePage {
       // Button didn't appear, proceed to check for editor
     }
     await expect(this.editor).toBeVisible();
+  }
+
+  private async throwIfAppErrorVisible() {
+    if (!(await this.appErrorHeading.isVisible().catch(() => false))) {
+      return;
+    }
+
+    const detailsVisible = await this.appErrorDetailsMessage.isVisible().catch(() => false);
+    if (!detailsVisible) {
+      await this.appErrorDetailsSummary.click().catch(() => {});
+    }
+
+    const errorDetails = (
+      await this.appErrorDetailsMessage.textContent().catch(() => null)
+    )?.trim();
+    const suffix = errorDetails ? `: ${errorDetails}` : "";
+    throw new Error(`React error boundary displayed${suffix}`);
   }
 
   async expectDocumentCount(count: number) {

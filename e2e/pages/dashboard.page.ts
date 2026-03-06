@@ -548,7 +548,9 @@ export class DashboardPage extends BasePage {
 
   async waitForSearchSettled() {
     await expect(async () => {
+      await this.throwIfAppErrorVisible();
       await expect(this.globalSearchLoadingState).not.toBeVisible();
+      await this.throwIfAppErrorVisible();
 
       const hasResults = await this.globalSearchResultItems
         .first()
