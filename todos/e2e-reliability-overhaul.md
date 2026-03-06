@@ -113,6 +113,18 @@ This is the concrete "what's left" list for reliability hardening after the late
    - append the latest pass/fail outcome and duration in this file.
    - record failing spec names and immediate next action when the suite is not 100% pass.
 
+## Evidence Freshness Guard
+
+Full-suite evidence in this TODO is considered stale if older than 24 hours.
+
+- If stale, do not treat `Full local suite run reports 100% pass` as release-gate evidence.
+- Refresh by rerunning:
+  - `pnpm exec playwright test --reporter=line`
+- Then update:
+  - `Last Updated`
+  - latest run outcome, duration, and skip count
+  - immediate next action when not 100% pass
+
 ## Blocker Update (2026-03-05)
 
 - Local full-suite run command:
