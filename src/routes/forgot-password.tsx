@@ -10,7 +10,6 @@ import { showError } from "@/lib/toast";
 
 interface ForgotPasswordSearch {
   step?: "reset";
-  email?: string;
 }
 
 export const Route = createFileRoute("/forgot-password")({
@@ -18,7 +17,6 @@ export const Route = createFileRoute("/forgot-password")({
   ssr: false,
   validateSearch: (search: Record<string, unknown>): ForgotPasswordSearch => ({
     step: search.step === "reset" ? "reset" : undefined,
-    email: typeof search.email === "string" ? search.email : undefined,
   }),
 });
 
@@ -72,7 +70,6 @@ function ForgotPasswordPage() {
         replace: true,
         search: {
           step: "reset",
-          email: normalizedEmail,
         },
       });
     } catch (error) {
@@ -87,20 +84,18 @@ function ForgotPasswordPage() {
     void submitResetRequest();
   };
 
-  const resetEmail = search.email ?? email;
-
-  if (search.step === "reset" && resetEmail) {
+  if (search.step === "reset" && email) {
     return (
       <AuthPageLayout
         title="Check your email"
         subtitle={
           <>
-            We sent a code to <strong>{resetEmail}</strong>
+            We sent a code to <strong>{email}</strong>
           </>
         }
       >
         <ResetPasswordForm
-          email={resetEmail}
+          email={email}
           onSuccess={() => navigate({ to: ROUTES.app.path })}
           onRetry={() => {
             setEmail(null);

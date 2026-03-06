@@ -1,3 +1,4 @@
+import { expect } from "@playwright/test";
 import { authenticatedTest as test } from "./fixtures";
 import { createTestNamespace } from "./utils/test-helpers";
 import { testUserService } from "./utils/test-user-service";
@@ -34,9 +35,7 @@ test.describe("Teams", () => {
     await workspacesPage.goto();
     await workspacesPage.createWorkspace(workspaceName);
     await workspacesPage.openWorkspaceTeams(workspaceName);
-
-    // Should show Teams heading or content
-    console.log("✓ Navigated to Teams page");
+    await workspacesPage.expectTeamsLoaded();
   });
 
   test("teams list shows create team button", async ({ workspacesPage }, testInfo) => {
@@ -60,6 +59,7 @@ test.describe("Teams", () => {
     await workspacesPage.openWorkspaceTeams(workspaceName);
 
     const teamsState = await workspacesPage.getTeamsPageState();
-    console.log(`✓ Teams page state is ${teamsState}`);
+    // Fresh workspace should have no teams
+    expect(teamsState).toBe("empty");
   });
 });

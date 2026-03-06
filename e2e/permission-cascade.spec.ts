@@ -117,14 +117,11 @@ test.describe("Permission Cascade", () => {
     await workspacesPage.createWorkspace(workspaceName);
 
     await workspacesPage.expectWorkspaceDetailVisible(workspaceName);
-    console.log("✓ On workspace detail page");
 
-    if (await workspacesPage.isWorkspaceSettingsTabVisible()) {
-      await workspacesPage.openWorkspaceSettings();
-      console.log("✓ Workspace settings accessible");
-    } else {
-      console.log("ℹ Workspace settings link not visible (may require specific role)");
-    }
+    // Creator should always have access to workspace settings
+    const hasSettingsTab = await workspacesPage.isWorkspaceSettingsTabVisible();
+    expect(hasSettingsTab).toBe(true);
+    await workspacesPage.openWorkspaceSettings();
   });
 
   test("organization members list is accessible to admins", async ({ settingsPage }) => {
