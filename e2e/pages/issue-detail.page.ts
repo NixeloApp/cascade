@@ -5,6 +5,7 @@ import { BasePage } from "./base.page";
 
 const EDIT_RETRY_INTERVALS = [1000];
 const EDIT_RETRY_TIMEOUT = 20000;
+const CLICK_RETRY_TIMEOUT = 3000;
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -80,14 +81,15 @@ export class IssueDetailPage extends BasePage {
   async editTitle(nextTitle: string) {
     await expect(async () => {
       if (!(await this.issueTitleInput.isVisible().catch(() => false))) {
-        await this.editIssueButton.click();
+        await this.editIssueButton.click({ timeout: CLICK_RETRY_TIMEOUT });
       }
 
       await expect(this.issueTitleInput).toBeVisible();
       await this.issueTitleInput.fill(nextTitle);
       await expect(this.issueTitleInput).toHaveValue(nextTitle);
       await expect(this.saveChangesButton).toBeVisible();
-      await this.saveChangesButton.click();
+      await expect(this.saveChangesButton).toBeEnabled();
+      await this.saveChangesButton.click({ timeout: CLICK_RETRY_TIMEOUT });
       await expect(this.issueTitleInput).not.toBeVisible();
       await expect(this.editIssueButton).toBeVisible();
     }).toPass({ timeout: EDIT_RETRY_TIMEOUT, intervals: EDIT_RETRY_INTERVALS });
@@ -96,13 +98,14 @@ export class IssueDetailPage extends BasePage {
   async editDescription(nextDescription: string) {
     await expect(async () => {
       if (!(await this.issueDescriptionEditor.isVisible().catch(() => false))) {
-        await this.editIssueButton.click();
+        await this.editIssueButton.click({ timeout: CLICK_RETRY_TIMEOUT });
       }
 
       await expect(this.issueDescriptionEditor).toBeVisible();
       await this.issueDescriptionEditor.fill(nextDescription);
       await expect(this.saveChangesButton).toBeVisible();
-      await this.saveChangesButton.click();
+      await expect(this.saveChangesButton).toBeEnabled();
+      await this.saveChangesButton.click({ timeout: CLICK_RETRY_TIMEOUT });
       await expect(this.issueDescriptionEditor).not.toBeVisible();
       await expect(this.editIssueButton).toBeVisible();
     }).toPass({ timeout: EDIT_RETRY_TIMEOUT, intervals: EDIT_RETRY_INTERVALS });

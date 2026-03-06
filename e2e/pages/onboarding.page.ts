@@ -3,6 +3,9 @@ import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 
 const TRANSITION_TIMEOUT = 15000;
+const TRANSITION_RETRY_INTERVALS = [500, 1000];
+const TRANSITION_RETRY_TIMEOUT = 20000;
+const CLICK_RETRY_TIMEOUT = 3000;
 
 /**
  * Onboarding Page Object
@@ -44,6 +47,9 @@ export class OnboardingPage {
 
   // Dashboard (after onboarding)
   readonly myWorkHeading: Locator;
+  readonly error500Heading: Locator;
+  readonly errorHeading: Locator;
+  readonly errorMessage: Locator;
 
   // ===================
   // Driver.js Tour Locators (legacy)
@@ -87,6 +93,9 @@ export class OnboardingPage {
 
     // Dashboard - use test ID to avoid matching multiple headings
     this.myWorkHeading = page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING);
+    this.error500Heading = page.getByRole("heading", { name: "500" });
+    this.errorHeading = page.getByRole("heading", { name: /^error$/i });
+    this.errorMessage = page.getByText(/something went wrong|setting up your project/i).first();
 
     // Driver.js uses these CSS classes
     this.tourOverlay = page.locator(".driver-overlay");
@@ -101,6 +110,20 @@ export class OnboardingPage {
 
   async goto(): Promise<void> {
     // Onboarding shows on /onboarding route for new users
+    await this.page.goto("/onboarding", { waitUntil: "domcontentloaded" });
+    await this.expectOnboardingRoute();
+  }
+
+  async recoverOnboardingRouteIfNeeded() {
+    const hasAppError =
+      (await this.error500Heading.isVisible().catch(() => false)) ||
+      ((await this.errorHeading.isVisible().catch(() => false)) &&
+        (await this.errorMessage.isVisible().catch(() => false)));
+
+    if (!hasAppError) {
+      return;
+    }
+
     await this.page.goto("/onboarding", { waitUntil: "domcontentloaded" });
     await this.expectOnboardingRoute();
   }
@@ -252,14 +275,23 @@ export class OnboardingPage {
    * Wait for onboarding wizard to load
    */
   async waitForWizard(timeout = TRANSITION_TIMEOUT) {
-    await this.waitForSplashScreen();
-    await expect(this.welcomeHeading).toBeVisible({ timeout });
+    await expect(async () => {
+      await this.recoverOnboardingRouteIfNeeded();
+      await this.expectOnboardingRoute();
+      await this.waitForSplashScreen();
+      await expect(this.welcomeHeading).toBeVisible({ timeout });
+      await expect(this.teamLeadCard).toBeVisible();
+      await expect(this.teamMemberCard).toBeVisible();
+    }).toPass({ timeout: TRANSITION_RETRY_TIMEOUT, intervals: TRANSITION_RETRY_INTERVALS });
   }
 
   /** Wait for role selection cards to be interactive */
   async waitForRoleCardsReady() {
-    await expect(this.teamLeadCard).toBeEnabled();
-    await expect(this.teamMemberCard).toBeEnabled();
+    await expect(async () => {
+      await this.recoverOnboardingRouteIfNeeded();
+      await expect(this.teamLeadCard).toBeEnabled();
+      await expect(this.teamMemberCard).toBeEnabled();
+    }).toPass({ timeout: TRANSITION_RETRY_TIMEOUT, intervals: TRANSITION_RETRY_INTERVALS });
   }
 
   /**
@@ -273,15 +305,15 @@ export class OnboardingPage {
         return;
       }
 
-      // Ensure splash screen is gone before clicking
-      await this.waitForSplashScreen();
+      await this.waitForWizard();
+      await this.waitForRoleCardsReady();
 
       // The role cards have a small pending state/delay, so we might need to retry click
-      await this.teamLeadCard.click();
+      await this.teamLeadCard.click({ timeout: CLICK_RETRY_TIMEOUT });
 
       // Check for the outcome (first screen of lead flow)
       await expect(this.teamLeadHeading).toBeVisible();
-    }).toPass();
+    }).toPass({ timeout: TRANSITION_RETRY_TIMEOUT, intervals: TRANSITION_RETRY_INTERVALS });
     console.log("Successfully transitioned to Team Lead setup.");
   }
 
@@ -296,13 +328,14 @@ export class OnboardingPage {
         return;
       }
 
-      await this.waitForSplashScreen();
+      await this.waitForWizard();
+      await this.waitForRoleCardsReady();
 
-      await this.teamMemberCard.click();
+      await this.teamMemberCard.click({ timeout: CLICK_RETRY_TIMEOUT });
 
       // Check for the outcome (first screen of member flow)
       await expect(this.nameProjectHeading).toBeVisible();
-    }).toPass();
+    }).toPass({ timeout: TRANSITION_RETRY_TIMEOUT, intervals: TRANSITION_RETRY_INTERVALS });
     console.log("Successfully transitioned to Team Member project naming.");
   }
 
