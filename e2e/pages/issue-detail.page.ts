@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { ROUTES } from "../utils/routes";
 import { waitForIssueUpdateSuccess } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
@@ -44,7 +45,7 @@ export class IssueDetailPage extends BasePage {
   }
 
   async gotoIssue(issueKey: string) {
-    await this.page.goto(`/${this.orgSlug}/issues/${issueKey}`);
+    await this.page.goto(ROUTES.issues.detail.build(this.orgSlug, issueKey));
     await this.waitForLoad();
   }
 
@@ -93,6 +94,8 @@ export class IssueDetailPage extends BasePage {
       await expect(this.issueTitleInput).not.toBeVisible();
       await expect(this.editIssueButton).toBeVisible();
     }).toPass({ timeout: EDIT_RETRY_TIMEOUT, intervals: EDIT_RETRY_INTERVALS });
+
+    await waitForIssueUpdateSuccess(this.page);
   }
 
   async editDescription(nextDescription: string) {

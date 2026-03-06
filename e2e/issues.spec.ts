@@ -39,11 +39,11 @@ test.describe("Issues", () => {
 
       await projectsPage.openCreateProjectForm();
       await projectsPage.cancelCreateProject();
-      await projectsPage.cancelCreateProject();
+      await expect(projectsPage.createProjectForm).not.toBeVisible();
 
+      // Verify dialog can be reopened after canceling
       await projectsPage.openCreateProjectForm();
       await expect(projectsPage.createProjectForm).toBeVisible();
-
       await projectsPage.cancelCreateProject();
     });
 

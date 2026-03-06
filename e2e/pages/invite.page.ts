@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { ROUTES } from "../utils/routes";
 
 /**
  * Page object for the public invite route: /invite/$token
@@ -24,7 +25,7 @@ export class InvitePage {
   }
 
   async goto(token: string, waitUntil: "commit" | "domcontentloaded" | "load" = "load") {
-    await this.page.goto(`/invite/${token}`, { waitUntil });
+    await this.page.goto(ROUTES.invite.build(token), { waitUntil });
   }
 
   async expectInvalidInvitation() {
