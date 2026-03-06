@@ -22,25 +22,10 @@ test.describe("Permission Cascade", () => {
     if (!seedResult) console.warn("WARNING: Failed to seed templates in test setup");
   });
 
-  test("org owner can access organization settings", async ({ dashboardPage, page }) => {
-    // Navigate to dashboard (user is org owner from setup)
-    await dashboardPage.goto();
-    await dashboardPage.expectLoaded();
-
-    // Navigate to settings
-    await dashboardPage.navigateTo("settings");
-
-    // Verify settings page loads
-    await expect(page).toHaveURL(/\/settings/);
-    console.log("✓ Navigated to settings");
-
-    // Verify org-level settings are accessible
-    // Admin tab should be visible for org admins (contains org-level settings like invites)
-    const adminTab = page
-      .getByRole("link", { name: /admin/i })
-      .or(page.getByRole("tab", { name: /admin/i }));
-    await expect(adminTab).toBeVisible();
-    console.log("✓ Admin settings tab visible (org admin access)");
+  test("org owner can access organization settings", async ({ settingsPage }) => {
+    await settingsPage.goto();
+    await settingsPage.switchToTab("admin");
+    console.log("✓ Admin settings accessible");
   });
 
   test("org owner can create workspaces", async ({ workspacesPage, page }) => {
