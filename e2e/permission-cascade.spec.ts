@@ -60,34 +60,21 @@ test.describe("Permission Cascade", () => {
     console.log("✓ Created project as org owner in workspace");
   });
 
-  test("user can only see workspaces they have access to", async ({ workspacesPage, page }) => {
-    // Navigate to workspaces
+  test("user can only see workspaces they have access to", async ({ workspacesPage }) => {
     await workspacesPage.goto();
-
-    // User should see either workspaces or empty state.
-    // Both are valid depending on organization setup
-    const workspacesList = page.locator("main");
-    await expect(workspacesList).toBeVisible();
+    await workspacesPage.expectWorkspacesView();
     console.log("✓ Workspaces page accessible");
 
-    // Check if there are any workspace cards/links
-    const workspaceLinks = page.locator("a[href*='/workspaces/']");
-    const workspaceCount = await workspaceLinks.count();
+    const workspaceCount = await workspacesPage.workspaceCards.count();
     console.log(`✓ User can see ${workspaceCount} workspace(s)`);
   });
 
-  test("user can only see projects they have access to", async ({ projectsPage, page }) => {
-    // Navigate to projects
+  test("user can only see projects they have access to", async ({ projectsPage }) => {
     await projectsPage.goto();
-
-    // User should see either projects or empty state.
-    const projectsList = page.locator("main");
-    await expect(projectsList).toBeVisible();
+    await projectsPage.expectProjectsView();
     console.log("✓ Projects page accessible");
 
-    // Check for project cards
-    const projectLinks = page.locator("a[href*='/projects/']");
-    const projectCount = await projectLinks.count();
+    const projectCount = await projectsPage.projectItems.count();
     console.log(`✓ User can see ${projectCount} project(s)`);
   });
 

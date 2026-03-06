@@ -125,7 +125,8 @@ This is the concrete "what's left" list for reliability hardening after the late
    - permission-cascade org-owner settings coverage now goes through `SettingsPage` helpers for admin-tab navigation, so the organization-settings permission check no longer probes raw admin-tab visibility instead of using the shared settings navigation contract.
    - permission-cascade admin user-management coverage now goes through `SettingsPage` helpers for admin-tab plus platform-users visibility, so the organization-members check no longer probes stale members-tab assumptions or ad hoc list markers.
    - permission-cascade create-workspace/create-project smoke assertions now go through `WorkspacesPage` and `ProjectsPage` helpers, so those tests no longer depend on raw URL/main-content checks after the create flows finish.
-   - next target: align the remaining workspace/project visibility smoke assertions in `permission-cascade.spec.ts` with `WorkspacesPage` and `ProjectsPage` list helpers so those tests stop reading raw main-content and href counts directly.
+   - permission-cascade workspace/project visibility smoke assertions now go through `WorkspacesPage` and `ProjectsPage` list helpers, so those tests no longer read raw main-content and href counts directly.
+   - next target: rerun the full `permission-cascade.spec.ts` file to validate the cumulative helper migration end-to-end, then record any remaining raw assertions or failures before moving back to the broader suite.
 2. Selector contract completion:
    - `pnpm run validate` now passes with no `Test ID constants` warnings.
    - continue replacing brittle text/CSS fallbacks opportunistically when modifying critical specs.
@@ -173,6 +174,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `permission-cascade.spec.ts` now relies on `SettingsPage` for org-owner admin-settings access, after the targeted rerun confirmed the settings permission check can reuse the shared admin-tab navigation contract instead of probing raw admin-tab visibility.
 - `permission-cascade.spec.ts` now relies on `SettingsPage.openAdminUsersList()` for admin user-management visibility, after the targeted rerun confirmed the test should assert the actual platform-users table instead of probing a stale members tab that the settings UI no longer exposes.
 - `permission-cascade.spec.ts` now relies on `WorkspacesPage.expectWorkspaceVisible()` and `ProjectsPage.expectBoardVisible()` for the org-owner create-workspace/create-project smoke coverage, after the targeted rerun confirmed those checks do not need raw URL or main-content assertions once the page objects own the completion boundary.
+- `permission-cascade.spec.ts` now relies on `WorkspacesPage.expectWorkspacesView()` / `workspaceCards` and `ProjectsPage.expectProjectsView()` / `projectItems` for the visibility-count smoke coverage, after the targeted rerun confirmed those list checks do not need raw `main` locators or direct href counting.
 
 ## Latest Targeted Hardening Evidence
 
@@ -236,6 +238,8 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `1 passed (18.7s)`
 - `pnpm exec playwright test e2e/permission-cascade.spec.ts -g "org owner can create workspaces|org owner can create projects in any workspace" --reporter=line --workers=1`
   - `2 passed (51.9s)`
+- `pnpm exec playwright test e2e/permission-cascade.spec.ts -g "user can only see workspaces they have access to|user can only see projects they have access to" --reporter=line --workers=1`
+  - `2 passed (22.5s)`
 - `pnpm exec playwright test e2e/board-drag-drop.spec.ts e2e/time-tracking.spec.ts e2e/search.spec.ts e2e/activity-feed.spec.ts e2e/analytics.spec.ts e2e/integration-workflow.spec.ts --reporter=line --workers=1`
   - `26 passed (9.2m)`
 
