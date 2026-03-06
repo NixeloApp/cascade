@@ -1,3 +1,4 @@
+import { Slot } from "@radix-ui/react-slot";
 import { ChevronRight } from "lucide-react";
 import * as React from "react";
 import { cn } from "@/lib/utils";
@@ -54,8 +55,9 @@ const BreadcrumbLink = React.forwardRef<
     asChild?: boolean;
   }
 >(({ asChild, className, ...props }, ref) => {
+  const Comp = asChild ? Slot : "a";
   return (
-    <a
+    <Comp
       ref={ref}
       className={cn(
         "text-ui-text-secondary transition-colors duration-default hover:text-ui-text",
