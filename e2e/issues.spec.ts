@@ -1,4 +1,5 @@
 import { expect, authenticatedTest as test } from "./fixtures";
+import { createTestNamespace } from "./utils/test-helpers";
 import { testUserService } from "./utils/test-user-service";
 
 /**
@@ -27,11 +28,13 @@ test.describe("Issues", () => {
   });
 
   test.describe("Issue Creation", () => {
-    test("can reopen project creation dialog after canceling", async ({ projectsPage }) => {
-      const uniqueId = Date.now().toString();
+    test("can reopen project creation dialog after canceling", async ({
+      projectsPage,
+    }, testInfo) => {
+      const namespace = createTestNamespace(testInfo);
 
       await projectsPage.goto();
-      await projectsPage.createWorkspace(`Project Modal WS ${uniqueId}`);
+      await projectsPage.createWorkspace(namespace.name("Project Modal WS"));
       await projectsPage.goto();
 
       await projectsPage.openCreateProjectForm();
@@ -44,26 +47,29 @@ test.describe("Issues", () => {
       await projectsPage.cancelCreateProject();
     });
 
-    test("can create an issue from board view", async ({ dashboardPage, projectsPage }) => {
+    test("can create an issue from board view", async ({
+      dashboardPage,
+      projectsPage,
+    }, testInfo) => {
       await dashboardPage.goto();
       await dashboardPage.expectLoaded();
       // Create project first
-      const uniqueId = Date.now().toString();
-      const projectKey = `PROJ${uniqueId.slice(-4)}`;
-      const issueTitle = "Test Issue";
+      const namespace = createTestNamespace(testInfo);
+      const projectKey = namespace.projectKey("PROJ");
+      const issueTitle = namespace.name("Test Issue");
 
       // Use direct URL navigation to projects page to access Create Project functionality
       await projectsPage.goto();
 
       // Create a unique workspace for this test run to avoid dependency on global state
       // which might be cleared by other tests (e.g., cleanup-workspaces)
-      await projectsPage.createWorkspace(`WS ${uniqueId}`);
+      await projectsPage.createWorkspace(namespace.name("WS"));
 
       // Go back to projects page as createWorkspace navigates away
       await projectsPage.goto();
 
       // Create a project (waits for board to be interactive)
-      await projectsPage.createProject(`Project ${uniqueId}`, projectKey);
+      await projectsPage.createProject(namespace.name("Project"), projectKey);
 
       // Create an issue
       await projectsPage.createIssue(issueTitle);
@@ -79,23 +85,23 @@ test.describe("Issues", () => {
   });
 
   test.describe("Issue Detail", () => {
-    test("can open issue detail dialog", async ({ projectsPage }) => {
+    test("can open issue detail dialog", async ({ projectsPage }, testInfo) => {
       // Create project first
-      const uniqueId = Date.now().toString();
-      const projectKey = `PROJ${uniqueId.slice(-4)}`;
-      const issueTitle = "Detail Test Issue";
+      const namespace = createTestNamespace(testInfo);
+      const projectKey = namespace.projectKey("PROJ");
+      const issueTitle = namespace.name("Detail Test Issue");
 
       // Navigate to projects page
       await projectsPage.goto();
 
       // Create a unique workspace for this test to ensure isolation
-      await projectsPage.createWorkspace(`Detail WS ${uniqueId}`);
+      await projectsPage.createWorkspace(namespace.name("Detail WS"));
 
       // Go back to projects page after workspace creation
       await projectsPage.goto();
 
       // Create a project (waits for board to be interactive)
-      await projectsPage.createProject(`Project ${uniqueId}`, projectKey);
+      await projectsPage.createProject(namespace.name("Project"), projectKey);
 
       // Create an issue
       await projectsPage.createIssue(issueTitle);
@@ -111,16 +117,16 @@ test.describe("Issues", () => {
       await expect(projectsPage.issueDetailDialog).toBeVisible();
     });
 
-    test("can edit an issue title from the detail dialog", async ({ projectsPage }) => {
-      const uniqueId = Date.now().toString();
-      const projectKey = `EDIT${uniqueId.slice(-4)}`;
-      const originalTitle = `Editable Issue ${uniqueId}`;
-      const updatedTitle = `Updated Issue ${uniqueId}`;
+    test("can edit an issue title from the detail dialog", async ({ projectsPage }, testInfo) => {
+      const namespace = createTestNamespace(testInfo);
+      const projectKey = namespace.projectKey("EDIT");
+      const originalTitle = namespace.name("Editable Issue");
+      const updatedTitle = namespace.name("Updated Issue");
 
       await projectsPage.goto();
-      await projectsPage.createWorkspace(`Edit WS ${uniqueId}`);
+      await projectsPage.createWorkspace(namespace.name("Edit WS"));
       await projectsPage.goto();
-      await projectsPage.createProject(`Project ${uniqueId}`, projectKey);
+      await projectsPage.createProject(namespace.name("Project"), projectKey);
 
       await projectsPage.createIssue(originalTitle);
       await projectsPage.switchToTab("backlog");
@@ -136,16 +142,16 @@ test.describe("Issues", () => {
 
     test("can edit issue description and priority from the detail dialog", async ({
       projectsPage,
-    }) => {
-      const uniqueId = Date.now().toString();
-      const projectKey = `META${uniqueId.slice(-4)}`;
-      const issueTitle = `Metadata Issue ${uniqueId}`;
-      const updatedDescription = `Updated issue description ${uniqueId}`;
+    }, testInfo) => {
+      const namespace = createTestNamespace(testInfo);
+      const projectKey = namespace.projectKey("META");
+      const issueTitle = namespace.name("Metadata Issue");
+      const updatedDescription = namespace.name("Updated issue description");
 
       await projectsPage.goto();
-      await projectsPage.createWorkspace(`Metadata WS ${uniqueId}`);
+      await projectsPage.createWorkspace(namespace.name("Metadata WS"));
       await projectsPage.goto();
-      await projectsPage.createProject(`Project ${uniqueId}`, projectKey);
+      await projectsPage.createProject(namespace.name("Project"), projectKey);
 
       await projectsPage.createIssue(issueTitle);
       await projectsPage.switchToTab("backlog");
@@ -161,23 +167,23 @@ test.describe("Issues", () => {
       await expect(projectsPage.issueDetailPrioritySelect).toContainText(/high/i);
     });
 
-    test("issue detail shows timer controls", async ({ projectsPage }) => {
+    test("issue detail shows timer controls", async ({ projectsPage }, testInfo) => {
       // Create project first
-      const uniqueId = Date.now().toString();
-      const projectKey = `PROJ${uniqueId.slice(-4)}`;
-      const issueTitle = "Timer Test Issue";
+      const namespace = createTestNamespace(testInfo);
+      const projectKey = namespace.projectKey("PROJ");
+      const issueTitle = namespace.name("Timer Test Issue");
 
       // Navigate to projects page
       await projectsPage.goto();
 
       // Create a unique workspace for this test to ensure isolation
-      await projectsPage.createWorkspace(`Timer WS ${uniqueId}`);
+      await projectsPage.createWorkspace(namespace.name("Timer WS"));
 
       // Go back to projects page after workspace creation
       await projectsPage.goto();
 
       // Create a project (waits for board to be interactive)
-      await projectsPage.createProject(`Project ${uniqueId}`, projectKey);
+      await projectsPage.createProject(namespace.name("Project"), projectKey);
 
       // Create an issue
       await projectsPage.createIssue(issueTitle);

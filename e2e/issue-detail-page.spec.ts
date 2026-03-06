@@ -1,5 +1,6 @@
 import { expect, authenticatedTest as test } from "./fixtures";
 import { IssueDetailPage } from "./pages";
+import { createTestNamespace } from "./utils/test-helpers";
 import { testUserService } from "./utils/test-user-service";
 
 /**
@@ -35,20 +36,20 @@ test.describe("Issue Detail Page", () => {
     projectsPage,
     page,
     orgSlug,
-  }) => {
+  }, testInfo) => {
     // First create a project and issue
-    const uniqueId = Date.now().toString();
-    const projectKey = `ISSU${uniqueId.slice(-4)}`;
-    const issueTitle = "Direct URL Test Issue";
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("ISSU");
+    const issueTitle = namespace.name("Direct URL Test Issue");
 
     await projectsPage.goto();
 
     // Create workspace for isolation
-    await projectsPage.createWorkspace(`Issue URL WS ${uniqueId}`);
+    await projectsPage.createWorkspace(namespace.name("Issue URL WS"));
     await projectsPage.goto();
 
     // Create project
-    await projectsPage.createProject(`Issue URL Project ${uniqueId}`, projectKey);
+    await projectsPage.createProject(namespace.name("Issue URL Project"), projectKey);
 
     // Create an issue
     await projectsPage.createIssue(issueTitle);
@@ -73,16 +74,16 @@ test.describe("Issue Detail Page", () => {
     projectsPage,
     page,
     orgSlug,
-  }) => {
-    const uniqueId = Date.now().toString();
-    const projectKey = `IUPD${uniqueId.slice(-4)}`;
-    const originalTitle = `Direct Edit Issue ${uniqueId}`;
-    const updatedTitle = `Direct Edit Updated ${uniqueId}`;
+  }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("IUPD");
+    const originalTitle = namespace.name("Direct Edit Issue");
+    const updatedTitle = namespace.name("Direct Edit Updated");
 
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Issue Edit WS ${uniqueId}`);
+    await projectsPage.createWorkspace(namespace.name("Issue Edit WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Issue Edit Project ${uniqueId}`, projectKey);
+    await projectsPage.createProject(namespace.name("Issue Edit Project"), projectKey);
     await projectsPage.createIssue(originalTitle);
     await projectsPage.switchToTab("backlog");
 
@@ -106,16 +107,16 @@ test.describe("Issue Detail Page", () => {
     projectsPage,
     page,
     orgSlug,
-  }) => {
-    const uniqueId = Date.now().toString();
-    const projectKey = `IMET${uniqueId.slice(-4)}`;
-    const issueTitle = `Direct Metadata Issue ${uniqueId}`;
-    const updatedDescription = `Direct metadata description ${uniqueId}`;
+  }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("IMET");
+    const issueTitle = namespace.name("Direct Metadata Issue");
+    const updatedDescription = namespace.name("Direct metadata description");
 
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Issue Metadata WS ${uniqueId}`);
+    await projectsPage.createWorkspace(namespace.name("Issue Metadata WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Issue Metadata Project ${uniqueId}`, projectKey);
+    await projectsPage.createProject(namespace.name("Issue Metadata Project"), projectKey);
     await projectsPage.createIssue(issueTitle);
     await projectsPage.switchToTab("backlog");
 
@@ -141,16 +142,16 @@ test.describe("Issue Detail Page", () => {
     projectsPage,
     page,
     orgSlug,
-  }) => {
+  }, testInfo) => {
     // Create project and issue
-    const uniqueId = Date.now().toString();
-    const projectKey = `BCRM${uniqueId.slice(-4)}`;
-    const issueTitle = "Breadcrumb Test Issue";
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("BCRM");
+    const issueTitle = namespace.name("Breadcrumb Test Issue");
 
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Breadcrumb WS ${uniqueId}`);
+    await projectsPage.createWorkspace(namespace.name("Breadcrumb WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Breadcrumb Project ${uniqueId}`, projectKey);
+    await projectsPage.createProject(namespace.name("Breadcrumb Project"), projectKey);
     await projectsPage.createIssue(issueTitle);
 
     // Switch to backlog to find the issue
