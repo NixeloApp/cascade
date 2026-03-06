@@ -137,7 +137,8 @@ This is the concrete "what's left" list for reliability hardening after the late
    - `invite.spec.ts` now goes through `InvitePage` for invalid-token, go-home, loading-or-invalid, and invalid-branding assertions instead of probing invite route state with raw selectors in the spec body.
    - `oauth-mocked.spec.ts` now goes through `AuthPage.gotoSignInLanding()`, `signInWithGoogle()`, and `waitForOAuthErrorSettle()` for the three mocked OAuth error flows instead of repeating the same raw Google-button and alert-settle logic in each test.
    - `integration-workflow.spec.ts` now goes through `ProjectsPage` for `calendar`/`timesheet` tab navigation, active-tab assertions, and timesheet ready state instead of dropping back to raw tab-strip locators and a raw `Time Entries` tab check.
-   - next target: remove the remaining raw non-existent-project assertion in `permission-cascade.spec.ts` by reusing `ProjectsPage.gotoProjectBoard()` and `expectProjectNotFound()`.
+   - `permission-cascade.spec.ts` now goes through `ProjectsPage.gotoProjectBoard()` and `expectProjectNotFound()` for the non-existent-project permission check instead of constructing the project URL and not-found heading directly in the spec body.
+   - next target: remove the final raw page-level assertion in `dashboard.spec.ts` by moving the theme-state `html` class check behind a page-object helper.
 2. Selector contract completion:
    - `pnpm run validate` now passes with no `Test ID constants` warnings.
    - continue replacing brittle text/CSS fallbacks opportunistically when modifying critical specs.
@@ -197,6 +198,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `invite.spec.ts` now relies on `InvitePage.expectInvalidInvitation()`, `goHome()`, `expectLoadingOrInvalid()`, and `expectInvalidInvitationBranding()`, after the focused rerun confirmed the public invite route can own invalid-token, loading, and go-home state checks instead of leaving them as raw selectors in the spec body.
 - `oauth-mocked.spec.ts` now relies on `AuthPage.gotoSignInLanding()`, `signInWithGoogle()`, and `waitForOAuthErrorSettle()`, after the focused rerun confirmed the three mocked OAuth error cases can share the same sign-in entry and error-settle contract instead of repeating inline Google-button and alert waits.
 - `integration-workflow.spec.ts` now relies on `ProjectsPage.switchToTab("calendar" | "timesheet" | "board")`, `expectProjectTabCurrent()`, and `expectTimesheetLoaded()`, after the focused rerun confirmed the project tab workflow no longer needs raw tab-strip lookups or a spec-local `Time Entries` visibility check.
+- `permission-cascade.spec.ts` now relies on `ProjectsPage.gotoProjectBoard()` plus `expectProjectNotFound()` for the non-existent-project permission check, after the full-file rerun confirmed the last raw project-not-found heading in that file can reuse the shared project error contract.
 
 ## Latest Targeted Hardening Evidence
 
@@ -224,6 +226,8 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `11 passed (15.2s)`
 - `pnpm exec playwright test e2e/integration-workflow.spec.ts --reporter=line --workers=1`
   - `4 passed (2.6m)`
+- `pnpm exec playwright test e2e/permission-cascade.spec.ts --reporter=line --workers=1`
+  - `9 passed (2.0m)`
 - `pnpm exec playwright test e2e/issues.spec.ts e2e/integration-workflow.spec.ts --reporter=line --workers=1`
   - `9 passed (4.9m)`
 - `pnpm exec playwright test e2e/search.spec.ts --reporter=line --workers=1`
