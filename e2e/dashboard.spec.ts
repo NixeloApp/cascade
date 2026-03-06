@@ -69,13 +69,6 @@ test.describe("Dashboard Tests", () => {
       await dashboardPage.closeCommandPalette();
       await expect(dashboardPage.commandPalette).not.toBeVisible();
     });
-
-    test("can open via keyboard shortcut", async ({ dashboardPage }) => {
-      await dashboardPage.goto();
-      // pressCommandPaletteShortcut includes retry logic and visibility check
-      await dashboardPage.pressCommandPaletteShortcut();
-      await expect(dashboardPage.commandPalette).toBeVisible();
-    });
   });
 
   test.describe("Theme Toggle", () => {
@@ -107,6 +100,12 @@ test.describe("Dashboard Tests", () => {
       await expect(dashboardPage.globalSearchModal).toBeVisible();
       await dashboardPage.closeGlobalSearch();
       await expect(dashboardPage.globalSearchModal).not.toBeVisible();
+    });
+
+    test("can open via keyboard shortcut", async ({ dashboardPage }) => {
+      await dashboardPage.goto();
+      await dashboardPage.openGlobalSearchWithShortcut();
+      await expect(dashboardPage.globalSearchModal).toBeVisible();
     });
   });
 

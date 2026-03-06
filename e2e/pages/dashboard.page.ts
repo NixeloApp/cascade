@@ -557,15 +557,6 @@ export class DashboardPage extends BasePage {
   // Actions - Keyboard
   // ===================
 
-  async pressCommandPaletteShortcut() {
-    await waitForDashboardReady(this.page);
-    // Use retry logic - keyboard events may not be captured immediately after hydration
-    await expect(async () => {
-      await this.page.keyboard.press("ControlOrMeta+k");
-      await expect(this.commandPalette).toBeVisible();
-    }).toPass();
-  }
-
   async pressShortcutsHelpShortcut() {
     await this.waitForLoad();
     await this.page.keyboard.press("Shift+?");
