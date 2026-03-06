@@ -241,25 +241,10 @@ export class DashboardPage extends BasePage {
       }
     }
 
-    const canClientNavigate =
-      currentUrl.includes(`/${this.orgSlug}/`) &&
-      !currentUrl.includes("/signin") &&
-      !currentUrl.endsWith("about:blank");
-
-    if (canClientNavigate) {
-      await this.page.evaluate((targetUrl) => {
-        const link = document.createElement("a");
-        link.href = targetUrl;
-        link.style.display = "none";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }, dashboardUrl);
-      await expect(this.page).toHaveURL(/\/dashboard/);
-    } else {
-      // Navigate directly to dashboard URL
-      await this.page.goto(dashboardUrl, { waitUntil: "domcontentloaded" });
-    }
+    // Use an explicit document navigation here. The auth fixtures now preserve
+    // rotated tokens across reloads, so this is more reliable than simulating
+    // hidden-link client navigation from arbitrary project routes.
+    await this.page.goto(dashboardUrl, { waitUntil: "domcontentloaded" });
 
     // Wait for URL to settle (auth redirect check)
     await this.page.waitForLoadState("load");
