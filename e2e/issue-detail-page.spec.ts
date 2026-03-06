@@ -79,6 +79,57 @@ test.describe("Issue Detail Page", () => {
     await expect(page.getByRole("button", { name: /edit issue/i })).toBeVisible();
   });
 
+  test("can edit an issue from the direct issue detail page", async ({
+    projectsPage,
+    page,
+    orgSlug,
+  }) => {
+    const uniqueId = Date.now().toString();
+    const projectKey = `IUPD${uniqueId.slice(-4)}`;
+    const originalTitle = `Direct Edit Issue ${uniqueId}`;
+    const updatedTitle = `Direct Edit Updated ${uniqueId}`;
+
+    await projectsPage.goto();
+    await projectsPage.createWorkspace(`Issue Edit WS ${uniqueId}`);
+    await projectsPage.goto();
+    await projectsPage.createProject(`Issue Edit Project ${uniqueId}`, projectKey);
+    await projectsPage.createIssue(originalTitle);
+    await projectsPage.switchToTab("backlog");
+
+    await expect(projectsPage.getIssueCard(originalTitle)).toBeVisible();
+    const issueKey = await projectsPage.getIssueKey(originalTitle);
+    await expect(issueKey).toMatch(new RegExp(`${projectKey}-\\d+`));
+
+    await page.goto(`/${orgSlug}/issues/${issueKey}`);
+
+    const editIssueButton = page.getByRole("button", { name: /edit issue/i });
+    await expect(editIssueButton).toBeVisible();
+
+    const issueTitleInput = page.getByPlaceholder("Issue title");
+    const saveChangesButton = page.getByRole("button", { name: /save changes/i });
+
+    await expect(async () => {
+      if (!(await issueTitleInput.isVisible().catch(() => false))) {
+        await editIssueButton.click();
+      }
+
+      await expect(issueTitleInput).toBeVisible();
+      await issueTitleInput.fill(updatedTitle);
+      await expect(issueTitleInput).toHaveValue(updatedTitle);
+      await expect(saveChangesButton).toBeVisible();
+      await saveChangesButton.click();
+      await expect(issueTitleInput).not.toBeVisible();
+      await expect(editIssueButton).toBeVisible();
+    }).toPass({ timeout: 20000, intervals: [1000] });
+
+    await page.getByRole("link", { name: new RegExp(projectKey, "i") }).click();
+    await expect(page).toHaveURL(/\/projects\/.*\/board/);
+
+    await projectsPage.switchToTab("backlog");
+    await expect(projectsPage.getIssueCard(updatedTitle)).toBeVisible();
+    await expect(projectsPage.getIssueCard(originalTitle)).toHaveCount(0);
+  });
+
   test("issue detail page has breadcrumb back to project", async ({
     projectsPage,
     page,
