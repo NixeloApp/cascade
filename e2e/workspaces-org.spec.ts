@@ -1,21 +1,27 @@
 import { rbacTest } from "./fixtures/rbac.fixture";
+import { createTestNamespace } from "./utils/test-helpers";
 
 rbacTest.describe("Organization Management", () => {
-  rbacTest("Admin can update organization name and settings", async ({ adminSettingsPage }) => {
-    await adminSettingsPage.goto();
-    await adminSettingsPage.switchToTab("admin");
-    await adminSettingsPage.expectAdminSettingsLoaded();
+  rbacTest(
+    "Admin can update organization name and settings",
+    async ({ adminSettingsPage }, testInfo) => {
+      const namespace = createTestNamespace(testInfo);
 
-    const newName = `E2E Org ${Date.now()}`;
-    await adminSettingsPage.updateOrganizationName(newName);
+      await adminSettingsPage.goto();
+      await adminSettingsPage.switchToTab("admin");
+      await adminSettingsPage.expectAdminSettingsLoaded();
 
-    await adminSettingsPage.expectOrganizationName(newName);
-    await adminSettingsPage.expectOrganizationNameVisible(newName);
+      const newName = namespace.name("E2E Org");
+      await adminSettingsPage.updateOrganizationName(newName);
 
-    // Reset name for other tests (slug follows name)
-    await adminSettingsPage.updateOrganizationName("Nixelo E2E");
-    await adminSettingsPage.expectOrganizationName("Nixelo E2E");
-  });
+      await adminSettingsPage.expectOrganizationName(newName);
+      await adminSettingsPage.expectOrganizationNameVisible(newName);
+
+      // Reset name for other tests (slug follows name)
+      await adminSettingsPage.updateOrganizationName("Nixelo E2E");
+      await adminSettingsPage.expectOrganizationName("Nixelo E2E");
+    },
+  );
 
   rbacTest("Admin can toggle time approval setting", async ({ adminSettingsPage }) => {
     await adminSettingsPage.goto();
@@ -37,11 +43,12 @@ rbacTest.describe("Organization Management", () => {
 });
 
 rbacTest.describe("Workspace Management", () => {
-  rbacTest("Admin can create multiple workspaces", async ({ adminWorkspacesPage }) => {
+  rbacTest("Admin can create multiple workspaces", async ({ adminWorkspacesPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+
     await adminWorkspacesPage.goto();
 
-    const wsName1 = `WS Alpha ${Date.now()}`;
-    const _wsName2 = `WS Beta ${Date.now()}`;
+    const wsName1 = namespace.name("WS Alpha");
 
     await adminWorkspacesPage.createWorkspace(wsName1);
 
