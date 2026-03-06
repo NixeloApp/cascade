@@ -1,4 +1,3 @@
-import { TEST_IDS } from "../src/lib/test-ids";
 import { E2E_ENDPOINTS, getE2EHeaders, TEST_USERS } from "./config";
 import { expect, onboardingTest as test } from "./fixtures";
 import { OnboardingPage } from "./pages";
@@ -89,7 +88,7 @@ test.describe("Onboarding Wizard", () => {
     await page.waitForURL(/\/[^/]+\/dashboard/);
 
     // Wait for dashboard to finish loading — use test ID to avoid matching multiple headings
-    await expect(page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING)).toBeVisible();
+    await expect(onboarding.myWorkHeading).toBeVisible();
 
     // Should navigate to dashboard
     await onboarding.expectDashboard();
@@ -164,7 +163,7 @@ test.describe("Onboarding - Team Member Flow", () => {
     await onboarding.selectTeamMember();
 
     // Enter project name and create it
-    await page.getByPlaceholder(/e.g., Acme Corp/i).fill("E2E Test Project");
+    await onboarding.fillProjectName("E2E Test Project");
     await onboarding.createProject();
 
     // Wait for features screen
@@ -180,7 +179,7 @@ test.describe("Onboarding - Team Member Flow", () => {
     await page.waitForURL(/\/[^/]+\/dashboard/);
 
     // Wait for dashboard to finish loading — use test ID to avoid matching multiple headings
-    await expect(page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING)).toBeVisible();
+    await expect(onboarding.myWorkHeading).toBeVisible();
 
     // Should navigate to dashboard
     await onboarding.expectDashboard();

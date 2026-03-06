@@ -31,6 +31,8 @@ export class OnboardingPage {
   readonly setupWorkspaceButton: Locator;
 
   // Team Member flow
+  readonly nameProjectHeading: Locator;
+  readonly projectNameInput: Locator;
   readonly allSetHeading: Locator;
   readonly goToDashboardButton: Locator;
   readonly createProjectButton: Locator;
@@ -72,6 +74,8 @@ export class OnboardingPage {
     this.setupWorkspaceButton = page.getByTestId(TEST_IDS.ONBOARDING.SETUP_WORKSPACE_BUTTON);
 
     // Team Member flow
+    this.nameProjectHeading = page.getByTestId(TEST_IDS.ONBOARDING.NAME_PROJECT_HEADING);
+    this.projectNameInput = page.getByPlaceholder(/e\.g\., acme corp/i);
     this.allSetHeading = page.getByRole("heading", { name: /you're ready/i });
     this.goToDashboardButton = page.getByTestId(TEST_IDS.ONBOARDING.GO_TO_DASHBOARD_BUTTON);
     this.createProjectButton = page.getByRole("button", { name: /create project/i });
@@ -287,7 +291,7 @@ export class OnboardingPage {
     console.log("Selecting Team Member role...");
     await expect(async () => {
       // For team members, the immediate next step is "Name Your Project"
-      if (await this.page.getByRole("heading", { name: /name your project/i }).isVisible()) {
+      if (await this.nameProjectHeading.isVisible()) {
         return;
       }
 
@@ -296,7 +300,7 @@ export class OnboardingPage {
       await this.teamMemberCard.click();
 
       // Check for the outcome (first screen of member flow)
-      await expect(this.page.getByRole("heading", { name: /name your project/i })).toBeVisible();
+      await expect(this.nameProjectHeading).toBeVisible();
     }).toPass();
     console.log("Successfully transitioned to Team Member project naming.");
   }
@@ -341,6 +345,11 @@ export class OnboardingPage {
    */
   async createProject() {
     await this.createProjectButton.click();
+  }
+
+  async fillProjectName(name: string) {
+    await expect(this.projectNameInput).toBeVisible();
+    await this.projectNameInput.fill(name);
   }
 
   /**
