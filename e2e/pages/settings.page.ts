@@ -375,12 +375,26 @@ export class SettingsPage extends BasePage {
     return this.inviteTable.getByTestId(TEST_IDS.INVITE.ROW).filter({ hasText: email });
   }
 
+  async expectInviteVisible(email: string) {
+    const row = this.getInviteRow(email);
+    await expect(this.inviteTable).toBeVisible();
+    await expect(row).toBeVisible();
+  }
+
+  async expectInviteRevoked(email: string) {
+    const row = this.getInviteRow(email);
+    await expect(row).toBeVisible();
+    await expect(row.getByText(/^revoked$/i)).toBeVisible();
+    await expect(row.getByRole("button", { name: /revoke/i })).toHaveCount(0);
+  }
+
   async revokeInvite(email: string) {
     const row = this.getInviteRow(email);
     await expect(row).toBeVisible();
 
     this.page.once("dialog", (dialog) => dialog.accept());
     await row.getByRole("button", { name: /revoke/i }).click();
+    await this.expectInviteRevoked(email);
   }
 
   async setTheme(theme: "light" | "dark" | "system") {

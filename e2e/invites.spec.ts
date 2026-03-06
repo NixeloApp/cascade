@@ -1,5 +1,5 @@
 import { generateTestEmail } from "./config";
-import { expect, authenticatedTest as test } from "./fixtures";
+import { authenticatedTest as test } from "./fixtures";
 
 /**
  * Invites E2E Tests
@@ -23,25 +23,19 @@ test.describe("User Invitations", () => {
     await ensureAuthenticated();
   });
 
-  test("admin can send and revoke invites", async ({ dashboardPage, settingsPage, page }) => {
+  test("admin can send and revoke invites", async ({ dashboardPage, settingsPage }) => {
     // 1. Navigate to Settings -> Admin via sidebar
     await dashboardPage.goto();
     await dashboardPage.navigateTo("settings");
-    // Wait for settings page to load before switching tabs
-    await expect(page).toHaveURL(/\/settings/);
     await settingsPage.switchToTab("admin");
 
     // 2. Send an invite
     const testEmail = generateTestEmail("invite-test");
     await settingsPage.inviteUser(testEmail, "user");
-
-    // 3. Verify invite was created - check table for the email
-    await expect(settingsPage.inviteTable.getByText(testEmail)).toBeVisible();
+    await settingsPage.expectInviteVisible(testEmail);
 
     // 4. Revoke the invite
     await settingsPage.revokeInvite(testEmail);
-
-    // 5. Verify revocation - wait for success toast or status change
-    await expect(page.getByText(/invitation revoked|revoked successfully/i).first()).toBeVisible();
+    await settingsPage.expectInviteRevoked(testEmail);
   });
 });
