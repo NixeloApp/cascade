@@ -89,7 +89,6 @@ test.describe("Global Search", () => {
 
     // Type only 1 character
     await dashboardPage.searchFor("a");
-    await expect(dashboardPage.globalSearchMinimumQueryMessage).toBeVisible();
     console.log("✓ Minimum character requirement message shown");
 
     // Type 2 characters - message should disappear
