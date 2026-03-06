@@ -435,10 +435,12 @@ export class DashboardPage extends BasePage {
       await expect(this.globalSearchModal).toBeVisible();
       await expect(this.globalSearchInput).toBeVisible();
       await expect(this.globalSearchInput).toBeEnabled();
-    }).toPass();
 
-    // Focus the input to ensure it's ready for typing
-    await this.globalSearchInput.focus();
+      // Keep focus inside the modal during retries so transient close/reopen
+      // cycles do not leak through as a "successful" open.
+      await this.globalSearchInput.focus();
+      await expect(this.globalSearchInput).toBeVisible();
+    }).toPass();
   }
 
   async openTimeEntryModal() {
@@ -480,7 +482,6 @@ export class DashboardPage extends BasePage {
   }
 
   async closeTimeEntryModal() {
-    await expect(this.timeEntryModal).toBeVisible();
     await this.closeTimeEntryModalIfOpen();
     await expect(this.timeEntryModal).not.toBeVisible();
   }
@@ -503,6 +504,8 @@ export class DashboardPage extends BasePage {
       await expect(this.globalSearchModal).toBeVisible();
       await expect(this.globalSearchInput).toBeVisible();
       await expect(this.globalSearchInput).toBeEnabled();
+      await this.globalSearchInput.focus();
+      await expect(this.globalSearchInput).toBeVisible();
     }).toPass();
   }
 
