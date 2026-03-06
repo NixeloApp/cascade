@@ -107,7 +107,9 @@ This is the concrete "what's left" list for reliability hardening after the late
    - time-entry modal open/close in billing settings now goes through `DashboardPage` helpers instead of spec-level dialog handling.
    - dashboard modal smoke tests now rely on page-object open/close helpers, and shortcut-open tests close their modals before exit.
    - invite-panel reset behavior now lives in `SettingsPage.closeInviteUserModalIfOpen()` instead of being inlined inside the open flow.
-   - next target: remaining non-project modal close patterns in other specs/page objects.
+   - workspace-create reset now goes through `WorkspacesPage.closeCreateWorkspaceDialogIfOpen()`, and the shared workspaces-page create flow uses the modal form submit path instead of depending on the button click staying actionable.
+   - dashboard modal open helpers now call named `close...IfOpen()` resets before reopening, and global-search open retries focus the input inside the retry loop so the helper proves the input survives long enough for typing.
+   - next target: issue-detail dialog reset and close behavior in `ProjectsPage`.
 2. Selector contract completion:
    - `pnpm run validate` now passes with no `Test ID constants` warnings.
    - continue replacing brittle text/CSS fallbacks opportunistically when modifying critical specs.
@@ -136,6 +138,9 @@ This is the concrete "what's left" list for reliability hardening after the late
 - Billing settings now open and close the header time-entry modal through `DashboardPage`, so the spec only asserts billable checkbox behavior instead of dialog mechanics.
 - Dashboard modal smoke tests no longer duplicate open/close visibility assertions that the corresponding `DashboardPage` helpers already guarantee.
 - Invite-panel reset now goes through a named `SettingsPage` helper, so the admin invite flow no longer hides modal cleanup inside the open retry block.
+- `WorkspacesPage.createWorkspace()` now preserves the old blanket Escape reset behind `closeCreateWorkspaceDialogIfOpen()` and submits through the shared create form, after `teams.spec.ts` showed that narrowing the reset to only a visible workspace dialog broke the shared workspace-create flow.
+- `DashboardPage` modal open helpers now reuse named `close...IfOpen()` resets, and global search keeps focus inside the retry loop, after the targeted search rerun showed the modal could disappear between the helper's visible check and the first `fill()`.
+- `DashboardPage.closeTimeEntryModal()` is idempotent again, after the billing-disabled flow showed the timer dialog can already be gone by cleanup time even though the checkbox assertion completed.
 
 ## Latest Targeted Hardening Evidence
 
@@ -163,6 +168,14 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `11 passed (1.6m)`
 - `pnpm exec playwright test e2e/invites.spec.ts --reporter=line --workers=1`
   - `1 passed (29.1s)`
+- `pnpm exec playwright test e2e/teams.spec.ts --reporter=line --workers=1`
+  - `3 passed (33.5s)`
+- `pnpm exec playwright test e2e/workspaces-org.spec.ts -g "Admin can create multiple workspaces" --reporter=line --workers=1`
+  - `1 passed (18.3s)`
+- `pnpm exec playwright test e2e/settings/billing.spec.ts -g "billing disabled hides billable checkbox on time entries" --reporter=line --workers=1`
+  - `1 passed (16.0s)`
+- `pnpm exec playwright test e2e/search.spec.ts -g "search returns matching issues" --reporter=line --workers=1`
+  - `1 passed (1.0m)`
 - `pnpm exec playwright test e2e/board-drag-drop.spec.ts e2e/time-tracking.spec.ts e2e/search.spec.ts e2e/activity-feed.spec.ts e2e/analytics.spec.ts e2e/integration-workflow.spec.ts --reporter=line --workers=1`
   - `26 passed (9.2m)`
 
