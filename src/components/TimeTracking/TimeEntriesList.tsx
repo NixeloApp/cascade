@@ -20,6 +20,7 @@ import { formatCurrency, formatDate } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Flex, FlexItem } from "../ui/Flex";
 import { IconButton } from "../ui/IconButton";
 import { Typography } from "../ui/Typography";
@@ -54,6 +55,8 @@ export function TimeEntriesList({
 
   const [_editingEntry, _setEditingEntry] = useState<string | null>(null);
   const [showManualEntryModal, setShowManualEntryModal] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<Id<"timeEntries"> | null>(null);
 
   // Format duration for display (hours and minutes)
   const formatDurationDisplay = (seconds: number) => {
@@ -66,16 +69,21 @@ export function TimeEntriesList({
     return `${minutes}m`;
   };
 
-  const handleDelete = async (entryId: Id<"timeEntries">) => {
-    if (!confirm("Are you sure you want to delete this time entry?")) {
-      return;
-    }
+  const handleDeleteClick = (entryId: Id<"timeEntries">) => {
+    setPendingDeleteId(entryId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!pendingDeleteId) return;
 
     try {
-      await deleteEntry({ entryId });
+      await deleteEntry({ entryId: pendingDeleteId });
       showSuccess("Time entry deleted");
     } catch (error) {
       showError(error, "Failed to delete time entry");
+    } finally {
+      setPendingDeleteId(null);
     }
   };
 
@@ -217,7 +225,7 @@ export function TimeEntriesList({
                 {!(entry.isLocked || entry.billed) && (
                   <FlexItem shrink={false}>
                     <IconButton
-                      onClick={() => handleDelete(entry._id)}
+                      onClick={() => handleDeleteClick(entry._id)}
                       variant="danger"
                       size="sm"
                       aria-label="Delete entry"
@@ -238,6 +246,16 @@ export function TimeEntriesList({
         onOpenChange={setShowManualEntryModal}
         projectId={projectId}
         billingEnabled={billingEnabled}
+      />
+
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Time Entry"
+        message="Are you sure you want to delete this time entry?"
+        variant="danger"
+        confirmLabel="Delete"
       />
     </Flex>
   );

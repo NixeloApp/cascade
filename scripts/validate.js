@@ -57,6 +57,7 @@ import { run as runImportOrderCheck } from "./validate/check-import-order.js";
 import { run as runImportPathsCheck } from "./validate/check-import-paths.js";
 import { run as runInteractiveTwCheck } from "./validate/check-interactive-tw.js";
 import { run as runJSDocCheck } from "./validate/check-jsdoc.js";
+import { run as runNativeConfirmCheck } from "./validate/check-native-confirm.js";
 import { run as runQueryIssuesCheck } from "./validate/check-queries.js";
 import { run as runRawTailwindCheck } from "./validate/check-raw-tailwind.js";
 import { run as runRouteConstantsCheck } from "./validate/check-route-constants.js";
@@ -104,6 +105,7 @@ const checks = [
   { name: "Time constants", fn: runTimeConstantsCheck },
   { name: "Unused parameters", fn: runUnusedParamsCheck },
   { name: "Weak assertions", fn: runWeakAssertionsCheck },
+  { name: "Native confirm()", fn: runNativeConfirmCheck },
 ];
 
 console.log(`\n${c.bold}Running validation...${c.reset}\n`);

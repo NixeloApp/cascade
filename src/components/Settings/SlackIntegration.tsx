@@ -13,6 +13,7 @@ import { Check } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Flex } from "../ui/Flex";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
@@ -101,6 +102,7 @@ export function SlackIntegration() {
   const disconnectSlack = useMutation(api.slack.disconnectSlack);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [disconnectConfirmOpen, setDisconnectConfirmOpen] = useState(false);
 
   useEffect(() => {
     const allowedOrigins = getAllowedOrigins();
@@ -155,11 +157,7 @@ export function SlackIntegration() {
     );
   };
 
-  const handleDisconnect = async () => {
-    if (!confirm("Disconnect Slack workspace?")) {
-      return;
-    }
-
+  const handleDisconnectConfirm = async () => {
     setIsDisconnecting(true);
     try {
       await disconnectSlack();
@@ -201,7 +199,7 @@ export function SlackIntegration() {
             <Button
               variant="danger"
               size="sm"
-              onClick={handleDisconnect}
+              onClick={() => setDisconnectConfirmOpen(true)}
               disabled={isDisconnecting}
             >
               {isDisconnecting ? "Disconnecting..." : "Disconnect"}
@@ -213,6 +211,16 @@ export function SlackIntegration() {
           )}
         </div>
       </Flex>
+
+      <ConfirmDialog
+        isOpen={disconnectConfirmOpen}
+        onClose={() => setDisconnectConfirmOpen(false)}
+        onConfirm={handleDisconnectConfirm}
+        title="Disconnect Slack"
+        message="Are you sure you want to disconnect your Slack workspace?"
+        variant="danger"
+        confirmLabel="Disconnect"
+      />
     </Card>
   );
 }

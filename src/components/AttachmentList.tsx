@@ -10,8 +10,10 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import type { LucideIcon } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
@@ -42,15 +44,23 @@ interface AttachmentListProps {
  */
 export function AttachmentList({ attachmentIds, issueId, canEdit = false }: AttachmentListProps) {
   const removeAttachment = useMutation(api.attachments.removeAttachment);
+  const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
+  const [pendingRemoveId, setPendingRemoveId] = useState<Id<"_storage"> | null>(null);
 
-  const handleRemove = async (storageId: Id<"_storage">) => {
-    if (!confirm("Are you sure you want to remove this attachment?")) return;
+  const handleRemoveClick = (storageId: Id<"_storage">) => {
+    setPendingRemoveId(storageId);
+    setRemoveConfirmOpen(true);
+  };
 
+  const handleRemoveConfirm = async () => {
+    if (!pendingRemoveId) return;
     try {
-      await removeAttachment({ issueId, storageId });
+      await removeAttachment({ issueId, storageId: pendingRemoveId });
       showSuccess("Attachment removed");
     } catch (error) {
       showError(error, "Failed to remove attachment");
+    } finally {
+      setPendingRemoveId(null);
     }
   };
 
@@ -68,10 +78,19 @@ export function AttachmentList({ attachmentIds, issueId, canEdit = false }: Atta
             storageId={storageId}
             issueId={issueId}
             canEdit={canEdit}
-            onRemove={() => handleRemove(storageId)}
+            onRemove={() => handleRemoveClick(storageId)}
           />
         ))}
       </Stack>
+      <ConfirmDialog
+        isOpen={removeConfirmOpen}
+        onClose={() => setRemoveConfirmOpen(false)}
+        onConfirm={handleRemoveConfirm}
+        title="Remove Attachment"
+        message="Are you sure you want to remove this attachment?"
+        variant="danger"
+        confirmLabel="Remove"
+      />
     </Stack>
   );
 }

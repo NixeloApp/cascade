@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Dialog } from "../ui/Dialog";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
@@ -124,6 +125,8 @@ export function UserTypeManager() {
   const [selectedType, setSelectedType] = useState<EmploymentType>("employee");
   const [selectedUserId, setSelectedUserId] = useState<Id<"users"> | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteProfileConfirmOpen, setDeleteProfileConfirmOpen] = useState(false);
+  const [pendingDeleteUserId, setPendingDeleteUserId] = useState<Id<"users"> | null>(null);
 
   // Employment type configs
   const configs = useQuery(api.userProfiles.getEmploymentTypeConfigs);
@@ -302,14 +305,21 @@ export function UserTypeManager() {
     }
   };
 
-  const handleDeleteProfile = async (userId: Id<"users">) => {
-    if (!confirm("Remove employment type assignment for this user?")) return;
+  const handleDeleteProfileClick = (userId: Id<"users">) => {
+    setPendingDeleteUserId(userId);
+    setDeleteProfileConfirmOpen(true);
+  };
+
+  const handleDeleteProfileConfirm = async () => {
+    if (!pendingDeleteUserId) return;
 
     try {
-      await deleteProfile({ userId });
+      await deleteProfile({ userId: pendingDeleteUserId });
       showSuccess("User profile removed");
     } catch (error) {
       showError(error, "Failed to remove user profile");
+    } finally {
+      setPendingDeleteUserId(null);
     }
   };
 
@@ -580,7 +590,7 @@ export function UserTypeManager() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDeleteProfile(profile.userId)}
+                        onClick={() => handleDeleteProfileClick(profile.userId)}
                       >
                         Remove
                       </Button>
@@ -932,6 +942,16 @@ export function UserTypeManager() {
           </Stack>
         </form>
       </Dialog>
+
+      <ConfirmDialog
+        isOpen={deleteProfileConfirmOpen}
+        onClose={() => setDeleteProfileConfirmOpen(false)}
+        onConfirm={handleDeleteProfileConfirm}
+        title="Remove Employment Assignment"
+        message="Are you sure you want to remove the employment type assignment for this user?"
+        variant="danger"
+        confirmLabel="Remove"
+      />
     </Flex>
   );
 }
