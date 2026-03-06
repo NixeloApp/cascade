@@ -99,15 +99,12 @@ This is the concrete "what's left" list for reliability hardening after the late
 
 1. Deterministic post-action assertions in critical flows:
    - convert any remaining action-only steps into `action -> deterministic wait -> outcome assert`.
-   - target specs first: `issue create/edit`.
+   - `createIssue()` now owns modal-close/success completion, and duplicate modal-close waits were removed from touched consumers.
+   - next target: `issue edit` and any remaining dialog-open/dialog-close assertions that are still duplicated in specs.
 2. Selector contract completion:
-   - replace remaining brittle text/CSS fallbacks with role/label/test-id selectors.
-   - add missing `TEST_IDS` constants for any critical controls without stable anchors.
-   - current `validate` warning buckets:
-     - `e2e/activity-feed.spec.ts` (`7`)
-     - `e2e/analytics.spec.ts` (`2`)
-     - `e2e/onboarding.spec.ts` (`2`)
-     - `e2e/rbac.spec.ts` (`1`)
+   - `pnpm run validate` now passes with no `Test ID constants` warnings.
+   - continue replacing brittle text/CSS fallbacks opportunistically when modifying critical specs.
+   - add missing `TEST_IDS` constants only where critical controls still lack stable anchors.
 3. Data isolation and cleanup hardening:
    - ensure per-spec unique namespaces for created entities.
    - guarantee teardown paths for users/projects/issues created during tests.
@@ -117,6 +114,26 @@ This is the concrete "what's left" list for reliability hardening after the late
 5. Evidence updates after every full run:
    - append the latest pass/fail outcome and duration in this file.
    - record failing spec names and immediate next action when the suite is not 100% pass.
+
+## Current Hardening Notes
+
+- Project-tab navigation is scoped to the project tab strip to avoid collisions with global navigation links.
+- `createProject()` now retries `click -> /projects/[KEY]/board` to absorb modal/hydration redirect races.
+- Issue-detail URL specs now read the issue key from `TEST_IDS.ISSUE.KEY` via `ProjectsPage`, not by parsing the card `aria-label`.
+- `createIssue()` owns the completion signal, so touched specs now assert the user-visible outcome instead of re-checking modal closure.
+
+## Latest Targeted Hardening Evidence
+
+- `pnpm run validate`
+  - `RESULT: PASS (0 errors)`
+- `pnpm exec playwright test e2e/onboarding.spec.ts --reporter=line --workers=1`
+  - `7 passed (1.5m)`
+- `pnpm exec playwright test e2e/rbac.spec.ts --reporter=line --workers=1`
+  - `3 passed (27.6s)`
+- `pnpm exec playwright test e2e/issues.spec.ts e2e/issue-detail-page.spec.ts --reporter=line --workers=1`
+  - `6 passed (2.2m)`
+- `pnpm exec playwright test e2e/board-drag-drop.spec.ts e2e/time-tracking.spec.ts e2e/search.spec.ts e2e/activity-feed.spec.ts e2e/analytics.spec.ts e2e/integration-workflow.spec.ts --reporter=line --workers=1`
+  - `26 passed (9.2m)`
 
 ## Evidence Freshness Guard
 
