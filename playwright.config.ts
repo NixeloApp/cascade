@@ -20,8 +20,9 @@ export default defineConfig({
   // Run tests in parallel in ALL environments (CI and Local)
   fullyParallel: true,
 
-  // Fail build on CI if test.only is left in code
-  forbidOnly: !!process.env.CI,
+  // Always fail if test.only is left in code.
+  // Local enforcement prevents accidental focused commits before CI.
+  forbidOnly: true,
 
   // Retries: 2 on CI only, no retries locally to catch flaky tests early
   retries: process.env.CI ? 2 : 0,
