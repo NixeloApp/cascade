@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { Link, type LinkProps, useLocation, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { CreateTeamModal } from "@/components/CreateTeamModal";
 import { SidebarTeamItem } from "@/components/Sidebar/SidebarTeamItem";
@@ -363,9 +363,10 @@ export function AppSidebar() {
 
   // Get organization from URL context
   const { orgSlug, organizationName, organizationId } = useOrganization();
+  const { isAuthenticated } = useConvexAuth();
 
   // All hooks must be called unconditionally
-  const isAdmin = useQuery(api.users.isOrganizationAdmin);
+  const isAdmin = useQuery(api.users.isOrganizationAdmin, isAuthenticated ? undefined : "skip");
   const showTimeTracking = isAdmin === true;
 
   // Section expand states
@@ -381,10 +382,16 @@ export function AppSidebar() {
   } | null>(null);
 
   // Data
-  const documentsResult = useQuery(api.documents.list, { limit: 11, organizationId });
+  const documentsResult = useQuery(
+    api.documents.list,
+    isAuthenticated ? { limit: 11, organizationId } : "skip",
+  );
   const documents = documentsResult?.documents;
-  const workspaces = useQuery(api.workspaces.list, { organizationId });
-  const teams = useQuery(api.teams.getOrganizationTeams, { organizationId });
+  const workspaces = useQuery(api.workspaces.list, isAuthenticated ? { organizationId } : "skip");
+  const teams = useQuery(
+    api.teams.getOrganizationTeams,
+    isAuthenticated ? { organizationId } : "skip",
+  );
 
   const allDocuments = documents ?? [];
   const allWorkspaces = workspaces ?? [];

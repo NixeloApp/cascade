@@ -10,6 +10,7 @@ import { api } from "@convex/_generated/api";
 import { isReservedSlug } from "@convex/shared/constants";
 import { createFileRoute, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { useEffect, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -20,7 +21,9 @@ export const Route = createFileRoute("/_auth/_app")({
   component: AppLayout,
 });
 
-let cachedRedirectPath: string | undefined;
+type UserOrganization = FunctionReturnType<typeof api.organizations.getUserOrganizations>[number];
+
+let cachedRedirectPath: string | null | undefined;
 let cachedUserOrganizations: UserOrganization[] | undefined;
 let hasAuthenticatedAppSession = false;
 

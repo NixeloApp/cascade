@@ -9,8 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
-import { useState } from "react";
-import type { FocusOutsideEvent } from "@radix-ui/react-dismissable-layer";
+import { type ComponentProps, useState } from "react";
 import { AdvancedSearchModal } from "@/components/AdvancedSearchModal";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
@@ -303,7 +302,9 @@ export function GlobalSearch() {
   const isLoading =
     shouldSearch && (issueSearchResult === undefined || documentSearchResult === undefined);
 
-  const handleFocusOutside = (event: FocusOutsideEvent) => {
+  const handleFocusOutside: NonNullable<ComponentProps<typeof CommandDialog>["onFocusOutside"]> = (
+    event,
+  ) => {
     // Keep the palette open when cmdk momentarily drops focus during result-list transitions.
     event.preventDefault();
   };
