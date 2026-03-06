@@ -1,19 +1,26 @@
 /**
- * Convex Query Helpers
+ * Convex Auth-Aware Hooks
  *
  * Provides auth-aware wrappers around Convex hooks to ensure
  * consistent handling of authentication state across the app.
  *
- * USE THESE INSTEAD OF RAW useQuery:
+ * USE THESE INSTEAD OF RAW useQuery/useMutation:
  * - useAuthenticatedQuery: For queries requiring auth (most queries)
+ * - useAuthenticatedMutation: For mutations requiring auth (most mutations)
  * - usePublicQuery: For public queries that don't need auth
- * - useAuthReady: For checking auth state in mutations/UI
+ * - useAuthReady: For checking auth state in UI
  */
 
-import { useConvexAuth, useQuery as useConvexQuery } from "convex/react";
+import type { ReactMutation } from "convex/react";
+import {
+  useConvexAuth,
+  useMutation as useConvexMutation,
+  useQuery as useConvexQuery,
+} from "convex/react";
 import type { FunctionArgs, FunctionReference, FunctionReturnType } from "convex/server";
 
 type QueryReference = FunctionReference<"query">;
+type MutationReference = FunctionReference<"mutation">;
 
 /**
  * Query that automatically skips when auth is not ready.
@@ -57,14 +64,42 @@ export function usePublicQuery<Query extends QueryReference>(
 }
 
 /**
- * Auth state hook for mutations and UI that needs to check auth.
+ * Mutation with auth state bundled for easy button disabling.
+ * Use for any mutation that requires authentication.
+ *
+ * @example
+ * const { mutate, canAct } = useAuthenticatedMutation(api.issues.create);
+ *
+ * <Button disabled={!canAct} onClick={() => mutate({ title: "New issue" })}>
+ *   Create Issue
+ * </Button>
+ */
+export function useAuthenticatedMutation<Mutation extends MutationReference>(
+  mutation: Mutation,
+): {
+  mutate: ReactMutation<Mutation>;
+  canAct: boolean;
+  isAuthLoading: boolean;
+} {
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const mutate = useConvexMutation(mutation);
+
+  return {
+    mutate,
+    /** True when auth is settled AND user is authenticated. Safe to call mutate. */
+    canAct: isAuthenticated && !isLoading,
+    isAuthLoading: isLoading,
+  };
+}
+
+/**
+ * Auth state hook for UI that needs to check auth without a specific mutation.
  * Returns derived `canAct` boolean for disabling buttons/actions.
  *
  * @example
  * const { canAct } = useAuthReady();
- * const doSomething = useMutation(api.foo.bar);
  *
- * <Button disabled={!canAct} onClick={() => doSomething(args)}>
+ * <Button disabled={!canAct} onClick={handleClick}>
  *   Do Something
  * </Button>
  */
