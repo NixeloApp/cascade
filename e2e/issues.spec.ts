@@ -118,6 +118,35 @@ test.describe("Issues", () => {
       await expect(projectsPage.getIssueCard(originalTitle)).toHaveCount(0);
     });
 
+    test("can edit issue description and priority from the detail dialog", async ({
+      page,
+      projectsPage,
+    }) => {
+      const uniqueId = Date.now().toString();
+      const projectKey = `META${uniqueId.slice(-4)}`;
+      const issueTitle = `Metadata Issue ${uniqueId}`;
+      const updatedDescription = `Updated issue description ${uniqueId}`;
+
+      await projectsPage.goto();
+      await projectsPage.createWorkspace(`Metadata WS ${uniqueId}`);
+      await projectsPage.goto();
+      await projectsPage.createProject(`Project ${uniqueId}`, projectKey);
+
+      await projectsPage.createIssue(issueTitle);
+      await projectsPage.switchToTab("backlog");
+      await projectsPage.openIssueDetail(issueTitle);
+
+      await projectsPage.editIssueDescription(updatedDescription);
+      await projectsPage.changeIssuePriority("High");
+
+      await page.keyboard.press("Escape");
+      await expect(projectsPage.issueDetailDialog).not.toBeVisible();
+
+      await projectsPage.openIssueDetail(issueTitle);
+      await expect(projectsPage.issueDetailDescriptionContent).toContainText(updatedDescription);
+      await expect(projectsPage.issueDetailPrioritySelect).toContainText("High");
+    });
+
     test("issue detail shows timer controls", async ({ projectsPage }) => {
       // Create project first
       const uniqueId = Date.now().toString();

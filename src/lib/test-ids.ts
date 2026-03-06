@@ -31,6 +31,10 @@ export const TEST_IDS = {
     PRIORITY: "issue-priority",
     /** @see src/components/IssueDetailModal.tsx */
     DETAIL_MODAL: "issue-detail-modal",
+    /** @see src/components/IssueDetail/IssueDetailContent.tsx */
+    DESCRIPTION_EDITOR: "issue-description-editor",
+    /** @see src/components/IssueDetail/IssueDetailContent.tsx */
+    DESCRIPTION_CONTENT: "issue-description-content",
   },
 
   BOARD: {

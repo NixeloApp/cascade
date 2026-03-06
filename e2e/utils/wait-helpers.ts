@@ -200,6 +200,18 @@ export async function waitForIssueCreateSuccess(page: Page, issueTitle?: string)
   await expect(issueCreatedToast).toBeVisible();
 }
 
+/**
+ * Wait for issue update completion signal.
+ * Primary signal is the success toast emitted by issue detail update flows.
+ */
+export async function waitForIssueUpdateSuccess(page: Page): Promise<void> {
+  const issueUpdatedToast = page
+    .locator("[data-sonner-toast][data-type='success']")
+    .filter({ hasText: /issue updated/i })
+    .first();
+  await expect(issueUpdatedToast).toBeVisible();
+}
+
 type WorkspaceCreationDialogOptions = {
   dialog: Locator;
   nameInput: Locator;

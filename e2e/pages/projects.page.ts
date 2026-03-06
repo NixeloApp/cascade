@@ -6,6 +6,7 @@ import {
   getWorkspaceDialogElements,
   waitForBoardLoaded,
   waitForIssueCreateSuccess,
+  waitForIssueUpdateSuccess,
 } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
@@ -99,7 +100,10 @@ export class ProjectsPage extends BasePage {
   readonly issueDetailDialog: Locator;
   readonly issueDetailEditButton: Locator;
   readonly issueDetailTitleInput: Locator;
+  readonly issueDetailDescriptionEditor: Locator;
+  readonly issueDetailDescriptionContent: Locator;
   readonly issueDetailSaveChangesButton: Locator;
+  readonly issueDetailPrioritySelect: Locator;
   readonly startTimerButton: Locator;
   readonly stopTimerButton: Locator;
   readonly timerStoppedToast: Locator;
@@ -207,9 +211,16 @@ export class ProjectsPage extends BasePage {
     this.issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
     this.issueDetailEditButton = this.issueDetailDialog.getByRole("button", { name: /^Edit$/ });
     this.issueDetailTitleInput = this.issueDetailDialog.getByPlaceholder("Issue title");
+    this.issueDetailDescriptionEditor = this.issueDetailDialog.getByTestId(
+      TEST_IDS.ISSUE.DESCRIPTION_EDITOR,
+    );
+    this.issueDetailDescriptionContent = this.issueDetailDialog.getByTestId(
+      TEST_IDS.ISSUE.DESCRIPTION_CONTENT,
+    );
     this.issueDetailSaveChangesButton = this.issueDetailDialog.getByRole("button", {
       name: /save changes/i,
     });
+    this.issueDetailPrioritySelect = this.issueDetailDialog.getByLabel("Change priority");
     this.startTimerButton = this.issueDetailDialog.getByRole("button", { name: "Start Timer" });
     this.stopTimerButton = this.issueDetailDialog.getByRole("button", { name: /stop timer|stop/i });
     this.timerStoppedToast = page.getByText(/Timer stopped/i);
@@ -505,6 +516,34 @@ export class ProjectsPage extends BasePage {
 
     await expect(this.issueDetailTitleInput).not.toBeVisible();
     await expect(this.issueDetailEditButton).toBeVisible();
+    await waitForIssueUpdateSuccess(this.page);
+  }
+
+  async editIssueDescription(nextDescription: string) {
+    await expect(this.issueDetailEditButton).toBeVisible();
+    await this.issueDetailEditButton.click();
+
+    await expect(this.issueDetailDescriptionEditor).toBeVisible();
+    await this.issueDetailDescriptionEditor.fill(nextDescription);
+
+    await this.issueDetailSaveChangesButton.click();
+
+    await expect(this.issueDetailDescriptionEditor).not.toBeVisible();
+    await expect(this.issueDetailEditButton).toBeVisible();
+    await waitForIssueUpdateSuccess(this.page);
+    await expect(this.issueDetailDescriptionContent).toContainText(nextDescription);
+  }
+
+  async changeIssuePriority(priorityLabel: "Highest" | "High" | "Medium" | "Low" | "Lowest") {
+    await expect(this.issueDetailPrioritySelect).toBeVisible();
+    await this.issueDetailPrioritySelect.click();
+
+    const option = this.page.getByRole("option", { name: new RegExp(`^${priorityLabel}$`, "i") });
+    await expect(option).toBeVisible();
+    await option.click();
+
+    await expect(this.issueDetailPrioritySelect).toContainText(priorityLabel);
+    await waitForIssueUpdateSuccess(this.page);
   }
 
   /**
