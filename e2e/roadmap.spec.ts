@@ -1,4 +1,5 @@
 import { authenticatedTest as test } from "./fixtures";
+import { createTestNamespace } from "./utils/test-helpers";
 import { testUserService } from "./utils/test-user-service";
 
 /**
@@ -22,63 +23,63 @@ test.describe("Roadmap", () => {
     if (!seedResult) console.warn("WARNING: Failed to seed templates in test setup");
   });
 
-  test("can navigate to roadmap tab from project board", async ({ projectsPage }) => {
+  test("can navigate to roadmap tab from project board", async ({ projectsPage }, testInfo) => {
     // Create a unique project
-    const uniqueId = Date.now().toString();
-    const projectKey = `ROAD${uniqueId.slice(-4)}`;
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("ROAD");
 
     // Navigate to projects page
     await projectsPage.goto();
 
     // Create a workspace for test isolation
-    await projectsPage.createWorkspace(`Roadmap WS ${uniqueId}`);
+    await projectsPage.createWorkspace(namespace.name("Roadmap WS"));
 
     // Go back to projects page
     await projectsPage.goto();
 
     // Create a project
-    await projectsPage.createProject(`Roadmap Project ${uniqueId}`, projectKey);
+    await projectsPage.createProject(namespace.name("Roadmap Project"), projectKey);
 
     await projectsPage.switchToTab("roadmap");
   });
 
-  test("roadmap page shows timeline view", async ({ projectsPage }) => {
+  test("roadmap page shows timeline view", async ({ projectsPage }, testInfo) => {
     // Create a unique project
-    const uniqueId = Date.now().toString();
-    const projectKey = `ROAD${uniqueId.slice(-4)}`;
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("ROAD");
 
     // Navigate to projects page
     await projectsPage.goto();
 
     // Create a workspace for test isolation
-    await projectsPage.createWorkspace(`Timeline WS ${uniqueId}`);
+    await projectsPage.createWorkspace(namespace.name("Timeline WS"));
 
     // Go back to projects page
     await projectsPage.goto();
 
     // Create a project
-    await projectsPage.createProject(`Timeline Project ${uniqueId}`, projectKey);
+    await projectsPage.createProject(namespace.name("Timeline Project"), projectKey);
 
     await projectsPage.switchToTab("roadmap");
     await projectsPage.expectRoadmapCurrentMonthVisible();
   });
 
-  test("roadmap shows epic filter dropdown", async ({ projectsPage }) => {
+  test("roadmap shows epic filter dropdown", async ({ projectsPage }, testInfo) => {
     // Create a unique project
-    const uniqueId = Date.now().toString();
-    const projectKey = `EPIC${uniqueId.slice(-4)}`;
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("EPIC");
 
     // Navigate to projects page
     await projectsPage.goto();
 
     // Create a workspace for test isolation
-    await projectsPage.createWorkspace(`Epic WS ${uniqueId}`);
+    await projectsPage.createWorkspace(namespace.name("Epic WS"));
 
     // Go back to projects page
     await projectsPage.goto();
 
     // Create a project
-    await projectsPage.createProject(`Epic Project ${uniqueId}`, projectKey);
+    await projectsPage.createProject(namespace.name("Epic Project"), projectKey);
 
     await projectsPage.switchToTab("roadmap");
 

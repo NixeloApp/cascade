@@ -1,4 +1,5 @@
 import { authenticatedTest as test } from "./fixtures";
+import { createTestNamespace } from "./utils/test-helpers";
 import { testUserService } from "./utils/test-user-service";
 
 /**
@@ -25,10 +26,10 @@ test.describe("Teams", () => {
     if (!seedResult) console.warn("WARNING: Failed to seed templates in test setup");
   });
 
-  test("can navigate to teams list from workspace", async ({ workspacesPage }) => {
+  test("can navigate to teams list from workspace", async ({ workspacesPage }, testInfo) => {
     // Create a workspace first
-    const uniqueId = Date.now().toString();
-    const workspaceName = `Teams WS ${uniqueId}`;
+    const namespace = createTestNamespace(testInfo);
+    const workspaceName = namespace.name("Teams WS");
 
     await workspacesPage.goto();
     await workspacesPage.createWorkspace(workspaceName);
@@ -38,10 +39,10 @@ test.describe("Teams", () => {
     console.log("✓ Navigated to Teams page");
   });
 
-  test("teams list shows create team button", async ({ workspacesPage }) => {
+  test("teams list shows create team button", async ({ workspacesPage }, testInfo) => {
     // Create a workspace first
-    const uniqueId = Date.now().toString();
-    const workspaceName = `Create Team WS ${uniqueId}`;
+    const namespace = createTestNamespace(testInfo);
+    const workspaceName = namespace.name("Create Team WS");
 
     await workspacesPage.goto();
     await workspacesPage.createWorkspace(workspaceName);
@@ -49,10 +50,10 @@ test.describe("Teams", () => {
     await workspacesPage.expectTeamsLoaded();
   });
 
-  test("teams list shows empty state when no teams exist", async ({ workspacesPage }) => {
+  test("teams list shows empty state when no teams exist", async ({ workspacesPage }, testInfo) => {
     // Create a fresh workspace
-    const uniqueId = Date.now().toString();
-    const workspaceName = `Empty Teams WS ${uniqueId}`;
+    const namespace = createTestNamespace(testInfo);
+    const workspaceName = namespace.name("Empty Teams WS");
 
     await workspacesPage.goto();
     await workspacesPage.createWorkspace(workspaceName);

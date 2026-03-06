@@ -1,4 +1,5 @@
 import { authenticatedTest as test } from "./fixtures";
+import { createTestNamespace } from "./utils/test-helpers";
 
 /**
  * Sprints E2E Tests
@@ -13,32 +14,38 @@ test.describe("Sprints", () => {
   });
 
   test.describe("Sprint Navigation", () => {
-    test("can navigate to sprints tab in project", async ({ dashboardPage, projectsPage }) => {
+    test("can navigate to sprints tab in project", async ({
+      dashboardPage,
+      projectsPage,
+    }, testInfo) => {
       await dashboardPage.goto();
       await dashboardPage.expectLoaded();
       // Use direct URL navigation to access projects
       await projectsPage.goto();
 
       // Create a project first
-      const uniqueId = Date.now();
-      const projectKey = `PROJ${uniqueId.toString().slice(-4)}`;
-      await projectsPage.createProject(`Sprint Test ${uniqueId}`, projectKey);
+      const namespace = createTestNamespace(testInfo);
+      const projectKey = namespace.projectKey("PROJ");
+      await projectsPage.createProject(namespace.name("Sprint Test"), projectKey);
       await projectsPage.expectBoardVisible();
 
       await projectsPage.switchToTab("sprints");
       await projectsPage.expectSprintsLoaded();
     });
 
-    test("sprints tab shows sprint management UI", async ({ dashboardPage, projectsPage }) => {
+    test("sprints tab shows sprint management UI", async ({
+      dashboardPage,
+      projectsPage,
+    }, testInfo) => {
       await dashboardPage.goto();
       await dashboardPage.expectLoaded();
       // Use direct URL navigation to access projects
       await projectsPage.goto();
 
       // Create a project first
-      const uniqueId = Date.now();
-      const projectKey = `PROJ${uniqueId.toString().slice(-4)}`;
-      await projectsPage.createProject(`Sprint Test ${uniqueId}`, projectKey);
+      const namespace = createTestNamespace(testInfo);
+      const projectKey = namespace.projectKey("PROJ");
+      await projectsPage.createProject(namespace.name("Sprint Test"), projectKey);
       await projectsPage.expectBoardVisible();
 
       // Navigate to sprints tab
@@ -48,16 +55,19 @@ test.describe("Sprints", () => {
   });
 
   test.describe("Backlog Navigation", () => {
-    test("can navigate to backlog tab in project", async ({ dashboardPage, projectsPage }) => {
+    test("can navigate to backlog tab in project", async ({
+      dashboardPage,
+      projectsPage,
+    }, testInfo) => {
       await dashboardPage.goto();
       await dashboardPage.expectLoaded();
       // Use direct URL navigation to access projects
       await projectsPage.goto();
 
       // Create a project first
-      const uniqueId = Date.now();
-      const projectKey = `PROJ${uniqueId.toString().slice(-4)}`;
-      await projectsPage.createProject(`Backlog Test ${uniqueId}`, projectKey);
+      const namespace = createTestNamespace(testInfo);
+      const projectKey = namespace.projectKey("PROJ");
+      await projectsPage.createProject(namespace.name("Backlog Test"), projectKey);
       await projectsPage.expectBoardVisible();
 
       // Navigate to backlog tab
