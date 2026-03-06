@@ -65,8 +65,17 @@ export class ProjectsPage extends BasePage {
   readonly boardTab: Locator;
   readonly backlogTab: Locator;
   readonly sprintsTab: Locator;
+  readonly activityTab: Locator;
   readonly analyticsTab: Locator;
   readonly settingsTab: Locator;
+
+  // ===================
+  // Locators - Activity Feed
+  // ===================
+  readonly activityPageHeader: Locator;
+  readonly activityFeed: Locator;
+  readonly activityEmptyState: Locator;
+  readonly activityEntries: Locator;
 
   // ===================
   // Locators - Issue Detail Dialog
@@ -149,8 +158,15 @@ export class ProjectsPage extends BasePage {
     this.boardTab = page.getByRole("link", { name: /^Board$/ });
     this.backlogTab = page.getByRole("link", { name: /^Backlog$/ });
     this.sprintsTab = page.getByRole("link", { name: /^Sprints$/ });
+    this.activityTab = page.getByRole("link", { name: /^Activity$/ });
     this.analyticsTab = page.getByRole("link", { name: /^Analytics$/ });
     this.settingsTab = page.getByRole("link", { name: /^Settings$/ });
+
+    // Activity feed
+    this.activityPageHeader = page.getByRole("heading", { name: /project activity/i });
+    this.activityFeed = page.getByTestId(TEST_IDS.ACTIVITY.FEED);
+    this.activityEmptyState = page.getByTestId(TEST_IDS.ACTIVITY.EMPTY_STATE);
+    this.activityEntries = this.activityFeed.getByTestId(TEST_IDS.ACTIVITY.ENTRY);
     // Issue detail dialog
     // Issue detail dialog - distinct from Create Issue modal
     this.issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
@@ -326,11 +342,12 @@ export class ProjectsPage extends BasePage {
     await waitForIssueCreateSuccess(this.page);
   }
 
-  async switchToTab(tab: "board" | "backlog" | "sprints" | "analytics" | "settings") {
+  async switchToTab(tab: "board" | "backlog" | "sprints" | "activity" | "analytics" | "settings") {
     const tabs = {
       board: this.boardTab,
       backlog: this.backlogTab,
       sprints: this.sprintsTab,
+      activity: this.activityTab,
       analytics: this.analyticsTab,
       settings: this.settingsTab,
     };
@@ -351,6 +368,7 @@ export class ProjectsPage extends BasePage {
       board: /\/board(?:[/?#]|$)/,
       backlog: /\/backlog(?:[/?#]|$)/,
       sprints: /\/sprints(?:[/?#]|$)/,
+      activity: /\/activity(?:[/?#]|$)/,
       analytics: /\/analytics(?:[/?#]|$)/,
       settings: /\/settings(?:[/?#]|$)/,
     };
@@ -359,6 +377,12 @@ export class ProjectsPage extends BasePage {
 
     if (tab === "board") {
       await this.waitForBoardInteractive();
+      return;
+    }
+
+    if (tab === "activity") {
+      await expect(this.activityPageHeader).toBeVisible();
+      await expect(this.activityEmptyState.or(this.activityFeed)).toBeVisible();
     }
   }
 
