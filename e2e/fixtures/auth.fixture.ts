@@ -15,6 +15,7 @@ import {
   WorkspacesPage,
 } from "../pages";
 import { testUserService } from "../utils";
+import { waitForDashboardReady } from "../utils/wait-helpers";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -91,6 +92,40 @@ async function injectAuthTokens(page: Page, token: string, refreshToken?: string
   );
 }
 
+async function waitForAuthenticatedDashboard(page: Page, orgSlug: string): Promise<void> {
+  const dashboardUrl = new RegExp(`/${orgSlug}/dashboard(?:\\?.*)?$`);
+  const appErrorHeading = page.getByRole("heading", { name: "500" });
+  const appErrorDetails = page.locator("details pre");
+  let lastError: Error | undefined;
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      await expect(page).toHaveURL(dashboardUrl);
+      await page.waitForLoadState("domcontentloaded");
+
+      if (await appErrorHeading.isVisible().catch(() => false)) {
+        throw new Error("App error boundary displayed during authenticated dashboard bootstrap");
+      }
+
+      await waitForDashboardReady(page);
+      return;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (attempt === 1) {
+        break;
+      }
+
+      await page.goto("/app", { waitUntil: "domcontentloaded" });
+    }
+  }
+
+  const errorDetails = (await appErrorDetails.textContent().catch(() => null))?.trim();
+  const suffix = errorDetails ? `: ${errorDetails}` : "";
+  throw new Error(
+    `Failed to bootstrap authenticated dashboard for ${orgSlug}: ${lastError?.message ?? "unknown error"}${suffix}`,
+  );
+}
+
 export const authenticatedTest = base.extend<AuthFixtures>({
   // Disable storageState loading to force fresh login per test
   // This prevents "Invalid refresh token" errors caused by token reuse across parallel workers
@@ -134,7 +169,7 @@ export const authenticatedTest = base.extend<AuthFixtures>({
       const destination = orgSlug ? "/app" : "/";
       await page.goto(destination, { waitUntil: "domcontentloaded" });
       if (orgSlug) {
-        await expect(page).toHaveURL(new RegExp(`/${orgSlug}/dashboard(?:\\?.*)?$`));
+        await waitForAuthenticatedDashboard(page, orgSlug);
       } else {
         await expect(page).toHaveURL(/\/$/);
       }

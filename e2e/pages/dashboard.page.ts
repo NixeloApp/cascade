@@ -582,14 +582,18 @@ export class DashboardPage extends BasePage {
 
   async searchFor(query: string) {
     await expect(async () => {
+      await this.throwIfAppErrorVisible();
       await expect(this.globalSearchInput).toBeVisible();
       await expect(this.globalSearchInput).toBeEnabled();
       await this.globalSearchInput.focus();
+      await this.throwIfAppErrorVisible();
       await this.globalSearchInput.fill(query);
+      await this.throwIfAppErrorVisible();
       await expect(this.globalSearchInput).toHaveValue(query);
     }).toPass();
 
     if (query.length < 2) {
+      await this.throwIfAppErrorVisible();
       await expect(this.globalSearchMinimumQueryMessage).toBeVisible();
       return;
     }
