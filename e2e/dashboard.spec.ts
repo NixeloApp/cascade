@@ -46,15 +46,12 @@ test.describe("Dashboard Tests", () => {
   test.describe("Dashboard Content", () => {
     test("displays main dashboard sections", async ({ dashboardPage }) => {
       await dashboardPage.goto();
-      await expect(dashboardPage.mainContent).toBeVisible();
-      await expect(dashboardPage.myIssuesSection).toBeVisible();
-      await expect(dashboardPage.workspacesSection).toBeVisible();
+      await dashboardPage.expectMainSectionsVisible();
     });
 
     test("can filter issues", async ({ dashboardPage }) => {
       await dashboardPage.goto();
-      await expect(dashboardPage.assignedTab).toBeVisible();
-      await expect(dashboardPage.createdTab).toBeVisible();
+      await dashboardPage.expectIssueFiltersVisible();
 
       await dashboardPage.filterIssues("created");
       await dashboardPage.filterIssues("assigned");
@@ -123,7 +120,7 @@ test.describe("Dashboard Tests", () => {
     test("can open notifications panel", async ({ dashboardPage }) => {
       await dashboardPage.goto();
       await dashboardPage.openNotifications();
-      await expect(dashboardPage.notificationPanel).toBeVisible();
+      await dashboardPage.expectNotificationsPanelVisible();
     });
   });
 });

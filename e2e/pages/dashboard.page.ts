@@ -642,4 +642,19 @@ export class DashboardPage extends BasePage {
     // Wait longer for organization context to load (auth tokens, organization data)
     await expect(this.loadingSpinner).not.toBeVisible();
   }
+
+  async expectMainSectionsVisible() {
+    await expect(this.mainContent).toBeVisible();
+    await expect(this.myIssuesSection).toBeVisible();
+    await expect(this.workspacesSection).toBeVisible();
+  }
+
+  async expectIssueFiltersVisible() {
+    await expect(this.assignedTab).toBeVisible();
+    await expect(this.createdTab).toBeVisible();
+  }
+
+  async expectNotificationsPanelVisible() {
+    await expect(this.notificationPanel).toBeVisible();
+  }
 }
