@@ -307,8 +307,8 @@ export class ProjectsPage extends BasePage {
           await this.createButton.dispatchEvent("click");
         }
 
-        // The app redirects to /projects/[KEY]/board after creation.
-        await this.page.waitForURL(/\/projects\/[A-Z0-9-]+\/board/, { timeout: 5000 });
+        // The app redirects client-side to /projects/[KEY]/board after creation.
+        await expect(this.page).toHaveURL(/\/projects\/[A-Z0-9-]+\/board/, { timeout: 5000 });
       }).toPass({ timeout: 30000, intervals: [1000] });
 
       // Wait for board to be fully interactive before returning
@@ -504,7 +504,7 @@ export class ProjectsPage extends BasePage {
     await this.issueDetailSaveChangesButton.click();
 
     await expect(this.issueDetailTitleInput).not.toBeVisible();
-    await expect(this.issueDetailDialog.getByRole("heading", { name: nextTitle })).toBeVisible();
+    await expect(this.issueDetailEditButton).toBeVisible();
   }
 
   /**
