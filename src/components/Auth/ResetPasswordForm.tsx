@@ -37,6 +37,11 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
       return;
     }
 
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
     setSubmitting(true);
 
     const formData = new FormData(form);
@@ -65,7 +70,7 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
     }
 
     e.preventDefault();
-    submitReset();
+    formRef.current?.requestSubmit();
   };
 
   return (
@@ -103,12 +108,11 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
         />
         <PasswordStrengthIndicator password={newPassword} className="-mt-2" />
         <Button
-          type="button"
+          type="submit"
           size="lg"
           className="w-full"
           disabled={submitting}
           data-testid={TEST_IDS.AUTH.RESET_SUBMIT_BUTTON}
-          onClick={submitReset}
         >
           {submitting ? "Resetting..." : "Reset password"}
         </Button>

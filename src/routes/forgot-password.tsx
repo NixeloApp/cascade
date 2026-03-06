@@ -9,7 +9,6 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
 
 interface ForgotPasswordSearch {
-  email?: string;
   step?: "reset";
 }
 
@@ -17,7 +16,6 @@ export const Route = createFileRoute("/forgot-password")({
   component: ForgotPasswordRoute,
   ssr: false,
   validateSearch: (search: Record<string, unknown>): ForgotPasswordSearch => ({
-    email: typeof search.email === "string" ? search.email : undefined,
     step: search.step === "reset" ? "reset" : undefined,
   }),
 });
@@ -28,6 +26,7 @@ function ForgotPasswordRoute() {
 
 function ForgotPasswordPage() {
   const [submitting, setSubmitting] = useState(false);
+  const [email, setEmail] = useState<string | null>(null);
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
   const formRef = useRef<HTMLFormElement>(null);
@@ -38,10 +37,19 @@ function ForgotPasswordPage() {
       return;
     }
 
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
     setSubmitting(true);
 
     const formData = new FormData(form);
-    const formEmail = formData.get("email") as string;
+    const formEmail = formData.get("email");
+    if (typeof formEmail !== "string" || !formEmail) {
+      setSubmitting(false);
+      return;
+    }
 
     try {
       const response = await fetch(`${getConvexSiteUrl()}/auth/request-reset`, {
@@ -54,10 +62,10 @@ function ForgotPasswordPage() {
         throw new Error(`Password reset request failed with status ${response.status}`);
       }
 
+      setEmail(formEmail);
       navigate({
         replace: true,
         search: {
-          email: formEmail,
           step: "reset",
         },
       });
@@ -79,23 +87,24 @@ function ForgotPasswordPage() {
     }
 
     e.preventDefault();
-    void submitResetRequest();
+    formRef.current?.requestSubmit();
   };
 
-  if (search.step === "reset" && search.email) {
+  if (search.step === "reset" && email) {
     return (
       <AuthPageLayout
         title="Check your email"
         subtitle={
           <>
-            We sent a code to <strong>{search.email}</strong>
+            We sent a code to <strong>{email}</strong>
           </>
         }
       >
         <ResetPasswordForm
-          email={search.email}
+          email={email}
           onSuccess={() => navigate({ to: ROUTES.app.path })}
           onRetry={() => {
+            setEmail(null);
             navigate({
               replace: true,
               search: {},
@@ -128,7 +137,7 @@ function ForgotPasswordPage() {
           required
           data-testid={TEST_IDS.AUTH.EMAIL_INPUT}
         />
-        <Button className="w-full" type="button" disabled={submitting} onClick={submitResetRequest}>
+        <Button className="w-full" type="submit" disabled={submitting}>
           {submitting ? "Sending..." : "Send reset code"}
         </Button>
       </form>

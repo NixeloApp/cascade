@@ -139,8 +139,10 @@ export class OnboardingPage {
           }
         ).__convex_test_client;
 
-        return document.body.classList.contains("app-hydrated") && !!convex?.connectionState()
-          .isWebSocketConnected;
+        return (
+          document.body.classList.contains("app-hydrated") &&
+          !!convex?.connectionState().isWebSocketConnected
+        );
       },
       undefined,
       { timeout: CONVEX_CONNECTION_TIMEOUT },

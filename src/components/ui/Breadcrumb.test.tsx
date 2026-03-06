@@ -6,10 +6,7 @@ describe("BreadcrumbLink", () => {
   it("renders a plain anchor by default", () => {
     render(<BreadcrumbLink href="/workspaces">Workspaces</BreadcrumbLink>);
 
-    expect(screen.getByRole("link", { name: "Workspaces" })).toHaveAttribute(
-      "href",
-      "/workspaces",
-    );
+    expect(screen.getByRole("link", { name: "Workspaces" })).toHaveAttribute("href", "/workspaces");
   });
 
   it("reuses the child anchor when asChild is true", () => {
@@ -19,10 +16,7 @@ describe("BreadcrumbLink", () => {
       </BreadcrumbLink>,
     );
 
-    expect(screen.getByRole("link", { name: "Workspaces" })).toHaveAttribute(
-      "href",
-      "/workspaces",
-    );
+    expect(screen.getByRole("link", { name: "Workspaces" })).toHaveAttribute("href", "/workspaces");
     expect(container.querySelectorAll("a")).toHaveLength(1);
   });
 });
