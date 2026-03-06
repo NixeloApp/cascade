@@ -174,6 +174,13 @@ Full-suite evidence in this TODO is considered stale if older than 24 hours.
 - Targeted validation:
   - `pnpm exec playwright test e2e/integration-workflow.spec.ts e2e/time-tracking.spec.ts e2e/issues.spec.ts --reporter=line --workers=1`
   - `8 passed (3.1m)`
+- Removed the raw `cmdk` DOM selector and loose `No results found` fallback from the integration search workflow, and switched it to the shared dashboard search page-object contract (`openGlobalSearch()`, `searchFor()`, explicit result assertion).
+- Root cause note:
+  - the integration workflow was still bypassing the stabilized search selectors, so it could drift independently from the dedicated `e2e/search.spec.ts` contract.
+  - routing the workflow through `DashboardPage` keeps the integration coverage aligned with the same deterministic search signals used by the focused search suite.
+- Targeted validation:
+  - `pnpm exec playwright test e2e/integration-workflow.spec.ts --reporter=line --workers=1`
+  - `4 passed (1.7m)`
 
 ## Historical Resolution Notes (2026-03-05)
 

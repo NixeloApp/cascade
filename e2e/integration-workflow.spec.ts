@@ -148,11 +148,7 @@ test.describe("Integration Workflows", () => {
   });
 
   test.describe("Search Workflow", () => {
-    test("can search for issues using global search", async ({
-      dashboardPage,
-      projectsPage,
-      page,
-    }) => {
+    test("can search for issues using global search", async ({ dashboardPage, projectsPage }) => {
       const timestamp = Date.now();
       const projectKey = `SRC${timestamp.toString().slice(-4)}`;
       const uniqueSearchTerm = `UniqueSearch${timestamp}`;
@@ -171,26 +167,10 @@ test.describe("Integration Workflows", () => {
       await dashboardPage.goto();
       await dashboardPage.expectLoaded();
 
-      // Open global search, type query, and wait for results
-      // Use single retry block to handle modal/input instability from cmdk re-renders
-      await expect(async () => {
-        // Ensure modal is open
-        if (!(await dashboardPage.globalSearchModal.isVisible().catch(() => false))) {
-          await dashboardPage.globalSearchButton.click();
-          await expect(dashboardPage.globalSearchModal).toBeVisible();
-          await expect(dashboardPage.globalSearchInput).toBeVisible();
-        }
-
-        // Fill the search input
-        await dashboardPage.globalSearchInput.fill(uniqueSearchTerm);
-
-        // Wait for search to process - either results appear or "No results found"
-        const noResultsText = page.getByText("No results found");
-        const searchResultGroup = page.locator("[cmdk-group]");
-        await expect(noResultsText.or(searchResultGroup)).toBeVisible();
-      }).toPass();
-
-      console.log("✓ Global search opened and search query processed");
+      await dashboardPage.openGlobalSearch();
+      await dashboardPage.searchFor(uniqueSearchTerm);
+      await expect(dashboardPage.getGlobalSearchResult(uniqueSearchTerm)).toBeVisible();
+      console.log("✓ Global search returned created issue");
 
       // Close search
       await dashboardPage.closeGlobalSearch();
