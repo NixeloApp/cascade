@@ -1,5 +1,5 @@
 import { api } from "@convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { Settings2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
@@ -13,7 +13,8 @@ import { Typography } from "../ui/Typography";
 
 /** Modal for customizing dashboard widget visibility preferences. */
 export function DashboardCustomizeModal() {
-  const userSettings = useQuery(api.userSettings.get);
+  const { isAuthenticated } = useConvexAuth();
+  const userSettings = useQuery(api.userSettings.get, isAuthenticated ? undefined : "skip");
   const updateSettings = useMutation(api.userSettings.update);
   const [open, setOpen] = useState(false);
 
