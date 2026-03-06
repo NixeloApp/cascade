@@ -3,7 +3,7 @@
 > **Priority:** P0 (Highest)
 > **Effort:** Large
 > **Status:** In Progress (local full-suite now green; hardening work remains)
-> **Last Updated:** 2026-03-05
+> **Last Updated:** 2026-03-06
 
 ## Objective
 
@@ -55,7 +55,7 @@ Make E2E tests deterministic and locally verifiable with one rule: run the full 
   - `getByLabel`
   - `getByTestId(TEST_IDS...)`
 - [ ] Expand `TEST_IDS` constants where critical flows lack stable anchors.
-- [ ] Document selector hierarchy for E2E authoring.
+- [x] Document selector hierarchy for E2E authoring.
 
 ### 5) Suite Controls
 
@@ -67,7 +67,7 @@ Make E2E tests deterministic and locally verifiable with one rule: run the full 
 
 - [ ] Review currently passing core specs and refactor weak waits preemptively.
 - [ ] Apply shared helper abstractions to reduce copy/paste anti-patterns.
-- [ ] Add reliability checklist to PR review for E2E file changes.
+- [x] Add reliability checklist to PR review for E2E file changes.
 
 ## Phase Plan
 

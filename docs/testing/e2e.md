@@ -72,6 +72,20 @@ Use this checklist for any PR that modifies `e2e/` specs, fixtures, page objects
 - Selectors prioritize semantic roles and test ids over brittle text/CSS-only locators
 - PR includes exact E2E command(s) run and pass/fail/skip outcomes
 
+## Selector Hierarchy
+
+Use selectors in this order for new/updated E2E tests:
+
+1. `getByRole(...)` with accessible name
+2. `getByLabel(...)` / `getByPlaceholder(...)` for form fields
+3. `getByTestId(TEST_IDS...)` via shared constants when role/label is not stable
+4. Scoped locator fallback under a stable container (`container.locator(...)`)
+
+Rules:
+- Always scope selectors to a stable parent when multiple matches are possible.
+- Avoid unscoped text/CSS selectors as first choice.
+- If adding a new `data-testid`, add it to shared `TEST_IDS` constants first.
+
 Automated guard commands:
 
 ```bash
