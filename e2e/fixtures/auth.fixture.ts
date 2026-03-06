@@ -14,7 +14,7 @@ import {
   SettingsPage,
   WorkspacesPage,
 } from "../pages";
-import { trySignInUser } from "../utils";
+import { testUserService } from "../utils";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -59,6 +59,32 @@ export type AuthFixtures = {
   skipAuthSave: boolean;
 };
 
+async function injectAuthTokens(page: Page, token: string, refreshToken?: string): Promise<void> {
+  await page.context().addInitScript(
+    ({ token: jwt, refreshToken: refresh, convexUrl }) => {
+      localStorage.setItem("convexAuthToken", jwt);
+      if (refresh) {
+        localStorage.setItem("convexAuthRefreshToken", refresh);
+      }
+
+      if (convexUrl) {
+        const namespace = convexUrl.replace(/[^a-zA-Z0-9]/g, "");
+        const jwtKey = `__convexAuthJWT_${namespace}`;
+        const refreshKey = `__convexAuthRefreshToken_${namespace}`;
+        localStorage.setItem(jwtKey, jwt);
+        if (refresh) {
+          localStorage.setItem(refreshKey, refresh);
+        }
+      }
+    },
+    {
+      token,
+      refreshToken,
+      convexUrl: process.env.VITE_CONVEX_URL,
+    },
+  );
+}
+
 export const authenticatedTest = base.extend<AuthFixtures>({
   // Disable storageState loading to force fresh login per test
   // This prevents "Invalid refresh token" errors caused by token reuse across parallel workers
@@ -70,10 +96,6 @@ export const authenticatedTest = base.extend<AuthFixtures>({
 
   ensureAuthenticated: async ({ page, orgSlug }, use, testInfo) => {
     let didAuthenticateThisTest = false;
-
-    // Determine the base URL from the current context or config
-    // Since we are starting fresh, page.url() might be about:blank
-    const baseURL = process.env.BASE_URL || "http://localhost:5555";
 
     const authenticate = async () => {
       if (didAuthenticateThisTest) {
@@ -92,16 +114,19 @@ export const authenticatedTest = base.extend<AuthFixtures>({
 
       console.log(`  🔐 ensureAuthenticated: Logging in as ${workerUser.email}...`);
 
-      // 3. Perform fresh login (uses API fast-path internally)
-      const success = await trySignInUser(page, baseURL, workerUser);
-
-      if (!success) {
+      // 3. Login via E2E API and preload auth into the context before the app boots.
+      const loginResult = await testUserService.loginTestUser(
+        workerUser.email,
+        workerUser.password,
+      );
+      if (!(loginResult.success && loginResult.token)) {
         throw new Error(`Failed to authenticate as ${workerUser.email}`);
       }
+      await injectAuthTokens(page, loginResult.token, loginResult.refreshToken);
 
       // 4. Navigate to the intended destination
       const destination = orgSlug ? `/${orgSlug}/dashboard` : "/";
-      await page.goto(destination);
+      await page.goto(destination, { waitUntil: "domcontentloaded" });
       if (orgSlug) {
         await expect(page).toHaveURL(/\/dashboard/);
       } else {
@@ -183,7 +208,6 @@ export const onboardingTest = base.extend<AuthFixtures>({
   ensureAuthenticated: async ({ page }, use, testInfo) => {
     let didAuthenticateThisTest = false;
 
-    const baseURL = process.env.BASE_URL || "http://localhost:5555";
     const onboardingUrl = "/onboarding";
 
     const authenticate = async () => {
@@ -203,16 +227,18 @@ export const onboardingTest = base.extend<AuthFixtures>({
 
       console.log(`  🔐 onboardingTest: Logging in as ${onboardingUser.email}...`);
 
-      // 3. Perform fresh login (uses API fast-path internally)
-      // Pass 'false' for autoCompleteOnboarding so we stay on onboarding page
-      const success = await trySignInUser(page, baseURL, onboardingUser, false);
-
-      if (!success) {
+      // 3. Login via E2E API and preload auth into the context before the app boots.
+      const loginResult = await testUserService.loginTestUser(
+        onboardingUser.email,
+        onboardingUser.password,
+      );
+      if (!(loginResult.success && loginResult.token)) {
         throw new Error(`Failed to authenticate as ${onboardingUser.email}`);
       }
+      await injectAuthTokens(page, loginResult.token, loginResult.refreshToken);
 
       // 4. Ensure we are at /onboarding
-      await page.goto(onboardingUrl);
+      await page.goto(onboardingUrl, { waitUntil: "domcontentloaded" });
       await expect(page).toHaveURL(/\/onboarding/);
 
       didAuthenticateThisTest = true;
