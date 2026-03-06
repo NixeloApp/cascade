@@ -122,7 +122,7 @@ This is the concrete "what's left" list for reliability hardening after the late
    - RBAC coverage now goes through `ProjectsPage` helpers for project-tab visibility and route-specific readiness, so role checks no longer mix raw `page.getByRole()` tab lookups with inline settings/sprint/analytics assertions.
    - permission-cascade owner settings coverage now goes through `ProjectsPage` helpers for settings-tab visibility and route readiness, so the project-settings permission check no longer clicks raw tab locators or duplicates settings-page URL assertions.
    - permission-cascade workspace settings coverage now goes through `WorkspacesPage` helpers for detail-page readiness and settings-route access, so the workspace-settings permission check no longer probes raw settings links or duplicates workspace-settings URL assertions.
-   - next target: align the organization-members branch in `permission-cascade.spec.ts` with `SettingsPage` helpers so the spec stops mixing raw settings-tab locators with ad hoc member-list probes.
+   - next target: align the org-owner settings branch in `permission-cascade.spec.ts` with `SettingsPage` helpers so the spec stops probing raw admin-tab visibility instead of using the shared settings navigation contract.
 2. Selector contract completion:
    - `pnpm run validate` now passes with no `Test ID constants` warnings.
    - continue replacing brittle text/CSS fallbacks opportunistically when modifying critical specs.
