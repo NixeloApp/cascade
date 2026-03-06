@@ -3,6 +3,7 @@ export { BasePage } from "./base.page";
 export { CalendarPage } from "./calendar.page";
 export { DashboardPage } from "./dashboard.page";
 export { DocumentsPage } from "./documents.page";
+export { IssueDetailPage } from "./issue-detail.page";
 export { LandingPage } from "./landing.page";
 export { OnboardingPage } from "./onboarding.page";
 export { ProjectsPage } from "./projects.page";

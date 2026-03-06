@@ -1,7 +1,6 @@
-import { TEST_IDS } from "../src/lib/test-ids";
 import { expect, authenticatedTest as test } from "./fixtures";
+import { IssueDetailPage } from "./pages";
 import { testUserService } from "./utils/test-user-service";
-import { waitForIssueUpdateSuccess } from "./utils/wait-helpers";
 
 /**
  * Issue Detail Page E2E Tests
@@ -71,14 +70,15 @@ test.describe("Issue Detail Page", () => {
     console.log(`Created issue with key: ${issueKey}`);
 
     // Navigate directly to the issue detail page via URL
-    await page.goto(`/${orgSlug}/issues/${issueKey}`);
+    const issueDetailPage = new IssueDetailPage(page, orgSlug);
+    await issueDetailPage.gotoIssue(issueKey);
 
     // Should show the issue detail layout
     // Look for issue key in the header
     await expect(page.getByText(issueKey)).toBeVisible();
 
     // Should have "Edit Issue" button
-    await expect(page.getByRole("button", { name: /edit issue/i })).toBeVisible();
+    await expect(issueDetailPage.editIssueButton).toBeVisible();
   });
 
   test("can edit an issue from the direct issue detail page", async ({
@@ -102,29 +102,12 @@ test.describe("Issue Detail Page", () => {
     const issueKey = await projectsPage.getIssueKey(originalTitle);
     await expect(issueKey).toMatch(new RegExp(`${projectKey}-\\d+`));
 
-    await page.goto(`/${orgSlug}/issues/${issueKey}`);
+    const issueDetailPage = new IssueDetailPage(page, orgSlug);
+    await issueDetailPage.gotoIssue(issueKey);
+    await expect(issueDetailPage.editIssueButton).toBeVisible();
+    await issueDetailPage.editTitle(updatedTitle);
 
-    const editIssueButton = page.getByRole("button", { name: /edit issue/i });
-    await expect(editIssueButton).toBeVisible();
-
-    const issueTitleInput = page.getByPlaceholder("Issue title");
-    const saveChangesButton = page.getByRole("button", { name: /save changes/i });
-
-    await expect(async () => {
-      if (!(await issueTitleInput.isVisible().catch(() => false))) {
-        await editIssueButton.click();
-      }
-
-      await expect(issueTitleInput).toBeVisible();
-      await issueTitleInput.fill(updatedTitle);
-      await expect(issueTitleInput).toHaveValue(updatedTitle);
-      await expect(saveChangesButton).toBeVisible();
-      await saveChangesButton.click();
-      await expect(issueTitleInput).not.toBeVisible();
-      await expect(editIssueButton).toBeVisible();
-    }).toPass({ timeout: 20000, intervals: [1000] });
-
-    await page.getByRole("link", { name: new RegExp(projectKey, "i") }).click();
+    await issueDetailPage.getProjectBreadcrumb(projectKey).click();
     await expect(page).toHaveURL(/\/projects\/.*\/board/);
 
     await projectsPage.switchToTab("backlog");
@@ -153,39 +136,12 @@ test.describe("Issue Detail Page", () => {
     const issueKey = await projectsPage.getIssueKey(issueTitle);
     await expect(issueKey).toMatch(new RegExp(`${projectKey}-\\d+`));
 
-    await page.goto(`/${orgSlug}/issues/${issueKey}`);
+    const issueDetailPage = new IssueDetailPage(page, orgSlug);
+    await issueDetailPage.gotoIssue(issueKey);
+    await issueDetailPage.editDescription(updatedDescription);
+    await issueDetailPage.changePriority("High");
 
-    const editIssueButton = page.getByRole("button", { name: /edit issue/i });
-    const issueDescriptionEditor = page.getByTestId(TEST_IDS.ISSUE.DESCRIPTION_EDITOR);
-    const issueDescriptionContent = page.getByTestId(TEST_IDS.ISSUE.DESCRIPTION_CONTENT);
-    const saveChangesButton = page.getByRole("button", { name: /save changes/i });
-    const prioritySelect = page.getByLabel("Change priority");
-
-    await expect(async () => {
-      if (!(await issueDescriptionEditor.isVisible().catch(() => false))) {
-        await editIssueButton.click();
-      }
-
-      await expect(issueDescriptionEditor).toBeVisible();
-      await issueDescriptionEditor.fill(updatedDescription);
-      await expect(saveChangesButton).toBeVisible();
-      await saveChangesButton.click();
-      await expect(issueDescriptionEditor).not.toBeVisible();
-      await expect(editIssueButton).toBeVisible();
-    }).toPass({ timeout: 20000, intervals: [1000] });
-
-    await waitForIssueUpdateSuccess(page);
-    await expect(issueDescriptionContent).toContainText(updatedDescription);
-
-    await prioritySelect.click();
-    const highOption = page.getByRole("option", { name: /^High$/i });
-    await expect(highOption).toBeVisible();
-    await highOption.click();
-
-    await expect(prioritySelect).toContainText(/high/i);
-    await waitForIssueUpdateSuccess(page);
-
-    await page.getByRole("link", { name: new RegExp(projectKey, "i") }).click();
+    await issueDetailPage.getProjectBreadcrumb(projectKey).click();
     await expect(page).toHaveURL(/\/projects\/.*\/board/);
 
     await projectsPage.switchToTab("backlog");
@@ -219,10 +175,11 @@ test.describe("Issue Detail Page", () => {
     await expect(issueKey).toMatch(new RegExp(`${projectKey}-\\d+`));
 
     // Navigate to issue detail page
-    await page.goto(`/${orgSlug}/issues/${issueKey}`);
+    const issueDetailPage = new IssueDetailPage(page, orgSlug);
+    await issueDetailPage.gotoIssue(issueKey);
 
     // Should have breadcrumb link back to project
-    const breadcrumbLink = page.getByRole("link", { name: new RegExp(projectKey, "i") });
+    const breadcrumbLink = issueDetailPage.getProjectBreadcrumb(projectKey);
     await expect(breadcrumbLink).toBeVisible();
 
     // Click breadcrumb should navigate back to project board
