@@ -465,7 +465,36 @@ export class DashboardPage extends BasePage {
       await this.appErrorDetailsMessage.textContent().catch(() => null)
     )?.trim();
     const suffix = errorDetails ? `: ${errorDetails}` : "";
-    throw new Error(`App error boundary visible${suffix}`);
+    const diagnostics = await this.getAppErrorDiagnostics();
+    throw new Error(`App error boundary visible${suffix}${diagnostics}`);
+  }
+
+  private async getAppErrorDiagnostics(): Promise<string> {
+    const diagnostics = await this.page
+      .evaluate(() => {
+        const authKeys = Object.keys(localStorage)
+          .filter((key) => key.includes("convexAuth"))
+          .sort();
+        const convexClient = (
+          window as typeof window & {
+            __convex_test_client?: { connectionState: () => unknown };
+          }
+        ).__convex_test_client;
+
+        return {
+          url: window.location.href,
+          hydrated: document.body.classList.contains("app-hydrated"),
+          authKeys,
+          connectionState: convexClient?.connectionState() ?? null,
+        };
+      })
+      .catch(() => null);
+
+    if (!diagnostics) {
+      return "";
+    }
+
+    return ` [diagnostics ${JSON.stringify(diagnostics)}]`;
   }
 
   async openTimeEntryModal() {
