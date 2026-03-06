@@ -323,7 +323,7 @@ export class ProjectsPage extends BasePage {
       await expect(this.createIssueModal).not.toBeVisible();
     }).toPass();
 
-    await waitForIssueCreateSuccess(this.page, { issueTitle: title });
+    await waitForIssueCreateSuccess(this.page);
   }
 
   async switchToTab(tab: "board" | "backlog" | "sprints" | "analytics" | "settings") {

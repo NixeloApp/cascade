@@ -43,6 +43,9 @@ test.describe("Time Tracking", () => {
     // Close modal
     await expect(projectsPage.createIssueModal).not.toBeVisible();
 
+    // New issues land in backlog for the default Scrum template.
+    await projectsPage.switchToTab("backlog");
+
     // Open detail
     await projectsPage.openIssueDetail(issueTitle);
 

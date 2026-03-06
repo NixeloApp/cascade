@@ -44,16 +44,17 @@ test.describe("Integration Workflows", () => {
       await expect(projectsPage.createIssueModal).not.toBeVisible();
       console.log("✓ Issue created");
 
-      // Step 6: Verify issue appears on board (look in backlog column)
-      const issueCard = page.getByText(issueTitle).first();
+      // Step 6: New issues land in backlog for the default Scrum template.
+      await projectsPage.switchToTab("backlog");
+      const issueCard = projectsPage.getIssueCard(issueTitle);
       await expect(issueCard).toBeVisible();
-      console.log("✓ Issue visible on board");
+      console.log("✓ Issue visible in backlog");
 
       // Step 7: Open issue detail
       await projectsPage.openIssueDetail(issueTitle);
 
       // Step 8: Verify issue detail panel/modal opens
-      const detailPanel = page.getByRole("dialog").or(page.locator("[data-issue-detail]"));
+      const detailPanel = projectsPage.issueDetailDialog;
       await expect(detailPanel).toBeVisible();
       console.log("✓ Issue detail panel opened");
 

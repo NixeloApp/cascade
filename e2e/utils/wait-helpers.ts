@@ -177,31 +177,20 @@ export async function waitForBoardLoaded(page: Page): Promise<void> {
   await expect(createIssueButton).toBeEnabled();
 }
 
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
 /**
  * Wait for issue creation completion signal.
- * The primary signal is modal dismissal; optional title assertion verifies board visibility.
+ * The primary signals are modal dismissal and the explicit success toast emitted by the UI.
  */
-export async function waitForIssueCreateSuccess(
-  page: Page,
-  options?: { issueTitle?: string },
-): Promise<void> {
+export async function waitForIssueCreateSuccess(page: Page): Promise<void> {
   const createIssueModal = page
     .getByRole("dialog")
     .filter({ hasText: /create.*issue|new.*issue/i });
   await expect(createIssueModal).not.toBeVisible();
-
-  if (options?.issueTitle) {
-    const titlePattern = new RegExp(escapeRegex(options.issueTitle), "i");
-    const issueCard = page
-      .getByRole("button", { name: titlePattern })
-      .or(page.getByText(options.issueTitle).first())
-      .first();
-    await expect(issueCard).toBeVisible();
-  }
+  await expect(
+    page.locator("[data-sonner-toast][data-type='success']").filter({
+      hasText: /issue created successfully/i,
+    }),
+  ).toBeVisible();
 }
 
 type WorkspaceCreationDialogOptions = {

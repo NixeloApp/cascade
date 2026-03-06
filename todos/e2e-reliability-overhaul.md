@@ -99,7 +99,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 
 1. Deterministic post-action assertions in critical flows:
    - convert any remaining action-only steps into `action -> deterministic wait -> outcome assert`.
-   - target specs first: `auth`.
+   - target specs first: `issue create/edit`.
 2. Selector contract completion:
    - replace remaining brittle text/CSS fallbacks with role/label/test-id selectors.
    - add missing `TEST_IDS` constants for any critical controls without stable anchors.
@@ -130,11 +130,11 @@ Full-suite evidence in this TODO is considered stale if older than 24 hours.
 - Run command:
   - `pnpm exec playwright test --reporter=line`
 - Run date:
-  - `2026-03-05`
+  - `2026-03-06`
 - Outcome:
-  - `155 passed (7.0m)`, `0 skipped`
+  - `155 passed (5.9m)`, `0 skipped`
 - Gate interpretation:
-  - this is a historical green run; refresh is required when evidence is older than 24 hours (see `Evidence Freshness Guard`).
+  - current local suite is green; refresh is required when evidence is older than 24 hours (see `Evidence Freshness Guard`).
 
 ## Historical Resolution Notes (2026-03-06)
 
@@ -166,6 +166,14 @@ Full-suite evidence in this TODO is considered stale if older than 24 hours.
   - `1 passed (17.9s)`
   - `pnpm exec playwright test e2e/auth.spec.ts --reporter=line --workers=1`
   - `19 passed (2.0m)`
+- Hardened issue-creation completion checks by removing the loose page-text fallback from `waitForIssueCreateSuccess(...)` and requiring the explicit `Issue created successfully` toast after modal dismissal.
+- Moved workflow assertions for newly created Scrum issues onto the backlog tab before opening detail views, so issue-card visibility is verified against the correct surface instead of incidental page text.
+- Root cause note:
+  - the old helper could treat any matching text node as proof of successful issue rendering, which masked whether the card actually appeared in backlog after creation.
+  - using the success toast for completion and backlog-scoped card assertions makes the issue lifecycle tests fail on real regressions in rendering or tab placement.
+- Targeted validation:
+  - `pnpm exec playwright test e2e/integration-workflow.spec.ts e2e/time-tracking.spec.ts e2e/issues.spec.ts --reporter=line --workers=1`
+  - `8 passed (3.1m)`
 
 ## Historical Resolution Notes (2026-03-05)
 
