@@ -78,13 +78,9 @@ test.describe("Permission Cascade", () => {
     console.log(`✓ User can see ${projectCount} project(s)`);
   });
 
-  test("accessing non-existent project shows error", async ({ page, orgSlug }) => {
-    // Try to access a project that doesn't exist
-    await page.goto(`/${orgSlug}/projects/NONEXISTENT/board`);
-
-    // Wait for the "Project Not Found" heading
-    const notFoundHeading = page.getByRole("heading", { name: /project not found/i });
-    await expect(notFoundHeading).toBeVisible();
+  test("accessing non-existent project shows error", async ({ projectsPage }) => {
+    await projectsPage.gotoProjectBoard("NONEXISTENT");
+    await projectsPage.expectProjectNotFound();
     console.log("✓ Shows 'Project Not Found' error for non-existent project");
   });
 
