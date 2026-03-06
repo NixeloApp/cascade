@@ -123,7 +123,8 @@ This is the concrete "what's left" list for reliability hardening after the late
    - permission-cascade owner settings coverage now goes through `ProjectsPage` helpers for settings-tab visibility and route readiness, so the project-settings permission check no longer clicks raw tab locators or duplicates settings-page URL assertions.
    - permission-cascade workspace settings coverage now goes through `WorkspacesPage` helpers for detail-page readiness and settings-route access, so the workspace-settings permission check no longer probes raw settings links or duplicates workspace-settings URL assertions.
    - permission-cascade org-owner settings coverage now goes through `SettingsPage` helpers for admin-tab navigation, so the organization-settings permission check no longer probes raw admin-tab visibility instead of using the shared settings navigation contract.
-   - next target: align the organization user-management branch in `permission-cascade.spec.ts` with `SettingsPage` helpers so the spec stops probing stale members-tab assumptions and ad hoc member-list markers.
+   - permission-cascade admin user-management coverage now goes through `SettingsPage` helpers for admin-tab plus platform-users visibility, so the organization-members check no longer probes stale members-tab assumptions or ad hoc list markers.
+   - next target: align the remaining create-workspace/create-project smoke assertions in `permission-cascade.spec.ts` with `WorkspacesPage` and `ProjectsPage` helpers so those tests stop using raw URL/main-content checks.
 2. Selector contract completion:
    - `pnpm run validate` now passes with no `Test ID constants` warnings.
    - continue replacing brittle text/CSS fallbacks opportunistically when modifying critical specs.
@@ -169,6 +170,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `permission-cascade.spec.ts` now relies on `ProjectsPage` for owner-only project-settings access, after the targeted rerun confirmed the permission check can reuse the same settings-tab visibility and settings-route readiness contract as the RBAC coverage.
 - `permission-cascade.spec.ts` now relies on `WorkspacesPage` for workspace detail readiness and workspace-settings navigation, after the targeted rerun confirmed the workspace-settings permission check can reuse a page-object contract instead of probing raw workspace links and URL patterns.
 - `permission-cascade.spec.ts` now relies on `SettingsPage` for org-owner admin-settings access, after the targeted rerun confirmed the settings permission check can reuse the shared admin-tab navigation contract instead of probing raw admin-tab visibility.
+- `permission-cascade.spec.ts` now relies on `SettingsPage.openAdminUsersList()` for admin user-management visibility, after the targeted rerun confirmed the test should assert the actual platform-users table instead of probing a stale members tab that the settings UI no longer exposes.
 
 ## Latest Targeted Hardening Evidence
 
@@ -228,6 +230,8 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `1 passed (33.3s)`
 - `pnpm exec playwright test e2e/permission-cascade.spec.ts -g "org owner can access organization settings" --reporter=line --workers=1`
   - `1 passed (18.8s)`
+- `pnpm exec playwright test e2e/permission-cascade.spec.ts -g "organization members list is accessible to admins" --reporter=line --workers=1`
+  - `1 passed (18.7s)`
 - `pnpm exec playwright test e2e/board-drag-drop.spec.ts e2e/time-tracking.spec.ts e2e/search.spec.ts e2e/activity-feed.spec.ts e2e/analytics.spec.ts e2e/integration-workflow.spec.ts --reporter=line --workers=1`
   - `26 passed (9.2m)`
 

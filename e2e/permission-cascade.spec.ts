@@ -150,33 +150,10 @@ test.describe("Permission Cascade", () => {
     }
   });
 
-  test("organization members list is accessible to admins", async ({ dashboardPage, page }) => {
-    // Navigate to settings
-    await dashboardPage.goto();
-    await dashboardPage.navigateTo("settings");
-
-    // Click on Members tab/link
-    const membersTab = page
-      .getByRole("link", { name: /members/i })
-      .or(page.getByRole("tab", { name: /members/i }));
-
-    if (await membersTab.isVisible().catch(() => false)) {
-      await membersTab.click();
-
-      // Verify members list or table is visible
-      const membersList = page.getByRole("table").or(page.locator("[data-members-list]"));
-      const hasMembersList = await membersList.isVisible().catch(() => false);
-
-      if (hasMembersList) {
-        console.log("✓ Organization members list accessible to admin");
-      } else {
-        // Might show as cards or other layout
-        const memberItems = page.locator("[data-member-item]").or(page.getByText(/@.*\./i));
-        const memberCount = await memberItems.count();
-        console.log(`✓ Members section accessible (${memberCount} items visible)`);
-      }
-    } else {
-      console.log("ℹ Members tab not visible in current settings view");
-    }
+  test("organization members list is accessible to admins", async ({ settingsPage }) => {
+    await settingsPage.goto();
+    await settingsPage.switchToTab("admin");
+    await settingsPage.openAdminUsersList();
+    console.log("✓ Organization members list accessible to admin");
   });
 });

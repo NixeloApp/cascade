@@ -64,10 +64,13 @@ export class SettingsPage extends BasePage {
   // Locators - Admin
   // ===================
   readonly userManagementSection: Locator;
+  readonly userManagementHeading: Locator;
   readonly inviteUserButton: Locator;
   readonly userTypeManager: Locator;
   readonly hourComplianceDashboard: Locator;
   readonly inviteTable: Locator;
+  readonly adminUsersTab: Locator;
+  readonly platformUsersTable: Locator;
 
   // ===================
   // Locators - Invite User Modal
@@ -158,9 +161,12 @@ export class SettingsPage extends BasePage {
     this.userManagementSection = page
       .locator("[data-user-management]")
       .or(page.getByText(/user.*management/i));
+    this.userManagementHeading = page.getByRole("heading", { name: /user management/i });
     this.inviteUserButton = page.getByRole("button", { name: /invite.*user/i });
     this.userTypeManager = page.locator("[data-user-type-manager]");
     this.hourComplianceDashboard = page.locator("[data-hour-compliance]");
+    this.adminUsersTab = page.getByRole("tab", { name: /^Users$/ });
+    this.platformUsersTable = page.getByRole("table", { name: /platform users/i });
 
     // Invite user form (it's an inline Card, not a dialog)
     this.inviteUserModal = page.getByRole("heading", { name: /send invitation/i });
@@ -414,6 +420,14 @@ export class SettingsPage extends BasePage {
     this.page.once("dialog", (dialog) => dialog.accept());
     await row.getByRole("button", { name: /revoke/i }).click();
     await this.expectInviteRevoked(email);
+  }
+
+  async openAdminUsersList() {
+    await expect(this.userManagementHeading).toBeVisible();
+    await expect(this.adminUsersTab).toBeVisible();
+    await this.adminUsersTab.click();
+    await expect(this.adminUsersTab).toHaveAttribute("aria-selected", "true");
+    await expect(this.platformUsersTable).toBeVisible();
   }
 
   async setTheme(theme: "light" | "dark" | "system") {
