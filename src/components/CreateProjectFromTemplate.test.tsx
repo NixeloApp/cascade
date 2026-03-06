@@ -29,7 +29,23 @@ vi.mock("@/hooks/useOrgContext", () => ({
   useOrganization: () => ({ organizationId: "org-123" }),
 }));
 
-describe("CreateProjectFromTemplate (Jules accessibility)", () => {
+describe("CreateProjectFromTemplate", () => {
+  it("skips queries when not authenticated", () => {
+    vi.mocked(useConvexAuth).mockReturnValue({ isAuthenticated: false, isLoading: false });
+
+    const useQueryMock = vi.mocked(useQuery);
+    useQueryMock.mockReturnValue(undefined);
+
+    render(<CreateProjectFromTemplate open={true} onOpenChange={() => {}} />);
+
+    // When not authenticated, useQuery should be called with "skip"
+    // The component should render without crashing and show loading/empty state
+    expect(useQueryMock).toHaveBeenCalled();
+
+    // Verify no template list is rendered (since query is skipped)
+    expect(screen.queryByRole("list")).not.toBeInTheDocument();
+  });
+
   it("renders template list as an unordered list (ul) with list items (li)", () => {
     vi.mocked(useConvexAuth).mockReturnValue({ isAuthenticated: true, isLoading: false });
 

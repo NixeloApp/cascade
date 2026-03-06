@@ -603,7 +603,11 @@ export const sendVerificationEmailAction = internalAction({
     // Store OTPs for test emails ONLY if they are test users
     if (isTestEmail && isE2ESafeEnvironment() && isTestUser) {
       try {
-        await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token });
+        await ctx.runMutation(internal.e2e.storeTestOtp, {
+          email,
+          code: token,
+          type: "verification",
+        });
       } catch (e) {
         logger.warn(`[Users] Failed to store test OTP: ${e}`);
       }

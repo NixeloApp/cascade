@@ -659,16 +659,18 @@ test("sign up sends verification email", async ({ authPage }) => {
 
 ### Skipping Tests
 
+> **Note:** These examples are for **non-critical coverage only**. See [Critical Path No-Skip Policy](#critical-path-no-skip-policy) above — static skips are prohibited for critical-path specs (`auth`, `issues`, `board`, `documents`, `search`).
+
 ```typescript
-// Skip individual test
+// Skip individual test (non-critical only)
 test.skip("feature not implemented", async () => {});
 
-// Skip conditionally
+// Skip conditionally (acceptable for environment-gated features)
 test("only on CI", async () => {
   test.skip(!process.env.CI, "CI only");
 });
 
-// Skip entire describe block
+// Skip entire describe block (non-critical only)
 test.describe.skip("WIP feature", () => {});
 ```
 
@@ -910,4 +912,4 @@ This file is read by `rbac.fixture.ts` to get the correct organization slug for 
 
 ---
 
-_Last Updated: 2026-01-28_
+_Last Updated: 2026-03-06_
