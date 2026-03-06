@@ -71,20 +71,25 @@ function useStableOrgData(isAuthenticated: boolean, orgSlug: string) {
     isAuthenticated ? undefined : "skip",
   ) as UserOrganization[] | undefined;
 
-  const [stableUserOrgs, setStableUserOrgs] = useState(userOrganizations);
-  if (userOrganizations !== undefined && userOrganizations !== stableUserOrgs) {
-    setStableUserOrgs(userOrganizations);
-  }
-
   const organization = useQuery(
     api.organizations.getOrganizationBySlug,
     isAuthenticated ? { slug: orgSlug } : "skip",
   );
 
+  const [stableUserOrgs, setStableUserOrgs] = useState(userOrganizations);
   const [stableOrg, setStableOrg] = useState(organization);
-  if (organization !== undefined && organization !== stableOrg) {
-    setStableOrg(organization);
-  }
+
+  useEffect(() => {
+    if (userOrganizations !== undefined) {
+      setStableUserOrgs(userOrganizations);
+    }
+  }, [userOrganizations]);
+
+  useEffect(() => {
+    if (organization !== undefined) {
+      setStableOrg(organization);
+    }
+  }, [organization]);
 
   return {
     organization: organization ?? stableOrg,
