@@ -67,6 +67,7 @@ export class ProjectsPage extends BasePage {
   readonly projectTabs: Locator;
   readonly boardTab: Locator;
   readonly backlogTab: Locator;
+  readonly roadmapTab: Locator;
   readonly sprintsTab: Locator;
   readonly activityTab: Locator;
   readonly analyticsTab: Locator;
@@ -94,6 +95,8 @@ export class ProjectsPage extends BasePage {
   readonly analyticsIssuesByPriorityChart: Locator;
   readonly analyticsTeamVelocityChart: Locator;
   readonly analyticsNoCompletedSprintsMessage: Locator;
+  readonly roadmapViewToggle: Locator;
+  readonly roadmapEpicFilter: Locator;
 
   // ===================
   // Locators - Issue Detail Dialog
@@ -181,6 +184,7 @@ export class ProjectsPage extends BasePage {
     this.projectTabs = page.getByRole("navigation", { name: "Tabs" }).or(page.getByLabel("Tabs"));
     this.boardTab = this.projectTabs.getByRole("link", { name: /^Board$/ });
     this.backlogTab = this.projectTabs.getByRole("link", { name: /^Backlog$/ });
+    this.roadmapTab = this.projectTabs.getByRole("link", { name: /^Roadmap$/ });
     this.sprintsTab = this.projectTabs.getByRole("link", { name: /^Sprints$/ });
     this.activityTab = this.projectTabs.getByRole("link", { name: /^Activity$/ });
     this.analyticsTab = this.projectTabs.getByRole("link", { name: /^Analytics$/ });
@@ -206,6 +210,8 @@ export class ProjectsPage extends BasePage {
     this.analyticsIssuesByPriorityChart = page.getByText("Issues by Priority");
     this.analyticsTeamVelocityChart = page.getByText("Team Velocity (Last 10 Sprints)");
     this.analyticsNoCompletedSprintsMessage = page.getByText("No completed sprints yet");
+    this.roadmapViewToggle = page.getByRole("group").filter({ hasText: /months|weeks/i });
+    this.roadmapEpicFilter = page.getByRole("combobox").filter({ hasText: /epic|all/i });
     // Issue detail dialog
     // Issue detail dialog - distinct from Create Issue modal
     this.issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
@@ -421,10 +427,13 @@ export class ProjectsPage extends BasePage {
     await waitForIssueCreateSuccess(this.page);
   }
 
-  async switchToTab(tab: "board" | "backlog" | "sprints" | "activity" | "analytics" | "settings") {
+  async switchToTab(
+    tab: "board" | "backlog" | "roadmap" | "sprints" | "activity" | "analytics" | "settings",
+  ) {
     const tabs = {
       board: this.boardTab,
       backlog: this.backlogTab,
+      roadmap: this.roadmapTab,
       sprints: this.sprintsTab,
       activity: this.activityTab,
       analytics: this.analyticsTab,
@@ -446,6 +455,7 @@ export class ProjectsPage extends BasePage {
     const tabPaths = {
       board: /\/board(?:[/?#]|$)/,
       backlog: /\/backlog(?:[/?#]|$)/,
+      roadmap: /\/roadmap(?:[/?#]|$)/,
       sprints: /\/sprints(?:[/?#]|$)/,
       activity: /\/activity(?:[/?#]|$)/,
       analytics: /\/analytics(?:[/?#]|$)/,
@@ -465,10 +475,31 @@ export class ProjectsPage extends BasePage {
       return;
     }
 
+    if (tab === "roadmap") {
+      await this.expectRoadmapLoaded();
+      return;
+    }
+
     if (tab === "analytics") {
       await expect(this.analyticsPageHeader).toBeVisible();
       await expect(this.analyticsTotalIssuesMetric).toBeVisible();
     }
+  }
+
+  async expectRoadmapLoaded() {
+    await expect(this.page).toHaveURL(/\/roadmap(?:[/?#]|$)/);
+    await expect(this.roadmapViewToggle).toBeVisible();
+  }
+
+  async expectRoadmapCurrentMonthVisible(date = new Date()) {
+    await this.expectRoadmapLoaded();
+    const currentMonth = date.toLocaleString("default", { month: "short" });
+    await expect(this.page.getByText(currentMonth)).toBeVisible();
+  }
+
+  async getRoadmapEpicFilterState(): Promise<"visible" | "hidden"> {
+    await this.expectRoadmapLoaded();
+    return (await this.roadmapEpicFilter.isVisible().catch(() => false)) ? "visible" : "hidden";
   }
 
   async getActivityPageState(): Promise<"empty" | "entries"> {
