@@ -62,18 +62,24 @@ export type AuthFixtures = {
 async function injectAuthTokens(page: Page, token: string, refreshToken?: string): Promise<void> {
   await page.context().addInitScript(
     ({ token: jwt, refreshToken: refresh, convexUrl }) => {
-      localStorage.setItem("convexAuthToken", jwt);
+      const setIfMissing = (key: string, value: string) => {
+        if (!localStorage.getItem(key)) {
+          localStorage.setItem(key, value);
+        }
+      };
+
+      setIfMissing("convexAuthToken", jwt);
       if (refresh) {
-        localStorage.setItem("convexAuthRefreshToken", refresh);
+        setIfMissing("convexAuthRefreshToken", refresh);
       }
 
       if (convexUrl) {
         const namespace = convexUrl.replace(/[^a-zA-Z0-9]/g, "");
         const jwtKey = `__convexAuthJWT_${namespace}`;
         const refreshKey = `__convexAuthRefreshToken_${namespace}`;
-        localStorage.setItem(jwtKey, jwt);
+        setIfMissing(jwtKey, jwt);
         if (refresh) {
-          localStorage.setItem(refreshKey, refresh);
+          setIfMissing(refreshKey, refresh);
         }
       }
     },
