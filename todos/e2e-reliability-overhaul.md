@@ -140,7 +140,8 @@ This is the concrete "what's left" list for reliability hardening after the late
    - `permission-cascade.spec.ts` now goes through `ProjectsPage.gotoProjectBoard()` and `expectProjectNotFound()` for the non-existent-project permission check instead of constructing the project URL and not-found heading directly in the spec body.
    - `dashboard.spec.ts` now goes through `SettingsPage.expectDarkThemeEnabled()` / `expectDarkThemeDisabled()` for the theme-state check instead of reading the `html` class directly from the spec body.
    - current raw page-level selector scan across `e2e/*.spec.ts` is clean.
-   - next target: shift from selector/page-object cleanup to deterministic data-isolation work, starting with shared unique-id and teardown patterns in the integration-style specs that still create entities with ad hoc `Date.now()` namespaces.
+   - `createTestNamespace(testInfo)` now owns run-scoped names and project keys in `integration-workflow.spec.ts`, `permission-cascade.spec.ts`, `issues.spec.ts`, `issue-detail-page.spec.ts`, `activity-feed.spec.ts`, `analytics.spec.ts`, `roadmap.spec.ts`, `sprints.spec.ts`, and `teams.spec.ts`, so those files no longer hand-roll ad hoc `Date.now()` namespaces.
+   - next target: finish the remaining timestamp holdouts in `board-drag-drop.spec.ts`, `workspaces-org.spec.ts`, `time-tracking.spec.ts`, `search.spec.ts`, and `documents.spec.ts`, then tighten teardown for the create-heavy flows that still leave broad shared state behind.
 2. Selector contract completion:
    - `pnpm run validate` now passes with no `Test ID constants` warnings.
    - continue replacing brittle text/CSS fallbacks opportunistically when modifying critical specs.
@@ -202,6 +203,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `integration-workflow.spec.ts` now relies on `ProjectsPage.switchToTab("calendar" | "timesheet" | "board")`, `expectProjectTabCurrent()`, and `expectTimesheetLoaded()`, after the focused rerun confirmed the project tab workflow no longer needs raw tab-strip lookups or a spec-local `Time Entries` visibility check.
 - `permission-cascade.spec.ts` now relies on `ProjectsPage.gotoProjectBoard()` plus `expectProjectNotFound()` for the non-existent-project permission check, after the full-file rerun confirmed the last raw project-not-found heading in that file can reuse the shared project error contract.
 - `dashboard.spec.ts` now relies on `SettingsPage.expectDarkThemeEnabled()` and `expectDarkThemeDisabled()` for theme-state assertions, after the focused rerun confirmed the last direct `page.locator("html")` check could move behind the settings page object and the current `e2e/*.spec.ts` raw-selector scan returned clean.
+- `createTestNamespace(testInfo)` now owns run-scoped names and project keys across `integration-workflow.spec.ts`, `permission-cascade.spec.ts`, `issues.spec.ts`, `issue-detail-page.spec.ts`, `activity-feed.spec.ts`, `analytics.spec.ts`, `roadmap.spec.ts`, `sprints.spec.ts`, and `teams.spec.ts`, after the grouped reruns confirmed the shorter namespace id avoids the earlier long-title click-intercept issue while removing those files' remaining spec-local `Date.now()` namespaces.
 
 ## Latest Targeted Hardening Evidence
 
@@ -287,6 +289,12 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `3 passed (30.5s)`
 - `pnpm exec playwright test e2e/board-drag-drop.spec.ts e2e/time-tracking.spec.ts e2e/search.spec.ts e2e/activity-feed.spec.ts e2e/analytics.spec.ts e2e/integration-workflow.spec.ts --reporter=line --workers=1`
   - `26 passed (9.2m)`
+- `pnpm exec playwright test e2e/issues.spec.ts e2e/issue-detail-page.spec.ts --reporter=line --workers=1`
+  - `11 passed (5.8m)`
+- `pnpm exec playwright test e2e/activity-feed.spec.ts e2e/analytics.spec.ts --reporter=line --workers=1`
+  - `9 passed (4.1m)`
+- `pnpm exec playwright test e2e/roadmap.spec.ts e2e/sprints.spec.ts e2e/teams.spec.ts --reporter=line --workers=1`
+  - `9 passed (3.4m)`
 
 ## Evidence Freshness Guard
 
