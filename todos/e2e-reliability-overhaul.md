@@ -100,7 +100,8 @@ This is the concrete "what's left" list for reliability hardening after the late
 1. Deterministic post-action assertions in critical flows:
    - convert any remaining action-only steps into `action -> deterministic wait -> outcome assert`.
    - `createIssue()` now owns modal-close/success completion, and duplicate modal-close waits were removed from touched consumers.
-   - next target: `issue edit` and any remaining dialog-open/dialog-close assertions that are still duplicated in specs.
+   - issue title edit guards now cover both the detail modal and the direct issue page route.
+   - next target: description/property edit flows and any remaining dialog-open/dialog-close assertions that are still duplicated in specs.
 2. Selector contract completion:
    - `pnpm run validate` now passes with no `Test ID constants` warnings.
    - continue replacing brittle text/CSS fallbacks opportunistically when modifying critical specs.
@@ -131,7 +132,11 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `pnpm exec playwright test e2e/rbac.spec.ts --reporter=line --workers=1`
   - `3 passed (27.6s)`
 - `pnpm exec playwright test e2e/issues.spec.ts e2e/issue-detail-page.spec.ts --reporter=line --workers=1`
-  - `6 passed (2.2m)`
+  - superseded by the dedicated issue-edit runs below
+- `pnpm exec playwright test e2e/issues.spec.ts --reporter=line --workers=1`
+  - `4 passed (1.9m)`
+- `pnpm exec playwright test e2e/issue-detail-page.spec.ts --reporter=line --workers=1`
+  - `4 passed (1.7m)`
 - `pnpm exec playwright test e2e/board-drag-drop.spec.ts e2e/time-tracking.spec.ts e2e/search.spec.ts e2e/activity-feed.spec.ts e2e/analytics.spec.ts e2e/integration-workflow.spec.ts --reporter=line --workers=1`
   - `26 passed (9.2m)`
 
