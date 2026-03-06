@@ -20,6 +20,9 @@ export class IssueDetailPage extends BasePage {
   readonly issueDescriptionContent: Locator;
   readonly saveChangesButton: Locator;
   readonly prioritySelect: Locator;
+  readonly notFoundHeading: Locator;
+  readonly notFoundMessage: Locator;
+  readonly backToDashboardLink: Locator;
 
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
@@ -30,6 +33,9 @@ export class IssueDetailPage extends BasePage {
     this.issueDescriptionContent = page.getByTestId(TEST_IDS.ISSUE.DESCRIPTION_CONTENT);
     this.saveChangesButton = page.getByRole("button", { name: /save changes/i });
     this.prioritySelect = page.getByLabel("Change priority");
+    this.notFoundHeading = page.getByRole("heading", { name: /issue not found/i });
+    this.notFoundMessage = page.getByText(/does not exist|don't have access/i);
+    this.backToDashboardLink = page.getByRole("link", { name: /back to dashboard/i });
   }
 
   async goto(): Promise<void> {
@@ -43,6 +49,32 @@ export class IssueDetailPage extends BasePage {
 
   getProjectBreadcrumb(projectKey: string): Locator {
     return this.page.getByRole("link", { name: new RegExp(projectKey, "i") });
+  }
+
+  async expectIssueLoaded(issueKey: string) {
+    await expect(this.page).toHaveURL(new RegExp(`/issues/${escapeRegExp(issueKey)}$`));
+    await expect(
+      this.page
+        .locator("code")
+        .filter({ hasText: new RegExp(`^${escapeRegExp(issueKey)}$`) })
+        .first(),
+    ).toBeVisible();
+    await expect(this.editIssueButton).toBeVisible();
+  }
+
+  async expectIssueNotFound() {
+    await expect(this.notFoundHeading).toBeVisible();
+    await expect(this.notFoundMessage).toBeVisible();
+    await expect(this.backToDashboardLink).toBeVisible();
+  }
+
+  async expectProjectBreadcrumbVisible(projectKey: string) {
+    await expect(this.getProjectBreadcrumb(projectKey)).toBeVisible();
+  }
+
+  async returnToProjectBoard(projectKey: string) {
+    await this.getProjectBreadcrumb(projectKey).click();
+    await expect(this.page).toHaveURL(/\/projects\/.*\/board/);
   }
 
   async editTitle(nextTitle: string) {

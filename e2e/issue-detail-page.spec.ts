@@ -24,17 +24,11 @@ test.describe("Issue Detail Page", () => {
   });
 
   test("shows error page for non-existent issue", async ({ page, orgSlug }) => {
+    const issueDetailPage = new IssueDetailPage(page, orgSlug);
+
     // Navigate directly to a non-existent issue
-    await page.goto(`/${orgSlug}/issues/FAKE-99999`);
-
-    // Should show error page
-    await expect(page.getByRole("heading", { name: /issue not found/i })).toBeVisible();
-
-    // Should have explanation message
-    await expect(page.getByText(/does not exist|don't have access/i)).toBeVisible();
-
-    // Should have "Back to dashboard" button
-    await expect(page.getByRole("link", { name: /back to dashboard/i })).toBeVisible();
+    await issueDetailPage.gotoIssue("FAKE-99999");
+    await issueDetailPage.expectIssueNotFound();
   });
 
   test("can navigate directly to issue detail page via URL", async ({
@@ -72,13 +66,7 @@ test.describe("Issue Detail Page", () => {
     // Navigate directly to the issue detail page via URL
     const issueDetailPage = new IssueDetailPage(page, orgSlug);
     await issueDetailPage.gotoIssue(issueKey);
-
-    // Should show the issue detail layout
-    // Look for issue key in the header
-    await expect(page.getByText(issueKey)).toBeVisible();
-
-    // Should have "Edit Issue" button
-    await expect(issueDetailPage.editIssueButton).toBeVisible();
+    await issueDetailPage.expectIssueLoaded(issueKey);
   });
 
   test("can edit an issue from the direct issue detail page", async ({
@@ -104,11 +92,10 @@ test.describe("Issue Detail Page", () => {
 
     const issueDetailPage = new IssueDetailPage(page, orgSlug);
     await issueDetailPage.gotoIssue(issueKey);
-    await expect(issueDetailPage.editIssueButton).toBeVisible();
+    await issueDetailPage.expectIssueLoaded(issueKey);
     await issueDetailPage.editTitle(updatedTitle);
 
-    await issueDetailPage.getProjectBreadcrumb(projectKey).click();
-    await expect(page).toHaveURL(/\/projects\/.*\/board/);
+    await issueDetailPage.returnToProjectBoard(projectKey);
 
     await projectsPage.switchToTab("backlog");
     await expect(projectsPage.getIssueCard(updatedTitle)).toBeVisible();
@@ -138,11 +125,11 @@ test.describe("Issue Detail Page", () => {
 
     const issueDetailPage = new IssueDetailPage(page, orgSlug);
     await issueDetailPage.gotoIssue(issueKey);
+    await issueDetailPage.expectIssueLoaded(issueKey);
     await issueDetailPage.editDescription(updatedDescription);
     await issueDetailPage.changePriority("High");
 
-    await issueDetailPage.getProjectBreadcrumb(projectKey).click();
-    await expect(page).toHaveURL(/\/projects\/.*\/board/);
+    await issueDetailPage.returnToProjectBoard(projectKey);
 
     await projectsPage.switchToTab("backlog");
     await projectsPage.openIssueDetail(issueTitle);
@@ -179,11 +166,9 @@ test.describe("Issue Detail Page", () => {
     await issueDetailPage.gotoIssue(issueKey);
 
     // Should have breadcrumb link back to project
-    const breadcrumbLink = issueDetailPage.getProjectBreadcrumb(projectKey);
-    await expect(breadcrumbLink).toBeVisible();
+    await issueDetailPage.expectProjectBreadcrumbVisible(projectKey);
 
     // Click breadcrumb should navigate back to project board
-    await breadcrumbLink.click();
-    await expect(page).toHaveURL(/\/projects\/.*\/board/);
+    await issueDetailPage.returnToProjectBoard(projectKey);
   });
 });
