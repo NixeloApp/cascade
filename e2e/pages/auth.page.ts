@@ -26,6 +26,7 @@ export class AuthPage extends BasePage {
   readonly forgotPasswordHeading: Locator;
   readonly resetPasswordHeading: Locator;
   readonly checkEmailHeading: Locator;
+  readonly authAlert: Locator;
 
   // ===================
   // Locators - Sign In/Up Forms
@@ -106,6 +107,7 @@ export class AuthPage extends BasePage {
     this.forgotPasswordHeading = page.getByRole("heading", { name: /reset your password/i });
     this.resetPasswordHeading = page.getByRole("heading", { name: /enter reset code/i });
     this.checkEmailHeading = page.getByRole("heading", { name: /check your email/i });
+    this.authAlert = page.getByRole("alert");
 
     // Sign In / Sign Up form - two-step flow
     this.continueWithEmailButton = page.getByRole("button", { name: /continue with email/i });
@@ -166,6 +168,12 @@ export class AuthPage extends BasePage {
     await this.expandEmailForm();
     // Verify form is expanded using data-expanded attribute
     await this.waitForFormExpanded();
+  }
+
+  async gotoSignInLanding() {
+    await this.page.goto("/signin", { waitUntil: "domcontentloaded" });
+    await this.signInHeading.waitFor({ state: "visible", timeout: 30000 });
+    await this.waitForHydration();
   }
 
   /**
@@ -339,6 +347,15 @@ export class AuthPage extends BasePage {
     await this.googleSignInButton.waitFor({ state: "visible" });
     await this.googleSignInButton.click();
     // Note: Will redirect to Google OAuth
+  }
+
+  async waitForOAuthErrorSettle() {
+    await expect(async () => {
+      const onSignInPage = this.page.url().includes("signin");
+      const hasAlert = await this.authAlert.isVisible().catch(() => false);
+      const hasErrorToast = await this.errorToast.isVisible().catch(() => false);
+      expect(onSignInPage || hasAlert || hasErrorToast).toBe(true);
+    }).toPass({ timeout: 5000 });
   }
 
   // ===================
