@@ -67,6 +67,7 @@ export class SettingsPage extends BasePage {
   readonly inviteUserButton: Locator;
   readonly userTypeManager: Locator;
   readonly hourComplianceDashboard: Locator;
+  readonly inviteTable: Locator;
 
   // ===================
   // Locators - Invite User Modal
@@ -164,6 +165,7 @@ export class SettingsPage extends BasePage {
     this.inviteEmailInput = page.getByTestId(TEST_IDS.INVITE.EMAIL_INPUT);
     this.inviteRoleSelect = page.getByTestId(TEST_IDS.INVITE.ROLE_SELECT);
     this.sendInviteButton = page.getByTestId(TEST_IDS.INVITE.SEND_BUTTON);
+    this.inviteTable = page.getByTestId(TEST_IDS.INVITE.TABLE);
 
     // Admin - Organization Settings
     this.organizationNameInput = page.locator("#orgName");
@@ -351,16 +353,26 @@ export class SettingsPage extends BasePage {
     }
     // Submit form and wait for email to appear in the invites table
     // Don't rely on toasts - wait for the actual result (email in table)
-    const inviteTable = this.page.getByTestId(TEST_IDS.INVITE.TABLE);
-
     await expect(async () => {
       await expect(this.sendInviteButton).toBeVisible();
       await expect(this.sendInviteButton).toBeEnabled();
       await this.sendInviteButton.click();
       // Wait for invite to appear in table - this is the real success indicator
-      await expect(inviteTable).toBeVisible();
-      await expect(inviteTable.getByText(email)).toBeVisible();
+      await expect(this.inviteTable).toBeVisible();
+      await expect(this.inviteTable.getByText(email)).toBeVisible();
     }).toPass();
+  }
+
+  getInviteRow(email: string) {
+    return this.inviteTable.getByTestId(TEST_IDS.INVITE.ROW).filter({ hasText: email });
+  }
+
+  async revokeInvite(email: string) {
+    const row = this.getInviteRow(email);
+    await expect(row).toBeVisible();
+
+    this.page.once("dialog", (dialog) => dialog.accept());
+    await row.getByRole("button", { name: /revoke/i }).click();
   }
 
   async setTheme(theme: "light" | "dark" | "system") {

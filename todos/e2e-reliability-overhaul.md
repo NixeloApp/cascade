@@ -106,7 +106,6 @@ This is the concrete "what's left" list for reliability hardening after the late
    - current `validate` warning buckets:
      - `e2e/activity-feed.spec.ts` (`7`)
      - `e2e/analytics.spec.ts` (`2`)
-     - `e2e/invites.spec.ts` (`2`)
      - `e2e/onboarding.spec.ts` (`2`)
      - `e2e/rbac.spec.ts` (`1`)
 3. Data isolation and cleanup hardening:
