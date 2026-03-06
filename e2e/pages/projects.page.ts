@@ -471,6 +471,50 @@ export class ProjectsPage extends BasePage {
     }
   }
 
+  async getActivityPageState(): Promise<"empty" | "entries"> {
+    await expect(this.activityPageHeader).toBeVisible();
+
+    if (await this.activityEntries.first().isVisible().catch(() => false)) {
+      return "entries";
+    }
+
+    if (await this.activityEmptyState.isVisible().catch(() => false)) {
+      return "empty";
+    }
+
+    await expect(this.activityEmptyState.or(this.activityEntries.first())).toBeVisible();
+
+    return (await this.activityEntries.first().isVisible().catch(() => false)) ? "entries" : "empty";
+  }
+
+  async expectActivityEntriesVisible() {
+    await expect(this.activityFeed).toBeVisible();
+    await expect(this.activityEntries.first()).toBeVisible();
+  }
+
+  async expectActivityActionVisible(actionPattern: RegExp) {
+    await this.expectActivityEntriesVisible();
+    await expect(this.activityFeed.getByText(actionPattern).first()).toBeVisible();
+  }
+
+  async expectActivityIssueKeyVisible(projectKey: string) {
+    await this.expectActivityEntriesVisible();
+    await expect(this.activityFeed.getByText(new RegExp(`${projectKey}-\\d+`)).first()).toBeVisible();
+  }
+
+  async expectActivityEntryActionVisible(actionPattern: RegExp) {
+    const activityEntry = this.activityEntries.first();
+    await expect(activityEntry).toBeVisible();
+    await expect(activityEntry.getByText(actionPattern)).toBeVisible();
+  }
+
+  async expectActivityRelativeTimestampVisible() {
+    await this.expectActivityEntriesVisible();
+    await expect(
+      this.activityFeed.getByText(/just now|seconds? ago|minutes? ago|hours? ago|days? ago/i).first(),
+    ).toBeVisible();
+  }
+
   /**
    * Get an issue card by its title
    * Targets the overlay button which is the interactive element

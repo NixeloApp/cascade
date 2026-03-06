@@ -37,14 +37,10 @@ test.describe("Activity Feed", () => {
     await projectsPage.switchToTab("activity");
     console.log("✓ Navigated to activity page");
 
-    // Verify page header
-    await expect(projectsPage.activityPageHeader).toBeVisible();
-    console.log("✓ Project Activity header visible");
-
     // A new project might have initial "created" activity or show empty state
     // Determine which one appeared for logging purposes
-    const hasEmptyState = await projectsPage.activityEmptyState.isVisible().catch(() => false);
-    console.log(`✓ Activity page shows ${hasEmptyState ? "empty state" : "activity entries"}`);
+    const activityState = await projectsPage.getActivityPageState();
+    console.log(`✓ Activity page shows ${activityState}`);
   });
 
   test("activity page shows entries after creating issues", async ({ projectsPage }) => {
@@ -70,20 +66,12 @@ test.describe("Activity Feed", () => {
 
     // Navigate to activity tab
     await projectsPage.switchToTab("activity");
-    await expect(projectsPage.activityFeed).toBeVisible();
-
-    // Verify activity entries are visible — scoped to the feed container
-    await expect(projectsPage.activityEntries.first()).toBeVisible();
-
-    // Activity entries should show "created" action — scoped to feed
-    const createdActivity = projectsPage.activityFeed.getByText(/created/i).first();
-    await expect(createdActivity).toBeVisible();
+    await projectsPage.expectActivityEntriesVisible();
+    await projectsPage.expectActivityActionVisible(/created/i);
     console.log("✓ Activity entries show 'created' action");
 
-    // Verify activity shows the project's issue key pattern (e.g., ACTI-1) — scoped to feed
-    const issueKeyPattern = new RegExp(`${projectKey}-\\d+`);
-    const issueKeyEntry = projectsPage.activityFeed.getByText(issueKeyPattern).first();
-    await expect(issueKeyEntry).toBeVisible();
+    // Verify activity shows the project's issue key pattern (e.g., ACTI-1)
+    await projectsPage.expectActivityIssueKeyVisible(projectKey);
     console.log("✓ Activity entries show issue keys");
   });
 
@@ -104,13 +92,8 @@ test.describe("Activity Feed", () => {
 
     // Navigate to activity tab
     await projectsPage.switchToTab("activity");
-    await expect(projectsPage.activityFeed).toBeVisible();
-
-    // Activity entries should show a user name with an action — scoped to feed
-    const activityEntry = projectsPage.activityEntries.first();
-    await expect(activityEntry).toBeVisible();
-    // Verify the entry contains both a user name (font-medium span) and an action word
-    await expect(activityEntry.getByText(/created|updated|commented/i)).toBeVisible();
+    await projectsPage.expectActivityEntriesVisible();
+    await projectsPage.expectActivityEntryActionVisible(/created|updated|commented/i);
     console.log("✓ Activity entries show user name with action");
   });
 
@@ -130,13 +113,7 @@ test.describe("Activity Feed", () => {
 
     // Navigate to activity tab
     await projectsPage.switchToTab("activity");
-    await expect(projectsPage.activityFeed).toBeVisible();
-
-    // Verify relative timestamps are shown — scoped to the feed container
-    const relativeTime = projectsPage.activityFeed.getByText(
-      /just now|seconds? ago|minutes? ago|hours? ago|days? ago/i,
-    );
-    await expect(relativeTime.first()).toBeVisible();
+    await projectsPage.expectActivityRelativeTimestampVisible();
     console.log("✓ Activity entries show relative timestamps");
   });
 });
