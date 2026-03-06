@@ -276,6 +276,11 @@ export class ProjectsPage extends BasePage {
     await this.waitForLoad();
   }
 
+  async gotoProjectBoard(projectKey: string) {
+    await this.page.goto(`/${this.orgSlug}/projects/${projectKey}/board`);
+    await this.waitForLoad();
+  }
+
   // ===================
   // Actions
   // ===================
@@ -873,6 +878,10 @@ export class ProjectsPage extends BasePage {
 
   async expectBoardVisible() {
     await expect(this.projectBoard).toBeVisible();
+  }
+
+  async expectProjectNotFound() {
+    await expect(this.page.getByRole("heading", { name: /project not found/i })).toBeVisible();
   }
 
   /** Wait for board to be fully interactive */

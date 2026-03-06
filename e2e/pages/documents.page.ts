@@ -85,6 +85,11 @@ export class DocumentsPage extends BasePage {
     await this.waitForLoad();
   }
 
+  async gotoDocument(documentId: string) {
+    await this.page.goto(`/${this.orgSlug}/documents/${documentId}`);
+    await this.waitForLoad();
+  }
+
   // ===================
   // Actions
   // ===================
@@ -195,5 +200,11 @@ export class DocumentsPage extends BasePage {
 
   async expectDocumentCount(count: number) {
     await expect(this.documentItems).toHaveCount(count);
+  }
+
+  async expectDocumentNotFound() {
+    await expect(
+      this.page.getByText(/document not found/i).or(this.page.getByText(/something went wrong/i)),
+    ).toBeVisible();
   }
 }
