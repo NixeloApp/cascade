@@ -102,6 +102,16 @@ Rules:
 - Avoid unscoped text/CSS selectors as first choice.
 - If adding a new `data-testid`, add it to shared `TEST_IDS` constants first.
 
+## E2E TODO Update Protocol
+
+After each full-suite reliability run (`pnpm exec playwright test --reporter=line`), update `todos/e2e-reliability-overhaul.md` in the same change set:
+
+- Set `Last Updated` to the run date.
+- Record exact outcome (`passed/failed`, duration, skip count if any).
+- If failures occurred, add concrete failing spec references and the immediate next action.
+- Only check boxes that are actually satisfied by code and tests in the branch.
+- If blocked by environment/external services, add blocker + next step instead of silently leaving status stale.
+
 Automated guard commands:
 
 ```bash
