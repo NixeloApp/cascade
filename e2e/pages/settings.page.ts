@@ -73,9 +73,11 @@ export class SettingsPage extends BasePage {
   // Locators - Invite User Modal
   // ===================
   readonly inviteUserModal: Locator;
+  readonly inviteUserForm: Locator;
   readonly inviteEmailInput: Locator;
   readonly inviteRoleSelect: Locator;
   readonly sendInviteButton: Locator;
+  readonly cancelInviteButton: Locator;
 
   // ===================
   // Locators - Organization Settings
@@ -163,8 +165,10 @@ export class SettingsPage extends BasePage {
     // Invite user form (it's an inline Card, not a dialog)
     this.inviteUserModal = page.getByRole("heading", { name: /send invitation/i });
     this.inviteEmailInput = page.getByTestId(TEST_IDS.INVITE.EMAIL_INPUT);
+    this.inviteUserForm = this.inviteEmailInput.locator("xpath=ancestor::form");
     this.inviteRoleSelect = page.getByTestId(TEST_IDS.INVITE.ROLE_SELECT);
     this.sendInviteButton = page.getByTestId(TEST_IDS.INVITE.SEND_BUTTON);
+    this.cancelInviteButton = this.inviteUserForm.getByRole("button", { name: /^cancel$/i });
     this.inviteTable = page.getByTestId(TEST_IDS.INVITE.TABLE);
 
     // Admin - Organization Settings
@@ -326,16 +330,26 @@ export class SettingsPage extends BasePage {
       await expect(inviteBtn).toBeEnabled();
       await inviteBtn.click();
       await expect(this.inviteUserModal).toBeVisible();
+      await expect(this.inviteUserForm).toBeVisible();
+      await expect(this.inviteEmailInput).toBeVisible();
+      await expect(this.sendInviteButton).toBeVisible();
     }).toPass();
   }
 
   async closeInviteUserModalIfOpen() {
-    if (!(await this.inviteUserModal.isVisible().catch(() => false))) {
+    if (!(await this.inviteUserForm.isVisible().catch(() => false))) {
       return;
     }
 
-    await this.page.keyboard.press("Escape");
-    await expect(this.inviteUserModal).not.toBeVisible();
+    if (await this.cancelInviteButton.isVisible().catch(() => false)) {
+      await this.cancelInviteButton.click().catch(() => {});
+    }
+
+    if (await this.inviteUserForm.isVisible().catch(() => false)) {
+      await this.page.keyboard.press("Escape");
+    }
+
+    await expect(this.inviteUserForm).not.toBeVisible();
   }
 
   async inviteUser(email: string, role?: string) {
@@ -362,12 +376,17 @@ export class SettingsPage extends BasePage {
     // Submit form and wait for email to appear in the invites table
     // Don't rely on toasts - wait for the actual result (email in table)
     await expect(async () => {
-      await expect(this.sendInviteButton).toBeVisible();
-      await expect(this.sendInviteButton).toBeEnabled();
-      await this.sendInviteButton.click();
-      // Wait for invite to appear in table - this is the real success indicator
-      await expect(this.inviteTable).toBeVisible();
-      await expect(this.inviteTable.getByText(email)).toBeVisible();
+      const inviteRow = this.getInviteRow(email);
+      if (await inviteRow.isVisible().catch(() => false)) {
+        return;
+      }
+
+      if (await this.sendInviteButton.isVisible().catch(() => false)) {
+        await expect(this.sendInviteButton).toBeEnabled();
+        await this.sendInviteButton.click();
+      }
+
+      await this.expectInviteVisible(email);
     }).toPass();
   }
 
