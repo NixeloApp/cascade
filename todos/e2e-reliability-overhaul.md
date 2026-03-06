@@ -93,6 +93,26 @@ Make E2E tests deterministic and locally verifiable with one rule: run the full 
 - [ ] Core flows (`auth`, `issue create/edit`, `board drag/drop`, `docs`, `search`) are stable.
 - [ ] E2E authoring standard is documented and enforced in reviews.
 
+## Remaining Work (Execution Backlog)
+
+This is the concrete "what's left" list for reliability hardening after the latest green full-suite run.
+
+1. Deterministic post-action assertions in critical flows:
+   - convert any remaining action-only steps into `action -> deterministic wait -> outcome assert`.
+   - target specs first: `auth`, `issues`, `board-drag-drop`, `documents`, `search`.
+2. Selector contract completion:
+   - replace remaining brittle text/CSS fallbacks with role/label/test-id selectors.
+   - add missing `TEST_IDS` constants for any critical controls without stable anchors.
+3. Data isolation and cleanup hardening:
+   - ensure per-spec unique namespaces for created entities.
+   - guarantee teardown paths for users/projects/issues created during tests.
+4. Suite policy enforcement:
+   - remove unnecessary retries in critical-path specs.
+   - keep no-skip/no-only audits clean for critical path at commit time.
+5. Evidence updates after every full run:
+   - append the latest pass/fail outcome and duration in this file.
+   - record failing spec names and immediate next action when the suite is not 100% pass.
+
 ## Blocker Update (2026-03-05)
 
 - Local full-suite run command:
