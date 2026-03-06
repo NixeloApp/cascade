@@ -31,6 +31,7 @@ export class AuthPage extends BasePage {
   // Locators - Sign In/Up Forms
   // ===================
   readonly continueWithEmailButton: Locator;
+  readonly authForm: Locator;
   readonly emailInput: Locator;
   readonly passwordInput: Locator;
   readonly signInButton: Locator;
@@ -108,6 +109,7 @@ export class AuthPage extends BasePage {
 
     // Sign In / Sign Up form - two-step flow
     this.continueWithEmailButton = page.getByRole("button", { name: /continue with email/i });
+    this.authForm = page.getByTestId(TEST_IDS.AUTH.FORM);
     this.emailInput = page.getByTestId(TEST_IDS.AUTH.EMAIL_INPUT);
     this.passwordInput = page.getByTestId(TEST_IDS.AUTH.PASSWORD_INPUT);
     // Submit button reuses the same DOM node across expanded states; bind by stable test id.

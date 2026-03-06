@@ -104,7 +104,6 @@ This is the concrete "what's left" list for reliability hardening after the late
    - replace remaining brittle text/CSS fallbacks with role/label/test-id selectors.
    - add missing `TEST_IDS` constants for any critical controls without stable anchors.
    - current `validate` warning buckets:
-     - `e2e/auth-comprehensive.spec.ts` (`11`)
      - `e2e/activity-feed.spec.ts` (`7`)
      - `e2e/analytics.spec.ts` (`2`)
      - `e2e/invites.spec.ts` (`2`)

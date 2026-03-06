@@ -1,4 +1,3 @@
-import { TEST_IDS } from "../src/lib/test-ids";
 import { expect, test } from "./fixtures";
 
 /**
@@ -14,7 +13,7 @@ test.describe("Sign In Form - Elements", () => {
     await page.goto("/signin", { waitUntil: "commit" });
   });
 
-  test("displays all sign in form elements", async ({ authPage, page }) => {
+  test("displays all sign in form elements", async ({ authPage }) => {
     // Wait for page to be ready
     await expect(authPage.signInHeading).toBeVisible();
 
@@ -26,8 +25,8 @@ test.describe("Sign In Form - Elements", () => {
     await expect(authPage.toggleFlowButton).toContainText(/sign up/i);
 
     // Submit button is always visible (shows either "Continue with email" or "Sign in")
-    const submitButton = page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-    const authForm = page.getByTestId(TEST_IDS.AUTH.FORM);
+    const submitButton = authPage.submitButton;
+    const authForm = authPage.authForm;
     await expect(submitButton).toBeVisible();
 
     // Wait for hydration before interacting
@@ -58,10 +57,10 @@ test.describe("Sign In Form - Elements", () => {
     await expect(authPage.passwordInput).toHaveAttribute("type", "password");
   });
 
-  test("email input validates email format", async ({ authPage, page }) => {
+  test("email input validates email format", async ({ authPage }) => {
     await authPage.waitForHydration();
-    const submitButton = page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-    const authForm = page.getByTestId(TEST_IDS.AUTH.FORM);
+    const submitButton = authPage.submitButton;
+    const authForm = authPage.authForm;
 
     // Expand form, fill with invalid email, and verify validation in retry block
     await expect(async () => {
@@ -84,10 +83,10 @@ test.describe("Sign In Form - Elements", () => {
     }).toPass();
   });
 
-  test("password input is masked", async ({ authPage, page }) => {
+  test("password input is masked", async ({ authPage }) => {
     await authPage.waitForHydration();
-    const submitButton = page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-    const authForm = page.getByTestId(TEST_IDS.AUTH.FORM);
+    const submitButton = authPage.submitButton;
+    const authForm = authPage.authForm;
 
     // Expand form and verify password is masked in retry block
     await expect(async () => {
@@ -109,7 +108,7 @@ test.describe("Sign Up Form - Elements", () => {
     await page.goto("/signup", { waitUntil: "commit" });
   });
 
-  test("displays all sign up form elements", async ({ authPage, page }) => {
+  test("displays all sign up form elements", async ({ authPage }) => {
     // Wait for page to be ready
     await expect(authPage.signUpHeading).toBeVisible();
 
@@ -121,8 +120,8 @@ test.describe("Sign Up Form - Elements", () => {
     await expect(authPage.toggleFlowButton).toContainText(/sign in/i);
 
     // Submit button is always visible (shows either "Continue with email" or "Create account")
-    const submitButton = page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-    const authForm = page.getByTestId(TEST_IDS.AUTH.FORM);
+    const submitButton = authPage.submitButton;
+    const authForm = authPage.authForm;
     await expect(submitButton).toBeVisible();
 
     // Wait for hydration before interacting
@@ -153,13 +152,13 @@ test.describe("Sign Up Form - Elements", () => {
 
   // This test involves multiple navigation and form expansion operations which can be flaky
   // due to React state management timing. Allow retries to handle intermittent failures.
-  test("can switch between sign in and sign up", async ({ authPage, page }) => {
+  test("can switch between sign in and sign up", async ({ authPage }) => {
     test.info().annotations.push({
       type: "flaky",
       description: "Form expansion timing can be inconsistent",
     });
-    const authForm = page.getByTestId(TEST_IDS.AUTH.FORM);
-    const submitButton = page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
+    const authForm = authPage.authForm;
+    const submitButton = authPage.submitButton;
 
     // Wait for hydration and expand form
     await authPage.waitForHydration();
@@ -201,10 +200,9 @@ test.describe("Forgot Password Form - Elements", () => {
     await expect(authPage.backToSignInButton).toBeVisible();
   });
 
-  test("can go back to sign in", async ({ authPage, page }) => {
+  test("can go back to sign in", async ({ authPage }) => {
     await authPage.goBackToSignIn();
-    const authForm = page.getByTestId(TEST_IDS.AUTH.FORM);
-    await expect(authForm).toHaveAttribute("data-expanded", "true");
+    await expect(authPage.authForm).toHaveAttribute("data-expanded", "true");
   });
 });
 
