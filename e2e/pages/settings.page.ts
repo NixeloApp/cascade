@@ -359,29 +359,26 @@ export class SettingsPage extends BasePage {
   }
 
   async inviteUser(email: string, role?: string) {
-    await this.openInviteUserModal();
-    await this.inviteEmailInput.fill(email);
-    // Only change role if it's not "user" (which is the default)
-    if (role && role.toLowerCase() !== "user") {
-      // Radix Select - click trigger with current value text, then select option
-      // The select shows "User" or "Super Admin" (or placeholder "Select role")
-      // Use retry pattern to handle element detachment during React updates
-      const displayRole = "Super Admin";
-      await expect(async () => {
+    await expect(async () => {
+      await this.openInviteUserModal();
+      await expect(this.inviteEmailInput).toBeVisible();
+      await expect(this.inviteEmailInput).toBeEnabled();
+      await this.inviteEmailInput.fill(email);
+      await expect(this.inviteEmailInput).toHaveValue(email);
+
+      // Only change role if it's not "user" (which is the default)
+      if (role && role.toLowerCase() !== "user") {
+        const displayRole = "Super Admin";
         const selectTrigger = this.page
           .getByRole("combobox")
           .filter({ hasText: /^User$|^Super Admin$|Select role/i });
         await expect(selectTrigger).toBeVisible();
         await selectTrigger.click();
         await expect(this.page.getByRole("option", { name: displayRole })).toBeVisible();
-      }).toPass();
-      await this.page.getByRole("option", { name: displayRole }).click();
-      // Wait for select dropdown to close (React re-render completes)
-      await expect(this.page.getByRole("option", { name: displayRole })).not.toBeVisible();
-    }
-    // Submit form and wait for email to appear in the invites table
-    // Don't rely on toasts - wait for the actual result (email in table)
-    await expect(async () => {
+        await this.page.getByRole("option", { name: displayRole }).click();
+        await expect(this.page.getByRole("option", { name: displayRole })).not.toBeVisible();
+      }
+
       const inviteRow = this.getInviteRow(email);
       if (await inviteRow.isVisible().catch(() => false)) {
         return;
