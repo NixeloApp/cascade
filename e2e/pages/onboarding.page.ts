@@ -101,7 +101,8 @@ export class OnboardingPage {
 
   async goto(): Promise<void> {
     // Onboarding shows on /onboarding route for new users
-    await this.page.goto("/onboarding");
+    await this.page.goto("/onboarding", { waitUntil: "domcontentloaded" });
+    await this.expectOnboardingRoute();
   }
 
   /**
@@ -324,13 +325,17 @@ export class OnboardingPage {
    * Skip onboarding and go to dashboard
    */
   async skipOnboarding() {
-    // Try button first, then text
-    const skipVisible = await this.skipButton.isVisible().catch(() => false);
-    if (skipVisible) {
-      await this.skipButton.click();
-    } else {
-      await this.skipText.click();
-    }
+    await expect(async () => {
+      // Try button first, then text
+      const skipVisible = await this.skipButton.isVisible().catch(() => false);
+      if (skipVisible) {
+        await this.skipButton.click();
+      } else {
+        await this.skipText.click();
+      }
+
+      await this.expectDashboard();
+    }).toPass();
   }
 
   /**
@@ -344,7 +349,10 @@ export class OnboardingPage {
    * Click create project button
    */
   async createProject() {
-    await this.createProjectButton.click();
+    await expect(async () => {
+      await this.createProjectButton.click();
+      await this.expectTeamMemberComplete();
+    }).toPass();
   }
 
   async fillProjectName(name: string) {
@@ -356,7 +364,10 @@ export class OnboardingPage {
    * Complete team member flow to dashboard
    */
   async goToDashboard() {
-    await this.goToDashboardButton.click();
+    await expect(async () => {
+      await this.goToDashboardButton.click();
+      await this.expectDashboard();
+    }).toPass();
   }
 
   // ===================
@@ -370,6 +381,10 @@ export class OnboardingPage {
     await expect(this.welcomeHeading).toBeVisible({ timeout: TRANSITION_TIMEOUT });
     await expect(this.teamLeadCard).toBeVisible();
     await expect(this.teamMemberCard).toBeVisible();
+  }
+
+  async expectOnboardingRoute(timeout = TRANSITION_TIMEOUT) {
+    await expect(this.page).toHaveURL(/\/onboarding$/, { timeout });
   }
 
   /**
@@ -401,6 +416,7 @@ export class OnboardingPage {
    * Assert we're on the dashboard
    */
   async expectDashboard(timeout = TRANSITION_TIMEOUT) {
+    await expect(this.page).toHaveURL(/\/[^/]+\/dashboard/, { timeout });
     await expect(this.myWorkHeading).toBeVisible({ timeout });
   }
 }

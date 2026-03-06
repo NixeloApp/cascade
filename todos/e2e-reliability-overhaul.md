@@ -129,7 +129,9 @@ This is the concrete "what's left" list for reliability hardening after the late
    - full `permission-cascade.spec.ts` rerun now passes after the helper migration, so the file is currently green end-to-end and no longer relies on the stale raw settings/members assertions that were driving this slice.
    - `workspaces-org.spec.ts` now goes through `SettingsPage` helpers for admin-settings readiness, organization-name visibility, time-approval state, and non-admin admin-tab blocking, and through `WorkspacesPage` helpers for workspace detail visibility.
    - `teams.spec.ts` now goes through `WorkspacesPage` helpers for workspace opening, teams-tab navigation, teams-page readiness, and empty-vs-teams state detection instead of branching on raw headings, workspace cards, and `Teams` links in the spec body.
-   - next target: audit the next page-object gap outside the workspace cluster, starting with `dashboard.spec.ts`, and move any remaining raw modal/settings assertions behind existing page objects.
+   - `dashboard.spec.ts` now goes through `DashboardPage` helpers for main-section visibility, issue-filter visibility, and notification-panel visibility instead of asserting those raw locators from the spec body.
+   - `onboarding.spec.ts` now goes through `OnboardingPage` for onboarding-route readiness, skip-to-dashboard completion, project-create completion, and dashboard-route readiness instead of mixing spec-level `waitForURL()` and dashboard-heading waits into the flow.
+   - next target: audit the remaining direct route/error-state assertions, starting with `issue-detail-page.spec.ts`, and move those checks behind `IssueDetailPage`.
 2. Selector contract completion:
    - `pnpm run validate` now passes with no `Test ID constants` warnings.
    - continue replacing brittle text/CSS fallbacks opportunistically when modifying critical specs.
@@ -181,6 +183,8 @@ This is the concrete "what's left" list for reliability hardening after the late
 - Full `permission-cascade.spec.ts` now reruns cleanly end-to-end after the settings, workspace, and visibility helper migrations, so the file has current whole-spec evidence instead of only isolated targeted cases.
 - `workspaces-org.spec.ts` now relies on `SettingsPage` for admin-settings readiness, org-name visibility, time-approval state, and non-admin admin-tab blocking, plus `WorkspacesPage.expectWorkspaceDetailVisible()` for workspace creation coverage, after the full-file rerun confirmed the organization/workspace permission smoke tests do not need raw page-level assertions.
 - `teams.spec.ts` now relies on `WorkspacesPage.openWorkspaceTeams()`, `expectTeamsLoaded()`, and `getTeamsPageState()`, after the full-file rerun confirmed the workspace/team navigation tests do not need to branch on raw workspace headings, card clicks, or `Teams` links from the spec body.
+- `dashboard.spec.ts` now relies on `DashboardPage.expectMainSectionsVisible()`, `expectIssueFiltersVisible()`, and `expectNotificationsPanelVisible()`, after the focused rerun confirmed those visibility checks can be treated as a single dashboard contract instead of repeated spec-local assertions.
+- `OnboardingPage.goto()` now waits for the onboarding route, `skipOnboarding()` and `goToDashboard()` now own dashboard-route plus dashboard-ready completion, and `createProject()` now waits for the member-complete screen, after the focused rerun confirmed `onboarding.spec.ts` no longer needs spec-level `waitForURL()` or dashboard-heading waits to prove those transitions finished.
 
 ## Latest Targeted Hardening Evidence
 
@@ -205,7 +209,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `pnpm exec playwright test e2e/settings/billing.spec.ts --reporter=line --workers=1`
   - `2 passed (22.5s)`
 - `pnpm exec playwright test e2e/dashboard.spec.ts --reporter=line --workers=1`
-  - `11 passed (1.6m)`
+  - `11 passed (1.4m)`
 - `pnpm exec playwright test e2e/invites.spec.ts --reporter=line --workers=1`
   - `1 passed (29.1s)`
 - `pnpm exec playwright test e2e/teams.spec.ts --reporter=line --workers=1`

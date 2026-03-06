@@ -48,8 +48,6 @@ test.describe("Onboarding Wizard", () => {
   test("displays welcome page with role selection", async ({ page }) => {
     const onboarding = new OnboardingPage(page);
     await onboarding.goto();
-    // Use a longer timeout and explicit URL wait to handle slow hydration/Convex updates
-    await page.waitForURL("**/onboarding");
     await onboarding.waitForSplashScreen();
 
     // Should show role selection
@@ -83,15 +81,6 @@ test.describe("Onboarding Wizard", () => {
     // Find and click skip element
     await expect(onboarding.skipText).toBeVisible();
     await onboarding.skipOnboarding();
-
-    // Wait for navigation to dashboard
-    await page.waitForURL(/\/[^/]+\/dashboard/);
-
-    // Wait for dashboard to finish loading — use test ID to avoid matching multiple headings
-    await expect(onboarding.myWorkHeading).toBeVisible();
-
-    // Should navigate to dashboard
-    await onboarding.expectDashboard();
   });
 
   test("shows feature highlights", async ({ page }) => {
@@ -166,22 +155,7 @@ test.describe("Onboarding - Team Member Flow", () => {
     await onboarding.fillProjectName("E2E Test Project");
     await onboarding.createProject();
 
-    // Wait for features screen
-    await onboarding.expectTeamMemberComplete();
-
-    // Verify we are on the Team Member specific step
-    // (Implicitly verified by selectTeamMember action now)
-
     // Click "Go to Dashboard" button to complete onboarding
     await onboarding.goToDashboard();
-
-    // Wait for navigation to dashboard
-    await page.waitForURL(/\/[^/]+\/dashboard/);
-
-    // Wait for dashboard to finish loading — use test ID to avoid matching multiple headings
-    await expect(onboarding.myWorkHeading).toBeVisible();
-
-    // Should navigate to dashboard
-    await onboarding.expectDashboard();
   });
 });
