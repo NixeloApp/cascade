@@ -93,7 +93,8 @@ async function injectAuthTokens(page: Page, token: string, refreshToken?: string
 }
 
 async function waitForAuthenticatedDashboard(page: Page, orgSlug: string): Promise<void> {
-  const dashboardUrl = new RegExp(`/${orgSlug}/dashboard(?:\\?.*)?$`);
+  const escapedOrgSlug = orgSlug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const dashboardUrl = new RegExp(`/${escapedOrgSlug}/dashboard(?:\\?.*)?$`);
   const appErrorHeading = page.getByRole("heading", { name: "500" });
   const appErrorDetails = page.locator("details pre");
   let lastError: Error | undefined;

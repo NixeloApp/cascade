@@ -368,7 +368,16 @@ export class SettingsPage extends BasePage {
 
       // Only change role if it's not "user" (which is the default)
       if (role && role.toLowerCase() !== "user") {
-        const displayRole = "Super Admin";
+        const normalizedRole = role.trim().toLowerCase();
+        const roleLabelMap: Record<string, string> = {
+          "super admin": "Super Admin",
+          super_admin: "Super Admin",
+          admin: "Super Admin",
+        };
+        const displayRole = roleLabelMap[normalizedRole];
+        if (!displayRole) {
+          throw new Error(`Unsupported invite role: ${role}`);
+        }
         const selectTrigger = this.page
           .getByRole("combobox")
           .filter({ hasText: /^User$|^Super Admin$|Select role/i });

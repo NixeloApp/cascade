@@ -146,13 +146,14 @@ export class WorkspacesPage extends BasePage {
   }
 
   async openWorkspace(name: string) {
-    if (
-      await this.page
+    // Only skip navigation if we're already on a workspace detail route with the heading visible
+    const onWorkspaceRoute = /\/workspaces\/[^/]+(?:[/?#]|$)/.test(this.page.url());
+    if (onWorkspaceRoute) {
+      const headingVisible = await this.page
         .getByRole("heading", { name, level: 3 })
         .isVisible()
-        .catch(() => false)
-    ) {
-      return;
+        .catch(() => false);
+      if (headingVisible) return;
     }
 
     const workspaceCard = this.page
