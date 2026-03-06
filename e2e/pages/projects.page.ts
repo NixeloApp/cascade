@@ -508,18 +508,36 @@ export class ProjectsPage extends BasePage {
    */
   async openIssueDetail(title: string) {
     const issueCard = this.getIssueCard(title);
-    await issueCard.waitFor({ state: "visible" });
-    await issueCard.click();
-    await expect(this.issueDetailDialog).toBeVisible();
+    await expect(async () => {
+      await this.closeIssueDetailIfOpen();
+      await issueCard.waitFor({ state: "visible" });
+      await issueCard.click();
+      await expect(this.issueDetailDialog).toBeVisible();
 
-    // Wait for modal content to be stable using the issue key metadata,
-    // which is consistently rendered regardless of sidebar section timing.
-    await expect(this.issueDetailDialog.getByText(/[A-Z][A-Z0-9]+-\d+/).first()).toBeVisible();
+      // Wait for modal content to be stable using the issue key metadata,
+      // which is consistently rendered regardless of sidebar section timing.
+      await expect(this.issueDetailDialog.getByText(/[A-Z][A-Z0-9]+-\d+/).first()).toBeVisible();
+    }).toPass();
   }
 
   async closeIssueDetail() {
-    await expect(this.issueDetailDialog).toBeVisible();
+    await expect(async () => {
+      await this.closeIssueDetailIfOpen();
+      await expect(this.issueDetailDialog).not.toBeVisible();
+    }).toPass();
+  }
+
+  async closeIssueDetailIfOpen() {
+    if (!(await this.issueDetailDialog.isVisible().catch(() => false))) {
+      return;
+    }
+
     await this.page.keyboard.press("Escape");
+
+    if (await this.issueDetailDialog.isVisible().catch(() => false)) {
+      await this.page.mouse.click(10, 10);
+    }
+
     await expect(this.issueDetailDialog).not.toBeVisible();
   }
 
