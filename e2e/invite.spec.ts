@@ -1,4 +1,5 @@
-import { expect, test } from "./fixtures";
+import { test } from "./fixtures";
+import { InvitePage } from "./pages";
 
 /**
  * Invite Page E2E Tests
@@ -14,71 +15,38 @@ import { expect, test } from "./fixtures";
 
 test.describe("Invite Page", () => {
   test("shows invalid invitation message for non-existent token", async ({ page }) => {
+    const invitePage = new InvitePage(page);
+
     // Navigate to invite page with a fake token
-    await page.goto("/invite/invalid-token-12345");
-
-    // Should show "Invalid Invitation" heading
-    await expect(page.getByRole("heading", { name: /invalid invitation/i })).toBeVisible();
-
-    // Should have an explanation message
-    await expect(page.getByText(/this invitation link is invalid|has been removed/i)).toBeVisible();
-
-    // Should have a "Go to Home" button
-    await expect(page.getByRole("button", { name: /go to home/i })).toBeVisible();
+    await invitePage.goto("invalid-token-12345");
+    await invitePage.expectInvalidInvitation();
   });
 
-  test("invalid invite page has Go to Home button that works", async ({ page }) => {
+  test("invalid invite page has Go to Home button that works", async ({ page, landingPage }) => {
+    const invitePage = new InvitePage(page);
+
     // Navigate to invite page with a fake token
-    await page.goto("/invite/another-fake-token", { waitUntil: "load" });
-
-    // Wait for Convex query to resolve and show invalid state
-    // The page shows loading first, then the Convex query returns null for invalid token
-    const invalidHeading = page.getByRole("heading", { name: /invalid invitation/i });
-    await expect(invalidHeading).toBeVisible();
-
-    // Click the "Go to Home" button - may be a link or button
-    const homeButton = page
-      .getByRole("button", { name: /go to home/i })
-      .or(page.getByRole("link", { name: /go to home/i }));
-    await expect(homeButton).toBeVisible();
-    await homeButton.click();
-
-    // Should navigate to home page (could be / or /signin for unauthenticated)
-    // The full URL includes the host, so match the path portion
-    await expect(page).toHaveURL(/\/($|signin)/);
+    await invitePage.goto("another-fake-token");
+    await invitePage.expectInvalidInvitation();
+    await invitePage.goHome();
+    await landingPage.expectLandingOrSignInPage();
   });
 
   test("shows loading state initially", async ({ page }) => {
+    const invitePage = new InvitePage(page);
+
     // Navigate to invite page
     // We use Promise.race to catch the loading state before it resolves to invalid
-    await page.goto("/invite/test-loading-state", { waitUntil: "commit" });
-
-    // Page should show either loading or invalid state.
-    await expect
-      .poll(async () => {
-        const hasLoading = await page
-          .getByText(/loading invitation/i)
-          .isVisible()
-          .catch(() => false);
-        const hasInvalid = await page
-          .getByRole("heading", { name: /invalid invitation/i })
-          .isVisible()
-          .catch(() => false);
-        return hasLoading || hasInvalid;
-      })
-      .toBe(true);
+    await invitePage.goto("test-loading-state", "commit");
+    await invitePage.expectLoadingOrInvalid();
   });
 
   test("invite page shows branding on invalid token page", async ({ page }) => {
+    const invitePage = new InvitePage(page);
+
     // Navigate to invite page (even invalid tokens show the page layout)
-    await page.goto("/invite/branding-test-token");
-
-    // Wait for the invalid state to fully render
-    await expect(page.getByRole("heading", { name: /invalid invitation/i })).toBeVisible();
-
-    // Invalid invite page shows an AlertCircle error icon (SVG) and the heading
-    // Verify the error icon is present (rendered as an SVG with specific classes)
-    const errorIcon = page.locator("svg.text-status-error");
-    await expect(errorIcon).toBeVisible();
+    await invitePage.goto("branding-test-token");
+    await invitePage.expectInvalidInvitation();
+    await invitePage.expectInvalidInvitationBranding();
   });
 });

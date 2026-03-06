@@ -133,7 +133,9 @@ This is the concrete "what's left" list for reliability hardening after the late
    - `onboarding.spec.ts` now goes through `OnboardingPage` for onboarding-route readiness, skip-to-dashboard completion, project-create completion, and dashboard-route readiness instead of mixing spec-level `waitForURL()` and dashboard-heading waits into the flow.
    - `issue-detail-page.spec.ts` now goes through `IssueDetailPage` for route-ready assertions, issue-not-found assertions, and breadcrumb navigation back to the project board instead of repeating direct URL, error-state, and route-return checks from the spec body.
    - `error-scenarios.spec.ts` now goes through `ProjectsPage`, `DocumentsPage`, and `IssueDetailPage` for authenticated non-existent project/document/issue checks instead of repeating route navigation and error-state assertions directly in the spec body.
-   - next target: replace the remaining unauthenticated redirect poll in `error-scenarios.spec.ts` with page-object auth/landing assertions, or move to the next invalid-route spec if that poll proves intentionally cross-page.
+   - `error-scenarios.spec.ts` now goes through `LandingPage.expectLandingOrSignInPage()` for the unauthenticated protected-route redirect check instead of polling raw headings from the spec body.
+   - `invite.spec.ts` now goes through `InvitePage` for invalid-token, go-home, loading-or-invalid, and invalid-branding assertions instead of probing invite route state with raw selectors in the spec body.
+   - next target: audit `oauth-mocked.spec.ts` and move the repeated Google-button and post-click error-settle checks behind `AuthPage` or a small OAuth helper.
 2. Selector contract completion:
    - `pnpm run validate` now passes with no `Test ID constants` warnings.
    - continue replacing brittle text/CSS fallbacks opportunistically when modifying critical specs.
@@ -189,6 +191,8 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `OnboardingPage.goto()` now waits for the onboarding route, `skipOnboarding()` and `goToDashboard()` now own dashboard-route plus dashboard-ready completion, and `createProject()` now waits for the member-complete screen, after the focused rerun confirmed `onboarding.spec.ts` no longer needs spec-level `waitForURL()` or dashboard-heading waits to prove those transitions finished.
 - `issue-detail-page.spec.ts` now relies on `IssueDetailPage.expectIssueNotFound()`, `expectIssueLoaded()`, `expectProjectBreadcrumbVisible()`, and `returnToProjectBoard()`, after the full-file rerun confirmed the standalone route can own both its error-state and happy-path readiness checks instead of leaving those assertions scattered in the spec body.
 - `error-scenarios.spec.ts` now relies on `ProjectsPage.gotoProjectBoard()` plus `expectProjectNotFound()`, `DocumentsPage.gotoDocument()` plus `expectDocumentNotFound()`, and `IssueDetailPage.expectIssueNotFound()`, after the focused rerun confirmed the authenticated invalid-resource coverage can reuse page-object route contracts instead of building URL and error assertions inline.
+- `LandingPage.expectLandingOrSignInPage()` now owns the unauthenticated protected-route redirect check, after the focused rerun confirmed `error-scenarios.spec.ts` does not need a spec-local heading poll to prove the redirect settled on landing or sign-in.
+- `invite.spec.ts` now relies on `InvitePage.expectInvalidInvitation()`, `goHome()`, `expectLoadingOrInvalid()`, and `expectInvalidInvitationBranding()`, after the focused rerun confirmed the public invite route can own invalid-token, loading, and go-home state checks instead of leaving them as raw selectors in the spec body.
 
 ## Latest Targeted Hardening Evidence
 
@@ -208,6 +212,10 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `5 passed (2.6m)`
 - `pnpm exec playwright test e2e/error-scenarios.spec.ts --reporter=line --workers=1`
   - `4 passed (29.5s)`
+- `pnpm exec playwright test e2e/error-scenarios.spec.ts --reporter=line --workers=1`
+  - `4 passed (28.8s)`
+- `pnpm exec playwright test e2e/invite.spec.ts --reporter=line --workers=1`
+  - `4 passed (18.6s)`
 - `pnpm exec playwright test e2e/issues.spec.ts e2e/integration-workflow.spec.ts --reporter=line --workers=1`
   - `9 passed (4.9m)`
 - `pnpm exec playwright test e2e/search.spec.ts --reporter=line --workers=1`
