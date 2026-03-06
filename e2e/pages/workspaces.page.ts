@@ -12,7 +12,12 @@ export class WorkspacesPage extends BasePage {
   readonly workspaceList: Locator;
   readonly workspaceCards: Locator;
   readonly workspaceTabs: Locator;
+  readonly workspaceTeamsTab: Locator;
   readonly workspaceSettingsTab: Locator;
+  readonly teamsPageHeader: Locator;
+  readonly createTeamButton: Locator;
+  readonly teamsEmptyStateHeading: Locator;
+  readonly teamCards: Locator;
   readonly workspaceSettingsHeader: Locator;
 
   constructor(page: Page, orgSlug: string) {
@@ -28,7 +33,15 @@ export class WorkspacesPage extends BasePage {
       .getByRole("navigation")
       .filter({ has: page.getByRole("link", { name: /^Teams$/ }) })
       .first();
+    this.workspaceTeamsTab = this.workspaceTabs.getByRole("link", { name: /^Teams$/ });
     this.workspaceSettingsTab = this.workspaceTabs.getByRole("link", { name: /^Settings$/ });
+    this.teamsPageHeader = page.getByRole("heading", { name: /^Teams$/ });
+    this.createTeamButton = page.getByRole("button", { name: /create team/i }).first();
+    this.teamsEmptyStateHeading = page.getByRole("heading", { name: /no teams yet/i });
+    this.teamCards = page
+      .getByRole("main")
+      .locator("a[href*='/teams/']")
+      .filter({ has: page.getByRole("heading", { level: 3 }) });
     this.workspaceSettingsHeader = page.getByRole("heading", { name: /workspace settings/i });
   }
 
@@ -130,6 +143,68 @@ export class WorkspacesPage extends BasePage {
 
   async isWorkspaceSettingsTabVisible() {
     return this.workspaceSettingsTab.isVisible().catch(() => false);
+  }
+
+  async openWorkspace(name: string) {
+    if (
+      await this.page
+        .getByRole("heading", { name, level: 3 })
+        .isVisible()
+        .catch(() => false)
+    ) {
+      return;
+    }
+
+    const workspaceCard = this.page
+      .getByRole("main")
+      .locator(`a[href*="/workspaces/"]`)
+      .filter({ hasText: name })
+      .first();
+    await expect(workspaceCard).toBeVisible();
+    await workspaceCard.click();
+  }
+
+  async openWorkspaceTeams(name: string) {
+    await this.openWorkspace(name);
+    await expect(this.page).toHaveURL(/\/workspaces\/[^/]+(?:[/?#]|$|\/teams)/);
+
+    if (!/\/teams(?:[/?#]|$)/.test(this.page.url())) {
+      await expect(this.workspaceTeamsTab).toBeVisible();
+      await this.workspaceTeamsTab.click();
+    }
+
+    await this.expectTeamsLoaded();
+  }
+
+  async expectTeamsLoaded() {
+    await expect(this.page).toHaveURL(/\/workspaces\/[^/]+\/teams(?:[/?#]|$)/);
+    await expect(this.teamsPageHeader).toBeVisible();
+    await expect(this.createTeamButton).toBeVisible();
+  }
+
+  async getTeamsPageState(): Promise<"empty" | "teams"> {
+    await this.expectTeamsLoaded();
+
+    if (
+      await this.teamCards
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
+      return "teams";
+    }
+
+    if (await this.teamsEmptyStateHeading.isVisible().catch(() => false)) {
+      return "empty";
+    }
+
+    await expect(this.teamsEmptyStateHeading.or(this.teamCards.first())).toBeVisible();
+    return (await this.teamCards
+      .first()
+      .isVisible()
+      .catch(() => false))
+      ? "teams"
+      : "empty";
   }
 
   async expectWorkspaceSettingsLoaded() {

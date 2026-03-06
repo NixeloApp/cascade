@@ -128,7 +128,8 @@ This is the concrete "what's left" list for reliability hardening after the late
    - permission-cascade workspace/project visibility smoke assertions now go through `WorkspacesPage` and `ProjectsPage` list helpers, so those tests no longer read raw main-content and href counts directly.
    - full `permission-cascade.spec.ts` rerun now passes after the helper migration, so the file is currently green end-to-end and no longer relies on the stale raw settings/members assertions that were driving this slice.
    - `workspaces-org.spec.ts` now goes through `SettingsPage` helpers for admin-settings readiness, organization-name visibility, time-approval state, and non-admin admin-tab blocking, and through `WorkspacesPage` helpers for workspace detail visibility.
-   - next target: move to `teams.spec.ts` and replace the remaining raw workspace-detail and teams-navigation assertions with `WorkspacesPage` helpers where possible.
+   - `teams.spec.ts` now goes through `WorkspacesPage` helpers for workspace opening, teams-tab navigation, teams-page readiness, and empty-vs-teams state detection instead of branching on raw headings, workspace cards, and `Teams` links in the spec body.
+   - next target: audit the next page-object gap outside the workspace cluster, starting with `dashboard.spec.ts`, and move any remaining raw modal/settings assertions behind existing page objects.
 2. Selector contract completion:
    - `pnpm run validate` now passes with no `Test ID constants` warnings.
    - continue replacing brittle text/CSS fallbacks opportunistically when modifying critical specs.
@@ -179,6 +180,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `permission-cascade.spec.ts` now relies on `WorkspacesPage.expectWorkspacesView()` / `workspaceCards` and `ProjectsPage.expectProjectsView()` / `projectItems` for the visibility-count smoke coverage, after the targeted rerun confirmed those list checks do not need raw `main` locators or direct href counting.
 - Full `permission-cascade.spec.ts` now reruns cleanly end-to-end after the settings, workspace, and visibility helper migrations, so the file has current whole-spec evidence instead of only isolated targeted cases.
 - `workspaces-org.spec.ts` now relies on `SettingsPage` for admin-settings readiness, org-name visibility, time-approval state, and non-admin admin-tab blocking, plus `WorkspacesPage.expectWorkspaceDetailVisible()` for workspace creation coverage, after the full-file rerun confirmed the organization/workspace permission smoke tests do not need raw page-level assertions.
+- `teams.spec.ts` now relies on `WorkspacesPage.openWorkspaceTeams()`, `expectTeamsLoaded()`, and `getTeamsPageState()`, after the full-file rerun confirmed the workspace/team navigation tests do not need to branch on raw workspace headings, card clicks, or `Teams` links from the spec body.
 
 ## Latest Targeted Hardening Evidence
 
@@ -248,6 +250,8 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `2 passed (22.5s)`
 - `pnpm exec playwright test e2e/permission-cascade.spec.ts --reporter=line --workers=1`
   - `9 passed (2.3m)`
+- `pnpm exec playwright test e2e/teams.spec.ts --reporter=line --workers=1`
+  - `3 passed (30.5s)`
 - `pnpm exec playwright test e2e/board-drag-drop.spec.ts e2e/time-tracking.spec.ts e2e/search.spec.ts e2e/activity-feed.spec.ts e2e/analytics.spec.ts e2e/integration-workflow.spec.ts --reporter=line --workers=1`
   - `26 passed (9.2m)`
 
