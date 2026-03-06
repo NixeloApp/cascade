@@ -15,7 +15,6 @@
  * - Viewer: e2e-viewer@inbox.mailtrap.io
  */
 
-import { TEST_IDS } from "../src/lib/test-ids";
 import { RBAC_TEST_CONFIG } from "./config";
 import { clientSideNavigate, expect, rbacTest } from "./fixtures";
 
@@ -136,17 +135,6 @@ rbacTest(
     console.log("✓ Editor cannot see settings tab");
 
     // 5. Try to access settings directly - should redirect to board
-    const html = await editorPage.content();
-    console.log("[DEBUG] Editor Page HTML Snapshot:", html);
-
-    // Try multiple selectors
-    const debugEl = editorPage.getByTestId(TEST_IDS.DEBUG.USER_ROLE);
-    if ((await debugEl.count()) > 0) {
-      console.log("[DEBUG] Found via locator:", await debugEl.getAttribute("data-role"));
-    } else {
-      console.log("[DEBUG] Debug element NOT found via locator");
-    }
-
     await clientSideNavigate(editorPage, `/${rbacOrgSlug}/projects/${rbacProjectKey}/settings`);
 
     // Wait for redirect to board
@@ -217,9 +205,6 @@ rbacTest(
     console.log("✓ Viewer cannot see create issue button");
 
     // 4. Verify settings tab is NOT visible
-    const htmlViewer = await viewerPage.content();
-    console.log("[DEBUG] Viewer Page HTML Snapshot:", htmlViewer);
-
     const settingsTab = viewerProjectsPage.getProjectSettingsTab();
     const settingsTabCount = await settingsTab.count();
     expect(settingsTabCount).toBe(0);
