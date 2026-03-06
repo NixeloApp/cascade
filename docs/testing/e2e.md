@@ -72,6 +72,22 @@ Use this checklist for any PR that modifies `e2e/` specs, fixtures, page objects
 - Selectors prioritize semantic roles and test ids over brittle text/CSS-only locators
 - PR includes exact E2E command(s) run and pass/fail/skip outcomes
 
+## Critical Path No-Skip Policy
+
+Critical-path E2E coverage (`auth`, `issues`, `board`, `documents`, `search`) must not be disabled with static skips.
+
+Policy:
+- Do not commit `test.skip(...)` or `test.describe.skip(...)` for critical-path specs.
+- If a test must be gated, use an explicit runtime precondition with a clear reason (for example missing OAuth secrets in local runs), and scope it to non-critical integrations.
+- Treat persistent skips as debt: track them in `todos/e2e-reliability-overhaul.md` with owner + next action.
+
+Audit commands:
+
+```bash
+rg -n "test\\.skip\\(|test\\.describe\\.skip\\(" e2e
+rg -n "test\\.only\\(|test\\.describe\\.only\\(" e2e
+```
+
 ## Selector Hierarchy
 
 Use selectors in this order for new/updated E2E tests:
