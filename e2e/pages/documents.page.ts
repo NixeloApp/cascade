@@ -179,21 +179,25 @@ export class DocumentsPage extends BasePage {
   }
 
   async expectEditorVisible() {
-    // Wait for full document readiness before checking editor hydration state.
-    await this.page.waitForFunction(() => document.readyState === "complete");
+    await expect(async () => {
+      // Wait for full document readiness before checking editor hydration state.
+      await this.page.waitForFunction(() => document.readyState === "complete");
 
-    // Check for React error boundary
-    await this.throwIfAppErrorVisible();
+      // Check for React error boundary
+      await this.throwIfAppErrorVisible();
 
-    // Handle "Initialize Document" empty state if present (for new documents)
-    const initButton = this.page.getByRole("button", { name: /initialize.*document/i });
-    try {
-      await initButton.waitFor({ state: "visible" });
-      await initButton.click();
-    } catch {
-      // Button didn't appear, proceed to check for editor
-    }
-    await expect(this.editor).toBeVisible();
+      // Handle "Initialize Document" empty state if present (for new documents)
+      const initButton = this.page.getByRole("button", { name: /initialize.*document/i });
+      try {
+        await initButton.waitFor({ state: "visible", timeout: 1000 });
+        await initButton.click();
+      } catch {
+        // Button didn't appear, proceed to check for editor
+      }
+
+      await this.throwIfAppErrorVisible();
+      await expect(this.editor).toBeVisible();
+    }).toPass();
   }
 
   private async throwIfAppErrorVisible() {
