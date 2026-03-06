@@ -146,10 +146,7 @@ test.describe("Permission Cascade", () => {
     console.log("✓ Can access project settings as owner");
   });
 
-  test("workspace settings are accessible to workspace members", async ({
-    workspacesPage,
-    page,
-  }) => {
+  test("workspace settings are accessible to workspace members", async ({ workspacesPage }) => {
     const timestamp = Date.now();
     const workspaceName = `Settings WS ${timestamp}`;
 
@@ -157,19 +154,11 @@ test.describe("Permission Cascade", () => {
     await workspacesPage.goto();
     await workspacesPage.createWorkspace(workspaceName);
 
-    // After creation, we should be on the workspace detail page (may be on /teams tab)
-    await expect(page).toHaveURL(/\/workspaces\/[^/]+/);
-
-    // Verify the workspace heading is visible
-    const workspaceHeading = page.getByRole("heading", { name: workspaceName, level: 3 });
-    await expect(workspaceHeading).toBeVisible();
+    await workspacesPage.expectWorkspaceDetailVisible(workspaceName);
     console.log("✓ On workspace detail page");
 
-    // Look for settings link/button in the workspace tabs
-    const settingsLink = page.getByRole("link", { name: /settings/i });
-    if (await settingsLink.isVisible().catch(() => false)) {
-      await settingsLink.click();
-      await expect(page).toHaveURL(/\/workspaces\/.*\/settings/);
+    if (await workspacesPage.isWorkspaceSettingsTabVisible()) {
+      await workspacesPage.openWorkspaceSettings();
       console.log("✓ Workspace settings accessible");
     } else {
       console.log("ℹ Workspace settings link not visible (may require specific role)");
