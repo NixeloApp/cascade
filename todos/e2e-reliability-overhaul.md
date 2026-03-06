@@ -116,7 +116,8 @@ This is the concrete "what's left" list for reliability hardening after the late
    - activity-feed coverage now uses `ProjectsPage` helpers for page-state detection, feed-entry visibility, action text, issue keys, and relative timestamps instead of probing feed internals directly from the spec.
    - invite coverage now uses `SettingsPage` helpers for invite visibility and revoked-state assertions, and `inviteUser()` / `revokeInvite()` both wait on the actual invite table state rather than a toast or a still-mounted form button.
    - documents coverage now uses `DocumentsPage.createNewDocument()` as the completion boundary for URL change plus editor readiness, so touched docs specs no longer duplicate editor hydration assertions after every create step.
-   - next target: move roadmap navigation and timeline/filter assertions behind `ProjectsPage`/page-object helpers so roadmap specs stop mixing direct project-tab clicks with inline page-level control lookups.
+   - roadmap coverage now goes through `ProjectsPage` helpers for route readiness, current-month visibility, and epic-filter state instead of mixing direct tab navigation with inline timeline/filter lookups in the spec body.
+   - next target: move sprint/backlog loaded-state assertions behind `ProjectsPage` helpers so `sprints.spec.ts` stops mixing page-object tab switching with raw page-level heading/button checks.
 2. Selector contract completion:
    - `pnpm run validate` now passes with no `Test ID constants` warnings.
    - continue replacing brittle text/CSS fallbacks opportunistically when modifying critical specs.
@@ -155,6 +156,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `activity-feed.spec.ts` now goes through `ProjectsPage` helpers for empty-vs-entry state, action text, issue-key visibility, and relative timestamps, after moving those assertions out of the spec body showed the feed state could be treated as a single page-object contract.
 - `SettingsPage.openInviteUserModal()` now waits for the invite form controls, `inviteUser()` accepts the invite row as the success signal, and `revokeInvite()` waits for the row status to become `revoked`, after the invite reruns showed the inline card could close before the button-based retry logic realized the action had already succeeded.
 - `DocumentsPage.createNewDocument()` now owns the post-create URL and editor-ready checks, after the docs rerun confirmed the spec no longer needs to reassert editor hydration separately after every new-document action.
+- `roadmap.spec.ts` now relies on `ProjectsPage` for roadmap route readiness, current-month visibility, and epic-filter state, after moving the remaining timeline/filter checks out of the spec body confirmed the route-specific controls can be treated as a single page-object contract.
 
 ## Latest Targeted Hardening Evidence
 
@@ -202,6 +204,8 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `1 passed (20.5s)`
 - `pnpm exec playwright test e2e/documents.spec.ts --reporter=line --workers=1`
   - `4 passed (1.1m)`
+- `pnpm exec playwright test e2e/roadmap.spec.ts --reporter=line --workers=1`
+  - `3 passed (1.6m)`
 - `pnpm exec playwright test e2e/board-drag-drop.spec.ts e2e/time-tracking.spec.ts e2e/search.spec.ts e2e/activity-feed.spec.ts e2e/analytics.spec.ts e2e/integration-workflow.spec.ts --reporter=line --workers=1`
   - `26 passed (9.2m)`
 
