@@ -1,4 +1,3 @@
-import { TEST_IDS } from "../src/lib/test-ids";
 import { expect, authenticatedTest as test } from "./fixtures";
 import { testUserService } from "./utils/test-user-service";
 
@@ -23,7 +22,7 @@ test.describe("Analytics Dashboard", () => {
     if (!seedResult) console.warn("WARNING: Failed to seed templates in test setup");
   });
 
-  test("analytics page displays key metrics", async ({ projectsPage, page }) => {
+  test("analytics page displays key metrics", async ({ projectsPage }) => {
     const timestamp = Date.now();
     const projectKey = `ANLM${timestamp.toString().slice(-4)}`;
 
@@ -35,36 +34,24 @@ test.describe("Analytics Dashboard", () => {
     await projectsPage.waitForBoardInteractive();
 
     // Navigate to analytics tab
-    const projectTabs = page.getByLabel("Tabs");
-    const analyticsTab = projectTabs.getByRole("link", { name: /analytics/i });
-    await expect(analyticsTab).toBeVisible();
-    await analyticsTab.click();
-    await expect(page).toHaveURL(/\/analytics/);
+    await projectsPage.switchToTab("analytics");
     console.log("✓ Navigated to analytics page");
 
-    // Wait for loading to complete — target the analytics heading instead of generic skeleton class
-    await expect(page.getByRole("heading", { name: /analytics dashboard/i })).toBeVisible();
-
     // Verify key metric cards are visible
-    const totalIssuesCard = page.getByText("Total Issues");
-    await expect(totalIssuesCard).toBeVisible();
+    await expect(projectsPage.analyticsTotalIssuesMetric).toBeVisible();
     console.log("✓ Total Issues metric card visible");
 
-    const unassignedCard = page.getByText("Unassigned");
-    await expect(unassignedCard).toBeVisible();
+    await expect(projectsPage.analyticsUnassignedMetric).toBeVisible();
     console.log("✓ Unassigned metric card visible");
 
-    const avgVelocityCard = page.getByText("Avg Velocity");
-    await expect(avgVelocityCard).toBeVisible();
+    await expect(projectsPage.analyticsAvgVelocityMetric).toBeVisible();
     console.log("✓ Avg Velocity metric card visible");
 
-    // Use test ID to avoid matching both the metric card label AND "No completed sprints yet" text
-    const completedSprintsCard = page.getByTestId(TEST_IDS.ANALYTICS.METRIC_COMPLETED_SPRINTS);
-    await expect(completedSprintsCard).toBeVisible();
+    await expect(projectsPage.analyticsCompletedSprintsMetric).toBeVisible();
     console.log("✓ Completed Sprints metric card visible");
   });
 
-  test("analytics page displays chart sections", async ({ projectsPage, page }) => {
+  test("analytics page displays chart sections", async ({ projectsPage }) => {
     const timestamp = Date.now();
     const projectKey = `ANLC${timestamp.toString().slice(-4)}`;
 
@@ -75,41 +62,26 @@ test.describe("Analytics Dashboard", () => {
     await projectsPage.createProject(`Analytics Charts Project ${timestamp}`, projectKey);
     await projectsPage.waitForBoardInteractive();
 
-    // Navigate to analytics - use force click for links
-    const projectTabs = page.getByLabel("Tabs");
-    const analyticsTab = projectTabs.getByRole("link", { name: /analytics/i });
-    await expect(analyticsTab).toBeVisible();
-    await analyticsTab.click();
-    await expect(page).toHaveURL(/\/analytics/);
-
-    // Wait for loading to complete — target analytics heading instead of generic skeleton class
-    await expect(page.getByRole("heading", { name: /analytics dashboard/i })).toBeVisible();
+    await projectsPage.switchToTab("analytics");
 
     // Verify chart cards are visible
-    const statusChart = page.getByText("Issues by Status");
-    await expect(statusChart).toBeVisible();
+    await expect(projectsPage.analyticsIssuesByStatusChart).toBeVisible();
     console.log("✓ Issues by Status chart visible");
 
-    const typeChart = page.getByText("Issues by Type");
-    await expect(typeChart).toBeVisible();
+    await expect(projectsPage.analyticsIssuesByTypeChart).toBeVisible();
     console.log("✓ Issues by Type chart visible");
 
-    const priorityChart = page.getByText("Issues by Priority");
-    await expect(priorityChart).toBeVisible();
+    await expect(projectsPage.analyticsIssuesByPriorityChart).toBeVisible();
     console.log("✓ Issues by Priority chart visible");
 
     // Team Velocity chart - may need to scroll into view
     // Note: ChartCard uses Typography variant="large" which renders <p>, not a heading
-    const velocityChart = page.getByText("Team Velocity (Last 10 Sprints)");
-    await velocityChart.scrollIntoViewIfNeeded();
-    await expect(velocityChart).toBeVisible();
+    await projectsPage.analyticsTeamVelocityChart.scrollIntoViewIfNeeded();
+    await expect(projectsPage.analyticsTeamVelocityChart).toBeVisible();
     console.log("✓ Team Velocity chart visible");
   });
 
-  test("analytics shows correct issue count after creating issues", async ({
-    projectsPage,
-    page,
-  }) => {
+  test("analytics shows correct issue count after creating issues", async ({ projectsPage }) => {
     const timestamp = Date.now();
     const projectKey = `ANLI${timestamp.toString().slice(-4)}`;
 
@@ -129,19 +101,11 @@ test.describe("Analytics Dashboard", () => {
     await expect(projectsPage.createIssueModal).not.toBeVisible();
     console.log("✓ Created 3 issues");
 
-    // Navigate to analytics
-    const projectTabs = page.getByLabel("Tabs");
-    const analyticsTab = projectTabs.getByRole("link", { name: /analytics/i });
-    await analyticsTab.click();
-    await expect(page).toHaveURL(/\/analytics/);
-
-    // Wait for loading to complete — target analytics heading instead of generic skeleton class
-    await expect(page.getByRole("heading", { name: /analytics dashboard/i })).toBeVisible();
+    await projectsPage.switchToTab("analytics");
 
     // Find the Total Issues metric by stable test id and parse the displayed number.
-    const totalIssuesCard = page.getByTestId(TEST_IDS.ANALYTICS.METRIC_TOTAL_ISSUES);
-    await expect(totalIssuesCard).toBeVisible();
-    const valueText = (await totalIssuesCard.textContent()) ?? "";
+    await expect(projectsPage.analyticsTotalIssuesMetric).toBeVisible();
+    const valueText = (await projectsPage.analyticsTotalIssuesMetric.textContent()) ?? "";
     const issueCount = Number.parseInt(valueText.match(/\d+/)?.[0] ?? "0", 10);
     expect(issueCount).toBeGreaterThanOrEqual(3);
     console.log(`✓ Total Issues count (${issueCount}) reflects created issues`);
@@ -149,7 +113,6 @@ test.describe("Analytics Dashboard", () => {
 
   test("analytics shows 'No completed sprints yet' when no sprints completed", async ({
     projectsPage,
-    page,
   }) => {
     const timestamp = Date.now();
     const projectKey = `ANLS${timestamp.toString().slice(-4)}`;
@@ -161,22 +124,14 @@ test.describe("Analytics Dashboard", () => {
     await projectsPage.createProject(`Analytics Sprints Project ${timestamp}`, projectKey);
     await projectsPage.waitForBoardInteractive();
 
-    // Navigate to analytics
-    const projectTabs = page.getByLabel("Tabs");
-    const analyticsTab = projectTabs.getByRole("link", { name: /analytics/i });
-    await analyticsTab.click();
-    await expect(page).toHaveURL(/\/analytics/);
-
-    // Wait for loading to complete — target analytics heading instead of generic skeleton class
-    await expect(page.getByRole("heading", { name: /analytics dashboard/i })).toBeVisible();
+    await projectsPage.switchToTab("analytics");
 
     // Verify "No completed sprints yet" message in velocity chart
-    const noSprintsMessage = page.getByText("No completed sprints yet");
-    await expect(noSprintsMessage).toBeVisible();
+    await expect(projectsPage.analyticsNoCompletedSprintsMessage).toBeVisible();
     console.log("✓ 'No completed sprints yet' message displayed");
   });
 
-  test("analytics page header and description are visible", async ({ projectsPage, page }) => {
+  test("analytics page header and description are visible", async ({ projectsPage }) => {
     const timestamp = Date.now();
     const projectKey = `ANLH${timestamp.toString().slice(-4)}`;
 
@@ -187,23 +142,14 @@ test.describe("Analytics Dashboard", () => {
     await projectsPage.createProject(`Analytics Header Project ${timestamp}`, projectKey);
     await projectsPage.waitForBoardInteractive();
 
-    // Navigate to analytics
-    const projectTabs = page.getByLabel("Tabs");
-    const analyticsTab = projectTabs.getByRole("link", { name: /analytics/i });
-    await analyticsTab.click();
-    await expect(page).toHaveURL(/\/analytics/);
-
-    // Wait for loading to complete — target analytics heading instead of generic skeleton class
-    await expect(page.getByRole("heading", { name: /analytics dashboard/i })).toBeVisible();
+    await projectsPage.switchToTab("analytics");
 
     // Verify page header
-    const pageHeader = page.getByRole("heading", { name: /analytics dashboard/i });
-    await expect(pageHeader).toBeVisible();
+    await expect(projectsPage.analyticsPageHeader).toBeVisible();
     console.log("✓ Analytics Dashboard header visible");
 
     // Verify page description
-    const pageDescription = page.getByText(/project insights.*velocity.*metrics/i);
-    await expect(pageDescription).toBeVisible();
+    await expect(projectsPage.analyticsPageDescription).toBeVisible();
     console.log("✓ Page description visible");
   });
 });

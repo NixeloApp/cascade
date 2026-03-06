@@ -62,6 +62,7 @@ export class ProjectsPage extends BasePage {
   // ===================
   // Locators - Project Tabs
   // ===================
+  readonly projectTabs: Locator;
   readonly boardTab: Locator;
   readonly backlogTab: Locator;
   readonly sprintsTab: Locator;
@@ -76,6 +77,21 @@ export class ProjectsPage extends BasePage {
   readonly activityFeed: Locator;
   readonly activityEmptyState: Locator;
   readonly activityEntries: Locator;
+
+  // ===================
+  // Locators - Analytics
+  // ===================
+  readonly analyticsPageHeader: Locator;
+  readonly analyticsPageDescription: Locator;
+  readonly analyticsTotalIssuesMetric: Locator;
+  readonly analyticsUnassignedMetric: Locator;
+  readonly analyticsAvgVelocityMetric: Locator;
+  readonly analyticsCompletedSprintsMetric: Locator;
+  readonly analyticsIssuesByStatusChart: Locator;
+  readonly analyticsIssuesByTypeChart: Locator;
+  readonly analyticsIssuesByPriorityChart: Locator;
+  readonly analyticsTeamVelocityChart: Locator;
+  readonly analyticsNoCompletedSprintsMessage: Locator;
 
   // ===================
   // Locators - Issue Detail Dialog
@@ -154,19 +170,35 @@ export class ProjectsPage extends BasePage {
       .getByRole("button", { name: /^create issue$/i })
       .or(this.createIssueModal.locator('button[type="submit"]'));
 
-    // Project tabs - rendered as links in route.tsx
-    this.boardTab = page.getByRole("link", { name: /^Board$/ });
-    this.backlogTab = page.getByRole("link", { name: /^Backlog$/ });
-    this.sprintsTab = page.getByRole("link", { name: /^Sprints$/ });
-    this.activityTab = page.getByRole("link", { name: /^Activity$/ });
-    this.analyticsTab = page.getByRole("link", { name: /^Analytics$/ });
-    this.settingsTab = page.getByRole("link", { name: /^Settings$/ });
+    // Project tabs - scope to the project tab strip to avoid collisions with global nav links.
+    this.projectTabs = page.getByRole("navigation", { name: "Tabs" }).or(page.getByLabel("Tabs"));
+    this.boardTab = this.projectTabs.getByRole("link", { name: /^Board$/ });
+    this.backlogTab = this.projectTabs.getByRole("link", { name: /^Backlog$/ });
+    this.sprintsTab = this.projectTabs.getByRole("link", { name: /^Sprints$/ });
+    this.activityTab = this.projectTabs.getByRole("link", { name: /^Activity$/ });
+    this.analyticsTab = this.projectTabs.getByRole("link", { name: /^Analytics$/ });
+    this.settingsTab = this.projectTabs.getByRole("link", { name: /^Settings$/ });
 
     // Activity feed
     this.activityPageHeader = page.getByRole("heading", { name: /project activity/i });
     this.activityFeed = page.getByTestId(TEST_IDS.ACTIVITY.FEED);
     this.activityEmptyState = page.getByTestId(TEST_IDS.ACTIVITY.EMPTY_STATE);
     this.activityEntries = this.activityFeed.getByTestId(TEST_IDS.ACTIVITY.ENTRY);
+
+    // Analytics
+    this.analyticsPageHeader = page.getByRole("heading", { name: /analytics dashboard/i });
+    this.analyticsPageDescription = page.getByText(/project insights.*velocity.*metrics/i);
+    this.analyticsTotalIssuesMetric = page.getByTestId(TEST_IDS.ANALYTICS.METRIC_TOTAL_ISSUES);
+    this.analyticsUnassignedMetric = page.getByTestId(TEST_IDS.ANALYTICS.METRIC_UNASSIGNED);
+    this.analyticsAvgVelocityMetric = page.getByTestId(TEST_IDS.ANALYTICS.METRIC_AVG_VELOCITY);
+    this.analyticsCompletedSprintsMetric = page.getByTestId(
+      TEST_IDS.ANALYTICS.METRIC_COMPLETED_SPRINTS,
+    );
+    this.analyticsIssuesByStatusChart = page.getByText("Issues by Status");
+    this.analyticsIssuesByTypeChart = page.getByText("Issues by Type");
+    this.analyticsIssuesByPriorityChart = page.getByText("Issues by Priority");
+    this.analyticsTeamVelocityChart = page.getByText("Team Velocity (Last 10 Sprints)");
+    this.analyticsNoCompletedSprintsMessage = page.getByText("No completed sprints yet");
     // Issue detail dialog
     // Issue detail dialog - distinct from Create Issue modal
     this.issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
@@ -180,10 +212,7 @@ export class ProjectsPage extends BasePage {
    * Scoped to "main" to avoid confusing it with global settings or sidebar items
    */
   getProjectSettingsTab() {
-    // Robust selector: match either the navigation link (sidebar/topbar) or the tab  getProjectSettingsTab() {
-    return this.page
-      .getByRole("navigation", { name: "Tabs" })
-      .getByRole("link", { name: "Settings" });
+    return this.projectTabs.getByRole("link", { name: "Settings" });
   }
 
   // ===================
@@ -255,16 +284,24 @@ export class ProjectsPage extends BasePage {
         await this.projectDescriptionInput.fill(description);
       }
 
-      // Create project - use evaluate to ensure React event handler fires
-      await this.createButton.waitFor({ state: "visible" });
-      await expect(this.createButton).toBeEnabled();
-      await this.createButton.evaluate((btn: HTMLButtonElement) => btn.click());
+      // Create project and tolerate occasional missed clicks or slower route transitions.
+      await expect(async () => {
+        if (/\/projects\/[A-Z0-9-]+\/board/.test(this.page.url())) {
+          return;
+        }
 
-      // Wait for navigation to the new project's board page
-      // The app redirects to /projects/[KEY]/board after creation
-      // URL change is the reliable, event-driven indicator that creation succeeded
-      // No hardcoded timeouts - Playwright's default actionability timeout handles slow backends
-      await this.page.waitForURL(/\/projects\/[A-Z0-9-]+\/board/);
+        await this.createButton.waitFor({ state: "visible" });
+        await expect(this.createButton).toBeEnabled();
+
+        try {
+          await this.createButton.click();
+        } catch {
+          await this.createButton.dispatchEvent("click");
+        }
+
+        // The app redirects to /projects/[KEY]/board after creation.
+        await this.page.waitForURL(/\/projects\/[A-Z0-9-]+\/board/, { timeout: 5000 });
+      }).toPass({ timeout: 30000, intervals: [1000] });
 
       // Wait for board to be fully interactive before returning
       await this.waitForBoardInteractive();
@@ -359,7 +396,7 @@ export class ProjectsPage extends BasePage {
 
     // Ensure the tab is actually clickable before attempting to click
     // Add a check for navigation container to ensure hydration is complete
-    await expect(this.page.getByRole("navigation", { name: "Tabs" })).toBeVisible();
+    await expect(this.projectTabs).toBeVisible();
     await expect(tabLocator).toBeEnabled();
 
     await tabLocator.click();
@@ -383,6 +420,12 @@ export class ProjectsPage extends BasePage {
     if (tab === "activity") {
       await expect(this.activityPageHeader).toBeVisible();
       await expect(this.activityEmptyState.or(this.activityFeed)).toBeVisible();
+      return;
+    }
+
+    if (tab === "analytics") {
+      await expect(this.analyticsPageHeader).toBeVisible();
+      await expect(this.analyticsTotalIssuesMetric).toBeVisible();
     }
   }
 
