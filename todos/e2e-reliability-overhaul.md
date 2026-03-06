@@ -119,7 +119,8 @@ This is the concrete "what's left" list for reliability hardening after the late
    - roadmap coverage now goes through `ProjectsPage` helpers for route readiness, current-month visibility, and epic-filter state instead of mixing direct tab navigation with inline timeline/filter lookups in the spec body.
    - sprint/backlog coverage now goes through `ProjectsPage` helpers for route-specific ready state, so `sprints.spec.ts` no longer mixes page-object tab switching with raw page-level heading/button assertions.
    - analytics coverage now goes through `ProjectsPage` helpers for route readiness, metric/chart visibility, total-issue count parsing, and empty-sprint messaging instead of reasserting those same sections from the spec body.
-   - next target: align `rbac.spec.ts` with `ProjectsPage` helpers for project-tab availability and route-specific readiness so role checks stop mixing raw `page.getByRole()` tab lookups with inline analytics/sprint assertions.
+   - RBAC coverage now goes through `ProjectsPage` helpers for project-tab visibility and route-specific readiness, so role checks no longer mix raw `page.getByRole()` tab lookups with inline settings/sprint/analytics assertions.
+   - next target: align `permission-cascade.spec.ts` with `ProjectsPage` helpers for owner-only project-settings access so the settings-permission check stops clicking raw tab locators and duplicating route readiness assertions.
 2. Selector contract completion:
    - `pnpm run validate` now passes with no `Test ID constants` warnings.
    - continue replacing brittle text/CSS fallbacks opportunistically when modifying critical specs.
@@ -161,6 +162,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `roadmap.spec.ts` now relies on `ProjectsPage` for roadmap route readiness, current-month visibility, and epic-filter state, after moving the remaining timeline/filter checks out of the spec body confirmed the route-specific controls can be treated as a single page-object contract.
 - `switchToTab("sprints")` and `switchToTab("backlog")` now finish on `ProjectsPage` route-specific ready checks, after the dedicated rerun confirmed `sprints.spec.ts` no longer needs raw heading/button assertions to prove the sprint manager and backlog board finished loading.
 - `analytics.spec.ts` now relies on `ProjectsPage` for analytics route readiness, metric/chart visibility, total-issue parsing, and empty-sprint messaging, after the targeted rerun confirmed the dashboard-specific loaded sections can be asserted as page-object contracts instead of repeated spec-local checks.
+- `rbac.spec.ts` now relies on `ProjectsPage` for project-tab visibility plus settings/sprints/analytics readiness, after the targeted rerun confirmed the role-permission checks can reuse the same project navigation contracts as the regular project-flow specs.
 
 ## Latest Targeted Hardening Evidence
 
@@ -169,7 +171,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `pnpm exec playwright test e2e/onboarding.spec.ts --reporter=line --workers=1`
   - `7 passed (1.5m)`
 - `pnpm exec playwright test e2e/rbac.spec.ts --reporter=line --workers=1`
-  - `3 passed (27.6s)`
+  - `3 passed (24.9s)`
 - `pnpm exec playwright test e2e/issues.spec.ts e2e/issue-detail-page.spec.ts --reporter=line --workers=1`
   - superseded by the dedicated issue-edit runs below
 - `pnpm exec playwright test e2e/issues.spec.ts --reporter=line --workers=1`

@@ -52,13 +52,12 @@ rbacTest(
     console.log("✓ Admin can see settings tab");
 
     // 5. Navigate to settings and verify access
-    // Use UI navigation (click tab) instead of goto URL to act more like a real user
-    await settingsTab.click();
+    // Use the shared project-tab navigation contract instead of spec-local tab clicks.
+    await adminProjectsPage.switchToTab("settings");
 
     // Verify we actually reached the settings page
     try {
-      await expect(adminPage).toHaveURL(/.*\/settings/);
-      await expect(adminPage.getByRole("heading", { name: /project settings/i })).toBeVisible();
+      await adminProjectsPage.expectProjectSettingsLoaded();
       console.log("✓ Admin can access project settings page");
     } catch (e) {
       console.log(`❌ Admin Settings Navigation Failed. Current URL: ${adminPage.url()}`);
@@ -71,34 +70,18 @@ rbacTest(
     // 6. Navigate back to board and check sprints
     await clientSideNavigate(adminPage, `/${rbacOrgSlug}/projects/${rbacProjectKey}/board`);
 
-    const sprintsTab = adminPage
-      .getByRole("tab", { name: /sprint/i })
-      .or(adminPage.getByRole("link", { name: /sprint/i }));
-
-    const sprintsTabCount = await sprintsTab.count();
-    if (sprintsTabCount > 0) {
-      await sprintsTab.click();
-
-      const createSprintButton = adminPage.getByRole("button", {
-        name: /create sprint|new sprint/i,
-      });
-      await expect(createSprintButton).toBeVisible();
+    if (await adminProjectsPage.isProjectTabVisible("sprints")) {
+      await adminProjectsPage.switchToTab("sprints");
+      await adminProjectsPage.expectCreateSprintVisible();
       console.log("✓ Admin can access sprints and create sprint button");
     } else {
       console.log("⚠ Sprints tab not present (project may not support sprints)");
     }
 
     // 7. Check analytics access
-    const analyticsTab = adminPage
-      .getByRole("tab", { name: /analytics/i })
-      .or(adminPage.getByRole("link", { name: /analytics/i }));
-
-    const analyticsTabCount = await analyticsTab.count();
-    if (analyticsTabCount > 0) {
-      await analyticsTab.click();
-
-      const analyticsContent = adminPage.getByText(/overview|metrics|velocity/i);
-      await expect(analyticsContent.first()).toBeVisible();
+    if (await adminProjectsPage.isProjectTabVisible("analytics")) {
+      await adminProjectsPage.switchToTab("analytics");
+      await adminProjectsPage.expectAnalyticsLoaded();
       console.log("✓ Admin can view analytics");
     } else {
       console.log("⚠ Analytics tab not present (feature may be disabled)");
@@ -129,9 +112,8 @@ rbacTest(
     console.log("✓ Editor can see create issue button");
 
     // 4. Verify settings tab is NOT visible
-    const settingsTab = editorProjectsPage.getProjectSettingsTab();
-    const settingsTabCount = await settingsTab.count();
-    expect(settingsTabCount).toBe(0);
+    const hasSettingsTab = await editorProjectsPage.isProjectTabVisible("settings");
+    expect(hasSettingsTab).toBe(false);
     console.log("✓ Editor cannot see settings tab");
 
     // 5. Try to access settings directly - should redirect to board
@@ -144,34 +126,18 @@ rbacTest(
     console.log("✓ Editor is redirected from settings to board");
 
     // 6. Check sprints access (already on board page after redirect)
-    const sprintsTab = editorPage
-      .getByRole("tab", { name: /sprint/i })
-      .or(editorPage.getByRole("link", { name: /sprint/i }));
-
-    const sprintsTabCount = await sprintsTab.count();
-    if (sprintsTabCount > 0) {
-      await sprintsTab.click();
-
-      const createSprintButton = editorPage.getByRole("button", {
-        name: /create sprint|new sprint/i,
-      });
-      await expect(createSprintButton).toBeVisible();
+    if (await editorProjectsPage.isProjectTabVisible("sprints")) {
+      await editorProjectsPage.switchToTab("sprints");
+      await editorProjectsPage.expectCreateSprintVisible();
       console.log("✓ Editor can access sprints and create sprint button");
     } else {
       console.log("⚠ Sprints tab not present (project may not support sprints)");
     }
 
     // 7. Check analytics access
-    const analyticsTab = editorPage
-      .getByRole("tab", { name: /analytics/i })
-      .or(editorPage.getByRole("link", { name: /analytics/i }));
-
-    const analyticsTabCount = await analyticsTab.count();
-    if (analyticsTabCount > 0) {
-      await analyticsTab.click();
-
-      const analyticsContent = editorPage.getByText(/overview|metrics|velocity/i);
-      await expect(analyticsContent.first()).toBeVisible();
+    if (await editorProjectsPage.isProjectTabVisible("analytics")) {
+      await editorProjectsPage.switchToTab("analytics");
+      await editorProjectsPage.expectAnalyticsLoaded();
       console.log("✓ Editor can view analytics");
     } else {
       console.log("⚠ Analytics tab not present (feature may be disabled)");
@@ -205,9 +171,8 @@ rbacTest(
     console.log("✓ Viewer cannot see create issue button");
 
     // 4. Verify settings tab is NOT visible
-    const settingsTab = viewerProjectsPage.getProjectSettingsTab();
-    const settingsTabCount = await settingsTab.count();
-    expect(settingsTabCount).toBe(0);
+    const hasSettingsTab = await viewerProjectsPage.isProjectTabVisible("settings");
+    expect(hasSettingsTab).toBe(false);
     console.log("✓ Viewer cannot see settings tab");
 
     // 5. Try to access settings directly - should redirect to board
@@ -220,16 +185,9 @@ rbacTest(
     console.log("✓ Viewer is redirected from settings to board");
 
     // 6. Check analytics access (viewers can view analytics - already on board page after redirect)
-    const analyticsTab = viewerPage
-      .getByRole("tab", { name: /analytics/i })
-      .or(viewerPage.getByRole("link", { name: /analytics/i }));
-
-    const analyticsTabCount = await analyticsTab.count();
-    if (analyticsTabCount > 0) {
-      await analyticsTab.click();
-
-      const analyticsContent = viewerPage.getByText(/overview|metrics|velocity/i);
-      await expect(analyticsContent.first()).toBeVisible();
+    if (await viewerProjectsPage.isProjectTabVisible("analytics")) {
+      await viewerProjectsPage.switchToTab("analytics");
+      await viewerProjectsPage.expectAnalyticsLoaded();
       console.log("✓ Viewer can view analytics");
     } else {
       console.log("⚠ Analytics tab not present (feature may be disabled)");

@@ -101,6 +101,7 @@ export class ProjectsPage extends BasePage {
   readonly analyticsNoCompletedSprintsMessage: Locator;
   readonly roadmapViewToggle: Locator;
   readonly roadmapEpicFilter: Locator;
+  readonly projectSettingsHeader: Locator;
 
   // ===================
   // Locators - Issue Detail Dialog
@@ -220,6 +221,7 @@ export class ProjectsPage extends BasePage {
     this.analyticsNoCompletedSprintsMessage = page.getByText("No completed sprints yet");
     this.roadmapViewToggle = page.getByRole("group").filter({ hasText: /months|weeks/i });
     this.roadmapEpicFilter = page.getByRole("combobox").filter({ hasText: /epic|all/i });
+    this.projectSettingsHeader = page.getByRole("heading", { name: /project settings/i });
     // Issue detail dialog
     // Issue detail dialog - distinct from Create Issue modal
     this.issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
@@ -246,6 +248,22 @@ export class ProjectsPage extends BasePage {
    */
   getProjectSettingsTab() {
     return this.projectTabs.getByRole("link", { name: "Settings" });
+  }
+
+  getProjectTab(
+    tab: "board" | "backlog" | "roadmap" | "sprints" | "activity" | "analytics" | "settings",
+  ) {
+    const tabs = {
+      board: this.boardTab,
+      backlog: this.backlogTab,
+      roadmap: this.roadmapTab,
+      sprints: this.sprintsTab,
+      activity: this.activityTab,
+      analytics: this.analyticsTab,
+      settings: this.settingsTab,
+    };
+
+    return tabs[tab];
   }
 
   // ===================
@@ -438,17 +456,7 @@ export class ProjectsPage extends BasePage {
   async switchToTab(
     tab: "board" | "backlog" | "roadmap" | "sprints" | "activity" | "analytics" | "settings",
   ) {
-    const tabs = {
-      board: this.boardTab,
-      backlog: this.backlogTab,
-      roadmap: this.roadmapTab,
-      sprints: this.sprintsTab,
-      activity: this.activityTab,
-      analytics: this.analyticsTab,
-      settings: this.settingsTab,
-    };
-
-    const tabLocator = tabs[tab];
+    const tabLocator = this.getProjectTab(tab);
 
     // Wait for tab to be available - handle potential loading states or animations
     await expect(tabLocator).toBeVisible();
@@ -500,7 +508,20 @@ export class ProjectsPage extends BasePage {
 
     if (tab === "analytics") {
       await this.expectAnalyticsLoaded();
+      return;
     }
+
+    if (tab === "settings") {
+      await this.expectProjectSettingsLoaded();
+    }
+  }
+
+  async isProjectTabVisible(
+    tab: "board" | "backlog" | "roadmap" | "sprints" | "activity" | "analytics" | "settings",
+  ) {
+    return this.getProjectTab(tab)
+      .isVisible()
+      .catch(() => false);
   }
 
   async expectAnalyticsLoaded() {
@@ -539,6 +560,11 @@ export class ProjectsPage extends BasePage {
   async expectAnalyticsHeaderAndDescriptionVisible() {
     await this.expectAnalyticsLoaded();
     await expect(this.analyticsPageDescription).toBeVisible();
+  }
+
+  async expectProjectSettingsLoaded() {
+    await expect(this.page).toHaveURL(/\/settings(?:[/?#]|$)/);
+    await expect(this.projectSettingsHeader).toBeVisible();
   }
 
   async expectBacklogLoaded() {
