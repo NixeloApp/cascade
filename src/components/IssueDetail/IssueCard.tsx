@@ -304,6 +304,7 @@ export const IssueCard = memo(function IssueCard({
             {canEdit && !selectionMode && (
               <div
                 ref={dragHandleRef}
+                data-testid={TEST_IDS.ISSUE.DRAG_HANDLE}
                 className="cursor-grab active:cursor-grabbing pointer-events-auto"
               >
                 <GripVertical

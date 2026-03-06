@@ -65,7 +65,7 @@ test.describe("Issues", () => {
   });
 
   test.describe("Issue Detail", () => {
-    test("can open issue detail dialog", async ({ projectsPage, page }) => {
+    test("can open issue detail dialog", async ({ projectsPage }) => {
       // Create project first
       const uniqueId = Date.now().toString();
       const projectKey = `PROJ${uniqueId.slice(-4)}`;
@@ -83,10 +83,6 @@ test.describe("Issues", () => {
       // Create a project (waits for board to be interactive)
       await projectsPage.createProject(`Project ${uniqueId}`, projectKey);
 
-      // Verify we're on the board page before proceeding
-      await expect(page).toHaveURL(/\/projects\/.*\/board/);
-      console.log(`✓ On board page: ${page.url()}`);
-
       // Create an issue
       await projectsPage.createIssue(issueTitle);
       await expect(projectsPage.createIssueModal).not.toBeVisible();
@@ -102,7 +98,7 @@ test.describe("Issues", () => {
       await expect(projectsPage.issueDetailDialog).toBeVisible();
     });
 
-    test("issue detail shows timer controls", async ({ projectsPage, page }) => {
+    test("issue detail shows timer controls", async ({ projectsPage }) => {
       // Create project first
       const uniqueId = Date.now().toString();
       const projectKey = `PROJ${uniqueId.slice(-4)}`;
@@ -119,10 +115,6 @@ test.describe("Issues", () => {
 
       // Create a project (waits for board to be interactive)
       await projectsPage.createProject(`Project ${uniqueId}`, projectKey);
-
-      // Verify we're on the board page before proceeding
-      await expect(page).toHaveURL(/\/projects\/.*\/board/);
-      console.log(`✓ On board page: ${page.url()}`);
 
       // Create an issue
       await projectsPage.createIssue(issueTitle);

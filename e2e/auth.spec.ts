@@ -1,4 +1,3 @@
-import { TEST_IDS } from "../src/lib/test-ids";
 import { TEST_USERS } from "./config";
 import { expect, test } from "./fixtures";
 import { trySignInUser } from "./utils/auth-helpers";
@@ -135,7 +134,7 @@ test.describe("Integration", () => {
     await authPage.expectVerificationForm();
   });
 
-  test("can complete email verification", async ({ authPage, page }) => {
+  test("can complete email verification", async ({ authPage }) => {
     const testEmail = getTestEmailAddress("verify-test");
     await authPage.gotoSignUp();
 
@@ -152,47 +151,14 @@ test.describe("Integration", () => {
     console.log(`[Test] Entering OTP: ${otp}`);
     await authPage.verifyEmail(otp);
 
-    // Wait for success toast indicating verification completed
-    // The success toast shows before navigation
-    const successToast = page
-      .locator("[data-sonner-toast]")
-      .filter({ hasText: /verified|success/i });
-    const errorToast = page.locator("[data-sonner-toast][data-type='error']");
-
-    // Wait for either success toast or error toast to appear
-    const toastResult = await Promise.race([
-      successToast.waitFor({ state: "visible", timeout: 10000 }).then(() => "success" as const),
-      errorToast.waitFor({ state: "visible", timeout: 10000 }).then(() => "error" as const),
-    ]).catch(() => "timeout" as const);
-
-    if (toastResult === "error") {
-      const errorText = await errorToast.textContent();
-      console.log(`[Test] Error toast visible: ${errorText}`);
-      throw new Error(`Verification failed with error: ${errorText}`);
-    }
-
+    const toastResult = await authPage.waitForToastOutcome(/verified|success/i);
     if (toastResult === "timeout") {
       console.log("[Test] No toast appeared within timeout, proceeding to check navigation...");
     } else {
       console.log("[Test] Success toast appeared");
     }
 
-    // Check current URL
-    console.log(`[Test] Current URL after verify: ${page.url()}`);
-
-    // If we're on the landing page, it means auth state wasn't ready
-    // Navigate to app gateway to trigger proper auth check
-    if (page.url().endsWith("/") || page.url().endsWith("localhost:5555")) {
-      await page.goto(ROUTES.app.build());
-    }
-
-    // Should redirect to dashboard or onboarding
-    await expect(
-      page
-        .getByRole("heading", { name: /welcome to nixelo/i })
-        .or(page.getByRole("link", { name: /dashboard/i }))
-        .or(page.locator('[data-sidebar="sidebar"]')), // Sidebar indicates we're in the app
-    ).toBeVisible();
+    await authPage.expectAuthenticatedApp({ recoverFromLanding: true });
   });
 
   test("can sign in with existing user and lands on dashboard", async ({
@@ -207,11 +173,6 @@ test.describe("Integration", () => {
 
     // Sign in with existing user
     await authPage.signIn(email, password);
-
-    const appShell = page
-      .getByTestId(TEST_IDS.HEADER.USER_MENU_BUTTON)
-      .or(page.locator('[data-sidebar="sidebar"]'))
-      .or(page.getByRole("heading", { name: /welcome to nixelo/i }));
 
     // If we are still on landing page or signin page after a short wait, force navigation to app.
     const isStuck = () => {
@@ -233,7 +194,10 @@ test.describe("Integration", () => {
     }
 
     // Retry UI sign-in once if first attempt does not reach authenticated shell.
-    const shellVisible = await appShell.isVisible({ timeout: 10000 }).catch(() => false);
+    const shellVisible = await authPage
+      .expectAuthenticatedApp()
+      .then(() => true)
+      .catch(() => false);
 
     if (!shellVisible) {
       console.log(
@@ -248,11 +212,7 @@ test.describe("Integration", () => {
       });
     }
 
-    await expect
-      .poll(() => new URL(page.url()).pathname, { timeout: 30000 })
-      .toMatch(/^\/([^/]+\/dashboard|onboarding)$/);
-
-    await expect(appShell.or(page.locator("body"))).toBeVisible({ timeout: 30000 });
+    await authPage.expectAuthenticatedApp({ recoverFromLanding: true });
     console.log("[Test] Successfully signed in and landed on dashboard");
   });
 
@@ -288,11 +248,6 @@ test.describe("Integration", () => {
 
     // Request password reset
     await authPage.requestPasswordReset(testEmail);
-    const resetTriggered = await testUserService.requestPasswordReset(testEmail);
-    expect(resetTriggered).toBe(true);
-
-    // Wait for reset code form to appear
-    await authPage.expectResetCodeForm();
     console.log("[Test] Reset code form appeared");
 
     // Get the reset code from backend
@@ -303,10 +258,9 @@ test.describe("Integration", () => {
     await authPage.completePasswordReset(resetCode, newPassword);
 
     // Wait for success indication (toast or redirect to sign in)
-    const successToast = page.locator("[data-sonner-toast]").filter({ hasText: /reset|success/i });
-    const signInForm = authPage.signInHeading;
-
-    await expect(successToast.or(signInForm)).toBeVisible();
+    await expect(
+      authPage.getSuccessToast(/reset|success/i).or(authPage.signInHeading),
+    ).toBeVisible();
     console.log("[Test] Password reset completed");
 
     // Verify the new password works via deterministic API login.

@@ -124,8 +124,8 @@ export class ProjectsPage extends BasePage {
     this.projectBoard = page
       .locator("[data-project-board]")
       .or(page.getByRole("heading", { name: /kanban board|scrum board/i }));
-    this.boardColumns = page.locator("[data-board-column]").or(page.locator(".kanban-column"));
-    this.issueCards = page.locator("[data-issue-card]").or(page.locator(".issue-card"));
+    this.boardColumns = page.getByTestId(TEST_IDS.BOARD.COLUMN);
+    this.issueCards = page.getByTestId(TEST_IDS.ISSUE.CARD);
     // Create issue - look for "Add issue" button (column headers have "Add issue to X")
     this.createIssueButton = page.getByRole("button", { name: /add issue/i }).first();
 
@@ -345,8 +345,21 @@ export class ProjectsPage extends BasePage {
     await expect(this.page.getByRole("navigation", { name: "Tabs" })).toBeVisible();
     await expect(tabLocator).toBeEnabled();
 
-    // Use force click to ensure we hit it even if animations are playing
     await tabLocator.click();
+
+    const tabPaths = {
+      board: /\/board(?:[/?#]|$)/,
+      backlog: /\/backlog(?:[/?#]|$)/,
+      sprints: /\/sprints(?:[/?#]|$)/,
+      analytics: /\/analytics(?:[/?#]|$)/,
+      settings: /\/settings(?:[/?#]|$)/,
+    };
+
+    await expect(this.page).toHaveURL(tabPaths[tab]);
+
+    if (tab === "board") {
+      await this.waitForBoardInteractive();
+    }
   }
 
   /**
@@ -359,6 +372,22 @@ export class ProjectsPage extends BasePage {
     // Escape regex characters to prevent matching errors
     const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     return this.page.getByRole("button", { name: new RegExp(escaped) });
+  }
+
+  getIssueCardContainer(title: string) {
+    return this.page
+      .getByTestId(TEST_IDS.ISSUE.CARD)
+      .filter({ has: this.getIssueCard(title) })
+      .first();
+  }
+
+  getIssueDragHandle(title: string) {
+    return this.getIssueCardContainer(title).getByTestId(TEST_IDS.ISSUE.DRAG_HANDLE);
+  }
+
+  getBoardColumn(name: string | RegExp) {
+    const namePattern = typeof name === "string" ? new RegExp(`^${name}$`, "i") : name;
+    return this.boardColumns.filter({ has: this.page.getByText(namePattern) }).first();
   }
 
   /**

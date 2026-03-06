@@ -22,6 +22,8 @@ export const TEST_IDS = {
     /** @see src/components/IssueCard.tsx */
     CARD: "issue-card",
     /** @see src/components/IssueCard.tsx */
+    DRAG_HANDLE: "issue-drag-handle",
+    /** @see src/components/IssueCard.tsx */
     TITLE: "issue-title",
     /** @see src/components/IssueCard.tsx */
     KEY: "issue-key",
@@ -91,9 +93,23 @@ export const TEST_IDS = {
     /** @see src/components/GlobalSearch.tsx */
     MODAL: "search-modal",
     /** @see src/components/GlobalSearch.tsx */
+    INPUT: "search-input",
+    /** @see src/components/GlobalSearch.tsx */
+    RESULTS_GROUP: "search-results-group",
+    /** @see src/components/GlobalSearch.tsx */
     RESULT_ITEM: "search-result-item",
     /** @see src/components/GlobalSearch.tsx */
     RESULT_TYPE: "search-result-type",
+    /** @see src/components/GlobalSearch.tsx */
+    LOADING_STATE: "search-loading-state",
+    /** @see src/components/GlobalSearch.tsx */
+    MIN_QUERY_MESSAGE: "search-min-query-message",
+    /** @see src/components/GlobalSearch.tsx */
+    TAB_ALL: "search-tab-all",
+    /** @see src/components/GlobalSearch.tsx */
+    TAB_ISSUES: "search-tab-issues",
+    /** @see src/components/GlobalSearch.tsx */
+    TAB_DOCUMENTS: "search-tab-documents",
   },
 
   // ============================================================
@@ -124,6 +140,16 @@ export const TEST_IDS = {
     FORM: "auth-form",
     /** @see src/components/auth/GoogleAuthButton.tsx */
     GOOGLE_BUTTON: "auth-google-button",
+    /** @see src/components/Auth/EmailVerificationForm.tsx */
+    VERIFICATION_CODE_INPUT: "auth-verification-code-input",
+    /** @see src/components/Auth/EmailVerificationForm.tsx */
+    VERIFICATION_SUBMIT_BUTTON: "auth-verification-submit-button",
+    /** @see src/components/Auth/ResetPasswordForm.tsx */
+    RESET_CODE_INPUT: "auth-reset-code-input",
+    /** @see src/components/Auth/ResetPasswordForm.tsx */
+    RESET_PASSWORD_INPUT: "auth-reset-password-input",
+    /** @see src/components/Auth/ResetPasswordForm.tsx */
+    RESET_SUBMIT_BUTTON: "auth-reset-submit-button",
   },
 
   // ============================================================
@@ -261,8 +287,10 @@ export const TEST_IDS = {
   DOCUMENT: {
     /** @see src/components/DocumentsList.tsx */
     CARD: "document-card",
-    /** @see src/components/DocumentHeader.tsx */
+    /** @see src/components/Documents/DocumentHeader.tsx */
     TITLE: "document-title",
+    /** @see src/components/Documents/DocumentHeader.tsx */
+    TITLE_INPUT: "document-title-input",
   },
 
   // ============================================================

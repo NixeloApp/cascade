@@ -118,7 +118,12 @@ function SearchListContent({
 }) {
   if (query.length < 2) {
     return (
-      <Typography variant="small" color="secondary" className="text-center">
+      <Typography
+        variant="small"
+        color="secondary"
+        className="text-center"
+        data-testid={TEST_IDS.SEARCH.MIN_QUERY_MESSAGE}
+      >
         {hasShortcuts
           ? "Add at least 2 non-shortcut characters to search"
           : "Type at least 2 characters to search"}
@@ -128,7 +133,12 @@ function SearchListContent({
 
   if (isLoading) {
     return (
-      <Flex direction="column" align="center" className="text-ui-text-secondary">
+      <Flex
+        direction="column"
+        align="center"
+        className="text-ui-text-secondary"
+        data-testid={TEST_IDS.SEARCH.LOADING_STATE}
+      >
         <div className="inline-block w-6 h-6 border-2 border-brand-ring border-t-transparent rounded-full animate-spin mb-2" />
         <Typography variant="small">Searching...</Typography>
       </Flex>
@@ -144,7 +154,7 @@ function SearchListContent({
         </Flex>
       </CommandEmpty>
       {filteredResults.length > 0 && (
-        <CommandGroup>
+        <CommandGroup data-testid={TEST_IDS.SEARCH.RESULTS_GROUP}>
           {filteredResults.map((result) => (
             <SearchResultItem key={result._id} result={result} onClose={onClose} />
           ))}
@@ -326,6 +336,8 @@ export function GlobalSearch() {
             value={query}
             onValueChange={setQuery}
             className="text-ui-text"
+            data-testid={TEST_IDS.SEARCH.INPUT}
+            aria-label="Global search"
           />
 
           {/* Tabs with counts */}
@@ -335,13 +347,19 @@ export function GlobalSearch() {
             className="border-b border-ui-border overflow-x-auto"
           >
             <TabsList variant="underline" className="gap-4">
-              <TabsTrigger value="all" variant="underline" className="pb-2 px-1 text-xs sm:text-sm">
+              <TabsTrigger
+                value="all"
+                variant="underline"
+                className="pb-2 px-1 text-xs sm:text-sm"
+                data-testid={TEST_IDS.SEARCH.TAB_ALL}
+              >
                 All{query.length >= 2 && ` (${issueTotal + documentTotal})`}
               </TabsTrigger>
               <TabsTrigger
                 value="issues"
                 variant="underline"
                 className="pb-2 px-1 text-xs sm:text-sm"
+                data-testid={TEST_IDS.SEARCH.TAB_ISSUES}
               >
                 Issues{query.length >= 2 && ` (${issueTotal})`}
               </TabsTrigger>
@@ -349,6 +367,7 @@ export function GlobalSearch() {
                 value="documents"
                 variant="underline"
                 className="pb-2 px-1 text-xs sm:text-sm"
+                data-testid={TEST_IDS.SEARCH.TAB_DOCUMENTS}
               >
                 Documents{query.length >= 2 && ` (${documentTotal})`}
               </TabsTrigger>

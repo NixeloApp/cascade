@@ -8,6 +8,7 @@
 
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
@@ -104,6 +105,7 @@ export function EmailVerificationForm({ email, onVerified, onResend }: EmailVeri
           required
           pattern="[0-9]{8}"
           maxLength={8}
+          data-testid={TEST_IDS.AUTH.VERIFICATION_CODE_INPUT}
           className="text-center tracking-widest text-lg transition-default"
           autoComplete="one-time-code"
         />
@@ -112,6 +114,7 @@ export function EmailVerificationForm({ email, onVerified, onResend }: EmailVeri
           size="lg"
           className="w-full shadow-card transition-all duration-medium"
           disabled={submitting}
+          data-testid={TEST_IDS.AUTH.VERIFICATION_SUBMIT_BUTTON}
         >
           {submitting ? (
             <Flex align="center" justify="center" gap="sm">

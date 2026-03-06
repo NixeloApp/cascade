@@ -67,6 +67,14 @@ export class DashboardPage extends BasePage {
   readonly shortcutsModal: Locator;
   readonly globalSearchModal: Locator;
   readonly globalSearchInput: Locator;
+  readonly globalSearchResultsGroup: Locator;
+  readonly globalSearchResultItems: Locator;
+  readonly globalSearchLoadingState: Locator;
+  readonly globalSearchMinimumQueryMessage: Locator;
+  readonly globalSearchNoResults: Locator;
+  readonly globalSearchAllTab: Locator;
+  readonly globalSearchIssuesTab: Locator;
+  readonly globalSearchDocumentsTab: Locator;
 
   // ===================
   // Locators - Notifications
@@ -168,7 +176,15 @@ export class DashboardPage extends BasePage {
     // Modals - Global Search (not a dialog role, it's a fixed positioned div)
     // The modal contains "Search issues and documents..." placeholder input
     this.globalSearchModal = page.getByTestId(TEST_IDS.SEARCH.MODAL);
-    this.globalSearchInput = page.getByPlaceholder(/search issues and documents/i);
+    this.globalSearchInput = page.getByTestId(TEST_IDS.SEARCH.INPUT);
+    this.globalSearchResultsGroup = page.getByTestId(TEST_IDS.SEARCH.RESULTS_GROUP);
+    this.globalSearchResultItems = page.getByTestId(TEST_IDS.SEARCH.RESULT_ITEM);
+    this.globalSearchLoadingState = page.getByTestId(TEST_IDS.SEARCH.LOADING_STATE);
+    this.globalSearchMinimumQueryMessage = page.getByTestId(TEST_IDS.SEARCH.MIN_QUERY_MESSAGE);
+    this.globalSearchNoResults = page.getByTestId(TEST_IDS.GLOBAL_SEARCH.NO_RESULTS);
+    this.globalSearchAllTab = page.getByTestId(TEST_IDS.SEARCH.TAB_ALL);
+    this.globalSearchIssuesTab = page.getByTestId(TEST_IDS.SEARCH.TAB_ISSUES);
+    this.globalSearchDocumentsTab = page.getByTestId(TEST_IDS.SEARCH.TAB_DOCUMENTS);
 
     // Notifications panel
     this.notificationPanel = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_PANEL);
@@ -433,6 +449,64 @@ export class DashboardPage extends BasePage {
       // Verify closed
       await expect(this.globalSearchModal).not.toBeVisible();
     }).toPass();
+  }
+
+  async openGlobalSearchWithShortcut() {
+    await waitForDashboardReady(this.page);
+
+    await expect(async () => {
+      await this.page.keyboard.press("ControlOrMeta+k");
+      await expect(this.globalSearchModal).toBeVisible();
+      await expect(this.globalSearchInput).toBeVisible();
+      await expect(this.globalSearchInput).toBeEnabled();
+    }).toPass();
+  }
+
+  async searchFor(query: string) {
+    await expect(this.globalSearchInput).toBeVisible();
+    await this.globalSearchInput.fill(query);
+
+    if (query.length < 2) {
+      await expect(this.globalSearchMinimumQueryMessage).toBeVisible();
+      return;
+    }
+
+    await this.waitForSearchSettled();
+  }
+
+  async waitForSearchSettled() {
+    await expect(async () => {
+      await expect(this.globalSearchLoadingState).not.toBeVisible();
+
+      const hasResults = await this.globalSearchResultItems
+        .first()
+        .isVisible()
+        .catch(() => false);
+      const hasNoResults = await this.globalSearchNoResults.isVisible().catch(() => false);
+
+      expect(hasResults || hasNoResults).toBe(true);
+    }).toPass();
+  }
+
+  async switchGlobalSearchTab(tab: "all" | "issues" | "documents") {
+    const tabs = {
+      all: this.globalSearchAllTab,
+      issues: this.globalSearchIssuesTab,
+      documents: this.globalSearchDocumentsTab,
+    };
+
+    await expect(tabs[tab]).toBeVisible();
+    await tabs[tab].click();
+    await expect(tabs[tab]).toHaveAttribute("data-state", "active");
+    await this.waitForSearchSettled();
+  }
+
+  getGlobalSearchResult(title: string): Locator {
+    return this.globalSearchResultItems.filter({ hasText: title }).first();
+  }
+
+  getGlobalSearchResults(title: string): Locator {
+    return this.globalSearchResultItems.filter({ hasText: title });
   }
 
   // ===================

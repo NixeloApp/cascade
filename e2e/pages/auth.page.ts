@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { waitForDashboardReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -91,6 +92,8 @@ export class AuthPage extends BasePage {
   readonly verifyEmailButton: Locator;
   readonly resendCodeButton: Locator;
   readonly signOutLink: Locator;
+  readonly successToast: Locator;
+  readonly errorToast: Locator;
 
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
@@ -122,18 +125,20 @@ export class AuthPage extends BasePage {
     // Password Reset
     this.sendResetCodeButton = page.getByRole("button", { name: /send reset code/i });
     this.backToSignInLink = page.getByRole("link", { name: /sign in/i });
-    this.codeInput = page.getByPlaceholder("8-digit code");
-    this.newPasswordInput = page.getByPlaceholder("New password");
-    this.resetPasswordButton = page.getByRole("button", { name: /^reset password$/i });
+    this.codeInput = page.getByTestId(TEST_IDS.AUTH.RESET_CODE_INPUT);
+    this.newPasswordInput = page.getByTestId(TEST_IDS.AUTH.RESET_PASSWORD_INPUT);
+    this.resetPasswordButton = page.getByTestId(TEST_IDS.AUTH.RESET_SUBMIT_BUTTON);
 
     // Email Verification
     // Email Verification - Use more robust locators that don't depend strictly on ARIA roles
     // as they might vary between h1/h2 during architecture transitions
     this.verifyHeading = page.getByText(/verify your email/i).first();
-    this.verifyCodeInput = page.getByPlaceholder(/enter.*code|8-digit code/i);
-    this.verifyEmailButton = page.getByRole("button", { name: /verify email/i });
+    this.verifyCodeInput = page.getByTestId(TEST_IDS.AUTH.VERIFICATION_CODE_INPUT);
+    this.verifyEmailButton = page.getByTestId(TEST_IDS.AUTH.VERIFICATION_SUBMIT_BUTTON);
     this.resendCodeButton = page.getByRole("button", { name: /didn't receive|resend/i });
     this.signOutLink = page.getByRole("button", { name: /sign out|different account/i });
+    this.successToast = page.locator('[data-sonner-toast][data-type="success"]').first();
+    this.errorToast = page.locator('[data-sonner-toast][data-type="error"]').first();
   }
 
   // ===================
@@ -405,6 +410,93 @@ export class AuthPage extends BasePage {
     await this.verifyEmailButton.click();
     // Wait for verification to process by requiring full document readiness.
     await this.page.waitForFunction(() => document.readyState === "complete");
+  }
+
+  getSuccessToast(message: RegExp): Locator {
+    return this.page.locator("[data-sonner-toast]").filter({ hasText: message }).first();
+  }
+
+  async waitForToastOutcome(message: RegExp): Promise<"success" | "timeout"> {
+    const successToast = this.getSuccessToast(message);
+
+    const result = await Promise.race([
+      successToast.waitFor({ state: "visible", timeout: 10000 }).then(() => "success" as const),
+      this.errorToast.waitFor({ state: "visible", timeout: 10000 }).then(() => "error" as const),
+    ]).catch(() => "timeout" as const);
+
+    if (result === "error") {
+      const errorText = await this.errorToast.textContent();
+      throw new Error(`Auth flow failed with error toast: ${errorText}`);
+    }
+
+    return result;
+  }
+
+  async expectAuthenticatedApp(options?: { recoverFromLanding?: boolean }) {
+    const isLandingOrSignIn = () => {
+      const { pathname } = new URL(this.page.url());
+      return pathname === "/" || pathname === "/signin";
+    };
+
+    const onboardingCandidates = [
+      this.page.getByTestId(TEST_IDS.ONBOARDING.SKIP_BUTTON),
+      this.page.getByTestId(TEST_IDS.ONBOARDING.WELCOME_HEADING),
+      this.page.getByTestId(TEST_IDS.ONBOARDING.TEAM_LEAD_CARD),
+      this.page.getByTestId(TEST_IDS.ONBOARDING.TEAM_MEMBER_CARD),
+      this.page.getByRole("heading", { name: /welcome to nixelo/i }),
+    ];
+
+    const getVisibleOnboardingCandidate = async () => {
+      for (const candidate of onboardingCandidates) {
+        const locator = candidate.first();
+        if (await locator.isVisible().catch(() => false)) {
+          return locator;
+        }
+      }
+      return null;
+    };
+
+    if (options?.recoverFromLanding && isLandingOrSignIn()) {
+      await this.page.goto("/app");
+    }
+
+    await expect
+      .poll(
+        async () => {
+          if (await getVisibleOnboardingCandidate()) {
+            return "onboarding";
+          }
+
+          const currentPath = new URL(this.page.url()).pathname;
+          if (/^\/onboarding\/?$/.test(currentPath)) {
+            return "onboarding";
+          }
+
+          if (/^\/[^/]+\/dashboard\/?$/.test(currentPath)) {
+            const hasCommandPalette = await this.page
+              .getByRole("button", { name: /open command palette/i })
+              .isVisible()
+              .catch(() => false);
+            return hasCommandPalette ? "dashboard" : null;
+          }
+
+          return null;
+        },
+        { timeout: 30000 },
+      )
+      .not.toBeNull();
+
+    const currentPath = new URL(this.page.url()).pathname;
+    const visibleOnboardingCandidate = await getVisibleOnboardingCandidate();
+    if (/^\/onboarding\/?$/.test(currentPath) || visibleOnboardingCandidate) {
+      if (visibleOnboardingCandidate) {
+        await expect(visibleOnboardingCandidate).toBeVisible();
+      }
+      return "onboarding" as const;
+    }
+
+    await waitForDashboardReady(this.page);
+    return "dashboard" as const;
   }
 
   async resendVerificationCode() {

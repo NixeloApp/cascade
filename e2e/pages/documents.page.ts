@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { TEST_IDS } from "../../src/lib/test-ids";
 import { BasePage } from "./base.page";
 
 /**
@@ -31,6 +32,7 @@ export class DocumentsPage extends BasePage {
   readonly editor: Locator;
   readonly editorContent: Locator;
   readonly documentTitle: Locator;
+  readonly documentTitleInput: Locator;
 
   // ===================
   // Locators - Delete Confirmation
@@ -62,15 +64,11 @@ export class DocumentsPage extends BasePage {
     this.meetingNotesTemplate = page.getByRole("button", { name: /meeting.*notes/i });
     this.projectBriefTemplate = page.getByRole("button", { name: /project.*brief/i });
 
-    // Editor (Plate editor uses data-slate-editor attribute)
-    this.editor = page
-      .locator("[data-slate-editor]")
-      .or(page.locator("[data-editor], [contenteditable='true']").first());
-    this.editorContent = page.locator("[data-slate-editor], .slate-editor");
-    this.documentTitle = page
-      .getByRole("heading", { level: 1 })
-      .first()
-      .or(page.locator("[data-document-title]"));
+    // Editor
+    this.editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
+    this.editorContent = this.editor;
+    this.documentTitle = page.getByTestId(TEST_IDS.DOCUMENT.TITLE);
+    this.documentTitleInput = page.getByTestId(TEST_IDS.DOCUMENT.TITLE_INPUT);
 
     // Delete confirmation
     this.deleteConfirmDialog = page.getByRole("dialog").filter({ hasText: /delete|confirm/i });
@@ -93,6 +91,7 @@ export class DocumentsPage extends BasePage {
 
   async createNewDocument() {
     await this.newDocumentButton.click();
+    await expect(this.page).toHaveURL(/\/documents\/[^/]+$/);
   }
 
   async openTemplateModal() {
@@ -116,6 +115,18 @@ export class DocumentsPage extends BasePage {
 
   async clearSearch() {
     await this.searchInput.clear();
+  }
+
+  async editDocumentTitle(title: string) {
+    await expect(this.documentTitle).toBeVisible();
+
+    await expect(async () => {
+      await this.documentTitle.click();
+      await expect(this.documentTitleInput).toBeVisible();
+      await this.documentTitleInput.fill(title);
+      await this.documentTitleInput.press("Enter");
+      await expect(this.documentTitle).toHaveText(title);
+    }).toPass();
   }
 
   async selectDocument(index: number) {

@@ -99,7 +99,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 
 1. Deterministic post-action assertions in critical flows:
    - convert any remaining action-only steps into `action -> deterministic wait -> outcome assert`.
-   - target specs first: `auth`, `issues`, `board-drag-drop`, `documents`, `search`.
+   - target specs first: `auth`.
 2. Selector contract completion:
    - replace remaining brittle text/CSS fallbacks with role/label/test-id selectors.
    - add missing `TEST_IDS` constants for any critical controls without stable anchors.
@@ -135,6 +135,27 @@ Full-suite evidence in this TODO is considered stale if older than 24 hours.
   - `155 passed (7.0m)`, `0 skipped`
 - Gate interpretation:
   - this is a historical green run; refresh is required when evidence is older than 24 hours (see `Evidence Freshness Guard`).
+
+## Historical Resolution Notes (2026-03-06)
+
+- Hardened `e2e/search.spec.ts` against selector drift by replacing raw `cmdk-*` selectors and loose text fallbacks with explicit `TEST_IDS` anchors for the search input, loading state, results group, minimum-query message, and tab controls.
+- Added dashboard page-object helpers to enforce `open/fill -> wait for settled state -> assert outcome` for global search instead of ad hoc per-test waits.
+- Guard assertions now verify both tab activation and filtered result absence in the search tab-switch path, so the spec fails on regressions in either state propagation or filtering.
+- Targeted validation:
+  - `pnpm exec playwright test e2e/search.spec.ts --reporter=line`
+  - `7 passed (2.7m)`
+- Hardened `e2e/board-drag-drop.spec.ts` by replacing the drag-handle CSS-class assertion with a dedicated `TEST_IDS.ISSUE.DRAG_HANDLE` contract and by routing board column checks through existing board test ids.
+- Strengthened `ProjectsPage.switchToTab(...)` to await the expected project route after each tab click, so backlog/board transitions are asserted instead of assumed.
+- Targeted validation:
+  - `pnpm exec playwright test e2e/board-drag-drop.spec.ts --reporter=line --workers=1`
+  - `5 passed (2.1m)`
+- Stabilized `ProjectsPage` around canonical board and issue-card test ids so issue/detail flows no longer depend on legacy CSS/data-attribute fallbacks.
+- Hardened `e2e/documents.spec.ts` by moving document-route waits into `DocumentsPage.createNewDocument()` and turning the title-edit case into a real title mutation/assertion backed by explicit document title test ids.
+- Targeted validation:
+  - `pnpm exec playwright test e2e/issues.spec.ts --reporter=line --workers=1`
+  - `3 passed (1.6m)`
+  - `pnpm exec playwright test e2e/documents.spec.ts --reporter=line --workers=1`
+  - `4 passed (1.2m)`
 
 ## Historical Resolution Notes (2026-03-05)
 

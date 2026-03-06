@@ -37,7 +37,7 @@ test.describe("Documents", () => {
   });
 
   test.describe("Document Creation", () => {
-    test("can create a new blank document", async ({ dashboardPage, documentsPage, page }) => {
+    test("can create a new blank document", async ({ dashboardPage, documentsPage }) => {
       await dashboardPage.goto();
       await dashboardPage.navigateTo("documents");
 
@@ -47,27 +47,24 @@ test.describe("Documents", () => {
       // Create new document
       await documentsPage.createNewDocument();
 
-      // Should navigate to document editor (URL contains /documents/ followed by ID)
-      await page.waitForURL(/\/documents\/[^/]+$/);
-
       // Editor should be visible
       await documentsPage.expectEditorVisible();
     });
   });
 
   test.describe("Document Editor", () => {
-    test("can edit document title", async ({ dashboardPage, documentsPage, page }) => {
+    test("can edit document title", async ({ dashboardPage, documentsPage }) => {
       await dashboardPage.goto();
       await dashboardPage.navigateTo("documents");
       await documentsPage.expectDocumentsView();
 
       // Create a new document first
       await documentsPage.createNewDocument();
-      await page.waitForURL(/\/documents\/[^/]+$/);
       await documentsPage.expectEditorVisible();
 
-      // The Plate editor should be present
-      await expect(documentsPage.editorContent).toBeVisible();
+      const updatedTitle = `E2E Title ${Date.now()}`;
+      await documentsPage.editDocumentTitle(updatedTitle);
+      await expect(documentsPage.documentTitle).toHaveText(updatedTitle);
     });
   });
 });

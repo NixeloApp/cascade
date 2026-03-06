@@ -8,6 +8,7 @@
 
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/form/Input";
@@ -64,6 +65,7 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
           required
           pattern="[0-9]{8}"
           maxLength={8}
+          data-testid={TEST_IDS.AUTH.RESET_CODE_INPUT}
         />
         <Input
           type="password"
@@ -73,9 +75,16 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
           minLength={8}
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
+          data-testid={TEST_IDS.AUTH.RESET_PASSWORD_INPUT}
         />
         <PasswordStrengthIndicator password={newPassword} className="-mt-2" />
-        <Button type="submit" size="lg" className="w-full" disabled={submitting}>
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full"
+          disabled={submitting}
+          data-testid={TEST_IDS.AUTH.RESET_SUBMIT_BUTTON}
+        >
           {submitting ? "Resetting..." : "Reset password"}
         </Button>
         <AuthLinkButton onClick={onRetry}>Didn't receive a code? Try again</AuthLinkButton>

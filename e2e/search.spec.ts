@@ -1,3 +1,4 @@
+import { TEST_IDS } from "../src/lib/test-ids";
 import { expect, authenticatedTest as test } from "./fixtures";
 import { testUserService } from "./utils/test-user-service";
 
@@ -23,7 +24,7 @@ test.describe("Global Search", () => {
     if (!seedResult) console.warn("WARNING: Failed to seed templates in test setup");
   });
 
-  test("search returns matching issues", async ({ dashboardPage, projectsPage, page }) => {
+  test("search returns matching issues", async ({ dashboardPage, projectsPage }) => {
     const timestamp = Date.now();
     const projectKey = `SRCH${timestamp.toString().slice(-4)}`;
     const uniqueSearchTerm = `UniqueFindMe${timestamp}`;
@@ -42,24 +43,16 @@ test.describe("Global Search", () => {
     await dashboardPage.goto();
     await dashboardPage.expectLoaded();
     await dashboardPage.openGlobalSearch();
-
-    // Type search query and wait for results
-    await dashboardPage.globalSearchInput.fill(uniqueSearchTerm);
-
-    // Wait for search to complete (loading spinner disappears and results appear)
-    const searchResults = page.locator("[cmdk-group]");
-    await expect(searchResults).toBeVisible();
+    await dashboardPage.searchFor(uniqueSearchTerm);
+    await expect(dashboardPage.globalSearchResultsGroup).toBeVisible();
 
     // Verify the issue appears in results
-    const issueResult = page.getByText(uniqueSearchTerm);
+    const issueResult = dashboardPage.getGlobalSearchResult(uniqueSearchTerm);
     await expect(issueResult).toBeVisible();
     console.log("✓ Issue found in search results");
 
     // Verify result shows issue type badge (lowercase "issue" from result.type)
-    const issueItem = page.locator("[cmdk-item]").filter({ hasText: uniqueSearchTerm });
-    await expect(issueItem).toBeVisible();
-    // The Badge renders result.type which is "issue"
-    await expect(issueItem.getByText("issue", { exact: true })).toBeVisible();
+    await expect(issueResult.getByTestId(TEST_IDS.SEARCH.RESULT_TYPE)).toHaveText("issue");
     console.log("✓ Issue badge visible");
 
     // Close search
@@ -79,46 +72,34 @@ test.describe("Global Search", () => {
 
     // Type a query that won't match anything
     const nonExistentTerm = `NonExistent${Date.now()}XYZ`;
-    await dashboardPage.globalSearchInput.fill(nonExistentTerm);
-
-    // Wait for loading spinner to disappear (search complete)
-    const loadingSpinner = dashboardPage.globalSearchModal.locator(".animate-spin");
-    await expect(loadingSpinner).not.toBeVisible();
-
-    // Wait for "No results found" message - use text content since CommandEmpty may not render with test ID
-    const noResultsMessage = dashboardPage.globalSearchModal.getByText(/no results found/i);
-    await expect(noResultsMessage).toBeVisible();
+    await dashboardPage.searchFor(nonExistentTerm);
+    await expect(dashboardPage.globalSearchNoResults).toBeVisible();
     console.log("✓ 'No results found' message displayed");
 
     // Close search
     await dashboardPage.closeGlobalSearch();
   });
 
-  test("search requires minimum 2 characters", async ({ dashboardPage, page }) => {
+  test("search requires minimum 2 characters", async ({ dashboardPage }) => {
     await dashboardPage.goto();
     await dashboardPage.expectLoaded();
     await dashboardPage.openGlobalSearch();
 
     // Type only 1 character
-    await dashboardPage.globalSearchInput.fill("a");
-
-    // Should show minimum character message
-    const minCharMessage = page.getByText(/type at least 2 characters/i);
-    await expect(minCharMessage).toBeVisible();
+    await dashboardPage.searchFor("a");
+    await expect(dashboardPage.globalSearchMinimumQueryMessage).toBeVisible();
     console.log("✓ Minimum character requirement message shown");
 
     // Type 2 characters - message should disappear
-    await dashboardPage.globalSearchInput.fill("ab");
-
-    // Either results, no results, or loading should appear (not the min char message)
-    await expect(minCharMessage).not.toBeVisible();
+    await dashboardPage.searchFor("ab");
+    await expect(dashboardPage.globalSearchMinimumQueryMessage).not.toBeVisible();
     console.log("✓ Minimum character message hidden after 2+ chars");
 
     // Close search
     await dashboardPage.closeGlobalSearch();
   });
 
-  test("search tabs filter results correctly", async ({ dashboardPage, projectsPage, page }) => {
+  test("search tabs filter results correctly", async ({ dashboardPage, projectsPage }) => {
     const timestamp = Date.now();
     const projectKey = `TABS${timestamp.toString().slice(-4)}`;
     const uniqueSearchTerm = `TabFilter${timestamp}`;
@@ -136,45 +117,33 @@ test.describe("Global Search", () => {
     await dashboardPage.goto();
     await dashboardPage.expectLoaded();
     await dashboardPage.openGlobalSearch();
-    await dashboardPage.globalSearchInput.fill(uniqueSearchTerm);
-
-    // Wait for results
-    const searchResults = page.locator("[cmdk-group]");
-    await expect(searchResults).toBeVisible();
+    await dashboardPage.searchFor(uniqueSearchTerm);
+    await expect(dashboardPage.globalSearchResultsGroup).toBeVisible();
 
     // Verify "All" tab is active by default and shows count
-    const allTab = page.getByRole("tab", { name: /^all/i });
-    await expect(allTab).toBeVisible();
+    await expect(dashboardPage.globalSearchAllTab).toBeVisible();
+    await expect(dashboardPage.globalSearchAllTab).toHaveAttribute("data-state", "active");
     console.log("✓ All tab visible");
 
     // Click on "Issues" tab
-    const issuesTab = page.getByRole("tab", { name: /^issues/i });
-    await expect(issuesTab).toBeVisible();
-    await issuesTab.click();
+    await dashboardPage.switchGlobalSearchTab("issues");
 
     // Issue should still be visible (it's an issue)
-    await expect(page.getByText(uniqueSearchTerm)).toBeVisible();
+    await expect(dashboardPage.getGlobalSearchResult(uniqueSearchTerm)).toBeVisible();
     console.log("✓ Issue visible in Issues tab");
 
     // Click on "Documents" tab
-    const documentsTab = page.getByRole("tab", { name: /^documents/i });
-    await expect(documentsTab).toBeVisible();
-    await documentsTab.click();
+    await dashboardPage.switchGlobalSearchTab("documents");
 
-    // Wait for tab to switch - check if either no results or no issue visible
-    // Since we created an issue but no document, either "no results" shows or our issue is filtered out
-    const issueInDocTab = page.locator("[cmdk-item]").filter({ hasText: uniqueSearchTerm });
-    const issueCount = await issueInDocTab.count();
-
-    // The issue should NOT appear in Documents tab (it's not a document)
-    expect(issueCount).toBe(0);
+    // Since we created an issue but no document, the issue must be filtered out.
+    await expect(dashboardPage.getGlobalSearchResults(uniqueSearchTerm)).toHaveCount(0);
     console.log("✓ Issue correctly filtered out in Documents tab");
 
     // Close search
     await dashboardPage.closeGlobalSearch();
   });
 
-  test("search displays result count in tabs", async ({ dashboardPage, projectsPage, page }) => {
+  test("search displays result count in tabs", async ({ dashboardPage, projectsPage }) => {
     const timestamp = Date.now();
     const projectKey = `CNT${timestamp.toString().slice(-4)}`;
     const uniqueSearchTerm = `CountTest${timestamp}`;
@@ -192,16 +161,11 @@ test.describe("Global Search", () => {
     await dashboardPage.goto();
     await dashboardPage.expectLoaded();
     await dashboardPage.openGlobalSearch();
-    await dashboardPage.globalSearchInput.fill(uniqueSearchTerm);
-
-    // Wait for results
-    const searchResults = page.locator("[cmdk-group]");
-    await expect(searchResults).toBeVisible();
+    await dashboardPage.searchFor(uniqueSearchTerm);
+    await expect(dashboardPage.globalSearchResultsGroup).toBeVisible();
 
     // Check that tabs show counts (e.g., "Issues (1)")
-    // The count appears as "(N)" after the tab label
-    const issuesTabWithCount = page.getByRole("tab", { name: /issues.*\(\d+\)/i });
-    await expect(issuesTabWithCount).toBeVisible();
+    await expect(dashboardPage.globalSearchIssuesTab).toHaveText(/issues.*\(\d+\)/i);
     console.log("✓ Issues tab shows count");
 
     // Close search
@@ -231,11 +195,7 @@ test.describe("Global Search", () => {
     // Ensure search is closed
     await expect(dashboardPage.globalSearchModal).not.toBeVisible();
 
-    // Press Cmd+K (or Ctrl+K on non-Mac)
-    await page.keyboard.press("ControlOrMeta+k");
-
-    // Modal should open
-    await expect(dashboardPage.globalSearchModal).toBeVisible();
+    await dashboardPage.openGlobalSearchWithShortcut();
     console.log("✓ Search opened with keyboard shortcut");
 
     // Close it
