@@ -144,7 +144,9 @@ This is the concrete "what's left" list for reliability hardening after the late
    - authenticated dashboard bootstrap now goes through `/app` and waits for a healthy dashboard shell before tests proceed, after the docs/search reruns showed a URL match alone could still leave the app on a `500` boundary.
    - dashboard search retries now surface app-error diagnostics immediately, after the minimum-query rerun showed `userSettings:get` could fail with `UNAUTHENTICATED` while the retry loop was still polling for the search input.
    - `DashboardCustomizeModal`, `PreferencesTab`, and the settings shell now gate auth-sensitive queries with `useConvexAuth()`, after the search minimum-query and dashboard theme reruns showed hidden/user-settings queries could still trip `UNAUTHENTICATED` boundaries during initial auth bootstrap.
-   - next focus: keep auditing settings/admin shells for eager authenticated queries and refresh broader suite evidence, since the previous search/documents and dashboard theme blockers are green in the latest targeted reruns.
+   - `SettingsPage.inviteUser()` now treats modal open, email fill, optional role selection, and invite-row visibility as one retryable interaction, after the settings/admin rerun showed the invite email input could detach between modal-open success and the first fill.
+   - `BreadcrumbLink` now honors `asChild`, after the `workspaces-org.spec.ts` rerun surfaced nested-anchor hydration errors in workspace breadcrumbs even though the tests still passed.
+   - next focus: refresh broader Playwright suite evidence and keep watching for eager authenticated queries outside the touched dashboard/settings shells, since the previous search/documents, dashboard theme, and settings/admin blockers are green in the latest targeted reruns.
 2. Selector contract completion:
    - `pnpm run validate` now passes with no `Test ID constants` warnings.
    - continue replacing brittle text/CSS fallbacks opportunistically when modifying critical specs.
@@ -178,6 +180,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `ensureAuthenticated()` now routes authenticated tests through `/app` and waits for a healthy dashboard shell instead of treating the dashboard URL alone as success, after the docs/search reruns showed API-authenticated tests could still land on a `500` dashboard during bootstrap.
 - `DashboardPage.searchFor()` now throws app-error diagnostics from inside its retry loop, after the minimum-query rerun showed the global search could fail behind a generic missing-input timeout when `userSettings:get` returned `UNAUTHENTICATED`.
 - `DashboardPage.closeTimeEntryModal()` is idempotent again, after the billing-disabled flow showed the timer dialog can already be gone by cleanup time even though the checkbox assertion completed.
+- `SettingsPage.inviteUser()` now wraps modal open, form fill, optional role selection, and invite-row visibility in the same retry boundary, after the settings/admin rerun showed the invite email input could detach immediately after the modal-open helper succeeded.
 - `ProjectsPage.openIssueDetail()` and `closeIssueDetail()` now reuse a named `closeIssueDetailIfOpen()` reset, after hardening moved the detail-dialog setup and teardown into the page object and the targeted rerun confirmed the modal flow stays deterministic across integration and issues specs.
 - `ProjectsPage.createProject()` now accepts the wizard's `Creating...` state as proof that submit started, after the issue-detail setup rerun exposed that waiting only for immediate dialog dismissal could misclassify a valid create click as a failure.
 - `ProjectsPage.openCreateProjectForm()` and `cancelCreateProject()` now reuse `closeCreateProjectFormIfOpen()`, after the create-project modal hardening showed the dialog needed an explicit reset path for repeated cancel/reopen flows instead of assuming the previous close fully settled.
@@ -211,6 +214,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `createTestNamespace(testInfo)` now owns run-scoped names and project keys across the create-heavy E2E specs, after the grouped reruns plus the final `workspaces-org.spec.ts` pass confirmed the shorter namespace id avoids the earlier long-title click-intercept issue and the current `e2e/*.spec.ts` timestamp scan is clean.
 - `GlobalSearch` now renders an explicit empty state instead of delegating to `CommandEmpty`, and the latest targeted reruns confirm the remaining runtime failure was the auth/bootstrap path rather than missing empty-state markup.
 - `DashboardCustomizeModal`, `PreferencesTab`, and `Settings` now skip auth-sensitive queries until `useConvexAuth()` reports an authenticated session, after the targeted search and dashboard reruns showed those hidden/settings-shell queries could still trigger `userSettings:get` or settings-route `500` boundaries during initial mount.
+- `BreadcrumbLink` now respects `asChild`, after the workspace-management rerun surfaced nested `<a>` hydration errors from `PageHeader` breadcrumbs on workspace detail routes.
 
 ## Latest Targeted Hardening Evidence
 
@@ -318,6 +322,14 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `1 passed (16.9s)`
 - `pnpm exec playwright test e2e/dashboard.spec.ts --reporter=line --workers=1`
   - `11 passed (55.3s)`
+- `pnpm exec playwright test e2e/invites.spec.ts --reporter=line --workers=1`
+  - `1 passed (28.3s)`
+- `pnpm exec playwright test e2e/settings/billing.spec.ts e2e/invites.spec.ts e2e/workspaces-org.spec.ts --reporter=line --workers=1`
+  - `8 passed (1.1m)`
+- `pnpm vitest run src/components/ui/Breadcrumb.test.tsx`
+  - `2 passed (600ms)`
+- `pnpm exec playwright test e2e/workspaces-org.spec.ts --reporter=line --workers=1`
+  - `5 passed (50.1s)`
 
 ## Evidence Freshness Guard
 
