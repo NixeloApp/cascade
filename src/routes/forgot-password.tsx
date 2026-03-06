@@ -1,10 +1,10 @@
+import { useAuthActions } from "@convex-dev/auth/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { AuthLink, AuthPageLayout, AuthRedirect, ResetPasswordForm } from "@/components/Auth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/form/Input";
 import { ROUTES } from "@/config/routes";
-import { getConvexSiteUrl } from "@/lib/convex";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
 
@@ -31,6 +31,7 @@ function ForgotPasswordRoute() {
 }
 
 function ForgotPasswordPage() {
+  const { signIn } = useAuthActions();
   const [submitting, setSubmitting] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
   const navigate = Route.useNavigate();
@@ -57,33 +58,21 @@ function ForgotPasswordPage() {
       return;
     }
 
+    const normalizedEmail = formEmail.trim().toLowerCase();
+
     try {
-      const response = await fetch(`${getConvexSiteUrl()}/auth/request-reset`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formEmail }),
-      });
+      const formData = new FormData();
+      formData.set("email", normalizedEmail);
+      formData.set("flow", "reset");
 
-      if (!response.ok) {
-        let detail = "";
+      await signIn("password", formData);
 
-        try {
-          const payload = (await response.json()) as unknown;
-          detail = typeof payload === "string" ? payload : JSON.stringify(payload);
-        } catch {
-          detail = await response.text().catch(() => "");
-        }
-
-        const suffix = detail || response.statusText;
-        throw new Error(`Password reset request failed (${response.status}): ${suffix}`);
-      }
-
-      setEmail(formEmail);
+      setEmail(normalizedEmail);
       navigate({
         replace: true,
         search: {
           step: "reset",
-          email: formEmail,
+          email: normalizedEmail,
         },
       });
     } catch (error) {
