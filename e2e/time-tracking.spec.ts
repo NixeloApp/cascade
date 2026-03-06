@@ -1,5 +1,6 @@
 import { CONVEX_SITE_URL, E2E_API_KEY, TEST_USERS } from "./config";
 import { expect, authenticatedTest as test } from "./fixtures";
+import { createTestNamespace } from "./utils/test-helpers";
 
 /** Time Tracking E2E Tests - start/stop timers on issues */
 test.describe("Time Tracking", () => {
@@ -25,17 +26,17 @@ test.describe("Time Tracking", () => {
     }
   });
 
-  test("user can track time on an issue", async ({ projectsPage }) => {
-    const now = Date.now();
-    const projectKey = `TT${now.toString().slice(-4)}`;
-    const issueTitle = `Time Track Issue ${now}`;
+  test("user can track time on an issue", async ({ projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("TT");
+    const issueTitle = namespace.name("Time Track Issue");
 
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`TT WS ${now}`);
+    await projectsPage.createWorkspace(namespace.name("TT WS"));
     await projectsPage.goto();
 
     // Create a project (waits for board to be interactive)
-    await projectsPage.createProject(`Time Tracking ${now}`, projectKey);
+    await projectsPage.createProject(namespace.name("Time Tracking"), projectKey);
 
     // Create Issue
     await projectsPage.createIssue(issueTitle);

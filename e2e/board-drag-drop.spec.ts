@@ -1,4 +1,5 @@
 import { expect, authenticatedTest as test } from "./fixtures";
+import { createTestNamespace } from "./utils/test-helpers";
 import { testUserService } from "./utils/test-user-service";
 
 /**
@@ -24,16 +25,16 @@ test.describe("Board Drag-Drop", () => {
     if (!seedResult) console.warn("WARNING: Failed to seed templates in test setup");
   });
 
-  test("issue cards have drag handle and are draggable", async ({ projectsPage }) => {
-    const timestamp = Date.now();
-    const projectKey = `DRAG${timestamp.toString().slice(-4)}`;
-    const issueTitle = `Draggable Issue ${timestamp}`;
+  test("issue cards have drag handle and are draggable", async ({ projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("DRAG");
+    const issueTitle = namespace.name("Draggable Issue");
 
     // Create a project with an issue
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Drag Test WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Drag Test WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Drag Test Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Drag Test Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
 
     // Create an issue (goes to Backlog for Scrum projects)
@@ -56,15 +57,15 @@ test.describe("Board Drag-Drop", () => {
     console.log("✓ Issue card has drag handle (Pragmatic DnD)");
   });
 
-  test("board columns are valid drop targets", async ({ projectsPage }) => {
-    const timestamp = Date.now();
-    const projectKey = `DROP${timestamp.toString().slice(-4)}`;
+  test("board columns are valid drop targets", async ({ projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("DROP");
 
     // Create a project
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Drop Test WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Drop Test WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Drop Test Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Drop Test Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
 
     // Verify board columns exist
@@ -82,16 +83,16 @@ test.describe("Board Drag-Drop", () => {
     }
   });
 
-  test("can drag issue between columns (status change)", async ({ projectsPage }) => {
-    const timestamp = Date.now();
-    const projectKey = `MOVE${timestamp.toString().slice(-4)}`;
-    const issueTitle = `Move Issue ${timestamp}`;
+  test("can drag issue between columns (status change)", async ({ projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("MOVE");
+    const issueTitle = namespace.name("Move Issue");
 
     // Create a project with an issue
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Move Test WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Move Test WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Move Test Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Move Test Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
 
     // Create an issue
@@ -168,15 +169,15 @@ test.describe("Board Drag-Drop", () => {
     console.log("✓ Drag operation completed");
   });
 
-  test("board shows multiple workflow states as columns", async ({ projectsPage }) => {
-    const timestamp = Date.now();
-    const projectKey = `COLS${timestamp.toString().slice(-4)}`;
+  test("board shows multiple workflow states as columns", async ({ projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("COLS");
 
     // Create a project
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Columns Test WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Columns Test WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Columns Test Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Columns Test Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
 
     // Scrum projects typically have: Backlog, To Do, In Progress, In Review, Done
@@ -197,19 +198,19 @@ test.describe("Board Drag-Drop", () => {
     console.log(`✓ Found ${foundStates} standard workflow columns`);
   });
 
-  test("column shows issue count badge", async ({ projectsPage }) => {
-    const timestamp = Date.now();
-    const projectKey = `BDGE${timestamp.toString().slice(-4)}`;
+  test("column shows issue count badge", async ({ projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("BDGE");
 
     // Create a project with issues
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Badge Test WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Badge Test WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Badge Test Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Badge Test Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
 
     // Create an issue
-    await projectsPage.createIssue(`Badge Test Issue ${timestamp}`);
+    await projectsPage.createIssue(namespace.name("Badge Test Issue"));
 
     // Switch to backlog
     await projectsPage.switchToTab("backlog");

@@ -1,4 +1,5 @@
 import { expect, authenticatedTest as test } from "./fixtures";
+import { createTestNamespace } from "./utils/test-helpers";
 import { testUserService } from "./utils/test-user-service";
 
 /**
@@ -23,16 +24,16 @@ test.describe("Global Search", () => {
     if (!seedResult) console.warn("WARNING: Failed to seed templates in test setup");
   });
 
-  test("search returns matching issues", async ({ dashboardPage, projectsPage }) => {
-    const timestamp = Date.now();
-    const projectKey = `SRCH${timestamp.toString().slice(-4)}`;
-    const uniqueSearchTerm = `UniqueFindMe${timestamp}`;
+  test("search returns matching issues", async ({ dashboardPage, projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("SRCH");
+    const uniqueSearchTerm = `UniqueFindMe${namespace.projectKey("FIND")}`;
 
     // Create a project with a uniquely named issue
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Search Test WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Search Test WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Search Test Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Search Test Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
     await projectsPage.createIssue(`Issue ${uniqueSearchTerm}`);
     console.log(`✓ Created issue with unique term: ${uniqueSearchTerm}`);
@@ -57,7 +58,9 @@ test.describe("Global Search", () => {
     await dashboardPage.closeGlobalSearch();
   });
 
-  test("search shows 'No results found' for non-matching query", async ({ dashboardPage }) => {
+  test("search shows 'No results found' for non-matching query", async ({
+    dashboardPage,
+  }, testInfo) => {
     await dashboardPage.goto();
     await dashboardPage.expectLoaded();
 
@@ -69,7 +72,8 @@ test.describe("Global Search", () => {
     await expect(dashboardPage.globalSearchInput).toBeVisible();
 
     // Type a query that won't match anything
-    const nonExistentTerm = `NonExistent${Date.now()}XYZ`;
+    const namespace = createTestNamespace(testInfo);
+    const nonExistentTerm = `NoMatch${namespace.projectKey("NONE")}XYZ`;
     await dashboardPage.searchFor(nonExistentTerm);
     await expect(dashboardPage.globalSearchNoResults).toBeVisible();
     console.log("✓ 'No results found' message displayed");
@@ -97,16 +101,19 @@ test.describe("Global Search", () => {
     await dashboardPage.closeGlobalSearch();
   });
 
-  test("search tabs filter results correctly", async ({ dashboardPage, projectsPage }) => {
-    const timestamp = Date.now();
-    const projectKey = `TABS${timestamp.toString().slice(-4)}`;
-    const uniqueSearchTerm = `TabFilter${timestamp}`;
+  test("search tabs filter results correctly", async ({
+    dashboardPage,
+    projectsPage,
+  }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("TABS");
+    const uniqueSearchTerm = `TabFilter${namespace.projectKey("TABS")}`;
 
     // Create an issue to search for
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Tab Filter WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Tab Filter WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Tab Filter Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Tab Filter Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
     await projectsPage.createIssue(`Issue ${uniqueSearchTerm}`);
 
@@ -140,16 +147,19 @@ test.describe("Global Search", () => {
     await dashboardPage.closeGlobalSearch();
   });
 
-  test("search displays result count in tabs", async ({ dashboardPage, projectsPage }) => {
-    const timestamp = Date.now();
-    const projectKey = `CNT${timestamp.toString().slice(-4)}`;
-    const uniqueSearchTerm = `CountTest${timestamp}`;
+  test("search displays result count in tabs", async ({
+    dashboardPage,
+    projectsPage,
+  }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("CNT");
+    const uniqueSearchTerm = `CountTest${namespace.projectKey("CNT")}`;
 
     // Create an issue
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Count Test WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Count Test WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Count Test Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Count Test Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
     await projectsPage.createIssue(`Issue ${uniqueSearchTerm}`);
 
