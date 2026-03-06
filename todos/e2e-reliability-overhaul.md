@@ -141,8 +141,10 @@ This is the concrete "what's left" list for reliability hardening after the late
    - `dashboard.spec.ts` now goes through `SettingsPage.expectDarkThemeEnabled()` / `expectDarkThemeDisabled()` for the theme-state check instead of reading the `html` class directly from the spec body.
    - current raw page-level selector scan across `e2e/*.spec.ts` is clean.
    - `createTestNamespace(testInfo)` now owns run-scoped names and project keys across the create-heavy E2E specs, and the current `rg` scan of `e2e/*.spec.ts` is clean for spec-local `Date.now()` namespaces.
-   - next blocker: `search.spec.ts` non-matching-query coverage still times out inside `DashboardPage.waitForSearchSettled()` because the global-search modal disappears before Playwright can observe a stable empty-state signal.
-   - next step for that blocker: instrument why the dialog closes during no-result searches and update the page-object settle contract to wait on the actual runtime empty state rather than assuming the modal remains open through the query lifecycle.
+   - authenticated dashboard bootstrap now goes through `/app` and waits for a healthy dashboard shell before tests proceed, after the docs/search reruns showed a URL match alone could still leave the app on a `500` boundary.
+   - dashboard search retries now surface app-error diagnostics immediately, after the minimum-query rerun showed `userSettings:get` could fail with `UNAUTHENTICATED` while the retry loop was still polling for the search input.
+   - `DashboardCustomizeModal`, `PreferencesTab`, and the settings shell now gate auth-sensitive queries with `useConvexAuth()`, after the search minimum-query and dashboard theme reruns showed hidden/user-settings queries could still trip `UNAUTHENTICATED` boundaries during initial auth bootstrap.
+   - next focus: keep auditing settings/admin shells for eager authenticated queries and refresh broader suite evidence, since the previous search/documents and dashboard theme blockers are green in the latest targeted reruns.
 2. Selector contract completion:
    - `pnpm run validate` now passes with no `Test ID constants` warnings.
    - continue replacing brittle text/CSS fallbacks opportunistically when modifying critical specs.
@@ -173,6 +175,8 @@ This is the concrete "what's left" list for reliability hardening after the late
 - Invite-panel reset now goes through a named `SettingsPage` helper, so the admin invite flow no longer hides modal cleanup inside the open retry block.
 - `WorkspacesPage.createWorkspace()` now preserves the old blanket Escape reset behind `closeCreateWorkspaceDialogIfOpen()` and submits through the shared create form, after `teams.spec.ts` showed that narrowing the reset to only a visible workspace dialog broke the shared workspace-create flow.
 - `DashboardPage` modal open helpers now reuse named `close...IfOpen()` resets, and global search keeps focus inside the retry loop, after the targeted search rerun showed the modal could disappear between the helper's visible check and the first `fill()`.
+- `ensureAuthenticated()` now routes authenticated tests through `/app` and waits for a healthy dashboard shell instead of treating the dashboard URL alone as success, after the docs/search reruns showed API-authenticated tests could still land on a `500` dashboard during bootstrap.
+- `DashboardPage.searchFor()` now throws app-error diagnostics from inside its retry loop, after the minimum-query rerun showed the global search could fail behind a generic missing-input timeout when `userSettings:get` returned `UNAUTHENTICATED`.
 - `DashboardPage.closeTimeEntryModal()` is idempotent again, after the billing-disabled flow showed the timer dialog can already be gone by cleanup time even though the checkbox assertion completed.
 - `ProjectsPage.openIssueDetail()` and `closeIssueDetail()` now reuse a named `closeIssueDetailIfOpen()` reset, after hardening moved the detail-dialog setup and teardown into the page object and the targeted rerun confirmed the modal flow stays deterministic across integration and issues specs.
 - `ProjectsPage.createProject()` now accepts the wizard's `Creating...` state as proof that submit started, after the issue-detail setup rerun exposed that waiting only for immediate dialog dismissal could misclassify a valid create click as a failure.
@@ -205,7 +209,8 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `permission-cascade.spec.ts` now relies on `ProjectsPage.gotoProjectBoard()` plus `expectProjectNotFound()` for the non-existent-project permission check, after the full-file rerun confirmed the last raw project-not-found heading in that file can reuse the shared project error contract.
 - `dashboard.spec.ts` now relies on `SettingsPage.expectDarkThemeEnabled()` and `expectDarkThemeDisabled()` for theme-state assertions, after the focused rerun confirmed the last direct `page.locator("html")` check could move behind the settings page object and the current `e2e/*.spec.ts` raw-selector scan returned clean.
 - `createTestNamespace(testInfo)` now owns run-scoped names and project keys across the create-heavy E2E specs, after the grouped reruns plus the final `workspaces-org.spec.ts` pass confirmed the shorter namespace id avoids the earlier long-title click-intercept issue and the current `e2e/*.spec.ts` timestamp scan is clean.
-- `GlobalSearch` now renders an explicit empty state instead of delegating to `CommandEmpty`, and `src/components/GlobalSearch.test.tsx` passes with that change, but Playwright still shows the modal disappearing during the non-matching-query case, so the remaining blocker is runtime dialog/open-state behavior rather than missing empty-state markup.
+- `GlobalSearch` now renders an explicit empty state instead of delegating to `CommandEmpty`, and the latest targeted reruns confirm the remaining runtime failure was the auth/bootstrap path rather than missing empty-state markup.
+- `DashboardCustomizeModal`, `PreferencesTab`, and `Settings` now skip auth-sensitive queries until `useConvexAuth()` reports an authenticated session, after the targeted search and dashboard reruns showed those hidden/settings-shell queries could still trigger `userSettings:get` or settings-route `500` boundaries during initial mount.
 
 ## Latest Targeted Hardening Evidence
 
@@ -305,6 +310,14 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `19 passed (1.83s)`
 - `pnpm exec playwright test e2e/search.spec.ts e2e/documents.spec.ts --reporter=line --workers=1`
   - `1 failed, 5 passed, 5 did not run (2.8m)`; blocker remains `search.spec.ts` non-matching-query settle timing out after the modal disappears
+- `pnpm exec playwright test e2e/search.spec.ts -g "search requires minimum 2 characters|can close search with Escape key|can open search with keyboard shortcut" --reporter=line --workers=1`
+  - `3 passed (19.8s)`
+- `pnpm vitest run src/components/Settings/PreferencesTab.test.tsx`
+  - `2 passed (816ms)`
+- `pnpm exec playwright test e2e/dashboard.spec.ts -g "can switch themes via settings" --reporter=line --workers=1`
+  - `1 passed (16.9s)`
+- `pnpm exec playwright test e2e/dashboard.spec.ts --reporter=line --workers=1`
+  - `11 passed (55.3s)`
 
 ## Evidence Freshness Guard
 
