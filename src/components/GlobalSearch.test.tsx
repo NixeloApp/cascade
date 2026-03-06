@@ -1,6 +1,7 @@
 import userEvent from "@testing-library/user-event";
 import { useQuery } from "convex/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { resetGlobalSearchStateForTests } from "@/hooks/useGlobalSearch";
 import { TEST_IDS } from "@/lib/test-ids";
 import { act, render, screen, waitFor } from "@/test/custom-render";
 import { GlobalSearch } from "./GlobalSearch";
@@ -16,10 +17,12 @@ describe("GlobalSearch", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     queryCallCount = 0;
+    resetGlobalSearchStateForTests();
     (useQuery as any).mockReturnValue([]);
   });
 
   afterEach(() => {
+    resetGlobalSearchStateForTests();
     vi.restoreAllMocks();
   });
 
