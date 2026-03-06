@@ -8,7 +8,7 @@
 
 import { api } from "@convex/_generated/api";
 import { Link } from "@tanstack/react-router";
-import { usePaginatedQuery } from "convex/react";
+import { useConvexAuth, usePaginatedQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -32,6 +32,7 @@ interface ProjectsListProps {
 /** Paginated list of projects with create button and navigation. */
 export function ProjectsList({ onCreateClick }: ProjectsListProps) {
   const { organizationId, orgSlug } = useOrganization();
+  const { isAuthenticated } = useConvexAuth();
 
   // Paginated projects list
   const {
@@ -40,7 +41,7 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
     loadMore,
   } = usePaginatedQuery(
     api.projects.getCurrentUserProjects as PaginatedQuery,
-    { organizationId },
+    isAuthenticated ? { organizationId } : "skip",
     { initialNumItems: 20 },
   );
 

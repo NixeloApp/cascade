@@ -8,7 +8,7 @@
 
 import { api } from "@convex/_generated/api";
 import { useSearch } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { useState } from "react";
 import { HourComplianceDashboard } from "./Admin/HourComplianceDashboard";
 import { IpRestrictionsSettings } from "./Admin/IpRestrictionsSettings";
@@ -48,8 +48,9 @@ type TabValue = (typeof validTabs)[number];
 
 /** Main settings page with tabs for profile, preferences, integrations, and admin. */
 export function Settings() {
-  const currentUser = useQuery(api.users.getCurrent);
-  const isAdmin = useQuery(api.users.isOrganizationAdmin);
+  const { isAuthenticated } = useConvexAuth();
+  const currentUser = useQuery(api.users.getCurrent, isAuthenticated ? undefined : "skip");
+  const isAdmin = useQuery(api.users.isOrganizationAdmin, isAuthenticated ? undefined : "skip");
   const showDevTools = isTestEmail(currentUser?.email);
   // Don't show admin tab while loading to prevent UI flicker
   const showAdminTab = isAdmin === true;

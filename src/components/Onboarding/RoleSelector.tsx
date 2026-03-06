@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { Typography } from "../ui/Typography";
 
 interface RoleSelectorProps {
-  onSelect: (role: "team_lead" | "team_member") => void;
+  onSelect: (role: "team_lead" | "team_member") => Promise<void> | void;
 }
 
 interface RoleCardProps {
@@ -101,9 +101,12 @@ export function RoleSelector({ onSelect }: RoleSelectorProps) {
   const [isPending, setIsPending] = useState(false);
   const [localSelected, setLocalSelected] = useState<"team_lead" | "team_member" | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
+      isMountedRef.current = false;
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, []);
@@ -114,7 +117,15 @@ export function RoleSelector({ onSelect }: RoleSelectorProps) {
 
     // Small delay for visual feedback before transitioning
     timeoutRef.current = setTimeout(() => {
-      onSelect(role);
+      timeoutRef.current = null;
+      void Promise.resolve(onSelect(role)).catch(() => {
+        if (!isMountedRef.current) {
+          return;
+        }
+
+        setLocalSelected(null);
+        setIsPending(false);
+      });
     }, 400);
   };
 

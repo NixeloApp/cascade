@@ -18,6 +18,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Dialog } from "../ui/Dialog";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
@@ -209,6 +210,7 @@ interface WebhookCardProps {
 
 function WebhookCard({ webhook, projects }: WebhookCardProps) {
   const [showEditModal, setShowEditModal] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const testWebhookAction = useAction(api.pumble.testWebhook);
   const deleteWebhookMutation = useMutation(api.pumble.deleteWebhook);
   const updateWebhookMutation = useMutation(api.pumble.updateWebhook);
@@ -236,9 +238,7 @@ function WebhookCard({ webhook, projects }: WebhookCardProps) {
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm(`Delete webhook "${webhook.name}"?`)) return;
-
+  const handleDeleteConfirm = async () => {
     try {
       await deleteWebhookMutation({ webhookId: webhook._id });
       showSuccess("Webhook deleted");
@@ -309,7 +309,12 @@ function WebhookCard({ webhook, projects }: WebhookCardProps) {
           <Button onClick={() => setShowEditModal(true)} variant="secondary" size="sm">
             Edit
           </Button>
-          <Button onClick={handleDelete} variant="danger" size="sm" className="ml-auto">
+          <Button
+            onClick={() => setDeleteConfirmOpen(true)}
+            variant="danger"
+            size="sm"
+            className="ml-auto"
+          >
             Delete
           </Button>
         </Flex>
@@ -321,6 +326,16 @@ function WebhookCard({ webhook, projects }: WebhookCardProps) {
         onOpenChange={setShowEditModal}
         webhook={webhook}
         projects={projects}
+      />
+
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Webhook"
+        message={`Are you sure you want to delete webhook "${webhook.name}"?`}
+        variant="danger"
+        confirmLabel="Delete"
       />
     </Card>
   );

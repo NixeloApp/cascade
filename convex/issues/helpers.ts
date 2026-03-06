@@ -6,6 +6,7 @@
  * queries and mutations to ensure consistent issue handling.
  */
 
+import type { Infer } from "convex/values";
 import { asyncMap, pruneNull } from "convex-helpers";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
@@ -13,6 +14,7 @@ import { conflict, notFound, validation } from "../lib/errors";
 import { getPlainTextFromDescription } from "../lib/richText";
 import { notDeleted } from "../lib/softDeleteHelpers";
 import { assertCanEditProject, canAccessProject } from "../projectAccess";
+import type { issueActivityActions } from "../validators";
 
 export const ROOT_ISSUE_TYPES = ["task", "bug", "story", "epic"] as const;
 
@@ -558,14 +560,8 @@ export function matchesSearchFilters(
   return true;
 }
 
-// Activity action types for type safety
-export type IssueActivityAction =
-  | "created"
-  | "updated"
-  | "archived"
-  | "restored"
-  | "deleted"
-  | "commented";
+// Shared activity action type (schema + mutation contract)
+export type IssueActivityAction = Infer<typeof issueActivityActions>;
 
 /**
  * Wrapper for `applyBulkUpdate` that fetches issues by ID first.

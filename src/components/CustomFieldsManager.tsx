@@ -16,6 +16,7 @@ import { CustomFieldCard } from "./Fields/CustomFieldCard";
 import { CustomFieldForm } from "./Fields/CustomFieldForm";
 import { Button } from "./ui/Button";
 import { Card, CardBody } from "./ui/Card";
+import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Flex } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
@@ -49,6 +50,8 @@ type CustomField = {
 export function CustomFieldsManager({ projectId }: CustomFieldsManagerProps) {
   const [showFormDialog, setShowFormDialog] = useState(false);
   const [editingField, setEditingField] = useState<CustomField | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<Id<"customFields"> | null>(null);
 
   const customFields = useQuery(api.customFields.list, { projectId });
   const removeField = useMutation(api.customFields.remove);
@@ -63,16 +66,20 @@ export function CustomFieldsManager({ projectId }: CustomFieldsManagerProps) {
     setShowFormDialog(true);
   };
 
-  const handleDelete = async (id: Id<"customFields">) => {
-    if (!confirm("Are you sure? This will delete all values for this field.")) {
-      return;
-    }
+  const handleDeleteClick = (id: Id<"customFields">) => {
+    setPendingDeleteId(id);
+    setDeleteConfirmOpen(true);
+  };
 
+  const handleDeleteConfirm = async () => {
+    if (!pendingDeleteId) return;
     try {
-      await removeField({ id });
+      await removeField({ id: pendingDeleteId });
       showSuccess("Field deleted");
     } catch (error) {
       showError(error instanceof Error ? error.message : "Failed to delete field");
+    } finally {
+      setPendingDeleteId(null);
     }
   };
 
@@ -112,7 +119,7 @@ export function CustomFieldsManager({ projectId }: CustomFieldsManagerProps) {
               key={field._id}
               field={field}
               onEdit={() => handleEdit(field)}
-              onDelete={() => handleDelete(field._id)}
+              onDelete={() => handleDeleteClick(field._id)}
             />
           ))}
         </Stack>
@@ -129,6 +136,16 @@ export function CustomFieldsManager({ projectId }: CustomFieldsManagerProps) {
             setEditingField(null);
           }
         }}
+      />
+
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Custom Field"
+        message="Are you sure? This will delete all values for this field."
+        variant="danger"
+        confirmLabel="Delete"
       />
     </Stack>
   );

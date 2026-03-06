@@ -18,9 +18,9 @@ describe("e2e integration", () => {
     const email = "test@inbox.mailtrap.io";
     const code = "123456";
 
-    await t.mutation(internal.e2e.storeTestOtp, { email, code });
+    await t.mutation(internal.e2e.storeTestOtp, { email, code, type: "verification" });
 
-    const storedCode = await t.query(internal.e2e.getLatestOTP, { email });
+    const storedCode = await t.query(internal.e2e.getLatestOTP, { email, type: "verification" });
     expect(storedCode).toBe(code);
   });
 
@@ -33,13 +33,13 @@ describe("e2e integration", () => {
     const email = "test-enc@inbox.mailtrap.io";
     const code = "123456";
 
-    await t.mutation(internal.e2e.storeTestOtp, { email, code });
+    await t.mutation(internal.e2e.storeTestOtp, { email, code, type: "verification" });
 
     // Verify it's encrypted
     await t.run(async (ctx) => {
       const entry = await ctx.db
         .query("testOtpCodes")
-        .withIndex("by_email", (q) => q.eq("email", email))
+        .withIndex("by_email_type", (q) => q.eq("email", email).eq("type", "verification"))
         .first();
 
       expect(entry).not.toBeNull();
@@ -48,7 +48,7 @@ describe("e2e integration", () => {
     });
 
     // Verify retrieval works
-    const storedCode = await t.query(internal.e2e.getLatestOTP, { email });
+    const storedCode = await t.query(internal.e2e.getLatestOTP, { email, type: "verification" });
     expect(storedCode).toBe(code);
   });
 
@@ -60,7 +60,7 @@ describe("e2e integration", () => {
     const t = convexTest(schema, modules);
     const email = "test-fail@inbox.mailtrap.io";
     const code = "123456";
-    await t.mutation(internal.e2e.storeTestOtp, { email, code });
+    await t.mutation(internal.e2e.storeTestOtp, { email, code, type: "verification" });
 
     // 2. Clear key and try to retrieve
     vi.stubEnv("E2E_API_KEY", "");
@@ -68,6 +68,8 @@ describe("e2e integration", () => {
     // Note: The t context might have cached env vars?
     // But since it runs in the same process, accessing process.env inside the function should see the change.
 
-    await expect(t.query(internal.e2e.getLatestOTP, { email })).rejects.toThrow();
+    await expect(
+      t.query(internal.e2e.getLatestOTP, { email, type: "verification" }),
+    ).rejects.toThrow();
   });
 });

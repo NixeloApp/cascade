@@ -8,7 +8,7 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { ChevronDown, Play, Plus, Square } from "lucide-react";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
@@ -145,17 +145,22 @@ export function TimeTracker({
   estimatedHours = 0,
   billingEnabled,
 }: TimeTrackerProps) {
+  const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
+  const canUseTimeTracking = isAuthenticated && !isAuthLoading;
   const [showLogModal, setShowLogModal] = useState(false);
   const [showEntries, setShowEntries] = useState(false);
 
   // Fetch time entries for this issue
-  const timeEntries = useQuery(api.timeTracking.listTimeEntries, {
-    issueId,
-    limit: 100,
-  });
+  const timeEntries = useQuery(
+    api.timeTracking.listTimeEntries,
+    canUseTimeTracking ? { issueId, limit: 100 } : "skip",
+  );
 
   // Check if there's a running timer
-  const runningTimer = useQuery(api.timeTracking.getRunningTimer);
+  const runningTimer = useQuery(
+    api.timeTracking.getRunningTimer,
+    canUseTimeTracking ? undefined : "skip",
+  );
   const isTimerRunningForThisIssue = runningTimer && runningTimer.issueId === issueId;
 
   // Mutations
@@ -209,6 +214,7 @@ export function TimeTracker({
                   variant="danger"
                   size="sm"
                   onClick={handleStopTimer}
+                  disabled={!canUseTimeTracking}
                   leftIcon={<Square className="w-4 h-4" fill="currentColor" />}
                 >
                   Stop Timer
@@ -218,7 +224,7 @@ export function TimeTracker({
                   variant="success"
                   size="sm"
                   onClick={handleStartTimer}
-                  disabled={!!runningTimer}
+                  disabled={!canUseTimeTracking || !!runningTimer}
                   title={
                     runningTimer ? "Stop the current timer first" : "Start timer for this issue"
                   }
@@ -233,6 +239,7 @@ export function TimeTracker({
                 variant="secondary"
                 size="sm"
                 onClick={() => setShowLogModal(true)}
+                disabled={!canUseTimeTracking}
                 leftIcon={<Plus className="w-4 h-4" />}
               >
                 Log Time

@@ -1,6 +1,6 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { FileText, Globe, Lock } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -19,13 +19,19 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/documents/")({
 
 function DocumentsListPage() {
   const { organizationId, orgSlug } = useOrganization();
+  const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
 
-  const documentsResult = useQuery(api.documents.list, {
-    organizationId,
-    limit: 50,
-  });
+  const documentsResult = useQuery(
+    api.documents.list,
+    isAuthenticated
+      ? {
+          organizationId,
+          limit: 50,
+        }
+      : "skip",
+  );
 
-  const isLoading = documentsResult === undefined;
+  const isLoading = isAuthLoading || (isAuthenticated && documentsResult === undefined);
   const documents = documentsResult?.documents ?? [];
   const isEmpty = !isLoading && documents.length === 0;
 

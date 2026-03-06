@@ -55,6 +55,8 @@ interface DialogProps extends VariantProps<typeof dialogVariants> {
   footer?: React.ReactNode;
   /** Whether to show the close button. Default: true */
   showCloseButton?: boolean;
+  /** Optional focus-outside handler for Radix dialog content */
+  onFocusOutside?: React.ComponentProps<typeof DialogPrimitive.Content>["onFocusOutside"];
   /** Test ID for the dialog */
   "data-testid"?: string;
 }
@@ -85,6 +87,7 @@ function Dialog({
   footer,
   size,
   showCloseButton = true,
+  onFocusOutside,
   "data-testid": testId,
 }: DialogProps) {
   return (
@@ -97,6 +100,7 @@ function Dialog({
         <DialogPrimitive.Content
           data-testid={testId}
           className={cn(dialogVariants({ size }), className)}
+          onFocusOutside={onFocusOutside}
         >
           {/* Header */}
           <Flex direction="column" gap="sm" className="text-center sm:text-left">

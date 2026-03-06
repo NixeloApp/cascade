@@ -25,12 +25,15 @@
 
 import { expect, test } from "@playwright/test";
 import { CONVEX_SITE_URL } from "./config";
+import { AuthPage } from "./pages";
 import {
   clearGoogleOAuthMock,
   setupGoogleOAuthMock,
   verifyOAuthError,
 } from "./utils/google-oauth-mock";
 import { waitForOAuthRedirectComplete } from "./utils/wait-helpers";
+
+const PUBLIC_ORG_PLACEHOLDER = "__public__";
 
 test.describe("Google OAuth Flow (Mocked)", () => {
   test.afterEach(async ({ page }) => {
@@ -109,26 +112,17 @@ test.describe("Google OAuth Flow (Mocked)", () => {
   });
 
   test.describe("OAuth Error Handling", () => {
-    test("should handle user denying access", async ({ page, baseURL }) => {
+    test("should handle user denying access", async ({ page }) => {
+      const authPage = new AuthPage(page, PUBLIC_ORG_PLACEHOLDER);
+
       await setupGoogleOAuthMock(page, {
         shouldFail: true,
         errorType: "access_denied",
       });
 
-      await page.goto(`${baseURL}/signin`);
-
-      const googleButton = page.getByRole("button", { name: /google/i });
-      await googleButton.click();
-
-      // Wait for either: stay on signin page OR show an error
-      await expect(async () => {
-        const onSigninPage = page.url().includes("signin");
-        const hasError = await page
-          .getByRole("alert")
-          .isVisible()
-          .catch(() => false);
-        expect(onSigninPage || hasError).toBe(true);
-      }).toPass({ timeout: 5000 });
+      await authPage.gotoSignInLanding();
+      await authPage.signInWithGoogle();
+      await authPage.waitForOAuthErrorSettle();
 
       // Verify error state if we left signin page
       if (!page.url().includes("signin")) {
@@ -136,52 +130,34 @@ test.describe("Google OAuth Flow (Mocked)", () => {
       }
     });
 
-    test("should handle invalid auth code", async ({ page, baseURL }) => {
+    test("should handle invalid auth code", async ({ page }) => {
+      const authPage = new AuthPage(page, PUBLIC_ORG_PLACEHOLDER);
+
       await setupGoogleOAuthMock(page, {
         shouldFail: true,
         errorType: "invalid_grant",
       });
 
-      await page.goto(`${baseURL}/signin`);
-
-      const googleButton = page.getByRole("button", { name: /google/i });
-      await googleButton.click();
-
-      // Wait for either: stay on signin page OR show an error
-      await expect(async () => {
-        const onSigninPage = page.url().includes("signin");
-        const hasError = await page
-          .getByRole("alert")
-          .isVisible()
-          .catch(() => false);
-        expect(onSigninPage || hasError).toBe(true);
-      }).toPass({ timeout: 5000 });
+      await authPage.gotoSignInLanding();
+      await authPage.signInWithGoogle();
+      await authPage.waitForOAuthErrorSettle();
 
       if (!page.url().includes("signin")) {
         await verifyOAuthError(page);
       }
     });
 
-    test("should handle Google server error", async ({ page, baseURL }) => {
+    test("should handle Google server error", async ({ page }) => {
+      const authPage = new AuthPage(page, PUBLIC_ORG_PLACEHOLDER);
+
       await setupGoogleOAuthMock(page, {
         shouldFail: true,
         errorType: "server_error",
       });
 
-      await page.goto(`${baseURL}/signin`);
-
-      const googleButton = page.getByRole("button", { name: /google/i });
-      await googleButton.click();
-
-      // Wait for either: stay on signin page OR show an error
-      await expect(async () => {
-        const onSigninPage = page.url().includes("signin");
-        const hasError = await page
-          .getByRole("alert")
-          .isVisible()
-          .catch(() => false);
-        expect(onSigninPage || hasError).toBe(true);
-      }).toPass({ timeout: 5000 });
+      await authPage.gotoSignInLanding();
+      await authPage.signInWithGoogle();
+      await authPage.waitForOAuthErrorSettle();
 
       if (!page.url().includes("signin")) {
         await verifyOAuthError(page);
@@ -263,15 +239,16 @@ test.describe("Google OAuth Flow (Mocked)", () => {
 });
 
 test.describe("Google Calendar OAuth (Mocked)", () => {
-  // Calendar OAuth is separate from login OAuth
-  // These tests would require being logged in first
+  test("calendar OAuth endpoint returns auth redirect contract", async ({ request }) => {
+    if (!CONVEX_SITE_URL) {
+      test.skip();
+      return;
+    }
 
-  test.skip("should connect Google Calendar", async () => {
-    // This test requires:
-    // 1. Being logged in
-    // 2. Navigating to settings/integrations
-    // 3. Clicking connect Google Calendar
-    // 4. Completing the calendar OAuth flow
-    // Skipped until we have proper test fixtures for authenticated state
+    const { redirectUrl } = await waitForOAuthRedirectComplete(request, CONVEX_SITE_URL);
+    expect(redirectUrl.origin).toBe("https://accounts.google.com");
+    expect(redirectUrl.searchParams.get("response_type")).toBe("code");
+    expect(redirectUrl.searchParams.get("client_id")).toBeTruthy();
+    expect(redirectUrl.searchParams.get("scope")).toBeTruthy();
   });
 });

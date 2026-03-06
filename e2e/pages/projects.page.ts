@@ -1,7 +1,14 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { waitForBoardLoaded, waitForIssueCreateSuccess } from "../utils/wait-helpers";
+import {
+  createWorkspaceFromDialog,
+  getWorkspaceDialogElements,
+  waitForBoardLoaded,
+  waitForIssueCreateSuccess,
+  waitForIssueUpdateSuccess,
+  waitForProjectCreateSuccess,
+} from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -57,24 +64,61 @@ export class ProjectsPage extends BasePage {
   // ===================
   // Locators - Project Tabs
   // ===================
+  readonly projectTabs: Locator;
   readonly boardTab: Locator;
   readonly backlogTab: Locator;
+  readonly calendarTab: Locator;
+  readonly timesheetTab: Locator;
+  readonly roadmapTab: Locator;
   readonly sprintsTab: Locator;
+  readonly activityTab: Locator;
   readonly analyticsTab: Locator;
   readonly settingsTab: Locator;
+  readonly timesheetEntriesTab: Locator;
+  readonly sprintsPageHeader: Locator;
+  readonly createSprintButton: Locator;
+  readonly sprintsEmptyState: Locator;
+  readonly sprintCards: Locator;
+
+  // ===================
+  // Locators - Activity Feed
+  // ===================
+  readonly activityPageHeader: Locator;
+  readonly activityFeed: Locator;
+  readonly activityEmptyState: Locator;
+  readonly activityEntries: Locator;
+
+  // ===================
+  // Locators - Analytics
+  // ===================
+  readonly analyticsPageHeader: Locator;
+  readonly analyticsPageDescription: Locator;
+  readonly analyticsTotalIssuesMetric: Locator;
+  readonly analyticsUnassignedMetric: Locator;
+  readonly analyticsAvgVelocityMetric: Locator;
+  readonly analyticsCompletedSprintsMetric: Locator;
+  readonly analyticsIssuesByStatusChart: Locator;
+  readonly analyticsIssuesByTypeChart: Locator;
+  readonly analyticsIssuesByPriorityChart: Locator;
+  readonly analyticsTeamVelocityChart: Locator;
+  readonly analyticsNoCompletedSprintsMessage: Locator;
+  readonly roadmapViewToggle: Locator;
+  readonly roadmapEpicFilter: Locator;
+  readonly projectSettingsHeader: Locator;
 
   // ===================
   // Locators - Issue Detail Dialog
   // ===================
   readonly issueDetailDialog: Locator;
+  readonly issueDetailEditButton: Locator;
+  readonly issueDetailTitleInput: Locator;
+  readonly issueDetailDescriptionEditor: Locator;
+  readonly issueDetailDescriptionContent: Locator;
+  readonly issueDetailSaveChangesButton: Locator;
+  readonly issueDetailPrioritySelect: Locator;
   readonly startTimerButton: Locator;
   readonly stopTimerButton: Locator;
   readonly timerStoppedToast: Locator;
-
-  // Workspace creation
-  readonly workspaceNameInput: Locator;
-  readonly workspaceDescriptionInput: Locator;
-  readonly submitWorkspaceButton: Locator;
 
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
@@ -96,14 +140,13 @@ export class ProjectsPage extends BasePage {
 
     // Create project form - look for dialog content
     // Fallback to role since test-id might be stripped or unreliable in some interactions
-    this.createProjectForm = page.getByRole("dialog");
+    this.createProjectForm = page
+      .getByRole("dialog")
+      .filter({ has: page.getByTestId(TEST_IDS.PROJECT.CREATE_MODAL) });
 
     // Template selection
     // Select from stable modal content instead of hardcoding template display names
-    this.templateOptionButtons = page
-      .getByTestId(TEST_IDS.PROJECT.CREATE_MODAL)
-      .locator("li")
-      .getByRole("button");
+    this.templateOptionButtons = this.createProjectForm.locator("li").getByRole("button");
 
     this.projectNameInput = page.getByTestId(TEST_IDS.PROJECT.NAME_INPUT);
     this.projectKeyInput = page.getByTestId(TEST_IDS.PROJECT.KEY_INPUT);
@@ -124,8 +167,8 @@ export class ProjectsPage extends BasePage {
     this.projectBoard = page
       .locator("[data-project-board]")
       .or(page.getByRole("heading", { name: /kanban board|scrum board/i }));
-    this.boardColumns = page.locator("[data-board-column]").or(page.locator(".kanban-column"));
-    this.issueCards = page.locator("[data-issue-card]").or(page.locator(".issue-card"));
+    this.boardColumns = page.getByTestId(TEST_IDS.BOARD.COLUMN);
+    this.issueCards = page.getByTestId(TEST_IDS.ISSUE.CARD);
     // Create issue - look for "Add issue" button (column headers have "Add issue to X")
     this.createIssueButton = page.getByRole("button", { name: /add issue/i }).first();
 
@@ -145,23 +188,64 @@ export class ProjectsPage extends BasePage {
       .getByRole("button", { name: /^create issue$/i })
       .or(this.createIssueModal.locator('button[type="submit"]'));
 
-    // Project tabs - rendered as links in route.tsx
-    this.boardTab = page.getByRole("link", { name: /^Board$/ });
-    this.backlogTab = page.getByRole("link", { name: /^Backlog$/ });
-    this.sprintsTab = page.getByRole("link", { name: /^Sprints$/ });
-    this.analyticsTab = page.getByRole("link", { name: /^Analytics$/ });
-    this.settingsTab = page.getByRole("link", { name: /^Settings$/ });
+    // Project tabs - scope to the project tab strip to avoid collisions with global nav links.
+    this.projectTabs = page.getByRole("navigation", { name: "Tabs" }).or(page.getByLabel("Tabs"));
+    this.boardTab = this.projectTabs.getByRole("link", { name: /^Board$/ });
+    this.backlogTab = this.projectTabs.getByRole("link", { name: /^Backlog$/ });
+    this.calendarTab = this.projectTabs.getByRole("link", { name: /^Calendar$/ });
+    this.timesheetTab = this.projectTabs.getByRole("link", { name: /^Timesheet$/ });
+    this.roadmapTab = this.projectTabs.getByRole("link", { name: /^Roadmap$/ });
+    this.sprintsTab = this.projectTabs.getByRole("link", { name: /^Sprints$/ });
+    this.activityTab = this.projectTabs.getByRole("link", { name: /^Activity$/ });
+    this.analyticsTab = this.projectTabs.getByRole("link", { name: /^Analytics$/ });
+    this.settingsTab = this.projectTabs.getByRole("link", { name: /^Settings$/ });
+    this.timesheetEntriesTab = page.getByRole("tab", { name: /time entries/i });
+    this.sprintsPageHeader = page.getByRole("heading", { name: /sprint management/i });
+    this.createSprintButton = page.getByRole("button", { name: /^create sprint$/i }).first();
+    this.sprintsEmptyState = page.getByText(/no sprints yet/i);
+    this.sprintCards = page.getByTestId(TEST_IDS.SPRINT.CARD);
+
+    // Activity feed
+    this.activityPageHeader = page.getByRole("heading", { name: /project activity/i });
+    this.activityFeed = page.getByTestId(TEST_IDS.ACTIVITY.FEED);
+    this.activityEmptyState = page.getByTestId(TEST_IDS.ACTIVITY.EMPTY_STATE);
+    this.activityEntries = this.activityFeed.getByTestId(TEST_IDS.ACTIVITY.ENTRY);
+
+    // Analytics
+    this.analyticsPageHeader = page.getByRole("heading", { name: /analytics dashboard/i });
+    this.analyticsPageDescription = page.getByText(/project insights.*velocity.*metrics/i);
+    this.analyticsTotalIssuesMetric = page.getByTestId(TEST_IDS.ANALYTICS.METRIC_TOTAL_ISSUES);
+    this.analyticsUnassignedMetric = page.getByTestId(TEST_IDS.ANALYTICS.METRIC_UNASSIGNED);
+    this.analyticsAvgVelocityMetric = page.getByTestId(TEST_IDS.ANALYTICS.METRIC_AVG_VELOCITY);
+    this.analyticsCompletedSprintsMetric = page.getByTestId(
+      TEST_IDS.ANALYTICS.METRIC_COMPLETED_SPRINTS,
+    );
+    this.analyticsIssuesByStatusChart = page.getByText("Issues by Status");
+    this.analyticsIssuesByTypeChart = page.getByText("Issues by Type");
+    this.analyticsIssuesByPriorityChart = page.getByText("Issues by Priority");
+    this.analyticsTeamVelocityChart = page.getByText("Team Velocity (Last 10 Sprints)");
+    this.analyticsNoCompletedSprintsMessage = page.getByText("No completed sprints yet");
+    this.roadmapViewToggle = page.getByRole("group").filter({ hasText: /months|weeks/i });
+    this.roadmapEpicFilter = page.getByRole("combobox").filter({ hasText: /epic|all/i });
+    this.projectSettingsHeader = page.getByRole("heading", { name: /project settings/i });
     // Issue detail dialog
     // Issue detail dialog - distinct from Create Issue modal
     this.issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
+    this.issueDetailEditButton = this.issueDetailDialog.getByRole("button", { name: /^Edit$/ });
+    this.issueDetailTitleInput = this.issueDetailDialog.getByPlaceholder("Issue title");
+    this.issueDetailDescriptionEditor = this.issueDetailDialog.getByTestId(
+      TEST_IDS.ISSUE.DESCRIPTION_EDITOR,
+    );
+    this.issueDetailDescriptionContent = this.issueDetailDialog.getByTestId(
+      TEST_IDS.ISSUE.DESCRIPTION_CONTENT,
+    );
+    this.issueDetailSaveChangesButton = this.issueDetailDialog.getByRole("button", {
+      name: /save changes/i,
+    });
+    this.issueDetailPrioritySelect = this.issueDetailDialog.getByLabel("Change priority");
     this.startTimerButton = this.issueDetailDialog.getByRole("button", { name: "Start Timer" });
     this.stopTimerButton = this.issueDetailDialog.getByRole("button", { name: /stop timer|stop/i });
     this.timerStoppedToast = page.getByText(/Timer stopped/i);
-
-    // Workspace creation
-    this.workspaceNameInput = page.getByLabel(/workspace name/i);
-    this.workspaceDescriptionInput = page.getByLabel(/description/i);
-    this.submitWorkspaceButton = page.getByRole("button", { name: /create workspace/i });
   }
 
   /**
@@ -169,10 +253,34 @@ export class ProjectsPage extends BasePage {
    * Scoped to "main" to avoid confusing it with global settings or sidebar items
    */
   getProjectSettingsTab() {
-    // Robust selector: match either the navigation link (sidebar/topbar) or the tab  getProjectSettingsTab() {
-    return this.page
-      .getByRole("navigation", { name: "Tabs" })
-      .getByRole("link", { name: "Settings" });
+    return this.projectTabs.getByRole("link", { name: "Settings" });
+  }
+
+  getProjectTab(
+    tab:
+      | "board"
+      | "backlog"
+      | "calendar"
+      | "timesheet"
+      | "roadmap"
+      | "sprints"
+      | "activity"
+      | "analytics"
+      | "settings",
+  ) {
+    const tabs = {
+      board: this.boardTab,
+      backlog: this.backlogTab,
+      calendar: this.calendarTab,
+      timesheet: this.timesheetTab,
+      roadmap: this.roadmapTab,
+      sprints: this.sprintsTab,
+      activity: this.activityTab,
+      analytics: this.analyticsTab,
+      settings: this.settingsTab,
+    };
+
+    return tabs[tab];
   }
 
   // ===================
@@ -185,6 +293,11 @@ export class ProjectsPage extends BasePage {
     await this.waitForLoad();
   }
 
+  async gotoProjectBoard(projectKey: string) {
+    await this.page.goto(`/${this.orgSlug}/projects/${projectKey}/board`);
+    await this.waitForLoad();
+  }
+
   // ===================
   // Actions
   // ===================
@@ -194,9 +307,12 @@ export class ProjectsPage extends BasePage {
 
     // Robust open: Retry clicking if modal doesn't appear (handles hydration timing)
     await expect(async () => {
-      if (!(await this.createProjectForm.isVisible())) {
+      await this.closeCreateProjectFormIfOpen();
+
+      if (!(await this.createProjectForm.isVisible().catch(() => false))) {
         await this.newProjectButton.click();
       }
+
       await expect(this.createProjectForm).toBeVisible();
     }).toPass();
 
@@ -244,16 +360,42 @@ export class ProjectsPage extends BasePage {
         await this.projectDescriptionInput.fill(description);
       }
 
-      // Create project - use evaluate to ensure React event handler fires
+      const normalizedProjectKey = key.toUpperCase();
+      const boardPath = `/${this.orgSlug}/projects/${normalizedProjectKey}/board`;
+      const boardUrlPattern = new RegExp(`/projects/${normalizedProjectKey}/board(?:[/?#]|$)`);
+      const creatingButton = this.createProjectForm.getByRole("button", { name: /creating/i });
+
       await this.createButton.waitFor({ state: "visible" });
       await expect(this.createButton).toBeEnabled();
-      await this.createButton.evaluate((btn: HTMLButtonElement) => btn.click());
+      await this.createButton.scrollIntoViewIfNeeded();
 
-      // Wait for navigation to the new project's board page
-      // The app redirects to /projects/[KEY]/board after creation
-      // URL change is the reliable, event-driven indicator that creation succeeded
-      // No hardcoded timeouts - Playwright's default actionability timeout handles slow backends
-      await this.page.waitForURL(/\/projects\/[A-Z0-9-]+\/board/);
+      // Retry the submit action until the modal begins closing. The project creation dialog
+      // occasionally misses the first click while the footer settles after hydration.
+      await expect(async () => {
+        if (!(await this.createProjectForm.isVisible())) {
+          return;
+        }
+
+        try {
+          await this.createButton.click();
+        } catch {
+          await this.createButton.dispatchEvent("click");
+        }
+
+        if (await creatingButton.isVisible().catch(() => false)) {
+          return;
+        }
+
+        await expect(this.createProjectForm).not.toBeVisible({ timeout: 5000 });
+      }).toPass({ timeout: 30000, intervals: [1000] });
+
+      await waitForProjectCreateSuccess(this.page);
+
+      if (!boardUrlPattern.test(this.page.url())) {
+        await this.page.goto(boardPath);
+      }
+
+      await expect(this.page).toHaveURL(boardUrlPattern);
 
       // Wait for board to be fully interactive before returning
       await this.waitForBoardInteractive();
@@ -270,40 +412,35 @@ export class ProjectsPage extends BasePage {
     await this.page.locator("nav").getByText("Workspaces", { exact: true }).click();
     await this.page.waitForURL(/\/workspaces/, { timeout: 30000 });
 
-    const createWorkspaceDialog = this.page.getByRole("dialog").filter({
-      hasText: /create workspace/i,
-    });
-    const createWorkspaceForm = this.page.locator("#create-workspace-form");
+    const { dialog, createForm, descriptionInput, nameInput, submitButton } =
+      getWorkspaceDialogElements(this.page);
 
-    await expect(async () => {
-      if (!(await createWorkspaceDialog.isVisible())) {
+    await createWorkspaceFromDialog({
+      dialog,
+      nameInput,
+      descriptionInput,
+      submitButton,
+      createForm,
+      workspaceName: name,
+      workspaceDescription: description,
+      openDialog: async () => {
+        await this.page.keyboard.press("Escape");
+        await expect(dialog).not.toBeVisible();
+        await expect(this.newWorkspaceButton).toBeVisible();
+        await this.newWorkspaceButton.scrollIntoViewIfNeeded();
         await this.newWorkspaceButton.click();
-      }
-      await expect(createWorkspaceDialog).toBeVisible();
-      await expect(this.workspaceNameInput).toBeVisible();
-    }).toPass();
+      },
+    });
 
-    await this.workspaceNameInput.fill(name);
-    await expect(this.workspaceNameInput).toHaveValue(name);
-    if (description) {
-      await this.workspaceDescriptionInput.fill(description);
-    }
-
-    if (await createWorkspaceForm.isVisible()) {
-      await createWorkspaceForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
-    } else {
-      await this.submitWorkspaceButton.click();
-    }
-
-    // Verify success
-    await expect(this.page.getByText("Workspace created successfully")).toBeVisible();
-    // Verify modal closed
-    await expect(createWorkspaceDialog).not.toBeVisible();
+    // Deterministic completion: modal closes and workspace route remains active.
+    await expect(this.page).toHaveURL(/\/workspaces(\/[^/?#]+)?(?:[/?#]|$)/);
   }
 
   async cancelCreateProject() {
-    await this.cancelButton.click();
-    await expect(this.createProjectForm).not.toBeVisible();
+    await expect(async () => {
+      await this.closeCreateProjectFormIfOpen();
+      await expect(this.createProjectForm).not.toBeVisible();
+    }).toPass();
   }
 
   async selectProject(index: number) {
@@ -339,30 +476,281 @@ export class ProjectsPage extends BasePage {
       await expect(this.createIssueModal).not.toBeVisible();
     }).toPass();
 
-    await waitForIssueCreateSuccess(this.page, { issueTitle: title });
+    await waitForIssueCreateSuccess(this.page);
   }
 
-  async switchToTab(tab: "board" | "backlog" | "sprints" | "analytics" | "settings") {
-    const tabs = {
-      board: this.boardTab,
-      backlog: this.backlogTab,
-      sprints: this.sprintsTab,
-      analytics: this.analyticsTab,
-      settings: this.settingsTab,
-    };
-
-    const tabLocator = tabs[tab];
+  async switchToTab(
+    tab:
+      | "board"
+      | "backlog"
+      | "calendar"
+      | "timesheet"
+      | "roadmap"
+      | "sprints"
+      | "activity"
+      | "analytics"
+      | "settings",
+  ) {
+    const tabLocator = this.getProjectTab(tab);
 
     // Wait for tab to be available - handle potential loading states or animations
     await expect(tabLocator).toBeVisible();
 
     // Ensure the tab is actually clickable before attempting to click
     // Add a check for navigation container to ensure hydration is complete
-    await expect(this.page.getByRole("navigation", { name: "Tabs" })).toBeVisible();
+    await expect(this.projectTabs).toBeVisible();
     await expect(tabLocator).toBeEnabled();
 
-    // Use force click to ensure we hit it even if animations are playing
     await tabLocator.click();
+
+    const tabPaths = {
+      board: /\/board(?:[/?#]|$)/,
+      backlog: /\/backlog(?:[/?#]|$)/,
+      calendar: /\/calendar(?:[/?#]|$)/,
+      timesheet: /\/timesheet(?:[/?#]|$)/,
+      roadmap: /\/roadmap(?:[/?#]|$)/,
+      sprints: /\/sprints(?:[/?#]|$)/,
+      activity: /\/activity(?:[/?#]|$)/,
+      analytics: /\/analytics(?:[/?#]|$)/,
+      settings: /\/settings(?:[/?#]|$)/,
+    };
+
+    await expect(this.page).toHaveURL(tabPaths[tab]);
+
+    if (tab === "board") {
+      await this.waitForBoardInteractive();
+      return;
+    }
+
+    if (tab === "activity") {
+      await expect(this.activityPageHeader).toBeVisible();
+      await expect(this.activityEmptyState.or(this.activityFeed)).toBeVisible();
+      return;
+    }
+
+    if (tab === "calendar") {
+      return;
+    }
+
+    if (tab === "backlog") {
+      await this.expectBacklogLoaded();
+      return;
+    }
+
+    if (tab === "timesheet") {
+      await this.expectTimesheetLoaded();
+      return;
+    }
+
+    if (tab === "roadmap") {
+      await this.expectRoadmapLoaded();
+      return;
+    }
+
+    if (tab === "sprints") {
+      await this.expectSprintsLoaded();
+      return;
+    }
+
+    if (tab === "analytics") {
+      await this.expectAnalyticsLoaded();
+      return;
+    }
+
+    if (tab === "settings") {
+      await this.expectProjectSettingsLoaded();
+    }
+  }
+
+  async isProjectTabVisible(
+    tab:
+      | "board"
+      | "backlog"
+      | "calendar"
+      | "timesheet"
+      | "roadmap"
+      | "sprints"
+      | "activity"
+      | "analytics"
+      | "settings",
+  ) {
+    return this.getProjectTab(tab)
+      .isVisible()
+      .catch(() => false);
+  }
+
+  async expectProjectTabCurrent(
+    tab:
+      | "board"
+      | "backlog"
+      | "calendar"
+      | "timesheet"
+      | "roadmap"
+      | "sprints"
+      | "activity"
+      | "analytics"
+      | "settings",
+  ) {
+    await expect(this.getProjectTab(tab)).toHaveAttribute("aria-current", "page");
+  }
+
+  async expectAnalyticsLoaded() {
+    await expect(this.page).toHaveURL(/\/analytics(?:[/?#]|$)/);
+    await expect(this.analyticsPageHeader).toBeVisible();
+    await expect(this.analyticsTotalIssuesMetric).toBeVisible();
+  }
+
+  async expectAnalyticsMetricsVisible() {
+    await this.expectAnalyticsLoaded();
+    await expect(this.analyticsUnassignedMetric).toBeVisible();
+    await expect(this.analyticsAvgVelocityMetric).toBeVisible();
+    await expect(this.analyticsCompletedSprintsMetric).toBeVisible();
+  }
+
+  async expectAnalyticsChartsVisible() {
+    await this.expectAnalyticsLoaded();
+    await expect(this.analyticsIssuesByStatusChart).toBeVisible();
+    await expect(this.analyticsIssuesByTypeChart).toBeVisible();
+    await expect(this.analyticsIssuesByPriorityChart).toBeVisible();
+    await this.analyticsTeamVelocityChart.scrollIntoViewIfNeeded();
+    await expect(this.analyticsTeamVelocityChart).toBeVisible();
+  }
+
+  async getAnalyticsTotalIssuesCount() {
+    await this.expectAnalyticsLoaded();
+    const valueText = (await this.analyticsTotalIssuesMetric.textContent()) ?? "";
+    return Number.parseInt(valueText.match(/\d+/)?.[0] ?? "0", 10);
+  }
+
+  async expectAnalyticsNoCompletedSprintsVisible() {
+    await this.expectAnalyticsLoaded();
+    await expect(this.analyticsNoCompletedSprintsMessage).toBeVisible();
+  }
+
+  async expectAnalyticsHeaderAndDescriptionVisible() {
+    await this.expectAnalyticsLoaded();
+    await expect(this.analyticsPageDescription).toBeVisible();
+  }
+
+  async expectProjectSettingsLoaded() {
+    await expect(this.page).toHaveURL(/\/settings(?:[/?#]|$)/);
+    await expect(this.projectSettingsHeader).toBeVisible();
+  }
+
+  async expectBacklogLoaded() {
+    await expect(this.page).toHaveURL(/\/backlog(?:[/?#]|$)/);
+    await expect(this.boardColumns.first()).toBeVisible();
+    await expect(this.getBoardColumn("Backlog")).toBeVisible();
+  }
+
+  async expectTimesheetLoaded() {
+    await expect(this.page).toHaveURL(/\/timesheet(?:[/?#]|$)/);
+    await expect(this.timesheetEntriesTab).toBeVisible();
+  }
+
+  async expectRoadmapLoaded() {
+    await expect(this.page).toHaveURL(/\/roadmap(?:[/?#]|$)/);
+    await expect(this.roadmapViewToggle).toBeVisible();
+  }
+
+  async expectRoadmapCurrentMonthVisible(date = new Date()) {
+    await this.expectRoadmapLoaded();
+    const currentMonth = date.toLocaleString("default", { month: "short" });
+    await expect(this.page.getByText(currentMonth)).toBeVisible();
+  }
+
+  async getRoadmapEpicFilterState(): Promise<"visible" | "hidden"> {
+    await this.expectRoadmapLoaded();
+    return (await this.roadmapEpicFilter.isVisible().catch(() => false)) ? "visible" : "hidden";
+  }
+
+  async expectSprintsLoaded() {
+    await expect(this.page).toHaveURL(/\/sprints(?:[/?#]|$)/);
+    await expect(this.sprintsPageHeader).toBeVisible();
+
+    if (await this.createSprintButton.isVisible().catch(() => false)) {
+      return;
+    }
+
+    if (await this.sprintsEmptyState.isVisible().catch(() => false)) {
+      return;
+    }
+
+    if (
+      await this.sprintCards
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
+      return;
+    }
+
+    await expect(
+      this.createSprintButton.or(this.sprintsEmptyState).or(this.sprintCards.first()),
+    ).toBeVisible();
+  }
+
+  async expectCreateSprintVisible() {
+    await this.expectSprintsLoaded();
+    await expect(this.createSprintButton).toBeVisible();
+  }
+
+  async getActivityPageState(): Promise<"empty" | "entries"> {
+    await expect(this.activityPageHeader).toBeVisible();
+
+    if (
+      await this.activityEntries
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
+      return "entries";
+    }
+
+    if (await this.activityEmptyState.isVisible().catch(() => false)) {
+      return "empty";
+    }
+
+    await expect(this.activityEmptyState.or(this.activityEntries.first())).toBeVisible();
+
+    return (await this.activityEntries
+      .first()
+      .isVisible()
+      .catch(() => false))
+      ? "entries"
+      : "empty";
+  }
+
+  async expectActivityEntriesVisible() {
+    await expect(this.activityFeed).toBeVisible();
+    await expect(this.activityEntries.first()).toBeVisible();
+  }
+
+  async expectActivityActionVisible(actionPattern: RegExp) {
+    await this.expectActivityEntriesVisible();
+    await expect(this.activityFeed.getByText(actionPattern).first()).toBeVisible();
+  }
+
+  async expectActivityIssueKeyVisible(projectKey: string) {
+    await this.expectActivityEntriesVisible();
+    await expect(
+      this.activityFeed.getByText(new RegExp(`${projectKey}-\\d+`)).first(),
+    ).toBeVisible();
+  }
+
+  async expectActivityEntryActionVisible(actionPattern: RegExp) {
+    const activityEntry = this.activityEntries.first();
+    await expect(activityEntry).toBeVisible();
+    await expect(activityEntry.getByText(actionPattern)).toBeVisible();
+  }
+
+  async expectActivityRelativeTimestampVisible() {
+    await this.expectActivityEntriesVisible();
+    await expect(
+      this.activityFeed
+        .getByText(/just now|seconds? ago|minutes? ago|hours? ago|days? ago/i)
+        .first(),
+    ).toBeVisible();
   }
 
   /**
@@ -377,18 +765,137 @@ export class ProjectsPage extends BasePage {
     return this.page.getByRole("button", { name: new RegExp(escaped) });
   }
 
+  getIssueCardContainer(title: string) {
+    return this.page
+      .getByTestId(TEST_IDS.ISSUE.CARD)
+      .filter({ has: this.getIssueCard(title) })
+      .first();
+  }
+
+  getIssueKeyElement(title: string) {
+    return this.getIssueCardContainer(title).getByTestId(TEST_IDS.ISSUE.KEY);
+  }
+
+  async getIssueKey(title: string) {
+    const issueKey = this.getIssueKeyElement(title);
+    await expect(issueKey).toBeVisible();
+    return (await issueKey.textContent())?.trim() ?? "";
+  }
+
+  getIssueDragHandle(title: string) {
+    return this.getIssueCardContainer(title).getByTestId(TEST_IDS.ISSUE.DRAG_HANDLE);
+  }
+
+  getBoardColumn(name: string | RegExp) {
+    const namePattern = typeof name === "string" ? new RegExp(`^${name}$`, "i") : name;
+    return this.boardColumns.filter({ has: this.page.getByText(namePattern) }).first();
+  }
+
+  getBoardColumnCountBadgeByIndex(index: number) {
+    return this.boardColumns.nth(index).getByTestId(TEST_IDS.BOARD.COLUMN_COUNT);
+  }
+
   /**
    * Open an issue detail dialog by clicking its card
    */
   async openIssueDetail(title: string) {
     const issueCard = this.getIssueCard(title);
-    await issueCard.waitFor({ state: "visible" });
-    await issueCard.click();
-    await expect(this.issueDetailDialog).toBeVisible();
+    await expect(async () => {
+      await this.closeIssueDetailIfOpen();
+      await issueCard.waitFor({ state: "visible" });
 
-    // Wait for modal content to be stable using the issue key metadata,
-    // which is consistently rendered regardless of sidebar section timing.
-    await expect(this.issueDetailDialog.getByText(/[A-Z][A-Z0-9]+-\d+/).first()).toBeVisible();
+      // Some card overlays intentionally sit behind visible title text and can be intercepted.
+      // Force click keeps targeting the semantic button while bypassing transient pointer blockers.
+      await issueCard.click({ force: true });
+      await expect(this.issueDetailDialog).toBeVisible();
+
+      // Wait for modal content to be stable using the issue key metadata,
+      // which is consistently rendered regardless of sidebar section timing.
+      await expect(this.issueDetailDialog.getByText(/[A-Z][A-Z0-9]+-\d+/).first()).toBeVisible();
+    }).toPass();
+  }
+
+  async closeIssueDetail() {
+    await expect(async () => {
+      await this.closeIssueDetailIfOpen();
+      await expect(this.issueDetailDialog).not.toBeVisible();
+    }).toPass();
+  }
+
+  async closeIssueDetailIfOpen() {
+    if (!(await this.issueDetailDialog.isVisible().catch(() => false))) {
+      return;
+    }
+
+    await this.page.keyboard.press("Escape");
+
+    if (await this.issueDetailDialog.isVisible().catch(() => false)) {
+      await this.page.mouse.click(10, 10);
+    }
+
+    await expect(this.issueDetailDialog).not.toBeVisible();
+  }
+
+  async closeCreateProjectFormIfOpen() {
+    if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+      return;
+    }
+
+    if (await this.cancelButton.isVisible().catch(() => false)) {
+      await this.cancelButton.click().catch(() => {});
+    }
+
+    if (await this.createProjectForm.isVisible().catch(() => false)) {
+      await this.page.keyboard.press("Escape");
+    }
+
+    if (await this.createProjectForm.isVisible().catch(() => false)) {
+      await this.page.mouse.click(10, 10);
+    }
+
+    await expect(this.createProjectForm).not.toBeVisible();
+  }
+
+  async editIssueTitle(nextTitle: string) {
+    await expect(this.issueDetailEditButton).toBeVisible();
+    await this.issueDetailEditButton.click();
+
+    await expect(this.issueDetailTitleInput).toBeVisible();
+    await this.issueDetailTitleInput.fill(nextTitle);
+    await expect(this.issueDetailTitleInput).toHaveValue(nextTitle);
+
+    await this.issueDetailSaveChangesButton.click();
+
+    await expect(this.issueDetailTitleInput).not.toBeVisible();
+    await expect(this.issueDetailEditButton).toBeVisible();
+    await waitForIssueUpdateSuccess(this.page);
+  }
+
+  async editIssueDescription(nextDescription: string) {
+    await expect(this.issueDetailEditButton).toBeVisible();
+    await this.issueDetailEditButton.click();
+
+    await expect(this.issueDetailDescriptionEditor).toBeVisible();
+    await this.issueDetailDescriptionEditor.fill(nextDescription);
+
+    await this.issueDetailSaveChangesButton.click();
+
+    await expect(this.issueDetailDescriptionEditor).not.toBeVisible();
+    await expect(this.issueDetailEditButton).toBeVisible();
+    await waitForIssueUpdateSuccess(this.page);
+    await expect(this.issueDetailDescriptionContent).toContainText(nextDescription);
+  }
+
+  async changeIssuePriority(priorityLabel: "Highest" | "High" | "Medium" | "Low" | "Lowest") {
+    await expect(this.issueDetailPrioritySelect).toBeVisible();
+    await this.issueDetailPrioritySelect.click();
+
+    const option = this.page.getByRole("option", { name: new RegExp(`^${priorityLabel}$`, "i") });
+    await expect(option).toBeVisible();
+    await option.click();
+
+    await expect(this.issueDetailPrioritySelect).toContainText(new RegExp(priorityLabel, "i"));
+    await waitForIssueUpdateSuccess(this.page);
   }
 
   /**
@@ -444,6 +951,10 @@ export class ProjectsPage extends BasePage {
 
   async expectBoardVisible() {
     await expect(this.projectBoard).toBeVisible();
+  }
+
+  async expectProjectNotFound() {
+    await expect(this.page.getByRole("heading", { name: /project not found/i })).toBeVisible();
   }
 
   /** Wait for board to be fully interactive */

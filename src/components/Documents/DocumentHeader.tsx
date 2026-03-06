@@ -20,6 +20,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { Archive, Download, FolderInput, History, Lock, LockOpen, Star, Upload } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 
 interface LockStatus {
@@ -96,6 +97,7 @@ export function DocumentHeader({
   const titleComponent = (
     <Typography
       variant="h1"
+      data-testid={TEST_IDS.DOCUMENT.TITLE}
       role={document.isOwner ? "button" : undefined}
       tabIndex={document.isOwner ? 0 : undefined}
       className={cn(
@@ -138,6 +140,7 @@ export function DocumentHeader({
             {isEditingTitle ? (
               <Input
                 type="text"
+                data-testid={TEST_IDS.DOCUMENT.TITLE_INPUT}
                 value={titleValue}
                 onChange={(e) => setTitleValue(e.target.value)}
                 onBlur={() => void handleTitleSave()}

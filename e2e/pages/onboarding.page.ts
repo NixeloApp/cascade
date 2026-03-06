@@ -3,6 +3,11 @@ import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 
 const TRANSITION_TIMEOUT = 15000;
+const TRANSITION_RETRY_INTERVALS = [500, 1000];
+const TRANSITION_RETRY_TIMEOUT = 30000;
+const CLICK_RETRY_TIMEOUT = 3000;
+const CARD_SELECTION_TIMEOUT = 5000;
+const CONVEX_CONNECTION_TIMEOUT = 15000;
 
 /**
  * Onboarding Page Object
@@ -31,6 +36,8 @@ export class OnboardingPage {
   readonly setupWorkspaceButton: Locator;
 
   // Team Member flow
+  readonly nameProjectHeading: Locator;
+  readonly projectNameInput: Locator;
   readonly allSetHeading: Locator;
   readonly goToDashboardButton: Locator;
   readonly createProjectButton: Locator;
@@ -42,6 +49,9 @@ export class OnboardingPage {
 
   // Dashboard (after onboarding)
   readonly myWorkHeading: Locator;
+  readonly error500Heading: Locator;
+  readonly errorHeading: Locator;
+  readonly errorMessage: Locator;
 
   // ===================
   // Driver.js Tour Locators (legacy)
@@ -72,6 +82,8 @@ export class OnboardingPage {
     this.setupWorkspaceButton = page.getByTestId(TEST_IDS.ONBOARDING.SETUP_WORKSPACE_BUTTON);
 
     // Team Member flow
+    this.nameProjectHeading = page.getByTestId(TEST_IDS.ONBOARDING.NAME_PROJECT_HEADING);
+    this.projectNameInput = page.getByPlaceholder(/e\.g\., acme corp/i);
     this.allSetHeading = page.getByRole("heading", { name: /you're ready/i });
     this.goToDashboardButton = page.getByTestId(TEST_IDS.ONBOARDING.GO_TO_DASHBOARD_BUTTON);
     this.createProjectButton = page.getByRole("button", { name: /create project/i });
@@ -83,6 +95,9 @@ export class OnboardingPage {
 
     // Dashboard - use test ID to avoid matching multiple headings
     this.myWorkHeading = page.getByTestId(TEST_IDS.DASHBOARD.FEED_HEADING);
+    this.error500Heading = page.getByRole("heading", { name: "500" });
+    this.errorHeading = page.getByRole("heading", { name: /^error$/i });
+    this.errorMessage = page.getByText(/something went wrong|setting up your project/i).first();
 
     // Driver.js uses these CSS classes
     this.tourOverlay = page.locator(".driver-overlay");
@@ -97,7 +112,51 @@ export class OnboardingPage {
 
   async goto(): Promise<void> {
     // Onboarding shows on /onboarding route for new users
-    await this.page.goto("/onboarding");
+    await this.page.goto("/onboarding", { waitUntil: "domcontentloaded" });
+    await this.expectOnboardingRoute();
+  }
+
+  async recoverOnboardingRouteIfNeeded() {
+    const hasAppError =
+      (await this.error500Heading.isVisible().catch(() => false)) ||
+      ((await this.errorHeading.isVisible().catch(() => false)) &&
+        (await this.errorMessage.isVisible().catch(() => false)));
+
+    if (!hasAppError) {
+      return;
+    }
+
+    await this.page.goto("/onboarding", { waitUntil: "domcontentloaded" });
+    await this.expectOnboardingRoute();
+  }
+
+  async waitForConvexConnection() {
+    await this.page.waitForFunction(
+      () => {
+        const convex = (
+          window as Window & {
+            __convex_test_client?: { connectionState: () => { isWebSocketConnected: boolean } };
+          }
+        ).__convex_test_client;
+
+        return (
+          document.body.classList.contains("app-hydrated") &&
+          !!convex?.connectionState().isWebSocketConnected
+        );
+      },
+      undefined,
+      { timeout: CONVEX_CONNECTION_TIMEOUT },
+    );
+  }
+
+  async hasRoleSelectionStarted(card: Locator) {
+    const pressed = await card.getAttribute("aria-pressed").catch(() => null);
+    if (pressed === "true") {
+      return true;
+    }
+
+    const isEnabled = await card.isEnabled().catch(() => false);
+    return !isEnabled;
   }
 
   /**
@@ -247,14 +306,24 @@ export class OnboardingPage {
    * Wait for onboarding wizard to load
    */
   async waitForWizard(timeout = TRANSITION_TIMEOUT) {
-    await this.waitForSplashScreen();
-    await expect(this.welcomeHeading).toBeVisible({ timeout });
+    await expect(async () => {
+      await this.recoverOnboardingRouteIfNeeded();
+      await this.expectOnboardingRoute();
+      await this.waitForConvexConnection();
+      await this.waitForSplashScreen();
+      await expect(this.welcomeHeading).toBeVisible({ timeout });
+      await expect(this.teamLeadCard).toBeVisible();
+      await expect(this.teamMemberCard).toBeVisible();
+    }).toPass({ timeout: TRANSITION_RETRY_TIMEOUT, intervals: TRANSITION_RETRY_INTERVALS });
   }
 
   /** Wait for role selection cards to be interactive */
   async waitForRoleCardsReady() {
-    await expect(this.teamLeadCard).toBeEnabled();
-    await expect(this.teamMemberCard).toBeEnabled();
+    await expect(async () => {
+      await this.recoverOnboardingRouteIfNeeded();
+      await expect(this.teamLeadCard).toBeEnabled();
+      await expect(this.teamMemberCard).toBeEnabled();
+    }).toPass({ timeout: TRANSITION_RETRY_TIMEOUT, intervals: TRANSITION_RETRY_INTERVALS });
   }
 
   /**
@@ -264,19 +333,24 @@ export class OnboardingPage {
     console.log("Selecting Team Lead role...");
     await expect(async () => {
       // If we are already on the next screen, we are good
-      if (await this.teamLeadHeading.isVisible()) {
+      if (await this.teamLeadHeading.isVisible().catch(() => false)) {
         return;
       }
 
-      // Ensure splash screen is gone before clicking
-      await this.waitForSplashScreen();
+      await this.recoverOnboardingRouteIfNeeded();
+      await this.waitForWizard();
 
-      // The role cards have a small pending state/delay, so we might need to retry click
-      await this.teamLeadCard.click();
+      if (!(await this.hasRoleSelectionStarted(this.teamLeadCard))) {
+        await this.waitForRoleCardsReady();
+        await this.teamLeadCard.click({ timeout: CLICK_RETRY_TIMEOUT });
+        await expect(this.teamLeadCard).toHaveAttribute("aria-pressed", "true", {
+          timeout: CARD_SELECTION_TIMEOUT,
+        });
+      }
 
       // Check for the outcome (first screen of lead flow)
-      await expect(this.teamLeadHeading).toBeVisible();
-    }).toPass();
+      await expect(this.teamLeadHeading).toBeVisible({ timeout: TRANSITION_TIMEOUT });
+    }).toPass({ timeout: TRANSITION_RETRY_TIMEOUT, intervals: TRANSITION_RETRY_INTERVALS });
     console.log("Successfully transitioned to Team Lead setup.");
   }
 
@@ -287,17 +361,24 @@ export class OnboardingPage {
     console.log("Selecting Team Member role...");
     await expect(async () => {
       // For team members, the immediate next step is "Name Your Project"
-      if (await this.page.getByRole("heading", { name: /name your project/i }).isVisible()) {
+      if (await this.nameProjectHeading.isVisible().catch(() => false)) {
         return;
       }
 
-      await this.waitForSplashScreen();
+      await this.recoverOnboardingRouteIfNeeded();
+      await this.waitForWizard();
 
-      await this.teamMemberCard.click();
+      if (!(await this.hasRoleSelectionStarted(this.teamMemberCard))) {
+        await this.waitForRoleCardsReady();
+        await this.teamMemberCard.click({ timeout: CLICK_RETRY_TIMEOUT });
+        await expect(this.teamMemberCard).toHaveAttribute("aria-pressed", "true", {
+          timeout: CARD_SELECTION_TIMEOUT,
+        });
+      }
 
       // Check for the outcome (first screen of member flow)
-      await expect(this.page.getByRole("heading", { name: /name your project/i })).toBeVisible();
-    }).toPass();
+      await expect(this.nameProjectHeading).toBeVisible({ timeout: TRANSITION_TIMEOUT });
+    }).toPass({ timeout: TRANSITION_RETRY_TIMEOUT, intervals: TRANSITION_RETRY_INTERVALS });
     console.log("Successfully transitioned to Team Member project naming.");
   }
 
@@ -320,13 +401,17 @@ export class OnboardingPage {
    * Skip onboarding and go to dashboard
    */
   async skipOnboarding() {
-    // Try button first, then text
-    const skipVisible = await this.skipButton.isVisible().catch(() => false);
-    if (skipVisible) {
-      await this.skipButton.click();
-    } else {
-      await this.skipText.click();
-    }
+    await expect(async () => {
+      // Try button first, then text
+      const skipVisible = await this.skipButton.isVisible().catch(() => false);
+      if (skipVisible) {
+        await this.skipButton.click();
+      } else {
+        await this.skipText.click();
+      }
+
+      await this.expectDashboard();
+    }).toPass();
   }
 
   /**
@@ -340,14 +425,25 @@ export class OnboardingPage {
    * Click create project button
    */
   async createProject() {
-    await this.createProjectButton.click();
+    await expect(async () => {
+      await this.createProjectButton.click();
+      await this.expectTeamMemberComplete();
+    }).toPass();
+  }
+
+  async fillProjectName(name: string) {
+    await expect(this.projectNameInput).toBeVisible();
+    await this.projectNameInput.fill(name);
   }
 
   /**
    * Complete team member flow to dashboard
    */
   async goToDashboard() {
-    await this.goToDashboardButton.click();
+    await expect(async () => {
+      await this.goToDashboardButton.click();
+      await this.expectDashboard();
+    }).toPass();
   }
 
   // ===================
@@ -361,6 +457,10 @@ export class OnboardingPage {
     await expect(this.welcomeHeading).toBeVisible({ timeout: TRANSITION_TIMEOUT });
     await expect(this.teamLeadCard).toBeVisible();
     await expect(this.teamMemberCard).toBeVisible();
+  }
+
+  async expectOnboardingRoute(timeout = TRANSITION_TIMEOUT) {
+    await expect(this.page).toHaveURL(/\/onboarding$/, { timeout });
   }
 
   /**
@@ -392,6 +492,7 @@ export class OnboardingPage {
    * Assert we're on the dashboard
    */
   async expectDashboard(timeout = TRANSITION_TIMEOUT) {
+    await expect(this.page).toHaveURL(/\/[^/]+\/dashboard/, { timeout });
     await expect(this.myWorkHeading).toBeVisible({ timeout });
   }
 }

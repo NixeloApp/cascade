@@ -22,7 +22,7 @@ import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { logger } from "./lib/logger";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { DAY, HOUR, MINUTE, MONTH, SECOND, WEEK } from "./lib/timeUtils";
-import type { CalendarEventColor } from "./validators";
+import { type CalendarEventColor, otpCodeTypes } from "./validators";
 
 // Test user expiration (1 hour - for garbage collection)
 const TEST_USER_EXPIRATION_MS = HOUR;
@@ -1720,7 +1720,7 @@ export const storeTestOtp = internalMutation({
   args: {
     email: v.string(),
     code: v.string(),
-    type: v.optional(v.string()),
+    type: otpCodeTypes,
   },
   handler: async (ctx, args) => {
     // Only allow test emails
@@ -1729,23 +1729,10 @@ export const storeTestOtp = internalMutation({
     }
 
     // Delete any existing OTP for this email AND type
-    // If type is not provided, we might delete any? Or just match by email?
-    // To support migration and mixed usage, if type is provided, we match by it.
-    // If not, we might overwrite indiscriminately (old behavior).
-    // Better: Match by email+type if type is provided.
-
-    let existingOtp: Doc<"testOtpCodes"> | null;
-    if (args.type) {
-      existingOtp = await ctx.db
-        .query("testOtpCodes")
-        .withIndex("by_email_type", (q) => q.eq("email", args.email).eq("type", args.type))
-        .first();
-    } else {
-      existingOtp = await ctx.db
-        .query("testOtpCodes")
-        .withIndex("by_email", (q) => q.eq("email", args.email))
-        .first();
-    }
+    const existingOtp = await ctx.db
+      .query("testOtpCodes")
+      .withIndex("by_email_type", (q) => q.eq("email", args.email).eq("type", args.type))
+      .first();
 
     if (existingOtp) {
       await ctx.db.delete(existingOtp._id);
@@ -1775,7 +1762,7 @@ export const storeTestOtp = internalMutation({
  * Reads from testOtpCodes table which stores plaintext codes for E2E testing.
  */
 export const getLatestOTP = internalQuery({
-  args: { email: v.string(), type: v.optional(v.string()) },
+  args: { email: v.string(), type: otpCodeTypes },
   handler: async (ctx, args) => {
     // Only allow test emails
     if (!isTestEmail(args.email)) {
@@ -1783,18 +1770,10 @@ export const getLatestOTP = internalQuery({
     }
 
     // Get from testOtpCodes table (plaintext for E2E)
-    let otpRecord: Doc<"testOtpCodes"> | null;
-    if (args.type) {
-      otpRecord = await ctx.db
-        .query("testOtpCodes")
-        .withIndex("by_email_type", (q) => q.eq("email", args.email).eq("type", args.type))
-        .first();
-    } else {
-      otpRecord = await ctx.db
-        .query("testOtpCodes")
-        .withIndex("by_email", (q) => q.eq("email", args.email))
-        .first();
-    }
+    const otpRecord = await ctx.db
+      .query("testOtpCodes")
+      .withIndex("by_email_type", (q) => q.eq("email", args.email).eq("type", args.type))
+      .first();
 
     if (!otpRecord) return null;
 

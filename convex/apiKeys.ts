@@ -196,7 +196,7 @@ export const generate = authenticatedMutation({
       action: "api_key.created",
       actorId: ctx.userId,
       targetId: keyId,
-      targetType: "apiKey",
+      targetType: "api_key",
       metadata: {
         name: args.name,
         scopes: args.scopes,
@@ -269,7 +269,7 @@ export const revoke = authenticatedMutation({
       action: "api_key.revoked",
       actorId: ctx.userId,
       targetId: args.keyId,
-      targetType: "apiKey",
+      targetType: "api_key",
       metadata: {
         name: key.name,
         keyPrefix: key.keyPrefix,

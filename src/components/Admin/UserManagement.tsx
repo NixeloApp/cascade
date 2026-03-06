@@ -19,6 +19,7 @@ import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex } from "../ui/Flex";
 import { Input } from "../ui/form";
@@ -86,6 +87,8 @@ export function UserManagement() {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"user" | "superAdmin">("user");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [revokeConfirmOpen, setRevokeConfirmOpen] = useState(false);
+  const [pendingRevokeId, setPendingRevokeId] = useState<Id<"invites"> | null>(null);
 
   // Queries
   // Queries
@@ -115,14 +118,20 @@ export function UserManagement() {
     }
   };
 
-  const handleRevokeInvite = async (inviteId: Id<"invites">) => {
-    if (!confirm("Are you sure you want to revoke this invitation?")) return;
+  const handleRevokeClick = (inviteId: Id<"invites">) => {
+    setPendingRevokeId(inviteId);
+    setRevokeConfirmOpen(true);
+  };
 
+  const handleRevokeConfirm = async () => {
+    if (!pendingRevokeId) return;
     try {
-      await revokeInvite({ inviteId });
+      await revokeInvite({ inviteId: pendingRevokeId });
       showSuccess("Invitation revoked");
     } catch (error) {
       showError(error, "Failed to revoke invitation");
+    } finally {
+      setPendingRevokeId(null);
     }
   };
 
@@ -375,7 +384,7 @@ export function UserManagement() {
                                     Resend
                                   </Button>
                                   <Button
-                                    onClick={() => handleRevokeInvite(invite._id)}
+                                    onClick={() => handleRevokeClick(invite._id)}
                                     variant="ghostDanger"
                                     size="sm"
                                     aria-label="Revoke invitation"
@@ -459,6 +468,16 @@ export function UserManagement() {
           </CardBody>
         </Card>
       )}
+
+      <ConfirmDialog
+        isOpen={revokeConfirmOpen}
+        onClose={() => setRevokeConfirmOpen(false)}
+        onConfirm={handleRevokeConfirm}
+        title="Revoke Invitation"
+        message="Are you sure you want to revoke this invitation?"
+        variant="danger"
+        confirmLabel="Revoke"
+      />
     </Flex>
   );
 }

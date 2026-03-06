@@ -72,6 +72,46 @@ Use this checklist for any PR that modifies `e2e/` specs, fixtures, page objects
 - Selectors prioritize semantic roles and test ids over brittle text/CSS-only locators
 - PR includes exact E2E command(s) run and pass/fail/skip outcomes
 
+## Critical Path No-Skip Policy
+
+Critical-path E2E coverage (`auth`, `issues`, `board`, `documents`, `search`) must not be disabled with static skips.
+
+Policy:
+- Do not commit `test.skip(...)` or `test.describe.skip(...)` for critical-path specs.
+- If a test must be gated, use an explicit runtime precondition with a clear reason (for example missing OAuth secrets in local runs), and scope it to non-critical integrations.
+- Treat persistent skips as debt: track them in `todos/e2e-reliability-overhaul.md` with owner + next action.
+
+Audit commands:
+
+```bash
+rg -n "test\\.skip\\(|test\\.describe\\.skip\\(" e2e
+rg -n "test\\.only\\(|test\\.describe\\.only\\(" e2e
+```
+
+## Selector Hierarchy
+
+Use selectors in this order for new/updated E2E tests:
+
+1. `getByRole(...)` with accessible name
+2. `getByLabel(...)` / `getByPlaceholder(...)` for form fields
+3. `getByTestId(TEST_IDS...)` via shared constants when role/label is not stable
+4. Scoped locator fallback under a stable container (`container.locator(...)`)
+
+Rules:
+- Always scope selectors to a stable parent when multiple matches are possible.
+- Avoid unscoped text/CSS selectors as first choice.
+- If adding a new `data-testid`, add it to shared `TEST_IDS` constants first.
+
+## E2E TODO Update Protocol
+
+After each full-suite reliability run (`pnpm exec playwright test --reporter=line`), update `todos/e2e-reliability-overhaul.md` in the same change set:
+
+- Set `Last Updated` to the run date.
+- Record exact outcome (`passed/failed`, duration, skip count if any).
+- If failures occurred, add concrete failing spec references and the immediate next action.
+- Only check boxes that are actually satisfied by code and tests in the branch.
+- If blocked by environment/external services, add blocker + next step instead of silently leaving status stale.
+
 Automated guard commands:
 
 ```bash
@@ -619,16 +659,18 @@ test("sign up sends verification email", async ({ authPage }) => {
 
 ### Skipping Tests
 
+> **Note:** These examples are for **non-critical coverage only**. See [Critical Path No-Skip Policy](#critical-path-no-skip-policy) above — static skips are prohibited for critical-path specs (`auth`, `issues`, `board`, `documents`, `search`).
+
 ```typescript
-// Skip individual test
+// Skip individual test (non-critical only)
 test.skip("feature not implemented", async () => {});
 
-// Skip conditionally
+// Skip conditionally (acceptable for environment-gated features)
 test("only on CI", async () => {
   test.skip(!process.env.CI, "CI only");
 });
 
-// Skip entire describe block
+// Skip entire describe block (non-critical only)
 test.describe.skip("WIP feature", () => {});
 ```
 
@@ -870,4 +912,4 @@ This file is read by `rbac.fixture.ts` to get the correct organization slug for 
 
 ---
 
-_Last Updated: 2026-01-28_
+_Last Updated: 2026-03-06_

@@ -12,6 +12,7 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/form/Input";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { TEST_IDS } from "@/lib/test-ids";
 
 interface IssueDetailContentProps {
   issueId: Id<"issues">;
@@ -64,6 +65,7 @@ export function IssueDetailContent({
                   onChange={onDescriptionChange}
                   placeholder="Add a description..."
                   minHeight={200}
+                  testId={TEST_IDS.ISSUE.DESCRIPTION_EDITOR}
                 />
                 <Flex gap="sm">
                   <Button onClick={onSave}>Save Changes</Button>
@@ -78,7 +80,10 @@ export function IssueDetailContent({
                   {issueTitle}
                 </Typography>
                 {issueDescription ? (
-                  <IssueDescriptionReadOnly value={issueDescription} />
+                  <IssueDescriptionReadOnly
+                    value={issueDescription}
+                    testId={TEST_IDS.ISSUE.DESCRIPTION_CONTENT}
+                  />
                 ) : (
                   <Typography variant="p" color="tertiary" className="italic">
                     No description provided

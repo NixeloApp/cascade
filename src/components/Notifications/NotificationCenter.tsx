@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Link } from "@tanstack/react-router";
-import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { isThisWeek, isToday, isYesterday } from "date-fns";
 import { Bell, ExternalLink } from "lucide-react";
 import { useState } from "react";
@@ -83,12 +83,13 @@ export function NotificationCenter() {
   const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState<NotificationFilter>("all");
   const orgContext = useOrganizationOptional();
+  const { isAuthenticated } = useConvexAuth();
 
   // Filter by type on the backend for proper pagination
   const typeFilter = FILTER_TYPE_MAP[filter];
   const { results: notificationsRaw } = usePaginatedQuery(
     api.notifications.list,
-    { types: typeFilter ?? undefined },
+    isAuthenticated ? { types: typeFilter ?? undefined } : "skip",
     { initialNumItems: 50 },
   );
   const notifications = (notificationsRaw ?? []) as NotificationWithActor[];
@@ -98,7 +99,7 @@ export function NotificationCenter() {
 
   // Ordered groups for display
   const orderedGroups: DateGroup[] = ["today", "yesterday", "this_week", "older"];
-  const unreadCount = useQuery(api.notifications.getUnreadCount, {});
+  const unreadCount = useQuery(api.notifications.getUnreadCount, isAuthenticated ? {} : "skip");
   const markAsRead = useMutation(api.notifications.markAsRead);
   const markAllAsRead = useMutation(api.notifications.markAllAsRead);
   const archiveNotification = useMutation(api.notifications.archiveNotification);

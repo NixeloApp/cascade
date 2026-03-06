@@ -16,6 +16,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Dialog } from "../ui/Dialog";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
@@ -143,12 +144,10 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
   const deleteKey = useMutation(api.apiKeys.remove);
   const [isRevoking, setIsRevoking] = useState(false);
   const [_isDeleting, setIsDeleting] = useState(false);
+  const [revokeConfirmOpen, setRevokeConfirmOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
-  const handleRevoke = async () => {
-    if (!confirm(`Revoke API key "${apiKey.name}"? This will immediately stop it from working.`)) {
-      return;
-    }
-
+  const handleRevokeConfirm = async () => {
     setIsRevoking(true);
     try {
       await revokeKey({ keyId: apiKey.id });
@@ -160,11 +159,7 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm(`Permanently delete API key "${apiKey.name}"? This cannot be undone.`)) {
-      return;
-    }
-
+  const handleDeleteConfirm = async () => {
     setIsDeleting(true);
     try {
       await deleteKey({ keyId: apiKey.id });
@@ -259,7 +254,7 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
           </Tooltip>
           {apiKey.isActive && (
             <Button
-              onClick={handleRevoke}
+              onClick={() => setRevokeConfirmOpen(true)}
               variant="ghost"
               size="sm"
               isLoading={isRevoking}
@@ -270,12 +265,37 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
             </Button>
           )}
           <Tooltip content="Delete API key">
-            <IconButton onClick={handleDelete} variant="danger" size="sm" aria-label="Delete key">
+            <IconButton
+              onClick={() => setDeleteConfirmOpen(true)}
+              variant="danger"
+              size="sm"
+              aria-label="Delete key"
+            >
               <Trash2 className="h-4 w-4" />
             </IconButton>
           </Tooltip>
         </Flex>
       </Flex>
+
+      <ConfirmDialog
+        isOpen={revokeConfirmOpen}
+        onClose={() => setRevokeConfirmOpen(false)}
+        onConfirm={handleRevokeConfirm}
+        title="Revoke API Key"
+        message={`Revoke API key "${apiKey.name}"? This will immediately stop it from working.`}
+        variant="warning"
+        confirmLabel="Revoke"
+      />
+
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete API Key"
+        message={`Permanently delete API key "${apiKey.name}"? This cannot be undone.`}
+        variant="danger"
+        confirmLabel="Delete"
+      />
     </Card>
   );
 }

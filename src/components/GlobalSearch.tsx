@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
-import { useState } from "react";
+import { type ComponentProps, useState } from "react";
 import { AdvancedSearchModal } from "@/components/AdvancedSearchModal";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
@@ -22,7 +22,6 @@ import { Button } from "./ui/Button";
 import {
   Command,
   CommandDialog,
-  CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
@@ -118,7 +117,12 @@ function SearchListContent({
 }) {
   if (query.length < 2) {
     return (
-      <Typography variant="small" color="secondary" className="text-center">
+      <Typography
+        variant="small"
+        color="secondary"
+        className="text-center"
+        data-testid={TEST_IDS.SEARCH.MIN_QUERY_MESSAGE}
+      >
         {hasShortcuts
           ? "Add at least 2 non-shortcut characters to search"
           : "Type at least 2 characters to search"}
@@ -128,7 +132,12 @@ function SearchListContent({
 
   if (isLoading) {
     return (
-      <Flex direction="column" align="center" className="text-ui-text-secondary">
+      <Flex
+        direction="column"
+        align="center"
+        className="text-ui-text-secondary"
+        data-testid={TEST_IDS.SEARCH.LOADING_STATE}
+      >
         <div className="inline-block w-6 h-6 border-2 border-brand-ring border-t-transparent rounded-full animate-spin mb-2" />
         <Typography variant="small">Searching...</Typography>
       </Flex>
@@ -137,14 +146,19 @@ function SearchListContent({
 
   return (
     <>
-      <CommandEmpty data-testid={TEST_IDS.GLOBAL_SEARCH.NO_RESULTS}>
-        <Flex direction="column" align="center">
+      {filteredResults.length === 0 && (
+        <Flex
+          direction="column"
+          align="center"
+          data-testid={TEST_IDS.GLOBAL_SEARCH.NO_RESULTS}
+          className="text-ui-text-secondary"
+        >
           <Icon icon={Search} size="xl" className="mb-4" />
           <Typography variant="label">No results found</Typography>
         </Flex>
-      </CommandEmpty>
+      )}
       {filteredResults.length > 0 && (
-        <CommandGroup>
+        <CommandGroup data-testid={TEST_IDS.SEARCH.RESULTS_GROUP}>
           {filteredResults.map((result) => (
             <SearchResultItem key={result._id} result={result} onClose={onClose} />
           ))}
@@ -288,6 +302,13 @@ export function GlobalSearch() {
   const isLoading =
     shouldSearch && (issueSearchResult === undefined || documentSearchResult === undefined);
 
+  const handleFocusOutside: NonNullable<ComponentProps<typeof CommandDialog>["onFocusOutside"]> = (
+    event,
+  ) => {
+    // Keep the palette open when cmdk momentarily drops focus during result-list transitions.
+    event.preventDefault();
+  };
+
   return (
     <>
       {/* Search Button */}
@@ -319,13 +340,19 @@ export function GlobalSearch() {
       </Button>
 
       {/* Search Modal */}
-      <CommandDialog open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
+      <CommandDialog
+        open={isOpen}
+        onOpenChange={(open) => !open && setIsOpen(false)}
+        onFocusOutside={handleFocusOutside}
+      >
         <Command data-testid={TEST_IDS.SEARCH.MODAL} className="bg-ui-bg" shouldFilter={false}>
           <CommandInput
             placeholder="Search issues and documents..."
             value={query}
             onValueChange={setQuery}
             className="text-ui-text"
+            data-testid={TEST_IDS.SEARCH.INPUT}
+            aria-label="Global search"
           />
 
           {/* Tabs with counts */}
@@ -335,13 +362,19 @@ export function GlobalSearch() {
             className="border-b border-ui-border overflow-x-auto"
           >
             <TabsList variant="underline" className="gap-4">
-              <TabsTrigger value="all" variant="underline" className="pb-2 px-1 text-xs sm:text-sm">
+              <TabsTrigger
+                value="all"
+                variant="underline"
+                className="pb-2 px-1 text-xs sm:text-sm"
+                data-testid={TEST_IDS.SEARCH.TAB_ALL}
+              >
                 All{query.length >= 2 && ` (${issueTotal + documentTotal})`}
               </TabsTrigger>
               <TabsTrigger
                 value="issues"
                 variant="underline"
                 className="pb-2 px-1 text-xs sm:text-sm"
+                data-testid={TEST_IDS.SEARCH.TAB_ISSUES}
               >
                 Issues{query.length >= 2 && ` (${issueTotal})`}
               </TabsTrigger>
@@ -349,6 +382,7 @@ export function GlobalSearch() {
                 value="documents"
                 variant="underline"
                 className="pb-2 px-1 text-xs sm:text-sm"
+                data-testid={TEST_IDS.SEARCH.TAB_DOCUMENTS}
               >
                 Documents{query.length >= 2 && ` (${documentTotal})`}
               </TabsTrigger>

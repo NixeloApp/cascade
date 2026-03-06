@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { createWorkspaceFromDialog, getWorkspaceDialogElements } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -8,11 +9,16 @@ import { BasePage } from "./base.page";
  */
 export class WorkspacesPage extends BasePage {
   readonly newWorkspaceButton: Locator;
-  readonly workspaceNameInput: Locator;
-  readonly workspaceDescriptionInput: Locator;
-  readonly submitWorkspaceButton: Locator;
   readonly workspaceList: Locator;
   readonly workspaceCards: Locator;
+  readonly workspaceTabs: Locator;
+  readonly workspaceTeamsTab: Locator;
+  readonly workspaceSettingsTab: Locator;
+  readonly teamsPageHeader: Locator;
+  readonly createTeamButton: Locator;
+  readonly teamsEmptyStateHeading: Locator;
+  readonly teamCards: Locator;
+  readonly workspaceSettingsHeader: Locator;
 
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
@@ -21,11 +27,22 @@ export class WorkspacesPage extends BasePage {
     this.newWorkspaceButton = page.getByRole("button", {
       name: /\+ Create Workspace|Create Workspace/i,
     });
-    this.workspaceNameInput = page.locator("#workspace-name");
-    this.workspaceDescriptionInput = page.locator("#workspace-description");
-    this.submitWorkspaceButton = page.getByRole("button", { name: /create workspace/i });
     this.workspaceList = page.getByRole("main").locator("a[href*='/workspaces/']").locator("..");
     this.workspaceCards = page.locator("a[href*='/workspaces/']");
+    this.workspaceTabs = page
+      .getByRole("navigation")
+      .filter({ has: page.getByRole("link", { name: /^Teams$/ }) })
+      .first();
+    this.workspaceTeamsTab = this.workspaceTabs.getByRole("link", { name: /^Teams$/ });
+    this.workspaceSettingsTab = this.workspaceTabs.getByRole("link", { name: /^Settings$/ });
+    this.teamsPageHeader = page.getByRole("heading", { name: /^Teams$/ });
+    this.createTeamButton = page.getByRole("button", { name: /create team/i }).first();
+    this.teamsEmptyStateHeading = page.getByRole("heading", { name: /no teams yet/i });
+    this.teamCards = page
+      .getByRole("main")
+      .locator("a[href*='/teams/']")
+      .filter({ has: page.getByRole("heading", { level: 3 }) });
+    this.workspaceSettingsHeader = page.getByRole("heading", { name: /workspace settings/i });
   }
 
   async expectLoaded() {
@@ -78,63 +95,128 @@ export class WorkspacesPage extends BasePage {
     // Wait for button to be ready - use first() to get the header button (not empty state)
     const createButton = this.newWorkspaceButton.first();
     await createButton.waitFor({ state: "visible" });
+    const { createForm, dialog, descriptionInput, nameInput, submitButton } =
+      getWorkspaceDialogElements(this.page);
 
-    // Click and retry until modal opens
-    await expect(async () => {
-      // Press Escape first to clear any existing modal state
-      await this.page.keyboard.press("Escape");
-      await createButton.scrollIntoViewIfNeeded();
-      await createButton.click();
-      // Wait for modal dialog to appear
-      const modal = this.page.getByRole("dialog");
-      await expect(modal).toBeVisible();
-    }).toPass();
-
-    // Fill and submit with retry - handles form timing issues
-    await expect(async () => {
-      // Ensure input is ready
-      await expect(this.workspaceNameInput).toBeVisible();
-      await expect(this.workspaceNameInput).toBeEnabled();
-
-      // Fill with name
-      await this.workspaceNameInput.fill(name);
-
-      // Verify the value was filled correctly
-      await expect(this.workspaceNameInput).toHaveValue(name);
-
-      if (description) {
-        await expect(this.workspaceDescriptionInput).toBeVisible();
-        await expect(this.workspaceDescriptionInput).toBeEnabled();
-        await this.workspaceDescriptionInput.fill(description);
-      }
-
-      // Submit
-      await this.submitWorkspaceButton.click();
-
-      // Wait for success toast
-      await expect(
-        this.page
-          .getByText(/workspace created/i)
-          .or(this.page.locator("[data-sonner-toast]"))
-          .first(),
-      ).toBeVisible();
-    }).toPass();
-
-    // Wait for modal to close (name input disappears)
-    await expect(this.workspaceNameInput).not.toBeVisible();
+    await createWorkspaceFromDialog({
+      dialog,
+      nameInput,
+      descriptionInput,
+      submitButton,
+      createForm,
+      workspaceName: name,
+      workspaceDescription: description,
+      openDialog: async () => {
+        await this.closeCreateWorkspaceDialogIfOpen(dialog);
+        await createButton.scrollIntoViewIfNeeded();
+        await createButton.click();
+      },
+    });
 
     // After workspace creation, the page may redirect to the workspace detail page
     // Wait for either the workspace to appear in the list OR the workspace detail page to load
-    const mainContent = this.page.getByRole("main");
-    const newWorkspaceCard = mainContent
-      .locator(`a[href*="/workspaces/"]`)
-      .filter({ hasText: name });
-    const workspaceHeading = mainContent.getByRole("heading", { name, level: 3 });
-    await expect(newWorkspaceCard.or(workspaceHeading)).toBeVisible();
+    await this.expectWorkspaceVisible(name);
+  }
+
+  async closeCreateWorkspaceDialogIfOpen(dialog = getWorkspaceDialogElements(this.page).dialog) {
+    // Preserve the previous blanket Escape reset because stale overlays can
+    // keep the next workspace-create retry from reaching an interactive dialog.
+    await this.page.keyboard.press("Escape");
+    await expect(dialog).not.toBeVisible();
   }
 
   async expectWorkspacesView() {
     await expect(this.newWorkspaceButton).toBeVisible();
+  }
+
+  async expectWorkspaceDetailVisible(name: string) {
+    await expect(this.page).toHaveURL(/\/workspaces\/[^/]+(?:[/?#]|$)/);
+    await expect(this.page.getByRole("heading", { name, level: 3 })).toBeVisible();
+  }
+
+  async expectWorkspaceVisible(name: string) {
+    const mainContent = this.page.getByRole("main");
+    const workspaceCard = mainContent.locator(`a[href*="/workspaces/"]`).filter({ hasText: name });
+    const workspaceHeading = mainContent.getByRole("heading", { name, level: 3 });
+    await expect(workspaceCard.or(workspaceHeading)).toBeVisible();
+  }
+
+  async isWorkspaceSettingsTabVisible() {
+    return this.workspaceSettingsTab.isVisible().catch(() => false);
+  }
+
+  async openWorkspace(name: string) {
+    // Only skip navigation if we're already on a workspace detail route with the heading visible
+    const onWorkspaceRoute = /\/workspaces\/[^/]+(?:[/?#]|$)/.test(this.page.url());
+    if (onWorkspaceRoute) {
+      const headingVisible = await this.page
+        .getByRole("heading", { name, level: 3 })
+        .isVisible()
+        .catch(() => false);
+      if (headingVisible) return;
+    }
+
+    const workspaceCard = this.page
+      .getByRole("main")
+      .locator(`a[href*="/workspaces/"]`)
+      .filter({ hasText: name })
+      .first();
+    await expect(workspaceCard).toBeVisible();
+    await workspaceCard.click();
+  }
+
+  async openWorkspaceTeams(name: string) {
+    await this.openWorkspace(name);
+    await expect(this.page).toHaveURL(/\/workspaces\/[^/]+(?:[/?#]|$|\/teams)/);
+
+    if (!/\/teams(?:[/?#]|$)/.test(this.page.url())) {
+      await expect(this.workspaceTeamsTab).toBeVisible();
+      await this.workspaceTeamsTab.click();
+    }
+
+    await this.expectTeamsLoaded();
+  }
+
+  async expectTeamsLoaded() {
+    await expect(this.page).toHaveURL(/\/workspaces\/[^/]+\/teams(?:[/?#]|$)/);
+    await expect(this.teamsPageHeader).toBeVisible();
+    await expect(this.createTeamButton).toBeVisible();
+  }
+
+  async getTeamsPageState(): Promise<"empty" | "teams"> {
+    await this.expectTeamsLoaded();
+
+    if (
+      await this.teamCards
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
+      return "teams";
+    }
+
+    if (await this.teamsEmptyStateHeading.isVisible().catch(() => false)) {
+      return "empty";
+    }
+
+    await expect(this.teamsEmptyStateHeading.or(this.teamCards.first())).toBeVisible();
+    return (await this.teamCards
+      .first()
+      .isVisible()
+      .catch(() => false))
+      ? "teams"
+      : "empty";
+  }
+
+  async expectWorkspaceSettingsLoaded() {
+    await expect(this.page).toHaveURL(/\/workspaces\/[^/]+\/settings(?:[/?#]|$)/);
+    await expect(this.workspaceSettingsHeader).toBeVisible();
+  }
+
+  async openWorkspaceSettings() {
+    await expect(this.workspaceSettingsTab).toBeVisible();
+    await this.workspaceSettingsTab.click();
+    await this.expectWorkspaceSettingsLoaded();
   }
 
   async expectWorkspaceCount(count: number) {

@@ -45,10 +45,16 @@ async function injectAuth(context: BrowserContext, email: string, password: stri
 
   await context.addInitScript(
     ({ token, refreshToken, convexUrl }) => {
+      const setIfMissing = (key: string, value: string) => {
+        if (!localStorage.getItem(key)) {
+          localStorage.setItem(key, value);
+        }
+      };
+
       // Legacy keys
-      localStorage.setItem("convexAuthToken", token);
+      setIfMissing("convexAuthToken", token);
       if (refreshToken) {
-        localStorage.setItem("convexAuthRefreshToken", refreshToken);
+        setIfMissing("convexAuthRefreshToken", refreshToken);
       }
 
       // Namespaced keys
@@ -56,9 +62,9 @@ async function injectAuth(context: BrowserContext, email: string, password: stri
         const namespace = convexUrl.replace(/[^a-zA-Z0-9]/g, "");
         const jwtKey = `__convexAuthJWT_${namespace}`;
         const refreshKey = `__convexAuthRefreshToken_${namespace}`;
-        localStorage.setItem(jwtKey, token);
+        setIfMissing(jwtKey, token);
         if (refreshToken) {
-          localStorage.setItem(refreshKey, refreshToken);
+          setIfMissing(refreshKey, refreshToken);
         }
       }
     },

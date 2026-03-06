@@ -5,7 +5,8 @@
  * meaningful waits for specific conditions.
  */
 
-import { type APIRequestContext, expect, type Page } from "@playwright/test";
+import { type APIRequestContext, expect, type Locator, type Page } from "@playwright/test";
+import { TEST_IDS } from "../../src/lib/test-ids";
 
 /**
  * Wait timeouts used across tests.
@@ -177,31 +178,148 @@ export async function waitForBoardLoaded(page: Page): Promise<void> {
   await expect(createIssueButton).toBeEnabled();
 }
 
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
 /**
  * Wait for issue creation completion signal.
- * The primary signal is modal dismissal; optional title assertion verifies board visibility.
+ * The primary signals are modal dismissal and the new issue card becoming visible on the board.
+ * A success toast is used as a supplemental confirmation, but must tolerate stacked toasts.
  */
-export async function waitForIssueCreateSuccess(
-  page: Page,
-  options?: { issueTitle?: string },
-): Promise<void> {
+export async function waitForIssueCreateSuccess(page: Page, issueTitle?: string): Promise<void> {
   const createIssueModal = page
     .getByRole("dialog")
     .filter({ hasText: /create.*issue|new.*issue/i });
   await expect(createIssueModal).not.toBeVisible();
 
-  if (options?.issueTitle) {
-    const titlePattern = new RegExp(escapeRegex(options.issueTitle), "i");
-    const issueCard = page
-      .getByRole("button", { name: titlePattern })
-      .or(page.getByText(options.issueTitle).first())
-      .first();
-    await expect(issueCard).toBeVisible();
+  if (issueTitle) {
+    const escapedTitle = issueTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    await expect(page.getByRole("button", { name: new RegExp(escapedTitle) })).toBeVisible();
   }
+
+  const issueCreatedToast = page
+    .locator("[data-sonner-toast][data-type='success']")
+    .filter({ hasText: /issue created successfully/i })
+    .first();
+  await expect(issueCreatedToast).toBeVisible();
+}
+
+/**
+ * Wait for issue update completion signal.
+ * Primary signal is the success toast emitted by issue detail update flows.
+ */
+export async function waitForIssueUpdateSuccess(page: Page): Promise<void> {
+  const issueUpdatedToast = page
+    .locator("[data-sonner-toast][data-type='success']")
+    .filter({ hasText: /issue updated/i })
+    .first();
+  await expect(issueUpdatedToast).toBeVisible();
+}
+
+/**
+ * Wait for project creation completion signal.
+ * The modal must close and the success toast must appear.
+ */
+export async function waitForProjectCreateSuccess(page: Page): Promise<void> {
+  const createProjectModal = page
+    .getByRole("dialog")
+    .filter({ has: page.getByTestId(TEST_IDS.PROJECT.CREATE_MODAL) });
+  const projectCreatedToast = page
+    .locator("[data-sonner-toast][data-type='success']")
+    .filter({ hasText: /project created successfully/i })
+    .first();
+
+  await expect(createProjectModal).not.toBeVisible();
+  await expect(projectCreatedToast).toBeVisible();
+}
+
+type WorkspaceCreationDialogOptions = {
+  dialog: Locator;
+  nameInput: Locator;
+  descriptionInput?: Locator;
+  submitButton: Locator;
+  createForm?: Locator;
+  workspaceName: string;
+  workspaceDescription?: string;
+  openDialog: () => Promise<void>;
+};
+
+export type WorkspaceDialogElements = {
+  dialog: Locator;
+  nameInput: Locator;
+  descriptionInput: Locator;
+  submitButton: Locator;
+  createForm: Locator;
+};
+
+/**
+ * Shared selector contract for the create-workspace modal.
+ */
+export function getWorkspaceDialogElements(page: Page): WorkspaceDialogElements {
+  const dialog = page.getByRole("dialog").filter({
+    hasText: /create workspace/i,
+  });
+  return {
+    dialog,
+    nameInput: dialog.getByLabel(/workspace name/i),
+    descriptionInput: dialog.getByLabel(/description/i),
+    submitButton: dialog.getByRole("button", { name: /create workspace/i }),
+    createForm: page.locator("#create-workspace-form"),
+  };
+}
+
+/**
+ * Deterministically create a workspace through the "Create Workspace" modal dialog.
+ * Shared by page objects to avoid duplicated retry/open/fill/submit logic.
+ */
+export async function createWorkspaceFromDialog(
+  options: WorkspaceCreationDialogOptions,
+): Promise<void> {
+  const {
+    dialog,
+    nameInput,
+    descriptionInput,
+    submitButton,
+    createForm,
+    workspaceName,
+    workspaceDescription,
+    openDialog,
+  } = options;
+
+  await expect(async () => {
+    if (!(await dialog.isVisible())) {
+      await openDialog();
+    }
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: /create workspace/i })).toBeVisible();
+    await expect(nameInput).toBeVisible();
+    await expect(nameInput).toBeEnabled();
+  }).toPass();
+
+  await expect(async () => {
+    await expect(nameInput).toBeVisible();
+    await expect(nameInput).toBeEnabled();
+    await nameInput.fill(workspaceName);
+    await expect(nameInput).toHaveValue(workspaceName);
+  }).toPass();
+
+  if (workspaceDescription && descriptionInput) {
+    await expect(async () => {
+      await expect(descriptionInput).toBeVisible();
+      await expect(descriptionInput).toBeEnabled();
+      await descriptionInput.fill(workspaceDescription);
+      await expect(descriptionInput).toHaveValue(workspaceDescription);
+    }).toPass();
+  }
+
+  await expect(async () => {
+    if (createForm && (await createForm.isVisible().catch(() => false))) {
+      await createForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
+    } else {
+      await expect(submitButton).toBeVisible();
+      await expect(submitButton).toBeEnabled();
+      await submitButton.click();
+    }
+
+    await expect(dialog).not.toBeVisible();
+  }).toPass();
 }
 
 /**

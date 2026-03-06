@@ -26,6 +26,7 @@ export class DashboardPage extends BasePage {
   readonly commandPaletteButton: Locator;
   readonly shortcutsHelpButton: Locator;
   readonly globalSearchButton: Locator;
+  readonly headerStartTimerButton: Locator;
   readonly notificationButton: Locator;
   readonly signOutButton: Locator;
 
@@ -67,6 +68,19 @@ export class DashboardPage extends BasePage {
   readonly shortcutsModal: Locator;
   readonly globalSearchModal: Locator;
   readonly globalSearchInput: Locator;
+  readonly globalSearchResultsGroup: Locator;
+  readonly globalSearchResultItems: Locator;
+  readonly globalSearchLoadingState: Locator;
+  readonly globalSearchMinimumQueryMessage: Locator;
+  readonly globalSearchNoResults: Locator;
+  readonly globalSearchAllTab: Locator;
+  readonly globalSearchIssuesTab: Locator;
+  readonly globalSearchDocumentsTab: Locator;
+  readonly timeEntryModal: Locator;
+  readonly timeEntryBillableCheckbox: Locator;
+  readonly appErrorHeading: Locator;
+  readonly appErrorDetailsSummary: Locator;
+  readonly appErrorDetailsMessage: Locator;
 
   // ===================
   // Locators - Notifications
@@ -123,6 +137,7 @@ export class DashboardPage extends BasePage {
     this.shortcutsHelpButton = page.getByTestId(TEST_IDS.HEADER.SHORTCUTS_BUTTON);
     // Global search button with aria-label "Open search (⌘K)"
     this.globalSearchButton = page.getByRole("button", { name: /open search/i });
+    this.headerStartTimerButton = page.getByRole("button", { name: /^start timer$/i }).first();
     // Bell notification icon button - aria-label is "Notifications" or "Notifications, N unread"
     this.notificationButton = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_BUTTON);
     // "Sign out" text button
@@ -168,7 +183,22 @@ export class DashboardPage extends BasePage {
     // Modals - Global Search (not a dialog role, it's a fixed positioned div)
     // The modal contains "Search issues and documents..." placeholder input
     this.globalSearchModal = page.getByTestId(TEST_IDS.SEARCH.MODAL);
-    this.globalSearchInput = page.getByPlaceholder(/search issues and documents/i);
+    this.globalSearchInput = page.getByTestId(TEST_IDS.SEARCH.INPUT);
+    this.globalSearchResultsGroup = page.getByTestId(TEST_IDS.SEARCH.RESULTS_GROUP);
+    this.globalSearchResultItems = page.getByTestId(TEST_IDS.SEARCH.RESULT_ITEM);
+    this.globalSearchLoadingState = page.getByTestId(TEST_IDS.SEARCH.LOADING_STATE);
+    this.globalSearchMinimumQueryMessage = page.getByTestId(TEST_IDS.SEARCH.MIN_QUERY_MESSAGE);
+    this.globalSearchNoResults = page.getByTestId(TEST_IDS.GLOBAL_SEARCH.NO_RESULTS);
+    this.globalSearchAllTab = page.getByTestId(TEST_IDS.SEARCH.TAB_ALL);
+    this.globalSearchIssuesTab = page.getByTestId(TEST_IDS.SEARCH.TAB_ISSUES);
+    this.globalSearchDocumentsTab = page.getByTestId(TEST_IDS.SEARCH.TAB_DOCUMENTS);
+    this.timeEntryModal = page.getByRole("dialog", { name: /^start timer$/i });
+    this.timeEntryBillableCheckbox = this.timeEntryModal.getByRole("checkbox", {
+      name: /billable/i,
+    });
+    this.appErrorHeading = page.getByRole("heading", { name: "500" });
+    this.appErrorDetailsSummary = page.getByText(/view error details/i);
+    this.appErrorDetailsMessage = page.locator("details pre");
 
     // Notifications panel
     this.notificationPanel = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_PANEL);
@@ -202,8 +232,14 @@ export class DashboardPage extends BasePage {
     // Check if already on dashboard - skip navigation to avoid token rotation
     const currentUrl = this.page.url();
     if (currentUrl.includes(`/${this.orgSlug}/dashboard`)) {
-      // Already on dashboard, just verify it's loaded
-      const isLoaded = await this.commandPaletteButton.isVisible().catch(() => false);
+      // Already on dashboard: give the existing app shell a chance to finish
+      // hydrating before forcing a second navigation.
+      await this.page.waitForLoadState("domcontentloaded");
+      const isLoaded = await this.commandPaletteButton
+        .waitFor({ state: "visible", timeout: 5000 })
+        .then(() => true)
+        .catch(() => false);
+
       if (isLoaded) {
         // Even if already on page, ensure it's hydrated before returning
         await this.waitForLoad();
@@ -211,41 +247,52 @@ export class DashboardPage extends BasePage {
       }
     }
 
-    // Navigate directly to dashboard URL
-    await this.page.goto(dashboardUrl, { waitUntil: "domcontentloaded" });
+    const isInAuthenticatedAppShell =
+      currentUrl.includes(`/${this.orgSlug}/`) &&
+      !currentUrl.includes("/signin") &&
+      (await this.dashboardTab.isVisible().catch(() => false));
 
-    // Wait for URL to settle (auth redirect check)
-    await this.page.waitForLoadState("load");
-
-    // Check if we got redirected to landing/signin page (auth failure)
-    let finalUrl = this.page.url();
-    if (
-      finalUrl.includes("/signin") ||
-      finalUrl === baseUrl ||
-      finalUrl === `${baseUrl}/` ||
-      !finalUrl.includes(this.orgSlug)
-    ) {
-      console.warn(
-        "⚠️  Auth redirect detected: navigated to",
-        finalUrl,
-        ". Retrying navigation once...",
-      );
-      // Wait for auth redirect chain to settle before retrying navigation
+    if (isInAuthenticatedAppShell) {
+      await this.dashboardTab.click();
+      await expect(this.page).toHaveURL(new RegExp(`/${this.orgSlug}/dashboard(?:\\?.*)?$`));
+    } else {
+      // Use an explicit document navigation only when entering the app shell
+      // from outside the authenticated UI. In-app route changes should preserve
+      // the live Convex auth session instead of forcing a fresh bootstrap.
       await this.page.waitForLoadState("load");
       await this.page.goto(dashboardUrl, { waitUntil: "domcontentloaded" });
-      await this.waitForLoad();
-      finalUrl = this.page.url(); // Update finalUrl after retry
-    }
+      await this.page.waitForLoadState("load");
 
-    // Final check after potential retry
-    if (
-      finalUrl.includes("/signin") ||
-      finalUrl === baseUrl ||
-      finalUrl === `${baseUrl}/` ||
-      !finalUrl.includes(this.orgSlug)
-    ) {
-      console.error("❌ Still on landing page after retry. Auth failed.");
-      throw new Error(`Redirected to landing/signin page: ${finalUrl}. Auth session invalid.`);
+      // Check if we got redirected to landing/signin page (auth failure)
+      let finalUrl = this.page.url();
+      if (
+        finalUrl.includes("/signin") ||
+        finalUrl === baseUrl ||
+        finalUrl === `${baseUrl}/` ||
+        !finalUrl.includes(this.orgSlug)
+      ) {
+        console.warn(
+          "⚠️  Auth redirect detected: navigated to",
+          finalUrl,
+          ". Retrying navigation once...",
+        );
+        // Wait for auth redirect chain to settle before retrying navigation
+        await this.page.waitForLoadState("load");
+        await this.page.goto(dashboardUrl, { waitUntil: "domcontentloaded" });
+        await this.waitForLoad();
+        finalUrl = this.page.url(); // Update finalUrl after retry
+      }
+
+      // Final check after potential retry
+      if (
+        finalUrl.includes("/signin") ||
+        finalUrl === baseUrl ||
+        finalUrl === `${baseUrl}/` ||
+        !finalUrl.includes(this.orgSlug)
+      ) {
+        console.error("❌ Still on landing page after retry. Auth failed.");
+        throw new Error(`Redirected to landing/signin page: ${finalUrl}. Auth session invalid.`);
+      }
     }
 
     // Wait for dashboard app shell with recovery
@@ -311,10 +358,7 @@ export class DashboardPage extends BasePage {
 
     // Use retry pattern - button click may not trigger event handler immediately after hydration
     await expect(async () => {
-      // Close any existing command palette first (in case it's in an inconsistent state)
-      if (await this.commandPalette.isVisible().catch(() => false)) {
-        await this.page.keyboard.press("Escape");
-      }
+      await this.closeCommandPaletteIfOpen();
       // Click to open command palette
       await this.commandPaletteButton.click();
       // Wait for dialog animation to complete (Radix Dialog has opening animation)
@@ -328,18 +372,25 @@ export class DashboardPage extends BasePage {
 
   async closeCommandPalette() {
     await expect(async () => {
-      if (!(await this.commandPalette.isVisible())) return;
-      // Focus input to ensure keyboard environment is captured
-      await this.commandPaletteInput.click().catch(() => {});
-      await this.page.keyboard.press("Escape");
-
-      // Fallback: click top-left corner (backdrop) if escape fails
-      if (await this.commandPalette.isVisible()) {
-        await this.page.mouse.click(0, 0);
-      }
-
+      await this.closeCommandPaletteIfOpen();
       await expect(this.commandPalette).not.toBeVisible();
     }).toPass();
+  }
+
+  async closeCommandPaletteIfOpen() {
+    if (!(await this.commandPalette.isVisible().catch(() => false))) {
+      return;
+    }
+
+    // Focus input to ensure keyboard events target the active dialog before Escape.
+    await this.commandPaletteInput.click().catch(() => {});
+    await this.page.keyboard.press("Escape");
+
+    if (await this.commandPalette.isVisible().catch(() => false)) {
+      await this.page.mouse.click(0, 0);
+    }
+
+    await expect(this.commandPalette).not.toBeVisible();
   }
 
   async openShortcutsHelp() {
@@ -398,41 +449,197 @@ export class DashboardPage extends BasePage {
 
     // Use retry pattern - click may not register immediately after page load
     await expect(async () => {
-      // Close any existing modals first by pressing Escape
-      await this.page.keyboard.press("Escape");
+      await this.throwIfAppErrorVisible();
+      await this.closeGlobalSearchIfOpen();
 
       // Click the search button directly (keyboard shortcut conflicts with command palette)
       await this.globalSearchButton.click();
+      await this.throwIfAppErrorVisible();
 
       // Check if modal opened AND input is ready
       await expect(this.globalSearchModal).toBeVisible();
       await expect(this.globalSearchInput).toBeVisible();
       await expect(this.globalSearchInput).toBeEnabled();
-    }).toPass();
 
-    // Focus the input to ensure it's ready for typing
-    await this.globalSearchInput.focus();
+      // Keep focus inside the modal during retries so transient close/reopen
+      // cycles do not leak through as a "successful" open.
+      await this.globalSearchInput.focus();
+      await expect(this.globalSearchInput).toBeVisible();
+    }).toPass();
+  }
+
+  private async throwIfAppErrorVisible() {
+    if (!(await this.appErrorHeading.isVisible().catch(() => false))) {
+      return;
+    }
+
+    const detailsVisible = await this.appErrorDetailsMessage.isVisible().catch(() => false);
+    if (!detailsVisible) {
+      await this.appErrorDetailsSummary.click().catch(() => {});
+    }
+
+    const errorDetails = (
+      await this.appErrorDetailsMessage.textContent().catch(() => null)
+    )?.trim();
+    const suffix = errorDetails ? `: ${errorDetails}` : "";
+    const diagnostics = await this.getAppErrorDiagnostics();
+    throw new Error(`App error boundary visible${suffix}${diagnostics}`);
+  }
+
+  private async getAppErrorDiagnostics(): Promise<string> {
+    const diagnostics = await this.page
+      .evaluate(() => {
+        const authKeys = Object.keys(localStorage)
+          .filter((key) => key.includes("convexAuth"))
+          .sort();
+        const convexClient = (
+          window as typeof window & {
+            __convex_test_client?: { connectionState: () => unknown };
+          }
+        ).__convex_test_client;
+
+        return {
+          url: window.location.href,
+          hydrated: document.body.classList.contains("app-hydrated"),
+          authKeys,
+          connectionState: convexClient?.connectionState() ?? null,
+        };
+      })
+      .catch(() => null);
+
+    if (!diagnostics) {
+      return "";
+    }
+
+    return ` [diagnostics ${JSON.stringify(diagnostics)}]`;
+  }
+
+  async openTimeEntryModal() {
+    await waitForDashboardReady(this.page);
+
+    await expect(async () => {
+      await this.closeTimeEntryModalIfOpen();
+      await expect(this.headerStartTimerButton).toBeVisible();
+      await this.headerStartTimerButton.click();
+      await expect(this.timeEntryModal).toBeVisible();
+    }).toPass();
   }
 
   async closeGlobalSearch() {
-    // If modal is not visible, nothing to close
+    await expect(async () => {
+      await this.closeGlobalSearchIfOpen();
+      await expect(this.globalSearchModal).not.toBeVisible();
+    }).toPass();
+  }
+
+  async closeGlobalSearchIfOpen() {
     if (!(await this.globalSearchModal.isVisible().catch(() => false))) {
       return;
     }
 
-    // Use retry pattern to handle timing variability
+    await this.page.keyboard.press("Escape");
+
+    if (await this.globalSearchModal.isVisible().catch(() => false)) {
+      await this.page.mouse.click(10, 10);
+    }
+
+    await expect(this.globalSearchModal).not.toBeVisible();
+  }
+
+  async closeGlobalSearchWithEscape() {
+    await expect(this.globalSearchModal).toBeVisible();
+    await this.page.keyboard.press("Escape");
+    await expect(this.globalSearchModal).not.toBeVisible();
+  }
+
+  async closeTimeEntryModal() {
+    await this.closeTimeEntryModalIfOpen();
+    await expect(this.timeEntryModal).not.toBeVisible();
+  }
+
+  async closeTimeEntryModalIfOpen() {
+    if (!(await this.timeEntryModal.isVisible().catch(() => false))) {
+      return;
+    }
+
+    await this.page.keyboard.press("Escape");
+    await expect(this.timeEntryModal).not.toBeVisible();
+  }
+
+  async openGlobalSearchWithShortcut() {
+    await waitForDashboardReady(this.page);
+
     await expect(async () => {
-      // Try pressing Escape to close
-      await this.page.keyboard.press("Escape");
-
-      // Check if still visible - if so, try clicking outside
-      if (await this.globalSearchModal.isVisible().catch(() => false)) {
-        await this.page.mouse.click(10, 10);
-      }
-
-      // Verify closed
-      await expect(this.globalSearchModal).not.toBeVisible();
+      await this.closeGlobalSearchIfOpen();
+      await this.page.keyboard.press("ControlOrMeta+k");
+      await expect(this.globalSearchModal).toBeVisible();
+      await expect(this.globalSearchInput).toBeVisible();
+      await expect(this.globalSearchInput).toBeEnabled();
+      await this.globalSearchInput.focus();
+      await expect(this.globalSearchInput).toBeVisible();
     }).toPass();
+  }
+
+  async searchFor(query: string) {
+    await expect(async () => {
+      await this.throwIfAppErrorVisible();
+      await expect(this.globalSearchInput).toBeVisible();
+      await expect(this.globalSearchInput).toBeEnabled();
+      await this.globalSearchInput.focus();
+      await this.throwIfAppErrorVisible();
+      await this.globalSearchInput.fill(query);
+      await this.throwIfAppErrorVisible();
+      await expect(this.globalSearchInput).toHaveValue(query);
+    }).toPass();
+
+    if (query.length < 2) {
+      await this.throwIfAppErrorVisible();
+      await expect(this.globalSearchMinimumQueryMessage).toBeVisible();
+      return;
+    }
+
+    await this.waitForSearchSettled();
+  }
+
+  async waitForSearchSettled() {
+    await expect(async () => {
+      await this.throwIfAppErrorVisible();
+      await expect(this.globalSearchLoadingState).not.toBeVisible();
+      await this.throwIfAppErrorVisible();
+
+      const hasResults = await this.globalSearchResultItems
+        .first()
+        .isVisible()
+        .catch(() => false);
+      const hasNoResults = await this.globalSearchNoResults.isVisible().catch(() => false);
+
+      expect(hasResults || hasNoResults).toBe(true);
+    }).toPass();
+  }
+
+  async switchGlobalSearchTab(tab: "all" | "issues" | "documents") {
+    const tabs = {
+      all: this.globalSearchAllTab,
+      issues: this.globalSearchIssuesTab,
+      documents: this.globalSearchDocumentsTab,
+    };
+
+    await expect(tabs[tab]).toBeVisible();
+    await tabs[tab].click();
+    await expect(tabs[tab]).toHaveAttribute("data-state", "active");
+    await this.waitForSearchSettled();
+  }
+
+  getGlobalSearchResult(title: string): Locator {
+    return this.globalSearchResultItems.filter({ hasText: title }).first();
+  }
+
+  getGlobalSearchResults(title: string): Locator {
+    return this.globalSearchResultItems.filter({ hasText: title });
+  }
+
+  getGlobalSearchResultType(title: string): Locator {
+    return this.getGlobalSearchResult(title).getByTestId(TEST_IDS.SEARCH.RESULT_TYPE);
   }
 
   // ===================
@@ -479,15 +686,6 @@ export class DashboardPage extends BasePage {
   // Actions - Keyboard
   // ===================
 
-  async pressCommandPaletteShortcut() {
-    await waitForDashboardReady(this.page);
-    // Use retry logic - keyboard events may not be captured immediately after hydration
-    await expect(async () => {
-      await this.page.keyboard.press("ControlOrMeta+k");
-      await expect(this.commandPalette).toBeVisible();
-    }).toPass();
-  }
-
   async pressShortcutsHelpShortcut() {
     await this.waitForLoad();
     await this.page.keyboard.press("Shift+?");
@@ -525,5 +723,20 @@ export class DashboardPage extends BasePage {
   async expectLoaded() {
     // Wait longer for organization context to load (auth tokens, organization data)
     await expect(this.loadingSpinner).not.toBeVisible();
+  }
+
+  async expectMainSectionsVisible() {
+    await expect(this.mainContent).toBeVisible();
+    await expect(this.myIssuesSection).toBeVisible();
+    await expect(this.workspacesSection).toBeVisible();
+  }
+
+  async expectIssueFiltersVisible() {
+    await expect(this.assignedTab).toBeVisible();
+    await expect(this.createdTab).toBeVisible();
+  }
+
+  async expectNotificationsPanelVisible() {
+    await expect(this.notificationPanel).toBeVisible();
   }
 }

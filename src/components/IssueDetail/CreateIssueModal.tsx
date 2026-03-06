@@ -10,7 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
 import { useForm } from "@tanstack/react-form";
-import { useAction, useMutation, useQuery } from "convex/react";
+import { useAction, useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { DuplicateDetection } from "@/components/DuplicateDetection";
@@ -106,6 +106,8 @@ export function CreateIssueModal({
   defaultDueDate,
 }: CreateIssueModalProps) {
   const { organizationId } = useOrganization();
+  const { isAuthenticated } = useConvexAuth();
+  const shouldLoadProjectData = open && isAuthenticated;
 
   // Project selection for global use
   const [internalSelectedProjectId, setInternalSelectedProjectId] = useState<Id<"projects"> | null>(
@@ -133,7 +135,7 @@ export function CreateIssueModal({
   // Queries
   const orgProjects = useQuery(
     api.projects.getCurrentUserProjects,
-    projectId ? "skip" : { organizationId },
+    shouldLoadProjectData && !projectId ? { organizationId } : "skip",
   );
 
   const effectiveProjectId = projectId || internalSelectedProjectId;
@@ -150,15 +152,15 @@ export function CreateIssueModal({
 
   const project = useQuery(
     api.projects.getProject,
-    effectiveProjectId ? { id: effectiveProjectId } : "skip",
+    shouldLoadProjectData && effectiveProjectId ? { id: effectiveProjectId } : "skip",
   );
   const templates = useQuery(
     api.templates.listByProject,
-    effectiveProjectId ? { projectId: effectiveProjectId } : "skip",
+    shouldLoadProjectData && effectiveProjectId ? { projectId: effectiveProjectId } : "skip",
   );
   const labels = useQuery(
     api.labels.list,
-    effectiveProjectId ? { projectId: effectiveProjectId } : "skip",
+    shouldLoadProjectData && effectiveProjectId ? { projectId: effectiveProjectId } : "skip",
   );
 
   // Mutations

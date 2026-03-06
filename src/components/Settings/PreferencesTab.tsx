@@ -7,7 +7,7 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
@@ -27,9 +27,10 @@ import { Typography } from "../ui/Typography";
  */
 export function PreferencesTab() {
   const { theme, setTheme } = useTheme();
+  const { isAuthenticated } = useConvexAuth();
 
   // Settings from DB
-  const userSettings = useQuery(api.userSettings.get);
+  const userSettings = useQuery(api.userSettings.get, isAuthenticated ? undefined : "skip");
   const updateSettings = useMutation(api.userSettings.update);
 
   // Local state for timezone (defaults to system if not set)

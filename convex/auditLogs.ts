@@ -8,7 +8,7 @@
 
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
-import { auditMetadata } from "./validators";
+import { auditActions, auditMetadata, auditTargetTypes } from "./validators";
 
 declare global {
   var IS_TEST_ENV: boolean | undefined;
@@ -17,10 +17,10 @@ declare global {
 /** Logs an audit entry to track actions, skipping in test environments to prevent transaction errors. */
 export const log = internalMutation({
   args: {
-    action: v.string(),
+    action: auditActions,
     actorId: v.optional(v.id("users")),
     targetId: v.string(),
-    targetType: v.string(),
+    targetType: auditTargetTypes,
     metadata: v.optional(auditMetadata),
   },
   handler: async (ctx, args) => {

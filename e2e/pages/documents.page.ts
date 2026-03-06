@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { TEST_IDS } from "../../src/lib/test-ids";
 import { BasePage } from "./base.page";
 
 /**
@@ -31,6 +32,10 @@ export class DocumentsPage extends BasePage {
   readonly editor: Locator;
   readonly editorContent: Locator;
   readonly documentTitle: Locator;
+  readonly documentTitleInput: Locator;
+  readonly appErrorHeading: Locator;
+  readonly appErrorDetailsSummary: Locator;
+  readonly appErrorDetailsMessage: Locator;
 
   // ===================
   // Locators - Delete Confirmation
@@ -62,15 +67,14 @@ export class DocumentsPage extends BasePage {
     this.meetingNotesTemplate = page.getByRole("button", { name: /meeting.*notes/i });
     this.projectBriefTemplate = page.getByRole("button", { name: /project.*brief/i });
 
-    // Editor (Plate editor uses data-slate-editor attribute)
-    this.editor = page
-      .locator("[data-slate-editor]")
-      .or(page.locator("[data-editor], [contenteditable='true']").first());
-    this.editorContent = page.locator("[data-slate-editor], .slate-editor");
-    this.documentTitle = page
-      .getByRole("heading", { level: 1 })
-      .first()
-      .or(page.locator("[data-document-title]"));
+    // Editor
+    this.editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
+    this.editorContent = this.editor;
+    this.documentTitle = page.getByTestId(TEST_IDS.DOCUMENT.TITLE);
+    this.documentTitleInput = page.getByTestId(TEST_IDS.DOCUMENT.TITLE_INPUT);
+    this.appErrorHeading = page.getByRole("heading", { name: "500" });
+    this.appErrorDetailsSummary = page.getByText(/view error details/i);
+    this.appErrorDetailsMessage = page.locator("details pre");
 
     // Delete confirmation
     this.deleteConfirmDialog = page.getByRole("dialog").filter({ hasText: /delete|confirm/i });
@@ -87,12 +91,22 @@ export class DocumentsPage extends BasePage {
     await this.waitForLoad();
   }
 
+  async gotoDocument(documentId: string) {
+    await this.page.goto(`/${this.orgSlug}/documents/${documentId}`);
+    await this.waitForLoad();
+  }
+
   // ===================
   // Actions
   // ===================
 
   async createNewDocument() {
-    await this.newDocumentButton.click();
+    await expect(async () => {
+      await this.newDocumentButton.click();
+      await expect(this.page).toHaveURL(/\/documents\/[^/]+$/);
+    }).toPass();
+
+    await this.expectEditorVisible();
   }
 
   async openTemplateModal() {
@@ -108,6 +122,7 @@ export class DocumentsPage extends BasePage {
       project: this.projectBriefTemplate,
     };
     await buttons[template].click();
+    await this.expectEditorVisible();
   }
 
   async searchDocuments(query: string) {
@@ -116,6 +131,18 @@ export class DocumentsPage extends BasePage {
 
   async clearSearch() {
     await this.searchInput.clear();
+  }
+
+  async editDocumentTitle(title: string) {
+    await expect(this.documentTitle).toBeVisible();
+
+    await expect(async () => {
+      await this.documentTitle.click();
+      await expect(this.documentTitleInput).toBeVisible();
+      await this.documentTitleInput.fill(title);
+      await this.documentTitleInput.press("Enter");
+      await expect(this.documentTitle).toHaveText(title);
+    }).toPass();
   }
 
   async selectDocument(index: number) {
@@ -152,32 +179,80 @@ export class DocumentsPage extends BasePage {
   }
 
   async expectEditorVisible() {
-    // Wait for full document readiness before checking editor hydration state.
-    await this.page.waitForFunction(() => document.readyState === "complete");
+    await expect(async () => {
+      // Wait for full document readiness before checking editor hydration state.
+      await this.page.waitForFunction(() => document.readyState === "complete");
 
-    // Check for React error boundary
-    const errorBoundary = this.page.locator("text=/Something went wrong/i");
-    const hasError = await errorBoundary.isVisible().catch(() => false);
-    if (hasError) {
-      const errorMsg = await this.page
-        .locator("code")
-        .textContent()
-        .catch(() => "Unknown error");
-      throw new Error(`React error boundary displayed: ${errorMsg}`);
+      // Check for React error boundary
+      await this.throwIfAppErrorVisible();
+
+      // Handle "Initialize Document" empty state if present (for new documents)
+      const initButton = this.page.getByRole("button", { name: /initialize.*document/i });
+      try {
+        await initButton.waitFor({ state: "visible", timeout: 1000 });
+        await initButton.click();
+      } catch {
+        // Button didn't appear, proceed to check for editor
+      }
+
+      await this.throwIfAppErrorVisible();
+      await expect(this.editor).toBeVisible();
+    }).toPass();
+  }
+
+  private async throwIfAppErrorVisible() {
+    if (!(await this.appErrorHeading.isVisible().catch(() => false))) {
+      return;
     }
 
-    // Handle "Initialize Document" empty state if present (for new documents)
-    const initButton = this.page.getByRole("button", { name: /initialize.*document/i });
-    try {
-      await initButton.waitFor({ state: "visible" });
-      await initButton.click();
-    } catch {
-      // Button didn't appear, proceed to check for editor
+    const detailsVisible = await this.appErrorDetailsMessage.isVisible().catch(() => false);
+    if (!detailsVisible) {
+      await this.appErrorDetailsSummary.click().catch(() => {});
     }
-    await expect(this.editor).toBeVisible();
+
+    const errorDetails = (
+      await this.appErrorDetailsMessage.textContent().catch(() => null)
+    )?.trim();
+    const suffix = errorDetails ? `: ${errorDetails}` : "";
+    const diagnostics = await this.getAppErrorDiagnostics();
+    throw new Error(`React error boundary displayed${suffix}${diagnostics}`);
+  }
+
+  private async getAppErrorDiagnostics(): Promise<string> {
+    const diagnostics = await this.page
+      .evaluate(() => {
+        const authKeys = Object.keys(localStorage)
+          .filter((key) => key.includes("convexAuth"))
+          .sort();
+        const convexClient = (
+          window as typeof window & {
+            __convex_test_client?: { connectionState: () => unknown };
+          }
+        ).__convex_test_client;
+
+        return {
+          url: window.location.href,
+          hydrated: document.body.classList.contains("app-hydrated"),
+          authKeys,
+          connectionState: convexClient?.connectionState() ?? null,
+        };
+      })
+      .catch(() => null);
+
+    if (!diagnostics) {
+      return "";
+    }
+
+    return ` [diagnostics ${JSON.stringify(diagnostics)}]`;
   }
 
   async expectDocumentCount(count: number) {
     await expect(this.documentItems).toHaveCount(count);
+  }
+
+  async expectDocumentNotFound() {
+    await expect(
+      this.page.getByText(/document not found/i).or(this.page.getByText(/something went wrong/i)),
+    ).toBeVisible();
   }
 }

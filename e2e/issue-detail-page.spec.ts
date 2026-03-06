@@ -1,4 +1,6 @@
 import { expect, authenticatedTest as test } from "./fixtures";
+import { IssueDetailPage } from "./pages";
+import { createTestNamespace } from "./utils/test-helpers";
 import { testUserService } from "./utils/test-user-service";
 
 /**
@@ -23,104 +25,151 @@ test.describe("Issue Detail Page", () => {
   });
 
   test("shows error page for non-existent issue", async ({ page, orgSlug }) => {
+    const issueDetailPage = new IssueDetailPage(page, orgSlug);
+
     // Navigate directly to a non-existent issue
-    await page.goto(`/${orgSlug}/issues/FAKE-99999`);
-
-    // Should show error page
-    await expect(page.getByRole("heading", { name: /issue not found/i })).toBeVisible();
-
-    // Should have explanation message
-    await expect(page.getByText(/does not exist|don't have access/i)).toBeVisible();
-
-    // Should have "Back to dashboard" button
-    await expect(page.getByRole("link", { name: /back to dashboard/i })).toBeVisible();
+    await issueDetailPage.gotoIssue("FAKE-99999");
+    await issueDetailPage.expectIssueNotFound();
   });
 
   test("can navigate directly to issue detail page via URL", async ({
     projectsPage,
     page,
     orgSlug,
-  }) => {
+  }, testInfo) => {
     // First create a project and issue
-    const uniqueId = Date.now().toString();
-    const projectKey = `ISSU${uniqueId.slice(-4)}`;
-    const issueTitle = "Direct URL Test Issue";
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("ISSU");
+    const issueTitle = namespace.name("Direct URL Test Issue");
 
     await projectsPage.goto();
 
     // Create workspace for isolation
-    await projectsPage.createWorkspace(`Issue URL WS ${uniqueId}`);
+    await projectsPage.createWorkspace(namespace.name("Issue URL WS"));
     await projectsPage.goto();
 
     // Create project
-    await projectsPage.createProject(`Issue URL Project ${uniqueId}`, projectKey);
+    await projectsPage.createProject(namespace.name("Issue URL Project"), projectKey);
 
     // Create an issue
     await projectsPage.createIssue(issueTitle);
-    await expect(projectsPage.createIssueModal).not.toBeVisible();
 
     // Switch to backlog to find the issue
     await projectsPage.switchToTab("backlog");
 
-    // Get the issue key from the card (format: PROJ-1)
     const issueCard = projectsPage.getIssueCard(issueTitle);
     await expect(issueCard).toBeVisible();
-
-    // Extract issue key from the card's accessible label, e.g.:
-    // "Task PROJ-1: Direct URL Test Issue, Medium priority, unassigned"
-    const issueAriaLabel = await issueCard.getAttribute("aria-label");
-    const issueKeyMatch = issueAriaLabel?.match(new RegExp(`${projectKey}-\\d+`));
-    expect(issueKeyMatch).toBeTruthy();
-    const issueKey = issueKeyMatch?.[0];
+    const issueKey = await projectsPage.getIssueKey(issueTitle);
+    await expect(issueKey).toMatch(new RegExp(`${projectKey}-\\d+`));
 
     console.log(`Created issue with key: ${issueKey}`);
 
     // Navigate directly to the issue detail page via URL
-    await page.goto(`/${orgSlug}/issues/${issueKey}`);
+    const issueDetailPage = new IssueDetailPage(page, orgSlug);
+    await issueDetailPage.gotoIssue(issueKey);
+    await issueDetailPage.expectIssueLoaded(issueKey);
+  });
 
-    // Should show the issue detail layout
-    // Look for issue key in the header
-    await expect(page.getByText(issueKey)).toBeVisible();
+  test("can edit an issue from the direct issue detail page", async ({
+    projectsPage,
+    page,
+    orgSlug,
+  }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("IUPD");
+    const originalTitle = namespace.name("Direct Edit Issue");
+    const updatedTitle = namespace.name("Direct Edit Updated");
 
-    // Should have "Edit Issue" button
-    await expect(page.getByRole("button", { name: /edit issue/i })).toBeVisible();
+    await projectsPage.goto();
+    await projectsPage.createWorkspace(namespace.name("Issue Edit WS"));
+    await projectsPage.goto();
+    await projectsPage.createProject(namespace.name("Issue Edit Project"), projectKey);
+    await projectsPage.createIssue(originalTitle);
+    await projectsPage.switchToTab("backlog");
+
+    await expect(projectsPage.getIssueCard(originalTitle)).toBeVisible();
+    const issueKey = await projectsPage.getIssueKey(originalTitle);
+    await expect(issueKey).toMatch(new RegExp(`${projectKey}-\\d+`));
+
+    const issueDetailPage = new IssueDetailPage(page, orgSlug);
+    await issueDetailPage.gotoIssue(issueKey);
+    await issueDetailPage.expectIssueLoaded(issueKey);
+    await issueDetailPage.editTitle(updatedTitle);
+
+    await issueDetailPage.returnToProjectBoard(projectKey);
+
+    await projectsPage.switchToTab("backlog");
+    await expect(projectsPage.getIssueCard(updatedTitle)).toBeVisible();
+    await expect(projectsPage.getIssueCard(originalTitle)).toHaveCount(0);
+  });
+
+  test("can edit issue description and priority from the direct issue detail page", async ({
+    projectsPage,
+    page,
+    orgSlug,
+  }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("IMET");
+    const issueTitle = namespace.name("Direct Metadata Issue");
+    const updatedDescription = namespace.name("Direct metadata description");
+
+    await projectsPage.goto();
+    await projectsPage.createWorkspace(namespace.name("Issue Metadata WS"));
+    await projectsPage.goto();
+    await projectsPage.createProject(namespace.name("Issue Metadata Project"), projectKey);
+    await projectsPage.createIssue(issueTitle);
+    await projectsPage.switchToTab("backlog");
+
+    await expect(projectsPage.getIssueCard(issueTitle)).toBeVisible();
+    const issueKey = await projectsPage.getIssueKey(issueTitle);
+    await expect(issueKey).toMatch(new RegExp(`${projectKey}-\\d+`));
+
+    const issueDetailPage = new IssueDetailPage(page, orgSlug);
+    await issueDetailPage.gotoIssue(issueKey);
+    await issueDetailPage.expectIssueLoaded(issueKey);
+    await issueDetailPage.editDescription(updatedDescription);
+    await issueDetailPage.changePriority("High");
+
+    await issueDetailPage.returnToProjectBoard(projectKey);
+
+    await projectsPage.switchToTab("backlog");
+    await projectsPage.openIssueDetail(issueTitle);
+    await expect(projectsPage.issueDetailDescriptionContent).toContainText(updatedDescription);
+    await expect(projectsPage.issueDetailPrioritySelect).toContainText(/high/i);
   });
 
   test("issue detail page has breadcrumb back to project", async ({
     projectsPage,
     page,
     orgSlug,
-  }) => {
+  }, testInfo) => {
     // Create project and issue
-    const uniqueId = Date.now().toString();
-    const projectKey = `BCRM${uniqueId.slice(-4)}`;
-    const issueTitle = "Breadcrumb Test Issue";
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("BCRM");
+    const issueTitle = namespace.name("Breadcrumb Test Issue");
 
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Breadcrumb WS ${uniqueId}`);
+    await projectsPage.createWorkspace(namespace.name("Breadcrumb WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Breadcrumb Project ${uniqueId}`, projectKey);
+    await projectsPage.createProject(namespace.name("Breadcrumb Project"), projectKey);
     await projectsPage.createIssue(issueTitle);
-    await expect(projectsPage.createIssueModal).not.toBeVisible();
 
     // Switch to backlog to find the issue
     await projectsPage.switchToTab("backlog");
 
     const issueCard = projectsPage.getIssueCard(issueTitle);
     await expect(issueCard).toBeVisible();
-    const issueAriaLabel = await issueCard.getAttribute("aria-label");
-    const issueKeyMatch = issueAriaLabel?.match(new RegExp(`${projectKey}-\\d+`));
-    const issueKey = issueKeyMatch?.[0];
+    const issueKey = await projectsPage.getIssueKey(issueTitle);
+    await expect(issueKey).toMatch(new RegExp(`${projectKey}-\\d+`));
 
     // Navigate to issue detail page
-    await page.goto(`/${orgSlug}/issues/${issueKey}`);
+    const issueDetailPage = new IssueDetailPage(page, orgSlug);
+    await issueDetailPage.gotoIssue(issueKey);
 
     // Should have breadcrumb link back to project
-    const breadcrumbLink = page.getByRole("link", { name: new RegExp(projectKey, "i") });
-    await expect(breadcrumbLink).toBeVisible();
+    await issueDetailPage.expectProjectBreadcrumbVisible(projectKey);
 
     // Click breadcrumb should navigate back to project board
-    await breadcrumbLink.click();
-    await expect(page).toHaveURL(/\/projects\/.*\/board/);
+    await issueDetailPage.returnToProjectBoard(projectKey);
   });
 });

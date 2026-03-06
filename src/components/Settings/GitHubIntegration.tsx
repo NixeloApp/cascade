@@ -13,6 +13,7 @@ import { Check, Github } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Stack } from "../ui/Stack";
@@ -39,6 +40,7 @@ export function GitHubIntegration() {
   const disconnectGitHub = useMutation(api.github.disconnectGitHub);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [disconnectConfirmOpen, setDisconnectConfirmOpen] = useState(false);
 
   // Listen for OAuth callback message
   useEffect(() => {
@@ -70,15 +72,7 @@ export function GitHubIntegration() {
     return () => window.removeEventListener("message", handleMessage);
   }, [connectGitHub]);
 
-  const handleDisconnect = async () => {
-    if (
-      !confirm(
-        "Are you sure you want to disconnect GitHub? This will remove all linked repositories.",
-      )
-    ) {
-      return;
-    }
-
+  const handleDisconnectConfirm = async () => {
     setIsDisconnecting(true);
     try {
       await disconnectGitHub();
@@ -131,7 +125,7 @@ export function GitHubIntegration() {
             <Button
               variant="danger"
               size="sm"
-              onClick={handleDisconnect}
+              onClick={() => setDisconnectConfirmOpen(true)}
               disabled={isDisconnecting}
             >
               {isDisconnecting ? "Disconnecting..." : "Disconnect"}
@@ -149,6 +143,16 @@ export function GitHubIntegration() {
           <LinkedRepositories />
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={disconnectConfirmOpen}
+        onClose={() => setDisconnectConfirmOpen(false)}
+        onConfirm={handleDisconnectConfirm}
+        title="Disconnect GitHub"
+        message="Are you sure you want to disconnect your GitHub account?"
+        variant="danger"
+        confirmLabel="Disconnect"
+      />
     </Card>
   );
 }

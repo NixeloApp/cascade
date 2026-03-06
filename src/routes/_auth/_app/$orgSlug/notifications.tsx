@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { isThisWeek, isToday, isYesterday } from "date-fns";
 import { Archive, Bell, CheckCheck } from "lucide-react";
 import { useState } from "react";
@@ -84,21 +84,25 @@ function NotificationsPage() {
   const [filter, setFilter] = useState<NotificationFilter>("all");
   const [activeTab, setActiveTab] = useState<"inbox" | "archived">("inbox");
   const orgContext = useOrganizationOptional();
+  const { isAuthenticated } = useConvexAuth();
 
   // Active notifications - filter by type on the backend for proper pagination
   const typeFilter = FILTER_TYPE_MAP[filter];
   const { results: notificationsRaw } = usePaginatedQuery(
     api.notifications.list,
-    { types: typeFilter ?? undefined },
+    isAuthenticated ? { types: typeFilter ?? undefined } : "skip",
     { initialNumItems: 100 },
   );
   const notifications = (notificationsRaw ?? []) as NotificationWithActor[];
 
   // Archived notifications
-  const archivedNotifications = useQuery(api.notifications.listArchived, {});
+  const archivedNotifications = useQuery(
+    api.notifications.listArchived,
+    isAuthenticated ? {} : "skip",
+  );
 
   // Unread count
-  const unreadCount = useQuery(api.notifications.getUnreadCount, {});
+  const unreadCount = useQuery(api.notifications.getUnreadCount, isAuthenticated ? {} : "skip");
 
   // Mutations
   const markAsRead = useMutation(api.notifications.markAsRead);

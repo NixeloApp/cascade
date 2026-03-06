@@ -1,5 +1,5 @@
-import { TEST_IDS } from "../src/lib/test-ids";
 import { expect, authenticatedTest as test } from "./fixtures";
+import { createTestNamespace } from "./utils/test-helpers";
 import { testUserService } from "./utils/test-user-service";
 
 /**
@@ -25,21 +25,20 @@ test.describe("Board Drag-Drop", () => {
     if (!seedResult) console.warn("WARNING: Failed to seed templates in test setup");
   });
 
-  test("issue cards have drag handle and are draggable", async ({ projectsPage, page }) => {
-    const timestamp = Date.now();
-    const projectKey = `DRAG${timestamp.toString().slice(-4)}`;
-    const issueTitle = `Draggable Issue ${timestamp}`;
+  test("issue cards have drag handle and are draggable", async ({ projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("DRAG");
+    const issueTitle = namespace.name("Draggable Issue");
 
     // Create a project with an issue
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Drag Test WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Drag Test WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Drag Test Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Drag Test Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
 
     // Create an issue (goes to Backlog for Scrum projects)
     await projectsPage.createIssue(issueTitle);
-    await expect(projectsPage.createIssueModal).not.toBeVisible();
 
     // Switch to backlog to find the issue
     await projectsPage.switchToTab("backlog");
@@ -49,33 +48,28 @@ test.describe("Board Drag-Drop", () => {
     await expect(issueCard).toBeVisible();
 
     // With Pragmatic DnD, the card is draggable via the library's internal setup.
-    // getIssueCard returns the overlay button, so locate the containing issue-card shell via test id.
-    const issueCardContainer = page
-      .getByTestId(TEST_IDS.ISSUE.CARD)
-      .filter({ has: issueCard })
-      .first();
+    // Assert against the stable drag-handle anchor instead of implementation CSS classes.
+    const issueCardContainer = projectsPage.getIssueCardContainer(issueTitle);
     await expect(issueCardContainer).toBeVisible();
 
-    // Verify there's a drag handle element (GripVertical icon wrapper)
-    // The drag handle is only visible on hover, but should exist in DOM
-    const dragHandle = issueCardContainer.locator("[class*='cursor-grab']");
+    const dragHandle = projectsPage.getIssueDragHandle(issueTitle);
     await expect(dragHandle).toBeAttached();
     console.log("✓ Issue card has drag handle (Pragmatic DnD)");
   });
 
-  test("board columns are valid drop targets", async ({ projectsPage, page }) => {
-    const timestamp = Date.now();
-    const projectKey = `DROP${timestamp.toString().slice(-4)}`;
+  test("board columns are valid drop targets", async ({ projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("DROP");
 
     // Create a project
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Drop Test WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Drop Test WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Drop Test Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Drop Test Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
 
     // Verify board columns exist
-    const columns = page.locator("[data-board-column]");
+    const columns = projectsPage.boardColumns;
     const columnCount = await columns.count();
     expect(columnCount).toBeGreaterThan(0);
     console.log(`✓ Found ${columnCount} board columns`);
@@ -89,21 +83,20 @@ test.describe("Board Drag-Drop", () => {
     }
   });
 
-  test("can drag issue between columns (status change)", async ({ projectsPage, page }) => {
-    const timestamp = Date.now();
-    const projectKey = `MOVE${timestamp.toString().slice(-4)}`;
-    const issueTitle = `Move Issue ${timestamp}`;
+  test("can drag issue between columns (status change)", async ({ projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("MOVE");
+    const issueTitle = namespace.name("Move Issue");
 
     // Create a project with an issue
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Move Test WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Move Test WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Move Test Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Move Test Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
 
     // Create an issue
     await projectsPage.createIssue(issueTitle);
-    await expect(projectsPage.createIssueModal).not.toBeVisible();
 
     // Switch to backlog to see the issue
     await projectsPage.switchToTab("backlog");
@@ -114,7 +107,7 @@ test.describe("Board Drag-Drop", () => {
     console.log("✓ Issue card visible in initial column");
 
     // Get all columns
-    const columns = page.locator("[data-board-column]");
+    const columns = projectsPage.boardColumns;
     const columnCount = await columns.count();
 
     if (columnCount < 2) {
@@ -130,7 +123,7 @@ test.describe("Board Drag-Drop", () => {
 
     // Find a different column to drop into
     // Try to find "In Progress" or similar column
-    let targetColumn = columns.filter({ has: page.getByText(/in progress/i) });
+    let targetColumn = projectsPage.getBoardColumn(/in progress/i);
     if ((await targetColumn.count()) === 0) {
       // Fall back to a column that's not the source
       for (let i = 0; i < columnCount; i++) {
@@ -176,19 +169,16 @@ test.describe("Board Drag-Drop", () => {
     console.log("✓ Drag operation completed");
   });
 
-  test("board shows multiple workflow states as columns", async ({ projectsPage, page }) => {
-    const timestamp = Date.now();
-    const projectKey = `COLS${timestamp.toString().slice(-4)}`;
+  test("board shows multiple workflow states as columns", async ({ projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("COLS");
 
     // Create a project
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Columns Test WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Columns Test WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Columns Test Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Columns Test Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
-
-    // Verify standard workflow columns exist
-    const columns = page.locator("[data-board-column]");
 
     // Scrum projects typically have: Backlog, To Do, In Progress, In Review, Done
     // We check for common workflow states
@@ -196,7 +186,7 @@ test.describe("Board Drag-Drop", () => {
     let foundStates = 0;
 
     for (const state of expectedStates) {
-      const stateColumn = columns.filter({ has: page.getByText(state, { exact: true }) });
+      const stateColumn = projectsPage.getBoardColumn(state);
       if ((await stateColumn.count()) > 0) {
         foundStates++;
         console.log(`✓ Found "${state}" column`);
@@ -208,33 +198,31 @@ test.describe("Board Drag-Drop", () => {
     console.log(`✓ Found ${foundStates} standard workflow columns`);
   });
 
-  test("column shows issue count badge", async ({ projectsPage, page }) => {
-    const timestamp = Date.now();
-    const projectKey = `BDGE${timestamp.toString().slice(-4)}`;
+  test("column shows issue count badge", async ({ projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("BDGE");
 
     // Create a project with issues
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Badge Test WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Badge Test WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Badge Test Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Badge Test Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
 
     // Create an issue
-    await projectsPage.createIssue(`Badge Test Issue ${timestamp}`);
-    await expect(projectsPage.createIssueModal).not.toBeVisible();
+    await projectsPage.createIssue(namespace.name("Badge Test Issue"));
 
     // Switch to backlog
     await projectsPage.switchToTab("backlog");
 
     // Find a column with issues and verify it shows count
-    const columns = page.locator("[data-board-column]");
+    const columns = projectsPage.boardColumns;
     const columnCount = await columns.count();
 
     let foundCountBadge = false;
     for (let i = 0; i < columnCount; i++) {
       const column = columns.nth(i);
-      // Look for count badge (usually shows as number in a badge near column header)
-      const badge = column.locator("header").getByRole("status");
+      const badge = projectsPage.getBoardColumnCountBadgeByIndex(i);
       if ((await badge.count()) > 0) {
         foundCountBadge = true;
         const badgeText = await badge.textContent();

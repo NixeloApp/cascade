@@ -8,7 +8,7 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
-import { emailDigests } from "./validators";
+import { emailDigests, weekDays } from "./validators";
 
 // Default preferences for new users
 export const DEFAULT_PREFERENCES = {
@@ -82,7 +82,7 @@ export const update = authenticatedMutation({
     emailComments: v.optional(v.boolean()),
     emailStatusChanges: v.optional(v.boolean()),
     emailDigest: v.optional(emailDigests),
-    digestDay: v.optional(v.string()),
+    digestDay: v.optional(weekDays),
     digestTime: v.optional(v.string()),
     // Quiet hours
     quietHoursEnabled: v.optional(v.boolean()),

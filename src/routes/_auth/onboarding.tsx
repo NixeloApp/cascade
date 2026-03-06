@@ -22,6 +22,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { TEST_IDS } from "@/lib/test-ids";
+import { showError } from "@/lib/toast";
 
 export const Route = createFileRoute("/_auth/onboarding")({
   component: OnboardingPage,
@@ -57,7 +58,13 @@ function OnboardingPage() {
 
   const handleRoleSelect = async (persona: "team_lead" | "team_member") => {
     setSelectedPersona(persona);
-    await setPersona({ persona });
+    try {
+      await setPersona({ persona });
+    } catch (error) {
+      setSelectedPersona(null);
+      showError(error, "Failed to start onboarding");
+      throw error;
+    }
 
     if (persona === "team_lead") {
       setStep("lead-flow");

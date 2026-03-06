@@ -1,21 +1,21 @@
-import { expect } from "@playwright/test";
 import { rbacTest } from "./fixtures/rbac.fixture";
+import { createTestNamespace } from "./utils/test-helpers";
 
 rbacTest.describe("Organization Management", () => {
   rbacTest(
     "Admin can update organization name and settings",
-    async ({ adminSettingsPage, adminPage, rbacOrgSlug }) => {
-      await adminSettingsPage.goto(rbacOrgSlug);
-      await adminSettingsPage.switchToTab("admin");
+    async ({ adminSettingsPage }, testInfo) => {
+      const namespace = createTestNamespace(testInfo);
 
-      const newName = `E2E Org ${Date.now()}`;
+      await adminSettingsPage.goto();
+      await adminSettingsPage.switchToTab("admin");
+      await adminSettingsPage.expectAdminSettingsLoaded();
+
+      const newName = namespace.name("E2E Org");
       await adminSettingsPage.updateOrganizationName(newName);
 
-      // Verify name in input
       await adminSettingsPage.expectOrganizationName(newName);
-
-      // Verify name appears on page after update (sidebar or settings description)
-      await expect(adminPage.getByText(newName, { exact: false }).first()).toBeVisible();
+      await adminSettingsPage.expectOrganizationNameVisible(newName);
 
       // Reset name for other tests (slug follows name)
       await adminSettingsPage.updateOrganizationName("Nixelo E2E");
@@ -23,74 +23,56 @@ rbacTest.describe("Organization Management", () => {
     },
   );
 
-  rbacTest("Admin can toggle time approval setting", async ({ adminSettingsPage, rbacOrgSlug }) => {
-    await adminSettingsPage.goto(rbacOrgSlug);
+  rbacTest("Admin can toggle time approval setting", async ({ adminSettingsPage }) => {
+    await adminSettingsPage.goto();
     await adminSettingsPage.switchToTab("admin");
+    await adminSettingsPage.expectAdminSettingsLoaded();
 
     // First, ensure we're in a known state by toggling OFF
     await adminSettingsPage.toggleTimeApproval(false);
-    await expect(adminSettingsPage.requiresTimeApprovalSwitch).toHaveAttribute(
-      "aria-checked",
-      "false",
-    );
+    await adminSettingsPage.expectTimeApprovalEnabled(false);
 
     // Now toggle ON
     await adminSettingsPage.toggleTimeApproval(true);
-    await expect(adminSettingsPage.requiresTimeApprovalSwitch).toHaveAttribute(
-      "aria-checked",
-      "true",
-    );
+    await adminSettingsPage.expectTimeApprovalEnabled(true);
 
     // Toggle OFF again to restore original state
     await adminSettingsPage.toggleTimeApproval(false);
-    await expect(adminSettingsPage.requiresTimeApprovalSwitch).toHaveAttribute(
-      "aria-checked",
-      "false",
-    );
+    await adminSettingsPage.expectTimeApprovalEnabled(false);
   });
 });
 
 rbacTest.describe("Workspace Management", () => {
-  rbacTest(
-    "Admin can create multiple workspaces",
-    async ({ adminWorkspacesPage, adminPage, rbacOrgSlug }) => {
-      await adminWorkspacesPage.goto(rbacOrgSlug);
+  rbacTest("Admin can create multiple workspaces", async ({ adminWorkspacesPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
 
-      const wsName1 = `WS Alpha ${Date.now()}`;
-      const _wsName2 = `WS Beta ${Date.now()}`;
+    await adminWorkspacesPage.goto();
 
-      await adminWorkspacesPage.createWorkspace(wsName1);
+    const wsName1 = namespace.name("WS Alpha");
 
-      // After creation, the app navigates to the new workspace detail page
-      // Verify we're on the workspace detail page by checking the heading
-      await expect(adminPage.getByRole("heading", { name: wsName1 })).toBeVisible();
+    await adminWorkspacesPage.createWorkspace(wsName1);
 
-      // Verify the workspace name appears on the page (both heading and sidebar)
-      await expect(adminPage.getByText(wsName1).first()).toBeVisible();
-    },
-  );
+    await adminWorkspacesPage.expectWorkspaceDetailVisible(wsName1);
+    await adminWorkspacesPage.expectWorkspaceVisible(wsName1);
+  });
 });
 
 rbacTest.describe("RBAC Verification", () => {
   rbacTest(
     "Editor cannot access Admin tab in settings",
     async ({ editorPage, editorSettingsPage, rbacOrgSlug }) => {
-      await editorSettingsPage.goto(rbacOrgSlug);
+      await editorSettingsPage.goto();
 
-      // Admin tab should not even be visible
-      await expect(editorPage.getByRole("tab", { name: /admin/i })).not.toBeVisible();
+      await editorSettingsPage.expectAdminTabHidden();
 
-      // Direct navigation to admin tab should hide content or redirect
+      // Direct navigation to the admin tab should not surface admin-only content.
       await editorPage.goto(`/${rbacOrgSlug}/settings/profile?tab=admin`);
-      await expect(editorPage.getByText(/organization settings/i)).not.toBeVisible();
+      await editorSettingsPage.expectAdminContentHidden();
     },
   );
 
-  rbacTest(
-    "Viewer cannot access Admin tab in settings",
-    async ({ viewerPage, viewerSettingsPage, rbacOrgSlug }) => {
-      await viewerSettingsPage.goto(rbacOrgSlug);
-      await expect(viewerPage.getByRole("tab", { name: /admin/i })).not.toBeVisible();
-    },
-  );
+  rbacTest("Viewer cannot access Admin tab in settings", async ({ viewerSettingsPage }) => {
+    await viewerSettingsPage.goto();
+    await viewerSettingsPage.expectAdminTabHidden();
+  });
 });

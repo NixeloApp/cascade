@@ -12,7 +12,9 @@ import { v } from "convex/values";
 import { issueActivityFields, issuesFields, projectsFields } from "./schemaFields";
 import {
   attendanceStatuses,
+  auditActions,
   auditMetadata,
+  auditTargetTypes,
   automationActionTypes,
   automationActionValue,
   automationTriggers,
@@ -47,6 +49,7 @@ import {
   meetingStatuses,
   oidcProviders,
   organizationRoles,
+  otpCodeTypes,
   periodTypes,
   personas,
   projectRoles,
@@ -60,6 +63,7 @@ import {
   ssoConnectionTypes,
   syncDirections,
   teamRoles,
+  themes,
   webhookStatuses,
   weekDays,
   workflowCategories,
@@ -892,7 +896,7 @@ const applicationTables = {
     emailComments: v.boolean(),
     emailStatusChanges: v.boolean(),
     emailDigest: emailDigests,
-    digestDay: v.optional(v.string()), // "monday", etc.
+    digestDay: v.optional(weekDays),
     digestTime: v.optional(v.string()), // "09:00"
     // Push notification preferences (Cal.com parity)
     pushEnabled: v.optional(v.boolean()), // Master toggle for push notifications
@@ -1737,7 +1741,7 @@ const applicationTables = {
   userSettings: defineTable({
     userId: v.id("users"),
     dashboardLayout: v.optional(dashboardLayout),
-    theme: v.optional(v.string()), // "light", "dark", "system"
+    theme: v.optional(themes),
     sidebarCollapsed: v.optional(v.boolean()),
     emailNotifications: v.optional(v.boolean()),
     desktopNotifications: v.optional(v.boolean()),
@@ -1766,10 +1770,10 @@ const applicationTables = {
   // ===========================================================================
 
   auditLogs: defineTable({
-    action: v.string(), // "team.create", "project.delete"
+    action: auditActions,
     actorId: v.optional(v.id("users")),
     targetId: v.string(),
-    targetType: v.string(), // "team", "project", "user"
+    targetType: auditTargetTypes,
     metadata: v.optional(auditMetadata),
     timestamp: v.number(),
   })
@@ -1815,7 +1819,7 @@ const applicationTables = {
   testOtpCodes: defineTable({
     email: v.string(),
     code: v.string(),
-    type: v.optional(v.string()), // "verification" | "reset"
+    type: v.optional(otpCodeTypes),
     expiresAt: v.number(),
   })
     .index("by_email", ["email"])

@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { MeetingRecordingSection } from "../MeetingRecordingSection";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Dialog } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
 import { MetadataItem } from "../ui/Metadata";
@@ -47,6 +48,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
   const markAttendance = useMutation(api.calendarEventsAttendance.markAttendance);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSavingAttendance, setIsSavingAttendance] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   if (!event) {
     return (
@@ -58,9 +60,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
     );
   }
 
-  const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this event?")) return;
-
+  const handleDeleteConfirm = async () => {
     setIsDeleting(true);
     try {
       await deleteEvent({ id: eventId });
@@ -114,7 +114,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
       footer={
         <>
           <Button
-            onClick={handleDelete}
+            onClick={() => setDeleteConfirmOpen(true)}
             variant="danger"
             isLoading={isDeleting}
             leftIcon={<Trash2 className="w-4 h-4" />}
@@ -322,6 +322,16 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
           )}
         </Flex>
       </Flex>
+
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Event"
+        message="Are you sure you want to delete this event?"
+        variant="danger"
+        confirmLabel="Delete"
+      />
     </Dialog>
   );
 }

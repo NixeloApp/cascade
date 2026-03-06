@@ -203,12 +203,22 @@ function TableOfContents({
  * Document info row
  */
 function InfoRow({ label, value }: { label: string; value: ReactNode }) {
+  const isPlainValue = typeof value === "string" || typeof value === "number";
+
   return (
     <Flex align="center" justify="between" className="py-1">
       <Typography variant="small" color="secondary">
         {label}
       </Typography>
-      <Typography variant="small">{value}</Typography>
+      {isPlainValue ? (
+        <Typography variant="small" as="span">
+          {value}
+        </Typography>
+      ) : (
+        <Flex align="center" justify="end">
+          {value}
+        </Flex>
+      )}
     </Flex>
   );
 }
@@ -278,7 +288,9 @@ export function DocumentSidebar({
             value={
               <Flex align="center" gap="xs">
                 <User className="h-3 w-3" />
-                {documentInfo.creatorName}
+                <Typography variant="small" as="span">
+                  {documentInfo.creatorName}
+                </Typography>
               </Flex>
             }
           />

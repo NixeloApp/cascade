@@ -14,6 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Dialog } from "@/components/ui/Dialog";
 import { Flex } from "@/components/ui/Flex";
 import { Input, Textarea } from "@/components/ui/form";
@@ -47,6 +48,8 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
   const [newConnectionType, setNewConnectionType] = useState<ConnectionType>("saml");
   const [newConnectionName, setNewConnectionName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<Id<"ssoConnections"> | null>(null);
 
   const handleCreate = async () => {
     if (!newConnectionName.trim()) {
@@ -71,19 +74,22 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
     }
   };
 
-  const handleDelete = async (connectionId: Id<"ssoConnections">) => {
-    if (!window.confirm("Are you sure you want to delete this SSO connection?")) {
-      return;
-    }
+  const handleDeleteClick = (connectionId: Id<"ssoConnections">) => {
+    setPendingDeleteId(connectionId);
+    setDeleteConfirmOpen(true);
+  };
 
+  const handleDeleteConfirm = async () => {
+    if (!pendingDeleteId) return;
     setIsLoading(true);
     try {
-      await removeConnection({ connectionId });
+      await removeConnection({ connectionId: pendingDeleteId });
       showSuccess("SSO connection deleted");
     } catch (error) {
       showError(error, "Failed to delete connection");
     } finally {
       setIsLoading(false);
+      setPendingDeleteId(null);
     }
   };
 
@@ -189,7 +195,7 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDelete(connection._id)}
+                      onClick={() => handleDeleteClick(connection._id)}
                       disabled={isLoading}
                     >
                       <Icon icon={Trash2} size="sm" className="text-status-error" />
@@ -269,6 +275,16 @@ export function SSOSettings({ organizationId }: SSOSettingsProps) {
           }}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete SSO Connection"
+        message="Are you sure you want to delete this SSO connection?"
+        variant="danger"
+        confirmLabel="Delete"
+      />
     </Stack>
   );
 }

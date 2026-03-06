@@ -20,6 +20,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Dialog } from "../ui/Dialog";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
@@ -38,6 +39,7 @@ export function HourComplianceDashboard() {
   const [reviewingRecord, setReviewingRecord] = useState<Id<"hourComplianceRecords"> | null>(null);
   const [reviewNotes, setReviewNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [checkAllConfirmOpen, setCheckAllConfirmOpen] = useState(false);
 
   // Queries
   const summary = useQuery(
@@ -80,9 +82,7 @@ export function HourComplianceDashboard() {
     }
   };
 
-  const handleCheckAllCompliance = async () => {
-    if (!confirm("Check compliance for all active users this week?")) return;
-
+  const handleCheckAllComplianceConfirm = async () => {
     try {
       const now = new Date();
       const weekStart = new Date(now);
@@ -223,7 +223,7 @@ export function HourComplianceDashboard() {
           title="Hour Compliance Records"
           description="Track employee/contractor/intern hour compliance"
           action={
-            <Button onClick={handleCheckAllCompliance} size="sm">
+            <Button onClick={() => setCheckAllConfirmOpen(true)} size="sm">
               Check All Users (This Week)
             </Button>
           }
@@ -273,7 +273,7 @@ export function HourComplianceDashboard() {
               description="Check compliance to start tracking"
               action={{
                 label: "Check All Users",
-                onClick: handleCheckAllCompliance,
+                onClick: () => setCheckAllConfirmOpen(true),
               }}
             />
           ) : (
@@ -425,6 +425,16 @@ export function HourComplianceDashboard() {
           </Stack>
         </form>
       </Dialog>
+
+      <ConfirmDialog
+        isOpen={checkAllConfirmOpen}
+        onClose={() => setCheckAllConfirmOpen(false)}
+        onConfirm={handleCheckAllComplianceConfirm}
+        title="Check Compliance"
+        message="Check compliance for all active users this week?"
+        variant="warning"
+        confirmLabel="Check All"
+      />
     </Flex>
   );
 }

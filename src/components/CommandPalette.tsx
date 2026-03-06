@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Doc } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
@@ -166,10 +166,12 @@ export function useCommands({
 } = {}) {
   const navigate = useNavigate();
   const { orgSlug } = useOrganization();
-  const projects = useQuery(api.dashboard.getMyProjects);
-  const myIssues = useQuery(api.dashboard.getMyIssues, {
-    paginationOpts: { numItems: 10, cursor: null },
-  });
+  const { isAuthenticated } = useConvexAuth();
+  const projects = useQuery(api.dashboard.getMyProjects, isAuthenticated ? undefined : "skip");
+  const myIssues = useQuery(
+    api.dashboard.getMyIssues,
+    isAuthenticated ? { paginationOpts: { numItems: 10, cursor: null } } : "skip",
+  );
 
   const commands: CommandAction[] = [
     // Navigation

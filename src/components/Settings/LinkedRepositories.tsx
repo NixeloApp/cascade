@@ -7,6 +7,7 @@ import { Github, Trash2 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Flex } from "../ui/Flex";
 import { Label } from "../ui/Label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
@@ -19,6 +20,8 @@ import { Typography } from "../ui/Typography";
  */
 export function LinkedRepositories() {
   const [selectedWorkspace, setSelectedWorkspace] = useState<Id<"projects"> | null>(null);
+  const [unlinkConfirmOpen, setUnlinkConfirmOpen] = useState(false);
+  const [pendingUnlinkId, setPendingUnlinkId] = useState<Id<"githubRepositories"> | null>(null);
   const projects = useQuery(api.projects.getCurrentUserProjects, {});
   const repositories = useQuery(
     api.github.listRepositories,
@@ -26,16 +29,20 @@ export function LinkedRepositories() {
   );
   const unlinkRepo = useMutation(api.github.unlinkRepository);
 
-  const handleUnlink = async (repoId: Id<"githubRepositories">) => {
-    if (!confirm("Are you sure you want to unlink this repository?")) {
-      return;
-    }
+  const handleUnlinkClick = (repoId: Id<"githubRepositories">) => {
+    setPendingUnlinkId(repoId);
+    setUnlinkConfirmOpen(true);
+  };
 
+  const handleUnlinkConfirm = async () => {
+    if (!pendingUnlinkId) return;
     try {
-      await unlinkRepo({ repositoryId: repoId });
+      await unlinkRepo({ repositoryId: pendingUnlinkId });
       showSuccess("Repository unlinked");
     } catch (error) {
       showError(error, "Failed to unlink repository");
+    } finally {
+      setPendingUnlinkId(null);
     }
   };
 
@@ -88,7 +95,7 @@ export function LinkedRepositories() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleUnlink(repo._id)}
+                  onClick={() => handleUnlinkClick(repo._id)}
                   aria-label={`Unlink ${repo.repoFullName}`}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -108,6 +115,16 @@ export function LinkedRepositories() {
           + Link New Repository
         </Button>
       )}
+
+      <ConfirmDialog
+        isOpen={unlinkConfirmOpen}
+        onClose={() => setUnlinkConfirmOpen(false)}
+        onConfirm={handleUnlinkConfirm}
+        title="Unlink Repository"
+        message="Are you sure you want to unlink this repository?"
+        variant="danger"
+        confirmLabel="Unlink"
+      />
     </Stack>
   );
 }

@@ -8,7 +8,7 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
@@ -40,6 +40,7 @@ export function CreateProjectFromTemplate({
   onProjectCreated,
 }: CreateProjectFromTemplateProps) {
   const { organizationId } = useOrganization();
+  const { isAuthenticated } = useConvexAuth();
   const [step, setStep] = useState<"select" | "configure">("select");
   const [selectedTemplateId, setSelectedTemplateId] = useState<Id<"projectTemplates"> | null>(null);
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<Id<"workspaces"> | null>(null);
@@ -49,12 +50,16 @@ export function CreateProjectFromTemplate({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const workspaces = useQuery(api.workspaces.list, { organizationId });
+  const shouldLoadModalData = open && isAuthenticated;
+  const workspaces = useQuery(
+    api.workspaces.list,
+    shouldLoadModalData ? { organizationId } : "skip",
+  );
 
-  const templates = useQuery(api.projectTemplates.list);
+  const templates = useQuery(api.projectTemplates.list, shouldLoadModalData ? undefined : "skip");
   const selectedTemplate = useQuery(
     api.projectTemplates.get,
-    selectedTemplateId ? { id: selectedTemplateId } : "skip",
+    shouldLoadModalData && selectedTemplateId ? { id: selectedTemplateId } : "skip",
   );
 
   // Auto-select first workspace if available

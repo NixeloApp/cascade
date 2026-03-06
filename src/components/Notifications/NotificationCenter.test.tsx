@@ -1,7 +1,7 @@
 import { HOUR } from "@convex/lib/timeUtils";
 import userEvent from "@testing-library/user-event";
 import type { ReactMutation } from "convex/react";
-import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import type { Mock } from "vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -11,6 +11,7 @@ import { NotificationCenter } from "./NotificationCenter";
 
 // Mock Convex hooks
 vi.mock("convex/react", () => ({
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   useQuery: vi.fn(),
   useMutation: vi.fn(),
   usePaginatedQuery: vi.fn(),
@@ -62,6 +63,7 @@ describe("NotificationCenter", () => {
     });
 
     // Default mock for useQuery
+    vi.mocked(useConvexAuth).mockReturnValue({ isAuthenticated: true, isLoading: false });
     vi.mocked(useQuery).mockReturnValue(undefined);
     // Default mock for usePaginatedQuery
     vi.mocked(usePaginatedQuery).mockReturnValue({

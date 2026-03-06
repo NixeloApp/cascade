@@ -1,4 +1,3 @@
-import { TEST_IDS } from "../src/lib/test-ids";
 import { expect, test } from "./fixtures";
 
 /**
@@ -14,7 +13,7 @@ test.describe("Sign In Form - Elements", () => {
     await page.goto("/signin", { waitUntil: "commit" });
   });
 
-  test("displays all sign in form elements", async ({ authPage, page }) => {
+  test("displays all sign in form elements", async ({ authPage }) => {
     // Wait for page to be ready
     await expect(authPage.signInHeading).toBeVisible();
 
@@ -25,81 +24,37 @@ test.describe("Sign In Form - Elements", () => {
     await expect(authPage.toggleFlowButton).toBeVisible();
     await expect(authPage.toggleFlowButton).toContainText(/sign up/i);
 
-    // Submit button is always visible (shows either "Continue with email" or "Sign in")
-    const submitButton = page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-    const authForm = page.getByTestId(TEST_IDS.AUTH.FORM);
-    await expect(submitButton).toBeVisible();
+    await expect(authPage.submitButton).toBeVisible();
 
-    // Wait for hydration before interacting
-    await authPage.waitForHydration();
-
-    // Expand form and verify all elements in a single retry block
-    // This ensures the form stays expanded during verification
-    await expect(async () => {
-      // Check if form needs expansion using data-expanded attribute
-      const isExpanded = await authForm.getAttribute("data-expanded");
-
-      if (isExpanded !== "true") {
-        // Click to expand
-        await submitButton.click();
-        // Wait for form to expand
-        await expect(authForm).toHaveAttribute("data-expanded", "true");
-      }
-
-      // Now verify all expanded elements
-      await expect(authPage.emailInput).toBeVisible();
-      await expect(authPage.passwordInput).toBeVisible();
-      await expect(authForm).toHaveAttribute("data-expanded", "true");
-      await expect(authPage.forgotPasswordButton).toBeVisible();
-    }).toPass();
+    await authPage.expandEmailForm();
+    await authPage.waitForFormExpanded();
+    await expect(authPage.emailInput).toBeVisible();
+    await expect(authPage.passwordInput).toBeVisible();
+    await expect(authPage.forgotPasswordButton).toBeVisible();
 
     // Final assertions for input types (these don't depend on form state)
     await expect(authPage.emailInput).toHaveAttribute("type", "email");
     await expect(authPage.passwordInput).toHaveAttribute("type", "password");
   });
 
-  test("email input validates email format", async ({ authPage, page }) => {
-    await authPage.waitForHydration();
-    const submitButton = page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-    const authForm = page.getByTestId(TEST_IDS.AUTH.FORM);
+  test("email input validates email format", async ({ authPage }) => {
+    await authPage.expandEmailForm();
 
-    // Expand form, fill with invalid email, and verify validation in retry block
-    await expect(async () => {
-      const isExpanded = await authForm.getAttribute("data-expanded");
-      if (isExpanded !== "true") {
-        await submitButton.click();
-        await expect(authForm).toHaveAttribute("data-expanded", "true");
-      }
+    await authPage.emailInput.fill("invalid-email");
+    await authPage.passwordInput.fill("password123");
+    await authPage.submitButton.click();
 
-      // Fill form with invalid email
-      await authPage.emailInput.fill("invalid-email");
-      await authPage.passwordInput.fill("password123");
-      await submitButton.click();
-
-      // HTML5 validation should trigger
-      const isInvalid = await authPage.emailInput.evaluate(
-        (el: HTMLInputElement) => !el.validity.valid,
-      );
-      expect(isInvalid).toBe(true);
-    }).toPass();
+    const isInvalid = await authPage.emailInput.evaluate(
+      (el: HTMLInputElement) => !el.validity.valid,
+    );
+    expect(isInvalid).toBe(true);
   });
 
-  test("password input is masked", async ({ authPage, page }) => {
-    await authPage.waitForHydration();
-    const submitButton = page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-    const authForm = page.getByTestId(TEST_IDS.AUTH.FORM);
+  test("password input is masked", async ({ authPage }) => {
+    await authPage.expandEmailForm();
 
-    // Expand form and verify password is masked in retry block
-    await expect(async () => {
-      const isExpanded = await authForm.getAttribute("data-expanded");
-      if (isExpanded !== "true") {
-        await submitButton.click();
-        await expect(authForm).toHaveAttribute("data-expanded", "true");
-      }
-
-      await authPage.passwordInput.fill("secretpassword");
-      await expect(authPage.passwordInput).toHaveAttribute("type", "password");
-    }).toPass();
+    await authPage.passwordInput.fill("secretpassword");
+    await expect(authPage.passwordInput).toHaveAttribute("type", "password");
   });
 });
 
@@ -109,7 +64,7 @@ test.describe("Sign Up Form - Elements", () => {
     await page.goto("/signup", { waitUntil: "commit" });
   });
 
-  test("displays all sign up form elements", async ({ authPage, page }) => {
+  test("displays all sign up form elements", async ({ authPage }) => {
     // Wait for page to be ready
     await expect(authPage.signUpHeading).toBeVisible();
 
@@ -120,64 +75,30 @@ test.describe("Sign Up Form - Elements", () => {
     await expect(authPage.toggleFlowButton).toBeVisible();
     await expect(authPage.toggleFlowButton).toContainText(/sign in/i);
 
-    // Submit button is always visible (shows either "Continue with email" or "Create account")
-    const submitButton = page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-    const authForm = page.getByTestId(TEST_IDS.AUTH.FORM);
-    await expect(submitButton).toBeVisible();
+    await expect(authPage.submitButton).toBeVisible();
 
-    // Wait for hydration before interacting
-    await authPage.waitForHydration();
-
-    // Expand form and verify all elements in a single retry block
-    // This ensures the form stays expanded during verification
-    await expect(async () => {
-      // Check if form needs expansion using data-expanded attribute
-      const isExpanded = await authForm.getAttribute("data-expanded");
-
-      if (isExpanded !== "true") {
-        // Click to expand
-        await submitButton.click();
-        // Wait for form to expand
-        await expect(authForm).toHaveAttribute("data-expanded", "true");
-      }
-
-      // Now verify all expanded elements
-      await expect(authPage.emailInput).toBeVisible();
-      await expect(authPage.passwordInput).toBeVisible();
-      await expect(authForm).toHaveAttribute("data-expanded", "true");
-    }).toPass();
+    await authPage.expandEmailForm();
+    await authPage.waitForFormExpanded();
+    await expect(authPage.emailInput).toBeVisible();
+    await expect(authPage.passwordInput).toBeVisible();
 
     // Forgot password hidden in sign up mode (only shown in sign in)
     await expect(authPage.forgotPasswordButton).not.toBeVisible();
   });
 
-  // This test involves multiple navigation and form expansion operations which can be flaky
-  // due to React state management timing. Allow retries to handle intermittent failures.
-  test("can switch between sign in and sign up", async ({ authPage, page }) => {
-    test.info().annotations.push({
-      type: "flaky",
-      description: "Form expansion timing can be inconsistent",
-    });
-    const authForm = page.getByTestId(TEST_IDS.AUTH.FORM);
-    const submitButton = page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-
-    // Wait for hydration and expand form
-    await authPage.waitForHydration();
-    await expect(async () => {
-      const isExpanded = await authForm.getAttribute("data-expanded");
-      if (isExpanded !== "true") {
-        await submitButton.click();
-        await expect(authForm).toHaveAttribute("data-expanded", "true");
-      }
-    }).toPass();
+  test("can switch between sign in and sign up", async ({ authPage }) => {
+    await authPage.expandEmailForm();
+    await authPage.waitForFormExpanded();
 
     // Switch to sign in
     await authPage.switchToSignIn();
-    await expect(authForm).toHaveAttribute("data-expanded", "true");
+    await expect(authPage.signInHeading).toBeVisible();
+    await authPage.waitForFormExpanded();
 
     // Switch back to sign up
     await authPage.switchToSignUp();
-    await expect(authForm).toHaveAttribute("data-expanded", "true");
+    await expect(authPage.signUpHeading).toBeVisible();
+    await authPage.waitForFormExpanded();
   });
 });
 
@@ -201,10 +122,9 @@ test.describe("Forgot Password Form - Elements", () => {
     await expect(authPage.backToSignInButton).toBeVisible();
   });
 
-  test("can go back to sign in", async ({ authPage, page }) => {
+  test("can go back to sign in", async ({ authPage }) => {
     await authPage.goBackToSignIn();
-    const authForm = page.getByTestId(TEST_IDS.AUTH.FORM);
-    await expect(authForm).toHaveAttribute("data-expanded", "true");
+    await expect(authPage.authForm).toHaveAttribute("data-expanded", "true");
   });
 });
 

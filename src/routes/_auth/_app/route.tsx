@@ -10,6 +10,7 @@ import { api } from "@convex/_generated/api";
 import { isReservedSlug } from "@convex/shared/constants";
 import { createFileRoute, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { useEffect, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -19,6 +20,12 @@ import { ROUTES } from "@/config/routes";
 export const Route = createFileRoute("/_auth/_app")({
   component: AppLayout,
 });
+
+type UserOrganization = FunctionReturnType<typeof api.organizations.getUserOrganizations>[number];
+
+let cachedRedirectPath: string | null | undefined;
+let cachedUserOrganizations: UserOrganization[] | undefined;
+let hasAuthenticatedAppSession = false;
 
 /**
  * AppLayout - The /app gateway route.
@@ -36,6 +43,12 @@ function AppLayout() {
   const { pathname } = useLocation();
   const { isLoading: isAuthLoading, isAuthenticated } = useConvexAuth();
 
+  if (isAuthenticated) {
+    hasAuthenticatedAppSession = true;
+  } else if (!isAuthLoading) {
+    hasAuthenticatedAppSession = false;
+  }
+
   // Get redirect destination from backend (handles onboarding check)
   const redirectPath = useQuery(
     api.auth.getRedirectDestination,
@@ -48,23 +61,43 @@ function AppLayout() {
     isAuthenticated ? undefined : "skip",
   );
 
+  if (redirectPath !== undefined) {
+    cachedRedirectPath = redirectPath;
+  }
+
+  if (userOrganizations !== undefined) {
+    cachedUserOrganizations = userOrganizations;
+  }
+
+  if (!isAuthLoading && !isAuthenticated) {
+    cachedRedirectPath = undefined;
+    cachedUserOrganizations = undefined;
+  }
+
+  const stableRedirectPath = redirectPath ?? cachedRedirectPath;
+  const stableUserOrganizations = userOrganizations ?? cachedUserOrganizations;
+
   // Redirect to correct destination if not at /app
   useEffect(() => {
-    if (redirectPath && redirectPath !== ROUTES.app.path) {
+    if (stableRedirectPath && stableRedirectPath !== ROUTES.app.path) {
       const isGateway = pathname === "/app" || pathname === "/app/";
-      const isOnboardingTarget = redirectPath.includes(ROUTES.onboarding.path);
+      const isOnboardingTarget = stableRedirectPath.includes(ROUTES.onboarding.path);
       const isOnboardingCurrent = pathname.includes(ROUTES.onboarding.path);
 
       if (isOnboardingTarget && !isOnboardingCurrent) {
-        navigate({ to: redirectPath, replace: true });
+        navigate({ to: stableRedirectPath, replace: true });
       } else if (isGateway) {
-        navigate({ to: redirectPath, replace: true });
+        navigate({ to: stableRedirectPath, replace: true });
       }
     }
-  }, [redirectPath, navigate, pathname]);
+  }, [navigate, pathname, stableRedirectPath]);
 
   // Loading state - waiting for queries
-  if (isAuthLoading || redirectPath === undefined || userOrganizations === undefined) {
+  if (
+    (isAuthLoading && !hasAuthenticatedAppSession) ||
+    stableRedirectPath === undefined ||
+    stableUserOrganizations === undefined
+  ) {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
         <LoadingSpinner size="lg" />
@@ -73,9 +106,9 @@ function AppLayout() {
   }
 
   // If we have a redirect path that's not /app, potentially show loading if we are about to redirect
-  if (redirectPath && redirectPath !== ROUTES.app.path) {
+  if (stableRedirectPath && stableRedirectPath !== ROUTES.app.path) {
     const isGateway = pathname === "/app" || pathname === "/app/";
-    const isOnboardingTarget = redirectPath.includes(ROUTES.onboarding.path);
+    const isOnboardingTarget = stableRedirectPath.includes(ROUTES.onboarding.path);
     const isOnboardingCurrent = pathname.includes(ROUTES.onboarding.path);
 
     const willRedirect = (isOnboardingTarget && !isOnboardingCurrent) || isGateway;
@@ -90,7 +123,7 @@ function AppLayout() {
   }
 
   // User has no organizations - initialize default organization
-  if (userOrganizations.length === 0) {
+  if (stableUserOrganizations.length === 0) {
     return <InitializeOrganization />;
   }
 

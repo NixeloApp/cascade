@@ -20,6 +20,56 @@ import { logger } from "./lib/logger";
 import { getClientIp } from "./lib/ssrf";
 import { rateLimit } from "./rateLimits";
 
+const PASSWORD_RESET_CORS_METHODS = "POST, OPTIONS";
+const PASSWORD_RESET_CORS_HEADERS = "Content-Type";
+
+function getPasswordResetCorsOrigin(request: Request): string | null {
+  const requestOrigin = request.headers.get("origin");
+  if (!requestOrigin) {
+    return null;
+  }
+
+  const allowedOrigins = new Set<string>();
+
+  if (process.env.SITE_URL) {
+    allowedOrigins.add(process.env.SITE_URL);
+  }
+
+  if (shouldUseFallbacks()) {
+    allowedOrigins.add("http://localhost:5555");
+    allowedOrigins.add("http://127.0.0.1:5555");
+  }
+
+  return allowedOrigins.has(requestOrigin) ? requestOrigin : null;
+}
+
+function getPasswordResetCorsHeaders(request: Request): HeadersInit {
+  const origin = getPasswordResetCorsOrigin(request);
+  if (!origin) {
+    return {
+      "Access-Control-Allow-Methods": PASSWORD_RESET_CORS_METHODS,
+      "Access-Control-Allow-Headers": PASSWORD_RESET_CORS_HEADERS,
+    };
+  }
+
+  return {
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Methods": PASSWORD_RESET_CORS_METHODS,
+    "Access-Control-Allow-Headers": PASSWORD_RESET_CORS_HEADERS,
+    Vary: "Origin",
+  };
+}
+
+function passwordResetJsonResponse(request: Request, body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      ...getPasswordResetCorsHeaders(request),
+    },
+  });
+}
+
 /**
  * Handler for password reset request - exported for testing
  */
@@ -143,20 +193,18 @@ export const securePasswordResetHandler = async (ctx: ActionCtx, request: Reques
       await ctx.runMutation(internal.authWrapper.checkPasswordResetRateLimit, { ip: clientIp });
     } catch {
       // Rate limit exceeded
-      return new Response(JSON.stringify({ success: false, error: "Rate limit exceeded" }), {
-        status: 429,
-        headers: { "Content-Type": "application/json" },
-      });
+      return passwordResetJsonResponse(
+        request,
+        { success: false, error: "Rate limit exceeded" },
+        429,
+      );
     }
 
     const body = await request.json();
     const { email: rawEmail } = body;
 
     if (!rawEmail || typeof rawEmail !== "string") {
-      return new Response(JSON.stringify({ success: true }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
+      return passwordResetJsonResponse(request, { success: true });
     }
 
     // Normalize email to prevent bypass via casing/whitespace
@@ -170,10 +218,7 @@ export const securePasswordResetHandler = async (ctx: ActionCtx, request: Reques
       // Rate limit exceeded for email
       // We return success to the client so they don't know the email is valid or rate limited,
       // but we do NOT schedule the reset email.
-      return new Response(JSON.stringify({ success: true }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
+      return passwordResetJsonResponse(request, { success: true });
     }
 
     if (shouldRunInlineForE2E()) {
@@ -185,19 +230,19 @@ export const securePasswordResetHandler = async (ctx: ActionCtx, request: Reques
     }
 
     // Always return success
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return passwordResetJsonResponse(request, { success: true });
   } catch (error) {
     logger.error("Secure password reset failed", { error });
     // Even on unexpected errors, return success
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return passwordResetJsonResponse(request, { success: true });
   }
 };
+
+export const securePasswordResetPreflightHandler = async (_ctx: ActionCtx, request: Request) =>
+  new Response(null, {
+    status: 204,
+    headers: getPasswordResetCorsHeaders(request),
+  });
 
 /**
  * Secure password reset request
@@ -206,3 +251,4 @@ export const securePasswordResetHandler = async (ctx: ActionCtx, request: Reques
  * This prevents attackers from discovering which emails are registered.
  */
 export const securePasswordReset = httpAction(securePasswordResetHandler);
+export const securePasswordResetPreflight = httpAction(securePasswordResetPreflightHandler);

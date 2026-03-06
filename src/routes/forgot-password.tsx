@@ -1,16 +1,23 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useAuthActions } from "@convex-dev/auth/react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useRef, useState } from "react";
 import { AuthLink, AuthPageLayout, AuthRedirect, ResetPasswordForm } from "@/components/Auth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/form/Input";
 import { ROUTES } from "@/config/routes";
-import { getConvexSiteUrl } from "@/lib/convex";
 import { TEST_IDS } from "@/lib/test-ids";
-import { showSuccess } from "@/lib/toast";
+import { showError } from "@/lib/toast";
+
+interface ForgotPasswordSearch {
+  step?: "reset";
+}
 
 export const Route = createFileRoute("/forgot-password")({
   component: ForgotPasswordRoute,
   ssr: false,
+  validateSearch: (search: Record<string, unknown>): ForgotPasswordSearch => ({
+    step: search.step === "reset" ? "reset" : undefined,
+  }),
 });
 
 function ForgotPasswordRoute() {
@@ -22,35 +29,62 @@ function ForgotPasswordRoute() {
 }
 
 function ForgotPasswordPage() {
+  const { signIn } = useAuthActions();
   const [submitting, setSubmitting] = useState(false);
-  const [email, setEmail] = useState("");
-  const [showReset, setShowReset] = useState(false);
-  const navigate = useNavigate();
+  const [email, setEmail] = useState<string | null>(null);
+  const navigate = Route.useNavigate();
+  const search = Route.useSearch();
+  const formRef = useRef<HTMLFormElement>(null);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setSubmitting(true);
-
-    const formData = new FormData(e.currentTarget);
-    const formEmail = formData.get("email") as string;
-
-    try {
-      await fetch(`${getConvexSiteUrl()}/auth/request-reset`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formEmail }),
-      });
-    } catch {
-      // Ignore network errors
+  const submitResetRequest = async () => {
+    const form = formRef.current;
+    if (!form || submitting) {
+      return;
     }
 
-    setEmail(formEmail);
-    setShowReset(true);
-    showSuccess("If an account exists, you'll receive a reset code");
-    setSubmitting(false);
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
+    setSubmitting(true);
+
+    const formData = new FormData(form);
+    const formEmail = formData.get("email");
+    if (typeof formEmail !== "string" || !formEmail) {
+      setSubmitting(false);
+      return;
+    }
+
+    const normalizedEmail = formEmail.trim().toLowerCase();
+
+    try {
+      const formData = new FormData();
+      formData.set("email", normalizedEmail);
+      formData.set("flow", "reset");
+
+      await signIn("password", formData);
+
+      setEmail(normalizedEmail);
+      navigate({
+        replace: true,
+        search: {
+          step: "reset",
+        },
+      });
+    } catch (error) {
+      showError(error, "Password reset request");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  if (showReset) {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    void submitResetRequest();
+  };
+
+  if (search.step === "reset" && email) {
     return (
       <AuthPageLayout
         title="Check your email"
@@ -64,8 +98,11 @@ function ForgotPasswordPage() {
           email={email}
           onSuccess={() => navigate({ to: ROUTES.app.path })}
           onRetry={() => {
-            setShowReset(false);
-            setEmail("");
+            setEmail(null);
+            navigate({
+              replace: true,
+              search: {},
+            });
           }}
         />
       </AuthPageLayout>
@@ -81,7 +118,7 @@ function ForgotPasswordPage() {
         </>
       }
     >
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+      <form ref={formRef} className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <Input
           type="email"
           name="email"

@@ -13,6 +13,7 @@ import { Calendar, Check } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { RadioGroup, RadioGroupItem } from "../ui/RadioGroup";
@@ -32,6 +33,7 @@ export function GoogleCalendarIntegration() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [disconnectConfirmOpen, setDisconnectConfirmOpen] = useState(false);
 
   // Handle OAuth callback message from popup
   useEffect(() => {
@@ -65,11 +67,7 @@ export function GoogleCalendarIntegration() {
     return () => window.removeEventListener("message", handleOAuthMessage);
   }, [connectGoogle]);
 
-  const handleDisconnect = async () => {
-    if (!confirm("Are you sure you want to disconnect Google Calendar?")) {
-      return;
-    }
-
+  const handleDisconnectConfirm = async () => {
     setIsDisconnecting(true);
     try {
       await disconnectGoogle();
@@ -160,7 +158,12 @@ export function GoogleCalendarIntegration() {
           </Stack>
         </Flex>
         {calendarConnection ? (
-          <Button variant="danger" size="sm" onClick={handleDisconnect} disabled={isDisconnecting}>
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => setDisconnectConfirmOpen(true)}
+            disabled={isDisconnecting}
+          >
             {isDisconnecting ? "Disconnecting..." : "Disconnect"}
           </Button>
         ) : (
@@ -169,6 +172,16 @@ export function GoogleCalendarIntegration() {
           </Button>
         )}
       </Flex>
+
+      <ConfirmDialog
+        isOpen={disconnectConfirmOpen}
+        onClose={() => setDisconnectConfirmOpen(false)}
+        onConfirm={handleDisconnectConfirm}
+        title="Disconnect Google Calendar"
+        message="Are you sure you want to disconnect Google Calendar?"
+        variant="danger"
+        confirmLabel="Disconnect"
+      />
 
       {calendarConnection && (
         <Stack gap="xl" className="mt-6 pt-6 border-t border-ui-border">

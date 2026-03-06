@@ -5,7 +5,7 @@ import { useMutation, useQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import type { Mock } from "vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@/test/custom-render";
+import { render, screen, within } from "@/test/custom-render";
 import { AttachmentList } from "./AttachmentList";
 
 // Mock Convex hooks
@@ -98,7 +98,11 @@ describe("AttachmentList", () => {
     const removeButton = screen.getByRole("button", { name: "Remove attachment" });
     await user.click(removeButton);
 
-    expect(global.confirm).toHaveBeenCalled();
+    // Confirm dialog should appear - click the confirm button
+    const dialog = await screen.findByRole("alertdialog");
+    const confirmButton = within(dialog).getByRole("button", { name: /Remove/i });
+    await user.click(confirmButton);
+
     expect(mockRemoveAttachment).toHaveBeenCalledWith({
       issueId,
       storageId: "storage-1",

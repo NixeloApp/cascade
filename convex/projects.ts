@@ -229,7 +229,7 @@ export const createProject = authenticatedMutation({
       action: "project_created",
       actorId: ctx.userId,
       targetId: projectId,
-      targetType: "projects",
+      targetType: "project",
       metadata: {
         name: args.name,
         key: args.key,
@@ -522,7 +522,7 @@ export const updateProject = projectAdminMutation({
       action: "project_updated",
       actorId: ctx.userId,
       targetId: ctx.projectId,
-      targetType: "projects",
+      targetType: "project",
       metadata: updates as Record<string, string | number | boolean>,
     });
 
@@ -565,7 +565,7 @@ export const softDeleteProject = authenticatedMutation({
       action: "project_deleted",
       actorId: ctx.userId,
       targetId: args.projectId,
-      targetType: "projects",
+      targetType: "project",
       metadata: { deletedAt },
     });
 
@@ -615,7 +615,7 @@ export const restoreProject = authenticatedMutation({
       action: "project_restored",
       actorId: ctx.userId,
       targetId: args.projectId,
-      targetType: "projects",
+      targetType: "project",
     });
 
     return { success: true, restored: true } as const;
@@ -656,7 +656,7 @@ export const updateWorkflow = projectAdminMutation({
       action: "workflow_updated",
       actorId: ctx.userId,
       targetId: ctx.projectId,
-      targetType: "projects",
+      targetType: "project",
       metadata: { workflowStates: JSON.stringify(args.workflowStates) },
     });
 
@@ -724,7 +724,7 @@ export const addProjectMember = projectAdminMutation({
       action: "member_added",
       actorId: ctx.userId,
       targetId: ctx.projectId,
-      targetType: "projects",
+      targetType: "project",
       metadata: {
         memberId: user._id,
         role: args.role,
@@ -779,7 +779,7 @@ export const updateProjectMemberRole = projectAdminMutation({
       action: "member_role_updated",
       actorId: ctx.userId,
       targetId: ctx.projectId,
-      targetType: "projects",
+      targetType: "project",
       metadata: {
         memberId: args.memberId,
         newRole: args.newRole,
@@ -828,7 +828,7 @@ export const removeProjectMember = projectAdminMutation({
         action: "member_removed",
         actorId: ctx.userId,
         targetId: ctx.projectId,
-        targetType: "projects",
+        targetType: "project",
         metadata: {
           memberId: args.memberId,
         },

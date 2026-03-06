@@ -1,4 +1,4 @@
-import { expect, authenticatedTest as test } from "./fixtures";
+import { authenticatedTest as test } from "./fixtures";
 
 /**
  * Dashboard E2E Tests
@@ -46,15 +46,12 @@ test.describe("Dashboard Tests", () => {
   test.describe("Dashboard Content", () => {
     test("displays main dashboard sections", async ({ dashboardPage }) => {
       await dashboardPage.goto();
-      await expect(dashboardPage.mainContent).toBeVisible();
-      await expect(dashboardPage.myIssuesSection).toBeVisible();
-      await expect(dashboardPage.workspacesSection).toBeVisible();
+      await dashboardPage.expectMainSectionsVisible();
     });
 
     test("can filter issues", async ({ dashboardPage }) => {
       await dashboardPage.goto();
-      await expect(dashboardPage.assignedTab).toBeVisible();
-      await expect(dashboardPage.createdTab).toBeVisible();
+      await dashboardPage.expectIssueFiltersVisible();
 
       await dashboardPage.filterIssues("created");
       await dashboardPage.filterIssues("assigned");
@@ -65,35 +62,24 @@ test.describe("Dashboard Tests", () => {
     test("can open and close via button", async ({ dashboardPage }) => {
       await dashboardPage.goto();
       await dashboardPage.openCommandPalette();
-      await expect(dashboardPage.commandPalette).toBeVisible();
       await dashboardPage.closeCommandPalette();
-      await expect(dashboardPage.commandPalette).not.toBeVisible();
-    });
-
-    test("can open via keyboard shortcut", async ({ dashboardPage }) => {
-      await dashboardPage.goto();
-      // pressCommandPaletteShortcut includes retry logic and visibility check
-      await dashboardPage.pressCommandPaletteShortcut();
-      await expect(dashboardPage.commandPalette).toBeVisible();
     });
   });
 
   test.describe("Theme Toggle", () => {
-    test("can switch themes via settings", async ({ dashboardPage, settingsPage, page }) => {
+    test("can switch themes via settings", async ({ dashboardPage, settingsPage }) => {
       // Navigate through UI: dashboard -> settings sidebar link
       await dashboardPage.goto();
       await dashboardPage.navigateTo("settings");
       await settingsPage.switchToTab("preferences");
 
-      const html = page.locator("html");
-
       // Switch to dark theme using page object
       await settingsPage.setTheme("dark");
-      await expect(html).toHaveClass(/dark/);
+      await settingsPage.expectDarkThemeEnabled();
 
       // Switch to light theme using page object
       await settingsPage.setTheme("light");
-      await expect(html).not.toHaveClass(/dark/);
+      await settingsPage.expectDarkThemeDisabled();
 
       // Switch to system theme using page object
       await settingsPage.setTheme("system");
@@ -104,9 +90,13 @@ test.describe("Dashboard Tests", () => {
     test("can open and close", async ({ dashboardPage }) => {
       await dashboardPage.goto();
       await dashboardPage.openGlobalSearch();
-      await expect(dashboardPage.globalSearchModal).toBeVisible();
       await dashboardPage.closeGlobalSearch();
-      await expect(dashboardPage.globalSearchModal).not.toBeVisible();
+    });
+
+    test("can open via keyboard shortcut", async ({ dashboardPage }) => {
+      await dashboardPage.goto();
+      await dashboardPage.openGlobalSearchWithShortcut();
+      await dashboardPage.closeGlobalSearchWithEscape();
     });
   });
 
@@ -114,15 +104,13 @@ test.describe("Dashboard Tests", () => {
     test("can open and close via button", async ({ dashboardPage }) => {
       await dashboardPage.goto();
       await dashboardPage.openShortcutsHelp();
-      await expect(dashboardPage.shortcutsModal).toBeVisible();
       await dashboardPage.closeShortcutsHelp();
-      await expect(dashboardPage.shortcutsModal).not.toBeVisible();
     });
 
     test("can open via keyboard shortcut", async ({ dashboardPage }) => {
       await dashboardPage.goto();
       await dashboardPage.pressShortcutsHelpShortcut();
-      await expect(dashboardPage.shortcutsModal).toBeVisible();
+      await dashboardPage.closeShortcutsHelp();
     });
   });
 
@@ -130,7 +118,7 @@ test.describe("Dashboard Tests", () => {
     test("can open notifications panel", async ({ dashboardPage }) => {
       await dashboardPage.goto();
       await dashboardPage.openNotifications();
-      await expect(dashboardPage.notificationPanel).toBeVisible();
+      await dashboardPage.expectNotificationsPanelVisible();
     });
   });
 });

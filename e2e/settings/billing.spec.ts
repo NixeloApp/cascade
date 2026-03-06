@@ -33,7 +33,7 @@ authenticatedTest.describe("Billing Settings", () => {
 
   authenticatedTest(
     "billing enabled shows billable checkbox on time entries",
-    async ({ dashboardPage, page, orgSlug }) => {
+    async ({ dashboardPage, orgSlug }) => {
       // Ensure billing is enabled
       const result = await testUserService.updateOrganizationSettings(orgSlug, {
         billingEnabled: true,
@@ -44,28 +44,19 @@ authenticatedTest.describe("Billing Settings", () => {
       await dashboardPage.goto(orgSlug);
       await dashboardPage.expectLoaded();
 
-      // Click "Start Timer" button in the header to open TimeEntryModal
-      const startTimerButton = page.getByRole("button", { name: /start timer/i });
-      await expect(startTimerButton).toBeVisible();
-      await startTimerButton.click();
-
-      // Wait for the TimeEntryModal dialog to appear
-      const timeEntryModal = page.getByRole("dialog");
-      await expect(timeEntryModal).toBeVisible();
+      await dashboardPage.openTimeEntryModal();
 
       // Verify billable checkbox IS visible when billing is enabled
-      const billableCheckbox = timeEntryModal.getByRole("checkbox", { name: /billable/i });
-      await expect(billableCheckbox).toBeVisible();
+      await expect(dashboardPage.timeEntryBillableCheckbox).toBeVisible();
 
       // Close modal
-      await page.keyboard.press("Escape");
-      await expect(timeEntryModal).not.toBeVisible();
+      await dashboardPage.closeTimeEntryModal();
     },
   );
 
   authenticatedTest(
     "billing disabled hides billable checkbox on time entries",
-    async ({ dashboardPage, page, orgSlug }) => {
+    async ({ dashboardPage, orgSlug }) => {
       // Disable billing
       const result = await testUserService.updateOrganizationSettings(orgSlug, {
         billingEnabled: false,
@@ -76,22 +67,13 @@ authenticatedTest.describe("Billing Settings", () => {
       await dashboardPage.goto(orgSlug);
       await dashboardPage.expectLoaded();
 
-      // Click "Start Timer" button in the header to open TimeEntryModal
-      const startTimerButton = page.getByRole("button", { name: /start timer/i });
-      await expect(startTimerButton).toBeVisible();
-      await startTimerButton.click();
-
-      // Wait for the TimeEntryModal dialog to appear
-      const timeEntryModal = page.getByRole("dialog");
-      await expect(timeEntryModal).toBeVisible();
+      await dashboardPage.openTimeEntryModal();
 
       // Verify billable checkbox is NOT visible when billing is disabled
-      const billableCheckbox = timeEntryModal.getByRole("checkbox", { name: /billable/i });
-      await expect(billableCheckbox).not.toBeVisible();
+      await expect(dashboardPage.timeEntryBillableCheckbox).not.toBeVisible();
 
       // Close modal
-      await page.keyboard.press("Escape");
-      await expect(timeEntryModal).not.toBeVisible();
+      await dashboardPage.closeTimeEntryModal();
     },
   );
 });

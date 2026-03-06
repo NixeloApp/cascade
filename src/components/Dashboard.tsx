@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Doc } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
-import { usePaginatedQuery, useQuery } from "convex/react";
+import { useConvexAuth, usePaginatedQuery, useQuery } from "convex/react";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
@@ -32,11 +32,12 @@ type IssueFilter = "assigned" | "created" | "all";
 export function Dashboard() {
   const navigate = useNavigate();
   const { orgSlug } = useOrganization();
+  const { isAuthenticated } = useConvexAuth();
   const [issueFilter, setIssueFilter] = useState<IssueFilter>("assigned");
 
   // User and Settings
-  const user = useQuery(api.users.getCurrent);
-  const userSettings = useQuery(api.userSettings.get);
+  const user = useQuery(api.users.getCurrent, isAuthenticated ? undefined : "skip");
+  const userSettings = useQuery(api.userSettings.get, isAuthenticated ? undefined : "skip");
   const layout = userSettings?.dashboardLayout;
   const showStats = layout?.showStats ?? true;
   const showRecentActivity = layout?.showRecentActivity ?? true;
@@ -48,13 +49,21 @@ export function Dashboard() {
     results: myIssues,
     status: myIssuesStatus,
     loadMore: loadMoreMyIssues,
-  } = usePaginatedQuery(api.dashboard.getMyIssues, {}, { initialNumItems: 20 });
+  } = usePaginatedQuery(api.dashboard.getMyIssues, isAuthenticated ? {} : "skip", {
+    initialNumItems: 20,
+  });
 
-  const myCreatedIssues = useQuery(api.dashboard.getMyCreatedIssues);
-  const myProjects = useQuery(api.dashboard.getMyProjects);
-  const recentActivity = useQuery(api.dashboard.getMyRecentActivity, { limit: 10 });
-  const stats = useQuery(api.dashboard.getMyStats);
-  const focusTask = useQuery(api.dashboard.getFocusTask);
+  const myCreatedIssues = useQuery(
+    api.dashboard.getMyCreatedIssues,
+    isAuthenticated ? undefined : "skip",
+  );
+  const myProjects = useQuery(api.dashboard.getMyProjects, isAuthenticated ? undefined : "skip");
+  const recentActivity = useQuery(
+    api.dashboard.getMyRecentActivity,
+    isAuthenticated ? { limit: 10 } : "skip",
+  );
+  const stats = useQuery(api.dashboard.getMyStats, isAuthenticated ? undefined : "skip");
+  const focusTask = useQuery(api.dashboard.getFocusTask, isAuthenticated ? undefined : "skip");
 
   const displayIssues = getDisplayIssues(issueFilter, myIssues, myCreatedIssues);
 

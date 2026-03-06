@@ -15,6 +15,7 @@ import { Calendar, DollarSign, Trash2 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Card } from "../ui/Card";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
@@ -36,6 +37,8 @@ export function Timesheet() {
   const deleteEntry = useMutation(api.timeTracking.deleteTimeEntry);
 
   const [_editingEntry, _setEditingEntry] = useState<string | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<Id<"timeEntries"> | null>(null);
 
   if (!timesheet) {
     return (
@@ -72,14 +75,21 @@ export function Timesheet() {
     return days;
   };
 
-  const handleDelete = async (entryId: Id<"timeEntries">) => {
-    if (!confirm("Delete this time entry?")) return;
+  const handleDeleteClick = (entryId: Id<"timeEntries">) => {
+    setPendingDeleteId(entryId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!pendingDeleteId) return;
 
     try {
-      await deleteEntry({ entryId });
+      await deleteEntry({ entryId: pendingDeleteId });
       showSuccess("Time entry deleted");
     } catch (error) {
       showError(error, "Failed to delete entry");
+    } finally {
+      setPendingDeleteId(null);
     }
   };
 
@@ -194,7 +204,7 @@ export function Timesheet() {
                         <IconButton
                           variant="danger"
                           size="xs"
-                          onClick={() => handleDelete(entry._id)}
+                          onClick={() => handleDeleteClick(entry._id)}
                           aria-label="Delete entry"
                         >
                           <Icon icon={Trash2} size="xs" />
@@ -228,6 +238,16 @@ export function Timesheet() {
             </Stack>
           </Card>
         )}
+
+        <ConfirmDialog
+          isOpen={deleteConfirmOpen}
+          onClose={() => setDeleteConfirmOpen(false)}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Time Entry"
+          message="Are you sure you want to delete this time entry?"
+          variant="danger"
+          confirmLabel="Delete"
+        />
       </Stack>
     </Card>
   );

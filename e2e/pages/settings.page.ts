@@ -64,17 +64,23 @@ export class SettingsPage extends BasePage {
   // Locators - Admin
   // ===================
   readonly userManagementSection: Locator;
+  readonly userManagementHeading: Locator;
   readonly inviteUserButton: Locator;
   readonly userTypeManager: Locator;
   readonly hourComplianceDashboard: Locator;
+  readonly inviteTable: Locator;
+  readonly adminUsersTab: Locator;
+  readonly platformUsersTable: Locator;
 
   // ===================
   // Locators - Invite User Modal
   // ===================
   readonly inviteUserModal: Locator;
+  readonly inviteUserForm: Locator;
   readonly inviteEmailInput: Locator;
   readonly inviteRoleSelect: Locator;
   readonly sendInviteButton: Locator;
+  readonly cancelInviteButton: Locator;
 
   // ===================
   // Locators - Organization Settings
@@ -82,6 +88,7 @@ export class SettingsPage extends BasePage {
   readonly organizationNameInput: Locator;
   readonly requiresTimeApprovalSwitch: Locator;
   readonly saveSettingsButton: Locator;
+  readonly organizationSettingsHeading: Locator;
 
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
@@ -155,17 +162,26 @@ export class SettingsPage extends BasePage {
     this.userManagementSection = page
       .locator("[data-user-management]")
       .or(page.getByText(/user.*management/i));
+    this.userManagementHeading = page.getByRole("heading", { name: /user management/i });
     this.inviteUserButton = page.getByRole("button", { name: /invite.*user/i });
     this.userTypeManager = page.locator("[data-user-type-manager]");
     this.hourComplianceDashboard = page.locator("[data-hour-compliance]");
+    this.adminUsersTab = page.getByRole("tab", { name: /^Users$/ });
+    this.platformUsersTable = page.getByRole("table", { name: /platform users/i });
 
     // Invite user form (it's an inline Card, not a dialog)
     this.inviteUserModal = page.getByRole("heading", { name: /send invitation/i });
     this.inviteEmailInput = page.getByTestId(TEST_IDS.INVITE.EMAIL_INPUT);
+    this.inviteUserForm = this.inviteEmailInput.locator("xpath=ancestor::form");
     this.inviteRoleSelect = page.getByTestId(TEST_IDS.INVITE.ROLE_SELECT);
     this.sendInviteButton = page.getByTestId(TEST_IDS.INVITE.SEND_BUTTON);
+    this.cancelInviteButton = this.inviteUserForm.getByRole("button", { name: /^cancel$/i });
+    this.inviteTable = page.getByTestId(TEST_IDS.INVITE.TABLE);
 
     // Admin - Organization Settings
+    this.organizationSettingsHeading = page.getByRole("heading", {
+      name: /organization settings/i,
+    });
     this.organizationNameInput = page.locator("#orgName");
     this.requiresTimeApprovalSwitch = page.getByTestId(TEST_IDS.SETTINGS.TIME_APPROVAL_SWITCH);
     this.saveSettingsButton = page.getByTestId(TEST_IDS.SETTINGS.SAVE_BUTTON);
@@ -247,9 +263,7 @@ export class SettingsPage extends BasePage {
 
     // For admin tab, also verify the admin content is actually visible
     if (tab === "admin") {
-      await this.page
-        .getByRole("heading", { name: /organization settings/i })
-        .waitFor({ state: "visible" });
+      await this.organizationSettingsHeading.waitFor({ state: "visible" });
     }
 
     await this.waitForLoad();
@@ -307,9 +321,7 @@ export class SettingsPage extends BasePage {
 
   async openInviteUserModal() {
     // Wait for the Admin tab content to be fully loaded - wait for heading to be visible
-    await this.page
-      .getByRole("heading", { name: /organization settings/i })
-      .waitFor({ state: "visible" });
+    await this.organizationSettingsHeading.waitFor({ state: "visible" });
 
     // Use the first "Invite User" button (header one, not empty state one)
     const inviteBtn = this.inviteUserButton.first();
@@ -319,48 +331,115 @@ export class SettingsPage extends BasePage {
     await inviteBtn.scrollIntoViewIfNeeded();
 
     // Retry pattern handles potential element detachment during re-renders
-    // Press Escape first to ensure any open modals are closed
     await expect(async () => {
-      await this.page.keyboard.press("Escape");
+      await this.closeInviteUserModalIfOpen();
       await expect(inviteBtn).toBeEnabled();
       await inviteBtn.click();
       await expect(this.inviteUserModal).toBeVisible();
+      await expect(this.inviteUserForm).toBeVisible();
+      await expect(this.inviteEmailInput).toBeVisible();
+      await expect(this.sendInviteButton).toBeVisible();
     }).toPass();
   }
 
+  async closeInviteUserModalIfOpen() {
+    if (!(await this.inviteUserForm.isVisible().catch(() => false))) {
+      return;
+    }
+
+    if (await this.cancelInviteButton.isVisible().catch(() => false)) {
+      await this.cancelInviteButton.click().catch(() => {});
+    }
+
+    if (await this.inviteUserForm.isVisible().catch(() => false)) {
+      await this.page.keyboard.press("Escape");
+    }
+
+    await expect(this.inviteUserForm).not.toBeVisible();
+  }
+
   async inviteUser(email: string, role?: string) {
-    await this.openInviteUserModal();
-    await this.inviteEmailInput.fill(email);
-    // Only change role if it's not "user" (which is the default)
-    if (role && role.toLowerCase() !== "user") {
-      // Radix Select - click trigger with current value text, then select option
-      // The select shows "User" or "Super Admin" (or placeholder "Select role")
-      // Use retry pattern to handle element detachment during React updates
-      const displayRole = "Super Admin";
-      await expect(async () => {
+    await expect(async () => {
+      await this.openInviteUserModal();
+      await expect(this.inviteEmailInput).toBeVisible();
+      await expect(this.inviteEmailInput).toBeEnabled();
+      await this.inviteEmailInput.fill(email);
+      await expect(this.inviteEmailInput).toHaveValue(email);
+
+      // Only change role if it's not "user" (which is the default)
+      if (role && role.toLowerCase() !== "user") {
+        const normalizedRole = role.trim().toLowerCase();
+        const roleLabelMap: Record<string, string> = {
+          "super admin": "Super Admin",
+          super_admin: "Super Admin",
+          admin: "Super Admin",
+        };
+        const displayRole = roleLabelMap[normalizedRole];
+        if (!displayRole) {
+          throw new Error(`Unsupported invite role: ${role}`);
+        }
         const selectTrigger = this.page
           .getByRole("combobox")
           .filter({ hasText: /^User$|^Super Admin$|Select role/i });
         await expect(selectTrigger).toBeVisible();
         await selectTrigger.click();
         await expect(this.page.getByRole("option", { name: displayRole })).toBeVisible();
-      }).toPass();
-      await this.page.getByRole("option", { name: displayRole }).click();
-      // Wait for select dropdown to close (React re-render completes)
-      await expect(this.page.getByRole("option", { name: displayRole })).not.toBeVisible();
-    }
-    // Submit form and wait for email to appear in the invites table
-    // Don't rely on toasts - wait for the actual result (email in table)
-    const inviteTable = this.page.getByTestId(TEST_IDS.INVITE.TABLE);
+        await this.page.getByRole("option", { name: displayRole }).click();
+        await expect(this.page.getByRole("option", { name: displayRole })).not.toBeVisible();
+      }
 
-    await expect(async () => {
-      await expect(this.sendInviteButton).toBeVisible();
-      await expect(this.sendInviteButton).toBeEnabled();
-      await this.sendInviteButton.click();
-      // Wait for invite to appear in table - this is the real success indicator
-      await expect(inviteTable).toBeVisible();
-      await expect(inviteTable.getByText(email)).toBeVisible();
+      const inviteRow = this.getInviteRow(email);
+      if (await inviteRow.isVisible().catch(() => false)) {
+        return;
+      }
+
+      if (await this.sendInviteButton.isVisible().catch(() => false)) {
+        await expect(this.sendInviteButton).toBeEnabled();
+        await this.sendInviteButton.click();
+      }
+
+      await this.expectInviteVisible(email);
     }).toPass();
+  }
+
+  getInviteRow(email: string) {
+    return this.inviteTable.getByTestId(TEST_IDS.INVITE.ROW).filter({ hasText: email });
+  }
+
+  async expectInviteVisible(email: string) {
+    const row = this.getInviteRow(email);
+    await expect(this.inviteTable).toBeVisible();
+    await expect(row).toBeVisible();
+  }
+
+  async expectInviteRevoked(email: string) {
+    const row = this.getInviteRow(email);
+    await expect(row).toBeVisible();
+    await expect(row.getByText(/^revoked$/i)).toBeVisible();
+    await expect(row.getByRole("button", { name: /revoke/i })).toHaveCount(0);
+  }
+
+  async revokeInvite(email: string) {
+    const row = this.getInviteRow(email);
+    await expect(row).toBeVisible();
+
+    // Click revoke button to open confirm dialog
+    await row.getByRole("button", { name: /revoke/i }).click();
+
+    // Confirm in the ConfirmDialog
+    const confirmDialog = this.page.getByRole("alertdialog");
+    await expect(confirmDialog).toBeVisible();
+    await confirmDialog.getByRole("button", { name: /revoke/i }).click();
+
+    await this.expectInviteRevoked(email);
+  }
+
+  async openAdminUsersList() {
+    await expect(this.userManagementHeading).toBeVisible();
+    await expect(this.adminUsersTab).toBeVisible();
+    await this.adminUsersTab.click();
+    await expect(this.adminUsersTab).toHaveAttribute("aria-selected", "true");
+    await expect(this.platformUsersTable).toBeVisible();
   }
 
   async setTheme(theme: "light" | "dark" | "system") {
@@ -370,6 +449,14 @@ export class SettingsPage extends BasePage {
       system: this.themeSystemOption,
     };
     await options[theme].click();
+  }
+
+  async expectDarkThemeEnabled() {
+    await expect(this.page.locator("html")).toHaveClass(/dark/);
+  }
+
+  async expectDarkThemeDisabled() {
+    await expect(this.page.locator("html")).not.toHaveClass(/dark/);
   }
 
   // ===================
@@ -390,6 +477,25 @@ export class SettingsPage extends BasePage {
 
   async expectPreferencesTab() {
     await expect(this.notificationPreferences).toBeVisible();
+  }
+
+  async isAdminTabVisible() {
+    return this.adminTab.isVisible().catch(() => false);
+  }
+
+  async expectAdminTabHidden() {
+    await expect(this.adminTab).not.toBeVisible();
+  }
+
+  async expectAdminSettingsLoaded() {
+    await this.organizationSettingsHeading.waitFor({ state: "visible" });
+    await expect(this.organizationNameInput).toBeVisible();
+    await expect(this.requiresTimeApprovalSwitch).toBeVisible();
+  }
+
+  async expectAdminContentHidden() {
+    await expect(this.organizationSettingsHeading).not.toBeVisible();
+    await expect(this.organizationNameInput).not.toBeVisible();
   }
 
   async updateOrganizationName(name: string) {
@@ -459,5 +565,16 @@ export class SettingsPage extends BasePage {
   async expectOrganizationName(name: string) {
     await this.organizationNameInput.waitFor({ state: "visible" });
     await expect(this.organizationNameInput).toHaveValue(name);
+  }
+
+  async expectOrganizationNameVisible(name: string) {
+    await expect(this.page.getByText(name, { exact: false }).first()).toBeVisible();
+  }
+
+  async expectTimeApprovalEnabled(enabled: boolean) {
+    await expect(this.requiresTimeApprovalSwitch).toHaveAttribute(
+      "aria-checked",
+      enabled ? "true" : "false",
+    );
   }
 }

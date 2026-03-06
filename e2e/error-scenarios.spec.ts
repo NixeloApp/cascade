@@ -1,4 +1,5 @@
-import { authenticatedTest, expect, test } from "./fixtures";
+import { authenticatedTest, test } from "./fixtures";
+import { IssueDetailPage } from "./pages";
 
 /**
  * Error Scenario E2E Tests
@@ -12,24 +13,10 @@ import { authenticatedTest, expect, test } from "./fixtures";
  */
 
 test.describe("Unauthenticated Access", () => {
-  test("redirects to signin when accessing protected route", async ({ page }) => {
+  test("redirects to signin when accessing protected route", async ({ page, landingPage }) => {
     // Try to access dashboard without auth
     await page.goto("/some-org/dashboard");
-
-    // Should redirect to signin or show landing.
-    await expect
-      .poll(async () => {
-        const isOnSignin = await page
-          .getByRole("heading", { name: /welcome back|sign in/i })
-          .isVisible()
-          .catch(() => false);
-        const isOnLanding = await page
-          .getByRole("heading", { name: /revolutionize/i })
-          .isVisible()
-          .catch(() => false);
-        return isOnSignin || isOnLanding;
-      })
-      .toBe(true);
+    await landingPage.expectLandingOrSignInPage();
   });
 });
 
@@ -42,50 +29,22 @@ authenticatedTest.describe("Non-existent Resources", () => {
 
   authenticatedTest(
     "shows not found message for non-existent project",
-    async ({ page, dashboardPage }) => {
-      await dashboardPage.goto();
-      await dashboardPage.expectLoaded();
-
-      // Navigate to a non-existent project
-      const orgSlug = new URL(page.url()).pathname.split("/")[1];
-      await page.goto(`/${orgSlug}/projects/NONEXISTENT99999/board`);
-
-      // Should show project not found heading
-      await expect(page.getByRole("heading", { name: /project not found/i })).toBeVisible();
+    async ({ projectsPage }) => {
+      await projectsPage.goto();
+      await projectsPage.gotoProjectBoard("NONEXISTENT99999");
+      await projectsPage.expectProjectNotFound();
     },
   );
 
-  authenticatedTest("shows error for non-existent document", async ({ page, dashboardPage }) => {
-    await dashboardPage.goto();
-    await dashboardPage.expectLoaded();
-
-    // Navigate to a non-existent document (invalid ID triggers error boundary)
-    const orgSlug = new URL(page.url()).pathname.split("/")[1];
-    await page.goto(`/${orgSlug}/documents/jf77777777777777777`);
-
-    // Should show error boundary or document not found
-    // Note: Error page uses plain text, not headings
-    await expect(
-      page.getByText(/document not found/i).or(page.getByText(/something went wrong/i)),
-    ).toBeVisible();
+  authenticatedTest("shows error for non-existent document", async ({ documentsPage }) => {
+    await documentsPage.goto();
+    await documentsPage.gotoDocument("jf77777777777777777");
+    await documentsPage.expectDocumentNotFound();
   });
 
-  authenticatedTest(
-    "shows not found message for non-existent issue",
-    async ({ page, dashboardPage }) => {
-      await dashboardPage.goto();
-      await dashboardPage.expectLoaded();
-
-      // Navigate to a non-existent issue
-      const orgSlug = new URL(page.url()).pathname.split("/")[1];
-      await page.goto(`/${orgSlug}/issues/FAKE-99999`);
-
-      // Should show issue not found or error heading
-      await expect(
-        page
-          .getByRole("heading", { name: /issue not found/i })
-          .or(page.getByRole("heading", { name: /something went wrong/i })),
-      ).toBeVisible();
-    },
-  );
+  authenticatedTest("shows not found message for non-existent issue", async ({ page, orgSlug }) => {
+    const issueDetailPage = new IssueDetailPage(page, orgSlug);
+    await issueDetailPage.gotoIssue("FAKE-99999");
+    await issueDetailPage.expectIssueNotFound();
+  });
 });

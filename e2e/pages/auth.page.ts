@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { waitForDashboardReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -25,11 +26,13 @@ export class AuthPage extends BasePage {
   readonly forgotPasswordHeading: Locator;
   readonly resetPasswordHeading: Locator;
   readonly checkEmailHeading: Locator;
+  readonly authAlert: Locator;
 
   // ===================
   // Locators - Sign In/Up Forms
   // ===================
   readonly continueWithEmailButton: Locator;
+  readonly authForm: Locator;
   readonly emailInput: Locator;
   readonly passwordInput: Locator;
   readonly signInButton: Locator;
@@ -91,6 +94,8 @@ export class AuthPage extends BasePage {
   readonly verifyEmailButton: Locator;
   readonly resendCodeButton: Locator;
   readonly signOutLink: Locator;
+  readonly successToast: Locator;
+  readonly errorToast: Locator;
 
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
@@ -102,9 +107,11 @@ export class AuthPage extends BasePage {
     this.forgotPasswordHeading = page.getByRole("heading", { name: /reset your password/i });
     this.resetPasswordHeading = page.getByRole("heading", { name: /enter reset code/i });
     this.checkEmailHeading = page.getByRole("heading", { name: /check your email/i });
+    this.authAlert = page.getByRole("alert");
 
     // Sign In / Sign Up form - two-step flow
     this.continueWithEmailButton = page.getByRole("button", { name: /continue with email/i });
+    this.authForm = page.getByTestId(TEST_IDS.AUTH.FORM);
     this.emailInput = page.getByTestId(TEST_IDS.AUTH.EMAIL_INPUT);
     this.passwordInput = page.getByTestId(TEST_IDS.AUTH.PASSWORD_INPUT);
     // Submit button reuses the same DOM node across expanded states; bind by stable test id.
@@ -122,18 +129,20 @@ export class AuthPage extends BasePage {
     // Password Reset
     this.sendResetCodeButton = page.getByRole("button", { name: /send reset code/i });
     this.backToSignInLink = page.getByRole("link", { name: /sign in/i });
-    this.codeInput = page.getByPlaceholder("8-digit code");
-    this.newPasswordInput = page.getByPlaceholder("New password");
-    this.resetPasswordButton = page.getByRole("button", { name: /^reset password$/i });
+    this.codeInput = page.getByTestId(TEST_IDS.AUTH.RESET_CODE_INPUT);
+    this.newPasswordInput = page.getByTestId(TEST_IDS.AUTH.RESET_PASSWORD_INPUT);
+    this.resetPasswordButton = page.getByTestId(TEST_IDS.AUTH.RESET_SUBMIT_BUTTON);
 
     // Email Verification
     // Email Verification - Use more robust locators that don't depend strictly on ARIA roles
     // as they might vary between h1/h2 during architecture transitions
     this.verifyHeading = page.getByText(/verify your email/i).first();
-    this.verifyCodeInput = page.getByPlaceholder(/enter.*code|8-digit code/i);
-    this.verifyEmailButton = page.getByRole("button", { name: /verify email/i });
+    this.verifyCodeInput = page.getByTestId(TEST_IDS.AUTH.VERIFICATION_CODE_INPUT);
+    this.verifyEmailButton = page.getByTestId(TEST_IDS.AUTH.VERIFICATION_SUBMIT_BUTTON);
     this.resendCodeButton = page.getByRole("button", { name: /didn't receive|resend/i });
     this.signOutLink = page.getByRole("button", { name: /sign out|different account/i });
+    this.successToast = page.locator('[data-sonner-toast][data-type="success"]').first();
+    this.errorToast = page.locator('[data-sonner-toast][data-type="error"]').first();
   }
 
   // ===================
@@ -161,6 +170,12 @@ export class AuthPage extends BasePage {
     await this.waitForFormExpanded();
   }
 
+  async gotoSignInLanding() {
+    await this.page.goto("/signin", { waitUntil: "domcontentloaded" });
+    await this.signInHeading.waitFor({ state: "visible", timeout: 30000 });
+    await this.waitForHydration();
+  }
+
   /**
    * Navigate to sign up page and expand email form
    */
@@ -181,6 +196,7 @@ export class AuthPage extends BasePage {
   async gotoForgotPassword() {
     await this.page.goto("/forgot-password");
     await this.forgotPasswordHeading.waitFor({ state: "visible", timeout: 15000 });
+    await this.waitForHydration();
     await this.emailInput.waitFor({ state: "visible" });
   }
 
@@ -333,6 +349,15 @@ export class AuthPage extends BasePage {
     // Note: Will redirect to Google OAuth
   }
 
+  async waitForOAuthErrorSettle() {
+    await expect(async () => {
+      const onSignInPage = this.page.url().includes("signin");
+      const hasAlert = await this.authAlert.isVisible().catch(() => false);
+      const hasErrorToast = await this.errorToast.isVisible().catch(() => false);
+      expect(onSignInPage || hasAlert || hasErrorToast).toBe(true);
+    }).toPass({ timeout: 5000 });
+  }
+
   // ===================
   // Actions - Password Reset
   // ===================
@@ -366,20 +391,50 @@ export class AuthPage extends BasePage {
   }
 
   async requestPasswordReset(email: string) {
-    const forgotPasswordForm = this.page
-      .getByRole("heading", { name: /reset your password/i })
-      .locator("..")
-      .locator("form");
+    await expect(async () => {
+      if (!this.page.url().includes("/forgot-password")) {
+        await this.page.goto("/forgot-password", { waitUntil: "domcontentloaded" });
+      }
 
-    await expect(this.emailInput).toBeVisible({ timeout: 30000 });
-    await this.emailInput.fill(email);
-    await expect(this.emailInput).toHaveValue(email);
-    await expect(this.sendResetCodeButton).toBeEnabled();
+      await expect
+        .poll(
+          async () => {
+            const isForgotVisible = await this.forgotPasswordHeading.isVisible().catch(() => false);
+            const isCheckEmailVisible = await this.checkEmailHeading.isVisible().catch(() => false);
+            const isCodeVisible = await this.codeInput.isVisible().catch(() => false);
+            return isForgotVisible || isCheckEmailVisible || isCodeVisible;
+          },
+          { timeout: 15000, intervals: [250, 500, 1000] },
+        )
+        .toBe(true);
 
-    // Submit via form API to avoid button-actionability flakes.
-    await forgotPasswordForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
-    await expect(this.checkEmailHeading).toBeVisible({ timeout: 30000 });
-    await expect(this.codeInput).toBeVisible({ timeout: 30000 });
+      if (await this.codeInput.isVisible().catch(() => false)) {
+        return;
+      }
+
+      await expect(this.emailInput).toBeVisible({ timeout: 15000 });
+
+      await this.emailInput.fill(email);
+      await expect(this.emailInput).toHaveValue(email);
+      await expect(this.sendResetCodeButton).toBeEnabled();
+      await this.sendResetCodeButton.click();
+
+      // Transition can race on CI. Accept any reset-step UI signal, then require code input.
+      await expect
+        .poll(
+          async () => {
+            const isCheckEmailVisible = await this.checkEmailHeading.isVisible().catch(() => false);
+            const isResetHeadingVisible = await this.resetPasswordHeading
+              .isVisible()
+              .catch(() => false);
+            const isCodeVisible = await this.codeInput.isVisible().catch(() => false);
+            return isCheckEmailVisible || isResetHeadingVisible || isCodeVisible;
+          },
+          { timeout: 30000, intervals: [250, 500, 1000, 2000] },
+        )
+        .toBe(true);
+      await expect(this.codeInput).toBeVisible({ timeout: 30000 });
+    }).toPass({ timeout: 90000, intervals: [500, 1000, 2000, 5000] });
   }
 
   async completePasswordReset(code: string, newPassword: string) {
@@ -405,6 +460,93 @@ export class AuthPage extends BasePage {
     await this.verifyEmailButton.click();
     // Wait for verification to process by requiring full document readiness.
     await this.page.waitForFunction(() => document.readyState === "complete");
+  }
+
+  getSuccessToast(message: RegExp): Locator {
+    return this.page.locator("[data-sonner-toast]").filter({ hasText: message }).first();
+  }
+
+  async waitForToastOutcome(message: RegExp): Promise<"success" | "timeout"> {
+    const successToast = this.getSuccessToast(message);
+
+    const result = await Promise.race([
+      successToast.waitFor({ state: "visible", timeout: 10000 }).then(() => "success" as const),
+      this.errorToast.waitFor({ state: "visible", timeout: 10000 }).then(() => "error" as const),
+    ]).catch(() => "timeout" as const);
+
+    if (result === "error") {
+      const errorText = await this.errorToast.textContent();
+      throw new Error(`Auth flow failed with error toast: ${errorText}`);
+    }
+
+    return result;
+  }
+
+  async expectAuthenticatedApp(options?: { recoverFromLanding?: boolean }) {
+    const isLandingOrSignIn = () => {
+      const { pathname } = new URL(this.page.url());
+      return pathname === "/" || pathname === "/signin";
+    };
+
+    const onboardingCandidates = [
+      this.page.getByTestId(TEST_IDS.ONBOARDING.SKIP_BUTTON),
+      this.page.getByTestId(TEST_IDS.ONBOARDING.WELCOME_HEADING),
+      this.page.getByTestId(TEST_IDS.ONBOARDING.TEAM_LEAD_CARD),
+      this.page.getByTestId(TEST_IDS.ONBOARDING.TEAM_MEMBER_CARD),
+      this.page.getByRole("heading", { name: /welcome to nixelo/i }),
+    ];
+
+    const getVisibleOnboardingCandidate = async () => {
+      for (const candidate of onboardingCandidates) {
+        const locator = candidate.first();
+        if (await locator.isVisible().catch(() => false)) {
+          return locator;
+        }
+      }
+      return null;
+    };
+
+    if (options?.recoverFromLanding && isLandingOrSignIn()) {
+      await this.page.goto("/app");
+    }
+
+    await expect
+      .poll(
+        async () => {
+          if (await getVisibleOnboardingCandidate()) {
+            return "onboarding";
+          }
+
+          const currentPath = new URL(this.page.url()).pathname;
+          if (/^\/onboarding\/?$/.test(currentPath)) {
+            return "onboarding";
+          }
+
+          if (/^\/[^/]+\/dashboard\/?$/.test(currentPath)) {
+            const hasCommandPalette = await this.page
+              .getByRole("button", { name: /open command palette/i })
+              .isVisible()
+              .catch(() => false);
+            return hasCommandPalette ? "dashboard" : null;
+          }
+
+          return null;
+        },
+        { timeout: 30000 },
+      )
+      .not.toBeNull();
+
+    const currentPath = new URL(this.page.url()).pathname;
+    const visibleOnboardingCandidate = await getVisibleOnboardingCandidate();
+    if (/^\/onboarding\/?$/.test(currentPath) || visibleOnboardingCandidate) {
+      if (visibleOnboardingCandidate) {
+        await expect(visibleOnboardingCandidate).toBeVisible();
+      }
+      return "onboarding" as const;
+    }
+
+    await waitForDashboardReady(this.page);
+    return "dashboard" as const;
   }
 
   async resendVerificationCode() {

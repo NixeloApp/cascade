@@ -8,7 +8,7 @@
 
 import { httpRouter } from "convex/server";
 import { handler as issuesHandler } from "./api/issues";
-import { securePasswordReset } from "./authWrapper";
+import { securePasswordReset, securePasswordResetPreflight } from "./authWrapper";
 import {
   batchCleanupEndpoint,
   cleanupE2EWorkspacesEndpoint,
@@ -122,6 +122,12 @@ http.route({
   path: "/auth/request-reset",
   method: "POST",
   handler: securePasswordReset,
+});
+
+http.route({
+  path: "/auth/request-reset",
+  method: "OPTIONS",
+  handler: securePasswordResetPreflight,
 });
 
 // E2E testing routes

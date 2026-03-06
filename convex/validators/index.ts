@@ -24,6 +24,55 @@ export const issuePriorities = literals("lowest", "low", "medium", "high", "high
 export const simplePriorities = literals("low", "medium", "high");
 export const boardTypes = literals("kanban", "scrum");
 export const workflowCategories = literals("todo", "inprogress", "done");
+export const issueActivityActions = literals(
+  "created",
+  "updated",
+  "commented",
+  "archived",
+  "restored",
+  "deleted",
+  "attached",
+  "removed",
+  "linked",
+  "unlinked",
+  "started_watching",
+  "stopped_watching",
+);
+export const auditActions = literals(
+  "api_key.created",
+  "api_key.revoked",
+  "organization.member_added",
+  "organization.member_role_changed",
+  "organization.member_removed",
+  "project_created",
+  "project_updated",
+  "project_deleted",
+  "project_restored",
+  "workflow_updated",
+  "member_added",
+  "member_role_updated",
+  "member_removed",
+  "team.create",
+  "team.update",
+  "team.softDelete",
+  "team.restore",
+  "team.member.add",
+  "team.member.updateRole",
+  "team.member.remove",
+  "webhook_created",
+  "webhook_updated",
+  "webhook_deleted",
+  "test",
+);
+export const auditTargetTypes = literals(
+  "api_key",
+  "user",
+  "project",
+  "team",
+  "webhook",
+  "organization",
+  "test",
+);
 
 // Roles
 export const projectRoles = literals("admin", "editor", "viewer");
@@ -90,6 +139,8 @@ export const oidcProviders = literals("google-workspace", "microsoft-entra", "ok
 export const emailDigests = literals("none", "daily", "weekly");
 export const digestFrequencies = literals("daily", "weekly"); // Without "none"
 export const personas = literals("team_lead", "team_member");
+export const themes = literals("light", "dark", "system");
+export const otpCodeTypes = literals("verification", "reset");
 
 // Booking
 export const bookingFieldTypes = literals("text", "email", "phone");

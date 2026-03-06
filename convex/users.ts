@@ -27,7 +27,7 @@ import { MINUTE } from "./lib/timeUtils";
 import { collectUserStats } from "./lib/userStats";
 import { sanitizeUserForAuth, sanitizeUserForCurrent } from "./lib/userUtils";
 import { rateLimit } from "./rateLimits";
-import { digestFrequencies } from "./validators";
+import { digestFrequencies, issueActivityActions } from "./validators";
 
 /**
  * Internal query to get user by ID (system use only)
@@ -603,7 +603,11 @@ export const sendVerificationEmailAction = internalAction({
     // Store OTPs for test emails ONLY if they are test users
     if (isTestEmail && isE2ESafeEnvironment() && isTestUser) {
       try {
-        await ctx.runMutation(internal.e2e.storeTestOtp, { email, code: token });
+        await ctx.runMutation(internal.e2e.storeTestOtp, {
+          email,
+          code: token,
+          type: "verification",
+        });
       } catch (e) {
         logger.warn(`[Users] Failed to store test OTP: ${e}`);
       }
@@ -823,7 +827,7 @@ export const getUserActivity = authenticatedQuery({
   returns: v.array(
     v.object({
       _id: v.id("issueActivity"),
-      action: v.string(),
+      action: issueActivityActions,
       field: v.optional(v.string()),
       oldValue: v.optional(v.string()),
       newValue: v.optional(v.string()),

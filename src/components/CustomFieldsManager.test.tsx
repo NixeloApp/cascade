@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { useMutation, useQuery } from "convex/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { showError, showSuccess } from "@/lib/toast";
-import { render, screen, waitFor } from "@/test/custom-render";
+import { render, screen, waitFor, within } from "@/test/custom-render";
 import { CustomFieldsManager } from "./CustomFieldsManager";
 
 // Mock dependencies
@@ -653,10 +653,8 @@ describe("CustomFieldsManager - Component Behavior", () => {
   });
 
   describe("Delete Confirmation", () => {
-    it("should show browser confirm dialog when delete is clicked", async () => {
+    it("should show confirm dialog when delete is clicked", async () => {
       const user = userEvent.setup();
-      const confirmSpy = vi.spyOn(window, "confirm");
-      confirmSpy.mockReturnValue(false);
 
       const field = {
         _id: "field1" as Id<"customFields">,
@@ -671,15 +669,16 @@ describe("CustomFieldsManager - Component Behavior", () => {
 
       await user.click(screen.getByRole("button", { name: /Delete/i }));
 
-      expect(confirmSpy).toHaveBeenCalledWith(
-        "Are you sure? This will delete all values for this field.",
-      );
+      // Check that the ConfirmDialog appears with the expected content
+      const dialog = await screen.findByRole("alertdialog");
+      expect(dialog).toBeInTheDocument();
+      expect(
+        within(dialog).getByText("Are you sure? This will delete all values for this field."),
+      ).toBeInTheDocument();
     });
 
     it("should not delete if user cancels confirmation", async () => {
       const user = userEvent.setup();
-      const confirmSpy = vi.spyOn(window, "confirm");
-      confirmSpy.mockReturnValue(false);
 
       const field = {
         _id: "field1" as Id<"customFields">,
@@ -692,15 +691,21 @@ describe("CustomFieldsManager - Component Behavior", () => {
 
       render(<CustomFieldsManager projectId={mockProjectId} />);
 
+      // Open confirm dialog
       await user.click(screen.getByRole("button", { name: /Delete/i }));
 
-      expect(mockRemoveField).not.toHaveBeenCalled();
+      // Click cancel button
+      const dialog = await screen.findByRole("alertdialog");
+      const cancelButton = within(dialog).getByRole("button", { name: /Cancel/i });
+      await user.click(cancelButton);
+
+      // Verify mutation wasn't called
+      expect(mockUpdateField).not.toHaveBeenCalled();
     });
 
     it("should delete if user confirms", async () => {
       const user = userEvent.setup();
-      const confirmSpy = vi.spyOn(window, "confirm");
-      confirmSpy.mockReturnValue(true);
+      // Note: mockUpdateField is returned for all useMutation calls in this test setup
       mockUpdateField.mockResolvedValue({});
 
       const field = {
@@ -714,9 +719,16 @@ describe("CustomFieldsManager - Component Behavior", () => {
 
       render(<CustomFieldsManager projectId={mockProjectId} />);
 
+      // Click delete button to open confirm dialog
       await user.click(screen.getByRole("button", { name: /Delete/i }));
 
+      // Wait for dialog and click confirm button
+      const dialog = await screen.findByRole("alertdialog");
+      const confirmButton = within(dialog).getByRole("button", { name: /Delete/i });
+      await user.click(confirmButton);
+
       await waitFor(() => {
+        // All useMutation calls return mockUpdateField in this test setup
         expect(mockUpdateField).toHaveBeenCalledWith({ id: "field1" });
       });
     });
@@ -764,9 +776,8 @@ describe("CustomFieldsManager - Component Behavior", () => {
 
     it("should show success toast after successful delete", async () => {
       const user = userEvent.setup();
-      const confirmSpy = vi.spyOn(window, "confirm");
-      confirmSpy.mockReturnValue(true);
-      mockRemoveField.mockResolvedValue({});
+      // Note: mockUpdateField is returned for all useMutation calls in this test setup
+      mockUpdateField.mockResolvedValue({});
 
       const field = {
         _id: "field1" as Id<"customFields">,
@@ -779,7 +790,13 @@ describe("CustomFieldsManager - Component Behavior", () => {
 
       render(<CustomFieldsManager projectId={mockProjectId} />);
 
+      // Click delete button to open confirm dialog
       await user.click(screen.getByRole("button", { name: /Delete/i }));
+
+      // Wait for dialog and click confirm button
+      const dialog = await screen.findByRole("alertdialog");
+      const confirmButton = within(dialog).getByRole("button", { name: /Delete/i });
+      await user.click(confirmButton);
 
       await waitFor(() => {
         expect(showSuccess).toHaveBeenCalledWith("Field deleted");

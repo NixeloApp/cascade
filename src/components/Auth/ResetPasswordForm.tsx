@@ -7,7 +7,8 @@
  */
 
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/form/Input";
@@ -28,12 +29,22 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
   const { signIn } = useAuthActions();
   const [submitting, setSubmitting] = useState(false);
   const [newPassword, setNewPassword] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const submitReset = () => {
+    const form = formRef.current;
+    if (!form || submitting) {
+      return;
+    }
+
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
     setSubmitting(true);
 
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData(form);
     formData.set("email", email);
     formData.set("flow", "reset-verification");
 
@@ -42,10 +53,15 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
         showSuccess("Password reset successfully!");
         onSuccess();
       })
-      .catch((_error) => {
-        showError("Invalid code or password. Please try again.");
+      .catch((error) => {
+        showError(error, "Password reset");
       })
       .finally(() => setSubmitting(false));
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    submitReset();
   };
 
   return (
@@ -56,7 +72,7 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
       <Typography variant="p" color="secondary" className="mb-4 text-sm">
         We sent a code to <strong>{email}</strong>. Enter it below with your new password.
       </Typography>
-      <form className="flex flex-col gap-form-field" onSubmit={handleSubmit}>
+      <form ref={formRef} className="flex flex-col gap-form-field" onSubmit={handleSubmit}>
         <Input
           type="text"
           name="code"
@@ -64,6 +80,7 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
           required
           pattern="[0-9]{8}"
           maxLength={8}
+          data-testid={TEST_IDS.AUTH.RESET_CODE_INPUT}
         />
         <Input
           type="password"
@@ -73,9 +90,16 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
           minLength={8}
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
+          data-testid={TEST_IDS.AUTH.RESET_PASSWORD_INPUT}
         />
         <PasswordStrengthIndicator password={newPassword} className="-mt-2" />
-        <Button type="submit" size="lg" className="w-full" disabled={submitting}>
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full"
+          disabled={submitting}
+          data-testid={TEST_IDS.AUTH.RESET_SUBMIT_BUTTON}
+        >
           {submitting ? "Resetting..." : "Reset password"}
         </Button>
         <AuthLinkButton onClick={onRetry}>Didn't receive a code? Try again</AuthLinkButton>
