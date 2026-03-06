@@ -33,6 +33,7 @@ const mockLoadMore = vi.fn();
 // Mock usePaginatedQuery with different return values
 const mockUsePaginatedQuery = vi.fn();
 vi.mock("convex/react", () => ({
+  useConvexAuth: () => ({ isAuthenticated: true, isLoading: false }),
   usePaginatedQuery: (...args: unknown[]) => mockUsePaginatedQuery(...args),
 }));
 

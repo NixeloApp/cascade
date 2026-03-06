@@ -1,6 +1,6 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { useState } from "react";
 import { CreateWorkspaceModal } from "@/components/CreateWorkspaceModal";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
@@ -20,11 +20,10 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/")({
 
 function WorkspacesList() {
   const { organizationId, orgSlug } = useOrganization();
+  const { isAuthenticated } = useConvexAuth();
   const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const workspaces = useQuery(api.workspaces.list, {
-    organizationId,
-  });
+  const workspaces = useQuery(api.workspaces.list, isAuthenticated ? { organizationId } : "skip");
 
   const handleWorkspaceCreated = (_workspaceId: string, slug: string) => {
     navigate({

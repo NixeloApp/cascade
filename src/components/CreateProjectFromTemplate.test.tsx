@@ -1,10 +1,11 @@
 import { render, screen } from "@testing-library/react";
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { describe, expect, it, vi } from "vitest";
 import { CreateProjectFromTemplate } from "./CreateProjectFromTemplate";
 
 // Mock Convex
 vi.mock("convex/react", () => ({
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   useQuery: vi.fn(),
   useMutation: vi.fn(() => vi.fn()),
 }));
@@ -30,6 +31,8 @@ vi.mock("@/hooks/useOrgContext", () => ({
 
 describe("CreateProjectFromTemplate (Jules accessibility)", () => {
   it("renders template list as an unordered list (ul) with list items (li)", () => {
+    vi.mocked(useConvexAuth).mockReturnValue({ isAuthenticated: true, isLoading: false });
+
     // Mock useQuery implementation
     const useQueryMock = vi.mocked(useQuery);
     useQueryMock.mockImplementation((query: any, ..._args: any[]) => {
