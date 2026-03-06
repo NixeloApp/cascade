@@ -1,4 +1,5 @@
 import { expect, authenticatedTest as test } from "./fixtures";
+import { createTestNamespace } from "./utils/test-helpers";
 import { testUserService } from "./utils/test-user-service";
 
 /**
@@ -22,15 +23,15 @@ test.describe("Analytics Dashboard", () => {
     if (!seedResult) console.warn("WARNING: Failed to seed templates in test setup");
   });
 
-  test("analytics page displays key metrics", async ({ projectsPage }) => {
-    const timestamp = Date.now();
-    const projectKey = `ANLM${timestamp.toString().slice(-4)}`;
+  test("analytics page displays key metrics", async ({ projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("ANLM");
 
     // Create a project
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Analytics Metrics WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Analytics Metrics WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Analytics Metrics Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Analytics Metrics Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
 
     // Navigate to analytics tab
@@ -41,15 +42,15 @@ test.describe("Analytics Dashboard", () => {
     console.log("✓ Analytics metric cards visible");
   });
 
-  test("analytics page displays chart sections", async ({ projectsPage }) => {
-    const timestamp = Date.now();
-    const projectKey = `ANLC${timestamp.toString().slice(-4)}`;
+  test("analytics page displays chart sections", async ({ projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("ANLC");
 
     // Create a project
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Analytics Charts WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Analytics Charts WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Analytics Charts Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Analytics Charts Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
 
     await projectsPage.switchToTab("analytics");
@@ -58,21 +59,23 @@ test.describe("Analytics Dashboard", () => {
     console.log("✓ Analytics chart sections visible");
   });
 
-  test("analytics shows correct issue count after creating issues", async ({ projectsPage }) => {
-    const timestamp = Date.now();
-    const projectKey = `ANLI${timestamp.toString().slice(-4)}`;
+  test("analytics shows correct issue count after creating issues", async ({
+    projectsPage,
+  }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("ANLI");
 
     // Create a project
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Analytics Issues WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Analytics Issues WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Analytics Issues Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Analytics Issues Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
 
     // Create multiple issues
-    await projectsPage.createIssue(`Analytics Test Issue 1 ${timestamp}`);
-    await projectsPage.createIssue(`Analytics Test Issue 2 ${timestamp}`);
-    await projectsPage.createIssue(`Analytics Test Issue 3 ${timestamp}`);
+    await projectsPage.createIssue(namespace.name("Analytics Test Issue 1"));
+    await projectsPage.createIssue(namespace.name("Analytics Test Issue 2"));
+    await projectsPage.createIssue(namespace.name("Analytics Test Issue 3"));
     console.log("✓ Created 3 issues");
 
     await projectsPage.switchToTab("analytics");
@@ -84,15 +87,15 @@ test.describe("Analytics Dashboard", () => {
 
   test("analytics shows 'No completed sprints yet' when no sprints completed", async ({
     projectsPage,
-  }) => {
-    const timestamp = Date.now();
-    const projectKey = `ANLS${timestamp.toString().slice(-4)}`;
+  }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("ANLS");
 
     // Create a fresh project (no sprints)
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Analytics Sprints WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Analytics Sprints WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Analytics Sprints Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Analytics Sprints Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
 
     await projectsPage.switchToTab("analytics");
@@ -101,15 +104,15 @@ test.describe("Analytics Dashboard", () => {
     console.log("✓ 'No completed sprints yet' message displayed");
   });
 
-  test("analytics page header and description are visible", async ({ projectsPage }) => {
-    const timestamp = Date.now();
-    const projectKey = `ANLH${timestamp.toString().slice(-4)}`;
+  test("analytics page header and description are visible", async ({ projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("ANLH");
 
     // Create a project
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Analytics Header WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Analytics Header WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Analytics Header Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Analytics Header Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
 
     await projectsPage.switchToTab("analytics");

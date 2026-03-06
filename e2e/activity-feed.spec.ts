@@ -1,4 +1,5 @@
-import { expect, authenticatedTest as test } from "./fixtures";
+import { authenticatedTest as test } from "./fixtures";
+import { createTestNamespace } from "./utils/test-helpers";
 import { testUserService } from "./utils/test-user-service";
 
 /**
@@ -22,15 +23,15 @@ test.describe("Activity Feed", () => {
     if (!seedResult) console.warn("WARNING: Failed to seed templates in test setup");
   });
 
-  test("activity page displays empty state for new project", async ({ projectsPage }) => {
-    const timestamp = Date.now();
-    const projectKey = `ACTE${timestamp.toString().slice(-4)}`;
+  test("activity page displays empty state for new project", async ({ projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("ACTE");
 
     // Create a project
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Activity Empty WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Activity Empty WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Activity Empty Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Activity Empty Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
 
     // Navigate to activity tab
@@ -43,19 +44,19 @@ test.describe("Activity Feed", () => {
     console.log(`✓ Activity page shows ${activityState}`);
   });
 
-  test("activity page shows entries after creating issues", async ({ projectsPage }) => {
-    const timestamp = Date.now();
-    const projectKey = `ACTI${timestamp.toString().slice(-4)}`;
+  test("activity page shows entries after creating issues", async ({ projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("ACTI");
     const issueTitles = [
-      `Activity Test Issue 1 ${timestamp}`,
-      `Activity Test Issue 2 ${timestamp}`,
+      namespace.name("Activity Test Issue 1"),
+      namespace.name("Activity Test Issue 2"),
     ];
 
     // Create a project
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Activity Issues WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Activity Issues WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Activity Issues Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Activity Issues Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
 
     // Create multiple issues to generate activity
@@ -75,19 +76,19 @@ test.describe("Activity Feed", () => {
     console.log("✓ Activity entries show issue keys");
   });
 
-  test("activity page displays user name in entries", async ({ projectsPage }) => {
-    const timestamp = Date.now();
-    const projectKey = `ACTU${timestamp.toString().slice(-4)}`;
+  test("activity page displays user name in entries", async ({ projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("ACTU");
 
     // Create a project
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Activity User WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Activity User WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Activity User Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Activity User Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
 
     // Create an issue to generate activity
-    await projectsPage.createIssue(`Activity User Test Issue ${timestamp}`);
+    await projectsPage.createIssue(namespace.name("Activity User Test Issue"));
     console.log("✓ Created issue");
 
     // Navigate to activity tab
@@ -97,19 +98,19 @@ test.describe("Activity Feed", () => {
     console.log("✓ Activity entries show user name with action");
   });
 
-  test("activity page shows relative timestamps", async ({ projectsPage }) => {
-    const timestamp = Date.now();
-    const projectKey = `ACTT${timestamp.toString().slice(-4)}`;
+  test("activity page shows relative timestamps", async ({ projectsPage }, testInfo) => {
+    const namespace = createTestNamespace(testInfo);
+    const projectKey = namespace.projectKey("ACTT");
 
     // Create a project
     await projectsPage.goto();
-    await projectsPage.createWorkspace(`Activity Time WS ${timestamp}`);
+    await projectsPage.createWorkspace(namespace.name("Activity Time WS"));
     await projectsPage.goto();
-    await projectsPage.createProject(`Activity Time Project ${timestamp}`, projectKey);
+    await projectsPage.createProject(namespace.name("Activity Time Project"), projectKey);
     await projectsPage.waitForBoardInteractive();
 
     // Create an issue to generate activity
-    await projectsPage.createIssue(`Activity Timestamp Test Issue ${timestamp}`);
+    await projectsPage.createIssue(namespace.name("Activity Timestamp Test Issue"));
 
     // Navigate to activity tab
     await projectsPage.switchToTab("activity");
