@@ -37,6 +37,13 @@ export { useOrganization, useOrganizationOptional };
 
 type UserOrganization = FunctionReturnType<typeof api.organizations.getUserOrganizations>[number];
 
+let cachedOrgUserOrganizations: UserOrganization[] | undefined;
+const cachedOrganizationsBySlug = new Map<
+  string,
+  FunctionReturnType<typeof api.organizations.getOrganizationBySlug>
+>();
+let hasAuthenticatedOrgSession = false;
+
 export const Route = createFileRoute("/_auth/_app/$orgSlug")({
   component: OrganizationLayout,
   ssr: false, // Disable SSR to prevent hydration issues with OrgContext
@@ -76,24 +83,17 @@ function useStableOrgData(isAuthenticated: boolean, orgSlug: string) {
     isAuthenticated ? { slug: orgSlug } : "skip",
   );
 
-  const [stableUserOrgs, setStableUserOrgs] = useState(userOrganizations);
-  const [stableOrg, setStableOrg] = useState(organization);
+  if (userOrganizations !== undefined) {
+    cachedOrgUserOrganizations = userOrganizations;
+  }
 
-  useEffect(() => {
-    if (userOrganizations !== undefined) {
-      setStableUserOrgs(userOrganizations);
-    }
-  }, [userOrganizations]);
-
-  useEffect(() => {
-    if (organization !== undefined) {
-      setStableOrg(organization);
-    }
-  }, [organization]);
+  if (organization !== undefined) {
+    cachedOrganizationsBySlug.set(orgSlug, organization);
+  }
 
   return {
-    organization: organization ?? stableOrg,
-    userOrgs: userOrganizations ?? stableUserOrgs,
+    organization: organization ?? cachedOrganizationsBySlug.get(orgSlug),
+    userOrgs: userOrganizations ?? cachedOrgUserOrganizations,
   };
 }
 
@@ -101,9 +101,21 @@ function OrganizationLayout() {
   const { orgSlug } = Route.useParams();
   const { isLoading: isAuthLoading, isAuthenticated } = useConvexAuth();
 
+  if (isAuthenticated) {
+    hasAuthenticatedOrgSession = true;
+  } else if (!isAuthLoading) {
+    hasAuthenticatedOrgSession = false;
+    cachedOrgUserOrganizations = undefined;
+    cachedOrganizationsBySlug.clear();
+  }
+
   const { organization, userOrgs } = useStableOrgData(isAuthenticated, orgSlug);
 
-  if ((isAuthLoading && !organization) || organization === undefined || userOrgs === undefined) {
+  if (
+    (isAuthLoading && !hasAuthenticatedOrgSession && !organization) ||
+    organization === undefined ||
+    userOrgs === undefined
+  ) {
     return <OrgLoading />;
   }
 

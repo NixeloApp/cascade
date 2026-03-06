@@ -1,6 +1,5 @@
 import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router";
 import { useConvexAuth } from "convex/react";
-import { useEffect, useState } from "react";
 import { AppSplashScreen } from "@/components/Auth";
 import { ROUTES } from "@/config/routes";
 
@@ -8,6 +7,8 @@ export const Route = createFileRoute("/_auth")({
   component: AuthLayout,
   ssr: false,
 });
+
+let hasAuthenticatedSession = false;
 
 /**
  * AuthLayout - Protected route layout using standard Convex auth components.
@@ -18,18 +19,12 @@ export const Route = createFileRoute("/_auth")({
  */
 function AuthLayout() {
   const { isLoading, isAuthenticated } = useConvexAuth();
-  const [hasAuthenticatedSession, setHasAuthenticatedSession] = useState(isAuthenticated);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      setHasAuthenticatedSession(true);
-      return;
-    }
-
-    if (!isLoading) {
-      setHasAuthenticatedSession(false);
-    }
-  }, [isAuthenticated, isLoading]);
+  if (isAuthenticated) {
+    hasAuthenticatedSession = true;
+  } else if (!isLoading) {
+    hasAuthenticatedSession = false;
+  }
 
   if (isLoading && !hasAuthenticatedSession) {
     return <AppSplashScreen />;

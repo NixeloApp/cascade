@@ -20,17 +20,9 @@ export const Route = createFileRoute("/_auth/_app")({
   component: AppLayout,
 });
 
-function useStableDefinedValue<T>(value: T | undefined): T | undefined {
-  const [stableValue, setStableValue] = useState<T | undefined>(value);
-
-  useEffect(() => {
-    if (value !== undefined) {
-      setStableValue(value);
-    }
-  }, [value]);
-
-  return value ?? stableValue;
-}
+let cachedRedirectPath: string | undefined;
+let cachedUserOrganizations: UserOrganization[] | undefined;
+let hasAuthenticatedAppSession = false;
 
 /**
  * AppLayout - The /app gateway route.
@@ -48,6 +40,12 @@ function AppLayout() {
   const { pathname } = useLocation();
   const { isLoading: isAuthLoading, isAuthenticated } = useConvexAuth();
 
+  if (isAuthenticated) {
+    hasAuthenticatedAppSession = true;
+  } else if (!isAuthLoading) {
+    hasAuthenticatedAppSession = false;
+  }
+
   // Get redirect destination from backend (handles onboarding check)
   const redirectPath = useQuery(
     api.auth.getRedirectDestination,
@@ -60,8 +58,21 @@ function AppLayout() {
     isAuthenticated ? undefined : "skip",
   );
 
-  const stableRedirectPath = useStableDefinedValue(redirectPath);
-  const stableUserOrganizations = useStableDefinedValue(userOrganizations);
+  if (redirectPath !== undefined) {
+    cachedRedirectPath = redirectPath;
+  }
+
+  if (userOrganizations !== undefined) {
+    cachedUserOrganizations = userOrganizations;
+  }
+
+  if (!isAuthLoading && !isAuthenticated) {
+    cachedRedirectPath = undefined;
+    cachedUserOrganizations = undefined;
+  }
+
+  const stableRedirectPath = redirectPath ?? cachedRedirectPath;
+  const stableUserOrganizations = userOrganizations ?? cachedUserOrganizations;
 
   // Redirect to correct destination if not at /app
   useEffect(() => {
@@ -79,7 +90,11 @@ function AppLayout() {
   }, [navigate, pathname, stableRedirectPath]);
 
   // Loading state - waiting for queries
-  if (isAuthLoading || stableRedirectPath === undefined || stableUserOrganizations === undefined) {
+  if (
+    (isAuthLoading && !hasAuthenticatedAppSession) ||
+    stableRedirectPath === undefined ||
+    stableUserOrganizations === undefined
+  ) {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
         <LoadingSpinner size="lg" />
