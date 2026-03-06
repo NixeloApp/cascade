@@ -27,6 +27,23 @@ test.describe("Issues", () => {
   });
 
   test.describe("Issue Creation", () => {
+    test("can reopen project creation dialog after canceling", async ({ projectsPage }) => {
+      const uniqueId = Date.now().toString();
+
+      await projectsPage.goto();
+      await projectsPage.createWorkspace(`Project Modal WS ${uniqueId}`);
+      await projectsPage.goto();
+
+      await projectsPage.openCreateProjectForm();
+      await projectsPage.cancelCreateProject();
+      await projectsPage.cancelCreateProject();
+
+      await projectsPage.openCreateProjectForm();
+      await expect(projectsPage.createProjectForm).toBeVisible();
+
+      await projectsPage.cancelCreateProject();
+    });
+
     test("can create an issue from board view", async ({ dashboardPage, projectsPage }) => {
       await dashboardPage.goto();
       await dashboardPage.expectLoaded();

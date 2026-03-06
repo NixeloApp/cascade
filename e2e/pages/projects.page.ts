@@ -253,9 +253,12 @@ export class ProjectsPage extends BasePage {
 
     // Robust open: Retry clicking if modal doesn't appear (handles hydration timing)
     await expect(async () => {
-      if (!(await this.createProjectForm.isVisible())) {
+      await this.closeCreateProjectFormIfOpen();
+
+      if (!(await this.createProjectForm.isVisible().catch(() => false))) {
         await this.newProjectButton.click();
       }
+
       await expect(this.createProjectForm).toBeVisible();
     }).toPass();
 
@@ -306,6 +309,7 @@ export class ProjectsPage extends BasePage {
       const normalizedProjectKey = key.toUpperCase();
       const boardPath = `/${this.orgSlug}/projects/${normalizedProjectKey}/board`;
       const boardUrlPattern = new RegExp(`/projects/${normalizedProjectKey}/board(?:[/?#]|$)`);
+      const creatingButton = this.createProjectForm.getByRole("button", { name: /creating/i });
 
       await this.createButton.waitFor({ state: "visible" });
       await expect(this.createButton).toBeEnabled();
@@ -322,6 +326,10 @@ export class ProjectsPage extends BasePage {
           await this.createButton.click();
         } catch {
           await this.createButton.dispatchEvent("click");
+        }
+
+        if (await creatingButton.isVisible().catch(() => false)) {
+          return;
         }
 
         await expect(this.createProjectForm).not.toBeVisible({ timeout: 5000 });
@@ -371,8 +379,10 @@ export class ProjectsPage extends BasePage {
   }
 
   async cancelCreateProject() {
-    await this.cancelButton.click();
-    await expect(this.createProjectForm).not.toBeVisible();
+    await expect(async () => {
+      await this.closeCreateProjectFormIfOpen();
+      await expect(this.createProjectForm).not.toBeVisible();
+    }).toPass();
   }
 
   async selectProject(index: number) {
@@ -539,6 +549,26 @@ export class ProjectsPage extends BasePage {
     }
 
     await expect(this.issueDetailDialog).not.toBeVisible();
+  }
+
+  async closeCreateProjectFormIfOpen() {
+    if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+      return;
+    }
+
+    if (await this.cancelButton.isVisible().catch(() => false)) {
+      await this.cancelButton.click().catch(() => {});
+    }
+
+    if (await this.createProjectForm.isVisible().catch(() => false)) {
+      await this.page.keyboard.press("Escape");
+    }
+
+    if (await this.createProjectForm.isVisible().catch(() => false)) {
+      await this.page.mouse.click(10, 10);
+    }
+
+    await expect(this.createProjectForm).not.toBeVisible();
   }
 
   async editIssueTitle(nextTitle: string) {
