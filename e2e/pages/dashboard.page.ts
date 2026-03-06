@@ -241,43 +241,52 @@ export class DashboardPage extends BasePage {
       }
     }
 
-    // Use an explicit document navigation here. The auth fixtures now preserve
-    // rotated tokens across reloads, so this is more reliable than simulating
-    // hidden-link client navigation from arbitrary project routes.
-    await this.page.goto(dashboardUrl, { waitUntil: "domcontentloaded" });
+    const isInAuthenticatedAppShell =
+      currentUrl.includes(`/${this.orgSlug}/`) &&
+      !currentUrl.includes("/signin") &&
+      (await this.dashboardTab.isVisible().catch(() => false));
 
-    // Wait for URL to settle (auth redirect check)
-    await this.page.waitForLoadState("load");
-
-    // Check if we got redirected to landing/signin page (auth failure)
-    let finalUrl = this.page.url();
-    if (
-      finalUrl.includes("/signin") ||
-      finalUrl === baseUrl ||
-      finalUrl === `${baseUrl}/` ||
-      !finalUrl.includes(this.orgSlug)
-    ) {
-      console.warn(
-        "⚠️  Auth redirect detected: navigated to",
-        finalUrl,
-        ". Retrying navigation once...",
-      );
-      // Wait for auth redirect chain to settle before retrying navigation
+    if (isInAuthenticatedAppShell) {
+      await this.dashboardTab.click();
+      await expect(this.page).toHaveURL(new RegExp(`/${this.orgSlug}/dashboard(?:\\?.*)?$`));
+    } else {
+      // Use an explicit document navigation only when entering the app shell
+      // from outside the authenticated UI. In-app route changes should preserve
+      // the live Convex auth session instead of forcing a fresh bootstrap.
       await this.page.waitForLoadState("load");
       await this.page.goto(dashboardUrl, { waitUntil: "domcontentloaded" });
-      await this.waitForLoad();
-      finalUrl = this.page.url(); // Update finalUrl after retry
-    }
+      await this.page.waitForLoadState("load");
 
-    // Final check after potential retry
-    if (
-      finalUrl.includes("/signin") ||
-      finalUrl === baseUrl ||
-      finalUrl === `${baseUrl}/` ||
-      !finalUrl.includes(this.orgSlug)
-    ) {
-      console.error("❌ Still on landing page after retry. Auth failed.");
-      throw new Error(`Redirected to landing/signin page: ${finalUrl}. Auth session invalid.`);
+      // Check if we got redirected to landing/signin page (auth failure)
+      let finalUrl = this.page.url();
+      if (
+        finalUrl.includes("/signin") ||
+        finalUrl === baseUrl ||
+        finalUrl === `${baseUrl}/` ||
+        !finalUrl.includes(this.orgSlug)
+      ) {
+        console.warn(
+          "⚠️  Auth redirect detected: navigated to",
+          finalUrl,
+          ". Retrying navigation once...",
+        );
+        // Wait for auth redirect chain to settle before retrying navigation
+        await this.page.waitForLoadState("load");
+        await this.page.goto(dashboardUrl, { waitUntil: "domcontentloaded" });
+        await this.waitForLoad();
+        finalUrl = this.page.url(); // Update finalUrl after retry
+      }
+
+      // Final check after potential retry
+      if (
+        finalUrl.includes("/signin") ||
+        finalUrl === baseUrl ||
+        finalUrl === `${baseUrl}/` ||
+        !finalUrl.includes(this.orgSlug)
+      ) {
+        console.error("❌ Still on landing page after retry. Auth failed.");
+        throw new Error(`Redirected to landing/signin page: ${finalUrl}. Auth session invalid.`);
+      }
     }
 
     // Wait for dashboard app shell with recovery
