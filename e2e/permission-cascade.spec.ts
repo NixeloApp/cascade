@@ -125,7 +125,7 @@ test.describe("Permission Cascade", () => {
     console.log("✓ Shows 'Project Not Found' error for non-existent project");
   });
 
-  test("project settings require appropriate permissions", async ({ projectsPage, page }) => {
+  test("project settings require appropriate permissions", async ({ projectsPage }) => {
     const timestamp = Date.now();
     const projectKey = `PERM${timestamp.toString().slice(-4)}`;
 
@@ -136,17 +136,13 @@ test.describe("Permission Cascade", () => {
     await projectsPage.createProject(`Perm Test Project ${timestamp}`, projectKey);
     await projectsPage.waitForBoardInteractive();
 
-    // Navigate to project settings
-    const projectTabs = page.getByLabel("Tabs");
-    const settingsTab = projectTabs.getByRole("link", { name: /settings/i });
-
     // Admin (owner) should see settings tab
-    await expect(settingsTab).toBeVisible();
+    const hasSettingsTab = await projectsPage.isProjectTabVisible("settings");
+    expect(hasSettingsTab).toBe(true);
     console.log("✓ Project settings tab visible for project owner");
 
-    // Click settings
-    await settingsTab.click();
-    await expect(page).toHaveURL(/\/settings/);
+    await projectsPage.switchToTab("settings");
+    await projectsPage.expectProjectSettingsLoaded();
     console.log("✓ Can access project settings as owner");
   });
 
