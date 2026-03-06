@@ -8,7 +8,7 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { ChevronDown, Play, Plus, Square } from "lucide-react";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
@@ -145,17 +145,21 @@ export function TimeTracker({
   estimatedHours = 0,
   billingEnabled,
 }: TimeTrackerProps) {
+  const { isAuthenticated } = useConvexAuth();
   const [showLogModal, setShowLogModal] = useState(false);
   const [showEntries, setShowEntries] = useState(false);
 
   // Fetch time entries for this issue
-  const timeEntries = useQuery(api.timeTracking.listTimeEntries, {
-    issueId,
-    limit: 100,
-  });
+  const timeEntries = useQuery(
+    api.timeTracking.listTimeEntries,
+    isAuthenticated ? { issueId, limit: 100 } : "skip",
+  );
 
   // Check if there's a running timer
-  const runningTimer = useQuery(api.timeTracking.getRunningTimer);
+  const runningTimer = useQuery(
+    api.timeTracking.getRunningTimer,
+    isAuthenticated ? undefined : "skip",
+  );
   const isTimerRunningForThisIssue = runningTimer && runningTimer.issueId === issueId;
 
   // Mutations

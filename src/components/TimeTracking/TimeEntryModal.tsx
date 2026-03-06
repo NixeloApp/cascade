@@ -8,7 +8,7 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { Clock, Hourglass, Play } from "lucide-react";
 import { ACTIVITY_TYPES } from "@/lib/constants";
@@ -295,9 +295,13 @@ export function TimeEntryModal({
   defaultMode = "log",
   billingEnabled,
 }: TimeEntryModalProps) {
+  const { isAuthenticated } = useConvexAuth();
   const createTimeEntry = useMutation(api.timeTracking.createTimeEntry);
   const startTimerMutation = useMutation(api.timeTracking.startTimer);
-  const projects = useQuery(api.projects.getCurrentUserProjects, {});
+  const projects = useQuery(
+    api.projects.getCurrentUserProjects,
+    open && isAuthenticated ? {} : "skip",
+  );
 
   const { state, actions, computed } = useTimeEntryForm({
     initialProjectId,
@@ -308,7 +312,7 @@ export function TimeEntryModal({
 
   const projectIssues = useQuery(
     api.issues.listSelectableIssues,
-    state.projectId ? { projectId: state.projectId } : "skip",
+    open && isAuthenticated && state.projectId ? { projectId: state.projectId } : "skip",
   );
 
   const handleStartTimer = async () => {
