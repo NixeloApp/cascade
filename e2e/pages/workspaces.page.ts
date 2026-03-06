@@ -73,20 +73,19 @@ export class WorkspacesPage extends BasePage {
     // Wait for button to be ready - use first() to get the header button (not empty state)
     const createButton = this.newWorkspaceButton.first();
     await createButton.waitFor({ state: "visible" });
-    const { dialog, descriptionInput, nameInput, submitButton } = getWorkspaceDialogElements(
-      this.page,
-    );
+    const { createForm, dialog, descriptionInput, nameInput, submitButton } =
+      getWorkspaceDialogElements(this.page);
 
     await createWorkspaceFromDialog({
       dialog,
       nameInput,
       descriptionInput,
       submitButton,
+      createForm,
       workspaceName: name,
       workspaceDescription: description,
       openDialog: async () => {
-        // Press Escape first to clear any existing modal state
-        await this.page.keyboard.press("Escape");
+        await this.closeCreateWorkspaceDialogIfOpen(dialog);
         await createButton.scrollIntoViewIfNeeded();
         await createButton.click();
       },
@@ -100,6 +99,13 @@ export class WorkspacesPage extends BasePage {
       .filter({ hasText: name });
     const workspaceHeading = mainContent.getByRole("heading", { name, level: 3 });
     await expect(newWorkspaceCard.or(workspaceHeading)).toBeVisible();
+  }
+
+  async closeCreateWorkspaceDialogIfOpen(dialog = getWorkspaceDialogElements(this.page).dialog) {
+    // Preserve the previous blanket Escape reset because stale overlays can
+    // keep the next workspace-create retry from reaching an interactive dialog.
+    await this.page.keyboard.press("Escape");
+    await expect(dialog).not.toBeVisible();
   }
 
   async expectWorkspacesView() {
