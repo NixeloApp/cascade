@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { AuthLink, AuthPageLayout, ResetPasswordForm } from "@/components/Auth";
+import { AuthLink, AuthPageLayout, AuthRedirect, ResetPasswordForm } from "@/components/Auth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/form/Input";
 import { ROUTES } from "@/config/routes";
@@ -23,7 +23,11 @@ export const Route = createFileRoute("/forgot-password")({
 });
 
 function ForgotPasswordRoute() {
-  return <ForgotPasswordPage />;
+  return (
+    <AuthRedirect>
+      <ForgotPasswordPage />
+    </AuthRedirect>
+  );
 }
 
 function ForgotPasswordPage() {
@@ -61,7 +65,17 @@ function ForgotPasswordPage() {
       });
 
       if (!response.ok) {
-        throw new Error(`Password reset request failed with status ${response.status}`);
+        let detail = "";
+
+        try {
+          const payload = (await response.json()) as unknown;
+          detail = typeof payload === "string" ? payload : JSON.stringify(payload);
+        } catch {
+          detail = await response.text().catch(() => "");
+        }
+
+        const suffix = detail || response.statusText;
+        throw new Error(`Password reset request failed (${response.status}): ${suffix}`);
       }
 
       setEmail(formEmail);
@@ -92,7 +106,7 @@ function ForgotPasswordPage() {
         title="Check your email"
         subtitle={
           <>
-            We sent a code to <strong>{email}</strong>
+            We sent a code to <strong>{resetEmail}</strong>
           </>
         }
       >
