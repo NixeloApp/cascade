@@ -1,4 +1,4 @@
-import { authenticatedTest, expect, test } from "./fixtures";
+import { authenticatedTest, test } from "./fixtures";
 import { IssueDetailPage } from "./pages";
 
 /**
@@ -13,24 +13,10 @@ import { IssueDetailPage } from "./pages";
  */
 
 test.describe("Unauthenticated Access", () => {
-  test("redirects to signin when accessing protected route", async ({ page }) => {
+  test("redirects to signin when accessing protected route", async ({ page, landingPage }) => {
     // Try to access dashboard without auth
     await page.goto("/some-org/dashboard");
-
-    // Should redirect to signin or show landing.
-    await expect
-      .poll(async () => {
-        const isOnSignin = await page
-          .getByRole("heading", { name: /welcome back|sign in/i })
-          .isVisible()
-          .catch(() => false);
-        const isOnLanding = await page
-          .getByRole("heading", { name: /revolutionize/i })
-          .isVisible()
-          .catch(() => false);
-        return isOnSignin || isOnLanding;
-      })
-      .toBe(true);
+    await landingPage.expectLandingOrSignInPage();
   });
 });
 

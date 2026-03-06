@@ -189,6 +189,16 @@ export class LandingPage extends BasePage {
     await expect(this.signUpHeading).toBeVisible();
   }
 
+  async expectLandingOrSignInPage() {
+    await expect
+      .poll(async () => {
+        const isOnSignIn = await this.signInHeading.isVisible().catch(() => false);
+        const isOnLanding = await this.heroHeadline.isVisible().catch(() => false);
+        return isOnSignIn || isOnLanding;
+      })
+      .toBe(true);
+  }
+
   /**
    * Alias for expectSignInPage - tests may call it expectLoginSection
    */
