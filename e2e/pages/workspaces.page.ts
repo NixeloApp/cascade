@@ -102,12 +102,7 @@ export class WorkspacesPage extends BasePage {
 
     // After workspace creation, the page may redirect to the workspace detail page
     // Wait for either the workspace to appear in the list OR the workspace detail page to load
-    const mainContent = this.page.getByRole("main");
-    const newWorkspaceCard = mainContent
-      .locator(`a[href*="/workspaces/"]`)
-      .filter({ hasText: name });
-    const workspaceHeading = mainContent.getByRole("heading", { name, level: 3 });
-    await expect(newWorkspaceCard.or(workspaceHeading)).toBeVisible();
+    await this.expectWorkspaceVisible(name);
   }
 
   async closeCreateWorkspaceDialogIfOpen(dialog = getWorkspaceDialogElements(this.page).dialog) {
@@ -124,6 +119,13 @@ export class WorkspacesPage extends BasePage {
   async expectWorkspaceDetailVisible(name: string) {
     await expect(this.page).toHaveURL(/\/workspaces\/[^/]+(?:[/?#]|$)/);
     await expect(this.page.getByRole("heading", { name, level: 3 })).toBeVisible();
+  }
+
+  async expectWorkspaceVisible(name: string) {
+    const mainContent = this.page.getByRole("main");
+    const workspaceCard = mainContent.locator(`a[href*="/workspaces/"]`).filter({ hasText: name });
+    const workspaceHeading = mainContent.getByRole("heading", { name, level: 3 });
+    await expect(workspaceCard.or(workspaceHeading)).toBeVisible();
   }
 
   async isWorkspaceSettingsTabVisible() {

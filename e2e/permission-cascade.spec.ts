@@ -28,7 +28,7 @@ test.describe("Permission Cascade", () => {
     console.log("✓ Admin settings accessible");
   });
 
-  test("org owner can create workspaces", async ({ workspacesPage, page }) => {
+  test("org owner can create workspaces", async ({ workspacesPage }) => {
     const timestamp = Date.now();
     const workspaceName = `Cascade WS ${timestamp}`;
 
@@ -39,19 +39,11 @@ test.describe("Permission Cascade", () => {
     await workspacesPage.createWorkspace(workspaceName);
     console.log("✓ Created workspace as org owner");
 
-    // Verify workspace was created - check for workspace detail page or list item
-    // After creation, page may redirect to workspace detail OR stay on list
-    await expect(page).toHaveURL(/\/workspaces\//);
-    const mainContent = page.getByRole("main");
-    const workspaceItem = mainContent
-      .locator(`a[href*="/workspaces/"]`)
-      .filter({ hasText: workspaceName });
-    const workspaceHeading = mainContent.getByRole("heading", { name: workspaceName, level: 3 });
-    await expect(workspaceItem.or(workspaceHeading)).toBeVisible();
+    await workspacesPage.expectWorkspaceVisible(workspaceName);
     console.log("✓ Workspace visible");
   });
 
-  test("org owner can create projects in any workspace", async ({ projectsPage, page }) => {
+  test("org owner can create projects in any workspace", async ({ projectsPage }) => {
     const timestamp = Date.now();
     const workspaceName = `Project WS ${timestamp}`;
     const projectKey = `CASC${timestamp.toString().slice(-4)}`;
@@ -64,8 +56,7 @@ test.describe("Permission Cascade", () => {
     await projectsPage.goto();
     await projectsPage.createProject(`Cascade Project ${timestamp}`, projectKey);
 
-    // Verify project was created
-    await expect(page).toHaveURL(/\/projects\/.*\/board/);
+    await projectsPage.expectBoardVisible();
     console.log("✓ Created project as org owner in workspace");
   });
 
