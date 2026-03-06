@@ -140,8 +140,9 @@ This is the concrete "what's left" list for reliability hardening after the late
    - `permission-cascade.spec.ts` now goes through `ProjectsPage.gotoProjectBoard()` and `expectProjectNotFound()` for the non-existent-project permission check instead of constructing the project URL and not-found heading directly in the spec body.
    - `dashboard.spec.ts` now goes through `SettingsPage.expectDarkThemeEnabled()` / `expectDarkThemeDisabled()` for the theme-state check instead of reading the `html` class directly from the spec body.
    - current raw page-level selector scan across `e2e/*.spec.ts` is clean.
-   - `createTestNamespace(testInfo)` now owns run-scoped names and project keys in `integration-workflow.spec.ts`, `permission-cascade.spec.ts`, `issues.spec.ts`, `issue-detail-page.spec.ts`, `activity-feed.spec.ts`, `analytics.spec.ts`, `roadmap.spec.ts`, `sprints.spec.ts`, and `teams.spec.ts`, so those files no longer hand-roll ad hoc `Date.now()` namespaces.
-   - next target: finish the remaining timestamp holdouts in `board-drag-drop.spec.ts`, `workspaces-org.spec.ts`, `time-tracking.spec.ts`, `search.spec.ts`, and `documents.spec.ts`, then tighten teardown for the create-heavy flows that still leave broad shared state behind.
+   - `createTestNamespace(testInfo)` now owns run-scoped names and project keys across the create-heavy E2E specs, and the current `rg` scan of `e2e/*.spec.ts` is clean for spec-local `Date.now()` namespaces.
+   - next blocker: `search.spec.ts` non-matching-query coverage still times out inside `DashboardPage.waitForSearchSettled()` because the global-search modal disappears before Playwright can observe a stable empty-state signal.
+   - next step for that blocker: instrument why the dialog closes during no-result searches and update the page-object settle contract to wait on the actual runtime empty state rather than assuming the modal remains open through the query lifecycle.
 2. Selector contract completion:
    - `pnpm run validate` now passes with no `Test ID constants` warnings.
    - continue replacing brittle text/CSS fallbacks opportunistically when modifying critical specs.
@@ -203,7 +204,8 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `integration-workflow.spec.ts` now relies on `ProjectsPage.switchToTab("calendar" | "timesheet" | "board")`, `expectProjectTabCurrent()`, and `expectTimesheetLoaded()`, after the focused rerun confirmed the project tab workflow no longer needs raw tab-strip lookups or a spec-local `Time Entries` visibility check.
 - `permission-cascade.spec.ts` now relies on `ProjectsPage.gotoProjectBoard()` plus `expectProjectNotFound()` for the non-existent-project permission check, after the full-file rerun confirmed the last raw project-not-found heading in that file can reuse the shared project error contract.
 - `dashboard.spec.ts` now relies on `SettingsPage.expectDarkThemeEnabled()` and `expectDarkThemeDisabled()` for theme-state assertions, after the focused rerun confirmed the last direct `page.locator("html")` check could move behind the settings page object and the current `e2e/*.spec.ts` raw-selector scan returned clean.
-- `createTestNamespace(testInfo)` now owns run-scoped names and project keys across `integration-workflow.spec.ts`, `permission-cascade.spec.ts`, `issues.spec.ts`, `issue-detail-page.spec.ts`, `activity-feed.spec.ts`, `analytics.spec.ts`, `roadmap.spec.ts`, `sprints.spec.ts`, and `teams.spec.ts`, after the grouped reruns confirmed the shorter namespace id avoids the earlier long-title click-intercept issue while removing those files' remaining spec-local `Date.now()` namespaces.
+- `createTestNamespace(testInfo)` now owns run-scoped names and project keys across the create-heavy E2E specs, after the grouped reruns plus the final `workspaces-org.spec.ts` pass confirmed the shorter namespace id avoids the earlier long-title click-intercept issue and the current `e2e/*.spec.ts` timestamp scan is clean.
+- `GlobalSearch` now renders an explicit empty state instead of delegating to `CommandEmpty`, and `src/components/GlobalSearch.test.tsx` passes with that change, but Playwright still shows the modal disappearing during the non-matching-query case, so the remaining blocker is runtime dialog/open-state behavior rather than missing empty-state markup.
 
 ## Latest Targeted Hardening Evidence
 
@@ -295,6 +297,14 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `9 passed (4.1m)`
 - `pnpm exec playwright test e2e/roadmap.spec.ts e2e/sprints.spec.ts e2e/teams.spec.ts --reporter=line --workers=1`
   - `9 passed (3.4m)`
+- `pnpm exec playwright test e2e/time-tracking.spec.ts e2e/board-drag-drop.spec.ts --reporter=line --workers=1`
+  - `6 passed (3.0m)`
+- `pnpm exec playwright test e2e/workspaces-org.spec.ts --reporter=line --workers=1`
+  - `5 passed (46.9s)`
+- `pnpm vitest run src/components/GlobalSearch.test.tsx`
+  - `19 passed (1.83s)`
+- `pnpm exec playwright test e2e/search.spec.ts e2e/documents.spec.ts --reporter=line --workers=1`
+  - `1 failed, 5 passed, 5 did not run (2.8m)`; blocker remains `search.spec.ts` non-matching-query settle timing out after the modal disappears
 
 ## Evidence Freshness Guard
 
