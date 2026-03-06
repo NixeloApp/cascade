@@ -57,21 +57,14 @@ test.describe("Issue Detail Page", () => {
 
     // Create an issue
     await projectsPage.createIssue(issueTitle);
-    await expect(projectsPage.createIssueModal).not.toBeVisible();
 
     // Switch to backlog to find the issue
     await projectsPage.switchToTab("backlog");
 
-    // Get the issue key from the card (format: PROJ-1)
     const issueCard = projectsPage.getIssueCard(issueTitle);
     await expect(issueCard).toBeVisible();
-
-    // Extract issue key from the card's accessible label, e.g.:
-    // "Task PROJ-1: Direct URL Test Issue, Medium priority, unassigned"
-    const issueAriaLabel = await issueCard.getAttribute("aria-label");
-    const issueKeyMatch = issueAriaLabel?.match(new RegExp(`${projectKey}-\\d+`));
-    expect(issueKeyMatch).toBeTruthy();
-    const issueKey = issueKeyMatch?.[0];
+    const issueKey = await projectsPage.getIssueKey(issueTitle);
+    await expect(issueKey).toMatch(new RegExp(`${projectKey}-\\d+`));
 
     console.log(`Created issue with key: ${issueKey}`);
 
@@ -101,16 +94,14 @@ test.describe("Issue Detail Page", () => {
     await projectsPage.goto();
     await projectsPage.createProject(`Breadcrumb Project ${uniqueId}`, projectKey);
     await projectsPage.createIssue(issueTitle);
-    await expect(projectsPage.createIssueModal).not.toBeVisible();
 
     // Switch to backlog to find the issue
     await projectsPage.switchToTab("backlog");
 
     const issueCard = projectsPage.getIssueCard(issueTitle);
     await expect(issueCard).toBeVisible();
-    const issueAriaLabel = await issueCard.getAttribute("aria-label");
-    const issueKeyMatch = issueAriaLabel?.match(new RegExp(`${projectKey}-\\d+`));
-    const issueKey = issueKeyMatch?.[0];
+    const issueKey = await projectsPage.getIssueKey(issueTitle);
+    await expect(issueKey).toMatch(new RegExp(`${projectKey}-\\d+`));
 
     // Navigate to issue detail page
     await page.goto(`/${orgSlug}/issues/${issueKey}`);

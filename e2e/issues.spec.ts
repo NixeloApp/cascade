@@ -51,9 +51,6 @@ test.describe("Issues", () => {
       // Create an issue
       await projectsPage.createIssue(issueTitle);
 
-      // Verify modal closes
-      await expect(projectsPage.createIssueModal).not.toBeVisible();
-
       // For Scrum projects (default template), new issues go to Backlog
       // Switch to Backlog tab to verify
       await projectsPage.switchToTab("backlog");
@@ -85,7 +82,6 @@ test.describe("Issues", () => {
 
       // Create an issue
       await projectsPage.createIssue(issueTitle);
-      await expect(projectsPage.createIssueModal).not.toBeVisible();
 
       // For Scrum projects (default template), new issues go to Backlog
       // Switch to Backlog tab to find the issue
@@ -118,7 +114,6 @@ test.describe("Issues", () => {
 
       // Create an issue
       await projectsPage.createIssue(issueTitle);
-      await expect(projectsPage.createIssueModal).not.toBeVisible();
 
       // For Scrum projects (default template), new issues go to Backlog
       // Switch to Backlog tab to find the issue

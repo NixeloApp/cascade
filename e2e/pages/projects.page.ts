@@ -448,6 +448,16 @@ export class ProjectsPage extends BasePage {
       .first();
   }
 
+  getIssueKeyElement(title: string) {
+    return this.getIssueCardContainer(title).getByTestId(TEST_IDS.ISSUE.KEY);
+  }
+
+  async getIssueKey(title: string) {
+    const issueKey = this.getIssueKeyElement(title);
+    await expect(issueKey).toBeVisible();
+    return (await issueKey.textContent())?.trim() ?? "";
+  }
+
   getIssueDragHandle(title: string) {
     return this.getIssueCardContainer(title).getByTestId(TEST_IDS.ISSUE.DRAG_HANDLE);
   }
