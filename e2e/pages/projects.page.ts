@@ -390,6 +390,10 @@ export class ProjectsPage extends BasePage {
     return this.boardColumns.filter({ has: this.page.getByText(namePattern) }).first();
   }
 
+  getBoardColumnCountBadgeByIndex(index: number) {
+    return this.boardColumns.nth(index).getByTestId(TEST_IDS.BOARD.COLUMN_COUNT);
+  }
+
   /**
    * Open an issue detail dialog by clicking its card
    */

@@ -1,4 +1,3 @@
-import { TEST_IDS } from "../src/lib/test-ids";
 import { expect, authenticatedTest as test } from "./fixtures";
 import { testUserService } from "./utils/test-user-service";
 
@@ -225,7 +224,7 @@ test.describe("Board Drag-Drop", () => {
     let foundCountBadge = false;
     for (let i = 0; i < columnCount; i++) {
       const column = columns.nth(i);
-      const badge = column.getByTestId(TEST_IDS.BOARD.COLUMN_COUNT);
+      const badge = projectsPage.getBoardColumnCountBadgeByIndex(i);
       if ((await badge.count()) > 0) {
         foundCountBadge = true;
         const badgeText = await badge.textContent();

@@ -188,6 +188,13 @@ Full-suite evidence in this TODO is considered stale if older than 24 hours.
 - Targeted validation:
   - `pnpm exec playwright test e2e/search.spec.ts --reporter=line --workers=1`
   - `7 passed (2.2m)`
+- Moved the board column-count badge lookup out of `e2e/board-drag-drop.spec.ts` and into `ProjectsPage.getBoardColumnCountBadgeByIndex(...)`, so the board-drag-drop core flow stays on page-object selectors only.
+- Root cause note:
+  - the drag-and-drop spec still reached into a raw board column test id directly, which left one selector-contract leak in a core flow already marked for hardening.
+  - centralizing that locator in `ProjectsPage` keeps board selectors alongside the other board helpers already used by the suite.
+- Targeted validation:
+  - `pnpm exec playwright test e2e/board-drag-drop.spec.ts --reporter=line --workers=1`
+  - `5 passed (1.8m)`
 
 ## Historical Resolution Notes (2026-03-05)
 
