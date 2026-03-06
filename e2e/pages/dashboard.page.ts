@@ -26,6 +26,7 @@ export class DashboardPage extends BasePage {
   readonly commandPaletteButton: Locator;
   readonly shortcutsHelpButton: Locator;
   readonly globalSearchButton: Locator;
+  readonly headerStartTimerButton: Locator;
   readonly notificationButton: Locator;
   readonly signOutButton: Locator;
 
@@ -75,6 +76,8 @@ export class DashboardPage extends BasePage {
   readonly globalSearchAllTab: Locator;
   readonly globalSearchIssuesTab: Locator;
   readonly globalSearchDocumentsTab: Locator;
+  readonly timeEntryModal: Locator;
+  readonly timeEntryBillableCheckbox: Locator;
 
   // ===================
   // Locators - Notifications
@@ -131,6 +134,7 @@ export class DashboardPage extends BasePage {
     this.shortcutsHelpButton = page.getByTestId(TEST_IDS.HEADER.SHORTCUTS_BUTTON);
     // Global search button with aria-label "Open search (⌘K)"
     this.globalSearchButton = page.getByRole("button", { name: /open search/i });
+    this.headerStartTimerButton = page.getByRole("button", { name: /^start timer$/i }).first();
     // Bell notification icon button - aria-label is "Notifications" or "Notifications, N unread"
     this.notificationButton = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_BUTTON);
     // "Sign out" text button
@@ -185,6 +189,10 @@ export class DashboardPage extends BasePage {
     this.globalSearchAllTab = page.getByTestId(TEST_IDS.SEARCH.TAB_ALL);
     this.globalSearchIssuesTab = page.getByTestId(TEST_IDS.SEARCH.TAB_ISSUES);
     this.globalSearchDocumentsTab = page.getByTestId(TEST_IDS.SEARCH.TAB_DOCUMENTS);
+    this.timeEntryModal = page.getByRole("dialog", { name: /^start timer$/i });
+    this.timeEntryBillableCheckbox = this.timeEntryModal.getByRole("checkbox", {
+      name: /billable/i,
+    });
 
     // Notifications panel
     this.notificationPanel = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_PANEL);
@@ -430,6 +438,16 @@ export class DashboardPage extends BasePage {
     await this.globalSearchInput.focus();
   }
 
+  async openTimeEntryModal() {
+    await waitForDashboardReady(this.page);
+
+    await expect(async () => {
+      await expect(this.headerStartTimerButton).toBeVisible();
+      await this.headerStartTimerButton.click();
+      await expect(this.timeEntryModal).toBeVisible();
+    }).toPass();
+  }
+
   async closeGlobalSearch() {
     // If modal is not visible, nothing to close
     if (!(await this.globalSearchModal.isVisible().catch(() => false))) {
@@ -455,6 +473,12 @@ export class DashboardPage extends BasePage {
     await expect(this.globalSearchModal).toBeVisible();
     await this.page.keyboard.press("Escape");
     await expect(this.globalSearchModal).not.toBeVisible();
+  }
+
+  async closeTimeEntryModal() {
+    await expect(this.timeEntryModal).toBeVisible();
+    await this.page.keyboard.press("Escape");
+    await expect(this.timeEntryModal).not.toBeVisible();
   }
 
   async openGlobalSearchWithShortcut() {
