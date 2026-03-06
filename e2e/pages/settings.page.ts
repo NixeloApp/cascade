@@ -439,6 +439,14 @@ export class SettingsPage extends BasePage {
     await options[theme].click();
   }
 
+  async expectDarkThemeEnabled() {
+    await expect(this.page.locator("html")).toHaveClass(/dark/);
+  }
+
+  async expectDarkThemeDisabled() {
+    await expect(this.page.locator("html")).not.toHaveClass(/dark/);
+  }
+
   // ===================
   // Assertions
   // ===================

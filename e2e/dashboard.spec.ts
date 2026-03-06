@@ -1,4 +1,4 @@
-import { expect, authenticatedTest as test } from "./fixtures";
+import { authenticatedTest as test } from "./fixtures";
 
 /**
  * Dashboard E2E Tests
@@ -67,21 +67,19 @@ test.describe("Dashboard Tests", () => {
   });
 
   test.describe("Theme Toggle", () => {
-    test("can switch themes via settings", async ({ dashboardPage, settingsPage, page }) => {
+    test("can switch themes via settings", async ({ dashboardPage, settingsPage }) => {
       // Navigate through UI: dashboard -> settings sidebar link
       await dashboardPage.goto();
       await dashboardPage.navigateTo("settings");
       await settingsPage.switchToTab("preferences");
 
-      const html = page.locator("html");
-
       // Switch to dark theme using page object
       await settingsPage.setTheme("dark");
-      await expect(html).toHaveClass(/dark/);
+      await settingsPage.expectDarkThemeEnabled();
 
       // Switch to light theme using page object
       await settingsPage.setTheme("light");
-      await expect(html).not.toHaveClass(/dark/);
+      await settingsPage.expectDarkThemeDisabled();
 
       // Switch to system theme using page object
       await settingsPage.setTheme("system");
