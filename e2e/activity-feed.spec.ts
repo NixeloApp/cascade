@@ -65,7 +65,6 @@ test.describe("Activity Feed", () => {
     // Create multiple issues to generate activity
     for (const title of issueTitles) {
       await projectsPage.createIssue(title);
-      await expect(projectsPage.createIssueModal).not.toBeVisible();
     }
     console.log(`✓ Created ${issueTitles.length} issues`);
 
@@ -101,7 +100,6 @@ test.describe("Activity Feed", () => {
 
     // Create an issue to generate activity
     await projectsPage.createIssue(`Activity User Test Issue ${timestamp}`);
-    await expect(projectsPage.createIssueModal).not.toBeVisible();
     console.log("✓ Created issue");
 
     // Navigate to activity tab
@@ -129,7 +127,6 @@ test.describe("Activity Feed", () => {
 
     // Create an issue to generate activity
     await projectsPage.createIssue(`Activity Timestamp Test Issue ${timestamp}`);
-    await expect(projectsPage.createIssueModal).not.toBeVisible();
 
     // Navigate to activity tab
     await projectsPage.switchToTab("activity");

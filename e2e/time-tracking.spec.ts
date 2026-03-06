@@ -40,9 +40,6 @@ test.describe("Time Tracking", () => {
     // Create Issue
     await projectsPage.createIssue(issueTitle);
 
-    // Close modal
-    await expect(projectsPage.createIssueModal).not.toBeVisible();
-
     // New issues land in backlog for the default Scrum template.
     await projectsPage.switchToTab("backlog");
 

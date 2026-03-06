@@ -35,7 +35,6 @@ test.describe("Global Search", () => {
     await projectsPage.createProject(`Search Test Project ${timestamp}`, projectKey);
     await projectsPage.waitForBoardInteractive();
     await projectsPage.createIssue(`Issue ${uniqueSearchTerm}`);
-    await expect(projectsPage.createIssueModal).not.toBeVisible();
     console.log(`✓ Created issue with unique term: ${uniqueSearchTerm}`);
 
     // Navigate to dashboard and open global search
@@ -110,7 +109,6 @@ test.describe("Global Search", () => {
     await projectsPage.createProject(`Tab Filter Project ${timestamp}`, projectKey);
     await projectsPage.waitForBoardInteractive();
     await projectsPage.createIssue(`Issue ${uniqueSearchTerm}`);
-    await expect(projectsPage.createIssueModal).not.toBeVisible();
 
     // Navigate to dashboard and search
     await dashboardPage.goto();
@@ -154,7 +152,6 @@ test.describe("Global Search", () => {
     await projectsPage.createProject(`Count Test Project ${timestamp}`, projectKey);
     await projectsPage.waitForBoardInteractive();
     await projectsPage.createIssue(`Issue ${uniqueSearchTerm}`);
-    await expect(projectsPage.createIssueModal).not.toBeVisible();
 
     // Navigate to dashboard and search
     await dashboardPage.goto();

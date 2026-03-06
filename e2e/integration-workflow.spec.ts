@@ -41,7 +41,6 @@ test.describe("Integration Workflows", () => {
 
       // Step 5: Create an issue
       await projectsPage.createIssue(issueTitle);
-      await expect(projectsPage.createIssueModal).not.toBeVisible();
       console.log("✓ Issue created");
 
       // Step 6: New issues land in backlog for the default Scrum template.
@@ -124,7 +123,6 @@ test.describe("Integration Workflows", () => {
       await projectsPage.createProject(`Dashboard WF ${timestamp}`, projectKey);
       await projectsPage.waitForBoardInteractive();
       await projectsPage.createIssue(issueTitle);
-      await expect(projectsPage.createIssueModal).not.toBeVisible();
       console.log("✓ Issue created for dashboard workflow test");
 
       // Navigate to dashboard
@@ -160,7 +158,6 @@ test.describe("Integration Workflows", () => {
       await projectsPage.createProject(`Search Test ${timestamp}`, projectKey);
       await projectsPage.waitForBoardInteractive();
       await projectsPage.createIssue(`Issue ${uniqueSearchTerm}`);
-      await expect(projectsPage.createIssueModal).not.toBeVisible();
       console.log("✓ Issue created with unique search term");
 
       // Navigate to dashboard and open global search

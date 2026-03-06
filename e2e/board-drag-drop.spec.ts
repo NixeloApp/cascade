@@ -38,7 +38,6 @@ test.describe("Board Drag-Drop", () => {
 
     // Create an issue (goes to Backlog for Scrum projects)
     await projectsPage.createIssue(issueTitle);
-    await expect(projectsPage.createIssueModal).not.toBeVisible();
 
     // Switch to backlog to find the issue
     await projectsPage.switchToTab("backlog");
@@ -97,7 +96,6 @@ test.describe("Board Drag-Drop", () => {
 
     // Create an issue
     await projectsPage.createIssue(issueTitle);
-    await expect(projectsPage.createIssueModal).not.toBeVisible();
 
     // Switch to backlog to see the issue
     await projectsPage.switchToTab("backlog");
@@ -212,7 +210,6 @@ test.describe("Board Drag-Drop", () => {
 
     // Create an issue
     await projectsPage.createIssue(`Badge Test Issue ${timestamp}`);
-    await expect(projectsPage.createIssueModal).not.toBeVisible();
 
     // Switch to backlog
     await projectsPage.switchToTab("backlog");

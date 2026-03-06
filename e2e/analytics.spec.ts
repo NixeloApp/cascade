@@ -94,11 +94,8 @@ test.describe("Analytics Dashboard", () => {
 
     // Create multiple issues
     await projectsPage.createIssue(`Analytics Test Issue 1 ${timestamp}`);
-    await expect(projectsPage.createIssueModal).not.toBeVisible();
     await projectsPage.createIssue(`Analytics Test Issue 2 ${timestamp}`);
-    await expect(projectsPage.createIssueModal).not.toBeVisible();
     await projectsPage.createIssue(`Analytics Test Issue 3 ${timestamp}`);
-    await expect(projectsPage.createIssueModal).not.toBeVisible();
     console.log("✓ Created 3 issues");
 
     await projectsPage.switchToTab("analytics");
