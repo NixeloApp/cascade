@@ -424,6 +424,10 @@ export class ProjectsPage extends BasePage {
       workspaceName: name,
       workspaceDescription: description,
       openDialog: async () => {
+        await this.page.keyboard.press("Escape");
+        await expect(dialog).not.toBeVisible();
+        await expect(this.newWorkspaceButton).toBeVisible();
+        await this.newWorkspaceButton.scrollIntoViewIfNeeded();
         await this.newWorkspaceButton.click();
       },
     });

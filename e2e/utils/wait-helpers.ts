@@ -293,20 +293,33 @@ export async function createWorkspaceFromDialog(
     await expect(nameInput).toBeEnabled();
   }).toPass();
 
-  await nameInput.fill(workspaceName);
-  await expect(nameInput).toHaveValue(workspaceName);
+  await expect(async () => {
+    await expect(nameInput).toBeVisible();
+    await expect(nameInput).toBeEnabled();
+    await nameInput.fill(workspaceName);
+    await expect(nameInput).toHaveValue(workspaceName);
+  }).toPass();
 
   if (workspaceDescription && descriptionInput) {
-    await descriptionInput.fill(workspaceDescription);
+    await expect(async () => {
+      await expect(descriptionInput).toBeVisible();
+      await expect(descriptionInput).toBeEnabled();
+      await descriptionInput.fill(workspaceDescription);
+      await expect(descriptionInput).toHaveValue(workspaceDescription);
+    }).toPass();
   }
 
-  if (createForm && (await createForm.isVisible())) {
-    await createForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
-  } else {
-    await submitButton.click();
-  }
+  await expect(async () => {
+    if (createForm && (await createForm.isVisible().catch(() => false))) {
+      await createForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
+    } else {
+      await expect(submitButton).toBeVisible();
+      await expect(submitButton).toBeEnabled();
+      await submitButton.click();
+    }
 
-  await expect(dialog).not.toBeVisible();
+    await expect(dialog).not.toBeVisible();
+  }).toPass();
 }
 
 /**

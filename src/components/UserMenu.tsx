@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { LogOut, Settings } from "lucide-react";
 import { Stack } from "@/components/ui/Stack";
 import { ROUTES } from "@/config/routes";
@@ -29,7 +29,8 @@ import { Typography } from "./ui/Typography";
 
 /** User dropdown menu with settings and sign out options. */
 export function UserMenu() {
-  const user = useQuery(api.users.getCurrent);
+  const { isAuthenticated } = useConvexAuth();
+  const user = useQuery(api.users.getCurrent, isAuthenticated ? undefined : "skip");
   const { signOut } = useAuthActions();
   const org = useOrganizationOptional();
   const orgSlug = org?.orgSlug;

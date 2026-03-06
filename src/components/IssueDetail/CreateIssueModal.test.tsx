@@ -1,12 +1,13 @@
 import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
-import { useAction, useMutation, useQuery } from "convex/react";
+import { useAction, useConvexAuth, useMutation, useQuery } from "convex/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { CreateIssueModal } from "./CreateIssueModal";
 
 // Mock Convex hooks
 vi.mock("convex/react", () => ({
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   useQuery: vi.fn(),
   useMutation: vi.fn(),
   useAction: vi.fn(),
@@ -70,6 +71,7 @@ describe("CreateIssueModal", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    (useConvexAuth as any).mockReturnValue({ isAuthenticated: true, isLoading: false });
     (useMutation as any).mockReturnValue(mockCreateIssue);
     (useAction as any).mockReturnValue(vi.fn());
     // Mock useQuery to return values in order:
