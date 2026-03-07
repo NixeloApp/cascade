@@ -46,7 +46,7 @@ describe("GitHub OAuth HTTP Handler", () => {
         runQuery: vi.fn(),
       } as unknown as ActionCtx;
 
-      const response = await initiateAuthHandler(ctx, request);
+      const response = await initiateAuthHandler();
 
       expect(response.status).toBe(302);
       const location = response.headers.get("Location");
@@ -80,7 +80,7 @@ describe("GitHub OAuth HTTP Handler", () => {
         runQuery: vi.fn(),
       } as unknown as ActionCtx;
 
-      const response = await initiateAuthHandler(ctx, request);
+      const response = await initiateAuthHandler();
 
       expect(response.status).toBe(500);
       const body = await response.json();
