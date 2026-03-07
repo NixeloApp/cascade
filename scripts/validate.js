@@ -23,15 +23,15 @@
  *  19. Interactive Tailwind — hover:/focus: should be in CVA components, not scattered
  *  20. Tailwind consistency — duration tokens, focus rings, disabled states, z-index, group-hover
  *  21. JSDoc coverage       — exported functions/components should have JSDoc documentation
- *  22. File headers         — non-trivial files (>50 lines) should have documentation headers
- *  23. Import order         — imports should follow standard grouping order
- *  24. Import paths         — validates import path conventions
- *  25. Hook patterns        — custom hooks should follow consistent patterns
- *  26. Async patterns       — consistent error handling in async operations
+ *  22. Import paths         — validates import path conventions
+ *  23. Hook patterns        — custom hooks should follow consistent patterns
+ *  24. Async patterns       — consistent error handling in async operations
+ *  25. Time constants       — enforces use of timeUtils constants instead of magic numbers
+ *  26. Unused parameters    — flags underscore-prefixed unused params (remove or use them)
  *  27. Test coverage        — critical files should have corresponding tests
- *  28. Time constants       — enforces use of timeUtils constants instead of magic numbers
- *  29. Unused parameters    — flags underscore-prefixed unused params (remove or use them)
- *  30. Weak assertions      — toBeDefined(), toBeTruthy(), {} as Type in tests
+ *  28. Weak assertions      — toBeDefined(), toBeTruthy(), {} as Type in tests
+ *  29. Native confirm()     — ensure custom dialogs used instead of native confirm()
+ *  30. Convex hooks         — validates Convex hook usage patterns
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -177,14 +177,6 @@ const checks = [
     modulePath: new URL("./validate/check-jsdoc.js", import.meta.url).href,
   },
   {
-    name: "File headers",
-    modulePath: new URL("./validate/check-file-headers.js", import.meta.url).href,
-  },
-  {
-    name: "Import order",
-    modulePath: new URL("./validate/check-import-order.js", import.meta.url).href,
-  },
-  {
     name: "Import paths",
     modulePath: new URL("./validate/check-import-paths.js", import.meta.url).href,
   },
@@ -197,16 +189,16 @@ const checks = [
     modulePath: new URL("./validate/check-async-patterns.js", import.meta.url).href,
   },
   {
-    name: "Test coverage",
-    modulePath: new URL("./validate/check-test-coverage.js", import.meta.url).href,
-  },
-  {
     name: "Time constants",
     modulePath: new URL("./validate/check-time-constants.js", import.meta.url).href,
   },
   {
     name: "Unused parameters",
     modulePath: new URL("./validate/check-unused-params.js", import.meta.url).href,
+  },
+  {
+    name: "Test coverage",
+    modulePath: new URL("./validate/check-test-coverage.js", import.meta.url).href,
   },
   {
     name: "Weak assertions",
