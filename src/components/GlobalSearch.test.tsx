@@ -12,6 +12,22 @@ vi.mock("convex/react", () => ({
   useQuery: vi.fn(),
 }));
 
+/** Check if useQuery was called with args matching the expected filters */
+function wasCalledWithFilters(mock: typeof useQuery, expected: Record<string, unknown>): boolean {
+  return (mock as any).mock.calls.some((call: unknown[]) => {
+    const args = call[1] as Record<string, unknown> | "skip" | undefined;
+    if (!args || args === "skip") return false;
+
+    return Object.entries(expected).every(([key, value]) => {
+      const argValue = args[key] as unknown[];
+      if (Array.isArray(value)) {
+        return Array.isArray(argValue) && value.every((v) => argValue.includes(v));
+      }
+      return args[key] === value;
+    });
+  });
+}
+
 describe("GlobalSearch", () => {
   let queryCallCount = 0;
 
@@ -212,24 +228,16 @@ describe("GlobalSearch", () => {
       await user.type(searchInput, "type:bug status:done priority:high label:frontend @me auth");
 
       await waitFor(() => {
-        const calls = (useQuery as any).mock.calls as unknown[][];
-        const hasShortcutIssueCall = calls.some((call) => {
-          const args = call[1] as Record<string, unknown> | "skip" | undefined;
-          return (
-            args !== "skip" &&
-            args?.query === "auth" &&
-            args?.assigneeId === "me" &&
-            Array.isArray(args?.type) &&
-            args.type.includes("bug") &&
-            Array.isArray(args?.status) &&
-            args.status.includes("done") &&
-            Array.isArray(args?.priority) &&
-            args.priority.includes("high") &&
-            Array.isArray(args?.labels) &&
-            args.labels.includes("frontend")
-          );
-        });
-        expect(hasShortcutIssueCall).toBe(true);
+        expect(
+          wasCalledWithFilters(useQuery, {
+            query: "auth",
+            assigneeId: "me",
+            type: ["bug"],
+            status: ["done"],
+            priority: ["high"],
+            labels: ["frontend"],
+          }),
+        ).toBe(true);
       });
     },
   );
