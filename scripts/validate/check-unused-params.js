@@ -10,7 +10,7 @@
  * Instead of using underscore prefix to silence linter warnings,
  * remove the binding entirely, restructure the API, or use the value.
  *
- * @strictness ERROR - Underscore-prefixed bindings fail validation
+ * Enforced. Underscore-prefixed bindings fail validation.
  */
 
 import fs from "node:fs";
@@ -136,9 +136,9 @@ export function run() {
 
   // Report results
   if (issues.length > 0) {
-    console.log(`${c.yellow}Found ${issues.length} underscore-prefixed binding(s):${c.reset}\n`);
+    console.log(`${c.red}Found ${issues.length} underscore-prefixed binding(s):${c.reset}\n`);
     for (const issue of issues) {
-      console.log(`  ${c.yellow}WARN${c.reset} ${issue.file}:${issue.line} - ${issue.message}`);
+      console.log(`  ${c.red}ERROR${c.reset} ${issue.file}:${issue.line} - ${issue.message}`);
     }
     console.log();
   }
@@ -146,7 +146,6 @@ export function run() {
   return {
     passed: issues.length === 0,
     errors: issues.length,
-    warnings: 0,
     detail: issues.length > 0 ? `${issues.length} underscore-prefixed binding(s)` : null,
   };
 }

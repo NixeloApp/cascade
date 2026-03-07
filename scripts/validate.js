@@ -33,7 +33,7 @@
  *  29. Unused parameters    — flags underscore-prefixed unused params (remove or use them)
  *  30. Weak assertions      — toBeDefined(), toBeTruthy(), {} as Type in tests
  *
- * Exit code 1 if any check reports errors. Some checks are warn-only and do not affect exit code.
+ * Exit code 1 if any check reports blocking issues.
  *
  * Usage:
  *   node scripts/validate.js
@@ -85,6 +85,15 @@ function runIsolatedCheck(modulePath) {
     passed: child.status === 0 && result.passed !== false,
     errors: child.status === 0 ? (result.errors ?? 0) : Math.max(1, result.errors ?? 0),
   };
+}
+
+function formatResultLine(index, totalChecks, result) {
+  const idx = `[${index + 1}/${totalChecks}]`;
+  const dots = ".".repeat(Math.max(1, 30 - result.name.length));
+  const statusColor = result.passed ? c.green : c.red;
+  const statusText = result.passed ? "PASS" : "FAIL";
+  const detailStr = !result.passed && result.detail ? `  (${result.detail})` : "";
+  return `${idx} ${result.name}${dots} ${statusColor}${statusText}${c.reset}${detailStr}`;
 }
 
 const checks = [
@@ -229,18 +238,18 @@ for (let i = 0; i < checks.length; i++) {
 
 // Print summary lines
 for (let i = 0; i < results.length; i++) {
-  const result = results[i];
-  const idx = `[${i + 1}/${checks.length}]`;
-  const dots = ".".repeat(Math.max(1, 30 - result.name.length));
-  const statusColor = result.passed ? c.green : c.red;
-  const statusText = result.passed ? "PASS" : "FAIL";
-  const detailStr = result.detail ? `  (${result.detail})` : "";
-  console.log(`${idx} ${result.name}${dots} ${statusColor}${statusText}${c.reset}${detailStr}`);
+  console.log(formatResultLine(i, checks.length, results[i]));
 }
 
-// Print detailed messages for failed/warned checks
-const failedResults = results.filter((r) => r.messages && r.messages.length > 0);
+// Print detailed messages only for failed checks.
+const failedResults = results.filter((r) => !r.passed && r.messages && r.messages.length > 0);
 if (failedResults.length > 0) {
+  console.log(`\n${c.bold}Failed checks:${c.reset}`);
+  for (const result of failedResults) {
+    const detail = result.detail ? ` (${result.detail})` : "";
+    console.log(`  ${c.red}-${c.reset} ${result.name}${detail}`);
+  }
+
   for (const result of failedResults) {
     console.log(`\n${c.bold}── ${result.name} details ──${c.reset}`);
     for (const msg of result.messages) console.log(msg);
@@ -250,8 +259,8 @@ if (failedResults.length > 0) {
 console.log("");
 
 if (totalErrors > 0) {
-  console.log(`${c.red}${c.bold}RESULT: FAIL${c.reset} (${totalErrors} error(s))`);
+  console.log(`${c.red}${c.bold}RESULT: FAIL${c.reset}`);
   process.exit(1);
 } else {
-  console.log(`${c.green}${c.bold}RESULT: PASS${c.reset} (0 errors)`);
+  console.log(`${c.green}${c.bold}RESULT: PASS${c.reset}`);
 }

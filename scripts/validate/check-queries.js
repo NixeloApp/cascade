@@ -2,7 +2,7 @@
  * CHECK 4: Query issues
  * N+1 queries, unbounded .collect(), missing indexes
  *
- * @strictness MEDIUM - Reports only. Warns about high-severity issues but doesn't block CI.
+ * Enforced. Query issues are reported as plain errors.
  */
 
 import fs from "node:fs";
@@ -12,7 +12,6 @@ import { ROOT, relPath, walkDir } from "./utils.js";
 export function run() {
   const convexDir = path.join(ROOT, "convex");
 
-  const SEVERITY = { HIGH: "HIGH", MEDIUM: "MEDIUM", LOW: "LOW" };
   const EXCLUDED_FILES = [
     "boundedQueries.ts",
     "softDeleteHelpers.ts",
@@ -100,7 +99,6 @@ export function run() {
         if (!hasBound) {
           issues.push({
             type: "UNBOUNDED_COLLECT",
-            severity: SEVERITY.HIGH,
             line: lineNum,
             code: trimmed,
             message: "Unbounded .collect() - add .take(BOUNDED_LIST_LIMIT) or use .first()",
@@ -136,7 +134,6 @@ export function run() {
           ) {
             issues.push({
               type: "N_PLUS_1",
-              severity: SEVERITY.HIGH,
               line: lineNum,
               loopLine: loopStartLine,
               code: trimmedLine,
@@ -182,7 +179,6 @@ export function run() {
             if (!promiseAllPattern.test(widerContext)) {
               issues.push({
                 type: "SEQUENTIAL_AWAIT",
-                severity: SEVERITY.MEDIUM,
                 line: lineNum,
                 loopLine: loopStartLine,
                 code: line.trim(),
@@ -205,7 +201,6 @@ export function run() {
         if (!hasIndex && /\.filter\s*\(/.test(queryContext) && !hasIgnore) {
           issues.push({
             type: "MISSING_INDEX",
-            severity: SEVERITY.LOW,
             line: lineNum,
             code: line.trim(),
             message: "Query uses .filter() without .withIndex()",
@@ -220,7 +215,6 @@ export function run() {
         if (takeValue > 1000) {
           issues.push({
             type: "LARGE_TAKE",
-            severity: SEVERITY.MEDIUM,
             line: lineNum,
             code: line.trim(),
             message: `Large .take(${takeValue}) - consider pagination`,
@@ -242,35 +236,17 @@ export function run() {
     }
   }
 
-  const highCount = allIssues.filter((i) => i.severity === SEVERITY.HIGH).length;
-  const medCount = allIssues.filter((i) => i.severity === SEVERITY.MEDIUM).length;
-  const lowCount = allIssues.filter((i) => i.severity === SEVERITY.LOW).length;
-
   const messages = [];
-  if (highCount > 0 || medCount > 0 || lowCount > 0) {
+  if (allIssues.length > 0) {
     for (const issue of allIssues) {
-      messages.push(
-        `  [${issue.severity}] ${issue.file}:${issue.line} ${issue.type} — ${issue.message}`,
-      );
+      messages.push(`  ${issue.file}:${issue.line} ${issue.type} - ${issue.message}`);
     }
   }
 
-  const totalErrors = highCount + medCount + lowCount;
-  let detail;
-  if (totalErrors > 0) {
-    const parts = [];
-    if (highCount > 0) parts.push(`${highCount} high`);
-    if (medCount > 0) parts.push(`${medCount} medium`);
-    if (lowCount > 0) parts.push(`${lowCount} low`);
-    detail = parts.join(", ");
-  } else {
-    detail = "0 high severity";
-  }
-
   return {
-    passed: totalErrors === 0,
-    errors: totalErrors,
-    detail,
+    passed: allIssues.length === 0,
+    errors: allIssues.length,
+    detail: allIssues.length > 0 ? `${allIssues.length} query issue(s)` : null,
     messages,
   };
 }

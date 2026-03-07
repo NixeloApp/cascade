@@ -22,18 +22,14 @@
  * - "find" for queries (use "get" or "list")
  * - Non-descriptive names that don't indicate operation type
  *
- * @strictness MEDIUM - Reports warnings, does not block CI
+ * Enforced. Convex naming issues are reported as plain errors.
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
-// Configuration
-const CONFIG = {
-  // 'error' | 'warn' | 'off'
-  strictness: "warn",
-};
+const CHECK_ENABLED = true;
 
 // Valid operation prefixes
 const VALID_PREFIXES = {
@@ -235,7 +231,7 @@ const ALLOWED_GENERIC_NAMES = new Set([
 ]);
 
 export function run() {
-  if (CONFIG.strictness === "off") {
+  if (!CHECK_ENABLED) {
     return {
       passed: true,
       errors: 0,
@@ -246,14 +242,13 @@ export function run() {
 
   const CONVEX_DIR = path.join(ROOT, "convex");
 
-  let warningCount = 0;
-  const warnings = [];
+  let issueCount = 0;
+  const messages = [];
 
-  function reportWarning(filePath, line, name, message) {
+  function reportIssue(filePath, line, name, message) {
     const rel = relPath(filePath);
-    const prefix = CONFIG.strictness === "error" ? `${c.red}ERROR` : `${c.yellow}WARN`;
-    warnings.push(`  ${prefix}${c.reset} ${rel}:${line} - '${name}': ${message}`);
-    warningCount++;
+    messages.push(`  ${c.red}ERROR${c.reset} ${rel}:${line} - '${name}': ${message}`);
+    issueCount++;
   }
 
   /**
@@ -295,7 +290,7 @@ export function run() {
     // Check anti-patterns first
     for (const { pattern, message } of ANTI_PATTERNS) {
       if (pattern.test(name)) {
-        reportWarning(filePath, line, name, message);
+        reportIssue(filePath, line, name, message);
         return;
       }
     }
@@ -303,7 +298,7 @@ export function run() {
     // Extract the prefix (first word in camelCase)
     const prefixMatch = name.match(/^([a-z]+)/);
     if (!prefixMatch) {
-      reportWarning(filePath, line, name, "Function name should start with a lowercase verb");
+      reportIssue(filePath, line, name, "Function name should start with a lowercase verb");
       return;
     }
 
@@ -317,7 +312,7 @@ export function run() {
         return;
       }
 
-      reportWarning(
+      reportIssue(
         filePath,
         line,
         name,
@@ -370,10 +365,9 @@ export function run() {
   }
 
   return {
-    passed: CONFIG.strictness === "warn" ? true : warningCount === 0,
-    errors: CONFIG.strictness === "error" ? warningCount : 0,
-    warnings: CONFIG.strictness === "warn" ? warningCount : 0,
-    detail: warningCount > 0 ? `${warningCount} naming issue(s)` : null,
-    messages: warnings,
+    passed: issueCount === 0,
+    errors: issueCount,
+    detail: issueCount > 0 ? `${issueCount} naming issue(s)` : null,
+    messages,
   };
 }

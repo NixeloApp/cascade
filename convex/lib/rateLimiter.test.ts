@@ -14,7 +14,7 @@ vi.mock("../_generated/api", () => ({
 
 // Mock @convex-dev/rate-limiter since we can't reliably import it in unit tests without proper setup
 vi.mock("@convex-dev/rate-limiter", () => ({
-  MINUTE: 60 * 1000,
+  MINUTE: 60_000,
 }));
 
 // Import MINUTE after mocking

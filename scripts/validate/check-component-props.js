@@ -16,18 +16,14 @@
  * | lg   | gap-4          | 16px         |
  * | xl   | gap-6          | 24px         |
  *
- * @strictness INFO - Reports issues, does not block CI
+ * Enforced. Component prop issues are reported as plain errors.
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath } from "./utils.js";
 
-// Configuration
-const CONFIG = {
-  // 'error' | 'warn' | 'off'
-  strictness: "info",
-};
+const CHECK_ENABLED = true;
 
 // Layout component files to check for consistency
 const LAYOUT_COMPONENTS = [
@@ -203,8 +199,8 @@ function checkLayoutComponent(filePath) {
  * Main validation function
  */
 export function run() {
-  if (CONFIG.strictness === "off") {
-    return { passed: true, errors: 0, warnings: 0, detail: "Disabled", messages: [] };
+  if (!CHECK_ENABLED) {
+    return { passed: true, errors: 0, detail: "Disabled", messages: [] };
   }
 
   const allIssues = [];
@@ -227,19 +223,17 @@ export function run() {
   const missingCount = allIssues.filter((i) => i.type === "missing-size").length;
   const deprecatedCount = allIssues.filter((i) => i.type === "deprecated-prop").length;
 
-  const isError = CONFIG.strictness === "error" && allIssues.length > 0;
   const totalIssues = allIssues.length;
 
   // Format messages
   const messages = allIssues.map((i) => {
     const location = i.component ? `${i.file} (${i.component})` : i.file;
-    return `  ${c.yellow}INFO${c.reset} ${location} - ${i.message}`;
+    return `  ${c.red}ERROR${c.reset} ${location} - ${i.message}`;
   });
 
   return {
-    passed: true, // INFO level always passes
-    errors: isError ? totalIssues : 0,
-    warnings: isError ? 0 : totalIssues,
+    passed: totalIssues === 0,
+    errors: totalIssues,
     detail:
       totalIssues > 0
         ? `${totalIssues} prop issue(s) (${inconsistentCount} inconsistent, ${missingCount} missing, ${deprecatedCount} deprecated)`
@@ -252,5 +246,5 @@ export function run() {
 if (process.argv[1] === import.meta.url.replace("file://", "")) {
   const result = run();
   console.log(JSON.stringify(result, null, 2));
-  process.exit(result.passed ? 0 : 1);
+  process.exit(result.errors === 0 ? 0 : 1);
 }

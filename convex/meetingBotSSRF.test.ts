@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import { HOUR } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { createProjectInOrganization, createTestContext } from "./testUtils";
@@ -23,7 +24,7 @@ describe("MeetingBot SSRF Security", () => {
         meetingUrl: privateIpUrl,
         title: "SSRF Attempt",
         meetingPlatform: "other",
-        scheduledStartTime: Date.now() + 3600000,
+        scheduledStartTime: Date.now() + HOUR,
         projectId,
       }),
     ).rejects.toThrow(/Private IP addresses are not allowed/);
@@ -69,7 +70,7 @@ describe("MeetingBot SSRF Security", () => {
         meetingUrl: publicUrl,
         title: "Valid Meeting",
         meetingPlatform: "other",
-        scheduledStartTime: Date.now() + 3600000,
+        scheduledStartTime: Date.now() + HOUR,
         projectId,
       }),
     ).resolves.not.toThrow();

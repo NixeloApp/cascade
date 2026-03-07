@@ -13,18 +13,14 @@
  * | Props interface  | {Component}Props     | ButtonProps, IssueCardProps  |
  * | Component file   | PascalCase.tsx       | Button.tsx, IssueCard.tsx    |
  *
- * @strictness INFO - Reports issues, does not block CI
+ * Enforced. Component naming issues are reported as plain errors.
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
-// Configuration
-const CONFIG = {
-  // 'error' | 'warn' | 'off'
-  strictness: "info",
-};
+const CHECK_ENABLED = true;
 
 // Directories to check
 // NOTE: src/routes excluded - TanStack Router uses lowercase file naming convention
@@ -212,8 +208,8 @@ function checkFile(filePath) {
  * Main validation function
  */
 export function run() {
-  if (CONFIG.strictness === "off") {
-    return { pass: true, errors: 0, warnings: 0, message: "Disabled" };
+  if (!CHECK_ENABLED) {
+    return { passed: true, errors: 0, detail: "Disabled", messages: [] };
   }
 
   const allIssues = [];
@@ -239,21 +235,18 @@ export function run() {
   const fileIssues = allIssues.filter((i) => i.type === "file");
   const mismatchIssues = allIssues.filter((i) => i.type === "mismatch");
 
-  const isError = CONFIG.strictness === "error" && allIssues.length > 0;
   const totalIssues = allIssues.length;
 
   return {
-    passed: true, // INFO level always passes
-    pass: !isError,
-    errors: isError ? totalIssues : 0,
-    warnings: isError ? 0 : totalIssues,
+    passed: totalIssues === 0,
+    errors: totalIssues,
     detail:
       totalIssues > 0
         ? `${totalIssues} naming issue(s) (${fileIssues.length} file, ${mismatchIssues.length} mismatch)`
         : undefined,
     messages:
       allIssues.length > 0
-        ? allIssues.map((i) => `  ${c.yellow}WARN${c.reset} ${i.file} - ${i.message}`)
+        ? allIssues.map((i) => `  ${c.red}ERROR${c.reset} ${i.file} - ${i.message}`)
         : [],
   };
 }
@@ -262,5 +255,5 @@ export function run() {
 if (process.argv[1] === import.meta.url.replace("file://", "")) {
   const result = run();
   console.log(JSON.stringify(result, null, 2));
-  process.exit(result.pass ? 0 : 1);
+  process.exit(result.errors === 0 ? 0 : 1);
 }

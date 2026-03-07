@@ -283,7 +283,7 @@ describe("useKeyboardShortcutsWithSequences", () => {
 
       // Press 'g' then wait too long before 'h'
       dispatchKeyEvent("g");
-      vi.advanceTimersByTime(1500); // More than SEQUENCE_TIMEOUT (1000ms)
+      vi.advanceTimersByTime(1500); // More than SEQUENCE_TIMEOUT (SECOND)
       dispatchKeyEvent("h");
 
       expect(handler).not.toHaveBeenCalled();

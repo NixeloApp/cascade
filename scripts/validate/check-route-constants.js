@@ -15,18 +15,14 @@
  * - API routes (/api/*)
  * - Anchor links (#*)
  *
- * @strictness MEDIUM - Reports warnings, does not block CI
+ * Enforced. Route constant issues are reported as plain errors.
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
-// Configuration
-const CONFIG = {
-  // 'error' | 'warn' | 'off'
-  strictness: "warn",
-};
+const CHECK_ENABLED = true;
 
 // Known route patterns that should use ROUTES constants
 const ROUTE_PATTERNS = [
@@ -83,7 +79,7 @@ const ALLOWED_PATTERNS = [
 ];
 
 export function run() {
-  if (CONFIG.strictness === "off") {
+  if (!CHECK_ENABLED) {
     return {
       passed: true,
       errors: 0,
@@ -94,14 +90,13 @@ export function run() {
 
   const SRC_DIR = path.join(ROOT, "src");
 
-  let warningCount = 0;
-  const warnings = [];
+  let issueCount = 0;
+  const messages = [];
 
-  function reportWarning(filePath, line, _match, message) {
+  function reportIssue(filePath, line, _match, message) {
     const rel = relPath(filePath);
-    const prefix = CONFIG.strictness === "error" ? `${c.red}ERROR` : `${c.yellow}WARN`;
-    warnings.push(`  ${prefix}${c.reset} ${rel}:${line} - ${message}`);
-    warningCount++;
+    messages.push(`  ${c.red}ERROR${c.reset} ${rel}:${line} - ${message}`);
+    issueCount++;
   }
 
   /**
@@ -128,7 +123,7 @@ export function run() {
           // Extract the matched route for the message
           const match = line.match(pattern);
           const routeStr = match ? match[0] : "route";
-          reportWarning(
+          reportIssue(
             filePath,
             i + 1,
             routeStr,
@@ -148,10 +143,9 @@ export function run() {
   }
 
   return {
-    passed: CONFIG.strictness === "warn" ? true : warningCount === 0,
-    errors: CONFIG.strictness === "error" ? warningCount : 0,
-    warnings: CONFIG.strictness === "warn" ? warningCount : 0,
-    detail: warningCount > 0 ? `${warningCount} hardcoded route(s)` : null,
-    messages: warnings,
+    passed: issueCount === 0,
+    errors: issueCount,
+    detail: issueCount > 0 ? `${issueCount} hardcoded route(s)` : null,
+    messages,
   };
 }

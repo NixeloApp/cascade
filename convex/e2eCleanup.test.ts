@@ -1,7 +1,7 @@
 import { convexTest } from "convex-test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { internal } from "./_generated/api";
-import { HOUR } from "./lib/timeUtils";
+import { HOUR, MINUTE } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 
@@ -126,7 +126,7 @@ describe("E2E Cleanup", () => {
         return await ctx.db.insert("users", {
           email: "recent-test@inbox.mailtrap.io",
           isTestUser: true,
-          testUserCreatedAt: now - 30 * 60 * 1000, // 30 mins ago
+          testUserCreatedAt: now - 30 * MINUTE, // 30 mins ago
         });
       });
 

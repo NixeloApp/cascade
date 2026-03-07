@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import { SECOND } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { createProjectInOrganization, createTestContext } from "./testUtils";
@@ -46,7 +47,7 @@ describe("MeetingBot List", () => {
         title: "Public Recording B",
         meetingUrl: "https://zoom.us/j/publicB",
         meetingPlatform: "zoom",
-        scheduledStartTime: Date.now() - 100000,
+        scheduledStartTime: Date.now() - 100 * SECOND,
         projectId,
         isPublic: true,
       },
@@ -59,7 +60,7 @@ describe("MeetingBot List", () => {
         title: `Private Recording ${i}`,
         meetingUrl: `https://zoom.us/j/priv${i}`,
         meetingPlatform: "zoom",
-        scheduledStartTime: Date.now() + i * 1000, // Newer
+        scheduledStartTime: Date.now() + i * SECOND, // Newer
         projectId,
         isPublic: false, // Private
       });

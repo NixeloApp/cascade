@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import { SECOND } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { createProjectInOrganization, createTestContext } from "./testUtils";
@@ -10,7 +11,7 @@ describe("MeetingBot", () => {
     const t = convexTest(schema, modules);
     const { asUser } = await createTestContext(t);
 
-    const futureTime = Date.now() + 100000;
+    const futureTime = Date.now() + 100 * SECOND;
     const meetingUrl = "https://zoom.us/j/123";
     const title = "Test Meeting";
     const meetingPlatform = "zoom";

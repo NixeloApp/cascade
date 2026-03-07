@@ -6,18 +6,14 @@
  * - Avoid console.log/console.error in catch blocks (use showError)
  * - Mutations should use try/catch with showError
  *
- * @strictness MEDIUM - Reports warnings, does not block CI
+ * Enforced. Async error-handling issues are reported as plain errors.
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
-// Configuration
-const CONFIG = {
-  // 'error' | 'warn' | 'off'
-  strictness: "warn",
-};
+const CHECK_ENABLED = true;
 
 // Files/directories to skip
 const SKIP_PATTERNS = [
@@ -59,8 +55,15 @@ const ALLOWED_TOAST_ERROR_FILES = new Set([
   "src/components/Auth/ResetPasswordForm.tsx", // Static auth error messages
 ]);
 
+const ALLOWED_CONSOLE_CATCH_FILES = new Set([
+  "src/components/LazyPostHog.tsx",
+  "src/components/Onboarding/WelcomeTour.tsx",
+  "src/lib/offline.ts",
+  "src/routes/__root.tsx",
+]);
+
 export function run() {
-  if (CONFIG.strictness === "off") {
+  if (!CHECK_ENABLED) {
     return {
       passed: true,
       errors: 0,
@@ -71,14 +74,13 @@ export function run() {
 
   const SRC_DIR = path.join(ROOT, "src");
 
-  let warningCount = 0;
-  const warnings = [];
+  let issueCount = 0;
+  const messages = [];
 
-  function reportWarning(filePath, line, message) {
+  function reportIssue(filePath, line, message) {
     const rel = relPath(filePath);
-    const prefix = CONFIG.strictness === "error" ? `${c.red}ERROR` : `${c.yellow}WARN`;
-    warnings.push(`  ${prefix}${c.reset} ${rel}:${line} - ${message}`);
-    warningCount++;
+    messages.push(`  ${c.red}ERROR${c.reset} ${rel}:${line} - ${message}`);
+    issueCount++;
   }
 
   /**
@@ -92,6 +94,7 @@ export function run() {
 
     // Skip allowed files
     if (ALLOWED_TOAST_ERROR_FILES.has(rel)) return;
+    if (ALLOWED_CONSOLE_CATCH_FILES.has(rel)) return;
 
     const content = fs.readFileSync(filePath, "utf-8");
     const lines = content.split("\n");
@@ -112,7 +115,7 @@ export function run() {
         const hasShowError = context.includes("showError");
 
         if (pattern.test(context) && line.includes("catch") && !hasShowError) {
-          reportWarning(filePath, i + 1, message);
+          reportIssue(filePath, i + 1, message);
           break;
         }
       }
@@ -126,7 +129,7 @@ export function run() {
         const hasShowError = catchBlock.includes("showError");
 
         if (!hasShowError) {
-          reportWarning(
+          reportIssue(
             filePath,
             i + 2,
             "Use showError() instead of console.log/error in catch blocks",
@@ -139,11 +142,7 @@ export function run() {
         // Check if this is inside a catch block by looking at recent lines
         const recentLines = lines.slice(Math.max(0, i - 5), i).join("\n");
         if (recentLines.includes("catch")) {
-          reportWarning(
-            filePath,
-            i + 1,
-            "Use showError() instead of toast.error() in catch blocks",
-          );
+          reportIssue(filePath, i + 1, "Use showError() instead of toast.error() in catch blocks");
         }
       }
     }
@@ -157,10 +156,9 @@ export function run() {
   }
 
   return {
-    passed: CONFIG.strictness === "warn" ? true : warningCount === 0,
-    errors: CONFIG.strictness === "error" ? warningCount : 0,
-    warnings: CONFIG.strictness === "warn" ? warningCount : 0,
-    detail: warningCount > 0 ? `${warningCount} async pattern issue(s)` : null,
-    messages: warnings,
+    passed: issueCount === 0,
+    errors: issueCount,
+    detail: issueCount > 0 ? `${issueCount} async pattern issue(s)` : null,
+    messages,
   };
 }

@@ -13,18 +13,14 @@
  * - Test files (*.test.tsx)
  * - Index files (index.tsx)
  *
- * @strictness INFO - Reports issues, does not block CI
+ * Enforced. Duplicate component names are reported as plain errors.
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
-// Configuration
-const CONFIG = {
-  // 'error' | 'warn' | 'off'
-  strictness: "info",
-};
+const CHECK_ENABLED = true;
 
 // Directories to check
 const COMPONENT_DIRS = ["src/components"];
@@ -77,8 +73,8 @@ function isAllowedDuplicate(path1, path2) {
  * Main validation function
  */
 export function run() {
-  if (CONFIG.strictness === "off") {
-    return { passed: true, errors: 0, warnings: 0, detail: "Disabled", messages: [] };
+  if (!CHECK_ENABLED) {
+    return { passed: true, errors: 0, detail: "Disabled", messages: [] };
   }
 
   const componentsByName = new Map();
@@ -125,22 +121,20 @@ export function run() {
     }
   }
 
-  const isError = CONFIG.strictness === "error" && duplicates.length > 0;
   const totalIssues = duplicates.length;
 
   // Format messages
   const messages = [];
   for (const dup of duplicates) {
-    messages.push(`  ${c.yellow}WARN${c.reset} "${dup.name}" found in multiple locations:`);
+    messages.push(`  ${c.red}ERROR${c.reset} "${dup.name}" found in multiple locations:`);
     for (const p of dup.paths) {
       messages.push(`    ${c.dim}- ${p}${c.reset}`);
     }
   }
 
   return {
-    passed: true, // INFO level always passes
-    errors: isError ? totalIssues : 0,
-    warnings: isError ? 0 : totalIssues,
+    passed: totalIssues === 0,
+    errors: totalIssues,
     detail: totalIssues > 0 ? `${totalIssues} duplicate name(s)` : undefined,
     messages,
   };
@@ -150,5 +144,5 @@ export function run() {
 if (process.argv[1] === import.meta.url.replace("file://", "")) {
   const result = run();
   console.log(JSON.stringify(result, null, 2));
-  process.exit(result.passed ? 0 : 1);
+  process.exit(result.errors === 0 ? 0 : 1);
 }
