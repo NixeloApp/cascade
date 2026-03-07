@@ -100,7 +100,8 @@ describe("listRoadmapIssues optimization", () => {
     // Should return exactly 5 issues
     expect(issues.length).toBe(5);
     for (const issue of issues) {
-      expect(issue.dueDate).toBeDefined();
+      expect(issue.dueDate).not.toBeUndefined();
+      expect(typeof issue.dueDate).toBe("number");
       expect(issue.type).not.toBe("subtask");
     }
   });

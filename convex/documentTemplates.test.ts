@@ -32,7 +32,8 @@ describe("Document Templates", () => {
         isPublic: false,
       });
 
-      expect(templateId).toBeDefined();
+      expect(templateId).not.toBeUndefined();
+      expect(typeof templateId).toBe("string");
 
       const template = await asUser.query(api.documentTemplates.get, { id: templateId });
       expect(template?.name).toBe("Test Template");
@@ -400,7 +401,8 @@ describe("Document Templates", () => {
         isPublic: false,
       });
 
-      expect(result.documentId).toBeDefined();
+      expect(result.documentId).not.toBeUndefined();
+      expect(typeof result.documentId).toBe("string");
       expect(result.templateContent).toEqual(sampleContent);
     });
 
@@ -426,7 +428,8 @@ describe("Document Templates", () => {
         isPublic: false,
       });
 
-      expect(result.documentId).toBeDefined();
+      expect(result.documentId).not.toBeUndefined();
+      expect(typeof result.documentId).toBe("string");
     });
 
     it("should reject creating document from private template of another user", async () => {

@@ -65,7 +65,8 @@ describe("queryHelpers", () => {
       });
 
       expect(page1.page).toHaveLength(2);
-      expect(page1.continueCursor).toBeTruthy();
+      expect(page1.continueCursor).not.toBeNull();
+      expect(typeof page1.continueCursor).toBe("string");
 
       // Fetch second page (2 items)
       const page2 = await t.run(async (ctx) => {
@@ -77,7 +78,8 @@ describe("queryHelpers", () => {
       });
 
       expect(page2.page).toHaveLength(2);
-      expect(page2.continueCursor).toBeTruthy();
+      expect(page2.continueCursor).not.toBeNull();
+      expect(typeof page2.continueCursor).toBe("string");
       // Ensure no overlap
       const ids1 = page1.page.map((i) => i._id);
       const ids2 = page2.page.map((i) => i._id);

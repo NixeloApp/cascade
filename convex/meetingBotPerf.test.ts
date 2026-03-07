@@ -105,24 +105,28 @@ describe("MeetingBot Performance", () => {
     expect(recordings).toHaveLength(4);
 
     const scheduled = recordings.find((r) => r.status === "scheduled");
-    expect(scheduled).toBeDefined();
+    expect(scheduled).not.toBeUndefined();
+    expect(scheduled?.title).toBe("Scheduled Meeting");
     expect(scheduled?.hasTranscript).toBe(false);
     expect(scheduled?.hasSummary).toBe(false);
 
     const summarizing = recordings.find((r) => r.status === "summarizing");
-    expect(summarizing).toBeDefined();
+    expect(summarizing).not.toBeUndefined();
+    expect(summarizing?.title).toBe("Summarizing Meeting");
     // In current implementation (before fix), this should be true because we inserted transcript
     expect(summarizing?.hasTranscript).toBe(true);
     expect(summarizing?.hasSummary).toBe(false);
 
     const completed = recordings.find((r) => r.status === "completed");
-    expect(completed).toBeDefined();
+    expect(completed).not.toBeUndefined();
+    expect(completed?.title).toBe("Completed Meeting");
     // In current implementation (before fix), this should be true because we inserted transcript and summary
     expect(completed?.hasTranscript).toBe(true);
     expect(completed?.hasSummary).toBe(true);
 
     const failed = recordings.find((r) => r.status === "failed");
-    expect(failed).toBeDefined();
+    expect(failed).not.toBeUndefined();
+    expect(failed?.title).toBe("Failed Meeting");
     expect(failed?.hasTranscript).toBe(false);
     expect(failed?.hasSummary).toBe(false);
 
@@ -153,7 +157,8 @@ describe("MeetingBot Performance", () => {
     // Call listRecordings again
     const recordings2 = await asUser.query(api.meetingBot.listRecordings, {});
     const failedWithTranscript = recordings2.find((r) => r.title === "Failed during Summary");
-    expect(failedWithTranscript).toBeDefined();
+    expect(failedWithTranscript).not.toBeUndefined();
+    expect(failedWithTranscript?.status).toBe("failed");
     // New behavior: false because status is 'failed', avoiding DB lookup
     expect(failedWithTranscript?.hasTranscript).toBe(false);
   });

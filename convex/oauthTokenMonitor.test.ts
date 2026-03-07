@@ -224,8 +224,9 @@ describe("OAuth Token Monitor", () => {
 
       const stats = await t.query(internal.oauthTokenMonitor.getTokenHealthStats, {});
 
-      expect(stats.lastCheck).toBeTruthy();
-      expect(stats.stats).toBeTruthy();
+      expect(stats.lastCheck).not.toBeNull();
+      expect(typeof stats.lastCheck).toBe("string");
+      expect(stats.stats).not.toBeNull();
       expect(stats.stats?.totalConnections).toBe(10);
       expect(stats.stats?.healthyCount).toBe(8);
       expect(stats.stats?.healthPercentage).toBe(80);

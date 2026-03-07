@@ -101,7 +101,8 @@ describe("Membership Performance & Correctness", () => {
       paginationOpts: { numItems: 10, cursor: null },
     });
     const myTeam = teams.page.find((team) => team._id === teamId);
-    expect(myTeam).toBeDefined();
+    expect(myTeam).not.toBeUndefined();
+    expect(typeof myTeam?._id).toBe("string");
 
     // NOTE: This assertion documents the CURRENT behavior (bug).
     // After fixing, this should be 2.

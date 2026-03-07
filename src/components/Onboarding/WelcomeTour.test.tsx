@@ -84,6 +84,7 @@ describe("WelcomeTour", () => {
     // The component should have called useMutation (via our mock)
     // This verifies the component is wired up to Convex correctly
     // The actual mutation call happens when tour completes/skips
-    expect(mockUpdateOnboarding).toBeDefined();
+    expect(mockUpdateOnboarding).not.toBeUndefined();
+    expect(typeof mockUpdateOnboarding).toBe("function");
   });
 });

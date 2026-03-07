@@ -28,8 +28,8 @@ describe("Awareness Utilities", () => {
 
     it("handles empty string", () => {
       const color = getUserColor("");
-      expect(color.main).toBeDefined();
-      expect(color.light).toBeDefined();
+      expect(color.main).toMatch(/^#[0-9A-F]{6}$/i);
+      expect(color.light).toMatch(/^rgba\(/);
     });
 
     it("handles special characters", () => {
@@ -86,8 +86,12 @@ describe("Awareness Utilities", () => {
 
       const result = parseAwarenessData(data);
 
-      expect(result?.cursor).toBeDefined();
+      expect(result).not.toBeNull();
+      expect(result?.cursor).not.toBeUndefined();
+      expect(result?.cursor?.anchor.path).toEqual([0]);
+      expect(result?.cursor?.anchor.offset).toBe(0);
       expect(result?.user?.name).toBe("Alice");
+      expect(result?.user?.color).toBe("#2196F3");
     });
 
     it("returns null for invalid JSON", () => {

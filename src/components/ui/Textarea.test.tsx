@@ -19,7 +19,9 @@ describe("Textarea", () => {
     const errorMessage = screen.getByText("Invalid input");
 
     // The error message should have an ID
-    expect(errorMessage.id).toBeTruthy();
+    expect(errorMessage.id).not.toBe("");
+    expect(typeof errorMessage.id).toBe("string");
+    expect(errorMessage.id.length).toBeGreaterThan(0);
 
     // The textarea should point to that ID
     expect(textarea).toHaveAttribute("aria-describedby", expect.stringContaining(errorMessage.id));

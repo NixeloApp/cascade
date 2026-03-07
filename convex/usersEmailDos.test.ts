@@ -27,7 +27,9 @@ describe("Email Claim Vulnerability Fix", () => {
     let attacker = await t.run(async (ctx) => ctx.db.get(attackerId));
     expect(attacker?.email).toBe("attacker@example.com"); // Still old email
     expect(attacker?.pendingEmail).toBe(victimEmail);
-    expect(attacker?.pendingEmailVerificationToken).toBeDefined();
+    expect(attacker?.pendingEmailVerificationToken).not.toBeUndefined();
+    expect(typeof attacker?.pendingEmailVerificationToken).toBe("string");
+    expect((attacker?.pendingEmailVerificationToken ?? "").length).toBeGreaterThan(0);
 
     // 3. Verify Victim can still register (simulated by creating a user)
     // The previous vulnerability was that Attacker could block this step.
@@ -70,7 +72,9 @@ describe("Email Claim Vulnerability Fix", () => {
     // Get token
     const user = await t.run(async (ctx) => ctx.db.get(userId));
     const token = user?.pendingEmailVerificationToken;
-    expect(token).toBeDefined();
+    expect(token).not.toBeUndefined();
+    expect(typeof token).toBe("string");
+    expect(token).not.toBe("");
 
     // Verify
     if (!token) throw new Error("Expected token to be defined");
@@ -82,6 +86,8 @@ describe("Email Claim Vulnerability Fix", () => {
     const updatedUser = await t.run(async (ctx) => ctx.db.get(userId));
     expect(updatedUser?.email).toBe(newEmail);
     expect(updatedUser?.pendingEmail).toBeUndefined();
-    expect(updatedUser?.emailVerificationTime).toBeDefined();
+    expect(updatedUser?.emailVerificationTime).not.toBeUndefined();
+    expect(typeof updatedUser?.emailVerificationTime).toBe("number");
+    expect(updatedUser?.emailVerificationTime).toBeGreaterThan(0);
   });
 });

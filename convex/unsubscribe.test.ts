@@ -17,9 +17,10 @@ describe("Unsubscribe", () => {
 
       const token = await asUser.mutation(api.unsubscribe.generateToken, {});
 
-      expect(token).toBeDefined();
+      expect(token).not.toBeUndefined();
       expect(typeof token).toBe("string");
       expect(token.length).toBe(HEX_TOKEN_LENGTH); // 32 bytes = 64 hex characters
+      expect(token).toMatch(/^[0-9a-f]{64}$/); // Valid hex string
     });
 
     it("should store token in database", async () => {
@@ -156,8 +157,9 @@ describe("Unsubscribe", () => {
           .first(),
       );
 
-      expect(tokenRecord?.usedAt).toBeDefined();
+      expect(tokenRecord?.usedAt).not.toBeUndefined();
       expect(typeof tokenRecord?.usedAt).toBe("number");
+      expect(tokenRecord?.usedAt).toBeGreaterThan(0);
     });
 
     it("should disable email notifications for user", async () => {
@@ -255,9 +257,10 @@ describe("Unsubscribe", () => {
 
       const token = await t.mutation(internal.unsubscribe.generateTokenInternal, { userId });
 
-      expect(token).toBeDefined();
+      expect(token).not.toBeUndefined();
       expect(typeof token).toBe("string");
-      expect(token.length).toBe(64);
+      expect(token.length).toBe(HEX_TOKEN_LENGTH);
+      expect(token).toMatch(/^[0-9a-f]{64}$/); // Valid hex string
     });
 
     it("should store token correctly", async () => {

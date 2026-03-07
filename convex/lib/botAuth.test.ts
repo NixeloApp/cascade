@@ -1,6 +1,5 @@
 import { ConvexError } from "convex/values";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { QueryCtx } from "../_generated/server";
 import { requireBotApiKey } from "./botAuth";
 
 describe("botAuth", () => {
@@ -13,8 +12,6 @@ describe("botAuth", () => {
   afterEach(() => {
     process.env = originalEnv;
   });
-
-  const mockCtx = {} as QueryCtx;
 
   it("should throw UNAUTHENTICATED if apiKey is missing", () => {
     expect.assertions(2);

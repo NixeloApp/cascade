@@ -71,21 +71,17 @@ describe("Hour Compliance", () => {
 
     const record = await t.run(async (ctx) => await ctx.db.get(recordId));
 
-    expect(record).toBeDefined();
-    // biome-ignore lint/style/noNonNullAssertion: asserted above
-    expect(record!.status).toBe("under_hours");
-    // biome-ignore lint/style/noNonNullAssertion: asserted above
-    expect(record!.totalHoursWorked).toBe(30);
-    // biome-ignore lint/style/noNonNullAssertion: asserted above
-    expect(record!.hoursDeficit).toBe(10);
+    expect(record).not.toBeUndefined();
+    expect(record?.status).toBe("under_hours");
+    expect(record?.totalHoursWorked).toBe(30);
+    expect(record?.hoursDeficit).toBe(10);
 
     // Check notification
     const notifications = await t.run(async (ctx) => await ctx.db.query("notifications").collect());
     expect(notifications.length).toBeGreaterThan(0);
     const notification = notifications.find((n) => n.type === "hour_compliance");
-    expect(notification).toBeDefined();
-    // biome-ignore lint/style/noNonNullAssertion: asserted above
-    expect(notification!.title).toContain("Hour Requirement Not Met");
+    expect(notification).not.toBeUndefined();
+    expect(notification?.title).toContain("Hour Requirement Not Met");
   });
 
   test("detects compliant status", async () => {
@@ -145,11 +141,9 @@ describe("Hour Compliance", () => {
 
     const record = await t.run(async (ctx) => await ctx.db.get(recordId));
 
-    expect(record).toBeDefined();
-    // biome-ignore lint/style/noNonNullAssertion: asserted above
-    expect(record!.status).toBe("compliant");
-    // biome-ignore lint/style/noNonNullAssertion: asserted above
-    expect(record!.totalHoursWorked).toBe(40);
+    expect(record).not.toBeUndefined();
+    expect(record?.status).toBe("compliant");
+    expect(record?.totalHoursWorked).toBe(40);
   });
 
   test("detects over hours", async () => {
@@ -209,13 +203,10 @@ describe("Hour Compliance", () => {
 
     const record = await t.run(async (ctx) => await ctx.db.get(recordId));
 
-    expect(record).toBeDefined();
-    // biome-ignore lint/style/noNonNullAssertion: asserted above
-    expect(record!.status).toBe("over_hours");
-    // biome-ignore lint/style/noNonNullAssertion: asserted above
-    expect(record!.totalHoursWorked).toBe(50);
-    // biome-ignore lint/style/noNonNullAssertion: asserted above
-    expect(record!.hoursExcess).toBe(10);
+    expect(record).not.toBeUndefined();
+    expect(record?.status).toBe("over_hours");
+    expect(record?.totalHoursWorked).toBe(50);
+    expect(record?.hoursExcess).toBe(10);
   });
 
   test("enforces admin permissions", async () => {

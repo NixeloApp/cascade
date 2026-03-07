@@ -45,12 +45,13 @@ describe("Sprint Workflow Integration", () => {
         goal: "Complete initial feature set",
       });
 
-      expect(sprintId).toBeDefined();
+      expect(sprintId).not.toBeUndefined();
+      expect(typeof sprintId).toBe("string");
 
       // Verify sprint was created with correct status
       const sprints = await asUser.query(api.sprints.listByProject, { projectId });
       const sprint = sprints.find((s) => s._id === sprintId);
-      expect(sprint).toBeDefined();
+      expect(sprint).not.toBeUndefined();
       expect(sprint?.status).toBe("future");
       expect(sprint?.name).toBe("Sprint 1");
       expect(sprint?.goal).toBe("Complete initial feature set");

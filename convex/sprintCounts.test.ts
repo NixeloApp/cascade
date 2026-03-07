@@ -58,17 +58,19 @@ describe("Sprint Issue Counts", () => {
 
     const counts = await asUser.query(api.issues.getIssueCounts, { projectId, sprintId });
 
-    expect(counts).toBeDefined();
+    expect(counts).not.toBeUndefined();
+    if (!counts) throw new Error("Expected counts to be defined");
+    expect(typeof counts).toBe("object");
 
     // Check Todo
-    expect(counts?.todo.total).toBe(3);
-    expect(counts?.todo.visible).toBe(3);
-    expect(counts?.todo.hidden).toBe(0);
+    expect(counts.todo.total).toBe(3);
+    expect(counts.todo.visible).toBe(3);
+    expect(counts.todo.hidden).toBe(0);
 
     // Check Done
-    expect(counts?.done.total).toBe(2);
-    expect(counts?.done.visible).toBe(2);
-    expect(counts?.done.hidden).toBe(0);
+    expect(counts.done.total).toBe(2);
+    expect(counts.done.visible).toBe(2);
+    expect(counts.done.hidden).toBe(0);
 
     await t.finishInProgressScheduledFunctions();
   });

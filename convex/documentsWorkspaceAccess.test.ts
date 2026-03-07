@@ -43,7 +43,8 @@ describe("Documents Workspace Access", () => {
       organizationId,
       workspaceId,
     });
-    expect(adminDocId).toBeDefined();
+    expect(adminDocId).not.toBeUndefined();
+    expect(typeof adminDocId).toBe("string");
 
     // 5. User B (Org Member, NOT Workspace Member) attempts to create a document in the workspace
     // This SHOULD fail, but currently succeeds due to the vulnerability

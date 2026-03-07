@@ -20,7 +20,8 @@ describe("Email Change Verification", () => {
 
     const user = await t.run(async (ctx) => ctx.db.get(userId));
     const token = user?.pendingEmailVerificationToken;
-    expect(token).toBeDefined();
+    expect(token).not.toBeUndefined();
+    expect(typeof token).toBe("string");
 
     if (!token) throw new Error("Expected token to be defined");
 
@@ -45,7 +46,8 @@ describe("Email Change Verification", () => {
 
     const user = await t.run(async (ctx) => ctx.db.get(userId));
     const token = user?.pendingEmailVerificationToken;
-    expect(token).toBeDefined();
+    expect(token).not.toBeUndefined();
+    expect(typeof token).toBe("string");
 
     await expect(
       asUser.mutation(api.users.verifyEmailChange, {

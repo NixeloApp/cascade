@@ -41,7 +41,7 @@ describe("Project Templates", () => {
       const templates = await t.query(api.projectTemplates.list, {});
       const softwareTpl = templates.find((tpl) => tpl.name === "Software Development");
 
-      expect(softwareTpl).toBeDefined();
+      expect(softwareTpl).not.toBeUndefined();
       expect(softwareTpl?.category).toBe("software");
       expect(softwareTpl?.boardType).toBe("scrum");
       expect(softwareTpl?.workflowStates.length).toBeGreaterThan(0);
@@ -56,7 +56,7 @@ describe("Project Templates", () => {
       const templates = await t.query(api.projectTemplates.list, {});
       const kanbanTpl = templates.find((tpl) => tpl.name === "Simple Kanban");
 
-      expect(kanbanTpl).toBeDefined();
+      expect(kanbanTpl).not.toBeUndefined();
       expect(kanbanTpl?.category).toBe("general");
       expect(kanbanTpl?.boardType).toBe("kanban");
     });
@@ -69,7 +69,7 @@ describe("Project Templates", () => {
       const templates = await t.query(api.projectTemplates.list, {});
       const marketingTpl = templates.find((tpl) => tpl.name === "Marketing Campaign");
 
-      expect(marketingTpl).toBeDefined();
+      expect(marketingTpl).not.toBeUndefined();
       expect(marketingTpl?.category).toBe("marketing");
     });
 
@@ -81,7 +81,7 @@ describe("Project Templates", () => {
       const templates = await t.query(api.projectTemplates.list, {});
       const designTpl = templates.find((tpl) => tpl.name === "Design Project");
 
-      expect(designTpl).toBeDefined();
+      expect(designTpl).not.toBeUndefined();
       expect(designTpl?.category).toBe("design");
     });
   });
@@ -161,9 +161,11 @@ describe("Project Templates", () => {
         expect(template.workflowStates.length).toBeGreaterThan(0);
         // Each workflow state should have required fields
         for (const state of template.workflowStates) {
-          expect(state.id).toBeDefined();
-          expect(state.name).toBeDefined();
-          expect(state.category).toBeDefined();
+          expect(typeof state.id).toBe("string");
+          expect(state.id.length).toBeGreaterThan(0);
+          expect(typeof state.name).toBe("string");
+          expect(state.name.length).toBeGreaterThan(0);
+          expect(typeof state.category).toBe("string");
           expect(["todo", "inprogress", "done"]).toContain(state.category);
         }
       }
@@ -180,7 +182,8 @@ describe("Project Templates", () => {
         expect(template.defaultLabels.length).toBeGreaterThan(0);
         // Each label should have name and color
         for (const label of template.defaultLabels) {
-          expect(label.name).toBeDefined();
+          expect(typeof label.name).toBe("string");
+          expect(label.name.length).toBeGreaterThan(0);
           expect(label.color).toMatch(/^#[0-9A-Fa-f]{6}$/);
         }
       }
@@ -204,7 +207,8 @@ describe("Project Templates", () => {
         workspaceId,
       });
 
-      expect(projectId).toBeDefined();
+      expect(typeof projectId).toBe("string");
+      expect(projectId.length).toBeGreaterThan(0);
 
       // Verify project was created
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
@@ -260,7 +264,8 @@ describe("Project Templates", () => {
       expect(labels.length).toBe(template.defaultLabels.length);
       for (const templateLabel of template.defaultLabels) {
         const match = labels.find((l) => l.name === templateLabel.name);
-        expect(match).toBeDefined();
+        expect(match).not.toBeUndefined();
+        expect(match?.name).toBe(templateLabel.name);
         expect(match?.color).toBe(templateLabel.color);
       }
     });

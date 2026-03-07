@@ -59,7 +59,8 @@ test("getCommentReactions fetches reactions for multiple comments correctly", as
   });
 
   // 6. Verify results
-  expect(reactions).toBeDefined();
+  expect(reactions).not.toBeUndefined();
+  expect(typeof reactions).toBe("object");
 
   // Check Comment 0
   expect(reactions[commentIds[0]]).toHaveLength(1);

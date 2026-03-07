@@ -21,7 +21,8 @@ describe("Booking Pages", () => {
         location: "zoom",
       });
 
-      expect(pageId).toBeDefined();
+      expect(pageId).not.toBeUndefined();
+      expect(typeof pageId).toBe("string");
 
       const page = await t.run(async (ctx) => ctx.db.get(pageId));
       expect(page?.slug).toBe("my-meeting");

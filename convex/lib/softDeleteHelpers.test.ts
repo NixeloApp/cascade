@@ -253,7 +253,8 @@ describe("softDeleteHelpers", () => {
       const deletedIssue = await t.run(async (ctx) => ctx.db.get(issueId));
       expect(deletedIssue?.isDeleted).toBe(true);
       expect(deletedIssue?.deletedBy).toBe(adminId);
-      expect(deletedIssue?.deletedAt).toBeDefined();
+      expect(deletedIssue?.deletedAt).not.toBeUndefined();
+      expect(typeof deletedIssue?.deletedAt).toBe("number");
     });
 
     it("restoreFields should work with db.patch", async () => {

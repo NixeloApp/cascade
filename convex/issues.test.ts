@@ -29,7 +29,8 @@ describe("Issues", () => {
         priority: "medium",
       });
 
-      expect(issueId).toBeDefined();
+      expect(issueId).not.toBeUndefined();
+      expect(typeof issueId).toBe("string");
 
       // Verify issue was created
       const issue = await asUser.query(api.issues.getIssue, { id: issueId });
@@ -179,7 +180,7 @@ describe("Issues", () => {
       });
 
       const issue = await asUser.query(api.issues.getIssue, { id: issueId });
-      expect(issue).toBeDefined();
+      expect(issue).not.toBeNull();
       expect(issue?.title).toBe("Detailed Issue");
       expect(issue?.description).toBe("Detailed description");
       expect(issue?.type).toBe("story");
@@ -333,7 +334,7 @@ describe("Issues", () => {
       });
 
       const statusChange = activities.find((a) => a.field === "status");
-      expect(statusChange).toBeDefined();
+      expect(statusChange).not.toBeUndefined();
       expect(statusChange?.oldValue).toBe("todo");
       expect(statusChange?.newValue).toBe("inprogress");
       await t.finishInProgressScheduledFunctions();
@@ -436,7 +437,8 @@ describe("Issues", () => {
         content: "This is a test comment",
       });
 
-      expect(commentId).toBeDefined();
+      expect(commentId).not.toBeUndefined();
+      expect(typeof commentId).toBe("string");
 
       // Verify comment was added
       const comments = await t.run(async (ctx) => {

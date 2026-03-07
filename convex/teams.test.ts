@@ -18,7 +18,8 @@ describe("Teams", () => {
         isPrivate: false,
       });
 
-      expect(teamId).toBeDefined();
+      expect(teamId).not.toBeUndefined();
+      expect(typeof teamId).toBe("string");
       expect(slug).toBe("engineering");
 
       const team = await t.run(async (ctx) => ctx.db.get(teamId));
@@ -65,7 +66,8 @@ describe("Teams", () => {
 
       const deletedTeam = await t.run(async (ctx) => ctx.db.get(teamId));
       expect(deletedTeam?.isDeleted).toBe(true);
-      expect(deletedTeam?.deletedAt).toBeDefined();
+      expect(deletedTeam?.deletedAt).not.toBeUndefined();
+      expect(typeof deletedTeam?.deletedAt).toBe("number");
 
       // Restore
       const restoreResult = await asOwner.mutation(api.teams.restoreTeam, { teamId });

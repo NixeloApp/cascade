@@ -74,7 +74,9 @@ describe("Document Versions", () => {
         documentId: docId,
       });
 
-      expect(versions[0].createdByName).toBeDefined();
+      expect(versions[0].createdByName).not.toBeUndefined();
+      expect(typeof versions[0].createdByName).toBe("string");
+      expect(versions[0].createdByName.length).toBeGreaterThan(0);
     });
 
     it("should allow access to public document versions", async () => {
@@ -142,7 +144,9 @@ describe("Document Versions", () => {
 
       expect(version.title).toBe("Specific Version");
       expect(version.snapshot).toEqual(testSnapshot);
-      expect(version.createdByName).toBeDefined();
+      expect(version.createdByName).not.toBeUndefined();
+      expect(typeof version.createdByName).toBe("string");
+      expect(version.createdByName.length).toBeGreaterThan(0);
     });
 
     it("should deny access to version from different document", async () => {

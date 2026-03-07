@@ -19,7 +19,8 @@ describe("Availability", () => {
         timezone: "America/New_York",
       });
 
-      expect(slotId).toBeDefined();
+      expect(slotId).not.toBeUndefined();
+      expect(typeof slotId).toBe("string");
 
       const slot = await t.run(async (ctx) => ctx.db.get(slotId));
       expect(slot?.userId).toBe(userId);

@@ -8,7 +8,14 @@ describe("Slack OAuth HTTP Handler", () => {
   it("should escape OAuth error text in callback HTML", async () => {
     const rawError = `<script>alert("xss")</script>`;
     const request = new Request(`${SLACK_CALLBACK_URL}?error=${encodeURIComponent(rawError)}`);
-    const ctx = {} as ActionCtx;
+    const ctx = {
+      runMutation: async () => ({}),
+      runQuery: async () => ({}),
+      runAction: async () => ({}),
+      scheduler: { runAfter: async () => ({}) },
+      auth: { getUserIdentity: async () => null },
+      storage: { getUrl: async () => null },
+    } as unknown as ActionCtx;
 
     const response = await handleCallbackHandler(ctx, request);
     const html = await response.text();
@@ -23,7 +30,14 @@ describe("Slack OAuth HTTP Handler", () => {
     const request = new Request(
       `${SLACK_CALLBACK_URL}?error=${encodeURIComponent(oversizedError)}`,
     );
-    const ctx = {} as ActionCtx;
+    const ctx = {
+      runMutation: async () => ({}),
+      runQuery: async () => ({}),
+      runAction: async () => ({}),
+      scheduler: { runAfter: async () => ({}) },
+      auth: { getUserIdentity: async () => null },
+      storage: { getUrl: async () => null },
+    } as unknown as ActionCtx;
 
     const response = await handleCallbackHandler(ctx, request);
     const html = await response.text();
@@ -40,7 +54,14 @@ describe("Slack OAuth HTTP Handler", () => {
         Cookie: "slack-oauth-state=ok-state",
       },
     });
-    const ctx = {} as ActionCtx;
+    const ctx = {
+      runMutation: async () => ({}),
+      runQuery: async () => ({}),
+      runAction: async () => ({}),
+      scheduler: { runAfter: async () => ({}) },
+      auth: { getUserIdentity: async () => null },
+      storage: { getUrl: async () => null },
+    } as unknown as ActionCtx;
 
     const response = await handleCallbackHandler(ctx, request);
     const html = await response.text();
@@ -56,7 +77,14 @@ describe("Slack OAuth HTTP Handler", () => {
         Cookie: `slack-oauth-state=${oversizedState}`,
       },
     });
-    const ctx = {} as ActionCtx;
+    const ctx = {
+      runMutation: async () => ({}),
+      runQuery: async () => ({}),
+      runAction: async () => ({}),
+      scheduler: { runAfter: async () => ({}) },
+      auth: { getUserIdentity: async () => null },
+      storage: { getUrl: async () => null },
+    } as unknown as ActionCtx;
 
     const response = await handleCallbackHandler(ctx, request);
     const html = await response.text();

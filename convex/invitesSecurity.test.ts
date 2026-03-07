@@ -59,7 +59,8 @@ describe("Invites Security", () => {
         .withIndex("by_project_user", (q) => q.eq("projectId", projectId).eq("userId", newUserId))
         .first(),
     );
-    expect(projectMember).toBeDefined();
+    expect(projectMember).not.toBeUndefined();
+    expect(projectMember).not.toBeNull();
 
     // Verify Organization Membership (should exist? - expected behavior is YES)
     const orgMember = await t.run(async (ctx) =>

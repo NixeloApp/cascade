@@ -22,7 +22,8 @@ describe("Documents", () => {
         organizationId,
       });
 
-      expect(docId).toBeDefined();
+      expect(docId).not.toBeUndefined();
+      expect(typeof docId).toBe("string");
 
       const doc = await asUser.query(api.documents.getDocument, { id: docId });
       expect(doc?.title).toBe("Public Document");
@@ -84,7 +85,9 @@ describe("Documents", () => {
       });
 
       const doc = await asUser.query(api.documents.getDocument, { id: docId });
-      expect(doc?.updatedAt).toBeDefined();
+      expect(doc?.updatedAt).not.toBeUndefined();
+      expect(typeof doc?.updatedAt).toBe("number");
+      expect(doc?.updatedAt).toBeGreaterThan(0);
     });
   });
 

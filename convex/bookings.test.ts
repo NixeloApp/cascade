@@ -95,7 +95,8 @@ describe("Bookings", () => {
     if (!booking) throw new Error("Booking not found");
 
     expect(booking.status).toBe("confirmed");
-    expect(booking.calendarEventId).toBeDefined();
+    expect(booking.calendarEventId).not.toBeUndefined();
+    expect(typeof booking.calendarEventId).toBe("string");
 
     // Verify calendar event
     const calendarEventId = booking.calendarEventId;

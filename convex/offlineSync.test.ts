@@ -82,17 +82,19 @@ describe("offlineSync", () => {
     await t.run(async (ctx) => {
       // Check itemBackoff
       const backoffItem = await ctx.db.get(itemBackoffId);
-      expect(backoffItem).toBeDefined();
+      expect(backoffItem).not.toBeUndefined();
+      expect(backoffItem).not.toBeNull();
       expect(backoffItem?.status).toBe("failed");
 
       // Check itemRetry
       const retryItem = await ctx.db.get(itemRetryId);
-      expect(retryItem).toBeDefined();
+      expect(retryItem).not.toBeUndefined();
+      expect(retryItem).not.toBeNull();
       expect(retryItem?.status).toBe("pending");
       // Should have updated updatedAt
       expect(retryItem?.updatedAt).toBeGreaterThan(now);
 
-      // Check itemArchive
+      // Check itemArchive - should be deleted
       const archiveItem = await ctx.db.get(itemArchiveId);
       expect(archiveItem).toBeNull();
     });
@@ -104,7 +106,8 @@ describe("offlineSync", () => {
 
     const queueId = await queueOfflineIssueMutation(asUser, "issue-1");
 
-    expect(queueId).toBeDefined();
+    expect(queueId).not.toBeUndefined();
+    expect(typeof queueId).toBe("string");
 
     const pendingMutations = await asUser.query(api.offlineSync.getPendingMutations);
     expect(pendingMutations.length).toBe(SINGLE_ITEM_COUNT);

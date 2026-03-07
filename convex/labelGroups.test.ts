@@ -49,7 +49,9 @@ describe("Label Groups", () => {
         description: "Priority labels",
       });
 
-      expect(groupId).toBeDefined();
+      expect(groupId).not.toBeUndefined();
+      if (groupId === undefined) throw new Error("groupId is undefined");
+      expect(typeof groupId).toBe("string");
 
       const groups = await asUser.query(api.labelGroups.list, { projectId });
       expect(groups.some((g) => g.name === "Priority")).toBe(true);
@@ -130,8 +132,9 @@ describe("Label Groups", () => {
       const groups = await asUser.query(api.labelGroups.list, { projectId });
       const priorityGroup = groups.find((g) => g.name === "Priority");
 
-      expect(priorityGroup).toBeDefined();
-      expect(priorityGroup?.labels).toHaveLength(2);
+      expect(priorityGroup).not.toBeUndefined();
+      if (priorityGroup === undefined) throw new Error("Priority group not found");
+      expect(priorityGroup.labels).toHaveLength(2);
     });
 
     it("should include ungrouped labels at the end", async () => {
@@ -149,9 +152,10 @@ describe("Label Groups", () => {
       const groups = await asUser.query(api.labelGroups.list, { projectId });
       const ungrouped = groups.find((g) => g.name === "Ungrouped");
 
-      expect(ungrouped).toBeDefined();
-      expect(ungrouped?.labels).toHaveLength(1);
-      expect(ungrouped?.labels[0].name).toBe("Orphan");
+      expect(ungrouped).not.toBeUndefined();
+      if (ungrouped === undefined) throw new Error("Ungrouped not found");
+      expect(ungrouped.labels).toHaveLength(1);
+      expect(ungrouped.labels[0].name).toBe("Orphan");
     });
 
     it("should sort groups by display order", async () => {

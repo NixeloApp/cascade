@@ -60,7 +60,8 @@ describe("Notification Preferences", () => {
         emailDigest: "daily",
       });
 
-      expect(preferenceId).toBeDefined();
+      expect(preferenceId).not.toBeUndefined();
+      expect(typeof preferenceId).toBe("string");
 
       const prefs = await asUser.query(api.notificationPreferences.get, {});
       expect(prefs.userId).toBe(userId);

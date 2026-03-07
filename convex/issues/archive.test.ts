@@ -41,7 +41,8 @@ describe("Issue Archive", () => {
     expect(result2.archived).toBe(true);
 
     const archivedIssue = await t.run(async (ctx) => ctx.db.get(issueId));
-    expect(archivedIssue?.archivedAt).toBeDefined();
+    expect(archivedIssue?.archivedAt).not.toBeUndefined();
+    expect(typeof archivedIssue?.archivedAt).toBe("number");
 
     // Restore
     const result3 = await asUser.mutation(api.issues.restore, { issueId });

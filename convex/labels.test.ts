@@ -20,7 +20,8 @@ describe("Labels", () => {
         description: "Critical production issues",
       });
 
-      expect(labelId).toBeDefined();
+      expect(labelId).not.toBeUndefined();
+      expect(typeof labelId).toBe("string");
 
       const labels = await asUser.query(api.labels.list, { projectId });
       expect(labels).toHaveLength(1);

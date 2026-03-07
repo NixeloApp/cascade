@@ -13,8 +13,9 @@ describe("Attachments", () => {
 
       const url = await asUser.mutation(api.attachments.generateUploadUrl, {});
 
-      expect(url).toBeDefined();
+      expect(url).not.toBeUndefined();
       expect(typeof url).toBe("string");
+      expect(url.length).toBeGreaterThan(0);
     });
 
     it("should reject unauthenticated users", async () => {

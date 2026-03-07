@@ -31,8 +31,12 @@ describe("pagination utilities", () => {
       const cursor1 = encodeCursor(0, "id1");
       const cursor2 = encodeCursor(Date.now(), "id2");
 
-      expect(cursor1).toBeTruthy();
-      expect(cursor2).toBeTruthy();
+      expect(cursor1).not.toBeUndefined();
+      expect(typeof cursor1).toBe("string");
+      expect(cursor1.length).toBeGreaterThan(0);
+      expect(cursor2).not.toBeUndefined();
+      expect(typeof cursor2).toBe("string");
+      expect(cursor2.length).toBeGreaterThan(0);
       expect(cursor1).not.toBe(cursor2);
     });
 
@@ -156,6 +160,7 @@ describe("pagination utilities", () => {
       expect(result.items).toHaveLength(3);
       expect(result.hasMore).toBe(true);
       expect(result.nextCursor).not.toBeNull();
+      expect(typeof result.nextCursor).toBe("string");
     });
 
     it("should build correct cursor from last item", () => {
@@ -164,6 +169,7 @@ describe("pagination utilities", () => {
       const result = buildPaginatedResult(items, 2);
 
       expect(result.nextCursor).not.toBeNull();
+      expect(typeof result.nextCursor).toBe("string");
       if (result.nextCursor === null) throw new Error("nextCursor is null");
       const decoded = decodeCursor(result.nextCursor);
       expect(decoded.timestamp).toBe(2000);
@@ -196,6 +202,7 @@ describe("pagination utilities", () => {
       const result = buildPaginatedResult(items, 2);
 
       expect(result.nextCursor).not.toBeNull();
+      expect(typeof result.nextCursor).toBe("string");
       if (result.nextCursor === null) throw new Error("nextCursor is null");
       const decoded = decodeCursor(result.nextCursor);
       expect(decoded.timestamp).toBe(2000);

@@ -302,13 +302,15 @@ describe("issueHelpers", () => {
       expect(reactions).toHaveLength(2);
 
       const thumbsUp = reactions.find((r) => r.emoji === "👍");
-      expect(thumbsUp).toBeDefined();
+      expect(thumbsUp).not.toBeUndefined();
+      expect(thumbsUp?.emoji).toBe("👍");
       expect(thumbsUp?.userIds).toHaveLength(2);
       expect(thumbsUp?.userIds).toContain(user1);
       expect(thumbsUp?.userIds).toContain(user2);
 
       const rocket = reactions.find((r) => r.emoji === "🚀");
-      expect(rocket).toBeDefined();
+      expect(rocket).not.toBeUndefined();
+      expect(rocket?.emoji).toBe("🚀");
       expect(rocket?.userIds).toHaveLength(1);
       expect(rocket?.userIds).toContain(user1);
     });

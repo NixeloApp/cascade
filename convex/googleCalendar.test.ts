@@ -25,7 +25,9 @@ describe("Google Calendar Integration", () => {
       syncDirection: "bidirectional",
     });
 
-    expect(connectionId).toBeDefined();
+    expect(connectionId).not.toBeUndefined();
+    if (connectionId === undefined) throw new Error("connectionId is undefined");
+    expect(typeof connectionId).toBe("string");
 
     // Verify connection exists and tokens are not exposed
     const connection = await asUser.query(api.googleCalendar.getConnection, {});
@@ -38,15 +40,19 @@ describe("Google Calendar Integration", () => {
 
     // Verify tokens are encrypted in DB
     const rawConnection = await t.run(async (ctx) => ctx.db.get(connectionId));
-    expect(rawConnection?.accessToken).not.toBe("access-token-123");
-    expect(rawConnection?.refreshToken).not.toBe("refresh-token-123");
+    expect(rawConnection).not.toBeUndefined();
+    if (rawConnection === undefined) throw new Error("rawConnection is undefined");
+    expect(rawConnection.accessToken).not.toBe("access-token-123");
+    expect(rawConnection.refreshToken).not.toBe("refresh-token-123");
 
     // Verify internal decryption works
     const decrypted = await t.mutation(internal.googleCalendar.getDecryptedTokens, {
       connectionId,
     });
-    expect(decrypted?.accessToken).toBe("access-token-123");
-    expect(decrypted?.refreshToken).toBe("refresh-token-123");
+    expect(decrypted).not.toBeUndefined();
+    if (decrypted === undefined) throw new Error("decrypted is undefined");
+    expect(decrypted.accessToken).toBe("access-token-123");
+    expect(decrypted.refreshToken).toBe("refresh-token-123");
 
     // 2. Sync events from Google
     const now = Date.now();
@@ -87,10 +93,11 @@ describe("Google Calendar Integration", () => {
 
     expect(dbEvents).toHaveLength(2);
     const meeting = dbEvents.find((e) => e.title === "Meeting 1");
-    expect(meeting).toBeDefined();
-    expect(meeting?.description).toBe("Discuss project");
-    expect(meeting?.location).toBe("Room A");
-    expect(meeting?.externalAttendees).toEqual(["user@example.com"]);
+    expect(meeting).not.toBeUndefined();
+    if (meeting === undefined) throw new Error("Meeting 1 not found");
+    expect(meeting.description).toBe("Discuss project");
+    expect(meeting.location).toBe("Room A");
+    expect(meeting.externalAttendees).toEqual(["user@example.com"]);
 
     // 3. Disconnect
     await asUser.mutation(api.googleCalendar.disconnectGoogle, {});

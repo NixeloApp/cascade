@@ -91,7 +91,9 @@ describe("Two Factor Authentication", () => {
 
     // 2. Begin setup
     const { secret, otpauthUrl } = await asUser.mutation(api.twoFactor.beginSetup);
-    expect(secret).toBeDefined();
+    expect(secret).not.toBeUndefined();
+    expect(typeof secret).toBe("string");
+    expect(secret.length).toBeGreaterThan(0);
     expect(otpauthUrl).toContain(`secret=${secret}`);
 
     // 3. Complete setup with valid code

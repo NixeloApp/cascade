@@ -39,7 +39,8 @@ describe("Service Rotation Security", () => {
       serviceType: "transcription",
       apiKey: MOCK_API_KEY,
     });
-    expect(summary).toBeDefined();
+    expect(summary).not.toBeUndefined();
+    expect(typeof summary).toBe("object");
 
     // Call selectProvider with key
     // Might return null if no providers, but shouldn't throw auth error
@@ -58,7 +59,8 @@ describe("Service Rotation Security", () => {
     const summary = await asUser.query(api.serviceRotation.getUsageSummary, {
       serviceType: "transcription",
     });
-    expect(summary).toBeDefined();
+    expect(summary).not.toBeUndefined();
+    expect(typeof summary).toBe("object");
 
     // Call selectProvider as user
     const selection = await asUser.query(api.serviceRotation.selectProvider, {

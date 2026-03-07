@@ -71,7 +71,9 @@ describe("Internal AI", () => {
       // Verify chat updated
       const chat = await t.run(async (ctx) => ctx.db.get(chatId));
       // check if updatedAt is recent? difficult to check exact time, but we can check existence
-      expect(chat?.updatedAt).toBeDefined();
+      expect(chat?.updatedAt).not.toBeUndefined();
+      expect(typeof chat?.updatedAt).toBe("number");
+      expect(chat?.updatedAt).toBeGreaterThan(0);
     });
   });
 

@@ -31,7 +31,8 @@ describe("Sprints", () => {
         endDate,
       });
 
-      expect(sprintId).toBeDefined();
+      expect(typeof sprintId).toBe("string");
+      expect(sprintId.length).toBeGreaterThan(0);
 
       // Verify sprint was created correctly
       const sprint = await t.run(async (ctx) => {
@@ -44,8 +45,10 @@ describe("Sprints", () => {
       expect(sprint?.endDate).toBe(endDate);
       expect(sprint?.status).toBe("future");
       expect(sprint?.createdBy).toBe(userId);
-      expect(sprint?._creationTime).toBeDefined();
-      expect(sprint?.updatedAt).toBeDefined();
+      expect(typeof sprint?._creationTime).toBe("number");
+      expect(sprint?._creationTime).toBeGreaterThan(0);
+      expect(typeof sprint?.updatedAt).toBe("number");
+      expect(sprint?.updatedAt).toBeGreaterThan(0);
     });
 
     it("should create a sprint with minimal fields", async () => {
@@ -100,7 +103,8 @@ describe("Sprints", () => {
         name: "Member Sprint",
       });
 
-      expect(sprintId).toBeDefined();
+      expect(typeof sprintId).toBe("string");
+      expect(sprintId.length).toBeGreaterThan(0);
     });
 
     it("should deny unauthenticated users", async () => {
@@ -737,7 +741,8 @@ describe("Sprints", () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.nextSprintId).toBeDefined();
+      expect(typeof result.nextSprintId).toBe("string");
+      expect(result.nextSprintId).not.toBeUndefined();
 
       const completed = await t.run(async (ctx) => ctx.db.get(sprintId));
       const nextSprint = await t.run(async (ctx) =>

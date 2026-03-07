@@ -83,8 +83,10 @@ describe("Google OAuth HTTP Handler", () => {
 
       const location = response.headers.get("Location");
       const setCookie = response.headers.get("Set-Cookie");
-      expect(location).toBeDefined();
-      expect(setCookie).toBeDefined();
+      expect(location).not.toBeUndefined();
+      expect(typeof location).toBe("string");
+      expect(setCookie).not.toBeUndefined();
+      expect(typeof setCookie).toBe("string");
 
       if (!location) {
         throw new Error("Expected Location header");
@@ -100,7 +102,9 @@ describe("Google OAuth HTTP Handler", () => {
       expect(url.searchParams.get("response_type")).toBe("code");
       expect(url.searchParams.get("access_type")).toBe("offline");
       expect(url.searchParams.get("prompt")).toBe("consent");
-      expect(state).toBeDefined();
+      expect(state).not.toBeUndefined();
+      expect(typeof state).toBe("string");
+      expect(state.length).toBeGreaterThan(0);
       expect(setCookie).toContain(`google-oauth-state=${state}`);
     });
 

@@ -10,21 +10,21 @@ import {
 describe("issue-utils", () => {
   describe("ISSUE_TYPE_ICONS", () => {
     it("should have icon for all issue types", () => {
-      expect(ISSUE_TYPE_ICONS.bug).toBeDefined();
-      expect(ISSUE_TYPE_ICONS.story).toBeDefined();
-      expect(ISSUE_TYPE_ICONS.epic).toBeDefined();
-      expect(ISSUE_TYPE_ICONS.subtask).toBeDefined();
-      expect(ISSUE_TYPE_ICONS.task).toBeDefined();
+      expect(typeof ISSUE_TYPE_ICONS.bug).toBe("object");
+      expect(typeof ISSUE_TYPE_ICONS.story).toBe("object");
+      expect(typeof ISSUE_TYPE_ICONS.epic).toBe("object");
+      expect(typeof ISSUE_TYPE_ICONS.subtask).toBe("object");
+      expect(typeof ISSUE_TYPE_ICONS.task).toBe("object");
     });
   });
 
   describe("PRIORITY_ICONS", () => {
     it("should have icon for all priorities", () => {
-      expect(PRIORITY_ICONS.highest).toBeDefined();
-      expect(PRIORITY_ICONS.high).toBeDefined();
-      expect(PRIORITY_ICONS.medium).toBeDefined();
-      expect(PRIORITY_ICONS.low).toBeDefined();
-      expect(PRIORITY_ICONS.lowest).toBeDefined();
+      expect(typeof PRIORITY_ICONS.highest).toBe("object");
+      expect(typeof PRIORITY_ICONS.high).toBe("object");
+      expect(typeof PRIORITY_ICONS.medium).toBe("object");
+      expect(typeof PRIORITY_ICONS.low).toBe("object");
+      expect(typeof PRIORITY_ICONS.lowest).toBe("object");
     });
   });
 

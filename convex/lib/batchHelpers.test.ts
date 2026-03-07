@@ -1,5 +1,6 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
+import type { Id } from "../_generated/dataModel";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import { batchFetch, batchFetchUsers, formatUser, getUserName } from "./batchHelpers";
@@ -84,11 +85,11 @@ describe("batchHelpers", () => {
   describe("formatUser", () => {
     it("should format user correctly", () => {
       const user = {
-        _id: "u1",
+        _id: "u1" as Id<"users">,
         name: "Alice",
         email: "alice@example.com",
         image: "img.png",
-      } as any;
+      };
       expect(formatUser(user)).toEqual({
         _id: "u1",
         name: "Alice",
@@ -98,7 +99,7 @@ describe("batchHelpers", () => {
     });
 
     it("should fallback to Unknown if name/email missing", () => {
-      const user = { _id: "u1" } as any;
+      const user = { _id: "u1" as Id<"users"> };
       expect(formatUser(user)).toEqual({
         _id: "u1",
         name: "Unknown",
@@ -115,13 +116,15 @@ describe("batchHelpers", () => {
 
   describe("getUserName", () => {
     it("should return name if present", () => {
-      expect(getUserName({ name: "Bob" } as any)).toBe("Bob");
+      expect(getUserName({ name: "Bob", _id: "u1" as Id<"users"> })).toBe("Bob");
     });
     it("should return email if name missing", () => {
-      expect(getUserName({ email: "bob@example.com" } as any)).toBe("bob@example.com");
+      expect(getUserName({ email: "bob@example.com", _id: "u1" as Id<"users"> })).toBe(
+        "bob@example.com",
+      );
     });
     it("should return Unknown if both missing", () => {
-      expect(getUserName({} as any)).toBe("Unknown");
+      expect(getUserName({ _id: "u1" as Id<"users"> })).toBe("Unknown");
     });
     it("should return Unknown if user is null/undefined", () => {
       expect(getUserName(null)).toBe("Unknown");

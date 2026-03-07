@@ -236,7 +236,9 @@ describe("issue helpers", () => {
       const updates = processIssueUpdates(issue, args, changes);
 
       expect(updates.labels).toEqual(["bug", "frontend"]);
-      expect(changes.find((c) => c.field === "labels")).toBeDefined();
+      const labelsChange = changes.find((c) => c.field === "labels");
+      expect(labelsChange).not.toBeUndefined();
+      expect(labelsChange?.field).toBe("labels");
     });
   });
 
@@ -592,7 +594,9 @@ describe("issue helpers", () => {
 
       expect(result.issues).toHaveLength(1);
       expect(result.issues[0]._id).toBe(issueId);
-      expect(result.projects[projectId.toString()]).toBeDefined();
+      const project = result.projects[projectId.toString()];
+      expect(project).not.toBeUndefined();
+      expect(typeof project).toBe("object");
     });
 
     it("should handle missing issues", async () => {
@@ -610,7 +614,9 @@ describe("issue helpers", () => {
 
       expect(result.issues).toHaveLength(1);
       expect(result.issues[0]._id).toBe(issueId);
-      expect(result.projects[projectId.toString()]).toBeDefined();
+      const project = result.projects[projectId.toString()];
+      expect(project).not.toBeUndefined();
+      expect(typeof project).toBe("object");
     });
   });
 });

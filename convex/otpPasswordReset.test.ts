@@ -60,7 +60,7 @@ describe("otpPasswordReset", () => {
 
   it("should generate a verification token", () => {
     const token = generateVerificationToken();
-    expect(token).toBeDefined();
+    expect(token).not.toBeUndefined();
     expect(typeof token).toBe("string");
     expect(token.length).toBeGreaterThan(0);
   });

@@ -27,7 +27,8 @@ describe("Issue Watchers", () => {
       });
 
       const { watcherId } = await asUser.mutation(api.watchers.watch, { issueId });
-      expect(watcherId).toBeDefined();
+      expect(typeof watcherId).toBe("string");
+      expect(watcherId).not.toBeUndefined();
 
       const isWatching = await asUser.query(api.watchers.isWatching, { issueId });
       expect(isWatching).toBe(true);
@@ -75,7 +76,8 @@ describe("Issue Watchers", () => {
       });
 
       const watchActivity = activities.find((a) => a.action === "started_watching");
-      expect(watchActivity).toBeDefined();
+      expect(watchActivity).not.toBeUndefined();
+      expect(typeof watchActivity).toBe("object");
       expect(watchActivity?.userId).toBe(userId);
     });
   });
@@ -147,7 +149,8 @@ describe("Issue Watchers", () => {
       });
 
       const unwatchActivity = activities.find((a) => a.action === "stopped_watching");
-      expect(unwatchActivity).toBeDefined();
+      expect(unwatchActivity).not.toBeUndefined();
+      expect(typeof unwatchActivity).toBe("object");
     });
   });
 
@@ -292,7 +295,8 @@ describe("Issue Watchers", () => {
       expect(watchedIssues[0].type).toBe("bug");
       expect(watchedIssues[0].priority).toBe("high");
       expect(watchedIssues[0].projectName).toBe("Test Project");
-      expect(watchedIssues[0].watchedAt).toBeDefined();
+      expect(typeof watchedIssues[0].watchedAt).toBe("number");
+      expect(watchedIssues[0].watchedAt).not.toBeUndefined();
     });
 
     it("should only return current user's watched issues", async () => {

@@ -79,6 +79,7 @@ describe("MeetingBot List", () => {
 
     expect(recordings.length).toBeGreaterThan(0);
     const found = recordings.find((r) => r._id === publicRecIdB);
-    expect(found).toBeDefined();
+    expect(found).not.toBeUndefined();
+    expect(found?._id).toBe(publicRecIdB);
   });
 });

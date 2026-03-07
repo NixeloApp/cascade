@@ -36,14 +36,15 @@ describe("Issue Soft Delete", () => {
 
     // Verify issue exists in DB with isDeleted: true
     const dbIssue = await t.run(async (ctx) => ctx.db.get(issueId));
-    expect(dbIssue).toBeDefined();
+    expect(dbIssue).not.toBeUndefined();
     expect(dbIssue?.isDeleted).toBe(true);
     expect(dbIssue?.deletedBy).toBe(userId);
-    expect(dbIssue?.deletedAt).toBeDefined();
+    expect(dbIssue?.deletedAt).not.toBeUndefined();
+    expect(typeof dbIssue?.deletedAt).toBe("number");
 
     // Verify comment still exists in DB
     const dbComment = await t.run(async (ctx) => ctx.db.get(commentId));
-    expect(dbComment).toBeDefined();
+    expect(dbComment).not.toBeUndefined();
     expect(dbComment?.content).toBe("This comment should survive deletion");
 
     // Verify activity log contains "deleted" action
@@ -55,7 +56,7 @@ describe("Issue Soft Delete", () => {
     });
 
     const deleteAction = activities.find((a) => a.action === "deleted");
-    expect(deleteAction).toBeDefined();
+    expect(deleteAction).not.toBeUndefined();
     expect(deleteAction?.userId).toBe(userId);
 
     await t.finishInProgressScheduledFunctions();

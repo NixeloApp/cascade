@@ -1,7 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
-import { WEEK } from "./lib/timeUtils";
+import { SECOND, WEEK } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -208,7 +208,9 @@ describe("Export", () => {
       expect(data.totalIssues).toBe(1);
       expect(data.issues).toHaveLength(1);
       expect(data.issues[0].title).toBe("JSON Test Issue");
-      expect(data.exportedAt).toBeDefined();
+      expect(typeof data.exportedAt).toBe("string");
+      expect(new Date(data.exportedAt).getTime()).toBeGreaterThan(Date.now() - SECOND);
+      expect(new Date(data.exportedAt).getTime()).toBeLessThanOrEqual(Date.now());
     });
 
     it("should include enriched data in JSON export", async () => {
@@ -228,9 +230,15 @@ describe("Export", () => {
       const jsonString = await asUser.query(api.export.exportIssuesJSON, { projectId });
       const data = JSON.parse(jsonString);
 
-      expect(data.issues[0].assigneeName).toBeDefined();
-      expect(data.issues[0].reporterName).toBeDefined();
-      expect(data.issues[0].statusName).toBeDefined();
+      expect(data.issues[0].assigneeName).not.toBeUndefined();
+      expect(typeof data.issues[0].assigneeName).toBe("string");
+      expect(data.issues[0].assigneeName.length).toBeGreaterThan(0);
+      expect(data.issues[0].reporterName).not.toBeUndefined();
+      expect(typeof data.issues[0].reporterName).toBe("string");
+      expect(data.issues[0].reporterName.length).toBeGreaterThan(0);
+      expect(data.issues[0].statusName).not.toBeUndefined();
+      expect(typeof data.issues[0].statusName).toBe("string");
+      expect(data.issues[0].statusName.length).toBeGreaterThan(0);
     });
 
     it("should export rich-text descriptions as plain text in JSON", async () => {
@@ -283,7 +291,10 @@ describe("Export", () => {
       expect(analytics.issuesByPriority.high).toBe(1);
       expect(analytics.issuesByPriority.medium).toBe(1);
       expect(analytics.issuesByPriority.low).toBe(1);
-      expect(analytics.exportedAt).toBeDefined();
+      expect(analytics.exportedAt).not.toBeUndefined();
+      expect(typeof analytics.exportedAt).toBe("string");
+      expect(new Date(analytics.exportedAt).getTime()).toBeGreaterThan(Date.now() - SECOND);
+      expect(new Date(analytics.exportedAt).getTime()).toBeLessThanOrEqual(Date.now());
     });
 
     it("should calculate completion rate", async () => {

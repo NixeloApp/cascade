@@ -58,7 +58,8 @@ describe("Event Reminders", () => {
         minutesBefore: 15,
       });
 
-      expect(reminderId).toBeDefined();
+      expect(reminderId).not.toBeUndefined();
+      expect(typeof reminderId).toBe("string");
 
       const reminder = await t.run(async (ctx) => ctx.db.get(reminderId));
       expect(reminder?.reminderType).toBe("email");
@@ -83,7 +84,8 @@ describe("Event Reminders", () => {
         minutesBefore: 30,
       });
 
-      expect(reminderId).toBeDefined();
+      expect(reminderId).not.toBeUndefined();
+      expect(typeof reminderId).toBe("string");
     });
 
     it("should reject reminder from non-participant", async () => {

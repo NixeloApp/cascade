@@ -27,16 +27,18 @@ vi.mock("./email", () => ({
 describe("OTP Rate Limiting", () => {
   it("should enforce rate limiting on password reset requests", async () => {
     const mockRunMutation = vi.fn().mockResolvedValue(undefined);
+    const mockDb = {
+      query: () => ({
+        withIndex: () => ({
+          first: () => Promise.resolve(null),
+        }),
+      }),
+    };
+    const mockScheduler = {};
     const mockCtx = {
       runMutation: mockRunMutation,
-      db: {
-        query: () => ({
-          withIndex: () => ({
-            first: () => Promise.resolve(null),
-          }),
-        }),
-      } as any,
-      scheduler: {} as any,
+      db: mockDb,
+      scheduler: mockScheduler,
     };
 
     const email = "victim@example.com";
@@ -46,7 +48,7 @@ describe("OTP Rate Limiting", () => {
     const sendVerificationRequest = (otpPasswordReset as any).options.sendVerificationRequest;
 
     // Call once
-    await sendVerificationRequest({ identifier: email, token }, mockCtx as any);
+    await sendVerificationRequest({ identifier: email, token }, mockCtx);
 
     // Verify rate limit mutation was called
     expect(mockRunMutation).toHaveBeenCalledWith("mocked-mutation-ref", { email });

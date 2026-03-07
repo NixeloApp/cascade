@@ -119,7 +119,8 @@ describe("Sprints Security", () => {
       projectId,
       name: "Editor Sprint",
     });
-    expect(sprintId).toBeDefined();
+    expect(sprintId).not.toBeUndefined();
+    expect(typeof sprintId).toBe("string");
 
     // 2. Start sprint
     const startDate = Date.now();
