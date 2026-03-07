@@ -1,14 +1,13 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
 import { IssueDetailHeader, IssueDetailLayout, useIssueDetail } from "@/components/IssueDetail";
 import { PageContent, PageError } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { ROUTES } from "@/config/routes";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { ChevronLeft } from "@/lib/icons";
-
 export const Route = createFileRoute("/_auth/_app/$orgSlug/issues/$key")({
   component: IssuePage,
 });
@@ -22,7 +21,7 @@ function IssuePage() {
   const projectKey = parts.slice(0, -1).join("-");
 
   // Get issue ID by key first
-  const issueByKey = useQuery(api.issues.getByKey, { key });
+  const issueByKey = useAuthenticatedQuery(api.issues.getByKey, { key });
 
   if (issueByKey === undefined) {
     return <PageContent isLoading>{null}</PageContent>;

@@ -8,8 +8,8 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation } from "convex/react";
 import { useState } from "react";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
@@ -45,7 +45,7 @@ export function SubtasksList({ issueId, projectId, subtasks }: SubtasksListProps
   const [isCreatingSubtask, setIsCreatingSubtask] = useState(false);
   const [subtaskTitle, setSubtaskTitle] = useState("");
 
-  const createIssue = useMutation(api.issues.createIssue);
+  const { mutate: createIssue } = useAuthenticatedMutation(api.issues.createIssue);
 
   const handleCreateSubtask = async () => {
     if (!subtaskTitle.trim()) return;

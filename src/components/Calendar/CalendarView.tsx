@@ -1,9 +1,9 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useQuery } from "convex/react";
 import { endOfDay, endOfMonth, endOfWeek, startOfDay, startOfMonth, startOfWeek } from "date-fns";
 import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { CreateEventModal } from "./CreateEventModal";
 import { type EventColor, PALETTE_COLORS } from "./calendar-colors";
 import { EventDetailsModal } from "./EventDetailsModal";
@@ -63,7 +63,7 @@ export function CalendarView({
 
   const { startDate, endDate } = getDateRange(date, mode);
 
-  const userScopedEvents = useQuery(
+  const userScopedEvents = useAuthenticatedQuery(
     api.calendarEvents.listByDateRange,
     teamId || workspaceId || organizationId
       ? "skip"
@@ -73,7 +73,7 @@ export function CalendarView({
           projectId,
         },
   );
-  const organizationScopedEvents = useQuery(
+  const organizationScopedEvents = useAuthenticatedQuery(
     api.calendarEvents.listByOrganizationDateRange,
     organizationId && !workspaceId && !teamId
       ? {
@@ -83,7 +83,7 @@ export function CalendarView({
         }
       : "skip",
   );
-  const workspaceScopedEvents = useQuery(
+  const workspaceScopedEvents = useAuthenticatedQuery(
     api.calendarEvents.listByWorkspaceDateRange,
     workspaceId && !teamId
       ? {
@@ -93,7 +93,7 @@ export function CalendarView({
         }
       : "skip",
   );
-  const teamScopedEvents = useQuery(
+  const teamScopedEvents = useAuthenticatedQuery(
     api.calendarEvents.listByTeamDateRange,
     teamId
       ? {

@@ -8,13 +8,14 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useConvexAuth } from "convex/react";
 import { ChevronDown, Play, Plus, Square } from "lucide-react";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { MetadataTimestamp } from "@/components/ui/Metadata";
 import { Stack } from "@/components/ui/Stack";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatCurrency, formatHours } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -151,21 +152,21 @@ export function TimeTracker({
   const [showEntries, setShowEntries] = useState(false);
 
   // Fetch time entries for this issue
-  const timeEntries = useQuery(
+  const timeEntries = useAuthenticatedQuery(
     api.timeTracking.listTimeEntries,
     canUseTimeTracking ? { issueId, limit: 100 } : "skip",
   );
 
   // Check if there's a running timer
-  const runningTimer = useQuery(
+  const runningTimer = useAuthenticatedQuery(
     api.timeTracking.getRunningTimer,
-    canUseTimeTracking ? undefined : "skip",
+    canUseTimeTracking ? {} : "skip",
   );
   const isTimerRunningForThisIssue = runningTimer && runningTimer.issueId === issueId;
 
   // Mutations
-  const startTimer = useMutation(api.timeTracking.startTimer);
-  const stopTimer = useMutation(api.timeTracking.stopTimer);
+  const { mutate: startTimer } = useAuthenticatedMutation(api.timeTracking.startTimer);
+  const { mutate: stopTimer } = useAuthenticatedMutation(api.timeTracking.stopTimer);
 
   // Calculate total hours from entries (convert seconds to hours)
   const totalLoggedHours = timeEntries

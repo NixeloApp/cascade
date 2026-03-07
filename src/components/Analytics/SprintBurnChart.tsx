@@ -5,8 +5,8 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useQuery } from "convex/react";
 import { useState } from "react";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
@@ -25,7 +25,7 @@ interface SprintBurnChartProps {
 export function SprintBurnChart({ sprintId }: SprintBurnChartProps) {
   const [mode, setMode] = useState<ChartMode>("burndown");
 
-  const burndownData = useQuery(api.analytics.getSprintBurndown, {
+  const burndownData = useAuthenticatedQuery(api.analytics.getSprintBurndown, {
     sprintId,
   });
 

@@ -8,8 +8,8 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
@@ -29,11 +29,11 @@ type EnrichedUserRate = Doc<"userRates"> & {
 
 /** Admin panel for managing user hourly rates for billing calculations. */
 export function UserRatesManagement() {
-  const currentUser = useQuery(api.auth.loggedInUser);
-  const projects = useQuery(api.projects.getCurrentUserProjects, {});
-  const userRates = useQuery(api.timeTracking.listUserRates, {});
+  const currentUser = useAuthenticatedQuery(api.auth.loggedInUser, {});
+  const projects = useAuthenticatedQuery(api.projects.getCurrentUserProjects, {});
+  const userRates = useAuthenticatedQuery(api.timeTracking.listUserRates, {});
 
-  const setUserRate = useMutation(api.timeTracking.setUserRate);
+  const { mutate: setUserRate } = useAuthenticatedMutation(api.timeTracking.setUserRate);
 
   const [showAddRate, setShowAddRate] = useState(false);
   const [editingUserId, setEditingUserId] = useState<Id<"users"> | null>(null);

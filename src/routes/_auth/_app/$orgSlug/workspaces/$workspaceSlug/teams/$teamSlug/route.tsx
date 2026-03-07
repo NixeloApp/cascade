@@ -1,13 +1,12 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
 import { PageHeader, PageLayout } from "@/components/layout";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
-
 export const Route = createFileRoute(
   "/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug",
 )({
@@ -18,12 +17,12 @@ function TeamLayout() {
   const { organizationId, orgSlug } = useOrganization();
   const { workspaceSlug, teamSlug } = Route.useParams();
 
-  const workspace = useQuery(api.workspaces.getBySlug, {
+  const workspace = useAuthenticatedQuery(api.workspaces.getBySlug, {
     organizationId,
     slug: workspaceSlug,
   });
 
-  const team = useQuery(
+  const team = useAuthenticatedQuery(
     api.teams.getBySlug,
     workspace?._id
       ? {

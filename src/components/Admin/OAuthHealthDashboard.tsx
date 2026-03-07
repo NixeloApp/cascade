@@ -1,6 +1,7 @@
 import { api } from "@convex/_generated/api";
-import { useQuery } from "convex/react";
+import type { useQuery } from "convex/react";
 import { useState } from "react";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { AlertTriangle, Clock } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
@@ -32,7 +33,7 @@ export function OAuthHealthDashboard() {
   const [days, setDays] = useState<RangeDays>(7);
   const { organizationId } = useOrganization();
 
-  const stats = useQuery(
+  const stats = useAuthenticatedQuery(
     api.oauthHealthCheck.getOAuthHealthStats,
     organizationId
       ? {

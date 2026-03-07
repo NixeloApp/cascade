@@ -10,6 +10,7 @@ const mockToggleReaction = vi.fn();
 
 // Mock convex/react
 vi.mock("convex/react", () => ({
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   useMutation: () => mockToggleReaction,
 }));
 

@@ -8,9 +8,9 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation } from "convex/react";
 import { Smile } from "lucide-react";
 import { useState } from "react";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import type { ReactionInfo } from "../../convex/lib/issueHelpers";
@@ -30,7 +30,7 @@ const COMMON_EMOJIS = ["👍", "👎", "❤️", "🔥", "🚀", "👀", "✅", 
 
 /** Emoji reaction buttons for issue comments with toggle functionality. */
 export function CommentReactions({ commentId, reactions, currentUserId }: CommentReactionsProps) {
-  const toggleReaction = useMutation(api.reactions.toggleReaction);
+  const { mutate: toggleReaction } = useAuthenticatedMutation(api.reactions.toggleReaction);
   const [isOpen, setIsOpen] = useState(false);
 
   const handleToggle = async (emoji: string) => {

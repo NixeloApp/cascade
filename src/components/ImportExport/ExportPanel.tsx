@@ -8,8 +8,8 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useQuery } from "convex/react";
 import { useEffect, useState } from "react";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { FileCode, FileSpreadsheet, Info } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -38,12 +38,12 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
   const [exportFormat, setExportFormat] = useState<ExportFormat>("csv");
   const [isExporting, setIsExporting] = useState(false);
 
-  const csvData = useQuery(
+  const csvData = useAuthenticatedQuery(
     api.export.exportIssuesCSV,
     isExporting && exportFormat === "csv" ? { projectId, sprintId, status } : "skip",
   );
 
-  const jsonData = useQuery(
+  const jsonData = useAuthenticatedQuery(
     api.export.exportIssuesJSON,
     isExporting && exportFormat === "json" ? { projectId, sprintId, status } : "skip",
   );

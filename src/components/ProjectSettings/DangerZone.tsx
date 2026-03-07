@@ -9,9 +9,9 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
-import { useMutation } from "convex/react";
 import { useState } from "react";
 import { ROUTES } from "@/config/routes";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
@@ -41,7 +41,7 @@ export function DangerZone({
   const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
 
-  const deleteProject = useMutation(api.projects.softDeleteProject);
+  const { mutate: deleteProject } = useAuthenticatedMutation(api.projects.softDeleteProject);
 
   const handleDelete = async () => {
     if (confirmText !== projectKey) {

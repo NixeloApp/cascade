@@ -8,7 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation } from "convex/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
@@ -16,6 +15,7 @@ import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Stack } from "@/components/ui/Stack";
 import { Textarea } from "@/components/ui/Textarea";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { showError, showSuccess } from "@/lib/toast";
 
@@ -28,7 +28,7 @@ interface CreateWorkspaceModalProps {
 /** Modal form for creating a new workspace in an organization. */
 export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorkspaceModalProps) {
   const { organizationId } = useOrganization();
-  const createWorkspace = useMutation(api.workspaces.create);
+  const { mutate: createWorkspace } = useAuthenticatedMutation(api.workspaces.create);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -15,6 +15,7 @@ function mockId<T extends TableNames>(id: string): Id<T> {
 
 // Mock dependencies
 vi.mock("convex/react", () => ({
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   useQuery: vi.fn(),
   useMutation: vi.fn(),
 }));

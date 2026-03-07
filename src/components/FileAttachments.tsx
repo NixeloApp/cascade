@@ -8,9 +8,9 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import { Loader2 } from "lucide-react";
 import { useRef, useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import {
   Archive,
   Download,
@@ -44,10 +44,10 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
   const [deleteConfirm, setDeleteConfirm] = useState<Id<"_storage"> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const attachments = useQuery(api.files.getIssueAttachments, { issueId });
-  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
-  const addAttachment = useMutation(api.files.addAttachment);
-  const removeAttachment = useMutation(api.files.removeAttachment);
+  const attachments = useAuthenticatedQuery(api.files.getIssueAttachments, { issueId });
+  const { mutate: generateUploadUrl } = useAuthenticatedMutation(api.files.generateUploadUrl);
+  const { mutate: addAttachment } = useAuthenticatedMutation(api.files.addAttachment);
+  const { mutate: removeAttachment } = useAuthenticatedMutation(api.files.removeAttachment);
   // Define type for attachment if not available globally
   interface Attachment {
     storageId: Id<"_storage">;

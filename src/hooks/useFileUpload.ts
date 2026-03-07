@@ -5,10 +5,9 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation } from "convex/react";
 import { useRef, useState } from "react";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "../lib/toast";
-
 export interface FileUploadOptions {
   /** Maximum file size in bytes (default: 10MB) */
   maxSize?: number;
@@ -79,7 +78,7 @@ export function useFileUpload(options: FileUploadOptions = {}): FileUploadReturn
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const generateUploadUrl = useMutation(api.attachments.generateUploadUrl);
+  const { mutate: generateUploadUrl } = useAuthenticatedMutation(api.attachments.generateUploadUrl);
 
   const reset = () => {
     if (fileInputRef.current) {

@@ -9,10 +9,10 @@
 import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useNavigate } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { ROUTES } from "@/config/routes";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { getEmailDomain, isGoogleWorkspaceSsoConnection } from "@/lib/sso-discovery";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
@@ -22,7 +22,6 @@ import { Input } from "../ui/form/Input";
 import { Typography } from "../ui/Typography";
 import { AuthLinkButton } from "./AuthLink";
 import { GoogleAuthButton } from "./GoogleAuthButton";
-
 /**
  * Sign in form with email/password and Google OAuth options.
  */
@@ -36,7 +35,7 @@ export function SignInForm() {
   const [email, setEmail] = useState("");
 
   const emailDomain = getEmailDomain(email);
-  const ssoConnection = useQuery(
+  const ssoConnection = useAuthenticatedQuery(
     api.sso.getForDomain,
     emailDomain
       ? {

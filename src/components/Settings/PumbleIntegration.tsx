@@ -9,9 +9,10 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useForm } from "@tanstack/react-form";
-import { useAction, useMutation, useQuery } from "convex/react";
+import { useAction } from "convex/react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { toggleInArray } from "@/lib/array-utils";
 import { FormInput } from "@/lib/form";
 import { showError, showSuccess } from "@/lib/toast";
@@ -56,8 +57,8 @@ const AVAILABLE_EVENTS = [
 /** Pumble webhook integration manager with add/edit/delete functionality. */
 export function PumbleIntegration() {
   const [showAddModal, setShowAddModal] = useState(false);
-  const webhooks = useQuery(api.pumble.listWebhooks);
-  const projectsResult = useQuery(api.projects.getCurrentUserProjects, {});
+  const webhooks = useAuthenticatedQuery(api.pumble.listWebhooks, {});
+  const projectsResult = useAuthenticatedQuery(api.projects.getCurrentUserProjects, {});
   const projects: Project[] = projectsResult?.page ?? [];
 
   return (
@@ -212,8 +213,8 @@ function WebhookCard({ webhook, projects }: WebhookCardProps) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const testWebhookAction = useAction(api.pumble.testWebhook);
-  const deleteWebhookMutation = useMutation(api.pumble.deleteWebhook);
-  const updateWebhookMutation = useMutation(api.pumble.updateWebhook);
+  const { mutate: deleteWebhookMutation } = useAuthenticatedMutation(api.pumble.deleteWebhook);
+  const { mutate: updateWebhookMutation } = useAuthenticatedMutation(api.pumble.updateWebhook);
 
   const project = webhook.projectId ? projects.find((p) => p._id === webhook.projectId) : null;
 
@@ -356,7 +357,7 @@ function AddWebhookModal({ open, onOpenChange, projects }: AddWebhookModalProps)
     "issue.assigned",
   ]);
 
-  const addWebhook = useMutation(api.pumble.addWebhook);
+  const { mutate: addWebhook } = useAuthenticatedMutation(api.pumble.addWebhook);
 
   const form = useForm({
     defaultValues: {
@@ -519,7 +520,7 @@ function EditWebhookModal({ open, onOpenChange, webhook }: EditWebhookModalProps
   // Events kept outside form due to checkbox array pattern
   const [selectedEvents, setSelectedEvents] = useState<string[]>(webhook.events);
 
-  const updateWebhook = useMutation(api.pumble.updateWebhook);
+  const { mutate: updateWebhook } = useAuthenticatedMutation(api.pumble.updateWebhook);
 
   const form = useForm({
     defaultValues: {

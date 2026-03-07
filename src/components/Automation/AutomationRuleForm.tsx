@@ -13,8 +13,8 @@ import type {
   AutomationActionValue,
   AutomationTrigger,
 } from "@convex/validators";
-import { useMutation } from "convex/react";
 import { useEffect, useState } from "react";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 import { FormDialog } from "../ui/FormDialog";
 import { Input } from "../ui/form/Input";
@@ -168,8 +168,8 @@ export function AutomationRuleForm({
   );
   const [isLoading, setIsLoading] = useState(false);
 
-  const createRule = useMutation(api.automationRules.create);
-  const updateRule = useMutation(api.automationRules.update);
+  const { mutate: createRule } = useAuthenticatedMutation(api.automationRules.create);
+  const { mutate: updateRule } = useAuthenticatedMutation(api.automationRules.update);
 
   // Reset form when rule changes or dialog opens
   useEffect(() => {

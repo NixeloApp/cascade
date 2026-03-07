@@ -7,12 +7,13 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useConvex, useQuery } from "convex/react";
+import { useConvex } from "convex/react";
 import { useEffect, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Flex } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { cn } from "@/lib/utils";
 import { type AwarenessUser, createAwarenessManager, getUserColor } from "@/lib/yjs/awareness";
 
@@ -30,7 +31,7 @@ export function Collaborators({ documentId, maxVisible = 5, className }: Collabo
   const [collaborators, setCollaborators] = useState<AwarenessUser[]>([]);
 
   // Get current user
-  const currentUser = useQuery(api.users.getCurrent);
+  const currentUser = useAuthenticatedQuery(api.users.getCurrent, {});
 
   useEffect(() => {
     if (!convex || !currentUser) {
@@ -121,7 +122,7 @@ function CollaboratorAvatar({ user }: CollaboratorAvatarProps) {
 export function useCollaboratorCount(documentId: Id<"documents">): number {
   const convex = useConvex();
   const [count, setCount] = useState(0);
-  const currentUser = useQuery(api.users.getCurrent);
+  const currentUser = useAuthenticatedQuery(api.users.getCurrent, {});
 
   useEffect(() => {
     if (!convex || !currentUser) {

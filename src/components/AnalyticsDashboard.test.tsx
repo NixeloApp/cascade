@@ -75,6 +75,7 @@ const { mockUseQuery } = vi.hoisted(() => ({
 }));
 
 vi.mock("convex/react", () => ({
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   useQuery: mockUseQuery,
 }));
 

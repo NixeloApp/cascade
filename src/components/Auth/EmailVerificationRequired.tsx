@@ -1,20 +1,19 @@
 import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useQuery } from "convex/react";
 import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/form/Input";
 import { AuthLinkButton } from "./AuthLink";
 import { AuthPageLayout } from "./AuthPageLayout";
-
 /**
  * Page shown when user needs to verify their email before accessing the app.
  */
 export function EmailVerificationRequired() {
   const { signIn, signOut } = useAuthActions();
-  const user = useQuery(api.auth.loggedInUser);
+  const user = useAuthenticatedQuery(api.auth.loggedInUser, {});
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
 

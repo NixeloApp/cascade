@@ -9,9 +9,9 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useForm } from "@tanstack/react-form";
-import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { z } from "zod";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { FormInput, FormTextarea } from "@/lib/form";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -71,8 +71,8 @@ export function CreateEventModal({
   projectId,
   issueId,
 }: CreateEventModalProps) {
-  const createEvent = useMutation(api.calendarEvents.create);
-  const projects = useQuery(api.projects.getCurrentUserProjects, {});
+  const { mutate: createEvent } = useAuthenticatedMutation(api.calendarEvents.create);
+  const projects = useAuthenticatedQuery(api.projects.getCurrentUserProjects, {});
 
   // Project selection (uses Radix Select, kept outside form)
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<Id<"projects"> | undefined>(

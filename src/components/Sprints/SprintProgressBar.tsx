@@ -7,9 +7,9 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useQuery } from "convex/react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { cn } from "@/lib/utils";
 
 interface SprintProgressBarProps {
@@ -43,8 +43,8 @@ function calculateProgress(
 }
 
 export function SprintProgressBar({ projectId, sprintId, className }: SprintProgressBarProps) {
-  const counts = useQuery(api.issues.getIssueCounts, { projectId, sprintId });
-  const project = useQuery(api.projects.getProject, { id: projectId });
+  const counts = useAuthenticatedQuery(api.issues.getIssueCounts, { projectId, sprintId });
+  const project = useAuthenticatedQuery(api.projects.getProject, { id: projectId });
 
   const progress =
     counts && project?.workflowStates ? calculateProgress(counts, project.workflowStates) : null;

@@ -8,12 +8,12 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Plus } from "@/lib/icons";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { showError } from "@/lib/toast";
@@ -100,7 +100,7 @@ export function IssuesCalendarView({
   const [draggedIssue, setDraggedIssue] = useState<Id<"issues"> | null>(null);
   const [dragOverDay, setDragOverDay] = useState<number | null>(null);
 
-  const updateIssue = useMutation(api.issues.update);
+  const { mutate: updateIssue } = useAuthenticatedMutation(api.issues.update);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -113,7 +113,7 @@ export function IssuesCalendarView({
 
   const { from: startTimestamp, to: endTimestamp } = getMonthRangeTimestamps(year, month);
 
-  const issues = useQuery(api.issues.listIssuesByDateRange, {
+  const issues = useAuthenticatedQuery(api.issues.listIssuesByDateRange, {
     projectId,
     sprintId,
     from: startTimestamp,

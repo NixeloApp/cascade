@@ -1,10 +1,9 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
 import { CalendarView } from "@/components/Calendar/CalendarView";
 import { PageContent, PageError } from "@/components/layout";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
-
 export const Route = createFileRoute(
   "/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/calendar",
 )({
@@ -15,11 +14,11 @@ function TeamCalendarPage() {
   const { organizationId } = useOrganization();
   const { workspaceSlug, teamSlug } = Route.useParams();
 
-  const workspace = useQuery(api.workspaces.getBySlug, {
+  const workspace = useAuthenticatedQuery(api.workspaces.getBySlug, {
     organizationId,
     slug: workspaceSlug,
   });
-  const team = useQuery(
+  const team = useAuthenticatedQuery(
     api.teams.getBySlug,
     workspace ? { workspaceId: workspace._id, slug: teamSlug } : "skip",
   );

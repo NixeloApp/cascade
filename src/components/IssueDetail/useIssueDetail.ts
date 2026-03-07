@@ -1,9 +1,8 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
-
 /** Hook for issue detail state management with edit mode and copy functionality. */
 export function useIssueDetail(issueId: Id<"issues">) {
   const [isEditing, setIsEditing] = useState(false);
@@ -11,9 +10,9 @@ export function useIssueDetail(issueId: Id<"issues">) {
   const [description, setDescription] = useState("");
   const [hasCopied, setHasCopied] = useState(false);
 
-  const issue = useQuery(api.issues.getIssue, { id: issueId });
-  const subtasks = useQuery(api.issues.listSubtasks, { parentId: issueId });
-  const updateIssue = useMutation(api.issues.update);
+  const issue = useAuthenticatedQuery(api.issues.getIssue, { id: issueId });
+  const subtasks = useAuthenticatedQuery(api.issues.listSubtasks, { parentId: issueId });
+  const { mutate: updateIssue } = useAuthenticatedMutation(api.issues.update);
 
   useEffect(() => {
     if (issue && !isEditing) {

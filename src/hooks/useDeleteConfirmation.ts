@@ -5,6 +5,7 @@
 
 import type { Id, TableNames } from "@convex/_generated/dataModel";
 import { useState } from "react";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "../lib/toast";
 
 export interface UseDeleteConfirmationOptions {
@@ -31,7 +32,7 @@ export interface UseDeleteConfirmationReturn<T extends TableNames> {
  * Manage delete confirmation state and execution
  *
  * @example
- * const deleteMutation = useMutation(api.labels.remove);
+ * const { mutate: deleteMutation } = useAuthenticatedMutation(api.labels.remove);
  * const { deleteId, isDeleting, confirmDelete, cancelDelete, executeDelete } =
  *   useDeleteConfirmation<"labels">({
  *     successMessage: "Label deleted",

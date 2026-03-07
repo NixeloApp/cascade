@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
-import { useAction, useMutation, useQuery } from "convex/react";
+import { useAction } from "convex/react";
 import { useState } from "react";
 import { InvoiceEditor } from "@/components/Invoices/InvoiceEditor";
 import { InvoicePdfTemplate } from "@/components/Invoices/InvoicePdfTemplate";
@@ -9,9 +9,9 @@ import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { showError, showSuccess } from "@/lib/toast";
-
 export const Route = createFileRoute("/_auth/_app/$orgSlug/invoices/$invoiceId")({
   component: InvoiceDetailPage,
 });
@@ -23,13 +23,13 @@ function InvoiceDetailPage() {
 
   const [isSavingEditor, setIsSavingEditor] = useState(false);
 
-  const invoice = useQuery(api.invoices.get, {
+  const invoice = useAuthenticatedQuery(api.invoices.get, {
     organizationId,
     invoiceId: typedInvoiceId,
   }) as Doc<"invoices"> | undefined;
-  const updateInvoice = useMutation(api.invoices.update);
-  const sendInvoice = useMutation(api.invoices.send);
-  const markPaid = useMutation(api.invoices.markPaid);
+  const { mutate: updateInvoice } = useAuthenticatedMutation(api.invoices.update);
+  const { mutate: sendInvoice } = useAuthenticatedMutation(api.invoices.send);
+  const { mutate: markPaid } = useAuthenticatedMutation(api.invoices.markPaid);
   const generatePdf = useAction(api.invoicesActions.generatePdf);
 
   if (!invoice) {

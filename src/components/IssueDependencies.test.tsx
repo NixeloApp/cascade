@@ -9,6 +9,7 @@ const mockUseQuery = vi.fn();
 const mockUseMutation = vi.fn();
 
 vi.mock("convex/react", () => ({
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   useQuery: (query: any, args: any) => mockUseQuery(query, args),
   useMutation: (mutation: any) => mockUseMutation(mutation),
 }));

@@ -8,7 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { PageContent, PageError } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
@@ -20,9 +19,9 @@ import { Stack } from "@/components/ui/Stack";
 import { Switch } from "@/components/ui/Switch";
 import { Textarea } from "@/components/ui/Textarea";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { showError, showSuccess } from "@/lib/toast";
-
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspaceSlug/settings")({
   component: WorkspaceSettings,
 });
@@ -33,8 +32,11 @@ const WORKSPACE_ICONS = ["🏢", "🏗️", "💼", "🎯", "🚀", "💡", "�
 function WorkspaceSettings() {
   const { organizationId } = useOrganization();
   const { workspaceSlug } = Route.useParams();
-  const workspace = useQuery(api.workspaces.getBySlug, { organizationId, slug: workspaceSlug });
-  const updateWorkspace = useMutation(api.workspaces.updateWorkspace);
+  const workspace = useAuthenticatedQuery(api.workspaces.getBySlug, {
+    organizationId,
+    slug: workspaceSlug,
+  });
+  const { mutate: updateWorkspace } = useAuthenticatedMutation(api.workspaces.updateWorkspace);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");

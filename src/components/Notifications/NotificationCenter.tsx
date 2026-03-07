@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Link } from "@tanstack/react-router";
-import { useConvexAuth, useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
 import { isThisWeek, isToday, isYesterday } from "date-fns";
 import { Bell, ExternalLink } from "lucide-react";
 import { useState } from "react";
@@ -23,6 +23,11 @@ import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
+import {
+  useAuthenticatedMutation,
+  useAuthenticatedQuery,
+  useAuthReady,
+} from "@/hooks/useConvexHelpers";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Inbox } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -83,13 +88,13 @@ export function NotificationCenter() {
   const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState<NotificationFilter>("all");
   const orgContext = useOrganizationOptional();
-  const { isAuthenticated } = useConvexAuth();
+  const { canAct } = useAuthReady();
 
   // Filter by type on the backend for proper pagination
   const typeFilter = FILTER_TYPE_MAP[filter];
   const { results: notificationsRaw } = usePaginatedQuery(
     api.notifications.list,
-    isAuthenticated ? { types: typeFilter ?? undefined } : "skip",
+    canAct ? { types: typeFilter ?? undefined } : "skip",
     { initialNumItems: 50 },
   );
   const notifications = (notificationsRaw ?? []) as NotificationWithActor[];
@@ -99,12 +104,18 @@ export function NotificationCenter() {
 
   // Ordered groups for display
   const orderedGroups: DateGroup[] = ["today", "yesterday", "this_week", "older"];
-  const unreadCount = useQuery(api.notifications.getUnreadCount, isAuthenticated ? {} : "skip");
-  const markAsRead = useMutation(api.notifications.markAsRead);
-  const markAllAsRead = useMutation(api.notifications.markAllAsRead);
-  const archiveNotification = useMutation(api.notifications.archiveNotification);
-  const snoozeNotification = useMutation(api.notifications.snoozeNotification);
-  const removeNotification = useMutation(api.notifications.softDeleteNotification);
+  const unreadCount = useAuthenticatedQuery(api.notifications.getUnreadCount, {});
+  const { mutate: markAsRead } = useAuthenticatedMutation(api.notifications.markAsRead);
+  const { mutate: markAllAsRead } = useAuthenticatedMutation(api.notifications.markAllAsRead);
+  const { mutate: archiveNotification } = useAuthenticatedMutation(
+    api.notifications.archiveNotification,
+  );
+  const { mutate: snoozeNotification } = useAuthenticatedMutation(
+    api.notifications.snoozeNotification,
+  );
+  const { mutate: removeNotification } = useAuthenticatedMutation(
+    api.notifications.softDeleteNotification,
+  );
 
   const handleMarkAsRead = async (id: Id<"notifications">) => {
     try {

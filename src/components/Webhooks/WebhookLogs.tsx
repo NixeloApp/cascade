@@ -8,9 +8,10 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useMutation, usePaginatedQuery } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import { useState } from "react";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { BarChart3, Check, RefreshCw, X } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
@@ -42,7 +43,7 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
     { webhookId },
     { initialNumItems: 50 },
   ) as { results: WebhookExecution[] };
-  const retryExecution = useMutation(api.webhooks.retryExecution);
+  const { mutate: retryExecution } = useAuthenticatedMutation(api.webhooks.retryExecution);
 
   const handleRetry = async (executionId: Id<"webhookExecutions">) => {
     try {

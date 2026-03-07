@@ -8,8 +8,8 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation } from "convex/react";
 import { useState } from "react";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
@@ -38,7 +38,7 @@ export function GeneralSettings({
   const [editDescription, setEditDescription] = useState(description || "");
   const [isSaving, setIsSaving] = useState(false);
 
-  const updateProject = useMutation(api.projects.updateProject);
+  const { mutate: updateProject } = useAuthenticatedMutation(api.projects.updateProject);
 
   const handleEdit = () => {
     setEditName(name);

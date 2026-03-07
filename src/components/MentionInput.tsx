@@ -8,9 +8,9 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useQuery } from "convex/react";
 import { Eye, Pencil } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { cn } from "@/lib/utils";
 import { CommentRenderer } from "./CommentRenderer";
 import { Avatar } from "./ui/Avatar";
@@ -53,7 +53,7 @@ export function MentionInput({
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const members = useQuery(api.projectMembers.list, { projectId });
+  const members = useAuthenticatedQuery(api.projectMembers.list, { projectId });
 
   // Filter members based on mention search
   const filteredMembers =

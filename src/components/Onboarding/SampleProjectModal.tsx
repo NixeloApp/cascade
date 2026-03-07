@@ -1,6 +1,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation } from "convex/react";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
+
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Dialog } from "../ui/Dialog";
@@ -21,7 +22,9 @@ export function SampleProjectModal({
   onCreateSampleProject,
   onStartFromScratch,
 }: SampleProjectModalProps) {
-  const createSampleProject = useMutation(api.onboarding.createSampleProject);
+  const { mutate: createSampleProject } = useAuthenticatedMutation(
+    api.onboarding.createSampleProject,
+  );
 
   const handleCreateSample = async () => {
     try {

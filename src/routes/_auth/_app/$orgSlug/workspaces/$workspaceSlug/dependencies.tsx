@@ -1,7 +1,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
 import { useState } from "react";
 import { PageContent, PageError } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
@@ -15,9 +14,9 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { LinkIcon } from "@/lib/icons";
-
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspaceSlug/dependencies")(
   {
     component: WorkspaceDependenciesPage,
@@ -31,12 +30,12 @@ function WorkspaceDependenciesPage() {
   const [status, setStatus] = useState<string>("all");
   const [priority, setPriority] = useState<string>("all");
 
-  const workspace = useQuery(api.workspaces.getBySlug, {
+  const workspace = useAuthenticatedQuery(api.workspaces.getBySlug, {
     organizationId,
     slug: workspaceSlug,
   });
-  const teams = useQuery(api.teams.getOrganizationTeams, { organizationId });
-  const dependencies = useQuery(
+  const teams = useAuthenticatedQuery(api.teams.getOrganizationTeams, { organizationId });
+  const dependencies = useAuthenticatedQuery(
     api.workspaces.getCrossTeamDependencies,
     workspace
       ? {

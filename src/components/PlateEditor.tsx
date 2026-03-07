@@ -11,7 +11,8 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useConvexAuth } from "convex/react";
+
 import type { Value } from "platejs";
 import { Plate, PlateContent, usePlateEditor } from "platejs/react";
 import { useState } from "react";
@@ -22,6 +23,7 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Skeleton, SkeletonText } from "@/components/ui/Skeleton";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Lock } from "@/lib/icons";
 import { getEditorPlugins, getInitialValue } from "@/lib/plate/editor";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -43,28 +45,19 @@ interface PlateEditorProps {
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Editor component with multiple document operations and state management
 export function PlateEditor({ documentId }: PlateEditorProps) {
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
-  const document = useQuery(
-    api.documents.getDocument,
-    isAuthenticated ? { id: documentId } : "skip",
-  );
-  const updateTitle = useMutation(api.documents.updateTitle);
-  const togglePublic = useMutation(api.documents.togglePublic);
-  const toggleFavorite = useMutation(api.documents.toggleFavorite);
-  const archiveDocument = useMutation(api.documents.archiveDocument);
-  const unarchiveDocument = useMutation(api.documents.unarchiveDocument);
-  const lockDocument = useMutation(api.documents.lockDocument);
-  const unlockDocument = useMutation(api.documents.unlockDocument);
-  const isFavorite = useQuery(api.documents.isFavorite, isAuthenticated ? { documentId } : "skip");
-  const isArchived = useQuery(api.documents.isArchived, isAuthenticated ? { documentId } : "skip");
-  const lockStatus = useQuery(
-    api.documents.getLockStatus,
-    isAuthenticated ? { documentId } : "skip",
-  );
-  const userId = useQuery(api.presence.getUserId, isAuthenticated ? undefined : "skip");
-  const versionCount = useQuery(
-    api.documentVersions.getVersionCount,
-    isAuthenticated ? { documentId } : "skip",
-  );
+  const document = useAuthenticatedQuery(api.documents.getDocument, { id: documentId });
+  const { mutate: updateTitle } = useAuthenticatedMutation(api.documents.updateTitle);
+  const { mutate: togglePublic } = useAuthenticatedMutation(api.documents.togglePublic);
+  const { mutate: toggleFavorite } = useAuthenticatedMutation(api.documents.toggleFavorite);
+  const { mutate: archiveDocument } = useAuthenticatedMutation(api.documents.archiveDocument);
+  const { mutate: unarchiveDocument } = useAuthenticatedMutation(api.documents.unarchiveDocument);
+  const { mutate: lockDocument } = useAuthenticatedMutation(api.documents.lockDocument);
+  const { mutate: unlockDocument } = useAuthenticatedMutation(api.documents.unlockDocument);
+  const isFavorite = useAuthenticatedQuery(api.documents.isFavorite, { documentId });
+  const isArchived = useAuthenticatedQuery(api.documents.isArchived, { documentId });
+  const lockStatus = useAuthenticatedQuery(api.documents.getLockStatus, { documentId });
+  const userId = useAuthenticatedQuery(api.presence.getUserId, {});
+  const versionCount = useAuthenticatedQuery(api.documentVersions.getVersionCount, { documentId });
 
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [showMoveDialog, setShowMoveDialog] = useState(false);

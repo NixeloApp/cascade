@@ -1,8 +1,8 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Github, Trash2 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
@@ -13,7 +13,6 @@ import { Label } from "../ui/Label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
-
 /**
  * GitHub linked repositories management
  * Extracted from Settings/GitHubIntegration for better organization
@@ -22,12 +21,12 @@ export function LinkedRepositories() {
   const [selectedWorkspace, setSelectedWorkspace] = useState<Id<"projects"> | null>(null);
   const [unlinkConfirmOpen, setUnlinkConfirmOpen] = useState(false);
   const [pendingUnlinkId, setPendingUnlinkId] = useState<Id<"githubRepositories"> | null>(null);
-  const projects = useQuery(api.projects.getCurrentUserProjects, {});
-  const repositories = useQuery(
+  const projects = useAuthenticatedQuery(api.projects.getCurrentUserProjects, {});
+  const repositories = useAuthenticatedQuery(
     api.github.listRepositories,
     selectedWorkspace ? { projectId: selectedWorkspace } : "skip",
   );
-  const unlinkRepo = useMutation(api.github.unlinkRepository);
+  const { mutate: unlinkRepo } = useAuthenticatedMutation(api.github.unlinkRepository);
 
   const handleUnlinkClick = (repoId: Id<"githubRepositories">) => {
     setPendingUnlinkId(repoId);

@@ -7,7 +7,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useQuery } from "convex/react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
@@ -15,6 +14,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Users } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +23,7 @@ interface SprintWorkloadProps {
 }
 
 export function SprintWorkload({ sprintId }: SprintWorkloadProps) {
-  const breakdown = useQuery(api.analytics.getSprintAssigneeBreakdown, {
+  const breakdown = useAuthenticatedQuery(api.analytics.getSprintAssigneeBreakdown, {
     sprintId,
   });
 

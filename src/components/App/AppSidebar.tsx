@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { Link, type LinkProps, useLocation, useNavigate } from "@tanstack/react-router";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
+
 import { useState } from "react";
 import { CreateTeamModal } from "@/components/CreateTeamModal";
 import { SidebarTeamItem } from "@/components/Sidebar/SidebarTeamItem";
@@ -20,6 +20,7 @@ import { NavItem as NavItemBase } from "@/components/ui/NavItem";
 import { Tooltip, TooltipProvider } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import {
@@ -363,10 +364,9 @@ export function AppSidebar() {
 
   // Get organization from URL context
   const { orgSlug, organizationName, organizationId } = useOrganization();
-  const { isAuthenticated } = useConvexAuth();
 
   // All hooks must be called unconditionally
-  const isAdmin = useQuery(api.users.isOrganizationAdmin, isAuthenticated ? undefined : "skip");
+  const isAdmin = useAuthenticatedQuery(api.users.isOrganizationAdmin, {});
   const showTimeTracking = isAdmin === true;
 
   // Section expand states
@@ -382,16 +382,10 @@ export function AppSidebar() {
   } | null>(null);
 
   // Data
-  const documentsResult = useQuery(
-    api.documents.list,
-    isAuthenticated ? { limit: 11, organizationId } : "skip",
-  );
+  const documentsResult = useAuthenticatedQuery(api.documents.list, { limit: 11, organizationId });
   const documents = documentsResult?.documents;
-  const workspaces = useQuery(api.workspaces.list, isAuthenticated ? { organizationId } : "skip");
-  const teams = useQuery(
-    api.teams.getOrganizationTeams,
-    isAuthenticated ? { organizationId } : "skip",
-  );
+  const workspaces = useAuthenticatedQuery(api.workspaces.list, { organizationId });
+  const teams = useAuthenticatedQuery(api.teams.getOrganizationTeams, { organizationId });
 
   const allDocuments = documents ?? [];
   const allWorkspaces = workspaces ?? [];
@@ -411,9 +405,9 @@ export function AppSidebar() {
   const teamsByWorkspace = groupTeamsByWorkspace(teams);
 
   // Mutations
-  const createDocument = useMutation(api.documents.create);
-  const createWorkspace = useMutation(api.workspaces.create);
-  // const createProject = useMutation(api.projects.createProject); // TODO: Add project creation UI
+  const { mutate: createDocument } = useAuthenticatedMutation(api.documents.create);
+  const { mutate: createWorkspace } = useAuthenticatedMutation(api.workspaces.create);
+  // const { mutate: createProject } = useAuthenticatedMutation(api.projects.createProject); // TODO: Add project creation UI
 
   const isActive = (pathPart: string) => {
     return location.pathname.includes(pathPart);

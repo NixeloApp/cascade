@@ -9,9 +9,9 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { toggleInArray } from "@/lib/array-utils";
 import { FormInput } from "@/lib/form";
 import { showError, showSuccess } from "@/lib/toast";
@@ -65,8 +65,8 @@ export function WebhookForm({ projectId, webhook, open, onOpenChange }: WebhookF
   // Events array (kept outside form due to checkbox array pattern)
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
 
-  const createWebhook = useMutation(api.webhooks.createWebhook);
-  const updateWebhook = useMutation(api.webhooks.updateWebhook);
+  const { mutate: createWebhook } = useAuthenticatedMutation(api.webhooks.createWebhook);
+  const { mutate: updateWebhook } = useAuthenticatedMutation(api.webhooks.updateWebhook);
 
   const form = useForm({
     defaultValues: {

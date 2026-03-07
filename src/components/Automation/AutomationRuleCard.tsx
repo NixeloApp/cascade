@@ -13,7 +13,8 @@ import type {
   AutomationActionValue,
   AutomationTrigger,
 } from "@convex/validators";
-import { useMutation } from "convex/react";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
+
 import { ArrowRight, Pause, Pencil, Play, Trash2 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
@@ -67,7 +68,7 @@ const getActionLabel = (actionType: string) => {
  * Extracted from AutomationRulesManager for better reusability
  */
 export function AutomationRuleCard({ rule, onEdit, onDelete }: AutomationRuleCardProps) {
-  const updateRule = useMutation(api.automationRules.update);
+  const { mutate: updateRule } = useAuthenticatedMutation(api.automationRules.update);
 
   const handleToggle = async () => {
     try {

@@ -7,8 +7,8 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Calendar, Check } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
@@ -20,16 +20,19 @@ import { RadioGroup, RadioGroupItem } from "../ui/RadioGroup";
 import { Stack } from "../ui/Stack";
 import { Switch } from "../ui/Switch";
 import { Typography } from "../ui/Typography";
-
 /**
  * Google Calendar integration card
  * Extracted from Settings for better organization
  */
 export function GoogleCalendarIntegration() {
-  const calendarConnection = useQuery(api.googleCalendar.getConnection);
-  const connectGoogle = useMutation(api.googleCalendar.connectGoogle);
-  const disconnectGoogle = useMutation(api.googleCalendar.disconnectGoogle);
-  const updateSyncSettings = useMutation(api.googleCalendar.updateSyncSettings);
+  const calendarConnection = useAuthenticatedQuery(api.googleCalendar.getConnection, {});
+  const { mutate: connectGoogle } = useAuthenticatedMutation(api.googleCalendar.connectGoogle);
+  const { mutate: disconnectGoogle } = useAuthenticatedMutation(
+    api.googleCalendar.disconnectGoogle,
+  );
+  const { mutate: updateSyncSettings } = useAuthenticatedMutation(
+    api.googleCalendar.updateSyncSettings,
+  );
   const [isConnecting, setIsConnecting] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);

@@ -6,8 +6,9 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { usePaginatedQuery, useQuery } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import type { EnrichedIssue } from "../../convex/lib/issueHelpers";
 
 type PaginatedQuery = FunctionReference<"query", "public">;
@@ -68,7 +69,7 @@ export function usePaginatedIssues({
     { initialNumItems: pageSize },
   ) as { results: EnrichedIssue[]; status: string; loadMore: (n: number) => void };
 
-  const countsData = useQuery(api.issues.getIssueCounts, {
+  const countsData = useAuthenticatedQuery(api.issues.getIssueCounts, {
     projectId,
     sprintId,
   });

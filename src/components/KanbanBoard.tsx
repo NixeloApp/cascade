@@ -11,11 +11,11 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import type { WorkflowState } from "@convex/shared/types";
-import { useQuery } from "convex/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useBoardDragAndDrop } from "@/hooks/useBoardDragAndDrop";
 import { useBoardHistory } from "@/hooks/useBoardHistory";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useListNavigation } from "@/hooks/useListNavigation";
 import { useSmartBoardData } from "@/hooks/useSmartBoardData";
 import { matchesBoardQuery, parseBoardQuery } from "@/lib/board-query-language";
@@ -170,7 +170,7 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
     });
   }, []);
 
-  const project = useQuery(
+  const project = useAuthenticatedQuery(
     api.projects.getProject,
     isProjectMode && projectId ? { id: projectId } : "skip",
   );

@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { Play } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { formatDuration, formatHours } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
@@ -11,15 +11,10 @@ import { Flex } from "../ui/Flex";
 import { Tooltip } from "../ui/Tooltip";
 import { Typography } from "../ui/Typography";
 import { TimeEntryModal } from "./TimeEntryModal";
-
 /** Real-time timer widget for tracking work on issues. */
 export function TimerWidget() {
-  const { isAuthenticated } = useConvexAuth();
-  const runningTimer = useQuery(
-    api.timeTracking.getRunningTimer,
-    isAuthenticated ? undefined : "skip",
-  );
-  const stopTimer = useMutation(api.timeTracking.stopTimer);
+  const runningTimer = useAuthenticatedQuery(api.timeTracking.getRunningTimer, {});
+  const { mutate: stopTimer } = useAuthenticatedMutation(api.timeTracking.stopTimer);
 
   // Get billing setting from organization context
   const { billingEnabled } = useOrganization();

@@ -8,9 +8,10 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useConvexAuth } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { Clock, Hourglass, Play } from "lucide-react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { ACTIVITY_TYPES } from "@/lib/constants";
 import { formatDateForInput, formatDurationHuman } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
@@ -297,9 +298,12 @@ export function TimeEntryModal({
 }: TimeEntryModalProps) {
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
   const canUseTimeEntry = open && isAuthenticated && !isAuthLoading;
-  const createTimeEntry = useMutation(api.timeTracking.createTimeEntry);
-  const startTimerMutation = useMutation(api.timeTracking.startTimer);
-  const projects = useQuery(api.projects.getCurrentUserProjects, canUseTimeEntry ? {} : "skip");
+  const { mutate: createTimeEntry } = useAuthenticatedMutation(api.timeTracking.createTimeEntry);
+  const { mutate: startTimerMutation } = useAuthenticatedMutation(api.timeTracking.startTimer);
+  const projects = useAuthenticatedQuery(
+    api.projects.getCurrentUserProjects,
+    canUseTimeEntry ? {} : "skip",
+  );
 
   const { state, actions, computed } = useTimeEntryForm({
     initialProjectId,
@@ -308,7 +312,7 @@ export function TimeEntryModal({
     open,
   });
 
-  const projectIssues = useQuery(
+  const projectIssues = useAuthenticatedQuery(
     api.issues.listSelectableIssues,
     canUseTimeEntry && state.projectId ? { projectId: state.projectId } : "skip",
   );

@@ -5,8 +5,8 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
-import { useQuery } from "convex/react";
 import { useState } from "react";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Bot, Lightbulb, MessageSquare } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { ErrorBoundary } from "../ErrorBoundary";
@@ -31,8 +31,8 @@ export function AIAssistantPanel({ projectId, isOpen, onClose }: AIAssistantPane
   const [currentChatId, setCurrentChatId] = useState<Id<"aiChats"> | undefined>();
   const [isAnimating, setIsAnimating] = useState(false);
 
-  const chats = useQuery(api.ai.queries.getUserChats, projectId ? { projectId } : {});
-  const suggestions = useQuery(
+  const chats = useAuthenticatedQuery(api.ai.queries.getUserChats, projectId ? { projectId } : {});
+  const suggestions = useAuthenticatedQuery(
     api.ai.queries.getProjectSuggestions,
     projectId ? { projectId } : "skip",
   );

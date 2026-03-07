@@ -8,12 +8,13 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
 import { Loader2, Paperclip, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatRelativeTime } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
 import { CommentReactions } from "./CommentReactions";
@@ -104,7 +105,7 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const currentUser = useQuery(api.users.getCurrent);
+  const currentUser = useAuthenticatedQuery(api.users.getCurrent, {});
 
   const {
     results: comments,
@@ -112,10 +113,10 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
     loadMore,
   } = usePaginatedQuery(api.issues.listComments, { issueId }, { initialNumItems: 50 });
 
-  const addComment = useMutation(api.issues.addComment);
-  const generateUploadUrl = useMutation(api.attachments.generateUploadUrl);
-  const attachToIssue = useMutation(api.attachments.attachToIssue);
-  const removeAttachment = useMutation(api.attachments.removeAttachment);
+  const { mutate: addComment } = useAuthenticatedMutation(api.issues.addComment);
+  const { mutate: generateUploadUrl } = useAuthenticatedMutation(api.attachments.generateUploadUrl);
+  const { mutate: attachToIssue } = useAuthenticatedMutation(api.attachments.attachToIssue);
+  const { mutate: removeAttachment } = useAuthenticatedMutation(api.attachments.removeAttachment);
 
   const handleAttachmentUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -374,7 +375,7 @@ function CommentAttachmentLink({
   storageId: Id<"_storage">;
   issueId: Id<"issues">;
 }) {
-  const url = useQuery(api.attachments.getAttachment, { storageId, issueId });
+  const url = useAuthenticatedQuery(api.attachments.getAttachment, { storageId, issueId });
 
   if (url === undefined || url === null) {
     return null;

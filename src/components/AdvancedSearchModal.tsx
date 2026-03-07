@@ -9,9 +9,9 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
-import { useQuery } from "convex/react";
 import { useState } from "react";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { FilterCheckboxGroup } from "./AdvancedSearchModal/FilterCheckboxGroup";
 import { SearchResultsList } from "./AdvancedSearchModal/SearchResultsList";
@@ -46,7 +46,7 @@ export function AdvancedSearchModal({
   const LIMIT = 50;
 
   // Use server-side filtering
-  const searchResult = useQuery(
+  const searchResult = useAuthenticatedQuery(
     api.issues.search,
     searchQuery.length >= 2
       ? {

@@ -8,7 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { SprintBurnChart } from "@/components/Analytics/SprintBurnChart";
 import { Alert } from "@/components/ui/Alert";
@@ -32,6 +31,7 @@ import {
 import { SkeletonProjectCard } from "@/components/ui/Skeleton";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { formatDate } from "@/lib/dates";
 import { Trophy } from "@/lib/icons";
@@ -193,15 +193,15 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
   const [autoCreateNextSprint, setAutoCreateNextSprint] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
 
-  const sprints = useQuery(api.sprints.listByProject, { projectId });
-  const incompleteIssueIds = useQuery(
+  const sprints = useAuthenticatedQuery(api.sprints.listByProject, { projectId });
+  const incompleteIssueIds = useAuthenticatedQuery(
     api.sprints.getIncompleteIssueIds,
     completingSprintId ? { sprintId: completingSprintId } : "skip",
   );
-  const createSprint = useMutation(api.sprints.create);
-  const startSprint = useMutation(api.sprints.startSprint);
-  const completeSprint = useMutation(api.sprints.completeSprint);
-  const bulkMoveToSprint = useMutation(api.issues.bulkMoveToSprint);
+  const { mutate: createSprint } = useAuthenticatedMutation(api.sprints.create);
+  const { mutate: startSprint } = useAuthenticatedMutation(api.sprints.startSprint);
+  const { mutate: completeSprint } = useAuthenticatedMutation(api.sprints.completeSprint);
+  const { mutate: bulkMoveToSprint } = useAuthenticatedMutation(api.issues.bulkMoveToSprint);
 
   // Keyboard shortcut: Shift+S to create sprint
   useKeyboardShortcuts(

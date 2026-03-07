@@ -9,7 +9,6 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
 import {
   Archive,
   Bell,
@@ -34,9 +33,9 @@ import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { HOUR, WEEK } from "@/lib/time";
 import { cn } from "@/lib/utils";
-
 export interface NotificationWithActor extends Doc<"notifications"> {
   actorName?: string;
 }
@@ -107,7 +106,7 @@ export function NotificationItem({
   const [snoozePopoverOpen, setSnoozePopoverOpen] = useState(false);
 
   // Fetch issue details if present to resolve key for navigation
-  const issue = useQuery(
+  const issue = useAuthenticatedQuery(
     api.issues.getIssue,
     notification.issueId ? { id: notification.issueId } : "skip",
   );

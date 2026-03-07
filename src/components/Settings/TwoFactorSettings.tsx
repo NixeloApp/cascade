@@ -7,7 +7,6 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
@@ -22,6 +21,7 @@ import { Icon } from "@/components/ui/Icon";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Copy, Key, ShieldCheck } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 
@@ -159,11 +159,13 @@ function SetupWizardView({
  * Allows users to enable/disable 2FA and manage backup codes.
  */
 export function TwoFactorSettings() {
-  const status = useQuery(api.twoFactor.getStatus);
-  const beginSetup = useMutation(api.twoFactor.beginSetup);
-  const completeSetup = useMutation(api.twoFactor.completeSetup);
-  const disable = useMutation(api.twoFactor.disable);
-  const regenerateBackupCodes = useMutation(api.twoFactor.regenerateBackupCodes);
+  const status = useAuthenticatedQuery(api.twoFactor.getStatus, {});
+  const { mutate: beginSetup } = useAuthenticatedMutation(api.twoFactor.beginSetup);
+  const { mutate: completeSetup } = useAuthenticatedMutation(api.twoFactor.completeSetup);
+  const { mutate: disable } = useAuthenticatedMutation(api.twoFactor.disable);
+  const { mutate: regenerateBackupCodes } = useAuthenticatedMutation(
+    api.twoFactor.regenerateBackupCodes,
+  );
 
   const [step, setStep] = useState<SetupStep>("idle");
   const [otpauthUrl, setOtpauthUrl] = useState<string>("");

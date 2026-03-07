@@ -1,15 +1,14 @@
 import { api } from "@convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Wrench } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
-
 /**
  * Developer Tools Tab
  *
@@ -17,8 +16,10 @@ import { Typography } from "../ui/Typography";
  * Provides utilities for testing and debugging.
  */
 export function DevToolsTab() {
-  const currentUser = useQuery(api.users.getCurrent);
-  const resetOnboardingMutation = useMutation(api.onboarding.resetOnboarding);
+  const currentUser = useAuthenticatedQuery(api.users.getCurrent, {});
+  const { mutate: resetOnboardingMutation } = useAuthenticatedMutation(
+    api.onboarding.resetOnboarding,
+  );
   const [isResettingOnboarding, setIsResettingOnboarding] = useState(false);
 
   const handleResetOnboarding = async () => {

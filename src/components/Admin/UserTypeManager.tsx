@@ -8,9 +8,9 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Briefcase, Gem, GraduationCap, Lightbulb, Settings, Users, Wrench } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -129,15 +129,19 @@ export function UserTypeManager() {
   const [pendingDeleteUserId, setPendingDeleteUserId] = useState<Id<"users"> | null>(null);
 
   // Employment type configs
-  const configs = useQuery(api.userProfiles.getEmploymentTypeConfigs);
-  const updateConfig = useMutation(api.userProfiles.updateEmploymentTypeConfig);
-  const initConfigs = useMutation(api.userProfiles.initializeEmploymentTypes);
+  const configs = useAuthenticatedQuery(api.userProfiles.getEmploymentTypeConfigs, {});
+  const { mutate: updateConfig } = useAuthenticatedMutation(
+    api.userProfiles.updateEmploymentTypeConfig,
+  );
+  const { mutate: initConfigs } = useAuthenticatedMutation(
+    api.userProfiles.initializeEmploymentTypes,
+  );
 
   // User profiles
-  const profiles = useQuery(api.userProfiles.listUserProfiles, {});
-  const usersWithoutProfiles = useQuery(api.userProfiles.getUsersWithoutProfiles);
-  const upsertProfile = useMutation(api.userProfiles.upsertUserProfile);
-  const deleteProfile = useMutation(api.userProfiles.deleteUserProfile);
+  const profiles = useAuthenticatedQuery(api.userProfiles.listUserProfiles, {});
+  const usersWithoutProfiles = useAuthenticatedQuery(api.userProfiles.getUsersWithoutProfiles, {});
+  const { mutate: upsertProfile } = useAuthenticatedMutation(api.userProfiles.upsertUserProfile);
+  const { mutate: deleteProfile } = useAuthenticatedMutation(api.userProfiles.deleteUserProfile);
 
   // Config form state
   const [configName, setConfigName] = useState("");

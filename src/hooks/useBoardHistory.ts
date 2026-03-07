@@ -8,12 +8,11 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation } from "convex/react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { DISPLAY_LIMITS } from "@/lib/constants";
 import { showError, showSuccess } from "@/lib/toast";
-
 export interface BoardAction {
   issueId: Id<"issues">;
   oldStatus: string;
@@ -29,7 +28,7 @@ export function useBoardHistory() {
   const [historyStack, setHistoryStack] = useState<BoardAction[]>([]);
   const [redoStack, setRedoStack] = useState<BoardAction[]>([]);
 
-  const updateIssueStatus = useMutation(api.issues.updateStatus);
+  const { mutate: updateIssueStatus } = useAuthenticatedMutation(api.issues.updateStatus);
 
   const pushAction = useCallback((action: BoardAction) => {
     setHistoryStack((prev) => [...prev, action].slice(-DISPLAY_LIMITS.MAX_HISTORY_SIZE));

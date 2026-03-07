@@ -9,8 +9,8 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { MONTH, WEEK } from "@convex/lib/timeUtils";
-import { useQuery } from "convex/react";
 import { useState } from "react";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
@@ -44,7 +44,10 @@ export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTra
   const { billingEnabled } = useOrganization();
 
   // Only fetch projects list if no projectId is locked
-  const projects = useQuery(api.projects.getCurrentUserProjects, projectId ? "skip" : {});
+  const projects = useAuthenticatedQuery(
+    api.projects.getCurrentUserProjects,
+    projectId ? "skip" : {},
+  );
 
   // Determine if user can see sensitive tabs (burn rate, hourly rates)
   const canSeeSensitiveTabs = isGlobalAdmin || userRole === "admin";

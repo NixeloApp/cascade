@@ -8,7 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { Clock, FileText, Folder, Lock, Plus, Trash } from "lucide-react";
 import { useState } from "react";
@@ -16,6 +15,7 @@ import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Stack } from "@/components/ui/Stack";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatCurrency, formatDate } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
@@ -43,7 +43,7 @@ export function TimeEntriesList({
   endDate,
   billingEnabled,
 }: TimeEntriesListProps) {
-  const entries = useQuery(api.timeTracking.listTimeEntries, {
+  const entries = useAuthenticatedQuery(api.timeTracking.listTimeEntries, {
     projectId,
     userId,
     startDate,
@@ -51,7 +51,7 @@ export function TimeEntriesList({
     limit: 100,
   });
 
-  const deleteEntry = useMutation(api.timeTracking.deleteTimeEntry);
+  const { mutate: deleteEntry } = useAuthenticatedMutation(api.timeTracking.deleteTimeEntry);
 
   const [_editingEntry, _setEditingEntry] = useState<string | null>(null);
   const [showManualEntryModal, setShowManualEntryModal] = useState(false);

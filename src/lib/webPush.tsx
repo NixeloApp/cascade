@@ -6,8 +6,8 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { useMutation } from "convex/react";
 import { createContext, useContext, useEffect, useState } from "react";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "./toast";
 
 // ============================================================================
@@ -74,8 +74,10 @@ export function WebPushProvider({ children, vapidPublicKey }: WebPushProviderPro
   const [currentSubscription, setCurrentSubscription] = useState<PushSubscription | null>(null);
 
   // Convex mutations
-  const subscribeMutation = useMutation(api.pushNotifications.subscribe);
-  const unsubscribeMutation = useMutation(api.pushNotifications.unsubscribe);
+  const { mutate: subscribeMutation } = useAuthenticatedMutation(api.pushNotifications.subscribe);
+  const { mutate: unsubscribeMutation } = useAuthenticatedMutation(
+    api.pushNotifications.unsubscribe,
+  );
 
   // Check if push is supported
   const isSupported =

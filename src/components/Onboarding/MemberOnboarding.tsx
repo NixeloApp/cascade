@@ -7,7 +7,6 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { useMutation } from "convex/react";
 import { ArrowLeft, Bell, Building2, Clock, FileText, Kanban } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
@@ -19,6 +18,7 @@ import { Input } from "@/components/ui/Input";
 import { KeyboardShortcut } from "@/components/ui/KeyboardShortcut";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 
@@ -42,8 +42,12 @@ export function MemberOnboarding({
   const [isCreating, setIsCreating] = useState(false);
   const [createdSlug, setCreatedSlug] = useState<string | null>(null);
 
-  const createOrganization = useMutation(api.organizations.createOrganization);
-  const completeOnboarding = useMutation(api.onboarding.completeOnboardingFlow);
+  const { mutate: createOrganization } = useAuthenticatedMutation(
+    api.organizations.createOrganization,
+  );
+  const { mutate: completeOnboarding } = useAuthenticatedMutation(
+    api.onboarding.completeOnboardingFlow,
+  );
 
   const handleCreateOrganization = async () => {
     if (!projectName.trim()) {

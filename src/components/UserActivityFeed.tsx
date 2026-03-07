@@ -8,8 +8,8 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useQuery } from "convex/react";
 import type { LucideIcon } from "lucide-react";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatRelativeTime } from "@/lib/dates";
 import {
   AlertTriangle,
@@ -59,7 +59,7 @@ export function UserActivityFeed({
   limit = 20,
   showProjectInfo = true,
 }: UserActivityFeedProps) {
-  const activities = useQuery(api.users.getUserActivity, { userId, limit });
+  const activities = useAuthenticatedQuery(api.users.getUserActivity, { userId, limit });
 
   const getActionIcon = (action: string): LucideIcon => {
     switch (action) {

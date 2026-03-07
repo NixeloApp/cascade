@@ -7,8 +7,8 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
@@ -35,8 +35,12 @@ interface OrganizationSettingsFormData {
  */
 export function OrganizationSettings() {
   const { organizationId, organizationName } = useOrganization();
-  const organization = useQuery(api.organizations.getOrganization, { id: organizationId });
-  const updateOrganization = useMutation(api.organizations.updateOrganization);
+  const organization = useAuthenticatedQuery(api.organizations.getOrganization, {
+    id: organizationId,
+  });
+  const { mutate: updateOrganization } = useAuthenticatedMutation(
+    api.organizations.updateOrganization,
+  );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<OrganizationSettingsFormData | null>(null);

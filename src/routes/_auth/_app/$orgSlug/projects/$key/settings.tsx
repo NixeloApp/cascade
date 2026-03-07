@@ -1,11 +1,10 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
 import { PageContent, PageError, PageLayout } from "@/components/layout";
 import { ProjectSettings } from "@/components/ProjectSettings";
 import { ROUTES } from "@/config/routes";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-
 export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key/settings")({
   component: SettingsPage,
 });
@@ -14,8 +13,8 @@ function SettingsPage() {
   const { key, orgSlug } = Route.useParams();
   const { user } = useCurrentUser();
   const navigate = useNavigate();
-  const project = useQuery(api.projects.getByKey, { key });
-  const userRole = useQuery(
+  const project = useAuthenticatedQuery(api.projects.getByKey, { key });
+  const userRole = useAuthenticatedQuery(
     api.projects.getProjectUserRole,
     project ? { projectId: project._id } : "skip",
   );

@@ -8,11 +8,11 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation } from "convex/react";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Stack } from "@/components/ui/Stack";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { Check, KanbanSquare, ListTodo } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -53,8 +53,10 @@ export function ProjectWizard({
     { id: "done", name: "Done", category: "done" as const, order: 2 },
   ]);
 
-  const createWorkspace = useMutation(api.projects.createProject);
-  const updateOnboarding = useMutation(api.onboarding.updateOnboardingStatus);
+  const { mutate: createWorkspace } = useAuthenticatedMutation(api.projects.createProject);
+  const { mutate: updateOnboarding } = useAuthenticatedMutation(
+    api.onboarding.updateOnboardingStatus,
+  );
 
   const handleNext = () => {
     if (step === 1) {

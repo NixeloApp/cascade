@@ -8,9 +8,9 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import { Plus } from "lucide-react";
 import { useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import { LinkIcon } from "@/lib/icons";
 import { Button } from "./ui/Button";
@@ -43,8 +43,10 @@ export function WebhooksManager({ projectId }: WebhooksManagerProps) {
   const [showModal, setShowModal] = useState(false);
   const [editingWebhook, setEditingWebhook] = useState<Webhook | null>(null);
 
-  const webhooks = useQuery(api.webhooks.listByProject, { projectId });
-  const deleteWebhookMutation = useMutation(api.webhooks.softDeleteWebhook);
+  const webhooks = useAuthenticatedQuery(api.webhooks.listByProject, { projectId });
+  const { mutate: deleteWebhookMutation } = useAuthenticatedMutation(
+    api.webhooks.softDeleteWebhook,
+  );
 
   // Delete confirmation
   const deleteConfirm = useDeleteConfirmation<"webhooks">({

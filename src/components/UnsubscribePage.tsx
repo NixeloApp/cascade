@@ -6,7 +6,6 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
 import { AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AuthPageLayout } from "@/components/Auth/AuthPageLayout";
@@ -16,6 +15,7 @@ import { Icon } from "@/components/ui/Icon";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 
 interface UnsubscribePageProps {
   token: string;
@@ -25,8 +25,8 @@ export function UnsubscribePage({ token }: UnsubscribePageProps) {
   const [status, setStatus] = useState<"loading" | "success" | "error" | "invalid">("loading");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const getUserFromToken = useQuery(api.unsubscribe.getUserFromToken, { token });
-  const unsubscribe = useMutation(api.unsubscribe.unsubscribe);
+  const getUserFromToken = useAuthenticatedQuery(api.unsubscribe.getUserFromToken, { token });
+  const { mutate: unsubscribe } = useAuthenticatedMutation(api.unsubscribe.unsubscribe);
 
   useEffect(() => {
     if (getUserFromToken === undefined) return;

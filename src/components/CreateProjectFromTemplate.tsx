@@ -8,11 +8,12 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useConvexAuth } from "convex/react";
 import { useEffect, useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Stack } from "@/components/ui/Stack";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { ArrowLeft, CheckCircle } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -51,13 +52,13 @@ export function CreateProjectFromTemplate({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const shouldLoadModalData = open && isAuthenticated;
-  const workspaces = useQuery(
+  const workspaces = useAuthenticatedQuery(
     api.workspaces.list,
     shouldLoadModalData ? { organizationId } : "skip",
   );
 
-  const templates = useQuery(api.projectTemplates.list, shouldLoadModalData ? undefined : "skip");
-  const selectedTemplate = useQuery(
+  const templates = useAuthenticatedQuery(api.projectTemplates.list, {});
+  const selectedTemplate = useAuthenticatedQuery(
     api.projectTemplates.get,
     shouldLoadModalData && selectedTemplateId ? { id: selectedTemplateId } : "skip",
   );
@@ -69,7 +70,9 @@ export function CreateProjectFromTemplate({
     }
   }, [workspaces, selectedWorkspaceId]);
 
-  const createProject = useMutation(api.projectTemplates.createFromTemplate);
+  const { mutate: createProject } = useAuthenticatedMutation(
+    api.projectTemplates.createFromTemplate,
+  );
 
   const handleSelectTemplate = (templateId: Id<"projectTemplates">) => {
     setSelectedTemplateId(templateId);

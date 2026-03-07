@@ -8,7 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
@@ -16,6 +15,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Select } from "@/components/ui/form/Select";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { FolderInput } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 
@@ -35,7 +35,6 @@ export function MoveDocumentDialog({
   currentProjectId,
   organizationId,
 }: MoveDocumentDialogProps) {
-  const { isAuthenticated } = useConvexAuth();
   const [selectedProjectId, setSelectedProjectId] = useState<Id<"projects"> | "">(
     currentProjectId || "",
   );
@@ -48,11 +47,8 @@ export function MoveDocumentDialog({
     }
   }, [open, currentProjectId]);
 
-  const projects = useQuery(
-    api.projects.getCurrentUserProjects,
-    open && isAuthenticated ? { organizationId } : "skip",
-  );
-  const moveToProject = useMutation(api.documents.moveToProject);
+  const projects = useAuthenticatedQuery(api.projects.getCurrentUserProjects, { organizationId });
+  const { mutate: moveToProject } = useAuthenticatedMutation(api.documents.moveToProject);
 
   const handleMove = async () => {
     setIsMoving(true);

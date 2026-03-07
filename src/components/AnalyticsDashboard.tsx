@@ -8,13 +8,13 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useQuery } from "convex/react";
 import { useMemo } from "react";
 import { PageHeader, PageLayout } from "@/components/layout";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Stack } from "@/components/ui/Stack";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { CheckCircle, MapPin, TrendingUp, Zap } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { BarChart } from "./Analytics/BarChart";
@@ -51,13 +51,13 @@ interface VelocityData {
  * Project analytics dashboard with metrics, velocity charts, and activity feed.
  */
 export function AnalyticsDashboard({ projectId }: Props) {
-  const analytics = useQuery(api.analytics.getProjectAnalytics, { projectId }) as
+  const analytics = useAuthenticatedQuery(api.analytics.getProjectAnalytics, { projectId }) as
     | AnalyticsData
     | undefined;
-  const velocity = useQuery(api.analytics.getTeamVelocity, { projectId }) as
+  const velocity = useAuthenticatedQuery(api.analytics.getTeamVelocity, { projectId }) as
     | VelocityData
     | undefined;
-  const recentActivity = useQuery(api.analytics.getRecentActivity, {
+  const recentActivity = useAuthenticatedQuery(api.analytics.getRecentActivity, {
     projectId,
     limit: 10,
   });

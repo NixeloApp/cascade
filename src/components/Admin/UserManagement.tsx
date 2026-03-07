@@ -8,8 +8,8 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Mail, Users } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -92,13 +92,19 @@ export function UserManagement() {
 
   // Queries
   // Queries
-  const invites = useQuery(api.invites.listInvites, organizationId ? { organizationId } : "skip");
-  const users = useQuery(api.invites.listUsers, organizationId ? { organizationId } : "skip");
+  const invites = useAuthenticatedQuery(
+    api.invites.listInvites,
+    organizationId ? { organizationId } : "skip",
+  );
+  const users = useAuthenticatedQuery(
+    api.invites.listUsers,
+    organizationId ? { organizationId } : "skip",
+  );
 
   // Mutations
-  const sendInvite = useMutation(api.invites.sendInvite);
-  const revokeInvite = useMutation(api.invites.revokeInvite);
-  const resendInvite = useMutation(api.invites.resendInvite);
+  const { mutate: sendInvite } = useAuthenticatedMutation(api.invites.sendInvite);
+  const { mutate: revokeInvite } = useAuthenticatedMutation(api.invites.revokeInvite);
+  const { mutate: resendInvite } = useAuthenticatedMutation(api.invites.resendInvite);
 
   const handleSendInvite = async (e: React.FormEvent) => {
     e.preventDefault();

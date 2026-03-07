@@ -1,7 +1,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
 import { useState } from "react";
 import { CalendarView } from "@/components/Calendar/CalendarView";
 import { PageContent } from "@/components/layout";
@@ -14,16 +13,16 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
-
 export const Route = createFileRoute("/_auth/_app/$orgSlug/calendar")({
   component: OrganizationCalendarPage,
 });
 
 function OrganizationCalendarPage() {
   const { organizationId } = useOrganization();
-  const workspaces = useQuery(api.workspaces.list, { organizationId });
-  const teams = useQuery(api.teams.getOrganizationTeams, { organizationId });
+  const workspaces = useAuthenticatedQuery(api.workspaces.list, { organizationId });
+  const teams = useAuthenticatedQuery(api.teams.getOrganizationTeams, { organizationId });
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<Id<"workspaces"> | "all">("all");
   const [selectedTeamId, setSelectedTeamId] = useState<Id<"teams"> | "all">("all");
 

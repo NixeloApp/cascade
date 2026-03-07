@@ -8,7 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
@@ -19,9 +18,9 @@ import { Icon } from "@/components/ui/Icon";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { ShieldCheck } from "@/lib/icons";
 import { showError } from "@/lib/toast";
-
 export const Route = createFileRoute("/verify-2fa")({
   component: Verify2FARoute,
   ssr: false,
@@ -29,9 +28,9 @@ export const Route = createFileRoute("/verify-2fa")({
 
 function Verify2FARoute() {
   const navigate = useNavigate();
-  const redirectPath = useQuery(api.auth.getRedirectDestination);
-  const verifyCode = useMutation(api.twoFactor.verifyCode);
-  const verifyBackupCode = useMutation(api.twoFactor.verifyBackupCode);
+  const redirectPath = useAuthenticatedQuery(api.auth.getRedirectDestination, {});
+  const { mutate: verifyCode } = useAuthenticatedMutation(api.twoFactor.verifyCode);
+  const { mutate: verifyBackupCode } = useAuthenticatedMutation(api.twoFactor.verifyBackupCode);
 
   const [code, setCode] = useState("");
   const [isBackupCode, setIsBackupCode] = useState(false);

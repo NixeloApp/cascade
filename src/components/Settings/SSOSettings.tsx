@@ -8,7 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
@@ -22,6 +21,7 @@ import { Icon } from "@/components/ui/Icon";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Key, Plus, Settings, Trash2 } from "@/lib/icons";
 import { getOidcPresetConfig, type OidcProviderPreset } from "@/lib/sso-oidc-presets";
 import { showError, showSuccess } from "@/lib/toast";
@@ -37,10 +37,10 @@ type ConnectionType = "saml" | "oidc";
  * Admin-only feature for organization authentication configuration.
  */
 export function SSOSettings({ organizationId }: SSOSettingsProps) {
-  const connections = useQuery(api.sso.list, { organizationId });
-  const createConnection = useMutation(api.sso.create);
-  const removeConnection = useMutation(api.sso.remove);
-  const setEnabled = useMutation(api.sso.setEnabled);
+  const connections = useAuthenticatedQuery(api.sso.list, { organizationId });
+  const { mutate: createConnection } = useAuthenticatedMutation(api.sso.create);
+  const { mutate: removeConnection } = useAuthenticatedMutation(api.sso.remove);
+  const { mutate: setEnabled } = useAuthenticatedMutation(api.sso.setEnabled);
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
@@ -296,10 +296,10 @@ interface SSOConfigDialogProps {
 }
 
 function SSOConfigDialog({ connectionId, open, onOpenChange }: SSOConfigDialogProps) {
-  const connection = useQuery(api.sso.get, { connectionId });
-  const updateSamlConfig = useMutation(api.sso.updateSamlConfig);
-  const updateOidcConfig = useMutation(api.sso.updateOidcConfig);
-  const updateDomains = useMutation(api.sso.updateDomains);
+  const connection = useAuthenticatedQuery(api.sso.get, { connectionId });
+  const { mutate: updateSamlConfig } = useAuthenticatedMutation(api.sso.updateSamlConfig);
+  const { mutate: updateOidcConfig } = useAuthenticatedMutation(api.sso.updateOidcConfig);
+  const { mutate: updateDomains } = useAuthenticatedMutation(api.sso.updateDomains);
 
   const [isLoading, setIsLoading] = useState(false);
 

@@ -1,8 +1,8 @@
 import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router";
-import { useConvexAuth } from "convex/react";
 import { useEffect, useRef } from "react";
 import { AppSplashScreen } from "@/components/Auth";
 import { ROUTES } from "@/config/routes";
+import { useAuthReady } from "@/hooks/useConvexHelpers";
 
 export const Route = createFileRoute("/_auth")({
   component: AuthLayout,
@@ -17,22 +17,22 @@ export const Route = createFileRoute("/_auth")({
  * - Redirects to home/signin only after auth has definitively resolved unauthenticated
  */
 function AuthLayout() {
-  const { isLoading, isAuthenticated } = useConvexAuth();
+  const { isAuthLoading, isAuthenticated } = useAuthReady();
   const hasAuthenticatedSession = useRef(false);
 
   useEffect(() => {
     if (isAuthenticated) {
       hasAuthenticatedSession.current = true;
-    } else if (!isLoading) {
+    } else if (!isAuthLoading) {
       hasAuthenticatedSession.current = false;
     }
-  }, [isAuthenticated, isLoading]);
+  }, [isAuthenticated, isAuthLoading]);
 
-  if (isLoading && !hasAuthenticatedSession.current) {
+  if (isAuthLoading && !hasAuthenticatedSession.current) {
     return <AppSplashScreen />;
   }
 
-  if (isAuthenticated || (isLoading && hasAuthenticatedSession.current)) {
+  if (isAuthenticated || (isAuthLoading && hasAuthenticatedSession.current)) {
     return <Outlet />;
   }
 

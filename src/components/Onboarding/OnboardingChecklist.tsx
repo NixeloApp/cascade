@@ -7,8 +7,8 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Check, ChevronDown, ChevronUp, Rocket, X } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
@@ -27,13 +27,15 @@ interface ChecklistItem {
 /** Collapsible checklist showing onboarding progress and pending tasks. */
 export function OnboardingChecklist() {
   const [isExpanded, setIsExpanded] = useState(true);
-  const onboarding = useQuery(api.onboarding.getOnboardingStatus);
-  const projects = useQuery(api.projects.getCurrentUserProjects, {});
+  const onboarding = useAuthenticatedQuery(api.onboarding.getOnboardingStatus, {});
+  const projects = useAuthenticatedQuery(api.projects.getCurrentUserProjects, {});
   // Efficient query - only checks if user has any completed issue
-  const hasCompletedIssue = useQuery(api.onboarding.hasCompletedIssue);
+  const hasCompletedIssue = useAuthenticatedQuery(api.onboarding.hasCompletedIssue, {});
   // Check if user has created any issues (just need count > 0)
-  const userIssueCount = useQuery(api.issues.getUserIssueCount);
-  const updateOnboarding = useMutation(api.onboarding.updateOnboardingStatus);
+  const userIssueCount = useAuthenticatedQuery(api.issues.getUserIssueCount, {});
+  const { mutate: updateOnboarding } = useAuthenticatedMutation(
+    api.onboarding.updateOnboardingStatus,
+  );
 
   if (!onboarding || onboarding.checklistDismissed || onboarding.onboardingCompleted) {
     return null;

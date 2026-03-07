@@ -9,10 +9,10 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { DAY } from "@convex/lib/timeUtils";
-import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useMemo, useState } from "react";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { ChevronLeft, ChevronRight } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
@@ -57,11 +57,11 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
   const { startDate, endDate, columns } = getDateRange(currentDate, timeScale);
 
   // Fetch issues and sprints with backend filters (avoids client-side filtering)
-  const issues = useQuery(api.issues.listRoadmapIssues, {
+  const issues = useAuthenticatedQuery(api.issues.listRoadmapIssues, {
     projectId,
     hasDueDate: true, // Only issues with due dates
   });
-  const sprints = useQuery(api.sprints.listByProject, {
+  const sprints = useAuthenticatedQuery(api.sprints.listByProject, {
     projectId,
     hasDates: true, // Only sprints with start and end dates
   });

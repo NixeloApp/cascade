@@ -10,6 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import type { EnrichedIssue } from "../../convex/lib/issueHelpers";
 
 // Type for the smart query return data
@@ -289,7 +290,7 @@ export function useSmartBoardData({
     queryArgs,
   ) as IssueCountsResult | undefined;
 
-  const moreDoneData = useQuery(
+  const moreDoneData = useAuthenticatedQuery(
     api.issues.loadMoreDoneIssues,
     getLoadMoreArgs(isTeamMode, loadMoreCursor, projectId, sprintId),
   );

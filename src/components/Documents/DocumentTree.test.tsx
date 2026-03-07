@@ -42,6 +42,7 @@ interface TreeNode {
 
 // Mock Convex
 vi.mock("convex/react", () => ({
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   useQuery: vi.fn((_query: unknown, args: unknown) => {
     // Check args to determine which query is being called
     const argsObj = args as Record<string, unknown> | "skip";

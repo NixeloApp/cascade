@@ -8,7 +8,7 @@
 
 import { api } from "@convex/_generated/api";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Authenticated, Unauthenticated, useMutation, useQuery } from "convex/react";
+import { Authenticated, Unauthenticated } from "convex/react";
 import { AlertCircle, CheckCircle, Clock, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { AuthRedirect, SignInForm } from "@/components/Auth";
@@ -16,8 +16,8 @@ import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
-
 export const Route = createFileRoute("/invite/$token")({
   component: InviteRoute,
   ssr: false, // No SSR needed for invite page
@@ -31,8 +31,8 @@ function InviteRoute() {
   const [inviteAccepted, setInviteAccepted] = useState(false);
 
   // Get invite details
-  const invite = useQuery(api.invites.getInviteByToken, { token });
-  const acceptInvite = useMutation(api.invites.acceptInvite);
+  const invite = useAuthenticatedQuery(api.invites.getInviteByToken, { token });
+  const { mutate: acceptInvite } = useAuthenticatedMutation(api.invites.acceptInvite);
 
   const goToHome = () => {
     navigate({ to: ROUTES.home.path });

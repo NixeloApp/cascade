@@ -9,9 +9,9 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { MONTH, WEEK } from "@convex/lib/timeUtils";
-import { useQuery } from "convex/react";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Calendar, DollarSign, TrendingUp } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
@@ -61,13 +61,13 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
 
   const { startDate, endDate } = ranges[dateRange];
 
-  const burnRate = useQuery(api.timeTracking.getBurnRate, {
+  const burnRate = useAuthenticatedQuery(api.timeTracking.getBurnRate, {
     projectId,
     startDate,
     endDate,
   });
 
-  const teamCosts = useQuery(api.timeTracking.getTeamCosts, {
+  const teamCosts = useAuthenticatedQuery(api.timeTracking.getTeamCosts, {
     projectId,
     startDate,
     endDate,

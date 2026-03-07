@@ -1,9 +1,9 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
 import { PageContent, PageError } from "@/components/layout";
 import { RoadmapView } from "@/components/RoadmapView";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key/roadmap")({
   component: RoadmapPage,
@@ -11,8 +11,8 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key/roadmap
 
 function RoadmapPage() {
   const { key } = Route.useParams();
-  const project = useQuery(api.projects.getByKey, { key });
-  const sprints = useQuery(
+  const project = useAuthenticatedQuery(api.projects.getByKey, { key });
+  const sprints = useAuthenticatedQuery(
     api.sprints.listByProject,
     project ? { projectId: project._id } : "skip",
   );

@@ -8,8 +8,8 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import { ClipboardList } from "@/lib/icons";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
@@ -48,8 +48,8 @@ export function TemplatesManager({ projectId }: TemplatesManagerProps) {
   const [showModal, setShowModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<IssueTemplate | null>(null);
 
-  const templates = useQuery(api.templates.listByProject, { projectId });
-  const deleteTemplateMutation = useMutation(api.templates.remove);
+  const templates = useAuthenticatedQuery(api.templates.listByProject, { projectId });
+  const { mutate: deleteTemplateMutation } = useAuthenticatedMutation(api.templates.remove);
 
   // Delete confirmation
   const deleteConfirm = useDeleteConfirmation<"issueTemplates">({

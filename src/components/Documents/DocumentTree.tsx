@@ -9,7 +9,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Link } from "@tanstack/react-router";
-import { useMutation, useQuery } from "convex/react";
 import {
   Archive,
   ChevronDown,
@@ -37,6 +36,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showError } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 
@@ -67,17 +67,17 @@ export function DocumentTree({
   const [favoritesExpanded, setFavoritesExpanded] = useState(true);
   const [archivedExpanded, setArchivedExpanded] = useState(false);
 
-  const rootDocs = useQuery(api.documents.listChildren, {
+  const rootDocs = useAuthenticatedQuery(api.documents.listChildren, {
     organizationId,
     parentId: undefined,
   });
 
-  const favorites = useQuery(api.documents.listFavorites, {
+  const favorites = useAuthenticatedQuery(api.documents.listFavorites, {
     organizationId,
     limit: 10,
   });
 
-  const archived = useQuery(api.documents.listArchived, {
+  const archived = useAuthenticatedQuery(api.documents.listArchived, {
     organizationId,
     limit: 10,
   });
@@ -322,12 +322,12 @@ function TreeNodeItem({
   const [isExpanded, setIsExpanded] = useState(false);
   const isSelected = selectedId === node._id;
 
-  const children = useQuery(
+  const children = useAuthenticatedQuery(
     api.documents.listChildren,
     isExpanded ? { organizationId, parentId: node._id } : "skip",
   );
 
-  const moveDocument = useMutation(api.documents.moveDocument);
+  const { mutate: moveDocument } = useAuthenticatedMutation(api.documents.moveDocument);
 
   const handleToggle = (e: React.MouseEvent) => {
     e.preventDefault();
