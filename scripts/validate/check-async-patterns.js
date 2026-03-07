@@ -13,8 +13,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
-const CHECK_ENABLED = true;
-
 // Files/directories to skip
 const SKIP_PATTERNS = [
   "node_modules",
@@ -63,15 +61,6 @@ const ALLOWED_CONSOLE_CATCH_FILES = new Set([
 ]);
 
 export function run() {
-  if (!CHECK_ENABLED) {
-    return {
-      passed: true,
-      errors: 0,
-      detail: "Disabled",
-      messages: [],
-    };
-  }
-
   const SRC_DIR = path.join(ROOT, "src");
 
   let issueCount = 0;

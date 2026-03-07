@@ -13,8 +13,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath } from "./utils.js";
 
-const CHECK_ENABLED = true;
-
 // Files to skip
 const SKIP_PATTERNS = [".test.", ".spec.", "index.ts", ".d.ts"];
 
@@ -30,15 +28,6 @@ const CONVEX_PATTERN_HOOKS = [
 ];
 
 export function run() {
-  if (!CHECK_ENABLED) {
-    return {
-      passed: true,
-      errors: 0,
-      detail: "Disabled",
-      messages: [],
-    };
-  }
-
   const HOOKS_DIR = path.join(ROOT, "src/hooks");
 
   // Check if hooks directory exists

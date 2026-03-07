@@ -23,8 +23,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath } from "./utils.js";
 
-const CHECK_ENABLED = true;
-
 // Layout component files to check for consistency
 const LAYOUT_COMPONENTS = [
   "src/components/ui/Flex.tsx",
@@ -199,10 +197,6 @@ function checkLayoutComponent(filePath) {
  * Main validation function
  */
 export function run() {
-  if (!CHECK_ENABLED) {
-    return { passed: true, errors: 0, detail: "Disabled", messages: [] };
-  }
-
   const allIssues = [];
 
   for (const componentPath of LAYOUT_COMPONENTS) {

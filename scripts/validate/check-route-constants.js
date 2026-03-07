@@ -22,8 +22,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
-const CHECK_ENABLED = true;
-
 // Known route patterns that should use ROUTES constants
 const ROUTE_PATTERNS = [
   // Auth routes
@@ -79,15 +77,6 @@ const ALLOWED_PATTERNS = [
 ];
 
 export function run() {
-  if (!CHECK_ENABLED) {
-    return {
-      passed: true,
-      errors: 0,
-      detail: "Disabled",
-      messages: [],
-    };
-  }
-
   const SRC_DIR = path.join(ROOT, "src");
 
   let issueCount = 0;

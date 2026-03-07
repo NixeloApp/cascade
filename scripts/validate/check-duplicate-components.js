@@ -20,8 +20,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
-const CHECK_ENABLED = true;
-
 // Directories to check
 const COMPONENT_DIRS = ["src/components"];
 
@@ -73,10 +71,6 @@ function isAllowedDuplicate(path1, path2) {
  * Main validation function
  */
 export function run() {
-  if (!CHECK_ENABLED) {
-    return { passed: true, errors: 0, detail: "Disabled", messages: [] };
-  }
-
   const componentsByName = new Map();
 
   // Collect all component files by base name

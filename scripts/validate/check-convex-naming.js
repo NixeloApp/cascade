@@ -29,8 +29,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
-const CHECK_ENABLED = true;
-
 // Valid operation prefixes
 const VALID_PREFIXES = {
   // Read operations
@@ -231,15 +229,6 @@ const ALLOWED_GENERIC_NAMES = new Set([
 ]);
 
 export function run() {
-  if (!CHECK_ENABLED) {
-    return {
-      passed: true,
-      errors: 0,
-      detail: "Disabled",
-      messages: [],
-    };
-  }
-
   const CONVEX_DIR = path.join(ROOT, "convex");
 
   let issueCount = 0;

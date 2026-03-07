@@ -13,8 +13,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
-const CHECK_ENABLED = true;
-
 // Directories to check
 const CHECK_DIRS = ["src/components", "src/hooks", "src/lib", "src/routes"];
 
@@ -165,10 +163,6 @@ function checkFile(filePath) {
  * Main validation function
  */
 export function run() {
-  if (!CHECK_ENABLED) {
-    return { passed: true, errors: 0, detail: "Disabled", messages: [] };
-  }
-
   const allIssues = [];
 
   for (const dir of CHECK_DIRS) {
