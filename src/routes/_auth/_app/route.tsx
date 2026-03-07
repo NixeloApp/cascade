@@ -9,14 +9,17 @@
 import { api } from "@convex/_generated/api";
 import { isReservedSlug } from "@convex/shared/constants";
 import { createFileRoute, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { useConvexAuth } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useEffect, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
-import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import {
+  useAuthenticatedMutation,
+  useAuthenticatedQuery,
+  useAuthReady,
+} from "@/hooks/useConvexHelpers";
 
 export const Route = createFileRoute("/_auth/_app")({
   component: AppLayout,
@@ -42,7 +45,7 @@ let hasAuthenticatedAppSession = false;
 function AppLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { isLoading: isAuthLoading, isAuthenticated } = useConvexAuth();
+  const { isAuthLoading, isAuthenticated } = useAuthReady();
 
   if (isAuthenticated) {
     hasAuthenticatedAppSession = true;

@@ -11,7 +11,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useConvexAuth } from "convex/react";
 
 import type { Value } from "platejs";
 import { Plate, PlateContent, usePlateEditor } from "platejs/react";
@@ -44,7 +43,6 @@ interface PlateEditorProps {
  */
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Editor component with multiple document operations and state management
 export function PlateEditor({ documentId }: PlateEditorProps) {
-  const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
   const document = useAuthenticatedQuery(api.documents.getDocument, { id: documentId });
   const { mutate: updateTitle } = useAuthenticatedMutation(api.documents.updateTitle);
   const { mutate: togglePublic } = useAuthenticatedMutation(api.documents.togglePublic);
@@ -161,8 +159,8 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
     }
   };
 
-  // Loading state - while auth is loading or while authenticated and data is loading
-  if (isAuthLoading || (isAuthenticated && (document === undefined || userId === undefined))) {
+  // Loading state - while data is loading
+  if (document === undefined || userId === undefined) {
     return (
       <Flex direction="column" className="h-full bg-ui-bg">
         <Card padding="lg" radius="none" className="border-x-0 border-t-0">
@@ -189,13 +187,11 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
     );
   }
 
-  // User not authenticated - check before document null check
-  if (!isAuthenticated || !userId) {
+  // No user ID - shouldn't happen in authenticated routes but handle gracefully
+  if (!userId) {
     return (
       <Flex align="center" justify="center" className="h-full">
-        <Typography className="text-ui-text-secondary">
-          Please sign in to view this document.
-        </Typography>
+        <Typography className="text-ui-text-secondary">Unable to load user data.</Typography>
       </Flex>
     );
   }

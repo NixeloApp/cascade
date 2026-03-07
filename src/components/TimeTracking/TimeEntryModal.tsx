@@ -8,7 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useConvexAuth } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { Clock, Hourglass, Play } from "lucide-react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -296,13 +295,13 @@ export function TimeEntryModal({
   defaultMode = "log",
   billingEnabled,
 }: TimeEntryModalProps) {
-  const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
-  const canUseTimeEntry = open && isAuthenticated && !isAuthLoading;
+  // Only load data when modal is open (auth is handled by useAuthenticatedQuery)
+  const shouldLoadData = open;
   const { mutate: createTimeEntry } = useAuthenticatedMutation(api.timeTracking.createTimeEntry);
   const { mutate: startTimerMutation } = useAuthenticatedMutation(api.timeTracking.startTimer);
   const projects = useAuthenticatedQuery(
     api.projects.getCurrentUserProjects,
-    canUseTimeEntry ? {} : "skip",
+    shouldLoadData ? {} : "skip",
   );
 
   const { state, actions, computed } = useTimeEntryForm({
@@ -314,7 +313,7 @@ export function TimeEntryModal({
 
   const projectIssues = useAuthenticatedQuery(
     api.issues.listSelectableIssues,
-    canUseTimeEntry && state.projectId ? { projectId: state.projectId } : "skip",
+    shouldLoadData && state.projectId ? { projectId: state.projectId } : "skip",
   );
 
   const handleStartTimer = async () => {
@@ -398,9 +397,7 @@ export function TimeEntryModal({
             type="submit"
             form="time-entry-form"
             variant="primary"
-            disabled={
-              !canUseTimeEntry || (!computed.isTimerMode && computed.effectiveDuration <= 0)
-            }
+            disabled={!shouldLoadData || (!computed.isTimerMode && computed.effectiveDuration <= 0)}
             leftIcon={computed.isTimerMode ? <Play className="w-4 h-4" /> : undefined}
           >
             {computed.isTimerMode ? "Start Timer" : "Log Time"}

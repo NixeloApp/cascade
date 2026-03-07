@@ -8,8 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { useConvexAuth } from "convex/react";
-
 import type { FunctionReturnType } from "convex/server";
 import { useCallback, useEffect, useState } from "react";
 import { AppHeader, AppSidebar } from "@/components/App";
@@ -23,7 +21,11 @@ import { Typography } from "@/components/ui/Typography";
 import { createKeyboardShortcuts, createKeySequences } from "@/config/keyboardShortcuts";
 import { ROUTES } from "@/config/routes";
 import { IssueViewModeProvider } from "@/contexts/IssueViewModeContext";
-import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import {
+  useAuthenticatedMutation,
+  useAuthenticatedQuery,
+  useAuthReady,
+} from "@/hooks/useConvexHelpers";
 import { useKeyboardShortcutsWithSequences } from "@/hooks/useKeyboardShortcuts";
 import {
   OrgContext,
@@ -98,7 +100,7 @@ function useStableOrgData(isAuthenticated: boolean, orgSlug: string) {
 
 function OrganizationLayout() {
   const { orgSlug } = Route.useParams();
-  const { isLoading: isAuthLoading, isAuthenticated } = useConvexAuth();
+  const { isAuthLoading, isAuthenticated } = useAuthReady();
 
   if (isAuthenticated) {
     hasAuthenticatedOrgSession = true;

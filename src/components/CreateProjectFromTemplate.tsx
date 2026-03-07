@@ -8,7 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useConvexAuth } from "convex/react";
 import { useEffect, useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
@@ -41,7 +40,6 @@ export function CreateProjectFromTemplate({
   onProjectCreated,
 }: CreateProjectFromTemplateProps) {
   const { organizationId } = useOrganization();
-  const { isAuthenticated } = useConvexAuth();
   const [step, setStep] = useState<"select" | "configure">("select");
   const [selectedTemplateId, setSelectedTemplateId] = useState<Id<"projectTemplates"> | null>(null);
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<Id<"workspaces"> | null>(null);
@@ -51,7 +49,8 @@ export function CreateProjectFromTemplate({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const shouldLoadModalData = open && isAuthenticated;
+  // Only load data when modal is open (auth is handled by useAuthenticatedQuery)
+  const shouldLoadModalData = open;
   const workspaces = useAuthenticatedQuery(
     api.workspaces.list,
     shouldLoadModalData ? { organizationId } : "skip",

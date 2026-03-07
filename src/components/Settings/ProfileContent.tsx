@@ -8,7 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useQuery } from "convex/react";
 import { Camera, ImageIcon } from "lucide-react";
 import { useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
@@ -256,7 +255,10 @@ export function ProfileContent({ userId }: ProfileContentProps) {
 
   const currentUser = useAuthenticatedQuery(api.users.getCurrent, {});
   const coverImageUrl = useAuthenticatedQuery(api.users.getCoverImageUrl, {});
-  const fetchedViewUser = useQuery(api.users.getUser, userId ? { id: userId } : "skip");
+  const fetchedViewUser = useAuthenticatedQuery(
+    api.users.getUser,
+    userId ? { id: userId } : "skip",
+  );
   const userStatsForUserId = useAuthenticatedQuery(
     api.users.getUserStats,
     userId ? { userId } : "skip",

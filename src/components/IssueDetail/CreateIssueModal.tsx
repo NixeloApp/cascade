@@ -10,7 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
 import { useForm } from "@tanstack/react-form";
-import { useAction, useConvexAuth } from "convex/react";
+import { useAction } from "convex/react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { DuplicateDetection } from "@/components/DuplicateDetection";
@@ -107,8 +107,8 @@ export function CreateIssueModal({
   defaultDueDate,
 }: CreateIssueModalProps) {
   const { organizationId } = useOrganization();
-  const { isAuthenticated } = useConvexAuth();
-  const shouldLoadProjectData = open && isAuthenticated;
+  // Only load data when modal is open (auth is handled by useAuthenticatedQuery)
+  const shouldLoadData = open;
 
   // Project selection for global use
   const [internalSelectedProjectId, setInternalSelectedProjectId] = useState<Id<"projects"> | null>(
@@ -136,7 +136,7 @@ export function CreateIssueModal({
   // Queries
   const orgProjects = useAuthenticatedQuery(
     api.projects.getCurrentUserProjects,
-    shouldLoadProjectData && !projectId ? { organizationId } : "skip",
+    shouldLoadData && !projectId ? { organizationId } : "skip",
   );
 
   const effectiveProjectId = projectId || internalSelectedProjectId;
@@ -153,15 +153,15 @@ export function CreateIssueModal({
 
   const project = useAuthenticatedQuery(
     api.projects.getProject,
-    shouldLoadProjectData && effectiveProjectId ? { id: effectiveProjectId } : "skip",
+    shouldLoadData && effectiveProjectId ? { id: effectiveProjectId } : "skip",
   );
   const templates = useAuthenticatedQuery(
     api.templates.listByProject,
-    shouldLoadProjectData && effectiveProjectId ? { projectId: effectiveProjectId } : "skip",
+    shouldLoadData && effectiveProjectId ? { projectId: effectiveProjectId } : "skip",
   );
   const labels = useAuthenticatedQuery(
     api.labels.list,
-    shouldLoadProjectData && effectiveProjectId ? { projectId: effectiveProjectId } : "skip",
+    shouldLoadData && effectiveProjectId ? { projectId: effectiveProjectId } : "skip",
   );
 
   // Mutations
