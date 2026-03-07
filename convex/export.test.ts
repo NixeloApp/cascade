@@ -200,7 +200,9 @@ describe("Export", () => {
         priority: "highest",
       });
 
+      const beforeExport = Date.now();
       const jsonString = await asUser.query(api.export.exportIssuesJSON, { projectId });
+      const afterExport = Date.now();
       const data = JSON.parse(jsonString);
 
       expect(data.project.name).toBe("JSON Export Project");
@@ -209,8 +211,9 @@ describe("Export", () => {
       expect(data.issues).toHaveLength(1);
       expect(data.issues[0].title).toBe("JSON Test Issue");
       expect(typeof data.exportedAt).toBe("string");
-      expect(new Date(data.exportedAt).getTime()).toBeGreaterThan(Date.now() - SECOND);
-      expect(new Date(data.exportedAt).getTime()).toBeLessThanOrEqual(Date.now());
+      const exportedAtTime = new Date(data.exportedAt).getTime();
+      expect(exportedAtTime).toBeGreaterThanOrEqual(beforeExport);
+      expect(exportedAtTime).toBeLessThanOrEqual(afterExport);
     });
 
     it("should include enriched data in JSON export", async () => {

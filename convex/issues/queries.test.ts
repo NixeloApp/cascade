@@ -445,9 +445,11 @@ describe("issue queries", () => {
 
       expect(result).not.toBeNull();
       expect(result?.todo).not.toBeUndefined();
+      expect(result?.todo).not.toBeNull();
       expect(typeof result?.todo).toBe("object");
       expect(result?.todo.total).toBe(2);
       expect(result?.done).not.toBeUndefined();
+      expect(result?.done).not.toBeNull();
       expect(typeof result?.done).toBe("object");
       expect(result?.done.total).toBe(1);
     });

@@ -71,7 +71,7 @@ describe("Hour Compliance", () => {
 
     const record = await t.run(async (ctx) => await ctx.db.get(recordId));
 
-    expect(record).not.toBeUndefined();
+    expect(record).not.toBeNull();
     expect(record?.status).toBe("under_hours");
     expect(record?.totalHoursWorked).toBe(30);
     expect(record?.hoursDeficit).toBe(10);

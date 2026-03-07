@@ -159,8 +159,8 @@ describe("GitHub Integration", () => {
       if (pr === undefined) throw new Error("pr is undefined");
       expect(pr.title).toBe("Feat: New thing (updated)");
       expect(pr.state).toBe("closed");
-      expect(pr.closedAt).not.toBeUndefined();
-      if (pr.closedAt === undefined) throw new Error("closedAt is undefined");
+      expect(pr.closedAt).not.toBeNull();
+      if (pr.closedAt == null) throw new Error("closedAt is null/undefined");
       expect(typeof pr.closedAt).toBe("number");
     });
 

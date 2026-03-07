@@ -32,7 +32,7 @@ export const chatWithRateLimit = action({
 
     // Example: Use the args in your AI chat implementation
     // In a real implementation, you would call your AI service here
-    console.log(`Processing message: ${args.message.substring(0, 50)}...`);
+    // e.g., await ctx.runAction(internal.ai.chat, { chatId: args.chatId, message: args.message });
 
     return { success: true, messageLength: args.message.length };
   },

@@ -40,8 +40,8 @@ describe("Google Calendar Integration", () => {
 
     // Verify tokens are encrypted in DB
     const rawConnection = await t.run(async (ctx) => ctx.db.get(connectionId));
-    expect(rawConnection).not.toBeUndefined();
-    if (rawConnection === undefined) throw new Error("rawConnection is undefined");
+    expect(rawConnection).not.toBeNull();
+    if (rawConnection === null) throw new Error("rawConnection is null");
     expect(rawConnection.accessToken).not.toBe("access-token-123");
     expect(rawConnection.refreshToken).not.toBe("refresh-token-123");
 
@@ -49,8 +49,8 @@ describe("Google Calendar Integration", () => {
     const decrypted = await t.mutation(internal.googleCalendar.getDecryptedTokens, {
       connectionId,
     });
-    expect(decrypted).not.toBeUndefined();
-    if (decrypted === undefined) throw new Error("decrypted is undefined");
+    expect(decrypted).not.toBeNull();
+    if (decrypted === null) throw new Error("decrypted is null");
     expect(decrypted.accessToken).toBe("access-token-123");
     expect(decrypted.refreshToken).toBe("refresh-token-123");
 
