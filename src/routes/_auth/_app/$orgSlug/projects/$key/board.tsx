@@ -9,7 +9,6 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
 import { ExportButton } from "@/components/ExportButton";
 import { type BoardFilters, FilterBar } from "@/components/FilterBar";
 import { KanbanBoard } from "@/components/KanbanBoard";
@@ -25,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import {
   type BoardSearchFilters,
   filtersToSearchParams,
@@ -74,8 +74,8 @@ function BoardPage() {
     });
   };
 
-  const project = useQuery(api.projects.getByKey, { key });
-  const sprints = useQuery(
+  const project = useAuthenticatedQuery(api.projects.getByKey, { key });
+  const sprints = useAuthenticatedQuery(
     api.sprints.listByProject,
     project ? { projectId: project._id } : "skip",
   );

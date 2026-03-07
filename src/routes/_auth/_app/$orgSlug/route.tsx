@@ -8,7 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useCallback, useEffect, useState } from "react";
 import { AppHeader, AppSidebar } from "@/components/App";
@@ -22,6 +21,11 @@ import { Typography } from "@/components/ui/Typography";
 import { createKeyboardShortcuts, createKeySequences } from "@/config/keyboardShortcuts";
 import { ROUTES } from "@/config/routes";
 import { IssueViewModeProvider } from "@/contexts/IssueViewModeContext";
+import {
+  useAuthenticatedMutation,
+  useAuthenticatedQuery,
+  useAuthReady,
+} from "@/hooks/useConvexHelpers";
 import { useKeyboardShortcutsWithSequences } from "@/hooks/useKeyboardShortcuts";
 import {
   OrgContext,
@@ -31,7 +35,6 @@ import {
 } from "@/hooks/useOrgContext";
 import { SidebarProvider } from "@/hooks/useSidebarState";
 import { showError, showSuccess } from "@/lib/toast";
-
 // Re-export hooks for backwards compatibility with existing imports
 export { useOrganization, useOrganizationOptional };
 
@@ -73,15 +76,13 @@ function OrgError({ title, message }: { title: string; message: string }) {
 }
 
 function useStableOrgData(isAuthenticated: boolean, orgSlug: string) {
-  const userOrganizations = useQuery(
-    api.organizations.getUserOrganizations,
-    isAuthenticated ? undefined : "skip",
-  ) as UserOrganization[] | undefined;
+  const userOrganizations = useAuthenticatedQuery(api.organizations.getUserOrganizations, {}) as
+    | UserOrganization[]
+    | undefined;
 
-  const organization = useQuery(
-    api.organizations.getOrganizationBySlug,
-    isAuthenticated ? { slug: orgSlug } : "skip",
-  );
+  const organization = useAuthenticatedQuery(api.organizations.getOrganizationBySlug, {
+    slug: orgSlug,
+  });
 
   if (userOrganizations !== undefined) {
     cachedOrgUserOrganizations = userOrganizations;
@@ -99,7 +100,7 @@ function useStableOrgData(isAuthenticated: boolean, orgSlug: string) {
 
 function OrganizationLayout() {
   const { orgSlug } = Route.useParams();
-  const { isLoading: isAuthLoading, isAuthenticated } = useConvexAuth();
+  const { isAuthLoading, isAuthenticated } = useAuthReady();
 
   if (isAuthenticated) {
     hasAuthenticatedOrgSession = true;
@@ -167,7 +168,7 @@ function OrganizationLayoutInner() {
   const { orgSlug, organizationId } = useOrganization();
 
   // Document creation mutation
-  const createDocument = useMutation(api.documents.create);
+  const { mutate: createDocument } = useAuthenticatedMutation(api.documents.create);
 
   const handleCreateDocument = useCallback(async () => {
     try {

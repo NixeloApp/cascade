@@ -8,9 +8,9 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Calendar, DollarSign, Trash2 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -32,9 +32,9 @@ type TimeEntryWithHours = NonNullable<TimesheetData>["byDay"][string][number];
 
 /** Weekly timesheet grid showing time entries grouped by day. */
 export function Timesheet() {
-  const timesheet = useQuery(api.timeTracking.getCurrentWeekTimesheet);
-  const _updateEntry = useMutation(api.timeTracking.updateTimeEntry);
-  const deleteEntry = useMutation(api.timeTracking.deleteTimeEntry);
+  const timesheet = useAuthenticatedQuery(api.timeTracking.getCurrentWeekTimesheet, {});
+  const { mutate: _updateEntry } = useAuthenticatedMutation(api.timeTracking.updateTimeEntry);
+  const { mutate: deleteEntry } = useAuthenticatedMutation(api.timeTracking.deleteTimeEntry);
 
   const [_editingEntry, _setEditingEntry] = useState<string | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);

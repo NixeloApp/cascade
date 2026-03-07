@@ -9,6 +9,7 @@ let callCount = 0;
 
 // Mock Convex - useQuery is called twice, first for counts, then for project
 vi.mock("convex/react", () => ({
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   useQuery: vi.fn(() => {
     callCount++;
     // First call is for counts, second for project

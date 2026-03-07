@@ -14,6 +14,7 @@ const mockResetOnboarding = vi.fn();
 
 // Mock Convex
 vi.mock("convex/react", () => ({
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   useQuery: vi.fn(() => mockCurrentUser),
   useMutation: vi.fn(() => mockResetOnboarding),
 }));

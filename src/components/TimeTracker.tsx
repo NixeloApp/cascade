@@ -8,13 +8,13 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { ChevronDown, Play, Plus, Square } from "lucide-react";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { MetadataTimestamp } from "@/components/ui/Metadata";
 import { Stack } from "@/components/ui/Stack";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatCurrency, formatHours } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -145,27 +145,22 @@ export function TimeTracker({
   estimatedHours = 0,
   billingEnabled,
 }: TimeTrackerProps) {
-  const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
-  const canUseTimeTracking = isAuthenticated && !isAuthLoading;
   const [showLogModal, setShowLogModal] = useState(false);
   const [showEntries, setShowEntries] = useState(false);
 
-  // Fetch time entries for this issue
-  const timeEntries = useQuery(
-    api.timeTracking.listTimeEntries,
-    canUseTimeTracking ? { issueId, limit: 100 } : "skip",
-  );
+  // Fetch time entries for this issue (auto-skips when not authenticated)
+  const timeEntries = useAuthenticatedQuery(api.timeTracking.listTimeEntries, {
+    issueId,
+    limit: 100,
+  });
 
   // Check if there's a running timer
-  const runningTimer = useQuery(
-    api.timeTracking.getRunningTimer,
-    canUseTimeTracking ? undefined : "skip",
-  );
+  const runningTimer = useAuthenticatedQuery(api.timeTracking.getRunningTimer, {});
   const isTimerRunningForThisIssue = runningTimer && runningTimer.issueId === issueId;
 
   // Mutations
-  const startTimer = useMutation(api.timeTracking.startTimer);
-  const stopTimer = useMutation(api.timeTracking.stopTimer);
+  const { mutate: startTimer } = useAuthenticatedMutation(api.timeTracking.startTimer);
+  const { mutate: stopTimer } = useAuthenticatedMutation(api.timeTracking.stopTimer);
 
   // Calculate total hours from entries (convert seconds to hours)
   const totalLoggedHours = timeEntries
@@ -214,7 +209,6 @@ export function TimeTracker({
                   variant="danger"
                   size="sm"
                   onClick={handleStopTimer}
-                  disabled={!canUseTimeTracking}
                   leftIcon={<Square className="w-4 h-4" fill="currentColor" />}
                 >
                   Stop Timer
@@ -224,7 +218,7 @@ export function TimeTracker({
                   variant="success"
                   size="sm"
                   onClick={handleStartTimer}
-                  disabled={!canUseTimeTracking || !!runningTimer}
+                  disabled={!!runningTimer}
                   title={
                     runningTimer ? "Stop the current timer first" : "Start timer for this issue"
                   }
@@ -239,7 +233,6 @@ export function TimeTracker({
                 variant="secondary"
                 size="sm"
                 onClick={() => setShowLogModal(true)}
-                disabled={!canUseTimeTracking}
                 leftIcon={<Plus className="w-4 h-4" />}
               >
                 Log Time

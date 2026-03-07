@@ -1,6 +1,5 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
 import { FileText, Globe, Lock } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
@@ -9,9 +8,9 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { cn } from "@/lib/utils";
-
 export const Route = createFileRoute(
   "/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki",
 )({
@@ -22,17 +21,17 @@ function TeamWikiPage() {
   const { organizationId, orgSlug } = useOrganization();
   const { workspaceSlug, teamSlug } = Route.useParams();
 
-  const workspace = useQuery(api.workspaces.getBySlug, {
+  const workspace = useAuthenticatedQuery(api.workspaces.getBySlug, {
     organizationId,
     slug: workspaceSlug,
   });
 
-  const team = useQuery(
+  const team = useAuthenticatedQuery(
     api.teams.getBySlug,
     workspace ? { workspaceId: workspace._id, slug: teamSlug } : "skip",
   );
 
-  const documentsResult = useQuery(
+  const documentsResult = useAuthenticatedQuery(
     api.documents.listByTeam,
     team ? { teamId: team._id, limit: 50 } : "skip",
   );

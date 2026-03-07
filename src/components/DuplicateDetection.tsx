@@ -7,7 +7,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useQuery } from "convex/react";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -15,6 +14,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { IssueType } from "@/lib/issue-utils";
 import { ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
@@ -34,7 +34,7 @@ export function DuplicateDetection({ title, projectId, onIssueClick }: Duplicate
   // Skip query if title is too short
   const shouldQuery = debouncedTitle.trim().length >= 3;
 
-  const similarIssues = useQuery(
+  const similarIssues = useAuthenticatedQuery(
     api.issues.findSimilarIssues,
     shouldQuery ? { query: debouncedTitle, projectId, limit: 5 } : "skip",
   );

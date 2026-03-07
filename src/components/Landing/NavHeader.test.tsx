@@ -10,6 +10,7 @@ vi.mock("@tanstack/react-router", () => ({
 
 // Mock convex/react auth components
 vi.mock("convex/react", () => ({
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   Authenticated: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="authenticated">{children}</div>
   ),

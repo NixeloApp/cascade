@@ -45,6 +45,7 @@ import { run as runAsyncPatternsCheck } from "./validate/check-async-patterns.js
 import { run as runColorAudit } from "./validate/check-colors.js";
 import { run as runComponentNamingCheck } from "./validate/check-component-naming.js";
 import { run as runComponentPropsCheck } from "./validate/check-component-props.js";
+import { run as runConvexHooksCheck } from "./validate/check-convex-hooks.js";
 import { run as runConvexNamingCheck } from "./validate/check-convex-naming.js";
 import { run as runConvexPatternsCheck } from "./validate/check-convex-patterns.js";
 import { run as runDuplicateComponentsCheck } from "./validate/check-duplicate-components.js";
@@ -106,6 +107,7 @@ const checks = [
   { name: "Unused parameters", fn: runUnusedParamsCheck },
   { name: "Weak assertions", fn: runWeakAssertionsCheck },
   { name: "Native confirm()", fn: runNativeConfirmCheck },
+  { name: "Convex hooks", fn: runConvexHooksCheck },
 ];
 
 console.log(`\n${c.bold}Running validation...${c.reset}\n`);

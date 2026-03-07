@@ -8,11 +8,11 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import { Eye } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
@@ -30,10 +30,10 @@ interface Watcher {
 
 /** Issue watchers panel with watch/unwatch toggle and watcher list. */
 export function IssueWatchers({ issueId }: IssueWatchersProps) {
-  const watchers = useQuery(api.watchers.getWatchers, { issueId });
-  const isWatching = useQuery(api.watchers.isWatching, { issueId });
-  const watch = useMutation(api.watchers.watch);
-  const unwatch = useMutation(api.watchers.unwatch);
+  const watchers = useAuthenticatedQuery(api.watchers.getWatchers, { issueId });
+  const isWatching = useAuthenticatedQuery(api.watchers.isWatching, { issueId });
+  const { mutate: watch } = useAuthenticatedMutation(api.watchers.watch);
+  const { mutate: unwatch } = useAuthenticatedMutation(api.watchers.unwatch);
 
   const handleToggleWatch = async () => {
     try {

@@ -1,6 +1,6 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useConvexAuth, useQuery } from "convex/react";
+
 import { useState } from "react";
 import { CreateWorkspaceModal } from "@/components/CreateWorkspaceModal";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
@@ -11,19 +11,18 @@ import { Grid } from "@/components/ui/Grid";
 import { Metadata, MetadataItem } from "@/components/ui/Metadata";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Building2 } from "@/lib/icons";
-
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/")({
   component: WorkspacesList,
 });
 
 function WorkspacesList() {
   const { organizationId, orgSlug } = useOrganization();
-  const { isAuthenticated } = useConvexAuth();
   const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const workspaces = useQuery(api.workspaces.list, isAuthenticated ? { organizationId } : "skip");
+  const workspaces = useAuthenticatedQuery(api.workspaces.list, { organizationId });
 
   const handleWorkspaceCreated = (_workspaceId: string, slug: string) => {
     navigate({

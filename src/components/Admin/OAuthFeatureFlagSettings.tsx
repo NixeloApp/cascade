@@ -1,6 +1,6 @@
 import { api } from "@convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
@@ -10,15 +10,16 @@ import { Flex } from "../ui/Flex";
 import { Input } from "../ui/form/Input";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
-
 /**
  * Admin-facing kill switch for enabling or disabling Google OAuth sign-in.
  */
 export function OAuthFeatureFlagSettings() {
   const { organizationId } = useOrganization();
   const [reason, setReason] = useState("");
-  const isGoogleAuthEnabled = useQuery(api.featureFlags.isGoogleAuthEnabled);
-  const setGoogleAuthEnabled = useMutation(api.featureFlags.setGoogleAuthEnabled);
+  const isGoogleAuthEnabled = useAuthenticatedQuery(api.featureFlags.isGoogleAuthEnabled, {});
+  const { mutate: setGoogleAuthEnabled } = useAuthenticatedMutation(
+    api.featureFlags.setGoogleAuthEnabled,
+  );
 
   if (!organizationId) {
     return null;

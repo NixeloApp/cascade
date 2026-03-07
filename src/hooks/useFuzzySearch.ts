@@ -10,6 +10,7 @@
 
 import Fuse from "fuse.js";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 
 export interface FuzzySearchOptions {
   /**
@@ -126,7 +127,7 @@ export function highlightMatches(
  *
  * @example
  * ```typescript
- * const users = useQuery(api.users.list); // Load from Convex
+ * const users = useAuthenticatedQuery(api.users.list, {}); // Load from Convex
  *
  * const { results, search, query, isSearching } = useFuzzySearch(users, {
  *   keys: ["name", "email"],
@@ -271,7 +272,7 @@ export function useFuzzySearch<T>(items: T[] | undefined, options: FuzzySearchOp
  *
  * @example
  * ```typescript
- * const members = useQuery(api.projects.getMembers, { projectId });
+ * const members = useAuthenticatedQuery(api.projects.getMembers, { projectId });
  * const { results, search, query } = useUserFuzzySearch(members);
  * ```
  */
@@ -294,7 +295,7 @@ export function useUserFuzzySearch<T extends { name?: string; email?: string }>(
  *
  * @example
  * ```typescript
- * const projects = useQuery(api.projects.getCurrentUserProjects);
+ * const projects = useAuthenticatedQuery(api.projects.getCurrentUserProjects, {});
  * const { results, search, query } = useProjectFuzzySearch(projects);
  * ```
  */
@@ -318,7 +319,7 @@ export function useProjectFuzzySearch(
  *
  * @example
  * ```typescript
- * const issues = useQuery(api.issues.list, { projectId });
+ * const issues = useAuthenticatedQuery(api.issues.list, { projectId });
  * const { results, search, query } = useIssueFuzzySearch(issues);
  * ```
  */
@@ -342,7 +343,7 @@ export function useIssueFuzzySearch(
  *
  * @example
  * ```typescript
- * const sprints = useQuery(api.sprints.list, { projectId });
+ * const sprints = useAuthenticatedQuery(api.sprints.list, { projectId });
  * const { results, search, query } = useSprintFuzzySearch(sprints);
  * ```
  */
@@ -384,7 +385,7 @@ export function useLabelFuzzySearch(labels: string[] | undefined) {
  *
  * @example
  * ```typescript
- * const documentsResult = useQuery(api.documents.list, { organizationId });
+ * const documentsResult = useAuthenticatedQuery(api.documents.list, { organizationId });
  * const { results, search, query } = useDocumentFuzzySearch(documentsResult?.documents);
  * ```
  */

@@ -8,7 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
@@ -17,6 +16,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import {
   Archive,
   Download,
@@ -43,7 +43,7 @@ interface AttachmentListProps {
  * Displays list of file attachments with download and delete actions.
  */
 export function AttachmentList({ attachmentIds, issueId, canEdit = false }: AttachmentListProps) {
-  const removeAttachment = useMutation(api.attachments.removeAttachment);
+  const { mutate: removeAttachment } = useAuthenticatedMutation(api.attachments.removeAttachment);
   const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
   const [pendingRemoveId, setPendingRemoveId] = useState<Id<"_storage"> | null>(null);
 
@@ -106,7 +106,7 @@ function AttachmentItem({
   canEdit: boolean;
   onRemove: () => void;
 }) {
-  const url = useQuery(api.attachments.getAttachment, { storageId, issueId });
+  const url = useAuthenticatedQuery(api.attachments.getAttachment, { storageId, issueId });
 
   // Show skeleton while loading (undefined), but handle null (deleted/expired) gracefully
   if (url === undefined) {

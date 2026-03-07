@@ -7,11 +7,11 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import {
   AtSign,
   Bell,
@@ -279,10 +279,14 @@ function PushNotificationsCard({
 
 /** Settings tab for notification preferences (email, push, digest). */
 export function NotificationsTab() {
-  const preferences = useQuery(api.notificationPreferences.get);
-  const pushPreferences = useQuery(api.pushNotifications.getPreferences);
-  const updatePreferences = useMutation(api.notificationPreferences.update);
-  const updatePushPreferences = useMutation(api.pushNotifications.updatePreferences);
+  const preferences = useAuthenticatedQuery(api.notificationPreferences.get, {});
+  const pushPreferences = useAuthenticatedQuery(api.pushNotifications.getPreferences, {});
+  const { mutate: updatePreferences } = useAuthenticatedMutation(
+    api.notificationPreferences.update,
+  );
+  const { mutate: updatePushPreferences } = useAuthenticatedMutation(
+    api.pushNotifications.updatePreferences,
+  );
   const [isSaving, setIsSaving] = useState(false);
 
   // Web Push hook

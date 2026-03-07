@@ -9,6 +9,7 @@ import { showError } from "@/lib/toast";
 import { useAIChat } from "./useAIChat";
 
 vi.mock("convex/react", () => ({
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   useAction: vi.fn(),
   useMutation: vi.fn(),
   useQuery: vi.fn(),

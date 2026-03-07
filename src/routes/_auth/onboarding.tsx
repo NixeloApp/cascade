@@ -9,7 +9,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { FeatureHighlights } from "@/components/Onboarding/FeatureHighlights";
 import { InvitedWelcome } from "@/components/Onboarding/InvitedWelcome";
@@ -21,9 +20,9 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
-
 export const Route = createFileRoute("/_auth/onboarding")({
   component: OnboardingPage,
 });
@@ -36,12 +35,14 @@ function OnboardingPage() {
   const [, setSelectedPersona] = useState<"team_lead" | "team_member" | null>(null);
 
   // Queries
-  const inviteStatus = useQuery(api.onboarding.checkInviteStatus);
-  const userOrganizations = useQuery(api.organizations.getUserOrganizations);
+  const inviteStatus = useAuthenticatedQuery(api.onboarding.checkInviteStatus, {});
+  const userOrganizations = useAuthenticatedQuery(api.organizations.getUserOrganizations, {});
 
   // Mutations
-  const setPersona = useMutation(api.onboarding.setOnboardingPersona);
-  const completeOnboarding = useMutation(api.onboarding.completeOnboardingFlow);
+  const { mutate: setPersona } = useAuthenticatedMutation(api.onboarding.setOnboardingPersona);
+  const { mutate: completeOnboarding } = useAuthenticatedMutation(
+    api.onboarding.completeOnboardingFlow,
+  );
 
   // Determine initial step based on data
   useEffect(() => {

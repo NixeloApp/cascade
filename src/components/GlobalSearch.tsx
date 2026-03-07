@@ -8,11 +8,11 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useQuery } from "convex/react";
 import { type ComponentProps, useState } from "react";
 import { AdvancedSearchModal } from "@/components/AdvancedSearchModal";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useSearchKeyboard, useSearchPagination } from "@/hooks/useGlobalSearch";
 import { Search } from "@/lib/icons";
 import { parseIssueSearchShortcuts } from "@/lib/search-shortcuts";
@@ -264,7 +264,7 @@ export function GlobalSearch() {
   const shouldSearch = effectiveQuery.length >= 2;
 
   // Search when query changes
-  const issueSearchResult = useQuery(
+  const issueSearchResult = useAuthenticatedQuery(
     api.issues.search,
     shouldSearch
       ? {
@@ -275,7 +275,7 @@ export function GlobalSearch() {
         }
       : "skip",
   );
-  const documentSearchResult = useQuery(
+  const documentSearchResult = useAuthenticatedQuery(
     api.documents.search,
     shouldSearch ? { query: effectiveQuery, limit, offset: documentOffset } : "skip",
   );

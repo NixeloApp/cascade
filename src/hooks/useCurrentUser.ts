@@ -7,11 +7,11 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { useQuery } from "convex/react";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 
 /** Returns current user with loading and auth states. */
 export function useCurrentUser() {
-  const user = useQuery(api.users.getCurrent);
+  const user = useAuthenticatedQuery(api.users.getCurrent, {});
 
   return {
     user,

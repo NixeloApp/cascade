@@ -10,7 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
 import { useForm } from "@tanstack/react-form";
-import { useAction, useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useAction } from "convex/react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { DuplicateDetection } from "@/components/DuplicateDetection";
@@ -29,6 +29,7 @@ import { SelectItem } from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
 import { Switch } from "@/components/ui/Switch";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useDraftAutoSave } from "@/hooks/useDraftAutoSave";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { toggleInArray } from "@/lib/array-utils";
@@ -106,8 +107,8 @@ export function CreateIssueModal({
   defaultDueDate,
 }: CreateIssueModalProps) {
   const { organizationId } = useOrganization();
-  const { isAuthenticated } = useConvexAuth();
-  const shouldLoadProjectData = open && isAuthenticated;
+  // Only load data when modal is open (auth is handled by useAuthenticatedQuery)
+  const shouldLoadData = open;
 
   // Project selection for global use
   const [internalSelectedProjectId, setInternalSelectedProjectId] = useState<Id<"projects"> | null>(
@@ -133,9 +134,9 @@ export function CreateIssueModal({
   const [draftDismissed, setDraftDismissed] = useState(false);
 
   // Queries
-  const orgProjects = useQuery(
+  const orgProjects = useAuthenticatedQuery(
     api.projects.getCurrentUserProjects,
-    shouldLoadProjectData && !projectId ? { organizationId } : "skip",
+    shouldLoadData && !projectId ? { organizationId } : "skip",
   );
 
   const effectiveProjectId = projectId || internalSelectedProjectId;
@@ -150,22 +151,22 @@ export function CreateIssueModal({
   // Show draft banner only if draft exists, not dismissed, and modal just opened
   const showDraftBanner = hasDraft && !draftDismissed && draft?.title;
 
-  const project = useQuery(
+  const project = useAuthenticatedQuery(
     api.projects.getProject,
-    shouldLoadProjectData && effectiveProjectId ? { id: effectiveProjectId } : "skip",
+    shouldLoadData && effectiveProjectId ? { id: effectiveProjectId } : "skip",
   );
-  const templates = useQuery(
+  const templates = useAuthenticatedQuery(
     api.templates.listByProject,
-    shouldLoadProjectData && effectiveProjectId ? { projectId: effectiveProjectId } : "skip",
+    shouldLoadData && effectiveProjectId ? { projectId: effectiveProjectId } : "skip",
   );
-  const labels = useQuery(
+  const labels = useAuthenticatedQuery(
     api.labels.list,
-    shouldLoadProjectData && effectiveProjectId ? { projectId: effectiveProjectId } : "skip",
+    shouldLoadData && effectiveProjectId ? { projectId: effectiveProjectId } : "skip",
   );
 
   // Mutations
-  const createIssue = useMutation(api.issues.createIssue);
-  const createLabel = useMutation(api.labels.createLabel);
+  const { mutate: createIssue } = useAuthenticatedMutation(api.issues.createIssue);
+  const { mutate: createLabel } = useAuthenticatedMutation(api.labels.createLabel);
   const generateSuggestions = useAction(api.ai.actions.generateIssueSuggestions);
 
   type CreateIssueForm = z.infer<typeof createIssueSchema>;

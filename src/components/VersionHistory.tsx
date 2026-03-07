@@ -8,9 +8,9 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Clock, RotateCcw } from "@/lib/icons";
 import { DAY, HOUR, MINUTE } from "@/lib/time";
 import { showError, showSuccess } from "@/lib/toast";
@@ -70,26 +70,18 @@ export function VersionHistory({
   onOpenChange,
   onRestoreVersion,
 }: VersionHistoryProps) {
-  const { isAuthenticated } = useConvexAuth();
   const [compareVersionIds, setCompareVersionIds] = useState<Id<"documentVersions">[]>([]);
 
-  const versions = useQuery(
-    api.documentVersions.listVersions,
-    open && isAuthenticated ? { documentId } : "skip",
-  );
-  const leftVersion = useQuery(
-    api.documentVersions.getVersion,
-    open && isAuthenticated && compareVersionIds[0]
-      ? { documentId, versionId: compareVersionIds[0] }
-      : "skip",
-  );
-  const rightVersion = useQuery(
-    api.documentVersions.getVersion,
-    open && isAuthenticated && compareVersionIds[1]
-      ? { documentId, versionId: compareVersionIds[1] }
-      : "skip",
-  );
-  const restoreVersion = useMutation(api.documentVersions.restoreVersion);
+  const versions = useAuthenticatedQuery(api.documentVersions.listVersions, { documentId });
+  const leftVersion = useAuthenticatedQuery(api.documentVersions.getVersion, {
+    documentId,
+    versionId: compareVersionIds[0],
+  });
+  const rightVersion = useAuthenticatedQuery(api.documentVersions.getVersion, {
+    documentId,
+    versionId: compareVersionIds[1],
+  });
+  const { mutate: restoreVersion } = useAuthenticatedMutation(api.documentVersions.restoreVersion);
 
   useEffect(() => {
     if (!open) {

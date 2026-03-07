@@ -8,9 +8,9 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation } from "convex/react";
 import { useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "./ui/Button";
 
@@ -39,8 +39,8 @@ export function AttachmentUpload({ issueId, onAttached }: AttachmentUploadProps)
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const generateUploadUrl = useMutation(api.attachments.generateUploadUrl);
-  const attachToIssue = useMutation(api.attachments.attachToIssue);
+  const { mutate: generateUploadUrl } = useAuthenticatedMutation(api.attachments.generateUploadUrl);
+  const { mutate: attachToIssue } = useAuthenticatedMutation(api.attachments.attachToIssue);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

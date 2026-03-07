@@ -8,6 +8,7 @@ import { GlobalSearch } from "./GlobalSearch";
 
 // Mock Convex hooks
 vi.mock("convex/react", () => ({
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   useQuery: vi.fn(),
 }));
 

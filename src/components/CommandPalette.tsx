@@ -9,13 +9,14 @@
 import { api } from "@convex/_generated/api";
 import type { Doc } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
-import { useConvexAuth, useQuery } from "convex/react";
+
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { ROUTES } from "@/config/routes";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { FileText, FolderKanban, Home, LayoutGrid, Plus } from "@/lib/icons";
 import { ISSUE_TYPE_ICONS, type IssueType } from "@/lib/issue-utils";
@@ -31,7 +32,6 @@ import {
 } from "./ui/Command";
 import { ShortcutHint } from "./ui/KeyboardShortcut";
 import { Typography } from "./ui/Typography";
-
 export interface CommandAction {
   id: string;
   label: string;
@@ -166,12 +166,10 @@ export function useCommands({
 } = {}) {
   const navigate = useNavigate();
   const { orgSlug } = useOrganization();
-  const { isAuthenticated } = useConvexAuth();
-  const projects = useQuery(api.dashboard.getMyProjects, isAuthenticated ? undefined : "skip");
-  const myIssues = useQuery(
-    api.dashboard.getMyIssues,
-    isAuthenticated ? { paginationOpts: { numItems: 10, cursor: null } } : "skip",
-  );
+  const projects = useAuthenticatedQuery(api.dashboard.getMyProjects, {});
+  const myIssues = useAuthenticatedQuery(api.dashboard.getMyIssues, {
+    paginationOpts: { numItems: 10, cursor: null },
+  });
 
   const commands: CommandAction[] = [
     // Navigation

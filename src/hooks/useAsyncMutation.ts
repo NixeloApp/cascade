@@ -3,6 +3,7 @@
  */
 
 import { useState } from "react";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError } from "../lib/toast";
 
 export interface UseAsyncMutationOptions<TResult> {
@@ -23,7 +24,7 @@ export interface UseAsyncMutationReturn<TArgs extends unknown[], TResult> {
  * Useful for wrapping Convex mutations or any async operation
  *
  * @example
- * const createIssue = useMutation(api.issues.createIssue);
+ * const { mutate: createIssue } = useAuthenticatedMutation(api.issues.createIssue);
  * const { mutate, isLoading } = useAsyncMutation(createIssue, {
  *   onSuccess: () => toast.success("Created!"),
  *   showErrorToast: true,

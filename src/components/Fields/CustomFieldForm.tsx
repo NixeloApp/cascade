@@ -8,8 +8,8 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation } from "convex/react";
 import { useEffect, useState } from "react";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 import { FormDialog } from "../ui/FormDialog";
 import { Checkbox } from "../ui/form/Checkbox";
@@ -69,8 +69,8 @@ export function CustomFieldForm({ projectId, field, open, onOpenChange }: Custom
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const createField = useMutation(api.customFields.create);
-  const updateField = useMutation(api.customFields.update);
+  const { mutate: createField } = useAuthenticatedMutation(api.customFields.create);
+  const { mutate: updateField } = useAuthenticatedMutation(api.customFields.update);
 
   // Reset form when field changes or dialog opens
   useEffect(() => {

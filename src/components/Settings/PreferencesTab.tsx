@@ -7,11 +7,12 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
+
 import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Monitor, Moon, Sun } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -20,18 +21,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Switch } from "../ui/Switch";
 import { ToggleGroup, ToggleGroupItem } from "../ui/ToggleGroup";
 import { Typography } from "../ui/Typography";
-
 /**
  * User preferences tab
  * Handles Theme, Timezone, and Browser Notifications (UI Settings)
  */
 export function PreferencesTab() {
   const { theme, setTheme } = useTheme();
-  const { isAuthenticated } = useConvexAuth();
 
   // Settings from DB
-  const userSettings = useQuery(api.userSettings.get, isAuthenticated ? undefined : "skip");
-  const updateSettings = useMutation(api.userSettings.update);
+  const userSettings = useAuthenticatedQuery(api.userSettings.get, {});
+  const { mutate: updateSettings } = useAuthenticatedMutation(api.userSettings.update);
 
   // Local state for timezone (defaults to system if not set)
   const [selectedTimezone, setSelectedTimezone] = useState<string>(

@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import type { Doc } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { anyApi } from "convex/server";
 import { useState } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
@@ -11,9 +11,9 @@ import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Input } from "@/components/ui/Input";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { showError, showSuccess } from "@/lib/toast";
-
 export const Route = createFileRoute("/_auth/_app/$orgSlug/clients/")({
   component: ClientsListPage,
 });
@@ -30,9 +30,11 @@ type ClientPortalTokenRow = {
 
 function ClientsListPage() {
   const { organizationId } = useOrganization();
-  const clients = useQuery(api.clients.list, { organizationId }) as Doc<"clients">[] | undefined;
-  const projects = useQuery(api.projects.getCurrentUserProjects, {});
-  const createClient = useMutation(api.clients.create);
+  const clients = useAuthenticatedQuery(api.clients.list, { organizationId }) as
+    | Doc<"clients">[]
+    | undefined;
+  const projects = useAuthenticatedQuery(api.projects.getCurrentUserProjects, {});
+  const { mutate: createClient } = useAuthenticatedMutation(api.clients.create);
   const generatePortalToken = useMutation(clientPortalApi.generateToken);
   const listPortalTokens = useMutation(clientPortalApi.listTokensByClient);
   const revokePortalToken = useMutation(clientPortalApi.revokeToken);

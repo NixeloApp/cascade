@@ -8,8 +8,8 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation } from "convex/react";
 import { useState } from "react";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
@@ -63,9 +63,11 @@ export function MemberManagement({
   const [memberToRemove, setMemberToRemove] = useState<Member | null>(null);
   const [changingRoleFor, setChangingRoleFor] = useState<Id<"users"> | null>(null);
 
-  const addMember = useMutation(api.projects.addProjectMember);
-  const updateMemberRole = useMutation(api.projects.updateProjectMemberRole);
-  const removeMember = useMutation(api.projects.removeProjectMember);
+  const { mutate: addMember } = useAuthenticatedMutation(api.projects.addProjectMember);
+  const { mutate: updateMemberRole } = useAuthenticatedMutation(
+    api.projects.updateProjectMemberRole,
+  );
+  const { mutate: removeMember } = useAuthenticatedMutation(api.projects.removeProjectMember);
 
   const handleAddMember = async () => {
     if (!email.trim()) {

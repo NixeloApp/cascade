@@ -8,11 +8,11 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import { Camera, ImageIcon } from "lucide-react";
 import { useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { UserActivityFeed } from "../UserActivityFeed";
@@ -253,18 +253,24 @@ export function ProfileContent({ userId }: ProfileContentProps) {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
 
-  const currentUser = useQuery(api.users.getCurrent);
-  const coverImageUrl = useQuery(api.users.getCoverImageUrl);
-  const fetchedViewUser = useQuery(api.users.getUser, userId ? { id: userId } : "skip");
-  const userStatsForUserId = useQuery(api.users.getUserStats, userId ? { userId } : "skip");
-  const userStatsForCurrent = useQuery(
+  const currentUser = useAuthenticatedQuery(api.users.getCurrent, {});
+  const coverImageUrl = useAuthenticatedQuery(api.users.getCoverImageUrl, {});
+  const fetchedViewUser = useAuthenticatedQuery(
+    api.users.getUser,
+    userId ? { id: userId } : "skip",
+  );
+  const userStatsForUserId = useAuthenticatedQuery(
+    api.users.getUserStats,
+    userId ? { userId } : "skip",
+  );
+  const userStatsForCurrent = useAuthenticatedQuery(
     api.users.getUserStats,
     !userId && currentUser ? { userId: currentUser._id } : "skip",
   );
 
   const viewUser = fetchedViewUser || currentUser;
   const userStats = userId ? userStatsForUserId : userStatsForCurrent;
-  const updateProfile = useMutation(api.users.updateProfile);
+  const { mutate: updateProfile } = useAuthenticatedMutation(api.users.updateProfile);
 
   const isOwnProfile = !userId || (currentUser && userId === currentUser._id);
 

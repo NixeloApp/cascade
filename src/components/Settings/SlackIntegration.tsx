@@ -6,9 +6,9 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
 import { MessageSquare } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Check } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
@@ -97,9 +97,9 @@ function parseSlackConnectionData(value: unknown): SlackConnectionData | null {
 }
 
 export function SlackIntegration() {
-  const slackConnection = useQuery(api.slack.getConnection);
-  const connectSlack = useMutation(api.slack.connectSlack);
-  const disconnectSlack = useMutation(api.slack.disconnectSlack);
+  const slackConnection = useAuthenticatedQuery(api.slack.getConnection, {});
+  const { mutate: connectSlack } = useAuthenticatedMutation(api.slack.connectSlack);
+  const { mutate: disconnectSlack } = useAuthenticatedMutation(api.slack.disconnectSlack);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [disconnectConfirmOpen, setDisconnectConfirmOpen] = useState(false);

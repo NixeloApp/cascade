@@ -8,9 +8,9 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { AlertTriangle, BookOpen, Copy, Key, Plus, Trash2, TrendingUp } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
@@ -47,7 +47,7 @@ type UsageLog = FunctionReturnType<typeof api.apiKeys.getUsageStats>["recentLogs
  * Allows users to generate and manage API keys for CLI/AI integration
  */
 export function ApiKeysManager() {
-  const apiKeys = useQuery(api.apiKeys.list);
+  const apiKeys = useAuthenticatedQuery(api.apiKeys.list, {});
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [selectedKeyId, setSelectedKeyId] = useState<Id<"apiKeys"> | null>(null);
 
@@ -140,8 +140,8 @@ export function ApiKeysManager() {
  * Individual API Key Card
  */
 function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () => void }) {
-  const revokeKey = useMutation(api.apiKeys.revoke);
-  const deleteKey = useMutation(api.apiKeys.remove);
+  const { mutate: revokeKey } = useAuthenticatedMutation(api.apiKeys.revoke);
+  const { mutate: deleteKey } = useAuthenticatedMutation(api.apiKeys.remove);
   const [isRevoking, setIsRevoking] = useState(false);
   const [_isDeleting, setIsDeleting] = useState(false);
   const [revokeConfirmOpen, setRevokeConfirmOpen] = useState(false);
@@ -310,7 +310,7 @@ function GenerateKeyModal({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const generateKey = useMutation(api.apiKeys.generate);
+  const { mutate: generateKey } = useAuthenticatedMutation(api.apiKeys.generate);
   const [name, setName] = useState("");
   const [selectedScopes, setSelectedScopes] = useState<string[]>(["issues:read"]);
   const [rateLimit, setRateLimit] = useState(100);
@@ -509,7 +509,7 @@ function UsageStatsModal({
   onOpenChange: (open: boolean) => void;
   keyId: Id<"apiKeys"> | null;
 }) {
-  const stats = useQuery(api.apiKeys.getUsageStats, keyId ? { keyId } : "skip");
+  const stats = useAuthenticatedQuery(api.apiKeys.getUsageStats, keyId ? { keyId } : "skip");
 
   return (
     <Dialog

@@ -1,12 +1,11 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
 import { PageContent, PageError } from "@/components/layout";
 import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { SearchX } from "@/lib/icons";
-
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog")({
   component: WorkspaceBacklogPage,
 });
@@ -15,12 +14,12 @@ function WorkspaceBacklogPage() {
   const { organizationId } = useOrganization();
   const { workspaceSlug } = Route.useParams();
 
-  const workspace = useQuery(api.workspaces.getBySlug, {
+  const workspace = useAuthenticatedQuery(api.workspaces.getBySlug, {
     organizationId,
     slug: workspaceSlug,
   });
 
-  const backlogIssues = useQuery(
+  const backlogIssues = useAuthenticatedQuery(
     api.workspaces.getBacklogIssues,
     workspace ? { workspaceId: workspace._id } : "skip",
   );

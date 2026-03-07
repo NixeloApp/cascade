@@ -8,6 +8,7 @@ import { CustomFieldsManager } from "./CustomFieldsManager";
 
 // Mock dependencies
 vi.mock("convex/react", () => ({
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   useQuery: vi.fn(),
   useMutation: vi.fn(),
 }));

@@ -1,7 +1,6 @@
 import { api } from "@convex/_generated/api";
 import type { Doc } from "@convex/_generated/dataModel";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
@@ -10,6 +9,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { WEEK } from "@/lib/time";
 import { showError, showSuccess } from "@/lib/toast";
@@ -28,8 +28,8 @@ function InvoicesListPage() {
   const { orgSlug, organizationId } = useOrganization();
   const [status, setStatus] = useState<InvoiceStatusFilter>("all");
 
-  const createInvoice = useMutation(api.invoices.create);
-  const invoices = useQuery(api.invoices.list, {
+  const { mutate: createInvoice } = useAuthenticatedMutation(api.invoices.create);
+  const invoices = useAuthenticatedQuery(api.invoices.list, {
     organizationId,
     status: status === "all" ? undefined : status,
   }) as Doc<"invoices">[] | undefined;

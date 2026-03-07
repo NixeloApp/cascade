@@ -9,8 +9,8 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { MONTH, WEEK } from "@convex/lib/timeUtils";
-import { useQuery } from "convex/react";
 import { useState } from "react";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Clock, DollarSign, Download, TrendingUp, Users } from "@/lib/icons";
 import { Button } from "../ui/Button";
 import { Card, CardBody } from "../ui/Card";
@@ -50,7 +50,7 @@ interface BillingReportProps {
 /** Time tracking billing report with exportable member time summaries. */
 export function BillingReport({ projectId }: BillingReportProps) {
   const [dateRange, setDateRange] = useState<"week" | "month" | "all">("month");
-  const project = useQuery(api.projects.getProject, { id: projectId });
+  const project = useAuthenticatedQuery(api.projects.getProject, { id: projectId });
 
   // Calculate date range parameters inline
   const dateRangeParams = (() => {
@@ -66,7 +66,7 @@ export function BillingReport({ projectId }: BillingReportProps) {
     }
   })();
 
-  const billing = useQuery(api.timeTracking.getProjectBilling, {
+  const billing = useAuthenticatedQuery(api.timeTracking.getProjectBilling, {
     projectId,
     ...dateRangeParams,
   });

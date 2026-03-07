@@ -10,7 +10,6 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { LabelInfo } from "@convex/lib/issueHelpers";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
-import { useMutation, useQuery } from "convex/react";
 import type { ReactNode } from "react";
 import { FileAttachments } from "@/components/FileAttachments";
 import { IssueDependencies } from "@/components/IssueDependencies";
@@ -20,6 +19,7 @@ import { TimeTracker } from "@/components/TimeTracker";
 import { Card } from "@/components/ui/Card";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showError } from "@/lib/toast";
 
 interface IssueDetailSidebarProps {
@@ -67,11 +67,11 @@ export function IssueDetailSidebar({
   canEdit = true,
 }: IssueDetailSidebarProps): ReactNode {
   // Fetch project for members and workflow states
-  const project = useQuery(api.projects.getProject, { id: projectId });
+  const project = useAuthenticatedQuery(api.projects.getProject, { id: projectId });
 
   // Mutations for inline updates
-  const updateIssue = useMutation(api.issues.update);
-  const updateStatus = useMutation(api.issues.updateStatus);
+  const { mutate: updateIssue } = useAuthenticatedMutation(api.issues.update);
+  const { mutate: updateStatus } = useAuthenticatedMutation(api.issues.updateStatus);
 
   // Extract project data for inline editing
   const members = project?.members ?? [];

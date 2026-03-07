@@ -8,11 +8,11 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Check, X } from "@/lib/icons";
 import { showError } from "@/lib/toast";
 import { Avatar } from "./ui/Avatar";
@@ -34,11 +34,11 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
   const [editingFieldId, setEditingFieldId] = useState<Id<"customFields"> | null>(null);
   const [editValue, setEditValue] = useState("");
 
-  const customFields = useQuery(api.customFields.list, { projectId });
-  const fieldValues = useQuery(api.customFields.getValuesForIssue, { issueId });
-  const projectMembers = useQuery(api.projectMembers.list, { projectId });
-  const setValue = useMutation(api.customFields.setValue);
-  const removeValue = useMutation(api.customFields.removeValue);
+  const customFields = useAuthenticatedQuery(api.customFields.list, { projectId });
+  const fieldValues = useAuthenticatedQuery(api.customFields.getValuesForIssue, { issueId });
+  const projectMembers = useAuthenticatedQuery(api.projectMembers.list, { projectId });
+  const { mutate: setValue } = useAuthenticatedMutation(api.customFields.setValue);
+  const { mutate: removeValue } = useAuthenticatedMutation(api.customFields.removeValue);
 
   // Helper to get user name from project members
   const getUserName = (userId: string) => {

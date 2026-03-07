@@ -1,6 +1,5 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useConvexAuth, useQuery } from "convex/react";
 import { FileText, Globe, Lock } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -10,28 +9,22 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { cn } from "@/lib/utils";
-
 export const Route = createFileRoute("/_auth/_app/$orgSlug/documents/")({
   component: DocumentsListPage,
 });
 
 function DocumentsListPage() {
   const { organizationId, orgSlug } = useOrganization();
-  const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
 
-  const documentsResult = useQuery(
-    api.documents.list,
-    isAuthenticated
-      ? {
-          organizationId,
-          limit: 50,
-        }
-      : "skip",
-  );
+  const documentsResult = useAuthenticatedQuery(api.documents.list, {
+    organizationId,
+    limit: 50,
+  });
 
-  const isLoading = isAuthLoading || (isAuthenticated && documentsResult === undefined);
+  const isLoading = documentsResult === undefined;
   const documents = documentsResult?.documents ?? [];
   const isEmpty = !isLoading && documents.length === 0;
 

@@ -9,7 +9,6 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { DAY, WEEK } from "@convex/lib/timeUtils";
-import { useMutation, useQuery } from "convex/react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -20,6 +19,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
@@ -108,17 +108,17 @@ export function InboxList({ projectId }: InboxListProps) {
   const [activeTab, setActiveTab] = useState<"open" | "closed">("open");
   const [selectedIds, setSelectedIds] = useState<Set<Id<"inboxIssues">>>(new Set());
 
-  const inboxIssues = useQuery(api.inbox.list, {
+  const inboxIssues = useAuthenticatedQuery(api.inbox.list, {
     projectId,
     tab: activeTab,
   });
 
-  const counts = useQuery(api.inbox.getCounts, { projectId });
+  const counts = useAuthenticatedQuery(api.inbox.getCounts, { projectId });
 
   // Bulk mutations
-  const bulkAccept = useMutation(api.inbox.bulkAccept);
-  const bulkDecline = useMutation(api.inbox.bulkDecline);
-  const bulkSnooze = useMutation(api.inbox.bulkSnooze);
+  const { mutate: bulkAccept } = useAuthenticatedMutation(api.inbox.bulkAccept);
+  const { mutate: bulkDecline } = useAuthenticatedMutation(api.inbox.bulkDecline);
+  const { mutate: bulkSnooze } = useAuthenticatedMutation(api.inbox.bulkSnooze);
 
   // Clear selection when tab changes
   const handleTabChange = (tab: string) => {
@@ -356,12 +356,12 @@ function InboxIssueRow({
   isSelected: boolean;
   onToggleSelect: (id: Id<"inboxIssues">) => void;
 }) {
-  const accept = useMutation(api.inbox.accept);
-  const decline = useMutation(api.inbox.decline);
-  const snooze = useMutation(api.inbox.snooze);
-  const unsnooze = useMutation(api.inbox.unsnooze);
-  const reopen = useMutation(api.inbox.reopen);
-  const remove = useMutation(api.inbox.remove);
+  const { mutate: accept } = useAuthenticatedMutation(api.inbox.accept);
+  const { mutate: decline } = useAuthenticatedMutation(api.inbox.decline);
+  const { mutate: snooze } = useAuthenticatedMutation(api.inbox.snooze);
+  const { mutate: unsnooze } = useAuthenticatedMutation(api.inbox.unsnooze);
+  const { mutate: reopen } = useAuthenticatedMutation(api.inbox.reopen);
+  const { mutate: remove } = useAuthenticatedMutation(api.inbox.remove);
 
   const config = STATUS_CONFIG[item.status];
   const StatusIcon = config.icon;

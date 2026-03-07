@@ -9,7 +9,6 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useForm } from "@tanstack/react-form";
-import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { Badge } from "@/components/ui/Badge";
@@ -24,6 +23,7 @@ import { IconPicker, TemplateIcon, toTemplateIconString } from "@/components/ui/
 import { Label } from "@/components/ui/Label";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { FormInput, FormSelect, FormTextarea } from "@/lib/form";
 import { FileText } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
@@ -62,13 +62,13 @@ export function DocumentTemplatesManager({
   const [deleteConfirm, setDeleteConfirm] = useState<Id<"documentTemplates"> | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
-  const templates = useQuery(api.documentTemplates.list, {
+  const templates = useAuthenticatedQuery(api.documentTemplates.list, {
     category: selectedCategory === "all" ? undefined : selectedCategory,
     projectId,
   });
-  const createTemplate = useMutation(api.documentTemplates.create);
-  const updateTemplate = useMutation(api.documentTemplates.update);
-  const deleteTemplate = useMutation(api.documentTemplates.remove);
+  const { mutate: createTemplate } = useAuthenticatedMutation(api.documentTemplates.create);
+  const { mutate: updateTemplate } = useAuthenticatedMutation(api.documentTemplates.update);
+  const { mutate: deleteTemplate } = useAuthenticatedMutation(api.documentTemplates.remove);
 
   const form = useForm({
     defaultValues: {

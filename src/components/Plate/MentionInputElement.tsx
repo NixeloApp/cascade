@@ -7,7 +7,6 @@
 import { api } from "@convex/_generated/api";
 import { useComboboxInput } from "@platejs/combobox/react";
 import { getMentionOnSelectItem, type TMentionItemBase } from "@platejs/mention";
-import { useQuery } from "convex/react";
 import type { PlateElementProps } from "platejs/react";
 import { useEditorRef } from "platejs/react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -17,6 +16,7 @@ import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { cn } from "@/lib/utils";
 
 interface MentionUser extends TMentionItemBase {
@@ -68,7 +68,7 @@ export function MentionInputElement({
   }
 
   // Search for users - query organization members
-  const searchResults = useQuery(api.users.searchUsers, {
+  const searchResults = useAuthenticatedQuery(api.users.searchUsers, {
     query: search,
     limit: 5,
   });

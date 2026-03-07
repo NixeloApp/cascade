@@ -1,11 +1,10 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
 import { PageContent, PageError } from "@/components/layout";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { ROUTES } from "@/config/routes";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-
 export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key")({
   component: ProjectLayout,
 });
@@ -13,8 +12,8 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key")({
 function ProjectLayout() {
   const { key, orgSlug } = Route.useParams();
   const { user } = useCurrentUser();
-  const project = useQuery(api.projects.getByKey, { key });
-  const userRole = useQuery(
+  const project = useAuthenticatedQuery(api.projects.getByKey, { key });
+  const userRole = useAuthenticatedQuery(
     api.projects.getProjectUserRole,
     project ? { projectId: project._id } : "skip",
   );

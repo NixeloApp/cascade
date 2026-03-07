@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
-import { useConvexAuth, useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
 import { isThisWeek, isToday, isYesterday } from "date-fns";
 import { Archive, Bell, CheckCheck } from "lucide-react";
 import { useState } from "react";
@@ -23,11 +23,15 @@ import { Flex } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Typography } from "@/components/ui/Typography";
+import {
+  useAuthenticatedMutation,
+  useAuthenticatedQuery,
+  useAuthReady,
+} from "@/hooks/useConvexHelpers";
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Inbox } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
-
 export const Route = createFileRoute("/_auth/_app/$orgSlug/notifications")({
   component: NotificationsPage,
 });
@@ -84,33 +88,38 @@ function NotificationsPage() {
   const [filter, setFilter] = useState<NotificationFilter>("all");
   const [activeTab, setActiveTab] = useState<"inbox" | "archived">("inbox");
   const orgContext = useOrganizationOptional();
-  const { isAuthenticated } = useConvexAuth();
+  const { canAct } = useAuthReady();
 
   // Active notifications - filter by type on the backend for proper pagination
   const typeFilter = FILTER_TYPE_MAP[filter];
   const { results: notificationsRaw } = usePaginatedQuery(
     api.notifications.list,
-    isAuthenticated ? { types: typeFilter ?? undefined } : "skip",
+    canAct ? { types: typeFilter ?? undefined } : "skip",
     { initialNumItems: 100 },
   );
   const notifications = (notificationsRaw ?? []) as NotificationWithActor[];
 
   // Archived notifications
-  const archivedNotifications = useQuery(
-    api.notifications.listArchived,
-    isAuthenticated ? {} : "skip",
-  );
+  const archivedNotifications = useAuthenticatedQuery(api.notifications.listArchived, {});
 
   // Unread count
-  const unreadCount = useQuery(api.notifications.getUnreadCount, isAuthenticated ? {} : "skip");
+  const unreadCount = useAuthenticatedQuery(api.notifications.getUnreadCount, {});
 
   // Mutations
-  const markAsRead = useMutation(api.notifications.markAsRead);
-  const markAllAsRead = useMutation(api.notifications.markAllAsRead);
-  const archiveNotification = useMutation(api.notifications.archiveNotification);
-  const unarchiveNotification = useMutation(api.notifications.unarchiveNotification);
-  const archiveAllNotifications = useMutation(api.notifications.archiveAllNotifications);
-  const removeNotification = useMutation(api.notifications.softDeleteNotification);
+  const { mutate: markAsRead } = useAuthenticatedMutation(api.notifications.markAsRead);
+  const { mutate: markAllAsRead } = useAuthenticatedMutation(api.notifications.markAllAsRead);
+  const { mutate: archiveNotification } = useAuthenticatedMutation(
+    api.notifications.archiveNotification,
+  );
+  const { mutate: unarchiveNotification } = useAuthenticatedMutation(
+    api.notifications.unarchiveNotification,
+  );
+  const { mutate: archiveAllNotifications } = useAuthenticatedMutation(
+    api.notifications.archiveAllNotifications,
+  );
+  const { mutate: removeNotification } = useAuthenticatedMutation(
+    api.notifications.softDeleteNotification,
+  );
 
   // Ordered groups for display
   const orderedGroups: DateGroup[] = ["today", "yesterday", "this_week", "older"];

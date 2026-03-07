@@ -7,9 +7,9 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { Avatar } from "@/components/ui/Avatar";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useUserFuzzySearch } from "@/hooks/useFuzzySearch";
 import { Flex } from "../ui/Flex";
 import { Typography } from "../ui/Typography";
@@ -55,7 +55,7 @@ export function AssigneeSearchDropdown({
   className = "",
 }: AssigneeSearchDropdownProps) {
   // Step 1: Load members from Convex (permission-filtered)
-  const members = useQuery(api.projectMembers.list, { projectId });
+  const members = useAuthenticatedQuery(api.projectMembers.list, { projectId });
 
   // Step 2: Apply fuzzy search on loaded data
   // Map our custom member format to the standard name/email format the hook expects

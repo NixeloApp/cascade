@@ -7,6 +7,7 @@ vi.mock("driver.js/dist/driver.css", () => ({}));
 // Mock Convex - track calls to updateOnboarding
 const mockUpdateOnboarding = vi.fn().mockResolvedValue(undefined);
 vi.mock("convex/react", () => ({
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   useMutation: () => mockUpdateOnboarding,
 }));
 
@@ -26,6 +27,7 @@ vi.mock("convex/react", () => ({
  * via manual/integration testing and e2e tests.
  */
 
+import { useMutation } from "convex/react";
 // Import after mocking
 import { WelcomeTour } from "./WelcomeTour";
 

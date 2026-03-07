@@ -52,6 +52,7 @@ const mockData = {
 };
 
 vi.mock("convex/react", () => ({
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   useQuery: vi.fn((_query: unknown, args: unknown) => {
     const queryArgs = args as { tab?: "open" | "closed"; projectId?: Id<"projects"> } | "skip";
     if (queryArgs === "skip") return undefined;

@@ -8,9 +8,9 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatDate, formatTime } from "@/lib/formatting";
 import { Calendar, Check, Clock, LinkIcon, MapPin, Trash2, X } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
@@ -42,10 +42,12 @@ interface EventDetailsModalProps {
  * Modal for viewing event details with attendance tracking and delete options.
  */
 export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsModalProps) {
-  const event = useQuery(api.calendarEvents.get, { id: eventId });
-  const attendance = useQuery(api.calendarEventsAttendance.getAttendance, { eventId });
-  const deleteEvent = useMutation(api.calendarEvents.remove);
-  const markAttendance = useMutation(api.calendarEventsAttendance.markAttendance);
+  const event = useAuthenticatedQuery(api.calendarEvents.get, { id: eventId });
+  const attendance = useAuthenticatedQuery(api.calendarEventsAttendance.getAttendance, { eventId });
+  const { mutate: deleteEvent } = useAuthenticatedMutation(api.calendarEvents.remove);
+  const { mutate: markAttendance } = useAuthenticatedMutation(
+    api.calendarEventsAttendance.markAttendance,
+  );
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSavingAttendance, setIsSavingAttendance] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);

@@ -8,13 +8,13 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { AlertTriangle, CheckCircle, Gem, TrendingUp, XCircle, Zap } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -42,7 +42,7 @@ export function HourComplianceDashboard() {
   const [checkAllConfirmOpen, setCheckAllConfirmOpen] = useState(false);
 
   // Queries
-  const summary = useQuery(
+  const summary = useAuthenticatedQuery(
     api.hourCompliance.getComplianceSummary,
     startDate || endDate
       ? {
@@ -52,15 +52,19 @@ export function HourComplianceDashboard() {
       : {},
   );
 
-  const records = useQuery(api.hourCompliance.listComplianceRecords, {
+  const records = useAuthenticatedQuery(api.hourCompliance.listComplianceRecords, {
     status: selectedStatus === "all" ? undefined : selectedStatus,
     startDate: startDate ? new Date(startDate).getTime() : undefined,
     endDate: endDate ? new Date(endDate).getTime() : undefined,
     limit: 100,
   });
 
-  const reviewRecord = useMutation(api.hourCompliance.reviewComplianceRecord);
-  const checkAllCompliance = useMutation(api.hourCompliance.checkAllUsersCompliance);
+  const { mutate: reviewRecord } = useAuthenticatedMutation(
+    api.hourCompliance.reviewComplianceRecord,
+  );
+  const { mutate: checkAllCompliance } = useAuthenticatedMutation(
+    api.hourCompliance.checkAllUsersCompliance,
+  );
 
   const handleReview = async (e: React.FormEvent) => {
     e.preventDefault();

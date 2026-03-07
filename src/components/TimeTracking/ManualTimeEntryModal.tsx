@@ -9,11 +9,11 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useForm, useStore } from "@tanstack/react-form";
-import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { Clock, Hourglass } from "lucide-react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { ACTIVITY_TYPES } from "@/lib/constants";
 import { FormTextarea } from "@/lib/form";
 import { formatDateForInput, formatDurationHuman, parseDuration } from "@/lib/formatting";
@@ -126,8 +126,8 @@ export function ManualTimeEntryModal({
   projectId: initialProjectId,
   issueId: initialIssueId,
 }: ManualTimeEntryModalProps) {
-  const createTimeEntry = useMutation(api.timeTracking.createTimeEntry);
-  const projects = useQuery(api.projects.getCurrentUserProjects, {});
+  const { mutate: createTimeEntry } = useAuthenticatedMutation(api.timeTracking.createTimeEntry);
+  const projects = useAuthenticatedQuery(api.projects.getCurrentUserProjects, {});
 
   // Mode and derived state (kept outside form due to complexity)
   const [entryMode, setEntryMode] = useState<EntryMode>("duration");
@@ -143,7 +143,7 @@ export function ManualTimeEntryModal({
   const [tagInput, setTagInput] = useState("");
 
   // Fetch issues for selected project
-  const projectIssues = useQuery(
+  const projectIssues = useAuthenticatedQuery(
     api.issues.listSelectableIssues,
     projectId ? { projectId } : "skip",
   );

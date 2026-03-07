@@ -9,8 +9,8 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { WorkflowState } from "@convex/shared/types";
-import { useMutation } from "convex/react";
 import { useState } from "react";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { ChevronDown, ChevronUp } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
@@ -45,7 +45,7 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
   const [states, setStates] = useState<WorkflowState[]>(workflowStates);
   const [isSaving, setIsSaving] = useState(false);
 
-  const updateWorkflow = useMutation(api.projects.updateWorkflow);
+  const { mutate: updateWorkflow } = useAuthenticatedMutation(api.projects.updateWorkflow);
 
   const handleEdit = () => {
     setStates([...workflowStates]);

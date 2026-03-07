@@ -8,11 +8,11 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { CheckCircle, Clock, FileText, Mic, MicOff, Play, XCircle } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "./ui/Badge";
@@ -234,9 +234,11 @@ export function MeetingRecordingSection({
     useConfirmDialog();
 
   // Check if there's already a recording for this event (optimized query)
-  const recording = useQuery(api.meetingBot.getRecordingByCalendarEvent, { calendarEventId });
-  const scheduleRecording = useMutation(api.meetingBot.scheduleRecording);
-  const cancelRecording = useMutation(api.meetingBot.cancelRecording);
+  const recording = useAuthenticatedQuery(api.meetingBot.getRecordingByCalendarEvent, {
+    calendarEventId,
+  });
+  const { mutate: scheduleRecording } = useAuthenticatedMutation(api.meetingBot.scheduleRecording);
+  const { mutate: cancelRecording } = useAuthenticatedMutation(api.meetingBot.cancelRecording);
 
   const handleScheduleRecording = async () => {
     setIsScheduling(true);
@@ -316,7 +318,7 @@ export function MeetingRecordingSection({
 // Separate component for showing recording results
 function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"> }) {
   const [showTranscript, setShowTranscript] = useState(false);
-  const recording = useQuery(api.meetingBot.getRecording, { recordingId });
+  const recording = useAuthenticatedQuery(api.meetingBot.getRecording, { recordingId });
 
   if (!recording) {
     return <LoadingSpinner size="sm" />;

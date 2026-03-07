@@ -8,7 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation } from "convex/react";
 import { ArrowLeft, Building2, FolderPlus, Sparkles, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
@@ -16,6 +15,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -47,9 +47,15 @@ export function LeadOnboarding({
   const [projectError, setWorkspaceError] = useState<string | null>(null);
   const [createdSlug, setCreatedSlug] = useState<string | null>(null);
 
-  const createSampleProject = useMutation(api.onboarding.createSampleProject);
-  const createOrganization = useMutation(api.organizations.createOrganization);
-  const completeOnboarding = useMutation(api.onboarding.completeOnboardingFlow);
+  const { mutate: createSampleProject } = useAuthenticatedMutation(
+    api.onboarding.createSampleProject,
+  );
+  const { mutate: createOrganization } = useAuthenticatedMutation(
+    api.organizations.createOrganization,
+  );
+  const { mutate: completeOnboarding } = useAuthenticatedMutation(
+    api.onboarding.completeOnboardingFlow,
+  );
 
   const handleCreateOrganization = async () => {
     if (!projectName.trim()) {

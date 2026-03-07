@@ -8,8 +8,8 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { ClipboardList } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { CustomFieldCard } from "./Fields/CustomFieldCard";
@@ -53,8 +53,8 @@ export function CustomFieldsManager({ projectId }: CustomFieldsManagerProps) {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<Id<"customFields"> | null>(null);
 
-  const customFields = useQuery(api.customFields.list, { projectId });
-  const removeField = useMutation(api.customFields.remove);
+  const customFields = useAuthenticatedQuery(api.customFields.list, { projectId });
+  const { mutate: removeField } = useAuthenticatedMutation(api.customFields.remove);
 
   const handleCreate = () => {
     setEditingField(null);

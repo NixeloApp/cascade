@@ -7,8 +7,8 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Check, Github } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
@@ -35,9 +35,9 @@ interface GitHubConnectionData {
  * Handles OAuth flow for connecting GitHub account
  */
 export function GitHubIntegration() {
-  const githubConnection = useQuery(api.github.getConnection);
-  const connectGitHub = useMutation(api.github.connectGitHub);
-  const disconnectGitHub = useMutation(api.github.disconnectGitHub);
+  const githubConnection = useAuthenticatedQuery(api.github.getConnection, {});
+  const { mutate: connectGitHub } = useAuthenticatedMutation(api.github.connectGitHub);
+  const { mutate: disconnectGitHub } = useAuthenticatedMutation(api.github.disconnectGitHub);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [disconnectConfirmOpen, setDisconnectConfirmOpen] = useState(false);

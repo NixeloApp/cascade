@@ -5,7 +5,6 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { useMutation } from "convex/react";
 import { Camera, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
@@ -13,6 +12,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { Flex } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 
@@ -37,9 +37,9 @@ export function CoverImageUploadModal({
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
-  const uploadCoverImage = useMutation(api.users.uploadCoverImage);
-  const removeCoverImage = useMutation(api.users.removeCoverImage);
+  const { mutate: generateUploadUrl } = useAuthenticatedMutation(api.files.generateUploadUrl);
+  const { mutate: uploadCoverImage } = useAuthenticatedMutation(api.users.uploadCoverImage);
+  const { mutate: removeCoverImage } = useAuthenticatedMutation(api.users.removeCoverImage);
 
   const handleFileSelect = (file: File) => {
     // Validate file type

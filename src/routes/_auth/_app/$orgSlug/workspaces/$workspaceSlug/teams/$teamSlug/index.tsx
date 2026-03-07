@@ -1,10 +1,9 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
 import { useEffect } from "react";
 import { ROUTES } from "@/config/routes";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
-
 export const Route = createFileRoute(
   "/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/",
 )({
@@ -16,12 +15,12 @@ function TeamHome() {
   const { workspaceSlug, teamSlug } = Route.useParams();
   const navigate = useNavigate();
 
-  const workspace = useQuery(api.workspaces.getBySlug, {
+  const workspace = useAuthenticatedQuery(api.workspaces.getBySlug, {
     organizationId,
     slug: workspaceSlug,
   });
 
-  const team = useQuery(
+  const team = useAuthenticatedQuery(
     api.teams.getBySlug,
     workspace?._id
       ? {

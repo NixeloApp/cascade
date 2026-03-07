@@ -8,7 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { X } from "lucide-react";
 import { useState } from "react";
@@ -17,6 +16,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { getTypeLabel, ISSUE_TYPE_ICONS, type IssueType } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -73,14 +73,14 @@ export function IssueDependencies({ issueId }: IssueDependenciesProps) {
   const [deleteConfirm, setDeleteConfirm] = useState<Id<"issueLinks"> | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const links = useQuery(api.issueLinks.getForIssue, { issueId });
+  const links = useAuthenticatedQuery(api.issueLinks.getForIssue, { issueId });
   // Backend excludes current issue - no client-side filtering needed
-  const searchResults = useQuery(
+  const searchResults = useAuthenticatedQuery(
     api.issues.search,
     searchQuery.length >= 2 ? { query: searchQuery, limit: 20, excludeIssueId: issueId } : "skip",
   );
-  const createLink = useMutation(api.issueLinks.create);
-  const removeLink = useMutation(api.issueLinks.remove);
+  const { mutate: createLink } = useAuthenticatedMutation(api.issueLinks.create);
+  const { mutate: removeLink } = useAuthenticatedMutation(api.issueLinks.remove);
 
   const handleAddLink = async () => {
     if (!selectedIssue) {

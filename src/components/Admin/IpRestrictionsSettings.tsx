@@ -7,9 +7,9 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import { Globe, Plus, Shield, ShieldAlert, ShieldCheck, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
@@ -39,12 +39,16 @@ interface IpAllowlistEntry {
 export function IpRestrictionsSettings() {
   const { organizationId } = useOrganization();
 
-  const status = useQuery(api.ipRestrictions.getIpRestrictionsStatus, { organizationId });
-  const allowlist = useQuery(api.ipRestrictions.listIpAllowlist, { organizationId });
+  const status = useAuthenticatedQuery(api.ipRestrictions.getIpRestrictionsStatus, {
+    organizationId,
+  });
+  const allowlist = useAuthenticatedQuery(api.ipRestrictions.listIpAllowlist, { organizationId });
 
-  const setEnabled = useMutation(api.ipRestrictions.setIpRestrictionsEnabled);
-  const addIp = useMutation(api.ipRestrictions.addIpToAllowlist);
-  const removeIp = useMutation(api.ipRestrictions.removeIpFromAllowlist);
+  const { mutate: setEnabled } = useAuthenticatedMutation(
+    api.ipRestrictions.setIpRestrictionsEnabled,
+  );
+  const { mutate: addIp } = useAuthenticatedMutation(api.ipRestrictions.addIpToAllowlist);
+  const { mutate: removeIp } = useAuthenticatedMutation(api.ipRestrictions.removeIpFromAllowlist);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newIpRange, setNewIpRange] = useState("");

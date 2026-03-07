@@ -8,8 +8,8 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import { useId, useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Archive } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "./ui/Button";
@@ -50,18 +50,18 @@ export function BulkOperationsBar({
   const startDateId = useId();
   const dueDateId = useId();
 
-  const _project = useQuery(api.projects.getProject, { id: projectId });
-  const sprints = useQuery(api.sprints.listByProject, { projectId });
-  const members = useQuery(api.projectMembers.list, { projectId });
+  const _project = useAuthenticatedQuery(api.projects.getProject, { id: projectId });
+  const sprints = useAuthenticatedQuery(api.sprints.listByProject, { projectId });
+  const members = useAuthenticatedQuery(api.projectMembers.list, { projectId });
 
-  const bulkUpdateStatus = useMutation(api.issues.bulkUpdateStatus);
-  const bulkUpdatePriority = useMutation(api.issues.bulkUpdatePriority);
-  const bulkAssign = useMutation(api.issues.bulkAssign);
-  const bulkMoveToSprint = useMutation(api.issues.bulkMoveToSprint);
-  const bulkArchive = useMutation(api.issues.bulkArchive);
-  const bulkDelete = useMutation(api.issues.bulkDelete);
-  const bulkUpdateStartDate = useMutation(api.issues.bulkUpdateStartDate);
-  const bulkUpdateDueDate = useMutation(api.issues.bulkUpdateDueDate);
+  const { mutate: bulkUpdateStatus } = useAuthenticatedMutation(api.issues.bulkUpdateStatus);
+  const { mutate: bulkUpdatePriority } = useAuthenticatedMutation(api.issues.bulkUpdatePriority);
+  const { mutate: bulkAssign } = useAuthenticatedMutation(api.issues.bulkAssign);
+  const { mutate: bulkMoveToSprint } = useAuthenticatedMutation(api.issues.bulkMoveToSprint);
+  const { mutate: bulkArchive } = useAuthenticatedMutation(api.issues.bulkArchive);
+  const { mutate: bulkDelete } = useAuthenticatedMutation(api.issues.bulkDelete);
+  const { mutate: bulkUpdateStartDate } = useAuthenticatedMutation(api.issues.bulkUpdateStartDate);
+  const { mutate: bulkUpdateDueDate } = useAuthenticatedMutation(api.issues.bulkUpdateDueDate);
 
   const issueIds = Array.from(selectedIssueIds);
   const count = issueIds.length;

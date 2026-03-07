@@ -8,7 +8,8 @@
 
 import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useQuery } from "convex/react";
+import { usePublicQuery } from "@/hooks/useConvexHelpers";
+
 import { TEST_IDS } from "@/lib/test-ids";
 import { Button } from "../ui/Button";
 import { Typography } from "../ui/Typography";
@@ -23,7 +24,8 @@ interface GoogleAuthButtonProps {
  */
 export function GoogleAuthButton({ redirectTo, text }: GoogleAuthButtonProps) {
   const { signIn } = useAuthActions();
-  const isGoogleAuthEnabled = useQuery(api.featureFlags.isGoogleAuthEnabled);
+  // Public query - feature flag must work on sign-in page before auth
+  const isGoogleAuthEnabled = usePublicQuery(api.featureFlags.isGoogleAuthEnabled, {});
   const isDisabled = isGoogleAuthEnabled === false;
 
   if (isDisabled) {

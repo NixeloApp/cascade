@@ -9,13 +9,13 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { DAY } from "@convex/lib/timeUtils";
-import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { List, type ListImperativeAPI } from "react-window";
 import { PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useListNavigation } from "@/hooks/useListNavigation";
 import { formatDate } from "@/lib/dates";
 import { LinkIcon } from "@/lib/icons";
@@ -75,16 +75,16 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     originalDueDate?: number;
   } | null>(null);
 
-  const updateIssue = useMutation(api.issues.update);
+  const { mutate: updateIssue } = useAuthenticatedMutation(api.issues.update);
 
   // Fetch epics for the dropdown (separate optimized query)
-  const epics = useQuery(api.issues.listEpics, { projectId });
+  const epics = useAuthenticatedQuery(api.issues.listEpics, { projectId });
 
   // Fetch issue dependencies for visualizing connections
-  const issueLinks = useQuery(api.issueLinks.getForProject, { projectId });
+  const issueLinks = useAuthenticatedQuery(api.issueLinks.getForProject, { projectId });
 
   // Fetch filtered issues - backend applies all filters
-  const filteredIssues = useQuery(api.issues.listRoadmapIssues, {
+  const filteredIssues = useAuthenticatedQuery(api.issues.listRoadmapIssues, {
     projectId,
     sprintId,
     excludeEpics: true, // Don't include epics in main list
@@ -92,7 +92,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     hasDueDate: true, // Only show issues with due dates
   });
 
-  const project = useQuery(api.projects.getProject, { id: projectId });
+  const project = useAuthenticatedQuery(api.projects.getProject, { id: projectId });
 
   type RoadmapIssue = FunctionReturnType<typeof api.issues.listRoadmapIssues>[number];
   type Epic = NonNullable<FunctionReturnType<typeof api.issues.listEpics>>[number];

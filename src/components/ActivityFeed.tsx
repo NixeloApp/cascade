@@ -8,8 +8,8 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useQuery } from "convex/react";
 import type { LucideIcon } from "lucide-react";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatRelativeTime } from "@/lib/dates";
 import {
   AlertTriangle,
@@ -51,7 +51,7 @@ interface ActivityFeedProps {
  * Displays a timeline of recent project activity (issue creation, updates, comments).
  */
 export function ActivityFeed({ projectId, limit = 50, compact = false }: ActivityFeedProps) {
-  const activities = useQuery(api.analytics.getRecentActivity, { projectId, limit });
+  const activities = useAuthenticatedQuery(api.analytics.getRecentActivity, { projectId, limit });
 
   const getActionIcon = (action: string): LucideIcon => {
     switch (action) {

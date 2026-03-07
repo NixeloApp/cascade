@@ -5,10 +5,10 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useAction, useMutation, useQuery } from "convex/react";
+import { useAction } from "convex/react";
 import { useEffect, useRef, useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showError } from "@/lib/toast";
-
 export interface UseAIChatOptions {
   projectId?: Id<"projects">;
   initialChatId?: Id<"aiChats">;
@@ -49,9 +49,12 @@ export function useAIChat({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const createChat = useMutation(api.ai.mutations.createChat);
+  const { mutate: createChat } = useAuthenticatedMutation(api.ai.mutations.createChat);
   const sendMessage = useAction(api.ai.chat.chat);
-  const messages = useQuery(api.ai.queries.getChatMessages, chatId ? { chatId } : "skip");
+  const messages = useAuthenticatedQuery(
+    api.ai.queries.getChatMessages,
+    chatId ? { chatId } : "skip",
+  );
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {

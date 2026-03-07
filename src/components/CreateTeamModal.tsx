@@ -9,7 +9,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
-import { useMutation } from "convex/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
@@ -20,6 +19,7 @@ import { Label } from "@/components/ui/Label";
 import { Stack } from "@/components/ui/Stack";
 import { Textarea } from "@/components/ui/Textarea";
 import { ROUTES } from "@/config/routes";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { showError, showSuccess } from "@/lib/toast";
 
@@ -39,7 +39,7 @@ export function CreateTeamModal({
 }: CreateTeamModalProps) {
   const { organizationId, orgSlug } = useOrganization();
   const navigate = useNavigate();
-  const createTeam = useMutation(api.teams.createTeam);
+  const { mutate: createTeam } = useAuthenticatedMutation(api.teams.createTeam);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");

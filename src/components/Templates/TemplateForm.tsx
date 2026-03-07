@@ -10,9 +10,9 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
 import { useForm } from "@tanstack/react-form";
-import { useMutation, useQuery } from "convex/react";
 import { type FormEvent, useEffect } from "react";
 import { z } from "zod";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { FormCheckbox, FormInput, FormSelect, FormTextarea } from "@/lib/form";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
@@ -65,11 +65,11 @@ interface TemplateFormProps {
 
 /** Form dialog for creating or editing issue templates with pre-filled fields. */
 export function TemplateForm({ projectId, template, open, onOpenChange }: TemplateFormProps) {
-  const createTemplate = useMutation(api.templates.create);
-  const updateTemplate = useMutation(api.templates.update);
+  const { mutate: createTemplate } = useAuthenticatedMutation(api.templates.create);
+  const { mutate: updateTemplate } = useAuthenticatedMutation(api.templates.update);
 
   // Fetch project data for members and workflow states
-  const project = useQuery(api.projects.getProject, { id: projectId });
+  const project = useAuthenticatedQuery(api.projects.getProject, { id: projectId });
 
   const form = useForm({
     defaultValues: {

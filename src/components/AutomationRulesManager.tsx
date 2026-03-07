@@ -13,8 +13,8 @@ import type {
   AutomationActionValue,
   AutomationTrigger,
 } from "@convex/validators";
-import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 import { AutomationRuleCard } from "./Automation/AutomationRuleCard";
 import { AutomationRuleForm } from "./Automation/AutomationRuleForm";
@@ -57,8 +57,8 @@ export function AutomationRulesManager({ projectId }: AutomationRulesManagerProp
   const [editingRule, setEditingRule] = useState<AutomationRule | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<Id<"automationRules"> | null>(null);
 
-  const rules = useQuery(api.automationRules.list, { projectId });
-  const removeRule = useMutation(api.automationRules.remove);
+  const rules = useAuthenticatedQuery(api.automationRules.list, { projectId });
+  const { mutate: removeRule } = useAuthenticatedMutation(api.automationRules.remove);
 
   const handleCreate = () => {
     setEditingRule(null);

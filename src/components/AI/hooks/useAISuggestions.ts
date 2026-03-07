@@ -5,11 +5,11 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useAction, useMutation, useQuery } from "convex/react";
+import { useAction } from "convex/react";
 import { useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 import type { SuggestionType } from "../config";
-
 export interface UseAISuggestionsOptions {
   projectId?: Id<"projects">;
 }
@@ -34,14 +34,16 @@ export function useAISuggestions({ projectId }: UseAISuggestionsOptions): UseAIS
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedType, setSelectedType] = useState<SuggestionType | undefined>();
 
-  const suggestions = useQuery(
+  const suggestions = useAuthenticatedQuery(
     api.ai.queries.getProjectSuggestions,
     projectId ? { projectId, suggestionType: selectedType } : "skip",
   );
 
   const generateInsights = useAction(api.ai.actions.generateProjectInsights);
-  const acceptSuggestion = useMutation(api.ai.mutations.acceptSuggestion);
-  const dismissSuggestion = useMutation(api.ai.mutations.dismissSuggestion);
+  const { mutate: acceptSuggestion } = useAuthenticatedMutation(api.ai.mutations.acceptSuggestion);
+  const { mutate: dismissSuggestion } = useAuthenticatedMutation(
+    api.ai.mutations.dismissSuggestion,
+  );
 
   const unreadCount =
     suggestions?.filter((s: Doc<"aiSuggestions">) => !(s.accepted || s.dismissed)).length || 0;

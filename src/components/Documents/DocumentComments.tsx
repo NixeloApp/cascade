@@ -8,7 +8,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -19,6 +18,7 @@ import { Textarea } from "@/components/ui/form/Textarea";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatRelativeTime } from "@/lib/formatting";
 import { MessageCircle } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
@@ -35,8 +35,8 @@ export function DocumentComments({ documentId }: DocumentCommentsProps) {
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const comments = useQuery(api.documents.listComments, { documentId });
-  const addComment = useMutation(api.documents.addComment);
+  const comments = useAuthenticatedQuery(api.documents.listComments, { documentId });
+  const { mutate: addComment } = useAuthenticatedMutation(api.documents.addComment);
 
   const handleSubmit = async () => {
     if (!newComment.trim()) return;

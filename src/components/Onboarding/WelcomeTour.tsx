@@ -7,9 +7,9 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { useMutation } from "convex/react";
 import type { driver as driverFunction } from "driver.js";
 import { useEffect, useState } from "react";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 
 interface WelcomeTourProps {
   onComplete?: () => void;
@@ -21,7 +21,9 @@ interface WelcomeTourProps {
  * to improve initial page load performance.
  */
 export function WelcomeTour({ onComplete, onSkip }: WelcomeTourProps) {
-  const updateOnboarding = useMutation(api.onboarding.updateOnboardingStatus);
+  const { mutate: updateOnboarding } = useAuthenticatedMutation(
+    api.onboarding.updateOnboardingStatus,
+  );
   const [driverFn, setDriverFn] = useState<typeof driverFunction | null>(null);
 
   // Lazy load driver.js

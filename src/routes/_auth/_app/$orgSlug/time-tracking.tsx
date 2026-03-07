@@ -1,9 +1,9 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
 import { lazy, Suspense, useEffect } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { ROUTES } from "@/config/routes";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 
 // Lazy load TimeTrackingPage (admin-only, heavy component)
 const TimeTrackingPage = lazy(() =>
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/time-tracking")({
 function TimeTrackingPageRoute() {
   const { orgSlug } = Route.useParams();
   const navigate = useNavigate();
-  const isAdmin = useQuery(api.users.isOrganizationAdmin);
+  const isAdmin = useAuthenticatedQuery(api.users.isOrganizationAdmin, {});
 
   // Redirect non-admins to dashboard
   useEffect(() => {

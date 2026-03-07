@@ -16,6 +16,7 @@ Object.assign(mockMutationFn, {
 
 // Mock Convex hooks
 vi.mock("convex/react", () => ({
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   useQuery: vi.fn(),
   useMutation: vi.fn(() => mockMutationFn),
 }));

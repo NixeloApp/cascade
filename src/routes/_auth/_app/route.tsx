@@ -9,13 +9,17 @@
 import { api } from "@convex/_generated/api";
 import { isReservedSlug } from "@convex/shared/constants";
 import { createFileRoute, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useEffect, useRef, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
+import {
+  useAuthenticatedMutation,
+  useAuthenticatedQuery,
+  useAuthReady,
+} from "@/hooks/useConvexHelpers";
 
 export const Route = createFileRoute("/_auth/_app")({
   component: AppLayout,
@@ -41,7 +45,7 @@ let hasAuthenticatedAppSession = false;
 function AppLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { isLoading: isAuthLoading, isAuthenticated } = useConvexAuth();
+  const { isAuthLoading, isAuthenticated } = useAuthReady();
 
   if (isAuthenticated) {
     hasAuthenticatedAppSession = true;
@@ -50,16 +54,10 @@ function AppLayout() {
   }
 
   // Get redirect destination from backend (handles onboarding check)
-  const redirectPath = useQuery(
-    api.auth.getRedirectDestination,
-    isAuthenticated ? undefined : "skip",
-  );
+  const redirectPath = useAuthenticatedQuery(api.auth.getRedirectDestination, {});
 
   // Get user's organizations to check if we need initialization
-  const userOrganizations = useQuery(
-    api.organizations.getUserOrganizations,
-    isAuthenticated ? undefined : "skip",
-  );
+  const userOrganizations = useAuthenticatedQuery(api.organizations.getUserOrganizations, {});
 
   if (redirectPath !== undefined) {
     cachedRedirectPath = redirectPath;
@@ -133,7 +131,7 @@ function AppLayout() {
 // Component to initialize default organization for users without one
 function InitializeOrganization() {
   const navigate = useNavigate();
-  const initializeDefaultOrganization = useMutation(
+  const { mutate: initializeDefaultOrganization } = useAuthenticatedMutation(
     api.organizations.initializeDefaultOrganization,
   );
   const initRef = useRef(false);

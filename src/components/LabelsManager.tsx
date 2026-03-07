@@ -8,10 +8,10 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
 import { ChevronDown, ChevronRight, FolderPlus, Pencil, Plus, Trash } from "lucide-react";
 import { useState } from "react";
 import { useAsyncMutation } from "@/hooks/useAsyncMutation";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import { useEntityForm } from "@/hooks/useEntityForm";
 import { useModal } from "@/hooks/useModal";
@@ -76,7 +76,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
   // Data - use the new grouped list endpoint
-  const labelGroups = useQuery(api.labelGroups.list, { projectId });
+  const labelGroups = useAuthenticatedQuery(api.labelGroups.list, { projectId });
 
   // Form states for labels
   const labelModal = useModal();
@@ -87,14 +87,14 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
   const groupForm = useEntityForm<GroupFormData>(DEFAULT_GROUP_FORM);
 
   // Label mutations
-  const createLabel = useMutation(api.labels.createLabel);
-  const updateLabel = useMutation(api.labels.update);
-  const deleteLabelMutation = useMutation(api.labels.remove);
+  const { mutate: createLabel } = useAuthenticatedMutation(api.labels.createLabel);
+  const { mutate: updateLabel } = useAuthenticatedMutation(api.labels.update);
+  const { mutate: deleteLabelMutation } = useAuthenticatedMutation(api.labels.remove);
 
   // Group mutations
-  const createGroup = useMutation(api.labelGroups.createLabelGroup);
-  const updateGroup = useMutation(api.labelGroups.update);
-  const deleteGroupMutation = useMutation(api.labelGroups.remove);
+  const { mutate: createGroup } = useAuthenticatedMutation(api.labelGroups.createLabelGroup);
+  const { mutate: updateGroup } = useAuthenticatedMutation(api.labelGroups.update);
+  const { mutate: deleteGroupMutation } = useAuthenticatedMutation(api.labelGroups.remove);
 
   // Label form submission
   const { mutate: submitLabelForm, isLoading: isLabelSubmitting } = useAsyncMutation(

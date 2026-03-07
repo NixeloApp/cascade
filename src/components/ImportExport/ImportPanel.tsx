@@ -8,8 +8,8 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useMutation } from "convex/react";
 import { useState } from "react";
+import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { AlertTriangle, FileCode, FileSpreadsheet } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -39,8 +39,8 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
   const [importData, setImportData] = useState<string>("");
   const [isImporting, setIsImporting] = useState(false);
 
-  const importCSV = useMutation(api.export.importIssuesCSV);
-  const importJSON = useMutation(api.export.importIssuesJSON);
+  const { mutate: importCSV } = useAuthenticatedMutation(api.export.importIssuesCSV);
+  const { mutate: importJSON } = useAuthenticatedMutation(api.export.importIssuesJSON);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

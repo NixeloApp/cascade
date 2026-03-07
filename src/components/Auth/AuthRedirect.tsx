@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
 import { useEffect } from "react";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 
 /**
  * AuthRedirect - Redirects authenticated users to their correct destination.
@@ -15,7 +15,7 @@ import { useEffect } from "react";
 export function AuthRedirect({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectPath = useQuery(api.auth.getRedirectDestination);
+  const redirectPath = useAuthenticatedQuery(api.auth.getRedirectDestination, {});
 
   useEffect(() => {
     // If we have a redirect destination and it's not the current path, navigate

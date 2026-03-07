@@ -9,9 +9,9 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
-import { useMutation, useQuery } from "convex/react";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { ChevronDown, Search, X } from "@/lib/icons";
 import { ISSUE_TYPE_ICONS, type IssuePriority, type IssueType } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
@@ -31,7 +31,6 @@ import { Icon } from "./ui/Icon";
 import { IconButton } from "./ui/IconButton";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
-
 export interface DateRangeFilter {
   from?: string; // ISO date string (YYYY-MM-DD)
   to?: string;
@@ -325,11 +324,11 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
   const [filterName, setFilterName] = useState("");
   const [isPublic, setIsPublic] = useState(false);
 
-  const savedFilters = useQuery(api.savedFilters.list, { projectId });
-  const createFilter = useMutation(api.savedFilters.create);
-  const removeFilter = useMutation(api.savedFilters.remove);
-  const labels = useQuery(api.labels.list, { projectId });
-  const members = useQuery(api.projectMembers.list, { projectId });
+  const savedFilters = useAuthenticatedQuery(api.savedFilters.list, { projectId });
+  const { mutate: createFilter } = useAuthenticatedMutation(api.savedFilters.create);
+  const { mutate: removeFilter } = useAuthenticatedMutation(api.savedFilters.remove);
+  const labels = useAuthenticatedQuery(api.labels.list, { projectId });
+  const members = useAuthenticatedQuery(api.projectMembers.list, { projectId });
 
   const handleSaveFilter = async () => {
     if (!filterName.trim()) {

@@ -17,6 +17,7 @@ vi.mock("@tanstack/react-router", async () => {
 // Mock Convex useQuery
 let mockRedirectPath: string | undefined;
 vi.mock("convex/react", () => ({
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   useQuery: vi.fn(() => mockRedirectPath),
 }));
 

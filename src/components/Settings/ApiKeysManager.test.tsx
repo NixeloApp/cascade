@@ -47,6 +47,7 @@ const mockDeleteKey = vi.fn();
 
 // Mock Convex
 vi.mock("convex/react", () => ({
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   useQuery: vi.fn((_query: unknown, args: unknown) => {
     if (args === "skip") return undefined;
     // Return usage stats when keyId is provided
