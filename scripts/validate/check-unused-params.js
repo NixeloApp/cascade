@@ -42,13 +42,6 @@ const ALLOWLIST = new Set([
   "src/components/Calendar/ProjectCalendar.tsx",
   // Interface defines onIssueReorder for future fine-grained reordering within columns
   "src/components/Kanban/KanbanColumn.tsx",
-  // HTTP handlers maintain ctx/request signature for test compatibility and future use
-  "convex/http/githubOAuth.ts",
-  "convex/http/googleOAuth.ts",
-  // Example file demonstrates rate limiting pattern, args intentionally unused
-  "convex/examples/rateLimitExample.ts",
-  // Callback signature required by CreateWorkspaceModal, workspaceId unused here
-  "src/routes/_auth/_app/$orgSlug/workspaces/index.tsx",
 ]);
 
 /**
