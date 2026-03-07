@@ -18,7 +18,7 @@ import { Icon } from "@/components/ui/Icon";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
-import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useAuthenticatedMutation, usePublicQuery } from "@/hooks/useConvexHelpers";
 import { ShieldCheck } from "@/lib/icons";
 import { showError } from "@/lib/toast";
 export const Route = createFileRoute("/verify-2fa")({
@@ -28,7 +28,8 @@ export const Route = createFileRoute("/verify-2fa")({
 
 function Verify2FARoute() {
   const navigate = useNavigate();
-  const redirectPath = useAuthenticatedQuery(api.auth.getRedirectDestination, {});
+  // Public query - works during 2FA flow before session is fully authenticated
+  const redirectPath = usePublicQuery(api.auth.getRedirectDestination, {});
   const { mutate: verifyCode } = useAuthenticatedMutation(api.twoFactor.verifyCode);
   const { mutate: verifyBackupCode } = useAuthenticatedMutation(api.twoFactor.verifyBackupCode);
 

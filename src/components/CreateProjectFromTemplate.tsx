@@ -56,7 +56,10 @@ export function CreateProjectFromTemplate({
     shouldLoadModalData ? { organizationId } : "skip",
   );
 
-  const templates = useAuthenticatedQuery(api.projectTemplates.list, {});
+  const templates = useAuthenticatedQuery(
+    api.projectTemplates.list,
+    shouldLoadModalData ? {} : "skip",
+  );
   const selectedTemplate = useAuthenticatedQuery(
     api.projectTemplates.get,
     shouldLoadModalData && selectedTemplateId ? { id: selectedTemplateId } : "skip",

@@ -51,16 +51,37 @@ export function useAuthenticatedQuery<Query extends QueryReference>(
 /**
  * Query for public endpoints that don't require auth.
  * Explicit marker that this is intentionally unauthenticated.
+ * Supports "skip" for conditional queries (e.g., modal not open).
  *
  * @example
  * // For truly public queries (landing page data, public documents, etc.)
  * const publicData = usePublicQuery(api.public.getLandingStats, {});
+ *
+ * // With conditional skip
+ * const data = usePublicQuery(api.invites.getByToken, open ? { token } : "skip");
  */
 export function usePublicQuery<Query extends QueryReference>(
   query: Query,
-  args: FunctionArgs<Query>,
+  args: FunctionArgs<Query> | "skip",
 ): FunctionReturnType<Query> | undefined {
-  return useConvexQuery(query, args as FunctionArgs<Query>);
+  return useConvexQuery(query, args as FunctionArgs<Query> | "skip");
+}
+
+/**
+ * Mutation for public endpoints that don't require auth.
+ * Use for mutations like unsubscribe-by-token, magic link verification, etc.
+ *
+ * @example
+ * const { mutate } = usePublicMutation(api.unsubscribe.unsubscribe);
+ * await mutate({ token });
+ */
+export function usePublicMutation<Mutation extends MutationReference>(
+  mutation: Mutation,
+): {
+  mutate: ReactMutation<Mutation>;
+} {
+  const mutate = useConvexMutation(mutation);
+  return { mutate };
 }
 
 /**

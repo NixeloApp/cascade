@@ -15,7 +15,7 @@ import { Icon } from "@/components/ui/Icon";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
-import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { usePublicMutation, usePublicQuery } from "@/hooks/useConvexHelpers";
 
 interface UnsubscribePageProps {
   token: string;
@@ -25,8 +25,9 @@ export function UnsubscribePage({ token }: UnsubscribePageProps) {
   const [status, setStatus] = useState<"loading" | "success" | "error" | "invalid">("loading");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const getUserFromToken = useAuthenticatedQuery(api.unsubscribe.getUserFromToken, { token });
-  const { mutate: unsubscribe } = useAuthenticatedMutation(api.unsubscribe.unsubscribe);
+  // Public endpoints - unsubscribe works without auth via email link
+  const getUserFromToken = usePublicQuery(api.unsubscribe.getUserFromToken, { token });
+  const { mutate: unsubscribe } = usePublicMutation(api.unsubscribe.unsubscribe);
 
   useEffect(() => {
     if (getUserFromToken === undefined) return;

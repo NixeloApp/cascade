@@ -12,7 +12,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { ROUTES } from "@/config/routes";
-import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { usePublicQuery } from "@/hooks/useConvexHelpers";
 import { getEmailDomain, isGoogleWorkspaceSsoConnection } from "@/lib/sso-discovery";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
@@ -34,8 +34,9 @@ export function SignInForm() {
   const [hydrated, setHydrated] = useState(false);
   const [email, setEmail] = useState("");
 
+  // Public query - SSO discovery must work on sign-in page before auth
   const emailDomain = getEmailDomain(email);
-  const ssoConnection = useAuthenticatedQuery(
+  const ssoConnection = usePublicQuery(
     api.sso.getForDomain,
     emailDomain
       ? {

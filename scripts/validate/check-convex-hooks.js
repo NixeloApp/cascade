@@ -22,12 +22,8 @@ export function run() {
     /clients\/index\.tsx$/, // Uses anyApi for client portal mutations
   ];
 
-  // Type-only imports are allowed (import type { useQuery })
-  const TYPE_IMPORT_REGEX = /import\s+type\s+\{[^}]*\}\s+from\s+["']convex\/react["']/;
-
-  // Runtime imports of hooks we want to block
-  const RAW_IMPORT_REGEX =
-    /import\s+\{[^}]*(useQuery|useMutation|useConvexAuth)[^}]*\}\s+from\s+["']convex\/react["']/;
+  // Hooks we want to block from direct convex/react imports
+  const BLOCKED_HOOKS = ["useQuery", "useMutation", "useConvexAuth"];
 
   const errors = [];
 
@@ -36,29 +32,44 @@ export function run() {
     if (ALLOWED_FILES.some((p) => p.test(rel))) return;
 
     const content = fs.readFileSync(filePath, "utf-8");
-    const lines = content.split("\n");
 
-    lines.forEach((line, index) => {
+    // Use regex with dotAll flag to match multiline imports
+    // Match: import { ... } from "convex/react" or 'convex/react'
+    const importRegex = /import\s+(type\s+)?\{([^}]*)\}\s+from\s+["']convex\/react["']/gs;
+
+    let match = importRegex.exec(content);
+    while (match !== null) {
+      const isTypeImport = !!match[1]; // "type " prefix
+      const importedItems = match[2];
+
       // Skip type-only imports
-      if (TYPE_IMPORT_REGEX.test(line)) return;
+      if (isTypeImport) continue;
 
-      const match = line.match(RAW_IMPORT_REGEX);
-      if (match) {
-        const hook = match[1];
-        let replacement = "";
-        if (hook === "useQuery") {
-          replacement = "useAuthenticatedQuery or usePublicQuery";
-        } else if (hook === "useMutation") {
-          replacement = "useAuthenticatedMutation";
-        } else if (hook === "useConvexAuth") {
-          replacement = "useAuthReady";
+      // Check if any blocked hook is imported
+      for (const hook of BLOCKED_HOOKS) {
+        // Match whole word (not useQueryClient, useMutationState, etc.)
+        const hookPattern = new RegExp(`\\b${hook}\\b`);
+        if (hookPattern.test(importedItems)) {
+          // Find line number for error reporting
+          const beforeMatch = content.slice(0, match.index);
+          const lineNumber = (beforeMatch.match(/\n/g) || []).length + 1;
+
+          let replacement = "";
+          if (hook === "useQuery") {
+            replacement = "useAuthenticatedQuery or usePublicQuery";
+          } else if (hook === "useMutation") {
+            replacement = "useAuthenticatedMutation or usePublicMutation";
+          } else if (hook === "useConvexAuth") {
+            replacement = "useAuthReady";
+          }
+
+          errors.push(
+            `  ${c.red}ERROR${c.reset} ${rel}:${lineNumber} - Raw ${hook} import. Use ${replacement} from @/hooks/useConvexHelpers`,
+          );
         }
-
-        errors.push(
-          `  ${c.red}ERROR${c.reset} ${rel}:${index + 1} - Raw ${hook} import. Use ${replacement} from @/hooks/useConvexHelpers`,
-        );
       }
-    });
+      match = importRegex.exec(content);
+    }
   }
 
   const files = walkDir(SRC_DIR, { extensions: new Set([".ts", ".tsx", ".js", ".jsx"]) });
