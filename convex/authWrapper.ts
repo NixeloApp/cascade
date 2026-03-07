@@ -73,9 +73,9 @@ function passwordResetJsonResponse(request: Request, body: unknown, status = 200
 /**
  * Handler for password reset request - exported for testing
  */
-export const performPasswordResetHandler = async (_ctx: ActionCtx, args: { email: string }) => {
+export const performPasswordResetHandler = async (ctx: ActionCtx, args: { email: string }) => {
   try {
-    await _ctx.runAction(api.auth.signIn, {
+    await ctx.runAction(api.auth.signIn, {
       provider: "password",
       params: {
         email: args.email,
@@ -238,11 +238,12 @@ export const securePasswordResetHandler = async (ctx: ActionCtx, request: Reques
   }
 };
 
-export const securePasswordResetPreflightHandler = async (_ctx: ActionCtx, request: Request) =>
-  new Response(null, {
+export const securePasswordResetPreflightHandler = async (...[, request]: [ActionCtx, Request]) => {
+  return new Response(null, {
     status: 204,
     headers: getPasswordResetCorsHeaders(request),
   });
+};
 
 /**
  * Secure password reset request

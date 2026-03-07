@@ -358,7 +358,7 @@ export const sendIssueNotification = action({
     for (const webhook of activeWebhooks) {
       try {
         const color = getColorForEvent(args.event);
-        const title = getTitleForEvent(args.event, issue);
+        const title = getTitleForEvent(args.event);
 
         await ctx.runAction(api.pumble.sendMessage, {
           webhookId: webhook._id,
@@ -422,7 +422,7 @@ function getColorForEvent(event: string): string {
   }
 }
 
-function getTitleForEvent(event: string, _issue: unknown): string {
+function getTitleForEvent(event: string): string {
   switch (event) {
     case "issue.created":
       return `🆕 New Issue Created`;

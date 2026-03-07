@@ -56,7 +56,6 @@ describe("BulkOperationsBar - Component Behavior", () => {
     { id: "done", name: "Done" },
   ];
 
-  const mockProject = { _id: mockProjectId, name: "Test" };
   const mockSprints = [{ _id: "sprint1" as Id<"sprints">, name: "Sprint 1" }];
   const mockMembers = [{ userId: "user1" as Id<"users">, userName: "John Doe" }];
 
@@ -75,8 +74,8 @@ describe("BulkOperationsBar - Component Behavior", () => {
     // Setup queries to cycle through values on each render
     let queryCallCount = 0;
     (useQuery as any).mockImplementation(() => {
-      const results = [mockProject, mockSprints, mockMembers];
-      return results[queryCallCount++ % 3];
+      const results = [mockSprints, mockMembers];
+      return results[queryCallCount++ % 2];
     });
 
     // Setup mutations - each useMutation call gets the corresponding mock

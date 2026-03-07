@@ -22,23 +22,6 @@ interface RecentActivityProps {
   activities: Activity[] | undefined;
 }
 
-const _getActionBadgeVariant = (action: string): "success" | "info" | "warning" | "neutral" => {
-  switch (action) {
-    case "created":
-      return "success";
-    case "updated":
-      return "info";
-    case "commented":
-      return "info";
-    case "assigned":
-      return "warning";
-    case "moved":
-      return "neutral";
-    default:
-      return "neutral";
-  }
-};
-
 /**
  * Dashboard recent activity timeline showing latest project updates
  */

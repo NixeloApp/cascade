@@ -53,7 +53,6 @@ export function TimeEntriesList({
 
   const { mutate: deleteEntry } = useAuthenticatedMutation(api.timeTracking.deleteTimeEntry);
 
-  const [_editingEntry, _setEditingEntry] = useState<string | null>(null);
   const [showManualEntryModal, setShowManualEntryModal] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<Id<"timeEntries"> | null>(null);

@@ -75,7 +75,7 @@ function OrgError({ title, message }: { title: string; message: string }) {
   );
 }
 
-function useStableOrgData(isAuthenticated: boolean, orgSlug: string) {
+function useStableOrgData(orgSlug: string) {
   const userOrganizations = useAuthenticatedQuery(api.organizations.getUserOrganizations, {}) as
     | UserOrganization[]
     | undefined;
@@ -110,7 +110,7 @@ function OrganizationLayout() {
     cachedOrganizationsBySlug.clear();
   }
 
-  const { organization, userOrgs } = useStableOrgData(isAuthenticated, orgSlug);
+  const { organization, userOrgs } = useStableOrgData(orgSlug);
 
   if (
     (isAuthLoading && !hasAuthenticatedOrgSession && !organization) ||
@@ -161,7 +161,7 @@ function OrganizationLayoutInner() {
   // UI state for modals
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
-  const [_showAIAssistant, setShowAIAssistant] = useState(false);
+  const [, setShowAIAssistant] = useState(false);
   const [showCreateIssue, setShowCreateIssue] = useState(false);
   const [showCreateProject, setShowCreateProject] = useState(false);
 
@@ -285,7 +285,7 @@ function OrganizationLayoutInner() {
           <CreateProjectFromTemplate
             open={showCreateProject}
             onOpenChange={setShowCreateProject}
-            onProjectCreated={async (_projectId, projectKey) => {
+            onProjectCreated={async ({ projectKey }) => {
               setShowCreateProject(false);
               await navigate({
                 to: ROUTES.projects.board.path,

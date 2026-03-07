@@ -39,75 +39,178 @@
  *   node scripts/validate.js
  */
 
-import { run as runApiCallsCheck } from "./validate/check-api-calls.js";
-import { run as runArbitraryTailwindCheck } from "./validate/check-arbitrary-tw.js";
-import { run as runAsyncPatternsCheck } from "./validate/check-async-patterns.js";
-import { run as runColorAudit } from "./validate/check-colors.js";
-import { run as runComponentNamingCheck } from "./validate/check-component-naming.js";
-import { run as runComponentPropsCheck } from "./validate/check-component-props.js";
-import { run as runConvexHooksCheck } from "./validate/check-convex-hooks.js";
-import { run as runConvexNamingCheck } from "./validate/check-convex-naming.js";
-import { run as runConvexPatternsCheck } from "./validate/check-convex-patterns.js";
-import { run as runDuplicateComponentsCheck } from "./validate/check-duplicate-components.js";
-import { run as runE2EHardRulesCheck } from "./validate/check-e2e-hard-rules.js";
-import { run as runE2EQualityCheck } from "./validate/check-e2e-quality.js";
-import { run as runEmojiCheck } from "./validate/check-emoji.js";
-import { run as runFileHeadersCheck } from "./validate/check-file-headers.js";
-import { run as runHookPatternsCheck } from "./validate/check-hook-patterns.js";
-import { run as runImportOrderCheck } from "./validate/check-import-order.js";
-import { run as runImportPathsCheck } from "./validate/check-import-paths.js";
-import { run as runInteractiveTwCheck } from "./validate/check-interactive-tw.js";
-import { run as runJSDocCheck } from "./validate/check-jsdoc.js";
-import { run as runNativeConfirmCheck } from "./validate/check-native-confirm.js";
-import { run as runQueryIssuesCheck } from "./validate/check-queries.js";
-import { run as runRawTailwindCheck } from "./validate/check-raw-tailwind.js";
-import { run as runRouteConstantsCheck } from "./validate/check-route-constants.js";
-import { run as runStandardsCheck } from "./validate/check-standards.js";
-import { run as runTailwindConsistencyCheck } from "./validate/check-tailwind-consistency.js";
-import { run as runTestCoverageCheck } from "./validate/check-test-coverage.js";
-import { run as runTestIdsCheck } from "./validate/check-test-ids.js";
-import { run as runTimeConstantsCheck } from "./validate/check-time-constants.js";
-import { run as runTypeSafetyCheck } from "./validate/check-type-safety.js";
-import { run as runTypeConsistencyCheck } from "./validate/check-types.js";
-import { run as runUIPatternsCheck } from "./validate/check-ui-patterns.js";
-import { run as runUnusedParamsCheck } from "./validate/check-unused-params.js";
-import { run as runWeakAssertionsCheck } from "./validate/check-weak-assertions.js";
-import { c } from "./validate/utils.js";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { c, ROOT } from "./validate/utils.js";
+
+function runIsolatedCheck(modulePath) {
+  const runnerPath = new URL("./validate/run-check.mjs", import.meta.url);
+  const child = spawnSync(process.execPath, [fileURLToPath(runnerPath), modulePath], {
+    cwd: ROOT,
+    encoding: "utf8",
+  });
+
+  if (child.error) {
+    return {
+      passed: false,
+      errors: 1,
+      warnings: 0,
+      detail: "isolated check execution failed",
+      messages: [`  ${c.red}ERROR${c.reset} Failed to run isolated check: ${child.error.message}`],
+    };
+  }
+
+  const stdoutLines = child.stdout
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const lastJsonLine = [...stdoutLines].reverse().find((line) => line.startsWith("{"));
+
+  if (!lastJsonLine) {
+    return {
+      passed: false,
+      errors: 1,
+      warnings: 0,
+      detail: "isolated check returned no structured result",
+      messages: [
+        `  ${c.red}ERROR${c.reset} Isolated check produced no JSON result`,
+        ...(child.stderr ? [child.stderr.trim()] : []),
+      ],
+    };
+  }
+
+  const result = JSON.parse(lastJsonLine);
+  return {
+    ...result,
+    passed: child.status === 0 && result.passed !== false,
+    errors: child.status === 0 ? (result.errors ?? 0) : Math.max(1, result.errors ?? 0),
+  };
+}
 
 const checks = [
-  { name: "Standards (AST)", fn: runStandardsCheck },
-  { name: "Color audit", fn: runColorAudit },
-  { name: "API calls", fn: runApiCallsCheck },
-  { name: "Query issues", fn: runQueryIssuesCheck },
-  { name: "Arbitrary Tailwind", fn: runArbitraryTailwindCheck },
-  { name: "Raw Tailwind", fn: runRawTailwindCheck },
-  { name: "Type consistency", fn: runTypeConsistencyCheck },
-  { name: "Type safety", fn: runTypeSafetyCheck },
-  { name: "Emoji usage", fn: runEmojiCheck },
-  { name: "Test ID constants", fn: runTestIdsCheck },
-  { name: "E2E hard rules", fn: runE2EHardRulesCheck },
-  { name: "E2E quality", fn: runE2EQualityCheck },
-  { name: "UI patterns", fn: runUIPatternsCheck },
-  { name: "Route constants", fn: runRouteConstantsCheck },
-  { name: "Convex patterns", fn: runConvexPatternsCheck },
-  { name: "Convex naming", fn: runConvexNamingCheck },
-  { name: "Component naming", fn: runComponentNamingCheck },
-  { name: "Component props", fn: runComponentPropsCheck },
-  { name: "Duplicate components", fn: runDuplicateComponentsCheck },
-  { name: "Interactive Tailwind", fn: runInteractiveTwCheck },
-  { name: "Tailwind consistency", fn: runTailwindConsistencyCheck },
-  { name: "JSDoc coverage", fn: runJSDocCheck },
-  { name: "File headers", fn: runFileHeadersCheck },
-  { name: "Import order", fn: runImportOrderCheck },
-  { name: "Import paths", fn: runImportPathsCheck },
-  { name: "Hook patterns", fn: runHookPatternsCheck },
-  { name: "Async patterns", fn: runAsyncPatternsCheck },
-  { name: "Test coverage", fn: runTestCoverageCheck },
-  { name: "Time constants", fn: runTimeConstantsCheck },
-  { name: "Unused parameters", fn: runUnusedParamsCheck },
-  { name: "Weak assertions", fn: runWeakAssertionsCheck },
-  { name: "Native confirm()", fn: runNativeConfirmCheck },
-  { name: "Convex hooks", fn: runConvexHooksCheck },
+  {
+    name: "Standards (AST)",
+    modulePath: new URL("./validate/check-standards.js", import.meta.url).href,
+  },
+  { name: "Color audit", modulePath: new URL("./validate/check-colors.js", import.meta.url).href },
+  { name: "API calls", modulePath: new URL("./validate/check-api-calls.js", import.meta.url).href },
+  {
+    name: "Query issues",
+    modulePath: new URL("./validate/check-queries.js", import.meta.url).href,
+  },
+  {
+    name: "Arbitrary Tailwind",
+    modulePath: new URL("./validate/check-arbitrary-tw.js", import.meta.url).href,
+  },
+  {
+    name: "Raw Tailwind",
+    modulePath: new URL("./validate/check-raw-tailwind.js", import.meta.url).href,
+  },
+  {
+    name: "Type consistency",
+    modulePath: new URL("./validate/check-types.js", import.meta.url).href,
+  },
+  {
+    name: "Type safety",
+    modulePath: new URL("./validate/check-type-safety.js", import.meta.url).href,
+  },
+  { name: "Emoji usage", modulePath: new URL("./validate/check-emoji.js", import.meta.url).href },
+  {
+    name: "Test ID constants",
+    modulePath: new URL("./validate/check-test-ids.js", import.meta.url).href,
+  },
+  {
+    name: "E2E hard rules",
+    modulePath: new URL("./validate/check-e2e-hard-rules.js", import.meta.url).href,
+  },
+  {
+    name: "E2E quality",
+    modulePath: new URL("./validate/check-e2e-quality.js", import.meta.url).href,
+  },
+  {
+    name: "UI patterns",
+    modulePath: new URL("./validate/check-ui-patterns.js", import.meta.url).href,
+  },
+  {
+    name: "Route constants",
+    modulePath: new URL("./validate/check-route-constants.js", import.meta.url).href,
+  },
+  {
+    name: "Convex patterns",
+    modulePath: new URL("./validate/check-convex-patterns.js", import.meta.url).href,
+  },
+  {
+    name: "Convex naming",
+    modulePath: new URL("./validate/check-convex-naming.js", import.meta.url).href,
+  },
+  {
+    name: "Component naming",
+    modulePath: new URL("./validate/check-component-naming.js", import.meta.url).href,
+  },
+  {
+    name: "Component props",
+    modulePath: new URL("./validate/check-component-props.js", import.meta.url).href,
+  },
+  {
+    name: "Duplicate components",
+    modulePath: new URL("./validate/check-duplicate-components.js", import.meta.url).href,
+  },
+  {
+    name: "Interactive Tailwind",
+    modulePath: new URL("./validate/check-interactive-tw.js", import.meta.url).href,
+  },
+  {
+    name: "Tailwind consistency",
+    modulePath: new URL("./validate/check-tailwind-consistency.js", import.meta.url).href,
+  },
+  {
+    name: "JSDoc coverage",
+    modulePath: new URL("./validate/check-jsdoc.js", import.meta.url).href,
+  },
+  {
+    name: "File headers",
+    modulePath: new URL("./validate/check-file-headers.js", import.meta.url).href,
+  },
+  {
+    name: "Import order",
+    modulePath: new URL("./validate/check-import-order.js", import.meta.url).href,
+  },
+  {
+    name: "Import paths",
+    modulePath: new URL("./validate/check-import-paths.js", import.meta.url).href,
+  },
+  {
+    name: "Hook patterns",
+    modulePath: new URL("./validate/check-hook-patterns.js", import.meta.url).href,
+  },
+  {
+    name: "Async patterns",
+    modulePath: new URL("./validate/check-async-patterns.js", import.meta.url).href,
+  },
+  {
+    name: "Test coverage",
+    modulePath: new URL("./validate/check-test-coverage.js", import.meta.url).href,
+  },
+  {
+    name: "Time constants",
+    modulePath: new URL("./validate/check-time-constants.js", import.meta.url).href,
+  },
+  {
+    name: "Unused parameters",
+    modulePath: new URL("./validate/check-unused-params.js", import.meta.url).href,
+  },
+  {
+    name: "Weak assertions",
+    modulePath: new URL("./validate/check-weak-assertions.js", import.meta.url).href,
+  },
+  {
+    name: "Native confirm()",
+    modulePath: new URL("./validate/check-native-confirm.js", import.meta.url).href,
+  },
+  {
+    name: "Convex hooks",
+    modulePath: new URL("./validate/check-convex-hooks.js", import.meta.url).href,
+  },
 ];
 
 console.log(`\n${c.bold}Running validation...${c.reset}\n`);
@@ -116,8 +219,8 @@ let totalErrors = 0;
 
 const results = [];
 for (let i = 0; i < checks.length; i++) {
-  const { name, fn } = checks[i];
-  const result = fn();
+  const { name, modulePath } = checks[i];
+  const result = runIsolatedCheck(modulePath);
   result.name = name;
   result.index = i;
   results.push(result);

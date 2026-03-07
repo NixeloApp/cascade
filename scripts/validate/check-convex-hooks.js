@@ -42,30 +42,29 @@ export function run() {
       const isTypeImport = !!match[1]; // "type " prefix
       const importedItems = match[2];
 
-      // Skip type-only imports
-      if (isTypeImport) continue;
+      if (!isTypeImport) {
+        // Check if any blocked hook is imported
+        for (const hook of BLOCKED_HOOKS) {
+          // Match whole word (not useQueryClient, useMutationState, etc.)
+          const hookPattern = new RegExp(`\\b${hook}\\b`);
+          if (hookPattern.test(importedItems)) {
+            // Find line number for error reporting
+            const beforeMatch = content.slice(0, match.index);
+            const lineNumber = (beforeMatch.match(/\n/g) || []).length + 1;
 
-      // Check if any blocked hook is imported
-      for (const hook of BLOCKED_HOOKS) {
-        // Match whole word (not useQueryClient, useMutationState, etc.)
-        const hookPattern = new RegExp(`\\b${hook}\\b`);
-        if (hookPattern.test(importedItems)) {
-          // Find line number for error reporting
-          const beforeMatch = content.slice(0, match.index);
-          const lineNumber = (beforeMatch.match(/\n/g) || []).length + 1;
+            let replacement = "";
+            if (hook === "useQuery") {
+              replacement = "useAuthenticatedQuery or usePublicQuery";
+            } else if (hook === "useMutation") {
+              replacement = "useAuthenticatedMutation or usePublicMutation";
+            } else if (hook === "useConvexAuth") {
+              replacement = "useAuthReady";
+            }
 
-          let replacement = "";
-          if (hook === "useQuery") {
-            replacement = "useAuthenticatedQuery or usePublicQuery";
-          } else if (hook === "useMutation") {
-            replacement = "useAuthenticatedMutation or usePublicMutation";
-          } else if (hook === "useConvexAuth") {
-            replacement = "useAuthReady";
+            errors.push(
+              `  ${c.red}ERROR${c.reset} ${rel}:${lineNumber} - Raw ${hook} import. Use ${replacement} from @/hooks/useConvexHelpers`,
+            );
           }
-
-          errors.push(
-            `  ${c.red}ERROR${c.reset} ${rel}:${lineNumber} - Raw ${hook} import. Use ${replacement} from @/hooks/useConvexHelpers`,
-          );
         }
       }
       match = importRegex.exec(content);

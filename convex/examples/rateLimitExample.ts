@@ -18,7 +18,7 @@ export const chatWithRateLimit = action({
     projectId: v.optional(v.id("projects")),
     message: v.string(),
   },
-  handler: async (ctx, _args) => {
+  handler: async (ctx) => {
     const userId = await ctx.auth.getUserIdentity();
     if (!userId) {
       throw unauthenticated();

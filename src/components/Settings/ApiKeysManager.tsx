@@ -143,7 +143,7 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
   const { mutate: revokeKey } = useAuthenticatedMutation(api.apiKeys.revoke);
   const { mutate: deleteKey } = useAuthenticatedMutation(api.apiKeys.remove);
   const [isRevoking, setIsRevoking] = useState(false);
-  const [_isDeleting, setIsDeleting] = useState(false);
+  const [, setIsDeleting] = useState(false);
   const [revokeConfirmOpen, setRevokeConfirmOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 

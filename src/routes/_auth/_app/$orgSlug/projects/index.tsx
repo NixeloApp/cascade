@@ -16,7 +16,12 @@ function ProjectsPage() {
   const navigate = useNavigate();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  const handleProjectCreated = async (_projectId: string, projectKey: string): Promise<void> => {
+  const handleProjectCreated = async ({
+    projectKey,
+  }: {
+    projectId: string;
+    projectKey: string;
+  }): Promise<void> => {
     setIsCreateOpen(false);
     await navigate({
       to: ROUTES.projects.board.path,

@@ -318,7 +318,7 @@ export const getPendingJobs = query({
   },
   handler: async (ctx, args) => {
     // Validate bot service API key
-    await requireBotApiKey(ctx, args.apiKey);
+    await requireBotApiKey(args.apiKey);
 
     const now = Date.now();
 
@@ -522,7 +522,7 @@ export const updateRecordingStatus = mutation({
   returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     // Validate bot service API key
-    await requireBotApiKey(ctx, args.apiKey);
+    await requireBotApiKey(args.apiKey);
 
     const recording = await ctx.db.get(args.recordingId);
     if (!recording) throw notFound("recording", args.recordingId);
@@ -567,7 +567,7 @@ export const saveTranscript = mutation({
   returns: v.object({ transcriptId: v.id("meetingTranscripts") }),
   handler: async (ctx, args) => {
     // Validate bot service API key
-    await requireBotApiKey(ctx, args.apiKey);
+    await requireBotApiKey(args.apiKey);
 
     const recording = await ctx.db.get(args.recordingId);
     if (!recording) throw notFound("recording", args.recordingId);
@@ -637,7 +637,7 @@ export const saveSummary = mutation({
   returns: v.object({ summaryId: v.id("meetingSummaries") }),
   handler: async (ctx, args) => {
     // Validate bot service API key
-    await requireBotApiKey(ctx, args.apiKey);
+    await requireBotApiKey(args.apiKey);
 
     const recording = await ctx.db.get(args.recordingId);
     if (!recording) throw notFound("recording", args.recordingId);
@@ -702,7 +702,7 @@ export const saveParticipants = mutation({
   returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     // Validate bot service API key
-    await requireBotApiKey(ctx, args.apiKey);
+    await requireBotApiKey(args.apiKey);
 
     const recording = await ctx.db.get(args.recordingId);
     if (!recording) throw notFound("recording", args.recordingId);

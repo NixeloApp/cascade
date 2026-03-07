@@ -48,7 +48,7 @@ export function register() {
             }
           });
         })
-        .catch((_error) => {
+        .catch(() => {
           // Service worker registration errors are non-critical
         });
 
@@ -69,7 +69,7 @@ export function unregister() {
       .then((registration) => {
         registration.unregister();
       })
-      .catch((_error) => {
+      .catch(() => {
         // Unregister errors are non-critical
       });
   }

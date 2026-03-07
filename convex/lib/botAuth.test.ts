@@ -19,7 +19,7 @@ describe("botAuth", () => {
   it("should throw UNAUTHENTICATED if apiKey is missing", () => {
     expect.assertions(2);
     try {
-      requireBotApiKey(mockCtx, undefined);
+      requireBotApiKey(undefined);
     } catch (e) {
       expect(e).toBeInstanceOf(ConvexError);
       expect((e as ConvexError<{ code: string }>).data.code).toBe("UNAUTHENTICATED");
@@ -31,7 +31,7 @@ describe("botAuth", () => {
     delete process.env.BOT_SERVICE_API_KEY;
 
     try {
-      requireBotApiKey(mockCtx, "some-key");
+      requireBotApiKey("some-key");
     } catch (e) {
       expect(e).toBeInstanceOf(ConvexError);
       expect((e as ConvexError<{ code: string }>).data.code).toBe("VALIDATION");
@@ -43,7 +43,7 @@ describe("botAuth", () => {
 
   it("should pass if apiKey matches env var", () => {
     process.env.BOT_SERVICE_API_KEY = "secret-key";
-    expect(() => requireBotApiKey(mockCtx, "secret-key")).not.toThrow();
+    expect(() => requireBotApiKey("secret-key")).not.toThrow();
   });
 
   it("should throw FORBIDDEN if apiKey does not match env var", () => {
@@ -51,7 +51,7 @@ describe("botAuth", () => {
     process.env.BOT_SERVICE_API_KEY = "secret-key";
 
     try {
-      requireBotApiKey(mockCtx, "wrong-key");
+      requireBotApiKey("wrong-key");
     } catch (e) {
       expect(e).toBeInstanceOf(ConvexError);
       expect((e as ConvexError<{ code: string }>).data.code).toBe("FORBIDDEN");
@@ -63,7 +63,7 @@ describe("botAuth", () => {
     process.env.BOT_SERVICE_API_KEY = "secret-key";
 
     try {
-      requireBotApiKey(mockCtx, "secret-key-extra");
+      requireBotApiKey("secret-key-extra");
     } catch (e) {
       expect(e).toBeInstanceOf(ConvexError);
       expect((e as ConvexError<{ code: string }>).data.code).toBe("FORBIDDEN");

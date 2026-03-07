@@ -1,4 +1,3 @@
-import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { getBotServiceApiKey } from "./env";
 import { forbidden, unauthenticated } from "./errors";
 
@@ -8,7 +7,7 @@ import { forbidden, unauthenticated } from "./errors";
  * This is simpler than the user API key system since there's only one bot service
  */
 
-function validateBotApiKey(_ctx: QueryCtx | MutationCtx, apiKey: string): boolean {
+function validateBotApiKey(apiKey: string): boolean {
   // Get the expected API key from environment variables
   const expectedKey = getBotServiceApiKey();
 
@@ -28,11 +27,11 @@ function validateBotApiKey(_ctx: QueryCtx | MutationCtx, apiKey: string): boolea
 /**
  * Validate bot API key and throw if invalid
  */
-export function requireBotApiKey(ctx: QueryCtx | MutationCtx, apiKey: string | undefined): void {
+export function requireBotApiKey(apiKey: string | undefined): void {
   if (!apiKey) {
     throw unauthenticated();
   }
-  const isValid = validateBotApiKey(ctx, apiKey);
+  const isValid = validateBotApiKey(apiKey);
   if (!isValid) {
     throw forbidden(undefined, "Invalid bot service API key");
   }
