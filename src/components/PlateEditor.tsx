@@ -143,7 +143,8 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
   };
 
   // Handle version restore
-  const handleRestoreVersion = async (snapshot: unknown, _version: number, title: string) => {
+  const handleRestoreVersion = async (snapshot: unknown, version: number, title: string) => {
+    void version;
     try {
       if (snapshot && document) {
         // Update document title if it changed

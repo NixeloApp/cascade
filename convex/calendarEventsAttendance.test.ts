@@ -61,7 +61,8 @@ describe("Calendar Events Attendance", () => {
         notes: "On time",
       });
 
-      expect(attendanceId).toBeDefined();
+      expect(attendanceId).not.toBeUndefined();
+      expect(typeof attendanceId).toBe("string");
 
       // Verify attendance was recorded
       const attendance = await t.run(async (ctx) => ctx.db.get(attendanceId));
@@ -183,7 +184,8 @@ describe("Calendar Events Attendance", () => {
 
       const result = await asUser.query(api.calendarEventsAttendance.getAttendance, { eventId });
 
-      expect(result).toBeDefined();
+      expect(result).not.toBeUndefined();
+      expect(result).not.toBeNull();
       expect(result?.totalAttendees).toBe(2);
       expect(result?.markedCount).toBe(1);
       expect(result?.attendees).toHaveLength(2);

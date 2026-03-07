@@ -15,12 +15,12 @@ import {
 describe("time utilities", () => {
   describe("time constants", () => {
     it("should have correct values for time constants", () => {
-      expect(SECOND).toBe(1000);
-      expect(MINUTE).toBe(60 * 1000);
-      expect(HOUR).toBe(60 * 60 * 1000);
-      expect(DAY).toBe(24 * 60 * 60 * 1000);
-      expect(WEEK).toBe(7 * 24 * 60 * 60 * 1000);
-      expect(MONTH).toBe(30 * 24 * 60 * 60 * 1000);
+      expect(SECOND).toBe(1_000);
+      expect(MINUTE).toBe(60 * SECOND);
+      expect(HOUR).toBe(60 * MINUTE);
+      expect(DAY).toBe(24 * HOUR);
+      expect(WEEK).toBe(7 * DAY);
+      expect(MONTH).toBe(30 * DAY);
     });
 
     it("should maintain relationship between constants", () => {
@@ -34,14 +34,14 @@ describe("time utilities", () => {
   describe("roundToInterval", () => {
     it("should round down to interval boundary", () => {
       // 1500ms rounded to 1000ms interval = 1000ms
-      expect(roundToInterval(1500, 1000)).toBe(1000);
+      expect(roundToInterval(1500, SECOND)).toBe(SECOND);
       // 2999ms rounded to 1000ms interval = 2000ms
-      expect(roundToInterval(2999, 1000)).toBe(2000);
+      expect(roundToInterval(2999, SECOND)).toBe(2 * SECOND);
     });
 
     it("should return same value if already on boundary", () => {
-      expect(roundToInterval(2000, 1000)).toBe(2000);
-      expect(roundToInterval(0, 1000)).toBe(0);
+      expect(roundToInterval(2 * SECOND, SECOND)).toBe(2 * SECOND);
+      expect(roundToInterval(0, SECOND)).toBe(0);
     });
 
     it("should work with larger intervals", () => {

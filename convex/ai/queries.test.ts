@@ -56,7 +56,8 @@ describe("AI Queries", () => {
       expect(context.project.name).toContain("Test Project");
 
       // Verify Active Sprint
-      expect(context.activeSprint).toBeDefined();
+      expect(context.activeSprint).not.toBeUndefined();
+      expect(context.activeSprint).not.toBeNull();
       expect(context.activeSprint?.name).toBe("Sprint 1");
 
       // Verify Stats

@@ -20,9 +20,10 @@ export function useEntityForm<T extends Record<string, unknown>>(defaultValues: 
   };
 
   const loadForEdit = (item: T & { _id: string }) => {
-    const { _id, ...data } = item;
-    setFormData(data as unknown as T);
-    setEditingId(_id);
+    const data = { ...item };
+    delete (data as T & { _id?: string })._id;
+    setFormData(data as T);
+    setEditingId(item._id);
     setIsEditing(true);
   };
 

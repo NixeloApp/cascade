@@ -51,16 +51,20 @@ describe("Smart Issue List", () => {
     // Fetch smart list
     const result = await asUser.query(api.issues.listByProjectSmart, { projectId });
 
-    expect(result.issuesByStatus).toBeDefined();
+    expect(result.issuesByStatus).not.toBeUndefined();
     expect(result.workflowStates).toHaveLength(3); // todo, inprogress, done
+    if (result.issuesByStatus === undefined) {
+      throw new Error("issuesByStatus is undefined");
+    }
 
     // Check Todo
     const todos = result.issuesByStatus.todo;
     expect(todos).toHaveLength(1);
     expect(todos[0]._id).toBe(todoId);
     expect(todos[0].title).toBe("Todo Task");
-    expect(todos[0].assignee).toBeDefined();
-    expect(todos[0].assignee?._id).toBe(userId); // Check enrichment
+    expect(todos[0].assignee).not.toBeUndefined();
+    if (todos[0].assignee === undefined) throw new Error("Assignee is undefined");
+    expect(todos[0].assignee._id).toBe(userId); // Check enrichment
 
     // Check In Progress
     const inProgress = result.issuesByStatus.inprogress;

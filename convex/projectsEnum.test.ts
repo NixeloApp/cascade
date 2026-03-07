@@ -101,8 +101,10 @@ describe("Global User Enumeration", () => {
     }
 
     // Security Fix: They should be the SAME (indistinguishable) to prevent enumeration
-    expect(errorUserB).toBeDefined();
-    expect(errorNonExistent).toBeDefined();
+    expect(errorUserB).not.toBeUndefined();
+    expect(errorUserB).toBeInstanceOf(Error);
+    expect(errorNonExistent).not.toBeUndefined();
+    expect(errorNonExistent).toBeInstanceOf(Error);
 
     const dataB =
       typeof errorUserB.data === "string" ? JSON.parse(errorUserB.data) : errorUserB.data;

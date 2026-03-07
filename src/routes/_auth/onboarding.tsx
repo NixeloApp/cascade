@@ -7,7 +7,6 @@
  */
 
 import { api } from "@convex/_generated/api";
-import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { FeatureHighlights } from "@/components/Onboarding/FeatureHighlights";
@@ -111,10 +110,8 @@ function OnboardingPage() {
     });
   };
 
-  const handleProjectCreated = (_workspaceId: Id<"projects">) => {
-    // Project was created, complete onboarding
-    handleComplete();
-  };
+  // Called when project is created - completes onboarding (projectId not used here)
+  const handleProjectCreated = () => handleComplete();
 
   // Loading state
   if (step === "loading") {

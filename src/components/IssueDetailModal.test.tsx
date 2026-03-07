@@ -245,7 +245,8 @@ describe("IssueDetailModal", () => {
         el.className.includes("bg-status-warning-bg") &&
         el.className.includes("text-status-warning-text"),
     );
-    expect(priorityBadge).toBeDefined();
+    expect(priorityBadge).not.toBeUndefined();
+    expect(priorityBadge).toBeInstanceOf(HTMLElement);
     expect(priorityBadge?.className).toContain("bg-status-warning-bg");
     expect(priorityBadge?.className).toContain("text-status-warning-text");
   });

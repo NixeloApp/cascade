@@ -75,16 +75,17 @@ describe("Google OAuth HTTP Handler", () => {
 
   describe("initiateAuthHandler", () => {
     it("should redirect to Google with correct parameters", async () => {
-      const request = new Request(GOOGLE_AUTH_URL);
-      const response = await initiateAuthHandler(mockCtx, request);
+      const response = await initiateAuthHandler();
 
       expect(response).toBeInstanceOf(Response);
       expect(response.status).toBe(302);
 
       const location = response.headers.get("Location");
       const setCookie = response.headers.get("Set-Cookie");
-      expect(location).toBeDefined();
-      expect(setCookie).toBeDefined();
+      expect(location).not.toBeUndefined();
+      expect(typeof location).toBe("string");
+      expect(setCookie).not.toBeUndefined();
+      expect(typeof setCookie).toBe("string");
 
       if (!location) {
         throw new Error("Expected Location header");
@@ -100,15 +101,16 @@ describe("Google OAuth HTTP Handler", () => {
       expect(url.searchParams.get("response_type")).toBe("code");
       expect(url.searchParams.get("access_type")).toBe("offline");
       expect(url.searchParams.get("prompt")).toBe("consent");
-      expect(state).toBeDefined();
+      expect(state).not.toBeUndefined();
+      expect(typeof state).toBe("string");
+      expect(state.length).toBeGreaterThan(0);
       expect(setCookie).toContain(`google-oauth-state=${state}`);
     });
 
     it("should return error if not configured", async () => {
       vi.mocked(envLib.isGoogleOAuthConfigured).mockReturnValue(false);
 
-      const request = new Request(GOOGLE_AUTH_URL);
-      const response = await initiateAuthHandler(mockCtx, request);
+      const response = await initiateAuthHandler();
 
       expect(response.status).toBe(500);
       const body = await response.json();
@@ -242,8 +244,7 @@ describe("Google OAuth HTTP Handler", () => {
     it("should return error if not connected", async () => {
       vi.mocked(mockCtx.runQuery).mockResolvedValue(null);
 
-      const request = new Request(GOOGLE_SYNC_URL, { method: "POST" });
-      const response = await triggerSyncHandler(mockCtx, request);
+      const response = await triggerSyncHandler(mockCtx);
 
       expect(response.status).toBe(400);
       const body = await response.json();
@@ -253,8 +254,7 @@ describe("Google OAuth HTTP Handler", () => {
     it("should return error if sync is disabled", async () => {
       vi.mocked(mockCtx.runQuery).mockResolvedValue({ _id: "conn1", syncEnabled: false });
 
-      const request = new Request(GOOGLE_SYNC_URL, { method: "POST" });
-      const response = await triggerSyncHandler(mockCtx, request);
+      const response = await triggerSyncHandler(mockCtx);
 
       expect(response.status).toBe(400);
       const body = await response.json();
@@ -265,8 +265,7 @@ describe("Google OAuth HTTP Handler", () => {
       vi.mocked(mockCtx.runQuery).mockResolvedValue({ _id: "conn1", syncEnabled: true });
       vi.mocked(mockCtx.runMutation).mockResolvedValue(null);
 
-      const request = new Request(GOOGLE_SYNC_URL, { method: "POST" });
-      const response = await triggerSyncHandler(mockCtx, request);
+      const response = await triggerSyncHandler(mockCtx);
 
       expect(response.status).toBe(500);
       const body = await response.json();
@@ -292,8 +291,7 @@ describe("Google OAuth HTTP Handler", () => {
         }),
       );
 
-      const request = new Request(GOOGLE_SYNC_URL, { method: "POST" });
-      const response = await triggerSyncHandler(mockCtx, request);
+      const response = await triggerSyncHandler(mockCtx);
 
       expect(response.status).toBe(200);
       const body = await response.json();
@@ -320,8 +318,7 @@ describe("Google OAuth HTTP Handler", () => {
         mockErrorResponse(500, "Internal Server Error"),
       );
 
-      const request = new Request(GOOGLE_SYNC_URL, { method: "POST" });
-      const response = await triggerSyncHandler(mockCtx, request);
+      const response = await triggerSyncHandler(mockCtx);
 
       expect(response.status).toBe(500);
       const body = await response.json();
@@ -344,8 +341,7 @@ describe("Google OAuth HTTP Handler", () => {
         mockErrorResponse(403, JSON.stringify(googleError)),
       );
 
-      const request = new Request(GOOGLE_SYNC_URL, { method: "POST" });
-      const response = await triggerSyncHandler(mockCtx, request);
+      const response = await triggerSyncHandler(mockCtx);
 
       expect(response.status).toBe(403);
       const body = await response.json();

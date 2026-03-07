@@ -262,8 +262,6 @@ export const addMember = authenticatedMutation({
       throw conflict("User is already a member of this organization");
     }
 
-    const _now = Date.now();
-
     await ctx.db.insert("organizationMembers", {
       organizationId: args.organizationId,
       userId: args.userId,

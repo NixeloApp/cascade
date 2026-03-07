@@ -59,7 +59,7 @@ export interface KanbanColumnProps {
   // Pagination props (optional - for done columns)
   hiddenCount?: number;
   totalCount?: number;
-  onLoadMore?: (statusId: string) => void;
+  onLoadMore?: () => void;
   isLoadingMore?: boolean;
   /** Callback when an issue is dropped on this column (column-level drop) */
   onIssueDrop?: (issueId: Id<"issues">, sourceStatus: string, targetStatus: string) => void;
@@ -419,7 +419,7 @@ const KanbanColumnComponent = function KanbanColumn({
 
   const handleCreateIssue = () => onCreateIssue?.(state.id);
 
-  const handleLoadMore = () => onLoadMore?.(state.id);
+  const handleLoadMore = () => onLoadMore?.();
 
   const handleToggleCollapse = () => onToggleCollapse?.(state.id);
 

@@ -74,8 +74,11 @@ describe("issue queries - sprint optimization", () => {
       sprintId,
     });
 
-    expect(result.issuesByStatus).toBeDefined();
-    expect(result.workflowStates).toBeDefined();
+    expect(result.issuesByStatus).not.toBeUndefined();
+    expect(result.workflowStates).not.toBeUndefined();
+    if (result.issuesByStatus === undefined || result.workflowStates === undefined) {
+      throw new Error("Result fields are undefined");
+    }
 
     const todoIssues = result.issuesByStatus.todo;
     expect(todoIssues).toHaveLength(2);

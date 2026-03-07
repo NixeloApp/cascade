@@ -47,8 +47,13 @@ describe("Bulk Archive", () => {
     const issue1 = await asUser.query(api.issues.getIssue, { id: issue1Id });
     const issue2 = await asUser.query(api.issues.getIssue, { id: issue2Id });
 
-    expect(issue1?.archivedAt).toBeDefined();
-    expect(issue2?.archivedAt).toBeDefined();
+    expect(issue1?.archivedAt).not.toBeUndefined();
+    expect(issue2?.archivedAt).not.toBeUndefined();
+    if (issue1?.archivedAt === undefined || issue2?.archivedAt === undefined) {
+      throw new Error("archivedAt is undefined");
+    }
+    expect(typeof issue1.archivedAt).toBe("number");
+    expect(typeof issue2.archivedAt).toBe("number");
     await t.finishInProgressScheduledFunctions();
   });
 

@@ -5,7 +5,6 @@
 
 import type { Id, TableNames } from "@convex/_generated/dataModel";
 import { useState } from "react";
-import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "../lib/toast";
 
 export interface UseDeleteConfirmationOptions {

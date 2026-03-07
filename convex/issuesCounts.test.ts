@@ -43,7 +43,8 @@ describe("Issue Counts Performance", () => {
 
     const counts = await asUser.query(api.issues.getIssueCounts, { projectId });
 
-    expect(counts).toBeDefined();
+    expect(counts).not.toBeUndefined();
+    expect(typeof counts).toBe("object");
 
     // Check Todo
     expect(counts?.todo.total).toBe(3);

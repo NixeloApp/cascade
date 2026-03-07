@@ -59,8 +59,10 @@ describe("Invites", () => {
       });
       const { inviteId, token } = expectInviteCreated(result);
 
-      expect(inviteId).toBeDefined();
-      expect(token).toBeDefined();
+      expect(typeof inviteId).toBe("string");
+      expect(inviteId.length).toBeGreaterThan(0);
+      expect(typeof token).toBe("string");
+      expect(token.length).toBeGreaterThan(0);
 
       const invite = await t.run(async (ctx) => ctx.db.get(inviteId as Id<"invites">));
       if (!invite || invite.role !== "user") throw new Error("Invite not found");
@@ -185,7 +187,9 @@ describe("Invites", () => {
           )
           .first(),
       );
-      expect(member).toBeDefined();
+      expect(member).not.toBeNull();
+      expect(member?.projectId).toBe(projectId);
+      expect(member?.userId).toBe(existingUserId);
       expect(member?.role).toBe("editor");
     });
 
@@ -249,7 +253,8 @@ describe("Invites", () => {
 
       // Verify user linked
       const user = await t.run(async (ctx) => ctx.db.get(newUserId));
-      expect(user?.inviteId).toBeDefined();
+      expect(typeof user?.inviteId).toBe("string");
+      expect(user?.inviteId?.length).toBeGreaterThan(0);
 
       // Verify invite updated
       const invite = await t.run(async (ctx) =>
@@ -295,7 +300,9 @@ describe("Invites", () => {
           .withIndex("by_project_user", (q) => q.eq("projectId", projectId).eq("userId", newUserId))
           .first(),
       );
-      expect(member).toBeDefined();
+      expect(member).not.toBeNull();
+      expect(member?.projectId).toBe(projectId);
+      expect(member?.userId).toBe(newUserId);
       expect(member?.role).toBe("viewer");
     });
   });
@@ -319,7 +326,8 @@ describe("Invites", () => {
       const invite = await t.run(async (ctx) => ctx.db.get(inviteId));
       if (!invite || invite.role !== "user") throw new Error("Invite not found");
       expect(invite.status).toBe("revoked");
-      expect(invite.revokedAt).toBeDefined();
+      expect(typeof invite.revokedAt).toBe("number");
+      expect(invite.revokedAt).toBeGreaterThan(0);
     });
 
     it("should reject revoking non-pending invite", async () => {
@@ -460,11 +468,12 @@ describe("Invites", () => {
 
       const invite = await t.query(api.invites.getInviteByToken, { token });
 
-      expect(invite).toBeDefined();
+      expect(invite).not.toBeNull();
       expect(invite?.email).toBe("gettoken@example.com");
       expect(invite?.status).toBe("pending");
       expect(invite?.isExpired).toBe(false);
-      expect(invite?.inviterName).toBeDefined();
+      expect(typeof invite?.inviterName).toBe("string");
+      expect(invite?.inviterName.length).toBeGreaterThan(0);
     });
 
     it("should return null for invalid token", async () => {
@@ -495,7 +504,8 @@ describe("Invites", () => {
 
       const invite = await t.query(api.invites.getInviteByToken, { token });
 
-      expect(invite?.projectName).toBeDefined();
+      expect(typeof invite?.projectName).toBe("string");
+      expect(invite?.projectName.length).toBeGreaterThan(0);
       expect(invite?.projectRole).toBe("viewer");
     });
 
@@ -687,7 +697,8 @@ describe("Invites", () => {
       expect(invites.some((i) => i.email === "list1@example.com")).toBe(true);
       expect(invites.some((i) => i.email === "list2@example.com")).toBe(true);
       // Should have enriched data
-      expect(invites[0].inviterName).toBeDefined();
+      expect(typeof invites[0].inviterName).toBe("string");
+      expect(invites[0].inviterName.length).toBeGreaterThan(0);
     });
 
     it("should filter by status", async () => {
@@ -748,8 +759,9 @@ describe("Invites", () => {
       expect(users.length).toBeGreaterThanOrEqual(1);
       // Should include admin user
       const adminUser = users.find((u) => u._id === adminId);
-      expect(adminUser).toBeDefined();
-      expect(adminUser?.name).toBeDefined();
+      expect(adminUser).not.toBeUndefined();
+      expect(typeof adminUser?.name).toBe("string");
+      expect(adminUser?.name.length).toBeGreaterThan(0);
       expect(typeof adminUser?.projectsCreated).toBe("number");
       expect(typeof adminUser?.projectMemberships).toBe("number");
     });

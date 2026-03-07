@@ -54,7 +54,8 @@ describe("Users Security", () => {
       // Verify initial state
       let user = await t.run(async (ctx) => ctx.db.get(userId));
       expect(user?.email).toBe("old@example.com");
-      expect(user?.emailVerificationTime).toBeDefined();
+      expect(user?.emailVerificationTime).not.toBeUndefined();
+      expect(typeof user?.emailVerificationTime).toBe("number");
 
       // Change email
       await asUser.mutation(api.users.updateProfile, {
@@ -74,7 +75,8 @@ describe("Users Security", () => {
       // Now it should be changed and verified
       user = await t.run(async (ctx) => ctx.db.get(userId));
       expect(user?.email).toBe("new@example.com");
-      expect(user?.emailVerificationTime).toBeDefined();
+      expect(user?.emailVerificationTime).not.toBeUndefined();
+      expect(typeof user?.emailVerificationTime).toBe("number");
     });
 
     it("should NOT revoke verification when email is unchanged", async () => {

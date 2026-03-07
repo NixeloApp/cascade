@@ -233,7 +233,7 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
   });
 
   // Handlers
-  const handleCreateIssue = (_status: string) => {
+  const handleCreateIssue = () => {
     setShowCreateIssue(true);
   };
 

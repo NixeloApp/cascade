@@ -23,7 +23,8 @@ describe("Workspaces", () => {
         organizationId,
       });
 
-      expect(workspaceId).toBeDefined();
+      expect(typeof workspaceId).toBe("string");
+      expect(workspaceId).not.toBeUndefined();
 
       const workspace = await t.run(async (ctx) => ctx.db.get(workspaceId));
       expect(workspace?.name).toBe("Test Workspace");
@@ -51,7 +52,8 @@ describe("Workspaces", () => {
         organizationId,
       });
 
-      expect(workspaceId).toBeDefined();
+      expect(typeof workspaceId).toBe("string");
+      expect(workspaceId).not.toBeUndefined();
     });
 
     it("should deny non-admin member from creating workspace", async () => {
@@ -963,7 +965,8 @@ describe("Workspaces", () => {
         role: "member",
       });
 
-      expect(workspaceMemberId).toBeDefined();
+      expect(typeof workspaceMemberId).toBe("string");
+      expect(workspaceMemberId).not.toBeUndefined();
 
       const membership = await t.run(async (ctx) => ctx.db.get(workspaceMemberId));
       expect(membership?.userId).toBe(memberId);
@@ -1139,7 +1142,8 @@ describe("Workspaces", () => {
 
       const membership = await t.run(async (ctx) => ctx.db.get(workspaceMemberId));
       expect(membership?.isDeleted).toBe(true);
-      expect(membership?.deletedAt).toBeDefined();
+      expect(typeof membership?.deletedAt).toBe("number");
+      expect(membership?.deletedAt).not.toBeUndefined();
     });
 
     it("should throw not found for non-member", async () => {
@@ -1203,7 +1207,8 @@ describe("Workspaces", () => {
       expect(members).toHaveLength(1);
       expect(members[0].userId).toBe(memberId);
       expect(members[0].role).toBe("member");
-      expect(members[0].user).toBeDefined();
+      expect(members[0].user).not.toBeUndefined();
+      expect(typeof members[0].user).toBe("object");
     });
 
     it("should not include soft-deleted members", async () => {

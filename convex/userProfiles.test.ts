@@ -163,7 +163,8 @@ describe("User Profiles", () => {
         isActive: true,
       });
 
-      expect(profileId).toBeDefined();
+      expect(profileId).not.toBeUndefined();
+      expect(typeof profileId).toBe("string");
 
       const profile = await asUser.query(api.userProfiles.getUserProfile, {
         userId: targetUserId,

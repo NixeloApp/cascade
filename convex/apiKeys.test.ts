@@ -101,7 +101,9 @@ describe("API Keys", () => {
         projectId,
       });
 
-      expect(result.apiKey).toBeDefined();
+      expect(result.apiKey).not.toBeUndefined();
+      expect(typeof result.apiKey).toBe("string");
+      expect(result.apiKey.length).toBeGreaterThan(0);
     });
 
     it("should BLOCK creating a GLOBAL key with write permissions", async () => {

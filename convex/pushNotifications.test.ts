@@ -23,7 +23,8 @@ describe("Push Notifications", () => {
       const result = await asUser.mutation(api.pushNotifications.subscribe, validSubscription);
 
       expect(result.success).toBe(true);
-      expect(result.id).toBeDefined();
+      expect(typeof result.id).toBe("string");
+      expect(result.id).not.toBeUndefined();
 
       // Verify subscription was stored
       const subscription = await t.run(async (ctx) => ctx.db.get(result.id));
@@ -265,9 +266,12 @@ describe("Push Notifications", () => {
       const subscriptions = await asUser.query(api.pushNotifications.listSubscriptions, {});
 
       expect(subscriptions.length).toBe(2);
-      expect(subscriptions[0].endpoint).toBeDefined();
-      expect(subscriptions[0].userAgent).toBeDefined();
-      expect(subscriptions[0].createdAt).toBeDefined();
+      expect(typeof subscriptions[0].endpoint).toBe("string");
+      expect(subscriptions[0].endpoint).not.toBeUndefined();
+      expect(typeof subscriptions[0].userAgent).toBe("string");
+      expect(subscriptions[0].userAgent).not.toBeUndefined();
+      expect(typeof subscriptions[0].createdAt).toBe("number");
+      expect(subscriptions[0].createdAt).not.toBeUndefined();
     });
 
     it("should not include other users' subscriptions", async () => {

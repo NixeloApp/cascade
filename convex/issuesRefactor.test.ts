@@ -38,20 +38,20 @@ describe("Refactor Issues Smart Queries", () => {
       projectId,
     });
 
-    expect(result.issuesByStatus).toBeDefined();
-    expect(result.workflowStates).toBeDefined();
+    expect(typeof result.issuesByStatus).toBe("object");
+    expect(Array.isArray(result.workflowStates)).toBe(true);
 
     const todoIssues = result.issuesByStatus.todo;
     const inprogressIssues = result.issuesByStatus.inprogress;
 
-    expect(todoIssues).toBeDefined();
-    expect(inprogressIssues).toBeDefined();
+    expect(Array.isArray(todoIssues)).toBe(true);
+    expect(Array.isArray(inprogressIssues)).toBe(true);
 
     expect(todoIssues.length).toBe(1);
     expect(todoIssues[0].title).toBe("Todo Issue");
     // Check enrichment (reporter)
     expect(todoIssues[0].reporter).not.toBeNull();
-    expect(todoIssues[0].reporter?.name).toBeDefined();
+    expect(typeof todoIssues[0].reporter?.name).toBe("string");
 
     expect(inprogressIssues.length).toBe(1);
     expect(inprogressIssues[0].title).toBe("InProgress Issue");
@@ -66,7 +66,7 @@ describe("Refactor Issues Smart Queries", () => {
     // Get the team associated with the project
     const project = await asUser.query(api.projects.getProject, { id: projectId });
     const teamId = project?.teamId;
-    expect(teamId).toBeDefined();
+    expect(typeof teamId).toBe("string");
 
     if (!teamId) return;
 
@@ -109,13 +109,13 @@ describe("Refactor Issues Smart Queries", () => {
       throw new Error("Expected result to be an object, but got an array");
     }
 
-    expect(result.issuesByStatus).toBeDefined();
+    expect(typeof result.issuesByStatus).toBe("object");
 
     const todoIssues = result.issuesByStatus.todo;
     const inprogressIssues = result.issuesByStatus.inprogress;
 
-    expect(todoIssues).toBeDefined();
-    expect(inprogressIssues).toBeDefined();
+    expect(Array.isArray(todoIssues)).toBe(true);
+    expect(Array.isArray(inprogressIssues)).toBe(true);
 
     expect(todoIssues.length).toBe(1);
     expect(todoIssues[0].title).toBe("Team Issue Todo");

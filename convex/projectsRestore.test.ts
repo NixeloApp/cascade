@@ -33,8 +33,8 @@ describe("Project Restore", () => {
     // Verify initial state
     const initialProject = await t.run(async (ctx) => await ctx.db.get(projectId));
     const initialIssue = await t.run(async (ctx) => await ctx.db.get(issueId));
-    expect(initialProject?.isDeleted).toBeFalsy();
-    expect(initialIssue?.isDeleted).toBeFalsy();
+    expect(initialProject?.isDeleted).toBeUndefined();
+    expect(initialIssue?.isDeleted).toBeUndefined();
 
     // 3. Soft delete the project
     await asUser.mutation(api.projects.softDeleteProject, { projectId });
@@ -52,7 +52,7 @@ describe("Project Restore", () => {
     const restoredProject = await t.run(async (ctx) => await ctx.db.get(projectId));
     const restoredIssue = await t.run(async (ctx) => await ctx.db.get(issueId));
 
-    expect(restoredProject?.isDeleted).toBeFalsy();
-    expect(restoredIssue?.isDeleted).toBeFalsy();
+    expect(restoredProject?.isDeleted).toBeUndefined();
+    expect(restoredIssue?.isDeleted).toBeUndefined();
   });
 });

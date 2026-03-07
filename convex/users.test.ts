@@ -48,7 +48,8 @@ describe("Users", () => {
       expect(user?.pendingEmail).toBe("new.email@example.com");
 
       const token = user?.pendingEmailVerificationToken;
-      expect(token).toBeDefined();
+      expect(token).not.toBeUndefined();
+      expect(typeof token).toBe("string");
 
       if (!token) throw new Error("Expected token to be defined");
       await asUser.mutation(api.users.verifyEmailChange, {

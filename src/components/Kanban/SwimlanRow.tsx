@@ -36,7 +36,7 @@ interface SwimlanRowProps {
   onIssueClick: (issueId: Id<"issues">) => void;
   onToggleSelect: (issueId: Id<"issues">) => void;
   statusCounts: Record<string, { total: number; loaded: number; hidden: number }>;
-  onLoadMore?: (statusId: string) => void;
+  onLoadMore?: () => void;
   isLoadingMore?: boolean;
   onIssueDrop?: (issueId: Id<"issues">, sourceStatus: string, targetStatus: string) => void;
   onIssueReorder?: (

@@ -249,7 +249,8 @@ describe("Onboarding", () => {
         organizationId,
       });
 
-      expect(projectId).toBeDefined();
+      expect(projectId).not.toBeUndefined();
+      expect(typeof projectId).toBe("string");
 
       // Verify project was created
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
@@ -440,7 +441,8 @@ describe("Onboarding", () => {
       const status = await asInvited.query(api.onboarding.checkInviteStatus, {});
 
       expect(status?.wasInvited).toBe(true);
-      expect(status?.inviterName).toBeDefined();
+      expect(status?.inviterName).not.toBeUndefined();
+      expect(typeof status?.inviterName).toBe("string");
       expect(status?.inviteRole).toBe("user");
       expect(status?.organizationId).toBe(organizationId);
     });

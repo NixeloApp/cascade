@@ -91,10 +91,12 @@ describe("Documents listChildren", () => {
     const r1 = rootDocs.find((d) => d._id === r1Id);
     const r2 = rootDocs.find((d) => d._id === r2Id);
 
-    expect(r1).toBeDefined();
+    expect(r1).not.toBeUndefined();
+    expect(r1).not.toBeNull();
     expect(r1?.hasChildren).toBe(true);
 
-    expect(r2).toBeDefined();
+    expect(r2).not.toBeUndefined();
+    expect(r2).not.toBeNull();
     expect(r2?.hasChildren).toBe(false);
   });
 });

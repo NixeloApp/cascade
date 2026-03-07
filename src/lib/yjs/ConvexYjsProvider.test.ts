@@ -46,8 +46,12 @@ describe("ConvexYjsProvider", () => {
     const docId = "doc-123" as Id<"documents">;
 
     beforeEach(() => {
-      // Mock ConvexReactClient
-      mockClient = {} as unknown as ConvexReactClient;
+      // Mock ConvexReactClient with minimal required interface
+      mockClient = {
+        mutation: vi.fn(),
+        query: vi.fn(),
+        action: vi.fn(),
+      } as unknown as ConvexReactClient;
 
       ydoc = new Y.Doc();
 

@@ -6,18 +6,12 @@
  * - No imports from deprecated/deleted modules
  * - No direct imports from convex/ in frontend code (use @convex/)
  *
- * @strictness INFO - Reports issues, does not block CI
+ * Enforced. Import path issues are reported as plain errors.
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
-
-// Configuration
-const CONFIG = {
-  // 'error' | 'warn' | 'off'
-  strictness: "info",
-};
 
 // Directories to check
 const CHECK_DIRS = ["src/components", "src/hooks", "src/lib", "src/routes"];
@@ -169,10 +163,6 @@ function checkFile(filePath) {
  * Main validation function
  */
 export function run() {
-  if (CONFIG.strictness === "off") {
-    return { passed: true, errors: 0, warnings: 0, detail: "Disabled", messages: [] };
-  }
-
   const allIssues = [];
 
   for (const dir of CHECK_DIRS) {
@@ -199,18 +189,16 @@ export function run() {
   const deepRelativeCount = allIssues.filter((i) => i.type === "deep-relative").length;
   const convexDirectCount = allIssues.filter((i) => i.type === "convex-direct").length;
 
-  const isError = CONFIG.strictness === "error" && allIssues.length > 0;
   const totalIssues = allIssues.length;
 
   // Format messages
   const messages = allIssues.map(
-    (i) => `  ${c.yellow}INFO${c.reset} ${i.file}:${i.line} - ${i.message}`,
+    (i) => `  ${c.red}ERROR${c.reset} ${i.file}:${i.line} - ${i.message}`,
   );
 
   return {
-    passed: true, // INFO level always passes
-    errors: isError ? totalIssues : 0,
-    warnings: isError ? 0 : totalIssues,
+    passed: totalIssues === 0,
+    errors: totalIssues,
     detail:
       totalIssues > 0
         ? `${totalIssues} import issue(s) (${deprecatedCount} deprecated, ${deepRelativeCount} deep-relative, ${convexDirectCount} convex-direct)`
@@ -223,5 +211,5 @@ export function run() {
 if (process.argv[1] === import.meta.url.replace("file://", "")) {
   const result = run();
   console.log(JSON.stringify(result, null, 2));
-  process.exit(result.passed ? 0 : 1);
+  process.exit(result.errors === 0 ? 0 : 1);
 }

@@ -8,6 +8,7 @@
  * - Collapsible sections
  */
 
+import { DAY } from "@convex/lib/timeUtils";
 import { ChevronDown, FileText, Hash, Info, List, User } from "lucide-react";
 import type { Value } from "platejs";
 import type { ReactNode } from "react";
@@ -96,7 +97,7 @@ function formatDate(timestamp: number): string {
   const date = new Date(timestamp);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const diffDays = Math.floor(diffMs / DAY);
 
   if (diffDays === 0) {
     return "Today";

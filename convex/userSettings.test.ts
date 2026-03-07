@@ -115,7 +115,8 @@ describe("User Settings", () => {
       });
 
       const settings1 = await asUser.query(api.userSettings.get, {});
-      expect(settings1?.updatedAt).toBeDefined();
+      expect(settings1?.updatedAt).not.toBeUndefined();
+      expect(typeof settings1?.updatedAt).toBe("number");
       const updatedAt1 = settings1?.updatedAt;
       if (!updatedAt1) throw new Error("Expected updatedAt to be defined");
 

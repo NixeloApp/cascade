@@ -91,7 +91,8 @@ describe("MeetingBot Pending Jobs Starvation", () => {
     const urgentJob = pendingJobs.find((j) => j.meetingUrl === "https://zoom.us/j/urgent");
 
     // NOTE: This assertion will FAIL if the bug exists.
-    expect(urgentJob).toBeDefined();
+    expect(urgentJob).not.toBeUndefined();
+    expect(urgentJob?.meetingUrl).toBe("https://zoom.us/j/urgent");
 
     // Ensure we filtered correctly
     expect(pendingJobs.length).toBeGreaterThan(0);

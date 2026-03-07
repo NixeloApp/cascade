@@ -7,11 +7,9 @@ describe("aiHelpers", () => {
     it("should return zeros when usage is undefined", () => {
       const result = extractUsage(undefined);
 
-      expect(result).toEqual({
-        promptTokens: 0,
-        completionTokens: 0,
-        totalTokens: 0,
-      });
+      expect(result.promptTokens).toBe(0);
+      expect(result.completionTokens).toBe(0);
+      expect(result.totalTokens).toBe(0);
     });
 
     it("should extract tokens when all fields are present", () => {
@@ -103,7 +101,7 @@ describe("aiHelpers", () => {
     });
 
     it("should return 0 when totalTokens is not set", () => {
-      const usage = {} as LanguageModelUsage;
+      const usage = { inputTokens: 0, outputTokens: 0 } as LanguageModelUsage;
 
       expect(getTotalTokens(usage)).toBe(0);
     });

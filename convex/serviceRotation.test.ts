@@ -255,7 +255,8 @@ describe("Service Rotation", () => {
           .first();
       });
 
-      expect(usage).toBeDefined();
+      expect(usage).not.toBeUndefined();
+      expect(typeof usage?._id).toBe("string");
       expect(usage?.unitsUsed).toBe(10);
       expect(usage?.paidUnitsUsed).toBe(0);
     });

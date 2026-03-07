@@ -40,13 +40,17 @@ describe("GitHub OAuth HTTP Handler", () => {
   describe("initiateAuthHandler", () => {
     it("should redirect to GitHub OAuth page with correct params", async () => {
       const request = new Request(GITHUB_AUTH_URL);
-      const ctx = {} as ActionCtx;
+      const ctx = {
+        runAction: vi.fn(),
+        runMutation: vi.fn(),
+        runQuery: vi.fn(),
+      } as unknown as ActionCtx;
 
-      const response = await initiateAuthHandler(ctx, request);
+      const response = await initiateAuthHandler();
 
       expect(response.status).toBe(302);
       const location = response.headers.get("Location");
-      expect(location).toBeDefined();
+      expect(location).not.toBeNull();
 
       if (!location) {
         throw new Error("Expected Location header");
@@ -70,9 +74,13 @@ describe("GitHub OAuth HTTP Handler", () => {
     it("should return 500 if environment variables are missing", async () => {
       process.env.GITHUB_CLIENT_ID = "";
       const request = new Request(GITHUB_AUTH_URL);
-      const ctx = {} as ActionCtx;
+      const ctx = {
+        runAction: vi.fn(),
+        runMutation: vi.fn(),
+        runQuery: vi.fn(),
+      } as unknown as ActionCtx;
 
-      const response = await initiateAuthHandler(ctx, request);
+      const response = await initiateAuthHandler();
 
       expect(response.status).toBe(500);
       const body = await response.json();
@@ -88,7 +96,11 @@ describe("GitHub OAuth HTTP Handler", () => {
           Cookie: `github-oauth-state=${MOCK_STATE}`,
         },
       });
-      const ctx = {} as ActionCtx;
+      const ctx = {
+        runAction: vi.fn(),
+        runMutation: vi.fn(),
+        runQuery: vi.fn(),
+      } as unknown as ActionCtx;
 
       // Mock token exchange response
       mockFetch.mockResolvedValueOnce({
@@ -135,7 +147,11 @@ describe("GitHub OAuth HTTP Handler", () => {
       const request = new Request(
         `${GITHUB_CALLBACK_URL}?error=access_denied&error_description=User+denied`,
       );
-      const ctx = {} as ActionCtx;
+      const ctx = {
+        runAction: vi.fn(),
+        runMutation: vi.fn(),
+        runQuery: vi.fn(),
+      } as unknown as ActionCtx;
 
       const response = await handleCallbackHandler(ctx, request);
 
@@ -151,7 +167,11 @@ describe("GitHub OAuth HTTP Handler", () => {
           Cookie: `github-oauth-state=${MOCK_STATE}`,
         },
       });
-      const ctx = {} as ActionCtx;
+      const ctx = {
+        runAction: vi.fn(),
+        runMutation: vi.fn(),
+        runQuery: vi.fn(),
+      } as unknown as ActionCtx;
 
       const response = await handleCallbackHandler(ctx, request);
 
@@ -166,7 +186,11 @@ describe("GitHub OAuth HTTP Handler", () => {
           Cookie: `github-oauth-state=${MOCK_STATE}`,
         },
       });
-      const ctx = {} as ActionCtx;
+      const ctx = {
+        runAction: vi.fn(),
+        runMutation: vi.fn(),
+        runQuery: vi.fn(),
+      } as unknown as ActionCtx;
 
       // Mock token exchange failure
       mockFetch.mockResolvedValueOnce({

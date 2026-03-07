@@ -424,8 +424,6 @@ export const upsertCommit = internalMutation({
     const repo = await ctx.db.get(args.repositoryId);
     if (!repo) throw notFound("repository", args.repositoryId);
 
-    const _now = Date.now();
-
     // Try to link to issue if issueKey provided
     let issueId: Id<"issues"> | undefined;
     if (args.issueKey) {

@@ -53,7 +53,8 @@ describe("AI Chat", () => {
 
     // Verify the result
     expect(result.message).toBe("I am a helpful AI assistant.");
-    expect(result.chatId).toBeDefined();
+    expect(typeof result.chatId).toBe("string");
+    expect(result.chatId.length).toBeGreaterThan(0);
 
     // Verify that the chat was created in the DB
     const chats = await t.run(async (ctx) => {
@@ -71,13 +72,15 @@ describe("AI Chat", () => {
     expect(messages).toHaveLength(2);
 
     const userMessage = messages.find((m) => m.role === "user");
-    expect(userMessage).toBeDefined();
-    expect(userMessage?.content).toBe("Hello AI");
+    expect(userMessage).not.toBeUndefined();
+    expect(userMessage!.role).toBe("user");
+    expect(userMessage!.content).toBe("Hello AI");
 
     const aiMessage = messages.find((m) => m.role === "assistant");
-    expect(aiMessage).toBeDefined();
-    expect(aiMessage?.content).toBe("I am a helpful AI assistant.");
-    expect(aiMessage?.tokensUsed).toBe(30);
+    expect(aiMessage).not.toBeUndefined();
+    expect(aiMessage!.role).toBe("assistant");
+    expect(aiMessage!.content).toBe("I am a helpful AI assistant.");
+    expect(aiMessage!.tokensUsed).toBe(30);
 
     // Verify usage tracking
     const usage = await t.run(async (ctx) => {
@@ -127,12 +130,14 @@ describe("AI Chat", () => {
     expect(messages).toHaveLength(2);
 
     const userMessage = messages.find((m) => m.role === "user");
-    expect(userMessage).toBeDefined();
-    expect(userMessage?.content).toBe("Hello AI");
+    expect(userMessage).not.toBeUndefined();
+    expect(userMessage!.role).toBe("user");
+    expect(userMessage!.content).toBe("Hello AI");
 
     const systemMessage = messages.find((m) => m.role === "system");
-    expect(systemMessage).toBeDefined();
-    expect(systemMessage?.content).toContain("AI generation failed: API Limit Exceeded");
+    expect(systemMessage).not.toBeUndefined();
+    expect(systemMessage!.role).toBe("system");
+    expect(systemMessage!.content).toContain("AI generation failed: API Limit Exceeded");
 
     // 4. Usage should be tracked as failure
     const usage = await t.run(async (ctx) => {

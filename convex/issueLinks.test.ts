@@ -37,7 +37,8 @@ describe("Issue Links", () => {
         linkType: "blocks",
       });
 
-      expect(linkId).toBeDefined();
+      expect(linkId).not.toBeUndefined();
+      expect(typeof linkId).toBe("string");
 
       // Verify link exists
       const link = await t.run(async (ctx) => {
@@ -55,7 +56,8 @@ describe("Issue Links", () => {
           .collect();
       });
       const linkActivity = activities.find((a) => a.action === "linked");
-      expect(linkActivity).toBeDefined();
+      expect(linkActivity).not.toBeUndefined();
+      expect(linkActivity?.action).toBe("linked");
       await t.finishInProgressScheduledFunctions();
     });
 
@@ -182,7 +184,8 @@ describe("Issue Links", () => {
           .collect();
       });
       const unlinkActivity = activities.find((a) => a.action === "unlinked");
-      expect(unlinkActivity).toBeDefined();
+      expect(unlinkActivity).not.toBeUndefined();
+      expect(unlinkActivity?.action).toBe("unlinked");
       await t.finishInProgressScheduledFunctions();
     });
 

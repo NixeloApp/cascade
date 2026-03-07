@@ -31,6 +31,45 @@ let cachedRedirectPath: string | null | undefined;
 let cachedUserOrganizations: UserOrganization[] | undefined;
 let hasAuthenticatedAppSession = false;
 
+function updateAppSessionState(isAuthenticated: boolean, isAuthLoading: boolean) {
+  if (isAuthenticated) {
+    hasAuthenticatedAppSession = true;
+    return;
+  }
+
+  if (!isAuthLoading) {
+    hasAuthenticatedAppSession = false;
+    cachedRedirectPath = undefined;
+    cachedUserOrganizations = undefined;
+  }
+}
+
+function getAppRedirectState(pathname: string, redirectPath: string | null) {
+  const isGateway = pathname === ROUTES.app.path || pathname === `${ROUTES.app.path}/`;
+  const isOnboardingTarget = redirectPath?.includes(ROUTES.onboarding.path) ?? false;
+  const isOnboardingCurrent = pathname.includes(ROUTES.onboarding.path);
+  const shouldRedirect =
+    Boolean(redirectPath) &&
+    redirectPath !== ROUTES.app.path &&
+    ((isOnboardingTarget && !isOnboardingCurrent) || isGateway);
+
+  return {
+    shouldRedirect,
+  };
+}
+
+function shouldShowAppLoading(
+  isAuthLoading: boolean,
+  stableRedirectPath: string | null | undefined,
+  stableUserOrganizations: UserOrganization[] | undefined,
+) {
+  return (
+    (isAuthLoading && !hasAuthenticatedAppSession) ||
+    stableRedirectPath === undefined ||
+    stableUserOrganizations === undefined
+  );
+}
+
 /**
  * AppLayout - The /app gateway route.
  *
@@ -47,11 +86,7 @@ function AppLayout() {
   const { pathname } = useLocation();
   const { isAuthLoading, isAuthenticated } = useAuthReady();
 
-  if (isAuthenticated) {
-    hasAuthenticatedAppSession = true;
-  } else if (!isAuthLoading) {
-    hasAuthenticatedAppSession = false;
-  }
+  updateAppSessionState(isAuthenticated, isAuthLoading);
 
   // Get redirect destination from backend (handles onboarding check)
   const redirectPath = useAuthenticatedQuery(api.auth.getRedirectDestination, {});
@@ -67,35 +102,19 @@ function AppLayout() {
     cachedUserOrganizations = userOrganizations;
   }
 
-  if (!isAuthLoading && !isAuthenticated) {
-    cachedRedirectPath = undefined;
-    cachedUserOrganizations = undefined;
-  }
-
   const stableRedirectPath = redirectPath ?? cachedRedirectPath;
   const stableUserOrganizations = userOrganizations ?? cachedUserOrganizations;
+  const redirectState = getAppRedirectState(pathname, stableRedirectPath ?? null);
 
   // Redirect to correct destination if not at /app
   useEffect(() => {
-    if (stableRedirectPath && stableRedirectPath !== ROUTES.app.path) {
-      const isGateway = pathname === "/app" || pathname === "/app/";
-      const isOnboardingTarget = stableRedirectPath.includes(ROUTES.onboarding.path);
-      const isOnboardingCurrent = pathname.includes(ROUTES.onboarding.path);
-
-      if (isOnboardingTarget && !isOnboardingCurrent) {
-        navigate({ to: stableRedirectPath, replace: true });
-      } else if (isGateway) {
-        navigate({ to: stableRedirectPath, replace: true });
-      }
+    if (stableRedirectPath && redirectState.shouldRedirect) {
+      navigate({ to: stableRedirectPath, replace: true });
     }
-  }, [navigate, pathname, stableRedirectPath]);
+  }, [navigate, redirectState.shouldRedirect, stableRedirectPath]);
 
   // Loading state - waiting for queries
-  if (
-    (isAuthLoading && !hasAuthenticatedAppSession) ||
-    stableRedirectPath === undefined ||
-    stableUserOrganizations === undefined
-  ) {
+  if (shouldShowAppLoading(isAuthLoading, stableRedirectPath, stableUserOrganizations)) {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
         <LoadingSpinner size="lg" />
@@ -104,24 +123,16 @@ function AppLayout() {
   }
 
   // If we have a redirect path that's not /app, potentially show loading if we are about to redirect
-  if (stableRedirectPath && stableRedirectPath !== ROUTES.app.path) {
-    const isGateway = pathname === "/app" || pathname === "/app/";
-    const isOnboardingTarget = stableRedirectPath.includes(ROUTES.onboarding.path);
-    const isOnboardingCurrent = pathname.includes(ROUTES.onboarding.path);
-
-    const willRedirect = (isOnboardingTarget && !isOnboardingCurrent) || isGateway;
-
-    if (willRedirect) {
-      return (
-        <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
-          <LoadingSpinner size="lg" />
-        </Flex>
-      );
-    }
+  if (stableRedirectPath && redirectState.shouldRedirect) {
+    return (
+      <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
+        <LoadingSpinner size="lg" />
+      </Flex>
+    );
   }
 
   // User has no organizations - initialize default organization
-  if (stableUserOrganizations.length === 0) {
+  if ((stableUserOrganizations ?? []).length === 0) {
     return <InitializeOrganization />;
   }
 

@@ -32,7 +32,8 @@ describe("Saved Filters", () => {
         isPublic: false,
       });
 
-      expect(filterId).toBeDefined();
+      expect(filterId).not.toBeUndefined();
+      expect(typeof filterId).toBe("string");
 
       const filters = await asUser.query(api.savedFilters.list, { projectId });
       expect(filters).toHaveLength(1);
@@ -121,7 +122,8 @@ describe("Saved Filters", () => {
         isPublic: true,
       });
 
-      expect(filterId).toBeDefined();
+      expect(filterId).not.toBeUndefined();
+      expect(typeof filterId).toBe("string");
 
       const filters = await asUser.query(api.savedFilters.list, { projectId });
       const filter = filters.find((f) => f._id === filterId);
@@ -193,7 +195,8 @@ describe("Saved Filters", () => {
       });
 
       const filters = await asUser.query(api.savedFilters.list, { projectId });
-      expect(filters[0].creatorName).toBeDefined();
+      expect(filters[0].creatorName).not.toBeUndefined();
+      expect(typeof filters[0].creatorName).toBe("string");
     });
   });
 

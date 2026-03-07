@@ -54,7 +54,9 @@ describe("Documents Security - Creator Access Revocation", () => {
 
     // Verify creator can access it
     const docBefore = await asCreator.query(api.documents.getDocument, { id: docId });
-    expect(docBefore).toBeDefined();
+    expect(docBefore).not.toBeUndefined();
+    expect(docBefore).not.toBeNull();
+    expect(docBefore?.title).toBe("My Secret Doc");
 
     // 5. Remove Creator from Project
     await t.run(async (ctx) => {
@@ -101,7 +103,9 @@ describe("Documents Security - Creator Access Revocation", () => {
 
     // Verify creator can access it
     const docBefore = await asCreator.query(api.documents.getDocument, { id: docId });
-    expect(docBefore).toBeDefined();
+    expect(docBefore).not.toBeUndefined();
+    expect(docBefore).not.toBeNull();
+    expect(docBefore?.title).toBe("Org Doc");
 
     // 4. Remove Creator from Organization
     await t.run(async (ctx) => {

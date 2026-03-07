@@ -97,9 +97,11 @@ describe("Analytics", () => {
 
       // Assignee counts
       expect(analytics.unassignedCount).toBe(1);
-      expect(analytics.issuesByAssignee[userId]).toBeDefined();
+      expect(analytics.issuesByAssignee[userId]).not.toBeUndefined();
+      expect(typeof analytics.issuesByAssignee[userId]).toBe("object");
       expect(analytics.issuesByAssignee[userId]?.count).toBe(1);
-      expect(analytics.issuesByAssignee[otherUserId]).toBeDefined();
+      expect(analytics.issuesByAssignee[otherUserId]).not.toBeUndefined();
+      expect(typeof analytics.issuesByAssignee[otherUserId]).toBe("object");
       expect(analytics.issuesByAssignee[otherUserId]?.count).toBe(1);
       expect(analytics.issuesByAssignee[userId]?.name).toBe("User 1");
       expect(analytics.issuesByAssignee[otherUserId]?.name).toBe("User 2");
@@ -646,7 +648,7 @@ describe("Analytics", () => {
         projectId,
       });
 
-      expect(activity).toBeDefined();
+      expect(activity).not.toBeUndefined();
       expect(Array.isArray(activity)).toBe(true);
     });
 

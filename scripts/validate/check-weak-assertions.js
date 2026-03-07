@@ -1,102 +1,134 @@
 /**
  * CHECK: Weak Assertions
  *
- * Finds test assertions that don't verify actual values, which can hide bugs.
+ * Flags weak test assertions that don't provide meaningful validation:
+ * - toBeDefined() - Only checks !== undefined, doesn't validate value
+ * - toBeTruthy() - Passes for any truthy value, too permissive
+ * - toBeFalsy() - Passes for any falsy value, too permissive
+ * - {} as Type - Unsafe type casts that bypass type checking
+ * - expect(x) without assertion - Incomplete assertions
  *
- * Patterns detected:
- * - expect(x).toBeDefined() - should use toEqual/toBe with actual value
- * - expect(x).toBeTruthy() - often masks boolean checks
- * - expect(x).not.toBeNull() - should verify actual value
- * - {} as Type - forbidden type assertions in tests
- *
- * @strictness MEDIUM - Reports warnings. Encourages better assertions.
+ * Enforced. Weak assertions fail validation.
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
+// Directories to check
+const TEST_DIRS = ["src", "convex", "e2e"];
+
+// Weak assertion patterns
 const WEAK_PATTERNS = [
   {
-    name: "toBeDefined without value check",
-    pattern: /expect\([^)]+\)\.toBeDefined\(\)/g,
-    severity: "warn",
-    suggestion: "Replace with toEqual(expectedValue) or toBe(expectedValue)",
+    pattern: /\.toBeDefined\(\)/g,
+    message: "toBeDefined() is weak - use specific value assertions instead",
+    suggestion: "Use toEqual(), toBe(), or check specific properties",
   },
   {
-    name: "toBeTruthy for result",
-    pattern: /expect\(result\)\.toBeTruthy\(\)/g,
-    severity: "warn",
-    suggestion: "Replace with specific value assertion",
+    pattern: /\.toBeTruthy\(\)/g,
+    message: "toBeTruthy() is too permissive - use specific assertions",
+    suggestion: "Use toBe(true), toEqual(expected), or check specific values",
   },
   {
-    name: "not.toBeNull without value check",
-    pattern: /expect\([^)]+\)\.not\.toBeNull\(\)\s*;?\s*$/gm,
-    severity: "info",
-    suggestion: "Consider adding toEqual() assertion after null check",
+    pattern: /\.toBeFalsy\(\)/g,
+    message: "toBeFalsy() is too permissive - use specific assertions",
+    suggestion: "Use toBe(false), toBeNull(), toBeUndefined(), or toBe('')",
   },
   {
-    name: "{} as Type assertion (weak mock)",
-    pattern: /\{\s*\}\s+as\s+[A-Z][a-zA-Z]+/g,
-    severity: "warn",
-    suggestion: "Use factory methods or build proper mock objects",
+    pattern: /\{\s*\}\s+as\s+\w+/g,
+    message: "Empty object cast {} as Type bypasses type safety",
+    suggestion: "Create a proper mock object with required properties",
+  },
+  {
+    pattern: /expect\([^)]+\)\s*[;\n](?!\s*\.)/g,
+    message: "expect() without assertion does nothing",
+    suggestion: "Add an assertion like .toBe(), .toEqual(), .toHaveBeenCalled()",
   },
 ];
 
-export function run() {
-  const TEST_DIRS = [path.join(ROOT, "convex"), path.join(ROOT, "src")];
+// Skip certain files
+const SKIP_PATTERNS = [/node_modules/, /\.d\.ts$/];
 
-  let errorCount = 0;
-  let warnCount = 0;
-  const messages = [];
+// Known allowlist - sometimes these are genuinely needed
+const ALLOWLIST_LINES = new Set([
+  // Add specific file:line patterns if needed
+]);
 
-  function auditFile(filePath) {
-    const content = fs.readFileSync(filePath, "utf-8");
-    const lines = content.split("\n");
+function checkFile(filePath) {
+  const issues = [];
+  const rel = relPath(filePath);
 
-    for (const patternDef of WEAK_PATTERNS) {
-      const regex = new RegExp(patternDef.pattern.source, patternDef.pattern.flags);
+  // Only check test files
+  if (!rel.includes(".test.")) return issues;
 
-      for (let match = regex.exec(content); match !== null; match = regex.exec(content)) {
-        const beforeMatch = content.slice(0, match.index);
-        const lineNumber = beforeMatch.split("\n").length;
-        const lineContent = lines[lineNumber - 1]?.trim() || "";
-        const rel = relPath(filePath);
+  // Skip excluded paths
+  for (const pattern of SKIP_PATTERNS) {
+    if (pattern.test(rel)) return issues;
+  }
 
-        if (patternDef.severity === "error") {
-          messages.push(
-            `  ${c.red}ERROR${c.reset} ${rel}:${lineNumber} - ${patternDef.name}: ${lineContent}`,
-          );
-          errorCount++;
-        } else if (patternDef.severity === "warn") {
-          messages.push(
-            `  ${c.yellow}WARN${c.reset} ${rel}:${lineNumber} - ${patternDef.name}: ${lineContent}`,
-          );
-          warnCount++;
+  const content = fs.readFileSync(filePath, "utf8");
+  const lines = content.split("\n");
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const lineNum = i + 1;
+
+    // Skip comments
+    if (line.trim().startsWith("//") || line.trim().startsWith("*")) continue;
+
+    for (const { pattern, message, suggestion } of WEAK_PATTERNS) {
+      pattern.lastIndex = 0;
+
+      if (pattern.test(line)) {
+        const key = `${rel}:${lineNum}`;
+        if (!ALLOWLIST_LINES.has(key)) {
+          issues.push({
+            file: rel,
+            line: lineNum,
+            message,
+            suggestion,
+            code: line.trim().substring(0, 80),
+          });
         }
-        // Skip 'info' severity - too noisy
       }
     }
   }
 
+  return issues;
+}
+
+export function run() {
+  const allIssues = [];
+
   for (const dir of TEST_DIRS) {
-    if (!fs.existsSync(dir)) continue;
-    const testFiles = walkDir(dir, { extensions: new Set([".ts", ".tsx"]) });
-    for (const file of testFiles) {
-      // Only check test files
-      if (!file.includes(".test.") && !file.includes(".spec.")) continue;
-      auditFile(file);
+    const fullDir = path.join(ROOT, dir);
+    if (!fs.existsSync(fullDir)) continue;
+
+    for (const filePath of walkDir(fullDir)) {
+      if (!filePath.endsWith(".test.ts") && !filePath.endsWith(".test.tsx")) continue;
+
+      const issues = checkFile(filePath);
+      allIssues.push(...issues);
     }
   }
 
-  const detail = [];
-  if (errorCount > 0) detail.push(`${errorCount} error(s)`);
-  if (warnCount > 0) detail.push(`${warnCount} warning(s)`);
+  const messages = allIssues.map(
+    (issue) =>
+      `  ${c.red}ERROR${c.reset} ${issue.file}:${issue.line} - ${issue.message}\n` +
+      `         ${c.dim}${issue.code}${c.reset}\n` +
+      `         ${c.yellow}Suggestion:${c.reset} ${issue.suggestion}`,
+  );
+
+  if (allIssues.length > 0) {
+    console.log(`${c.red}Found ${allIssues.length} weak assertion(s):${c.reset}`);
+  }
 
   return {
-    passed: errorCount === 0,
-    errors: errorCount,
-    detail: detail.length > 0 ? detail.join(", ") : undefined,
-    messages: messages.length > 0 ? messages : undefined,
+    passed: allIssues.length === 0,
+    errors: allIssues.length,
+    warnings: 0,
+    detail: allIssues.length > 0 ? `${allIssues.length} weak assertion(s)` : null,
+    messages,
   };
 }

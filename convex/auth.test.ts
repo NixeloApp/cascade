@@ -55,7 +55,8 @@ describe("Authentication", () => {
 
       const user = await t.run(async (ctx) => ctx.db.get(userId));
 
-      expect(user?.emailVerificationTime).toBeDefined();
+      expect(user?.emailVerificationTime).not.toBeUndefined();
+      expect(typeof user?.emailVerificationTime).toBe("number");
       expect(user?.emailVerificationTime).toBeGreaterThanOrEqual(beforeCreate);
     });
 
@@ -154,7 +155,8 @@ describe("Authentication", () => {
       const verified = await t.run(async (ctx) => ctx.db.get(verifiedId));
       const unverified = await t.run(async (ctx) => ctx.db.get(unverifiedId));
 
-      expect(verified?.emailVerificationTime).toBeDefined();
+      expect(verified?.emailVerificationTime).not.toBeUndefined();
+      expect(typeof verified?.emailVerificationTime).toBe("number");
       expect(unverified?.emailVerificationTime).toBeUndefined();
     });
 

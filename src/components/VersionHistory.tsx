@@ -73,14 +73,32 @@ export function VersionHistory({
   const [compareVersionIds, setCompareVersionIds] = useState<Id<"documentVersions">[]>([]);
 
   const versions = useAuthenticatedQuery(api.documentVersions.listVersions, { documentId });
-  const leftVersion = useAuthenticatedQuery(api.documentVersions.getVersion, {
-    documentId,
-    versionId: compareVersionIds[0],
-  });
-  const rightVersion = useAuthenticatedQuery(api.documentVersions.getVersion, {
-    documentId,
-    versionId: compareVersionIds[1],
-  });
+  const orderedCompareVersionIds =
+    compareVersionIds.length === 2 && versions
+      ? [...compareVersionIds].sort((leftId, rightId) => {
+          const leftVersion = versions.find((version) => version._id === leftId)?.version ?? 0;
+          const rightVersion = versions.find((version) => version._id === rightId)?.version ?? 0;
+          return leftVersion - rightVersion;
+        })
+      : [];
+  const leftVersion = useAuthenticatedQuery(
+    api.documentVersions.getVersion,
+    orderedCompareVersionIds[0]
+      ? {
+          documentId,
+          versionId: orderedCompareVersionIds[0],
+        }
+      : "skip",
+  );
+  const rightVersion = useAuthenticatedQuery(
+    api.documentVersions.getVersion,
+    orderedCompareVersionIds[1]
+      ? {
+          documentId,
+          versionId: orderedCompareVersionIds[1],
+        }
+      : "skip",
+  );
   const { mutate: restoreVersion } = useAuthenticatedMutation(api.documentVersions.restoreVersion);
 
   useEffect(() => {
@@ -115,7 +133,7 @@ export function VersionHistory({
     });
   };
 
-  const isComparing = compareVersionIds.length === 2;
+  const isComparing = orderedCompareVersionIds.length === 2;
   const diffLeft = leftVersion?.snapshot ? stringifySnapshot(leftVersion.snapshot) : "";
   const diffRight = rightVersion?.snapshot ? stringifySnapshot(rightVersion.snapshot) : "";
 

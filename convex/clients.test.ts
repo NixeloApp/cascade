@@ -1,6 +1,7 @@
 import { anyApi } from "convex/server";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
+import { DAY } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -63,7 +64,7 @@ describe("clients", () => {
       organizationId,
       clientId,
       issueDate: Date.now(),
-      dueDate: Date.now() + 86400000,
+      dueDate: Date.now() + DAY,
       lineItems: [{ description: "Implementation", quantity: 4, rate: 120 }],
     });
 

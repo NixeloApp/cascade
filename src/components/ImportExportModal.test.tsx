@@ -45,10 +45,14 @@ function createMockFileReader(data: string) {
 // Helper to wait for file input to be available and return it
 // Note: Dialog uses a portal, so we need to search document.body instead of container
 async function waitForFileInput(_container: HTMLElement): Promise<HTMLInputElement> {
+  let fileInput: HTMLInputElement | null = null;
   await waitFor(() => {
-    expect(document.body.querySelector('input[type="file"]')).toBeInTheDocument();
+    fileInput = document.body.querySelector('input[type="file"]');
+    expect(fileInput).not.toBeNull();
+    expect(fileInput).toBeInstanceOf(HTMLInputElement);
   });
-  return document.body.querySelector('input[type="file"]') as HTMLInputElement;
+  if (!fileInput) throw new Error("File input not found");
+  return fileInput;
 }
 
 describe("ImportExportModal - Component Behavior", () => {
@@ -205,7 +209,7 @@ describe("ImportExportModal - Component Behavior", () => {
         download: "",
         click: vi.fn(),
       };
-      const mockNode = {} as Node;
+      const mockNode = document.createTextNode("") as Node;
       vi.spyOn(document, "createElement").mockImplementation((tagName: string) => {
         if (tagName === "a") {
           return mockLink as HTMLElement;

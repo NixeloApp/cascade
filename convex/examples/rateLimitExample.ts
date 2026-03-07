@@ -18,7 +18,7 @@ export const chatWithRateLimit = action({
     projectId: v.optional(v.id("projects")),
     message: v.string(),
   },
-  handler: async (ctx, _args) => {
+  handler: async (ctx, args) => {
     const userId = await ctx.auth.getUserIdentity();
     if (!userId) {
       throw unauthenticated();
@@ -30,10 +30,10 @@ export const chatWithRateLimit = action({
       throws: true,
     });
 
-    // Now call the actual AI chat function
-    // (Your existing ai.chat implementation)
-    // ...
+    // Example: Use the args in your AI chat implementation
+    // In a real implementation, you would call your AI service here
+    // e.g., await ctx.runAction(internal.ai.chat, { chatId: args.chatId, message: args.message });
 
-    return { success: true };
+    return { success: true, messageLength: args.message.length };
   },
 });

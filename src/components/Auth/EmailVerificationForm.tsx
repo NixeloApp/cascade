@@ -43,7 +43,7 @@ export function EmailVerificationForm({ email, onVerified, onResend }: EmailVeri
         showSuccess("Email verified successfully!");
         onVerified();
       })
-      .catch((_error) => {
+      .catch(() => {
         showError("Invalid code. Please try again.");
       })
       .finally(() => setSubmitting(false));

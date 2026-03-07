@@ -37,7 +37,8 @@ describe("Issue Templates", () => {
         defaultLabels: ["bug", "needs-triage"],
       });
 
-      expect(templateId).toBeDefined();
+      expect(templateId).not.toBeUndefined();
+      expect(typeof templateId).toBe("string");
 
       const template = await asUser.query(api.templates.get, { id: templateId });
       expect(template?.name).toBe("Bug Report");
@@ -552,7 +553,8 @@ describe("Issue Templates", () => {
         defaultLabels: [],
       });
 
-      expect(templateId).toBeDefined();
+      expect(templateId).not.toBeUndefined();
+      expect(typeof templateId).toBe("string");
     });
 
     it("should reject viewer from creating templates", async () => {

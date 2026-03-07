@@ -50,8 +50,9 @@ describe("Files", () => {
 
       const { uploadUrl } = await asUser.mutation(api.files.generateUploadUrl, {});
 
-      expect(uploadUrl).toBeDefined();
+      expect(uploadUrl).not.toBeUndefined();
       expect(typeof uploadUrl).toBe("string");
+      expect(uploadUrl.length).toBeGreaterThan(0);
     });
 
     it("should generate unique URLs for each request", async () => {

@@ -252,7 +252,7 @@ export async function performBulkDateUpdate(
   newValue: number | null,
   validate: (issue: Doc<"issues">, newValue: number | null) => boolean,
 ) {
-  return performBulkUpdate(ctx, issueIds, async (issue, _now) => {
+  return performBulkUpdate(ctx, issueIds, async (issue) => {
     // Run custom validation (e.g., check start < due)
     if (!validate(issue, newValue)) {
       return null;

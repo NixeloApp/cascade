@@ -56,7 +56,7 @@ describe("Custom Functions Access Control", () => {
       const teams = await asMember.query(api.teams.getOrganizationTeams, {
         organizationId: adminOrgId,
       });
-      expect(teams).toBeDefined();
+      expect(teams).not.toBeUndefined();
       expect(Array.isArray(teams)).toBe(true);
     });
   });
@@ -190,7 +190,8 @@ describe("Custom Functions Access Control", () => {
         priority: "medium",
       });
 
-      expect(issueId).toBeDefined();
+      expect(issueId).not.toBeUndefined();
+      expect(typeof issueId).toBe("string");
     });
   });
 });

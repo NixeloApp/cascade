@@ -22,6 +22,9 @@ function resetPersistedSearchState() {
   persistedSearchState.documentOffset = initialSearchState.documentOffset;
 }
 
+/**
+ * Resets the persisted module state between tests.
+ */
 export function resetGlobalSearchStateForTests() {
   resetPersistedSearchState();
 }

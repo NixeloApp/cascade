@@ -326,7 +326,6 @@ export const update = issueMutation({
     // Verify optimistic lock - throws conflict error if version mismatch
     assertVersionMatch(ctx.issue.version, args.expectedVersion);
 
-    const _now = Date.now();
     const changes: Array<{
       field: string;
       oldValue: string | number | null | undefined;
@@ -824,7 +823,7 @@ export const bulkRestore = authenticatedMutation({
   },
   returns: v.object({ restored: v.number() }),
   handler: async (ctx, args) => {
-    const result = await performBulkUpdate(ctx, args.issueIds, async (issue, _now) => {
+    const result = await performBulkUpdate(ctx, args.issueIds, async (issue) => {
       if (!issue.archivedAt) return null;
 
       return {

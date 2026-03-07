@@ -26,7 +26,7 @@ export const generateEmbedding = internalAction({
   args: {
     text: v.string(),
   },
-  handler: async (_ctx, args) => {
+  handler: async (...[, args]) => {
     const apiKey = getVoyageApiKey();
     if (!apiKey) {
       throw validation("VOYAGE_API_KEY", "VOYAGE_API_KEY not configured");

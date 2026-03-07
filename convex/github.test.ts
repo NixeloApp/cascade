@@ -65,7 +65,9 @@ describe("GitHub Integration", () => {
         repoId: "123",
       });
 
-      expect(repoId).toBeDefined();
+      expect(repoId).not.toBeUndefined();
+      if (repoId === undefined) throw new Error("repoId is undefined");
+      expect(typeof repoId).toBe("string");
 
       const repos = await asUser.query(api.github.listRepositories, { projectId });
       expect(repos).toHaveLength(1);
@@ -153,9 +155,13 @@ describe("GitHub Integration", () => {
       });
 
       const pr = await t.run(async (ctx) => ctx.db.get(prId));
-      expect(pr?.title).toBe("Feat: New thing (updated)");
-      expect(pr?.state).toBe("closed");
-      expect(pr?.closedAt).toBeDefined();
+      expect(pr).not.toBeUndefined();
+      if (pr === undefined) throw new Error("pr is undefined");
+      expect(pr.title).toBe("Feat: New thing (updated)");
+      expect(pr.state).toBe("closed");
+      expect(pr.closedAt).not.toBeNull();
+      if (pr.closedAt == null) throw new Error("closedAt is null/undefined");
+      expect(typeof pr.closedAt).toBe("number");
     });
 
     it("should upsert commit and link to issue", async () => {

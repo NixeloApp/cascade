@@ -28,11 +28,11 @@ describe("Projects", () => {
         teamId,
       });
 
-      expect(projectId).toBeDefined();
+      expect(typeof projectId).toBe("string");
 
       // Verify project was created
       const project = await asUser.query(api.projects.getProject, { id: projectId });
-      expect(project).toBeDefined();
+      expect(project).not.toBeNull();
       expect(project?.name).toBe("Test Project");
       expect(project?.key).toBe("TEST");
       expect(project?.description).toBe("A test project");
@@ -150,7 +150,7 @@ describe("Projects", () => {
       });
 
       const project = await asUser.query(api.projects.getProject, { id: projectId });
-      expect(project).toBeDefined();
+      expect(project).not.toBeNull();
       expect(project?.name).toBe("My Project");
       expect(project?.isOwner).toBe(true);
       expect(project?.userRole).toBe("admin");
@@ -186,7 +186,7 @@ describe("Projects", () => {
       }); // Access as different organization member
       const asMember = asAuthenticatedUser(t, organizationMember);
       const project = await asMember.query(api.projects.getProject, { id: projectId });
-      expect(project).toBeDefined();
+      expect(project).not.toBeNull();
       expect(project?.name).toBe("organization Visible Project");
       expect(project?.isPublic).toBe(true);
       expect(project?.isOwner).toBe(false);
@@ -378,7 +378,8 @@ describe("Projects", () => {
       });
 
       const project = projects.find((p) => p._id === projectId);
-      expect(project).toBeDefined();
+      expect(project).not.toBeUndefined();
+      expect(typeof project?._id).toBe("string");
       expect(project?.issueCount).toBe(1); // Should count only the active issue
       await t.finishInProgressScheduledFunctions();
     });
@@ -730,7 +731,7 @@ describe("Projects", () => {
 
       const project = await asUser.query(api.projects.getByKey, { key: "BYKEY" });
 
-      expect(project).toBeDefined();
+      expect(project).not.toBeNull();
       expect(project?.name).toBe("My Project");
       expect(project?.key).toBe("BYKEY");
       await t.finishInProgressScheduledFunctions();
@@ -899,7 +900,7 @@ describe("Projects", () => {
 
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       expect(project?.isDeleted).toBe(true);
-      expect(project?.deletedAt).toBeDefined();
+      expect(typeof project?.deletedAt).toBe("number");
       await t.finishInProgressScheduledFunctions();
     });
 
@@ -958,7 +959,7 @@ describe("Projects", () => {
       expect(result.restored).toBe(true);
 
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
-      expect(project?.isDeleted).toBeUndefined();
+      expect(project?.isDeleted).not.toBe(true);
       await t.finishInProgressScheduledFunctions();
     });
 

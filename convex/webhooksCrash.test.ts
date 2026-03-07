@@ -61,6 +61,8 @@ describe("Webhooks Test/Retry Crash Handling", () => {
     });
 
     expect(executions.length).toBe(1);
+    expect(executions[0]).not.toBeUndefined();
+    expect(typeof executions[0]).toBe("object");
     expect(executions[0].status).toBe("failed");
     expect(executions[0].error).toBe("Simulated crash");
   });
@@ -108,12 +110,11 @@ describe("Webhooks Test/Retry Crash Handling", () => {
       return await ctx.db.get(executionId);
     });
 
-    expect(execution).toBeDefined();
-    // biome-ignore lint/style/noNonNullAssertion: testing convenience
-    expect(execution!.attempts).toBe(2);
-    // biome-ignore lint/style/noNonNullAssertion: testing convenience
-    expect(execution!.status).toBe("failed");
-    // biome-ignore lint/style/noNonNullAssertion: testing convenience
-    expect(execution!.error).toBe("Simulated crash");
+    expect(execution).not.toBeUndefined();
+    if (!execution) throw new Error("Expected execution to exist");
+    expect(typeof execution).toBe("object");
+    expect(execution.attempts).toBe(2);
+    expect(execution.status).toBe("failed");
+    expect(execution.error).toBe("Simulated crash");
   });
 });

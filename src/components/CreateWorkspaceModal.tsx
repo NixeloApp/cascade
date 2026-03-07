@@ -22,7 +22,7 @@ import { showError, showSuccess } from "@/lib/toast";
 interface CreateWorkspaceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreated?: (workspaceId: string, slug: string) => void;
+  onCreated?: (slug: string) => void;
 }
 
 /** Modal form for creating a new workspace in an organization. */
@@ -45,7 +45,7 @@ export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorks
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "");
 
-      const { workspaceId } = await createWorkspace({
+      await createWorkspace({
         name,
         slug,
         description: description.trim() || undefined,
@@ -53,7 +53,7 @@ export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorks
       });
 
       showSuccess("Workspace created successfully");
-      onCreated?.(workspaceId, slug);
+      onCreated?.(slug);
       onClose();
       setName("");
       setDescription("");

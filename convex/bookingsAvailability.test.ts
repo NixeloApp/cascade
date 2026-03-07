@@ -78,6 +78,7 @@ describe("Booking Availability Security", () => {
       timezone: "UTC",
     });
 
-    expect(result.bookingId).toBeDefined();
+    expect(result.bookingId).not.toBeUndefined();
+    expect(typeof result.bookingId).toBe("string");
   });
 });

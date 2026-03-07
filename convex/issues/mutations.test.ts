@@ -43,7 +43,7 @@ describe("Issue Mutations", () => {
       expect(issue?.priority).toBe("high");
       expect(issue?.estimatedHours).toBe(8);
       expect(issue?.storyPoints).toBe(5);
-      expect(issue?.dueDate).toBeDefined();
+      expect(issue?.dueDate).toBeGreaterThan(Date.now());
       await t.finishInProgressScheduledFunctions();
     });
 
@@ -390,7 +390,8 @@ describe("Issue Mutations", () => {
         mentions: [mentionedUser],
       });
 
-      expect(commentId).toBeDefined();
+      expect(typeof commentId).toBe("string");
+      expect(commentId.length).toBeGreaterThan(0);
 
       const comment = await t.run(async (ctx) => ctx.db.get(commentId));
       expect(comment?.mentions).toContain(mentionedUser);
@@ -426,7 +427,8 @@ describe("Issue Mutations", () => {
       });
 
       const commentActivity = activities.find((a) => a.action === "commented");
-      expect(commentActivity).toBeDefined();
+      expect(commentActivity?.action).toBe("commented");
+      expect(commentActivity?.userId).toBe(userId);
       await t.finishInProgressScheduledFunctions();
     });
 
@@ -459,7 +461,8 @@ describe("Issue Mutations", () => {
         content: "Viewer comment",
       });
 
-      expect(commentId).toBeDefined();
+      expect(typeof commentId).toBe("string");
+      expect(commentId.length).toBeGreaterThan(0);
       await t.finishInProgressScheduledFunctions();
     });
   });
@@ -707,7 +710,8 @@ describe("Issue Mutations", () => {
 
         // Issue should still exist
         const issue = await asAdmin.query(api.issues.getIssue, { id: issueId });
-        expect(issue).toBeDefined();
+        expect(issue).not.toBeNull();
+        expect(issue?.title).toBe("Admin Only Delete");
         await t.finishInProgressScheduledFunctions();
       });
     });

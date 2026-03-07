@@ -52,7 +52,8 @@ describe("calendarEvents", () => {
         eventType: "meeting",
       });
 
-      expect(eventId).toBeDefined();
+      expect(eventId).not.toBeUndefined();
+      expect(typeof eventId).toBe("string");
 
       const event = await asUser.query(api.calendarEvents.get, { id: eventId });
       expect(event).not.toBeNull();
@@ -154,7 +155,8 @@ describe("calendarEvents", () => {
       const event = await asUser.query(api.calendarEvents.get, { id: eventId });
       expect(event).not.toBeNull();
       expect(event?.title).toBe("My Event");
-      expect(event?.organizerName).toBeDefined();
+      expect(event?.organizerName).not.toBeUndefined();
+      expect(typeof event?.organizerName).toBe("string");
     });
 
     it("should return event for attendee", async () => {

@@ -37,7 +37,8 @@ describe("Pumble Integration", () => {
         events: ["issue.created"],
       });
 
-      expect(webhookId).toBeDefined();
+      expect(webhookId).not.toBeUndefined();
+      expect(typeof webhookId).toBe("string");
 
       const webhook = await t.run(async (ctx) => await ctx.db.get(webhookId));
       expect(webhook?.webhookUrl).toBe("https://hooks.pumble.com/123456");
@@ -55,7 +56,8 @@ describe("Pumble Integration", () => {
         events: ["issue.created"],
       });
 
-      expect(webhookId).toBeDefined();
+      expect(webhookId).not.toBeUndefined();
+      expect(typeof webhookId).toBe("string");
     });
 
     it("should reject invalid webhook URL", async () => {

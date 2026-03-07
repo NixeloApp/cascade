@@ -44,7 +44,7 @@ export const selectProvider = query({
   handler: async (ctx, args) => {
     // Dual Authentication: API Key (Bot) OR User Session (Dashboard)
     if (args.apiKey) {
-      await requireBotApiKey(ctx, args.apiKey);
+      await requireBotApiKey(args.apiKey);
     } else {
       const userId = await getAuthUserId(ctx);
       if (!userId) {
@@ -157,7 +157,7 @@ export const getUsageSummary = query({
   handler: async (ctx, args) => {
     // Dual Authentication: API Key (Bot) OR User Session (Dashboard)
     if (args.apiKey) {
-      await requireBotApiKey(ctx, args.apiKey);
+      await requireBotApiKey(args.apiKey);
     } else {
       const userId = await getAuthUserId(ctx);
       if (!userId) {
@@ -248,7 +248,7 @@ export const recordUsage = mutation({
   }),
   handler: async (ctx, args) => {
     // Validate bot service API key
-    await requireBotApiKey(ctx, args.apiKey);
+    await requireBotApiKey(args.apiKey);
 
     const month = getCurrentMonth();
 

@@ -101,13 +101,15 @@ describe("Two Factor Authentication Lockout Vulnerability", () => {
       } else {
         // 5th attempt triggers lockout
         expect((result as any).error).toContain("Account temporarily locked");
-        expect((result as any).lockedUntil).toBeDefined();
+        expect(typeof (result as any).lockedUntil).toBe("number");
+        expect((result as any).lockedUntil).not.toBeUndefined();
       }
     }
 
     // Check internal state directly
     const user = await t.query(internal.users.getInternal, { id: userId });
-    expect(user?.twoFactorLockedUntil).toBeDefined();
+    expect(typeof user?.twoFactorLockedUntil).toBe("number");
+    expect(user?.twoFactorLockedUntil).not.toBeUndefined();
 
     // Attempt 6th time (should be locked)
     const lockedResult = await asUser.mutation(api.twoFactor.disable, { code: "000000" });
@@ -137,13 +139,15 @@ describe("Two Factor Authentication Lockout Vulnerability", () => {
         expect((result as any).error).toBe("Invalid backup code");
       } else {
         expect((result as any).error).toContain("Account temporarily locked");
-        expect((result as any).lockedUntil).toBeDefined();
+        expect(typeof (result as any).lockedUntil).toBe("number");
+        expect((result as any).lockedUntil).not.toBeUndefined();
       }
     }
 
     // Check internal state directly
     const user = await t.query(internal.users.getInternal, { id: userId });
-    expect(user?.twoFactorLockedUntil).toBeDefined();
+    expect(typeof user?.twoFactorLockedUntil).toBe("number");
+    expect(user?.twoFactorLockedUntil).not.toBeUndefined();
 
     // Attempt 6th time (should be locked)
     const lockedResult = await asUser.mutation(api.twoFactor.verifyBackupCode, { code: "INVALID" });

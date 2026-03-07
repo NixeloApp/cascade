@@ -6,18 +6,12 @@
  * - Async hooks should include loading/error states
  * - Hooks returning multiple values should use objects (not arrays) for >3 values
  *
- * @strictness MEDIUM - Reports warnings, does not block CI
+ * Enforced. Hook issues are reported as plain errors.
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath } from "./utils.js";
-
-// Configuration
-const CONFIG = {
-  // 'error' | 'warn' | 'off'
-  strictness: "warn",
-};
 
 // Files to skip
 const SKIP_PATTERNS = [".test.", ".spec.", "index.ts", ".d.ts"];
@@ -28,20 +22,12 @@ const CONVEX_PATTERN_HOOKS = [
   "useCurrentUser", // Simple Convex query wrapper
   "useFuzzySearch", // Client-side search, async is for setup only
   "useConfirmDialog", // Modal state, mutation is for actions not data
+  "useConvexHelpers", // Auth wrappers over Convex hooks
   "usePaginatedIssues", // Convex query - errors thrown
   "useSmartBoardData", // Convex query - errors thrown
 ];
 
 export function run() {
-  if (CONFIG.strictness === "off") {
-    return {
-      passed: true,
-      errors: 0,
-      detail: "Disabled",
-      messages: [],
-    };
-  }
-
   const HOOKS_DIR = path.join(ROOT, "src/hooks");
 
   // Check if hooks directory exists
@@ -54,14 +40,13 @@ export function run() {
     };
   }
 
-  let warningCount = 0;
-  const warnings = [];
+  let issueCount = 0;
+  const messages = [];
 
-  function reportWarning(filePath, line, message) {
+  function reportIssue(filePath, line, message) {
     const rel = relPath(filePath);
-    const prefix = CONFIG.strictness === "error" ? `${c.red}ERROR` : `${c.yellow}WARN`;
-    warnings.push(`  ${prefix}${c.reset} ${rel}:${line} - ${message}`);
-    warningCount++;
+    messages.push(`  ${c.red}ERROR${c.reset} ${rel}:${line} - ${message}`);
+    issueCount++;
   }
 
   /**
@@ -96,7 +81,7 @@ export function run() {
     }
 
     if (!hasExportedHook && fileName.startsWith("use")) {
-      reportWarning(filePath, 1, `Hook file should export a function starting with "use"`);
+      reportIssue(filePath, 1, `Hook file should export a function starting with "use"`);
     }
 
     // Check 2: For hooks with async operations, look for loading/error states
@@ -130,11 +115,7 @@ export function run() {
         // Find the return statement line
         for (let i = 0; i < lines.length; i++) {
           if (/return\s*\{/.test(lines[i])) {
-            reportWarning(
-              filePath,
-              i + 1,
-              `Async hook should include loading state in return value`,
-            );
+            reportIssue(filePath, i + 1, `Async hook should include loading state in return value`);
             break;
           }
         }
@@ -143,7 +124,7 @@ export function run() {
       if (hasReturnObject && !hasErrorState) {
         for (let i = 0; i < lines.length; i++) {
           if (/return\s*\{/.test(lines[i])) {
-            reportWarning(filePath, i + 1, `Async hook should include error state in return value`);
+            reportIssue(filePath, i + 1, `Async hook should include error state in return value`);
             break;
           }
         }
@@ -158,7 +139,7 @@ export function run() {
       if (elements.length > 3) {
         for (let i = 0; i < lines.length; i++) {
           if (/return\s*\[/.test(lines[i])) {
-            reportWarning(
+            reportIssue(
               filePath,
               i + 1,
               `Hook returns ${elements.length} values as array. Consider using an object for better destructuring.`,
@@ -183,10 +164,9 @@ export function run() {
   }
 
   return {
-    passed: CONFIG.strictness === "warn" ? true : warningCount === 0,
-    errors: CONFIG.strictness === "error" ? warningCount : 0,
-    warnings: CONFIG.strictness === "warn" ? warningCount : 0,
-    detail: warningCount > 0 ? `${warningCount} hook pattern issue(s)` : null,
-    messages: warnings,
+    passed: issueCount === 0,
+    errors: issueCount,
+    detail: issueCount > 0 ? `${issueCount} hook pattern issue(s)` : null,
+    messages,
   };
 }

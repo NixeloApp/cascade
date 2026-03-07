@@ -37,16 +37,6 @@ export type CollapsedSwimlanes = Set<string>;
 // Constants
 // =============================================================================
 
-/** Priority order for swimlane display (highest first) - reserved for future sorting */
-const _PRIORITY_ORDER: Record<IssuePriority, number> = {
-  highest: 0,
-  high: 1,
-  medium: 2,
-  low: 3,
-  lowest: 4,
-};
-void _PRIORITY_ORDER;
-
 /** Priority colors for swimlane headers */
 const PRIORITY_COLORS: Record<IssuePriority, string> = {
   highest: "text-status-error",
@@ -55,16 +45,6 @@ const PRIORITY_COLORS: Record<IssuePriority, string> = {
   low: "text-palette-blue",
   lowest: "text-ui-text-tertiary",
 };
-
-/** Type order for swimlane display - reserved for future sorting */
-const _TYPE_ORDER: Record<string, number> = {
-  epic: 0,
-  story: 1,
-  task: 2,
-  bug: 3,
-  subtask: 4,
-};
-void _TYPE_ORDER;
 
 // =============================================================================
 // Swimlane Grouping Logic

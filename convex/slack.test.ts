@@ -35,7 +35,8 @@ describe("Slack integration", () => {
       incomingWebhookChannel: "#alerts",
     });
 
-    expect(connectionId).toBeDefined();
+    expect(connectionId).not.toBeUndefined();
+    expect(typeof connectionId).toBe("string");
 
     const connection = await asUser.query(api.slack.getConnection, {});
     expect(connection?.teamId).toBe("T123");

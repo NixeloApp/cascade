@@ -216,7 +216,8 @@ describe("Google OAuth Token Exchange Contract", () => {
           redirectUri: "http://localhost/callback",
         });
 
-        expect(tokens.access_token).toBeDefined();
+        expect(tokens.access_token).not.toBeUndefined();
+        expect(typeof tokens.access_token).toBe("string");
         expect(tokens.refresh_token).toBeUndefined();
       });
 
@@ -232,8 +233,11 @@ describe("Google OAuth Token Exchange Contract", () => {
           redirectUri: "http://localhost/callback",
         });
 
-        expect(tokens.access_token).toBeDefined();
-        expect((tokens as Record<string, unknown>).id_token).toBeDefined();
+        expect(tokens.access_token).not.toBeUndefined();
+        expect(typeof tokens.access_token).toBe("string");
+        const tokenRecord = tokens as Record<string, unknown>;
+        expect(tokenRecord.id_token).not.toBeUndefined();
+        expect(typeof tokenRecord.id_token).toBe("string");
       });
     });
 
@@ -372,7 +376,9 @@ describe("Google OAuth User Profile Contract", () => {
       const profile = await fetchGoogleUserProfile("valid-token");
 
       expect(profile.email).toBe("john.doe@gmail.com");
+      expect(typeof profile.name).toBe("string");
       expect(profile.name).toBe("John Doe");
+      expect(typeof profile.picture).toBe("string");
       expect(profile.picture).toBe("https://lh3.googleusercontent.com/a/default-user=s96-c");
     });
 

@@ -710,8 +710,6 @@ export const addProjectMember = projectAdminMutation({
 
     if (existingMembership) throw conflict("User is already a member");
 
-    const _now = Date.now();
-
     // Add to projectMembers table
     await ctx.db.insert("projectMembers", {
       projectId: ctx.projectId,

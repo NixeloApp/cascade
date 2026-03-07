@@ -10,7 +10,6 @@
 
 import Fuse from "fuse.js";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 
 export interface FuzzySearchOptions {
   /**

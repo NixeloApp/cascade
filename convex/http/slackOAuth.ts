@@ -40,7 +40,7 @@ const getSlackOAuthConfig = () => {
   };
 };
 
-export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
+export const initiateAuthHandler = () => {
   if (!isSlackOAuthConfigured()) {
     return Promise.resolve(
       new Response(
@@ -127,7 +127,7 @@ async function exchangeCodeForToken(
   return tokenData;
 }
 
-export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) => {
+export const handleCallbackHandler = async (...[, request]: [ActionCtx, Request]) => {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");

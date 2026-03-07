@@ -146,7 +146,8 @@ describe("accessibility utilities", () => {
     it("should pass the correct event type to handler", () => {
       const handler = vi.fn((e: React.KeyboardEvent<HTMLDivElement>) => {
         // Handler can access event properties
-        expect(e.key).toBeDefined();
+        expect(e.key).not.toBeUndefined();
+        expect(typeof e.key).toBe("string");
       });
 
       const keyboardHandler = handleKeyboardClickWithEvent<HTMLDivElement>(
@@ -253,7 +254,8 @@ describe("accessibility utilities", () => {
     it("should support event delegation pattern", () => {
       const handleClick = vi.fn((e: React.MouseEvent | React.KeyboardEvent) => {
         // Can access event target
-        expect(e).toBeDefined();
+        expect(e).not.toBeUndefined();
+        expect(typeof e).toBe("object");
       });
 
       const onKeyDown = handleKeyboardClickWithEvent(handleClick);

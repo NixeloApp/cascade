@@ -17,7 +17,8 @@ describe("organizations", () => {
         timezone: "America/New_York",
       });
 
-      expect(organizationId).toBeDefined();
+      expect(organizationId).not.toBeUndefined();
+      expect(typeof organizationId).toBe("string");
       expect(slug).toBe("test-organization");
 
       // Verify db state

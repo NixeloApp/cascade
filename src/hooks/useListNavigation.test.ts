@@ -46,7 +46,9 @@ describe("useListNavigation", () => {
         }),
       );
 
-      expect(result.current.listRef).toBeDefined();
+      expect(result.current.listRef).not.toBeUndefined();
+      expect(typeof result.current.listRef).toBe("object");
+      expect(result.current.listRef).toHaveProperty("current");
     });
   });
 

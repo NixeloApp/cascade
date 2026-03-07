@@ -44,7 +44,8 @@ describe("Custom Functions Team Access Control", () => {
 
       // 3. Member calls teamQuery (getTeamMembers)
       const members = await asMember.query(api.teams.getTeamMembers, { teamId });
-      expect(members).toBeDefined();
+      expect(members).not.toBeUndefined();
+      expect(Array.isArray(members)).toBe(true);
       expect(members.length).toBeGreaterThan(0);
     });
 
@@ -75,7 +76,8 @@ describe("Custom Functions Team Access Control", () => {
 
       // 3. Org Admin calls teamQuery (getTeamMembers)
       const members = await asAdmin.query(api.teams.getTeamMembers, { teamId });
-      expect(members).toBeDefined();
+      expect(members).not.toBeUndefined();
+      expect(Array.isArray(members)).toBe(true);
       // Should see at least the owner
       expect(members.length).toBeGreaterThan(0);
     });

@@ -53,14 +53,14 @@ describe("Issue Notifications", () => {
     const mentionNotification = notifications.find(
       (n) => n.userId === mentionedUserId && n.type === "issue_mentioned",
     );
-    expect(mentionNotification).toBeDefined();
+    expect(mentionNotification).not.toBeUndefined();
     expect(mentionNotification?.issueId).toBe(issueId);
 
     // Reporter should get 'issue_comment' (since commenter != reporter)
     const reporterNotification = notifications.find(
       (n) => n.userId === reporterId && n.type === "issue_comment",
     );
-    expect(reporterNotification).toBeDefined();
+    expect(reporterNotification).not.toBeUndefined();
     expect(reporterNotification?.issueId).toBe(issueId);
 
     // Commenter should NOT get a notification
@@ -113,6 +113,6 @@ describe("Issue Notifications", () => {
     const reporterNotification = notifications.find(
       (n) => n.userId === reporterId && n.type === "issue_comment",
     );
-    expect(reporterNotification).toBeDefined();
+    expect(reporterNotification).not.toBeUndefined();
   });
 });

@@ -26,7 +26,8 @@ describe("IP Restrictions", () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.id).toBeDefined();
+      expect(result.id).not.toBeUndefined();
+      expect(typeof result.id).toBe("string");
     });
 
     it("should add a valid CIDR range to allowlist", async () => {

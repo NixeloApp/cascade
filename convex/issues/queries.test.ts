@@ -36,7 +36,10 @@ describe("issue queries", () => {
 
       expect(result).not.toBeNull();
       expect(result?.title).toBe("Test Issue");
-      expect(result?.project).toBeDefined();
+      expect(result?.description).toBe("Description");
+      expect(result?.project).not.toBeUndefined();
+      expect(typeof result?.project?.name).toBe("string");
+      expect(result?.project?.name.length).toBeGreaterThan(0);
     });
 
     it("should return null for non-existent issue", async () => {
@@ -410,8 +413,11 @@ describe("issue queries", () => {
         projectId,
       });
 
-      expect(result.issuesByStatus).toBeDefined();
-      expect(result.workflowStates).toBeDefined();
+      expect(result.issuesByStatus).not.toBeUndefined();
+      expect(typeof result.issuesByStatus).toBe("object");
+      expect(result.issuesByStatus).not.toBeNull();
+      expect(result.workflowStates).not.toBeUndefined();
+      expect(Array.isArray(result.workflowStates)).toBe(true);
       expect(result.workflowStates.length).toBeGreaterThan(0);
     });
   });
@@ -438,8 +444,14 @@ describe("issue queries", () => {
       });
 
       expect(result).not.toBeNull();
-      expect(result?.todo).toBeDefined();
+      expect(result?.todo).not.toBeUndefined();
+      expect(result?.todo).not.toBeNull();
+      expect(typeof result?.todo).toBe("object");
       expect(result?.todo.total).toBe(2);
+      expect(result?.done).not.toBeUndefined();
+      expect(result?.done).not.toBeNull();
+      expect(typeof result?.done).toBe("object");
+      expect(result?.done.total).toBe(1);
     });
   });
 
@@ -530,7 +542,11 @@ describe("issue queries", () => {
       });
 
       expect(result.page).toHaveLength(2);
-      expect(result.page[0].author).toBeDefined();
+      expect(result.page[0].author).not.toBeUndefined();
+      expect(typeof result.page[0].author?.name).toBe("string");
+      expect(result.page[0].author?.name.length).toBeGreaterThan(0);
+      expect(typeof result.page[0].content).toBe("string");
+      expect(result.page[0].content.length).toBeGreaterThan(0);
     });
   });
 

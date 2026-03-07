@@ -181,7 +181,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   useEffect(() => {
     if (!resizing || !timelineRef.current) return;
 
-    const handleMouseMove = (_e: MouseEvent) => {
+    const handleMouseMove = () => {
       const container = timelineRef.current;
       if (!container) return;
 

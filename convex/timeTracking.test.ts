@@ -52,7 +52,8 @@ describe("Time Tracking", () => {
       expect(stopResult.totalCost).toBeGreaterThanOrEqual(0);
 
       const entry = await t.run(async (ctx) => ctx.db.get(entryId));
-      expect(entry?.endTime).toBeDefined();
+      expect(entry?.endTime).not.toBeUndefined();
+      expect(typeof entry?.endTime).toBe("number");
       // Since 0 time passed, duration/cost might be 0, but it should be stopped.
       // If we want non-zero, we might need to patch the start time back in time manually?
       await t.run(async (ctx) => {
@@ -565,7 +566,8 @@ describe("Time Tracking", () => {
         rateType: "billable",
       });
       expect(success).toBe(true);
-      expect(rateId).toBeDefined();
+      expect(rateId).not.toBeUndefined();
+      expect(typeof rateId).toBe("string");
 
       // Verify rate was set by checking time entries use it
       const { entryId } = await asUser.mutation(api.timeTracking.startTimer, {});
@@ -685,7 +687,8 @@ describe("Time Tracking", () => {
       expect(billing?.entries).toBe(2);
 
       const userIdStr = userId;
-      expect(billing?.byUser[userIdStr]).toBeDefined();
+      expect(billing?.byUser[userIdStr]).not.toBeUndefined();
+      expect(typeof billing?.byUser[userIdStr]).toBe("object");
       expect(billing?.byUser[userIdStr].revenue).toBeCloseTo(200, 0);
     });
   });

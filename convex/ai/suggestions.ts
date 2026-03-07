@@ -33,7 +33,7 @@ const CLAUDE_HAIKU = "claude-haiku-4-5";
  */
 export const generateDescription = internalAction({
   args: { prompt: v.string() },
-  handler: async (_ctx, args) => {
+  handler: async (...[, args]) => {
     const response = await generateText({
       model: anthropic(CLAUDE_HAIKU),
       prompt: args.prompt,
@@ -54,7 +54,7 @@ const descriptionCache = new ActionCache(components.actionCache, {
  */
 export const generatePriority = internalAction({
   args: { prompt: v.string() },
-  handler: async (_ctx, args) => {
+  handler: async (...[, args]) => {
     const response = await generateText({
       model: anthropic(CLAUDE_HAIKU),
       prompt: args.prompt,
@@ -75,7 +75,7 @@ const priorityCache = new ActionCache(components.actionCache, {
  */
 export const generateLabels = internalAction({
   args: { prompt: v.string() },
-  handler: async (_ctx, args) => {
+  handler: async (...[, args]) => {
     const response = await generateText({
       model: anthropic(CLAUDE_HAIKU),
       prompt: args.prompt,

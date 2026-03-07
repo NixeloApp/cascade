@@ -1,168 +1,179 @@
 /**
  * CHECK: Test Coverage
  *
- * Identifies critical files that should have tests but don't:
- * - convex/*.ts (backend logic)
- * - src/hooks/*.ts (reusable hooks)
- * - src/lib/*.ts (utilities)
+ * Ensures critical files have corresponding test files.
+ * Focuses on:
+ * - Components in src/components/ (except ui/ primitives)
+ * - Hooks in src/hooks/
+ * - Convex functions in convex/ (queries, mutations, actions)
  *
- * A file is considered "covered" if it has a corresponding .test.ts file
- * in the same directory or a __tests__ subdirectory.
- *
- * @strictness INFO - Reports only, does not block CI
+ * WARN-ONLY: Reports issues but doesn't fail validation.
+ * This allows incremental adoption of test coverage requirements.
  */
 
 import fs from "node:fs";
 import path from "node:path";
-import { c, ROOT, relPath } from "./utils.js";
-
-// Configuration
-const CONFIG = {
-  // 'error' | 'warn' | 'off'
-  strictness: "warn",
-};
+import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 // Directories to check for test coverage
-const CRITICAL_DIRS = [
-  { path: "convex", label: "Backend (Convex)" },
-  { path: "src/hooks", label: "Hooks" },
-  { path: "src/lib", label: "Utilities" },
-];
+const COMPONENT_DIRS = ["src/components"];
+const HOOK_DIR = "src/hooks";
+const CONVEX_DIR = "convex";
 
-// Files/patterns to skip (don't require tests)
+// Skip patterns - files that don't need tests
 const SKIP_PATTERNS = [
-  ".test.",
-  ".spec.",
-  ".d.ts",
-  "index.ts", // Re-exports
-  "_generated",
-  "schema.ts", // Convex schema
-  "auth.config.ts",
-  "http.ts", // Convex HTTP router
-  "crons.ts", // Convex crons
-  "validators.ts",
-  "types.ts", // Type definitions
-  "constants.ts", // Constants don't need tests
-  "test-utils.ts",
-  "test-helpers.ts",
-  ".stories.",
+  /\.test\.tsx?$/, // Test files themselves
+  /\.stories\.tsx?$/, // Storybook files
+  /\/ui\//, // UI primitives (tested via integration)
+  /\/index\.tsx?$/, // Re-export barrels
+  /types\.ts$/, // Type definition files
+  /\.d\.ts$/, // Declaration files
+  /constants\.ts$/, // Constants files
+  /_generated/, // Generated files
+  /routeTree\.gen\.ts$/, // Generated route tree
+  /schema\.ts$/, // Convex schema
+  /convex\.config\.ts$/, // Convex config
+  /http\.ts$/, // HTTP routes (tested via integration)
 ];
 
-// Files that are allowed to not have tests (with justification)
-const ALLOWED_NO_TESTS = new Set([
-  // Convex internal/generated
-  "convex/convex.config.ts",
-  // Simple re-exports or thin wrappers
-  "src/lib/utils.ts", // cn() utility, trivial
-  "src/lib/toast.ts", // Thin wrapper over sonner
-  // Configuration files
-  "src/lib/serviceWorker.ts", // Browser API dependent
+// Minimum lines for a file to require a test
+const MIN_LINES_FOR_TEST = 30;
+
+// Known exceptions - files that intentionally don't have tests
+const ALLOWLIST = new Set([
+  // Thin wrappers or config files
+  "src/components/PlateEditor.tsx", // Wrapper around Plate
+  "src/components/BlockNoteEditor.tsx", // Wrapper around BlockNote
 ]);
 
+function shouldRequireTest(filePath, content) {
+  const rel = relPath(filePath);
+
+  // Check skip patterns
+  for (const pattern of SKIP_PATTERNS) {
+    if (pattern.test(rel)) return false;
+  }
+
+  // Check allowlist
+  if (ALLOWLIST.has(rel)) return false;
+
+  // Check minimum lines
+  const lines = content.split("\n").length;
+  if (lines < MIN_LINES_FOR_TEST) return false;
+
+  return true;
+}
+
+function findTestFile(filePath) {
+  const dir = path.dirname(filePath);
+  const base = path.basename(filePath);
+  const ext = path.extname(filePath);
+  const name = base.replace(ext, "");
+
+  // Possible test file locations
+  const testPatterns = [
+    path.join(dir, `${name}.test${ext}`),
+    path.join(dir, `${name}.test.ts`),
+    path.join(dir, `${name}.test.tsx`),
+    path.join(dir, "__tests__", `${name}.test${ext}`),
+    path.join(dir, "__tests__", `${name}.test.ts`),
+    path.join(dir, "__tests__", `${name}.test.tsx`),
+  ];
+
+  for (const testPath of testPatterns) {
+    if (fs.existsSync(testPath)) return testPath;
+  }
+
+  return null;
+}
+
 export function run() {
-  if (CONFIG.strictness === "off") {
-    return {
-      passed: true,
-      errors: 0,
-      detail: "Disabled",
-      messages: [],
-    };
-  }
+  const issues = [];
 
-  let warningCount = 0;
-  const warnings = [];
-  const stats = { checked: 0, covered: 0, missing: 0 };
+  // Check components
+  for (const componentDir of COMPONENT_DIRS) {
+    const fullDir = path.join(ROOT, componentDir);
+    if (!fs.existsSync(fullDir)) continue;
 
-  function reportWarning(filePath, message) {
-    const rel = relPath(filePath);
-    const prefix = CONFIG.strictness === "error" ? `${c.red}ERROR` : `${c.yellow}WARN`;
-    warnings.push(`  ${prefix}${c.reset} ${rel} - ${message}`);
-    warningCount++;
-  }
+    for (const filePath of walkDir(fullDir)) {
+      if (!filePath.endsWith(".tsx")) continue;
 
-  /**
-   * Check if a test file exists for the given source file
-   */
-  function hasTestFile(filePath) {
-    const dir = path.dirname(filePath);
-    const baseName = path.basename(filePath, path.extname(filePath));
-    const ext = path.extname(filePath);
+      const content = fs.readFileSync(filePath, "utf8");
+      if (!shouldRequireTest(filePath, content)) continue;
 
-    // Check for test file in same directory
-    const testPatterns = [
-      path.join(dir, `${baseName}.test${ext}`),
-      path.join(dir, `${baseName}.spec${ext}`),
-      path.join(dir, `${baseName}.test.tsx`),
-      path.join(dir, `${baseName}.spec.tsx`),
-      // Check __tests__ subdirectory
-      path.join(dir, "__tests__", `${baseName}.test${ext}`),
-      path.join(dir, "__tests__", `${baseName}.spec${ext}`),
-    ];
-
-    return testPatterns.some((testPath) => fs.existsSync(testPath));
-  }
-
-  /**
-   * Get all TypeScript files in a directory (non-recursive for hooks/lib)
-   */
-  function getFilesInDir(dirPath, recursive = false) {
-    const files = [];
-
-    if (!fs.existsSync(dirPath)) return files;
-
-    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
-
-    for (const entry of entries) {
-      const fullPath = path.join(dirPath, entry.name);
-
-      if (entry.isDirectory() && recursive) {
-        files.push(...getFilesInDir(fullPath, recursive));
-      } else if (entry.isFile() && (entry.name.endsWith(".ts") || entry.name.endsWith(".tsx"))) {
-        files.push(fullPath);
-      }
-    }
-
-    return files;
-  }
-
-  // Check each critical directory
-  for (const { path: dirRelPath, label } of CRITICAL_DIRS) {
-    const dirPath = path.join(ROOT, dirRelPath);
-
-    if (!fs.existsSync(dirPath)) continue;
-
-    // Convex needs recursive, hooks/lib are flat
-    const recursive = dirRelPath === "convex";
-    const files = getFilesInDir(dirPath, recursive);
-
-    for (const filePath of files) {
-      const rel = relPath(filePath);
-
-      // Skip files that don't need tests
-      if (SKIP_PATTERNS.some((pattern) => rel.includes(pattern))) continue;
-
-      // Skip explicitly allowed files
-      if (ALLOWED_NO_TESTS.has(rel)) continue;
-
-      stats.checked++;
-
-      if (hasTestFile(filePath)) {
-        stats.covered++;
-      } else {
-        stats.missing++;
-        reportWarning(filePath, `Missing test file (${label})`);
+      const testFile = findTestFile(filePath);
+      if (!testFile) {
+        issues.push({
+          file: relPath(filePath),
+          message: "Component missing test file",
+        });
       }
     }
   }
 
-  const coveragePercent =
-    stats.checked > 0 ? Math.round((stats.covered / stats.checked) * 100) : 100;
+  // Check hooks
+  const hooksDir = path.join(ROOT, HOOK_DIR);
+  if (fs.existsSync(hooksDir)) {
+    for (const filePath of walkDir(hooksDir)) {
+      if (!filePath.endsWith(".ts") && !filePath.endsWith(".tsx")) continue;
 
+      const content = fs.readFileSync(filePath, "utf8");
+      if (!shouldRequireTest(filePath, content)) continue;
+
+      // Only check files that export hooks (use* functions)
+      if (!/export\s+(?:function|const)\s+use[A-Z]/.test(content)) continue;
+
+      const testFile = findTestFile(filePath);
+      if (!testFile) {
+        issues.push({
+          file: relPath(filePath),
+          message: "Hook missing test file",
+        });
+      }
+    }
+  }
+
+  // Check Convex functions
+  const convexDir = path.join(ROOT, CONVEX_DIR);
+  if (fs.existsSync(convexDir)) {
+    for (const filePath of walkDir(convexDir)) {
+      if (!filePath.endsWith(".ts")) continue;
+
+      const content = fs.readFileSync(filePath, "utf8");
+      if (!shouldRequireTest(filePath, content)) continue;
+
+      // Only check files that export queries/mutations/actions
+      if (
+        !/export\s+const\s+\w+\s*=\s*(?:query|mutation|action|internalQuery|internalMutation|internalAction)\(/.test(
+          content,
+        )
+      )
+        continue;
+
+      const testFile = findTestFile(filePath);
+      if (!testFile) {
+        issues.push({
+          file: relPath(filePath),
+          message: "Convex function missing test file",
+        });
+      }
+    }
+  }
+
+  const messages = issues.map(
+    (issue) => `  ${c.red}ERROR${c.reset} ${issue.file} - ${issue.message}`,
+  );
+
+  if (issues.length > 0) {
+    console.log(`${c.red}Found ${issues.length} file(s) missing tests:${c.reset}`);
+  }
+
+  // Warn-only: always pass but report issues as warnings
   return {
-    passed: CONFIG.strictness === "warn" ? true : warningCount === 0,
-    errors: CONFIG.strictness === "error" ? warningCount : 0,
-    warnings: CONFIG.strictness === "warn" ? warningCount : 0,
-    detail: `${stats.missing} missing tests (${coveragePercent}% covered)`,
-    messages: warnings.slice(0, 20), // Limit output to first 20
+    passed: true,
+    errors: 0,
+    warnings: issues.length,
+    detail: issues.length > 0 ? `${issues.length} file(s) missing tests (warn-only)` : null,
+    messages,
   };
 }

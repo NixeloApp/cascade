@@ -31,7 +31,8 @@ describe("Notifications", () => {
 
       expect(notifications.page).toHaveLength(1);
       expect(notifications.page[0]?.type).toBe("issue_assigned");
-      expect(notifications.page[0]?.actorName).toBeDefined();
+      expect(notifications.page[0]?.actorName).not.toBeUndefined();
+      expect(typeof notifications.page[0]?.actorName).toBe("string");
     });
 
     it("should respect limit parameter", async () => {

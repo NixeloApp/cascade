@@ -35,7 +35,8 @@ describe("customFields", () => {
         isRequired: false,
       });
 
-      expect(fieldId).toBeDefined();
+      expect(fieldId).not.toBeUndefined();
+      expect(typeof fieldId).toBe("string");
 
       const fields = await asUser.query(api.customFields.list, { projectId });
       expect(fields.length).toBe(1);
@@ -100,7 +101,8 @@ describe("customFields", () => {
           options: fieldType === "select" || fieldType === "multiselect" ? ["A", "B"] : undefined,
           isRequired: false,
         });
-        expect(fieldId).toBeDefined();
+        expect(fieldId).not.toBeUndefined();
+        expect(typeof fieldId).toBe("string");
       }
 
       const fields = await asUser.query(api.customFields.list, { projectId });
@@ -547,7 +549,8 @@ describe("customFields", () => {
       });
 
       const values = await asUser.query(api.customFields.getValuesForIssue, { issueId });
-      expect(values[0].field).toBeDefined();
+      expect(values[0].field).not.toBeUndefined();
+      expect(values[0].field).not.toBeNull();
       expect(values[0].field?.name).toBe("Priority");
       expect(values[0].field?.fieldType).toBe("select");
       expect(values[0].field?.options).toEqual(["High", "Low"]);
