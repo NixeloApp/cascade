@@ -339,8 +339,9 @@ export function CreateProjectFromTemplate({
     }
 
     setIsSubmitting(true);
+    let projectId: Id<"projects">;
     try {
-      const { projectId } = await createProject({
+      const result = await createProject({
         templateId: selectedTemplateId,
         projectName: projectName.trim(),
         projectKey: projectKey.trim().toUpperCase(),
@@ -348,19 +349,26 @@ export function CreateProjectFromTemplate({
         organizationId,
         workspaceId: selectedWorkspaceId,
       });
+      projectId = result.projectId;
+    } catch (error) {
+      showError(error, "Failed to create project");
+      setIsSubmitting(false);
+      return;
+    }
 
-      showSuccess("Project created successfully");
+    // Project created successfully - callback errors are separate
+    showSuccess("Project created successfully");
+    try {
       await onProjectCreated?.({
         projectId,
         projectKey: projectKey.trim().toUpperCase(),
       });
-      onOpenChange(false);
-      resetForm();
     } catch (error) {
-      showError(error, "Failed to create project");
-    } finally {
-      setIsSubmitting(false);
+      showError(error, "Project created but callback failed");
     }
+    onOpenChange(false);
+    resetForm();
+    setIsSubmitting(false);
   };
 
   const resetForm = () => {

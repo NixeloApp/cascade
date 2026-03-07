@@ -110,10 +110,8 @@ function OnboardingPage() {
     });
   };
 
-  const handleProjectCreated = () => {
-    // Project was created, complete onboarding
-    return handleComplete();
-  };
+  // Called when project is created - completes onboarding (projectId not used here)
+  const handleProjectCreated = () => handleComplete();
 
   // Loading state
   if (step === "loading") {
