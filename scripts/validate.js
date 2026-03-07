@@ -233,8 +233,12 @@ for (let i = 0; i < results.length; i++) {
   console.log(formatResultLine(i, checks.length, results[i]));
 }
 
-// Print detailed messages only for failed checks.
+// Print detailed messages for failed checks and warnings.
 const failedResults = results.filter((r) => !r.passed && r.messages && r.messages.length > 0);
+const warningResults = results.filter(
+  (r) => r.passed && r.warnings > 0 && r.messages && r.messages.length > 0,
+);
+
 if (failedResults.length > 0) {
   console.log(`\n${c.bold}Failed checks:${c.reset}`);
   for (const result of failedResults) {
@@ -244,6 +248,19 @@ if (failedResults.length > 0) {
 
   for (const result of failedResults) {
     console.log(`\n${c.bold}── ${result.name} details ──${c.reset}`);
+    for (const msg of result.messages) console.log(msg);
+  }
+}
+
+if (warningResults.length > 0) {
+  console.log(`\n${c.bold}Warnings:${c.reset}`);
+  for (const result of warningResults) {
+    const detail = result.detail ? ` (${result.detail})` : "";
+    console.log(`  ${c.yellow}-${c.reset} ${result.name}${detail}`);
+  }
+
+  for (const result of warningResults) {
+    console.log(`\n${c.bold}── ${result.name} warnings ──${c.reset}`);
     for (const msg of result.messages) console.log(msg);
   }
 }

@@ -51,8 +51,63 @@ function findUnusedParams(content) {
   const issues = [];
   const lines = content.split("\n");
 
+  // Track multi-line comment state
+  let inMultiLineComment = false;
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+
+    // Handle multi-line comments
+    let lineToCheck = line;
+    let commentCheckPos = 0;
+
+    // Process the line character by character to track comment state
+    while (commentCheckPos < lineToCheck.length) {
+      if (inMultiLineComment) {
+        const endPos = lineToCheck.indexOf("*/", commentCheckPos);
+        if (endPos === -1) {
+          // Entire remaining line is in comment
+          lineToCheck = lineToCheck.slice(0, commentCheckPos);
+          break;
+        } else {
+          // Remove commented portion
+          lineToCheck =
+            lineToCheck.slice(0, commentCheckPos) +
+            " ".repeat(endPos - commentCheckPos + 2) +
+            lineToCheck.slice(endPos + 2);
+          commentCheckPos = endPos + 2;
+          inMultiLineComment = false;
+        }
+      } else {
+        const startPos = lineToCheck.indexOf("/*", commentCheckPos);
+        const singleLinePos = lineToCheck.indexOf("//", commentCheckPos);
+
+        // Single-line comment takes rest of line
+        if (singleLinePos !== -1 && (startPos === -1 || singleLinePos < startPos)) {
+          lineToCheck = lineToCheck.slice(0, singleLinePos);
+          break;
+        }
+
+        if (startPos === -1) break;
+
+        // Check if multi-line comment ends on same line
+        const endPos = lineToCheck.indexOf("*/", startPos + 2);
+        if (endPos === -1) {
+          // Comment continues to next line
+          lineToCheck = lineToCheck.slice(0, startPos);
+          inMultiLineComment = true;
+          break;
+        } else {
+          // Comment ends on same line - blank it out
+          lineToCheck =
+            lineToCheck.slice(0, startPos) +
+            " ".repeat(endPos - startPos + 2) +
+            lineToCheck.slice(endPos + 2);
+          commentCheckPos = endPos + 2;
+        }
+      }
+    }
+
     const patterns = [
       {
         regex: /(\w+):\s*(_[a-zA-Z]\w*)\s*(?:=\s*[^,}]+)?/g,
@@ -60,7 +115,8 @@ function findUnusedParams(content) {
           `Unused parameter: "${propName}" renamed to "${varName}". Consider removing if not needed.`,
       },
       {
-        regex: /(?:^|[(,]\s*)(_[a-zA-Z]\w*)\s*(?::|[=,)])/g,
+        // Match underscore params: at start of line (with optional indent), after ( or ,
+        regex: /(?:^[\s]*|[(,]\s*)(_[a-zA-Z]\w*)\s*(?::|[=,)])/g,
         createMessage: ([, varName]) =>
           `Underscore-prefixed parameter "${varName}". Remove it or restructure the callback to avoid unused positional args.`,
       },
@@ -79,22 +135,15 @@ function findUnusedParams(content) {
     for (const { regex, createMessage } of patterns) {
       regex.lastIndex = 0;
 
-      let match = regex.exec(line);
+      let match = regex.exec(lineToCheck);
       while (match !== null) {
-        // Skip if it's in a comment
-        const beforeMatch = line.slice(0, match.index);
-        if (beforeMatch.includes("//") || beforeMatch.includes("/*")) {
-          match = regex.exec(line);
-          continue;
-        }
-
         issues.push({
           line: i + 1,
           column: match.index + 1,
           message: createMessage(match),
         });
 
-        match = regex.exec(line);
+        match = regex.exec(lineToCheck);
       }
     }
   }

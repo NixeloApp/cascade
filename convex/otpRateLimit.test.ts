@@ -24,6 +24,13 @@ vi.mock("./email", () => ({
   sendEmail: vi.fn().mockResolvedValue({ success: true }),
 }));
 
+// Minimal type for the sendVerificationRequest context parameter
+type MockAuthContext = {
+  runMutation: ReturnType<typeof vi.fn>;
+  db: { query: () => { withIndex: () => { first: () => Promise<null> } } };
+  scheduler: Record<string, never>;
+};
+
 describe("OTP Rate Limiting", () => {
   it("should enforce rate limiting on password reset requests", async () => {
     const mockRunMutation = vi.fn().mockResolvedValue(undefined);
@@ -35,7 +42,7 @@ describe("OTP Rate Limiting", () => {
       }),
     };
     const mockScheduler = {};
-    const mockCtx = {
+    const mockCtx: MockAuthContext = {
       runMutation: mockRunMutation,
       db: mockDb,
       scheduler: mockScheduler,
@@ -57,8 +64,8 @@ describe("OTP Rate Limiting", () => {
     mockRunMutation.mockRejectedValueOnce(new Error("Rate limit exceeded"));
 
     // Expect it to throw
-    await expect(
-      sendVerificationRequest({ identifier: email, token }, mockCtx as any),
-    ).rejects.toThrow("Too many password reset requests. Please try again later.");
+    await expect(sendVerificationRequest({ identifier: email, token }, mockCtx)).rejects.toThrow(
+      "Too many password reset requests. Please try again later.",
+    );
   });
 });

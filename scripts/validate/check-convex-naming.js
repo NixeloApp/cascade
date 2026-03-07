@@ -18,11 +18,10 @@
  * | Set value    | set{Property}        | setStatus, setValue             |
  *
  * Anti-patterns flagged:
- * - Verbs like "fetch", "make", "add" for creation (use "create")
- * - "find" for queries (use "get" or "list")
+ * - Verbs like "fetch", "make" for creation (use "create")
  * - Non-descriptive names that don't indicate operation type
  *
- * Enforced. Convex naming issues are reported as plain errors.
+ * Note: "add" (addMember, addComment) and "find" are allowed for specific use cases.
  */
 
 import fs from "node:fs";
