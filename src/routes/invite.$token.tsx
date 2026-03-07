@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
-import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useAuthenticatedMutation, usePublicQuery } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 export const Route = createFileRoute("/invite/$token")({
   component: InviteRoute,
@@ -30,8 +30,8 @@ function InviteRoute() {
   const [acceptError, setAcceptError] = useState<string | null>(null);
   const [inviteAccepted, setInviteAccepted] = useState(false);
 
-  // Get invite details
-  const invite = useAuthenticatedQuery(api.invites.getInviteByToken, { token });
+  // Get invite details (public endpoint - works for unauthenticated users)
+  const invite = usePublicQuery(api.invites.getInviteByToken, { token });
   const { mutate: acceptInvite } = useAuthenticatedMutation(api.invites.acceptInvite);
 
   const goToHome = () => {
