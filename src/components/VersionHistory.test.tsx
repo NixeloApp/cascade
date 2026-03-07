@@ -65,22 +65,22 @@ describe("VersionHistory", () => {
     });
   });
 
-  it("shows side-by-side diff panel when two versions are selected for compare", async () => {
+  it("orders compared snapshots by version number instead of click order", async () => {
     const user = userEvent.setup();
     render(<VersionHistory documentId={documentId} open onOpenChange={vi.fn()} />);
 
     const compareButtons = await screen.findAllByRole("button", { name: "Compare" });
     expect(compareButtons).toHaveLength(2);
 
-    await user.click(compareButtons[0]);
     await user.click(compareButtons[1]);
+    await user.click(compareButtons[0]);
 
     await waitFor(() => {
       expect(screen.getByText("Diff View")).toBeInTheDocument();
-      expect(screen.getByText(/Older: v2 Previous Title/i)).toBeInTheDocument();
-      expect(screen.getByText(/Newer: v1 Initial Title/i)).toBeInTheDocument();
-      expect(screen.getByText(/old text/i)).toBeInTheDocument();
+      expect(screen.getByText(/Older: v1 Initial Title/i)).toBeInTheDocument();
+      expect(screen.getByText(/Newer: v2 Previous Title/i)).toBeInTheDocument();
       expect(screen.getByText(/new text/i)).toBeInTheDocument();
+      expect(screen.getByText(/old text/i)).toBeInTheDocument();
     });
   });
 });

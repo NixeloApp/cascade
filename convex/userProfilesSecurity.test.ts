@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
 import { api } from "./_generated/api";
+import { HOUR } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 
@@ -63,7 +64,7 @@ test("listTimeEntries leaks hourly rate to other users", async () => {
 
     await ctx.db.insert("timeEntries", {
       userId,
-      startTime: Date.now() - 3600000,
+      startTime: Date.now() - HOUR,
       duration: 3600,
       date: Date.now(),
       hourlyRate: 250, // Sensitive!

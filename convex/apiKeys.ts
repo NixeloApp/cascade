@@ -289,7 +289,7 @@ export const remove = authenticatedMutation({
   },
   returns: v.object({ success: v.literal(true), deleted: v.literal(true) }),
   handler: async (ctx, args) => {
-    const _key = requireOwned(await ctx.db.get(args.keyId), ctx.userId, "apiKey");
+    requireOwned(await ctx.db.get(args.keyId), ctx.userId, "apiKey");
 
     await ctx.db.delete(args.keyId);
 
@@ -310,7 +310,7 @@ export const update = authenticatedMutation({
   },
   returns: v.object({ success: v.literal(true) }),
   handler: async (ctx, args) => {
-    const _key = requireOwned(await ctx.db.get(args.keyId), ctx.userId, "apiKey");
+    const key = requireOwned(await ctx.db.get(args.keyId), ctx.userId, "apiKey");
 
     const updates: Partial<{
       name: string;
@@ -322,7 +322,7 @@ export const update = authenticatedMutation({
     if (args.name !== undefined) updates.name = args.name;
     if (args.scopes !== undefined) {
       // Validate new scopes against user permissions
-      await validateKeyGeneration(ctx, _key.projectId, args.scopes);
+      await validateKeyGeneration(ctx, key.projectId, args.scopes);
       updates.scopes = args.scopes;
     }
     if (args.rateLimit !== undefined) {

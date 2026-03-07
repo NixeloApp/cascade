@@ -82,7 +82,7 @@ const getGitHubOAuthConfig = () => {
  * @param _request - The incoming HTTP request
  * @returns A Promise resolving to a Redirect Response
  */
-export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
+export const initiateAuthHandler = () => {
   if (!isGitHubOAuthConfigured()) {
     return Promise.resolve(
       jsonResponse(
@@ -239,7 +239,7 @@ async function fetchGitHubUserInfo(accessToken: string) {
  * @throws {ConvexError} "oauth" - If code exchange fails or state is invalid.
  * @throws {ConvexError} "github" - If user info fetch fails.
  */
-export const handleCallbackHandler = async (_ctx: ActionCtx, request: Request) => {
+export const handleCallbackHandler = async (...[, request]: [ActionCtx, Request]) => {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");

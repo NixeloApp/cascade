@@ -33,10 +33,8 @@ type TimeEntryWithHours = NonNullable<TimesheetData>["byDay"][string][number];
 /** Weekly timesheet grid showing time entries grouped by day. */
 export function Timesheet() {
   const timesheet = useAuthenticatedQuery(api.timeTracking.getCurrentWeekTimesheet, {});
-  const { mutate: _updateEntry } = useAuthenticatedMutation(api.timeTracking.updateTimeEntry);
   const { mutate: deleteEntry } = useAuthenticatedMutation(api.timeTracking.deleteTimeEntry);
 
-  const [_editingEntry, _setEditingEntry] = useState<string | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<Id<"timeEntries"> | null>(null);
 

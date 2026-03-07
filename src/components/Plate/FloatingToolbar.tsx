@@ -91,7 +91,7 @@ function getSelectionRect(): DOMRect | null {
  * Must be rendered inside Plate context
  */
 export function FloatingToolbar() {
-  const _editor = useEditorRef();
+  useEditorRef();
   const selection = useEditorSelection();
   const [open, setOpen] = useState(false);
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);

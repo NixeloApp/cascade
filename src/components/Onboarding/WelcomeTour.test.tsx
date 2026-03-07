@@ -27,7 +27,6 @@ vi.mock("convex/react", () => ({
  * via manual/integration testing and e2e tests.
  */
 
-import { useMutation } from "convex/react";
 // Import after mocking
 import { WelcomeTour } from "./WelcomeTour";
 

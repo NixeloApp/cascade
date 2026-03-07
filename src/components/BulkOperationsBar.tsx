@@ -50,7 +50,6 @@ export function BulkOperationsBar({
   const startDateId = useId();
   const dueDateId = useId();
 
-  const _project = useAuthenticatedQuery(api.projects.getProject, { id: projectId });
   const sprints = useAuthenticatedQuery(api.sprints.listByProject, { projectId });
   const members = useAuthenticatedQuery(api.projectMembers.list, { projectId });
 

@@ -148,7 +148,7 @@ export const removeAttachment = issueMutation({
  */
 export const getIssueAttachments = issueQuery({
   args: {},
-  handler: async (ctx, _args) => {
+  handler: async (ctx) => {
     const issue = ctx.issue;
     if (!issue?.attachments) {
       return [];

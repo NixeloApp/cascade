@@ -9,7 +9,7 @@
  * 2. In e2e tests: getByTestId must use TEST_IDS.X.Y (not string literals)
  * 3. In e2e specs: getByTestId should be in page objects, not directly in spec files
  *
- * @strictness STRICT - Blocks CI. Test IDs must use centralized constants.
+ * Enforced. Test ID issues are reported as plain errors.
  */
 
 import fs from "node:fs";
@@ -29,19 +29,12 @@ export function run() {
   ];
 
   let errorCount = 0;
-  let warnCount = 0;
   const messages = [];
 
   function reportError(filePath, line, col, message) {
     const rel = relPath(filePath);
     messages.push(`  ${c.red}ERROR${c.reset} ${rel}:${line}:${col} - ${message}`);
     errorCount++;
-  }
-
-  function reportWarn(filePath, line, col, message) {
-    const rel = relPath(filePath);
-    messages.push(`  ${c.yellow}WARN${c.reset} ${rel}:${line}:${col} - ${message}`);
-    warnCount++;
   }
 
   /**
@@ -173,7 +166,6 @@ export function run() {
 
   /**
    * Check if getByTestId is used directly in spec files (should be in page objects)
-   * NOTE: This is a warning, not error - gradual migration to page object pattern
    */
   function checkTestIdLocation(filePath) {
     const rel = relPath(filePath);
@@ -188,7 +180,7 @@ export function run() {
         const expr = node.expression;
         if (ts.isPropertyAccessExpression(expr) && expr.name.getText() === "getByTestId") {
           const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
-          reportWarn(
+          reportError(
             filePath,
             line + 1,
             character + 1,
@@ -215,14 +207,10 @@ export function run() {
     checkTestIdLocation(file);
   }
 
-  const detail = [];
-  if (errorCount > 0) detail.push(`${errorCount} error(s)`);
-  if (warnCount > 0) detail.push(`${warnCount} warning(s)`);
-
   return {
     passed: errorCount === 0,
     errors: errorCount,
-    detail: detail.length > 0 ? detail.join(", ") : undefined,
+    detail: errorCount > 0 ? `${errorCount} test ID issue(s)` : undefined,
     messages: messages.length > 0 ? messages : undefined,
   };
 }

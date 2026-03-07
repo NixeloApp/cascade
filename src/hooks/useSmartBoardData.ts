@@ -340,17 +340,14 @@ export function useSmartBoardData({
     return { timestamp: oldest.updatedAt, id: oldest._id.toString() };
   }, [additionalDoneIssues, smartData]);
 
-  const loadMoreDone = useCallback(
-    (_status: string) => {
-      // Double-check with ref and state to prevent race conditions from rapid clicks
-      if (loadingRef.current || isLoadingMore) return;
+  const loadMoreDone = useCallback(() => {
+    // Double-check with ref and state to prevent race conditions from rapid clicks
+    if (loadingRef.current || isLoadingMore) return;
 
-      loadingRef.current = true;
-      setIsLoadingMore(true);
-      setLoadMoreCursor(oldestIssueCursor);
-    },
-    [isLoadingMore, oldestIssueCursor],
-  );
+    loadingRef.current = true;
+    setIsLoadingMore(true);
+    setLoadMoreCursor(oldestIssueCursor);
+  }, [isLoadingMore, oldestIssueCursor]);
 
   return {
     issuesByStatus,

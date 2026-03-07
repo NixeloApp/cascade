@@ -15,7 +15,7 @@
  * - Auto-generated files (routeTree.gen.ts)
  * - Type-only exports (interfaces, types)
  *
- * @strictness MEDIUM - Warns about missing JSDoc but doesn't block CI.
+ * Enforced. Missing JSDoc is reported as a plain error.
  */
 
 import fs from "node:fs";
@@ -171,9 +171,8 @@ export function run() {
   // Note: We'd need to count all exports for accurate %, but for now report count
 
   return {
-    passed: true, // Warnings only, doesn't block
-    errors: 0,
-    warnings: violations.length,
+    passed: violations.length === 0,
+    errors: violations.length,
     detail: violations.length > 0 ? `${violations.length} exports missing JSDoc` : null,
     messages,
   };

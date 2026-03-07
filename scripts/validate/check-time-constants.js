@@ -2,7 +2,7 @@
  * CHECK: Time Constants
  * Enforces use of time constants from @convex/lib/timeUtils instead of magic numbers.
  *
- * @strictness MEDIUM - Reports warnings. Existing violations in allowlist.
+ * Enforced. Magic time values are reported as plain errors.
  *
  * Detects patterns like:
  * - Date.now() - 3600000 (should use HOUR)
@@ -68,8 +68,8 @@ const ALLOWLIST = [
 export function run() {
   const DIRS = [path.join(ROOT, "src"), path.join(ROOT, "convex")];
 
-  let warningCount = 0;
-  const warnings = [];
+  let issueCount = 0;
+  const messages = [];
 
   function checkFile(filePath) {
     const rel = relPath(filePath);
@@ -96,16 +96,16 @@ export function run() {
         const num = parseInt(match[1], 10);
         const constant = TIME_CONSTANTS[num];
         if (constant) {
-          warnings.push(
-            `  ${c.yellow}WARN${c.reset} ${rel}:${lineNum} - Use ${constant} from @convex/lib/timeUtils instead of ${num}`,
+          messages.push(
+            `  ${c.red}ERROR${c.reset} ${rel}:${lineNum} - Use ${constant} from @convex/lib/timeUtils instead of ${num}`,
           );
-          warningCount++;
+          issueCount++;
         } else if (num >= 60000) {
           // Any number >= 1 minute is suspicious
-          warnings.push(
-            `  ${c.yellow}WARN${c.reset} ${rel}:${lineNum} - Consider using time constants from @convex/lib/timeUtils instead of ${num}`,
+          messages.push(
+            `  ${c.red}ERROR${c.reset} ${rel}:${lineNum} - Consider using time constants from @convex/lib/timeUtils instead of ${num}`,
           );
-          warningCount++;
+          issueCount++;
         }
       }
 
@@ -114,10 +114,10 @@ export function run() {
         // Reset regex state
         pattern.lastIndex = 0;
         if (pattern.test(line)) {
-          warnings.push(
-            `  ${c.yellow}WARN${c.reset} ${rel}:${lineNum} - Use ${suggestion} from @convex/lib/timeUtils instead of multiplication`,
+          messages.push(
+            `  ${c.red}ERROR${c.reset} ${rel}:${lineNum} - Use ${suggestion} from @convex/lib/timeUtils instead of multiplication`,
           );
-          warningCount++;
+          issueCount++;
         }
       }
 
@@ -130,10 +130,10 @@ export function run() {
         const num = parseInt(match[2], 10);
         const constant = TIME_CONSTANTS[num];
         if (constant) {
-          warnings.push(
-            `  ${c.yellow}WARN${c.reset} ${rel}:${lineNum} - Use ${constant} from @convex/lib/timeUtils instead of ${num}`,
+          messages.push(
+            `  ${c.red}ERROR${c.reset} ${rel}:${lineNum} - Use ${constant} from @convex/lib/timeUtils instead of ${num}`,
           );
-          warningCount++;
+          issueCount++;
         }
       }
     });
@@ -146,15 +146,14 @@ export function run() {
   }
 
   let detail = null;
-  if (warningCount > 0) {
-    detail = `${warningCount} magic time number(s)`;
+  if (issueCount > 0) {
+    detail = `${issueCount} magic time number(s)`;
   }
 
   return {
-    passed: true, // MEDIUM strictness - warnings don't fail CI
-    errors: 0,
-    warnings: warningCount,
+    passed: issueCount === 0,
+    errors: issueCount,
     detail,
-    messages: warnings.slice(0, 20), // Limit output
+    messages: messages.slice(0, 20),
   };
 }

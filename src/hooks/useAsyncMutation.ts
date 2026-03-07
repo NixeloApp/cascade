@@ -3,7 +3,6 @@
  */
 
 import { useState } from "react";
-import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError } from "../lib/toast";
 
 export interface UseAsyncMutationOptions<TResult> {

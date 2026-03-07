@@ -1006,7 +1006,7 @@ const applicationTables = {
     userId: v.id("users"), // User to remind
     reminderType: reminderTypes,
     minutesBefore: v.number(), // e.g., 15, 30, 60, 1440 (1 day)
-    scheduledFor: v.number(), // Computed: event.startTime - minutesBefore * 60 * 1000
+    scheduledFor: v.number(), // Computed: event.startTime - minutesBefore * MINUTE
     sent: v.boolean(), // Has reminder been sent?
     sentAt: v.optional(v.number()), // When reminder was sent
   })

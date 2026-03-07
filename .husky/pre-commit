@@ -1,2 +1,3 @@
 corepack pnpm lint-staged
-corepack pnpm run check
+corepack pnpm run typecheck
+corepack pnpm run biome:check

@@ -123,8 +123,6 @@ export const initializeBuiltInTemplates = mutation({
   args: {},
   returns: v.object({ success: v.boolean(), initialized: v.boolean() }),
   handler: async (ctx) => {
-    const _now = Date.now();
-
     // Check if templates already exist
     const existing = await ctx.db
       .query("projectTemplates")
