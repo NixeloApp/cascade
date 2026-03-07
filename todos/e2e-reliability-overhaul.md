@@ -2,8 +2,8 @@
 
 > **Priority:** P0 (Highest)
 > **Effort:** Large
-> **Status:** In Progress (local full-suite now green; hardening work remains)
-> **Last Updated:** 2026-03-06
+> **Status:** In Progress (latest local full-suite regressed: 2 Playwright failures; validation also failing)
+> **Last Updated:** 2026-03-07
 
 ## Objective
 
@@ -89,13 +89,19 @@ Make E2E tests deterministic and locally verifiable with one rule: run the full 
 ## Acceptance Criteria
 
 - [ ] No unjustified `waitForTimeout` usage across E2E suite.
-- [x] Full local suite run reports 100% pass.
+- [ ] Full local suite run reports 100% pass.
 - [ ] Core flows (`auth`, `issue create/edit`, `board drag/drop`, `docs`, `search`) are stable.
 - [ ] E2E authoring standard is documented and enforced in reviews.
 
 ## Remaining Work (Execution Backlog)
 
 This is the concrete "what's left" list for reliability hardening after the latest green full-suite run.
+
+### Execution Priority Note
+
+- focus on validation failures first before chasing additional E2E-only symptoms, because the validator is surfacing broader consistency debt that will keep leaking into tests.
+- do not land narrow one-off fixes purely to make a failing check go green; prefer reusable page-object, helper, selector-contract, and UI-state abstractions that remove the whole class of failure.
+- treat each failure as an architecture opportunity: simplify control flow, make completion boundaries explicit, reduce duplicated test logic, and leave the touched code clearer than it was before.
 
 1. Deterministic post-action assertions in critical flows:
    - convert any remaining action-only steps into `action -> deterministic wait -> outcome assert`.
@@ -162,6 +168,15 @@ This is the concrete "what's left" list for reliability hardening after the late
 5. Evidence updates after every full run:
    - append the latest pass/fail outcome and duration in this file.
    - record failing spec names and immediate next action when the suite is not 100% pass.
+   - latest full run on `2026-03-07` regressed to `157 passed`, `2 failed`, `1 did not run` in `8.4m`.
+   - immediate next actions:
+     - `e2e/settings/billing.spec.ts`: inspect whether the billable checkbox was removed from the start-timer dialog or the page object is opening/asserting the wrong dialog state; then align the spec/helper with the current billing UX contract.
+     - `e2e/signout.spec.ts`: verify the intended post-signout destination (`/`, `/signin`, or app shell with cleared auth), then fix either the redirect logic or the assertion contract so signout proves auth was actually cleared.
+   - adjacent non-E2E verification on `2026-03-07`:
+     - `pnpm run validate` failed on `Unused parameters` with `189 underscore-prefixed binding(s)`; `Test coverage` still reports `164 file(s) missing tests` as warn-only.
+     - `pnpm run test:run` passed: `371 passed`, `5 skipped`.
+     - `pnpm run test:convex:run` passed: `250 passed`, `3 skipped`.
+     - backend/unit suites are currently green, but they still emit expected-looking stderr from negative-path tests and scheduled-job env validation (`BOT_SERVICE_URL`, OAuth error-path logs, digest-email render error logs), so those logs should not be confused with actual test failures.
 
 ## Current Hardening Notes
 
@@ -358,11 +373,16 @@ Full-suite evidence in this TODO is considered stale if older than 24 hours.
 - Run command:
   - `pnpm exec playwright test --reporter=line`
 - Run date:
-  - `2026-03-06`
+  - `2026-03-07`
 - Outcome:
-  - `155 passed (5.9m)`, `0 skipped`
+  - `157 passed`, `2 failed`, `1 did not run` `(8.4m)`
+- Failing specs:
+  - `e2e/settings/billing.spec.ts:34` - `billing enabled shows billable checkbox on time entries`
+  - `e2e/signout.spec.ts:29` - `sign out returns to landing page and allows signing back in`
+- Immediate next action:
+  - root-cause the billing dialog mismatch and signout redirect/auth-clear contract before trusting targeted reruns as release evidence.
 - Gate interpretation:
-  - current local suite is green; refresh is required when evidence is older than 24 hours (see `Evidence Freshness Guard`).
+  - current local suite is not green; release-gate evidence is blocked until the two Playwright failures are fixed and the full run is repeated.
 
 ## Related Files
 
