@@ -135,7 +135,7 @@ export interface SmartBoardData {
   >;
   isLoading: boolean;
   doneStatusesWithMore: string[];
-  loadMoreDone: (status: string) => void;
+  loadMoreDone: () => void;
   isLoadingMore: boolean;
   hiddenDoneCount: number;
   workflowStates?: {

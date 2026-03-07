@@ -82,7 +82,7 @@ const getGitHubOAuthConfig = () => {
  * @param _request - The incoming HTTP request
  * @returns A Promise resolving to a Redirect Response
  */
-export const initiateAuthHandler = () => {
+export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
   if (!isGitHubOAuthConfigured()) {
     return Promise.resolve(
       jsonResponse(

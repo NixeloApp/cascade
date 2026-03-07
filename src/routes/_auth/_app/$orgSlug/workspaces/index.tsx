@@ -24,8 +24,7 @@ function WorkspacesList() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const workspaces = useAuthenticatedQuery(api.workspaces.list, { organizationId });
 
-  const handleWorkspaceCreated = (workspaceId: string, slug: string) => {
-    void workspaceId;
+  const handleWorkspaceCreated = (_workspaceId: string, slug: string) => {
     navigate({
       to: ROUTES.workspaces.teams.list.path,
       params: { orgSlug, workspaceSlug: slug },

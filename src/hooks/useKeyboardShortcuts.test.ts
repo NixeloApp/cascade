@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { SECOND } from "@/lib/time";
 import { renderHook } from "@/test/custom-render";
 import {
   getSequenceDisplay,
@@ -269,7 +270,7 @@ describe("useKeyboardShortcutsWithSequences", () => {
 
       // Press 'g' then 'h' quickly
       dispatchKeyEvent("g");
-      vi.advanceTimersByTime(100);
+      vi.advanceTimersByTime(0.1 * SECOND);
       dispatchKeyEvent("h");
 
       expect(handler).toHaveBeenCalled();
@@ -283,7 +284,7 @@ describe("useKeyboardShortcutsWithSequences", () => {
 
       // Press 'g' then wait too long before 'h'
       dispatchKeyEvent("g");
-      vi.advanceTimersByTime(1500); // More than SEQUENCE_TIMEOUT (SECOND)
+      vi.advanceTimersByTime(1.5 * SECOND); // More than SEQUENCE_TIMEOUT (SECOND)
       dispatchKeyEvent("h");
 
       expect(handler).not.toHaveBeenCalled();
@@ -297,7 +298,7 @@ describe("useKeyboardShortcutsWithSequences", () => {
 
       // Press 'g' then 'k' (wrong second key)
       dispatchKeyEvent("g");
-      vi.advanceTimersByTime(100);
+      vi.advanceTimersByTime(0.1 * SECOND);
       dispatchKeyEvent("k");
 
       expect(handler).not.toHaveBeenCalled();

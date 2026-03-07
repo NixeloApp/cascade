@@ -6,7 +6,7 @@ if (!modulePath) {
 }
 
 const module = await import(modulePath);
-const result = module.run();
+const result = await module.run();
 
 console.log(JSON.stringify(result));
 process.exit((result.errors ?? 0) > 0 ? 1 : 0);

@@ -2,7 +2,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
 import { useMutation, useQuery } from "convex/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@/test/custom-render";
+import { render, screen, waitFor, within } from "@/test/custom-render";
 import { VersionHistory } from "./VersionHistory";
 
 vi.mock("convex/react", () => ({
@@ -77,10 +77,16 @@ describe("VersionHistory", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Diff View")).toBeInTheDocument();
-      expect(screen.getByText(/Older: v1 Initial Title/i)).toBeInTheDocument();
-      expect(screen.getByText(/Newer: v2 Previous Title/i)).toBeInTheDocument();
-      expect(screen.getByText(/new text/i)).toBeInTheDocument();
-      expect(screen.getByText(/old text/i)).toBeInTheDocument();
     });
+
+    // Verify older pane (v1) contains its correct content
+    const olderHeading = screen.getByText(/Older: v1 Initial Title/i);
+    const olderPane = olderHeading.closest("div")?.parentElement as HTMLElement;
+    expect(within(olderPane).getByText(/new text/i)).toBeInTheDocument();
+
+    // Verify newer pane (v2) contains its correct content
+    const newerHeading = screen.getByText(/Newer: v2 Previous Title/i);
+    const newerPane = newerHeading.closest("div")?.parentElement as HTMLElement;
+    expect(within(newerPane).getByText(/old text/i)).toBeInTheDocument();
   });
 });

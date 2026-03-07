@@ -122,14 +122,6 @@ function AppLayout() {
     );
   }
 
-  if (stableUserOrganizations === undefined) {
-    return (
-      <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
-        <LoadingSpinner size="lg" />
-      </Flex>
-    );
-  }
-
   // If we have a redirect path that's not /app, potentially show loading if we are about to redirect
   if (stableRedirectPath && redirectState.shouldRedirect) {
     return (
@@ -140,7 +132,7 @@ function AppLayout() {
   }
 
   // User has no organizations - initialize default organization
-  if (stableUserOrganizations.length === 0) {
+  if ((stableUserOrganizations ?? []).length === 0) {
     return <InitializeOrganization />;
   }
 

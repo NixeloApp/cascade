@@ -356,6 +356,7 @@ export function run() {
   return {
     passed: issueCount === 0,
     errors: issueCount,
+    warnings: 0,
     detail: issueCount > 0 ? `${issueCount} naming issue(s)` : null,
     messages,
   };

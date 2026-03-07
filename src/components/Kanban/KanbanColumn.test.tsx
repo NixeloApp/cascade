@@ -235,7 +235,7 @@ describe("KanbanColumn", () => {
       );
 
       await user.click(screen.getByRole("button", { name: /load.*more/i }));
-      expect(onLoadMore).toHaveBeenCalledWith("state-1");
+      expect(onLoadMore).toHaveBeenCalled();
     });
 
     it("should display loading state when isLoadingMore", () => {

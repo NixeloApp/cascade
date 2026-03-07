@@ -112,7 +112,7 @@ function OnboardingPage() {
 
   const handleProjectCreated = () => {
     // Project was created, complete onboarding
-    handleComplete();
+    return handleComplete();
   };
 
   // Loading state

@@ -232,7 +232,7 @@ const getGoogleOAuthConfig = () => {
 /**
  * Initiate Google OAuth flow handler
  */
-export const initiateAuthHandler = () => {
+export const initiateAuthHandler = (_ctx: ActionCtx, _request: Request) => {
   if (!isGoogleOAuthConfigured()) {
     return Promise.resolve(
       new Response(
@@ -538,7 +538,7 @@ export const handleCallback = httpAction(handleCallbackHandler);
 /**
  * Trigger manual sync handler
  */
-export const triggerSyncHandler = async (ctx: ActionCtx) => {
+export const triggerSyncHandler = async (ctx: ActionCtx, _request: Request) => {
   try {
     // Get user's Google Calendar connection (metadata only, no tokens)
     const connection = await ctx.runQuery(api.googleCalendar.getConnection);

@@ -31,7 +31,10 @@ import { Typography } from "./ui/Typography";
 interface CreateProjectFromTemplateProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onProjectCreated?: (project: { projectId: Id<"projects">; projectKey: string }) => void;
+  onProjectCreated?: (project: {
+    projectId: Id<"projects">;
+    projectKey: string;
+  }) => void | Promise<void>;
 }
 
 interface CreateProjectFooterProps {
@@ -347,7 +350,7 @@ export function CreateProjectFromTemplate({
       });
 
       showSuccess("Project created successfully");
-      onProjectCreated?.({
+      await onProjectCreated?.({
         projectId,
         projectKey: projectKey.trim().toUpperCase(),
       });
