@@ -319,11 +319,16 @@ async function globalSetup(config: FullConfig): Promise<void> {
             authPath,
             completeOnboarding,
           );
-          if (result.success) {
-            userConfigs[key] = { orgSlug: result.orgSlug };
+          if (!result.success) {
+            throw new Error(`Worker ${i} ${key}: auth bootstrap failed`);
           }
+          if (key === "teamLead" && !result.orgSlug) {
+            throw new Error(`Worker ${i} ${key}: missing orgSlug after sign-in`);
+          }
+          userConfigs[key] = { orgSlug: result.orgSlug };
         } catch (error) {
           console.error(`  ❌ Worker ${i} ${key}: Setup error:`, error);
+          throw error;
         } finally {
           await context.close();
         }
@@ -339,34 +344,34 @@ async function globalSetup(config: FullConfig): Promise<void> {
         viewerEmail: users.viewer.email,
       });
 
-      if (rbacResult.success) {
-        console.log(`  ✓ Worker ${i}: RBAC project created: ${rbacResult.projectKey}`);
-        // Save worker-specific config
-        const rbacConfig = {
-          projectKey: rbacResult.projectKey,
-          orgSlug: rbacResult.orgSlug,
-          projectId: rbacResult.projectId,
-          organizationId: rbacResult.organizationId,
-        };
-        fs.writeFileSync(
-          path.join(AUTH_DIR, `rbac-config-${i}.json`),
-          JSON.stringify(rbacConfig, null, 2),
-        );
-      } else {
-        console.warn(`  ⚠️ Worker ${i}: RBAC setup failed: ${rbacResult.error}`);
+      if (!rbacResult.success) {
+        throw new Error(`Worker ${i}: RBAC setup failed: ${rbacResult.error}`);
       }
+      console.log(`  ✓ Worker ${i}: RBAC project created: ${rbacResult.projectKey}`);
+      // Save worker-specific config
+      const rbacConfig = {
+        projectKey: rbacResult.projectKey,
+        orgSlug: rbacResult.orgSlug,
+        projectId: rbacResult.projectId,
+        organizationId: rbacResult.organizationId,
+      };
+      fs.writeFileSync(
+        path.join(AUTH_DIR, `rbac-config-${i}.json`),
+        JSON.stringify(rbacConfig, null, 2),
+      );
 
       // 4. Save Dashboard Config for this worker
-      if (userConfigs.teamLead?.orgSlug) {
-        const dashboardConfig = {
-          orgSlug: userConfigs.teamLead.orgSlug,
-          email: users.teamLead.email,
-        };
-        fs.writeFileSync(
-          path.join(AUTH_DIR, `dashboard-config-${i}.json`),
-          JSON.stringify(dashboardConfig, null, 2),
-        );
+      if (!userConfigs.teamLead?.orgSlug) {
+        throw new Error(`Worker ${i}: teamLead orgSlug was not captured during setup`);
       }
+      const dashboardConfig = {
+        orgSlug: userConfigs.teamLead.orgSlug,
+        email: users.teamLead.email,
+      };
+      fs.writeFileSync(
+        path.join(AUTH_DIR, `dashboard-config-${i}.json`),
+        JSON.stringify(dashboardConfig, null, 2),
+      );
     }
   } finally {
     await browser.close();

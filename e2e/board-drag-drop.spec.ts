@@ -152,26 +152,12 @@ test.describe("Board Drag-Drop", () => {
     await targetColumn.scrollIntoViewIfNeeded();
     await issueCard.dragTo(targetColumn);
 
-    // Wait for DOM to settle after drag, then check final state with retrying assertion.
-    // The card must remain rendered after the drag gesture, either in target (successful move)
-    // or source (no-op move in constrained envs).
-    await expect
-      .poll(
-        async () => {
-          const inTarget = await issueButtonInTargetColumn.isVisible().catch(() => false);
-          const inSource = await issueButtonInSourceColumn.isVisible().catch(() => false);
-          return inTarget || inSource;
-        },
-        { timeout: 5000, intervals: [250, 500, 1000] },
-      )
-      .toBe(true);
-
-    const movedToTarget = await issueButtonInTargetColumn.isVisible().catch(() => false);
-    if (movedToTarget) {
+    // Verify the issue moved to the target column and is no longer in the source.
+    // Use expect().toPass() for retrying both assertions together.
+    await expect(async () => {
+      await expect(issueButtonInTargetColumn).toBeVisible();
       await expect(issueButtonInSourceColumn).toHaveCount(0);
-    } else {
-      await expect(issueButtonInSourceColumn).toBeVisible();
-    }
+    }).toPass({ timeout: 5000, intervals: [250, 500, 1000] });
 
     console.log("✓ Drag operation completed");
   });

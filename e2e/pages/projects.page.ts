@@ -830,12 +830,6 @@ export class ProjectsPage extends BasePage {
     }
 
     await this.tryStartCreateProjectSubmit();
-
-    if (await this.waitForCreateProjectSubmitStart()) {
-      return;
-    }
-
-    await this.tryStartCreateProjectSubmit();
     await this.expectCreateProjectSubmitStarted();
   }
 
@@ -857,7 +851,7 @@ export class ProjectsPage extends BasePage {
     }
   }
 
-  async waitForCreateProjectSubmitStart(timeout = 5000) {
+  async waitForCreateProjectSubmitStart(timeout = 10000) {
     if (!(await this.createProjectForm.isVisible().catch(() => false))) {
       return true;
     }
@@ -868,6 +862,8 @@ export class ProjectsPage extends BasePage {
       await Promise.race([
         creatingButton.waitFor({ state: "visible", timeout }),
         this.createProjectForm.waitFor({ state: "hidden", timeout }),
+        // Button becomes disabled when submitting
+        expect(this.createButton).toBeDisabled({ timeout }),
       ]);
       return true;
     } catch {
