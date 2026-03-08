@@ -224,25 +224,11 @@ export class DashboardPage extends BasePage {
 
   async goto() {
     const dashboardUrl = `/${this.orgSlug}/dashboard`;
-
-    // Determine baseURL from current URL
-    const urlObj = new URL(this.page.url());
-    const baseUrl = `${urlObj.protocol}//${urlObj.host}`;
-
-    // Check if already on dashboard - skip navigation to avoid token rotation
     const currentUrl = this.page.url();
-    if (currentUrl.includes(`/${this.orgSlug}/dashboard`)) {
-      // Already on dashboard: give the existing app shell a chance to finish
-      // hydrating before forcing a second navigation.
-      await this.page.waitForLoadState("domcontentloaded");
-      const isLoaded = await this.commandPaletteButton
-        .waitFor({ state: "visible", timeout: 5000 })
-        .then(() => true)
-        .catch(() => false);
 
-      if (isLoaded) {
-        // Even if already on page, ensure it's hydrated before returning
-        await this.waitForLoad();
+    if (currentUrl.includes(`/${this.orgSlug}/dashboard`)) {
+      await this.page.waitForLoadState("domcontentloaded");
+      if (await this.tryDashboardReady()) {
         return;
       }
     }
@@ -254,68 +240,67 @@ export class DashboardPage extends BasePage {
 
     if (isInAuthenticatedAppShell) {
       await this.dashboardTab.click();
-      await expect(this.page).toHaveURL(new RegExp(`/${this.orgSlug}/dashboard(?:\\?.*)?$`));
+      if (await this.tryDashboardReady(5000)) {
+        return;
+      }
     } else {
-      // Use an explicit document navigation only when entering the app shell
-      // from outside the authenticated UI. In-app route changes should preserve
-      // the live Convex auth session instead of forcing a fresh bootstrap.
       await this.page.waitForLoadState("load");
       await this.page.goto(dashboardUrl, { waitUntil: "domcontentloaded" });
       await this.page.waitForLoadState("load");
-
-      // Check if we got redirected to landing/signin page (auth failure)
-      let finalUrl = this.page.url();
-      if (
-        finalUrl.includes("/signin") ||
-        finalUrl === baseUrl ||
-        finalUrl === `${baseUrl}/` ||
-        !finalUrl.includes(this.orgSlug)
-      ) {
-        console.warn(
-          "⚠️  Auth redirect detected: navigated to",
-          finalUrl,
-          ". Retrying navigation once...",
-        );
-        // Wait for auth redirect chain to settle before retrying navigation
-        await this.page.waitForLoadState("load");
-        await this.page.goto(dashboardUrl, { waitUntil: "domcontentloaded" });
-        await this.waitForLoad();
-        finalUrl = this.page.url(); // Update finalUrl after retry
-      }
-
-      // Final check after potential retry
-      if (
-        finalUrl.includes("/signin") ||
-        finalUrl === baseUrl ||
-        finalUrl === `${baseUrl}/` ||
-        !finalUrl.includes(this.orgSlug)
-      ) {
-        console.error("❌ Still on landing page after retry. Auth failed.");
-        throw new Error(`Redirected to landing/signin page: ${finalUrl}. Auth session invalid.`);
+      if (await this.tryDashboardReady(5000)) {
+        return;
       }
     }
 
-    // Wait for dashboard app shell with recovery
-    try {
-      await this.commandPaletteButton.waitFor({ state: "visible" });
-    } catch (_e) {
-      // Check again if redirected to landing after timeout
-      const currentUrl = this.page.url();
-      if (
-        currentUrl.includes("/signin") ||
-        currentUrl === "http://localhost:5555/" ||
-        !currentUrl.includes(this.orgSlug)
-      ) {
-        throw new Error(`Redirected to landing/signin page: ${currentUrl}. Auth session invalid.`);
-      }
-      console.log("Dashboard didn't load in time, reloading...");
-      await this.page.reload();
-      await this.commandPaletteButton.waitFor({ state: "visible" });
+    await this.recoverDashboardRoute(dashboardUrl);
+    await this.expectDashboardReady();
+  }
+
+  private async expectDashboardReady(timeout = 15000) {
+    const currentUrl = this.page.url();
+    if (this.isOutsideOrgShell(currentUrl)) {
+      throw new Error(`Redirected to landing/signin page: ${currentUrl}. Auth session invalid.`);
     }
 
+    await expect(this.page).toHaveURL(new RegExp(`/${this.orgSlug}/dashboard(?:\\?.*)?$`), {
+      timeout,
+    });
     await this.expectLoaded();
     await waitForDashboardReady(this.page);
-    await expect(this.myIssuesSection).toBeVisible();
+    await expect(this.myIssuesSection).toBeVisible({ timeout });
+  }
+
+  private async tryDashboardReady(timeout = 5000) {
+    try {
+      await this.expectDashboardReady(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async recoverDashboardRoute(dashboardUrl: string) {
+    if (this.isOutsideOrgShell(this.page.url())) {
+      await this.page.goto("/app", { waitUntil: "domcontentloaded" });
+      await this.page.waitForLoadState("load");
+      if (await this.tryDashboardReady(5000)) {
+        return;
+      }
+    }
+
+    await this.page.goto(dashboardUrl, { waitUntil: "domcontentloaded" });
+    await this.page.waitForLoadState("load");
+
+    if (await this.tryDashboardReady(5000)) {
+      return;
+    }
+
+    await this.page.reload({ waitUntil: "domcontentloaded" });
+    await this.page.waitForLoadState("load");
+  }
+
+  private isOutsideOrgShell(url: string) {
+    return !url.includes(`/${this.orgSlug}/`) || url.includes("/signin");
   }
 
   async navigateTo(
