@@ -439,10 +439,8 @@ export class ProjectsPage extends BasePage {
   }
 
   async cancelCreateProject() {
-    await expect(async () => {
-      await this.closeCreateProjectFormIfOpen();
-      await expect(this.createProjectForm).not.toBeVisible();
-    }).toPass();
+    await this.closeCreateProjectFormIfOpen();
+    await expect(this.createProjectForm).not.toBeVisible();
   }
 
   async selectProject(index: number) {

@@ -203,6 +203,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `SettingsPage.inviteUser()` now wraps modal open, form fill, optional role selection, and invite-row visibility in the same retry boundary, after the settings/admin rerun showed the invite email input could detach immediately after the modal-open helper succeeded.
 - `ProjectsPage.openIssueDetail()` and `closeIssueDetail()` now reuse a named `closeIssueDetailIfOpen()` reset, after hardening moved the detail-dialog setup and teardown into the page object and the targeted rerun confirmed the modal flow stays deterministic across integration and issues specs.
 - `ProjectsPage.createProject()` now accepts the wizard's `Creating...` state as proof that submit started, after the issue-detail setup rerun exposed that waiting only for immediate dialog dismissal could misclassify a valid create click as a failure.
+- `ProjectsPage.createIssue()` now submits once and waits on the shared issue-create completion contract (modal dismissed, created card visible, success toast visible) instead of wrapping `requestSubmit()` in a broad retry loop.
 - `/app` organization bootstrap now waits for `api.users.getCurrent` to return a real user before calling `initializeDefaultOrganization`, and the backend mutation now fails fast with a precise error if the authenticated user profile document is missing instead of trying to patch a nonexistent user id.
 - `ProjectsPage.openCreateProjectForm()` and `cancelCreateProject()` now reuse `closeCreateProjectFormIfOpen()`, after the create-project modal hardening showed the dialog needed an explicit reset path for repeated cancel/reopen flows instead of assuming the previous close fully settled.
 - `auth-comprehensive.spec.ts` now relies on `AuthPage.expandEmailForm()` and `waitForFormExpanded()` for sign-in/sign-up coverage, after removing the spec-local expansion retries and flaky annotation proved the page object already exposes the deterministic state transition those tests needed.
@@ -277,6 +278,10 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `11 passed (15.2s)`
 - `pnpm exec playwright test e2e/integration-workflow.spec.ts --reporter=line --workers=1`
   - `4 passed (2.6m)`
+- `pnpm exec playwright test e2e/issues.spec.ts --reporter=line --workers=1`
+  - `6 passed (3.1m)` after replacing the issue-create submit retry with the shared completion contract
+- `pnpm exec playwright test e2e/issues.spec.ts -g "can reopen project creation dialog after canceling" --reporter=line --workers=1`
+  - `1 passed (33.2s)` after removing the extra `cancelCreateProject()` retry wrapper
 - `pnpm exec playwright test e2e/permission-cascade.spec.ts --reporter=line --workers=1`
   - `9 passed (2.0m)`
 - `pnpm exec playwright test e2e/issues.spec.ts e2e/integration-workflow.spec.ts --reporter=line --workers=1`
