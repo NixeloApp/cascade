@@ -558,33 +558,21 @@ export class DashboardPage extends BasePage {
 
   async openTimeEntryModal(options?: { expectBillable?: boolean }) {
     await waitForDashboardReady(this.page);
+    await this.openTimeEntryModalOnce();
 
-    await expect(async () => {
-      await this.closeTimeEntryModalIfOpen();
-      await expect(this.headerStartTimerButton).toBeVisible();
-      await this.headerStartTimerButton.click();
-      await expect(this.timeEntryModal).toBeVisible();
+    if (options?.expectBillable === undefined) {
+      return;
+    }
 
-      if (options?.expectBillable === undefined) {
-        return;
-      }
+    if (await this.hasExpectedTimeEntryBillingState(options.expectBillable)) {
+      await this.expectTimeEntryBillingState(options.expectBillable);
+      return;
+    }
 
-      const isBillableVisible = await this.timeEntryBillableCheckbox.isVisible().catch(() => false);
-      if (isBillableVisible !== options.expectBillable) {
-        await this.closeTimeEntryModalIfOpen();
-        await this.reloadAppShell();
-        throw new Error(
-          `Time entry modal billing state not synced yet (expected billable visibility ${options.expectBillable}, received ${isBillableVisible})`,
-        );
-      }
-
-      if (options.expectBillable) {
-        await expect(this.timeEntryBillableCheckbox).toBeVisible();
-        return;
-      }
-
-      await expect(this.timeEntryBillableCheckbox).not.toBeVisible();
-    }).toPass();
+    await this.closeTimeEntryModalIfOpen();
+    await this.reloadAppShell();
+    await this.openTimeEntryModalOnce();
+    await this.expectTimeEntryBillingState(options.expectBillable);
   }
 
   async reloadAppShell() {
@@ -631,6 +619,47 @@ export class DashboardPage extends BasePage {
 
     await this.page.keyboard.press("Escape");
     await expect(this.timeEntryModal).not.toBeVisible();
+  }
+
+  private async openTimeEntryModalOnce() {
+    await this.closeTimeEntryModalIfOpen();
+    await expect(this.headerStartTimerButton).toBeVisible();
+    await this.headerStartTimerButton.click();
+
+    if (await this.waitForTimeEntryModalVisible()) {
+      return;
+    }
+
+    await this.headerStartTimerButton.click();
+    await this.expectTimeEntryModalVisible();
+  }
+
+  private async waitForTimeEntryModalVisible(timeout = 3000) {
+    try {
+      await this.timeEntryModal.waitFor({ state: "visible", timeout });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectTimeEntryModalVisible(timeout = 10000) {
+    const visible = await this.waitForTimeEntryModalVisible(timeout);
+    expect(visible).toBe(true);
+  }
+
+  private async hasExpectedTimeEntryBillingState(expectBillable: boolean) {
+    const isBillableVisible = await this.timeEntryBillableCheckbox.isVisible().catch(() => false);
+    return isBillableVisible === expectBillable;
+  }
+
+  private async expectTimeEntryBillingState(expectBillable: boolean) {
+    if (expectBillable) {
+      await expect(this.timeEntryBillableCheckbox).toBeVisible();
+      return;
+    }
+
+    await expect(this.timeEntryBillableCheckbox).not.toBeVisible();
   }
 
   async openGlobalSearchWithShortcut() {

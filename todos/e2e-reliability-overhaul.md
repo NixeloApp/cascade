@@ -196,9 +196,9 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `WorkspacesPage.createWorkspace()` now preserves the old blanket Escape reset behind `closeCreateWorkspaceDialogIfOpen()` and submits through the shared create form, after `teams.spec.ts` showed that narrowing the reset to only a visible workspace dialog broke the shared workspace-create flow.
 - `DashboardPage` modal open helpers now reuse named `close...IfOpen()` resets, and global search keeps focus inside the retry loop, after the targeted search rerun showed the modal could disappear between the helper's visible check and the first `fill()`.
 - `ensureAuthenticated()` now routes authenticated tests through `/app` and waits for a healthy dashboard shell instead of treating the dashboard URL alone as success, after the docs/search reruns showed API-authenticated tests could still land on a `500` dashboard during bootstrap.
-- `DashboardPage.searchFor()` now throws app-error diagnostics from inside its retry loop, after the minimum-query rerun showed the global search could fail behind a generic missing-input timeout when `userSettings:get` returned `UNAUTHENTICATED`.
+- `DashboardPage.searchFor()` now uses a direct input/value contract with one bounded refill recovery, and `waitForSearchSettled()` now polls a named search-results state instead of retrying the whole interaction, after the full search rerun confirmed the modal only needed a single query re-entry when the input remounted.
 - `DashboardPage.closeTimeEntryModal()` is idempotent again, after the billing-disabled flow showed the timer dialog can already be gone by cleanup time even though the checkbox assertion completed.
-- `DashboardPage.openTimeEntryModal({ expectBillable })` now reloads the app shell only when the modal proves org billing state is stale, after the grouped billing/signout rerun reproduced an out-of-band settings race that did not show up in the earlier isolated billing run.
+- `DashboardPage.openTimeEntryModal({ expectBillable })` now uses a direct modal-open contract with one bounded second-click recovery and keeps the app-shell reload as a single explicit billing-state resync path, after the repeated billing reruns confirmed the timer dialog only needed a second trigger or one post-settings reload instead of retrying the whole flow.
 - `DashboardPage.signOutViaUserMenu()` now reacquires the visible `Sign out` menu item inside the retry loop and waits for a signed-out destination, after the isolated signout rerun showed the previous locator could detach between menu-open and click.
 - `SettingsPage.inviteUser()` now wraps modal open, form fill, optional role selection, and invite-row visibility in the same retry boundary, after the settings/admin rerun showed the invite email input could detach immediately after the modal-open helper succeeded.
 - `SettingsPage.toggleTimeApproval()` now uses explicit draft-state and save-state helpers with one bounded re-stage recovery, after the admin settings reruns showed the live organization-settings subscription could remount the save button mid-click and invalidate a blanket retry wrapper.
@@ -328,8 +328,14 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `9 passed (4.9m)`
 - `pnpm exec playwright test e2e/search.spec.ts --reporter=line --workers=1`
   - `7 passed (2.4m)`
+- `pnpm exec playwright test e2e/search.spec.ts --reporter=line --workers=1`
+  - `7 passed (56.5s)` after replacing the global-search query-entry and search-settled retry wrappers with direct input/value and result-state contracts
 - `pnpm exec playwright test e2e/settings/billing.spec.ts --reporter=line --workers=1`
   - `2 passed (22.5s)`
+- `pnpm exec playwright test e2e/settings/billing.spec.ts --reporter=line --workers=1`
+  - `2 passed (26.2s)` after replacing the timer-modal retry wrapper with a direct open contract plus a single billing-state resync path
+- `pnpm exec playwright test e2e/settings/billing.spec.ts --reporter=line --workers=1`
+  - `2 passed (32.7s)` confirming the timer-modal billing flows stay green on a repeated isolated rerun
 - `pnpm exec playwright test e2e/workspaces-org.spec.ts -g "Admin can toggle time approval setting" --reporter=line --workers=1`
   - `1 passed (18.7s)` after replacing the time-approval save retry wrapper with explicit draft-state and save-state helpers
 - `pnpm exec playwright test e2e/workspaces-org.spec.ts -g "Admin can toggle time approval setting" --reporter=line --workers=1`
