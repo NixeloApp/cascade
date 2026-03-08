@@ -208,6 +208,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `DashboardPage.openCommandPalette()` / `closeCommandPalette()` now use direct dialog open/close contracts with one bounded reopen recovery instead of retrying the whole command-palette interaction, after the repeated dashboard reruns confirmed the header command button only needed a single second click when the dialog missed the first mount.
 - `DashboardPage.filterIssues()` now uses a direct tab-click plus active-state assertion instead of retrying the whole filter interaction, after the repeated dashboard reruns confirmed the filter pills settle deterministically once the dashboard shell is ready.
 - `DashboardPage.closeGlobalSearch()` now relies directly on `closeGlobalSearchIfOpen()` instead of wrapping the same close contract in another retry shell, after the focused dashboard rerun confirmed the close path stays deterministic for both button-open and shortcut-open flows.
+- `DashboardPage.openGlobalSearch()` / `openGlobalSearchWithShortcut()` now use direct modal-ready contracts with one bounded reopen recovery instead of retrying the whole open interaction, after the repeated dashboard reruns confirmed the search modal only needed a single second trigger when the first mount was missed.
 - `ProjectsPage.openIssueDetail()` and `closeIssueDetail()` now reuse a named `closeIssueDetailIfOpen()` reset, after hardening moved the detail-dialog setup and teardown into the page object and the targeted rerun confirmed the modal flow stays deterministic across integration and issues specs.
 - `ProjectsPage.openIssueDetail()` now uses a direct close-if-open -> force-click -> dialog-ready contract instead of wrapping that same modal-open sequence in a retry shell, after the issue-detail-open rerun confirmed the modal still settles deterministically.
 - `ProjectsPage.closeIssueDetail()` now relies directly on `closeIssueDetailIfOpen()` instead of wrapping the same close contract in an extra retry loop, after the title-edit rerun confirmed the reopen path still passes.
@@ -357,6 +358,10 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `1 passed (13.9s)` confirming the issue-filter flow stays green on a repeated isolated rerun
 - `pnpm exec playwright test e2e/dashboard.spec.ts -g "Global Search" --reporter=line --workers=1`
   - `2 passed (19.7s)` after removing the extra global-search close retry wrapper
+- `pnpm exec playwright test e2e/dashboard.spec.ts -g "Global Search" --reporter=line --workers=1`
+  - `2 passed (29.4s)` after replacing the global-search open retry wrappers with direct modal-ready contracts plus bounded reopen recovery
+- `pnpm exec playwright test e2e/dashboard.spec.ts -g "Global Search" --reporter=line --workers=1`
+  - `2 passed (18.2s)` confirming the global-search open/close flows stay green on a repeated isolated rerun
 - `pnpm exec playwright test e2e/dashboard.spec.ts --reporter=line --workers=1`
   - `11 passed (1.6m)`
 - `pnpm exec playwright test e2e/invites.spec.ts --reporter=line --workers=1`

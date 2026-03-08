@@ -494,26 +494,20 @@ export class DashboardPage extends BasePage {
 
   async openGlobalSearch() {
     await waitForDashboardReady(this.page);
+    await this.throwIfAppErrorVisible();
+    await this.closeGlobalSearchIfOpen();
+    await this.globalSearchButton.click();
+    await this.throwIfAppErrorVisible();
 
-    // Use retry pattern - click may not register immediately after page load
-    await expect(async () => {
-      await this.throwIfAppErrorVisible();
-      await this.closeGlobalSearchIfOpen();
-
-      // Click the search button directly (keyboard shortcut conflicts with command palette)
+    if (!(await this.waitForGlobalSearchReady())) {
       await this.globalSearchButton.click();
       await this.throwIfAppErrorVisible();
+      await this.expectGlobalSearchReady();
+      return;
+    }
 
-      // Check if modal opened AND input is ready
-      await expect(this.globalSearchModal).toBeVisible();
-      await expect(this.globalSearchInput).toBeVisible();
-      await expect(this.globalSearchInput).toBeEnabled();
-
-      // Keep focus inside the modal during retries so transient close/reopen
-      // cycles do not leak through as a "successful" open.
-      await this.globalSearchInput.focus();
-      await expect(this.globalSearchInput).toBeVisible();
-    }).toPass();
+    await this.globalSearchInput.focus();
+    await expect(this.globalSearchInput).toBeVisible();
   }
 
   private async throwIfAppErrorVisible() {
@@ -641,16 +635,36 @@ export class DashboardPage extends BasePage {
 
   async openGlobalSearchWithShortcut() {
     await waitForDashboardReady(this.page);
+    await this.closeGlobalSearchIfOpen();
+    await this.page.keyboard.press("ControlOrMeta+k");
 
-    await expect(async () => {
-      await this.closeGlobalSearchIfOpen();
+    if (!(await this.waitForGlobalSearchReady())) {
       await this.page.keyboard.press("ControlOrMeta+k");
-      await expect(this.globalSearchModal).toBeVisible();
-      await expect(this.globalSearchInput).toBeVisible();
-      await expect(this.globalSearchInput).toBeEnabled();
-      await this.globalSearchInput.focus();
-      await expect(this.globalSearchInput).toBeVisible();
-    }).toPass();
+      await this.expectGlobalSearchReady();
+      return;
+    }
+
+    await this.globalSearchInput.focus();
+    await expect(this.globalSearchInput).toBeVisible();
+  }
+
+  async waitForGlobalSearchReady(timeout = 3000) {
+    try {
+      await this.throwIfAppErrorVisible();
+      await this.globalSearchModal.waitFor({ state: "visible", timeout });
+      await this.globalSearchInput.waitFor({ state: "visible", timeout });
+      await expect(this.globalSearchInput).toBeEnabled({ timeout });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async expectGlobalSearchReady(timeout = 10000) {
+    const ready = await this.waitForGlobalSearchReady(timeout);
+    expect(ready).toBe(true);
+    await this.globalSearchInput.focus();
+    await expect(this.globalSearchInput).toBeVisible();
   }
 
   async searchFor(query: string) {
