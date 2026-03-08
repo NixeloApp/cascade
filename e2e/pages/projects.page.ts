@@ -464,21 +464,17 @@ export class ProjectsPage extends BasePage {
     if (priority) {
       await this.issuePrioritySelect.selectOption(priority);
     }
-    await expect(async () => {
-      if (!(await this.createIssueModal.isVisible())) {
-        return;
-      }
+    await expect(this.submitIssueButton).toBeVisible();
+    await expect(this.submitIssueButton).toBeEnabled();
 
-      // Submit the form directly to avoid viewport/actionability flakiness on modal footer buttons.
-      if (await this.createIssueForm.isVisible()) {
-        await this.createIssueForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
-      } else {
-        await this.submitIssueButton.dispatchEvent("click");
-      }
-      await expect(this.createIssueModal).not.toBeVisible();
-    }).toPass();
+    // Submit the form directly to avoid viewport/actionability flakiness on modal footer buttons.
+    if (await this.createIssueForm.isVisible()) {
+      await this.createIssueForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
+    } else {
+      await this.submitIssueButton.click();
+    }
 
-    await waitForIssueCreateSuccess(this.page);
+    await waitForIssueCreateSuccess(this.page, title);
   }
 
   async switchToTab(
