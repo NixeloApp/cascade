@@ -233,7 +233,7 @@ export class AuthPage extends BasePage {
       return;
     }
 
-    await submitButton.click();
+    await this.authForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
 
     if (!(await this.waitForEmailFormExpanded())) {
       await submitButton.click();
