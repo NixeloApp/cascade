@@ -209,10 +209,11 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `DashboardPage.openTimeEntryModal({ expectBillable })` now polls the timer modal billing state (`billable` / `non-billable`) before declaring the shell stale, and it performs bounded close-reload-open recovery when an out-of-band organization settings mutation still leaves the modal on the old billing context.
 - `DashboardPage.signOutViaUserMenu()` now reacquires the visible `Sign out` menu item inside the retry loop and waits for a signed-out destination, after the isolated signout rerun showed the previous locator could detach between menu-open and click.
 - `DashboardPage.signOutViaUserMenu()` now uses a direct menu-open -> sign-out click contract with one bounded second attempt and a named signed-out destination check, after the isolated signout rerun confirmed the full flow does not need a blanket retry wrapper.
-- latest source-of-truth full-suite run on `2026-03-07`: `153 passed`, `3 failed`, `4 did not run` in `5.9m`.
-- the three exposed regressions now have targeted green evidence:
+- latest source-of-truth full-suite run on `2026-03-07`: `160 passed` in `5.4m`.
+- the previous three exposed regressions now have targeted green evidence plus a restored full-suite green confirmation:
   - `pnpm exec playwright test e2e/auth.spec.ts -g "sign up flow sends verification email|can complete email verification" --reporter=line --workers=1` -> `2 passed (26.7s)` and `2 passed (34.1s)`
   - `pnpm exec playwright test e2e/settings/billing.spec.ts e2e/signout.spec.ts --reporter=line --workers=1` -> `3 passed (40.1s)` and `3 passed (31.8s)`
+  - `pnpm exec playwright test --reporter=line` -> `160 passed (5.4m)`
   - `pnpm run validate` -> `PASS` with the existing warn-only `164 file(s) missing tests`
 - `SettingsPage.inviteUser()` now wraps modal open, form fill, optional role selection, and invite-row visibility in the same retry boundary, after the settings/admin rerun showed the invite email input could detach immediately after the modal-open helper succeeded.
 - `SettingsPage.toggleTimeApproval()` now uses explicit draft-state and save-state helpers with one bounded re-stage recovery, after the admin settings reruns showed the live organization-settings subscription could remount the save button mid-click and invalidate a blanket retry wrapper.
