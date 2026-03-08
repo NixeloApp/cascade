@@ -726,15 +726,13 @@ export class DashboardPage extends BasePage {
       assigned: this.assignedTab,
       created: this.createdTab,
     };
-    await expect(async () => {
-      await expect(tabs[filter]).toBeVisible();
-      await expect(tabs[filter]).toBeEnabled();
-      await tabs[filter].click();
+    await expect(tabs[filter]).toBeVisible();
+    await expect(tabs[filter]).toBeEnabled();
+    await tabs[filter].click();
 
-      const ariaSelected = await tabs[filter].getAttribute("aria-selected");
-      const dataState = await tabs[filter].getAttribute("data-state");
-      expect(ariaSelected === "true" || dataState === "active").toBe(true);
-    }).toPass();
+    const ariaSelected = await tabs[filter].getAttribute("aria-selected");
+    const dataState = await tabs[filter].getAttribute("data-state");
+    expect(ariaSelected === "true" || dataState === "active").toBe(true);
   }
 
   // ===================
