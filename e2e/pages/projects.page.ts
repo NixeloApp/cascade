@@ -326,29 +326,22 @@ export class ProjectsPage extends BasePage {
     await this.openCreateProjectForm();
 
     try {
-      // Use retry pattern to handle modal reopen/hydration/template loading races.
-      await expect(async () => {
-        // Recovery: If modal closed (flakiness), re-open it
-        if (!(await this.createProjectForm.isVisible())) {
-          await this.newProjectButton.click();
-          await expect(this.createProjectForm).toBeVisible();
-        }
+      const configureHeading = this.createProjectForm.getByRole("heading", {
+        name: /configure project/i,
+      });
 
-        const configureHeading = this.createProjectForm.getByRole("heading", {
-          name: /configure project/i,
-        });
-        if (await configureHeading.isVisible()) {
-          return;
-        }
-
-        // Wait for at least one template card and select the first available option.
-        // Template names are content-managed and should not be hardcoded in E2E selectors.
+      if (!(await configureHeading.isVisible().catch(() => false))) {
         await expect(this.templateOptionButtons.first()).toBeVisible();
         await this.templateOptionButtons.first().click();
 
-        // Verify we proceeded to configuration step
-        await expect(configureHeading).toBeVisible();
-      }).toPass();
+        if (!(await configureHeading.isVisible().catch(() => false))) {
+          await this.openCreateProjectForm();
+          await expect(this.templateOptionButtons.first()).toBeVisible();
+          await this.templateOptionButtons.first().click();
+        }
+      }
+
+      await expect(configureHeading).toBeVisible();
 
       // Step 2: Fill in project details
       await this.projectNameInput.waitFor({ state: "visible" });
