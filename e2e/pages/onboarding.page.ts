@@ -3,8 +3,6 @@ import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 
 const TRANSITION_TIMEOUT = 15000;
-const TRANSITION_RETRY_INTERVALS = [500, 1000];
-const TRANSITION_RETRY_TIMEOUT = 30000;
 const CLICK_RETRY_TIMEOUT = 3000;
 const CARD_SELECTION_TIMEOUT = 5000;
 const CONVEX_CONNECTION_TIMEOUT = 15000;

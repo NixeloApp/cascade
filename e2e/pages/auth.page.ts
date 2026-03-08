@@ -338,50 +338,20 @@ export class AuthPage extends BasePage {
   }
 
   async requestPasswordReset(email: string) {
-    await expect(async () => {
-      if (!this.page.url().includes("/forgot-password")) {
-        await this.page.goto("/forgot-password", { waitUntil: "domcontentloaded" });
-      }
+    await this.ensureForgotPasswordEntry();
 
-      await expect
-        .poll(
-          async () => {
-            const isForgotVisible = await this.forgotPasswordHeading.isVisible().catch(() => false);
-            const isCheckEmailVisible = await this.checkEmailHeading.isVisible().catch(() => false);
-            const isCodeVisible = await this.codeInput.isVisible().catch(() => false);
-            return isForgotVisible || isCheckEmailVisible || isCodeVisible;
-          },
-          { timeout: 15000, intervals: [250, 500, 1000] },
-        )
-        .toBe(true);
+    if (await this.codeInput.isVisible().catch(() => false)) {
+      return;
+    }
 
-      if (await this.codeInput.isVisible().catch(() => false)) {
-        return;
-      }
+    if (await this.attemptPasswordResetRequest(email)) {
+      return;
+    }
 
-      await expect(this.emailInput).toBeVisible({ timeout: 15000 });
-
-      await this.emailInput.fill(email);
-      await expect(this.emailInput).toHaveValue(email);
-      await expect(this.sendResetCodeButton).toBeEnabled();
-      await this.sendResetCodeButton.click();
-
-      // Transition can race on CI. Accept any reset-step UI signal, then require code input.
-      await expect
-        .poll(
-          async () => {
-            const isCheckEmailVisible = await this.checkEmailHeading.isVisible().catch(() => false);
-            const isResetHeadingVisible = await this.resetPasswordHeading
-              .isVisible()
-              .catch(() => false);
-            const isCodeVisible = await this.codeInput.isVisible().catch(() => false);
-            return isCheckEmailVisible || isResetHeadingVisible || isCodeVisible;
-          },
-          { timeout: 30000, intervals: [250, 500, 1000, 2000] },
-        )
-        .toBe(true);
-      await expect(this.codeInput).toBeVisible({ timeout: 30000 });
-    }).toPass({ timeout: 90000, intervals: [500, 1000, 2000, 5000] });
+    await this.page.goto("/forgot-password", { waitUntil: "domcontentloaded" });
+    await this.ensureForgotPasswordEntry();
+    const requested = await this.attemptPasswordResetRequest(email, { expectOutcome: true });
+    expect(requested).toBe(true);
   }
 
   async completePasswordReset(code: string, newPassword: string) {
@@ -584,6 +554,19 @@ export class AuthPage extends BasePage {
     await expect(this.forgotPasswordHeading).toBeVisible({ timeout });
   }
 
+  async ensureForgotPasswordEntry() {
+    if (!this.page.url().includes("/forgot-password")) {
+      await this.page.goto("/forgot-password", { waitUntil: "domcontentloaded" });
+    }
+
+    await expect
+      .poll(async () => this.getPasswordResetEntryState(), {
+        timeout: 15000,
+        intervals: [250, 500, 1000],
+      })
+      .not.toBe("pending");
+  }
+
   async waitForSignUpVerificationStep(timeout = 3000) {
     try {
       await this.expectSignUpVerificationStep(timeout);
@@ -630,6 +613,40 @@ export class AuthPage extends BasePage {
     return "pending";
   }
 
+  async getPasswordResetEntryState(): Promise<"forgot" | "check-email" | "code" | "pending"> {
+    if (await this.codeInput.isVisible().catch(() => false)) {
+      return "code";
+    }
+
+    if (await this.forgotPasswordHeading.isVisible().catch(() => false)) {
+      return "forgot";
+    }
+
+    if (await this.checkEmailHeading.isVisible().catch(() => false)) {
+      return "check-email";
+    }
+
+    return "pending";
+  }
+
+  async getPasswordResetCodeStepState(): Promise<
+    "check-email" | "reset-heading" | "code" | "pending"
+  > {
+    if (await this.codeInput.isVisible().catch(() => false)) {
+      return "code";
+    }
+
+    if (await this.resetPasswordHeading.isVisible().catch(() => false)) {
+      return "reset-heading";
+    }
+
+    if (await this.checkEmailHeading.isVisible().catch(() => false)) {
+      return "check-email";
+    }
+
+    return "pending";
+  }
+
   private async clickForgotPasswordLink() {
     await expect(this.forgotPasswordLink).toBeVisible();
     await expect(this.forgotPasswordLink).toBeEnabled();
@@ -646,6 +663,46 @@ export class AuthPage extends BasePage {
         await this.forgotPasswordLink.dispatchEvent("click");
       }
     }
+  }
+
+  private async attemptPasswordResetRequest(email: string, options?: { expectOutcome?: boolean }) {
+    await this.ensureForgotPasswordEntry();
+
+    if (await this.codeInput.isVisible().catch(() => false)) {
+      return true;
+    }
+
+    await expect(this.emailInput).toBeVisible({ timeout: 15000 });
+    await this.emailInput.fill(email);
+    await expect(this.emailInput).toHaveValue(email);
+    await expect(this.sendResetCodeButton).toBeEnabled();
+    await this.sendResetCodeButton.click();
+
+    if (options?.expectOutcome) {
+      await this.expectPasswordResetCodeStep();
+      return true;
+    }
+
+    return this.waitForPasswordResetCodeStep();
+  }
+
+  private async waitForPasswordResetCodeStep(timeout = 5000) {
+    try {
+      await this.expectPasswordResetCodeStep(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectPasswordResetCodeStep(timeout = 30000) {
+    await expect
+      .poll(async () => this.getPasswordResetCodeStepState(), {
+        timeout,
+        intervals: [250, 500, 1000, 2000],
+      })
+      .not.toBe("pending");
+    await expect(this.codeInput).toBeVisible({ timeout });
   }
 
   private async attemptSignUp(
