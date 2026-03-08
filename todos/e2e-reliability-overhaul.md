@@ -205,6 +205,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `ProjectsPage.openIssueDetail()` now uses a direct close-if-open -> force-click -> dialog-ready contract instead of wrapping that same modal-open sequence in a retry shell, after the issue-detail-open rerun confirmed the modal still settles deterministically.
 - `ProjectsPage.closeIssueDetail()` now relies directly on `closeIssueDetailIfOpen()` instead of wrapping the same close contract in an extra retry loop, after the title-edit rerun confirmed the reopen path still passes.
 - `ProjectsPage.createProject()` now accepts the wizard's `Creating...` state as proof that submit started, after the issue-detail setup rerun exposed that waiting only for immediate dialog dismissal could misclassify a valid create click as a failure.
+- `ProjectsPage.openCreateProjectForm()` now uses a direct open contract with one explicit second-click recovery if the modal does not mount on the first attempt, instead of wrapping the whole open sequence in a broad retry loop.
 - `ProjectsPage.createIssue()` now submits once and waits on the shared issue-create completion contract (modal dismissed, created card visible, success toast visible) instead of wrapping `requestSubmit()` in a broad retry loop.
 - `/app` organization bootstrap now waits for `api.users.getCurrent` to return a real user before calling `initializeDefaultOrganization`, and the backend mutation now fails fast with a precise error if the authenticated user profile document is missing instead of trying to patch a nonexistent user id.
 - `ProjectsPage.openCreateProjectForm()` and `cancelCreateProject()` now reuse `closeCreateProjectFormIfOpen()`, after the create-project modal hardening showed the dialog needed an explicit reset path for repeated cancel/reopen flows instead of assuming the previous close fully settled.
@@ -289,6 +290,8 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `6 passed (3.1m)` after replacing the issue-create submit retry with the shared completion contract
 - `pnpm exec playwright test e2e/issues.spec.ts -g "can reopen project creation dialog after canceling" --reporter=line --workers=1`
   - `1 passed (33.2s)` after removing the extra `cancelCreateProject()` retry wrapper
+- `pnpm exec playwright test e2e/issues.spec.ts -g "can reopen project creation dialog after canceling" --reporter=line --workers=1`
+  - `1 passed (25.5s)` after replacing the create-project modal open retry with a direct open contract plus one explicit recovery click
 - `pnpm exec playwright test e2e/issues.spec.ts -g "can edit an issue title from the detail dialog" --reporter=line --workers=1`
   - `1 passed (46.7s)` after removing the extra `closeIssueDetail()` retry wrapper
 - `pnpm exec playwright test e2e/issues.spec.ts -g "can open issue detail dialog" --reporter=line --workers=1`

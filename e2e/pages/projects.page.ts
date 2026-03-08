@@ -307,16 +307,17 @@ export class ProjectsPage extends BasePage {
   async openCreateProjectForm() {
     console.log("Clicking 'Create Project' button...");
 
-    // Robust open: Retry clicking if modal doesn't appear (handles hydration timing)
-    await expect(async () => {
-      await this.closeCreateProjectFormIfOpen();
+    await this.closeCreateProjectFormIfOpen();
+    await expect(this.newProjectButton).toBeVisible();
+    await expect(this.newProjectButton).toBeEnabled();
+    await this.newProjectButton.scrollIntoViewIfNeeded();
+    await this.newProjectButton.click();
 
-      if (!(await this.createProjectForm.isVisible().catch(() => false))) {
-        await this.newProjectButton.click();
-      }
+    if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+      await this.newProjectButton.click();
+    }
 
-      await expect(this.createProjectForm).toBeVisible();
-    }).toPass();
+    await expect(this.createProjectForm).toBeVisible();
 
     console.log("Create project modal visible.");
   }
