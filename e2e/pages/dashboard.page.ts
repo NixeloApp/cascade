@@ -505,13 +505,39 @@ export class DashboardPage extends BasePage {
   }
 
   private async attemptSignOutViaUserMenu() {
-    await this.userMenuButton.click();
-    await this.expectVisibleUserMenuSignOutItem();
-    await this.getVisibleUserMenuSignOutItem().click();
+    await this.openUserMenu();
+
+    try {
+      await this.getVisibleUserMenuSignOutItem().click();
+    } catch {
+      await this.openUserMenu();
+      await this.getVisibleUserMenuSignOutItem().click();
+    }
   }
 
   private getVisibleUserMenuSignOutItem() {
     return this.page.getByRole("menuitem", { name: /sign out/i }).last();
+  }
+
+  private async openUserMenu() {
+    await expect(this.userMenuButton).toBeVisible();
+    await this.userMenuButton.click();
+
+    if (await this.waitForVisibleUserMenuSignOutItem()) {
+      return;
+    }
+
+    await this.userMenuButton.click();
+    await this.expectVisibleUserMenuSignOutItem();
+  }
+
+  private async waitForVisibleUserMenuSignOutItem(timeout = 3000) {
+    try {
+      await this.expectVisibleUserMenuSignOutItem(timeout);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   private async expectVisibleUserMenuSignOutItem(timeout = 5000) {
@@ -599,19 +625,23 @@ export class DashboardPage extends BasePage {
 
   async openTimeEntryModal(options?: { expectBillable?: boolean }) {
     await waitForDashboardReady(this.page);
-    await this.openTimeEntryModalOnce();
-
     if (options?.expectBillable === undefined) {
+      await this.openTimeEntryModalOnce();
       return;
     }
 
-    if (await this.hasExpectedTimeEntryBillingState(options.expectBillable)) {
-      await this.expectTimeEntryBillingState(options.expectBillable);
-      return;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await this.openTimeEntryModalOnce();
+
+      if (await this.waitForTimeEntryBillingState(options.expectBillable)) {
+        await this.expectTimeEntryBillingState(options.expectBillable);
+        return;
+      }
+
+      await this.closeTimeEntryModalIfOpen();
+      await this.reloadAppShell();
     }
 
-    await this.closeTimeEntryModalIfOpen();
-    await this.reloadAppShell();
     await this.openTimeEntryModalOnce();
     await this.expectTimeEntryBillingState(options.expectBillable);
   }
@@ -689,9 +719,30 @@ export class DashboardPage extends BasePage {
     expect(visible).toBe(true);
   }
 
-  private async hasExpectedTimeEntryBillingState(expectBillable: boolean) {
-    const isBillableVisible = await this.timeEntryBillableCheckbox.isVisible().catch(() => false);
-    return isBillableVisible === expectBillable;
+  private async waitForTimeEntryBillingState(expectBillable: boolean, timeout = 3000) {
+    try {
+      await expect
+        .poll(async () => this.getTimeEntryBillingState(), {
+          timeout,
+          intervals: [200, 500, 1000],
+        })
+        .toBe(expectBillable ? "billable" : "non-billable");
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async getTimeEntryBillingState(): Promise<"billable" | "non-billable" | "pending"> {
+    if (!(await this.timeEntryModal.isVisible().catch(() => false))) {
+      return "pending";
+    }
+
+    if (await this.timeEntryBillableCheckbox.isVisible().catch(() => false)) {
+      return "billable";
+    }
+
+    return "non-billable";
   }
 
   private async expectTimeEntryBillingState(expectBillable: boolean) {
