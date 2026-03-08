@@ -76,7 +76,7 @@ describe("batchHelpers", () => {
     );
 
     await t.run(async (ctx) => {
-      const map = await batchFetch(ctx, "users", [user1Id]);
+      const map = await batchFetch(ctx, [user1Id]);
       expect(map.size).toBe(1);
       expect(map.get(user1Id)?.name).toBe("User 1");
     });

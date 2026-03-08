@@ -261,7 +261,6 @@ async function checkUserComplianceInternal(
     requiredEquityHours,
     maxHours,
     profile.managerId,
-    now,
   );
 
   return { recordId };
@@ -283,7 +282,6 @@ async function sendComplianceNotifications(
   requiredEquityHours: number,
   maxHours: number,
   managerId: Id<"users"> | undefined,
-  _now: number,
 ) {
   if (status === "compliant" || existingRecord?.notificationSent) {
     return;

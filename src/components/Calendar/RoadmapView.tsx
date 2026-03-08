@@ -300,7 +300,7 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
 
                     {/* Date Bar */}
                     <Flex align="center" className="absolute inset-y-0 px-2">
-                      {renderDateBar(item, startDate, endDate, columns.length)}
+                      {renderDateBar(item, startDate, endDate)}
                     </Flex>
                   </FlexItem>
                 </Flex>
@@ -318,7 +318,6 @@ function renderDateBar(
   item: { startDate: number; endDate: number; [key: string]: unknown },
   rangeStart: Date,
   rangeEnd: Date,
-  _columnCount: number,
 ) {
   const itemStart = new Date(item.startDate);
   const itemEnd = new Date(item.endDate);

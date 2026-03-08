@@ -7,7 +7,6 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useConvex } from "convex/react";
 import { useEffect, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Flex } from "@/components/ui/Flex";
@@ -27,18 +26,17 @@ interface CollaboratorsProps {
  * Collaborators - Shows active users editing a document
  */
 export function Collaborators({ documentId, maxVisible = 5, className }: CollaboratorsProps) {
-  const convex = useConvex();
   const [collaborators, setCollaborators] = useState<AwarenessUser[]>([]);
 
   // Get current user
   const currentUser = useAuthenticatedQuery(api.users.getCurrent, {});
 
   useEffect(() => {
-    if (!convex || !currentUser) {
+    if (!currentUser) {
       return;
     }
 
-    const manager = createAwarenessManager(documentId, convex, {
+    const manager = createAwarenessManager(documentId, {
       name: currentUser.name || "Anonymous",
       image: currentUser.image,
     });
@@ -54,7 +52,7 @@ export function Collaborators({ documentId, maxVisible = 5, className }: Collabo
       unsubscribe();
       manager.disconnect();
     };
-  }, [documentId, convex, currentUser]);
+  }, [documentId, currentUser]);
 
   if (collaborators.length === 0) {
     return null;
@@ -120,16 +118,15 @@ function CollaboratorAvatar({ user }: CollaboratorAvatarProps) {
  * Hook to get collaborator count
  */
 export function useCollaboratorCount(documentId: Id<"documents">): number {
-  const convex = useConvex();
   const [count, setCount] = useState(0);
   const currentUser = useAuthenticatedQuery(api.users.getCurrent, {});
 
   useEffect(() => {
-    if (!convex || !currentUser) {
+    if (!currentUser) {
       return;
     }
 
-    const manager = createAwarenessManager(documentId, convex, {
+    const manager = createAwarenessManager(documentId, {
       name: currentUser.name || "Anonymous",
       image: currentUser.image,
     });
@@ -144,7 +141,7 @@ export function useCollaboratorCount(documentId: Id<"documents">): number {
       unsubscribe();
       manager.disconnect();
     };
-  }, [documentId, convex, currentUser]);
+  }, [documentId, currentUser]);
 
   return count;
 }
