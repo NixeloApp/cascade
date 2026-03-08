@@ -1,5 +1,5 @@
 import { CONVEX_SITE_URL, E2E_API_KEY, TEST_USERS } from "./config";
-import { expect, authenticatedTest as test } from "./fixtures";
+import { authenticatedTest as test } from "./fixtures";
 import { createTestNamespace } from "./utils/test-helpers";
 
 /** Time Tracking E2E Tests - start/stop timers on issues */
