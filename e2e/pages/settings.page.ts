@@ -331,10 +331,12 @@ export class SettingsPage extends BasePage {
     await this.closeInviteUserModalIfOpen();
     await expect(inviteBtn).toBeEnabled();
     await inviteBtn.click();
-    await expect(this.inviteUserModal).toBeVisible();
-    await expect(this.inviteUserForm).toBeVisible();
-    await expect(this.inviteEmailInput).toBeVisible();
-    await expect(this.sendInviteButton).toBeVisible();
+
+    if (!(await this.waitForInviteFormReady())) {
+      await inviteBtn.click();
+    }
+
+    await this.expectInviteFormReady();
   }
 
   async closeInviteUserModalIfOpen() {
@@ -424,16 +426,12 @@ export class SettingsPage extends BasePage {
   }
 
   private async ensureInviteFormReady() {
-    if (await this.inviteEmailInput.isVisible().catch(() => false)) {
-      await expect(this.inviteEmailInput).toBeEditable();
-      await expect(this.sendInviteButton).toBeVisible();
+    if (await this.waitForInviteFormReady(1000)) {
       return;
     }
 
     await this.openInviteUserModal();
-    await expect(this.inviteEmailInput).toBeVisible();
-    await expect(this.inviteEmailInput).toBeEditable();
-    await expect(this.sendInviteButton).toBeVisible();
+    await this.expectInviteFormReady();
   }
 
   private async fillInviteEmail(email: string) {
@@ -469,6 +467,24 @@ export class SettingsPage extends BasePage {
       .toMatch(/^(table|empty)$/);
   }
 
+  private async waitForInviteFormReady(timeout = 3000) {
+    try {
+      await this.expectInviteFormReady(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectInviteFormReady(timeout = 10000) {
+    await expect
+      .poll(async () => this.getInviteFormState(), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .toBe("ready");
+  }
+
   private async getInviteManagementState(): Promise<"table" | "empty" | "loading"> {
     if (await this.inviteTable.isVisible().catch(() => false)) {
       return "table";
@@ -479,6 +495,26 @@ export class SettingsPage extends BasePage {
     }
 
     return "loading";
+  }
+
+  private async getInviteFormState(): Promise<"ready" | "open" | "closed"> {
+    if (
+      (await this.inviteEmailInput.isVisible().catch(() => false)) &&
+      (await this.inviteEmailInput.isEditable().catch(() => false)) &&
+      (await this.sendInviteButton.isVisible().catch(() => false))
+    ) {
+      return "ready";
+    }
+
+    if (
+      (await this.inviteUserModal.isVisible().catch(() => false)) ||
+      (await this.inviteUserForm.isVisible().catch(() => false)) ||
+      (await this.sendInviteButton.isVisible().catch(() => false))
+    ) {
+      return "open";
+    }
+
+    return "closed";
   }
 
   async openAdminUsersList() {

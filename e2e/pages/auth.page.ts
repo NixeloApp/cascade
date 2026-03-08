@@ -164,9 +164,9 @@ export class AuthPage extends BasePage {
     await this.signInHeading.waitFor({ state: "visible", timeout: 30000 });
     await this.waitForAuthFormHydrated();
     // Expand form using robust click logic
-    await this.expandEmailForm();
+    await this.expandEmailForm("signin");
     // Verify form is expanded using data-expanded attribute
-    await this.waitForFormExpanded();
+    await this.waitForFormExpanded("signin");
   }
 
   async gotoSignInLanding() {
@@ -183,9 +183,9 @@ export class AuthPage extends BasePage {
     await this.signUpHeading.waitFor({ state: "visible", timeout: 30000 });
     await this.waitForAuthFormHydrated();
     // Expand form using robust click logic
-    await this.expandEmailForm();
+    await this.expandEmailForm("signup");
     // Verify form is expanded using data-expanded attribute
-    await this.waitForFormExpanded();
+    await this.waitForFormExpanded("signup");
   }
 
   /**
@@ -215,8 +215,9 @@ export class AuthPage extends BasePage {
    * Call this after navigating if form is collapsed
    * Uses one bounded second-click recovery if the first expansion misses
    */
-  async expandEmailForm() {
+  async expandEmailForm(mode?: "signin" | "signup") {
     await this.waitForAuthFormHydrated();
+    const expectedMode = mode ?? (await this.getCurrentAuthRoute());
 
     // The submit button with test ID
     const submitButton = this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
@@ -227,21 +228,20 @@ export class AuthPage extends BasePage {
     await expect(submitButton).toBeEnabled();
 
     // Check if already expanded
-    const isAlreadyExpanded = await authForm.getAttribute("data-expanded");
-    if (isAlreadyExpanded === "true") {
-      await this.waitForFormReady();
+    if (await this.waitForEmailFormExpanded(1000, expectedMode)) {
+      await this.waitForFormReady(expectedMode);
       return;
     }
 
     await this.authForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
 
-    if (!(await this.waitForEmailFormExpanded())) {
+    if (!(await this.waitForEmailFormExpanded(1000, expectedMode))) {
       await submitButton.click();
-      await this.expectEmailFormExpanded();
+      await this.expectEmailFormExpanded(expectedMode);
     }
 
     // Wait for form-ready state
-    await this.waitForFormReady();
+    await this.waitForFormReady(expectedMode);
 
     // Sign-in link affordances can render one tick after expansion; do not gate form usage on them.
   }
@@ -251,11 +251,11 @@ export class AuthPage extends BasePage {
   // ===================
 
   async signIn(email: string, password: string) {
-    await this.expandEmailForm();
+    await this.expandEmailForm("signin");
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
     await expect(this.signInButton).toBeVisible();
-    await this.waitForFormReady();
+    await this.waitForFormReady("signin");
     await this.signInButton.click();
   }
 
@@ -280,16 +280,16 @@ export class AuthPage extends BasePage {
 
   async switchToSignUp() {
     await this.navigateToSignUp();
-    await this.expandEmailForm();
+    await this.expandEmailForm("signup");
     // Verify form is expanded using data-expanded attribute
-    await this.waitForFormExpanded();
+    await this.waitForFormExpanded("signup");
   }
 
   async switchToSignIn() {
     await this.navigateToSignIn();
-    await this.expandEmailForm();
+    await this.expandEmailForm("signin");
     // Verify form is expanded using data-expanded attribute
-    await this.waitForFormExpanded();
+    await this.waitForFormExpanded("signin");
   }
 
   async signInWithGoogle() {
@@ -309,16 +309,16 @@ export class AuthPage extends BasePage {
   // ===================
 
   async clickForgotPassword() {
-    await this.expandEmailForm();
-    await this.waitForFormReady();
+    await this.expandEmailForm("signin");
+    await this.waitForFormReady("signin");
     await this.clickForgotPasswordLink();
 
     if (await this.waitForForgotPasswordReady()) {
       return;
     }
 
-    await this.expandEmailForm();
-    await this.waitForFormReady();
+    await this.expandEmailForm("signin");
+    await this.waitForFormReady("signin");
     await this.clickForgotPasswordLink();
     await this.expectForgotPasswordReady();
   }
@@ -358,7 +358,7 @@ export class AuthPage extends BasePage {
     await this.backToSignInLink.click();
     await this.signInHeading.waitFor({ state: "visible" });
     // Expand the form after navigation
-    await this.expandEmailForm();
+    await this.expandEmailForm("signin");
   }
 
   // ===================
@@ -496,10 +496,10 @@ export class AuthPage extends BasePage {
    * Wait for form to be expanded (email/password fields visible)
    * Uses data-expanded attribute set by React component
    */
-  async waitForFormExpanded() {
-    const mode = await this.getCurrentAuthRoute();
-    await this.expectEmailFormExpanded(mode);
-    await this.waitForFormReady();
+  async waitForFormExpanded(mode?: "signin" | "signup") {
+    const expectedMode = mode ?? (await this.getCurrentAuthRoute());
+    await this.expectEmailFormExpanded(expectedMode);
+    await this.waitForFormReady(expectedMode);
   }
 
   async waitForEmailFormExpanded(timeout = 3000, mode?: "signin" | "signup") {
@@ -527,12 +527,12 @@ export class AuthPage extends BasePage {
    * Uses data-form-ready attribute instead of arbitrary timeout
    * This is a best-effort wait - it won't throw if the form doesn't have this attribute
    */
-  async waitForFormReady() {
+  async waitForFormReady(mode?: "signin" | "signup") {
     await this.waitForAuthFormHydrated();
-    const mode = await this.getCurrentAuthRoute();
-    await this.expectEmailFormExpanded(mode);
+    const expectedMode = mode ?? (await this.getCurrentAuthRoute());
+    await this.expectEmailFormExpanded(expectedMode);
 
-    if (mode === "signin") {
+    if (expectedMode === "signin") {
       await expect(this.forgotPasswordLink).toBeVisible();
     }
   }
