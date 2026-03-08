@@ -69,6 +69,7 @@ export class SettingsPage extends BasePage {
   readonly userTypeManager: Locator;
   readonly hourComplianceDashboard: Locator;
   readonly inviteTable: Locator;
+  readonly inviteEmptyState: Locator;
   readonly adminUsersTab: Locator;
   readonly platformUsersTable: Locator;
 
@@ -168,6 +169,7 @@ export class SettingsPage extends BasePage {
     this.hourComplianceDashboard = page.locator("[data-hour-compliance]");
     this.adminUsersTab = page.getByRole("tab", { name: /^Users$/ });
     this.platformUsersTable = page.getByRole("table", { name: /platform users/i });
+    this.inviteEmptyState = page.getByText(/^No invitations$/);
 
     // Invite user form (it's an inline Card, not a dialog)
     this.inviteUserModal = page.getByRole("heading", { name: /send invitation/i });
@@ -320,14 +322,10 @@ export class SettingsPage extends BasePage {
   // ===================
 
   async openInviteUserModal() {
-    // Wait for the Admin tab content to be fully loaded - wait for heading to be visible
-    await this.organizationSettingsHeading.waitFor({ state: "visible" });
+    await this.waitForInviteManagementReady();
 
-    // Use the first "Invite User" button (header one, not empty state one)
     const inviteBtn = this.inviteUserButton.first();
     await inviteBtn.waitFor({ state: "visible" });
-
-    // Scroll into view and wait for it to be stable
     await inviteBtn.scrollIntoViewIfNeeded();
 
     await this.closeInviteUserModalIfOpen();
@@ -427,29 +425,60 @@ export class SettingsPage extends BasePage {
 
   private async ensureInviteFormReady() {
     if (await this.inviteEmailInput.isVisible().catch(() => false)) {
-      await expect(this.inviteEmailInput).toBeEnabled();
+      await expect(this.inviteEmailInput).toBeEditable();
       await expect(this.sendInviteButton).toBeVisible();
       return;
     }
 
     await this.openInviteUserModal();
     await expect(this.inviteEmailInput).toBeVisible();
-    await expect(this.inviteEmailInput).toBeEnabled();
+    await expect(this.inviteEmailInput).toBeEditable();
     await expect(this.sendInviteButton).toBeVisible();
   }
 
   private async fillInviteEmail(email: string) {
     for (let attempt = 0; attempt < 2; attempt += 1) {
       await this.ensureInviteFormReady();
-      await this.inviteEmailInput.fill(email);
+      try {
+        await this.inviteEmailInput.fill(email);
+      } catch {
+        await this.closeInviteUserModalIfOpen();
+        continue;
+      }
 
       const currentValue = await this.inviteEmailInput.inputValue().catch(() => null);
       if (currentValue === email) {
         return;
       }
+
+      await this.closeInviteUserModalIfOpen();
     }
 
     await expect(this.inviteEmailInput).toHaveValue(email);
+  }
+
+  private async waitForInviteManagementReady(timeout = 15000) {
+    await expect(this.organizationSettingsHeading).toBeVisible({ timeout });
+    await expect(this.userManagementHeading).toBeVisible({ timeout });
+    await expect(this.adminUsersTab).toBeVisible({ timeout });
+    await expect
+      .poll(async () => this.getInviteManagementState(), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .toMatch(/^(table|empty)$/);
+  }
+
+  private async getInviteManagementState(): Promise<"table" | "empty" | "loading"> {
+    if (await this.inviteTable.isVisible().catch(() => false)) {
+      return "table";
+    }
+
+    if (await this.inviteEmptyState.isVisible().catch(() => false)) {
+      return "empty";
+    }
+
+    return "loading";
   }
 
   async openAdminUsersList() {

@@ -270,16 +270,12 @@ export class AuthPage extends BasePage {
 
   async navigateToSignUp() {
     await this.signUpLink.click();
-    await this.signUpHeading.waitFor({ state: "visible" });
-    // Wait for the new page's form to hydrate - it's a different component instance
-    await this.waitForHydration();
+    await this.waitForAuthLanding("signup");
   }
 
   async navigateToSignIn() {
     await this.signInLink.click();
-    await this.signInHeading.waitFor({ state: "visible" });
-    // Wait for the new page's form to hydrate - it's a different component instance
-    await this.waitForHydration();
+    await this.waitForAuthLanding("signin");
   }
 
   async switchToSignUp() {
@@ -501,23 +497,28 @@ export class AuthPage extends BasePage {
    * Uses data-expanded attribute set by React component
    */
   async waitForFormExpanded() {
-    await this.waitForAuthFormHydrated();
-    await expect(this.authForm).toHaveAttribute("data-expanded", "true");
+    const mode = await this.getCurrentAuthRoute();
+    await this.expectEmailFormExpanded(mode);
     await this.waitForFormReady();
   }
 
-  async waitForEmailFormExpanded(timeout = 3000) {
+  async waitForEmailFormExpanded(timeout = 3000, mode?: "signin" | "signup") {
     try {
-      await expect(this.authForm).toHaveAttribute("data-expanded", "true", { timeout });
+      await this.expectEmailFormExpanded(mode, timeout);
       return true;
     } catch {
       return false;
     }
   }
 
-  async expectEmailFormExpanded(timeout = 10000) {
-    const expanded = await this.waitForEmailFormExpanded(timeout);
-    expect(expanded).toBe(true);
+  async expectEmailFormExpanded(mode?: "signin" | "signup", timeout = 10000) {
+    const expectedMode = mode ?? (await this.getCurrentAuthRoute());
+    await expect
+      .poll(async () => this.getAuthFormState(), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .toBe(expectedMode === "signin" ? "signin-expanded" : "signup-expanded");
   }
 
   /**
@@ -528,30 +529,102 @@ export class AuthPage extends BasePage {
    */
   async waitForFormReady() {
     await this.waitForAuthFormHydrated();
+    const mode = await this.getCurrentAuthRoute();
+    await this.expectEmailFormExpanded(mode);
 
-    try {
-      await this.page.locator('form[data-form-ready="true"]').waitFor({
-        state: "attached",
-      });
-    } catch {
-      // Form might not have data-form-ready attribute (e.g., forgot password page)
-      // Use full document readiness as a generic fallback signal.
-      await this.page.waitForFunction(() => document.readyState === "complete");
-    }
-
-    if (await this.signInHeading.isVisible().catch(() => false)) {
-      await expect(this.signInButton).toContainText(/sign in|signing in/i);
+    if (mode === "signin") {
       await expect(this.forgotPasswordLink).toBeVisible();
-      return;
-    }
-
-    if (await this.signUpHeading.isVisible().catch(() => false)) {
-      await expect(this.signUpButton).toContainText(/create account|creating account/i);
     }
   }
 
   private async waitForAuthFormHydrated(timeout = 15000) {
     await expect(this.authForm).toHaveAttribute("data-hydrated", "true", { timeout });
+  }
+
+  private async waitForAuthLanding(mode: "signin" | "signup", timeout = 15000) {
+    await expect
+      .poll(async () => this.getAuthFormState(), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .toBe(mode === "signin" ? "signin-landing" : "signup-landing");
+  }
+
+  private async getCurrentAuthRoute(): Promise<"signin" | "signup"> {
+    if (await this.signInHeading.isVisible().catch(() => false)) {
+      return "signin";
+    }
+
+    if (await this.signUpHeading.isVisible().catch(() => false)) {
+      return "signup";
+    }
+
+    await expect
+      .poll(
+        async () => {
+          if (await this.signInHeading.isVisible().catch(() => false)) {
+            return "signin";
+          }
+
+          if (await this.signUpHeading.isVisible().catch(() => false)) {
+            return "signup";
+          }
+
+          return "pending";
+        },
+        {
+          timeout: 15000,
+          intervals: [200, 500, 1000],
+        },
+      )
+      .not.toBe("pending");
+
+    return (await this.signInHeading.isVisible().catch(() => false)) ? "signin" : "signup";
+  }
+
+  private async getAuthFormState(): Promise<
+    "signin-landing" | "signin-expanded" | "signup-landing" | "signup-expanded" | "pending"
+  > {
+    const route = await this.getCurrentAuthRoute().catch(() => null);
+    if (!route) {
+      return "pending";
+    }
+
+    await this.waitForAuthFormHydrated().catch(() => {});
+
+    const buttonText =
+      (await this.submitButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
+    const expanded = await this.authForm.getAttribute("data-expanded").catch(() => null);
+
+    if (route === "signin") {
+      if (
+        expanded === "true" &&
+        /sign in|signing in/.test(buttonText) &&
+        (await this.emailInput.isVisible().catch(() => false))
+      ) {
+        return "signin-expanded";
+      }
+
+      if (expanded === "false" && /continue with email/.test(buttonText)) {
+        return "signin-landing";
+      }
+
+      return "pending";
+    }
+
+    if (
+      expanded === "true" &&
+      /create account|creating account/.test(buttonText) &&
+      (await this.emailInput.isVisible().catch(() => false))
+    ) {
+      return "signup-expanded";
+    }
+
+    if (expanded === "false" && /continue with email/.test(buttonText)) {
+      return "signup-landing";
+    }
+
+    return "pending";
   }
 
   async waitForForgotPasswordReady(timeout = 3000) {
