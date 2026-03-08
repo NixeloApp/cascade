@@ -341,12 +341,9 @@ export class AuthPage extends BasePage {
   }
 
   async waitForOAuthErrorSettle() {
-    await expect(async () => {
-      const onSignInPage = this.page.url().includes("signin");
-      const hasAlert = await this.authAlert.isVisible().catch(() => false);
-      const hasErrorToast = await this.errorToast.isVisible().catch(() => false);
-      expect(onSignInPage || hasAlert || hasErrorToast).toBe(true);
-    }).toPass({ timeout: 5000 });
+    await expect
+      .poll(async () => this.getOAuthErrorSettleState(), { timeout: 5000, intervals: [250, 500] })
+      .not.toBe("pending");
   }
 
   // ===================
@@ -620,6 +617,22 @@ export class AuthPage extends BasePage {
   async expectForgotPasswordReady(timeout = 15000) {
     await expect(this.page).toHaveURL(/forgot-password/, { timeout });
     await expect(this.forgotPasswordHeading).toBeVisible({ timeout });
+  }
+
+  async getOAuthErrorSettleState(): Promise<"signin" | "alert" | "toast" | "pending"> {
+    if (this.page.url().includes("signin")) {
+      return "signin";
+    }
+
+    if (await this.authAlert.isVisible().catch(() => false)) {
+      return "alert";
+    }
+
+    if (await this.errorToast.isVisible().catch(() => false)) {
+      return "toast";
+    }
+
+    return "pending";
   }
 
   private async clickForgotPasswordLink() {
