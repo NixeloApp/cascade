@@ -77,7 +77,12 @@ function ForgotPasswordPage() {
 
   useEffect(() => {
     if (search.step === "reset") {
-      setEmail(getStoredResetEmail());
+      // Only update from storage if we get a value - preserve in-memory email
+      // when sessionStorage is unavailable (returns null)
+      const storedEmail = getStoredResetEmail();
+      if (storedEmail !== null) {
+        setEmail(storedEmail);
+      }
       return;
     }
 

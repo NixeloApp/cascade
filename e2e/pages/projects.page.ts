@@ -1092,14 +1092,22 @@ export class ProjectsPage extends BasePage {
       await this.recoverCreateProjectTemplateStep();
     }
 
-    await this.clickFirstProjectTemplate();
+    // Recovery may land on either template or configure - only click template if needed
+    if (await this.waitForCreateProjectStep("template", 1000)) {
+      await this.clickFirstProjectTemplate();
+    } else if (await this.waitForCreateProjectStep("configure", 1000)) {
+      return;
+    }
 
     if (await this.waitForCreateProjectStep("configure", 5000)) {
       return;
     }
 
     await this.recoverCreateProjectTemplateStep();
-    await this.clickFirstProjectTemplate();
+    // After recovery, check which step we landed on
+    if (await this.waitForCreateProjectStep("template", 1000)) {
+      await this.clickFirstProjectTemplate();
+    }
     await this.expectCreateProjectStep("configure");
   }
 
@@ -1120,7 +1128,16 @@ export class ProjectsPage extends BasePage {
     await this.goto();
     await this.expectProjectsView();
     await this.openCreateProjectForm();
-    await this.expectCreateProjectStep("template");
+    // Recovery can land on either template or configure - both are valid
+    await expect
+      .poll(
+        async () => {
+          const step = await this.getCreateProjectStep();
+          return step === "template" || step === "configure";
+        },
+        { timeout: 10000, intervals: [250, 500, 1000] },
+      )
+      .toBe(true);
   }
 
   async expectBoardVisible() {

@@ -332,11 +332,17 @@ export class SettingsPage extends BasePage {
     await expect(inviteBtn).toBeEnabled();
     await inviteBtn.click();
 
-    if (!(await this.waitForInviteFormReady())) {
-      await inviteBtn.click();
+    if (await this.waitForInviteFormReady()) {
+      return;
     }
 
-    await this.expectInviteFormReady();
+    // Only re-click if the form is not visible (avoid double-clicking an open form)
+    if (await this.inviteUserForm.isVisible().catch(() => false)) {
+      await this.expectInviteFormReady();
+    } else {
+      await inviteBtn.click();
+      await this.expectInviteFormReady();
+    }
   }
 
   async closeInviteUserModalIfOpen() {
@@ -662,6 +668,7 @@ export class SettingsPage extends BasePage {
       return false;
     }
 
+    await this.waitForSettingsSuccessToastReset();
     await this.saveSettingsButton.evaluate((button: HTMLButtonElement) => button.click());
 
     try {
@@ -674,12 +681,21 @@ export class SettingsPage extends BasePage {
 
   async saveOrganizationSettings() {
     await this.expectSettingsSaveReady();
+    await this.waitForSettingsSuccessToastReset();
     await this.saveSettingsButton.evaluate((button: HTMLButtonElement) => button.click());
     await this.waitForOrganizationSettingsSaved();
   }
 
   async waitForOrganizationSettingsSaved() {
     await expect(this.page.getByText(/organization settings updated/i).first()).toBeVisible();
+  }
+
+  private async waitForSettingsSuccessToastReset() {
+    await this.page
+      .getByText(/organization settings updated/i)
+      .first()
+      .waitFor({ state: "hidden", timeout: 1000 })
+      .catch(() => {});
   }
 
   async expectOrganizationName(name: string) {
