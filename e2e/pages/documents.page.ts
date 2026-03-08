@@ -135,14 +135,12 @@ export class DocumentsPage extends BasePage {
 
   async editDocumentTitle(title: string) {
     await expect(this.documentTitle).toBeVisible();
-
-    await expect(async () => {
-      await this.documentTitle.click();
-      await expect(this.documentTitleInput).toBeVisible();
-      await this.documentTitleInput.fill(title);
-      await this.documentTitleInput.press("Enter");
-      await expect(this.documentTitle).toHaveText(title);
-    }).toPass();
+    await this.documentTitle.click();
+    await expect(this.documentTitleInput).toBeVisible();
+    await this.documentTitleInput.fill(title);
+    await this.documentTitleInput.press("Enter");
+    await expect(this.documentTitleInput).not.toBeVisible();
+    await expect(this.documentTitle).toHaveText(title);
   }
 
   async selectDocument(index: number) {
