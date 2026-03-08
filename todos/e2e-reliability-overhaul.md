@@ -211,6 +211,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `activity-feed.spec.ts` now goes through `ProjectsPage` helpers for empty-vs-entry state, action text, issue-key visibility, and relative timestamps, after moving those assertions out of the spec body showed the feed state could be treated as a single page-object contract.
 - `SettingsPage.openInviteUserModal()` now waits for the invite form controls, `inviteUser()` accepts the invite row as the success signal, and `revokeInvite()` waits for the row status to become `revoked`, after the invite reruns showed the inline card could close before the button-based retry logic realized the action had already succeeded.
 - `SettingsPage.openInviteUserModal()` now uses a direct close-if-open -> click -> form-visible contract instead of wrapping that same modal-open sequence in a retry shell, after the invite flow rerun confirmed the admin invite modal opens deterministically.
+- `SettingsPage.inviteUser()` now uses `ensureInviteFormReady()` to own the inline invite-card remount case before filling the form, so the send flow no longer depends on a blanket retry loop while still recovering if the card disappears between modal-open and the first keystroke.
 - `DocumentsPage.createNewDocument()` now owns the post-create URL and editor-ready checks, after the docs rerun confirmed the spec no longer needs to reassert editor hydration separately after every new-document action.
 - `DocumentsPage.createNewDocument()` now clicks once and waits on route change plus editor readiness directly instead of wrapping the route transition in a retry loop, after the docs rerun confirmed the create flow no longer needs the extra retry shell.
 - `DocumentsPage.editDocumentTitle()` now uses a direct click -> input visible -> save -> title updated contract instead of wrapping the same sequence in a retry loop, after the docs rerun confirmed inline title editing still settles deterministically.
@@ -297,6 +298,8 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `4 passed (29.8s)` after replacing the editor-visible retry with a direct editor-ready contract
 - `pnpm exec playwright test e2e/invites.spec.ts --reporter=line --workers=1`
   - `1 passed (33.1s)` after replacing the invite-modal open retry with a direct modal-open contract
+- `pnpm exec playwright test e2e/invites.spec.ts --reporter=line --workers=1`
+  - `1 passed (27.7s)` after replacing the invite-send retry with a named invite-form readiness contract
 - `pnpm exec playwright test e2e/permission-cascade.spec.ts --reporter=line --workers=1`
   - `9 passed (2.0m)`
 - `pnpm exec playwright test e2e/issues.spec.ts e2e/integration-workflow.spec.ts --reporter=line --workers=1`

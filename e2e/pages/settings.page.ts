@@ -356,47 +356,42 @@ export class SettingsPage extends BasePage {
   }
 
   async inviteUser(email: string, role?: string) {
-    await expect(async () => {
-      await this.openInviteUserModal();
-      await expect(this.inviteEmailInput).toBeVisible();
-      await expect(this.inviteEmailInput).toBeEnabled();
-      await this.inviteEmailInput.fill(email);
-      await expect(this.inviteEmailInput).toHaveValue(email);
+    await this.ensureInviteFormReady();
+    await this.inviteEmailInput.fill(email);
+    await expect(this.inviteEmailInput).toHaveValue(email);
 
-      // Only change role if it's not "user" (which is the default)
-      if (role && role.toLowerCase() !== "user") {
-        const normalizedRole = role.trim().toLowerCase();
-        const roleLabelMap: Record<string, string> = {
-          "super admin": "Super Admin",
-          super_admin: "Super Admin",
-          admin: "Super Admin",
-        };
-        const displayRole = roleLabelMap[normalizedRole];
-        if (!displayRole) {
-          throw new Error(`Unsupported invite role: ${role}`);
-        }
-        const selectTrigger = this.page
-          .getByRole("combobox")
-          .filter({ hasText: /^User$|^Super Admin$|Select role/i });
-        await expect(selectTrigger).toBeVisible();
-        await selectTrigger.click();
-        await expect(this.page.getByRole("option", { name: displayRole })).toBeVisible();
-        await this.page.getByRole("option", { name: displayRole }).click();
-        await expect(this.page.getByRole("option", { name: displayRole })).not.toBeVisible();
+    // Only change role if it's not "user" (which is the default)
+    if (role && role.toLowerCase() !== "user") {
+      const normalizedRole = role.trim().toLowerCase();
+      const roleLabelMap: Record<string, string> = {
+        "super admin": "Super Admin",
+        super_admin: "Super Admin",
+        admin: "Super Admin",
+      };
+      const displayRole = roleLabelMap[normalizedRole];
+      if (!displayRole) {
+        throw new Error(`Unsupported invite role: ${role}`);
       }
+      const selectTrigger = this.page
+        .getByRole("combobox")
+        .filter({ hasText: /^User$|^Super Admin$|Select role/i });
+      await expect(selectTrigger).toBeVisible();
+      await selectTrigger.click();
+      await expect(this.page.getByRole("option", { name: displayRole })).toBeVisible();
+      await this.page.getByRole("option", { name: displayRole }).click();
+      await expect(this.page.getByRole("option", { name: displayRole })).not.toBeVisible();
+    }
 
-      const inviteRow = this.getInviteRow(email);
-      if (await inviteRow.isVisible().catch(() => false)) {
-        return;
-      }
+    const inviteRow = this.getInviteRow(email);
+    if (await inviteRow.isVisible().catch(() => false)) {
+      return;
+    }
 
-      if (await this.sendInviteButton.isVisible().catch(() => false)) {
-        await expect(this.sendInviteButton).toBeEnabled();
-        await this.sendInviteButton.click();
-      }
+    await expect(this.sendInviteButton).toBeVisible();
+    await expect(this.sendInviteButton).toBeEnabled();
+    await this.sendInviteButton.click();
 
-      await this.expectInviteVisible(email);
-    }).toPass();
+    await this.expectInviteVisible(email);
   }
 
   getInviteRow(email: string) {
@@ -429,6 +424,19 @@ export class SettingsPage extends BasePage {
     await confirmDialog.getByRole("button", { name: /revoke/i }).click();
 
     await this.expectInviteRevoked(email);
+  }
+
+  private async ensureInviteFormReady() {
+    if (await this.inviteEmailInput.isVisible().catch(() => false)) {
+      await expect(this.inviteEmailInput).toBeEnabled();
+      await expect(this.sendInviteButton).toBeVisible();
+      return;
+    }
+
+    await this.openInviteUserModal();
+    await expect(this.inviteEmailInput).toBeVisible();
+    await expect(this.inviteEmailInput).toBeEnabled();
+    await expect(this.sendInviteButton).toBeVisible();
   }
 
   async openAdminUsersList() {
