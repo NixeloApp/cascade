@@ -203,6 +203,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `SettingsPage.inviteUser()` now wraps modal open, form fill, optional role selection, and invite-row visibility in the same retry boundary, after the settings/admin rerun showed the invite email input could detach immediately after the modal-open helper succeeded.
 - `SettingsPage.toggleTimeApproval()` now uses explicit draft-state and save-state helpers with one bounded re-stage recovery, after the admin settings reruns showed the live organization-settings subscription could remount the save button mid-click and invalidate a blanket retry wrapper.
 - `board-drag-drop.spec.ts` now treats `dragTo()` as the action boundary and asserts the two allowed post-drag end states directly, after the repeated reruns showed the spec did not need to retry the entire drag gesture just to prove the card still exists in source or target.
+- `IssueDetailPage.editTitle()` / `editDescription()` now use a bounded edit-mode recovery on the standalone route instead of retrying the whole edit cycle, after the direct-route reruns showed the first `Edit Issue` click or the first save-control mount could be dropped without invalidating the entire edit contract.
 - `ProjectsPage.openIssueDetail()` and `closeIssueDetail()` now reuse a named `closeIssueDetailIfOpen()` reset, after hardening moved the detail-dialog setup and teardown into the page object and the targeted rerun confirmed the modal flow stays deterministic across integration and issues specs.
 - `ProjectsPage.openIssueDetail()` now uses a direct close-if-open -> force-click -> dialog-ready contract instead of wrapping that same modal-open sequence in a retry shell, after the issue-detail-open rerun confirmed the modal still settles deterministically.
 - `ProjectsPage.closeIssueDetail()` now relies directly on `closeIssueDetailIfOpen()` instead of wrapping the same close contract in an extra retry loop, after the title-edit rerun confirmed the reopen path still passes.
@@ -332,6 +333,12 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `1 passed (28.5s)` after replacing the drag/drop retry wrapper with a direct post-drag end-state assertion
 - `pnpm exec playwright test e2e/board-drag-drop.spec.ts -g "can drag issue between columns (status change)" --reporter=line --workers=1`
   - `1 passed (27.7s)` confirming the drag/drop flow stays green on a repeated isolated rerun
+- `pnpm exec playwright test e2e/issue-detail-page.spec.ts -g "can edit an issue from the direct issue detail page" --reporter=line --workers=1`
+  - `1 passed (31.4s)` after replacing the standalone title-edit retry shell with bounded edit-mode recovery
+- `pnpm exec playwright test e2e/issue-detail-page.spec.ts -g "can edit issue description and priority from the direct issue detail page" --reporter=line --workers=1`
+  - `1 passed (38.7s)` after replacing the standalone description-edit retry shell with bounded edit-mode and save-control recovery
+- `pnpm exec playwright test e2e/issue-detail-page.spec.ts --reporter=line --workers=1`
+  - `5 passed (1.7m)` confirming the full standalone issue-detail file stays green after the helper change
 - `pnpm exec playwright test e2e/dashboard.spec.ts --reporter=line --workers=1`
   - `11 passed (1.6m)`
 - `pnpm exec playwright test e2e/invites.spec.ts --reporter=line --workers=1`
