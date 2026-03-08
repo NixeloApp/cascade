@@ -220,8 +220,10 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `ProjectsPage.closeIssueDetail()` now relies directly on `closeIssueDetailIfOpen()` instead of wrapping the same close contract in an extra retry loop, after the title-edit rerun confirmed the reopen path still passes.
 - `ProjectsPage.createProject()` now accepts the wizard's `Creating...` state as proof that submit started, after the issue-detail setup rerun exposed that waiting only for immediate dialog dismissal could misclassify a valid create click as a failure.
 - `ProjectsPage.submitCreateProject()` now uses a bounded submit-start contract (`Creating...` or modal dismissal) with a semantic click first and a DOM-click fallback for the sticky footer button, after the latest project-create reruns showed Playwright actionability could reject a still-valid footer button as outside the viewport.
+- Playwright `globalSetup` now seeds built-in project templates before worker auth setup, so project-creation specs no longer depend on earlier files opportunistically calling `testUserService.seedTemplates()` before a later isolated rerun reaches `ProjectsPage.createProject()`.
 - `ProjectsPage.openCreateProjectForm()` now uses a direct open contract with one explicit second-click recovery if the modal does not mount on the first attempt, instead of wrapping the whole open sequence in a broad retry loop.
 - `ProjectsPage.createProject()` now uses a direct template-selection contract with one explicit modal-reopen recovery if the configure step does not appear after the first template click, instead of wrapping the whole template step in a broad retry loop.
+- `ProjectsPage.ensureCreateProjectConfigureStep()` now owns the wizard-ready contract for `createProject()`, reopening the modal once if it mounted without either the template choices or the configure step, after the focused `sprints.spec.ts` rerun showed the modal container could appear before the wizard reached a usable state.
 - `ProjectsPage.createIssue()` now submits once and waits on the shared issue-create completion contract (modal dismissed, created card visible, success toast visible) instead of wrapping `requestSubmit()` in a broad retry loop.
 - `/app` organization bootstrap now waits for `api.users.getCurrent` to return a real user before calling `initializeDefaultOrganization`, and the backend mutation now fails fast with a precise error if the authenticated user profile document is missing instead of trying to patch a nonexistent user id.
 - `ProjectsPage.openCreateProjectForm()` and `cancelCreateProject()` now reuse `closeCreateProjectFormIfOpen()`, after the create-project modal hardening showed the dialog needed an explicit reset path for repeated cancel/reopen flows instead of assuming the previous close fully settled.
@@ -423,6 +425,8 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `3 passed (1.6m)`
 - `pnpm exec playwright test e2e/sprints.spec.ts --reporter=line --workers=1`
   - `3 passed (2.0m)`
+- `pnpm exec playwright test e2e/sprints.spec.ts --reporter=line --workers=1`
+  - `3 passed (59.2s)` after moving project-template seeding into Playwright global setup and letting `ProjectsPage.createProject()` recover once when the modal mounts before the wizard reaches a usable step
 - `pnpm exec playwright test e2e/analytics.spec.ts --reporter=line --workers=1`
   - `5 passed (3.1m)`
 - `pnpm exec playwright test e2e/permission-cascade.spec.ts -g "workspace settings are accessible to workspace members" --reporter=line --workers=1`
@@ -451,6 +455,8 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `9 passed (3.4m)`
 - `pnpm exec playwright test e2e/time-tracking.spec.ts e2e/board-drag-drop.spec.ts --reporter=line --workers=1`
   - `6 passed (3.0m)`
+- `pnpm exec playwright test e2e/board-drag-drop.spec.ts e2e/search.spec.ts e2e/sprints.spec.ts e2e/time-tracking.spec.ts --reporter=line --workers=1`
+  - `16 passed (4.1m)` after the global template-seeding precondition and the create-project configure-step recovery were both in place
 - `pnpm exec playwright test e2e/workspaces-org.spec.ts --reporter=line --workers=1`
   - `5 passed (46.9s)`
 - `pnpm vitest run src/components/GlobalSearch.test.tsx`
