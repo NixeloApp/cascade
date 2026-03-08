@@ -676,9 +676,14 @@ export class AuthPage extends BasePage {
     await this.emailInput.fill(email);
     await expect(this.emailInput).toHaveValue(email);
     await expect(this.sendResetCodeButton).toBeEnabled();
-    await this.sendResetCodeButton.click();
+    await this.submitForgotPasswordRequest();
 
     if (options?.expectOutcome) {
+      if (!(await this.waitForPasswordResetCodeStep())) {
+        await expect(this.sendResetCodeButton).toBeEnabled();
+        await this.sendResetCodeButton.click();
+      }
+
       await this.expectPasswordResetCodeStep();
       return true;
     }
@@ -703,6 +708,17 @@ export class AuthPage extends BasePage {
       })
       .not.toBe("pending");
     await expect(this.codeInput).toBeVisible({ timeout });
+  }
+
+  private async submitForgotPasswordRequest() {
+    await this.emailInput.evaluate((input) => {
+      const form = input.closest("form");
+      if (!(form instanceof HTMLFormElement)) {
+        throw new Error("Forgot password form not found");
+      }
+
+      form.requestSubmit();
+    });
   }
 
   private async attemptSignUp(
