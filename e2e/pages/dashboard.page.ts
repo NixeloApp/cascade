@@ -438,10 +438,55 @@ export class DashboardPage extends BasePage {
   }
 
   async signOutViaUserMenu() {
-    await this.userMenuButton.click();
-    // Wait for dropdown content to be visible
-    await this.userMenuSignOutItem.waitFor({ state: "visible" });
-    await this.userMenuSignOutItem.click();
+    await waitForDashboardReady(this.page);
+
+    await expect(async () => {
+      if (await this.isSignedOutDestinationVisible()) {
+        return;
+      }
+
+      await this.userMenuButton.click();
+
+      const signOutItem = this.page.getByRole("menuitem", { name: /sign out/i }).last();
+      await expect(signOutItem).toBeVisible();
+      await signOutItem.click();
+
+      await this.waitForSignedOutRedirect();
+    }).toPass({ timeout: 30000, intervals: [500, 1000, 2000] });
+  }
+
+  private async waitForSignedOutRedirect() {
+    await expect
+      .poll(
+        async () => {
+          if (await this.isSignedOutDestinationVisible()) {
+            return "signed-out";
+          }
+
+          if (this.page.url().includes(`/${this.orgSlug}/`)) {
+            return "authenticated-app";
+          }
+
+          return "redirecting";
+        },
+        { timeout: 30000, intervals: [500, 1000, 2000] },
+      )
+      .toBe("signed-out");
+  }
+
+  private async isSignedOutDestinationVisible(): Promise<boolean> {
+    const landingCtaVisible = await this.page
+      .getByRole("link", { name: /get started free/i })
+      .isVisible()
+      .catch(() => false);
+    if (landingCtaVisible) {
+      return true;
+    }
+
+    return this.page
+      .getByRole("heading", { name: /sign in to nixelo/i })
+      .isVisible()
+      .catch(() => false);
   }
 
   async openGlobalSearch() {
