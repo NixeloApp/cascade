@@ -205,6 +205,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `ProjectsPage.openIssueDetail()` now uses a direct close-if-open -> force-click -> dialog-ready contract instead of wrapping that same modal-open sequence in a retry shell, after the issue-detail-open rerun confirmed the modal still settles deterministically.
 - `ProjectsPage.closeIssueDetail()` now relies directly on `closeIssueDetailIfOpen()` instead of wrapping the same close contract in an extra retry loop, after the title-edit rerun confirmed the reopen path still passes.
 - `ProjectsPage.createProject()` now accepts the wizard's `Creating...` state as proof that submit started, after the issue-detail setup rerun exposed that waiting only for immediate dialog dismissal could misclassify a valid create click as a failure.
+- `ProjectsPage.submitCreateProject()` now uses a bounded submit-start contract (`Creating...` or modal dismissal) with a semantic click first and a DOM-click fallback for the sticky footer button, after the latest project-create reruns showed Playwright actionability could reject a still-valid footer button as outside the viewport.
 - `ProjectsPage.openCreateProjectForm()` now uses a direct open contract with one explicit second-click recovery if the modal does not mount on the first attempt, instead of wrapping the whole open sequence in a broad retry loop.
 - `ProjectsPage.createProject()` now uses a direct template-selection contract with one explicit modal-reopen recovery if the configure step does not appear after the first template click, instead of wrapping the whole template step in a broad retry loop.
 - `ProjectsPage.createIssue()` now submits once and waits on the shared issue-create completion contract (modal dismissed, created card visible, success toast visible) instead of wrapping `requestSubmit()` in a broad retry loop.
@@ -295,6 +296,8 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `1 passed (25.5s)` after replacing the create-project modal open retry with a direct open contract plus one explicit recovery click
 - `pnpm exec playwright test e2e/issues.spec.ts -g "can create an issue from board view" --reporter=line --workers=1`
   - `1 passed (44.6s)` after replacing the project-template selection retry with a direct configure-step contract plus one explicit modal-reopen recovery
+- `pnpm exec playwright test e2e/issues.spec.ts -g "can create an issue from board view" --reporter=line --workers=1`
+  - `1 passed (23.1s)` after replacing the create-project submit retry loop with a bounded submit-start contract plus sticky-footer DOM-click fallback
 - `pnpm exec playwright test e2e/issues.spec.ts -g "can edit an issue title from the detail dialog" --reporter=line --workers=1`
   - `1 passed (46.7s)` after removing the extra `closeIssueDetail()` retry wrapper
 - `pnpm exec playwright test e2e/issues.spec.ts -g "can open issue detail dialog" --reporter=line --workers=1`
@@ -311,6 +314,8 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `1 passed (27.7s)` after replacing the invite-send retry with a named invite-form readiness contract
 - `pnpm exec playwright test e2e/permission-cascade.spec.ts --reporter=line --workers=1`
   - `9 passed (2.0m)`
+- `pnpm exec playwright test e2e/permission-cascade.spec.ts -g "org owner can create projects in any workspace" --reporter=line --workers=1`
+  - `1 passed (30.0s)` after confirming the new create-project submit contract also holds in the org-owner permission path
 - `pnpm exec playwright test e2e/issues.spec.ts e2e/integration-workflow.spec.ts --reporter=line --workers=1`
   - `9 passed (4.9m)`
 - `pnpm exec playwright test e2e/search.spec.ts --reporter=line --workers=1`

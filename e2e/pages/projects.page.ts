@@ -359,31 +359,12 @@ export class ProjectsPage extends BasePage {
       const normalizedProjectKey = key.toUpperCase();
       const boardPath = `/${this.orgSlug}/projects/${normalizedProjectKey}/board`;
       const boardUrlPattern = new RegExp(`/projects/${normalizedProjectKey}/board(?:[/?#]|$)`);
-      const creatingButton = this.createProjectForm.getByRole("button", { name: /creating/i });
 
       await this.createButton.waitFor({ state: "visible" });
       await expect(this.createButton).toBeEnabled();
       await this.createButton.scrollIntoViewIfNeeded();
 
-      // Retry the submit action until the modal begins closing. The project creation dialog
-      // occasionally misses the first click while the footer settles after hydration.
-      await expect(async () => {
-        if (!(await this.createProjectForm.isVisible())) {
-          return;
-        }
-
-        try {
-          await this.createButton.click();
-        } catch {
-          await this.createButton.dispatchEvent("click");
-        }
-
-        if (await creatingButton.isVisible().catch(() => false)) {
-          return;
-        }
-
-        await expect(this.createProjectForm).not.toBeVisible({ timeout: 5000 });
-      }).toPass({ timeout: 30000, intervals: [1000] });
+      await this.submitCreateProject();
 
       await waitForProjectCreateSuccess(this.page);
 
@@ -840,6 +821,62 @@ export class ProjectsPage extends BasePage {
     }
 
     await expect(this.createProjectForm).not.toBeVisible();
+  }
+
+  async submitCreateProject() {
+    if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+      return;
+    }
+
+    await this.tryStartCreateProjectSubmit();
+
+    if (await this.waitForCreateProjectSubmitStart()) {
+      return;
+    }
+
+    await this.tryStartCreateProjectSubmit();
+    await this.expectCreateProjectSubmitStarted();
+  }
+
+  async tryStartCreateProjectSubmit() {
+    if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+      return;
+    }
+
+    await expect(this.createButton).toBeVisible();
+    await this.createButton.scrollIntoViewIfNeeded();
+
+    try {
+      await this.createButton.click({ timeout: 2000 });
+    } catch {
+      // The modal footer can remain logically visible while its sticky layout leaves the
+      // button outside Playwright's viewport checks. Fall back to a DOM click instead of
+      // polling repeated actionability retries.
+      await this.createButton.evaluate((button: HTMLButtonElement) => button.click());
+    }
+  }
+
+  async waitForCreateProjectSubmitStart(timeout = 5000) {
+    if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+      return true;
+    }
+
+    const creatingButton = this.createProjectForm.getByRole("button", { name: /creating/i });
+
+    try {
+      await Promise.race([
+        creatingButton.waitFor({ state: "visible", timeout }),
+        this.createProjectForm.waitFor({ state: "hidden", timeout }),
+      ]);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async expectCreateProjectSubmitStarted(timeout = 10000) {
+    const submitStarted = await this.waitForCreateProjectSubmitStart(timeout);
+    expect(submitStarted).toBe(true);
   }
 
   async editIssueTitle(nextTitle: string) {
