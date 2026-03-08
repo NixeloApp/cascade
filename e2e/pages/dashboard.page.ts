@@ -601,10 +601,8 @@ export class DashboardPage extends BasePage {
   }
 
   async closeGlobalSearch() {
-    await expect(async () => {
-      await this.closeGlobalSearchIfOpen();
-      await expect(this.globalSearchModal).not.toBeVisible();
-    }).toPass();
+    await this.closeGlobalSearchIfOpen();
+    await expect(this.globalSearchModal).not.toBeVisible();
   }
 
   async closeGlobalSearchIfOpen() {
