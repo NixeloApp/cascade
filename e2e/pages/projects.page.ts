@@ -118,6 +118,7 @@ export class ProjectsPage extends BasePage {
   readonly issueDetailPrioritySelect: Locator;
   readonly startTimerButton: Locator;
   readonly stopTimerButton: Locator;
+  readonly timerStartedToast: Locator;
   readonly timerStoppedToast: Locator;
 
   constructor(page: Page, orgSlug: string) {
@@ -245,7 +246,8 @@ export class ProjectsPage extends BasePage {
     this.issueDetailPrioritySelect = this.issueDetailDialog.getByLabel("Change priority");
     this.startTimerButton = this.issueDetailDialog.getByRole("button", { name: "Start Timer" });
     this.stopTimerButton = this.issueDetailDialog.getByRole("button", { name: /stop timer|stop/i });
-    this.timerStoppedToast = page.getByText(/Timer stopped/i);
+    this.timerStartedToast = this.getToast("Timer started");
+    this.timerStoppedToast = this.getToast("Timer stopped");
   }
 
   /**
@@ -902,42 +904,27 @@ export class ProjectsPage extends BasePage {
    * Start timer in issue detail dialog
    */
   async startTimer() {
-    await expect(async () => {
-      if (await this.stopTimerButton.isVisible()) {
-        return;
-      }
+    if (await this.stopTimerButton.isVisible().catch(() => false)) {
+      return;
+    }
 
-      // Robust interaction: Scroll into view, hover, then click
-      await this.startTimerButton.scrollIntoViewIfNeeded();
-      await this.startTimerButton.hover();
-
-      try {
-        // Try standard click first (most realistic)
-        await this.startTimerButton.click();
-      } catch (_e) {
-        console.log("Standard click failed/timed out, trying force click...");
-        await this.startTimerButton.click();
-      }
-
-      // If still not working, the test will retry this block via toPass
-      // No need to dispatchEvent yet, force click usually covers it.
-      // But we will wait for the UI update longer inside the expectation
-      await expect(this.stopTimerButton).toBeVisible();
-    }).toPass({ intervals: [1000] });
+    await this.completeTimerAction({
+      actionButton: this.startTimerButton,
+      completionButton: this.stopTimerButton,
+      successToast: this.timerStartedToast,
+    });
   }
 
   async stopTimer() {
-    await expect(async () => {
-      if (await this.startTimerButton.isVisible()) {
-        return;
-      }
+    if (await this.startTimerButton.isVisible().catch(() => false)) {
+      return;
+    }
 
-      await expect(this.stopTimerButton).toBeVisible();
-      await expect(this.stopTimerButton).toBeEnabled();
-      await this.stopTimerButton.click();
-
-      await expect(this.startTimerButton).toBeVisible();
-    }).toPass({ intervals: [1000] });
+    await this.completeTimerAction({
+      actionButton: this.stopTimerButton,
+      completionButton: this.startTimerButton,
+      successToast: this.timerStoppedToast,
+    });
   }
 
   // ===================
@@ -964,5 +951,22 @@ export class ProjectsPage extends BasePage {
 
   async expectProjectCount(count: number) {
     await expect(this.projectItems).toHaveCount(count);
+  }
+
+  private async completeTimerAction({
+    actionButton,
+    completionButton,
+    successToast,
+  }: {
+    actionButton: Locator;
+    completionButton: Locator;
+    successToast: Locator;
+  }) {
+    await expect(actionButton).toBeVisible();
+    await expect(actionButton).toBeEnabled();
+    await actionButton.scrollIntoViewIfNeeded();
+    await actionButton.click();
+    await expect(successToast).toBeVisible();
+    await expect(completionButton).toBeVisible();
   }
 }

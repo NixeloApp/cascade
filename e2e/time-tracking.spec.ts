@@ -47,16 +47,10 @@ test.describe("Time Tracking", () => {
     // Open detail
     await projectsPage.openIssueDetail(issueTitle);
 
-    // Start timer
+    // Start timer and wait for the running state contract.
     await projectsPage.startTimer();
 
-    // Wait for timer to register (check stop button appears)
-    await expect(projectsPage.stopTimerButton).toBeVisible();
-
-    // Stop timer
+    // Stop timer and wait for the idle state contract.
     await projectsPage.stopTimer();
-
-    // Verify timer stopped (start button should reappear)
-    await expect(projectsPage.startTimerButton).toBeVisible();
   });
 });
