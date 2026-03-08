@@ -263,47 +263,12 @@ export class AuthPage extends BasePage {
   }
 
   async signUp(email: string, password: string) {
-    // Use retry pattern for the entire sign-up flow to handle form state issues
-    await expect(async () => {
-      // Ensure the email form is expanded
-      await this.expandEmailForm();
+    if (await this.attemptSignUp(email, password)) {
+      return;
+    }
 
-      // Verify form is actually expanded using data-expanded attribute
-      const authForm = this.page.getByTestId(TEST_IDS.AUTH.FORM);
-      const isExpanded = await authForm.getAttribute("data-expanded");
-      if (isExpanded !== "true") {
-        throw new Error(`Form not expanded - data-expanded: ${isExpanded}`);
-      }
-
-      // Fill the form fields - wait for inputs to be ready
-      await expect(this.emailInput).toBeVisible();
-      await this.emailInput.fill(email);
-
-      // Verify form still expanded after filling email
-      const expandedAfterEmail = await authForm.getAttribute("data-expanded");
-      if (expandedAfterEmail !== "true") {
-        throw new Error(`Form collapsed after email fill`);
-      }
-
-      await expect(this.passwordInput).toBeVisible();
-      await this.passwordInput.fill(password);
-
-      // Verify form still expanded after filling password
-      const expandedAfterPassword = await authForm.getAttribute("data-expanded");
-      if (expandedAfterPassword !== "true") {
-        throw new Error(`Form collapsed after password fill`);
-      }
-
-      // Ensure form is ready before clicking submit
-      await this.waitForFormReady();
-
-      // Submit the form
-      const submitButton = this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-      await submitButton.click();
-
-      // Wait for either verification form or toast to appear
-      await expect(this.verifyHeading.or(this.page.locator(".sonner-toast"))).toBeVisible();
-    }).toPass();
+    const completed = await this.attemptSignUp(email, password, { expectOutcome: true });
+    expect(completed).toBe(true);
   }
 
   async navigateToSignUp() {
@@ -619,6 +584,24 @@ export class AuthPage extends BasePage {
     await expect(this.forgotPasswordHeading).toBeVisible({ timeout });
   }
 
+  async waitForSignUpVerificationStep(timeout = 3000) {
+    try {
+      await this.expectSignUpVerificationStep(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async expectSignUpVerificationStep(timeout = 15000) {
+    await expect
+      .poll(async () => this.getSignUpVerificationState(), {
+        timeout,
+        intervals: [250, 500, 1000],
+      })
+      .not.toBe("pending");
+  }
+
   async getOAuthErrorSettleState(): Promise<"signin" | "alert" | "toast" | "pending"> {
     if (this.page.url().includes("signin")) {
       return "signin";
@@ -629,6 +612,18 @@ export class AuthPage extends BasePage {
     }
 
     if (await this.errorToast.isVisible().catch(() => false)) {
+      return "toast";
+    }
+
+    return "pending";
+  }
+
+  async getSignUpVerificationState(): Promise<"verify" | "toast" | "pending"> {
+    if (await this.verifyHeading.isVisible().catch(() => false)) {
+      return "verify";
+    }
+
+    if (await this.successToast.isVisible().catch(() => false)) {
       return "toast";
     }
 
@@ -651,6 +646,53 @@ export class AuthPage extends BasePage {
         await this.forgotPasswordLink.dispatchEvent("click");
       }
     }
+  }
+
+  private async attemptSignUp(
+    email: string,
+    password: string,
+    options?: { expectOutcome?: boolean },
+  ) {
+    await this.expandEmailForm();
+    if (!(await this.waitForEmailFormExpanded())) {
+      if (!options?.expectOutcome) {
+        return false;
+      }
+
+      await this.expectEmailFormExpanded();
+    }
+
+    await expect(this.emailInput).toBeVisible();
+    await this.emailInput.fill(email);
+
+    if (!(await this.waitForEmailFormExpanded())) {
+      if (!options?.expectOutcome) {
+        return false;
+      }
+
+      await this.expectEmailFormExpanded();
+    }
+
+    await expect(this.passwordInput).toBeVisible();
+    await this.passwordInput.fill(password);
+
+    if (!(await this.waitForEmailFormExpanded())) {
+      if (!options?.expectOutcome) {
+        return false;
+      }
+
+      await this.expectEmailFormExpanded();
+    }
+
+    await this.waitForFormReady();
+    await this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON).click();
+
+    if (options?.expectOutcome) {
+      await this.expectSignUpVerificationStep();
+      return true;
+    }
+
+    return this.waitForSignUpVerificationStep();
   }
 
   async expectSignInForm() {
