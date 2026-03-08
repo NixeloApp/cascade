@@ -62,8 +62,8 @@ describe("Smart Issue List", () => {
     expect(todos).toHaveLength(1);
     expect(todos[0]._id).toBe(todoId);
     expect(todos[0].title).toBe("Todo Task");
-    expect(todos[0].assignee).not.toBeUndefined();
-    if (todos[0].assignee === undefined) throw new Error("Assignee is undefined");
+    expect(todos[0].assignee).not.toBeNull();
+    if (todos[0].assignee == null) throw new Error("Assignee is null/undefined");
     expect(todos[0].assignee._id).toBe(userId); // Check enrichment
 
     // Check In Progress
