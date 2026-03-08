@@ -331,7 +331,9 @@ export class AuthPage extends BasePage {
   async requestPasswordReset(email: string) {
     await this.ensureForgotPasswordEntry();
 
-    if (await this.codeInput.isVisible().catch(() => false)) {
+    // Already at check-email or code step from persisted state - nothing to do
+    const state = await this.getPasswordResetEntryState();
+    if (state === "check-email" || state === "code") {
       return;
     }
 
@@ -636,7 +638,13 @@ export class AuthPage extends BasePage {
 
   async expectForgotPasswordReady(timeout = 15000) {
     await expect(this.page).toHaveURL(/forgot-password/, { timeout });
-    await expect(this.forgotPasswordHeading).toBeVisible({ timeout });
+    // Accept any valid forgot-password state: entry form, check-email, or code input
+    await expect
+      .poll(async () => this.getPasswordResetEntryState(), {
+        timeout,
+        intervals: [250, 500, 1000],
+      })
+      .not.toBe("pending");
   }
 
   async ensureForgotPasswordEntry() {
@@ -773,7 +781,9 @@ export class AuthPage extends BasePage {
   private async attemptPasswordResetRequest(email: string, options?: { expectOutcome?: boolean }) {
     await this.ensureForgotPasswordEntry();
 
-    if (await this.codeInput.isVisible().catch(() => false)) {
+    // Already at check-email or code step from persisted state - nothing to do
+    const state = await this.getPasswordResetEntryState();
+    if (state === "check-email" || state === "code") {
       return true;
     }
 
