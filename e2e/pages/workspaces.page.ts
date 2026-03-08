@@ -23,7 +23,8 @@ export class WorkspacesPage extends BasePage {
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
 
-    // Scope to main content to avoid sidebar's "Add new workspace" button
+    // This page object targets the route-owned create-workspace modal, not the sidebar's
+    // direct-create shortcut, so keep the trigger scoped to the page surface.
     this.newWorkspaceButton = page.getByRole("button", {
       name: /\+ Create Workspace|Create Workspace/i,
     });
@@ -90,6 +91,7 @@ export class WorkspacesPage extends BasePage {
   }
 
   async expectWorkspacesView() {
+    await expect(this.page.getByRole("heading", { name: /workspaces/i }).first()).toBeVisible();
     await expect(this.newWorkspaceButton.first()).toBeVisible();
   }
 
@@ -189,6 +191,9 @@ export class WorkspacesPage extends BasePage {
 
   private async waitForWorkspacesView(timeout = 3000) {
     try {
+      await expect(this.page.getByRole("heading", { name: /workspaces/i }).first()).toBeVisible({
+        timeout,
+      });
       await expect(this.newWorkspaceButton.first()).toBeVisible({ timeout });
       return true;
     } catch {
