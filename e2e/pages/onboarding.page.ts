@@ -306,24 +306,28 @@ export class OnboardingPage {
    * Wait for onboarding wizard to load
    */
   async waitForWizard(timeout = TRANSITION_TIMEOUT) {
-    await expect(async () => {
-      await this.recoverOnboardingRouteIfNeeded();
-      await this.expectOnboardingRoute();
-      await this.waitForConvexConnection();
-      await this.waitForSplashScreen();
-      await expect(this.welcomeHeading).toBeVisible({ timeout });
-      await expect(this.teamLeadCard).toBeVisible();
-      await expect(this.teamMemberCard).toBeVisible();
-    }).toPass({ timeout: TRANSITION_RETRY_TIMEOUT, intervals: TRANSITION_RETRY_INTERVALS });
+    await this.prepareOnboardingWizard();
+
+    if (await this.waitForWizardVisible(timeout)) {
+      return;
+    }
+
+    await this.recoverOnboardingRouteIfNeeded();
+    await this.prepareOnboardingWizard();
+    await this.expectWizardVisible(timeout);
   }
 
   /** Wait for role selection cards to be interactive */
   async waitForRoleCardsReady() {
-    await expect(async () => {
-      await this.recoverOnboardingRouteIfNeeded();
-      await expect(this.teamLeadCard).toBeEnabled();
-      await expect(this.teamMemberCard).toBeEnabled();
-    }).toPass({ timeout: TRANSITION_RETRY_TIMEOUT, intervals: TRANSITION_RETRY_INTERVALS });
+    await this.waitForWizard();
+
+    if (await this.waitForRoleCardsInteractive()) {
+      return;
+    }
+
+    await this.recoverOnboardingRouteIfNeeded();
+    await this.waitForWizard();
+    await this.expectRoleCardsInteractive();
   }
 
   /**
@@ -331,26 +335,24 @@ export class OnboardingPage {
    */
   async selectTeamLead() {
     console.log("Selecting Team Lead role...");
-    await expect(async () => {
-      // If we are already on the next screen, we are good
-      if (await this.teamLeadHeading.isVisible().catch(() => false)) {
-        return;
-      }
 
+    if (await this.teamLeadHeading.isVisible().catch(() => false)) {
+      console.log("Successfully transitioned to Team Lead setup.");
+      return;
+    }
+
+    if (!(await this.attemptRoleSelection(this.teamLeadCard, this.teamLeadHeading))) {
       await this.recoverOnboardingRouteIfNeeded();
-      await this.waitForWizard();
+      const transitioned = await this.attemptRoleSelection(
+        this.teamLeadCard,
+        this.teamLeadHeading,
+        {
+          expectOutcome: true,
+        },
+      );
+      expect(transitioned).toBe(true);
+    }
 
-      if (!(await this.hasRoleSelectionStarted(this.teamLeadCard))) {
-        await this.waitForRoleCardsReady();
-        await this.teamLeadCard.click({ timeout: CLICK_RETRY_TIMEOUT });
-        await expect(this.teamLeadCard).toHaveAttribute("aria-pressed", "true", {
-          timeout: CARD_SELECTION_TIMEOUT,
-        });
-      }
-
-      // Check for the outcome (first screen of lead flow)
-      await expect(this.teamLeadHeading).toBeVisible({ timeout: TRANSITION_TIMEOUT });
-    }).toPass({ timeout: TRANSITION_RETRY_TIMEOUT, intervals: TRANSITION_RETRY_INTERVALS });
     console.log("Successfully transitioned to Team Lead setup.");
   }
 
@@ -359,26 +361,22 @@ export class OnboardingPage {
    */
   async selectTeamMember() {
     console.log("Selecting Team Member role...");
-    await expect(async () => {
-      // For team members, the immediate next step is "Name Your Project"
-      if (await this.nameProjectHeading.isVisible().catch(() => false)) {
-        return;
-      }
 
+    if (await this.nameProjectHeading.isVisible().catch(() => false)) {
+      console.log("Successfully transitioned to Team Member project naming.");
+      return;
+    }
+
+    if (!(await this.attemptRoleSelection(this.teamMemberCard, this.nameProjectHeading))) {
       await this.recoverOnboardingRouteIfNeeded();
-      await this.waitForWizard();
+      const transitioned = await this.attemptRoleSelection(
+        this.teamMemberCard,
+        this.nameProjectHeading,
+        { expectOutcome: true },
+      );
+      expect(transitioned).toBe(true);
+    }
 
-      if (!(await this.hasRoleSelectionStarted(this.teamMemberCard))) {
-        await this.waitForRoleCardsReady();
-        await this.teamMemberCard.click({ timeout: CLICK_RETRY_TIMEOUT });
-        await expect(this.teamMemberCard).toHaveAttribute("aria-pressed", "true", {
-          timeout: CARD_SELECTION_TIMEOUT,
-        });
-      }
-
-      // Check for the outcome (first screen of member flow)
-      await expect(this.nameProjectHeading).toBeVisible({ timeout: TRANSITION_TIMEOUT });
-    }).toPass({ timeout: TRANSITION_RETRY_TIMEOUT, intervals: TRANSITION_RETRY_INTERVALS });
     console.log("Successfully transitioned to Team Member project naming.");
   }
 
@@ -503,5 +501,69 @@ export class OnboardingPage {
 
     await expect(this.skipText).toBeVisible({ timeout: TRANSITION_TIMEOUT });
     return this.skipText;
+  }
+
+  private async prepareOnboardingWizard() {
+    await this.recoverOnboardingRouteIfNeeded();
+    await this.expectOnboardingRoute();
+    await this.waitForConvexConnection();
+    await this.waitForSplashScreen();
+  }
+
+  private async waitForWizardVisible(timeout = 3000) {
+    try {
+      await this.expectWizardVisible(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectWizardVisible(timeout = TRANSITION_TIMEOUT) {
+    await expect(this.welcomeHeading).toBeVisible({ timeout });
+    await expect(this.teamLeadCard).toBeVisible({ timeout });
+    await expect(this.teamMemberCard).toBeVisible({ timeout });
+  }
+
+  private async waitForRoleCardsInteractive(timeout = 3000) {
+    try {
+      await this.expectRoleCardsInteractive(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectRoleCardsInteractive(timeout = TRANSITION_TIMEOUT) {
+    await expect(this.teamLeadCard).toBeEnabled({ timeout });
+    await expect(this.teamMemberCard).toBeEnabled({ timeout });
+  }
+
+  private async attemptRoleSelection(
+    card: Locator,
+    nextStepHeading: Locator,
+    options?: { expectOutcome?: boolean },
+  ) {
+    await this.waitForRoleCardsReady();
+
+    if (!(await this.hasRoleSelectionStarted(card))) {
+      await card.click({ timeout: CLICK_RETRY_TIMEOUT });
+    }
+
+    if (options?.expectOutcome) {
+      await expect(nextStepHeading).toBeVisible({ timeout: TRANSITION_TIMEOUT });
+      return true;
+    }
+
+    return this.waitForVisible(nextStepHeading, CARD_SELECTION_TIMEOUT);
+  }
+
+  private async waitForVisible(locator: Locator, timeout = 3000) {
+    try {
+      await locator.waitFor({ state: "visible", timeout });
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
