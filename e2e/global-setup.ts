@@ -208,6 +208,16 @@ async function waitForAppReady(page: Page, baseURL: string): Promise<boolean> {
   }
 }
 
+async function ensureProjectTemplatesSeeded(): Promise<void> {
+  console.log("🌱 Seeding built-in project templates...");
+
+  if (!(await testUserService.seedTemplates())) {
+    throw new Error("Failed to seed built-in project templates during global setup.");
+  }
+
+  console.log("✓ Built-in project templates ready");
+}
+
 /**
  * Global setup entry point
  */
@@ -247,6 +257,8 @@ async function globalSetup(config: FullConfig): Promise<void> {
     await browser.close();
     throw new Error("React app failed to load. Cannot proceed with global setup.");
   }
+
+  await ensureProjectTemplatesSeeded();
 
   // Iterate for each worker
   for (let i = 0; i < workerCount; i++) {

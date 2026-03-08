@@ -311,12 +311,12 @@ export class ProjectsPage extends BasePage {
     await this.expectProjectsView();
     await this.clickNewProjectButton();
 
-    if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+    if (!(await this.waitForCreateProjectFormVisible())) {
       await this.expectProjectsView();
       await this.clickNewProjectButton();
     }
 
-    await expect(this.createProjectForm).toBeVisible();
+    await this.expectCreateProjectFormVisible();
 
     console.log("Create project modal visible.");
   }
@@ -969,9 +969,12 @@ export class ProjectsPage extends BasePage {
     }
   }
 
-  private async getCreateProjectStep(): Promise<"template" | "configure" | "pending"> {
+  private async getCreateProjectStep(): Promise<"template" | "configure" | "select" | "pending"> {
     const configureHeading = this.createProjectForm.getByRole("heading", {
       name: /configure project/i,
+    });
+    const selectHeading = this.page.getByRole("heading", {
+      name: /choose a template/i,
     });
 
     if (await configureHeading.isVisible().catch(() => false)) {
@@ -987,6 +990,10 @@ export class ProjectsPage extends BasePage {
       return "template";
     }
 
+    if (await selectHeading.isVisible().catch(() => false)) {
+      return "select";
+    }
+
     return "pending";
   }
 
@@ -997,6 +1004,19 @@ export class ProjectsPage extends BasePage {
     } catch {
       return false;
     }
+  }
+
+  private async waitForCreateProjectFormVisible(timeout = 3000) {
+    try {
+      await this.expectCreateProjectFormVisible(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectCreateProjectFormVisible(timeout = 10000) {
+    await this.createProjectForm.waitFor({ state: "visible", timeout });
   }
 
   private async expectCreateProjectStep(step: "template" | "configure", timeout = 10000) {
