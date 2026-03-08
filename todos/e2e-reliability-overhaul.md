@@ -242,6 +242,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `ProjectsPage.openCreateProjectForm()` and `cancelCreateProject()` now reuse `closeCreateProjectFormIfOpen()`, after the create-project modal hardening showed the dialog needed an explicit reset path for repeated cancel/reopen flows instead of assuming the previous close fully settled.
 - `auth-comprehensive.spec.ts` now relies on `AuthPage.expandEmailForm()` and `waitForFormExpanded()` for sign-in/sign-up coverage, after removing the spec-local expansion retries and flaky annotation proved the page object already exposes the deterministic state transition those tests needed.
 - `AuthPage` auth-form transitions now use named landing and expanded states (`signin-landing`, `signin-expanded`, `signup-landing`, `signup-expanded`) so route switches wait for the target form instance instead of trusting a transient `data-expanded` match from the previous auth route.
+- `authenticatedTest.ensureAuthenticated()` now treats dashboard bootstrap as a direct contract (`dashboard URL -> no 500 boundary -> dashboard shell ready`) with one explicit recovery path that escalates from `/app` to `/:orgSlug/dashboard` when auth injection lands on the marketing shell, instead of relying on a generic two-attempt loop around the whole bootstrap.
 - `activity-feed.spec.ts` now goes through `ProjectsPage` helpers for empty-vs-entry state, action text, issue-key visibility, and relative timestamps, after moving those assertions out of the spec body showed the feed state could be treated as a single page-object contract.
 - `SettingsPage.openInviteUserModal()` now waits for the invite form controls, `inviteUser()` accepts the invite row as the success signal, and `revokeInvite()` waits for the row status to become `revoked`, after the invite reruns showed the inline card could close before the button-based retry logic realized the action had already succeeded.
 - `SettingsPage.openInviteUserModal()` now uses a direct close-if-open -> click -> form-visible contract instead of wrapping that same modal-open sequence in a retry shell, after the invite flow rerun confirmed the admin invite modal opens deterministically.
@@ -513,6 +514,10 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `2 passed (600ms)`
 - `pnpm exec playwright test e2e/workspaces-org.spec.ts --reporter=line --workers=1`
   - `5 passed (50.1s)`
+- `pnpm run validate`
+  - `PASS` with the existing warn-only `164 file(s) missing tests`
+- `pnpm exec playwright test e2e/documents.spec.ts e2e/search.spec.ts e2e/permission-cascade.spec.ts --reporter=line --workers=1`
+  - `20 passed (2.6m)` after tightening authenticated dashboard bootstrap to recover via the concrete `/:orgSlug/dashboard` route when `/app` falls back to the landing page
 - `pnpm exec playwright test e2e/issue-detail-page.spec.ts -g "can edit issue description and priority from the direct issue detail page" --reporter=line --workers=1`
   - `1 passed (1.3m)`
 - `pnpm vitest run src/components/Onboarding/RoleSelector.test.tsx`
