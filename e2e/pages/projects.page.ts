@@ -1023,27 +1023,18 @@ export class ProjectsPage extends BasePage {
       return;
     }
 
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-      if (!(await this.waitForCreateProjectStep("template", 5000))) {
-        if (attempt === 0) {
-          await this.openCreateProjectForm();
-          continue;
-        }
-
-        await this.expectCreateProjectStep("template");
-      }
-
-      await this.clickFirstProjectTemplate();
-
-      if (await this.waitForCreateProjectStep("configure", 5000)) {
-        return;
-      }
-
-      if (attempt === 0) {
-        await this.openCreateProjectForm();
-      }
+    if (!(await this.waitForCreateProjectStep("template", 5000))) {
+      await this.recoverCreateProjectTemplateStep();
     }
 
+    await this.clickFirstProjectTemplate();
+
+    if (await this.waitForCreateProjectStep("configure", 5000)) {
+      return;
+    }
+
+    await this.recoverCreateProjectTemplateStep();
+    await this.clickFirstProjectTemplate();
     await this.expectCreateProjectStep("configure");
   }
 
@@ -1058,6 +1049,13 @@ export class ProjectsPage extends BasePage {
         .first()
         .evaluate((button: HTMLButtonElement) => button.click());
     }
+  }
+
+  private async recoverCreateProjectTemplateStep() {
+    await this.goto();
+    await this.expectProjectsView();
+    await this.openCreateProjectForm();
+    await this.expectCreateProjectStep("template");
   }
 
   async expectBoardVisible() {
