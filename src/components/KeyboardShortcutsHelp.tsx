@@ -113,9 +113,8 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
     title: "General",
     priority: 1,
     items: [
-      { id: "cmd-palette", description: "Open command palette", modifierShortcut: "cmd+k" },
+      { id: "cmd-palette", description: "Open search and commands", modifierShortcut: "cmd+k" },
       { id: "shortcuts-help", description: "Show keyboard shortcuts", singleKey: "?" },
-      { id: "focus-search", description: "Focus search", singleKey: "/" },
       { id: "close-modal", description: "Close modal or cancel", singleKey: "Esc" },
       { id: "ai-assistant", description: "Toggle AI assistant", modifierShortcut: "cmd+shift+a" },
     ],
@@ -339,7 +338,7 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
           >
             {isMacPlatform() ? "⌘" : "Ctrl"}+K
           </Typography>{" "}
-          to open command palette
+          to open search and commands
         </Typography>
       </Card>
     </Dialog>

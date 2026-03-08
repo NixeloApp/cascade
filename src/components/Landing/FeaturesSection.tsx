@@ -11,24 +11,24 @@ export function FeaturesSection() {
   const features = [
     {
       icon: <FileText className="w-6 h-6 text-brand-cyan-text" />,
-      title: "Docs and issues, finally together",
+      title: "Docs and execution stay linked",
       description:
-        "No more tab-switching between your wiki and your task board. Link specs to tickets, discussions to sprints. All in one place.",
+        "Link specs, issue threads, client updates, and board work instead of asking the team to manually keep them in sync.",
       gradient: "cyan" as const,
     },
     {
       icon: <Users className="w-6 h-6 text-brand-teal-text" />,
-      title: "Edit together, in real-time",
+      title: "Collaboration with less context loss",
       description:
-        "See who's typing, where they are, what changed. Collaborate like you're in the same room, even when you're not.",
+        "See what changed, who is blocked, and what needs a handoff without building a second workflow in chat and status meetings.",
       gradient: "teal" as const,
     },
     {
-      icon: <PanelsTopLeft className="w-6 h-6 text-palette-purple-text" />,
-      title: "See everything. Miss nothing.",
+      icon: <PanelsTopLeft className="w-6 h-6 text-status-warning-text" />,
+      title: "AI can act on real workspace context",
       description:
-        "One dashboard that actually makes sense. No more digging through 5 different tools to find what you need.",
-      gradient: "purple" as const,
+        "Search, summarize, and draft next steps from the same source of truth your team already works in.",
+      gradient: "amber" as const,
     },
   ];
 
@@ -37,10 +37,11 @@ export function FeaturesSection() {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <Typography variant="h2" className="text-3xl md:text-4xl font-bold mb-4 text-ui-text">
-            Stop juggling tools. Start shipping.
+            Built for the intelligence age
           </Typography>
           <Typography variant="lead" className="text-ui-text-secondary max-w-2xl mx-auto">
-            Project management shouldn't feel like a second job.
+            A sharper workflow is mostly about killing duplicated work, duplicated context, and
+            duplicated surfaces.
           </Typography>
         </div>
 
@@ -63,24 +64,24 @@ function FeatureCard({
   icon: React.ReactNode;
   title: string;
   description: string;
-  gradient: "cyan" | "teal" | "purple";
+  gradient: "cyan" | "teal" | "amber";
 }) {
   const gradients = {
     cyan: "from-brand-cyan-bg to-brand-teal-bg",
     teal: "from-brand-teal-bg to-brand-emerald-bg",
-    purple: "from-palette-purple-solid to-palette-pink-solid",
+    amber: "from-status-warning-bg to-status-warning/70",
   };
 
   const glows = {
     cyan: "hover:shadow-brand-cyan-text/20 hover:border-brand-cyan-text/40",
     teal: "hover:shadow-brand-teal-text/20 hover:border-brand-teal-text/40",
-    purple: "hover:shadow-palette-purple-solid/20 hover:border-palette-purple-solid/40",
+    amber: "hover:shadow-status-warning/20 hover:border-status-warning/40",
   };
 
   const linkColors = {
     cyan: "text-brand-cyan-text hover:text-brand-cyan-border",
     teal: "text-brand-teal-text hover:text-brand-teal-border",
-    purple: "text-palette-purple-text hover:text-palette-purple-solid",
+    amber: "text-status-warning-text hover:text-status-warning",
   };
 
   return (

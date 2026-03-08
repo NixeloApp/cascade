@@ -1,9 +1,9 @@
 /**
  * Global Search
  *
- * Command palette for searching issues, documents, and users.
- * Supports keyboard navigation, type filtering, and quick actions.
- * Opens with Cmd+K shortcut and provides paginated results.
+ * Unified omnibox for search, navigation, and quick actions.
+ * Supports keyboard navigation, type filtering, and advanced search handoff.
+ * Opens with Cmd+K shortcut and provides paginated results plus command actions.
  */
 
 import { api } from "@convex/_generated/api";
@@ -14,18 +14,20 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useSearchKeyboard, useSearchPagination } from "@/hooks/useGlobalSearch";
-import { Search } from "@/lib/icons";
+import { ArrowRight, Command, Filter, Plus, Search } from "@/lib/icons";
 import { parseIssueSearchShortcuts } from "@/lib/search-shortcuts";
 import { TEST_IDS } from "@/lib/test-ids";
+import type { CommandAction } from "./CommandPalette";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import {
-  Command,
   CommandDialog,
+  CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
+  Command as CommandMenu,
 } from "./ui/Command";
 import { KeyboardShortcut, ShortcutHint } from "./ui/KeyboardShortcut";
 import { Tabs, TabsList, TabsTrigger } from "./ui/Tabs";
@@ -47,14 +49,50 @@ type SearchResult =
       type: "document";
     };
 
-// Helper function to get filtered results based on active tab
+function filterCommands(commands: CommandAction[], query: string) {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) {
+    return commands.slice(0, 8);
+  }
+
+  return commands
+    .filter((command) => {
+      const haystack = [
+        command.label,
+        command.description,
+        ...(command.keywords ?? []),
+        command.group,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(normalizedQuery);
+    })
+    .slice(0, 8);
+}
+
+function groupCommands(commands: CommandAction[]) {
+  return commands.reduce<Record<string, CommandAction[]>>((groups, command) => {
+    const group = command.group ?? "Actions";
+    if (!groups[group]) {
+      groups[group] = [];
+    }
+    groups[group].push(command);
+    return groups;
+  }, {});
+}
+
 function getFilteredResults(
   activeTab: "all" | "issues" | "documents",
   issueResults: Doc<"issues">[],
   documentResults: Doc<"documents">[],
 ): SearchResult[] {
-  const issueSearchResults = issueResults.map((r) => ({ ...r, type: "issue" as const }));
-  const documentSearchResults = documentResults.map((r) => ({ ...r, type: "document" as const }));
+  const issueSearchResults = issueResults.map((result) => ({ ...result, type: "issue" as const }));
+  const documentSearchResults = documentResults.map((result) => ({
+    ...result,
+    type: "document" as const,
+  }));
 
   if (activeTab === "all") {
     return [...issueSearchResults, ...documentSearchResults];
@@ -65,7 +103,6 @@ function getFilteredResults(
   return documentSearchResults;
 }
 
-// Helper function to get total count based on active tab
 function getTotalCount(
   activeTab: "all" | "issues" | "documents",
   issueTotal: number,
@@ -80,7 +117,6 @@ function getTotalCount(
   return documentTotal;
 }
 
-// Helper function to check if there are more results
 function getHasMore(
   activeTab: "all" | "issues" | "documents",
   issueHasMore: boolean,
@@ -95,92 +131,30 @@ function getHasMore(
   return documentHasMore;
 }
 
-// Search list content component - renders based on query/loading state
-function SearchListContent({
-  query,
-  hasShortcuts,
-  isLoading,
-  filteredResults,
-  hasMore,
-  totalCount,
-  onClose,
-  onLoadMore,
-}: {
-  query: string;
-  hasShortcuts: boolean;
-  isLoading: boolean;
-  filteredResults: SearchResult[];
-  hasMore: boolean;
-  totalCount: number;
-  onClose: () => void;
-  onLoadMore: () => void;
-}) {
-  if (query.length < 2) {
-    return (
-      <Typography
-        variant="small"
-        color="secondary"
-        className="text-center"
-        data-testid={TEST_IDS.SEARCH.MIN_QUERY_MESSAGE}
-      >
-        {hasShortcuts
-          ? "Add at least 2 non-shortcut characters to search"
-          : "Type at least 2 characters to search"}
-      </Typography>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <Flex
-        direction="column"
-        align="center"
-        className="text-ui-text-secondary"
-        data-testid={TEST_IDS.SEARCH.LOADING_STATE}
-      >
-        <div className="inline-block w-6 h-6 border-2 border-brand-ring border-t-transparent rounded-full animate-spin mb-2" />
-        <Typography variant="small">Searching...</Typography>
-      </Flex>
-    );
-  }
-
+function CommandActionItem({ command, onClose }: { command: CommandAction; onClose: () => void }) {
   return (
-    <>
-      {filteredResults.length === 0 && (
-        <Flex
-          direction="column"
-          align="center"
-          data-testid={TEST_IDS.GLOBAL_SEARCH.NO_RESULTS}
-          className="text-ui-text-secondary"
-        >
-          <Icon icon={Search} size="xl" className="mb-4" />
-          <Typography variant="label">No results found</Typography>
-        </Flex>
-      )}
-      {filteredResults.length > 0 && (
-        <CommandGroup data-testid={TEST_IDS.SEARCH.RESULTS_GROUP}>
-          {filteredResults.map((result) => (
-            <SearchResultItem key={result._id} result={result} onClose={onClose} />
-          ))}
-        </CommandGroup>
-      )}
-      {hasMore && (
-        <Flex className="border-t border-ui-border">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onLoadMore}
-            className="w-full text-brand bg-brand-subtle hover:bg-brand-subtle:bg-brand-active/50"
-          >
-            Load More ({totalCount - filteredResults.length} remaining)
-          </Button>
-        </Flex>
-      )}
-    </>
+    <CommandItem
+      value={command.id}
+      onSelect={() => {
+        command.action();
+        onClose();
+      }}
+      className="cursor-pointer data-[selected=true]:bg-ui-bg-secondary"
+    >
+      {command.icon ? <Icon icon={command.icon} size="md" className="mr-2" /> : null}
+      <FlexItem flex="1">
+        <Typography variant="label" as="p">
+          {command.label}
+        </Typography>
+        {command.description ? (
+          <Typography variant="caption">{command.description}</Typography>
+        ) : null}
+      </FlexItem>
+      <ArrowRight className="h-4 w-4 text-ui-text-tertiary" />
+    </CommandItem>
   );
 }
 
-// Search result item component
 function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: () => void }) {
   const href =
     result.type === "issue"
@@ -198,16 +172,15 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
       data-testid={TEST_IDS.SEARCH.RESULT_ITEM}
     >
       <Flex align="start" gap="md" className="w-full">
-        {/* Icon */}
         <Flex
           align="center"
           justify="center"
-          className="shrink-0 w-8 h-8 rounded bg-ui-bg-tertiary"
+          className="h-8 w-8 shrink-0 rounded bg-ui-bg-tertiary"
         >
           {result.type === "issue" ? (
             <svg
               aria-hidden="true"
-              className="w-5 h-5 text-brand"
+              className="h-5 w-5 text-brand"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -220,7 +193,7 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
           ) : (
             <svg
               aria-hidden="true"
-              className="w-5 h-5 text-accent"
+              className="h-5 w-5 text-accent"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -233,10 +206,11 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
           )}
         </Flex>
 
-        {/* Content */}
         <FlexItem flex="1" className="min-w-0">
           <Flex align="center" gap="sm" wrap>
-            {result.type === "issue" && <Typography variant="inlineCode">{result.key}</Typography>}
+            {result.type === "issue" ? (
+              <Typography variant="inlineCode">{result.key}</Typography>
+            ) : null}
             <Badge variant="neutral" shape="pill" data-testid={TEST_IDS.SEARCH.RESULT_TYPE}>
               {result.type}
             </Badge>
@@ -253,8 +227,148 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
   );
 }
 
-/** Global command palette for searching issues and documents across the app. */
-export function GlobalSearch() {
+function SearchListContent({
+  query,
+  hasShortcuts,
+  commandGroups,
+  isLoading,
+  filteredResults,
+  hasMore,
+  totalCount,
+  onClose,
+  onLoadMore,
+  onOpenAdvancedSearch,
+}: {
+  query: string;
+  hasShortcuts: boolean;
+  commandGroups: Record<string, CommandAction[]>;
+  isLoading: boolean;
+  filteredResults: SearchResult[];
+  hasMore: boolean;
+  totalCount: number;
+  onClose: () => void;
+  onLoadMore: () => void;
+  onOpenAdvancedSearch: () => void;
+}) {
+  const commandGroupEntries = Object.entries(commandGroups);
+
+  if (query.length === 0) {
+    return (
+      <>
+        {commandGroupEntries.map(([group, commands]) => (
+          <CommandGroup key={group} heading={group}>
+            {commands.map((command) => (
+              <CommandActionItem key={command.id} command={command} onClose={onClose} />
+            ))}
+          </CommandGroup>
+        ))}
+
+        <Flex
+          direction="column"
+          align="center"
+          className="border-t border-ui-border px-4 py-6 text-center text-ui-text-secondary"
+        >
+          <Command className="mb-3 h-8 w-8 rounded-full border border-ui-border/70 p-2 text-ui-text-tertiary" />
+          <Typography variant="small">
+            Search across issues and docs, or jump straight into common actions.
+          </Typography>
+        </Flex>
+      </>
+    );
+  }
+
+  if (query.length < 2) {
+    return (
+      <>
+        {commandGroupEntries.map(([group, commands]) => (
+          <CommandGroup key={group} heading={group}>
+            {commands.map((command) => (
+              <CommandActionItem key={command.id} command={command} onClose={onClose} />
+            ))}
+          </CommandGroup>
+        ))}
+        <Typography
+          variant="small"
+          color="secondary"
+          className="px-4 py-5 text-center"
+          data-testid={TEST_IDS.SEARCH.MIN_QUERY_MESSAGE}
+        >
+          {hasShortcuts
+            ? "Add at least 2 non-shortcut characters to search issues and docs"
+            : "Type at least 2 characters to search issues and docs"}
+        </Typography>
+      </>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <Flex
+        direction="column"
+        align="center"
+        className="py-8 text-ui-text-secondary"
+        data-testid={TEST_IDS.SEARCH.LOADING_STATE}
+      >
+        <div className="mb-2 inline-block h-6 w-6 animate-spin rounded-full border-2 border-brand-ring border-t-transparent" />
+        <Typography variant="small">Searching...</Typography>
+      </Flex>
+    );
+  }
+
+  const hasCommandMatches = commandGroupEntries.length > 0;
+  const hasSearchMatches = filteredResults.length > 0;
+
+  return (
+    <>
+      {commandGroupEntries.map(([group, commands]) => (
+        <CommandGroup key={group} heading={group}>
+          {commands.map((command) => (
+            <CommandActionItem key={command.id} command={command} onClose={onClose} />
+          ))}
+        </CommandGroup>
+      ))}
+
+      {!hasSearchMatches ? (
+        <Flex
+          direction="column"
+          align="center"
+          data-testid={TEST_IDS.GLOBAL_SEARCH.NO_RESULTS}
+          className="px-4 py-8 text-ui-text-secondary"
+        >
+          <Icon icon={Search} size="xl" className="mb-4" />
+          <Typography variant="label">
+            {hasCommandMatches ? "No issue or document results" : "No results found"}
+          </Typography>
+          <Button variant="ghost" size="sm" onClick={onOpenAdvancedSearch} className="mt-3">
+            Open advanced search
+          </Button>
+        </Flex>
+      ) : (
+        <CommandGroup data-testid={TEST_IDS.SEARCH.RESULTS_GROUP} heading="Results">
+          {filteredResults.map((result) => (
+            <SearchResultItem key={result._id} result={result} onClose={onClose} />
+          ))}
+        </CommandGroup>
+      )}
+
+      {hasMore ? (
+        <Flex className="border-t border-ui-border">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onLoadMore}
+            className="w-full bg-brand-subtle text-brand hover:bg-brand-subtle/70"
+          >
+            Load More ({totalCount - filteredResults.length} remaining)
+          </Button>
+        </Flex>
+      ) : null}
+    </>
+  );
+}
+
+/** Unified omnibox for searching issues/documents and executing app actions. */
+export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const { isOpen, setIsOpen } = useSearchKeyboard();
   const { query, setQuery, activeTab, setActiveTab, issueOffset, documentOffset, limit, loadMore } =
@@ -262,8 +376,9 @@ export function GlobalSearch() {
   const parsedSearch = parseIssueSearchShortcuts(query);
   const effectiveQuery = parsedSearch.textQuery;
   const shouldSearch = effectiveQuery.length >= 2;
+  const matchedCommands = filterCommands(commands, effectiveQuery);
+  const commandGroups = groupCommands(matchedCommands);
 
-  // Search when query changes
   const issueSearchResult = useAuthenticatedQuery(
     api.issues.search,
     shouldSearch
@@ -286,149 +401,150 @@ export function GlobalSearch() {
   const documentTotal = documentSearchResult?.total ?? 0;
   const issueHasMore = (issueSearchResult?.page?.length ?? 0) === limit;
   const documentHasMore = documentSearchResult?.hasMore ?? false;
-
-  // Get filtered results based on active tab
   const filteredResults = shouldSearch
     ? getFilteredResults(activeTab, issueResults, documentResults)
     : [];
-
   const totalCount = getTotalCount(activeTab, issueTotal, documentTotal);
   const hasMore = getHasMore(activeTab, issueHasMore, documentHasMore);
+  const isLoading =
+    shouldSearch && (issueSearchResult === undefined || documentSearchResult === undefined);
 
   const handleLoadMore = () => {
     loadMore(issueHasMore, documentHasMore);
   };
 
-  const isLoading =
-    shouldSearch && (issueSearchResult === undefined || documentSearchResult === undefined);
+  const handleOpenAdvancedSearch = () => {
+    setIsOpen(false);
+    setIsAdvancedOpen(true);
+  };
 
   const handleFocusOutside: NonNullable<ComponentProps<typeof CommandDialog>["onFocusOutside"]> = (
     event,
   ) => {
-    // Keep the palette open when cmdk momentarily drops focus during result-list transitions.
     event.preventDefault();
   };
 
   return (
     <>
-      {/* Search Button */}
       <Button
-        variant="ghost"
+        variant="secondary"
         size="sm"
         onClick={() => setIsOpen(true)}
-        aria-label="Open search (⌘K)"
-        className="h-9 px-2.5 sm:px-3 bg-ui-bg-soft border border-ui-border/70 hover:bg-ui-bg-hover hover:border-ui-border-secondary text-ui-text-secondary hover:text-ui-text transition-all duration-default"
+        aria-label="Open search and commands"
+        data-testid={TEST_IDS.HEADER.SEARCH_BUTTON}
+        className="h-10 min-w-0 max-w-sm flex-1 justify-between rounded-full border border-ui-border/70 bg-ui-bg-soft px-3 text-ui-text-secondary shadow-soft transition-all duration-default hover:border-ui-border-secondary hover:bg-ui-bg-hover hover:text-ui-text"
       >
-        <svg
-          aria-hidden="true"
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-          />
-        </svg>
-        <Typography variant="small" color="secondary" className="text-xs sm:text-sm">
-          Search...
-        </Typography>
-        <KeyboardShortcut shortcut="⌘+K" className="hidden sm:inline-flex" />
+        <Flex align="center" gap="sm" className="min-w-0">
+          <Search className="h-4 w-4 shrink-0" />
+          <Typography variant="small" color="secondary" className="truncate text-xs sm:text-sm">
+            Search, jump, or create...
+          </Typography>
+        </Flex>
+        <KeyboardShortcut shortcut="⌘+K" className="hidden shrink-0 sm:inline-flex" />
       </Button>
 
-      {/* Search Modal */}
       <CommandDialog
         open={isOpen}
         onOpenChange={(open) => !open && setIsOpen(false)}
         onFocusOutside={handleFocusOutside}
+        title="Search and commands"
+        description="Find issues and documents, navigate the app, or run quick actions."
       >
-        <Command data-testid={TEST_IDS.SEARCH.MODAL} className="bg-ui-bg" shouldFilter={false}>
+        <CommandMenu data-testid={TEST_IDS.SEARCH.MODAL} className="bg-ui-bg" shouldFilter={false}>
           <CommandInput
-            placeholder="Search issues and documents..."
+            placeholder="Search issues, docs, and commands..."
             value={query}
             onValueChange={setQuery}
             className="text-ui-text"
             data-testid={TEST_IDS.SEARCH.INPUT}
-            aria-label="Global search"
+            aria-label="Search and commands"
           />
 
-          {/* Tabs with counts */}
-          <Tabs
-            value={activeTab}
-            onValueChange={(value) => setActiveTab(value as "all" | "issues" | "documents")}
-            className="border-b border-ui-border overflow-x-auto"
-          >
-            <TabsList variant="underline" className="gap-4">
-              <TabsTrigger
-                value="all"
-                variant="underline"
-                className="pb-2 px-1 text-xs sm:text-sm"
-                data-testid={TEST_IDS.SEARCH.TAB_ALL}
-              >
-                All{query.length >= 2 && ` (${issueTotal + documentTotal})`}
-              </TabsTrigger>
-              <TabsTrigger
-                value="issues"
-                variant="underline"
-                className="pb-2 px-1 text-xs sm:text-sm"
-                data-testid={TEST_IDS.SEARCH.TAB_ISSUES}
-              >
-                Issues{query.length >= 2 && ` (${issueTotal})`}
-              </TabsTrigger>
-              <TabsTrigger
-                value="documents"
-                variant="underline"
-                className="pb-2 px-1 text-xs sm:text-sm"
-                data-testid={TEST_IDS.SEARCH.TAB_DOCUMENTS}
-              >
-                Documents{query.length >= 2 && ` (${documentTotal})`}
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {effectiveQuery.length >= 2 ? (
+            <Tabs
+              value={activeTab}
+              onValueChange={(value) => setActiveTab(value as "all" | "issues" | "documents")}
+              className="overflow-x-auto border-b border-ui-border"
+            >
+              <TabsList variant="underline" className="gap-4">
+                <TabsTrigger
+                  value="all"
+                  variant="underline"
+                  className="px-1 pb-2 text-xs sm:text-sm"
+                  data-testid={TEST_IDS.SEARCH.TAB_ALL}
+                >
+                  All ({issueTotal + documentTotal})
+                </TabsTrigger>
+                <TabsTrigger
+                  value="issues"
+                  variant="underline"
+                  className="px-1 pb-2 text-xs sm:text-sm"
+                  data-testid={TEST_IDS.SEARCH.TAB_ISSUES}
+                >
+                  Issues ({issueTotal})
+                </TabsTrigger>
+                <TabsTrigger
+                  value="documents"
+                  variant="underline"
+                  className="px-1 pb-2 text-xs sm:text-sm"
+                  data-testid={TEST_IDS.SEARCH.TAB_DOCUMENTS}
+                >
+                  Documents ({documentTotal})
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          ) : null}
 
-          <CommandList className="max-h-80 sm:max-h-96">
+          <CommandList className="max-h-96 sm:max-h-screen">
+            <CommandEmpty>No matches</CommandEmpty>
             <SearchListContent
               query={effectiveQuery}
               hasShortcuts={parsedSearch.hasShortcuts}
+              commandGroups={commandGroups}
               isLoading={isLoading}
               filteredResults={filteredResults}
               hasMore={hasMore}
               totalCount={totalCount}
               onClose={() => setIsOpen(false)}
               onLoadMore={handleLoadMore}
+              onOpenAdvancedSearch={handleOpenAdvancedSearch}
             />
           </CommandList>
 
           <Typography
             variant="meta"
-            className="px-3 py-2 border-t border-ui-border text-ui-text-tertiary"
+            className="border-t border-ui-border px-3 py-2 text-ui-text-tertiary"
           >
-            Shortcuts: <code>type:bug</code> <code>status:done</code> <code>priority:high</code>{" "}
-            <code>label:frontend</code> <code>@me</code>
+            Search filters: <code>type:bug</code> <code>status:done</code>{" "}
+            <code>priority:high</code> <code>label:frontend</code> <code>@me</code>
           </Typography>
 
-          {/* Footer */}
-          <Flex align="center" justify="between" className="border-t border-ui-border">
-            <Flex align="center" gap="lg">
+          <Flex align="center" justify="between" className="border-t border-ui-border px-3 py-2">
+            <Flex align="center" gap="sm" wrap>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => {
-                  setIsOpen(false);
-                  setIsAdvancedOpen(true);
-                }}
+                onClick={handleOpenAdvancedSearch}
+                leftIcon={<Filter className="h-4 w-4" />}
               >
                 Advanced Search
               </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setQuery("@")}
+                leftIcon={<Plus className="h-4 w-4" />}
+              >
+                Search with filters
+              </Button>
+            </Flex>
+            <Flex align="center" gap="lg" className="hidden sm:flex">
               <ShortcutHint keys="up+down">Navigate</ShortcutHint>
               <ShortcutHint keys="Enter">Open</ShortcutHint>
+              <ShortcutHint keys="Esc">Close</ShortcutHint>
             </Flex>
-            <ShortcutHint keys="Esc">Close</ShortcutHint>
           </Flex>
-        </Command>
+        </CommandMenu>
       </CommandDialog>
 
       {isAdvancedOpen ? (

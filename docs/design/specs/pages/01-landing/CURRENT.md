@@ -1,8 +1,8 @@
 # Landing Page - Current State
 
 > **Route**: `/`
-> **Status**: 🔴 SLOP
-> **Last Updated**: Run `pnpm screenshots` to regenerate
+> **Status**: 🟡 Much closer to target; needs fresh screenshots and another visual pass
+> **Last Updated**: 2026-03-08 (code updated; run `pnpm screenshots` to refresh captures)
 
 ---
 
@@ -15,180 +15,107 @@
 
 ---
 
-## Structure
+## Current Composition
 
-The current landing page layout:
+The landing page now renders:
 
-```
-+-------------------------------------------------------------------------------------------+
-|  [N] Nixelo     Features  Pricing  Resources         [☀] [Sign in] [Get Started]          |
-+-------------------------------------------------------------------------------------------+
-|                                                                                           |
-|                          ~~~~~~~~~ AMBIENT GLOW ORBS ~~~~~~~~~                            |
-|                          ~~~~~~~~~ CIRCUIT FLOW LINES ~~~~~~~~                            |
-|                                                                                           |
-|                     .-----------------------------------.                                  |
-|                    | Project Management · Time Tracking |                                 |
-|                     '-----------------------------------'                                  |
-|                           (pill badge, subtle border)                                     |
-|                                                                                           |
-|                      Revolutionize Your Workflow.                                         |
-|                       Harmonize Your Team.                                                |
-|                          (two-line headline)                                              |
-|                                                                                           |
-|                  Experience the future of project management                              |
-|                  with integrated tracking, automation...                                  |
-|                            (muted subheadline)                                            |
-|                                                                                           |
-|                   [Get Started Free]    [▶ Watch Demo]                                    |
-|                    (gradient pill)       (outlined)                                       |
-|                                                                                           |
-+-------------------------------------------------------------------------------------------+
-|                                                                                           |
-|                       Stop juggling tools. Start shipping.                                |
-|                  Project management shouldn't feel like a second job.                     |
-|                                                                                           |
-|     +------------------------+ +------------------------+ +------------------------+      |
-|     | [⚡] icon container    | | [📊] icon container    | | [🎯] icon container    |      |
-|     |                        | |                        | |                        |      |
-|     | Real-time              | | Visual                 | | Smart                  |      |
-|     | Collaboration          | | Analytics              | | Automation             |      |
-|     |                        | |                        | |                        |      |
-|     | Description text that  | | Description text that  | | Description text that  |      |
-|     | explains the feature.  | | explains the feature.  | | explains the feature.  |      |
-|     |                        | |                        | |                        |      |
-|     | [Learn more →]         | | [Learn more →]         | | [Learn more →]         |      |
-|     +------------------------+ +------------------------+ +------------------------+      |
-|                                                                                           |
-+-------------------------------------------------------------------------------------------+
-|                                                                                           |
-|    +--------------------------------------------------------------------------------+     |
-|    |                                                                                |     |
-|    |                    Teams actually like using it.                               |     |
-|    |           No training required. No steep learning curve.                       |     |
-|    |                                                                                |     |
-|    |   30% faster    10% efficient    95% rate    95% reduction                     |     |
-|    |   ████████████  ████████████    ████████████  ████████████                     |     |
-|    |   Task compl.   Team product.   Satisfaction  Context switch                   |     |
-|    |                                                                                |     |
-|    +--------------------------------------------------------------------------------+     |
-|                                                                                           |
-+-------------------------------------------------------------------------------------------+
-|                                                                                           |
-|  [N] Nixelo                                                                               |
-|  The intelligent project management platform.                                             |
-|                                                                                           |
-|   PRODUCT          ORGANIZATION       RESOURCES                                           |
-|   Features         About              Blog                                                |
-|   Pricing          Careers            Documentation                                       |
-|   Changelog        Contact            Community                                           |
-|                                                                                           |
-|  ────────────────────────────────────────────────────────────────────                     |
-|  © 2026 Nixelo, Inc.  [FB] [TT] [PA]            Privacy · Terms · Cookies                 |
-|                                                                                           |
-+-------------------------------------------------------------------------------------------+
-```
+1. Sticky nav header
+2. Hero with stronger product copy and integrated product showcase
+3. Logo/proof strip
+4. Feature grid focused on reducing duplicated work/context
+5. AI assistance demo section
+6. Outcome-oriented proof/story section
+7. Pricing
+8. Closing CTA
+9. Richer trust-oriented footer
 
 ---
 
 ## Current Elements
 
 ### Navigation Header
-- **Logo**: Gradient "N" icon + "Nixelo" text
-- **Nav links**: Features, Pricing, Resources
-- **Theme toggle**: Sun/moon icon
-- **Sign in**: Ghost text link
-- **Get Started**: Gradient pill button
+- Logo + nav links
+- Theme toggle
+- Sign in / Get Started or Go to App
 
-### Background Effects
-- **Ambient orbs**: Fixed position blurred circles (brand/info/success)
-- **Circuit lines**: SVG pattern with faint curved lines
+### Hero
+- Badge with integrated workspace positioning
+- Stronger headline and supporting copy
+- Real CTA pair
+- Embedded `ProductShowcase` mockup
+- Supporting proof row below CTAs
 
-### Hero Section
-- **Badge**: "Project Management · Time Tracking" pill
-- **Headline**: Two-line, second line gradient accent
-- **Subheadline**: Muted description
-- **CTAs**: Two buttons (gradient + outlined)
+### Product Showcase
+- Board/control-tower preview
+- AI assistant summary panel
+- Quick metrics cards
+- Connected-surfaces panel
 
-### Features Section
-- **Heading**: "Stop juggling tools. Start shipping."
-- **Subheading**: Secondary description
-- **Cards**: 3-column grid with icons, titles, descriptions, links
+### Proof + Narrative
+- Text-logo strip below hero
+- Feature cards focused on context reduction
+- AI workflow demo mockup
+- Story cards replacing abstract percentage stats
 
-### Stats Section
-- **Card**: Large rounded secondary background
-- **Heading**: "Teams actually like using it."
-- **Stats**: 4 animated progress bars with percentages
-
-### Footer
-- **Logo + tagline**
-- **Link columns**: Product, Organization, Resources
-- **Bottom bar**: Copyright, social icons, legal links
+### Conversion
+- Pricing section
+- Dedicated final CTA section
+- Footer with trust/status treatment
 
 ---
 
 ## Files
 
-| File | Purpose | Lines |
-|------|---------|-------|
-| `src/routes/index.tsx` | Route definition | ~25 |
-| `src/components/landing/NavHeader.tsx` | Navigation header | ~120 |
-| `src/components/landing/HeroSection.tsx` | Hero content | ~80 |
-| `src/components/landing/FeaturesSection.tsx` | Feature cards | ~100 |
-| `src/components/landing/WhyChooseSection.tsx` | Stats section | ~120 |
-| `src/components/landing/Footer.tsx` | Page footer | ~150 |
-| `src/components/landing/CircuitFlowLines.tsx` | Background pattern | ~60 |
+| File | Purpose |
+|------|---------|
+| `src/routes/index.tsx` | Landing page composition |
+| `src/components/Landing/NavHeader.tsx` | Navigation header |
+| `src/components/Landing/HeroSection.tsx` | Hero and CTA copy |
+| `src/components/Landing/ProductShowcase.tsx` | Product preview mockup |
+| `src/components/Landing/LogoBar.tsx` | Social-proof strip |
+| `src/components/Landing/FeaturesSection.tsx` | Feature grid |
+| `src/components/Landing/AIFeatureDemo.tsx` | AI assistance mockup |
+| `src/components/Landing/WhyChooseSection.tsx` | Outcome/story cards |
+| `src/components/Landing/PricingSection.tsx` | Pricing tiers |
+| `src/components/Landing/FinalCTASection.tsx` | Closing CTA |
+| `src/components/Landing/Footer.tsx` | Footer and trust treatment |
 
 ---
 
-## Problems
+## What Improved
 
-| # | Problem | Location | Severity |
-|---|---------|----------|----------|
-| 1 | Light background lacks premium depth | index.tsx | HIGH |
-| 2 | Hero missing product showcase | HeroSection.tsx | HIGH |
-| 3 | No customer logos/social proof | N/A | HIGH |
-| 4 | Feature cards feel generic | FeaturesSection.tsx | MEDIUM |
-| 5 | Circuit lines too subtle | CircuitFlowLines.tsx | MEDIUM |
-| 6 | Missing "enterprise" section | N/A | MEDIUM |
-| 7 | No case studies/testimonials | N/A | MEDIUM |
-| 8 | Stats are abstract, not customer-tied | WhyChooseSection.tsx | MEDIUM |
-| 9 | Footer lacks depth | Footer.tsx | LOW |
-| 10 | Missing announcement banner | N/A | LOW |
-| 11 | No "Get a demo" booking | N/A | LOW |
-| 12 | Missing AI feature showcase | N/A | LOW |
+| # | Improvement | Status |
+|---|-------------|--------|
+| 1 | Hero is no longer text-only | Fixed |
+| 2 | Product showcase exists in the hero | Fixed |
+| 3 | Social proof strip exists below the hero | Fixed |
+| 4 | AI workflow/demo content exists | Fixed |
+| 5 | Abstract stats were replaced with more concrete story cards | Fixed |
+| 6 | Final CTA section exists | Fixed |
+| 7 | Footer has more trust/depth than the previous minimal version | Improved |
+| 8 | Fake demo CTA was removed | Fixed |
 
 ---
 
-## Current Colors (Light Theme)
+## Remaining Gaps
 
-| Element | Current Value |
-|---------|---------------|
-| Page background | Light gray/white |
-| Card background | Gradient (light gray) |
-| Primary text | Dark gray |
-| Secondary text | Medium gray |
-| Card borders | Subtle gray |
-| CTA gradient | Cyan-to-teal |
+| # | Problem | Severity |
+|---|---------|----------|
+| 1 | Screenshot references are stale and still reflect the older landing baseline | HIGH |
+| 2 | Logo strip uses text placeholders rather than real customer/brand assets | MEDIUM |
+| 3 | Hero/product preview is a crafted mockup, not a captured real app screenshot | MEDIUM |
+| 4 | No announcement banner yet | LOW |
+| 5 | No dedicated enterprise section yet | LOW |
+| 6 | Footer/legal/resources links are still placeholders | LOW |
 
 ---
 
 ## Summary
 
-The current landing page has:
-- Light-themed design instead of premium dark
-- No product screenshot/showcase in hero
-- No customer logos (social proof)
-- Abstract stats not tied to real customers
-- Missing enterprise-focused sections
-- Circuit line background too subtle
-- Generic feature cards
-- No AI feature demonstration
+The landing page is no longer the earlier generic hero + feature grid. It now has the core structure the target doc expected: product-led hero, proof strip, AI narrative, stronger conversion flow, and a richer close.
 
-Target state should match Mintlify's approach:
-- Near-black background (#08090a)
-- Product screenshot prominently displayed
-- Customer logos immediately below hero
-- Customer stories and case studies
-- Enterprise section with CTA
-- Final CTA section
+The next step is visual verification, not another blind rewrite:
+
+1. Run `pnpm screenshots`
+2. Replace the stale screenshot refs in this folder
+3. Re-score remaining gaps after looking at actual captures

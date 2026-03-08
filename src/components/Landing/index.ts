@@ -1,8 +1,12 @@
+export { AIFeatureDemo } from "./AIFeatureDemo";
 export { CircuitFlowLines } from "./CircuitFlowLines";
 export { FeaturesSection } from "./FeaturesSection";
+export { FinalCTASection } from "./FinalCTASection";
 export { Footer } from "./Footer";
 export { HeroSection } from "./HeroSection";
 export { NixeloLogo } from "./Icons";
+export { LogoBar } from "./LogoBar";
 export { NavHeader } from "./NavHeader";
 export { PricingSection } from "./PricingSection";
+export { ProductShowcase } from "./ProductShowcase";
 export { WhyChooseSection } from "./WhyChooseSection";

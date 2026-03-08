@@ -1,15 +1,15 @@
 # Nixelo Todo Portfolio
 
-> **Last Updated:** 2026-03-04  
+> **Last Updated:** 2026-03-08  
 > **Scope:** `todos/*.md` + `todos/jules/open/*.md`
 
 Canonical control plane for all todo docs: what to do first, what is blocked externally, and what is already done.
 
 ## Portfolio Snapshot
 
-- Total todo markdown files (including control files): `21`
-- Tracked execution docs (excluding `README.md` and `TODO.md`): `19`
-- Checkbox rollup across tracked docs: `156 done / 108 open / 1 in-progress`
+- Total todo markdown files (including control files): `20`
+- Tracked execution docs (excluding `README.md` and `TODO.md`): `18`
+- Checkbox rollup across tracked docs: `161 done / 100 open / 1 in-progress`
 - Highest-risk unresolved queue: calendar access control, invoice integrity, Slack auth/scoping
 
 ## Current Focus
@@ -45,7 +45,7 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 
 | Priority | File | Progress | State | Main Blocker |
 |---|---|---:|---|---|
-| P0 | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | `5/33` | In Progress | Finish deterministic waits/selectors and keep local full suite green |
+| P0 | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | `10/33` | In Progress | Finish deterministic waits/selectors, trim retry-heavy helpers, and keep local full suite green |
 | P1 | [multi-level-views.md](./multi-level-views.md) | `36/37` | Blocked | External package install/DNS for final validation |
 | P2 | [feature-gaps.md](./feature-gaps.md) | `16/21` | Blocked | Slack dashboard setup/registration |
 | P2 | [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) | `20/21` | Blocked | Monitoring destination decision |
@@ -73,7 +73,7 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 
 | File | Role | State |
 |---|---|---|
-| [visual-inconsistencies-2026-03-04.md](./visual-inconsistencies-2026-03-04.md) | Screenshot audit baseline (176 captures) | Checklist complete on 2026-03-04 |
+| [visual-inconsistencies-2026-03-04.md](./visual-inconsistencies-2026-03-04.md) | Screenshot audit baseline (176 captures) | Checklist complete on 2026-03-04; landing + omnibox refresh shipped on 2026-03-08; next step is fresh screenshots and design-doc sync |
 | [consistency-tracking.md](./consistency-tracking.md) | Standards/validator ledger | Operational tracking ongoing (`23/23` checklist complete) |
 
 ## Jules Issues (Open)

@@ -1,9 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
+  AIFeatureDemo,
   CircuitFlowLines,
   FeaturesSection,
+  FinalCTASection,
   Footer,
   HeroSection,
+  LogoBar,
   NavHeader,
   PricingSection,
   WhyChooseSection,
@@ -30,9 +33,12 @@ function LandingPage() {
       <div className="relative z-10">
         <NavHeader />
         <HeroSection />
+        <LogoBar />
         <FeaturesSection />
+        <AIFeatureDemo />
         <PricingSection />
         <WhyChooseSection />
+        <FinalCTASection />
         <Footer />
       </div>
     </div>

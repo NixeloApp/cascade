@@ -2,6 +2,7 @@
 
 > Source: `pnpm screenshots` run on 2026-03-04 (`176` captures)
 > Scope: visual quality issues from generated desktop/tablet/mobile screenshots
+> Status: Checklist complete; remaining screenshot-reference sync is tracked in design-doc maintenance, not in this todo.
 
 ## P0 - Blockers (fix first)
 
@@ -50,3 +51,4 @@
 
 - First priority should be screenshot determinism (wait for data + no loading placeholders in baselines).
 - After determinism, address token-level consistency (contrast, spacing, surface depth, CTA color system).
+- 2026-03-08 follow-up: landing hero/composition and the in-app search/command experience were overhauled; the remaining visual task is to recapture screenshots and sync the design CURRENT docs to that newer baseline.

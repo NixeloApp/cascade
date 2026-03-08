@@ -13,20 +13,20 @@ import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
-import { Typography } from "@/components/ui/Typography";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import { Menu } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
+import type { CommandAction } from "../CommandPalette";
 
 interface AppHeaderProps {
-  onShowCommandPalette?: () => void;
+  commands?: CommandAction[];
   onShowShortcutsHelp?: () => void;
 }
 
 /**
  * Main application header with search, notifications, and user menu.
  */
-export function AppHeader({ onShowCommandPalette, onShowShortcutsHelp }: AppHeaderProps) {
+export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
   const { isMobileOpen, toggleMobile } = useSidebarState();
 
   return (
@@ -45,40 +45,7 @@ export function AppHeader({ onShowCommandPalette, onShowShortcutsHelp }: AppHead
         </Button>
       </Flex>
 
-      <Flex align="center" gap="xs" className="sm:gap-2 shrink-0">
-        {onShowCommandPalette && (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={onShowCommandPalette}
-            className="h-9 gap-1.5 px-2 sm:px-3 text-xs sm:text-sm"
-            aria-label="Open command palette"
-            data-tour="command-palette"
-          >
-            <svg
-              aria-hidden="true"
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            <span className="hidden sm:inline text-current">Commands</span>
-            <Typography
-              as="kbd"
-              className="hidden lg:inline px-1.5 py-0.5 text-xs text-ui-text-tertiary bg-ui-bg border border-ui-border/50 rounded font-mono"
-            >
-              ⌘K
-            </Typography>
-          </Button>
-        )}
-
+      <Flex align="center" gap="xs" className="min-w-0 shrink-0 sm:gap-2">
         {onShowShortcutsHelp && (
           <Tooltip content="Keyboard shortcuts">
             <Button
@@ -108,7 +75,7 @@ export function AppHeader({ onShowCommandPalette, onShowShortcutsHelp }: AppHead
         )}
 
         <NavTimerWidget />
-        <GlobalSearch />
+        <GlobalSearch commands={commands} />
         <NotificationCenter />
         <UserMenu />
       </Flex>
