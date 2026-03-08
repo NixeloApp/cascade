@@ -221,8 +221,6 @@ export class AuthPage extends BasePage {
 
     // The submit button with test ID
     const submitButton = this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-    const authForm = this.page.getByTestId(TEST_IDS.AUTH.FORM);
-
     // Wait for button to be visible and enabled
     await expect(submitButton).toBeVisible();
     await expect(submitButton).toBeEnabled();
