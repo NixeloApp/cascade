@@ -139,7 +139,6 @@ This is the concrete "what's left" list for reliability hardening after the late
    - `dashboard.spec.ts` now goes through `DashboardPage` helpers for main-section visibility, issue-filter visibility, and notification-panel visibility instead of asserting those raw locators from the spec body.
    - `DashboardPage.signOutViaUserMenu()` now reacquires the Radix dropdown item inside a retry boundary and waits for a signed-out landing/sign-in destination, so sign-out no longer races a remounted menu item or leaves redirect completion to the spec body.
    - `onboarding.spec.ts` now goes through `OnboardingPage` for onboarding-route readiness, skip-to-dashboard completion, project-create completion, and dashboard-route readiness instead of mixing spec-level `waitForURL()` and dashboard-heading waits into the flow.
-   - follow-up watchpoint: onboarding role selection had a previous mixed-worker repro in `pnpm exec playwright test e2e/onboarding.spec.ts e2e/issue-detail-page.spec.ts --reporter=line --workers=2`, but the latest full 4-worker suite passed cleanly; keep it on the watchlist, but it is not the current release blocker.
    - `issue-detail-page.spec.ts` now goes through `IssueDetailPage` for route-ready assertions, issue-not-found assertions, and breadcrumb navigation back to the project board instead of repeating direct URL, error-state, and route-return checks from the spec body.
    - `error-scenarios.spec.ts` now goes through `ProjectsPage`, `DocumentsPage`, and `IssueDetailPage` for authenticated non-existent project/document/issue checks instead of repeating route navigation and error-state assertions directly in the spec body.
    - `error-scenarios.spec.ts` now goes through `LandingPage.expectLandingOrSignInPage()` for the unauthenticated protected-route redirect check instead of polling raw headings from the spec body.
@@ -172,7 +171,7 @@ This is the concrete "what's left" list for reliability hardening after the late
    - latest full runs on `2026-03-07` are green twice in a row: `160 passed` in `8.0m`, then `160 passed` in `7.8m`.
    - immediate next actions:
      - continue converting retry-heavy flows into explicit completion contracts while the suite is green enough to use as a stable benchmark.
-     - use the repeated green baseline to prioritize cleanup of remaining helper retries and long-lived watchpoints like onboarding mixed-worker instrumentation.
+     - use the repeated green baseline to prioritize cleanup of remaining helper retries and other high-churn flows that still lean on broad retry wrappers instead of narrow completion contracts.
    - adjacent non-E2E verification on `2026-03-07`:
      - `pnpm run validate` passed; `Test coverage` still reports `164 file(s) missing tests` as warn-only.
      - `pnpm run test:run` passed: `371 passed`, `5 skipped`.
@@ -363,7 +362,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `node node_modules/typescript/bin/tsc -b . --noEmit`
   - `pass`
 - `pnpm exec playwright test e2e/onboarding.spec.ts e2e/issue-detail-page.spec.ts --reporter=line --workers=2`
-  - `1 failed before interruption`; blocker remains onboarding role selection in `e2e/onboarding.spec.ts` under mixed-worker load, while the direct issue-detail edit path continued to pass in isolated reruns
+  - `12 passed (3.0m)`
 
 ## Evidence Freshness Guard
 
