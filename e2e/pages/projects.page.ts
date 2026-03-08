@@ -812,10 +812,8 @@ export class ProjectsPage extends BasePage {
   }
 
   async closeIssueDetail() {
-    await expect(async () => {
-      await this.closeIssueDetailIfOpen();
-      await expect(this.issueDetailDialog).not.toBeVisible();
-    }).toPass();
+    await this.closeIssueDetailIfOpen();
+    await expect(this.issueDetailDialog).not.toBeVisible();
   }
 
   async closeIssueDetailIfOpen() {
