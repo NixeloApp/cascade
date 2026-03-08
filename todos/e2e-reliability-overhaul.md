@@ -2,7 +2,7 @@
 
 > **Priority:** P0 (Highest)
 > **Effort:** Large
-> **Status:** In Progress (latest local full-suite regressed: 2 Playwright failures; validation also failing)
+> **Status:** In Progress (latest local full-suite green: 160 Playwright passed; validation passing)
 > **Last Updated:** 2026-03-07
 
 ## Objective
@@ -89,7 +89,7 @@ Make E2E tests deterministic and locally verifiable with one rule: run the full 
 ## Acceptance Criteria
 
 - [ ] No unjustified `waitForTimeout` usage across E2E suite.
-- [ ] Full local suite run reports 100% pass.
+- [x] Full local suite run reports 100% pass.
 - [ ] Core flows (`auth`, `issue create/edit`, `board drag/drop`, `docs`, `search`) are stable.
 - [ ] E2E authoring standard is documented and enforced in reviews.
 
@@ -99,7 +99,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 
 ### Execution Priority Note
 
-- focus on validation failures first before chasing additional E2E-only symptoms, because the validator is surfacing broader consistency debt that will keep leaking into tests.
+- validation-first cleanup is now landed and `pnpm run validate` passes again; keep that bar in place before taking on any new E2E-only hardening.
 - do not land narrow one-off fixes purely to make a failing check go green; prefer reusable page-object, helper, selector-contract, and UI-state abstractions that remove the whole class of failure.
 - treat each failure as an architecture opportunity: simplify control flow, make completion boundaries explicit, reduce duplicated test logic, and leave the touched code clearer than it was before.
 
@@ -111,6 +111,7 @@ This is the concrete "what's left" list for reliability hardening after the late
    - issue-detail dialog close assertions now go through `ProjectsPage.closeIssueDetail()` in the touched modal consumers.
    - global-search close assertions in `search.spec.ts` now go through `DashboardPage` helpers instead of spec-level `Escape` handling.
    - time-entry modal open/close in billing settings now goes through `DashboardPage` helpers instead of spec-level dialog handling.
+   - `DashboardPage.openTimeEntryModal({ expectBillable })` now treats org-setting propagation as part of the helper contract, reloading the app shell only when the timer modal proves the billing context is stale after an out-of-band settings mutation.
    - dashboard modal smoke tests now rely on page-object open/close helpers, and shortcut-open tests close their modals before exit.
    - invite-panel reset behavior now lives in `SettingsPage.closeInviteUserModalIfOpen()` instead of being inlined inside the open flow.
    - workspace-create reset now goes through `WorkspacesPage.closeCreateWorkspaceDialogIfOpen()`, and the shared workspaces-page create flow uses the modal form submit path instead of depending on the button click staying actionable.
@@ -136,9 +137,9 @@ This is the concrete "what's left" list for reliability hardening after the late
    - `workspaces-org.spec.ts` now goes through `SettingsPage` helpers for admin-settings readiness, organization-name visibility, time-approval state, and non-admin admin-tab blocking, and through `WorkspacesPage` helpers for workspace detail visibility.
    - `teams.spec.ts` now goes through `WorkspacesPage` helpers for workspace opening, teams-tab navigation, teams-page readiness, and empty-vs-teams state detection instead of branching on raw headings, workspace cards, and `Teams` links in the spec body.
    - `dashboard.spec.ts` now goes through `DashboardPage` helpers for main-section visibility, issue-filter visibility, and notification-panel visibility instead of asserting those raw locators from the spec body.
+   - `DashboardPage.signOutViaUserMenu()` now reacquires the Radix dropdown item inside a retry boundary and waits for a signed-out landing/sign-in destination, so sign-out no longer races a remounted menu item or leaves redirect completion to the spec body.
    - `onboarding.spec.ts` now goes through `OnboardingPage` for onboarding-route readiness, skip-to-dashboard completion, project-create completion, and dashboard-route readiness instead of mixing spec-level `waitForURL()` and dashboard-heading waits into the flow.
-   - current blocker: onboarding role selection is still not deterministic under mixed-worker pressure. The mixed repro `pnpm exec playwright test e2e/onboarding.spec.ts e2e/issue-detail-page.spec.ts --reporter=line --workers=2` still stalls on the role-select screen for `can select team lead role` or `can select team member role`, even after the page object now retries through route errors/connection readiness and the UI now recovers from rejected async role-selection callbacks instead of staying permanently pending.
-   - next step: instrument the onboarding role-selection path with explicit diagnostics for the post-click state (`aria-pressed`, `disabled`, toast/error visibility, console errors, and mutation failure surface) and harden the actual transition contract in the app instead of extending page-object retries further.
+   - follow-up watchpoint: onboarding role selection had a previous mixed-worker repro in `pnpm exec playwright test e2e/onboarding.spec.ts e2e/issue-detail-page.spec.ts --reporter=line --workers=2`, but the latest full 4-worker suite passed cleanly; keep it on the watchlist, but it is not the current release blocker.
    - `issue-detail-page.spec.ts` now goes through `IssueDetailPage` for route-ready assertions, issue-not-found assertions, and breadcrumb navigation back to the project board instead of repeating direct URL, error-state, and route-return checks from the spec body.
    - `error-scenarios.spec.ts` now goes through `ProjectsPage`, `DocumentsPage`, and `IssueDetailPage` for authenticated non-existent project/document/issue checks instead of repeating route navigation and error-state assertions directly in the spec body.
    - `error-scenarios.spec.ts` now goes through `LandingPage.expectLandingOrSignInPage()` for the unauthenticated protected-route redirect check instead of polling raw headings from the spec body.
@@ -154,7 +155,7 @@ This is the concrete "what's left" list for reliability hardening after the late
    - `DashboardCustomizeModal`, `PreferencesTab`, and the settings shell now gate auth-sensitive queries with `useConvexAuth()`, after the search minimum-query and dashboard theme reruns showed hidden/user-settings queries could still trip `UNAUTHENTICATED` boundaries during initial auth bootstrap.
    - `SettingsPage.inviteUser()` now treats modal open, email fill, optional role selection, and invite-row visibility as one retryable interaction, after the settings/admin rerun showed the invite email input could detach between modal-open success and the first fill.
    - `BreadcrumbLink` now honors `asChild`, after the `workspaces-org.spec.ts` rerun surfaced nested-anchor hydration errors in workspace breadcrumbs even though the tests still passed.
-   - next focus: refresh broader Playwright suite evidence and keep watching for eager authenticated queries outside the touched dashboard/settings shells, since the previous search/documents, dashboard theme, and settings/admin blockers are green in the latest targeted reruns.
+   - next focus: repeat the full suite on the new green baseline and keep trimming helper retries that are still acting as synchronization safety nets instead of explicit completion contracts.
 2. Selector contract completion:
    - `pnpm run validate` now passes with no `Test ID constants` warnings.
    - continue replacing brittle text/CSS fallbacks opportunistically when modifying critical specs.
@@ -168,12 +169,12 @@ This is the concrete "what's left" list for reliability hardening after the late
 5. Evidence updates after every full run:
    - append the latest pass/fail outcome and duration in this file.
    - record failing spec names and immediate next action when the suite is not 100% pass.
-   - latest full run on `2026-03-07` regressed to `157 passed`, `2 failed`, `1 did not run` in `8.4m`.
+   - latest full run on `2026-03-07` is green: `160 passed` in `8.0m`.
    - immediate next actions:
-     - `e2e/settings/billing.spec.ts`: inspect whether the billable checkbox was removed from the start-timer dialog or the page object is opening/asserting the wrong dialog state; then align the spec/helper with the current billing UX contract.
-     - `e2e/signout.spec.ts`: verify the intended post-signout destination (`/`, `/signin`, or app shell with cleared auth), then fix either the redirect logic or the assertion contract so signout proves auth was actually cleared.
+     - rerun the full suite to confirm this green baseline is repeatable, not a one-off.
+     - continue converting retry-heavy flows into explicit completion contracts while the suite is green enough to use as a stable benchmark.
    - adjacent non-E2E verification on `2026-03-07`:
-     - `pnpm run validate` failed on `Unused parameters` with `189 underscore-prefixed binding(s)`; `Test coverage` still reports `164 file(s) missing tests` as warn-only.
+     - `pnpm run validate` passed; `Test coverage` still reports `164 file(s) missing tests` as warn-only.
      - `pnpm run test:run` passed: `371 passed`, `5 skipped`.
      - `pnpm run test:convex:run` passed: `250 passed`, `3 skipped`.
      - backend/unit suites are currently green, but they still emit expected-looking stderr from negative-path tests and scheduled-job env validation (`BOT_SERVICE_URL`, OAuth error-path logs, digest-email render error logs), so those logs should not be confused with actual test failures.
@@ -197,6 +198,8 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `ensureAuthenticated()` now routes authenticated tests through `/app` and waits for a healthy dashboard shell instead of treating the dashboard URL alone as success, after the docs/search reruns showed API-authenticated tests could still land on a `500` dashboard during bootstrap.
 - `DashboardPage.searchFor()` now throws app-error diagnostics from inside its retry loop, after the minimum-query rerun showed the global search could fail behind a generic missing-input timeout when `userSettings:get` returned `UNAUTHENTICATED`.
 - `DashboardPage.closeTimeEntryModal()` is idempotent again, after the billing-disabled flow showed the timer dialog can already be gone by cleanup time even though the checkbox assertion completed.
+- `DashboardPage.openTimeEntryModal({ expectBillable })` now reloads the app shell only when the modal proves org billing state is stale, after the grouped billing/signout rerun reproduced an out-of-band settings race that did not show up in the earlier isolated billing run.
+- `DashboardPage.signOutViaUserMenu()` now reacquires the visible `Sign out` menu item inside the retry loop and waits for a signed-out destination, after the isolated signout rerun showed the previous locator could detach between menu-open and click.
 - `SettingsPage.inviteUser()` now wraps modal open, form fill, optional role selection, and invite-row visibility in the same retry boundary, after the settings/admin rerun showed the invite email input could detach immediately after the modal-open helper succeeded.
 - `ProjectsPage.openIssueDetail()` and `closeIssueDetail()` now reuse a named `closeIssueDetailIfOpen()` reset, after hardening moved the detail-dialog setup and teardown into the page object and the targeted rerun confirmed the modal flow stays deterministic across integration and issues specs.
 - `ProjectsPage.createProject()` now accepts the wizard's `Creating...` state as proof that submit started, after the issue-detail setup rerun exposed that waiting only for immediate dialog dismissal could misclassify a valid create click as a failure.
@@ -343,6 +346,10 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `1 passed (28.3s)`
 - `pnpm exec playwright test e2e/settings/billing.spec.ts e2e/invites.spec.ts e2e/workspaces-org.spec.ts --reporter=line --workers=1`
   - `8 passed (1.1m)`
+- `pnpm exec playwright test e2e/settings/billing.spec.ts e2e/signout.spec.ts --reporter=line --workers=1`
+  - `3 passed (30.7s)`
+- `pnpm exec playwright test --reporter=line`
+  - `160 passed (8.0m)`
 - `pnpm vitest run src/components/ui/Breadcrumb.test.tsx`
   - `2 passed (600ms)`
 - `pnpm exec playwright test e2e/workspaces-org.spec.ts --reporter=line --workers=1`
@@ -375,14 +382,13 @@ Full-suite evidence in this TODO is considered stale if older than 24 hours.
 - Run date:
   - `2026-03-07`
 - Outcome:
-  - `157 passed`, `2 failed`, `1 did not run` `(8.4m)`
+  - `160 passed` `(8.0m)`
 - Failing specs:
-  - `e2e/settings/billing.spec.ts:34` - `billing enabled shows billable checkbox on time entries`
-  - `e2e/signout.spec.ts:29` - `sign out returns to landing page and allows signing back in`
+  - `none`
 - Immediate next action:
-  - root-cause the billing dialog mismatch and signout redirect/auth-clear contract before trusting targeted reruns as release evidence.
+  - rerun the full suite to prove the green baseline is stable across consecutive runs, then keep reducing helper retries in the remaining high-churn flows.
 - Gate interpretation:
-  - current local suite is not green; release-gate evidence is blocked until the two Playwright failures are fixed and the full run is repeated.
+  - current local suite is green; release-gate evidence is available, but it should still be refreshed with a second clean full run before calling the hardening phase complete.
 
 ## Related Files
 
