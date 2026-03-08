@@ -668,16 +668,8 @@ export class DashboardPage extends BasePage {
   }
 
   async searchFor(query: string) {
-    await expect(async () => {
-      await this.throwIfAppErrorVisible();
-      await expect(this.globalSearchInput).toBeVisible();
-      await expect(this.globalSearchInput).toBeEnabled();
-      await this.globalSearchInput.focus();
-      await this.throwIfAppErrorVisible();
-      await this.globalSearchInput.fill(query);
-      await this.throwIfAppErrorVisible();
-      await expect(this.globalSearchInput).toHaveValue(query);
-    }).toPass();
+    await this.expectGlobalSearchReady();
+    await this.enterGlobalSearchQuery(query);
 
     if (query.length < 2) {
       await this.throwIfAppErrorVisible();
@@ -689,19 +681,12 @@ export class DashboardPage extends BasePage {
   }
 
   async waitForSearchSettled() {
-    await expect(async () => {
-      await this.throwIfAppErrorVisible();
-      await expect(this.globalSearchLoadingState).not.toBeVisible();
-      await this.throwIfAppErrorVisible();
-
-      const hasResults = await this.globalSearchResultItems
-        .first()
-        .isVisible()
-        .catch(() => false);
-      const hasNoResults = await this.globalSearchNoResults.isVisible().catch(() => false);
-
-      expect(hasResults || hasNoResults).toBe(true);
-    }).toPass();
+    await expect
+      .poll(async () => this.getGlobalSearchResultsState(), {
+        timeout: 10000,
+        intervals: [200, 500, 1000],
+      })
+      .toMatch(/^(results|empty)$/);
   }
 
   async switchGlobalSearchTab(tab: "all" | "issues" | "documents") {
@@ -727,6 +712,56 @@ export class DashboardPage extends BasePage {
 
   getGlobalSearchResultType(title: string): Locator {
     return this.getGlobalSearchResult(title).getByTestId(TEST_IDS.SEARCH.RESULT_TYPE);
+  }
+
+  private async enterGlobalSearchQuery(query: string) {
+    await this.throwIfAppErrorVisible();
+    await expect(this.globalSearchInput).toBeVisible();
+    await expect(this.globalSearchInput).toBeEnabled();
+    await this.globalSearchInput.focus();
+    await this.globalSearchInput.fill(query);
+    await this.throwIfAppErrorVisible();
+
+    if (await this.waitForGlobalSearchQueryValue(query)) {
+      return;
+    }
+
+    await this.expectGlobalSearchReady();
+    await this.globalSearchInput.fill(query);
+    await this.throwIfAppErrorVisible();
+    await expect(this.globalSearchInput).toHaveValue(query);
+  }
+
+  private async waitForGlobalSearchQueryValue(query: string, timeout = 3000) {
+    try {
+      await expect(this.globalSearchInput).toHaveValue(query, { timeout });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async getGlobalSearchResultsState(): Promise<"loading" | "results" | "empty" | "settling"> {
+    await this.throwIfAppErrorVisible();
+
+    if (await this.globalSearchLoadingState.isVisible().catch(() => false)) {
+      return "loading";
+    }
+
+    if (
+      await this.globalSearchResultItems
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
+      return "results";
+    }
+
+    if (await this.globalSearchNoResults.isVisible().catch(() => false)) {
+      return "empty";
+    }
+
+    return "settling";
   }
 
   // ===================
