@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import {
   createWorkspaceFromDialog,
@@ -320,9 +321,14 @@ export class ProjectsPage extends BasePage {
       return;
     }
 
-    await this.ensureProjectsView();
-    await this.clickNewProjectButton();
-    await this.expectCreateProjectWizardReady();
+    // Check if modal is already open but still pending before re-clicking
+    if (await this.createProjectForm.isVisible().catch(() => false)) {
+      await this.expectCreateProjectWizardReady();
+    } else {
+      await this.ensureProjectsView();
+      await this.clickNewProjectButton();
+      await this.expectCreateProjectWizardReady();
+    }
 
     console.log("Create project modal visible.");
   }
@@ -984,7 +990,9 @@ export class ProjectsPage extends BasePage {
   }
 
   private async navigateToProjectsRoute() {
-    await this.page.goto(`/${this.orgSlug}/projects`, { waitUntil: "domcontentloaded" });
+    await this.page.goto(ROUTES.projects.list.build(this.orgSlug), {
+      waitUntil: "domcontentloaded",
+    });
     await this.page.waitForLoadState("load");
     await this.waitForLoad();
 
@@ -992,9 +1000,11 @@ export class ProjectsPage extends BasePage {
       return;
     }
 
-    await this.page.goto("/app", { waitUntil: "domcontentloaded" });
+    await this.page.goto(ROUTES.app.build(), { waitUntil: "domcontentloaded" });
     await this.page.waitForLoadState("load");
-    await this.page.goto(`/${this.orgSlug}/projects`, { waitUntil: "domcontentloaded" });
+    await this.page.goto(ROUTES.projects.list.build(this.orgSlug), {
+      waitUntil: "domcontentloaded",
+    });
     await this.page.waitForLoadState("load");
     await this.waitForLoad();
   }

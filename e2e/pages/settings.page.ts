@@ -358,9 +358,11 @@ export class SettingsPage extends BasePage {
   async inviteUser(email: string, role?: string) {
     await this.fillInviteEmail(email);
 
+    // Normalize role first to handle whitespace-padded values like " User "
+    const normalizedRole = role?.trim().toLowerCase();
+
     // Only change role if it's not "user" (which is the default)
-    if (role && role.toLowerCase() !== "user") {
-      const normalizedRole = role.trim().toLowerCase();
+    if (normalizedRole && normalizedRole !== "user") {
       const roleLabelMap: Record<string, string> = {
         "super admin": "Super Admin",
         super_admin: "Super Admin",
@@ -370,11 +372,8 @@ export class SettingsPage extends BasePage {
       if (!displayRole) {
         throw new Error(`Unsupported invite role: ${role}`);
       }
-      const selectTrigger = this.page
-        .getByRole("combobox")
-        .filter({ hasText: /^User$|^Super Admin$|Select role/i });
-      await expect(selectTrigger).toBeVisible();
-      await selectTrigger.click();
+      await expect(this.inviteRoleSelect).toBeVisible();
+      await this.inviteRoleSelect.click();
       await expect(this.page.getByRole("option", { name: displayRole })).toBeVisible();
       await this.page.getByRole("option", { name: displayRole }).click();
       await expect(this.page.getByRole("option", { name: displayRole })).not.toBeVisible();
@@ -601,6 +600,11 @@ export class SettingsPage extends BasePage {
     await this.expectAdminSettingsLoaded();
 
     if (await this.hasTimeApprovalState(enabled)) {
+      // Even if DOM matches, there may be a pending unsaved draft - ensure it's persisted
+      if (await this.waitForSettingsSaveReady(500)) {
+        await this.saveOrganizationSettings();
+      }
+      await this.expectTimeApprovalEnabled(enabled);
       return;
     }
 

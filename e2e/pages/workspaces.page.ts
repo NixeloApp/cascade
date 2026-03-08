@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { ROUTES } from "../../convex/shared/routes";
 import { createWorkspaceFromDialog, getWorkspaceDialogElements } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
@@ -25,9 +26,10 @@ export class WorkspacesPage extends BasePage {
 
     // This page object targets the route-owned create-workspace modal, not the sidebar's
     // direct-create shortcut, so keep the trigger scoped to the page surface.
-    this.newWorkspaceButton = page.getByRole("button", {
-      name: /\+ Create Workspace|Create Workspace/i,
-    });
+    this.newWorkspaceButton = page
+      .getByRole("main")
+      .getByRole("button", { name: /\+ Create Workspace|Create Workspace/i })
+      .first();
     this.workspaceList = page.getByRole("main").locator("a[href*='/workspaces/']").locator("..");
     this.workspaceCards = page.locator("a[href*='/workspaces/']");
     this.workspaceTabs = page
@@ -211,7 +213,7 @@ export class WorkspacesPage extends BasePage {
   }
 
   private async navigateToWorkspacesRoute() {
-    const workspacesUrl = `/${this.orgSlug}/workspaces`;
+    const workspacesUrl = ROUTES.workspaces.list.build(this.orgSlug);
 
     await this.page.goto(workspacesUrl, { waitUntil: "domcontentloaded" });
     await this.page.waitForLoadState("load");
@@ -221,7 +223,7 @@ export class WorkspacesPage extends BasePage {
       return;
     }
 
-    await this.page.goto("/app", { waitUntil: "domcontentloaded" });
+    await this.page.goto(ROUTES.app.build(), { waitUntil: "domcontentloaded" });
     await this.page.waitForLoadState("load");
     await this.page.goto(workspacesUrl, { waitUntil: "domcontentloaded" });
     await this.page.waitForLoadState("load");
