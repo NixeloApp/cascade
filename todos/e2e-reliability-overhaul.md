@@ -216,6 +216,7 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `pnpm exec playwright test --reporter=line` -> `160 passed (5.4m)`
   - `pnpm run validate` -> `PASS` with the existing warn-only `164 file(s) missing tests`
 - `SettingsPage.inviteUser()` now wraps modal open, form fill, optional role selection, and invite-row visibility in the same retry boundary, after the settings/admin rerun showed the invite email input could detach immediately after the modal-open helper succeeded.
+- `SettingsPage.fillInviteEmail()` now uses a direct fill-and-confirm contract with one explicit modal reset instead of a small retry loop, after the isolated invites rerun confirmed the inline invite form only needed a bounded reopen recovery when the email input detached during fill.
 - `SettingsPage.toggleTimeApproval()` now uses explicit draft-state and save-state helpers with one bounded re-stage recovery, after the admin settings reruns showed the live organization-settings subscription could remount the save button mid-click and invalidate a blanket retry wrapper.
 - `board-drag-drop.spec.ts` now treats `dragTo()` as the action boundary and asserts the two allowed post-drag end states directly, after the repeated reruns showed the spec did not need to retry the entire drag gesture just to prove the card still exists in source or target.
 - `IssueDetailPage.editTitle()` / `editDescription()` now use a bounded edit-mode recovery on the standalone route instead of retrying the whole edit cycle, after the direct-route reruns showed the first `Edit Issue` click or the first save-control mount could be dropped without invalidating the entire edit contract.
@@ -231,6 +232,8 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `ProjectsPage.submitCreateProject()` now uses a bounded submit-start contract (`Creating...` or modal dismissal) with a semantic click first and a DOM-click fallback for the sticky footer button, after the latest project-create reruns showed Playwright actionability could reject a still-valid footer button as outside the viewport.
 - Playwright `globalSetup` now seeds built-in project templates before worker auth setup, so project-creation specs no longer depend on earlier files opportunistically calling `testUserService.seedTemplates()` before a later isolated rerun reaches `ProjectsPage.createProject()`.
 - `ProjectsPage.openCreateProjectForm()` now uses a direct open contract with one explicit second-click recovery if the modal does not mount on the first attempt, instead of wrapping the whole open sequence in a broad retry loop.
+- `ProjectsPage.openCreateProjectForm()` now requires a live projects shell before clicking and treats wizard-ready state (`template` or `configure`) as the modal-open completion signal, instead of assuming a visible dialog container or a previously mounted sidebar is enough to make the create flow safe.
+- `ProjectsPage.goto()` now owns app-gateway recovery plus projects-shell visibility, after the serial search reruns showed a direct `/projects` navigation could settle on a loading shell or the landing page while the next create-project step still assumed the org shell was interactive.
 - `ProjectsPage.createProject()` now uses a direct template-selection contract with one explicit modal-reopen recovery if the configure step does not appear after the first template click, instead of wrapping the whole template step in a broad retry loop.
 - `ProjectsPage.ensureCreateProjectConfigureStep()` now owns the wizard-ready contract for `createProject()`, reopening the modal once if it mounted without either the template choices or the configure step, after the focused `sprints.spec.ts` rerun showed the modal container could appear before the wizard reached a usable state.
 - `ProjectsPage.createIssue()` now submits once and waits on the shared issue-create completion contract (modal dismissed, created card visible, success toast visible) instead of wrapping `requestSubmit()` in a broad retry loop.
@@ -247,6 +250,11 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `pnpm exec playwright test e2e/auth-comprehensive.spec.ts -g "can switch between sign in and sign up" --reporter=line --workers=1` -> `1 passed (18.5s)`
   - `pnpm exec playwright test e2e/invites.spec.ts --reporter=line --workers=1` -> `1 passed (23.0s)`
   - `pnpm exec playwright test e2e/auth-comprehensive.spec.ts e2e/invites.spec.ts --reporter=line --workers=1` -> `10 passed (47.9s)`
+  - `pnpm run validate` -> `PASS` with the existing warn-only `164 file(s) missing tests`
+- latest project/create-flow reruns on `2026-03-07` are green after the projects-shell recovery follow-up:
+  - `pnpm exec playwright test e2e/search.spec.ts -g "search displays result count in tabs" --reporter=line --workers=1` -> `1 passed (30.6s)`
+  - `pnpm exec playwright test e2e/invites.spec.ts --reporter=line --workers=1` -> `1 passed (19.4s)`
+  - `pnpm exec playwright test e2e/issues.spec.ts e2e/sprints.spec.ts e2e/roadmap.spec.ts e2e/search.spec.ts --reporter=line --workers=1` -> `19 passed (4.7m)`
   - `pnpm run validate` -> `PASS` with the existing warn-only `164 file(s) missing tests`
 - `DocumentsPage.createNewDocument()` now owns the post-create URL and editor-ready checks, after the docs rerun confirmed the spec no longer needs to reassert editor hydration separately after every new-document action.
 - `DocumentsPage.createNewDocument()` now clicks once and waits on route change plus editor readiness directly instead of wrapping the route transition in a retry loop, after the docs rerun confirmed the create flow no longer needs the extra retry shell.
