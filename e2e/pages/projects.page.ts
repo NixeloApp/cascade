@@ -295,17 +295,8 @@ export class ProjectsPage extends BasePage {
   // ===================
 
   async goto() {
-    await this.page.goto(`/${this.orgSlug}/projects`, { waitUntil: "domcontentloaded" });
-    await this.page.waitForLoadState("load");
-
-    if (await this.isOutsideAuthenticatedOrgShell()) {
-      await this.page.goto("/app", { waitUntil: "domcontentloaded" });
-      await this.page.waitForLoadState("load");
-      await this.page.goto(`/${this.orgSlug}/projects`, { waitUntil: "domcontentloaded" });
-      await this.page.waitForLoadState("load");
-    }
-
-    await this.waitForLoad();
+    await this.navigateToProjectsRoute();
+    await this.expectProjectsView();
   }
 
   async gotoProjectBoard(projectKey: string) {
@@ -321,7 +312,7 @@ export class ProjectsPage extends BasePage {
     console.log("Clicking 'Create Project' button...");
 
     await this.closeCreateProjectFormIfOpen();
-    await this.expectProjectsView();
+    await this.ensureProjectsView();
     await this.clickNewProjectButton();
 
     if (await this.waitForCreateProjectWizardReady()) {
@@ -329,7 +320,7 @@ export class ProjectsPage extends BasePage {
       return;
     }
 
-    await this.expectProjectsView();
+    await this.ensureProjectsView();
     await this.clickNewProjectButton();
     await this.expectCreateProjectWizardReady();
 
@@ -956,9 +947,9 @@ export class ProjectsPage extends BasePage {
   // Assertions
   // ===================
 
-  async expectProjectsView() {
-    await expect(this.sidebar).toBeVisible();
-    await expect(this.newProjectButton).toBeVisible();
+  async expectProjectsView(timeout = 10000) {
+    await expect(this.sidebar).toBeVisible({ timeout });
+    await expect(this.newProjectButton).toBeVisible({ timeout });
   }
 
   private async clickNewProjectButton() {
@@ -974,15 +965,38 @@ export class ProjectsPage extends BasePage {
     }
   }
 
-  private async isOutsideAuthenticatedOrgShell() {
-    const currentUrl = this.page.url();
+  private async waitForProjectsView(timeout = 3000) {
+    try {
+      await this.expectProjectsView(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
-    return (
-      currentUrl.includes("/signin") ||
-      currentUrl === "http://localhost:5555/" ||
-      currentUrl === "http://localhost:5555" ||
-      !currentUrl.includes(`/${this.orgSlug}/`)
-    );
+  private async ensureProjectsView() {
+    if (await this.waitForProjectsView(3000)) {
+      return;
+    }
+
+    await this.navigateToProjectsRoute();
+    await this.expectProjectsView();
+  }
+
+  private async navigateToProjectsRoute() {
+    await this.page.goto(`/${this.orgSlug}/projects`, { waitUntil: "domcontentloaded" });
+    await this.page.waitForLoadState("load");
+    await this.waitForLoad();
+
+    if (await this.waitForProjectsView(5000)) {
+      return;
+    }
+
+    await this.page.goto("/app", { waitUntil: "domcontentloaded" });
+    await this.page.waitForLoadState("load");
+    await this.page.goto(`/${this.orgSlug}/projects`, { waitUntil: "domcontentloaded" });
+    await this.page.waitForLoadState("load");
+    await this.waitForLoad();
   }
 
   private async getCreateProjectStep(): Promise<"template" | "configure" | "select" | "pending"> {
