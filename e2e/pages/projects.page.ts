@@ -328,17 +328,7 @@ export class ProjectsPage extends BasePage {
       const configureHeading = this.createProjectForm.getByRole("heading", {
         name: /configure project/i,
       });
-
-      if (!(await this.waitForCreateProjectStep("configure"))) {
-        await this.expectCreateProjectStep("template");
-        await this.clickFirstProjectTemplate();
-
-        if (!(await this.waitForCreateProjectStep("configure"))) {
-          await this.openCreateProjectForm();
-          await this.expectCreateProjectStep("template");
-          await this.clickFirstProjectTemplate();
-        }
-      }
+      await this.ensureCreateProjectConfigureStep();
 
       await expect(configureHeading).toBeVisible();
 
@@ -1026,6 +1016,35 @@ export class ProjectsPage extends BasePage {
         intervals: [250, 500, 1000],
       })
       .toBe(step);
+  }
+
+  private async ensureCreateProjectConfigureStep() {
+    if (await this.waitForCreateProjectStep("configure")) {
+      return;
+    }
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      if (!(await this.waitForCreateProjectStep("template", 5000))) {
+        if (attempt === 0) {
+          await this.openCreateProjectForm();
+          continue;
+        }
+
+        await this.expectCreateProjectStep("template");
+      }
+
+      await this.clickFirstProjectTemplate();
+
+      if (await this.waitForCreateProjectStep("configure", 5000)) {
+        return;
+      }
+
+      if (attempt === 0) {
+        await this.openCreateProjectForm();
+      }
+    }
+
+    await this.expectCreateProjectStep("configure");
   }
 
   private async clickFirstProjectTemplate() {
