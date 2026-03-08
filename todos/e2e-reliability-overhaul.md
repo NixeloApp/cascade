@@ -207,6 +207,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `DashboardPage.closeTimeEntryModal()` is idempotent again, after the billing-disabled flow showed the timer dialog can already be gone by cleanup time even though the checkbox assertion completed.
 - `DashboardPage.openTimeEntryModal({ expectBillable })` now uses a direct modal-open contract with one bounded second-click recovery and keeps the app-shell reload as a single explicit billing-state resync path, after the repeated billing reruns confirmed the timer dialog only needed a second trigger or one post-settings reload instead of retrying the whole flow.
 - `DashboardPage.openTimeEntryModal({ expectBillable })` now polls the timer modal billing state (`billable` / `non-billable`) before declaring the shell stale, and it performs bounded close-reload-open recovery when an out-of-band organization settings mutation still leaves the modal on the old billing context.
+- `DashboardPage.openTimeEntryModal({ expectBillable })` now uses one direct billing-state check plus one named app-shell resync instead of a generic three-attempt loop, after the focused billing rerun confirmed the helper only needs a single stale-context recovery path when org settings change out of band.
 - `DashboardPage.signOutViaUserMenu()` now reacquires the visible `Sign out` menu item inside the retry loop and waits for a signed-out destination, after the isolated signout rerun showed the previous locator could detach between menu-open and click.
 - `DashboardPage.signOutViaUserMenu()` now uses a direct menu-open -> sign-out click contract with one bounded second attempt and a named signed-out destination check, after the isolated signout rerun confirmed the full flow does not need a blanket retry wrapper.
 - latest source-of-truth full-suite run on `2026-03-07`: `160 passed` in `5.4m`.
@@ -255,6 +256,9 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `pnpm exec playwright test e2e/search.spec.ts -g "search displays result count in tabs" --reporter=line --workers=1` -> `1 passed (30.6s)`
   - `pnpm exec playwright test e2e/invites.spec.ts --reporter=line --workers=1` -> `1 passed (19.4s)`
   - `pnpm exec playwright test e2e/issues.spec.ts e2e/sprints.spec.ts e2e/roadmap.spec.ts e2e/search.spec.ts --reporter=line --workers=1` -> `19 passed (4.7m)`
+  - `pnpm run validate` -> `PASS` with the existing warn-only `164 file(s) missing tests`
+- latest billing helper rerun on `2026-03-07` is green after the billing-state resync simplification:
+  - `pnpm exec playwright test e2e/settings/billing.spec.ts --reporter=line --workers=1` -> `2 passed (38.0s)`
   - `pnpm run validate` -> `PASS` with the existing warn-only `164 file(s) missing tests`
 - `DocumentsPage.createNewDocument()` now owns the post-create URL and editor-ready checks, after the docs rerun confirmed the spec no longer needs to reassert editor hydration separately after every new-document action.
 - `DocumentsPage.createNewDocument()` now clicks once and waits on route change plus editor readiness directly instead of wrapping the route transition in a retry loop, after the docs rerun confirmed the create flow no longer needs the extra retry shell.

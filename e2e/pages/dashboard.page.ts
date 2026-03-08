@@ -630,18 +630,14 @@ export class DashboardPage extends BasePage {
       return;
     }
 
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      await this.openTimeEntryModalOnce();
+    await this.openTimeEntryModalOnce();
 
-      if (await this.waitForTimeEntryBillingState(options.expectBillable)) {
-        await this.expectTimeEntryBillingState(options.expectBillable);
-        return;
-      }
-
-      await this.closeTimeEntryModalIfOpen();
-      await this.reloadAppShell();
+    if (await this.waitForTimeEntryBillingState(options.expectBillable)) {
+      await this.expectTimeEntryBillingState(options.expectBillable);
+      return;
     }
 
+    await this.resyncTimeEntryModalBillingState();
     await this.openTimeEntryModalOnce();
     await this.expectTimeEntryBillingState(options.expectBillable);
   }
@@ -703,6 +699,11 @@ export class DashboardPage extends BasePage {
 
     await this.headerStartTimerButton.click();
     await this.expectTimeEntryModalVisible();
+  }
+
+  private async resyncTimeEntryModalBillingState() {
+    await this.closeTimeEntryModalIfOpen();
+    await this.reloadAppShell();
   }
 
   private async waitForTimeEntryModalVisible(timeout = 3000) {
