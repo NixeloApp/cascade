@@ -215,7 +215,7 @@ export class AuthPage extends BasePage {
   /**
    * Expand the email form by clicking "Continue with email"
    * Call this after navigating if form is collapsed
-   * Uses retry logic to handle React hydration timing issues
+   * Uses one bounded second-click recovery if the first expansion misses
    */
   async expandEmailForm() {
     // Wait for hydration first
@@ -236,21 +236,12 @@ export class AuthPage extends BasePage {
       return;
     }
 
-    // Retry expansion to handle React timing issues
-    // toPass() uses Playwright's default intervals and timeout (no hardcoded values)
-    await expect(async () => {
-      // Check if expanded
-      const isExpanded = await authForm.getAttribute("data-expanded");
-      if (isExpanded === "true") {
-        return; // Already expanded
-      }
+    await submitButton.click();
 
-      // Click the button to expand the form
+    if (!(await this.waitForEmailFormExpanded())) {
       await submitButton.click();
-
-      // Verify form expanded using data-expanded attribute
-      await expect(authForm).toHaveAttribute("data-expanded", "true");
-    }).toPass();
+      await this.expectEmailFormExpanded();
+    }
 
     // Wait for form-ready state
     await this.waitForFormReady();
@@ -363,24 +354,18 @@ export class AuthPage extends BasePage {
   // ===================
 
   async clickForgotPassword() {
-    // Use retry pattern to handle form expansion and navigation
-    await expect(async () => {
-      // Forgot password link appears after form is expanded
-      await this.expandEmailForm();
-      // Wait for form to stabilize (formReady state) before clicking
-      await this.waitForFormReady();
+    await this.expandEmailForm();
+    await this.waitForFormReady();
+    await this.clickForgotPasswordLink();
 
-      // Verify forgot password link is visible and enabled before clicking
-      await expect(this.forgotPasswordLink).toBeVisible();
-      await expect(this.forgotPasswordLink).toBeEnabled();
+    if (await this.waitForForgotPasswordReady()) {
+      return;
+    }
 
-      // Click the link
-      await this.forgotPasswordLink.click();
-
-      // Verify navigation completed
-      await expect(this.page).toHaveURL(/forgot-password/);
-      await expect(this.forgotPasswordHeading).toBeVisible();
-    }).toPass();
+    await this.expandEmailForm();
+    await this.waitForFormReady();
+    await this.clickForgotPasswordLink();
+    await this.expectForgotPasswordReady();
   }
 
   /**
@@ -591,6 +576,20 @@ export class AuthPage extends BasePage {
     await expect(authForm).toHaveAttribute("data-expanded", "true");
   }
 
+  async waitForEmailFormExpanded(timeout = 3000) {
+    try {
+      await expect(this.authForm).toHaveAttribute("data-expanded", "true", { timeout });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async expectEmailFormExpanded(timeout = 10000) {
+    const expanded = await this.waitForEmailFormExpanded(timeout);
+    expect(expanded).toBe(true);
+  }
+
   /**
    * Wait for form to be fully ready (formReady state)
    * The form sets formReady=true after expansion which enables required attributes
@@ -606,6 +605,38 @@ export class AuthPage extends BasePage {
       // Form might not have data-form-ready attribute (e.g., forgot password page)
       // Use full document readiness as a generic fallback signal.
       await this.page.waitForFunction(() => document.readyState === "complete");
+    }
+  }
+
+  async waitForForgotPasswordReady(timeout = 3000) {
+    try {
+      await this.expectForgotPasswordReady(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async expectForgotPasswordReady(timeout = 15000) {
+    await expect(this.page).toHaveURL(/forgot-password/, { timeout });
+    await expect(this.forgotPasswordHeading).toBeVisible({ timeout });
+  }
+
+  private async clickForgotPasswordLink() {
+    await expect(this.forgotPasswordLink).toBeVisible();
+    await expect(this.forgotPasswordLink).toBeEnabled();
+
+    try {
+      await this.forgotPasswordLink.click({ timeout: 5000 });
+    } catch {
+      if (await this.waitForForgotPasswordReady(1000)) {
+        return;
+      }
+
+      const forgotPasswordVisible = await this.forgotPasswordLink.isVisible().catch(() => false);
+      if (forgotPasswordVisible) {
+        await this.forgotPasswordLink.dispatchEvent("click");
+      }
     }
   }
 
