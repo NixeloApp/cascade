@@ -70,7 +70,6 @@ test.describe("Onboarding Wizard", () => {
     await onboarding.selectTeamMember();
   });
 
-  // TODO: Dashboard stuck in loading state after skip - needs investigation
   test("can skip onboarding", async ({ page }) => {
     const onboarding = new OnboardingPage(page);
     await onboarding.goto();

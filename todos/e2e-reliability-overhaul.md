@@ -224,6 +224,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `teams.spec.ts` now relies on `WorkspacesPage.openWorkspaceTeams()`, `expectTeamsLoaded()`, and `getTeamsPageState()`, after the full-file rerun confirmed the workspace/team navigation tests do not need to branch on raw workspace headings, card clicks, or `Teams` links from the spec body.
 - `dashboard.spec.ts` now relies on `DashboardPage.expectMainSectionsVisible()`, `expectIssueFiltersVisible()`, and `expectNotificationsPanelVisible()`, after the focused rerun confirmed those visibility checks can be treated as a single dashboard contract instead of repeated spec-local assertions.
 - `OnboardingPage.goto()` now waits for the onboarding route, `skipOnboarding()` and `goToDashboard()` now own dashboard-route plus dashboard-ready completion, and `createProject()` now waits for the member-complete screen, after the focused rerun confirmed `onboarding.spec.ts` no longer needs spec-level `waitForURL()` or dashboard-heading waits to prove those transitions finished.
+- the previous `can skip onboarding` dashboard-loading watchpoint is currently cleared, after a focused rerun confirmed the flow reaches the dashboard cleanly on the guarded `/app` bootstrap path.
 - `issue-detail-page.spec.ts` now relies on `IssueDetailPage.expectIssueNotFound()`, `expectIssueLoaded()`, `expectProjectBreadcrumbVisible()`, and `returnToProjectBoard()`, after the full-file rerun confirmed the standalone route can own both its error-state and happy-path readiness checks instead of leaving those assertions scattered in the spec body.
 - `error-scenarios.spec.ts` now relies on `ProjectsPage.gotoProjectBoard()` plus `expectProjectNotFound()`, `DocumentsPage.gotoDocument()` plus `expectDocumentNotFound()`, and `IssueDetailPage.expectIssueNotFound()`, after the focused rerun confirmed the authenticated invalid-resource coverage can reuse page-object route contracts instead of building URL and error assertions inline.
 - `LandingPage.expectLandingOrSignInPage()` now owns the unauthenticated protected-route redirect check, after the focused rerun confirmed `error-scenarios.spec.ts` does not need a spec-local heading poll to prove the redirect settled on landing or sign-in.
@@ -261,6 +262,8 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `1 passed (57.4s)` after guarding `/app` bootstrap on authenticated-user readiness
 - `pnpm exec playwright test e2e/onboarding.spec.ts -g "shows member-specific content and can complete onboarding" --reporter=line --workers=1`
   - `1 passed (38.8s)`
+- `pnpm exec playwright test e2e/onboarding.spec.ts -g "can skip onboarding" --reporter=line --workers=1`
+  - `1 passed (18.9s)`
 - `pnpm exec playwright test e2e/error-scenarios.spec.ts --reporter=line --workers=1`
   - `4 passed (28.8s)`
 - `pnpm exec playwright test e2e/invite.spec.ts --reporter=line --workers=1`
