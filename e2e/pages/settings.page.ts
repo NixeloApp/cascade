@@ -356,9 +356,7 @@ export class SettingsPage extends BasePage {
   }
 
   async inviteUser(email: string, role?: string) {
-    await this.ensureInviteFormReady();
-    await this.inviteEmailInput.fill(email);
-    await expect(this.inviteEmailInput).toHaveValue(email);
+    await this.fillInviteEmail(email);
 
     // Only change role if it's not "user" (which is the default)
     if (role && role.toLowerCase() !== "user") {
@@ -387,6 +385,7 @@ export class SettingsPage extends BasePage {
       return;
     }
 
+    await this.ensureInviteFormReady();
     await expect(this.sendInviteButton).toBeVisible();
     await expect(this.sendInviteButton).toBeEnabled();
     await this.sendInviteButton.click();
@@ -437,6 +436,20 @@ export class SettingsPage extends BasePage {
     await expect(this.inviteEmailInput).toBeVisible();
     await expect(this.inviteEmailInput).toBeEnabled();
     await expect(this.sendInviteButton).toBeVisible();
+  }
+
+  private async fillInviteEmail(email: string) {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      await this.ensureInviteFormReady();
+      await this.inviteEmailInput.fill(email);
+
+      const currentValue = await this.inviteEmailInput.inputValue().catch(() => null);
+      if (currentValue === email) {
+        return;
+      }
+    }
+
+    await expect(this.inviteEmailInput).toHaveValue(email);
   }
 
   async openAdminUsersList() {

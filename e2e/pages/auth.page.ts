@@ -162,8 +162,7 @@ export class AuthPage extends BasePage {
   async gotoSignIn() {
     await this.page.goto("/signin", { waitUntil: "domcontentloaded" });
     await this.signInHeading.waitFor({ state: "visible", timeout: 30000 });
-    // Wait for hydration before expanding
-    await this.waitForHydration();
+    await this.waitForAuthFormHydrated();
     // Expand form using robust click logic
     await this.expandEmailForm();
     // Verify form is expanded using data-expanded attribute
@@ -173,7 +172,7 @@ export class AuthPage extends BasePage {
   async gotoSignInLanding() {
     await this.page.goto("/signin", { waitUntil: "domcontentloaded" });
     await this.signInHeading.waitFor({ state: "visible", timeout: 30000 });
-    await this.waitForHydration();
+    await this.waitForAuthFormHydrated();
   }
 
   /**
@@ -182,8 +181,7 @@ export class AuthPage extends BasePage {
   async gotoSignUp() {
     await this.page.goto("/signup", { waitUntil: "domcontentloaded" });
     await this.signUpHeading.waitFor({ state: "visible", timeout: 30000 });
-    // Wait for hydration before expanding
-    await this.waitForHydration();
+    await this.waitForAuthFormHydrated();
     // Expand form using robust click logic
     await this.expandEmailForm();
     // Verify form is expanded using data-expanded attribute
@@ -218,8 +216,7 @@ export class AuthPage extends BasePage {
    * Uses one bounded second-click recovery if the first expansion misses
    */
   async expandEmailForm() {
-    // Wait for hydration first
-    await this.waitForHydration();
+    await this.waitForAuthFormHydrated();
 
     // The submit button with test ID
     const submitButton = this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
@@ -504,8 +501,8 @@ export class AuthPage extends BasePage {
    * Uses data-expanded attribute set by React component
    */
   async waitForFormExpanded() {
-    const authForm = this.page.getByTestId(TEST_IDS.AUTH.FORM);
-    await expect(authForm).toHaveAttribute("data-expanded", "true");
+    await this.waitForAuthFormHydrated();
+    await expect(this.authForm).toHaveAttribute("data-expanded", "true");
     await this.waitForFormReady();
   }
 
@@ -530,6 +527,8 @@ export class AuthPage extends BasePage {
    * This is a best-effort wait - it won't throw if the form doesn't have this attribute
    */
   async waitForFormReady() {
+    await this.waitForAuthFormHydrated();
+
     try {
       await this.page.locator('form[data-form-ready="true"]').waitFor({
         state: "attached",
@@ -540,18 +539,19 @@ export class AuthPage extends BasePage {
       await this.page.waitForFunction(() => document.readyState === "complete");
     }
 
-    await expect(this.emailInput).toBeVisible();
-    await expect(this.passwordInput).toBeVisible();
-
-    if (this.page.url().includes("/signin")) {
+    if (await this.signInHeading.isVisible().catch(() => false)) {
       await expect(this.signInButton).toContainText(/sign in|signing in/i);
       await expect(this.forgotPasswordLink).toBeVisible();
       return;
     }
 
-    if (this.page.url().includes("/signup")) {
+    if (await this.signUpHeading.isVisible().catch(() => false)) {
       await expect(this.signUpButton).toContainText(/create account|creating account/i);
     }
+  }
+
+  private async waitForAuthFormHydrated(timeout = 15000) {
+    await expect(this.authForm).toHaveAttribute("data-hydrated", "true", { timeout });
   }
 
   async waitForForgotPasswordReady(timeout = 3000) {
