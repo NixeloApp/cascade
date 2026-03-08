@@ -559,7 +559,7 @@ export class DashboardPage extends BasePage {
     return ` [diagnostics ${JSON.stringify(diagnostics)}]`;
   }
 
-  async openTimeEntryModal() {
+  async openTimeEntryModal(options?: { expectBillable?: boolean }) {
     await waitForDashboardReady(this.page);
 
     await expect(async () => {
@@ -567,7 +567,34 @@ export class DashboardPage extends BasePage {
       await expect(this.headerStartTimerButton).toBeVisible();
       await this.headerStartTimerButton.click();
       await expect(this.timeEntryModal).toBeVisible();
+
+      if (options?.expectBillable === undefined) {
+        return;
+      }
+
+      const isBillableVisible = await this.timeEntryBillableCheckbox.isVisible().catch(() => false);
+      if (isBillableVisible !== options.expectBillable) {
+        await this.closeTimeEntryModalIfOpen();
+        await this.reloadAppShell();
+        throw new Error(
+          `Time entry modal billing state not synced yet (expected billable visibility ${options.expectBillable}, received ${isBillableVisible})`,
+        );
+      }
+
+      if (options.expectBillable) {
+        await expect(this.timeEntryBillableCheckbox).toBeVisible();
+        return;
+      }
+
+      await expect(this.timeEntryBillableCheckbox).not.toBeVisible();
     }).toPass();
+  }
+
+  async reloadAppShell() {
+    await this.page.reload({ waitUntil: "domcontentloaded" });
+    await this.page.waitForLoadState("load");
+    await waitForDashboardReady(this.page);
+    await this.expectLoaded();
   }
 
   async closeGlobalSearch() {
