@@ -443,22 +443,30 @@ export class DashboardPage extends BasePage {
   async signOutViaUserMenu() {
     await waitForDashboardReady(this.page);
 
-    await expect(async () => {
-      if (await this.isSignedOutDestinationVisible()) {
-        return;
-      }
+    if (await this.isSignedOutDestinationVisible()) {
+      return;
+    }
 
-      await this.userMenuButton.click();
+    await this.attemptSignOutViaUserMenu();
 
-      const signOutItem = this.page.getByRole("menuitem", { name: /sign out/i }).last();
-      await expect(signOutItem).toBeVisible();
-      await signOutItem.click();
+    if (await this.waitForSignedOutDestination()) {
+      return;
+    }
 
-      await this.waitForSignedOutRedirect();
-    }).toPass({ timeout: 30000, intervals: [500, 1000, 2000] });
+    await this.attemptSignOutViaUserMenu();
+    await this.expectSignedOutDestination();
   }
 
-  private async waitForSignedOutRedirect() {
+  private async waitForSignedOutDestination(timeout = 5000) {
+    try {
+      await this.expectSignedOutDestination(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectSignedOutDestination(timeout = 30000) {
     await expect
       .poll(
         async () => {
@@ -472,9 +480,23 @@ export class DashboardPage extends BasePage {
 
           return "redirecting";
         },
-        { timeout: 30000, intervals: [500, 1000, 2000] },
+        { timeout, intervals: [500, 1000, 2000] },
       )
       .toBe("signed-out");
+  }
+
+  private async attemptSignOutViaUserMenu() {
+    await this.userMenuButton.click();
+    await this.expectVisibleUserMenuSignOutItem();
+    await this.getVisibleUserMenuSignOutItem().click();
+  }
+
+  private getVisibleUserMenuSignOutItem() {
+    return this.page.getByRole("menuitem", { name: /sign out/i }).last();
+  }
+
+  private async expectVisibleUserMenuSignOutItem(timeout = 5000) {
+    await expect(this.getVisibleUserMenuSignOutItem()).toBeVisible({ timeout });
   }
 
   private async isSignedOutDestinationVisible(): Promise<boolean> {
