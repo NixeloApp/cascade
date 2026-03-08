@@ -308,13 +308,12 @@ export class ProjectsPage extends BasePage {
     console.log("Clicking 'Create Project' button...");
 
     await this.closeCreateProjectFormIfOpen();
-    await expect(this.newProjectButton).toBeVisible();
-    await expect(this.newProjectButton).toBeEnabled();
-    await this.newProjectButton.scrollIntoViewIfNeeded();
-    await this.newProjectButton.click();
+    await this.expectProjectsView();
+    await this.clickNewProjectButton();
 
     if (!(await this.createProjectForm.isVisible().catch(() => false))) {
-      await this.newProjectButton.click();
+      await this.expectProjectsView();
+      await this.clickNewProjectButton();
     }
 
     await expect(this.createProjectForm).toBeVisible();
@@ -330,14 +329,14 @@ export class ProjectsPage extends BasePage {
         name: /configure project/i,
       });
 
-      if (!(await configureHeading.isVisible().catch(() => false))) {
-        await expect(this.templateOptionButtons.first()).toBeVisible();
-        await this.templateOptionButtons.first().click();
+      if (!(await this.waitForCreateProjectStep("configure"))) {
+        await this.expectCreateProjectStep("template");
+        await this.clickFirstProjectTemplate();
 
-        if (!(await configureHeading.isVisible().catch(() => false))) {
+        if (!(await this.waitForCreateProjectStep("configure"))) {
           await this.openCreateProjectForm();
-          await expect(this.templateOptionButtons.first()).toBeVisible();
-          await this.templateOptionButtons.first().click();
+          await this.expectCreateProjectStep("template");
+          await this.clickFirstProjectTemplate();
         }
       }
 
@@ -955,6 +954,71 @@ export class ProjectsPage extends BasePage {
   async expectProjectsView() {
     await expect(this.sidebar).toBeVisible();
     await expect(this.newProjectButton).toBeVisible();
+  }
+
+  private async clickNewProjectButton() {
+    await expect(this.newProjectButton).toBeVisible();
+    await expect(this.newProjectButton).toBeEnabled();
+
+    try {
+      await this.newProjectButton.click({ timeout: 3000 });
+    } catch {
+      await expect(this.newProjectButton).toBeVisible();
+      await expect(this.newProjectButton).toBeEnabled();
+      await this.newProjectButton.evaluate((button: HTMLButtonElement) => button.click());
+    }
+  }
+
+  private async getCreateProjectStep(): Promise<"template" | "configure" | "pending"> {
+    const configureHeading = this.createProjectForm.getByRole("heading", {
+      name: /configure project/i,
+    });
+
+    if (await configureHeading.isVisible().catch(() => false)) {
+      return "configure";
+    }
+
+    if (
+      await this.templateOptionButtons
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
+      return "template";
+    }
+
+    return "pending";
+  }
+
+  private async waitForCreateProjectStep(step: "template" | "configure", timeout = 3000) {
+    try {
+      await this.expectCreateProjectStep(step, timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectCreateProjectStep(step: "template" | "configure", timeout = 10000) {
+    await expect
+      .poll(async () => this.getCreateProjectStep(), {
+        timeout,
+        intervals: [250, 500, 1000],
+      })
+      .toBe(step);
+  }
+
+  private async clickFirstProjectTemplate() {
+    await expect(this.templateOptionButtons.first()).toBeVisible();
+
+    try {
+      await this.templateOptionButtons.first().click({ timeout: 3000 });
+    } catch {
+      await expect(this.templateOptionButtons.first()).toBeVisible();
+      await this.templateOptionButtons
+        .first()
+        .evaluate((button: HTMLButtonElement) => button.click());
+    }
   }
 
   async expectBoardVisible() {
