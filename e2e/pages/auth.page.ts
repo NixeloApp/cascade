@@ -506,6 +506,7 @@ export class AuthPage extends BasePage {
   async waitForFormExpanded() {
     const authForm = this.page.getByTestId(TEST_IDS.AUTH.FORM);
     await expect(authForm).toHaveAttribute("data-expanded", "true");
+    await this.waitForFormReady();
   }
 
   async waitForEmailFormExpanded(timeout = 3000) {
@@ -537,6 +538,19 @@ export class AuthPage extends BasePage {
       // Form might not have data-form-ready attribute (e.g., forgot password page)
       // Use full document readiness as a generic fallback signal.
       await this.page.waitForFunction(() => document.readyState === "complete");
+    }
+
+    await expect(this.emailInput).toBeVisible();
+    await expect(this.passwordInput).toBeVisible();
+
+    if (this.page.url().includes("/signin")) {
+      await expect(this.signInButton).toContainText(/sign in|signing in/i);
+      await expect(this.forgotPasswordLink).toBeVisible();
+      return;
+    }
+
+    if (this.page.url().includes("/signup")) {
+      await expect(this.signUpButton).toContainText(/create account|creating account/i);
     }
   }
 

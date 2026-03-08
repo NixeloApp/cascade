@@ -356,14 +356,13 @@ export class DashboardPage extends BasePage {
   async openCommandPalette() {
     await waitForDashboardReady(this.page);
     await this.closeCommandPaletteIfOpen();
-    await this.commandPaletteButton.click();
+    await this.clickCommandPaletteButton();
 
-    if (!(await this.commandPalette.isVisible().catch(() => false))) {
-      await this.commandPaletteButton.click();
+    if (!(await this.waitForCommandPaletteReady())) {
+      await this.clickCommandPaletteButton();
     }
 
-    await expect(this.commandPalette).toBeVisible();
-    await expect(this.commandPaletteInput).toBeVisible();
+    await this.expectCommandPaletteReady();
     await this.commandPaletteInput.focus();
   }
 
@@ -386,6 +385,26 @@ export class DashboardPage extends BasePage {
     }
 
     await expect(this.commandPalette).not.toBeVisible();
+  }
+
+  private async clickCommandPaletteButton() {
+    await expect(this.commandPaletteButton).toBeVisible();
+    await expect(this.commandPaletteButton).toBeEnabled();
+    await this.commandPaletteButton.click();
+  }
+
+  private async waitForCommandPaletteReady(timeout = 3000) {
+    try {
+      await this.expectCommandPaletteReady(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectCommandPaletteReady(timeout = 10000) {
+    await expect(this.commandPalette).toBeVisible({ timeout });
+    await expect(this.commandPaletteInput).toBeVisible({ timeout });
   }
 
   async openShortcutsHelp() {
