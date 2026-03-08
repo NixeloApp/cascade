@@ -113,12 +113,19 @@ function nextIndex(prefix: string): number {
 // Dynamic page patterns that map to spec folders
 // Pattern: [regex to match pageId, spec folder, filename suffix]
 const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
+  [/^filled-dashboard-omnibox$/, "04-dashboard", "-omnibox"],
+  [/^filled-dashboard-advanced-search-modal$/, "04-dashboard", "-advanced-search-modal"],
+  [/^filled-dashboard-shortcuts-modal$/, "04-dashboard", "-shortcuts-modal"],
+  [/^filled-dashboard-time-entry-modal$/, "04-dashboard", "-time-entry-modal"],
+  [/^filled-projects-create-project-modal$/, "05-projects", "-create-project-modal"],
   // Project board: filled-project-xxx-board → 06-board
   [/^filled-project-[^-]+-board$/, "06-board", ""],
+  [/^filled-project-[^-]+-create-issue-modal$/, "06-board", "-create-issue-modal"],
   // Project backlog: filled-project-xxx-backlog → 07-backlog
   [/^filled-project-[^-]+-backlog$/, "07-backlog", ""],
   // Issue detail: filled-issue-xxx → 08-issue
   [/^filled-issue-/, "08-issue", ""],
+  [/^filled-project-[^-]+-issue-detail-modal$/, "08-issue", "-detail-modal"],
   // Document editor: filled-document-editor → 10-editor
   [/^filled-document-editor$/, "10-editor", ""],
   // Project calendar views: filled-project-xxx-calendar, filled-calendar-{mode}
@@ -197,6 +204,28 @@ async function takeScreenshot(
   // Show relative path for clarity
   const relativePath = path.relative(process.cwd(), screenshotPath);
   console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}`);
+}
+
+async function captureCurrentView(page: Page, prefix: string, name: string): Promise<void> {
+  const n = nextIndex(prefix);
+  const num = String(n).padStart(2, "0");
+  const screenshotPath = getScreenshotPath(prefix, name);
+
+  await waitForScreenshotReady(page);
+  await page.screenshot({ path: screenshotPath });
+  totalScreenshots++;
+
+  const relativePath = path.relative(process.cwd(), screenshotPath);
+  console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}`);
+}
+
+async function runCaptureStep(label: string, fn: () => Promise<void>): Promise<void> {
+  try {
+    await fn();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.log(`    ⚠️  skipped ${label}: ${message}`);
+  }
 }
 
 function isProjectBoardUrl(url: string): boolean {
@@ -427,6 +456,9 @@ async function screenshotFilledStates(
   await takeScreenshot(page, p, "settings", `/${orgSlug}/settings`);
   await takeScreenshot(page, p, "settings-profile", `/${orgSlug}/settings/profile`);
 
+  await screenshotDashboardModals(page, orgSlug, p);
+  await screenshotProjectsModal(page, orgSlug, p);
+
   // Project sub-pages
   const projectKey = seed.projectKey;
   if (projectKey) {
@@ -450,6 +482,8 @@ async function screenshotFilledStates(
         `/${orgSlug}/projects/${projectKey}/${tab}`,
       );
     }
+
+    await screenshotBoardModals(page, orgSlug, projectKey, p);
 
     // Calendar view modes
     const calendarUrl = `/${orgSlug}/projects/${projectKey}/calendar`;
@@ -562,6 +596,135 @@ async function screenshotFilledStates(
   const docId = await discoverFirstHref(page, /\/documents\/([a-z0-9]+)/);
   if (docId) {
     await takeScreenshot(page, p, "document-editor", `/${orgSlug}/documents/${docId}`);
+  }
+}
+
+async function screenshotDashboardModals(
+  page: Page,
+  orgSlug: string,
+  prefix: string,
+): Promise<void> {
+  await page
+    .goto(`${BASE_URL}/${orgSlug}/dashboard`, { waitUntil: "domcontentloaded", timeout: 15000 })
+    .catch(() => {});
+  await waitForExpectedContent(page, `/${orgSlug}/dashboard`, "dashboard");
+  await waitForScreenshotReady(page);
+
+  const omniboxTrigger = page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON);
+  if ((await omniboxTrigger.count()) > 0) {
+    await omniboxTrigger.click();
+    await page.getByTestId(TEST_IDS.SEARCH.INPUT).waitFor({ state: "visible", timeout: 5000 });
+    await captureCurrentView(page, prefix, "dashboard-omnibox");
+
+    const advancedSearchButton = page.getByRole("button", { name: /advanced search/i });
+    if ((await advancedSearchButton.count()) > 0) {
+      await runCaptureStep("dashboard advanced-search modal", async () => {
+        await advancedSearchButton.click();
+        const advancedSearchDialog = page.getByRole("dialog", { name: /advanced search/i });
+        await advancedSearchDialog.waitFor({ state: "visible", timeout: 5000 });
+        await captureCurrentView(page, prefix, "dashboard-advanced-search-modal");
+        await page.keyboard.press("Escape").catch(() => {});
+        await advancedSearchDialog.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
+      });
+    } else {
+      await page.keyboard.press("Escape").catch(() => {});
+    }
+  }
+
+  const shortcutsTrigger = page.getByTestId(TEST_IDS.HEADER.SHORTCUTS_BUTTON);
+  if ((await shortcutsTrigger.count()) > 0) {
+    await runCaptureStep("dashboard shortcuts modal", async () => {
+      await shortcutsTrigger.click();
+      const shortcutsDialog = page.getByRole("dialog", { name: /keyboard shortcuts/i });
+      await shortcutsDialog.waitFor({ state: "visible", timeout: 5000 });
+      await captureCurrentView(page, prefix, "dashboard-shortcuts-modal");
+      await page.keyboard.press("Escape").catch(() => {});
+      await shortcutsDialog.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
+    });
+  }
+
+  const timeEntryTrigger = page.getByRole("button", { name: /^start timer$/i }).first();
+  if ((await timeEntryTrigger.count()) > 0) {
+    await runCaptureStep("dashboard time-entry modal", async () => {
+      await timeEntryTrigger.click();
+      const timeEntryDialog = page.getByRole("dialog", { name: /^start timer$/i });
+      await timeEntryDialog.waitFor({ state: "visible", timeout: 5000 });
+      await captureCurrentView(page, prefix, "dashboard-time-entry-modal");
+      await page.keyboard.press("Escape").catch(() => {});
+      await timeEntryDialog.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
+    });
+  }
+}
+
+async function screenshotProjectsModal(page: Page, orgSlug: string, prefix: string): Promise<void> {
+  await page
+    .goto(`${BASE_URL}/${orgSlug}/projects`, { waitUntil: "domcontentloaded", timeout: 15000 })
+    .catch(() => {});
+  await waitForScreenshotReady(page);
+
+  const createProjectButton = page.getByRole("button", {
+    name: /\+ create project/i,
+  });
+
+  if ((await createProjectButton.count()) === 0) {
+    return;
+  }
+
+  await runCaptureStep("projects create-project modal", async () => {
+    await createProjectButton.first().click();
+    const createProjectDialog = page.getByRole("dialog", {
+      name: /choose a template|configure project/i,
+    });
+    await createProjectDialog.waitFor({ state: "visible", timeout: 5000 });
+    await captureCurrentView(page, prefix, "projects-create-project-modal");
+    await page.keyboard.press("Escape").catch(() => {});
+    await createProjectDialog.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
+  });
+}
+
+async function screenshotBoardModals(
+  page: Page,
+  orgSlug: string,
+  projectKey: string,
+  prefix: string,
+): Promise<void> {
+  const boardUrl = `/${orgSlug}/projects/${projectKey}/board`;
+  await page
+    .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+    .catch(() => {});
+  await waitForExpectedContent(page, boardUrl, "board");
+  await waitForScreenshotReady(page);
+
+  const createIssueButton = page.getByRole("button", { name: /add issue/i }).first();
+  if ((await createIssueButton.count()) > 0) {
+    await runCaptureStep("board create-issue modal", async () => {
+      await createIssueButton.click();
+      const createIssueDialog = page.getByRole("dialog", { name: /create issue/i });
+      await createIssueDialog.waitFor({ state: "visible", timeout: 5000 });
+      await captureCurrentView(
+        page,
+        prefix,
+        `project-${projectKey.toLowerCase()}-create-issue-modal`,
+      );
+      await page.keyboard.press("Escape").catch(() => {});
+      await createIssueDialog.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
+    });
+  }
+
+  const issueCard = page.getByTestId(TEST_IDS.ISSUE.CARD).first();
+  if ((await issueCard.count()) > 0) {
+    await runCaptureStep("board issue-detail modal", async () => {
+      await issueCard.click();
+      const issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
+      await issueDetailDialog.waitFor({ state: "visible", timeout: 5000 });
+      await captureCurrentView(
+        page,
+        prefix,
+        `project-${projectKey.toLowerCase()}-issue-detail-modal`,
+      );
+      await page.keyboard.press("Escape").catch(() => {});
+      await issueDetailDialog.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
+    });
   }
 }
 
