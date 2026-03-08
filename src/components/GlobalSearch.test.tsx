@@ -214,33 +214,31 @@ describe("GlobalSearch", () => {
     });
   });
 
-  it(
-    "should parse shortcuts and pass issue filters to search query",
-    { timeout: 15000 },
-    async () => {
-      const user = userEvent.setup();
-      (useQuery as any).mockReturnValue({ page: [], results: [], total: 0, hasMore: false });
+  it("should parse shortcuts and pass issue filters to search query", {
+    timeout: 15000,
+  }, async () => {
+    const user = userEvent.setup();
+    (useQuery as any).mockReturnValue({ page: [], results: [], total: 0, hasMore: false });
 
-      render(<GlobalSearch />);
+    render(<GlobalSearch />);
 
-      await user.click(screen.getByRole("button"));
-      const searchInput = screen.getByPlaceholderText(/Search issues and documents/i);
-      await user.type(searchInput, "type:bug status:done priority:high label:frontend @me auth");
+    await user.click(screen.getByRole("button"));
+    const searchInput = screen.getByPlaceholderText(/Search issues and documents/i);
+    await user.type(searchInput, "type:bug status:done priority:high label:frontend @me auth");
 
-      await waitFor(() => {
-        expect(
-          wasCalledWithFilters(useQuery, {
-            query: "auth",
-            assigneeId: "me",
-            type: ["bug"],
-            status: ["done"],
-            priority: ["high"],
-            labels: ["frontend"],
-          }),
-        ).toBe(true);
-      });
-    },
-  );
+    await waitFor(() => {
+      expect(
+        wasCalledWithFilters(useQuery, {
+          query: "auth",
+          assigneeId: "me",
+          type: ["bug"],
+          status: ["done"],
+          priority: ["high"],
+          labels: ["frontend"],
+        }),
+      ).toBe(true);
+    });
+  });
 
   it("should prompt for non-shortcut text when query only has shortcuts", async () => {
     const user = userEvent.setup();

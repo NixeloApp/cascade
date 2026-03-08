@@ -178,9 +178,9 @@ export function ActivityFeed({ projectId, limit = 50, compact = false }: Activit
         <div className="absolute left-3 top-6 bottom-6 w-px bg-ui-border" />
       )}
 
-      {activities.map((activity: Activity, index: number) => (
+      {activities.map((activity: Activity) => (
         <Flex
-          key={`${activity._id}-${index}`}
+          key={activity._id}
           gap="lg"
           className={cn(
             "relative transition-colors duration-fast",

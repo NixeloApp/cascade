@@ -78,7 +78,7 @@ export function DigestEmail({
           {/* Digest Items */}
           <Section style={digestContainer}>
             {items.map((item, index) => (
-              <div key={`${item.issueKey}-${item.type}-${index}`}>
+              <div key={`${item.issueUrl}-${item.type}-${item.time}-${item.actorName}`}>
                 <Section style={digestItem}>
                   <div style={itemHeader}>
                     <span style={itemIcon}>{getItemIcon(item.type)}</span>

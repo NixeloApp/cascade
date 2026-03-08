@@ -293,14 +293,23 @@ export function HighlightedText({
   highlightClassName?: string;
 }) {
   const parts = highlightMatches(text, matches);
+  let characterOffset = 0;
 
   return (
     <span className={className}>
-      {parts.map((part, index) => (
-        <span key={`${index}-${part.text}`} className={part.highlight ? highlightClassName : ""}>
-          {part.text}
-        </span>
-      ))}
+      {parts.map((part) => {
+        const partOffset = characterOffset;
+        characterOffset += part.text.length;
+
+        return (
+          <span
+            key={`${partOffset}-${part.text}`}
+            className={part.highlight ? highlightClassName : ""}
+          >
+            {part.text}
+          </span>
+        );
+      })}
     </span>
   );
 }

@@ -360,11 +360,8 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
           <Typography variant="label">Action Items</Typography>
           <Stack as="ul" gap="sm">
             {summary.actionItems.map(
-              (
-                item: { description: string; assignee?: string; dueDate?: string },
-                index: number,
-              ) => (
-                <li key={`action-${index}-${item.description.slice(0, 20)}`}>
+              (item: { description: string; assignee?: string; dueDate?: string }) => (
+                <li key={`${item.description}-${item.assignee ?? ""}-${item.dueDate ?? ""}`}>
                   <Card padding="sm" className="bg-status-warning-bg">
                     <Flex justify="between" align="start">
                       <Typography variant="small">{item.description}</Typography>

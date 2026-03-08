@@ -8,6 +8,9 @@ config();
 const app = express();
 const port = process.env.PORT || 3001;
 
+const getSingleRouteParam = (param: string | string[] | undefined): string | undefined =>
+  Array.isArray(param) ? param[0] : param;
+
 app.use(express.json());
 
 // Health check
@@ -44,8 +47,13 @@ app.post("/api/jobs", authMiddleware, async (req, res) => {
 
 // Get job status
 app.get("/api/jobs/:jobId", authMiddleware, async (req, res) => {
+  const jobId = getSingleRouteParam(req.params.jobId);
+  if (!jobId) {
+    return res.status(400).json({ error: "Missing job ID" });
+  }
+
   try {
-    const job = botManager.getJob(req.params.jobId);
+    const job = botManager.getJob(jobId);
     if (!job) {
       return res.status(404).json({ error: "Job not found" });
     }
@@ -57,8 +65,13 @@ app.get("/api/jobs/:jobId", authMiddleware, async (req, res) => {
 
 // Stop a job
 app.post("/api/jobs/:jobId/stop", authMiddleware, async (req, res) => {
+  const jobId = getSingleRouteParam(req.params.jobId);
+  if (!jobId) {
+    return res.status(400).json({ error: "Missing job ID" });
+  }
+
   try {
-    await botManager.stopJob(req.params.jobId);
+    await botManager.stopJob(jobId);
     res.json({ success: true });
   } catch (_error) {
     res.status(500).json({ error: "Failed to stop job" });

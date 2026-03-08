@@ -48,6 +48,20 @@ interface ItemData<T> {
   renderItem: (item: T, index: number) => React.ReactNode;
 }
 
+function useEndReachedState(itemCount: number) {
+  const endReachedCalledRef = useRef(false);
+  const prevItemCountRef = useRef(itemCount);
+
+  useEffect(() => {
+    if (itemCount !== prevItemCountRef.current) {
+      endReachedCalledRef.current = false;
+      prevItemCountRef.current = itemCount;
+    }
+  }, [itemCount]);
+
+  return endReachedCalledRef;
+}
+
 function ItemRenderer<T>({ index, style, data }: ListChildComponentProps<ItemData<T>>) {
   const { items, renderItem } = data;
   const item = items[index];
@@ -84,18 +98,7 @@ function VirtualListInner<T>(
   }: VirtualListProps<T>,
   ref: React.ForwardedRef<unknown>,
 ) {
-  // Track if onEndReached has been called to prevent multiple calls
-  const endReachedCalledRef = useRef(false);
-  const prevItemCountRef = useRef(items.length);
-
-  // Reset the endReachedCalled flag when items change (new data loaded)
-  // Using useEffect to avoid direct ref mutation during render
-  useEffect(() => {
-    if (items.length !== prevItemCountRef.current) {
-      endReachedCalledRef.current = false;
-      prevItemCountRef.current = items.length;
-    }
-  }, [items.length]);
+  const endReachedCalledRef = useEndReachedState(items.length);
 
   const itemData: ItemData<T> = {
     items,
