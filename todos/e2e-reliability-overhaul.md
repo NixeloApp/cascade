@@ -2,7 +2,7 @@
 
 > **Priority:** P0 (Highest)
 > **Effort:** Large
-> **Status:** In Progress (latest local full-suite green: 160 Playwright passed; validation passing)
+> **Status:** In Progress (latest local full-suite green twice in a row; validation passing)
 > **Last Updated:** 2026-03-07
 
 ## Objective
@@ -73,7 +73,7 @@ Make E2E tests deterministic and locally verifiable with one rule: run the full 
 
 ### Phase 1 (S1): Stability Foundation
 
-- [ ] Fix top failing specs and drive local full-suite to consistent green runs.
+- [x] Fix top failing specs and drive local full-suite to consistent green runs.
 - [ ] Land waiting helper rollout across highest-risk specs.
 
 ### Phase 2 (S2): Determinism
@@ -169,10 +169,10 @@ This is the concrete "what's left" list for reliability hardening after the late
 5. Evidence updates after every full run:
    - append the latest pass/fail outcome and duration in this file.
    - record failing spec names and immediate next action when the suite is not 100% pass.
-   - latest full run on `2026-03-07` is green: `160 passed` in `8.0m`.
+   - latest full runs on `2026-03-07` are green twice in a row: `160 passed` in `8.0m`, then `160 passed` in `7.8m`.
    - immediate next actions:
-     - rerun the full suite to confirm this green baseline is repeatable, not a one-off.
      - continue converting retry-heavy flows into explicit completion contracts while the suite is green enough to use as a stable benchmark.
+     - use the repeated green baseline to prioritize cleanup of remaining helper retries and long-lived watchpoints like onboarding mixed-worker instrumentation.
    - adjacent non-E2E verification on `2026-03-07`:
      - `pnpm run validate` passed; `Test coverage` still reports `164 file(s) missing tests` as warn-only.
      - `pnpm run test:run` passed: `371 passed`, `5 skipped`.
@@ -350,6 +350,8 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `3 passed (30.7s)`
 - `pnpm exec playwright test --reporter=line`
   - `160 passed (8.0m)`
+- `pnpm exec playwright test --reporter=line`
+  - `160 passed (7.8m)`
 - `pnpm vitest run src/components/ui/Breadcrumb.test.tsx`
   - `2 passed (600ms)`
 - `pnpm exec playwright test e2e/workspaces-org.spec.ts --reporter=line --workers=1`
@@ -382,13 +384,15 @@ Full-suite evidence in this TODO is considered stale if older than 24 hours.
 - Run date:
   - `2026-03-07`
 - Outcome:
-  - `160 passed` `(8.0m)`
+  - `160 passed` `(7.8m)`
+- Consecutive green full runs:
+  - `2`
 - Failing specs:
   - `none`
 - Immediate next action:
-  - rerun the full suite to prove the green baseline is stable across consecutive runs, then keep reducing helper retries in the remaining high-churn flows.
+  - keep reducing helper retries in the remaining high-churn flows and use targeted mixed-worker repros only for watchpoints that are no longer blocking the full suite.
 - Gate interpretation:
-  - current local suite is green; release-gate evidence is available, but it should still be refreshed with a second clean full run before calling the hardening phase complete.
+  - current local suite is green across consecutive full runs; release-gate evidence is strong enough to move from recovery into cleanup and simplification work.
 
 ## Related Files
 
