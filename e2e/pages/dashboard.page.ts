@@ -355,26 +355,21 @@ export class DashboardPage extends BasePage {
 
   async openCommandPalette() {
     await waitForDashboardReady(this.page);
+    await this.closeCommandPaletteIfOpen();
+    await this.commandPaletteButton.click();
 
-    // Use retry pattern - button click may not trigger event handler immediately after hydration
-    await expect(async () => {
-      await this.closeCommandPaletteIfOpen();
-      // Click to open command palette
+    if (!(await this.commandPalette.isVisible().catch(() => false))) {
       await this.commandPaletteButton.click();
-      // Wait for dialog animation to complete (Radix Dialog has opening animation)
-      await expect(this.commandPalette).toBeVisible();
-      // Verify it stays visible (not immediately closed)
-      await expect(this.commandPaletteInput).toBeVisible();
-      // Focus the input to keep the dialog open and stable (inside retry loop to handle detachments)
-      await this.commandPaletteInput.focus();
-    }).toPass();
+    }
+
+    await expect(this.commandPalette).toBeVisible();
+    await expect(this.commandPaletteInput).toBeVisible();
+    await this.commandPaletteInput.focus();
   }
 
   async closeCommandPalette() {
-    await expect(async () => {
-      await this.closeCommandPaletteIfOpen();
-      await expect(this.commandPalette).not.toBeVisible();
-    }).toPass();
+    await this.closeCommandPaletteIfOpen();
+    await expect(this.commandPalette).not.toBeVisible();
   }
 
   async closeCommandPaletteIfOpen() {
