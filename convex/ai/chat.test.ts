@@ -15,6 +15,14 @@ vi.mock("ai", () => ({
 // Import the mocked function to set up return values
 import { generateText } from "ai";
 
+function expectDefined<T>(value: T | undefined, label: string): T {
+  expect(value, `${label} should be defined`).not.toBeUndefined();
+  if (value === undefined) {
+    throw new Error(`${label} should be defined`);
+  }
+  return value;
+}
+
 describe("AI Chat", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -71,16 +79,20 @@ describe("AI Chat", () => {
     });
     expect(messages).toHaveLength(2);
 
-    const userMessage = messages.find((m) => m.role === "user");
-    expect(userMessage).not.toBeUndefined();
-    expect(userMessage!.role).toBe("user");
-    expect(userMessage!.content).toBe("Hello AI");
+    const userMessage = expectDefined(
+      messages.find((m) => m.role === "user"),
+      "user message",
+    );
+    expect(userMessage.role).toBe("user");
+    expect(userMessage.content).toBe("Hello AI");
 
-    const aiMessage = messages.find((m) => m.role === "assistant");
-    expect(aiMessage).not.toBeUndefined();
-    expect(aiMessage!.role).toBe("assistant");
-    expect(aiMessage!.content).toBe("I am a helpful AI assistant.");
-    expect(aiMessage!.tokensUsed).toBe(30);
+    const aiMessage = expectDefined(
+      messages.find((m) => m.role === "assistant"),
+      "assistant message",
+    );
+    expect(aiMessage.role).toBe("assistant");
+    expect(aiMessage.content).toBe("I am a helpful AI assistant.");
+    expect(aiMessage.tokensUsed).toBe(30);
 
     // Verify usage tracking
     const usage = await t.run(async (ctx) => {
@@ -129,15 +141,19 @@ describe("AI Chat", () => {
     // Should have 2 messages: user message and system error message
     expect(messages).toHaveLength(2);
 
-    const userMessage = messages.find((m) => m.role === "user");
-    expect(userMessage).not.toBeUndefined();
-    expect(userMessage!.role).toBe("user");
-    expect(userMessage!.content).toBe("Hello AI");
+    const userMessage = expectDefined(
+      messages.find((m) => m.role === "user"),
+      "user message",
+    );
+    expect(userMessage.role).toBe("user");
+    expect(userMessage.content).toBe("Hello AI");
 
-    const systemMessage = messages.find((m) => m.role === "system");
-    expect(systemMessage).not.toBeUndefined();
-    expect(systemMessage!.role).toBe("system");
-    expect(systemMessage!.content).toContain("AI generation failed: API Limit Exceeded");
+    const systemMessage = expectDefined(
+      messages.find((m) => m.role === "system"),
+      "system message",
+    );
+    expect(systemMessage.role).toBe("system");
+    expect(systemMessage.content).toContain("AI generation failed: API Limit Exceeded");
 
     // 4. Usage should be tracked as failure
     const usage = await t.run(async (ctx) => {

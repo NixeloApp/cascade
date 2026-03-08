@@ -12,6 +12,14 @@ import {
   useUserFuzzySearch,
 } from "./useFuzzySearch";
 
+function expectDefined<T>(value: T | undefined, label: string): T {
+  expect(value, `${label} should be defined`).not.toBeUndefined();
+  if (value === undefined) {
+    throw new Error(`${label} should be defined`);
+  }
+  return value;
+}
+
 describe("useFuzzySearch", () => {
   const sampleUsers = [
     { _id: "1", name: "John Doe", email: "john@example.com" },
@@ -62,9 +70,11 @@ describe("useFuzzySearch", () => {
     await waitFor(() => {
       expect(result.current.results.length).toBeGreaterThan(0);
       // Should fuzzy match "John"
-      const johnResult = result.current.results.find((r) => r.item.name.includes("John"));
-      expect(johnResult).not.toBeUndefined();
-      expect(johnResult!.item.name).toBe("John Doe");
+      const johnResult = expectDefined(
+        result.current.results.find((r) => r.item.name.includes("John")),
+        "John search result",
+      );
+      expect(johnResult.item.name).toBe("John Doe");
     });
   });
 
@@ -290,10 +300,12 @@ describe("useProjectFuzzySearch", () => {
 
     await waitFor(() => {
       // Should find BETA project
-      const betaProject = result.current.results.find((r) => r.item.key === "BETA");
-      expect(betaProject).not.toBeUndefined();
-      expect(betaProject!.item.key).toBe("BETA");
-      expect(betaProject!.item.name).toBe("Project Beta");
+      const betaProject = expectDefined(
+        result.current.results.find((r) => r.item.key === "BETA"),
+        "BETA project result",
+      );
+      expect(betaProject.item.key).toBe("BETA");
+      expect(betaProject.item.name).toBe("Project Beta");
     });
   });
 });
@@ -325,10 +337,12 @@ describe("useIssueFuzzySearch", () => {
 
     await waitFor(() => {
       // Should find "Add dark mode" issue
-      const darkModeIssue = result.current.results.find((r) => r.item.title.includes("dark mode"));
-      expect(darkModeIssue).not.toBeUndefined();
-      expect(darkModeIssue!.item.key).toBe("PROJ-124");
-      expect(darkModeIssue!.item.title).toBe("Add dark mode");
+      const darkModeIssue = expectDefined(
+        result.current.results.find((r) => r.item.title.includes("dark mode")),
+        "dark mode issue result",
+      );
+      expect(darkModeIssue.item.key).toBe("PROJ-124");
+      expect(darkModeIssue.item.title).toBe("Add dark mode");
     });
   });
 });
@@ -376,9 +390,11 @@ describe("useLabelFuzzySearch", () => {
 
     await waitFor(() => {
       // Should find "enhancement"
-      const enhancementLabel = result.current.results.find((r) => r.item.label === "enhancement");
-      expect(enhancementLabel).not.toBeUndefined();
-      expect(enhancementLabel!.item.label).toBe("enhancement");
+      const enhancementLabel = expectDefined(
+        result.current.results.find((r) => r.item.label === "enhancement"),
+        "enhancement label result",
+      );
+      expect(enhancementLabel.item.label).toBe("enhancement");
     });
   });
 });
