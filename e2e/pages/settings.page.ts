@@ -513,58 +513,84 @@ export class SettingsPage extends BasePage {
   }
 
   async toggleTimeApproval(enabled: boolean) {
-    // Wait for the switch to appear - OrganizationSettings component makes its own query
-    await this.requiresTimeApprovalSwitch.waitFor({ state: "visible" });
+    await this.expectAdminSettingsLoaded();
 
-    // Wait for save button to appear (form is loaded)
-    await this.saveSettingsButton.waitFor({ state: "visible" });
-
-    // Scroll the switch into view
-    await this.requiresTimeApprovalSwitch.scrollIntoViewIfNeeded();
-
-    const isChecked = await this.requiresTimeApprovalSwitch.getAttribute("aria-checked");
-    const needsChange = (isChecked === "true") !== enabled;
-
-    if (!needsChange) {
-      // Already in desired state, nothing to do
+    if (await this.hasTimeApprovalState(enabled)) {
       return;
     }
 
-    const expectedChecked = enabled ? "true" : "false";
+    await this.setTimeApprovalDraftState(enabled);
 
-    // Use retry pattern for the entire toggle + save cycle to handle Convex real-time updates
-    // The Convex subscription can reset formData which disables the save button
-    await expect(async () => {
-      // Re-check current state in case it changed
-      const currentChecked = await this.requiresTimeApprovalSwitch.getAttribute("aria-checked");
+    if (!(await this.trySaveOrganizationSettings())) {
+      await this.setTimeApprovalDraftState(enabled);
+      await this.expectTimeApprovalDraftState(enabled);
+      await this.saveOrganizationSettings();
+    }
+    await this.expectTimeApprovalEnabled(enabled);
+  }
 
-      // Only click if we need to change the state
-      if (currentChecked !== expectedChecked) {
-        // Ensure switch is in viewport and not covered
-        await this.requiresTimeApprovalSwitch.scrollIntoViewIfNeeded();
+  async hasTimeApprovalState(enabled: boolean) {
+    return (
+      (await this.requiresTimeApprovalSwitch.getAttribute("aria-checked")) ===
+      (enabled ? "true" : "false")
+    );
+  }
 
-        // Click the switch to toggle
-        await this.requiresTimeApprovalSwitch.click();
+  async setTimeApprovalDraftState(enabled: boolean) {
+    if (await this.hasTimeApprovalState(enabled)) {
+      return;
+    }
 
-        // Verify the aria-checked changes
-        await expect(this.requiresTimeApprovalSwitch).toHaveAttribute(
-          "aria-checked",
-          expectedChecked,
-        );
-      }
+    await this.requiresTimeApprovalSwitch.scrollIntoViewIfNeeded();
+    await this.requiresTimeApprovalSwitch.click();
+    await this.expectTimeApprovalDraftState(enabled);
+  }
 
-      // Wait for React to process the state change and enable the save button
-      // This must be inside the retry loop because Convex subscription can reset state
-      await expect(this.saveSettingsButton).toBeEnabled();
+  async waitForSettingsSaveReady(timeout = 2000) {
+    try {
+      await expect(this.saveSettingsButton).toBeEnabled({ timeout });
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
-      // Click save button - this must also be in the retry loop
-      await this.saveSettingsButton.click();
+  async expectSettingsSaveReady(timeout = 5000) {
+    await expect(this.saveSettingsButton).toBeEnabled({ timeout });
+  }
 
-      // Verify success toast appears
-      await expect(
-        this.page.locator("[data-sonner-toast][data-type='success']").first(),
-      ).toBeVisible();
-    }).toPass();
+  async expectTimeApprovalDraftState(enabled: boolean) {
+    await expect(this.requiresTimeApprovalSwitch).toHaveAttribute(
+      "aria-checked",
+      enabled ? "true" : "false",
+    );
+  }
+
+  async trySaveOrganizationSettings() {
+    await this.saveSettingsButton.waitFor({ state: "visible" });
+
+    if (!(await this.waitForSettingsSaveReady())) {
+      return false;
+    }
+
+    await this.saveSettingsButton.evaluate((button: HTMLButtonElement) => button.click());
+
+    try {
+      await this.waitForOrganizationSettingsSaved();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async saveOrganizationSettings() {
+    await this.expectSettingsSaveReady();
+    await this.saveSettingsButton.evaluate((button: HTMLButtonElement) => button.click());
+    await this.waitForOrganizationSettingsSaved();
+  }
+
+  async waitForOrganizationSettingsSaved() {
+    await expect(this.page.getByText(/organization settings updated/i).first()).toBeVisible();
   }
 
   async expectOrganizationName(name: string) {

@@ -201,6 +201,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `DashboardPage.openTimeEntryModal({ expectBillable })` now reloads the app shell only when the modal proves org billing state is stale, after the grouped billing/signout rerun reproduced an out-of-band settings race that did not show up in the earlier isolated billing run.
 - `DashboardPage.signOutViaUserMenu()` now reacquires the visible `Sign out` menu item inside the retry loop and waits for a signed-out destination, after the isolated signout rerun showed the previous locator could detach between menu-open and click.
 - `SettingsPage.inviteUser()` now wraps modal open, form fill, optional role selection, and invite-row visibility in the same retry boundary, after the settings/admin rerun showed the invite email input could detach immediately after the modal-open helper succeeded.
+- `SettingsPage.toggleTimeApproval()` now uses explicit draft-state and save-state helpers with one bounded re-stage recovery, after the admin settings reruns showed the live organization-settings subscription could remount the save button mid-click and invalidate a blanket retry wrapper.
 - `ProjectsPage.openIssueDetail()` and `closeIssueDetail()` now reuse a named `closeIssueDetailIfOpen()` reset, after hardening moved the detail-dialog setup and teardown into the page object and the targeted rerun confirmed the modal flow stays deterministic across integration and issues specs.
 - `ProjectsPage.openIssueDetail()` now uses a direct close-if-open -> force-click -> dialog-ready contract instead of wrapping that same modal-open sequence in a retry shell, after the issue-detail-open rerun confirmed the modal still settles deterministically.
 - `ProjectsPage.closeIssueDetail()` now relies directly on `closeIssueDetailIfOpen()` instead of wrapping the same close contract in an extra retry loop, after the title-edit rerun confirmed the reopen path still passes.
@@ -322,6 +323,10 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `7 passed (2.4m)`
 - `pnpm exec playwright test e2e/settings/billing.spec.ts --reporter=line --workers=1`
   - `2 passed (22.5s)`
+- `pnpm exec playwright test e2e/workspaces-org.spec.ts -g "Admin can toggle time approval setting" --reporter=line --workers=1`
+  - `1 passed (18.7s)` after replacing the time-approval save retry wrapper with explicit draft-state and save-state helpers
+- `pnpm exec playwright test e2e/workspaces-org.spec.ts -g "Admin can toggle time approval setting" --reporter=line --workers=1`
+  - `1 passed (18.1s)` confirming the admin time-approval flow stays green on a repeated isolated rerun
 - `pnpm exec playwright test e2e/dashboard.spec.ts --reporter=line --workers=1`
   - `11 passed (1.6m)`
 - `pnpm exec playwright test e2e/invites.spec.ts --reporter=line --workers=1`
