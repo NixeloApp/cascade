@@ -417,10 +417,17 @@ export class OnboardingPage {
    * Click create project button
    */
   async createProject() {
-    await expect(async () => {
-      await this.createProjectButton.click();
-      await this.expectTeamMemberComplete();
-    }).toPass();
+    const creatingButton = this.page.getByRole("button", { name: /creating/i });
+
+    await expect(this.createProjectButton).toBeVisible({ timeout: TRANSITION_TIMEOUT });
+    await expect(this.createProjectButton).toBeEnabled();
+    await this.createProjectButton.click();
+
+    if (await creatingButton.isVisible().catch(() => false)) {
+      await expect(creatingButton).toBeDisabled();
+    }
+
+    await this.expectTeamMemberComplete();
   }
 
   async fillProjectName(name: string) {

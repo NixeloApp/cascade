@@ -102,7 +102,6 @@ test.describe("Onboarding - Team Lead Flow", () => {
   test.describe.configure({ mode: "serial" });
   // Skip auth save for this test - onboarding state changes can affect auth state
 
-  // TODO: Storage state becomes invalid after earlier tests - needs investigation
   test("shows team lead features and can go back to role selection", async ({ page }, testInfo) => {
     const onboarding = new OnboardingPage(page);
 
@@ -133,7 +132,6 @@ test.describe("Onboarding - Team Lead Flow", () => {
 test.describe("Onboarding - Team Member Flow", () => {
   // Run tests serially to prevent auth token rotation issues
 
-  // TODO: Storage state becomes invalid after earlier tests - needs investigation
   test("shows member-specific content and can complete onboarding", async ({ page }, testInfo) => {
     const onboarding = new OnboardingPage(page);
 
