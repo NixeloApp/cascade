@@ -244,6 +244,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `AuthPage` auth-form transitions now use named landing and expanded states (`signin-landing`, `signin-expanded`, `signup-landing`, `signup-expanded`) so route switches wait for the target form instance instead of trusting a transient `data-expanded` match from the previous auth route.
 - `authenticatedTest.ensureAuthenticated()` now treats dashboard bootstrap as a direct contract (`dashboard URL -> no 500 boundary -> dashboard shell ready`) with one explicit recovery path that escalates from `/app` to `/:orgSlug/dashboard` when auth injection lands on the marketing shell, instead of relying on a generic two-attempt loop around the whole bootstrap.
 - `DashboardPage.goto()` now follows the same explicit contract (`dashboard route -> dashboard shell ready -> my-issues visible`) with one named recovery path (`/app`, then direct dashboard route, then a final reload) instead of branching through inline retry/reload logic.
+- `trySignInUser()` now owns a named post-submit redirect contract that either settles on dashboard/onboarding directly or escalates once through the `/app` gateway before failing, instead of carrying a long inline timeout branch inside the UI-login path.
 - `activity-feed.spec.ts` now goes through `ProjectsPage` helpers for empty-vs-entry state, action text, issue-key visibility, and relative timestamps, after moving those assertions out of the spec body showed the feed state could be treated as a single page-object contract.
 - `SettingsPage.openInviteUserModal()` now waits for the invite form controls, `inviteUser()` accepts the invite row as the success signal, and `revokeInvite()` waits for the row status to become `revoked`, after the invite reruns showed the inline card could close before the button-based retry logic realized the action had already succeeded.
 - `SettingsPage.openInviteUserModal()` now uses a direct close-if-open -> click -> form-visible contract instead of wrapping that same modal-open sequence in a retry shell, after the invite flow rerun confirmed the admin invite modal opens deterministically.
@@ -523,6 +524,12 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `PASS` with the existing warn-only `164 file(s) missing tests`
 - `pnpm exec playwright test e2e/dashboard.spec.ts e2e/settings/billing.spec.ts e2e/signout.spec.ts --reporter=line --workers=1`
   - `14 passed (1.3m)` after moving `DashboardPage.goto()` onto the same named app-shell recovery contract as the authenticated fixture
+- `pnpm run validate`
+  - `PASS` with the existing warn-only `164 file(s) missing tests`
+- `pnpm exec playwright test e2e/signout.spec.ts --reporter=line --workers=1`
+  - `1 passed (18.9s)` after centralizing post-sign-in redirect recovery inside `trySignInUser()`
+- `pnpm exec playwright test e2e/auth.spec.ts -g "can sign in with existing user and lands on dashboard" --reporter=line --workers=1`
+  - `1 passed (24.0s)` with the sign-in integration test still proving the helper can recover from a landing-page stall and reach the app shell
 - `pnpm exec playwright test e2e/issue-detail-page.spec.ts -g "can edit issue description and priority from the direct issue detail page" --reporter=line --workers=1`
   - `1 passed (1.3m)`
 - `pnpm vitest run src/components/Onboarding/RoleSelector.test.tsx`
