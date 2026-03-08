@@ -126,8 +126,13 @@ export class ProjectsPage extends BasePage {
 
     // Sidebar
     this.sidebar = page.locator("[data-tour='sidebar']").or(page.getByRole("complementary"));
-    // Updated to distinguish between Project and Workspace
-    this.newProjectButton = page.getByRole("button", { name: "+ Create Project" });
+    // Scope project creation to the main page surface so shell-level actions cannot
+    // satisfy the same button-name contract by accident.
+    this.newProjectButton = page
+      .getByRole("main")
+      .last()
+      .getByRole("button", { name: "+ Create Project" })
+      .first();
     this.newWorkspaceButton = page.getByRole("button", { name: "+ Create Workspace" });
     this.createEntityButton = this.sidebar.getByRole("button", {
       name: /add new|create|\+/i,
@@ -311,12 +316,14 @@ export class ProjectsPage extends BasePage {
     await this.expectProjectsView();
     await this.clickNewProjectButton();
 
-    if (!(await this.waitForCreateProjectFormVisible())) {
-      await this.expectProjectsView();
-      await this.clickNewProjectButton();
+    if (await this.waitForCreateProjectWizardReady()) {
+      console.log("Create project modal visible.");
+      return;
     }
 
-    await this.expectCreateProjectFormVisible();
+    await this.expectProjectsView();
+    await this.clickNewProjectButton();
+    await this.expectCreateProjectWizardReady();
 
     console.log("Create project modal visible.");
   }
@@ -996,17 +1003,32 @@ export class ProjectsPage extends BasePage {
     }
   }
 
-  private async waitForCreateProjectFormVisible(timeout = 3000) {
+  private async getCreateProjectWizardReadyState() {
+    const step = await this.getCreateProjectStep();
+    return step === "template" || step === "configure" ? step : null;
+  }
+
+  private async waitForCreateProjectWizardReady(timeout = 3000) {
     try {
-      await this.expectCreateProjectFormVisible(timeout);
-      return true;
+      return await this.expectCreateProjectWizardReady(timeout);
     } catch {
-      return false;
+      return null;
     }
   }
 
-  private async expectCreateProjectFormVisible(timeout = 10000) {
+  private async expectCreateProjectWizardReady(timeout = 10000) {
     await this.createProjectForm.waitFor({ state: "visible", timeout });
+
+    await expect
+      .poll(async () => this.getCreateProjectWizardReadyState(), {
+        timeout,
+        intervals: [250, 500, 1000],
+      })
+      .not.toBeNull();
+
+    const readyState = await this.getCreateProjectWizardReadyState();
+    expect(readyState).not.toBeNull();
+    return readyState;
   }
 
   private async expectCreateProjectStep(step: "template" | "configure", timeout = 10000) {
