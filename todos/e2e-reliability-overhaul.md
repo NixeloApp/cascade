@@ -202,6 +202,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `DashboardPage.signOutViaUserMenu()` now reacquires the visible `Sign out` menu item inside the retry loop and waits for a signed-out destination, after the isolated signout rerun showed the previous locator could detach between menu-open and click.
 - `SettingsPage.inviteUser()` now wraps modal open, form fill, optional role selection, and invite-row visibility in the same retry boundary, after the settings/admin rerun showed the invite email input could detach immediately after the modal-open helper succeeded.
 - `ProjectsPage.openIssueDetail()` and `closeIssueDetail()` now reuse a named `closeIssueDetailIfOpen()` reset, after hardening moved the detail-dialog setup and teardown into the page object and the targeted rerun confirmed the modal flow stays deterministic across integration and issues specs.
+- `ProjectsPage.openIssueDetail()` now uses a direct close-if-open -> force-click -> dialog-ready contract instead of wrapping that same modal-open sequence in a retry shell, after the issue-detail-open rerun confirmed the modal still settles deterministically.
 - `ProjectsPage.closeIssueDetail()` now relies directly on `closeIssueDetailIfOpen()` instead of wrapping the same close contract in an extra retry loop, after the title-edit rerun confirmed the reopen path still passes.
 - `ProjectsPage.createProject()` now accepts the wizard's `Creating...` state as proof that submit started, after the issue-detail setup rerun exposed that waiting only for immediate dialog dismissal could misclassify a valid create click as a failure.
 - `ProjectsPage.createIssue()` now submits once and waits on the shared issue-create completion contract (modal dismissed, created card visible, success toast visible) instead of wrapping `requestSubmit()` in a broad retry loop.
@@ -290,6 +291,8 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `1 passed (33.2s)` after removing the extra `cancelCreateProject()` retry wrapper
 - `pnpm exec playwright test e2e/issues.spec.ts -g "can edit an issue title from the detail dialog" --reporter=line --workers=1`
   - `1 passed (46.7s)` after removing the extra `closeIssueDetail()` retry wrapper
+- `pnpm exec playwright test e2e/issues.spec.ts -g "can open issue detail dialog" --reporter=line --workers=1`
+  - `1 passed (54.6s)` after replacing the issue-detail open retry with a direct dialog-ready contract
 - `pnpm exec playwright test e2e/documents.spec.ts --reporter=line --workers=1`
   - `4 passed (26.7s)` after replacing the new-document route retry with a direct route-plus-editor contract
 - `pnpm exec playwright test e2e/documents.spec.ts --reporter=line --workers=1`

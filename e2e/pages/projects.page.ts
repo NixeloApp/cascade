@@ -796,19 +796,17 @@ export class ProjectsPage extends BasePage {
    */
   async openIssueDetail(title: string) {
     const issueCard = this.getIssueCard(title);
-    await expect(async () => {
-      await this.closeIssueDetailIfOpen();
-      await issueCard.waitFor({ state: "visible" });
+    await this.closeIssueDetailIfOpen();
+    await issueCard.waitFor({ state: "visible" });
 
-      // Some card overlays intentionally sit behind visible title text and can be intercepted.
-      // Force click keeps targeting the semantic button while bypassing transient pointer blockers.
-      await issueCard.click({ force: true });
-      await expect(this.issueDetailDialog).toBeVisible();
+    // Some card overlays intentionally sit behind visible title text and can be intercepted.
+    // Force click keeps targeting the semantic button while bypassing transient pointer blockers.
+    await issueCard.click({ force: true });
+    await expect(this.issueDetailDialog).toBeVisible();
 
-      // Wait for modal content to be stable using the issue key metadata,
-      // which is consistently rendered regardless of sidebar section timing.
-      await expect(this.issueDetailDialog.getByText(/[A-Z][A-Z0-9]+-\d+/).first()).toBeVisible();
-    }).toPass();
+    // Wait for modal content to be stable using the issue key metadata,
+    // which is consistently rendered regardless of sidebar section timing.
+    await expect(this.issueDetailDialog.getByText(/[A-Z][A-Z0-9]+-\d+/).first()).toBeVisible();
   }
 
   async closeIssueDetail() {
