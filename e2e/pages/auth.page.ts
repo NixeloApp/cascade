@@ -654,7 +654,7 @@ export class AuthPage extends BasePage {
 
   async waitForSignUpVerificationStep(timeout = 3000) {
     try {
-      await this.expectSignUpVerificationStep(timeout);
+      await this.expectVerificationFormReady(timeout);
       return true;
     } catch {
       return false;
@@ -662,12 +662,16 @@ export class AuthPage extends BasePage {
   }
 
   async expectSignUpVerificationStep(timeout = 15000) {
+    await this.expectVerificationFormReady(timeout);
+  }
+
+  private async expectVerificationFormReady(timeout = 30000) {
     await expect
-      .poll(async () => this.getSignUpVerificationState(), {
+      .poll(async () => this.getSignUpVerificationFormState(), {
         timeout,
         intervals: [250, 500, 1000],
       })
-      .not.toBe("pending");
+      .toBe("verify");
   }
 
   async getOAuthErrorSettleState(): Promise<"signin" | "alert" | "toast" | "pending"> {
@@ -693,6 +697,22 @@ export class AuthPage extends BasePage {
 
     if (await this.successToast.isVisible().catch(() => false)) {
       return "toast";
+    }
+
+    return "pending";
+  }
+
+  private async getSignUpVerificationFormState(): Promise<"verify" | "error" | "pending"> {
+    if (
+      (await this.verifyHeading.isVisible().catch(() => false)) &&
+      (await this.verifyCodeInput.isVisible().catch(() => false)) &&
+      (await this.verifyEmailButton.isVisible().catch(() => false))
+    ) {
+      return "verify";
+    }
+
+    if (await this.errorToast.isVisible().catch(() => false)) {
+      return "error";
     }
 
     return "pending";
@@ -811,42 +831,42 @@ export class AuthPage extends BasePage {
     password: string,
     options?: { expectOutcome?: boolean },
   ) {
-    await this.expandEmailForm();
-    if (!(await this.waitForEmailFormExpanded())) {
+    await this.expandEmailForm("signup");
+    if (!(await this.waitForEmailFormExpanded(1000, "signup"))) {
       if (!options?.expectOutcome) {
         return false;
       }
 
-      await this.expectEmailFormExpanded();
+      await this.expectEmailFormExpanded("signup");
     }
 
     await expect(this.emailInput).toBeVisible();
     await this.emailInput.fill(email);
 
-    if (!(await this.waitForEmailFormExpanded())) {
+    if (!(await this.waitForEmailFormExpanded(1000, "signup"))) {
       if (!options?.expectOutcome) {
         return false;
       }
 
-      await this.expectEmailFormExpanded();
+      await this.expectEmailFormExpanded("signup");
     }
 
     await expect(this.passwordInput).toBeVisible();
     await this.passwordInput.fill(password);
 
-    if (!(await this.waitForEmailFormExpanded())) {
+    if (!(await this.waitForEmailFormExpanded(1000, "signup"))) {
       if (!options?.expectOutcome) {
         return false;
       }
 
-      await this.expectEmailFormExpanded();
+      await this.expectEmailFormExpanded("signup");
     }
 
-    await this.waitForFormReady();
+    await this.waitForFormReady("signup");
     await this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON).click();
 
     if (options?.expectOutcome) {
-      await this.expectSignUpVerificationStep();
+      await this.expectVerificationFormReady();
       return true;
     }
 
@@ -886,7 +906,7 @@ export class AuthPage extends BasePage {
   }
 
   async expectVerificationForm() {
-    // Wait for verification form to appear - uses Playwright's default timeout
+    await this.expectVerificationFormReady();
     await expect(this.verifyHeading).toBeVisible();
     await expect(this.verifyCodeInput).toBeVisible();
     await expect(this.verifyEmailButton).toBeVisible();
