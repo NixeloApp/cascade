@@ -35,17 +35,15 @@ import type { QueryCtx } from "../_generated/server";
  * Fetches multiple documents by ID in parallel and returns a Map for O(1) lookups.
  *
  * @param ctx - Query context
- * @param _table - Table name (used for type inference only)
  * @param ids - Array of IDs to fetch (can include undefined)
  * @returns Map of ID to document
  *
  * @example
- * const userMap = await batchFetch(ctx, "users", userIds);
- * const projectMap = await batchFetch(ctx, "projects", projectIds);
+ * const userMap = await batchFetch(ctx, userIds);
+ * const projectMap = await batchFetch(ctx, projectIds);
  */
 export async function batchFetch<T extends TableNames>(
   ctx: QueryCtx,
-  _table: T,
   ids: (Id<T> | undefined)[],
 ): Promise<Map<Id<T>, Doc<T>>> {
   const uniqueIds = [...new Set(ids.filter((id): id is Id<T> => !!id))];
@@ -63,49 +61,49 @@ export async function batchFetch<T extends TableNames>(
 
 /** Batch fetch users by ID */
 export const batchFetchUsers = (ctx: QueryCtx, ids: (Id<"users"> | undefined)[]) =>
-  batchFetch(ctx, "users", ids);
+  batchFetch(ctx, ids);
 
 /** Batch fetch issues by ID */
 export const batchFetchIssues = (ctx: QueryCtx, ids: (Id<"issues"> | undefined)[]) =>
-  batchFetch(ctx, "issues", ids);
+  batchFetch(ctx, ids);
 
 /** Batch fetch projects by ID */
 export const batchFetchProjects = (ctx: QueryCtx, ids: (Id<"projects"> | undefined)[]) =>
-  batchFetch(ctx, "projects", ids);
+  batchFetch(ctx, ids);
 
 /** Batch fetch calendar events by ID */
 export const batchFetchCalendarEvents = (
   ctx: QueryCtx,
   ids: (Id<"calendarEvents"> | undefined)[],
-) => batchFetch(ctx, "calendarEvents", ids);
+) => batchFetch(ctx, ids);
 
 /** Batch fetch teams by ID */
 export const batchFetchTeams = (ctx: QueryCtx, ids: (Id<"teams"> | undefined)[]) =>
-  batchFetch(ctx, "teams", ids);
+  batchFetch(ctx, ids);
 
 /** Batch fetch organizations by ID */
 export const batchFetchOrganizations = (ctx: QueryCtx, ids: (Id<"organizations"> | undefined)[]) =>
-  batchFetch(ctx, "organizations", ids);
+  batchFetch(ctx, ids);
 
 /** Batch fetch sprints by ID */
 export const batchFetchSprints = (ctx: QueryCtx, ids: (Id<"sprints"> | undefined)[]) =>
-  batchFetch(ctx, "sprints", ids);
+  batchFetch(ctx, ids);
 
 /** Batch fetch booking pages by ID */
 export const batchFetchBookingPages = (ctx: QueryCtx, ids: (Id<"bookingPages"> | undefined)[]) =>
-  batchFetch(ctx, "bookingPages", ids);
+  batchFetch(ctx, ids);
 
 /** Batch fetch documents by ID */
 export const batchFetchDocuments = (ctx: QueryCtx, ids: (Id<"documents"> | undefined)[]) =>
-  batchFetch(ctx, "documents", ids);
+  batchFetch(ctx, ids);
 
 /** Batch fetch custom fields by ID */
 export const batchFetchCustomFields = (ctx: QueryCtx, ids: (Id<"customFields"> | undefined)[]) =>
-  batchFetch(ctx, "customFields", ids);
+  batchFetch(ctx, ids);
 
 /** Batch fetch recordings by ID */
 export const batchFetchRecordings = (ctx: QueryCtx, ids: (Id<"meetingRecordings"> | undefined)[]) =>
-  batchFetch(ctx, "meetingRecordings", ids);
+  batchFetch(ctx, ids);
 
 // ============================================================================
 // FORMATTING HELPERS

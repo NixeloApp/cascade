@@ -148,23 +148,41 @@ test.describe("Board Drag-Drop", () => {
       name: new RegExp(escapedIssueTitle),
     });
 
-    // Use locator-level dragTo for Pragmatic DnD and verify post-drag card state deterministically.
-    await expect(async () => {
-      await issueCard.scrollIntoViewIfNeeded();
-      await targetColumn.scrollIntoViewIfNeeded();
-      await issueCard.dragTo(targetColumn);
+    await issueCard.scrollIntoViewIfNeeded();
+    await targetColumn.scrollIntoViewIfNeeded();
+    await issueCard.dragTo(targetColumn);
 
-      const targetCount = await issueButtonInTargetColumn.count();
-      const sourceCount = await issueButtonInSourceColumn.count();
+    // Wait for DOM to settle after drag using retrying assertion.
+    // Use expect.poll to wait until *either* the target-column locator or the source-column
+    // locator is visible, then branch based on the settled state.
+    const settledState = await expect
+      .poll(
+        async () => {
+          const inTarget = await issueButtonInTargetColumn.isVisible().catch(() => false);
+          const inSource = await issueButtonInSourceColumn.isVisible().catch(() => false);
 
-      // The card must remain rendered after drag gesture, either in target (successful move)
-      // or source (no-op move in constrained envs).
-      expect(targetCount + sourceCount).toBeGreaterThan(0);
+          if (inTarget && !inSource) return "target";
+          if (inSource && !inTarget) return "source";
+          if (inTarget || inSource) return "visible"; // At least one is visible
+          return "pending";
+        },
+        { timeout: 5000, intervals: [250, 500, 1000] },
+      )
+      .not.toBe("pending");
 
-      if (targetCount > 0) {
+    // Assert based on the settled state
+    if (settledState === "target" || settledState === "visible") {
+      // Re-check if moved to target using retrying assertion
+      const movedToTarget = await issueButtonInTargetColumn.isVisible().catch(() => false);
+      if (movedToTarget) {
         await expect(issueButtonInSourceColumn).toHaveCount(0);
+      } else {
+        await expect(issueButtonInSourceColumn).toBeVisible();
       }
-    }).toPass();
+    } else {
+      // Card remained in source column
+      await expect(issueButtonInSourceColumn).toBeVisible();
+    }
 
     console.log("✓ Drag operation completed");
   });

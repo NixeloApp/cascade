@@ -76,7 +76,7 @@ describe("batchHelpers", () => {
     );
 
     await t.run(async (ctx) => {
-      const map = await batchFetch(ctx, "users", [user1Id]);
+      const map = await batchFetch(ctx, [user1Id]);
       expect(map.size).toBe(1);
       expect(map.get(user1Id)?.name).toBe("User 1");
     });
@@ -86,6 +86,7 @@ describe("batchHelpers", () => {
     it("should format user correctly", () => {
       const user = {
         _id: "u1" as Id<"users">,
+        _creationTime: 0,
         name: "Alice",
         email: "alice@example.com",
         image: "img.png",
@@ -99,7 +100,7 @@ describe("batchHelpers", () => {
     });
 
     it("should fallback to Unknown if name/email missing", () => {
-      const user = { _id: "u1" as Id<"users"> };
+      const user = { _id: "u1" as Id<"users">, _creationTime: 0 };
       expect(formatUser(user)).toEqual({
         _id: "u1",
         name: "Unknown",
@@ -116,15 +117,15 @@ describe("batchHelpers", () => {
 
   describe("getUserName", () => {
     it("should return name if present", () => {
-      expect(getUserName({ name: "Bob", _id: "u1" as Id<"users"> })).toBe("Bob");
+      expect(getUserName({ name: "Bob", _id: "u1" as Id<"users">, _creationTime: 0 })).toBe("Bob");
     });
     it("should return email if name missing", () => {
-      expect(getUserName({ email: "bob@example.com", _id: "u1" as Id<"users"> })).toBe(
-        "bob@example.com",
-      );
+      expect(
+        getUserName({ email: "bob@example.com", _id: "u1" as Id<"users">, _creationTime: 0 }),
+      ).toBe("bob@example.com");
     });
     it("should return Unknown if both missing", () => {
-      expect(getUserName({ _id: "u1" as Id<"users"> })).toBe("Unknown");
+      expect(getUserName({ _id: "u1" as Id<"users">, _creationTime: 0 })).toBe("Unknown");
     });
     it("should return Unknown if user is null/undefined", () => {
       expect(getUserName(null)).toBe("Unknown");

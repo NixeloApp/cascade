@@ -224,25 +224,11 @@ export class DashboardPage extends BasePage {
 
   async goto() {
     const dashboardUrl = `/${this.orgSlug}/dashboard`;
-
-    // Determine baseURL from current URL
-    const urlObj = new URL(this.page.url());
-    const baseUrl = `${urlObj.protocol}//${urlObj.host}`;
-
-    // Check if already on dashboard - skip navigation to avoid token rotation
     const currentUrl = this.page.url();
-    if (currentUrl.includes(`/${this.orgSlug}/dashboard`)) {
-      // Already on dashboard: give the existing app shell a chance to finish
-      // hydrating before forcing a second navigation.
-      await this.page.waitForLoadState("domcontentloaded");
-      const isLoaded = await this.commandPaletteButton
-        .waitFor({ state: "visible", timeout: 5000 })
-        .then(() => true)
-        .catch(() => false);
 
-      if (isLoaded) {
-        // Even if already on page, ensure it's hydrated before returning
-        await this.waitForLoad();
+    if (currentUrl.includes(`/${this.orgSlug}/dashboard`)) {
+      await this.page.waitForLoadState("domcontentloaded");
+      if (await this.tryDashboardReady()) {
         return;
       }
     }
@@ -254,68 +240,67 @@ export class DashboardPage extends BasePage {
 
     if (isInAuthenticatedAppShell) {
       await this.dashboardTab.click();
-      await expect(this.page).toHaveURL(new RegExp(`/${this.orgSlug}/dashboard(?:\\?.*)?$`));
+      if (await this.tryDashboardReady(5000)) {
+        return;
+      }
     } else {
-      // Use an explicit document navigation only when entering the app shell
-      // from outside the authenticated UI. In-app route changes should preserve
-      // the live Convex auth session instead of forcing a fresh bootstrap.
       await this.page.waitForLoadState("load");
       await this.page.goto(dashboardUrl, { waitUntil: "domcontentloaded" });
       await this.page.waitForLoadState("load");
-
-      // Check if we got redirected to landing/signin page (auth failure)
-      let finalUrl = this.page.url();
-      if (
-        finalUrl.includes("/signin") ||
-        finalUrl === baseUrl ||
-        finalUrl === `${baseUrl}/` ||
-        !finalUrl.includes(this.orgSlug)
-      ) {
-        console.warn(
-          "⚠️  Auth redirect detected: navigated to",
-          finalUrl,
-          ". Retrying navigation once...",
-        );
-        // Wait for auth redirect chain to settle before retrying navigation
-        await this.page.waitForLoadState("load");
-        await this.page.goto(dashboardUrl, { waitUntil: "domcontentloaded" });
-        await this.waitForLoad();
-        finalUrl = this.page.url(); // Update finalUrl after retry
-      }
-
-      // Final check after potential retry
-      if (
-        finalUrl.includes("/signin") ||
-        finalUrl === baseUrl ||
-        finalUrl === `${baseUrl}/` ||
-        !finalUrl.includes(this.orgSlug)
-      ) {
-        console.error("❌ Still on landing page after retry. Auth failed.");
-        throw new Error(`Redirected to landing/signin page: ${finalUrl}. Auth session invalid.`);
+      if (await this.tryDashboardReady(5000)) {
+        return;
       }
     }
 
-    // Wait for dashboard app shell with recovery
-    try {
-      await this.commandPaletteButton.waitFor({ state: "visible" });
-    } catch (_e) {
-      // Check again if redirected to landing after timeout
-      const currentUrl = this.page.url();
-      if (
-        currentUrl.includes("/signin") ||
-        currentUrl === "http://localhost:5555/" ||
-        !currentUrl.includes(this.orgSlug)
-      ) {
-        throw new Error(`Redirected to landing/signin page: ${currentUrl}. Auth session invalid.`);
-      }
-      console.log("Dashboard didn't load in time, reloading...");
-      await this.page.reload();
-      await this.commandPaletteButton.waitFor({ state: "visible" });
+    await this.recoverDashboardRoute(dashboardUrl);
+    await this.expectDashboardReady();
+  }
+
+  private async expectDashboardReady(timeout = 15000) {
+    const currentUrl = this.page.url();
+    if (this.isOutsideOrgShell(currentUrl)) {
+      throw new Error(`Redirected to landing/signin page: ${currentUrl}. Auth session invalid.`);
     }
 
+    await expect(this.page).toHaveURL(new RegExp(`/${this.orgSlug}/dashboard(?:\\?.*)?$`), {
+      timeout,
+    });
     await this.expectLoaded();
     await waitForDashboardReady(this.page);
-    await expect(this.myIssuesSection).toBeVisible();
+    await expect(this.myIssuesSection).toBeVisible({ timeout });
+  }
+
+  private async tryDashboardReady(timeout = 5000) {
+    try {
+      await this.expectDashboardReady(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async recoverDashboardRoute(dashboardUrl: string) {
+    if (this.isOutsideOrgShell(this.page.url())) {
+      await this.page.goto("/app", { waitUntil: "domcontentloaded" });
+      await this.page.waitForLoadState("load");
+      if (await this.tryDashboardReady(5000)) {
+        return;
+      }
+    }
+
+    await this.page.goto(dashboardUrl, { waitUntil: "domcontentloaded" });
+    await this.page.waitForLoadState("load");
+
+    if (await this.tryDashboardReady(5000)) {
+      return;
+    }
+
+    await this.page.reload({ waitUntil: "domcontentloaded" });
+    await this.page.waitForLoadState("load");
+  }
+
+  private isOutsideOrgShell(url: string) {
+    return !url.includes(`/${this.orgSlug}/`) || url.includes("/signin");
   }
 
   async navigateTo(
@@ -355,26 +340,20 @@ export class DashboardPage extends BasePage {
 
   async openCommandPalette() {
     await waitForDashboardReady(this.page);
+    await this.closeCommandPaletteIfOpen();
+    await this.clickCommandPaletteButton();
 
-    // Use retry pattern - button click may not trigger event handler immediately after hydration
-    await expect(async () => {
-      await this.closeCommandPaletteIfOpen();
-      // Click to open command palette
-      await this.commandPaletteButton.click();
-      // Wait for dialog animation to complete (Radix Dialog has opening animation)
-      await expect(this.commandPalette).toBeVisible();
-      // Verify it stays visible (not immediately closed)
-      await expect(this.commandPaletteInput).toBeVisible();
-      // Focus the input to keep the dialog open and stable (inside retry loop to handle detachments)
-      await this.commandPaletteInput.focus();
-    }).toPass();
+    if (!(await this.waitForCommandPaletteReady())) {
+      await this.clickCommandPaletteButton();
+    }
+
+    await this.expectCommandPaletteReady();
+    await this.commandPaletteInput.focus();
   }
 
   async closeCommandPalette() {
-    await expect(async () => {
-      await this.closeCommandPaletteIfOpen();
-      await expect(this.commandPalette).not.toBeVisible();
-    }).toPass();
+    await this.closeCommandPaletteIfOpen();
+    await expect(this.commandPalette).not.toBeVisible();
   }
 
   async closeCommandPaletteIfOpen() {
@@ -393,27 +372,55 @@ export class DashboardPage extends BasePage {
     await expect(this.commandPalette).not.toBeVisible();
   }
 
-  async openShortcutsHelp() {
-    // Wait for button to be visible and stable
-    await this.shortcutsHelpButton.waitFor({ state: "visible" });
+  private async clickCommandPaletteButton() {
+    await expect(this.commandPaletteButton).toBeVisible();
+    await expect(this.commandPaletteButton).toBeEnabled();
+    await this.commandPaletteButton.click();
+  }
 
-    // Use retry pattern to handle potential React re-renders
-    await expect(async () => {
+  private async waitForCommandPaletteReady(timeout = 3000) {
+    try {
+      await this.expectCommandPaletteReady(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectCommandPaletteReady(timeout = 10000) {
+    await expect(this.commandPalette).toBeVisible({ timeout });
+    await expect(this.commandPaletteInput).toBeVisible({ timeout });
+  }
+
+  async openShortcutsHelp() {
+    await this.shortcutsHelpButton.waitFor({ state: "visible" });
+    await this.closeShortcutsHelpIfOpen();
+    await this.shortcutsHelpButton.click();
+
+    if (!(await this.shortcutsModal.isVisible().catch(() => false))) {
       await this.shortcutsHelpButton.click();
-      await expect(this.shortcutsModal).toBeVisible();
-    }).toPass();
+    }
+
+    await expect(this.shortcutsModal).toBeVisible();
   }
 
   async closeShortcutsHelp() {
-    await expect(async () => {
-      if (!(await this.shortcutsModal.isVisible())) return;
-      await this.page.keyboard.press("Escape");
-      // Fallback: click outside if escape fails (try clicking main content)
-      if (await this.shortcutsModal.isVisible()) {
-        await this.mainContent.click({ position: { x: 10, y: 10 } }).catch(() => {});
-      }
-      await expect(this.shortcutsModal).not.toBeVisible();
-    }).toPass();
+    await this.closeShortcutsHelpIfOpen();
+    await expect(this.shortcutsModal).not.toBeVisible();
+  }
+
+  async closeShortcutsHelpIfOpen() {
+    if (!(await this.shortcutsModal.isVisible().catch(() => false))) {
+      return;
+    }
+
+    await this.page.keyboard.press("Escape");
+
+    if (await this.shortcutsModal.isVisible().catch(() => false)) {
+      await this.mainContent.click({ position: { x: 10, y: 10 } }).catch(() => {});
+    }
+
+    await expect(this.shortcutsModal).not.toBeVisible();
   }
 
   async setTheme(theme: "light" | "dark" | "system") {
@@ -438,34 +445,121 @@ export class DashboardPage extends BasePage {
   }
 
   async signOutViaUserMenu() {
+    await waitForDashboardReady(this.page);
+
+    if (await this.isSignedOutDestinationVisible()) {
+      return;
+    }
+
+    await this.attemptSignOutViaUserMenu();
+
+    if (await this.waitForSignedOutDestination()) {
+      return;
+    }
+
+    await this.attemptSignOutViaUserMenu();
+    await this.expectSignedOutDestination();
+  }
+
+  private async waitForSignedOutDestination(timeout = 5000) {
+    try {
+      await this.expectSignedOutDestination(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectSignedOutDestination(timeout = 30000) {
+    await expect
+      .poll(
+        async () => {
+          if (await this.isSignedOutDestinationVisible()) {
+            return "signed-out";
+          }
+
+          if (this.page.url().includes(`/${this.orgSlug}/`)) {
+            return "authenticated-app";
+          }
+
+          return "redirecting";
+        },
+        { timeout, intervals: [500, 1000, 2000] },
+      )
+      .toBe("signed-out");
+  }
+
+  private async attemptSignOutViaUserMenu() {
+    await this.openUserMenu();
+
+    try {
+      await this.getVisibleUserMenuSignOutItem().click();
+    } catch {
+      await this.openUserMenu();
+      await this.getVisibleUserMenuSignOutItem().click();
+    }
+  }
+
+  private getVisibleUserMenuSignOutItem() {
+    return this.page.getByRole("menuitem", { name: /sign out/i }).last();
+  }
+
+  private async openUserMenu() {
+    await expect(this.userMenuButton).toBeVisible();
     await this.userMenuButton.click();
-    // Wait for dropdown content to be visible
-    await this.userMenuSignOutItem.waitFor({ state: "visible" });
-    await this.userMenuSignOutItem.click();
+
+    if (await this.waitForVisibleUserMenuSignOutItem()) {
+      return;
+    }
+
+    await this.userMenuButton.click();
+    await this.expectVisibleUserMenuSignOutItem();
+  }
+
+  private async waitForVisibleUserMenuSignOutItem(timeout = 3000) {
+    try {
+      await this.expectVisibleUserMenuSignOutItem(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectVisibleUserMenuSignOutItem(timeout = 5000) {
+    await expect(this.getVisibleUserMenuSignOutItem()).toBeVisible({ timeout });
+  }
+
+  private async isSignedOutDestinationVisible(): Promise<boolean> {
+    const landingCtaVisible = await this.page
+      .getByRole("link", { name: /get started free/i })
+      .isVisible()
+      .catch(() => false);
+    if (landingCtaVisible) {
+      return true;
+    }
+
+    return this.page
+      .getByRole("heading", { name: /sign in to nixelo/i })
+      .isVisible()
+      .catch(() => false);
   }
 
   async openGlobalSearch() {
     await waitForDashboardReady(this.page);
+    await this.throwIfAppErrorVisible();
+    await this.closeGlobalSearchIfOpen();
+    await this.globalSearchButton.click();
+    await this.throwIfAppErrorVisible();
 
-    // Use retry pattern - click may not register immediately after page load
-    await expect(async () => {
-      await this.throwIfAppErrorVisible();
-      await this.closeGlobalSearchIfOpen();
-
-      // Click the search button directly (keyboard shortcut conflicts with command palette)
+    if (!(await this.waitForGlobalSearchReady())) {
       await this.globalSearchButton.click();
       await this.throwIfAppErrorVisible();
+      await this.expectGlobalSearchReady();
+      return;
+    }
 
-      // Check if modal opened AND input is ready
-      await expect(this.globalSearchModal).toBeVisible();
-      await expect(this.globalSearchInput).toBeVisible();
-      await expect(this.globalSearchInput).toBeEnabled();
-
-      // Keep focus inside the modal during retries so transient close/reopen
-      // cycles do not leak through as a "successful" open.
-      await this.globalSearchInput.focus();
-      await expect(this.globalSearchInput).toBeVisible();
-    }).toPass();
+    await this.globalSearchInput.focus();
+    await expect(this.globalSearchInput).toBeVisible();
   }
 
   private async throwIfAppErrorVisible() {
@@ -514,22 +608,35 @@ export class DashboardPage extends BasePage {
     return ` [diagnostics ${JSON.stringify(diagnostics)}]`;
   }
 
-  async openTimeEntryModal() {
+  async openTimeEntryModal(options?: { expectBillable?: boolean }) {
     await waitForDashboardReady(this.page);
+    if (options?.expectBillable === undefined) {
+      await this.openTimeEntryModalOnce();
+      return;
+    }
 
-    await expect(async () => {
-      await this.closeTimeEntryModalIfOpen();
-      await expect(this.headerStartTimerButton).toBeVisible();
-      await this.headerStartTimerButton.click();
-      await expect(this.timeEntryModal).toBeVisible();
-    }).toPass();
+    await this.openTimeEntryModalOnce();
+
+    if (await this.waitForTimeEntryBillingState(options.expectBillable)) {
+      await this.expectTimeEntryBillingState(options.expectBillable);
+      return;
+    }
+
+    await this.resyncTimeEntryModalBillingState();
+    await this.openTimeEntryModalOnce();
+    await this.expectTimeEntryBillingState(options.expectBillable);
+  }
+
+  async reloadAppShell() {
+    await this.page.reload({ waitUntil: "domcontentloaded" });
+    await this.page.waitForLoadState("load");
+    await waitForDashboardReady(this.page);
+    await this.expectLoaded();
   }
 
   async closeGlobalSearch() {
-    await expect(async () => {
-      await this.closeGlobalSearchIfOpen();
-      await expect(this.globalSearchModal).not.toBeVisible();
-    }).toPass();
+    await this.closeGlobalSearchIfOpen();
+    await expect(this.globalSearchModal).not.toBeVisible();
   }
 
   async closeGlobalSearchIfOpen() {
@@ -566,31 +673,110 @@ export class DashboardPage extends BasePage {
     await expect(this.timeEntryModal).not.toBeVisible();
   }
 
+  private async openTimeEntryModalOnce() {
+    await this.closeTimeEntryModalIfOpen();
+    await expect(this.headerStartTimerButton).toBeVisible();
+    await this.headerStartTimerButton.click();
+
+    if (await this.waitForTimeEntryModalVisible()) {
+      return;
+    }
+
+    await this.headerStartTimerButton.click();
+    await this.expectTimeEntryModalVisible();
+  }
+
+  private async resyncTimeEntryModalBillingState() {
+    await this.closeTimeEntryModalIfOpen();
+    await this.reloadAppShell();
+  }
+
+  private async waitForTimeEntryModalVisible(timeout = 3000) {
+    try {
+      await this.timeEntryModal.waitFor({ state: "visible", timeout });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectTimeEntryModalVisible(timeout = 10000) {
+    const visible = await this.waitForTimeEntryModalVisible(timeout);
+    expect(visible).toBe(true);
+  }
+
+  private async waitForTimeEntryBillingState(expectBillable: boolean, timeout = 3000) {
+    try {
+      await expect
+        .poll(async () => this.getTimeEntryBillingState(), {
+          timeout,
+          intervals: [200, 500, 1000],
+        })
+        .toBe(expectBillable ? "billable" : "non-billable");
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async getTimeEntryBillingState(): Promise<"billable" | "non-billable" | "pending"> {
+    if (!(await this.timeEntryModal.isVisible().catch(() => false))) {
+      return "pending";
+    }
+
+    if (await this.timeEntryBillableCheckbox.isVisible().catch(() => false)) {
+      return "billable";
+    }
+
+    return "non-billable";
+  }
+
+  private async expectTimeEntryBillingState(expectBillable: boolean) {
+    if (expectBillable) {
+      await expect(this.timeEntryBillableCheckbox).toBeVisible();
+      return;
+    }
+
+    await expect(this.timeEntryBillableCheckbox).not.toBeVisible();
+  }
+
   async openGlobalSearchWithShortcut() {
     await waitForDashboardReady(this.page);
+    await this.closeGlobalSearchIfOpen();
+    await this.page.keyboard.press("ControlOrMeta+k");
 
-    await expect(async () => {
-      await this.closeGlobalSearchIfOpen();
+    if (!(await this.waitForGlobalSearchReady())) {
       await this.page.keyboard.press("ControlOrMeta+k");
-      await expect(this.globalSearchModal).toBeVisible();
-      await expect(this.globalSearchInput).toBeVisible();
-      await expect(this.globalSearchInput).toBeEnabled();
-      await this.globalSearchInput.focus();
-      await expect(this.globalSearchInput).toBeVisible();
-    }).toPass();
+      await this.expectGlobalSearchReady();
+      return;
+    }
+
+    await this.globalSearchInput.focus();
+    await expect(this.globalSearchInput).toBeVisible();
+  }
+
+  async waitForGlobalSearchReady(timeout = 3000) {
+    try {
+      await this.throwIfAppErrorVisible();
+      await this.globalSearchModal.waitFor({ state: "visible", timeout });
+      await this.globalSearchInput.waitFor({ state: "visible", timeout });
+      await expect(this.globalSearchInput).toBeEnabled({ timeout });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async expectGlobalSearchReady(timeout = 10000) {
+    const ready = await this.waitForGlobalSearchReady(timeout);
+    expect(ready).toBe(true);
+    await this.globalSearchInput.focus();
+    await expect(this.globalSearchInput).toBeVisible();
   }
 
   async searchFor(query: string) {
-    await expect(async () => {
-      await this.throwIfAppErrorVisible();
-      await expect(this.globalSearchInput).toBeVisible();
-      await expect(this.globalSearchInput).toBeEnabled();
-      await this.globalSearchInput.focus();
-      await this.throwIfAppErrorVisible();
-      await this.globalSearchInput.fill(query);
-      await this.throwIfAppErrorVisible();
-      await expect(this.globalSearchInput).toHaveValue(query);
-    }).toPass();
+    await this.expectGlobalSearchReady();
+    await this.enterGlobalSearchQuery(query);
 
     if (query.length < 2) {
       await this.throwIfAppErrorVisible();
@@ -602,19 +788,12 @@ export class DashboardPage extends BasePage {
   }
 
   async waitForSearchSettled() {
-    await expect(async () => {
-      await this.throwIfAppErrorVisible();
-      await expect(this.globalSearchLoadingState).not.toBeVisible();
-      await this.throwIfAppErrorVisible();
-
-      const hasResults = await this.globalSearchResultItems
-        .first()
-        .isVisible()
-        .catch(() => false);
-      const hasNoResults = await this.globalSearchNoResults.isVisible().catch(() => false);
-
-      expect(hasResults || hasNoResults).toBe(true);
-    }).toPass();
+    await expect
+      .poll(async () => this.getGlobalSearchResultsState(), {
+        timeout: 10000,
+        intervals: [200, 500, 1000],
+      })
+      .toMatch(/^(results|empty)$/);
   }
 
   async switchGlobalSearchTab(tab: "all" | "issues" | "documents") {
@@ -642,6 +821,56 @@ export class DashboardPage extends BasePage {
     return this.getGlobalSearchResult(title).getByTestId(TEST_IDS.SEARCH.RESULT_TYPE);
   }
 
+  private async enterGlobalSearchQuery(query: string) {
+    await this.throwIfAppErrorVisible();
+    await expect(this.globalSearchInput).toBeVisible();
+    await expect(this.globalSearchInput).toBeEnabled();
+    await this.globalSearchInput.focus();
+    await this.globalSearchInput.fill(query);
+    await this.throwIfAppErrorVisible();
+
+    if (await this.waitForGlobalSearchQueryValue(query)) {
+      return;
+    }
+
+    await this.expectGlobalSearchReady();
+    await this.globalSearchInput.fill(query);
+    await this.throwIfAppErrorVisible();
+    await expect(this.globalSearchInput).toHaveValue(query);
+  }
+
+  private async waitForGlobalSearchQueryValue(query: string, timeout = 3000) {
+    try {
+      await expect(this.globalSearchInput).toHaveValue(query, { timeout });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async getGlobalSearchResultsState(): Promise<"loading" | "results" | "empty" | "settling"> {
+    await this.throwIfAppErrorVisible();
+
+    if (await this.globalSearchLoadingState.isVisible().catch(() => false)) {
+      return "loading";
+    }
+
+    if (
+      await this.globalSearchResultItems
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
+      return "results";
+    }
+
+    if (await this.globalSearchNoResults.isVisible().catch(() => false)) {
+      return "empty";
+    }
+
+    return "settling";
+  }
+
   // ===================
   // Actions - Dashboard Content
   // ===================
@@ -651,15 +880,13 @@ export class DashboardPage extends BasePage {
       assigned: this.assignedTab,
       created: this.createdTab,
     };
-    await expect(async () => {
-      await expect(tabs[filter]).toBeVisible();
-      await expect(tabs[filter]).toBeEnabled();
-      await tabs[filter].click();
+    await expect(tabs[filter]).toBeVisible();
+    await expect(tabs[filter]).toBeEnabled();
+    await tabs[filter].click();
 
-      const ariaSelected = await tabs[filter].getAttribute("aria-selected");
-      const dataState = await tabs[filter].getAttribute("data-state");
-      expect(ariaSelected === "true" || dataState === "active").toBe(true);
-    }).toPass();
+    const ariaSelected = await tabs[filter].getAttribute("aria-selected");
+    const dataState = await tabs[filter].getAttribute("data-state");
+    expect(ariaSelected === "true" || dataState === "active").toBe(true);
   }
 
   // ===================

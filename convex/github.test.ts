@@ -155,8 +155,8 @@ describe("GitHub Integration", () => {
       });
 
       const pr = await t.run(async (ctx) => ctx.db.get(prId));
-      expect(pr).not.toBeUndefined();
-      if (pr === undefined) throw new Error("pr is undefined");
+      expect(pr).not.toBeNull();
+      if (pr === null) throw new Error("pr is null");
       expect(pr.title).toBe("Feat: New thing (updated)");
       expect(pr.state).toBe("closed");
       expect(pr.closedAt).not.toBeNull();

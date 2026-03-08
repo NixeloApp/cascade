@@ -69,6 +69,7 @@ export class SettingsPage extends BasePage {
   readonly userTypeManager: Locator;
   readonly hourComplianceDashboard: Locator;
   readonly inviteTable: Locator;
+  readonly inviteEmptyState: Locator;
   readonly adminUsersTab: Locator;
   readonly platformUsersTable: Locator;
 
@@ -168,6 +169,7 @@ export class SettingsPage extends BasePage {
     this.hourComplianceDashboard = page.locator("[data-hour-compliance]");
     this.adminUsersTab = page.getByRole("tab", { name: /^Users$/ });
     this.platformUsersTable = page.getByRole("table", { name: /platform users/i });
+    this.inviteEmptyState = page.getByText(/^No invitations$/);
 
     // Invite user form (it's an inline Card, not a dialog)
     this.inviteUserModal = page.getByRole("heading", { name: /send invitation/i });
@@ -320,26 +322,27 @@ export class SettingsPage extends BasePage {
   // ===================
 
   async openInviteUserModal() {
-    // Wait for the Admin tab content to be fully loaded - wait for heading to be visible
-    await this.organizationSettingsHeading.waitFor({ state: "visible" });
+    await this.waitForInviteManagementReady();
 
-    // Use the first "Invite User" button (header one, not empty state one)
     const inviteBtn = this.inviteUserButton.first();
     await inviteBtn.waitFor({ state: "visible" });
-
-    // Scroll into view and wait for it to be stable
     await inviteBtn.scrollIntoViewIfNeeded();
 
-    // Retry pattern handles potential element detachment during re-renders
-    await expect(async () => {
-      await this.closeInviteUserModalIfOpen();
-      await expect(inviteBtn).toBeEnabled();
+    await this.closeInviteUserModalIfOpen();
+    await expect(inviteBtn).toBeEnabled();
+    await inviteBtn.click();
+
+    if (await this.waitForInviteFormReady()) {
+      return;
+    }
+
+    // Only re-click if the form is not visible (avoid double-clicking an open form)
+    if (await this.inviteUserForm.isVisible().catch(() => false)) {
+      await this.expectInviteFormReady();
+    } else {
       await inviteBtn.click();
-      await expect(this.inviteUserModal).toBeVisible();
-      await expect(this.inviteUserForm).toBeVisible();
-      await expect(this.inviteEmailInput).toBeVisible();
-      await expect(this.sendInviteButton).toBeVisible();
-    }).toPass();
+      await this.expectInviteFormReady();
+    }
   }
 
   async closeInviteUserModalIfOpen() {
@@ -359,47 +362,40 @@ export class SettingsPage extends BasePage {
   }
 
   async inviteUser(email: string, role?: string) {
-    await expect(async () => {
-      await this.openInviteUserModal();
-      await expect(this.inviteEmailInput).toBeVisible();
-      await expect(this.inviteEmailInput).toBeEnabled();
-      await this.inviteEmailInput.fill(email);
-      await expect(this.inviteEmailInput).toHaveValue(email);
+    await this.fillInviteEmail(email);
 
-      // Only change role if it's not "user" (which is the default)
-      if (role && role.toLowerCase() !== "user") {
-        const normalizedRole = role.trim().toLowerCase();
-        const roleLabelMap: Record<string, string> = {
-          "super admin": "Super Admin",
-          super_admin: "Super Admin",
-          admin: "Super Admin",
-        };
-        const displayRole = roleLabelMap[normalizedRole];
-        if (!displayRole) {
-          throw new Error(`Unsupported invite role: ${role}`);
-        }
-        const selectTrigger = this.page
-          .getByRole("combobox")
-          .filter({ hasText: /^User$|^Super Admin$|Select role/i });
-        await expect(selectTrigger).toBeVisible();
-        await selectTrigger.click();
-        await expect(this.page.getByRole("option", { name: displayRole })).toBeVisible();
-        await this.page.getByRole("option", { name: displayRole }).click();
-        await expect(this.page.getByRole("option", { name: displayRole })).not.toBeVisible();
+    // Normalize role first to handle whitespace-padded values like " User "
+    const normalizedRole = role?.trim().toLowerCase();
+
+    // Only change role if it's not "user" (which is the default)
+    if (normalizedRole && normalizedRole !== "user") {
+      const roleLabelMap: Record<string, string> = {
+        "super admin": "Super Admin",
+        super_admin: "Super Admin",
+        admin: "Super Admin",
+      };
+      const displayRole = roleLabelMap[normalizedRole];
+      if (!displayRole) {
+        throw new Error(`Unsupported invite role: ${role}`);
       }
+      await expect(this.inviteRoleSelect).toBeVisible();
+      await this.inviteRoleSelect.click();
+      await expect(this.page.getByRole("option", { name: displayRole })).toBeVisible();
+      await this.page.getByRole("option", { name: displayRole }).click();
+      await expect(this.page.getByRole("option", { name: displayRole })).not.toBeVisible();
+    }
 
-      const inviteRow = this.getInviteRow(email);
-      if (await inviteRow.isVisible().catch(() => false)) {
-        return;
-      }
+    const inviteRow = this.getInviteRow(email);
+    if (await inviteRow.isVisible().catch(() => false)) {
+      return;
+    }
 
-      if (await this.sendInviteButton.isVisible().catch(() => false)) {
-        await expect(this.sendInviteButton).toBeEnabled();
-        await this.sendInviteButton.click();
-      }
+    await this.ensureInviteFormReady();
+    await expect(this.sendInviteButton).toBeVisible();
+    await expect(this.sendInviteButton).toBeEnabled();
+    await this.sendInviteButton.click();
 
-      await this.expectInviteVisible(email);
-    }).toPass();
+    await this.expectInviteVisible(email);
   }
 
   getInviteRow(email: string) {
@@ -432,6 +428,105 @@ export class SettingsPage extends BasePage {
     await confirmDialog.getByRole("button", { name: /revoke/i }).click();
 
     await this.expectInviteRevoked(email);
+  }
+
+  private async ensureInviteFormReady() {
+    if (await this.waitForInviteFormReady(1000)) {
+      return;
+    }
+
+    await this.openInviteUserModal();
+    await this.expectInviteFormReady();
+  }
+
+  private async fillInviteEmail(email: string) {
+    await this.ensureInviteFormReady();
+
+    if (await this.tryFillInviteEmail(email)) {
+      return;
+    }
+
+    await this.closeInviteUserModalIfOpen();
+    await this.ensureInviteFormReady();
+    await this.expectInviteEmailFilled(email);
+  }
+
+  private async tryFillInviteEmail(email: string) {
+    try {
+      await this.inviteEmailInput.fill(email);
+    } catch {
+      return false;
+    }
+
+    const currentValue = await this.inviteEmailInput.inputValue().catch(() => null);
+    return currentValue === email;
+  }
+
+  private async expectInviteEmailFilled(email: string) {
+    await this.inviteEmailInput.fill(email);
+    await expect(this.inviteEmailInput).toHaveValue(email);
+  }
+
+  private async waitForInviteManagementReady(timeout = 15000) {
+    await expect(this.organizationSettingsHeading).toBeVisible({ timeout });
+    await expect(this.userManagementHeading).toBeVisible({ timeout });
+    await expect(this.adminUsersTab).toBeVisible({ timeout });
+    await expect
+      .poll(async () => this.getInviteManagementState(), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .toMatch(/^(table|empty)$/);
+  }
+
+  private async waitForInviteFormReady(timeout = 3000) {
+    try {
+      await this.expectInviteFormReady(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectInviteFormReady(timeout = 10000) {
+    await expect
+      .poll(async () => this.getInviteFormState(), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .toBe("ready");
+  }
+
+  private async getInviteManagementState(): Promise<"table" | "empty" | "loading"> {
+    if (await this.inviteTable.isVisible().catch(() => false)) {
+      return "table";
+    }
+
+    if (await this.inviteEmptyState.isVisible().catch(() => false)) {
+      return "empty";
+    }
+
+    return "loading";
+  }
+
+  private async getInviteFormState(): Promise<"ready" | "open" | "closed"> {
+    if (
+      (await this.inviteEmailInput.isVisible().catch(() => false)) &&
+      (await this.inviteEmailInput.isEditable().catch(() => false)) &&
+      (await this.sendInviteButton.isVisible().catch(() => false))
+    ) {
+      return "ready";
+    }
+
+    if (
+      (await this.inviteUserModal.isVisible().catch(() => false)) ||
+      (await this.inviteUserForm.isVisible().catch(() => false)) ||
+      (await this.sendInviteButton.isVisible().catch(() => false))
+    ) {
+      return "open";
+    }
+
+    return "closed";
   }
 
   async openAdminUsersList() {
@@ -508,58 +603,99 @@ export class SettingsPage extends BasePage {
   }
 
   async toggleTimeApproval(enabled: boolean) {
-    // Wait for the switch to appear - OrganizationSettings component makes its own query
-    await this.requiresTimeApprovalSwitch.waitFor({ state: "visible" });
+    await this.expectAdminSettingsLoaded();
 
-    // Wait for save button to appear (form is loaded)
-    await this.saveSettingsButton.waitFor({ state: "visible" });
-
-    // Scroll the switch into view
-    await this.requiresTimeApprovalSwitch.scrollIntoViewIfNeeded();
-
-    const isChecked = await this.requiresTimeApprovalSwitch.getAttribute("aria-checked");
-    const needsChange = (isChecked === "true") !== enabled;
-
-    if (!needsChange) {
-      // Already in desired state, nothing to do
+    if (await this.hasTimeApprovalState(enabled)) {
+      // Even if DOM matches, there may be a pending unsaved draft - ensure it's persisted
+      if (await this.waitForSettingsSaveReady(500)) {
+        await this.saveOrganizationSettings();
+      }
+      await this.expectTimeApprovalEnabled(enabled);
       return;
     }
 
-    const expectedChecked = enabled ? "true" : "false";
+    await this.setTimeApprovalDraftState(enabled);
 
-    // Use retry pattern for the entire toggle + save cycle to handle Convex real-time updates
-    // The Convex subscription can reset formData which disables the save button
-    await expect(async () => {
-      // Re-check current state in case it changed
-      const currentChecked = await this.requiresTimeApprovalSwitch.getAttribute("aria-checked");
+    if (!(await this.trySaveOrganizationSettings())) {
+      await this.setTimeApprovalDraftState(enabled);
+      await this.expectTimeApprovalDraftState(enabled);
+      await this.saveOrganizationSettings();
+    }
+    await this.expectTimeApprovalEnabled(enabled);
+  }
 
-      // Only click if we need to change the state
-      if (currentChecked !== expectedChecked) {
-        // Ensure switch is in viewport and not covered
-        await this.requiresTimeApprovalSwitch.scrollIntoViewIfNeeded();
+  async hasTimeApprovalState(enabled: boolean) {
+    return (
+      (await this.requiresTimeApprovalSwitch.getAttribute("aria-checked")) ===
+      (enabled ? "true" : "false")
+    );
+  }
 
-        // Click the switch to toggle
-        await this.requiresTimeApprovalSwitch.click();
+  async setTimeApprovalDraftState(enabled: boolean) {
+    if (await this.hasTimeApprovalState(enabled)) {
+      return;
+    }
 
-        // Verify the aria-checked changes
-        await expect(this.requiresTimeApprovalSwitch).toHaveAttribute(
-          "aria-checked",
-          expectedChecked,
-        );
-      }
+    await this.requiresTimeApprovalSwitch.scrollIntoViewIfNeeded();
+    await this.requiresTimeApprovalSwitch.click();
+    await this.expectTimeApprovalDraftState(enabled);
+  }
 
-      // Wait for React to process the state change and enable the save button
-      // This must be inside the retry loop because Convex subscription can reset state
-      await expect(this.saveSettingsButton).toBeEnabled();
+  async waitForSettingsSaveReady(timeout = 2000) {
+    try {
+      await expect(this.saveSettingsButton).toBeEnabled({ timeout });
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
-      // Click save button - this must also be in the retry loop
-      await this.saveSettingsButton.click();
+  async expectSettingsSaveReady(timeout = 5000) {
+    await expect(this.saveSettingsButton).toBeEnabled({ timeout });
+  }
 
-      // Verify success toast appears
-      await expect(
-        this.page.locator("[data-sonner-toast][data-type='success']").first(),
-      ).toBeVisible();
-    }).toPass();
+  async expectTimeApprovalDraftState(enabled: boolean) {
+    await expect(this.requiresTimeApprovalSwitch).toHaveAttribute(
+      "aria-checked",
+      enabled ? "true" : "false",
+    );
+  }
+
+  async trySaveOrganizationSettings() {
+    await this.saveSettingsButton.waitFor({ state: "visible" });
+
+    if (!(await this.waitForSettingsSaveReady())) {
+      return false;
+    }
+
+    await this.waitForSettingsSuccessToastReset();
+    await this.saveSettingsButton.evaluate((button: HTMLButtonElement) => button.click());
+
+    try {
+      await this.waitForOrganizationSettingsSaved();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async saveOrganizationSettings() {
+    await this.expectSettingsSaveReady();
+    await this.waitForSettingsSuccessToastReset();
+    await this.saveSettingsButton.evaluate((button: HTMLButtonElement) => button.click());
+    await this.waitForOrganizationSettingsSaved();
+  }
+
+  async waitForOrganizationSettingsSaved() {
+    await expect(this.page.getByText(/organization settings updated/i).first()).toBeVisible();
+  }
+
+  private async waitForSettingsSuccessToastReset() {
+    await this.page
+      .getByText(/organization settings updated/i)
+      .first()
+      .waitFor({ state: "hidden", timeout: 1000 })
+      .catch(() => {});
   }
 
   async expectOrganizationName(name: string) {

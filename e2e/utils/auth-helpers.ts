@@ -256,6 +256,65 @@ export async function trySignInUser(
     return false;
   };
 
+  const resolvePostSignInRedirect = async (): Promise<boolean> => {
+    try {
+      await page.waitForURL(urlPatterns.dashboardOrOnboarding, { timeout: 15000 });
+      console.log("  ✓ Redirected to:", page.url());
+      return await handleOnboardingOrDashboard(page, autoCompleteOnboarding);
+    } catch {
+      const errorText = await page
+        .locator('[role="alert"], .text-red-500, .error')
+        .textContent()
+        .catch(() => null);
+      const toastError = await toastLocators(page)
+        .error.textContent()
+        .catch(() => null);
+      const pageText =
+        (await page
+          .locator("body")
+          .textContent()
+          .catch(() => "")) || "";
+      const buttonText =
+        (await page
+          .locator('button[type="submit"]')
+          .textContent()
+          .catch(() => "")) || "";
+
+      console.log(`  📍 Current URL: ${page.url()}`);
+      console.log(`  🔘 Submit button text: "${buttonText}"`);
+
+      if (errorText) {
+        console.log("  ❌ Page error:", errorText.slice(0, 200));
+        return false;
+      }
+
+      if (toastError) {
+        console.log("  ❌ Toast error:", toastError.slice(0, 200));
+        return false;
+      }
+
+      console.log("  ⚠️ Redirect timeout after 15s");
+      console.log("  📄 Page content:", pageText.slice(0, 300));
+
+      const stuckOutsideAppShell =
+        /\/signin(?:[/?#]|$)/.test(page.url()) || page.url().endsWith("/");
+      if (!stuckOutsideAppShell) {
+        return false;
+      }
+
+      console.log("  🔁 Attempting app-gateway recovery after redirect timeout...");
+      try {
+        if (await tryNavigateToAppGateway()) {
+          return await handleOnboardingOrDashboard(page, autoCompleteOnboarding);
+        }
+      } catch {
+        // Continue to fail below if recovery didn't resolve authentication.
+      }
+
+      return false;
+    }
+  };
+
   try {
     console.log(`  🔐 Attempting sign-in for ${user.email}...`);
     await page.goto(`${baseURL}/signin`, { waitUntil: "load" });
@@ -480,61 +539,7 @@ export async function trySignInUser(
     console.log(
       `  🚀 Form submitted (submitting state: ${submitResult.isSubmitting}, button: "${submitResult.buttonText}")`,
     );
-
-    try {
-      // Wait for redirect - handles both old (/dashboard) and new (/:orgSlug/dashboard) patterns
-      await page.waitForURL(urlPatterns.dashboardOrOnboarding);
-      console.log("  ✓ Redirected to:", page.url());
-    } catch {
-      // Timeout or error - check for specific failures
-      const errorText = await page
-        .locator('[role="alert"], .text-red-500, .error')
-        .textContent()
-        .catch(() => null);
-      const toastError = await toastLocators(page)
-        .error.textContent()
-        .catch(() => null);
-
-      // Get full page text for debugging
-      const pageText =
-        (await page
-          .locator("body")
-          .textContent()
-          .catch(() => "")) || "";
-      const buttonText =
-        (await page
-          .locator('button[type="submit"]')
-          .textContent()
-          .catch(() => "")) || "";
-
-      console.log(`  📍 Current URL: ${page.url()}`);
-      console.log(`  🔘 Submit button text: "${buttonText}"`);
-
-      if (errorText) {
-        console.log("  ❌ Page error:", errorText.slice(0, 200));
-      } else if (toastError) {
-        console.log("  ❌ Toast error:", toastError.slice(0, 200));
-      } else {
-        console.log("  ⚠️ Redirect timeout after 90s");
-        console.log("  📄 Page content:", pageText.slice(0, 300));
-
-        // Recovery path: app shell can land on "/" or remain at "/signin" before token hydration settles.
-        if (/\/signin(?:[/?#]|$)/.test(page.url()) || page.url().endsWith("/")) {
-          console.log("  🔁 Attempting app-gateway recovery after redirect timeout...");
-          try {
-            if (await tryNavigateToAppGateway()) {
-              return await handleOnboardingOrDashboard(page, autoCompleteOnboarding);
-            }
-          } catch {
-            // Continue to fail below if recovery didn't resolve authentication.
-          }
-        }
-      }
-
-      return false; // Let global-setup retry handle this
-    }
-
-    return await handleOnboardingOrDashboard(page, autoCompleteOnboarding);
+    return await resolvePostSignInRedirect();
   } catch (error) {
     console.log("  ❌ Sign-in error:", String(error).slice(0, 200));
     return false;

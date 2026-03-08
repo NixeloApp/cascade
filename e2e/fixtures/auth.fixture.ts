@@ -94,37 +94,63 @@ async function injectAuthTokens(page: Page, token: string, refreshToken?: string
 
 async function waitForAuthenticatedDashboard(page: Page, orgSlug: string): Promise<void> {
   const escapedOrgSlug = orgSlug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const dashboardPath = `/${orgSlug}/dashboard`;
   const dashboardUrl = new RegExp(`/${escapedOrgSlug}/dashboard(?:\\?.*)?$`);
   const appErrorHeading = page.getByRole("heading", { name: "500" });
   const appErrorDetails = page.locator("details pre");
-  let lastError: Error | undefined;
+  const expectAuthenticatedDashboardReady = async (timeout = 15000) => {
+    await expect(page).toHaveURL(dashboardUrl, { timeout });
+    await page.waitForLoadState("domcontentloaded");
 
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    try {
-      await expect(page).toHaveURL(dashboardUrl);
-      await page.waitForLoadState("domcontentloaded");
-
-      if (await appErrorHeading.isVisible().catch(() => false)) {
-        throw new Error("App error boundary displayed during authenticated dashboard bootstrap");
-      }
-
-      await waitForDashboardReady(page);
-      return;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      if (attempt === 1) {
-        break;
-      }
-
-      await page.goto("/app", { waitUntil: "domcontentloaded" });
+    if (await appErrorHeading.isVisible().catch(() => false)) {
+      throw new Error("App error boundary displayed during authenticated dashboard bootstrap");
     }
+
+    await waitForDashboardReady(page);
+  };
+
+  const tryAuthenticatedDashboardReady = async (timeout = 10000) => {
+    try {
+      await expectAuthenticatedDashboardReady(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const recoverAuthenticatedDashboard = async () => {
+    const currentUrl = page.url();
+    const isOutsideOrgShell =
+      currentUrl.endsWith("/") || currentUrl.includes("/signin") || !currentUrl.includes(orgSlug);
+
+    await page.goto(isOutsideOrgShell ? dashboardPath : "/app", {
+      waitUntil: "domcontentloaded",
+    });
+    await page.waitForLoadState("load");
+
+    if (await tryAuthenticatedDashboardReady(5000)) {
+      return;
+    }
+
+    await page.goto(dashboardPath, { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("load");
+  };
+
+  if (await tryAuthenticatedDashboardReady()) {
+    return;
   }
 
-  const errorDetails = (await appErrorDetails.textContent().catch(() => null))?.trim();
-  const suffix = errorDetails ? `: ${errorDetails}` : "";
-  throw new Error(
-    `Failed to bootstrap authenticated dashboard for ${orgSlug}: ${lastError?.message ?? "unknown error"}${suffix}`,
-  );
+  await recoverAuthenticatedDashboard();
+  try {
+    await expectAuthenticatedDashboardReady();
+  } catch (error) {
+    const lastError = error instanceof Error ? error : new Error(String(error));
+    const errorDetails = (await appErrorDetails.textContent().catch(() => null))?.trim();
+    const suffix = errorDetails ? `: ${errorDetails}` : "";
+    throw new Error(
+      `Failed to bootstrap authenticated dashboard for ${orgSlug}: ${lastError.message}${suffix}`,
+    );
+  }
 }
 
 export const authenticatedTest = base.extend<AuthFixtures>({

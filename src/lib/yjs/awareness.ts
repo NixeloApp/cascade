@@ -10,7 +10,6 @@
  */
 
 import type { Id } from "@convex/_generated/dataModel";
-import type { ConvexReactClient } from "convex/react";
 
 // Types for cursor/selection state
 export interface CursorPosition {
@@ -92,11 +91,7 @@ export class AwarenessManager {
   private listeners: Set<(users: AwarenessUser[]) => void> = new Set();
   private connected = false;
 
-  constructor(
-    documentId: Id<"documents">,
-    _client: ConvexReactClient, // Unused in stub - will be used for backend integration
-    user?: { name: string; image?: string },
-  ) {
+  constructor(documentId: Id<"documents">, user?: { name: string; image?: string }) {
     this.documentId = documentId;
     this.clientId = Math.floor(Math.random() * 2147483647);
 
@@ -231,8 +226,7 @@ export class AwarenessManager {
  */
 export function createAwarenessManager(
   documentId: Id<"documents">,
-  client: ConvexReactClient,
   user?: { name: string; image?: string },
 ): AwarenessManager {
-  return new AwarenessManager(documentId, client, user);
+  return new AwarenessManager(documentId, user);
 }

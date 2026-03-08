@@ -93,6 +93,7 @@ function AppLayout() {
 
   // Get user's organizations to check if we need initialization
   const userOrganizations = useAuthenticatedQuery(api.organizations.getUserOrganizations, {});
+  const currentUser = useAuthenticatedQuery(api.users.getCurrent, {});
 
   if (redirectPath !== undefined) {
     cachedRedirectPath = redirectPath;
@@ -127,6 +128,32 @@ function AppLayout() {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
         <LoadingSpinner size="lg" />
+      </Flex>
+    );
+  }
+
+  // Wait for the authenticated user document to load before attempting org bootstrap.
+  // undefined = still loading, null = profile missing (error state)
+  if (currentUser === undefined) {
+    return (
+      <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
+        <LoadingSpinner size="lg" />
+      </Flex>
+    );
+  }
+
+  // User profile not found - show error with recovery option
+  if (currentUser === null) {
+    return (
+      <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
+        <div className="text-center">
+          <Typography variant="h2" className="text-xl font-medium mb-2 text-status-error">
+            Account Error
+          </Typography>
+          <Typography variant="p" color="secondary" className="mb-4">
+            Your user profile could not be found. Please sign out and try again.
+          </Typography>
+        </div>
       </Flex>
     );
   }

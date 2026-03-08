@@ -504,8 +504,10 @@ describe("Invites", () => {
 
       const invite = await t.query(api.invites.getInviteByToken, { token });
 
+      expect(invite).not.toBeNull();
       expect(typeof invite?.projectName).toBe("string");
-      expect(invite?.projectName.length).toBeGreaterThan(0);
+      if (invite?.projectName === undefined) throw new Error("projectName is undefined");
+      expect(invite.projectName.length).toBeGreaterThan(0);
       expect(invite?.projectRole).toBe("viewer");
     });
 

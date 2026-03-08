@@ -101,7 +101,8 @@ describe("Google OAuth HTTP Handler", () => {
       expect(url.searchParams.get("response_type")).toBe("code");
       expect(url.searchParams.get("access_type")).toBe("offline");
       expect(url.searchParams.get("prompt")).toBe("consent");
-      expect(state).not.toBeUndefined();
+      expect(state).not.toBeNull();
+      if (state === null) throw new Error("state is null");
       expect(typeof state).toBe("string");
       expect(state.length).toBeGreaterThan(0);
       expect(setCookie).toContain(`google-oauth-state=${state}`);

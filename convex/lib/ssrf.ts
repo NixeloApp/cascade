@@ -58,7 +58,7 @@ export function isStrictIPv6(hostname: string): boolean {
  */
 export function isPrivateIPv4(ip: string): boolean {
   const parts = ip.split(".").map((p) => parseInt(p, 10));
-  const [a, b, c, _d] = parts;
+  const [a, b, c] = parts;
 
   // Simple range checks
   if (a === 0 || a === 10 || a === 127) return true;

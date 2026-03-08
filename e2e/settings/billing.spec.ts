@@ -44,10 +44,7 @@ authenticatedTest.describe("Billing Settings", () => {
       await dashboardPage.goto(orgSlug);
       await dashboardPage.expectLoaded();
 
-      await dashboardPage.openTimeEntryModal();
-
-      // Verify billable checkbox IS visible when billing is enabled
-      await expect(dashboardPage.timeEntryBillableCheckbox).toBeVisible();
+      await dashboardPage.openTimeEntryModal({ expectBillable: true });
 
       // Close modal
       await dashboardPage.closeTimeEntryModal();
@@ -67,10 +64,7 @@ authenticatedTest.describe("Billing Settings", () => {
       await dashboardPage.goto(orgSlug);
       await dashboardPage.expectLoaded();
 
-      await dashboardPage.openTimeEntryModal();
-
-      // Verify billable checkbox is NOT visible when billing is disabled
-      await expect(dashboardPage.timeEntryBillableCheckbox).not.toBeVisible();
+      await dashboardPage.openTimeEntryModal({ expectBillable: false });
 
       // Close modal
       await dashboardPage.closeTimeEntryModal();

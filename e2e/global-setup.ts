@@ -208,6 +208,16 @@ async function waitForAppReady(page: Page, baseURL: string): Promise<boolean> {
   }
 }
 
+async function ensureProjectTemplatesSeeded(): Promise<void> {
+  console.log("🌱 Seeding built-in project templates...");
+
+  if (!(await testUserService.seedTemplates())) {
+    throw new Error("Failed to seed built-in project templates during global setup.");
+  }
+
+  console.log("✓ Built-in project templates ready");
+}
+
 /**
  * Global setup entry point
  */
@@ -238,96 +248,105 @@ async function globalSetup(config: FullConfig): Promise<void> {
 
   const browser = await chromium.launch();
 
-  // Wait for React app to be ready before starting user setup
-  const testPage = await browser.newPage();
-  const appReady = await waitForAppReady(testPage, baseURL);
-  await testPage.close();
+  try {
+    // Wait for React app to be ready before starting user setup
+    const testPage = await browser.newPage();
+    const appReady = await waitForAppReady(testPage, baseURL);
+    await testPage.close();
 
-  if (!appReady) {
-    await browser.close();
-    throw new Error("React app failed to load. Cannot proceed with global setup.");
-  }
-
-  // Iterate for each worker
-  for (let i = 0; i < workerCount; i++) {
-    console.log(`\n--- 👷 Worker ${i} Setup ---`);
-
-    // 1. Generate unique emails for this worker using shard-isolated base
-    const workerSuffix = `w${i}`;
-
-    // Note: TEST_USERS already includes -s${SHARD} in the base email from config.ts
-    // We just need to inject the worker suffix before the @ domain
-    const users = {
-      teamLead: {
-        ...TEST_USERS.teamLead,
-        email: TEST_USERS.teamLead.email.replace("@", `-${workerSuffix}@`),
-      },
-      teamMember: {
-        ...TEST_USERS.teamMember,
-        email: TEST_USERS.teamMember.email.replace("@", `-${workerSuffix}@`),
-      },
-      viewer: {
-        ...TEST_USERS.viewer,
-        email: TEST_USERS.viewer.email.replace("@", `-${workerSuffix}@`),
-      },
-      onboarding: {
-        ...TEST_USERS.onboarding,
-        email: TEST_USERS.onboarding.email.replace("@", `-${workerSuffix}@`),
-      },
-    };
-
-    // 2. Setup Auth for each user
-    const usersToSetup = [
-      { key: "teamLead", user: users.teamLead, authPath: AUTH_PATHS.teamLead(i) },
-      { key: "teamMember", user: users.teamMember, authPath: AUTH_PATHS.teamMember(i) },
-      { key: "viewer", user: users.viewer, authPath: AUTH_PATHS.viewer(i) },
-      { key: "onboarding", user: users.onboarding, authPath: AUTH_PATHS.onboarding(i) },
-    ];
-
-    const userConfigs: Record<string, { orgSlug?: string }> = {};
-
-    for (const { key, user, authPath } of usersToSetup) {
-      const context = await browser.newContext();
-      await context.addInitScript(() => {
-        try {
-          Object.defineProperty(navigator, "onLine", { get: () => true });
-        } catch {}
-      });
-      const page = await context.newPage();
-
-      try {
-        // onboarding user should NOT have onboarding completed automatically
-        const completeOnboarding = key !== "onboarding";
-        const result = await setupTestUser(
-          context,
-          page,
-          baseURL,
-          `${key}-${i}`,
-          user,
-          authPath,
-          completeOnboarding,
-        );
-        if (result.success) {
-          userConfigs[key] = { orgSlug: result.orgSlug };
-        }
-      } catch (error) {
-        console.error(`  ❌ Worker ${i} ${key}: Setup error:`, error);
-      } finally {
-        await context.close();
-      }
+    if (!appReady) {
+      throw new Error("React app failed to load. Cannot proceed with global setup.");
     }
 
-    // 3. Setup Isolated RBAC Project
-    console.log(`  🔐 Worker ${i}: Setting up RBAC project...`);
-    const rbacResult = await testUserService.setupRbacProject({
-      projectKey: `${RBAC_TEST_CONFIG.projectKey}-W${i}`,
-      projectName: `${RBAC_TEST_CONFIG.projectName} (Worker ${i})`,
-      adminEmail: users.teamLead.email,
-      editorEmail: users.teamMember.email,
-      viewerEmail: users.viewer.email,
-    });
+    await ensureProjectTemplatesSeeded();
 
-    if (rbacResult.success) {
+    // Iterate for each worker
+    for (let i = 0; i < workerCount; i++) {
+      console.log(`\n--- 👷 Worker ${i} Setup ---`);
+
+      // 1. Generate unique emails for this worker using shard-isolated base
+      const workerSuffix = `w${i}`;
+
+      // Note: TEST_USERS already includes -s${SHARD} in the base email from config.ts
+      // We just need to inject the worker suffix before the @ domain
+      const users = {
+        teamLead: {
+          ...TEST_USERS.teamLead,
+          email: TEST_USERS.teamLead.email.replace("@", `-${workerSuffix}@`),
+        },
+        teamMember: {
+          ...TEST_USERS.teamMember,
+          email: TEST_USERS.teamMember.email.replace("@", `-${workerSuffix}@`),
+        },
+        viewer: {
+          ...TEST_USERS.viewer,
+          email: TEST_USERS.viewer.email.replace("@", `-${workerSuffix}@`),
+        },
+        onboarding: {
+          ...TEST_USERS.onboarding,
+          email: TEST_USERS.onboarding.email.replace("@", `-${workerSuffix}@`),
+        },
+      };
+
+      // 2. Setup Auth for each user
+      const usersToSetup = [
+        { key: "teamLead", user: users.teamLead, authPath: AUTH_PATHS.teamLead(i) },
+        { key: "teamMember", user: users.teamMember, authPath: AUTH_PATHS.teamMember(i) },
+        { key: "viewer", user: users.viewer, authPath: AUTH_PATHS.viewer(i) },
+        { key: "onboarding", user: users.onboarding, authPath: AUTH_PATHS.onboarding(i) },
+      ];
+
+      const userConfigs: Record<string, { orgSlug?: string }> = {};
+
+      for (const { key, user, authPath } of usersToSetup) {
+        const context = await browser.newContext();
+        await context.addInitScript(() => {
+          try {
+            Object.defineProperty(navigator, "onLine", { get: () => true });
+          } catch {}
+        });
+        const page = await context.newPage();
+
+        try {
+          // onboarding user should NOT have onboarding completed automatically
+          const completeOnboarding = key !== "onboarding";
+          const result = await setupTestUser(
+            context,
+            page,
+            baseURL,
+            `${key}-${i}`,
+            user,
+            authPath,
+            completeOnboarding,
+          );
+          if (!result.success) {
+            throw new Error(`Worker ${i} ${key}: auth bootstrap failed`);
+          }
+          if (key === "teamLead" && !result.orgSlug) {
+            throw new Error(`Worker ${i} ${key}: missing orgSlug after sign-in`);
+          }
+          userConfigs[key] = { orgSlug: result.orgSlug };
+        } catch (error) {
+          console.error(`  ❌ Worker ${i} ${key}: Setup error:`, error);
+          throw error;
+        } finally {
+          await context.close();
+        }
+      }
+
+      // 3. Setup Isolated RBAC Project
+      console.log(`  🔐 Worker ${i}: Setting up RBAC project...`);
+      const rbacResult = await testUserService.setupRbacProject({
+        projectKey: `${RBAC_TEST_CONFIG.projectKey}-W${i}`,
+        projectName: `${RBAC_TEST_CONFIG.projectName} (Worker ${i})`,
+        adminEmail: users.teamLead.email,
+        editorEmail: users.teamMember.email,
+        viewerEmail: users.viewer.email,
+      });
+
+      if (!rbacResult.success) {
+        throw new Error(`Worker ${i}: RBAC setup failed: ${rbacResult.error}`);
+      }
       console.log(`  ✓ Worker ${i}: RBAC project created: ${rbacResult.projectKey}`);
       // Save worker-specific config
       const rbacConfig = {
@@ -340,12 +359,11 @@ async function globalSetup(config: FullConfig): Promise<void> {
         path.join(AUTH_DIR, `rbac-config-${i}.json`),
         JSON.stringify(rbacConfig, null, 2),
       );
-    } else {
-      console.warn(`  ⚠️ Worker ${i}: RBAC setup failed: ${rbacResult.error}`);
-    }
 
-    // 4. Save Dashboard Config for this worker
-    if (userConfigs.teamLead?.orgSlug) {
+      // 4. Save Dashboard Config for this worker
+      if (!userConfigs.teamLead?.orgSlug) {
+        throw new Error(`Worker ${i}: teamLead orgSlug was not captured during setup`);
+      }
       const dashboardConfig = {
         orgSlug: userConfigs.teamLead.orgSlug,
         email: users.teamLead.email,
@@ -355,9 +373,9 @@ async function globalSetup(config: FullConfig): Promise<void> {
         JSON.stringify(dashboardConfig, null, 2),
       );
     }
+  } finally {
+    await browser.close();
   }
-
-  await browser.close();
   console.log("\n✅ Global setup complete\n");
 }
 

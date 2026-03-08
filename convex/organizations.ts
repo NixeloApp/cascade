@@ -683,6 +683,11 @@ export const initializeDefaultOrganization = authenticatedMutation({
     usersAssigned: v.number(),
   }),
   handler: async (ctx, args) => {
+    const user = await ctx.db.get(ctx.userId);
+    if (!user) {
+      throw new Error("Authenticated user profile not found");
+    }
+
     // Check if user already has an organization
     const existingMembership = await ctx.db
       .query("organizationMembers")
@@ -701,8 +706,7 @@ export const initializeDefaultOrganization = authenticatedMutation({
     }
 
     // Get user info to generate organization name
-    const user = await ctx.db.get(ctx.userId);
-    const userName = user?.name || user?.email?.split("@")[0] || "user";
+    const userName = user.name || user.email?.split("@")[0] || "user";
 
     const now = Date.now();
     const organizationName = args.organizationName || `${userName}'s Project`;

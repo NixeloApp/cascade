@@ -162,18 +162,17 @@ export class AuthPage extends BasePage {
   async gotoSignIn() {
     await this.page.goto("/signin", { waitUntil: "domcontentloaded" });
     await this.signInHeading.waitFor({ state: "visible", timeout: 30000 });
-    // Wait for hydration before expanding
-    await this.waitForHydration();
+    await this.waitForAuthFormHydrated();
     // Expand form using robust click logic
-    await this.expandEmailForm();
+    await this.expandEmailForm("signin");
     // Verify form is expanded using data-expanded attribute
-    await this.waitForFormExpanded();
+    await this.waitForFormExpanded("signin");
   }
 
   async gotoSignInLanding() {
     await this.page.goto("/signin", { waitUntil: "domcontentloaded" });
     await this.signInHeading.waitFor({ state: "visible", timeout: 30000 });
-    await this.waitForHydration();
+    await this.waitForAuthFormHydrated();
   }
 
   /**
@@ -182,12 +181,11 @@ export class AuthPage extends BasePage {
   async gotoSignUp() {
     await this.page.goto("/signup", { waitUntil: "domcontentloaded" });
     await this.signUpHeading.waitFor({ state: "visible", timeout: 30000 });
-    // Wait for hydration before expanding
-    await this.waitForHydration();
+    await this.waitForAuthFormHydrated();
     // Expand form using robust click logic
-    await this.expandEmailForm();
+    await this.expandEmailForm("signup");
     // Verify form is expanded using data-expanded attribute
-    await this.waitForFormExpanded();
+    await this.waitForFormExpanded("signup");
   }
 
   /**
@@ -215,45 +213,33 @@ export class AuthPage extends BasePage {
   /**
    * Expand the email form by clicking "Continue with email"
    * Call this after navigating if form is collapsed
-   * Uses retry logic to handle React hydration timing issues
+   * Uses one bounded second-click recovery if the first expansion misses
    */
-  async expandEmailForm() {
-    // Wait for hydration first
-    await this.waitForHydration();
+  async expandEmailForm(mode?: "signin" | "signup") {
+    await this.waitForAuthFormHydrated();
+    const expectedMode = mode ?? (await this.getCurrentAuthRoute());
 
     // The submit button with test ID
     const submitButton = this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-    const authForm = this.page.getByTestId(TEST_IDS.AUTH.FORM);
-
     // Wait for button to be visible and enabled
     await expect(submitButton).toBeVisible();
     await expect(submitButton).toBeEnabled();
 
     // Check if already expanded
-    const isAlreadyExpanded = await authForm.getAttribute("data-expanded");
-    if (isAlreadyExpanded === "true") {
-      await this.waitForFormReady();
+    if (await this.waitForEmailFormExpanded(1000, expectedMode)) {
+      await this.waitForFormReady(expectedMode);
       return;
     }
 
-    // Retry expansion to handle React timing issues
-    // toPass() uses Playwright's default intervals and timeout (no hardcoded values)
-    await expect(async () => {
-      // Check if expanded
-      const isExpanded = await authForm.getAttribute("data-expanded");
-      if (isExpanded === "true") {
-        return; // Already expanded
-      }
+    await this.authForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
 
-      // Click the button to expand the form
+    if (!(await this.waitForEmailFormExpanded(1000, expectedMode))) {
       await submitButton.click();
-
-      // Verify form expanded using data-expanded attribute
-      await expect(authForm).toHaveAttribute("data-expanded", "true");
-    }).toPass();
+      await this.expectEmailFormExpanded(expectedMode);
+    }
 
     // Wait for form-ready state
-    await this.waitForFormReady();
+    await this.waitForFormReady(expectedMode);
 
     // Sign-in link affordances can render one tick after expansion; do not gate form usage on them.
   }
@@ -263,84 +249,45 @@ export class AuthPage extends BasePage {
   // ===================
 
   async signIn(email: string, password: string) {
-    await this.expandEmailForm();
+    await this.expandEmailForm("signin");
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
     await expect(this.signInButton).toBeVisible();
-    await this.waitForFormReady();
+    await this.waitForFormReady("signin");
     await this.signInButton.click();
   }
 
   async signUp(email: string, password: string) {
-    // Use retry pattern for the entire sign-up flow to handle form state issues
-    await expect(async () => {
-      // Ensure the email form is expanded
-      await this.expandEmailForm();
+    if (await this.attemptSignUp(email, password)) {
+      return;
+    }
 
-      // Verify form is actually expanded using data-expanded attribute
-      const authForm = this.page.getByTestId(TEST_IDS.AUTH.FORM);
-      const isExpanded = await authForm.getAttribute("data-expanded");
-      if (isExpanded !== "true") {
-        throw new Error(`Form not expanded - data-expanded: ${isExpanded}`);
-      }
-
-      // Fill the form fields - wait for inputs to be ready
-      await expect(this.emailInput).toBeVisible();
-      await this.emailInput.fill(email);
-
-      // Verify form still expanded after filling email
-      const expandedAfterEmail = await authForm.getAttribute("data-expanded");
-      if (expandedAfterEmail !== "true") {
-        throw new Error(`Form collapsed after email fill`);
-      }
-
-      await expect(this.passwordInput).toBeVisible();
-      await this.passwordInput.fill(password);
-
-      // Verify form still expanded after filling password
-      const expandedAfterPassword = await authForm.getAttribute("data-expanded");
-      if (expandedAfterPassword !== "true") {
-        throw new Error(`Form collapsed after password fill`);
-      }
-
-      // Ensure form is ready before clicking submit
-      await this.waitForFormReady();
-
-      // Submit the form
-      const submitButton = this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-      await submitButton.click();
-
-      // Wait for either verification form or toast to appear
-      await expect(this.verifyHeading.or(this.page.locator(".sonner-toast"))).toBeVisible();
-    }).toPass();
+    const completed = await this.attemptSignUp(email, password, { expectOutcome: true });
+    expect(completed).toBe(true);
   }
 
   async navigateToSignUp() {
     await this.signUpLink.click();
-    await this.signUpHeading.waitFor({ state: "visible" });
-    // Wait for the new page's form to hydrate - it's a different component instance
-    await this.waitForHydration();
+    await this.waitForAuthLanding("signup");
   }
 
   async navigateToSignIn() {
     await this.signInLink.click();
-    await this.signInHeading.waitFor({ state: "visible" });
-    // Wait for the new page's form to hydrate - it's a different component instance
-    await this.waitForHydration();
+    await this.waitForAuthLanding("signin");
   }
 
   async switchToSignUp() {
     await this.navigateToSignUp();
-    await this.expandEmailForm();
+    await this.expandEmailForm("signup");
     // Verify form is expanded using data-expanded attribute
-    await this.waitForFormExpanded();
+    await this.waitForFormExpanded("signup");
   }
 
   async switchToSignIn() {
     await this.navigateToSignIn();
-    await this.expandEmailForm();
+    await this.expandEmailForm("signin");
     // Verify form is expanded using data-expanded attribute
-    await this.waitForFormExpanded();
+    await this.waitForFormExpanded("signin");
   }
 
   async signInWithGoogle() {
@@ -350,12 +297,9 @@ export class AuthPage extends BasePage {
   }
 
   async waitForOAuthErrorSettle() {
-    await expect(async () => {
-      const onSignInPage = this.page.url().includes("signin");
-      const hasAlert = await this.authAlert.isVisible().catch(() => false);
-      const hasErrorToast = await this.errorToast.isVisible().catch(() => false);
-      expect(onSignInPage || hasAlert || hasErrorToast).toBe(true);
-    }).toPass({ timeout: 5000 });
+    await expect
+      .poll(async () => this.getOAuthErrorSettleState(), { timeout: 5000, intervals: [250, 500] })
+      .not.toBe("pending");
   }
 
   // ===================
@@ -363,24 +307,18 @@ export class AuthPage extends BasePage {
   // ===================
 
   async clickForgotPassword() {
-    // Use retry pattern to handle form expansion and navigation
-    await expect(async () => {
-      // Forgot password link appears after form is expanded
-      await this.expandEmailForm();
-      // Wait for form to stabilize (formReady state) before clicking
-      await this.waitForFormReady();
+    await this.expandEmailForm("signin");
+    await this.waitForFormReady("signin");
+    await this.clickForgotPasswordLink();
 
-      // Verify forgot password link is visible and enabled before clicking
-      await expect(this.forgotPasswordLink).toBeVisible();
-      await expect(this.forgotPasswordLink).toBeEnabled();
+    if (await this.waitForForgotPasswordReady()) {
+      return;
+    }
 
-      // Click the link
-      await this.forgotPasswordLink.click();
-
-      // Verify navigation completed
-      await expect(this.page).toHaveURL(/forgot-password/);
-      await expect(this.forgotPasswordHeading).toBeVisible();
-    }).toPass();
+    await this.expandEmailForm("signin");
+    await this.waitForFormReady("signin");
+    await this.clickForgotPasswordLink();
+    await this.expectForgotPasswordReady();
   }
 
   /**
@@ -391,50 +329,22 @@ export class AuthPage extends BasePage {
   }
 
   async requestPasswordReset(email: string) {
-    await expect(async () => {
-      if (!this.page.url().includes("/forgot-password")) {
-        await this.page.goto("/forgot-password", { waitUntil: "domcontentloaded" });
-      }
+    await this.ensureForgotPasswordEntry();
 
-      await expect
-        .poll(
-          async () => {
-            const isForgotVisible = await this.forgotPasswordHeading.isVisible().catch(() => false);
-            const isCheckEmailVisible = await this.checkEmailHeading.isVisible().catch(() => false);
-            const isCodeVisible = await this.codeInput.isVisible().catch(() => false);
-            return isForgotVisible || isCheckEmailVisible || isCodeVisible;
-          },
-          { timeout: 15000, intervals: [250, 500, 1000] },
-        )
-        .toBe(true);
+    // Already at check-email or code step from persisted state - nothing to do
+    const state = await this.getPasswordResetEntryState();
+    if (state === "check-email" || state === "code") {
+      return;
+    }
 
-      if (await this.codeInput.isVisible().catch(() => false)) {
-        return;
-      }
+    if (await this.attemptPasswordResetRequest(email)) {
+      return;
+    }
 
-      await expect(this.emailInput).toBeVisible({ timeout: 15000 });
-
-      await this.emailInput.fill(email);
-      await expect(this.emailInput).toHaveValue(email);
-      await expect(this.sendResetCodeButton).toBeEnabled();
-      await this.sendResetCodeButton.click();
-
-      // Transition can race on CI. Accept any reset-step UI signal, then require code input.
-      await expect
-        .poll(
-          async () => {
-            const isCheckEmailVisible = await this.checkEmailHeading.isVisible().catch(() => false);
-            const isResetHeadingVisible = await this.resetPasswordHeading
-              .isVisible()
-              .catch(() => false);
-            const isCodeVisible = await this.codeInput.isVisible().catch(() => false);
-            return isCheckEmailVisible || isResetHeadingVisible || isCodeVisible;
-          },
-          { timeout: 30000, intervals: [250, 500, 1000, 2000] },
-        )
-        .toBe(true);
-      await expect(this.codeInput).toBeVisible({ timeout: 30000 });
-    }).toPass({ timeout: 90000, intervals: [500, 1000, 2000, 5000] });
+    await this.page.goto("/forgot-password", { waitUntil: "domcontentloaded" });
+    await this.ensureForgotPasswordEntry();
+    const requested = await this.attemptPasswordResetRequest(email, { expectOutcome: true });
+    expect(requested).toBe(true);
   }
 
   async completePasswordReset(code: string, newPassword: string) {
@@ -448,7 +358,7 @@ export class AuthPage extends BasePage {
     await this.backToSignInLink.click();
     await this.signInHeading.waitFor({ state: "visible" });
     // Expand the form after navigation
-    await this.expandEmailForm();
+    await this.expandEmailForm("signin");
   }
 
   // ===================
@@ -586,9 +496,29 @@ export class AuthPage extends BasePage {
    * Wait for form to be expanded (email/password fields visible)
    * Uses data-expanded attribute set by React component
    */
-  async waitForFormExpanded() {
-    const authForm = this.page.getByTestId(TEST_IDS.AUTH.FORM);
-    await expect(authForm).toHaveAttribute("data-expanded", "true");
+  async waitForFormExpanded(mode?: "signin" | "signup") {
+    const expectedMode = mode ?? (await this.getCurrentAuthRoute());
+    await this.expectEmailFormExpanded(expectedMode);
+    await this.waitForFormReady(expectedMode);
+  }
+
+  async waitForEmailFormExpanded(timeout = 3000, mode?: "signin" | "signup") {
+    try {
+      await this.expectEmailFormExpanded(mode, timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async expectEmailFormExpanded(mode?: "signin" | "signup", timeout = 10000) {
+    const expectedMode = mode ?? (await this.getCurrentAuthRoute());
+    await expect
+      .poll(async () => this.getAuthFormState(), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .toBe(expectedMode === "signin" ? "signin-expanded" : "signup-expanded");
   }
 
   /**
@@ -597,16 +527,360 @@ export class AuthPage extends BasePage {
    * Uses data-form-ready attribute instead of arbitrary timeout
    * This is a best-effort wait - it won't throw if the form doesn't have this attribute
    */
-  async waitForFormReady() {
-    try {
-      await this.page.locator('form[data-form-ready="true"]').waitFor({
-        state: "attached",
-      });
-    } catch {
-      // Form might not have data-form-ready attribute (e.g., forgot password page)
-      // Use full document readiness as a generic fallback signal.
-      await this.page.waitForFunction(() => document.readyState === "complete");
+  async waitForFormReady(mode?: "signin" | "signup") {
+    await this.waitForAuthFormHydrated();
+    const expectedMode = mode ?? (await this.getCurrentAuthRoute());
+    await this.expectEmailFormExpanded(expectedMode);
+
+    if (expectedMode === "signin") {
+      await expect(this.forgotPasswordLink).toBeVisible();
     }
+  }
+
+  private async waitForAuthFormHydrated(timeout = 15000) {
+    await expect(this.authForm).toHaveAttribute("data-hydrated", "true", { timeout });
+  }
+
+  private async waitForAuthLanding(mode: "signin" | "signup", timeout = 15000) {
+    await expect
+      .poll(async () => this.getAuthFormState(), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .toBe(mode === "signin" ? "signin-landing" : "signup-landing");
+  }
+
+  private async getCurrentAuthRoute(): Promise<"signin" | "signup"> {
+    if (await this.signInHeading.isVisible().catch(() => false)) {
+      return "signin";
+    }
+
+    if (await this.signUpHeading.isVisible().catch(() => false)) {
+      return "signup";
+    }
+
+    await expect
+      .poll(
+        async () => {
+          if (await this.signInHeading.isVisible().catch(() => false)) {
+            return "signin";
+          }
+
+          if (await this.signUpHeading.isVisible().catch(() => false)) {
+            return "signup";
+          }
+
+          return "pending";
+        },
+        {
+          timeout: 15000,
+          intervals: [200, 500, 1000],
+        },
+      )
+      .not.toBe("pending");
+
+    return (await this.signInHeading.isVisible().catch(() => false)) ? "signin" : "signup";
+  }
+
+  private async getAuthFormState(): Promise<
+    "signin-landing" | "signin-expanded" | "signup-landing" | "signup-expanded" | "pending"
+  > {
+    const route = await this.getCurrentAuthRoute().catch(() => null);
+    if (!route) {
+      return "pending";
+    }
+
+    await this.waitForAuthFormHydrated().catch(() => {});
+
+    const buttonText =
+      (await this.submitButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
+    const expanded = await this.authForm.getAttribute("data-expanded").catch(() => null);
+
+    if (route === "signin") {
+      if (
+        expanded === "true" &&
+        /sign in|signing in/.test(buttonText) &&
+        (await this.emailInput.isVisible().catch(() => false))
+      ) {
+        return "signin-expanded";
+      }
+
+      if (expanded === "false" && /continue with email/.test(buttonText)) {
+        return "signin-landing";
+      }
+
+      return "pending";
+    }
+
+    if (
+      expanded === "true" &&
+      /create account|creating account/.test(buttonText) &&
+      (await this.emailInput.isVisible().catch(() => false))
+    ) {
+      return "signup-expanded";
+    }
+
+    if (expanded === "false" && /continue with email/.test(buttonText)) {
+      return "signup-landing";
+    }
+
+    return "pending";
+  }
+
+  async waitForForgotPasswordReady(timeout = 3000) {
+    try {
+      await this.expectForgotPasswordReady(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async expectForgotPasswordReady(timeout = 15000) {
+    await expect(this.page).toHaveURL(/forgot-password/, { timeout });
+    // Accept any valid forgot-password state: entry form, check-email, or code input
+    await expect
+      .poll(async () => this.getPasswordResetEntryState(), {
+        timeout,
+        intervals: [250, 500, 1000],
+      })
+      .not.toBe("pending");
+  }
+
+  async ensureForgotPasswordEntry() {
+    if (!this.page.url().includes("/forgot-password")) {
+      await this.page.goto("/forgot-password", { waitUntil: "domcontentloaded" });
+    }
+
+    await expect
+      .poll(async () => this.getPasswordResetEntryState(), {
+        timeout: 15000,
+        intervals: [250, 500, 1000],
+      })
+      .not.toBe("pending");
+  }
+
+  async waitForSignUpVerificationStep(timeout = 3000) {
+    try {
+      await this.expectVerificationFormReady(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async expectSignUpVerificationStep(timeout = 15000) {
+    await this.expectVerificationFormReady(timeout);
+  }
+
+  private async expectVerificationFormReady(timeout = 30000) {
+    await expect
+      .poll(async () => this.getSignUpVerificationFormState(), {
+        timeout,
+        intervals: [250, 500, 1000],
+      })
+      .toBe("verify");
+  }
+
+  async getOAuthErrorSettleState(): Promise<"signin" | "alert" | "toast" | "pending"> {
+    if (this.page.url().includes("signin")) {
+      return "signin";
+    }
+
+    if (await this.authAlert.isVisible().catch(() => false)) {
+      return "alert";
+    }
+
+    if (await this.errorToast.isVisible().catch(() => false)) {
+      return "toast";
+    }
+
+    return "pending";
+  }
+
+  async getSignUpVerificationState(): Promise<"verify" | "toast" | "pending"> {
+    if (await this.verifyHeading.isVisible().catch(() => false)) {
+      return "verify";
+    }
+
+    if (await this.successToast.isVisible().catch(() => false)) {
+      return "toast";
+    }
+
+    return "pending";
+  }
+
+  private async getSignUpVerificationFormState(): Promise<"verify" | "error" | "pending"> {
+    if (
+      (await this.verifyHeading.isVisible().catch(() => false)) &&
+      (await this.verifyCodeInput.isVisible().catch(() => false)) &&
+      (await this.verifyEmailButton.isVisible().catch(() => false))
+    ) {
+      return "verify";
+    }
+
+    if (await this.errorToast.isVisible().catch(() => false)) {
+      return "error";
+    }
+
+    return "pending";
+  }
+
+  async getPasswordResetEntryState(): Promise<"forgot" | "check-email" | "code" | "pending"> {
+    if (await this.codeInput.isVisible().catch(() => false)) {
+      return "code";
+    }
+
+    if (await this.forgotPasswordHeading.isVisible().catch(() => false)) {
+      return "forgot";
+    }
+
+    if (await this.checkEmailHeading.isVisible().catch(() => false)) {
+      return "check-email";
+    }
+
+    return "pending";
+  }
+
+  async getPasswordResetCodeStepState(): Promise<
+    "check-email" | "reset-heading" | "code" | "pending"
+  > {
+    if (await this.codeInput.isVisible().catch(() => false)) {
+      return "code";
+    }
+
+    if (await this.resetPasswordHeading.isVisible().catch(() => false)) {
+      return "reset-heading";
+    }
+
+    if (await this.checkEmailHeading.isVisible().catch(() => false)) {
+      return "check-email";
+    }
+
+    return "pending";
+  }
+
+  private async clickForgotPasswordLink() {
+    await expect(this.forgotPasswordLink).toBeVisible();
+    await expect(this.forgotPasswordLink).toBeEnabled();
+
+    try {
+      await this.forgotPasswordLink.click({ timeout: 5000 });
+    } catch {
+      if (await this.waitForForgotPasswordReady(1000)) {
+        return;
+      }
+
+      const forgotPasswordVisible = await this.forgotPasswordLink.isVisible().catch(() => false);
+      if (forgotPasswordVisible) {
+        await this.forgotPasswordLink.dispatchEvent("click");
+      }
+    }
+  }
+
+  private async attemptPasswordResetRequest(email: string, options?: { expectOutcome?: boolean }) {
+    await this.ensureForgotPasswordEntry();
+
+    // Already at check-email or code step from persisted state - nothing to do
+    const state = await this.getPasswordResetEntryState();
+    if (state === "check-email" || state === "code") {
+      return true;
+    }
+
+    await expect(this.emailInput).toBeVisible({ timeout: 15000 });
+    await this.emailInput.fill(email);
+    await expect(this.emailInput).toHaveValue(email);
+    await expect(this.sendResetCodeButton).toBeEnabled();
+    await this.submitForgotPasswordRequest();
+
+    if (options?.expectOutcome) {
+      if (!(await this.waitForPasswordResetCodeStep())) {
+        await expect(this.sendResetCodeButton).toBeEnabled();
+        await this.sendResetCodeButton.click();
+      }
+
+      await this.expectPasswordResetCodeStep();
+      return true;
+    }
+
+    return this.waitForPasswordResetCodeStep();
+  }
+
+  private async waitForPasswordResetCodeStep(timeout = 5000) {
+    try {
+      await this.expectPasswordResetCodeStep(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectPasswordResetCodeStep(timeout = 30000) {
+    await expect
+      .poll(async () => this.getPasswordResetCodeStepState(), {
+        timeout,
+        intervals: [250, 500, 1000, 2000],
+      })
+      .not.toBe("pending");
+    await expect(this.codeInput).toBeVisible({ timeout });
+  }
+
+  private async submitForgotPasswordRequest() {
+    await this.emailInput.evaluate((input) => {
+      const form = input.closest("form");
+      if (!(form instanceof HTMLFormElement)) {
+        throw new Error("Forgot password form not found");
+      }
+
+      form.requestSubmit();
+    });
+  }
+
+  private async attemptSignUp(
+    email: string,
+    password: string,
+    options?: { expectOutcome?: boolean },
+  ) {
+    await this.expandEmailForm("signup");
+    if (!(await this.waitForEmailFormExpanded(1000, "signup"))) {
+      if (!options?.expectOutcome) {
+        return false;
+      }
+
+      await this.expectEmailFormExpanded("signup");
+    }
+
+    await expect(this.emailInput).toBeVisible();
+    await this.emailInput.fill(email);
+
+    if (!(await this.waitForEmailFormExpanded(1000, "signup"))) {
+      if (!options?.expectOutcome) {
+        return false;
+      }
+
+      await this.expectEmailFormExpanded("signup");
+    }
+
+    await expect(this.passwordInput).toBeVisible();
+    await this.passwordInput.fill(password);
+
+    if (!(await this.waitForEmailFormExpanded(1000, "signup"))) {
+      if (!options?.expectOutcome) {
+        return false;
+      }
+
+      await this.expectEmailFormExpanded("signup");
+    }
+
+    await this.waitForFormReady("signup");
+    await this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON).click();
+
+    if (options?.expectOutcome) {
+      await this.expectVerificationFormReady();
+      return true;
+    }
+
+    return this.waitForSignUpVerificationStep();
   }
 
   async expectSignInForm() {
@@ -642,7 +916,7 @@ export class AuthPage extends BasePage {
   }
 
   async expectVerificationForm() {
-    // Wait for verification form to appear - uses Playwright's default timeout
+    await this.expectVerificationFormReady();
     await expect(this.verifyHeading).toBeVisible();
     await expect(this.verifyCodeInput).toBeVisible();
     await expect(this.verifyEmailButton).toBeVisible();

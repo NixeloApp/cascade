@@ -4,10 +4,6 @@ import { ROUTES } from "../utils/routes";
 import { waitForIssueUpdateSuccess } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
-const EDIT_RETRY_INTERVALS = [1000];
-const EDIT_RETRY_TIMEOUT = 20000;
-const CLICK_RETRY_TIMEOUT = 3000;
-
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -79,39 +75,97 @@ export class IssueDetailPage extends BasePage {
     await expect(this.page).toHaveURL(/\/projects\/.*\/board/);
   }
 
-  async editTitle(nextTitle: string) {
-    await expect(async () => {
-      if (!(await this.issueTitleInput.isVisible().catch(() => false))) {
-        await this.editIssueButton.click({ timeout: CLICK_RETRY_TIMEOUT });
-      }
+  async enterEditMode() {
+    if (await this.isInEditMode()) {
+      return;
+    }
 
+    await expect(this.editIssueButton).toBeVisible();
+    await expect(this.editIssueButton).toBeEnabled();
+    await this.editIssueButton.click();
+
+    if (await this.waitForEditMode()) {
+      return;
+    }
+
+    await this.editIssueButton.click({ force: true });
+    await this.expectEditMode();
+  }
+
+  async saveEdits() {
+    await expect(this.saveChangesButton).toBeVisible();
+    await expect(this.saveChangesButton).toBeEnabled();
+    await this.saveChangesButton.click();
+  }
+
+  async isInEditMode() {
+    return (
+      (await this.issueTitleInput.isVisible().catch(() => false)) ||
+      (await this.issueDescriptionEditor.isVisible().catch(() => false))
+    );
+  }
+
+  async waitForEditMode(timeout = 3000) {
+    try {
+      await Promise.race([
+        this.issueTitleInput.waitFor({ state: "visible", timeout }),
+        this.issueDescriptionEditor.waitFor({ state: "visible", timeout }),
+      ]);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async expectEditMode() {
+    const editModeVisible = await this.waitForEditMode(10000);
+    expect(editModeVisible).toBe(true);
+  }
+
+  async waitForSaveControls(timeout = 3000) {
+    try {
+      await this.saveChangesButton.waitFor({ state: "visible", timeout });
+      await expect(this.saveChangesButton).toBeEnabled({ timeout });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async editTitle(nextTitle: string) {
+    await this.enterEditMode();
+    await expect(this.issueTitleInput).toBeVisible();
+    await this.issueTitleInput.fill(nextTitle);
+    await expect(this.issueTitleInput).toHaveValue(nextTitle);
+
+    if (!(await this.waitForSaveControls())) {
+      await this.enterEditMode();
       await expect(this.issueTitleInput).toBeVisible();
       await this.issueTitleInput.fill(nextTitle);
       await expect(this.issueTitleInput).toHaveValue(nextTitle);
-      await expect(this.saveChangesButton).toBeVisible();
-      await expect(this.saveChangesButton).toBeEnabled();
-      await this.saveChangesButton.click({ timeout: CLICK_RETRY_TIMEOUT });
-      await expect(this.issueTitleInput).not.toBeVisible();
-      await expect(this.editIssueButton).toBeVisible();
-    }).toPass({ timeout: EDIT_RETRY_TIMEOUT, intervals: EDIT_RETRY_INTERVALS });
+    }
+
+    await this.saveEdits();
+    await expect(this.issueTitleInput).not.toBeVisible();
+    await expect(this.editIssueButton).toBeVisible();
 
     await waitForIssueUpdateSuccess(this.page);
   }
 
   async editDescription(nextDescription: string) {
-    await expect(async () => {
-      if (!(await this.issueDescriptionEditor.isVisible().catch(() => false))) {
-        await this.editIssueButton.click({ timeout: CLICK_RETRY_TIMEOUT });
-      }
+    await this.enterEditMode();
+    await expect(this.issueDescriptionEditor).toBeVisible();
+    await this.issueDescriptionEditor.fill(nextDescription);
 
+    if (!(await this.waitForSaveControls())) {
+      await this.enterEditMode();
       await expect(this.issueDescriptionEditor).toBeVisible();
       await this.issueDescriptionEditor.fill(nextDescription);
-      await expect(this.saveChangesButton).toBeVisible();
-      await expect(this.saveChangesButton).toBeEnabled();
-      await this.saveChangesButton.click({ timeout: CLICK_RETRY_TIMEOUT });
-      await expect(this.issueDescriptionEditor).not.toBeVisible();
-      await expect(this.editIssueButton).toBeVisible();
-    }).toPass({ timeout: EDIT_RETRY_TIMEOUT, intervals: EDIT_RETRY_INTERVALS });
+    }
+
+    await this.saveEdits();
+    await expect(this.issueDescriptionEditor).not.toBeVisible();
+    await expect(this.editIssueButton).toBeVisible();
 
     await waitForIssueUpdateSuccess(this.page);
     await expect(this.issueDescriptionContent).toContainText(nextDescription);

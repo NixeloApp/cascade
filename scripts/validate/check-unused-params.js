@@ -15,6 +15,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import ts from "typescript";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 // Directories to check
@@ -44,110 +45,118 @@ const ALLOWLIST = new Set([
   "src/components/Kanban/KanbanColumn.tsx",
 ]);
 
-/**
- * Find underscore-prefixed bindings in destructuring patterns, parameters, and locals.
- */
-function findUnusedParams(content) {
-  const issues = [];
-  const lines = content.split("\n");
+function isUnderscorePrefixed(name) {
+  return /^_[a-zA-Z]\w*$/.test(name);
+}
 
-  // Track multi-line comment state
-  let inMultiLineComment = false;
+function getBindingKind(node) {
+  let current = node;
+  while (current.parent) {
+    if (ts.isParameter(current.parent)) {
+      return "parameter";
+    }
+    if (ts.isVariableDeclaration(current.parent)) {
+      return "variable";
+    }
+    current = current.parent;
+  }
+  return null;
+}
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+function reportIssue(sourceFile, node, message, issues) {
+  const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+  issues.push({
+    line: line + 1,
+    column: character + 1,
+    message,
+  });
+}
 
-    // Handle multi-line comments
-    let lineToCheck = line;
-    let commentCheckPos = 0;
+function visitBindingName(name, sourceFile, issues) {
+  if (ts.isIdentifier(name)) {
+    if (!isUnderscorePrefixed(name.text)) return;
 
-    // Process the line character by character to track comment state
-    while (commentCheckPos < lineToCheck.length) {
-      if (inMultiLineComment) {
-        const endPos = lineToCheck.indexOf("*/", commentCheckPos);
-        if (endPos === -1) {
-          // Entire remaining line is in comment
-          lineToCheck = lineToCheck.slice(0, commentCheckPos);
-          break;
-        } else {
-          // Remove commented portion
-          lineToCheck =
-            lineToCheck.slice(0, commentCheckPos) +
-            " ".repeat(endPos - commentCheckPos + 2) +
-            lineToCheck.slice(endPos + 2);
-          commentCheckPos = endPos + 2;
-          inMultiLineComment = false;
-        }
-      } else {
-        const startPos = lineToCheck.indexOf("/*", commentCheckPos);
-        const singleLinePos = lineToCheck.indexOf("//", commentCheckPos);
-
-        // Single-line comment takes rest of line
-        if (singleLinePos !== -1 && (startPos === -1 || singleLinePos < startPos)) {
-          lineToCheck = lineToCheck.slice(0, singleLinePos);
-          break;
-        }
-
-        if (startPos === -1) break;
-
-        // Check if multi-line comment ends on same line
-        const endPos = lineToCheck.indexOf("*/", startPos + 2);
-        if (endPos === -1) {
-          // Comment continues to next line
-          lineToCheck = lineToCheck.slice(0, startPos);
-          inMultiLineComment = true;
-          break;
-        } else {
-          // Comment ends on same line - blank it out
-          lineToCheck =
-            lineToCheck.slice(0, startPos) +
-            " ".repeat(endPos - startPos + 2) +
-            lineToCheck.slice(endPos + 2);
-          commentCheckPos = endPos + 2;
-        }
-      }
+    const bindingKind = getBindingKind(name);
+    if (bindingKind === "parameter") {
+      reportIssue(
+        sourceFile,
+        name,
+        `Underscore-prefixed parameter "${name.text}". Remove it or restructure the callback to avoid unused positional args.`,
+        issues,
+      );
+      return;
     }
 
-    const patterns = [
-      {
-        regex: /(\w+):\s*(_[a-zA-Z]\w*)\s*(?:=\s*[^,}]+)?/g,
-        createMessage: ([, propName, varName]) =>
-          `Unused parameter: "${propName}" renamed to "${varName}". Consider removing if not needed.`,
-      },
-      {
-        // Match underscore params: at start of line (with optional indent), after ( or ,
-        regex: /(?:^[\s]*|[(,]\s*)(_[a-zA-Z]\w*)\s*(?::|[=,)])/g,
-        createMessage: ([, varName]) =>
-          `Underscore-prefixed parameter "${varName}". Remove it or restructure the callback to avoid unused positional args.`,
-      },
-      {
-        regex: /\b(?:const|let|var)\s+(_[a-zA-Z]\w*)\b/g,
-        createMessage: ([, varName]) =>
-          `Underscore-prefixed local "${varName}". Remove it or rename it to the real domain concept.`,
-      },
-      {
-        regex: /\[\s*(_[a-zA-Z]\w*)\s*,/g,
-        createMessage: ([, varName]) =>
-          `Underscore-prefixed state or tuple binding "${varName}". Omit the slot instead of naming an unused value.`,
-      },
-    ];
+    if (bindingKind === "variable") {
+      reportIssue(
+        sourceFile,
+        name,
+        `Underscore-prefixed local "${name.text}". Remove it or rename it to the real domain concept.`,
+        issues,
+      );
+    }
+    return;
+  }
 
-    for (const { regex, createMessage } of patterns) {
-      regex.lastIndex = 0;
+  if (ts.isObjectBindingPattern(name) || ts.isArrayBindingPattern(name)) {
+    for (const element of name.elements) {
+      if (!ts.isBindingElement(element)) continue;
 
-      let match = regex.exec(lineToCheck);
-      while (match !== null) {
-        issues.push({
-          line: i + 1,
-          column: match.index + 1,
-          message: createMessage(match),
-        });
+      const bindingKind = getBindingKind(element);
+      const isTupleBinding = ts.isArrayBindingPattern(name) && bindingKind === "variable";
 
-        match = regex.exec(lineToCheck);
+      if (ts.isIdentifier(element.name) && isUnderscorePrefixed(element.name.text)) {
+        if (element.propertyName) {
+          reportIssue(
+            sourceFile,
+            element.name,
+            `Unused parameter: "${element.propertyName.getText(sourceFile)}" renamed to "${element.name.text}". Consider removing if not needed.`,
+            issues,
+          );
+          continue;
+        }
+
+        if (bindingKind === "parameter") {
+          reportIssue(
+            sourceFile,
+            element.name,
+            `Underscore-prefixed parameter "${element.name.text}". Remove it or restructure the callback to avoid unused positional args.`,
+            issues,
+          );
+          continue;
+        }
+
+        if (bindingKind === "variable") {
+          const message = isTupleBinding
+            ? `Underscore-prefixed state or tuple binding "${element.name.text}". Omit the slot instead of naming an unused value.`
+            : `Underscore-prefixed local "${element.name.text}". Remove it or rename it to the real domain concept.`;
+          reportIssue(sourceFile, element.name, message, issues);
+        }
+      }
+
+      if (ts.isObjectBindingPattern(element.name) || ts.isArrayBindingPattern(element.name)) {
+        visitBindingName(element.name, sourceFile, issues);
       }
     }
   }
+}
 
+/**
+ * Find underscore-prefixed bindings in actual parameter/local binding positions.
+ * Uses the TypeScript AST so type members like `_id: v.id(...)` are not false positives.
+ */
+function findUnusedParams(filePath, content) {
+  const issues = [];
+  const sourceFile = ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest, true);
+
+  function visit(node) {
+    if (ts.isParameter(node) || ts.isVariableDeclaration(node)) {
+      visitBindingName(node.name, sourceFile, issues);
+    }
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
   return issues;
 }
 
@@ -159,35 +168,32 @@ export function run() {
     if (!fs.existsSync(fullDir)) continue;
 
     for (const file of walkDir(fullDir)) {
-      // Skip non-TS/TSX files
       if (!/\.(ts|tsx)$/.test(file)) continue;
-
-      // Skip patterns
-      if (SKIP_PATTERNS.some((p) => p.test(file))) continue;
+      if (SKIP_PATTERNS.some((pattern) => pattern.test(file))) continue;
 
       const rel = relPath(file);
-
-      // Skip allowlisted files
       if (ALLOWLIST.has(rel)) continue;
 
       const content = fs.readFileSync(file, "utf8");
-      const fileIssues = findUnusedParams(content);
+      const fileIssues = findUnusedParams(file, content);
 
       for (const issue of fileIssues) {
         issues.push({
           file: rel,
           line: issue.line,
+          column: issue.column,
           message: issue.message,
         });
       }
     }
   }
 
-  // Report results
   if (issues.length > 0) {
     console.log(`${c.red}Found ${issues.length} underscore-prefixed binding(s):${c.reset}\n`);
     for (const issue of issues) {
-      console.log(`  ${c.red}ERROR${c.reset} ${issue.file}:${issue.line} - ${issue.message}`);
+      console.log(
+        `  ${c.red}ERROR${c.reset} ${issue.file}:${issue.line}:${issue.column} - ${issue.message}`,
+      );
     }
     console.log();
   }
