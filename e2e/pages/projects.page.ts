@@ -295,8 +295,16 @@ export class ProjectsPage extends BasePage {
   // ===================
 
   async goto() {
-    // Navigate directly to the projects route
-    await this.page.goto(`/${this.orgSlug}/projects`);
+    await this.page.goto(`/${this.orgSlug}/projects`, { waitUntil: "domcontentloaded" });
+    await this.page.waitForLoadState("load");
+
+    if (await this.isOutsideAuthenticatedOrgShell()) {
+      await this.page.goto("/app", { waitUntil: "domcontentloaded" });
+      await this.page.waitForLoadState("load");
+      await this.page.goto(`/${this.orgSlug}/projects`, { waitUntil: "domcontentloaded" });
+      await this.page.waitForLoadState("load");
+    }
+
     await this.waitForLoad();
   }
 
@@ -964,6 +972,17 @@ export class ProjectsPage extends BasePage {
       await expect(this.newProjectButton).toBeEnabled();
       await this.newProjectButton.evaluate((button: HTMLButtonElement) => button.click());
     }
+  }
+
+  private async isOutsideAuthenticatedOrgShell() {
+    const currentUrl = this.page.url();
+
+    return (
+      currentUrl.includes("/signin") ||
+      currentUrl === "http://localhost:5555/" ||
+      currentUrl === "http://localhost:5555" ||
+      !currentUrl.includes(`/${this.orgSlug}/`)
+    );
   }
 
   private async getCreateProjectStep(): Promise<"template" | "configure" | "select" | "pending"> {

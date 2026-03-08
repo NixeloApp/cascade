@@ -435,23 +435,30 @@ export class SettingsPage extends BasePage {
   }
 
   private async fillInviteEmail(email: string) {
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-      await this.ensureInviteFormReady();
-      try {
-        await this.inviteEmailInput.fill(email);
-      } catch {
-        await this.closeInviteUserModalIfOpen();
-        continue;
-      }
+    await this.ensureInviteFormReady();
 
-      const currentValue = await this.inviteEmailInput.inputValue().catch(() => null);
-      if (currentValue === email) {
-        return;
-      }
-
-      await this.closeInviteUserModalIfOpen();
+    if (await this.tryFillInviteEmail(email)) {
+      return;
     }
 
+    await this.closeInviteUserModalIfOpen();
+    await this.ensureInviteFormReady();
+    await this.expectInviteEmailFilled(email);
+  }
+
+  private async tryFillInviteEmail(email: string) {
+    try {
+      await this.inviteEmailInput.fill(email);
+    } catch {
+      return false;
+    }
+
+    const currentValue = await this.inviteEmailInput.inputValue().catch(() => null);
+    return currentValue === email;
+  }
+
+  private async expectInviteEmailFilled(email: string) {
+    await this.inviteEmailInput.fill(email);
     await expect(this.inviteEmailInput).toHaveValue(email);
   }
 
