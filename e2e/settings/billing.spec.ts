@@ -1,5 +1,5 @@
 import { SETTINGS_PROFILES, TEST_ORG_SLUG } from "../config";
-import { authenticatedTest } from "../fixtures";
+import { authenticatedTest, expect } from "../fixtures";
 import { testUserService } from "../utils";
 
 /**
