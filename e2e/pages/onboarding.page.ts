@@ -401,17 +401,9 @@ export class OnboardingPage {
    * Skip onboarding and go to dashboard
    */
   async skipOnboarding() {
-    await expect(async () => {
-      // Try button first, then text
-      const skipVisible = await this.skipButton.isVisible().catch(() => false);
-      if (skipVisible) {
-        await this.skipButton.click();
-      } else {
-        await this.skipText.click();
-      }
-
-      await this.expectDashboard();
-    }).toPass();
+    const skipAction = await this.getVisibleSkipAction();
+    await skipAction.click();
+    await this.expectDashboard();
   }
 
   /**
@@ -440,10 +432,10 @@ export class OnboardingPage {
    * Complete team member flow to dashboard
    */
   async goToDashboard() {
-    await expect(async () => {
-      await this.goToDashboardButton.click();
-      await this.expectDashboard();
-    }).toPass();
+    await expect(this.goToDashboardButton).toBeVisible({ timeout: TRANSITION_TIMEOUT });
+    await expect(this.goToDashboardButton).toBeEnabled();
+    await this.goToDashboardButton.click();
+    await this.expectDashboard();
   }
 
   // ===================
@@ -494,5 +486,15 @@ export class OnboardingPage {
   async expectDashboard(timeout = TRANSITION_TIMEOUT) {
     await expect(this.page).toHaveURL(/\/[^/]+\/dashboard/, { timeout });
     await expect(this.myWorkHeading).toBeVisible({ timeout });
+  }
+
+  private async getVisibleSkipAction() {
+    if (await this.skipButton.isVisible().catch(() => false)) {
+      await expect(this.skipButton).toBeEnabled();
+      return this.skipButton;
+    }
+
+    await expect(this.skipText).toBeVisible({ timeout: TRANSITION_TIMEOUT });
+    return this.skipText;
   }
 }
