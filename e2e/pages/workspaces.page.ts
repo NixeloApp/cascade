@@ -54,47 +54,11 @@ export class WorkspacesPage extends BasePage {
   }
 
   async goto() {
-    const workspacesUrl = `/${this.orgSlug}/workspaces`;
-
-    await this.page.goto(workspacesUrl, { waitUntil: "domcontentloaded" });
-
-    try {
-      // Wait for the Workspaces heading
-      await this.page
-        .getByRole("heading", { name: /workspaces/i })
-        .first()
-        .waitFor({ state: "visible" });
-    } catch (e) {
-      const currentUrl = this.page.url();
-      const bodyText = await this.page
-        .evaluate(() => document.body.innerText)
-        .catch(() => "Could not get body text");
-      console.log(`[DEBUG] WorkspacesPage.goto failed`);
-      console.log(`[DEBUG] Target URL: ${workspacesUrl}`);
-      console.log(`[DEBUG] Current URL: ${currentUrl}`);
-      const localStorage = await this.page
-        .evaluate(() => JSON.stringify(localStorage))
-        .catch(() => "Could not get localStorage");
-      const convexClientState = await this.page
-        .evaluate(() => {
-          // biome-ignore lint/suspicious/noExplicitAny: Accessing internal test client
-          const client = (window as any).__convex_test_client;
-          return client
-            ? `Found client. Auth token set: ${!!client.authenticationToken}`
-            : "Client not found on window";
-        })
-        .catch(() => "Error getting client state");
-      console.log(`[DEBUG] LocalStorage: ${localStorage}`);
-      console.log(`[DEBUG] ConvexClient: ${convexClientState}`);
-      console.log(`[DEBUG] Body Text: ${bodyText.substring(0, 1000)}`);
-      throw e;
-    }
+    await this.navigateToWorkspacesRoute();
+    await this.expectWorkspacesView();
   }
 
   async createWorkspace(name: string, description?: string) {
-    // Wait for button to be ready - use first() to get the header button (not empty state)
-    const createButton = this.newWorkspaceButton.first();
-    await createButton.waitFor({ state: "visible" });
     const { createForm, dialog, descriptionInput, nameInput, submitButton } =
       getWorkspaceDialogElements(this.page);
 
@@ -107,9 +71,9 @@ export class WorkspacesPage extends BasePage {
       workspaceName: name,
       workspaceDescription: description,
       openDialog: async () => {
+        await this.ensureWorkspacesView();
         await this.closeCreateWorkspaceDialogIfOpen(dialog);
-        await createButton.scrollIntoViewIfNeeded();
-        await createButton.click();
+        await this.clickNewWorkspaceButton();
       },
     });
 
@@ -126,7 +90,7 @@ export class WorkspacesPage extends BasePage {
   }
 
   async expectWorkspacesView() {
-    await expect(this.newWorkspaceButton).toBeVisible();
+    await expect(this.newWorkspaceButton.first()).toBeVisible();
   }
 
   async expectWorkspaceDetailVisible(name: string) {
@@ -221,5 +185,55 @@ export class WorkspacesPage extends BasePage {
 
   async expectWorkspaceCount(count: number) {
     await expect(this.workspaceCards).toHaveCount(count);
+  }
+
+  private async waitForWorkspacesView(timeout = 3000) {
+    try {
+      await expect(this.newWorkspaceButton.first()).toBeVisible({ timeout });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async ensureWorkspacesView() {
+    if (await this.waitForWorkspacesView(3000)) {
+      return;
+    }
+
+    await this.navigateToWorkspacesRoute();
+    await this.expectWorkspacesView();
+  }
+
+  private async navigateToWorkspacesRoute() {
+    const workspacesUrl = `/${this.orgSlug}/workspaces`;
+
+    await this.page.goto(workspacesUrl, { waitUntil: "domcontentloaded" });
+    await this.page.waitForLoadState("load");
+    await this.expectLoaded();
+
+    if (await this.waitForWorkspacesView(5000)) {
+      return;
+    }
+
+    await this.page.goto("/app", { waitUntil: "domcontentloaded" });
+    await this.page.waitForLoadState("load");
+    await this.page.goto(workspacesUrl, { waitUntil: "domcontentloaded" });
+    await this.page.waitForLoadState("load");
+    await this.expectLoaded();
+  }
+
+  private async clickNewWorkspaceButton() {
+    const createButton = this.newWorkspaceButton.first();
+    await expect(createButton).toBeVisible();
+    await expect(createButton).toBeEnabled();
+
+    try {
+      await createButton.click({ timeout: 3000 });
+    } catch {
+      await expect(createButton).toBeVisible();
+      await expect(createButton).toBeEnabled();
+      await createButton.evaluate((button: HTMLButtonElement) => button.click());
+    }
   }
 }

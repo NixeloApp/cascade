@@ -283,43 +283,163 @@ export async function createWorkspaceFromDialog(
     openDialog,
   } = options;
 
-  await expect(async () => {
-    if (!(await dialog.isVisible())) {
-      await openDialog();
-    }
-    await expect(dialog).toBeVisible();
-    await expect(dialog.getByRole("heading", { name: /create workspace/i })).toBeVisible();
-    await expect(nameInput).toBeVisible();
-    await expect(nameInput).toBeEnabled();
-  }).toPass();
-
-  await expect(async () => {
-    await expect(nameInput).toBeVisible();
-    await expect(nameInput).toBeEnabled();
-    await nameInput.fill(workspaceName);
-    await expect(nameInput).toHaveValue(workspaceName);
-  }).toPass();
+  await ensureWorkspaceDialogReady({ dialog, nameInput, openDialog });
+  await fillWorkspaceDialogField(nameInput, workspaceName, async () => {
+    await ensureWorkspaceDialogReady({ dialog, nameInput, openDialog });
+  });
 
   if (workspaceDescription && descriptionInput) {
-    await expect(async () => {
-      await expect(descriptionInput).toBeVisible();
-      await expect(descriptionInput).toBeEnabled();
-      await descriptionInput.fill(workspaceDescription);
-      await expect(descriptionInput).toHaveValue(workspaceDescription);
-    }).toPass();
+    await fillWorkspaceDialogField(descriptionInput, workspaceDescription, async () => {
+      await ensureWorkspaceDialogReady({ dialog, nameInput, openDialog });
+    });
   }
 
-  await expect(async () => {
-    if (createForm && (await createForm.isVisible().catch(() => false))) {
-      await createForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
-    } else {
-      await expect(submitButton).toBeVisible();
-      await expect(submitButton).toBeEnabled();
-      await submitButton.click();
-    }
+  await submitWorkspaceDialog({
+    dialog,
+    submitButton,
+    createForm,
+  });
+}
 
+async function ensureWorkspaceDialogReady(options: {
+  dialog: Locator;
+  nameInput: Locator;
+  openDialog: () => Promise<void>;
+}) {
+  const { dialog, nameInput, openDialog } = options;
+
+  if (await waitForWorkspaceDialogReady(dialog, nameInput, 1000)) {
+    return;
+  }
+
+  await openDialog();
+  await expectWorkspaceDialogReady(dialog, nameInput);
+}
+
+async function waitForWorkspaceDialogReady(dialog: Locator, nameInput: Locator, timeout = 3000) {
+  try {
+    await expectWorkspaceDialogReady(dialog, nameInput, timeout);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function expectWorkspaceDialogReady(dialog: Locator, nameInput: Locator, timeout = 10000) {
+  await expect(dialog).toBeVisible({ timeout });
+  await expect(dialog.getByRole("heading", { name: /create workspace/i })).toBeVisible({
+    timeout,
+  });
+  await expect(nameInput).toBeVisible({ timeout });
+  await expect(nameInput).toBeEnabled({ timeout });
+}
+
+async function fillWorkspaceDialogField(
+  input: Locator,
+  value: string,
+  recover: () => Promise<void>,
+) {
+  if (await tryFillWorkspaceDialogField(input, value)) {
+    return;
+  }
+
+  await recover();
+  await expect(input).toBeVisible();
+  await expect(input).toBeEnabled();
+  await input.fill(value);
+  await expect(input).toHaveValue(value);
+}
+
+async function tryFillWorkspaceDialogField(input: Locator, value: string) {
+  try {
+    await expect(input).toBeVisible();
+    await expect(input).toBeEnabled();
+    await input.fill(value);
+  } catch {
+    return false;
+  }
+
+  const currentValue = await input.inputValue().catch(() => null);
+  return currentValue === value;
+}
+
+async function submitWorkspaceDialog(options: {
+  dialog: Locator;
+  submitButton: Locator;
+  createForm?: Locator;
+}) {
+  const { dialog, submitButton, createForm } = options;
+
+  await tryStartWorkspaceDialogSubmit({ dialog, submitButton, createForm });
+
+  if (await waitForWorkspaceDialogSubmitStart(dialog, submitButton, 5000)) {
     await expect(dialog).not.toBeVisible();
-  }).toPass();
+    return;
+  }
+
+  await tryStartWorkspaceDialogSubmit({ dialog, submitButton, createForm });
+  await expectWorkspaceDialogSubmitStarted(dialog, submitButton);
+  await expect(dialog).not.toBeVisible();
+}
+
+async function tryStartWorkspaceDialogSubmit(options: {
+  dialog: Locator;
+  submitButton: Locator;
+  createForm?: Locator;
+}) {
+  const { dialog, submitButton, createForm } = options;
+
+  if (!(await dialog.isVisible().catch(() => false))) {
+    return;
+  }
+
+  if (createForm && (await createForm.isVisible().catch(() => false))) {
+    await createForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
+    return;
+  }
+
+  await expect(submitButton).toBeVisible();
+  await expect(submitButton).toBeEnabled();
+  await submitButton.click();
+}
+
+async function waitForWorkspaceDialogSubmitStart(
+  dialog: Locator,
+  submitButton: Locator,
+  timeout = 3000,
+) {
+  try {
+    await expect
+      .poll(async () => getWorkspaceDialogSubmitState(dialog, submitButton), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .not.toBe("open");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function expectWorkspaceDialogSubmitStarted(
+  dialog: Locator,
+  submitButton: Locator,
+  timeout = 10000,
+) {
+  const started = await waitForWorkspaceDialogSubmitStart(dialog, submitButton, timeout);
+  expect(started).toBe(true);
+}
+
+async function getWorkspaceDialogSubmitState(dialog: Locator, submitButton: Locator) {
+  if (!(await dialog.isVisible().catch(() => false))) {
+    return "closed";
+  }
+
+  if (await submitButton.isDisabled().catch(() => false)) {
+    return "submitting";
+  }
+
+  return "open";
 }
 
 /**
