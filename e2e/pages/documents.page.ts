@@ -101,10 +101,10 @@ export class DocumentsPage extends BasePage {
   // ===================
 
   async createNewDocument() {
-    await expect(async () => {
-      await this.newDocumentButton.click();
-      await expect(this.page).toHaveURL(/\/documents\/[^/]+$/);
-    }).toPass();
+    await expect(this.newDocumentButton).toBeVisible();
+    await expect(this.newDocumentButton).toBeEnabled();
+    await this.newDocumentButton.click();
+    await expect(this.page).toHaveURL(/\/documents\/[^/]+$/);
 
     await this.expectEditorVisible();
   }

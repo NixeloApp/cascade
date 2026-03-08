@@ -211,6 +211,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `activity-feed.spec.ts` now goes through `ProjectsPage` helpers for empty-vs-entry state, action text, issue-key visibility, and relative timestamps, after moving those assertions out of the spec body showed the feed state could be treated as a single page-object contract.
 - `SettingsPage.openInviteUserModal()` now waits for the invite form controls, `inviteUser()` accepts the invite row as the success signal, and `revokeInvite()` waits for the row status to become `revoked`, after the invite reruns showed the inline card could close before the button-based retry logic realized the action had already succeeded.
 - `DocumentsPage.createNewDocument()` now owns the post-create URL and editor-ready checks, after the docs rerun confirmed the spec no longer needs to reassert editor hydration separately after every new-document action.
+- `DocumentsPage.createNewDocument()` now clicks once and waits on route change plus editor readiness directly instead of wrapping the route transition in a retry loop, after the docs rerun confirmed the create flow no longer needs the extra retry shell.
 - `roadmap.spec.ts` now relies on `ProjectsPage` for roadmap route readiness, current-month visibility, and epic-filter state, after moving the remaining timeline/filter checks out of the spec body confirmed the route-specific controls can be treated as a single page-object contract.
 - `switchToTab("sprints")` and `switchToTab("backlog")` now finish on `ProjectsPage` route-specific ready checks, after the dedicated rerun confirmed `sprints.spec.ts` no longer needs raw heading/button assertions to prove the sprint manager and backlog board finished loading.
 - `analytics.spec.ts` now relies on `ProjectsPage` for analytics route readiness, metric/chart visibility, total-issue parsing, and empty-sprint messaging, after the targeted rerun confirmed the dashboard-specific loaded sections can be asserted as page-object contracts instead of repeated spec-local checks.
@@ -285,6 +286,8 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `1 passed (33.2s)` after removing the extra `cancelCreateProject()` retry wrapper
 - `pnpm exec playwright test e2e/issues.spec.ts -g "can edit an issue title from the detail dialog" --reporter=line --workers=1`
   - `1 passed (46.7s)` after removing the extra `closeIssueDetail()` retry wrapper
+- `pnpm exec playwright test e2e/documents.spec.ts --reporter=line --workers=1`
+  - `4 passed (26.7s)` after replacing the new-document route retry with a direct route-plus-editor contract
 - `pnpm exec playwright test e2e/permission-cascade.spec.ts --reporter=line --workers=1`
   - `9 passed (2.0m)`
 - `pnpm exec playwright test e2e/issues.spec.ts e2e/integration-workflow.spec.ts --reporter=line --workers=1`
