@@ -394,26 +394,34 @@ export class DashboardPage extends BasePage {
   }
 
   async openShortcutsHelp() {
-    // Wait for button to be visible and stable
     await this.shortcutsHelpButton.waitFor({ state: "visible" });
+    await this.closeShortcutsHelpIfOpen();
+    await this.shortcutsHelpButton.click();
 
-    // Use retry pattern to handle potential React re-renders
-    await expect(async () => {
+    if (!(await this.shortcutsModal.isVisible().catch(() => false))) {
       await this.shortcutsHelpButton.click();
-      await expect(this.shortcutsModal).toBeVisible();
-    }).toPass();
+    }
+
+    await expect(this.shortcutsModal).toBeVisible();
   }
 
   async closeShortcutsHelp() {
-    await expect(async () => {
-      if (!(await this.shortcutsModal.isVisible())) return;
-      await this.page.keyboard.press("Escape");
-      // Fallback: click outside if escape fails (try clicking main content)
-      if (await this.shortcutsModal.isVisible()) {
-        await this.mainContent.click({ position: { x: 10, y: 10 } }).catch(() => {});
-      }
-      await expect(this.shortcutsModal).not.toBeVisible();
-    }).toPass();
+    await this.closeShortcutsHelpIfOpen();
+    await expect(this.shortcutsModal).not.toBeVisible();
+  }
+
+  async closeShortcutsHelpIfOpen() {
+    if (!(await this.shortcutsModal.isVisible().catch(() => false))) {
+      return;
+    }
+
+    await this.page.keyboard.press("Escape");
+
+    if (await this.shortcutsModal.isVisible().catch(() => false)) {
+      await this.mainContent.click({ position: { x: 10, y: 10 } }).catch(() => {});
+    }
+
+    await expect(this.shortcutsModal).not.toBeVisible();
   }
 
   async setTheme(theme: "light" | "dark" | "system") {
