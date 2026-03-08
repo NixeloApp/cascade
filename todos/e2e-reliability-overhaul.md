@@ -90,7 +90,7 @@ Make E2E tests deterministic and locally verifiable with one rule: run the full 
 
 - [ ] No unjustified `waitForTimeout` usage across E2E suite.
 - [x] Full local suite run reports 100% pass.
-- [ ] Core flows (`auth`, `issue create/edit`, `board drag/drop`, `docs`, `search`) are stable.
+- [x] Core flows (`auth`, `issue create/edit`, `board drag/drop`, `docs`, `search`) are stable.
 - [ ] E2E authoring standard is documented and enforced in reviews.
 
 ## Remaining Work (Execution Backlog)
