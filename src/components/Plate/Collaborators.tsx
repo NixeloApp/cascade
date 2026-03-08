@@ -33,6 +33,7 @@ export function Collaborators({ documentId, maxVisible = 5, className }: Collabo
 
   useEffect(() => {
     if (!currentUser) {
+      setCollaborators([]);
       return;
     }
 
@@ -123,6 +124,7 @@ export function useCollaboratorCount(documentId: Id<"documents">): number {
 
   useEffect(() => {
     if (!currentUser) {
+      setCount(0);
       return;
     }
 

@@ -210,7 +210,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `DashboardPage.openTimeEntryModal({ expectBillable })` now uses one direct billing-state check plus one named app-shell resync instead of a generic three-attempt loop, after the focused billing rerun confirmed the helper only needs a single stale-context recovery path when org settings change out of band.
 - `DashboardPage.signOutViaUserMenu()` now reacquires the visible `Sign out` menu item inside the retry loop and waits for a signed-out destination, after the isolated signout rerun showed the previous locator could detach between menu-open and click.
 - `DashboardPage.signOutViaUserMenu()` now uses a direct menu-open -> sign-out click contract with one bounded second attempt and a named signed-out destination check, after the isolated signout rerun confirmed the full flow does not need a blanket retry wrapper.
-- latest source-of-truth full-suite run on `2026-03-07`: `160 passed` in `5.4m`.
+- historical full-suite run on `2026-03-07`: `160 passed` in `5.4m`.
 - the previous three exposed regressions now have targeted green evidence plus a restored full-suite green confirmation:
   - `pnpm exec playwright test e2e/auth.spec.ts -g "sign up flow sends verification email|can complete email verification" --reporter=line --workers=1` -> `2 passed (26.7s)` and `2 passed (34.1s)`
   - `pnpm exec playwright test e2e/settings/billing.spec.ts e2e/signout.spec.ts --reporter=line --workers=1` -> `3 passed (40.1s)` and `3 passed (31.8s)`

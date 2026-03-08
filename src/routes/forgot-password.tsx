@@ -19,7 +19,12 @@ function getStoredResetEmail() {
     return null;
   }
 
-  return window.sessionStorage.getItem(RESET_EMAIL_STORAGE_KEY);
+  try {
+    return window.sessionStorage.getItem(RESET_EMAIL_STORAGE_KEY);
+  } catch {
+    // sessionStorage may throw SecurityError in restricted contexts
+    return null;
+  }
 }
 
 function setStoredResetEmail(email: string) {
@@ -27,7 +32,11 @@ function setStoredResetEmail(email: string) {
     return;
   }
 
-  window.sessionStorage.setItem(RESET_EMAIL_STORAGE_KEY, email);
+  try {
+    window.sessionStorage.setItem(RESET_EMAIL_STORAGE_KEY, email);
+  } catch {
+    // sessionStorage may throw SecurityError in restricted contexts
+  }
 }
 
 function clearStoredResetEmail() {
@@ -35,7 +44,11 @@ function clearStoredResetEmail() {
     return;
   }
 
-  window.sessionStorage.removeItem(RESET_EMAIL_STORAGE_KEY);
+  try {
+    window.sessionStorage.removeItem(RESET_EMAIL_STORAGE_KEY);
+  } catch {
+    // sessionStorage may throw SecurityError in restricted contexts
+  }
 }
 
 export const Route = createFileRoute("/forgot-password")({
