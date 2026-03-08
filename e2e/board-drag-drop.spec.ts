@@ -148,23 +148,19 @@ test.describe("Board Drag-Drop", () => {
       name: new RegExp(escapedIssueTitle),
     });
 
-    // Use locator-level dragTo for Pragmatic DnD and verify post-drag card state deterministically.
-    await expect(async () => {
-      await issueCard.scrollIntoViewIfNeeded();
-      await targetColumn.scrollIntoViewIfNeeded();
-      await issueCard.dragTo(targetColumn);
+    await issueCard.scrollIntoViewIfNeeded();
+    await targetColumn.scrollIntoViewIfNeeded();
+    await issueCard.dragTo(targetColumn);
 
-      const targetCount = await issueButtonInTargetColumn.count();
-      const sourceCount = await issueButtonInSourceColumn.count();
+    const movedToTarget = await issueButtonInTargetColumn.isVisible().catch(() => false);
 
-      // The card must remain rendered after drag gesture, either in target (successful move)
-      // or source (no-op move in constrained envs).
-      expect(targetCount + sourceCount).toBeGreaterThan(0);
-
-      if (targetCount > 0) {
-        await expect(issueButtonInSourceColumn).toHaveCount(0);
-      }
-    }).toPass();
+    // The card must remain rendered after the drag gesture, either in target (successful move)
+    // or source (no-op move in constrained envs).
+    if (movedToTarget) {
+      await expect(issueButtonInSourceColumn).toHaveCount(0);
+    } else {
+      await expect(issueButtonInSourceColumn).toBeVisible();
+    }
 
     console.log("✓ Drag operation completed");
   });
