@@ -152,21 +152,35 @@ test.describe("Board Drag-Drop", () => {
     await targetColumn.scrollIntoViewIfNeeded();
     await issueCard.dragTo(targetColumn);
 
-    // Wait for DOM to settle after drag. Use retrying assertion to verify card
-    // is in one of the valid end states (either target or source column).
-    await expect(async () => {
-      const inTarget = await issueButtonInTargetColumn.isVisible().catch(() => false);
-      const inSource = await issueButtonInSourceColumn.isVisible().catch(() => false);
-      // Card must be visible in exactly one column
-      expect(inTarget || inSource).toBe(true);
-    }).toPass({ timeout: 5000, intervals: [250, 500, 1000] });
+    // Wait for DOM to settle after drag using retrying assertion.
+    // Use expect.poll to wait until *either* the target-column locator or the source-column
+    // locator is visible, then branch based on the settled state.
+    const settledState = await expect
+      .poll(
+        async () => {
+          const inTarget = await issueButtonInTargetColumn.isVisible().catch(() => false);
+          const inSource = await issueButtonInSourceColumn.isVisible().catch(() => false);
 
-    // Now determine settled state and assert exclusivity
-    const movedToTarget = await issueButtonInTargetColumn.isVisible().catch(() => false);
+          if (inTarget && !inSource) return "target";
+          if (inSource && !inTarget) return "source";
+          if (inTarget || inSource) return "visible"; // At least one is visible
+          return "pending";
+        },
+        { timeout: 5000, intervals: [250, 500, 1000] },
+      )
+      .not.toBe("pending");
 
-    if (movedToTarget) {
-      await expect(issueButtonInSourceColumn).toHaveCount(0);
+    // Assert based on the settled state
+    if (settledState === "target" || settledState === "visible") {
+      // Re-check if moved to target using retrying assertion
+      const movedToTarget = await issueButtonInTargetColumn.isVisible().catch(() => false);
+      if (movedToTarget) {
+        await expect(issueButtonInSourceColumn).toHaveCount(0);
+      } else {
+        await expect(issueButtonInSourceColumn).toBeVisible();
+      }
     } else {
+      // Card remained in source column
       await expect(issueButtonInSourceColumn).toBeVisible();
     }
 
