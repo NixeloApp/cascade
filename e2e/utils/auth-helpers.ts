@@ -258,7 +258,7 @@ export async function trySignInUser(
 
   const resolvePostSignInRedirect = async (): Promise<boolean> => {
     try {
-      await page.waitForURL(urlPatterns.dashboardOrOnboarding);
+      await page.waitForURL(urlPatterns.dashboardOrOnboarding, { timeout: 15000 });
       console.log("  ✓ Redirected to:", page.url());
       return await handleOnboardingOrDashboard(page, autoCompleteOnboarding);
     } catch {
@@ -293,7 +293,7 @@ export async function trySignInUser(
         return false;
       }
 
-      console.log("  ⚠️ Redirect timeout after 90s");
+      console.log("  ⚠️ Redirect timeout after 15s");
       console.log("  📄 Page content:", pageText.slice(0, 300));
 
       const stuckOutsideAppShell =
