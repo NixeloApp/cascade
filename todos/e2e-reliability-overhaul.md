@@ -112,6 +112,7 @@ This is the concrete "what's left" list for reliability hardening after the late
    - global-search close assertions in `search.spec.ts` now go through `DashboardPage` helpers instead of spec-level `Escape` handling.
    - time-entry modal open/close in billing settings now goes through `DashboardPage` helpers instead of spec-level dialog handling.
    - `DashboardPage.openTimeEntryModal({ expectBillable })` now treats org-setting propagation as part of the helper contract, reloading the app shell only when the timer modal proves the billing context is stale after an out-of-band settings mutation.
+   - `ProjectsPage.startTimer()` / `stopTimer()` now share a timer-action completion contract that waits for the success toast plus the opposite control state, so touched time-tracking specs no longer duplicate button-state assertions after each timer action.
    - dashboard modal smoke tests now rely on page-object open/close helpers, and shortcut-open tests close their modals before exit.
    - invite-panel reset behavior now lives in `SettingsPage.closeInviteUserModalIfOpen()` instead of being inlined inside the open flow.
    - workspace-create reset now goes through `WorkspacesPage.closeCreateWorkspaceDialogIfOpen()`, and the shared workspaces-page create flow uses the modal form submit path instead of depending on the button click staying actionable.
@@ -202,6 +203,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `SettingsPage.inviteUser()` now wraps modal open, form fill, optional role selection, and invite-row visibility in the same retry boundary, after the settings/admin rerun showed the invite email input could detach immediately after the modal-open helper succeeded.
 - `ProjectsPage.openIssueDetail()` and `closeIssueDetail()` now reuse a named `closeIssueDetailIfOpen()` reset, after hardening moved the detail-dialog setup and teardown into the page object and the targeted rerun confirmed the modal flow stays deterministic across integration and issues specs.
 - `ProjectsPage.createProject()` now accepts the wizard's `Creating...` state as proof that submit started, after the issue-detail setup rerun exposed that waiting only for immediate dialog dismissal could misclassify a valid create click as a failure.
+- `/app` organization bootstrap now waits for `api.users.getCurrent` to return a real user before calling `initializeDefaultOrganization`, and the backend mutation now fails fast with a precise error if the authenticated user profile document is missing instead of trying to patch a nonexistent user id.
 - `ProjectsPage.openCreateProjectForm()` and `cancelCreateProject()` now reuse `closeCreateProjectFormIfOpen()`, after the create-project modal hardening showed the dialog needed an explicit reset path for repeated cancel/reopen flows instead of assuming the previous close fully settled.
 - `auth-comprehensive.spec.ts` now relies on `AuthPage.expandEmailForm()` and `waitForFormExpanded()` for sign-in/sign-up coverage, after removing the spec-local expansion retries and flaky annotation proved the page object already exposes the deterministic state transition those tests needed.
 - `activity-feed.spec.ts` now goes through `ProjectsPage` helpers for empty-vs-entry state, action text, issue-key visibility, and relative timestamps, after moving those assertions out of the spec body showed the feed state could be treated as a single page-object contract.
@@ -239,6 +241,8 @@ This is the concrete "what's left" list for reliability hardening after the late
 
 - `pnpm run validate`
   - `RESULT: PASS (0 errors)`
+- `pnpm vitest run convex/organizations.test.ts`
+  - `12 passed (747ms)`
 - `pnpm exec playwright test e2e/onboarding.spec.ts --reporter=line --workers=1`
   - `7 passed (1.5m)`
 - `pnpm exec playwright test e2e/rbac.spec.ts --reporter=line --workers=1`
@@ -253,6 +257,10 @@ This is the concrete "what's left" list for reliability hardening after the late
   - `5 passed (2.6m)`
 - `pnpm exec playwright test e2e/error-scenarios.spec.ts --reporter=line --workers=1`
   - `4 passed (29.5s)`
+- `pnpm exec playwright test e2e/time-tracking.spec.ts --reporter=line --workers=1`
+  - `1 passed (57.4s)` after guarding `/app` bootstrap on authenticated-user readiness
+- `pnpm exec playwright test e2e/onboarding.spec.ts -g "shows member-specific content and can complete onboarding" --reporter=line --workers=1`
+  - `1 passed (38.8s)`
 - `pnpm exec playwright test e2e/error-scenarios.spec.ts --reporter=line --workers=1`
   - `4 passed (28.8s)`
 - `pnpm exec playwright test e2e/invite.spec.ts --reporter=line --workers=1`

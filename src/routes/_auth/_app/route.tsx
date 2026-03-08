@@ -93,6 +93,7 @@ function AppLayout() {
 
   // Get user's organizations to check if we need initialization
   const userOrganizations = useAuthenticatedQuery(api.organizations.getUserOrganizations, {});
+  const currentUser = useAuthenticatedQuery(api.users.getCurrent, {});
 
   if (redirectPath !== undefined) {
     cachedRedirectPath = redirectPath;
@@ -124,6 +125,15 @@ function AppLayout() {
 
   // If we have a redirect path that's not /app, potentially show loading if we are about to redirect
   if (stableRedirectPath && redirectState.shouldRedirect) {
+    return (
+      <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
+        <LoadingSpinner size="lg" />
+      </Flex>
+    );
+  }
+
+  // Wait for the authenticated user document to exist before attempting org bootstrap.
+  if (currentUser === undefined || currentUser === null) {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
         <LoadingSpinner size="lg" />

@@ -61,6 +61,57 @@ describe("organizations", () => {
     });
   });
 
+  describe("initializeDefaultOrganization", () => {
+    it("should create an organization and set it as default for the authenticated user", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t, {
+        name: "Casey",
+        email: "casey@example.com",
+      });
+      const asUser = asAuthenticatedUser(t, userId);
+
+      const result = await asUser.mutation(api.organizations.initializeDefaultOrganization, {
+        timezone: "UTC",
+      });
+
+      expect(result.organizationId).not.toBeUndefined();
+      expect(result.usersAssigned).toBe(1);
+      expect(result.message).toBe("organization created successfully");
+
+      const organization = await t.run(async (ctx) => ctx.db.get(result.organizationId));
+      expect(organization?.name).toBe("Casey's Project");
+      expect(organization?.timezone).toBe("UTC");
+      expect(organization?.createdBy).toBe(userId);
+
+      const membership = await t.run(async (ctx) =>
+        ctx.db
+          .query("organizationMembers")
+          .withIndex("by_organization_user", (q) =>
+            q.eq("organizationId", result.organizationId).eq("userId", userId),
+          )
+          .first(),
+      );
+      expect(membership?.role).toBe("owner");
+
+      const user = await t.run(async (ctx) => ctx.db.get(userId));
+      expect(user?.defaultOrganizationId).toBe(result.organizationId);
+    });
+
+    it("should reject initialization when the authenticated user document is missing", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const asUser = asAuthenticatedUser(t, userId);
+
+      await t.run(async (ctx) => {
+        await ctx.db.delete(userId);
+      });
+
+      await expect(async () => {
+        await asUser.mutation(api.organizations.initializeDefaultOrganization, {});
+      }).rejects.toThrow("Authenticated user profile not found");
+    });
+  });
+
   describe("updateOrganization", () => {
     it("should allow admins to update details", async () => {
       const t = convexTest(schema, modules);
