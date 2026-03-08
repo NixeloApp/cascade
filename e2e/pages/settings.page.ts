@@ -330,16 +330,13 @@ export class SettingsPage extends BasePage {
     // Scroll into view and wait for it to be stable
     await inviteBtn.scrollIntoViewIfNeeded();
 
-    // Retry pattern handles potential element detachment during re-renders
-    await expect(async () => {
-      await this.closeInviteUserModalIfOpen();
-      await expect(inviteBtn).toBeEnabled();
-      await inviteBtn.click();
-      await expect(this.inviteUserModal).toBeVisible();
-      await expect(this.inviteUserForm).toBeVisible();
-      await expect(this.inviteEmailInput).toBeVisible();
-      await expect(this.sendInviteButton).toBeVisible();
-    }).toPass();
+    await this.closeInviteUserModalIfOpen();
+    await expect(inviteBtn).toBeEnabled();
+    await inviteBtn.click();
+    await expect(this.inviteUserModal).toBeVisible();
+    await expect(this.inviteUserForm).toBeVisible();
+    await expect(this.inviteEmailInput).toBeVisible();
+    await expect(this.sendInviteButton).toBeVisible();
   }
 
   async closeInviteUserModalIfOpen() {
