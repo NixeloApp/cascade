@@ -102,7 +102,7 @@ function ProjectLayout() {
             </Badge>
           </Flex>
 
-          <nav className="mt-3 flex gap-1 overflow-x-auto pb-1" aria-label="Tabs">
+          <nav className="mt-3 flex gap-1 overflow-x-auto pb-1" aria-label="Project sections">
             {tabs.map((tab) => (
               <Link
                 key={tab.name}
