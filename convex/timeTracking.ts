@@ -470,6 +470,78 @@ export const listTimeEntries = authenticatedQuery({
   },
 });
 
+/**
+ * Get aggregated metrics for time entries without fetching full records.
+ * Used for overview dashboards to show accurate totals regardless of pagination limits.
+ */
+export const getTimeEntrySummary = authenticatedQuery({
+  args: {
+    projectId: v.optional(v.id("projects")),
+    startDate: v.optional(v.number()),
+    endDate: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const userId = ctx.userId;
+
+    let entries: Doc<"timeEntries">[];
+
+    if (args.projectId && args.startDate !== undefined && args.endDate !== undefined) {
+      const startDate = args.startDate;
+      const endDate = args.endDate;
+      const projectId = args.projectId;
+      entries = await ctx.db
+        .query("timeEntries")
+        .withIndex("by_project_date", (q) =>
+          q.eq("projectId", projectId).gte("date", startDate).lte("date", endDate),
+        )
+        .filter((q) => q.eq(q.field("userId"), userId))
+        .collect();
+    } else if (args.startDate !== undefined && args.endDate !== undefined) {
+      const startDate = args.startDate;
+      const endDate = args.endDate;
+      entries = await ctx.db
+        .query("timeEntries")
+        .withIndex("by_user_date", (q) =>
+          q.eq("userId", userId).gte("date", startDate).lte("date", endDate),
+        )
+        .collect();
+    } else if (args.projectId) {
+      entries = await ctx.db
+        .query("timeEntries")
+        .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+        .filter((q) => q.eq(q.field("userId"), userId))
+        .collect();
+    } else {
+      entries = await ctx.db
+        .query("timeEntries")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .collect();
+    }
+
+    // Aggregate metrics
+    let totalDuration = 0;
+    let billableDuration = 0;
+    let totalCost = 0;
+    let entryCount = 0;
+
+    for (const entry of entries) {
+      entryCount++;
+      totalDuration += entry.duration ?? 0;
+      if (entry.billable) {
+        billableDuration += entry.duration ?? 0;
+      }
+      totalCost += entry.totalCost ?? 0;
+    }
+
+    return {
+      totalDuration,
+      billableDuration,
+      totalCost,
+      entryCount,
+    };
+  },
+});
+
 // Get current week timesheet for the logged in user
 export const getCurrentWeekTimesheet = authenticatedQuery({
   args: {},

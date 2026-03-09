@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { MONTH, WEEK } from "@convex/lib/timeUtils";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { formatCurrency, formatDurationHuman } from "@/lib/formatting";
@@ -37,10 +37,11 @@ interface TimeTrackingPageProps {
 type TimeTrackingTab = "entries" | "burn-rate" | "rates";
 type TimeTrackingDateRange = "week" | "month" | "all";
 
-interface TimeTrackingSummaryEntry {
-  duration?: number;
-  billable?: boolean;
-  totalCost?: number;
+interface TimeEntrySummary {
+  totalDuration: number;
+  billableDuration: number;
+  totalCost: number;
+  entryCount: number;
 }
 
 interface TimeTrackingOverviewProps {
@@ -48,43 +49,41 @@ interface TimeTrackingOverviewProps {
   dateRange: TimeTrackingDateRange;
   rangeLabel: string;
   selectedProject: Id<"projects"> | "all";
-  entrySummary: TimeTrackingSummaryEntry[] | undefined;
+  summary: TimeEntrySummary | undefined;
 }
 
-const DATE_RANGES: Record<
-  TimeTrackingDateRange,
-  { startDate: number | undefined; endDate: number | undefined; label: string }
-> = {
-  week: {
-    startDate: Date.now() - WEEK,
-    endDate: Date.now(),
-    label: "Last 7 Days",
-  },
-  month: {
-    startDate: Date.now() - MONTH,
-    endDate: Date.now(),
-    label: "Last 30 Days",
-  },
-  all: {
-    startDate: undefined,
-    endDate: undefined,
-    label: "All Time",
-  },
+const DATE_RANGE_LABELS: Record<TimeTrackingDateRange, string> = {
+  week: "Last 7 Days",
+  month: "Last 30 Days",
+  all: "All Time",
 };
+
+function getDateRangeBounds(range: TimeTrackingDateRange): {
+  startDate: number | undefined;
+  endDate: number | undefined;
+} {
+  const now = Date.now();
+  switch (range) {
+    case "week":
+      return { startDate: now - WEEK, endDate: now };
+    case "month":
+      return { startDate: now - MONTH, endDate: now };
+    case "all":
+      return { startDate: undefined, endDate: undefined };
+  }
+}
 
 function TimeTrackingOverview({
   billingEnabled,
   dateRange,
   rangeLabel,
   selectedProject,
-  entrySummary,
+  summary,
 }: TimeTrackingOverviewProps) {
-  const totalLoggedSeconds =
-    entrySummary?.reduce((sum, entry) => sum + (entry.duration ?? 0), 0) ?? 0;
-  const billableSeconds =
-    entrySummary?.reduce((sum, entry) => sum + (entry.billable ? (entry.duration ?? 0) : 0), 0) ??
-    0;
-  const totalCost = entrySummary?.reduce((sum, entry) => sum + (entry.totalCost ?? 0), 0) ?? 0;
+  const totalLoggedSeconds = summary?.totalDuration ?? 0;
+  const billableSeconds = summary?.billableDuration ?? 0;
+  const totalCost = summary?.totalCost ?? 0;
+  const entryCount = summary?.entryCount ?? 0;
 
   return (
     <OverviewBand
@@ -99,7 +98,7 @@ function TimeTrackingOverview({
         },
         {
           label: "Entries",
-          value: entrySummary?.length ?? 0,
+          value: entryCount,
           detail:
             selectedProject === "all"
               ? "Across all visible projects"
@@ -334,12 +333,15 @@ export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTra
   // Determine if user can see sensitive tabs (burn rate, hourly rates)
   const canSeeSensitiveTabs = isGlobalAdmin || userRole === "admin";
 
-  const { startDate, endDate, label: rangeLabel } = DATE_RANGES[dateRange];
-  const entrySummary = useAuthenticatedQuery(api.timeTracking.listTimeEntries, {
+  // Compute date bounds at render time to stay current in long-lived sessions
+  const { startDate, endDate } = useMemo(() => getDateRangeBounds(dateRange), [dateRange]);
+  const rangeLabel = DATE_RANGE_LABELS[dateRange];
+
+  // Use aggregate query for accurate totals (no pagination limits)
+  const summary = useAuthenticatedQuery(api.timeTracking.getTimeEntrySummary, {
     projectId: selectedProject === "all" ? undefined : selectedProject,
     startDate,
     endDate,
-    limit: 100,
   });
 
   return (
@@ -349,7 +351,7 @@ export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTra
         dateRange={dateRange}
         rangeLabel={rangeLabel}
         selectedProject={selectedProject}
-        entrySummary={entrySummary}
+        summary={summary}
       />
 
       <TimeTrackingControls
