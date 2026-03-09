@@ -224,7 +224,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - latest landing/search stabilization evidence on `2026-03-09`:
   - `pnpm exec playwright test e2e/auth.spec.ts e2e/landing.spec.ts --reporter=line --workers=1` -> `28 passed (1.7m)`
   - `pnpm exec playwright test --reporter=line` -> `161 passed (5.7m)`
-  - `pnpm screenshots` -> `199 screenshots captured`
+  - `pnpm screenshots` -> `200 screenshots captured`
 - latest calendar coverage stabilization evidence on `2026-03-09`:
   - screenshot seed now adds workspace membership for the screenshot user and seeded collaborators, so workspace-scoped calendar queries can see the seeded events.
   - Playwright and screenshot browser contexts now run in `UTC`, so seeded calendar dates and browser-visible date ranges stay aligned locally and in CI.

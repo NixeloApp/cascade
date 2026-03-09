@@ -1,6 +1,6 @@
 # Visual Inconsistencies TODO (2026-03-04)
 
-> Source: initial `pnpm screenshots` run on 2026-03-04 (`176` captures); refreshed baseline rerun on 2026-03-09 (`199` captures)
+> Source: initial `pnpm screenshots` run on 2026-03-04 (`176` captures); latest refreshed baseline rerun on 2026-03-09 (`200` captures)
 > Scope: visual quality issues from generated desktop/tablet/mobile screenshots
 > Status: Checklist complete; remaining screenshot-reference sync is tracked in design-doc maintenance, not in this todo.
 
@@ -57,3 +57,4 @@
   - create-project and create-issue modal capture is fixed across desktop/tablet/mobile
   - calendar event-detail modal capture is fixed across desktop/tablet/mobile
   - design CURRENT docs still need screenshot-reference sync to the 2026-03-09 baseline
+- 2026-03-09 visual polish round: dashboard shell and omnibox were tightened again after the stabilized screenshot run; this file remains the closed audit baseline while new polish iterations continue outside the checklist.
