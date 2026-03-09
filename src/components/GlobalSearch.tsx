@@ -494,13 +494,17 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
         onClick={() => setIsOpen(true)}
         aria-label="Open search and commands"
         data-testid={TEST_IDS.HEADER.SEARCH_BUTTON}
-        className="h-10 min-w-0 max-w-md flex-1 justify-between rounded-full border border-transparent bg-transparent px-2 text-ui-text-secondary shadow-none transition-all duration-default hover:border-ui-border/70 hover:bg-ui-bg-soft/80 hover:text-ui-text"
+        className="h-10 w-10 shrink-0 justify-center rounded-full border border-transparent bg-transparent px-0 text-ui-text-secondary shadow-none transition-all duration-default hover:border-ui-border/70 hover:bg-ui-bg-soft/80 hover:text-ui-text sm:min-w-0 sm:max-w-md sm:flex-1 sm:justify-between sm:px-2"
       >
         <Flex align="center" gap="sm" className="min-w-0">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-ui-border/60 bg-linear-to-br from-ui-bg-secondary to-ui-bg-soft text-ui-text-tertiary shadow-soft">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-ui-border/60 bg-linear-to-br from-ui-bg-secondary to-ui-bg-soft text-ui-text-tertiary shadow-soft sm:h-7 sm:w-7">
             <Search className="h-4 w-4" />
           </div>
-          <Typography variant="small" color="secondary" className="truncate text-xs sm:text-sm">
+          <Typography
+            variant="small"
+            color="secondary"
+            className="hidden truncate text-xs sm:block sm:text-sm"
+          >
             Search, jump, or create...
           </Typography>
         </Flex>

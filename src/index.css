@@ -854,17 +854,18 @@ body {
   background:
     radial-gradient(
       circle at top left,
-      color-mix(in oklab, var(--color-ui-bg-elevated) 92%, transparent),
-      transparent 28%
+      color-mix(in oklab, var(--color-brand-subtle) 50%, transparent),
+      transparent 22%
     ),
     radial-gradient(
-      circle at top right,
-      color-mix(in oklab, var(--color-brand-subtle) 68%, transparent),
-      transparent 30%
+      circle at top center,
+      color-mix(in oklab, var(--color-ui-bg-elevated) 94%, transparent),
+      transparent 34%
     ),
     linear-gradient(
       180deg,
-      color-mix(in oklab, var(--color-brand) 9%, var(--color-ui-bg-secondary)) 0%,
+      color-mix(in oklab, var(--color-brand-subtle) 42%, var(--color-ui-bg-secondary)) 0%,
+      color-mix(in oklab, var(--color-ui-bg-elevated) 76%, var(--color-ui-bg)) 160px,
       var(--color-ui-bg) 340px
     );
 }

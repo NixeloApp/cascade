@@ -63,7 +63,7 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
         <Flex
           align="center"
           gap="xs"
-          className="min-w-0 shrink-0 rounded-full border border-ui-border/70 bg-linear-to-r from-ui-bg-elevated/95 via-ui-bg-elevated/92 to-ui-bg-soft/90 p-1 shadow-card backdrop-blur-xl sm:gap-2"
+          className="min-w-0 shrink-0 rounded-full border border-ui-border/70 bg-linear-to-r from-ui-bg-elevated/95 via-ui-bg-elevated/92 to-ui-bg-soft/90 p-0.5 shadow-card backdrop-blur-xl sm:gap-2 sm:p-1"
         >
           {onShowShortcutsHelp && (
             <Tooltip content="Keyboard shortcuts">

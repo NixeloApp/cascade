@@ -35,7 +35,12 @@ export function PageHeader({
   className,
 }: PageHeaderProps): ReactNode {
   return (
-    <div className={cn("mb-7 sm:mb-8", className)}>
+    <div
+      className={cn(
+        "mb-6 rounded-2xl border border-ui-border/45 bg-linear-to-r from-ui-bg-elevated/80 via-ui-bg-elevated/45 to-transparent px-5 py-4 shadow-soft sm:mb-7 sm:px-6",
+        className,
+      )}
+    >
       {breadcrumbs && breadcrumbs.length > 0 && (
         <Breadcrumb className="mb-2">
           <BreadcrumbList>
@@ -58,6 +63,15 @@ export function PageHeader({
       )}
       <Flex justify="between" align="start" gap="md" className="flex-col sm:flex-row sm:items-end">
         <Stack gap="xs" className="min-w-0">
+          <div className="mb-1 flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-brand shadow-[0_0_0_5px_color-mix(in_oklab,var(--color-brand)_14%,transparent)]" />
+            <Typography
+              variant="caption"
+              className="uppercase tracking-[0.22em] text-ui-text-tertiary"
+            >
+              Workspace view
+            </Typography>
+          </div>
           <Typography variant="h2" className="text-3xl lg:text-4xl">
             {title}
           </Typography>

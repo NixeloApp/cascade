@@ -34,12 +34,12 @@ export function OverviewBand({
       variant="default"
       padding="lg"
       className={cn(
-        "overflow-hidden border-ui-border-secondary/90 bg-linear-to-br from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-secondary shadow-card",
+        "overflow-hidden border-ui-border-secondary/90 bg-linear-to-br from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-soft/70 shadow-card",
         className,
       )}
     >
       <div className="grid gap-6 lg:grid-cols-12">
-        <div className="rounded-container border border-ui-border-secondary/70 bg-ui-bg/95 p-5 shadow-soft lg:col-span-5">
+        <div className="rounded-container border border-ui-border-secondary/70 bg-linear-to-br from-ui-bg to-ui-bg-secondary/75 p-5 shadow-soft lg:col-span-5">
           <Stack gap="sm">
             {eyebrow ? (
               <Badge
@@ -72,7 +72,7 @@ export function OverviewBand({
                   key={metric.label}
                   variant="default"
                   padding="md"
-                  className="h-full border-ui-border-secondary/80 bg-ui-bg-elevated/95 shadow-soft"
+                  className="h-full border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-elevated/95 to-ui-bg-soft/85 shadow-soft"
                 >
                   <Stack gap="xs">
                     <Typography
@@ -96,7 +96,7 @@ export function OverviewBand({
           ) : null}
 
           {aside ? (
-            <div className="rounded-container border border-ui-border-secondary/70 bg-linear-to-br from-brand-subtle/50 to-ui-bg-elevated p-4 shadow-soft">
+            <div className="rounded-container border border-ui-border-secondary/70 bg-linear-to-br from-brand-subtle/35 via-ui-bg-elevated to-ui-bg-soft/85 p-4 shadow-soft">
               {aside}
             </div>
           ) : null}
