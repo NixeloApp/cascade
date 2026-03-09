@@ -86,27 +86,38 @@ export function MyIssuesList({
   const isLoadingMore = status === "LoadingMore";
 
   return (
-    <Flex direction="column" className="h-full">
-      <Card padding="lg" radius="none" variant="ghost" className="pb-2">
-        <Stack gap="xs">
-          <Typography variant="h3" data-testid={TEST_IDS.DASHBOARD.FEED_HEADING}>
-            Feed
-          </Typography>
-          <Typography variant="small" color="tertiary">
-            Track your active contributions
-          </Typography>
-        </Stack>
+    <Flex direction="column" className="h-full min-w-0">
+      <Card
+        padding="lg"
+        radius="none"
+        variant="ghost"
+        className="border-b border-ui-border/50 pb-3"
+      >
+        <Flex justify="between" align="end" gap="md" wrap>
+          <Stack gap="xs">
+            <Typography variant="h3" data-testid={TEST_IDS.DASHBOARD.FEED_HEADING}>
+              Active feed
+            </Typography>
+            <Typography variant="small" color="tertiary" className="max-w-xl">
+              Assigned and created issues stay in one queue so you can triage without hopping
+              between views.
+            </Typography>
+          </Stack>
+          <Badge variant="neutral" shape="pill" className="bg-ui-bg-soft text-ui-text-secondary">
+            Live queue
+          </Badge>
+        </Flex>
       </Card>
       <Tabs
         value={issueFilter}
         onValueChange={(value) => onFilterChange(value as IssueFilter)}
         className="border-b border-ui-border/50 bg-ui-bg/20"
       >
-        <TabsList variant="underline" className="px-4 gap-4">
+        <TabsList variant="underline" className="gap-6 px-4">
           <TabsTrigger
             value="assigned"
             variant="underline"
-            className="py-3 px-2 font-bold text-xs uppercase tracking-wider text-ui-text-tertiary"
+            className="px-1 py-3 font-bold text-xs uppercase tracking-widest text-ui-text-tertiary"
           >
             Assigned
             <Typography variant="label" as="span" className="ml-1.5 opacity-60">
@@ -116,7 +127,7 @@ export function MyIssuesList({
           <TabsTrigger
             value="created"
             variant="underline"
-            className="py-3 px-2 font-bold text-xs uppercase tracking-wider text-ui-text-tertiary"
+            className="px-1 py-3 font-bold text-xs uppercase tracking-widest text-ui-text-tertiary"
           >
             Created
             <Typography variant="label" as="span" className="ml-1.5 opacity-60">
@@ -154,13 +165,13 @@ export function MyIssuesList({
                   onClick={() => navigateToWorkspace(issue.projectKey)}
                   {...issueNavigation.getItemProps(index)}
                   className={cn(
-                    "w-full text-left p-3 bg-ui-bg-secondary/20 hover:bg-ui-bg-secondary/40 rounded-lg group cursor-pointer transition-colors h-auto",
+                    "h-auto w-full rounded-xl border border-transparent bg-ui-bg-soft/60 p-4 text-left shadow-soft transition-all duration-default hover:border-ui-border/60 hover:bg-ui-bg-soft group cursor-pointer",
                     issueNavigation.getItemProps(index).className,
                   )}
                 >
                   <Flex justify="between" align="start">
                     <FlexItem flex="1">
-                      <Flex gap="sm" align="center" className="mb-1.5">
+                      <Flex gap="sm" align="center" wrap className="mb-2">
                         <Typography
                           variant="inlineCode"
                           color="tertiary"
@@ -170,18 +181,18 @@ export function MyIssuesList({
                         </Typography>
                         <Badge
                           variant="neutral"
-                          className="text-xs uppercase font-bold bg-ui-bg-tertiary/50"
+                          className="bg-ui-bg-tertiary/60 text-xs uppercase font-bold"
                         >
                           {issue.priority}
                         </Badge>
                       </Flex>
                       <Typography
                         variant="label"
-                        className="mb-1 group-hover:text-brand transition-colors"
+                        className="mb-2 text-base group-hover:text-brand transition-colors"
                       >
                         {issue.title}
                       </Typography>
-                      <Metadata size="xs" gap="xs" className="uppercase tracking-wider">
+                      <Metadata size="xs" gap="xs" className="uppercase tracking-widest">
                         <MetadataItem>{issue.projectName}</MetadataItem>
                         <MetadataItem>{issue.status}</MetadataItem>
                       </Metadata>

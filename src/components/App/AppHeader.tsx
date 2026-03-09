@@ -30,54 +30,56 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
   const { isMobileOpen, toggleMobile } = useSidebarState();
 
   return (
-    <header className="sticky top-0 z-40 bg-ui-bg/85 backdrop-blur-md border-b border-ui-border/70 px-3 sm:px-6 py-2.5 sm:py-3 flex justify-between items-center gap-2 transition-all duration-default">
-      <Flex align="center" gap="sm" className="sm:gap-3">
-        {/* Mobile Hamburger Menu */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleMobile}
-          className="lg:hidden"
-          aria-label="Toggle sidebar menu"
-          aria-expanded={isMobileOpen}
-        >
-          <Menu className="w-5 h-5" />
-        </Button>
-      </Flex>
+    <header className="sticky top-0 z-40 border-b border-ui-border/50 bg-ui-bg/80 px-3 py-2.5 backdrop-blur-xl transition-all duration-default sm:px-6 sm:py-3">
+      <Flex align="center" justify="between" gap="md">
+        <Flex align="center" gap="sm" className="sm:gap-3">
+          {/* Mobile Hamburger Menu */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleMobile}
+            className="lg:hidden"
+            aria-label="Toggle sidebar menu"
+            aria-expanded={isMobileOpen}
+          >
+            <Menu className="w-5 h-5" />
+          </Button>
+        </Flex>
 
-      <Flex align="center" gap="xs" className="min-w-0 shrink-0 sm:gap-2">
-        {onShowShortcutsHelp && (
-          <Tooltip content="Keyboard shortcuts">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onShowShortcutsHelp}
-              className="hidden sm:flex"
-              aria-label="Keyboard shortcuts"
-              data-testid={TEST_IDS.HEADER.SHORTCUTS_BUTTON}
-            >
-              <svg
-                aria-hidden="true"
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+        <Flex align="center" gap="xs" className="min-w-0 shrink-0 sm:gap-2">
+          {onShowShortcutsHelp && (
+            <Tooltip content="Keyboard shortcuts">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onShowShortcutsHelp}
+                className="hidden rounded-full border border-ui-border/40 bg-ui-bg-soft/60 text-ui-text-secondary shadow-soft transition-all duration-default hover:border-ui-border/70 hover:bg-ui-bg-soft hover:text-ui-text sm:flex"
+                aria-label="Keyboard shortcuts"
+                data-testid={TEST_IDS.HEADER.SHORTCUTS_BUTTON}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </Button>
-          </Tooltip>
-        )}
+                <svg
+                  aria-hidden="true"
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </Button>
+            </Tooltip>
+          )}
 
-        <NavTimerWidget />
-        <GlobalSearch commands={commands} />
-        <NotificationCenter />
-        <UserMenu />
+          <NavTimerWidget />
+          <GlobalSearch commands={commands} />
+          <NotificationCenter />
+          <UserMenu />
+        </Flex>
       </Flex>
     </header>
   );

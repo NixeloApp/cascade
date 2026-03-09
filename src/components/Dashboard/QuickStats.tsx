@@ -38,14 +38,17 @@ const variantStyles = {
   brand: {
     text: "text-brand",
     bg: "bg-brand",
+    glow: "from-brand-subtle/35",
   },
   success: {
     text: "text-status-success",
     bg: "bg-status-success",
+    glow: "from-status-success/15",
   },
   accent: {
     text: "text-accent",
     bg: "bg-accent",
+    glow: "from-accent/15",
   },
 } as const;
 
@@ -56,30 +59,36 @@ function StatCard({ title, value, subtitle, variant, progressValue }: StatCardPr
   const styles = variantStyles[variant];
 
   return (
-    <Card hoverable className="relative overflow-hidden group">
-      {/* Colored left border accent */}
-      <div className={cn("absolute left-0 top-0 h-full w-1", styles.bg)} />
-      <CardBody className="pl-6">
-        <Stack gap="sm">
+    <Card
+      hoverable
+      variant="outline"
+      className="group relative overflow-hidden border-ui-border/50 bg-ui-bg-soft/70 shadow-soft backdrop-blur-sm"
+    >
+      <div
+        className={cn("absolute inset-x-0 top-0 h-16 bg-linear-to-b to-transparent", styles.glow)}
+      />
+      <div className={cn("absolute inset-x-4 top-0 h-0.5 rounded-full", styles.bg)} />
+      <CardBody className="p-5">
+        <Stack gap="md" className="relative">
           <Typography
             variant="label"
             color="tertiary"
-            className="text-caption uppercase tracking-wider"
+            className="text-caption uppercase tracking-widest"
           >
             {title}
           </Typography>
-          <Flex align="baseline" gap="xs">
-            <Typography variant="h2" className={cn("text-display-sm", styles.text)}>
+          <Flex align="baseline" gap="sm" wrap>
+            <Typography variant="h2" className={cn("text-display-sm tracking-tight", styles.text)}>
               {value || 0}
             </Typography>
-            <Typography variant="caption" color="secondary">
+            <Typography variant="small" color="secondary">
               {subtitle}
             </Typography>
           </Flex>
           {progressValue !== undefined && (
             <Progress
               value={progressValue}
-              className="h-1.5"
+              className="h-1.5 bg-ui-bg-secondary/70"
               id="stat-progress"
               indicatorClassName={styles.bg}
             />
@@ -96,23 +105,35 @@ function StatCard({ title, value, subtitle, variant, progressValue }: StatCardPr
 function HighPriorityCard({ count }: { count: number }) {
   const hasHighPriority = count > 0;
   return (
-    <Card className={cn("relative overflow-hidden", hasHighPriority && "border-status-warning/30")}>
-      <CardBody>
-        <Stack gap="sm">
+    <Card
+      variant="outline"
+      className={cn(
+        "relative overflow-hidden border-ui-border/50 bg-ui-bg-soft/70 shadow-soft backdrop-blur-sm",
+        hasHighPriority && "border-status-warning/30",
+      )}
+    >
+      <div
+        className={cn(
+          "absolute inset-x-0 top-0 h-16 bg-linear-to-b to-transparent",
+          hasHighPriority ? "from-status-warning/15" : "from-ui-bg-soft/20",
+        )}
+      />
+      <CardBody className="p-5">
+        <Stack gap="md" className="relative">
           <Typography
             variant="label"
             className={cn(
-              "text-caption uppercase tracking-wider",
+              "text-caption uppercase tracking-widest",
               hasHighPriority ? "text-status-warning" : "text-ui-text-tertiary",
             )}
           >
             Attention Needed
           </Typography>
-          <Flex align="baseline" gap="xs">
+          <Flex align="baseline" gap="sm" wrap>
             <Typography
               variant="h2"
               className={cn(
-                "text-3xl font-extrabold",
+                "text-3xl font-extrabold tracking-tight",
                 hasHighPriority ? "text-status-warning" : "text-ui-text",
               )}
             >
@@ -125,7 +146,7 @@ function HighPriorityCard({ count }: { count: number }) {
         </Stack>
 
         {hasHighPriority && (
-          <div className="absolute right-0 top-0 h-full w-1.5 bg-status-warning" />
+          <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-status-warning" />
         )}
       </CardBody>
     </Card>
@@ -153,7 +174,7 @@ export function QuickStats({ stats }: QuickStatsProps) {
     totalAssigned > 0 ? (stats.completedThisWeek / totalAssigned) * 100 : 0;
 
   return (
-    <Grid cols={1} colsSm={2} colsLg={4} gap="lg" className="mb-8">
+    <Grid cols={1} colsSm={2} colsLg={4} gap="md">
       <StatCard
         title="Active Load"
         value={stats.assignedToMe}

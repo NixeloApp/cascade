@@ -333,9 +333,11 @@ function SearchListContent({
           direction="column"
           align="center"
           data-testid={TEST_IDS.GLOBAL_SEARCH.NO_RESULTS}
-          className="px-4 py-8 text-ui-text-secondary"
+          className="px-4 py-10 text-ui-text-secondary"
         >
-          <Icon icon={Search} size="xl" className="mb-4" />
+          <div className="mb-4 rounded-full border border-ui-border/50 bg-ui-bg-soft p-3 shadow-soft">
+            <Icon icon={Search} size="xl" />
+          </div>
           <Typography variant="label">
             {hasCommandMatches ? "No issue or document results" : "No results found"}
           </Typography>
@@ -446,10 +448,12 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
         onClick={() => setIsOpen(true)}
         aria-label="Open search and commands"
         data-testid={TEST_IDS.HEADER.SEARCH_BUTTON}
-        className="h-10 min-w-0 max-w-sm flex-1 justify-between rounded-full border border-ui-border/70 bg-ui-bg-soft px-3 text-ui-text-secondary shadow-soft transition-all duration-default hover:border-ui-border-secondary hover:bg-ui-bg-hover hover:text-ui-text"
+        className="h-11 min-w-0 max-w-md flex-1 justify-between rounded-full border border-ui-border/50 bg-ui-bg-soft/70 px-3 text-ui-text-secondary shadow-soft backdrop-blur-sm transition-all duration-default hover:border-ui-border hover:bg-ui-bg-soft hover:text-ui-text"
       >
         <Flex align="center" gap="sm" className="min-w-0">
-          <Search className="h-4 w-4 shrink-0" />
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ui-bg-secondary/70 text-ui-text-tertiary">
+            <Search className="h-4 w-4" />
+          </div>
           <Typography variant="small" color="secondary" className="truncate text-xs sm:text-sm">
             Search, jump, or create...
           </Typography>
@@ -464,7 +468,11 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
         title="Search and commands"
         description="Find issues and documents, navigate the app, or run quick actions."
       >
-        <CommandMenu data-testid={TEST_IDS.SEARCH.MODAL} className="bg-ui-bg" shouldFilter={false}>
+        <CommandMenu
+          data-testid={TEST_IDS.SEARCH.MODAL}
+          className="bg-linear-to-b from-ui-bg to-ui-bg-secondary/80"
+          shouldFilter={false}
+        >
           <CommandInput
             placeholder="Search issues, docs, and commands..."
             value={query}
@@ -478,13 +486,13 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
             <Tabs
               value={activeTab}
               onValueChange={(value) => setActiveTab(value as "all" | "issues" | "documents")}
-              className="overflow-x-auto border-b border-ui-border"
+              className="overflow-x-auto border-b border-ui-border/50 bg-ui-bg-soft/30"
             >
-              <TabsList variant="underline" className="gap-4">
+              <TabsList variant="underline" className="gap-5 px-3">
                 <TabsTrigger
                   value="all"
                   variant="underline"
-                  className="px-1 pb-2 text-xs sm:text-sm"
+                  className="px-1 pb-3 text-xs uppercase tracking-widest sm:text-sm"
                   data-testid={TEST_IDS.SEARCH.TAB_ALL}
                 >
                   All ({issueTotal + documentTotal})
@@ -492,7 +500,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
                 <TabsTrigger
                   value="issues"
                   variant="underline"
-                  className="px-1 pb-2 text-xs sm:text-sm"
+                  className="px-1 pb-3 text-xs uppercase tracking-widest sm:text-sm"
                   data-testid={TEST_IDS.SEARCH.TAB_ISSUES}
                 >
                   Issues ({issueTotal})
@@ -500,7 +508,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
                 <TabsTrigger
                   value="documents"
                   variant="underline"
-                  className="px-1 pb-2 text-xs sm:text-sm"
+                  className="px-1 pb-3 text-xs uppercase tracking-widest sm:text-sm"
                   data-testid={TEST_IDS.SEARCH.TAB_DOCUMENTS}
                 >
                   Documents ({documentTotal})
@@ -527,19 +535,24 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
 
           <Typography
             variant="meta"
-            className="border-t border-ui-border px-3 py-2 text-ui-text-tertiary"
+            className="border-t border-ui-border/50 bg-ui-bg-soft/20 px-3 py-2 text-ui-text-tertiary"
           >
             Search filters: <code>type:bug</code> <code>status:done</code>{" "}
             <code>priority:high</code> <code>label:frontend</code> <code>@me</code>
           </Typography>
 
-          <Flex align="center" justify="between" className="border-t border-ui-border px-3 py-2">
+          <Flex
+            align="center"
+            justify="between"
+            className="border-t border-ui-border/50 bg-ui-bg-soft/10 px-3 py-3"
+          >
             <Flex align="center" gap="sm" wrap>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleOpenAdvancedSearch}
                 leftIcon={<Filter className="h-4 w-4" />}
+                className="rounded-full border border-ui-border/40 bg-ui-bg-soft/60"
               >
                 Advanced Search
               </Button>
@@ -548,6 +561,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
                 size="sm"
                 onClick={() => setQuery("@")}
                 leftIcon={<Plus className="h-4 w-4" />}
+                className="rounded-full border border-ui-border/40 bg-ui-bg-soft/60"
               >
                 Search with filters
               </Button>

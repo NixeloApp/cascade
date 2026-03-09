@@ -291,10 +291,16 @@ async function openOmnibox(page: Page, trigger: Locator, dialog: Locator): Promi
   }
 
   await dialog.waitFor({ state: "visible", timeout: 5000 });
+  await page.getByTestId(TEST_IDS.SEARCH.INPUT).waitFor({ state: "visible", timeout: 5000 });
+  await page.waitForTimeout(250);
 }
 
 function isProjectBoardUrl(url: string): boolean {
   return /\/projects\/[^/]+\/board$/.test(url);
+}
+
+function isDashboardUrl(url: string): boolean {
+  return /\/[^/]+\/dashboard$/.test(url);
 }
 
 function isProjectCalendarUrl(url: string): boolean {
@@ -358,6 +364,25 @@ async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<bool
 }
 
 async function waitForExpectedContent(page: Page, url: string, name: string): Promise<void> {
+  if (isDashboardUrl(url) || name === "dashboard") {
+    await page
+      .getByRole("heading", { name: /^dashboard$/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON)
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .locator(".animate-shimmer")
+      .first()
+      .waitFor({ state: "hidden", timeout: 4000 })
+      .catch(() => {});
+    return;
+  }
+
   if (isProjectBoardUrl(url)) {
     await page
       .getByTestId(TEST_IDS.BOARD.COLUMN)
