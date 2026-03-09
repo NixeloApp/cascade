@@ -41,7 +41,10 @@ describe("Footer", () => {
       "href",
       "https://www.patreon.com/nixelo",
     );
-    expect(screen.getByText(/© 2026 Nixelo. All rights reserved./)).toBeInTheDocument();
+    const currentYear = new Date().getFullYear();
+    expect(
+      screen.getByText(new RegExp(`© ${currentYear} Nixelo. All rights reserved.`)),
+    ).toBeInTheDocument();
   });
 
   it("renders as a footer element with headings", () => {

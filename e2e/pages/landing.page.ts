@@ -116,7 +116,7 @@ export class LandingPage extends BasePage {
     this.footerResourcesHeading = this.footer.getByRole("heading", { name: /resources/i });
     this.footerPrivacyLink = this.footer.getByRole("link", { name: /privacy/i });
     this.footerTermsLink = this.footer.getByRole("link", { name: /terms/i });
-    this.footerCopyright = page.getByText(/© 2026 Nixelo/i);
+    this.footerCopyright = this.footer.getByText(/©\s+\d{4}\s+Nixelo/i);
 
     // Auth page headings (separate routes now)
     // Updated to match the actual text in src/routes/signin.tsx and src/routes/signup.tsx

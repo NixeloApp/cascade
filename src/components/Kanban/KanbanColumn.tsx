@@ -490,7 +490,10 @@ const KanbanColumnComponent = function KanbanColumn({
       {/* Issues */}
       <div className="flex min-h-72 flex-col space-y-2 p-2.5 transition-default lg:min-h-96">
         {stateIssues.length === 0 && hiddenCount === 0 ? (
-          <EmptyColumnState canEdit={canEdit} onCreateIssue={handleCreateIssue} />
+          <EmptyColumnState
+            canEdit={canEdit}
+            onCreateIssue={onCreateIssue ? handleCreateIssue : undefined}
+          />
         ) : (
           <>
             {stateIssues.map((issue, issueIndex) => (

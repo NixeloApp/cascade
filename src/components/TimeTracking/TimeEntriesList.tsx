@@ -124,36 +124,49 @@ export function TimeEntriesList({
     );
   }
 
+  const headerCard = (
+    <Card variant="flat" padding="md" className="border-ui-border-secondary/70 bg-ui-bg-soft/90">
+      <Flex justify="between" align="center" gap="md" className="flex-wrap">
+        <Stack gap="xs">
+          <Typography variant="label">Recent entries</Typography>
+          <Typography variant="caption" color="secondary">
+            Review logged work, fix mistakes quickly, and add time before the week closes.
+          </Typography>
+        </Stack>
+        <Button
+          onClick={() => setShowManualEntryModal(true)}
+          variant="primary"
+          size="sm"
+          leftIcon={<Plus className="h-4 w-4" />}
+        >
+          Add Time Entry
+        </Button>
+      </Flex>
+    </Card>
+  );
+
   if (entries.length === 0) {
     return (
-      <EmptyState
-        icon={Clock}
-        title="No time entries"
-        description="Start tracking time to see entries here."
-      />
+      <Flex direction="column" gap="xl">
+        {headerCard}
+        <EmptyState
+          icon={Clock}
+          title="No time entries"
+          description="Start tracking time to see entries here."
+        />
+        <TimeEntryModal
+          open={showManualEntryModal}
+          onOpenChange={setShowManualEntryModal}
+          projectId={projectId}
+          billingEnabled={billingEnabled}
+        />
+      </Flex>
     );
   }
 
   return (
     <Flex direction="column" gap="xl">
-      <Card variant="flat" padding="md" className="border-ui-border-secondary/70 bg-ui-bg-soft/90">
-        <Flex justify="between" align="center" gap="md" className="flex-wrap">
-          <Stack gap="xs">
-            <Typography variant="label">Recent entries</Typography>
-            <Typography variant="caption" color="secondary">
-              Review logged work, fix mistakes quickly, and add time before the week closes.
-            </Typography>
-          </Stack>
-          <Button
-            onClick={() => setShowManualEntryModal(true)}
-            variant="primary"
-            size="sm"
-            leftIcon={<Plus className="w-4 h-4" />}
-          >
-            Add Time Entry
-          </Button>
-        </Flex>
-      </Card>
+      {headerCard}
 
       {groupedEntries.map(({ date: isoDate, entries: dateEntries, duration }) => (
         <Stack key={isoDate} gap="sm">
