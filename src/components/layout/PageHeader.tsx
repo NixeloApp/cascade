@@ -70,7 +70,7 @@ export function PageHeader({
       >
         <Stack gap="xs" className="min-w-0">
           <Flex align="center" gap="sm" className="mb-1">
-            <span className="h-2 w-2 rounded-full bg-brand shadow-[0_0_0_5px_color-mix(in_oklab,var(--color-brand)_14%,transparent)]" />
+            <span className="h-2 w-2 rounded-full bg-brand shadow-brand-halo" />
             <Typography
               variant="caption"
               className="uppercase tracking-[0.22em] text-ui-text-tertiary"

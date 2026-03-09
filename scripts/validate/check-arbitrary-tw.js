@@ -28,7 +28,6 @@ const ALLOWED_PATTERNS = [
   /grid-cols-\[/, // Custom grid column layouts (design-specific)
   /shadow-\[\d+_\d+px_\d+px_rgba/, // Complex drop shadows with rgba (landing page)
   /shadow-\[inset_/, // Inset shadows (subtle highlights)
-  /shadow-\[0_0_0_\d+px_color-mix/, // Brand indicator ring shadows using color-mix
   /tracking-\[0\.\d+em\]/, // Precise letter-spacing for design details
 ];
 

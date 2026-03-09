@@ -49,7 +49,7 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
           </Button>
 
           <div className="hidden rounded-full border border-ui-border/60 bg-linear-to-r from-ui-bg-elevated/95 to-ui-bg-soft/90 px-3 py-1.5 shadow-soft lg:flex lg:items-center lg:gap-3">
-            <div className="h-2.5 w-2.5 rounded-full bg-brand shadow-[0_0_0_4px_color-mix(in_oklab,var(--color-brand)_12%,transparent)]" />
+            <div className="h-2.5 w-2.5 rounded-full bg-brand shadow-brand-halo" />
             <div className="min-w-0">
               <Typography
                 variant="caption"
