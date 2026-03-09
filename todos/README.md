@@ -73,7 +73,7 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 
 | File | Role | State |
 |---|---|---|
-| [visual-inconsistencies-2026-03-04.md](./visual-inconsistencies-2026-03-04.md) | Screenshot audit baseline (197 captures) | Checklist complete on 2026-03-04; refreshed baseline captured on 2026-03-09; remaining work is calendar event-detail visibility plus design-doc sync |
+| [visual-inconsistencies-2026-03-04.md](./visual-inconsistencies-2026-03-04.md) | Screenshot audit baseline (199 captures) | Checklist complete on 2026-03-04; refreshed baseline captured on 2026-03-09; modal coverage is now complete and remaining work is design-doc screenshot-reference sync |
 | [consistency-tracking.md](./consistency-tracking.md) | Standards/validator ledger | Operational tracking ongoing (`23/23` checklist complete) |
 
 ## Jules Issues (Open)

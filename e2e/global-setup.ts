@@ -20,6 +20,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { type BrowserContext, chromium, type FullConfig, type Page } from "@playwright/test";
 import { AUTH_PATHS, CONVEX_SITE_URL, RBAC_TEST_CONFIG, TEST_USERS, type TestUser } from "./config";
+import { E2E_TIMEZONE } from "./constants";
 import { testUserService, trySignInUser } from "./utils";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -299,7 +300,7 @@ async function globalSetup(config: FullConfig): Promise<void> {
       const userConfigs: Record<string, { orgSlug?: string }> = {};
 
       for (const { key, user, authPath } of usersToSetup) {
-        const context = await browser.newContext();
+        const context = await browser.newContext({ timezoneId: E2E_TIMEZONE });
         await context.addInitScript(() => {
           try {
             Object.defineProperty(navigator, "onLine", { get: () => true });

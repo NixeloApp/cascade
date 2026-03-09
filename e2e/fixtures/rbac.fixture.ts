@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { type BrowserContext, test as base, expect, type Page } from "@playwright/test";
 import { AUTH_PATHS, RBAC_TEST_CONFIG, TEST_USERS } from "../config";
+import { E2E_TIMEZONE } from "../constants";
 import { ProjectsPage, SettingsPage, WorkspacesPage } from "../pages";
 import { testUserService } from "../utils";
 
@@ -119,7 +120,7 @@ export async function clientSideNavigate(page: Page, url: string) {
 export const rbacTest = base.extend<RbacFixtures>({
   adminContext: async ({ browser }, use, testInfo) => {
     const workerIndex = testInfo.parallelIndex;
-    const context = await browser.newContext();
+    const context = await browser.newContext({ timezoneId: E2E_TIMEZONE });
 
     // Calculate email for this worker
     const workerSuffix = `w${workerIndex}`;
@@ -136,7 +137,7 @@ export const rbacTest = base.extend<RbacFixtures>({
   },
   editorContext: async ({ browser }, use, testInfo) => {
     const workerIndex = testInfo.parallelIndex;
-    const context = await browser.newContext();
+    const context = await browser.newContext({ timezoneId: E2E_TIMEZONE });
 
     const workerSuffix = `w${workerIndex}`;
     const email = TEST_USERS.teamMember.email.replace("@", `-${workerSuffix}@`);
@@ -152,7 +153,7 @@ export const rbacTest = base.extend<RbacFixtures>({
   },
   viewerContext: async ({ browser }, use, testInfo) => {
     const workerIndex = testInfo.parallelIndex;
-    const context = await browser.newContext();
+    const context = await browser.newContext({ timezoneId: E2E_TIMEZONE });
 
     const workerSuffix = `w${workerIndex}`;
     const email = TEST_USERS.viewer.email.replace("@", `-${workerSuffix}@`);

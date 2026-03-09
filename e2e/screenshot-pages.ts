@@ -26,6 +26,7 @@ import * as path from "node:path";
 import { type Browser, chromium, type Locator, type Page } from "@playwright/test";
 import { TEST_IDS } from "../src/lib/test-ids";
 import { TEST_USERS } from "./config";
+import { E2E_TIMEZONE } from "./constants";
 import { type SeedScreenshotResult, testUserService } from "./utils/test-user-service";
 
 // ---------------------------------------------------------------------------
@@ -333,6 +334,29 @@ async function waitForCalendarReady(page: Page): Promise<boolean> {
   return false;
 }
 
+async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<boolean> {
+  const eventItems = page.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM);
+  const attempts = Math.max(1, Math.ceil(timeoutMs / 500));
+
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    if ((await eventItems.count().catch(() => 0)) > 0) {
+      return true;
+    }
+
+    if (attempt === Math.floor(attempts / 2)) {
+      await page
+        .getByRole("button", { name: /^today$/i })
+        .first()
+        .click()
+        .catch(() => {});
+    }
+
+    await page.waitForTimeout(500);
+  }
+
+  return false;
+}
+
 async function waitForExpectedContent(page: Page, url: string, name: string): Promise<void> {
   if (isProjectBoardUrl(url)) {
     await page
@@ -622,10 +646,11 @@ async function screenshotFilledStates(
           eventItem = locateEvent();
         }
 
-        if ((await eventItem.count()) === 0) {
+        if (!(await waitForCalendarEvents(page))) {
           throw new Error(`[${p}] No calendar events found for modal screenshot`);
         }
 
+        eventItem = locateEvent();
         await eventItem.scrollIntoViewIfNeeded().catch(() => {});
         await eventItem.click({ force: true });
         const dialog = page.getByTestId(TEST_IDS.CALENDAR.EVENT_DETAILS_MODAL);
@@ -860,6 +885,7 @@ async function captureForConfig(
   const context = await browser.newContext({
     viewport: VIEWPORTS[viewport],
     colorScheme: theme,
+    timezoneId: E2E_TIMEZONE,
   });
   const page = await context.newPage();
 
@@ -967,6 +993,7 @@ async function run(): Promise<void> {
   const setupContext = await browser.newContext({
     viewport: VIEWPORTS.desktop,
     colorScheme: "dark",
+    timezoneId: E2E_TIMEZONE,
   });
   const setupPage = await setupContext.newPage();
   const orgSlug = await autoLogin(setupPage);
