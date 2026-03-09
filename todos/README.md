@@ -16,6 +16,7 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 
 1. Active product polish loop:
    - [visual-inconsistencies-2026-03-04.md](./visual-inconsistencies-2026-03-04.md) as the visual baseline (`200` captures)
+   - [docs/design-perfection/SCREENSHOT_REVIEW_LOOP.md](../docs/design-perfection/SCREENSHOT_REVIEW_LOOP.md) as the operating playbook for each screenshot iteration
    - landing/dashboard design CURRENT docs for screenshot-reference sync and next-round review
    - keep iterating on shell, sidebar, landing, and modal quality until the screenshots look intentional rather than merely "fixed"
 2. P1 correctness/security defects:
@@ -43,6 +44,7 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 | Priority | File | Role | Next Action |
 |---|---|---|---|
 | P0 | [visual-inconsistencies-2026-03-04.md](./visual-inconsistencies-2026-03-04.md) | Active visual review baseline | Keep iterating on shell/sidebar/landing polish and refresh design docs against the latest screenshot set |
+| P0 | [docs/design-perfection/SCREENSHOT_REVIEW_LOOP.md](../docs/design-perfection/SCREENSHOT_REVIEW_LOOP.md) | Screenshot review operating manual | Use this loop for every visual pass so issues get classified and fixed through shared primitives first |
 | P0 | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Reliability sustainment while UI churn continues | Keep full suite green and keep replacing retry-heavy helpers with explicit completion contracts |
 | P1 | [calendar-access-control.md](./calendar-access-control.md) | Cross-scope event injection risk | Gate scope derivation with `canAccessProject()` and add regression test |
 | P1 | [invoice-system-issues.md](./invoice-system-issues.md) | Billing data integrity and numbering collisions | Fix unlinking, uniqueness, scoped fetch, and line-item linkage |
