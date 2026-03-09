@@ -47,7 +47,7 @@ function DocumentsListPage() {
         }
       />
 
-      {!isEmpty ? (
+      {!isLoading && !isEmpty ? (
         <OverviewBand
           eyebrow="Knowledge base"
           title="Keep specs, handoffs, and internal notes close to delivery work."
