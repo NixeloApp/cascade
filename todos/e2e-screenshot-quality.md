@@ -1,0 +1,468 @@
+# E2E Screenshot Quality
+
+> **Priority:** P0
+> **Status:** Active canonical doc for screenshot determinism, screenshot-driven UI review, and screenshot-specific E2E quality work
+> **Last Updated:** 2026-03-09
+> **Supersedes:** previous active visual-polish todo and `docs/design-perfection/SCREENSHOT_REVIEW_LOOP.md`
+
+## Objective
+
+Keep `pnpm screenshots` trustworthy and useful.
+
+That means two things must stay true at the same time:
+
+1. the screenshot runner captures real, loaded UI states deterministically
+2. the resulting screenshots drive disciplined visual improvements instead of ad hoc page tweaks
+
+This is the single control doc for both.
+
+## Commands
+
+### Primary Commands
+
+```bash
+pnpm screenshots
+pnpm exec playwright test --reporter=line
+```
+
+### Interpretation
+
+- `pnpm screenshots` is the visual baseline generator.
+- `pnpm exec playwright test --reporter=line` is the reliability gate for the broader E2E path.
+- If screenshot capture is invalid, fix the harness first before doing design critique.
+
+## Screenshot Matrix
+
+Supported variants:
+
+- `desktop-dark` (`1920x1080`)
+- `desktop-light` (`1920x1080`)
+- `tablet-light` (`768x1024`)
+- `mobile-light` (`390x844`)
+
+Each review round must check:
+
+- full pages
+- key modal states
+- light/dark parity where supported
+- responsive compression on tablet/mobile
+
+## Source Of Truth
+
+### Screenshot Outputs
+
+Primary screenshot folders:
+
+- `docs/design/specs/pages/01-landing/screenshots/`
+- `docs/design/specs/pages/02-signin/screenshots/`
+- `docs/design/specs/pages/03-signup/screenshots/`
+- `docs/design/specs/pages/04-forgot-password/screenshots/`
+- `docs/design/specs/pages/04-dashboard/screenshots/`
+- `docs/design/specs/pages/05-projects/screenshots/`
+- `docs/design/specs/pages/06-board/screenshots/`
+- `docs/design/specs/pages/07-backlog/screenshots/`
+- `docs/design/specs/pages/08-issue/screenshots/`
+- `docs/design/specs/pages/09-documents/screenshots/`
+- `docs/design/specs/pages/10-editor/screenshots/`
+- `docs/design/specs/pages/11-calendar/screenshots/`
+- `docs/design/specs/pages/12-settings/screenshots/`
+- `docs/design/specs/pages/13-analytics/screenshots/`
+
+Fallback screenshots without spec folders land in:
+
+- `e2e/screenshots/`
+
+### Design Intent References
+
+Use these while reviewing:
+
+- page `CURRENT.md`
+- page `TARGET.md`
+- `docs/design/DIRECTOR.md`
+- relevant component specs in `docs/design/specs/components/`
+
+## Hard Rules
+
+### 1. Do Not Review Broken Captures As If They Were UI Defects
+
+Common invalid-baseline cases:
+
+- loading spinner
+- splash screen
+- wrong route captured
+- modal shell captured before content hydrates
+- empty/error state captured instead of seeded state
+
+These are harness/data issues first.
+
+### 2. Review All Variants
+
+A page is not done because one desktop-dark screenshot looks decent.
+
+Minimum review set:
+
+- desktop dark
+- desktop light
+- tablet light
+- mobile light
+- key modal states where they exist
+
+### 3. Fix Repeated Problems Centrally
+
+If the same defect appears across two or more screens, prefer:
+
+- token changes
+- shared primitives
+- page-shell/layout wrappers
+- shared dialog anatomy
+- shared card/list/header patterns
+
+### 4. Theme Parity Is Mandatory
+
+Every visual decision must be judged in both themes where both exist.
+
+### 5. Docs Must Move With The UI
+
+After each meaningful round:
+
+- update relevant `CURRENT.md`
+- update this doc if priorities changed
+- update `todos/README.md` only if execution order changed materially
+
+## Review Rubric
+
+Score each page/modal from `0` to `3`:
+
+- `0` broken or visibly bad
+- `1` functional but weak/inconsistent
+- `2` good enough but still rough
+- `3` strong and intentional
+
+### A. Hierarchy
+
+Check:
+
+- Is the main action obvious?
+- Is the title strong enough?
+- Do secondary controls stay secondary?
+- Can dense areas be parsed quickly?
+
+Red flags:
+
+- everything same weight
+- oversized headers with weak content below
+- important actions getting lost in chrome
+
+### B. Spacing Rhythm
+
+Check:
+
+- section gaps
+- internal padding
+- row density
+- toolbar spacing
+- mobile versus desktop consistency
+
+Red flags:
+
+- random padding jumps
+- dead space
+- cramped controls next to oversized shells
+
+### C. Surface System
+
+Check:
+
+- borders
+- shadows
+- background layering
+- nested container discipline
+- empty-state framing
+
+Red flags:
+
+- card-inside-card noise
+- pale surfaces stacked on pale surfaces
+- dark mode using muddy gray slabs
+
+### D. Theme Parity
+
+Check:
+
+- contrast
+- muted text legibility
+- CTA weight
+- active/hover states
+- empty states
+
+### E. Reuse And Pattern Discipline
+
+Check:
+
+- repeated header structure
+- repeated card shells
+- repeated modal anatomy
+- repeated section wrappers
+
+### F. Content Density
+
+Check:
+
+- does the page use the screen well?
+- does it feel intentional?
+- do empty states still feel designed?
+
+### G. Modal And Overlay Quality
+
+Check:
+
+- relationship to parent page
+- header/body/footer rhythm
+- visual consistency across omnibox/create/detail flows
+- mobile fit
+
+## Defect Taxonomy
+
+Classify every issue before fixing it.
+
+### Harness/Data-Level
+
+Examples:
+
+- wrong route captured
+- loading state captured
+- seeded content missing
+- modal not ready before screenshot
+
+Expected fix location:
+
+- `e2e/screenshot-pages.ts`
+- seed helpers
+- E2E wait contracts
+
+### Token-Level
+
+Examples:
+
+- muted text too faint
+- borders too noisy
+- shadows too weak/strong
+- radius mismatch
+
+### Primitive-Level
+
+Examples:
+
+- card shells inconsistent
+- dialog anatomy inconsistent
+- tabs/toolbars inconsistent
+
+### Composition-Level
+
+Examples:
+
+- page header too large on mobile
+- dashboard feels over-wrapped
+- settings hierarchy too shallow
+
+### Content-Level
+
+Examples:
+
+- filler copy lowering quality
+- weak labels
+- unconvincing proof/stat content
+
+## Active Queue
+
+### P0 - Screenshot Baseline Blockers
+
+- [ ] Fix issue-detail capture so the baseline shows the real issue UI instead of the error state.
+  - Evidence: `docs/design/specs/pages/08-issue/screenshots/desktop-light.png`
+  - Evidence: `docs/design/specs/pages/08-issue/screenshots/mobile-light.png`
+  - Likely fix points: `e2e/screenshot-pages.ts`, `src/routes/_auth/_app/$orgSlug/issues/$key.tsx`
+
+- [ ] Fix document-editor capture so `10-editor` stops resolving to the templates page.
+  - Evidence: `docs/design/specs/pages/10-editor/screenshots/desktop-light.png`
+  - Evidence: `docs/design/specs/pages/10-editor/screenshots/mobile-light.png`
+  - Likely fix point: document link discovery in `e2e/screenshot-pages.ts`
+
+- [ ] Fix create-issue modal capture readiness so the modal is not screenshotted as a spinner.
+  - Evidence: `docs/design/specs/pages/06-board/screenshots/desktop-light-create-issue-modal.png`
+  - Evidence: `docs/design/specs/pages/06-board/screenshots/mobile-light-create-issue-modal.png`
+  - Likely fix point: board modal readiness in `e2e/screenshot-pages.ts`
+
+- [ ] Expand screenshot readiness contracts beyond dashboard/board/settings/calendar.
+  - Evidence: `docs/design/specs/pages/05-projects/screenshots/mobile-light.png`
+  - Evidence: `docs/design/specs/pages/13-analytics/screenshots/desktop-dark.png`
+  - Expected: every captured route has a deterministic loaded-content signal.
+
+### P1 - Highest-Leverage Visual Fixes
+
+- [ ] Simplify the auth shell so it stops reading like a split marketing card with nested panels.
+  - Evidence: `docs/design/specs/pages/02-signin/screenshots/desktop-light.png`
+  - Evidence: `docs/design/specs/pages/03-signup/screenshots/desktop-light.png`
+  - Evidence: `docs/design/specs/pages/04-forgot-password/screenshots/desktop-light.png`
+  - Likely fix point: `src/components/Auth/AuthPageLayout.tsx`
+
+- [ ] Simplify mobile project chrome and tab density.
+  - Evidence: `docs/design/specs/pages/06-board/screenshots/mobile-light.png`
+  - Evidence: `docs/design/specs/pages/07-backlog/screenshots/mobile-light.png`
+  - Evidence: `docs/design/specs/pages/11-calendar/screenshots/mobile-light.png`
+  - Likely fix point: `src/routes/_auth/_app/$orgSlug/projects/$key/route.tsx`
+
+- [ ] Reduce card-inside-card layering and restore light-theme depth/contrast.
+  - Evidence: `docs/design/specs/pages/04-dashboard/screenshots/desktop-light.png`
+  - Evidence: `docs/design/specs/pages/12-settings/screenshots/desktop-light.png`
+  - Evidence: `docs/design/specs/pages/05-projects/screenshots/desktop-light-create-project-modal.png`
+  - Likely fix points: `src/components/ui/Card.tsx`, `src/components/ui/Dialog.tsx`, `src/components/Dashboard.tsx`
+
+- [ ] Make the “filled projects” state credible again.
+  - Evidence: `docs/design/specs/pages/05-projects/screenshots/desktop-light.png`
+  - Evidence: `docs/design/specs/pages/05-projects/screenshots/tablet-light.png`
+  - Evidence: `docs/design/specs/pages/05-projects/screenshots/mobile-light.png`
+  - Likely fix points: `src/components/ProjectsList.tsx`, screenshot readiness in `e2e/screenshot-pages.ts`
+
+- [ ] Tighten settings tab density on tablet/mobile.
+  - Evidence: `docs/design/specs/pages/12-settings/screenshots/mobile-light.png`
+  - Evidence: `docs/design/specs/pages/12-settings/screenshots/tablet-light.png`
+  - Likely fix point: `src/components/Settings.tsx`
+
+### P2 - Follow-Through
+
+- [ ] Refresh affected `CURRENT.md` docs once the screenshots reflect the real UI.
+- [ ] Rerun `pnpm screenshots` after each meaningful polish round.
+- [ ] Keep screenshot-specific reliability work synced with `todos/e2e-reliability-overhaul.md`.
+
+## Execution Loop
+
+### Step 1. Capture
+
+```bash
+pnpm screenshots
+```
+
+If the run is invalid, fix the harness before critiquing visuals.
+
+### Step 2. Review By Family
+
+Review in this order:
+
+1. landing and auth
+2. app shell and dashboard
+3. project surfaces
+4. issue/editor/detail surfaces
+5. calendar, analytics, settings
+6. modal and overlay states
+
+### Step 3. Log By Leverage
+
+For each issue, record:
+
+- screenshot path
+- viewport/theme
+- what is wrong
+- rubric category
+- likely shared fix point
+
+### Step 4. Prefer Shared Fixes
+
+Ask before editing:
+
+- Is this actually a token problem?
+- Is there a shared primitive that should own this?
+- Is this page-specific, or am I patching around a system defect?
+
+### Step 5. Implement Small High-Leverage Sets
+
+A good round usually targets one to three themes:
+
+- screenshot determinism
+- auth/landing cohesion
+- shell density
+- modal consistency
+- light-theme contrast and depth
+
+### Step 6. Re-Capture
+
+```bash
+pnpm screenshots
+```
+
+Then verify:
+
+- target pages improved
+- untouched pages did not regress
+- theme parity got better, not worse
+
+### Step 7. Update Docs
+
+Update:
+
+- relevant `CURRENT.md`
+- this doc
+- `todos/README.md` only if priority order changed
+
+## Required Round Log
+
+Each screenshot-driven round should leave a short entry in the active log or commit summary with:
+
+- baseline date
+- screenshot count
+- main themes addressed
+- shared primitives changed
+- pages improved
+- pages still below bar
+- commands run
+- next target
+
+### Round Template
+
+```md
+## Screenshot Round - YYYY-MM-DD
+
+- Baseline: `pnpm screenshots` -> `N screenshots captured`
+- Focus:
+  - screenshot determinism / auth / shell / modal / light-theme depth
+- Main issues found:
+  - [page + viewport] ...
+  - [page + viewport] ...
+- Shared fixes chosen:
+  - harness:
+  - token:
+  - primitive:
+  - composition:
+- Validation:
+  - `pnpm screenshots`
+  - `pnpm exec playwright test --reporter=line`
+- Result:
+  - improved:
+  - still weak:
+  - next round:
+```
+
+## Historical Notes
+
+### 2026-03-04 Baseline
+
+- The original screenshot audit lives in `todos/visual-inconsistencies-2026-03-04.md`.
+- Keep it as archive/reference, not the active queue.
+
+### 2026-03-09 Baseline
+
+- Fresh rerun completed successfully: `198 screenshots captured`
+- New blockers found:
+  - issue detail captured as not-found state
+  - editor captured as templates page
+  - create-issue modal captured before hydration
+  - projects/analytics still vulnerable to partial-load captures
+
+## Success Criteria
+
+This doc is doing its job when:
+
+- `pnpm screenshots` stops producing obviously invalid baselines
+- repeated visual problems are solved in shared primitives instead of page patches
+- the shell, auth, and modal surfaces feel like the same product
+- light mode and dark mode both look intentional
+- `CURRENT.md` files describe the actual UI instead of stale intentions
