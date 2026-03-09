@@ -70,7 +70,7 @@ function DocumentsListPage() {
               <Card hoverable padding="lg" className="h-full">
                 <Flex direction="column" gap="lg">
                   <Flex justify="between" align="start" gap="md">
-                    <Flex align="center" gap="md">
+                    <Flex align="center" gap="md" className="min-w-0 flex-1">
                       <Flex
                         align="center"
                         justify="center"
@@ -78,7 +78,7 @@ function DocumentsListPage() {
                       >
                         <FileText size={20} />
                       </Flex>
-                      <div>
+                      <div className="min-w-0">
                         <Typography
                           variant="h4"
                           className="line-clamp-1 tracking-tight transition-colors group-hover:text-brand"

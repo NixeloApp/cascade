@@ -472,7 +472,8 @@ export const listTimeEntries = authenticatedQuery({
 
 /**
  * Get aggregated metrics for time entries without fetching full records.
- * Used for overview dashboards to show accurate totals regardless of pagination limits.
+ * Used for overview dashboards to show totals with truncation awareness.
+ * Returns isTruncated: true when MAX_TIME_ENTRIES is hit so UI can indicate partial data.
  */
 export const getTimeEntrySummary = authenticatedQuery({
   args: {
@@ -508,10 +509,10 @@ export const getTimeEntrySummary = authenticatedQuery({
         )
         .take(MAX_TIME_ENTRIES);
     } else if (args.projectId) {
+      // Use composite index to avoid post-query filter
       entries = await ctx.db
         .query("timeEntries")
-        .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-        .filter((q) => q.eq(q.field("userId"), userId))
+        .withIndex("by_user_project", (q) => q.eq("userId", userId).eq("projectId", args.projectId))
         .take(MAX_TIME_ENTRIES);
     } else {
       entries = await ctx.db
@@ -519,6 +520,9 @@ export const getTimeEntrySummary = authenticatedQuery({
         .withIndex("by_user", (q) => q.eq("userId", userId))
         .take(MAX_TIME_ENTRIES);
     }
+
+    // Flag when results may be incomplete
+    const isTruncated = entries.length === MAX_TIME_ENTRIES;
 
     // Aggregate metrics
     let totalDuration = 0;
@@ -540,6 +544,7 @@ export const getTimeEntrySummary = authenticatedQuery({
       billableDuration,
       totalCost,
       entryCount,
+      isTruncated,
     };
   },
 });

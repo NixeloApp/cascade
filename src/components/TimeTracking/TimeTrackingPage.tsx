@@ -42,6 +42,7 @@ interface TimeEntrySummary {
   billableDuration: number;
   totalCost: number;
   entryCount: number;
+  isTruncated: boolean;
 }
 
 interface TimeTrackingOverviewProps {
@@ -84,6 +85,7 @@ function TimeTrackingOverview({
   const billableSeconds = summary?.billableDuration ?? 0;
   const totalCost = summary?.totalCost ?? 0;
   const entryCount = summary?.entryCount ?? 0;
+  const isTruncated = summary?.isTruncated ?? false;
 
   return (
     <OverviewBand
@@ -93,12 +95,15 @@ function TimeTrackingOverview({
       metrics={[
         {
           label: "Logged",
-          value: totalLoggedSeconds > 0 ? formatDurationHuman(totalLoggedSeconds) : "0m",
+          value:
+            totalLoggedSeconds > 0
+              ? `${formatDurationHuman(totalLoggedSeconds)}${isTruncated ? "+" : ""}`
+              : "0m",
           detail: dateRange === "all" ? "Across all saved entries" : rangeLabel,
         },
         {
           label: "Entries",
-          value: entryCount,
+          value: isTruncated ? `${entryCount}+` : entryCount,
           detail:
             selectedProject === "all"
               ? "Across all visible projects"
@@ -108,9 +113,9 @@ function TimeTrackingOverview({
           label: "Billable",
           value:
             billingEnabled && totalCost > 0
-              ? formatCurrency(totalCost)
+              ? `${formatCurrency(totalCost)}${isTruncated ? "+" : ""}`
               : billableSeconds > 0
-                ? formatDurationHuman(billableSeconds)
+                ? `${formatDurationHuman(billableSeconds)}${isTruncated ? "+" : ""}`
                 : "0m",
           detail: billingEnabled ? "Tracked billable value" : "Billable time captured",
         },
