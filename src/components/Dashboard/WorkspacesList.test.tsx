@@ -124,14 +124,14 @@ describe("WorkspacesList", () => {
   it("should display issue counts for each project", () => {
     render(<WorkspacesList {...defaultProps} />);
 
-    // Project Alpha: 5 assigned issues
-    expect(screen.getByText("5 assigned issues")).toBeInTheDocument();
+    // Project Alpha: 5 assigned issues · 10 total tracked
+    expect(screen.getByText(/5 assigned issues/)).toBeInTheDocument();
 
-    // Project Beta: 2 assigned issues
-    expect(screen.getByText("2 assigned issues")).toBeInTheDocument();
+    // Project Beta: 2 assigned issues · 8 total tracked
+    expect(screen.getByText(/2 assigned issues/)).toBeInTheDocument();
 
-    // Project Gamma: 0 assigned issues
-    expect(screen.getByText("0 assigned issues")).toBeInTheDocument();
+    // Project Gamma: 0 assigned issues · 3 total tracked
+    expect(screen.getByText(/0 assigned issues/)).toBeInTheDocument();
   });
 
   it("should navigate to project board when clicking a project", async () => {
@@ -209,7 +209,7 @@ describe("WorkspacesList", () => {
 
     render(<WorkspacesList {...defaultProps} projects={zeroIssuesWorkspace} />);
 
-    expect(screen.getByText("0 assigned issues")).toBeInTheDocument();
+    expect(screen.getByText(/0 assigned issues/)).toBeInTheDocument();
   });
 
   it("should render with capitalized role badges", () => {

@@ -85,8 +85,8 @@ describe("MyIssuesList", () => {
   it("should render card header", () => {
     render(<MyIssuesList {...defaultProps} />);
 
-    expect(screen.getByText("Feed")).toBeInTheDocument();
-    expect(screen.getByText("Track your active contributions")).toBeInTheDocument();
+    expect(screen.getByText("Active feed")).toBeInTheDocument();
+    expect(screen.getByText(/Assigned and created issues stay in one queue/)).toBeInTheDocument();
   });
 
   it("should render loading skeleton when data is undefined", () => {
