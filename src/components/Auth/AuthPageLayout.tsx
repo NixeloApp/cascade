@@ -17,16 +17,10 @@ interface AuthPageLayoutProps {
  */
 export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProps) {
   return (
-    <div
-      className="relative isolate min-h-screen w-full overflow-hidden bg-ui-bg p-4 sm:p-6"
-      style={{
-        backgroundImage:
-          "radial-gradient(circle at top left, rgba(34, 211, 238, 0.24), transparent 34%), radial-gradient(circle at top right, rgba(99, 102, 241, 0.2), transparent 38%), radial-gradient(circle at bottom center, rgba(16, 185, 129, 0.12), transparent 30%), linear-gradient(135deg, rgba(224, 242, 254, 0.82), rgba(245, 243, 255, 0.84) 48%, rgba(255, 255, 255, 0.96))",
-      }}
-    >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-linear-to-b from-white/60 to-transparent" />
-      <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-5xl animate-fade-in items-center">
-        <div className="w-full overflow-hidden rounded-3xl border border-ui-border-secondary/70 bg-white/55 shadow-elevated backdrop-blur-md">
+    <div className="relative isolate min-h-screen w-full overflow-hidden bg-ui-bg bg-auth-gradient p-4 sm:p-6">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-linear-to-b from-ui-bg-elevated/60 to-transparent" />
+      <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-5xl animate-fade-in items-center sm:min-h-[calc(100vh-3rem)]">
+        <div className="w-full overflow-hidden rounded-3xl border border-ui-border-secondary/70 bg-ui-bg-elevated/55 shadow-elevated backdrop-blur-md">
           <div className="grid w-full gap-0 lg:grid-cols-[1.12fr_380px]">
             <div className="hidden border-r border-ui-border/60 bg-linear-to-br from-ui-bg-elevated via-brand-subtle/35 to-ui-bg-elevated p-12 lg:flex lg:flex-col lg:justify-between">
               <div>
@@ -36,7 +30,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
 
                 <Link
                   to={ROUTES.home.path}
-                  className="inline-flex w-fit items-center rounded-full border border-ui-border/70 bg-white/70 px-4 py-2 shadow-soft transition-opacity hover:opacity-80"
+                  className="inline-flex w-fit items-center rounded-full border border-ui-border/70 bg-ui-bg-elevated/70 px-4 py-2 shadow-soft transition-opacity hover:opacity-80"
                 >
                   <NixeloLogo size={32} />
                 </Link>
@@ -67,7 +61,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
                 </Flex>
               </div>
 
-              <div className="rounded-3xl border border-ui-border-secondary/70 bg-white/72 p-5 shadow-card">
+              <div className="rounded-3xl border border-ui-border-secondary/70 bg-ui-bg-elevated/72 p-5 shadow-card">
                 <div className="mb-4 inline-flex items-center rounded-full border border-ui-border/70 bg-ui-bg-elevated/85 px-3 py-1 text-xs font-medium uppercase tracking-wider text-ui-text-tertiary">
                   Operating snapshot
                 </div>
@@ -133,7 +127,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
             <Flex
               align="center"
               justify="center"
-              className="w-full bg-linear-to-b from-white/28 to-white/46 p-4 sm:p-6 lg:p-8"
+              className="w-full bg-linear-to-b from-ui-bg-elevated/28 to-ui-bg-elevated/46 p-4 sm:p-6 lg:p-8"
             >
               <div className="w-full max-w-auth lg:max-w-none">
                 <div className="mb-4 rounded-3xl border border-ui-border/70 bg-ui-bg-elevated/95 p-5 shadow-card lg:hidden">
@@ -143,7 +137,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
 
                   <Link
                     to={ROUTES.home.path}
-                    className="inline-flex w-fit items-center gap-2 rounded-full border border-ui-border/70 bg-white/80 px-3 py-2 shadow-soft transition-opacity hover:opacity-80"
+                    className="inline-flex w-fit items-center gap-2 rounded-full border border-ui-border/70 bg-ui-bg-elevated/80 px-3 py-2 shadow-soft transition-opacity hover:opacity-80"
                   >
                     <NixeloLogo size={28} />
                     <Typography variant="small" className="font-semibold text-ui-text">

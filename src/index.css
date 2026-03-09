@@ -870,6 +870,15 @@ body {
     );
 }
 
+/* Auth page gradient (theme-aware, decorative background) */
+.bg-auth-gradient {
+  background-image:
+    radial-gradient(circle at top left, color-mix(in oklab, var(--color-status-info) 24%, transparent), transparent 34%),
+    radial-gradient(circle at top right, color-mix(in oklab, var(--color-brand) 20%, transparent), transparent 38%),
+    radial-gradient(circle at bottom center, color-mix(in oklab, var(--color-status-success) 12%, transparent), transparent 30%),
+    linear-gradient(135deg, color-mix(in oklab, var(--color-ui-bg-elevated) 82%, transparent), color-mix(in oklab, var(--color-brand-subtle) 24%, var(--color-ui-bg-elevated)) 48%, var(--color-ui-bg-elevated));
+}
+
 /* Premium scrollbar styling (uses scrollbar tokens from @theme) */
 .scrollbar-subtle {
   scrollbar-width: thin;
