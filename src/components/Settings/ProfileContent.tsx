@@ -401,11 +401,13 @@ function LoadedProfileContent({
               </Stack>
             </Card>
 
-            {"_creationTime" in viewUser && typeof viewUser._creationTime === "number" && (
-              <div className="lg:col-span-1">
-                <AccountInfo user={viewUser as ProfileUser & { _creationTime: number }} />
-              </div>
-            )}
+            {isOwnProfile &&
+              "_creationTime" in viewUser &&
+              typeof viewUser._creationTime === "number" && (
+                <div className="lg:col-span-1">
+                  <AccountInfo user={viewUser as ProfileUser & { _creationTime: number }} />
+                </div>
+              )}
           </Grid>
         </Stack>
       </div>

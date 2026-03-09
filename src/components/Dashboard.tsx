@@ -94,12 +94,12 @@ export function Dashboard() {
         <Greeting userName={user?.name} completedCount={stats?.completedThisWeek} />
 
         <Grid cols={1} colsLg={12} gap="lg" className="mb-8">
-          <div className="lg:col-span-7">
+          <div className={showStats ? "lg:col-span-7" : "lg:col-span-12"}>
             <FocusZone task={focusTask} />
           </div>
 
-          <div className="lg:col-span-5">
-            {showStats && (
+          {showStats && (
+            <div className="lg:col-span-5">
               <Flex direction="column" justify="end" className="h-full">
                 <Typography
                   variant="label"
@@ -116,8 +116,8 @@ export function Dashboard() {
                   <QuickStats stats={stats} />
                 </Card>
               </Flex>
-            )}
-          </div>
+            </div>
+          )}
         </Grid>
 
         <Grid cols={1} colsLg={12} gap="lg">
