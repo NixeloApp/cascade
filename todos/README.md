@@ -7,9 +7,9 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 
 ## Portfolio Snapshot
 
-- Total todo markdown files (including control files): `21`
-- Tracked execution docs (excluding `README.md` and `TODO.md`): `19`
-- Checkbox rollup across tracked docs: `162 done / 111 open / 0 in-progress`
+- Total todo markdown files (including control files): `20`
+- Tracked execution docs (excluding `README.md` and `TODO.md`): `18`
+- Checkbox rollup across tracked docs: `153 done / 111 open / 0 in-progress`
 - Highest-risk unresolved queue: calendar access control, invoice integrity, Slack auth/scoping
 
 ## Current Focus
@@ -87,7 +87,6 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 
 | File | Role | State |
 |---|---|---|
-| [visual-inconsistencies-2026-03-04.md](./visual-inconsistencies-2026-03-04.md) | Closed March 4 screenshot audit baseline | Checklist complete; keep as archive/reference only, with new active work tracked in [e2e-screenshot-quality.md](./e2e-screenshot-quality.md) |
 | [consistency-tracking.md](./consistency-tracking.md) | Standards/validator ledger | Operational tracking ongoing (`23/23` checklist complete) |
 
 ## Jules Issues (Open)

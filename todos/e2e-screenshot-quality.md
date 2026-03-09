@@ -3,7 +3,7 @@
 > **Priority:** P0
 > **Status:** Active canonical doc for screenshot determinism, screenshot-driven UI review, and screenshot-specific E2E quality work
 > **Last Updated:** 2026-03-09
-> **Supersedes:** previous active visual-polish todo and `docs/design-perfection/SCREENSHOT_REVIEW_LOOP.md`
+> **Supersedes:** previous screenshot review loop docs and separate visual-polish todo files
 
 ## Objective
 
@@ -445,8 +445,12 @@ Each screenshot-driven round should leave a short entry in the active log or com
 
 ### 2026-03-04 Baseline
 
-- The original screenshot audit lives in `todos/visual-inconsistencies-2026-03-04.md`.
-- Keep it as archive/reference, not the active queue.
+- Initial screenshot audit established the first determinism + visual consistency backlog.
+- The notable fixed classes from that round were:
+  - calendar captured in loading state
+  - board/settings tablet and mobile partial-load captures
+  - light-theme contrast and border inconsistency
+  - mobile top-bar density problems
 
 ### 2026-03-09 Baseline
 
