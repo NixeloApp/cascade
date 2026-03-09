@@ -109,47 +109,53 @@ function BoardPage() {
 
   return (
     <Flex direction="column" className="h-full">
-      {/* Board Header */}
-      <div className="border-b border-ui-border p-3 sm:p-4">
-        <Flex align="center" justify="between" gap="md">
-          <Flex align="center" gap="sm">
-            <Typography variant="h3" className="text-lg font-semibold">
-              {project.name}
-            </Typography>
-            <Badge variant="neutral" size="md">
-              {project.key}
-            </Badge>
-            <Badge variant="accent" size="md">
-              {project.boardType}
-            </Badge>
-          </Flex>
-          <Flex align="center" gap="md">
-            {/* Sprint Progress & Workload */}
-            {project.boardType === "scrum" && effectiveSprintId && (
-              <>
-                <SprintProgressBar projectId={project._id} sprintId={effectiveSprintId} />
-                <SprintWorkload sprintId={effectiveSprintId} />
-              </>
-            )}
+      <div className="px-3 pt-3 sm:px-4">
+        <div className="rounded-2xl border border-ui-border/70 bg-ui-bg-elevated/90 px-4 py-3 shadow-soft">
+          <Flex align="center" justify="between" gap="md" className="flex-col sm:flex-row">
+            <Flex align="center" gap="sm" wrap>
+              <div className="hidden sm:block">
+                <Typography variant="h4" className="tracking-tight">
+                  Delivery board
+                </Typography>
+                <Typography variant="caption" className="mt-1">
+                  Filter issues, switch sprints, and move work without leaving the board.
+                </Typography>
+              </div>
+              <Badge variant="neutral" size="md">
+                {project.key}
+              </Badge>
+              <Badge variant="accent" size="md">
+                {project.boardType}
+              </Badge>
+            </Flex>
+            <Flex align="center" gap="sm" wrap className="justify-end">
+              {/* Sprint Progress & Workload */}
+              {project.boardType === "scrum" && effectiveSprintId && (
+                <>
+                  <SprintProgressBar projectId={project._id} sprintId={effectiveSprintId} />
+                  <SprintWorkload sprintId={effectiveSprintId} />
+                </>
+              )}
 
-            <ExportButton projectId={project._id} sprintId={effectiveSprintId} />
-            {project.boardType === "scrum" && sprints && (
-              <Select value={selectedSprintId || "active"} onValueChange={handleSprintChange}>
-                <SelectTrigger className="w-48 px-3 py-2 border border-ui-border rounded-md text-sm">
-                  <SelectValue placeholder="Active Sprint" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active Sprint</SelectItem>
-                  {sprints.map((sprint: Doc<"sprints">) => (
-                    <SelectItem key={sprint._id} value={sprint._id}>
-                      {sprint.name} ({sprint.status})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+              <ExportButton projectId={project._id} sprintId={effectiveSprintId} />
+              {project.boardType === "scrum" && sprints && (
+                <Select value={selectedSprintId || "active"} onValueChange={handleSprintChange}>
+                  <SelectTrigger className="w-48 px-3 py-2 border border-ui-border rounded-md text-sm">
+                    <SelectValue placeholder="Active Sprint" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active Sprint</SelectItem>
+                    {sprints.map((sprint: Doc<"sprints">) => (
+                      <SelectItem key={sprint._id} value={sprint._id}>
+                        {sprint.name} ({sprint.status})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </Flex>
           </Flex>
-        </Flex>
+        </div>
       </div>
 
       {/* Filter Bar */}

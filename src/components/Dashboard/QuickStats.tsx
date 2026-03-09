@@ -159,7 +159,7 @@ function HighPriorityCard({ count }: { count: number }) {
 export function QuickStats({ stats }: QuickStatsProps) {
   if (!stats) {
     return (
-      <Grid cols={1} colsSm={2} colsLg={4} gap="lg" className="mb-8">
+      <Grid cols={1} colsSm={2} colsLg={2} gap="md">
         <SkeletonStatCard />
         <SkeletonStatCard />
         <SkeletonStatCard />
@@ -174,7 +174,7 @@ export function QuickStats({ stats }: QuickStatsProps) {
     totalAssigned > 0 ? (stats.completedThisWeek / totalAssigned) * 100 : 0;
 
   return (
-    <Grid cols={1} colsSm={2} colsLg={4} gap="md">
+    <Grid cols={1} colsSm={2} colsLg={2} gap="md">
       <StatCard
         title="Active Load"
         value={stats.assignedToMe}

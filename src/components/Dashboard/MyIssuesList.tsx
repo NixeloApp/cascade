@@ -146,6 +146,7 @@ export function MyIssuesList({
               icon={Inbox}
               title="Inbox Clear"
               description="No pending items in your feed."
+              size="compact"
               action={{
                 label: "Explore Projects",
                 onClick: navigateToWorkspaces,

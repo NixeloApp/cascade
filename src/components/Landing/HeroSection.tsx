@@ -11,7 +11,7 @@ import { ProductShowcase } from "./ProductShowcase";
 /** Landing page hero section with headline, CTA buttons, and product preview. */
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden px-6 pt-20 pb-24">
+    <section className="relative overflow-hidden px-6 pb-24 pt-28 sm:pt-32">
       <div className="absolute inset-0 bg-ui-bg-hero">
         <div
           className="absolute inset-0"

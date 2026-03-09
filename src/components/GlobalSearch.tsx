@@ -141,16 +141,33 @@ function CommandActionItem({ command, onClose }: { command: CommandAction; onClo
       }}
       className="cursor-pointer data-[selected=true]:bg-ui-bg-secondary"
     >
-      {command.icon ? <Icon icon={command.icon} size="md" className="mr-2" /> : null}
-      <FlexItem flex="1">
-        <Typography variant="label" as="p">
-          {command.label}
-        </Typography>
-        {command.description ? (
-          <Typography variant="caption">{command.description}</Typography>
-        ) : null}
-      </FlexItem>
-      <ArrowRight className="h-4 w-4 text-ui-text-tertiary" />
+      <Flex align="start" gap="md" className="w-full">
+        <Flex
+          align="center"
+          justify="center"
+          className="h-9 w-9 shrink-0 rounded-xl border border-ui-border/60 bg-ui-bg-soft text-ui-text-tertiary shadow-soft"
+        >
+          {command.icon ? <Icon icon={command.icon} size="md" /> : <Command className="h-4 w-4" />}
+        </Flex>
+        <FlexItem flex="1" className="min-w-0">
+          <Flex align="center" gap="sm" wrap>
+            <Typography variant="label" as="p" className="truncate">
+              {command.label}
+            </Typography>
+            {command.group ? (
+              <Badge variant="outline" shape="pill">
+                {command.group}
+              </Badge>
+            ) : null}
+          </Flex>
+          {command.description ? (
+            <Typography variant="caption" className="mt-1 line-clamp-2">
+              {command.description}
+            </Typography>
+          ) : null}
+        </FlexItem>
+        <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-ui-text-tertiary" />
+      </Flex>
     </CommandItem>
   );
 }
@@ -175,7 +192,7 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
         <Flex
           align="center"
           justify="center"
-          className="h-8 w-8 shrink-0 rounded bg-ui-bg-tertiary"
+          className="h-9 w-9 shrink-0 rounded-xl border border-ui-border/60 bg-ui-bg-soft shadow-soft"
         >
           {result.type === "issue" ? (
             <svg
@@ -255,6 +272,36 @@ function SearchListContent({
   if (query.length === 0) {
     return (
       <>
+        <div className="px-2 pb-3">
+          <div className="rounded-2xl border border-ui-border/70 bg-linear-to-br from-brand-subtle/70 via-ui-bg-soft to-ui-bg-secondary/85 p-4 shadow-soft">
+            <Flex direction="column" gap="md">
+              <div>
+                <Badge variant="brand" shape="pill">
+                  Command center
+                </Badge>
+                <Typography variant="h5" className="mt-3">
+                  Jump faster across your workspace
+                </Typography>
+                <Typography variant="small" color="secondary" className="mt-2">
+                  Search issues and docs as you type, or use the quick actions below to navigate and
+                  create without leaving your flow.
+                </Typography>
+              </div>
+              <Flex gap="sm" wrap>
+                <Badge variant="outline" shape="pill">
+                  Navigate
+                </Badge>
+                <Badge variant="outline" shape="pill">
+                  Create
+                </Badge>
+                <Badge variant="outline" shape="pill">
+                  Search with filters
+                </Badge>
+              </Flex>
+            </Flex>
+          </div>
+        </div>
+
         {commandGroupEntries.map(([group, commands]) => (
           <CommandGroup key={group} heading={group}>
             {commands.map((command) => (
@@ -266,9 +313,8 @@ function SearchListContent({
         <Flex
           direction="column"
           align="center"
-          className="border-t border-ui-border px-4 py-6 text-center text-ui-text-secondary"
+          className="border-t border-ui-border px-4 py-5 text-center text-ui-text-secondary"
         >
-          <Command className="mb-3 h-8 w-8 rounded-full border border-ui-border/70 p-2 text-ui-text-tertiary" />
           <Typography variant="small">
             Search across issues and docs, or jump straight into common actions.
           </Typography>
@@ -448,10 +494,10 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
         onClick={() => setIsOpen(true)}
         aria-label="Open search and commands"
         data-testid={TEST_IDS.HEADER.SEARCH_BUTTON}
-        className="h-11 min-w-0 max-w-md flex-1 justify-between rounded-full border border-ui-border/50 bg-ui-bg-soft/70 px-3 text-ui-text-secondary shadow-soft backdrop-blur-sm transition-all duration-default hover:border-ui-border hover:bg-ui-bg-soft hover:text-ui-text"
+        className="h-10 min-w-0 max-w-md flex-1 justify-between rounded-full border border-transparent bg-transparent px-2 text-ui-text-secondary shadow-none transition-all duration-default hover:border-ui-border/70 hover:bg-ui-bg-soft/80 hover:text-ui-text"
       >
         <Flex align="center" gap="sm" className="min-w-0">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ui-bg-secondary/70 text-ui-text-tertiary">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-ui-border/60 bg-linear-to-br from-ui-bg-secondary to-ui-bg-soft text-ui-text-tertiary shadow-soft">
             <Search className="h-4 w-4" />
           </div>
           <Typography variant="small" color="secondary" className="truncate text-xs sm:text-sm">
@@ -470,7 +516,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
       >
         <CommandMenu
           data-testid={TEST_IDS.SEARCH.MODAL}
-          className="bg-linear-to-b from-ui-bg to-ui-bg-secondary/80"
+          className="bg-linear-to-b from-ui-bg to-ui-bg-secondary/70"
           shouldFilter={false}
         >
           <CommandInput
@@ -533,18 +579,20 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
             />
           </CommandList>
 
-          <Typography
-            variant="meta"
-            className="border-t border-ui-border/50 bg-ui-bg-soft/20 px-3 py-2 text-ui-text-tertiary"
-          >
-            Search filters: <code>type:bug</code> <code>status:done</code>{" "}
-            <code>priority:high</code> <code>label:frontend</code> <code>@me</code>
-          </Typography>
+          <div className="border-t border-ui-border/50 bg-ui-bg-soft/20 px-4 py-2.5 text-ui-text-tertiary">
+            <Typography variant="meta" className="hidden sm:block">
+              Search filters: <code>type:bug</code> <code>status:done</code>{" "}
+              <code>priority:high</code> <code>label:frontend</code> <code>@me</code>
+            </Typography>
+            <Typography variant="meta" className="sm:hidden">
+              Try <code>@me</code>, <code>type:bug</code>, or <code>status:done</code>
+            </Typography>
+          </div>
 
           <Flex
             align="center"
             justify="between"
-            className="border-t border-ui-border/50 bg-ui-bg-soft/10 px-3 py-3"
+            className="border-t border-ui-border/50 bg-ui-bg-soft/10 px-4 py-3"
           >
             <Flex align="center" gap="sm" wrap>
               <Button

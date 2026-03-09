@@ -50,6 +50,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
             icon={TrendingUp}
             title="No activity"
             description="Fresh updates from your team will appear here."
+            size="compact"
           />
         ) : (
           <div className="relative h-96 overflow-y-auto pr-2 custom-scrollbar">

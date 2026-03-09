@@ -2,9 +2,11 @@ import { api } from "@convex/_generated/api";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { PageContent, PageError } from "@/components/layout";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key")({
   component: ProjectLayout,
 });
@@ -63,27 +65,57 @@ function ProjectLayout() {
 
   return (
     <Flex direction="column" className="h-full">
-      {/* Tab Navigation */}
-      <div className="border-b border-ui-border bg-ui-bg">
-        <nav className="flex space-x-4 px-4 overflow-x-auto" aria-label="Tabs">
-          {tabs.map((tab) => (
-            <Link
-              key={tab.name}
-              to={tab.to}
-              params={tab.params}
-              className="border-b-2 py-3 px-1 text-sm font-medium transition-colors"
-              activeProps={{
-                className: "border-brand-indigo-border text-brand-indigo-text",
-              }}
-              inactiveProps={{
-                className:
-                  "border-transparent text-ui-text-secondary hover:text-ui-text hover:border-ui-border-secondary",
-              }}
-            >
-              {tab.name}
-            </Link>
-          ))}
-        </nav>
+      <div className="border-b border-ui-border/70 bg-ui-bg/80 px-3 py-3 backdrop-blur-xl sm:px-4">
+        <div className="rounded-2xl border border-ui-border/70 bg-ui-bg-elevated/90 px-4 py-3 shadow-soft">
+          <Flex
+            align="center"
+            justify="between"
+            gap="md"
+            className="flex-col sm:flex-row sm:items-start"
+          >
+            <Flex align="center" gap="sm" className="min-w-0">
+              <Flex
+                align="center"
+                justify="center"
+                className="h-10 w-10 shrink-0 rounded-xl bg-brand-subtle text-brand ring-1 ring-brand/15"
+              >
+                <Typography variant="small" className="font-semibold text-current">
+                  {project.key.slice(0, 2).toUpperCase()}
+                </Typography>
+              </Flex>
+              <div className="min-w-0">
+                <Typography variant="caption" color="tertiary" className="uppercase tracking-wider">
+                  {isScrum ? "Scrum project" : "Kanban project"}
+                </Typography>
+                <Typography variant="h4" className="truncate tracking-tight">
+                  {project.name}
+                </Typography>
+              </div>
+            </Flex>
+            <div className="rounded-full border border-ui-border/60 bg-ui-bg-soft px-3 py-1 text-xs font-medium uppercase tracking-wider text-ui-text-tertiary">
+              {project.key}
+            </div>
+          </Flex>
+
+          <nav className="mt-3 flex gap-1 overflow-x-auto pb-1" aria-label="Project sections">
+            {tabs.map((tab) => (
+              <Link
+                key={tab.name}
+                to={tab.to}
+                params={tab.params}
+                className={cn(
+                  "rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition-default",
+                  "text-ui-text-secondary hover:bg-ui-bg-hover hover:text-ui-text",
+                )}
+                activeProps={{
+                  className: "bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border/70",
+                }}
+              >
+                {tab.name}
+              </Link>
+            ))}
+          </nav>
+        </div>
       </div>
 
       {/* Tab Content */}

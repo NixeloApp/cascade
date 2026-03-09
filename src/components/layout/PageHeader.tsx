@@ -35,7 +35,7 @@ export function PageHeader({
   className,
 }: PageHeaderProps): ReactNode {
   return (
-    <div className={cn("mb-6", className)}>
+    <div className={cn("mb-7 sm:mb-8", className)}>
       {breadcrumbs && breadcrumbs.length > 0 && (
         <Breadcrumb className="mb-2">
           <BreadcrumbList>
@@ -56,13 +56,19 @@ export function PageHeader({
           </BreadcrumbList>
         </Breadcrumb>
       )}
-      <Flex justify="between" align="start" gap="md">
-        <Stack gap="xs">
-          <Typography variant="h3">{title}</Typography>
-          {description && <Typography variant="muted">{description}</Typography>}
+      <Flex justify="between" align="start" gap="md" className="flex-col sm:flex-row sm:items-end">
+        <Stack gap="xs" className="min-w-0">
+          <Typography variant="h2" className="text-3xl lg:text-4xl">
+            {title}
+          </Typography>
+          {description && (
+            <Typography variant="muted" className="max-w-3xl text-sm sm:text-base">
+              {description}
+            </Typography>
+          )}
         </Stack>
         {actions && (
-          <Flex gap="sm" align="center" className="shrink-0">
+          <Flex gap="sm" align="center" className="w-full shrink-0 sm:w-auto">
             {actions}
           </Flex>
         )}

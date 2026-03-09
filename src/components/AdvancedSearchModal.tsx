@@ -93,7 +93,8 @@ export function AdvancedSearchModal({
       open={open}
       onOpenChange={onOpenChange}
       title="Advanced Search"
-      size="xl"
+      description="Search issues by text, then narrow the result set with a few precise filters."
+      size="lg"
       data-testid={TEST_IDS.SEARCH.ADVANCED_MODAL}
       footer={
         <Button onClick={() => onOpenChange(false)} variant="secondary">
@@ -102,6 +103,22 @@ export function AdvancedSearchModal({
       }
     >
       <Stack gap="lg">
+        <Card
+          variant="flat"
+          padding="md"
+          className="border-ui-border-secondary/70 bg-linear-to-br from-ui-bg-soft to-ui-bg-elevated"
+        >
+          <Stack gap="xs">
+            <Typography variant="label" className="uppercase tracking-wider text-ui-text-tertiary">
+              Search playbook
+            </Typography>
+            <Typography variant="small" color="secondary">
+              Start with a title, issue key, or problem phrase. Add filters only when you need to
+              cut a large result set down.
+            </Typography>
+          </Stack>
+        </Card>
+
         {/* Search Input */}
         <Input
           label="Search Issues"
@@ -147,40 +164,58 @@ export function AdvancedSearchModal({
         </Grid>
 
         {/* Results */}
-        <Stack gap="sm">
-          <Flex align="center" justify="between">
-            <Typography variant="label">
-              Results {searchQuery.length >= 2 && `(${total} total, showing ${results.length})`}
-            </Typography>
-            {(selectedType.length > 0 ||
-              selectedPriority.length > 0 ||
-              selectedStatus.length > 0) && (
-              <Button
-                variant="link"
-                size="sm"
-                onClick={() => {
-                  setSelectedType([]);
-                  setSelectedPriority([]);
-                  setSelectedStatus([]);
-                  setOffset(0);
-                }}
+        {searchQuery.length >= 2 ? (
+          <Stack gap="sm">
+            <Flex align="center" justify="between">
+              <Typography
+                variant="label"
+                className="uppercase tracking-wider text-ui-text-tertiary"
               >
-                Clear Filters
-              </Button>
-            )}
-          </Flex>
+                Results ({total} total, showing {results.length})
+              </Typography>
+              {(selectedType.length > 0 ||
+                selectedPriority.length > 0 ||
+                selectedStatus.length > 0) && (
+                <Button
+                  variant="link"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedType([]);
+                    setSelectedPriority([]);
+                    setSelectedStatus([]);
+                    setOffset(0);
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              )}
+            </Flex>
 
-          <Card radius="full" className="overflow-hidden">
-            <SearchResultsList
-              searchQuery={searchQuery}
-              results={results}
-              total={total}
-              hasMore={hasMore}
-              onSelectIssue={handleSelectIssue}
-              onLoadMore={handleLoadMore}
-            />
+            <Card
+              radius="full"
+              className="overflow-hidden border-ui-border-secondary/70 bg-ui-bg-elevated/95 shadow-soft"
+            >
+              <SearchResultsList
+                searchQuery={searchQuery}
+                results={results}
+                total={total}
+                hasMore={hasMore}
+                onSelectIssue={handleSelectIssue}
+                onLoadMore={handleLoadMore}
+              />
+            </Card>
+          </Stack>
+        ) : (
+          <Card
+            variant="flat"
+            padding="md"
+            className="border-ui-border-secondary/70 bg-ui-bg-soft/70"
+          >
+            <Typography variant="small" color="secondary">
+              Results appear once you type at least 2 characters.
+            </Typography>
           </Card>
-        </Stack>
+        )}
       </Stack>
     </Dialog>
   );

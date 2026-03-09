@@ -47,10 +47,20 @@ export function BoardToolbar({
   onDisplayOptionsChange,
 }: BoardToolbarProps) {
   return (
-    <Flex align="center" justify="between" gap="sm" className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3">
-      <Typography variant="h2" className="text-base sm:text-lg font-semibold tracking-tight">
-        {sprintId ? "Sprint Board" : "Kanban Board"}
-      </Typography>
+    <Flex
+      align="center"
+      justify="between"
+      gap="sm"
+      className="mx-3 mt-3 rounded-2xl border border-ui-border/70 bg-ui-bg-elevated px-4 pb-3 pt-4 shadow-soft sm:mx-6 sm:mt-4 sm:px-5"
+    >
+      <div>
+        <Typography variant="h2" className="text-base font-semibold tracking-tight sm:text-lg">
+          {sprintId ? "Sprint Board" : "Kanban Board"}
+        </Typography>
+        <Typography variant="caption" className="mt-1 hidden sm:block">
+          Move work between stages, keep limits visible, and start new items from the right column.
+        </Typography>
+      </div>
       {showControls && (
         <Flex align="center" gap="xs" className="sm:gap-2 shrink-0">
           {/* Undo/Redo buttons */}

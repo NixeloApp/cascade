@@ -17,7 +17,7 @@ const tabsListVariants = cva("inline-flex text-ui-text-secondary", {
   variants: {
     variant: {
       /** Pill style - contained background with rounded items */
-      pill: "h-10 rounded-md bg-ui-bg-soft p-1 border border-ui-border gap-1",
+      pill: "min-h-11 rounded-2xl border border-ui-border-secondary/70 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-soft/80 p-1 shadow-card backdrop-blur-sm supports-[backdrop-filter]:bg-ui-bg-elevated/90 gap-1",
       /** Underline style - border-bottom with underline indicators */
       underline: "h-auto bg-transparent border-0 rounded-none p-0 gap-0 -mb-px",
     },
@@ -48,7 +48,7 @@ const tabsTriggerVariants = cva(
     variants: {
       variant: {
         /** Pill style - background changes on active */
-        pill: "rounded-sm px-3 py-1.5 text-sm hover:bg-ui-bg-hover data-[state=active]:bg-ui-bg data-[state=active]:text-brand data-[state=active]:shadow-sm",
+        pill: "rounded-xl px-3 py-2 text-sm text-ui-text-secondary hover:bg-ui-bg-hover/80 hover:text-ui-text data-[state=active]:bg-ui-bg-elevated data-[state=active]:text-ui-text data-[state=active]:shadow-card data-[state=active]:ring-1 data-[state=active]:ring-ui-border-secondary/70",
         /** Underline style - border-bottom indicator */
         underline:
           "px-4 py-3 text-sm border-b-2 border-transparent rounded-none bg-transparent shadow-none text-ui-text-secondary hover:text-ui-text data-[state=active]:border-brand data-[state=active]:text-brand data-[state=active]:bg-transparent data-[state=active]:shadow-none",
@@ -83,7 +83,7 @@ const TabsContent = React.forwardRef<
   <TabsPrimitive.Content
     ref={ref}
     className={cn(
-      "mt-2 ring-offset-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2",
+      "mt-3 ring-offset-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2",
       className,
     )}
     {...props}

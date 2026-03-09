@@ -30,7 +30,7 @@ function ProjectsPage() {
   };
 
   return (
-    <PageLayout maxWidth="xl">
+    <PageLayout maxWidth="lg">
       <PageHeader
         title="Projects"
         description="Manage your projects and initiatives"

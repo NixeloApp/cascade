@@ -173,7 +173,7 @@ export function NotificationCenter() {
           <Button
             variant="ghost"
             size="icon"
-            className="relative h-9 w-9"
+            className="relative h-9 w-9 rounded-full border border-transparent bg-transparent text-ui-text-secondary shadow-none hover:border-ui-border/70 hover:bg-ui-bg-soft/80 hover:text-ui-text"
             aria-label={dynamicLabel}
             data-testid={TEST_IDS.HEADER.NOTIFICATION_BUTTON}
           >

@@ -85,6 +85,7 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
             icon={Folder}
             title="No projects"
             description="You're not a member of any projects yet"
+            size="compact"
             action={{
               label: "Go to Workspaces",
               onClick: navigateToWorkspaces,

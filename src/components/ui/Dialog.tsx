@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { Flex } from "./Flex";
 
 const dialogVariants = cva(
-  "bg-ui-bg fixed top-1/2 left-1/2 z-50 grid w-full max-w-dialog-mobile -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-ui-border p-6 shadow-elevated origin-center [perspective:800px] data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out",
+  "fixed top-1/2 left-1/2 z-50 grid w-full max-w-dialog-mobile -translate-x-1/2 -translate-y-1/2 gap-5 overflow-y-auto overscroll-contain rounded-3xl border border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg p-6 shadow-elevated origin-center [perspective:800px] data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out",
   {
     variants: {
       size: {
@@ -95,7 +95,7 @@ function Dialog({
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay
           data-testid={TEST_IDS.DIALOG.OVERLAY}
-          className="fixed inset-0 z-50 bg-ui-bg-overlay data-[state=open]:animate-fade-in data-[state=closed]:opacity-0 transition-opacity duration-fast"
+          className="fixed inset-0 z-50 bg-ui-bg-overlay backdrop-blur-sm data-[state=open]:animate-fade-in data-[state=closed]:opacity-0 transition-opacity duration-fast"
         />
         <DialogPrimitive.Content
           data-testid={testId}
@@ -103,12 +103,15 @@ function Dialog({
           onFocusOutside={onFocusOutside}
         >
           {/* Header */}
-          <Flex direction="column" gap="sm" className="text-center sm:text-left">
-            <DialogPrimitive.Title className="text-lg leading-none font-semibold tracking-tight text-ui-text">
+          <Flex direction="column" gap="xs" className="pr-10 text-center sm:text-left">
+            <DialogPrimitive.Title className="text-xl leading-none font-semibold tracking-tight text-ui-text">
               {title}
             </DialogPrimitive.Title>
             <DialogPrimitive.Description
-              className={cn("text-sm", description ? "text-ui-text-secondary" : "sr-only")}
+              className={cn(
+                "max-w-2xl text-sm leading-6",
+                description ? "text-ui-text-secondary" : "sr-only",
+              )}
             >
               {description || title}
             </DialogPrimitive.Description>
@@ -119,12 +122,14 @@ function Dialog({
 
           {/* Footer */}
           {footer && (
-            <Flex className="flex-col-reverse gap-3 sm:flex-row sm:justify-end pt-4">{footer}</Flex>
+            <Flex className="border-t border-ui-border-secondary/60 pt-4 flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              {footer}
+            </Flex>
           )}
 
           {/* Close button */}
           {showCloseButton && (
-            <DialogPrimitive.Close className="absolute top-4 right-4 rounded-sm text-ui-text-secondary opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-brand-ring focus:ring-offset-2 disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
+            <DialogPrimitive.Close className="absolute top-4 right-4 inline-flex h-8 w-8 items-center justify-center rounded-full border border-ui-border-secondary/70 bg-ui-bg-elevated/90 text-ui-text-secondary shadow-soft transition-all hover:border-ui-border-secondary hover:bg-ui-bg-soft hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-brand-ring focus:ring-offset-2 disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
               <XIcon />
               <span className="sr-only">Close</span>
             </DialogPrimitive.Close>

@@ -56,7 +56,10 @@ export function TimerWidget() {
 
   if (runningTimer) {
     return (
-      <Card padding="sm" className="bg-brand-indigo-track border-brand-indigo-border">
+      <Card
+        padding="sm"
+        className="rounded-full border border-brand-indigo-border/70 bg-linear-to-r from-brand-indigo-track via-brand-indigo-track to-brand-indigo-bg/70 shadow-soft"
+      >
         <Flex align="center" gap="sm">
           <Flex align="center" gap="sm">
             {/* Pulsing dot - using output for semantics, spans for phrasing content */}
@@ -97,7 +100,7 @@ export function TimerWidget() {
             onClick={handleStop}
             variant="ghost"
             size="sm"
-            className="text-xs text-brand-indigo-text hover:bg-brand-indigo-bg/10"
+            className="rounded-full px-3 text-xs text-brand-indigo-text hover:bg-brand-indigo-bg/10"
             aria-label="Stop timer"
           >
             Stop
@@ -115,6 +118,7 @@ export function TimerWidget() {
         size="sm"
         leftIcon={<Play className="w-4 h-4" fill="currentColor" />}
         aria-label="Start timer"
+        className="h-10 rounded-full border border-ui-border/70 bg-linear-to-r from-ui-bg-elevated to-ui-bg-soft px-4 shadow-soft hover:border-ui-border-secondary hover:bg-ui-bg-hover"
       >
         <span className="hidden sm:inline">Start Timer</span>
       </Button>

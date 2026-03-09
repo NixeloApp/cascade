@@ -136,17 +136,24 @@ export function TimeEntriesList({
 
   return (
     <Flex direction="column" gap="xl">
-      {/* Add Time Entry Button */}
-      <Flex justify="end">
-        <Button
-          onClick={() => setShowManualEntryModal(true)}
-          variant="primary"
-          size="sm"
-          leftIcon={<Plus className="w-4 h-4" />}
-        >
-          Add Time Entry
-        </Button>
-      </Flex>
+      <Card variant="flat" padding="md" className="border-ui-border-secondary/70 bg-ui-bg-soft/90">
+        <Flex justify="between" align="center" gap="md" className="flex-wrap">
+          <Stack gap="xs">
+            <Typography variant="label">Recent entries</Typography>
+            <Typography variant="caption" color="secondary">
+              Review logged work, fix mistakes quickly, and add time before the week closes.
+            </Typography>
+          </Stack>
+          <Button
+            onClick={() => setShowManualEntryModal(true)}
+            variant="primary"
+            size="sm"
+            leftIcon={<Plus className="w-4 h-4" />}
+          >
+            Add Time Entry
+          </Button>
+        </Flex>
+      </Card>
 
       {groupedEntries.map(({ date: isoDate, entries: dateEntries, duration }) => (
         <Stack key={isoDate} gap="sm">

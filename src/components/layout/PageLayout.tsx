@@ -6,8 +6,8 @@ type MaxWidth = "sm" | "md" | "lg" | "xl" | "2xl" | "full";
 const maxWidthClasses: Record<MaxWidth, string> = {
   sm: "max-w-3xl",
   md: "max-w-4xl",
-  lg: "max-w-6xl",
-  xl: "max-w-7xl",
+  lg: "max-w-5xl",
+  xl: "max-w-6xl",
   "2xl": "max-w-screen-2xl",
   full: "max-w-full",
 };
@@ -29,7 +29,7 @@ export function PageLayout({
   return (
     <div
       className={cn(
-        "p-4 sm:p-6 animate-fade-in",
+        "mx-auto w-full animate-fade-in px-4 py-5 sm:px-6 sm:py-6 lg:px-8",
         maxWidthClasses[maxWidth],
         fullHeight && "h-full overflow-y-auto",
         className,

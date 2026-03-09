@@ -40,10 +40,10 @@ export function SearchResultsList({
 }: SearchResultsListProps) {
   if (searchQuery.length < 2) {
     return (
-      <Card padding="xl" variant="ghost" className="text-center text-ui-text-tertiary">
+      <Card padding="lg" variant="ghost" className="text-center text-ui-text-tertiary">
         <svg
           aria-hidden="true"
-          className="w-16 h-16 mx-auto mb-4 text-ui-text-tertiary"
+          className="mx-auto mb-3 h-10 w-10 text-ui-text-tertiary"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -62,7 +62,7 @@ export function SearchResultsList({
 
   if (results.length === 0) {
     return (
-      <Card padding="xl" variant="ghost" className="text-center text-ui-text-tertiary">
+      <Card padding="lg" variant="ghost" className="text-center text-ui-text-tertiary">
         <Typography variant="muted">No issues found matching your criteria</Typography>
       </Card>
     );

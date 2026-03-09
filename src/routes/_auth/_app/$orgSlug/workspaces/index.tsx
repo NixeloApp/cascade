@@ -1,28 +1,224 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import type { FunctionReturnType } from "convex/server";
 
 import { useState } from "react";
 import { CreateWorkspaceModal } from "@/components/CreateWorkspaceModal";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Metadata, MetadataItem } from "@/components/ui/Metadata";
+import { OverviewBand } from "@/components/ui/OverviewBand";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Building2 } from "@/lib/icons";
+
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/")({
   component: WorkspacesList,
 });
+
+type WorkspaceListItem = FunctionReturnType<typeof api.workspaces.list>[number];
+
+interface WorkspaceCardProps {
+  orgSlug: string;
+  workspace: WorkspaceListItem;
+  compact?: boolean;
+}
+
+function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardProps) {
+  const footer = (
+    <Flex
+      align="center"
+      justify="between"
+      gap="md"
+      className="rounded-xl border border-ui-border-secondary/70 bg-ui-bg-soft/90 px-3 py-2"
+      wrap
+    >
+      <Metadata size="sm">
+        <MetadataItem>
+          {workspace.teamCount} {workspace.teamCount === 1 ? "team" : "teams"}
+        </MetadataItem>
+        <MetadataItem>
+          {workspace.projectCount} {workspace.projectCount === 1 ? "project" : "projects"}
+        </MetadataItem>
+      </Metadata>
+      <Badge variant="outline" shape="pill">
+        Open workspace
+      </Badge>
+    </Flex>
+  );
+
+  if (compact) {
+    return (
+      <Link
+        to={ROUTES.workspaces.detail.path}
+        params={{ orgSlug, workspaceSlug: workspace.slug }}
+        className="block h-full"
+      >
+        <Card hoverable className="h-full p-6">
+          <div className="grid gap-5 lg:grid-cols-12">
+            <Flex direction="column" gap="lg" className="lg:col-span-7">
+              <Flex align="start" justify="between" gap="md">
+                <Flex align="center" gap="sm">
+                  {workspace.icon && (
+                    <Flex
+                      align="center"
+                      justify="center"
+                      className="h-12 w-12 shrink-0 rounded-2xl border border-ui-border/60 bg-ui-bg-soft text-2xl shadow-soft"
+                    >
+                      <span aria-hidden="true">{workspace.icon}</span>
+                    </Flex>
+                  )}
+                  <div>
+                    <Typography variant="h4">{workspace.name}</Typography>
+                    <Flex align="center" gap="sm" className="mt-2 flex-wrap">
+                      <Badge variant="secondary" shape="pill">
+                        Workspace
+                      </Badge>
+                      <Badge variant="outline" shape="pill">
+                        {workspace.slug}
+                      </Badge>
+                    </Flex>
+                  </div>
+                </Flex>
+                <Badge variant="outline" shape="pill">
+                  {workspace.teamCount} {workspace.teamCount === 1 ? "team" : "teams"}
+                </Badge>
+              </Flex>
+
+              <Typography variant="small" color="secondary" className="max-w-2xl">
+                {workspace.description ||
+                  "Group related teams and projects here so ownership stays visible as the organization grows."}
+              </Typography>
+
+              <Typography variant="caption" color="secondary" className="max-w-xl">
+                This workspace acts as the primary operating lane for its teams, projects, and
+                calendar views.
+              </Typography>
+            </Flex>
+
+            <Stack gap="sm" className="lg:col-span-5">
+              <Grid cols={2} gap="sm">
+                <Card
+                  variant="flat"
+                  padding="sm"
+                  className="border-ui-border-secondary/70 bg-ui-bg-soft/90"
+                >
+                  <Typography variant="caption" className="uppercase tracking-wide">
+                    Teams
+                  </Typography>
+                  <Typography variant="h5" className="mt-2">
+                    {workspace.teamCount}
+                  </Typography>
+                </Card>
+                <Card
+                  variant="flat"
+                  padding="sm"
+                  className="border-ui-border-secondary/70 bg-ui-bg-soft/90"
+                >
+                  <Typography variant="caption" className="uppercase tracking-wide">
+                    Projects
+                  </Typography>
+                  <Typography variant="h5" className="mt-2">
+                    {workspace.projectCount}
+                  </Typography>
+                </Card>
+              </Grid>
+
+              {footer}
+            </Stack>
+          </div>
+        </Card>
+      </Link>
+    );
+  }
+
+  return (
+    <Link
+      to={ROUTES.workspaces.detail.path}
+      params={{ orgSlug, workspaceSlug: workspace.slug }}
+      className="block h-full"
+    >
+      <Card hoverable className="h-full p-6">
+        <Flex direction="column" gap="lg" className="h-full">
+          <Flex align="start" justify="between" gap="md">
+            <Flex align="center" gap="sm">
+              {workspace.icon && (
+                <Flex
+                  align="center"
+                  justify="center"
+                  className="h-12 w-12 shrink-0 rounded-2xl border border-ui-border/60 bg-ui-bg-soft text-2xl shadow-soft"
+                >
+                  <span aria-hidden="true">{workspace.icon}</span>
+                </Flex>
+              )}
+              <div>
+                <Typography variant="h4">{workspace.name}</Typography>
+                <Typography variant="caption">Workspace</Typography>
+              </div>
+            </Flex>
+            <Badge variant="outline" shape="pill">
+              {workspace.teamCount} {workspace.teamCount === 1 ? "team" : "teams"}
+            </Badge>
+          </Flex>
+
+          <Typography variant="small" color="secondary" className="max-w-2xl">
+            {workspace.description ||
+              "Group related teams and projects here so ownership stays visible as the organization grows."}
+          </Typography>
+
+          <Grid cols={2} gap="sm">
+            <Card
+              variant="flat"
+              padding="sm"
+              className="border-ui-border-secondary/70 bg-ui-bg-soft/90"
+            >
+              <Typography variant="caption" className="uppercase tracking-wide">
+                Teams
+              </Typography>
+              <Typography variant="h5" className="mt-2">
+                {workspace.teamCount}
+              </Typography>
+            </Card>
+            <Card
+              variant="flat"
+              padding="sm"
+              className="border-ui-border-secondary/70 bg-ui-bg-soft/90"
+            >
+              <Typography variant="caption" className="uppercase tracking-wide">
+                Projects
+              </Typography>
+              <Typography variant="h5" className="mt-2">
+                {workspace.projectCount}
+              </Typography>
+            </Card>
+          </Grid>
+
+          <div className="mt-auto">{footer}</div>
+        </Flex>
+      </Card>
+    </Link>
+  );
+}
 
 function WorkspacesList() {
   const { organizationId, orgSlug } = useOrganization();
   const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const workspaces = useAuthenticatedQuery(api.workspaces.list, { organizationId });
+  const workspaceCount = workspaces?.length ?? 0;
+  const totalTeams = workspaces?.reduce((sum, workspace) => sum + workspace.teamCount, 0) ?? 0;
+  const totalProjects =
+    workspaces?.reduce((sum, workspace) => sum + workspace.projectCount, 0) ?? 0;
+  const gridColumns = workspaceCount > 1 ? 2 : 1;
+  const isCompactOverview = workspaceCount <= 1;
+  const pageWidth = isCompactOverview ? "md" : "lg";
 
   const handleWorkspaceCreated = (slug: string) => {
     navigate({
@@ -32,7 +228,7 @@ function WorkspacesList() {
   };
 
   return (
-    <PageLayout>
+    <PageLayout maxWidth={pageWidth}>
       <PageHeader
         title="Workspaces"
         description="Organize your organization into departments and teams"
@@ -63,44 +259,72 @@ function WorkspacesList() {
           ),
         }}
       >
-        <Grid cols={1} colsMd={2} colsLg={3} gap="xl">
-          {workspaces?.map((workspace) => (
-            <Link
-              key={workspace._id}
-              to={ROUTES.workspaces.detail.path}
-              params={{ orgSlug, workspaceSlug: workspace.slug }}
-            >
-              <Card hoverable className="p-6">
-                <Flex direction="column" gap="md">
-                  <Flex align="center" gap="sm">
-                    {workspace.icon && (
-                      <Typography variant="h2" as="span">
-                        {workspace.icon}
-                      </Typography>
-                    )}
-                    <Typography variant="h3">{workspace.name}</Typography>
-                  </Flex>
+        {isCompactOverview ? (
+          <Stack gap="xl">
+            <OverviewBand
+              eyebrow="Workspace map"
+              title="Structure teams before work gets scattered."
+              description="Use workspaces to group departments, keep related projects together, and route ownership cleanly across the organization."
+              metrics={[
+                { label: "Workspaces", value: workspaceCount, detail: "Operating areas" },
+                { label: "Teams", value: totalTeams, detail: "Grouped beneath them" },
+                { label: "Projects", value: totalProjects, detail: "Routed by ownership" },
+              ]}
+              aside={
+                <Stack gap="sm">
+                  <Typography variant="label">Recommended next step</Typography>
+                  <Typography variant="small" color="secondary">
+                    Create one workspace for each durable operating area, then branch teams
+                    underneath it instead of flattening everything into the sidebar.
+                  </Typography>
+                </Stack>
+              }
+            />
 
-                  {workspace.description && (
-                    <Typography variant="p" color="secondary">
-                      {workspace.description}
+            <Grid cols={1} colsMd={gridColumns} gap="xl">
+              {workspaces?.map((workspace) => (
+                <WorkspaceCard
+                  key={workspace._id}
+                  orgSlug={orgSlug}
+                  workspace={workspace}
+                  compact
+                />
+              ))}
+            </Grid>
+          </Stack>
+        ) : (
+          <Grid cols={1} colsLg={12} gap="xl">
+            <div className="lg:col-span-7">
+              <Grid cols={1} colsMd={gridColumns} gap="xl">
+                {workspaces?.map((workspace) => (
+                  <WorkspaceCard key={workspace._id} orgSlug={orgSlug} workspace={workspace} />
+                ))}
+              </Grid>
+            </div>
+
+            <div className="lg:col-span-5">
+              <OverviewBand
+                eyebrow="Operating structure"
+                title="Keep ownership obvious before the org gets noisy."
+                description="Use workspaces as the durable top-level map for departments, business units, or client delivery pods so people know where projects belong."
+                metrics={[
+                  { label: "Workspaces", value: workspaceCount, detail: "Primary lanes" },
+                  { label: "Teams", value: totalTeams, detail: "Organized beneath them" },
+                  { label: "Projects", value: totalProjects, detail: "Mapped to clear homes" },
+                ]}
+                aside={
+                  <Stack gap="sm">
+                    <Typography variant="label">Design principle</Typography>
+                    <Typography variant="small" color="secondary">
+                      Keep the number of workspaces low and durable. Teams and projects can shift
+                      more often, but the workspace map should remain legible over time.
                     </Typography>
-                  )}
-
-                  <Metadata size="sm">
-                    <MetadataItem>
-                      {workspace.teamCount} {workspace.teamCount === 1 ? "team" : "teams"}
-                    </MetadataItem>
-                    <MetadataItem>
-                      {workspace.projectCount}{" "}
-                      {workspace.projectCount === 1 ? "project" : "projects"}
-                    </MetadataItem>
-                  </Metadata>
-                </Flex>
-              </Card>
-            </Link>
-          ))}
-        </Grid>
+                  </Stack>
+                }
+              />
+            </div>
+          </Grid>
+        )}
       </PageContent>
     </PageLayout>
   );

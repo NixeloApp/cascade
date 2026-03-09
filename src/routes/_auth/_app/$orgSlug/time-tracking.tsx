@@ -43,7 +43,7 @@ function TimeTrackingPageRoute() {
 
   // Platform admin - show all tabs
   return (
-    <PageLayout>
+    <PageLayout maxWidth="lg">
       <PageHeader
         title="Time Tracking"
         description="Track time, analyze costs, and monitor burn rate"

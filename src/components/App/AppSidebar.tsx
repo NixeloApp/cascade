@@ -114,9 +114,13 @@ function NavSubItem({
 }: NavSubItemProps) {
   return (
     <Tooltip content={label}>
-      <NavItemBase asChild active={isActive} size="sm">
+      <NavItemBase asChild active={isActive} size="sm" className="min-h-9">
         <Link to={to} params={params} onClick={onClick} {...props}>
-          {Icon && <Icon className="w-4 h-4 shrink-0" />}
+          {Icon && (
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-ui-bg-soft text-ui-text-tertiary ring-1 ring-ui-border/60">
+              <Icon className="h-3.5 w-3.5 shrink-0" />
+            </span>
+          )}
           <span className="truncate">{label}</span>
         </Link>
       </NavItemBase>
@@ -188,7 +192,7 @@ function WorkspacesSectionContent({
       ))}
       {showSearch && filteredCount === 0 && (
         <li className="list-none">
-          <Typography variant="caption" color="tertiary" className="px-3 py-1">
+          <Typography variant="caption" color="tertiary" className="px-3 py-2">
             No matching workspaces
           </Typography>
         </li>
@@ -310,7 +314,7 @@ function WorkspaceNavItem({
           variant="ghost"
           size="icon"
           onClick={() => onToggleWorkspace(workspace.slug)}
-          className="h-6 w-6 p-0.5"
+          className="h-7 w-7 rounded-lg p-0.5 text-ui-text-tertiary hover:bg-ui-bg-hover"
           aria-expanded={isExpanded}
           aria-label={isExpanded ? `Collapse ${workspace.name}` : `Expand ${workspace.name}`}
         >
@@ -331,7 +335,7 @@ function WorkspaceNavItem({
             e.stopPropagation();
             onCreateTeam({ id: workspace._id, slug: workspace.slug });
           }}
-          className="h-6 w-6 p-1"
+          className="h-7 w-7 rounded-lg p-1"
           aria-label="Create new team"
         >
           <Plus className="w-4 h-4 text-ui-text-tertiary" />
@@ -477,8 +481,8 @@ export function AppSidebar() {
       <aside
         className={cn(
           "fixed lg:relative z-50 lg:z-auto h-screen overflow-hidden",
-          "bg-linear-to-b from-ui-bg-sidebar to-ui-bg-secondary",
-          "border-r border-ui-border",
+          "bg-linear-to-b from-ui-bg-sidebar via-ui-bg-sidebar to-ui-bg/96 backdrop-blur-xl",
+          "border-r border-ui-border-secondary/70 shadow-card",
           "transition-default",
           // Force full width on mobile, respect collapse on desktop
           isCollapsed ? "lg:w-16 w-64" : "w-64",
@@ -487,13 +491,46 @@ export function AppSidebar() {
       >
         <Flex direction="column" className="h-full">
           {/* Header with organization name and collapse toggle */}
-          <Flex align="center" justify="between" className="p-4 border-b border-ui-border">
+          <Flex
+            align="center"
+            justify="between"
+            className="border-b border-ui-border-secondary/70 p-3"
+          >
             {!showCollapsed && (
               <Tooltip content={organizationName}>
-                <Link to={ROUTES.dashboard.path} params={{ orgSlug }} onClick={handleNavClick}>
-                  <Typography variant="large" className="truncate max-w-40">
-                    {organizationName}
-                  </Typography>
+                <Link
+                  to={ROUTES.dashboard.path}
+                  params={{ orgSlug }}
+                  onClick={handleNavClick}
+                  className="min-w-0 flex-1"
+                >
+                  <Flex
+                    align="center"
+                    gap="sm"
+                    className="rounded-2xl border border-ui-border-secondary/70 bg-ui-bg-elevated/95 px-3 py-2 shadow-soft"
+                  >
+                    <Flex
+                      align="center"
+                      justify="center"
+                      className="h-9 w-9 shrink-0 rounded-xl bg-brand-subtle text-brand ring-1 ring-brand/15"
+                    >
+                      <Typography variant="small" className="font-semibold text-current">
+                        {organizationName.charAt(0).toUpperCase()}
+                      </Typography>
+                    </Flex>
+                    <div className="min-w-0">
+                      <Typography
+                        variant="caption"
+                        color="tertiary"
+                        className="uppercase tracking-wider"
+                      >
+                        Workspace
+                      </Typography>
+                      <Typography variant="large" className="max-w-36 truncate">
+                        {organizationName}
+                      </Typography>
+                    </div>
+                  </Flex>
                 </Link>
               </Tooltip>
             )}
@@ -503,7 +540,10 @@ export function AppSidebar() {
               variant="ghost"
               size="icon"
               onClick={toggleCollapse}
-              className={cn("hidden lg:flex h-9 w-9", showCollapsed && "mx-auto")}
+              className={cn(
+                "hidden h-9 w-9 rounded-xl border border-ui-border-secondary/70 bg-ui-bg-elevated/85 shadow-soft lg:flex",
+                showCollapsed && "mx-auto",
+              )}
               aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {isCollapsed ? (
@@ -518,7 +558,7 @@ export function AppSidebar() {
               variant="ghost"
               size="icon"
               onClick={closeMobile}
-              className="lg:hidden h-9 w-9 text-ui-text-secondary"
+              className="h-9 w-9 rounded-xl border border-ui-border-secondary/70 bg-ui-bg-elevated/85 text-ui-text-secondary shadow-soft lg:hidden"
               aria-label="Close sidebar"
             >
               <X className="w-5 h-5" />
@@ -528,10 +568,10 @@ export function AppSidebar() {
           {/* Navigation */}
           <FlexItem
             as="nav"
-            className="flex-1 overflow-y-auto p-2 scrollbar-subtle"
+            className="flex-1 overflow-y-auto px-2 py-3 scrollbar-subtle"
             aria-label="Main Navigation"
           >
-            <ul className="flex flex-col gap-1 list-none">
+            <ul className="flex flex-col gap-1.5 list-none">
               {/* Dashboard */}
               <NavItem
                 to={ROUTES.dashboard.path}
@@ -595,13 +635,11 @@ export function AppSidebar() {
               {/* Products Section */}
               {!showCollapsed && (
                 <li className="list-none">
-                  <Typography
-                    variant="small"
-                    color="tertiary"
-                    className="px-3 mt-4 mb-2 text-caption font-bold uppercase tracking-wider"
-                  >
-                    Products
-                  </Typography>
+                  <div className="mb-3 mt-5 px-3">
+                    <span className="inline-flex items-center rounded-full border border-ui-border/70 bg-ui-bg-elevated/80 px-2.5 py-1 text-caption font-semibold uppercase tracking-wider text-ui-text-tertiary shadow-soft">
+                      Products
+                    </span>
+                  </div>
                 </li>
               )}
 
@@ -724,7 +762,7 @@ export function AppSidebar() {
           </FlexItem>
 
           {/* Bottom section - Settings */}
-          <div className="p-2 border-t border-ui-border">
+          <div className="border-t border-ui-border-secondary/70 p-2">
             <ul className="list-none">
               <NavItem
                 to={ROUTES.settings.profile.path}
@@ -775,7 +813,13 @@ function NavItem({
   ...props
 }: NavItemProps) {
   const content = (
-    <NavItemBase asChild active={isActive} collapsed={isCollapsed} variant="bordered">
+    <NavItemBase
+      asChild
+      active={isActive}
+      collapsed={isCollapsed}
+      variant="bordered"
+      className="group"
+    >
       <Link
         to={to}
         params={params}
@@ -785,7 +829,16 @@ function NavItem({
         data-tour={dataTour}
         aria-label={isCollapsed ? label : undefined}
       >
-        <Icon className="w-5 h-5 shrink-0" />
+        <span
+          className={cn(
+            "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ring-1 transition-default",
+            isActive
+              ? "bg-brand-subtle text-brand ring-brand/20"
+              : "bg-ui-bg-soft text-ui-text-tertiary ring-ui-border/60 group-hover:bg-ui-bg-hover group-hover:text-ui-text-secondary",
+          )}
+        >
+          <Icon className="h-4.5 w-4.5 shrink-0" />
+        </span>
         {!isCollapsed && label}
       </Link>
     </NavItemBase>
@@ -878,7 +931,7 @@ function CollapsibleSection({
           variant="ghost"
           size="icon"
           onClick={onToggle}
-          className="h-6 w-6 p-0.5"
+          className="h-7 w-7 rounded-lg p-0.5 text-ui-text-tertiary hover:bg-ui-bg-hover"
           aria-expanded={isExpanded}
           aria-label={isExpanded ? `Collapse ${label}` : `Expand ${label}`}
         >
@@ -894,11 +947,20 @@ function CollapsibleSection({
             to={props.to}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "flex-1 flex items-center gap-2 text-sm font-medium transition-default",
+              "flex flex-1 items-center gap-3 text-sm font-medium transition-default",
               isActive ? "text-ui-text" : "text-ui-text-secondary hover:text-ui-text",
             )}
           >
-            <Icon className="w-5 h-5" />
+            <span
+              className={cn(
+                "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ring-1 transition-default",
+                isActive
+                  ? "bg-brand-subtle text-brand ring-brand/20 shadow-soft"
+                  : "bg-ui-bg-elevated text-ui-text-tertiary ring-ui-border-secondary/70 shadow-soft",
+              )}
+            >
+              <Icon className="h-4.5 w-4.5" />
+            </span>
             {label}
           </Link>
         ) : (
@@ -907,7 +969,9 @@ function CollapsibleSection({
             gap="sm"
             className="flex-1 text-sm font-medium text-ui-text-secondary transition-default"
           >
-            <Icon className="w-5 h-5" />
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-ui-bg-soft text-ui-text-tertiary ring-1 ring-ui-border/60">
+              <Icon className="h-4.5 w-4.5" />
+            </span>
             {label}
           </Flex>
         )}
@@ -919,7 +983,7 @@ function CollapsibleSection({
             e.stopPropagation();
             onAdd();
           }}
-          className="h-6 w-6 p-1"
+          className="h-7 w-7 rounded-lg p-1"
           aria-label={`Add new ${label.toLowerCase().slice(0, -1)}`}
         >
           <Plus className="w-4 h-4 text-ui-text-tertiary" />
@@ -927,7 +991,11 @@ function CollapsibleSection({
       </NavItemBase>
 
       {/* Section children */}
-      {isExpanded && <ul className="ml-4 mt-1 space-y-1 list-none">{children}</ul>}
+      {isExpanded && (
+        <ul className="ml-5 mt-1.5 space-y-1 rounded-2xl border border-ui-border-secondary/60 bg-ui-bg-elevated/70 p-2 shadow-soft list-none">
+          {children}
+        </ul>
+      )}
     </li>
   );
 }

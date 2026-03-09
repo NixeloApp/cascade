@@ -27,6 +27,7 @@ import { type Browser, chromium, type Locator, type Page } from "@playwright/tes
 import { TEST_IDS } from "../src/lib/test-ids";
 import { TEST_USERS } from "./config";
 import { E2E_TIMEZONE } from "./constants";
+import { ProjectsPage } from "./pages";
 import { type SeedScreenshotResult, testUserService } from "./utils/test-user-service";
 
 // ---------------------------------------------------------------------------
@@ -292,6 +293,12 @@ async function openOmnibox(page: Page, trigger: Locator, dialog: Locator): Promi
 
   await dialog.waitFor({ state: "visible", timeout: 5000 });
   await page.getByTestId(TEST_IDS.SEARCH.INPUT).waitFor({ state: "visible", timeout: 5000 });
+  await dialog
+    .getByText(/jump faster across your workspace/i)
+    .first()
+    .waitFor({ state: "visible", timeout: 5000 })
+    .catch(() => {});
+  await waitForScreenshotReady(page);
   await page.waitForTimeout(250);
 }
 
@@ -309,6 +316,10 @@ function isProjectCalendarUrl(url: string): boolean {
 
 function isProjectSettingsUrl(url: string): boolean {
   return /\/projects\/[^/]+\/settings$/.test(url);
+}
+
+function isSettingsUrl(url: string): boolean {
+  return /\/[^/]+\/settings(?:\/profile)?$/.test(url);
 }
 
 async function waitForCalendarReady(page: Page): Promise<boolean> {
@@ -409,6 +420,38 @@ async function waitForExpectedContent(page: Page, url: string, name: string): Pr
     return;
   }
 
+  if (isSettingsUrl(url) || name === "settings" || name === "settings-profile") {
+    await page
+      .waitForURL(
+        (currentUrl) => /\/[^/]+\/settings\/profile$/.test(new URL(currentUrl).pathname),
+        {
+          timeout: 12000,
+        },
+      )
+      .catch(() => {});
+    await page
+      .getByRole("heading", { name: /^settings$/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("tab", { name: /^profile$/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByText(/manage your account, integrations, and preferences/i)
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .locator(".animate-spin")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    return;
+  }
+
   if (
     isProjectCalendarUrl(url) ||
     name === "calendar-event-modal" ||
@@ -425,6 +468,7 @@ async function waitForScreenshotReady(page: Page): Promise<void> {
   // App shell loading indicator may appear during route/query transitions.
   const loadingSpinner = page
     .getByLabel("Loading")
+    .or(page.getByRole("status").filter({ has: page.locator(".animate-spin") }))
     .or(page.locator("[data-loading-spinner]"))
     .first();
   await loadingSpinner.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
@@ -803,27 +847,17 @@ async function screenshotProjectsModal(page: Page, orgSlug: string, prefix: stri
     .catch(() => {});
   await waitForScreenshotReady(page);
 
-  const createProjectButton = page
-    .getByRole("main")
-    .last()
-    .getByRole("button", {
-      name: /\+ create project/i,
-    });
-  const createProjectDialog = page.getByRole("dialog").filter({
-    has: page.getByTestId(TEST_IDS.PROJECT.CREATE_MODAL),
-  });
+  const projectsPage = new ProjectsPage(page, orgSlug);
 
-  if ((await createProjectButton.count()) === 0) {
+  if ((await projectsPage.newProjectButton.count()) === 0) {
     return;
   }
 
   await runCaptureStep("projects create-project modal", async () => {
-    await dismissIfOpen(page, createProjectDialog);
-    await createProjectButton.first().waitFor({ state: "visible", timeout: 5000 });
-    await createProjectButton.first().click({ force: true });
-    await createProjectDialog.waitFor({ state: "visible", timeout: 5000 });
+    await projectsPage.openCreateProjectForm();
+    await waitForScreenshotReady(page);
     await captureCurrentView(page, prefix, "projects-create-project-modal");
-    await dismissIfOpen(page, createProjectDialog);
+    await projectsPage.closeCreateProjectFormIfOpen();
   });
 }
 

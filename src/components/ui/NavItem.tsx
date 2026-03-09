@@ -4,7 +4,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const navItemVariants = cva(
-  "flex items-center gap-3 rounded-md transition-default text-sm font-medium",
+  "flex items-center gap-3 rounded-xl transition-default text-sm font-medium",
   {
     variants: {
       variant: {
@@ -12,19 +12,20 @@ const navItemVariants = cva(
         bordered: "",
       },
       size: {
-        sm: "px-2 py-1.5",
-        md: "px-3 py-2",
+        sm: "px-2.5 py-2",
+        md: "px-3 py-2.5",
       },
       active: {
-        true: "bg-ui-bg-hover text-ui-text",
-        false: "text-ui-text-secondary hover:bg-ui-bg-hover hover:text-ui-text",
+        true: "bg-ui-bg-elevated text-ui-text shadow-card ring-1 ring-inset ring-ui-border-secondary/80",
+        false:
+          "text-ui-text-secondary hover:bg-ui-bg-elevated/85 hover:text-ui-text hover:shadow-soft hover:ring-1 hover:ring-inset hover:ring-ui-border/60",
       },
     },
     compoundVariants: [
       {
         variant: "bordered",
         active: true,
-        className: "border-l-2 border-brand",
+        className: "ring-brand/20",
       },
     ],
     defaultVariants: {

@@ -166,6 +166,9 @@ export function ActivityFeed({ projectId, limit = 50, compact = false }: Activit
           icon={Clock}
           title="No activity yet"
           description="Activity will appear here as work progresses"
+          align={compact ? "center" : "start"}
+          size={compact ? "compact" : "default"}
+          className={compact ? undefined : "max-w-full"}
         />
       </div>
     );
