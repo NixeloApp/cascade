@@ -345,6 +345,55 @@ function areFocusedIssuesEqual(prev: KanbanColumnProps, next: KanbanColumnProps)
   return !(wasFocusedInColumn || isFocusedInColumn);
 }
 
+function getStateIssues(state: WorkflowState, issues: Issue[]): Issue[] {
+  return state.category !== "done" ? issues : [...issues].sort((a, b) => a.order - b.order);
+}
+
+function getWipLimitState(wipLimit: number | undefined, issueCount: number) {
+  const normalizedLimit = wipLimit ?? 0;
+  const hasWipLimit = normalizedLimit > 0;
+
+  return {
+    isAtWipLimit: hasWipLimit && issueCount === normalizedLimit,
+    isOverWipLimit: hasWipLimit && issueCount > normalizedLimit,
+  };
+}
+
+function useKanbanColumnDropTarget({
+  columnRef,
+  stateId,
+  onIssueDrop,
+  setIsDraggedOver,
+}: {
+  columnRef: React.RefObject<HTMLElement | null>;
+  stateId: string;
+  onIssueDrop?: (issueId: Id<"issues">, sourceStatus: string, targetStatus: string) => void;
+  setIsDraggedOver: (value: boolean) => void;
+}) {
+  useEffect(() => {
+    const element = columnRef.current;
+    if (!element) return;
+
+    return dropTargetForElements({
+      element,
+      getData: () => createColumnData(stateId, stateId),
+      canDrop: ({ source }) => {
+        // Only accept issue cards
+        return isIssueCardData(source.data as Record<string, unknown>);
+      },
+      onDragEnter: () => setIsDraggedOver(true),
+      onDragLeave: () => setIsDraggedOver(false),
+      onDrop: ({ source }) => {
+        setIsDraggedOver(false);
+        const data = source.data as IssueCardData;
+        if (isIssueCardData(source.data as Record<string, unknown>)) {
+          onIssueDrop?.(data.issueId, data.status, stateId);
+        }
+      },
+    });
+  }, [columnRef, onIssueDrop, setIsDraggedOver, stateId]);
+}
+
 /**
  * Custom equality check for KanbanColumn props
  * Optimizes performance by checking if selectedIssueIds actually affects this column
@@ -399,47 +448,24 @@ const KanbanColumnComponent = function KanbanColumn({
   const columnRef = useRef<HTMLElement>(null);
   const [isDraggedOver, setIsDraggedOver] = useState(false);
 
-  // Issues are now pre-filtered by status from parent
-  const stateIssues =
-    // "todo" and "inprogress" columns are already sorted by order from the server.
-    // "done" columns are sorted by updatedAt, so we need to resort them if we want order-based sorting.
-    state.category !== "done" ? issues : [...issues].sort((a, b) => a.order - b.order);
+  // Issues are now pre-filtered by status from parent.
+  // "done" columns are sorted by updatedAt, so we resort them if order-based rendering is needed.
+  const stateIssues = getStateIssues(state, issues);
+  const { isAtWipLimit, isOverWipLimit } = getWipLimitState(state.wipLimit, stateIssues.length);
 
-  // WIP limit checks
-  const wipLimit = state.wipLimit ?? 0;
-  const hasWipLimit = wipLimit > 0;
-  const isAtWipLimit = hasWipLimit && stateIssues.length === wipLimit;
-  const isOverWipLimit = hasWipLimit && stateIssues.length > wipLimit;
-
-  // Set up Pragmatic DnD drop target
-  useEffect(() => {
-    const element = columnRef.current;
-    if (!element) return;
-
-    return dropTargetForElements({
-      element,
-      getData: () => createColumnData(state.id, state.id),
-      canDrop: ({ source }) => {
-        // Only accept issue cards
-        return isIssueCardData(source.data as Record<string, unknown>);
-      },
-      onDragEnter: () => setIsDraggedOver(true),
-      onDragLeave: () => setIsDraggedOver(false),
-      onDrop: ({ source }) => {
-        setIsDraggedOver(false);
-        const data = source.data as IssueCardData;
-        if (isIssueCardData(source.data as Record<string, unknown>)) {
-          onIssueDrop?.(data.issueId, data.status, state.id);
-        }
-      },
-    });
-  }, [state.id, onIssueDrop]);
+  useKanbanColumnDropTarget({
+    columnRef,
+    stateId: state.id,
+    onIssueDrop,
+    setIsDraggedOver,
+  });
 
   const handleCreateIssue = () => onCreateIssue?.(state.id);
-
+  const createIssueHandler = onCreateIssue ? handleCreateIssue : undefined;
   const handleLoadMore = () => onLoadMore?.();
-
   const handleToggleCollapse = () => onToggleCollapse?.(state.id);
+  const collapseHandler = onToggleCollapse ? handleToggleCollapse : undefined;
+  const showEmptyState = stateIssues.length === 0 && hiddenCount === 0;
 
   // Render collapsed column view
   if (isCollapsed) {
@@ -483,17 +509,14 @@ const KanbanColumnComponent = function KanbanColumn({
         isAtWipLimit={isAtWipLimit}
         canEdit={canEdit}
         columnIndex={columnIndex}
-        onToggleCollapse={onToggleCollapse ? handleToggleCollapse : undefined}
-        onCreateIssue={onCreateIssue ? handleCreateIssue : undefined}
+        onToggleCollapse={collapseHandler}
+        onCreateIssue={createIssueHandler}
       />
 
       {/* Issues */}
       <div className="flex min-h-72 flex-col space-y-2 p-2.5 transition-default lg:min-h-96">
-        {stateIssues.length === 0 && hiddenCount === 0 ? (
-          <EmptyColumnState
-            canEdit={canEdit}
-            onCreateIssue={onCreateIssue ? handleCreateIssue : undefined}
-          />
+        {showEmptyState ? (
+          <EmptyColumnState canEdit={canEdit} onCreateIssue={createIssueHandler} />
         ) : (
           <>
             {stateIssues.map((issue, issueIndex) => (

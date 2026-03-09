@@ -74,6 +74,46 @@ function getDateRangeBounds(range: TimeTrackingDateRange): {
   }
 }
 
+function formatLoggedMetric(totalLoggedSeconds: number, isTruncated: boolean): string {
+  if (totalLoggedSeconds === 0) {
+    return "0m";
+  }
+
+  return `${formatDurationHuman(totalLoggedSeconds)}${isTruncated ? "+" : ""}`;
+}
+
+function getEntriesMetricDetail(selectedProject: Id<"projects"> | "all"): string {
+  return selectedProject === "all" ? "Across all visible projects" : "In the current project scope";
+}
+
+function formatBillableMetric({
+  billingEnabled,
+  totalCost,
+  billableSeconds,
+  isTruncated,
+}: {
+  billingEnabled: boolean;
+  totalCost: number;
+  billableSeconds: number;
+  isTruncated: boolean;
+}): string {
+  if (billingEnabled && totalCost > 0) {
+    return `${formatCurrency(totalCost)}${isTruncated ? "+" : ""}`;
+  }
+
+  if (billableSeconds > 0) {
+    return `${formatDurationHuman(billableSeconds)}${isTruncated ? "+" : ""}`;
+  }
+
+  return "0m";
+}
+
+function getScopeDescription(selectedProject: Id<"projects"> | "all"): string {
+  return selectedProject === "all"
+    ? "Review the organization-wide time picture, then drill into a project when you need burn and rate detail."
+    : "This view is filtered to a single project so cost and utilization stay specific.";
+}
+
 function TimeTrackingOverview({
   billingEnabled,
   dateRange,
@@ -86,6 +126,15 @@ function TimeTrackingOverview({
   const totalCost = summary?.totalCost ?? 0;
   const entryCount = summary?.entryCount ?? 0;
   const isTruncated = summary?.isTruncated ?? false;
+  const loggedValue = formatLoggedMetric(totalLoggedSeconds, isTruncated);
+  const entriesDetail = getEntriesMetricDetail(selectedProject);
+  const billableValue = formatBillableMetric({
+    billingEnabled,
+    totalCost,
+    billableSeconds,
+    isTruncated,
+  });
+  const scopeDescription = getScopeDescription(selectedProject);
 
   return (
     <OverviewBand
@@ -95,28 +144,17 @@ function TimeTrackingOverview({
       metrics={[
         {
           label: "Logged",
-          value:
-            totalLoggedSeconds > 0
-              ? `${formatDurationHuman(totalLoggedSeconds)}${isTruncated ? "+" : ""}`
-              : "0m",
+          value: loggedValue,
           detail: dateRange === "all" ? "Across all saved entries" : rangeLabel,
         },
         {
           label: "Entries",
           value: isTruncated ? `${entryCount}+` : entryCount,
-          detail:
-            selectedProject === "all"
-              ? "Across all visible projects"
-              : "In the current project scope",
+          detail: entriesDetail,
         },
         {
           label: "Billable",
-          value:
-            billingEnabled && totalCost > 0
-              ? `${formatCurrency(totalCost)}${isTruncated ? "+" : ""}`
-              : billableSeconds > 0
-                ? `${formatDurationHuman(billableSeconds)}${isTruncated ? "+" : ""}`
-                : "0m",
+          value: billableValue,
           detail: billingEnabled ? "Tracked billable value" : "Billable time captured",
         },
       ]}
@@ -124,9 +162,7 @@ function TimeTrackingOverview({
         <Stack gap="sm">
           <Typography variant="label">Current scope</Typography>
           <Typography variant="small" color="secondary">
-            {selectedProject === "all"
-              ? "Review the organization-wide time picture, then drill into a project when you need burn and rate detail."
-              : "This view is filtered to a single project so cost and utilization stay specific."}
+            {scopeDescription}
           </Typography>
         </Stack>
       }
