@@ -529,8 +529,8 @@ export const getTimeEntrySummary = authenticatedQuery({
       totalDuration += entry.duration ?? 0;
       if (entry.billable) {
         billableDuration += entry.duration ?? 0;
+        totalCost += entry.totalCost ?? 0;
       }
-      totalCost += entry.totalCost ?? 0;
     }
 
     return {
