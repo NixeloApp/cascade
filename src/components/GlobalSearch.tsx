@@ -490,7 +490,10 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
       <Button
         variant="secondary"
         size="sm"
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          setShouldOpenAdvancedSearch(false); // Reset handoff flag to prevent stale state
+          setIsOpen(true);
+        }}
         aria-label="Open search and commands"
         data-testid={TEST_IDS.HEADER.SEARCH_BUTTON}
         className="h-10 w-10 shrink-0 justify-center rounded-full border border-transparent bg-transparent px-0 text-ui-text-secondary shadow-none transition-all duration-default hover:border-ui-border/70 hover:bg-ui-bg-soft/80 hover:text-ui-text sm:min-w-0 sm:max-w-md sm:flex-1 sm:justify-between sm:px-2"
