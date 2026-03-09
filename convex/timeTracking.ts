@@ -487,7 +487,10 @@ export const getTimeEntrySummary = authenticatedQuery({
     let entries: Doc<"timeEntries">[];
 
     // Use MAX_TIME_ENTRIES as a reasonable upper bound for summary aggregation
-    // This covers typical use cases while preventing unbounded memory usage
+    // Fetch one extra to detect truncation accurately (> vs ===)
+    // Order descending to aggregate newest entries when truncated
+    const fetchLimit = MAX_TIME_ENTRIES + 1;
+
     if (args.projectId && args.startDate !== undefined && args.endDate !== undefined) {
       const startDate = args.startDate;
       const endDate = args.endDate;
@@ -497,8 +500,9 @@ export const getTimeEntrySummary = authenticatedQuery({
         .withIndex("by_project_date", (q) =>
           q.eq("projectId", projectId).gte("date", startDate).lte("date", endDate),
         )
+        .order("desc")
         .filter((q) => q.eq(q.field("userId"), userId))
-        .take(MAX_TIME_ENTRIES);
+        .take(fetchLimit);
     } else if (args.startDate !== undefined && args.endDate !== undefined) {
       const startDate = args.startDate;
       const endDate = args.endDate;
@@ -507,22 +511,27 @@ export const getTimeEntrySummary = authenticatedQuery({
         .withIndex("by_user_date", (q) =>
           q.eq("userId", userId).gte("date", startDate).lte("date", endDate),
         )
-        .take(MAX_TIME_ENTRIES);
+        .order("desc")
+        .take(fetchLimit);
     } else if (args.projectId) {
       // Use composite index to avoid post-query filter
       entries = await ctx.db
         .query("timeEntries")
         .withIndex("by_user_project", (q) => q.eq("userId", userId).eq("projectId", args.projectId))
-        .take(MAX_TIME_ENTRIES);
+        .order("desc")
+        .take(fetchLimit);
     } else {
       entries = await ctx.db
         .query("timeEntries")
         .withIndex("by_user", (q) => q.eq("userId", userId))
-        .take(MAX_TIME_ENTRIES);
+        .order("desc")
+        .take(fetchLimit);
     }
 
-    // Flag when results may be incomplete
-    const isTruncated = entries.length === MAX_TIME_ENTRIES;
+    // Flag when results may be incomplete (fetched more than limit)
+    const isTruncated = entries.length > MAX_TIME_ENTRIES;
+    // Only aggregate up to the limit
+    const summaryEntries = isTruncated ? entries.slice(0, MAX_TIME_ENTRIES) : entries;
 
     // Aggregate metrics
     let totalDuration = 0;
@@ -530,7 +539,7 @@ export const getTimeEntrySummary = authenticatedQuery({
     let totalCost = 0;
     let entryCount = 0;
 
-    for (const entry of entries) {
+    for (const entry of summaryEntries) {
       entryCount++;
       totalDuration += entry.duration ?? 0;
       if (entry.billable) {
