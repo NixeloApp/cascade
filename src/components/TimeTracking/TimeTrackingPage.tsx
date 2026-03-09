@@ -346,13 +346,15 @@ export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTra
 
   return (
     <Flex direction="column" gap="xl">
-      <TimeTrackingOverview
-        billingEnabled={billingEnabled}
-        dateRange={dateRange}
-        rangeLabel={rangeLabel}
-        selectedProject={selectedProject}
-        summary={summary}
-      />
+      {summary !== undefined && (
+        <TimeTrackingOverview
+          billingEnabled={billingEnabled}
+          dateRange={dateRange}
+          rangeLabel={rangeLabel}
+          selectedProject={selectedProject}
+          summary={summary}
+        />
+      )}
 
       <TimeTrackingControls
         activeTab={activeTab}

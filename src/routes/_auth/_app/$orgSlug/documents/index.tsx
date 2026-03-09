@@ -8,12 +8,10 @@ import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
-import { OverviewBand } from "@/components/ui/OverviewBand";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { formatDate } from "@/lib/formatting";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/documents/")({
   component: DocumentsListPage,
 });
@@ -29,9 +27,6 @@ function DocumentsListPage() {
   const isLoading = documentsResult === undefined;
   const documents = documentsResult?.documents ?? [];
   const isEmpty = !isLoading && documents.length === 0;
-  const sharedCount = documents.filter((doc) => doc.isPublic).length;
-  const privateCount = documents.length - sharedCount;
-  const latestUpdatedAt = documents.reduce((latest, doc) => Math.max(latest, doc.updatedAt), 0);
 
   return (
     <PageLayout maxWidth="md">
@@ -46,32 +41,6 @@ function DocumentsListPage() {
           </Button>
         }
       />
-
-      {!isLoading && !isEmpty ? (
-        <OverviewBand
-          eyebrow="Knowledge base"
-          title="Keep specs, handoffs, and internal notes close to delivery work."
-          description="Use documents for source-of-truth requirements, client context, and recurring operational notes without losing them across separate tools."
-          metrics={[
-            { label: "Documents", value: documents.length, detail: "Active internal pages" },
-            { label: "Private", value: privateCount, detail: "Internal-only context" },
-            { label: "Shared", value: sharedCount, detail: "Visible to collaborators" },
-          ]}
-          aside={
-            <>
-              <Typography variant="label">Latest update</Typography>
-              <Typography variant="small" color="secondary" className="mt-2">
-                {latestUpdatedAt > 0
-                  ? `Most recently edited ${formatDate(latestUpdatedAt)}.`
-                  : "Start with a template to set your first shared document structure."}
-              </Typography>
-              <Typography variant="caption" color="secondary" className="mt-3 block">
-                Templates help standardize retros, requirements, and client handoff docs.
-              </Typography>
-            </>
-          }
-        />
-      ) : null}
 
       <PageContent
         isLoading={isLoading}

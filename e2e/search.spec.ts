@@ -205,6 +205,9 @@ test.describe("Global Search", () => {
     await dashboardPage.expectLoaded();
 
     await dashboardPage.openAdvancedSearch();
+    await expect(dashboardPage.advancedSearchModal).toBeVisible();
+
     await dashboardPage.closeAdvancedSearch();
+    await expect(dashboardPage.advancedSearchModal).not.toBeVisible();
   });
 });
