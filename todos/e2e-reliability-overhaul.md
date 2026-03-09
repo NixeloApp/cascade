@@ -2,8 +2,8 @@
 
 > **Priority:** P0 (Highest)
 > **Effort:** Large
-> **Status:** In Progress (`10/33` checklist items complete; latest recorded local full-suite runs are green twice in a row; validation passing)
-> **Last Updated:** 2026-03-07
+> **Status:** In Progress (`11/33` checklist items complete; latest recorded local full-suite runs are green repeatedly; validation passing)
+> **Last Updated:** 2026-03-09
 
 ## Objective
 
@@ -84,7 +84,7 @@ Make E2E tests deterministic and locally verifiable with one rule: run the full 
 ### Phase 3 (S3): Sustainment
 
 - [ ] Proactively modernize remaining passing specs.
-- [ ] Keep full local suite green across repeated runs.
+- [x] Keep full local suite green across repeated runs.
 
 ## Acceptance Criteria
 
@@ -176,7 +176,10 @@ This is the concrete "what's left" list for reliability hardening after the late
 5. Evidence updates after every full run:
    - append the latest pass/fail outcome and duration in this file.
    - record failing spec names and immediate next action when the suite is not 100% pass.
-   - latest full runs on `2026-03-07` are green twice in a row: `160 passed` in `8.0m`, then `160 passed` in `7.8m`.
+  - latest full runs are green repeatedly:
+    - `2026-03-07`: `160 passed` in `8.0m`
+    - `2026-03-07`: `160 passed` in `7.8m`
+    - `2026-03-09`: `161 passed` in `5.4m`
    - immediate next actions:
      - continue converting retry-heavy flows into explicit completion contracts while the suite is green enough to use as a stable benchmark.
      - use the repeated green baseline to prioritize cleanup of remaining helper retries and other high-churn flows that still lean on broad retry wrappers instead of narrow completion contracts.
@@ -211,11 +214,16 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `DashboardPage.signOutViaUserMenu()` now reacquires the visible `Sign out` menu item inside the retry loop and waits for a signed-out destination, after the isolated signout rerun showed the previous locator could detach between menu-open and click.
 - `DashboardPage.signOutViaUserMenu()` now uses a direct menu-open -> sign-out click contract with one bounded second attempt and a named signed-out destination check, after the isolated signout rerun confirmed the full flow does not need a blanket retry wrapper.
 - historical full-suite run on `2026-03-07`: `160 passed` in `5.4m`.
+- latest full-suite run on `2026-03-09`: `161 passed` in `5.4m`.
 - the previous three exposed regressions now have targeted green evidence plus a restored full-suite green confirmation:
   - `pnpm exec playwright test e2e/auth.spec.ts -g "sign up flow sends verification email|can complete email verification" --reporter=line --workers=1` -> `2 passed (26.7s)` and `2 passed (34.1s)`
   - `pnpm exec playwright test e2e/settings/billing.spec.ts e2e/signout.spec.ts --reporter=line --workers=1` -> `3 passed (40.1s)` and `3 passed (31.8s)`
   - `pnpm exec playwright test --reporter=line` -> `160 passed (5.4m)`
   - `pnpm run validate` -> `PASS` with the existing warn-only `164 file(s) missing tests`
+- latest landing/search stabilization evidence on `2026-03-09`:
+  - `pnpm exec playwright test e2e/auth.spec.ts e2e/landing.spec.ts --reporter=line --workers=1` -> `28 passed (1.7m)`
+  - `pnpm exec playwright test --reporter=line` -> `161 passed (5.4m)`
+  - `pnpm screenshots` -> `197 screenshots captured`
 - `SettingsPage.inviteUser()` now wraps modal open, form fill, optional role selection, and invite-row visibility in the same retry boundary, after the settings/admin rerun showed the invite email input could detach immediately after the modal-open helper succeeded.
 - `SettingsPage.fillInviteEmail()` now uses a direct fill-and-confirm contract with one explicit modal reset instead of a small retry loop, after the isolated invites rerun confirmed the inline invite form only needed a bounded reopen recovery when the email input detached during fill.
 - `SettingsPage.toggleTimeApproval()` now uses explicit draft-state and save-state helpers with one bounded re-stage recovery, after the admin settings reruns showed the live organization-settings subscription could remount the save button mid-click and invalidate a blanket retry wrapper.

@@ -13,6 +13,7 @@ import { useState } from "react";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
+import { TEST_IDS } from "@/lib/test-ids";
 import { FilterCheckboxGroup } from "./AdvancedSearchModal/FilterCheckboxGroup";
 import { SearchResultsList } from "./AdvancedSearchModal/SearchResultsList";
 import { Button } from "./ui/Button";
@@ -93,6 +94,7 @@ export function AdvancedSearchModal({
       onOpenChange={onOpenChange}
       title="Advanced Search"
       size="xl"
+      data-testid={TEST_IDS.SEARCH.ADVANCED_MODAL}
       footer={
         <Button onClick={() => onOpenChange(false)} variant="secondary">
           Close

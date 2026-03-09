@@ -2,6 +2,7 @@ import { ArrowRight, Building2, KanbanSquare, MessageSquare } from "@/lib/icons"
 import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
 
 const stories = [
@@ -43,7 +44,7 @@ export function WhyChooseSection() {
           </Typography>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-3">
+        <Grid cols={1} colsLg={3} gap="xl">
           {stories.map((story) => (
             <Card
               key={story.title}
@@ -74,7 +75,7 @@ export function WhyChooseSection() {
               </a>
             </Card>
           ))}
-        </div>
+        </Grid>
       </div>
     </section>
   );

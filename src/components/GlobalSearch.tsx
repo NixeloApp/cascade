@@ -8,7 +8,7 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { type ComponentProps, useState } from "react";
+import { type ComponentProps, useEffect, useState } from "react";
 import { AdvancedSearchModal } from "@/components/AdvancedSearchModal";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
@@ -370,6 +370,7 @@ function SearchListContent({
 /** Unified omnibox for searching issues/documents and executing app actions. */
 export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+  const [shouldOpenAdvancedSearch, setShouldOpenAdvancedSearch] = useState(false);
   const { isOpen, setIsOpen } = useSearchKeyboard();
   const { query, setQuery, activeTab, setActiveTab, issueOffset, documentOffset, limit, loadMore } =
     useSearchPagination(isOpen);
@@ -414,9 +415,22 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
   };
 
   const handleOpenAdvancedSearch = () => {
+    setShouldOpenAdvancedSearch(true);
     setIsOpen(false);
-    setIsAdvancedOpen(true);
   };
+
+  useEffect(() => {
+    if (!shouldOpenAdvancedSearch || isOpen) {
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      setIsAdvancedOpen(true);
+      setShouldOpenAdvancedSearch(false);
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [isOpen, shouldOpenAdvancedSearch]);
 
   const handleFocusOutside: NonNullable<ComponentProps<typeof CommandDialog>["onFocusOutside"]> = (
     event,

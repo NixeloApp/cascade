@@ -1,7 +1,8 @@
 import { Bot, Search, Sparkles } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
 
 const answerSteps = [
@@ -29,7 +30,7 @@ export function AIFeatureDemo() {
           </Typography>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-5">
+        <Grid cols={1} colsLg={5} gap="xl">
           <Card className="rounded-3xl border-ui-border/50 bg-ui-bg-secondary/80 p-6 lg:col-span-2">
             <Flex align="center" gap="sm" className="mb-5">
               <div className="rounded-full bg-ui-bg-soft p-2 text-brand">
@@ -91,9 +92,14 @@ export function AIFeatureDemo() {
               <div className="space-y-3">
                 {answerSteps.map((step, index) => (
                   <Flex key={step} align="start" gap="sm">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ui-bg text-sm font-semibold text-ui-text">
-                      {index + 1}
-                    </div>
+                    <FlexItem
+                      shrink={false}
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-ui-bg"
+                    >
+                      <Typography variant="small" className="font-semibold text-ui-text">
+                        {index + 1}
+                      </Typography>
+                    </FlexItem>
                     <Typography variant="small" color="secondary">
                       {step}
                     </Typography>
@@ -102,7 +108,7 @@ export function AIFeatureDemo() {
               </div>
             </Card>
           </Card>
-        </div>
+        </Grid>
       </div>
     </section>
   );

@@ -199,4 +199,12 @@ test.describe("Global Search", () => {
     // Close it
     await dashboardPage.closeGlobalSearchWithEscape();
   });
+
+  test("can open advanced search from the omnibox", async ({ dashboardPage }) => {
+    await dashboardPage.goto();
+    await dashboardPage.expectLoaded();
+
+    await dashboardPage.openAdvancedSearch();
+    await dashboardPage.closeAdvancedSearch();
+  });
 });

@@ -1,5 +1,5 @@
 import { ShieldCheck } from "@/lib/icons";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
 import { NixeloLogo } from "./Icons";
@@ -28,7 +28,7 @@ export function Footer() {
   return (
     <footer className="border-t border-ui-border/20 bg-transparent px-6 py-16 transition-colors">
       <div className="mx-auto max-w-6xl">
-        <div className="mb-10 grid gap-6 lg:grid-cols-5">
+        <Grid cols={1} colsLg={5} gap="xl" className="mb-10">
           <div className="lg:col-span-2">
             <Flex align="center" gap="sm" className="mb-4">
               <NixeloLogo />
@@ -47,13 +47,13 @@ export function Footer() {
               <div className="rounded-full bg-status-success/15 p-2 text-status-success-text">
                 <ShieldCheck className="h-5 w-5" />
               </div>
-              <div className="flex-1">
+              <FlexItem flex="1">
                 <Typography variant="label">Enterprise-grade trust signals</Typography>
                 <Typography variant="small" color="secondary" className="mt-2">
                   Security-minded teams can move fast without divorcing planning, delivery, and
                   client communication into separate systems.
                 </Typography>
-              </div>
+              </FlexItem>
               <div className="rounded-full border border-ui-border/50 bg-ui-bg px-3 py-1">
                 <Typography variant="meta" className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-status-success-text" />
@@ -62,7 +62,7 @@ export function Footer() {
               </div>
             </Flex>
           </div>
-        </div>
+        </Grid>
 
         <Grid cols={1} colsSm={2} colsLg={4} gap="lg" className="mb-12">
           {footerColumns.map((column) => (

@@ -1,3 +1,4 @@
+import { Flex } from "../ui/Flex";
 import { Typography } from "../ui/Typography";
 
 const logos = ["STRIPE", "VERCEL", "NOTION", "ANTHROPIC", "COINBASE", "PERPLEXITY"];
@@ -14,7 +15,13 @@ export function LogoBar() {
           Inspired by the workflows modern product teams expect
         </Typography>
 
-        <div className="flex flex-wrap items-center justify-center gap-4 text-sm font-semibold tracking-widest text-ui-text-tertiary sm:gap-8">
+        <Flex
+          align="center"
+          justify="center"
+          wrap
+          gap="xl"
+          className="text-sm font-semibold tracking-widest text-ui-text-tertiary"
+        >
           {logos.map((logo) => (
             <span
               key={logo}
@@ -23,7 +30,7 @@ export function LogoBar() {
               {logo}
             </span>
           ))}
-        </div>
+        </Flex>
       </div>
     </section>
   );

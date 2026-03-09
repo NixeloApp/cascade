@@ -5,6 +5,7 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
 
 /** Closing CTA section for the landing page. */
@@ -35,7 +36,7 @@ export function FinalCTASection() {
             </Flex>
           </div>
 
-          <div className="mt-10 grid gap-4 md:grid-cols-2">
+          <Grid cols={1} colsMd={2} gap="lg" className="mt-10">
             <Card className="rounded-2xl border-ui-border/50 bg-ui-bg-soft/80 p-5">
               <Flex align="center" gap="sm" className="mb-3">
                 <div className="rounded-full bg-brand-subtle p-2 text-brand">
@@ -75,7 +76,7 @@ export function FinalCTASection() {
                 <ArrowRight className="h-4 w-4" />
               </a>
             </Card>
-          </div>
+          </Grid>
         </Card>
       </div>
     </section>

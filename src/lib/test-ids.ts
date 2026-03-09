@@ -96,6 +96,8 @@ export const TEST_IDS = {
   SEARCH: {
     /** @see src/components/GlobalSearch.tsx */
     MODAL: "search-modal",
+    /** @see src/components/AdvancedSearchModal.tsx */
+    ADVANCED_MODAL: "search-advanced-modal",
     /** @see src/components/GlobalSearch.tsx */
     INPUT: "search-input",
     /** @see src/components/GlobalSearch.tsx */
@@ -172,6 +174,10 @@ export const TEST_IDS = {
   // ============================================================
 
   CALENDAR: {
+    /** @see src/components/Calendar/shadcn-calendar/calendar-event.tsx */
+    EVENT_ITEM: "calendar-event-item",
+    /** @see src/components/Calendar/EventDetailsModal.tsx */
+    EVENT_DETAILS_MODAL: "calendar-event-details-modal",
     /** @see src/components/Calendar/shadcn-calendar/header/actions/calendar-header-actions-mode.tsx */
     MODE_DAY: "calendar-mode-day",
     MODE_WEEK: "calendar-mode-week",

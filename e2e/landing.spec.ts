@@ -44,7 +44,7 @@ test.describe("Landing Page - Hero Section", () => {
     await landingPage.expectHeroSection();
 
     // Also verify specific text content
-    await expect(landingPage.heroHeadline).toContainText(/revolutionize your workflow/i);
+    await expect(landingPage.heroHeadline).toContainText(/replace scattered project tools/i);
   });
 
   test("hero get started button opens auth form", async ({ landingPage }) => {

@@ -1,5 +1,6 @@
 import { isSameDay } from "date-fns";
 import { Typography } from "@/components/ui/Typography";
+import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { DOT_COLOR_CLASSES, type EventColor } from "../../../calendar-colors";
 
@@ -52,6 +53,7 @@ export function CalendarBodyDayEvents(): React.ReactElement {
           <button
             type="button"
             key={event.id}
+            data-testid={TEST_IDS.CALENDAR.EVENT_ITEM}
             className="flex items-center gap-2.5 px-2 py-1.5 rounded-secondary cursor-pointer text-left hover:bg-ui-bg-hover transition-colors duration-default group"
             onClick={() => onEventClick(event)}
           >

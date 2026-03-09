@@ -1,8 +1,10 @@
 import { ArrowRight, Bot, Clock, LayoutGrid, Sparkles } from "@/lib/icons";
+import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
 
 const boardColumns = [
@@ -57,7 +59,12 @@ export function ProductShowcase() {
           </Flex>
         </div>
 
-        <div className="grid gap-4 bg-linear-to-b from-ui-bg-soft/70 to-ui-bg px-4 py-4 lg:grid-cols-3">
+        <Grid
+          cols={1}
+          colsLg={3}
+          gap="lg"
+          className="bg-linear-to-b from-ui-bg-soft/70 to-ui-bg px-4 py-4"
+        >
           <div className="space-y-4 lg:col-span-2">
             <Card
               variant="soft"
@@ -79,7 +86,7 @@ export function ProductShowcase() {
                 </Button>
               </Flex>
 
-              <div className="grid gap-3 md:grid-cols-3">
+              <Grid cols={1} colsMd={3} gap="md">
                 {boardColumns.map((column) => (
                   <div
                     key={column.title}
@@ -87,7 +94,7 @@ export function ProductShowcase() {
                   >
                     <Flex align="center" justify="between" className="mb-3">
                       <Typography variant="label">{column.title}</Typography>
-                      <div className={`h-2 w-2 rounded-full ${column.accent}`} />
+                      <div className={cn("h-2 w-2 rounded-full", column.accent)} />
                     </Flex>
 
                     <div className="space-y-2">
@@ -104,10 +111,10 @@ export function ProductShowcase() {
                     </div>
                   </div>
                 ))}
-              </div>
+              </Grid>
             </Card>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <Grid cols={1} colsMd={3} gap="lg">
               <Card className="rounded-2xl border-ui-border/50 bg-ui-bg-secondary/80 p-4">
                 <Typography variant="meta" className="uppercase tracking-widest">
                   Active projects
@@ -143,7 +150,7 @@ export function ProductShowcase() {
                   Less status chasing every week once docs and execution share one system.
                 </Typography>
               </Card>
-            </div>
+            </Grid>
           </div>
 
           <div className="space-y-4">
@@ -211,7 +218,7 @@ export function ProductShowcase() {
               </div>
             </Card>
           </div>
-        </div>
+        </Grid>
       </Card>
     </div>
   );

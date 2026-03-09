@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { TEST_IDS } from "../../src/lib/test-ids";
 import { BasePage } from "./base.page";
 
 /**
@@ -72,13 +73,20 @@ export class CalendarPage extends BasePage {
       .or(page.locator(".calendar-header h2, .fc-toolbar-title"));
 
     // View toggles
-    this.monthViewButton = page.getByRole("button", { name: /month/i });
-    this.weekViewButton = page.getByRole("button", { name: /week/i });
-    this.dayViewButton = page.getByRole("button", { name: /day/i });
+    this.monthViewButton = page
+      .getByTestId(TEST_IDS.CALENDAR.MODE_MONTH)
+      .or(page.getByRole("button", { name: /^month$/i }));
+    this.weekViewButton = page
+      .getByTestId(TEST_IDS.CALENDAR.MODE_WEEK)
+      .or(page.getByRole("button", { name: /^week$/i }));
+    this.dayViewButton = page
+      .getByTestId(TEST_IDS.CALENDAR.MODE_DAY)
+      .or(page.getByRole("button", { name: /^day$/i }));
 
     // Events
     this.eventItems = page
-      .locator("[data-event-item]")
+      .getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM)
+      .or(page.locator("[data-event-item]"))
       .or(page.locator(".calendar-event, .fc-event"));
     this.createEventButton = page.getByRole("button", {
       name: /create.*event|new.*event|add.*event|\+/i,
@@ -106,7 +114,7 @@ export class CalendarPage extends BasePage {
     this.cancelEventButton = this.createEventModal.getByRole("button", { name: /cancel/i });
 
     // Event detail modal
-    this.eventDetailModal = page.getByRole("dialog").filter({ hasText: /event.*detail|meeting/i });
+    this.eventDetailModal = page.getByTestId(TEST_IDS.CALENDAR.EVENT_DETAILS_MODAL);
     this.editEventButton = page.getByRole("button", { name: /edit/i });
     this.deleteEventButton = page.getByRole("button", { name: /delete/i });
     this.attendeesList = page.locator("[data-attendees]");
@@ -178,7 +186,15 @@ export class CalendarPage extends BasePage {
     if (options?.isRequired) {
       await this.isRequiredCheckbox.check();
     }
-    await this.saveEventButton.click();
+    await this.saveEventButton.scrollIntoViewIfNeeded();
+
+    try {
+      await this.saveEventButton.click({ timeout: 2000 });
+    } catch {
+      await this.saveEventButton.evaluate((button: HTMLButtonElement) => button.click());
+    }
+    await expect(this.createEventModal).not.toBeVisible();
+    await expect(this.eventItems.filter({ hasText: title }).first()).toBeVisible();
   }
 
   async cancelCreateEvent() {
@@ -189,6 +205,48 @@ export class CalendarPage extends BasePage {
   async selectEvent(index: number) {
     const event = this.eventItems.nth(index);
     await event.click();
+  }
+
+  async openEventDetails(index = 0) {
+    const event = this.eventItems.nth(index);
+    await expect(event).toBeVisible();
+    await event.click();
+    await expect(this.eventDetailModal).toBeVisible();
+  }
+
+  async openEventDetailsByTitle(title: string) {
+    await this.goToToday().catch(() => {});
+
+    if ((await this.dayViewButton.count()) > 0) {
+      await this.switchToDayView();
+    }
+
+    await this.scrollCalendarToHour(8);
+
+    const event = this.eventItems.filter({ hasText: title }).first();
+    if (!(await event.isVisible().catch(() => false))) {
+      const fallbackEvent = this.calendar.getByText(title).first();
+      await expect(fallbackEvent).toBeVisible();
+      await fallbackEvent.click();
+      await expect(this.eventDetailModal).toBeVisible();
+      return;
+    }
+
+    await event.scrollIntoViewIfNeeded().catch(() => {});
+    await event.click();
+    await expect(this.eventDetailModal).toBeVisible();
+  }
+
+  private async scrollCalendarToHour(hour: number) {
+    const scrollContainer = this.calendar.locator(".overflow-y-auto").first();
+
+    if (!(await scrollContainer.isVisible().catch(() => false))) {
+      return;
+    }
+
+    await scrollContainer.evaluate((element, targetHour) => {
+      element.scrollTop = Math.max(0, targetHour * 128 - 96);
+    }, hour);
   }
 
   // ===================
@@ -204,5 +262,9 @@ export class CalendarPage extends BasePage {
 
   async expectEventCount(count: number) {
     await expect(this.eventItems).toHaveCount(count);
+  }
+
+  async expectEventDetailsVisible() {
+    await expect(this.eventDetailModal).toBeVisible();
   }
 }
