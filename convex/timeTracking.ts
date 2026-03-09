@@ -485,6 +485,8 @@ export const getTimeEntrySummary = authenticatedQuery({
 
     let entries: Doc<"timeEntries">[];
 
+    // Use MAX_TIME_ENTRIES as a reasonable upper bound for summary aggregation
+    // This covers typical use cases while preventing unbounded memory usage
     if (args.projectId && args.startDate !== undefined && args.endDate !== undefined) {
       const startDate = args.startDate;
       const endDate = args.endDate;
@@ -495,7 +497,7 @@ export const getTimeEntrySummary = authenticatedQuery({
           q.eq("projectId", projectId).gte("date", startDate).lte("date", endDate),
         )
         .filter((q) => q.eq(q.field("userId"), userId))
-        .collect();
+        .take(MAX_TIME_ENTRIES);
     } else if (args.startDate !== undefined && args.endDate !== undefined) {
       const startDate = args.startDate;
       const endDate = args.endDate;
@@ -504,18 +506,18 @@ export const getTimeEntrySummary = authenticatedQuery({
         .withIndex("by_user_date", (q) =>
           q.eq("userId", userId).gte("date", startDate).lte("date", endDate),
         )
-        .collect();
+        .take(MAX_TIME_ENTRIES);
     } else if (args.projectId) {
       entries = await ctx.db
         .query("timeEntries")
         .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
         .filter((q) => q.eq(q.field("userId"), userId))
-        .collect();
+        .take(MAX_TIME_ENTRIES);
     } else {
       entries = await ctx.db
         .query("timeEntries")
         .withIndex("by_user", (q) => q.eq("userId", userId))
-        .collect();
+        .take(MAX_TIME_ENTRIES);
     }
 
     // Aggregate metrics
