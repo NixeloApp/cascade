@@ -13,6 +13,7 @@ import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { Typography } from "@/components/ui/Typography";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import { Menu } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -50,12 +51,15 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
           <div className="hidden rounded-full border border-ui-border/60 bg-linear-to-r from-ui-bg-elevated/95 to-ui-bg-soft/90 px-3 py-1.5 shadow-soft lg:flex lg:items-center lg:gap-3">
             <div className="h-2.5 w-2.5 rounded-full bg-brand shadow-[0_0_0_4px_color-mix(in_oklab,var(--color-brand)_12%,transparent)]" />
             <div className="min-w-0">
-              <div className="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-ui-text-muted">
+              <Typography
+                variant="caption"
+                className="block uppercase tracking-widest text-ui-text-muted"
+              >
                 Workspace cockpit
-              </div>
-              <div className="max-w-48 truncate text-sm font-medium text-ui-text">
+              </Typography>
+              <Typography variant="small" className="block max-w-48 truncate font-medium">
                 Search, track, and act from one surface
-              </div>
+              </Typography>
             </div>
           </div>
         </Flex>

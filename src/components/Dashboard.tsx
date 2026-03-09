@@ -108,9 +108,13 @@ export function Dashboard() {
                 >
                   Overview
                 </Typography>
-                <div className="rounded-2xl border border-ui-border-secondary/70 bg-ui-bg/75 p-3 shadow-soft">
+                <Card
+                  variant="outline"
+                  padding="sm"
+                  className="border-ui-border-secondary/70 bg-ui-bg/75 shadow-soft"
+                >
                   <QuickStats stats={stats} />
-                </div>
+                </Card>
               </Flex>
             )}
           </div>

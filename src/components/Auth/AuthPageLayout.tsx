@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { NixeloLogo } from "@/components/Landing";
 import { Badge } from "@/components/ui/Badge";
 import { Flex } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 
@@ -19,9 +20,12 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
   return (
     <div className="relative isolate min-h-screen w-full overflow-hidden bg-ui-bg bg-auth-gradient p-4 sm:p-6">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-linear-to-b from-ui-bg-elevated/60 to-transparent" />
-      <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-5xl animate-fade-in items-center sm:min-h-[calc(100vh-3rem)]">
+      <Flex
+        align="center"
+        className="mx-auto min-h-[calc(100vh-2rem)] w-full max-w-5xl animate-fade-in sm:min-h-[calc(100vh-3rem)]"
+      >
         <div className="w-full overflow-hidden rounded-3xl border border-ui-border-secondary/70 bg-ui-bg-elevated/55 shadow-elevated backdrop-blur-md">
-          <div className="grid w-full gap-0 lg:grid-cols-[1.12fr_380px]">
+          <Grid cols={1} className="w-full lg:grid-cols-[1.12fr_380px]">
             <div className="hidden border-r border-ui-border/60 bg-linear-to-br from-ui-bg-elevated via-brand-subtle/35 to-ui-bg-elevated p-12 lg:flex lg:flex-col lg:justify-between">
               <div>
                 <Badge variant="brand" shape="pill" className="mb-6 w-fit">
@@ -62,21 +66,33 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
               </div>
 
               <div className="rounded-3xl border border-ui-border-secondary/70 bg-ui-bg-elevated/72 p-5 shadow-card">
-                <div className="mb-4 inline-flex items-center rounded-full border border-ui-border/70 bg-ui-bg-elevated/85 px-3 py-1 text-xs font-medium uppercase tracking-wider text-ui-text-tertiary">
+                <Badge
+                  variant="outline"
+                  shape="pill"
+                  className="mb-4 bg-ui-bg-elevated/85 font-medium uppercase tracking-wider"
+                >
                   Operating snapshot
-                </div>
+                </Badge>
                 <Typography variant="h3" className="max-w-md text-3xl tracking-tight">
                   One search, one plan, one delivery view.
                 </Typography>
                 <div className="mt-4 space-y-3">
-                  <div className="flex items-start gap-3 rounded-2xl border border-ui-border/60 bg-ui-bg-elevated/75 px-4 py-3 shadow-soft">
+                  <Flex
+                    align="start"
+                    gap="md"
+                    className="rounded-2xl border border-ui-border/60 bg-ui-bg-elevated/75 px-4 py-3 shadow-soft"
+                  >
                     <span className="mt-1 h-2.5 w-2.5 rounded-full bg-brand" aria-hidden="true" />
                     <Typography variant="small" color="secondary">
                       Search docs, issues, and actions from the same command surface instead of
                       bouncing between tools.
                     </Typography>
-                  </div>
-                  <div className="flex items-start gap-3 rounded-2xl border border-ui-border/60 bg-ui-bg-elevated/75 px-4 py-3 shadow-soft">
+                  </Flex>
+                  <Flex
+                    align="start"
+                    gap="md"
+                    className="rounded-2xl border border-ui-border/60 bg-ui-bg-elevated/75 px-4 py-3 shadow-soft"
+                  >
                     <span
                       className="mt-1 h-2.5 w-2.5 rounded-full bg-status-success"
                       aria-hidden="true"
@@ -84,9 +100,9 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
                     <Typography variant="small" color="secondary">
                       Keep boards, roadmap, calendar, and client updates in one operating lane.
                     </Typography>
-                  </div>
+                  </Flex>
                 </div>
-                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                <Grid cols={1} colsSm={3} gap="md" className="mt-5">
                   <div className="rounded-2xl border border-ui-border/60 bg-ui-bg-elevated/80 p-3 shadow-soft">
                     <Typography
                       variant="caption"
@@ -120,7 +136,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
                       Clients
                     </Typography>
                   </div>
-                </div>
+                </Grid>
               </div>
             </div>
 
@@ -195,9 +211,9 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
                 </div>
               </div>
             </Flex>
-          </div>
+          </Grid>
         </div>
-      </div>
+      </Flex>
     </div>
   );
 }

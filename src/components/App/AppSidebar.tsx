@@ -13,6 +13,7 @@ import { Link, type LinkProps, useLocation, useNavigate } from "@tanstack/react-
 import { useState } from "react";
 import { CreateTeamModal } from "@/components/CreateTeamModal";
 import { SidebarTeamItem } from "@/components/Sidebar/SidebarTeamItem";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/Input";
@@ -117,9 +118,13 @@ function NavSubItem({
       <NavItemBase asChild active={isActive} size="sm" className="min-h-9">
         <Link to={to} params={params} onClick={onClick} {...props}>
           {Icon && (
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-ui-bg-soft text-ui-text-tertiary ring-1 ring-ui-border/60">
+            <Flex
+              align="center"
+              justify="center"
+              className="h-6 w-6 shrink-0 rounded-lg bg-ui-bg-soft text-ui-text-tertiary ring-1 ring-ui-border/60"
+            >
               <Icon className="h-3.5 w-3.5 shrink-0" />
-            </span>
+            </Flex>
           )}
           <span className="truncate">{label}</span>
         </Link>
@@ -636,9 +641,13 @@ export function AppSidebar() {
               {!showCollapsed && (
                 <li className="list-none">
                   <div className="mb-3 mt-5 px-3">
-                    <span className="inline-flex items-center rounded-full border border-ui-border/70 bg-ui-bg-elevated/80 px-2.5 py-1 text-caption font-semibold uppercase tracking-wider text-ui-text-tertiary shadow-soft">
+                    <Badge
+                      variant="outline"
+                      shape="pill"
+                      className="bg-ui-bg-elevated/80 font-semibold uppercase tracking-wider shadow-soft"
+                    >
                       Products
-                    </span>
+                    </Badge>
                   </div>
                 </li>
               )}
@@ -951,16 +960,18 @@ function CollapsibleSection({
               isActive ? "text-ui-text" : "text-ui-text-secondary hover:text-ui-text",
             )}
           >
-            <span
+            <Flex
+              align="center"
+              justify="center"
               className={cn(
-                "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ring-1 transition-default",
+                "h-8 w-8 shrink-0 rounded-xl ring-1 transition-default",
                 isActive
                   ? "bg-brand-subtle text-brand ring-brand/20 shadow-soft"
                   : "bg-ui-bg-elevated text-ui-text-tertiary ring-ui-border-secondary/70 shadow-soft",
               )}
             >
               <Icon className="h-4.5 w-4.5" />
-            </span>
+            </Flex>
             {label}
           </Link>
         ) : (
@@ -969,9 +980,13 @@ function CollapsibleSection({
             gap="sm"
             className="flex-1 text-sm font-medium text-ui-text-secondary transition-default"
           >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-ui-bg-soft text-ui-text-tertiary ring-1 ring-ui-border/60">
+            <Flex
+              align="center"
+              justify="center"
+              className="h-8 w-8 shrink-0 rounded-xl bg-ui-bg-soft text-ui-text-tertiary ring-1 ring-ui-border/60"
+            >
               <Icon className="h-4.5 w-4.5" />
-            </span>
+            </Flex>
             {label}
           </Flex>
         )}

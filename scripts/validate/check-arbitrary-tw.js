@@ -24,6 +24,12 @@ const ALLOWED_PATTERNS = [
   /scale-\[0\.9[0-9]\]/, // Active/press scale states (0.95-0.99)
   /max-h-\[\d+vh\]/, // Panel/modal heights (industry standard - no tokens needed)
   /max-w-\[calc\(100vw/, // Mobile-friendly width with gutters
+  /min-h-\[calc\(100vh/, // Viewport-based min-heights (auth/landing pages)
+  /grid-cols-\[/, // Custom grid column layouts (design-specific)
+  /shadow-\[\d+_\d+px_\d+px_rgba/, // Complex drop shadows with rgba (landing page)
+  /shadow-\[inset_/, // Inset shadows (subtle highlights)
+  /shadow-\[0_0_0_\d+px_color-mix/, // Brand indicator ring shadows using color-mix
+  /tracking-\[0\.\d+em\]/, // Precise letter-spacing for design details
 ];
 
 export function run() {

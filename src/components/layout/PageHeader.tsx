@@ -61,9 +61,15 @@ export function PageHeader({
           </BreadcrumbList>
         </Breadcrumb>
       )}
-      <Flex justify="between" align="start" gap="md" className="flex-col sm:flex-row sm:items-end">
+      <Flex
+        justify="between"
+        align="start"
+        gap="md"
+        direction="column"
+        className="sm:flex-row sm:items-end"
+      >
         <Stack gap="xs" className="min-w-0">
-          <div className="mb-1 flex items-center gap-2">
+          <Flex align="center" gap="sm" className="mb-1">
             <span className="h-2 w-2 rounded-full bg-brand shadow-[0_0_0_5px_color-mix(in_oklab,var(--color-brand)_14%,transparent)]" />
             <Typography
               variant="caption"
@@ -71,7 +77,7 @@ export function PageHeader({
             >
               Workspace view
             </Typography>
-          </div>
+          </Flex>
           <Typography variant="h2" className="text-3xl lg:text-4xl">
             {title}
           </Typography>

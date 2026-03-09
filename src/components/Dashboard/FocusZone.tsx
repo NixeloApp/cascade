@@ -39,7 +39,7 @@ export function FocusZone({ task }: FocusZoneProps) {
 
   return (
     <Stack gap="sm">
-      <Flex align="center" justify="between" className="gap-3">
+      <Flex align="center" justify="between" gap="md">
         <Typography variant="label" color="tertiary" className="uppercase tracking-widest">
           Focus Item
         </Typography>

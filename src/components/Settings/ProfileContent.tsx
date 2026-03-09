@@ -178,7 +178,7 @@ export function ProfileHeader({
   onAvatarClick?: () => void;
 }) {
   return (
-    <Flex align="center" gap="xl" className="flex-col sm:flex-row sm:items-center">
+    <Flex align="center" gap="xl" direction="column" className="sm:flex-row sm:items-center">
       {/* Avatar */}
       <div className="relative group">
         {user.image ? (
@@ -393,7 +393,7 @@ function LoadedProfileContent({
 
           {userStats && <UserStatsCards stats={userStats} />}
 
-          <div className="grid gap-4 lg:grid-cols-3">
+          <Grid cols={1} colsLg={3} gap="md">
             <Card padding="lg" variant="soft" className="lg:col-span-2">
               <Stack gap="md">
                 <Typography variant="h5">Recent Activity</Typography>
@@ -406,7 +406,7 @@ function LoadedProfileContent({
                 <AccountInfo user={viewUser as ProfileUser & { _creationTime: number }} />
               </div>
             )}
-          </div>
+          </Grid>
         </Stack>
       </div>
     </Card>

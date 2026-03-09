@@ -1,3 +1,4 @@
+import { Flex } from "../ui/Flex";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
@@ -17,12 +18,16 @@ export function Greeting({ userName, completedCount = 0 }: GreetingProps) {
 
   return (
     <Stack gap="sm" className="mb-8">
-      <div className="inline-flex w-fit items-center gap-2 rounded-full border border-ui-border/60 bg-ui-bg-soft/70 px-3 py-1 text-ui-text-tertiary shadow-soft backdrop-blur-sm">
+      <Flex
+        align="center"
+        gap="sm"
+        className="inline-flex w-fit rounded-full border border-ui-border/60 bg-ui-bg-soft/70 px-3 py-1 text-ui-text-tertiary shadow-soft backdrop-blur-sm"
+      >
         <span className="h-2 w-2 rounded-full bg-brand" aria-hidden="true" />
         <Typography variant="caption" className="uppercase tracking-widest text-ui-text-tertiary">
           Command Center
         </Typography>
-      </div>
+      </Flex>
       <Typography variant="h1" className="max-w-4xl text-4xl tracking-tight md:text-5xl">
         {greeting}, <span className="text-brand">{firstName}</span>.
       </Typography>

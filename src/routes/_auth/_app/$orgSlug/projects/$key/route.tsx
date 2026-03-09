@@ -1,6 +1,7 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { PageContent, PageError } from "@/components/layout";
+import { Badge } from "@/components/ui/Badge";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -92,9 +93,13 @@ function ProjectLayout() {
                 </Typography>
               </div>
             </Flex>
-            <div className="rounded-full border border-ui-border/60 bg-ui-bg-soft px-3 py-1 text-xs font-medium uppercase tracking-wider text-ui-text-tertiary">
+            <Badge
+              variant="outline"
+              shape="pill"
+              className="bg-ui-bg-soft uppercase tracking-wider"
+            >
               {project.key}
-            </div>
+            </Badge>
           </Flex>
 
           <nav className="mt-3 flex gap-1 overflow-x-auto pb-1" aria-label="Project sections">
