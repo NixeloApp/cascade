@@ -27,8 +27,16 @@ interface RecentActivityProps {
  */
 export function RecentActivity({ activities }: RecentActivityProps) {
   return (
-    <Card hoverable>
-      <CardHeader title="Feed" description="Latest updates across all projects" />
+    <Card
+      hoverable
+      variant="outline"
+      className="border-ui-border/50 bg-ui-bg/70 shadow-soft backdrop-blur-sm"
+    >
+      <CardHeader
+        title="Recent activity"
+        description="Latest updates across projects and teammates"
+        className="border-ui-border/50"
+      />
       <CardBody>
         {!activities ? (
           /* Loading skeleton */
@@ -41,23 +49,24 @@ export function RecentActivity({ activities }: RecentActivityProps) {
           <EmptyState
             icon={TrendingUp}
             title="No activity"
-            description="No recent activity to show"
+            description="Fresh updates from your team will appear here."
+            size="compact"
           />
         ) : (
           <div className="relative h-96 overflow-y-auto pr-2 custom-scrollbar">
             {/* Timeline line */}
             {activities.length > 1 && (
-              <div className="absolute left-4 top-4 bottom-4 w-px bg-ui-border" />
+              <div className="absolute bottom-4 left-4 top-4 w-px bg-ui-border/60" />
             )}
 
             <Flex direction="column" gap="none">
               {activities.map((activity: Activity) => (
                 <Card
                   key={activity._id}
-                  variant="flat"
+                  variant="ghost"
                   padding="none"
                   hoverable
-                  className="relative bg-transparent"
+                  className="relative rounded-xl border border-transparent px-2 py-2 hover:border-ui-border/50 hover:bg-ui-bg-soft/50"
                 >
                   <Flex gap="md" align="start">
                     {/* User avatar */}
@@ -72,7 +81,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                         </Typography>
                         <Badge
                           variant="neutral"
-                          className="font-mono text-caption bg-ui-bg-tertiary/50 border-ui-border w-fit"
+                          className="w-fit border-ui-border/50 bg-ui-bg-tertiary/60 font-mono text-caption"
                         >
                           {activity.issueKey}
                         </Badge>

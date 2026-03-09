@@ -2728,6 +2728,40 @@ export const seedScreenshotDataInternal = internalMutation({
     }
     const workspaceId = workspace._id;
 
+    // Ensure current user is a workspace member so workspace-scoped queries,
+    // including calendar views, can actually see the seeded data.
+    const existingWorkspaceMember = await ctx.db
+      .query("workspaceMembers")
+      .withIndex("by_workspace_user", (q) => q.eq("workspaceId", workspaceId).eq("userId", userId))
+      .first();
+    if (!existingWorkspaceMember) {
+      await ctx.db.insert("workspaceMembers", {
+        workspaceId,
+        userId,
+        role: "admin",
+        addedBy: userId,
+      });
+    }
+
+    // Keep synthetic members aligned with the seeded workspace so team/workspace
+    // scoped views operate on consistent membership data.
+    for (const memberId of syntheticUserIds) {
+      const existingWorkspaceSyntheticMember = await ctx.db
+        .query("workspaceMembers")
+        .withIndex("by_workspace_user", (q) =>
+          q.eq("workspaceId", workspaceId).eq("userId", memberId),
+        )
+        .first();
+      if (!existingWorkspaceSyntheticMember) {
+        await ctx.db.insert("workspaceMembers", {
+          workspaceId,
+          userId: memberId,
+          role: "member",
+          addedBy: userId,
+        });
+      }
+    }
+
     // 4. Create team (idempotent)
     let team = await ctx.db
       .query("teams")

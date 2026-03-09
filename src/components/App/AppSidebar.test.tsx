@@ -148,7 +148,8 @@ describe("AppSidebar Accessibility", () => {
     const user = userEvent.setup();
     render(<AppSidebar />);
 
-    const orgLink = screen.getByRole("link", { name: "Demo Org" });
+    // The link contains "D" (initial) + "Workspace" + "Demo Org" text
+    const orgLink = screen.getByRole("link", { name: /Demo Org/ });
     expect(orgLink).toBeInTheDocument();
 
     await user.hover(orgLink);

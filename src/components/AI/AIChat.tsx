@@ -26,7 +26,6 @@ interface AIChatProps {
 // Message Item Component
 function MessageItem({
   message,
-  index,
   chatId,
   copiedMessageId,
   onCopy,
@@ -38,19 +37,15 @@ function MessageItem({
     modelUsed?: string;
     responseTime?: number;
   };
-  index: number;
   chatId: Id<"aiChats">;
   copiedMessageId: string | null;
   onCopy: (content: string, messageId: string) => void;
 }) {
-  const messageId = `${chatId}-${index}`;
+  const messageId = `${chatId}-${message._creationTime}-${message.role}-${message.content.slice(0, 32)}`;
   const isCopied = copiedMessageId === messageId;
 
   return (
-    <div
-      key={`${chatId}-${message._creationTime}-${index}`}
-      className={cn("flex group", message.role === "user" ? "justify-end" : "justify-start")}
-    >
+    <div className={cn("flex group", message.role === "user" ? "justify-end" : "justify-start")}>
       <div
         className={cn(
           "relative max-w-chat-bubble md:max-w-chat-bubble-md rounded-lg px-4 py-3",
@@ -198,11 +193,10 @@ export function AIChat({ projectId, chatId: initialChatId, onChatCreated }: AICh
           <>
             {messages
               .filter((m) => m.role !== "system")
-              .map((message, index) => (
+              .map((message) => (
                 <MessageItem
-                  key={`${message.chatId}-${message._creationTime}-${index}`}
+                  key={`${message.chatId}-${message._creationTime}-${message.role}-${message.content.slice(0, 32)}`}
                   message={message}
-                  index={index}
                   chatId={message.chatId}
                   copiedMessageId={copiedMessageId}
                   onCopy={copyToClipboard}

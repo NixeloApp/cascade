@@ -159,7 +159,7 @@ export async function waitForClickable(
 export async function waitForDashboardReady(page: Page): Promise<void> {
   await page.waitForFunction(() => document.readyState === "complete");
   await expect(page.getByRole("main").last()).toBeVisible();
-  await expect(page.getByRole("button", { name: /open command palette/i })).toBeVisible();
+  await expect(page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON)).toBeVisible();
   const loadingSpinner = page.getByLabel("Loading").or(page.locator("[data-loading-spinner]"));
   await expect(loadingSpinner).not.toBeVisible();
 }

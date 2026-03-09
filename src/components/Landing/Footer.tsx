@@ -1,90 +1,89 @@
-/**
- * Landing Page Footer
- *
- * Site footer with navigation links and branding.
- * Includes product, company, and resource sections.
- * Contains social media links and legal pages.
- */
-
-import { Flex } from "../ui/Flex";
+import { ShieldCheck } from "@/lib/icons";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
 import { NixeloLogo } from "./Icons";
 
-/** Landing page footer with navigation links and branding. */
+const footerColumns = [
+  {
+    title: "Product",
+    links: ["Features", "Pricing", "Integrations", "Changelog"],
+  },
+  {
+    title: "Company",
+    links: ["About", "Blog", "Careers", "Contact"],
+  },
+  {
+    title: "Resources",
+    links: ["Documentation", "Help Center", "API Reference", "Status"],
+  },
+  {
+    title: "Legal",
+    links: ["Privacy", "Terms", "Cookies"],
+  },
+];
+
+/** Landing page footer with richer structure and trust signals. */
 export function Footer() {
   return (
-    <footer className="px-6 py-16 border-t border-ui-border/20 bg-transparent transition-colors">
-      <div className="max-w-6xl mx-auto">
-        <Grid cols={1} colsMd={5} gap="lg" className="mb-12">
-          {/* Brand */}
-          <div className="md:col-span-2">
+    <footer className="border-t border-ui-border/20 bg-transparent px-6 py-16 transition-colors">
+      <div className="mx-auto max-w-6xl">
+        <Grid cols={1} colsLg={5} gap="xl" className="mb-10">
+          <div className="lg:col-span-2">
             <Flex align="center" gap="sm" className="mb-4">
               <NixeloLogo />
               <Typography variant="h3" className="text-xl font-semibold">
-                nixelo
+                Nixelo
               </Typography>
             </Flex>
-            <Typography variant="muted" className="max-w-xs text-ui-text-secondary">
-              Revolutionizing project management with intelligent automation and seamless
-              collaboration.
+            <Typography variant="muted" className="max-w-md text-ui-text-secondary">
+              The calmer way to run delivery: shared docs, clearer execution, and AI help that stays
+              connected to the actual work.
             </Typography>
           </div>
 
-          {/* Links */}
-          <div>
-            <Typography variant="h4" className="font-semibold mb-4 text-ui-text">
-              Product
-            </Typography>
-            <ul className="space-y-2">
-              {["Features", "Pricing", "Integrations", "Changelog"].map((item) => (
-                <li key={item}>
-                  <a
-                    href="/"
-                    className="text-ui-text-tertiary hover:text-ui-text text-sm transition-colors"
-                  >
-                    {item}
-                  </a>
-                </li>
-              ))}
-            </ul>
+          <div className="rounded-3xl border border-ui-border/40 bg-ui-bg-soft/80 p-5 lg:col-span-3">
+            <Flex align="start" gap="md">
+              <div className="rounded-full bg-status-success/15 p-2 text-status-success-text">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <FlexItem flex="1">
+                <Typography variant="label">Enterprise-grade trust signals</Typography>
+                <Typography variant="small" color="secondary" className="mt-2">
+                  Security-minded teams can move fast without divorcing planning, delivery, and
+                  client communication into separate systems.
+                </Typography>
+              </FlexItem>
+              <div className="rounded-full border border-ui-border/50 bg-ui-bg px-3 py-1">
+                <Typography variant="meta" className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-status-success-text" />
+                  All systems normal
+                </Typography>
+              </div>
+            </Flex>
           </div>
+        </Grid>
 
-          <div>
-            <Typography variant="h4" className="font-semibold mb-4 text-ui-text">
-              organization
-            </Typography>
-            <ul className="space-y-2">
-              {["About", "Blog", "Careers", "Contact"].map((item) => (
-                <li key={item}>
-                  <a
-                    href="/"
-                    className="text-ui-text-tertiary hover:text-ui-text text-sm transition-colors"
-                  >
-                    {item}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <Typography variant="h4" className="font-semibold mb-4 text-ui-text">
-              Resources
-            </Typography>
-            <ul className="space-y-2">
-              {["Documentation", "Help Center", "API Reference", "Status"].map((item) => (
-                <li key={item}>
-                  <a
-                    href="/"
-                    className="text-ui-text-tertiary hover:text-ui-text text-sm transition-colors"
-                  >
-                    {item}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
+        <Grid cols={1} colsSm={2} colsLg={4} gap="lg" className="mb-12">
+          {footerColumns.map((column) => (
+            <div key={column.title}>
+              <Typography variant="h4" className="mb-4 text-base">
+                {column.title}
+              </Typography>
+              <ul className="space-y-2">
+                {column.links.map((item) => (
+                  <li key={item}>
+                    <a
+                      href="/"
+                      className="text-sm text-ui-text-tertiary transition-colors hover:text-ui-text"
+                    >
+                      {item}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </Grid>
 
         <Flex
@@ -92,21 +91,21 @@ export function Footer() {
           justify="between"
           align="center"
           gap="lg"
-          className="pt-8 border-t border-ui-border/20 sm:flex-row"
+          className="border-t border-ui-border/20 pt-8 sm:flex-row"
         >
           <Typography variant="muted" className="text-ui-text-secondary">
             © 2026 Nixelo. All rights reserved.
           </Typography>
+
           <Flex align="center" gap="xl">
-            {/* Social Links */}
             <a
               href="https://www.facebook.com/nixeloapp/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-ui-text-tertiary hover:text-ui-text transition-colors"
+              className="text-ui-text-tertiary transition-colors hover:text-ui-text"
             >
               <span className="sr-only">Follow us on Facebook</span>
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
               </svg>
             </a>
@@ -114,10 +113,10 @@ export function Footer() {
               href="https://www.tiktok.com/@nixeloapp"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-ui-text-tertiary hover:text-ui-text transition-colors"
+              className="text-ui-text-tertiary transition-colors hover:text-ui-text"
             >
               <span className="sr-only">Follow us on TikTok</span>
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z" />
               </svg>
             </a>
@@ -125,31 +124,12 @@ export function Footer() {
               href="https://www.patreon.com/nixelo"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-ui-text-tertiary hover:text-ui-text transition-colors"
+              className="text-ui-text-tertiary transition-colors hover:text-ui-text"
             >
               <span className="sr-only">Support us on Patreon</span>
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M15.386 2c-3.848 0-6.966 3.118-6.966 6.966 0 3.847 3.118 6.965 6.966 6.965 3.847 0 6.965-3.118 6.965-6.965C22.351 5.118 19.233 2 15.386 2zM.649 22h3.818V2H.649v20z" />
               </svg>
-            </a>
-            <div className="h-4 w-px bg-ui-border-secondary" />
-            <a
-              href="/"
-              className="text-ui-text-secondary hover:text-ui-text text-sm transition-colors"
-            >
-              Privacy
-            </a>
-            <a
-              href="/"
-              className="text-ui-text-secondary hover:text-ui-text text-sm transition-colors"
-            >
-              Terms
-            </a>
-            <a
-              href="/"
-              className="text-ui-text-secondary hover:text-ui-text text-sm transition-colors"
-            >
-              Cookies
             </a>
           </Flex>
         </Flex>

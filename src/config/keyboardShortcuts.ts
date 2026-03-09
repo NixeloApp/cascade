@@ -4,33 +4,17 @@ import { ROUTES } from "./routes";
 export interface ShortcutHandlers {
   orgSlug: string;
   navigate: (to: string) => void;
-  setShowCommandPalette: (show: boolean) => void;
   setShowShortcutsHelp: (show: boolean) => void;
   setShowAIAssistant: (toggle: boolean) => void;
 }
 
 /**
  * Creates keyboard shortcuts configuration for the application.
- * Includes navigation, command palette, AI assistant, and help shortcuts.
+ * Includes navigation, AI assistant, and help shortcuts.
  */
 export function createKeyboardShortcuts(handlers: ShortcutHandlers) {
   const { orgSlug } = handlers;
   const shortcuts = [
-    // Command palette (Cmd/Ctrl+K)
-    {
-      key: "k",
-      meta: true,
-      handler: () => handlers.setShowCommandPalette(true),
-      description: "Open command palette",
-      global: true,
-    },
-    {
-      key: "k",
-      ctrl: true,
-      handler: () => handlers.setShowCommandPalette(true),
-      description: "Open command palette",
-      global: true,
-    },
     // Help (?)
     {
       key: "?",

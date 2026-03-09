@@ -1,7 +1,8 @@
 # Visual Inconsistencies TODO (2026-03-04)
 
-> Source: `pnpm screenshots` run on 2026-03-04 (`176` captures)
+> Source: initial `pnpm screenshots` run on 2026-03-04 (`176` captures); latest refreshed baseline rerun on 2026-03-09 (`200` captures)
 > Scope: visual quality issues from generated desktop/tablet/mobile screenshots
+> Status: Checklist complete; remaining screenshot-reference sync is tracked in design-doc maintenance, not in this todo.
 
 ## P0 - Blockers (fix first)
 
@@ -50,3 +51,10 @@
 
 - First priority should be screenshot determinism (wait for data + no loading placeholders in baselines).
 - After determinism, address token-level consistency (contrast, spacing, surface depth, CTA color system).
+- 2026-03-08 follow-up: landing hero/composition and the in-app search/command experience were overhauled.
+- 2026-03-09 follow-up: refreshed screenshots are now captured and modal coverage is complete:
+  - dashboard/search modal sequencing is fixed across desktop/tablet/mobile
+  - create-project and create-issue modal capture is fixed across desktop/tablet/mobile
+  - calendar event-detail modal capture is fixed across desktop/tablet/mobile
+  - design CURRENT docs still need screenshot-reference sync to the 2026-03-09 baseline
+- 2026-03-09 visual polish round: dashboard shell and omnibox were tightened again after the stabilized screenshot run; this file remains the closed audit baseline while new polish iterations continue outside the checklist.

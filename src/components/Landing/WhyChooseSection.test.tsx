@@ -3,63 +3,39 @@ import { render, screen } from "@/test/custom-render";
 import { WhyChooseSection } from "./WhyChooseSection";
 
 describe("WhyChooseSection", () => {
-  describe("Rendering", () => {
-    it("should render the section headline", () => {
-      render(<WhyChooseSection />);
+  it("renders the new proof-oriented heading and copy", () => {
+    render(<WhyChooseSection />);
 
-      expect(screen.getByText("Teams actually like using it.")).toBeInTheDocument();
-    });
-
-    it("should render the section subheadline", () => {
-      render(<WhyChooseSection />);
-
-      expect(
-        screen.getByText(/No training required. No "change management" needed/),
-      ).toBeInTheDocument();
-    });
+    expect(
+      screen.getByText(/Better product ops usually starts with fewer disconnected surfaces/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/less repeated searching/i)).toBeInTheDocument();
   });
 
-  describe("Stats", () => {
-    it("should render all four stat items", () => {
-      render(<WhyChooseSection />);
+  it("renders all story cards", () => {
+    render(<WhyChooseSection />);
 
-      expect(screen.getByText("Less time in meetings")).toBeInTheDocument();
-      expect(screen.getByText("Fewer tools to manage")).toBeInTheDocument();
-      expect(screen.getByText("Actually use it daily")).toBeInTheDocument();
-      expect(screen.getByText("Would recommend")).toBeInTheDocument();
-    });
-
-    it("should render stat values with percentage", () => {
-      render(<WhyChooseSection />);
-
-      expect(screen.getByText("30%")).toBeInTheDocument();
-      expect(screen.getByText("10%")).toBeInTheDocument();
-      // Two items have 95%
-      expect(screen.getAllByText("95%")).toHaveLength(2);
-    });
-
-    it("should render progress bars for each stat", () => {
-      const { container } = render(<WhyChooseSection />);
-
-      // Each stat has a progress bar container with nested divs
-      const progressBars = container.querySelectorAll(".h-2.w-full.rounded-full");
-      expect(progressBars).toHaveLength(4);
-    });
+    expect(screen.getByText("Product teams stop rebuilding the same context")).toBeInTheDocument();
+    expect(
+      screen.getByText("Client-facing teams keep updates grounded in real work"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Ops leaders get cleaner visibility without heavier process"),
+    ).toBeInTheDocument();
   });
 
-  describe("Structure", () => {
-    it("should render as a section element", () => {
-      const { container } = render(<WhyChooseSection />);
+  it("renders stat badges for each story card", () => {
+    render(<WhyChooseSection />);
 
-      const section = container.querySelector("section");
-      expect(section).toBeInTheDocument();
-    });
+    expect(screen.getByText("11h saved weekly")).toBeInTheDocument();
+    expect(screen.getByText("2 fewer tools in the loop")).toBeInTheDocument();
+    expect(screen.getByText("Faster handoffs")).toBeInTheDocument();
+  });
 
-    it("should have accessible heading structure", () => {
-      render(<WhyChooseSection />);
+  it("renders as a section with an h2", () => {
+    const { container } = render(<WhyChooseSection />);
 
-      const h2 = screen.getByRole("heading", { level: 2 });
-      expect(h2).toHaveTextContent("Teams actually like using it.");
-    });
+    expect(container.querySelector("section")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2 })).toBeInTheDocument();
   });
 });

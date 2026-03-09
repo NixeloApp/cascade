@@ -433,11 +433,11 @@ export class AuthPage extends BasePage {
           }
 
           if (/^\/[^/]+\/dashboard\/?$/.test(currentPath)) {
-            const hasCommandPalette = await this.page
-              .getByRole("button", { name: /open command palette/i })
+            const hasDashboardSearch = await this.page
+              .getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON)
               .isVisible()
               .catch(() => false);
-            return hasCommandPalette ? "dashboard" : null;
+            return hasDashboardSearch ? "dashboard" : null;
           }
 
           return null;

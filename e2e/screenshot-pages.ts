@@ -23,9 +23,11 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { type Browser, chromium, type Page } from "@playwright/test";
+import { type Browser, chromium, type Locator, type Page } from "@playwright/test";
 import { TEST_IDS } from "../src/lib/test-ids";
 import { TEST_USERS } from "./config";
+import { E2E_TIMEZONE } from "./constants";
+import { ProjectsPage } from "./pages";
 import { type SeedScreenshotResult, testUserService } from "./utils/test-user-service";
 
 // ---------------------------------------------------------------------------
@@ -87,6 +89,7 @@ const SCREENSHOT_USER = {
   email: TEST_USERS.teamLead.email.replace("@", "-screenshots@"),
   password: TEST_USERS.teamLead.password,
 };
+const SEARCH_SHORTCUT = process.platform === "darwin" ? "Meta+K" : "Control+K";
 
 // ---------------------------------------------------------------------------
 // State
@@ -113,12 +116,19 @@ function nextIndex(prefix: string): number {
 // Dynamic page patterns that map to spec folders
 // Pattern: [regex to match pageId, spec folder, filename suffix]
 const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
+  [/^filled-dashboard-omnibox$/, "04-dashboard", "-omnibox"],
+  [/^filled-dashboard-advanced-search-modal$/, "04-dashboard", "-advanced-search-modal"],
+  [/^filled-dashboard-shortcuts-modal$/, "04-dashboard", "-shortcuts-modal"],
+  [/^filled-dashboard-time-entry-modal$/, "04-dashboard", "-time-entry-modal"],
+  [/^filled-projects-create-project-modal$/, "05-projects", "-create-project-modal"],
   // Project board: filled-project-xxx-board → 06-board
   [/^filled-project-[^-]+-board$/, "06-board", ""],
+  [/^filled-project-[^-]+-create-issue-modal$/, "06-board", "-create-issue-modal"],
   // Project backlog: filled-project-xxx-backlog → 07-backlog
   [/^filled-project-[^-]+-backlog$/, "07-backlog", ""],
   // Issue detail: filled-issue-xxx → 08-issue
   [/^filled-issue-/, "08-issue", ""],
+  [/^filled-project-[^-]+-issue-detail-modal$/, "08-issue", "-detail-modal"],
   // Document editor: filled-document-editor → 10-editor
   [/^filled-document-editor$/, "10-editor", ""],
   // Project calendar views: filled-project-xxx-calendar, filled-calendar-{mode}
@@ -199,8 +209,105 @@ async function takeScreenshot(
   console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}`);
 }
 
+async function captureCurrentView(page: Page, prefix: string, name: string): Promise<void> {
+  const n = nextIndex(prefix);
+  const num = String(n).padStart(2, "0");
+  const screenshotPath = getScreenshotPath(prefix, name);
+
+  await waitForScreenshotReady(page);
+  await page.screenshot({ path: screenshotPath });
+  totalScreenshots++;
+
+  const relativePath = path.relative(process.cwd(), screenshotPath);
+  console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}`);
+}
+
+async function runCaptureStep(label: string, fn: () => Promise<void>): Promise<void> {
+  try {
+    await fn();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.log(`    ⚠️  skipped ${label}: ${message}`);
+  }
+}
+
+async function dismissIfOpen(page: Page, locator: Locator): Promise<void> {
+  if (!(await locator.isVisible().catch(() => false))) {
+    return;
+  }
+
+  await page.keyboard.press("Escape").catch(() => {});
+
+  if (await locator.isVisible().catch(() => false)) {
+    await page.mouse.click(10, 10).catch(() => {});
+  }
+
+  await locator.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
+}
+
+async function waitForDialogOverlaysToClear(page: Page): Promise<void> {
+  await page
+    .waitForFunction(
+      () =>
+        document.querySelectorAll("[data-testid='dialog-overlay'][data-state='open']").length === 0,
+      undefined,
+      { timeout: 5000 },
+    )
+    .catch(() => {});
+}
+
+async function dismissAllDialogs(page: Page): Promise<void> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const openOverlays = await page
+      .getByTestId(TEST_IDS.DIALOG.OVERLAY)
+      .count()
+      .catch(() => 0);
+    if (openOverlays === 0) {
+      break;
+    }
+
+    await page.keyboard.press("Escape").catch(() => {});
+    await waitForDialogOverlaysToClear(page);
+
+    const remainingOverlays = await page
+      .getByTestId(TEST_IDS.DIALOG.OVERLAY)
+      .count()
+      .catch(() => 0);
+    if (remainingOverlays === 0) {
+      break;
+    }
+
+    await page.mouse.click(10, 10).catch(() => {});
+    await waitForDialogOverlaysToClear(page);
+  }
+}
+
+async function openOmnibox(page: Page, trigger: Locator, dialog: Locator): Promise<void> {
+  await dismissAllDialogs(page);
+
+  if (await trigger.isVisible().catch(() => false)) {
+    await trigger.click({ force: true });
+  } else {
+    await page.keyboard.press(SEARCH_SHORTCUT);
+  }
+
+  await dialog.waitFor({ state: "visible", timeout: 5000 });
+  await page.getByTestId(TEST_IDS.SEARCH.INPUT).waitFor({ state: "visible", timeout: 5000 });
+  await dialog
+    .getByText(/jump faster across your workspace/i)
+    .first()
+    .waitFor({ state: "visible", timeout: 5000 })
+    .catch(() => {});
+  await waitForScreenshotReady(page);
+  await page.waitForTimeout(250);
+}
+
 function isProjectBoardUrl(url: string): boolean {
   return /\/projects\/[^/]+\/board$/.test(url);
+}
+
+function isDashboardUrl(url: string): boolean {
+  return /\/[^/]+\/dashboard$/.test(url);
 }
 
 function isProjectCalendarUrl(url: string): boolean {
@@ -209,6 +316,10 @@ function isProjectCalendarUrl(url: string): boolean {
 
 function isProjectSettingsUrl(url: string): boolean {
   return /\/projects\/[^/]+\/settings$/.test(url);
+}
+
+function isSettingsUrl(url: string): boolean {
+  return /\/[^/]+\/settings(?:\/profile)?$/.test(url);
 }
 
 async function waitForCalendarReady(page: Page): Promise<boolean> {
@@ -240,7 +351,49 @@ async function waitForCalendarReady(page: Page): Promise<boolean> {
   return false;
 }
 
+async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<boolean> {
+  const eventItems = page.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM);
+  const attempts = Math.max(1, Math.ceil(timeoutMs / 500));
+
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    if ((await eventItems.count().catch(() => 0)) > 0) {
+      return true;
+    }
+
+    if (attempt === Math.floor(attempts / 2)) {
+      await page
+        .getByRole("button", { name: /^today$/i })
+        .first()
+        .click()
+        .catch(() => {});
+    }
+
+    await page.waitForTimeout(500);
+  }
+
+  return false;
+}
+
 async function waitForExpectedContent(page: Page, url: string, name: string): Promise<void> {
+  if (isDashboardUrl(url) || name === "dashboard") {
+    await page
+      .getByRole("heading", { name: /^dashboard$/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON)
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .locator(".animate-shimmer")
+      .first()
+      .waitFor({ state: "hidden", timeout: 4000 })
+      .catch(() => {});
+    return;
+  }
+
   if (isProjectBoardUrl(url)) {
     await page
       .getByTestId(TEST_IDS.BOARD.COLUMN)
@@ -267,6 +420,38 @@ async function waitForExpectedContent(page: Page, url: string, name: string): Pr
     return;
   }
 
+  if (isSettingsUrl(url) || name === "settings" || name === "settings-profile") {
+    await page
+      .waitForURL(
+        (currentUrl) => /\/[^/]+\/settings\/profile$/.test(new URL(currentUrl).pathname),
+        {
+          timeout: 12000,
+        },
+      )
+      .catch(() => {});
+    await page
+      .getByRole("heading", { name: /^settings$/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("tab", { name: /^profile$/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByText(/manage your account, integrations, and preferences/i)
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .locator(".animate-spin")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    return;
+  }
+
   if (
     isProjectCalendarUrl(url) ||
     name === "calendar-event-modal" ||
@@ -283,6 +468,7 @@ async function waitForScreenshotReady(page: Page): Promise<void> {
   // App shell loading indicator may appear during route/query transitions.
   const loadingSpinner = page
     .getByLabel("Loading")
+    .or(page.getByRole("status").filter({ has: page.locator(".animate-spin") }))
     .or(page.locator("[data-loading-spinner]"))
     .first();
   await loadingSpinner.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
@@ -427,8 +613,12 @@ async function screenshotFilledStates(
   await takeScreenshot(page, p, "settings", `/${orgSlug}/settings`);
   await takeScreenshot(page, p, "settings-profile", `/${orgSlug}/settings/profile`);
 
+  await screenshotDashboardModals(page, orgSlug, p);
+  await screenshotProjectsModal(page, orgSlug, p);
+
   // Project sub-pages
   const projectKey = seed.projectKey;
+  const firstIssueKey = seed.issueKeys?.[0];
   if (projectKey) {
     const tabs = [
       "board",
@@ -450,6 +640,8 @@ async function screenshotFilledStates(
         `/${orgSlug}/projects/${projectKey}/${tab}`,
       );
     }
+
+    await screenshotBoardModals(page, orgSlug, projectKey, firstIssueKey, p);
 
     // Calendar view modes
     const calendarUrl = `/${orgSlug}/projects/${projectKey}/calendar`;
@@ -492,35 +684,49 @@ async function screenshotFilledStates(
         console.log(`    ${num}  [${p}] calendar-${mode} → ${relativePath}`);
       }
 
-      // Event details modal screenshot — click first visible calendar event
-      // Switch back to week view for the modal screenshot (events are most visible)
-      const weekToggle = page.getByTestId(TEST_IDS.CALENDAR.MODE_WEEK);
-      if ((await weekToggle.count()) > 0) {
-        await weekToggle.first().click();
-        await waitForScreenshotReady(page);
-      }
-      // Events are rendered as tabIndex={0} divs with event titles
-      const eventEl = page
-        .locator("[tabindex='0']")
-        .filter({ hasText: /Sprint Planning|Design Review|Focus Time|Standup/i });
-      if ((await eventEl.count()) === 0) {
-        throw new Error(`[${p}] No calendar events found for modal screenshot`);
-      }
-      await eventEl.first().click();
-      const dialog = page.getByRole("dialog").first();
-      await dialog.waitFor({ state: "visible", timeout: 5000 });
-      await waitForScreenshotReady(page);
-      const n = nextIndex(p);
-      const num = String(n).padStart(2, "0");
-      const screenshotPath = getScreenshotPath(p, "calendar-event-modal");
-      await page.screenshot({ path: screenshotPath });
-      totalScreenshots++;
-      const relativePath = path.relative(process.cwd(), screenshotPath);
-      console.log(`    ${num}  [${p}] calendar-event-modal → ${relativePath}`);
+      await runCaptureStep("calendar event-detail modal", async () => {
+        const openDayView = async (): Promise<void> => {
+          const dayToggle = page.getByTestId(TEST_IDS.CALENDAR.MODE_DAY);
+          if ((await dayToggle.count()) > 0) {
+            await dayToggle.first().click();
+            await waitForScreenshotReady(page);
+            await waitForCalendarReady(page);
+          }
+        };
 
-      // Close the modal via Escape
-      await page.keyboard.press("Escape");
-      await dialog.waitFor({ state: "hidden", timeout: 5000 });
+        const locateEvent = () => page.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM).first();
+
+        let eventItem = locateEvent();
+        if (typeof seed.workspaceSlug === "string") {
+          await page
+            .goto(`${BASE_URL}/${orgSlug}/workspaces/${seed.workspaceSlug}/calendar`, {
+              waitUntil: "domcontentloaded",
+              timeout: 15000,
+            })
+            .catch(() => {});
+          await waitForScreenshotReady(page);
+          const workspaceCalendarReady = await waitForCalendarReady(page);
+          if (workspaceCalendarReady) {
+            await openDayView();
+            eventItem = locateEvent();
+          }
+        } else {
+          await openDayView();
+          eventItem = locateEvent();
+        }
+
+        if (!(await waitForCalendarEvents(page))) {
+          throw new Error(`[${p}] No calendar events found for modal screenshot`);
+        }
+
+        eventItem = locateEvent();
+        await eventItem.scrollIntoViewIfNeeded().catch(() => {});
+        await eventItem.click({ force: true });
+        const dialog = page.getByTestId(TEST_IDS.CALENDAR.EVENT_DETAILS_MODAL);
+        await dialog.waitFor({ state: "visible", timeout: 5000 });
+        await captureCurrentView(page, p, "calendar-event-modal");
+        await dismissIfOpen(page, dialog);
+      });
     }
   }
 
@@ -565,6 +771,158 @@ async function screenshotFilledStates(
   }
 }
 
+async function screenshotDashboardModals(
+  page: Page,
+  orgSlug: string,
+  prefix: string,
+): Promise<void> {
+  await page
+    .goto(`${BASE_URL}/${orgSlug}/dashboard`, { waitUntil: "domcontentloaded", timeout: 15000 })
+    .catch(() => {});
+  await waitForExpectedContent(page, `/${orgSlug}/dashboard`, "dashboard");
+  await waitForScreenshotReady(page);
+
+  const omniboxTrigger = page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON);
+  const omniboxDialog = page.getByTestId(TEST_IDS.SEARCH.MODAL);
+  if ((await omniboxTrigger.count()) > 0) {
+    await runCaptureStep("dashboard omnibox", async () => {
+      await openOmnibox(page, omniboxTrigger, omniboxDialog);
+      await captureCurrentView(page, prefix, "dashboard-omnibox");
+      await dismissIfOpen(page, omniboxDialog);
+    });
+
+    await runCaptureStep("dashboard advanced-search modal", async () => {
+      try {
+        await openOmnibox(page, omniboxTrigger, omniboxDialog);
+        const advancedSearchButton = omniboxDialog.getByRole("button", {
+          name: /^advanced search$/i,
+        });
+        await advancedSearchButton.waitFor({ state: "visible", timeout: 5000 });
+        await advancedSearchButton.click();
+        await omniboxDialog.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
+        const advancedSearchDialog = page.getByTestId(TEST_IDS.SEARCH.ADVANCED_MODAL);
+        await advancedSearchDialog.waitFor({ state: "visible", timeout: 5000 });
+        await captureCurrentView(page, prefix, "dashboard-advanced-search-modal");
+        await dismissIfOpen(page, advancedSearchDialog);
+      } finally {
+        await dismissIfOpen(page, omniboxDialog);
+      }
+    });
+  }
+
+  const shortcutsTrigger = page.getByTestId(TEST_IDS.HEADER.SHORTCUTS_BUTTON);
+  if (
+    (await shortcutsTrigger.count()) > 0 &&
+    (await shortcutsTrigger
+      .first()
+      .isVisible()
+      .catch(() => false))
+  ) {
+    await runCaptureStep("dashboard shortcuts modal", async () => {
+      await dismissAllDialogs(page);
+      await shortcutsTrigger.click();
+      const shortcutsDialog = page.getByRole("dialog", { name: /keyboard shortcuts/i });
+      await shortcutsDialog.waitFor({ state: "visible", timeout: 5000 });
+      await captureCurrentView(page, prefix, "dashboard-shortcuts-modal");
+      await dismissIfOpen(page, shortcutsDialog);
+    });
+  }
+
+  const timeEntryTrigger = page.getByRole("button", { name: /^start timer$/i }).first();
+  if ((await timeEntryTrigger.count()) > 0) {
+    await runCaptureStep("dashboard time-entry modal", async () => {
+      await dismissAllDialogs(page);
+      await timeEntryTrigger.click();
+      const timeEntryDialog = page.getByRole("dialog", { name: /^start timer$/i });
+      await timeEntryDialog.waitFor({ state: "visible", timeout: 5000 });
+      await captureCurrentView(page, prefix, "dashboard-time-entry-modal");
+      await dismissIfOpen(page, timeEntryDialog);
+    });
+  }
+}
+
+async function screenshotProjectsModal(page: Page, orgSlug: string, prefix: string): Promise<void> {
+  await page
+    .goto(`${BASE_URL}/${orgSlug}/projects`, { waitUntil: "domcontentloaded", timeout: 15000 })
+    .catch(() => {});
+  await waitForScreenshotReady(page);
+
+  const projectsPage = new ProjectsPage(page, orgSlug);
+
+  if ((await projectsPage.newProjectButton.count()) === 0) {
+    return;
+  }
+
+  await runCaptureStep("projects create-project modal", async () => {
+    await projectsPage.openCreateProjectForm();
+    await waitForScreenshotReady(page);
+    await captureCurrentView(page, prefix, "projects-create-project-modal");
+    await projectsPage.closeCreateProjectFormIfOpen();
+  });
+}
+
+async function screenshotBoardModals(
+  page: Page,
+  orgSlug: string,
+  projectKey: string,
+  issueKey: string | undefined,
+  prefix: string,
+): Promise<void> {
+  const boardUrl = `/${orgSlug}/projects/${projectKey}/board`;
+  await page
+    .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+    .catch(() => {});
+  await waitForExpectedContent(page, boardUrl, "board");
+  await waitForScreenshotReady(page);
+
+  const createIssueButton = page.getByRole("button", { name: /add issue/i }).first();
+  if ((await createIssueButton.count()) > 0) {
+    await runCaptureStep("board create-issue modal", async () => {
+      await dismissAllDialogs(page);
+      await createIssueButton.waitFor({ state: "visible", timeout: 5000 });
+      await createIssueButton.scrollIntoViewIfNeeded().catch(() => {});
+      await createIssueButton.click({ force: true });
+      const createIssueDialog = page.getByRole("dialog", { name: /create issue/i });
+      await createIssueDialog.waitFor({ state: "visible", timeout: 10000 }).catch(async () => {
+        await createIssueButton.click({ force: true });
+        await createIssueDialog.waitFor({ state: "visible", timeout: 10000 });
+      });
+      await captureCurrentView(
+        page,
+        prefix,
+        `project-${projectKey.toLowerCase()}-create-issue-modal`,
+      );
+      await dismissIfOpen(page, createIssueDialog);
+    });
+  }
+
+  let issueCard = page.getByTestId(TEST_IDS.ISSUE.CARD).first();
+  if (issueKey) {
+    const matchingIssueCard = page
+      .getByTestId(TEST_IDS.ISSUE.CARD)
+      .filter({ hasText: issueKey })
+      .first();
+    if ((await matchingIssueCard.count()) > 0) {
+      issueCard = matchingIssueCard;
+    }
+  }
+
+  if ((await issueCard.count()) > 0) {
+    await runCaptureStep("board issue-detail modal", async () => {
+      await issueCard.scrollIntoViewIfNeeded().catch(() => {});
+      await issueCard.click({ force: true });
+      const issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
+      await issueDetailDialog.waitFor({ state: "visible", timeout: 5000 });
+      await captureCurrentView(
+        page,
+        prefix,
+        `project-${projectKey.toLowerCase()}-issue-detail-modal`,
+      );
+      await dismissIfOpen(page, issueDetailDialog);
+    });
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Main capture function for a single viewport/theme combination
 // ---------------------------------------------------------------------------
@@ -586,6 +944,7 @@ async function captureForConfig(
   const context = await browser.newContext({
     viewport: VIEWPORTS[viewport],
     colorScheme: theme,
+    timezoneId: E2E_TIMEZONE,
   });
   const page = await context.newPage();
 
@@ -693,6 +1052,7 @@ async function run(): Promise<void> {
   const setupContext = await browser.newContext({
     viewport: VIEWPORTS.desktop,
     colorScheme: "dark",
+    timezoneId: E2E_TIMEZONE,
   });
   const setupPage = await setupContext.newPage();
   const orgSlug = await autoLogin(setupPage);

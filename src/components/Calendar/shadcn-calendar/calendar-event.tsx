@@ -9,6 +9,7 @@
 import { format, isSameDay, isSameMonth } from "date-fns";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { Typography } from "@/components/ui/Typography";
+import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { getEventColorClasses } from "../calendar-colors";
 import { useCalendarContext } from "./calendar-context";
@@ -90,6 +91,7 @@ export function CalendarEvent({
       <AnimatePresence mode="wait">
         <motion.div
           tabIndex={0}
+          data-testid={TEST_IDS.CALENDAR.EVENT_ITEM}
           className={cn(
             month ? "px-2 py-0.5 rounded-secondary" : "px-3 py-1.5 rounded-lg",
             "truncate cursor-pointer transition-all duration-medium",

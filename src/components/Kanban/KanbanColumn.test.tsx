@@ -119,7 +119,7 @@ describe("KanbanColumn", () => {
       render(<KanbanColumn {...defaultProps} issues={[]} />);
 
       expect(screen.getByText("No issues yet")).toBeInTheDocument();
-      expect(screen.getByText("Drop issues here or click + to add")).toBeInTheDocument();
+      expect(screen.getByText("This stage is clear right now.")).toBeInTheDocument();
     });
 
     it("should show correct test IDs for accessibility", () => {

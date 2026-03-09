@@ -470,6 +470,94 @@ export const listTimeEntries = authenticatedQuery({
   },
 });
 
+/**
+ * Get aggregated metrics for time entries without fetching full records.
+ * Used for overview dashboards to show totals with truncation awareness.
+ * Returns isTruncated: true when MAX_TIME_ENTRIES is hit so UI can indicate partial data.
+ */
+export const getTimeEntrySummary = authenticatedQuery({
+  args: {
+    projectId: v.optional(v.id("projects")),
+    startDate: v.optional(v.number()),
+    endDate: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const userId = ctx.userId;
+
+    let entries: Doc<"timeEntries">[];
+
+    // Use MAX_TIME_ENTRIES as a reasonable upper bound for summary aggregation
+    // Fetch one extra to detect truncation accurately (> vs ===)
+    // Order descending to aggregate newest entries when truncated
+    const fetchLimit = MAX_TIME_ENTRIES + 1;
+
+    if (args.projectId && args.startDate !== undefined && args.endDate !== undefined) {
+      const startDate = args.startDate;
+      const endDate = args.endDate;
+      const projectId = args.projectId;
+      entries = await ctx.db
+        .query("timeEntries")
+        .withIndex("by_project_date", (q) =>
+          q.eq("projectId", projectId).gte("date", startDate).lte("date", endDate),
+        )
+        .order("desc")
+        .filter((q) => q.eq(q.field("userId"), userId))
+        .take(fetchLimit);
+    } else if (args.startDate !== undefined && args.endDate !== undefined) {
+      const startDate = args.startDate;
+      const endDate = args.endDate;
+      entries = await ctx.db
+        .query("timeEntries")
+        .withIndex("by_user_date", (q) =>
+          q.eq("userId", userId).gte("date", startDate).lte("date", endDate),
+        )
+        .order("desc")
+        .take(fetchLimit);
+    } else if (args.projectId) {
+      // Use composite index to avoid post-query filter
+      entries = await ctx.db
+        .query("timeEntries")
+        .withIndex("by_user_project", (q) => q.eq("userId", userId).eq("projectId", args.projectId))
+        .order("desc")
+        .take(fetchLimit);
+    } else {
+      entries = await ctx.db
+        .query("timeEntries")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .order("desc")
+        .take(fetchLimit);
+    }
+
+    // Flag when results may be incomplete (fetched more than limit)
+    const isTruncated = entries.length > MAX_TIME_ENTRIES;
+    // Only aggregate up to the limit
+    const summaryEntries = isTruncated ? entries.slice(0, MAX_TIME_ENTRIES) : entries;
+
+    // Aggregate metrics
+    let totalDuration = 0;
+    let billableDuration = 0;
+    let totalCost = 0;
+    let entryCount = 0;
+
+    for (const entry of summaryEntries) {
+      entryCount++;
+      totalDuration += entry.duration ?? 0;
+      if (entry.billable) {
+        billableDuration += entry.duration ?? 0;
+        totalCost += entry.totalCost ?? 0;
+      }
+    }
+
+    return {
+      totalDuration,
+      billableDuration,
+      totalCost,
+      entryCount,
+      isTruncated,
+    };
+  },
+});
+
 // Get current week timesheet for the logged in user
 export const getCurrentWeekTimesheet = authenticatedQuery({
   args: {},

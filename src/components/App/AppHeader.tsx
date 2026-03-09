@@ -17,100 +17,91 @@ import { Typography } from "@/components/ui/Typography";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import { Menu } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
+import type { CommandAction } from "../CommandPalette";
 
 interface AppHeaderProps {
-  onShowCommandPalette?: () => void;
+  commands?: CommandAction[];
   onShowShortcutsHelp?: () => void;
 }
 
 /**
  * Main application header with search, notifications, and user menu.
  */
-export function AppHeader({ onShowCommandPalette, onShowShortcutsHelp }: AppHeaderProps) {
+export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
   const { isMobileOpen, toggleMobile } = useSidebarState();
 
   return (
-    <header className="sticky top-0 z-40 bg-ui-bg/85 backdrop-blur-md border-b border-ui-border/70 px-3 sm:px-6 py-2.5 sm:py-3 flex justify-between items-center gap-2 transition-all duration-default">
-      <Flex align="center" gap="sm" className="sm:gap-3">
-        {/* Mobile Hamburger Menu */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleMobile}
-          className="lg:hidden"
-          aria-label="Toggle sidebar menu"
-          aria-expanded={isMobileOpen}
-        >
-          <Menu className="w-5 h-5" />
-        </Button>
-      </Flex>
+    <header className="sticky top-0 z-40 border-b border-ui-border/50 bg-linear-to-b from-ui-bg/95 via-ui-bg/90 to-ui-bg/80 px-3 py-2 backdrop-blur-xl transition-all duration-default sm:px-6 sm:py-3">
+      <Flex align="center" justify="between" gap="md" className="relative">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-brand/15 to-transparent" />
 
-      <Flex align="center" gap="xs" className="sm:gap-2 shrink-0">
-        {onShowCommandPalette && (
+        <Flex align="center" gap="sm" className="sm:gap-3">
+          {/* Mobile Hamburger Menu */}
           <Button
-            variant="secondary"
-            size="sm"
-            onClick={onShowCommandPalette}
-            className="h-9 gap-1.5 px-2 sm:px-3 text-xs sm:text-sm"
-            aria-label="Open command palette"
-            data-tour="command-palette"
+            variant="ghost"
+            size="icon"
+            onClick={toggleMobile}
+            className="h-10 w-10 rounded-full border border-ui-border/60 bg-ui-bg-elevated/90 text-ui-text-secondary shadow-soft backdrop-blur-sm hover:border-ui-border-secondary hover:bg-ui-bg-hover hover:text-ui-text lg:hidden"
+            aria-label="Toggle sidebar menu"
+            aria-expanded={isMobileOpen}
           >
-            <svg
-              aria-hidden="true"
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            <span className="hidden sm:inline text-current">Commands</span>
-            <Typography
-              as="kbd"
-              className="hidden lg:inline px-1.5 py-0.5 text-xs text-ui-text-tertiary bg-ui-bg border border-ui-border/50 rounded font-mono"
-            >
-              ⌘K
-            </Typography>
+            <Menu className="w-5 h-5" />
           </Button>
-        )}
 
-        {onShowShortcutsHelp && (
-          <Tooltip content="Keyboard shortcuts">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onShowShortcutsHelp}
-              className="hidden sm:flex"
-              aria-label="Keyboard shortcuts"
-              data-testid={TEST_IDS.HEADER.SHORTCUTS_BUTTON}
-            >
-              <svg
-                aria-hidden="true"
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          <div className="hidden rounded-full border border-ui-border/60 bg-linear-to-r from-ui-bg-elevated/95 to-ui-bg-soft/90 px-3 py-1.5 shadow-soft lg:flex lg:items-center lg:gap-3">
+            <div className="h-2.5 w-2.5 rounded-full bg-brand shadow-brand-halo" />
+            <div className="min-w-0">
+              <Typography
+                variant="caption"
+                className="block uppercase tracking-widest text-ui-text-muted"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </Button>
-          </Tooltip>
-        )}
+                Workspace cockpit
+              </Typography>
+              <Typography variant="small" className="block max-w-48 truncate font-medium">
+                Search, track, and act from one surface
+              </Typography>
+            </div>
+          </div>
+        </Flex>
 
-        <NavTimerWidget />
-        <GlobalSearch />
-        <NotificationCenter />
-        <UserMenu />
+        <Flex
+          align="center"
+          gap="xs"
+          className="min-w-0 shrink-0 rounded-full border border-ui-border/70 bg-linear-to-r from-ui-bg-elevated/95 via-ui-bg-elevated/92 to-ui-bg-soft/90 p-0.5 shadow-card backdrop-blur-xl sm:gap-2 sm:p-1"
+        >
+          {onShowShortcutsHelp && (
+            <Tooltip content="Keyboard shortcuts">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onShowShortcutsHelp}
+                className="hidden h-9 w-9 rounded-full border border-transparent bg-transparent text-ui-text-secondary shadow-none transition-all duration-default hover:border-ui-border/70 hover:bg-ui-bg-soft hover:text-ui-text sm:flex"
+                aria-label="Keyboard shortcuts"
+                data-testid={TEST_IDS.HEADER.SHORTCUTS_BUTTON}
+              >
+                <svg
+                  aria-hidden="true"
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </Button>
+            </Tooltip>
+          )}
+
+          <NavTimerWidget />
+          <GlobalSearch commands={commands} />
+          <NotificationCenter />
+          <UserMenu />
+        </Flex>
       </Flex>
     </header>
   );

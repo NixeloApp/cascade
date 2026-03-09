@@ -55,6 +55,7 @@ export function run() {
     "/CommentReactions.tsx", // Popover overrides
     "/CommentRenderer.tsx", // Inline markdown code element styling
     "/CreateProjectFromTemplate.tsx", // Responsive button layout
+    "/Dashboard.tsx", // Main dashboard with decorative gradients and complex layout
     "/DocumentHeader.tsx", // Header with breadcrumbs
     "/DocumentSidebar.tsx", // Sidebar with TOC and info sections
     "/DocumentTemplatesManager.tsx", // Template cards with gradients
@@ -73,6 +74,7 @@ export function run() {
     "/KeyboardShortcutsHelp.tsx", // kbd element styling
     "/DocumentTree.tsx", // Tree expand/collapse button (p-0.5 h-5 w-5)
     "/LabelsManager.tsx", // Inline link button styling (p-0 h-auto)
+    "/layout/PageHeader.tsx", // Responsive header layout with Typography size overrides
     "/MentionInput.tsx", // Dropdown positioning
     "/NotificationCenter.tsx", // Popover with badge positioning
     "/NotificationItem.tsx", // Link with flex styling

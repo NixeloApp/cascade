@@ -113,9 +113,8 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
     title: "General",
     priority: 1,
     items: [
-      { id: "cmd-palette", description: "Open command palette", modifierShortcut: "cmd+k" },
+      { id: "cmd-palette", description: "Open search and commands", modifierShortcut: "cmd+k" },
       { id: "shortcuts-help", description: "Show keyboard shortcuts", singleKey: "?" },
-      { id: "focus-search", description: "Focus search", singleKey: "/" },
       { id: "close-modal", description: "Close modal or cancel", singleKey: "Esc" },
       { id: "ai-assistant", description: "Toggle AI assistant", modifierShortcut: "cmd+shift+a" },
     ],
@@ -178,7 +177,7 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
 
 function KeyBadge({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-ui-border bg-ui-bg-secondary px-1.5 font-mono text-xs font-medium text-ui-text-secondary">
+    <kbd className="inline-flex h-6 min-w-6 items-center justify-center rounded-lg border border-ui-border-secondary/70 bg-ui-bg-elevated px-2 font-mono text-xs font-medium text-ui-text-secondary shadow-soft">
       {children}
     </kbd>
   );
@@ -264,21 +263,27 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
       onOpenChange={handleOpenChange}
       title="Keyboard Shortcuts"
       description="Available keyboard shortcuts for navigation and actions"
-      size="sm"
+      size="md"
     >
       {/* Search Input */}
       <Stack gap="md">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ui-text-tertiary" />
-          <Input
-            type="text"
-            placeholder="Search shortcuts..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-8 pl-8 text-sm"
-            autoFocus
-          />
-        </div>
+        <Card
+          variant="flat"
+          padding="sm"
+          className="border-ui-border-secondary/70 bg-linear-to-br from-ui-bg-soft to-ui-bg-elevated"
+        >
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ui-text-tertiary" />
+            <Input
+              type="text"
+              placeholder="Search shortcuts..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-9 pl-8 text-sm"
+              autoFocus
+            />
+          </div>
+        </Card>
       </Stack>
 
       {/* Shortcuts List */}
@@ -286,7 +291,12 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
         {hasResults ? (
           <Flex direction="column" gap="md">
             {filteredCategories.map((category) => (
-              <div key={category.id}>
+              <Card
+                key={category.id}
+                variant="flat"
+                padding="md"
+                className="border-ui-border-secondary/70 bg-ui-bg-soft/60"
+              >
                 <Typography
                   variant="label"
                   color="secondary"
@@ -296,7 +306,12 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
                 </Typography>
                 <Flex direction="column" gap="xs">
                   {category.items.map((item) => (
-                    <Card key={item.id} padding="xs" variant="ghost" radius="none">
+                    <Card
+                      key={item.id}
+                      padding="sm"
+                      variant="default"
+                      className="border-ui-border/70 bg-ui-bg-elevated/90"
+                    >
                       <Flex align="center" justify="between">
                         <Typography variant="small" color="secondary">
                           {item.description}
@@ -306,7 +321,7 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
                     </Card>
                   ))}
                 </Flex>
-              </div>
+              </Card>
             ))}
           </Flex>
         ) : (
@@ -339,7 +354,7 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
           >
             {isMacPlatform() ? "⌘" : "Ctrl"}+K
           </Typography>{" "}
-          to open command palette
+          to open search and commands
         </Typography>
       </Card>
     </Dialog>

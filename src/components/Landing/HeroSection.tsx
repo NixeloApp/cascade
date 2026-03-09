@@ -1,26 +1,25 @@
 import { Link } from "@tanstack/react-router";
 import { ROUTES } from "@/config/routes";
+import { ArrowRight } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
+import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
 import { Typography } from "../ui/Typography";
-import { PlayIcon } from "./Icons";
+import { ProductShowcase } from "./ProductShowcase";
 
-/** Landing page hero section with headline and CTA buttons. */
+/** Landing page hero section with headline, CTA buttons, and product preview. */
 export function HeroSection() {
   return (
-    <section className="relative px-6 pt-20 pb-32 overflow-hidden">
-      {/* Near-black background with gradient overlays */}
+    <section className="relative overflow-hidden px-6 pb-24 pt-28 sm:pt-32">
       <div className="absolute inset-0 bg-ui-bg-hero">
-        {/* Radial gradient from center */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(99, 102, 241, 0.15), transparent)",
+              "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(99, 102, 241, 0.14), transparent)",
           }}
         />
-        {/* Subtle grid pattern overlay */}
         <div
           className="absolute inset-0 opacity-5"
           style={{
@@ -29,102 +28,85 @@ export function HeroSection() {
             backgroundSize: "64px 64px",
           }}
         />
-        {/* Top edge glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-px bg-linear-to-r from-transparent via-landing-accent/50 to-transparent" />
+        <div className="absolute left-1/2 top-0 h-px w-full max-w-4xl -translate-x-1/2 bg-linear-to-r from-transparent via-landing-accent/50 to-transparent" />
       </div>
 
-      <div className="relative max-w-4xl mx-auto text-center">
-        {/* Tag - with staggered animation */}
-        <Flex justify="center" className="mb-10 animate-fade-in">
+      <div className="relative mx-auto max-w-6xl text-center">
+        <Flex justify="center" className="mb-8 animate-fade-in">
           <Badge
             variant="outline"
             shape="pill"
             className={cn(
-              "px-4 py-2",
-              "bg-ui-bg-soft backdrop-blur-sm",
+              "bg-ui-bg-soft px-4 py-2 backdrop-blur-sm",
               "transition-default hover:border-ui-border-secondary",
             )}
           >
-            Project Management · Time Tracking
+            Docs, delivery, and time tracking in one operating system
           </Badge>
         </Flex>
 
-        {/* Headline - with tighter tracking for premium feel */}
         <Typography
           variant="h1"
           className={cn(
-            "text-4xl md:text-5xl lg:text-7xl font-bold leading-tight mb-6",
-            "tracking-tighter text-brand-foreground",
+            "mb-6 text-4xl font-bold leading-tight tracking-tighter text-brand-foreground md:text-6xl lg:text-7xl",
             "animate-slide-up",
           )}
           style={{ animationDelay: "0.1s", animationFillMode: "backwards" }}
         >
-          Revolutionize Your Workflow.
+          Replace scattered project tools
           <br />
           <span className="bg-linear-to-r from-landing-accent via-landing-accent-teal to-status-success-text bg-clip-text text-transparent">
-            Harmonize Your Team.
+            with one sharper workspace.
           </span>
         </Typography>
 
-        {/* Subheadline - with opacity-based secondary text */}
         <Typography
           variant="lead"
           className={cn(
-            "text-ui-text-secondary max-w-2xl mx-auto mb-12",
-            "text-lg md:text-xl leading-relaxed",
+            "mx-auto mb-10 max-w-3xl text-lg leading-relaxed text-ui-text-secondary md:text-xl",
             "animate-slide-up",
           )}
           style={{ animationDelay: "0.2s", animationFillMode: "backwards" }}
         >
-          Experience the future of project management with integrated tracking, automation, and
-          collaboration.
+          Nixelo keeps specs, tasks, client updates, and AI assistance in the same flow so teams can
+          search faster, act faster, and stop duplicating context.
         </Typography>
 
-        {/* CTAs - with hover animations */}
         <Flex
           direction="column"
           gap="md"
           align="center"
           justify="center"
-          className={cn("sm:flex-row animate-slide-up")}
+          className={cn("animate-slide-up sm:flex-row")}
           style={{ animationDelay: "0.3s", animationFillMode: "backwards" }}
         >
-          <Link
-            to={ROUTES.signup.path}
-            className={cn(
-              "px-8 py-3.5 rounded-pill",
-              "bg-linear-to-r from-landing-accent to-landing-accent-teal",
-              "text-base font-bold text-brand-foreground",
-              "shadow-elevated",
-              "transition-all duration-default",
-              "hover:shadow-xl hover:shadow-landing-accent/25",
-              "hover:scale-105 active:scale-95",
-            )}
-          >
-            Get Started Free
-          </Link>
-          <a
-            href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(
-              "group px-8 py-3.5 rounded-pill",
-              "bg-transparent border border-ui-border-secondary",
-              "text-base font-medium text-ui-text-secondary",
-              "transition-all duration-default",
-              "hover:border-ui-border hover:text-brand-foreground",
-              "hover:bg-ui-bg-hover",
-              "flex items-center justify-center gap-2",
-            )}
-          >
-            Watch Demo
-            <PlayIcon className="w-4 h-4 text-landing-accent transition-transform duration-default group-hover:translate-x-0.5" />
-          </a>
+          <Button asChild size="lg" className="rounded-full px-8">
+            <Link to={ROUTES.signup.path}>Get Started Free</Link>
+          </Button>
+          <Button asChild variant="secondary" size="lg" className="rounded-full px-8">
+            <a href="#product-showcase">
+              See workflow tour
+              <ArrowRight className="h-4 w-4" />
+            </a>
+          </Button>
         </Flex>
 
-        {/* Bottom decorative glow */}
+        <Flex
+          justify="center"
+          gap="lg"
+          wrap
+          className="mt-8 animate-slide-up text-sm text-ui-text-tertiary"
+          style={{ animationDelay: "0.4s", animationFillMode: "backwards" }}
+        >
+          <span>Built for product, ops, and client delivery teams</span>
+          <span>AI-native search and action layer</span>
+          <span>Fewer tools, less duplicated work</span>
+        </Flex>
+
+        <ProductShowcase />
+
         <div
-          className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-96 h-48 rounded-full blur-glow bg-landing-accent/10 pointer-events-none animate-fade-in"
+          className="pointer-events-none absolute -bottom-20 left-1/2 h-48 w-96 -translate-x-1/2 rounded-full bg-landing-accent/10 blur-glow"
           style={{ animationDelay: "0.5s", animationFillMode: "backwards" }}
         />
       </div>

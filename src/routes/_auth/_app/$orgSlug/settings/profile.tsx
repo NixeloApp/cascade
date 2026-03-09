@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/settings/profile")({
 function SettingsProfilePage() {
   return (
     <Suspense fallback={<PageContent isLoading>{null}</PageContent>}>
-      <PageLayout>
+      <PageLayout maxWidth="lg">
         <PageHeader
           title="Settings"
           description="Manage your account, integrations, and preferences"

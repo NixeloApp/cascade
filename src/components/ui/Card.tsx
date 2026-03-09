@@ -15,14 +15,14 @@ import { Typography } from "./Typography";
 const cardVariants = cva("border transition-default", {
   variants: {
     variant: {
-      default: "bg-ui-bg border-ui-border shadow-soft",
-      elevated: "bg-ui-bg border-ui-border-secondary shadow-card",
-      soft: "bg-ui-bg-soft border-ui-border shadow-soft",
+      default: "bg-ui-bg-elevated border-ui-border shadow-card",
+      elevated: "bg-ui-bg-elevated border-ui-border-secondary shadow-elevated",
+      soft: "bg-ui-bg-secondary border-ui-border shadow-soft",
       interactive:
-        "bg-ui-bg border-ui-border hover:bg-ui-bg-hover hover:border-ui-border-secondary cursor-pointer",
-      outline: "bg-transparent border-ui-border",
+        "bg-ui-bg-elevated border-ui-border shadow-soft hover:bg-ui-bg-hover hover:border-ui-border-secondary hover:shadow-card-hover cursor-pointer",
+      outline: "bg-ui-bg/80 border-ui-border shadow-soft",
       ghost: "bg-transparent border-transparent",
-      flat: "bg-ui-bg border-ui-border shadow-none",
+      flat: "bg-ui-bg-secondary/80 border-ui-border shadow-none",
     },
     padding: {
       none: "",
@@ -40,7 +40,7 @@ const cardVariants = cva("border transition-default", {
       full: "rounded-2xl",
     },
     hoverable: {
-      true: "hover:bg-ui-bg-hover hover:border-ui-border-secondary cursor-pointer",
+      true: "hover:bg-ui-bg-hover hover:border-ui-border-secondary hover:shadow-card-hover cursor-pointer",
       false: "",
     },
   },

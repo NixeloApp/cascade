@@ -122,8 +122,8 @@ describe("TimerWidget", () => {
 
       const { container } = render(<TimerWidget />);
 
-      // Card component renders with role="article" or a div
-      const card = container.querySelector(".bg-brand-indigo-track");
+      // Card component renders with gradient background when timer is running
+      const card = container.querySelector(".from-brand-indigo-track");
       expect(card).toBeInTheDocument();
     });
   });

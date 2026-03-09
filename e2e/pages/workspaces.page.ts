@@ -99,14 +99,17 @@ export class WorkspacesPage extends BasePage {
 
   async expectWorkspaceDetailVisible(name: string) {
     await expect(this.page).toHaveURL(/\/workspaces\/[^/]+(?:[/?#]|$)/);
-    await expect(this.page.getByRole("heading", { name, level: 3 })).toBeVisible();
+    // PageHeader renders workspace name as h2
+    await expect(this.page.getByRole("heading", { name, level: 2 })).toBeVisible();
   }
 
   async expectWorkspaceVisible(name: string) {
     const mainContent = this.page.getByRole("main");
+    // Workspace list cards use h4, detail page uses h2 via PageHeader
     const workspaceCard = mainContent.locator(`a[href*="/workspaces/"]`).filter({ hasText: name });
-    const workspaceHeading = mainContent.getByRole("heading", { name, level: 3 });
-    await expect(workspaceCard.or(workspaceHeading)).toBeVisible();
+    const workspaceH2 = mainContent.getByRole("heading", { name, level: 2 });
+    const workspaceH4 = mainContent.getByRole("heading", { name, level: 4 });
+    await expect(workspaceCard.or(workspaceH2).or(workspaceH4)).toBeVisible();
   }
 
   async isWorkspaceSettingsTabVisible() {
@@ -117,8 +120,9 @@ export class WorkspacesPage extends BasePage {
     // Only skip navigation if we're already on a workspace detail route with the heading visible
     const onWorkspaceRoute = /\/workspaces\/[^/]+(?:[/?#]|$)/.test(this.page.url());
     if (onWorkspaceRoute) {
+      // PageHeader renders workspace name as h2
       const headingVisible = await this.page
-        .getByRole("heading", { name, level: 3 })
+        .getByRole("heading", { name, level: 2 })
         .isVisible()
         .catch(() => false);
       if (headingVisible) return;

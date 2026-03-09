@@ -11,7 +11,7 @@ import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import type { FunctionReturnType } from "convex/server";
 import { useCallback, useEffect, useState } from "react";
 import { AppHeader, AppSidebar } from "@/components/App";
-import { CommandPalette, useCommands } from "@/components/CommandPalette";
+import { useCommands } from "@/components/CommandPalette";
 import { CreateProjectFromTemplate } from "@/components/CreateProjectFromTemplate";
 import { CreateIssueModal } from "@/components/IssueDetail";
 import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
@@ -159,7 +159,6 @@ function OrganizationLayoutInner() {
   const navigate = useNavigate();
 
   // UI state for modals
-  const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [, setShowAIAssistant] = useState(false);
   const [showCreateIssue, setShowCreateIssue] = useState(false);
@@ -210,7 +209,6 @@ function OrganizationLayoutInner() {
     navigate: (to: string) => {
       navigate({ to });
     },
-    setShowCommandPalette,
     setShowShortcutsHelp,
     setShowAIAssistant,
   });
@@ -220,7 +218,6 @@ function OrganizationLayoutInner() {
     navigate: (to: string) => {
       navigate({ to });
     },
-    setShowCommandPalette,
     setShowShortcutsHelp,
     setShowAIAssistant,
   });
@@ -251,10 +248,7 @@ function OrganizationLayoutInner() {
           {/* Main content area */}
           <Flex direction="column" className="flex-1 min-w-0">
             {/* Slim header */}
-            <AppHeader
-              onShowCommandPalette={() => setShowCommandPalette(true)}
-              onShowShortcutsHelp={() => setShowShortcutsHelp(true)}
-            />
+            <AppHeader commands={commands} onShowShortcutsHelp={() => setShowShortcutsHelp(true)} />
 
             {/* Page content */}
             <FlexItem
@@ -267,13 +261,6 @@ function OrganizationLayoutInner() {
               <Outlet />
             </FlexItem>
           </Flex>
-
-          {/* Command Palette Modal */}
-          <CommandPalette
-            isOpen={showCommandPalette}
-            onClose={() => setShowCommandPalette(false)}
-            commands={commands}
-          />
 
           {/* Keyboard Shortcuts Help Modal */}
           <KeyboardShortcutsHelp open={showShortcutsHelp} onOpenChange={setShowShortcutsHelp} />

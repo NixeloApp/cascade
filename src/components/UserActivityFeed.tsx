@@ -202,6 +202,10 @@ export function UserActivityFeed({
         icon={Clock}
         title="No activity yet"
         description="Activity will appear here as work progresses"
+        variant="info"
+        align="start"
+        size="compact"
+        className="max-w-full border-ui-border-secondary/70 bg-linear-to-br from-ui-bg-elevated via-ui-bg-elevated to-brand-subtle/20"
       />
     );
   }

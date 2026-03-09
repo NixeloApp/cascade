@@ -58,19 +58,51 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
     <Flex direction="column" gap="lg">
       {/* Projects Grid */}
       {projects.length === 0 ? (
-        <EmptyState
-          icon={Folder}
-          title="No projects yet"
-          description="Create your first project to organize work"
-          className="min-h-96 rounded-container border border-dashed border-ui-border-secondary bg-ui-bg-soft shadow-soft"
-          action={
-            <Button variant="primary" onClick={onCreateClick}>
-              + Create Project
-            </Button>
-          }
-        />
+        <Flex direction="column" gap="lg">
+          <EmptyState
+            icon={Folder}
+            title="No projects yet"
+            description="Create your first project to organize work"
+            className="min-h-64 w-full max-w-2xl border-dashed bg-linear-to-b from-ui-bg-elevated to-ui-bg-secondary/80 sm:min-h-72"
+            action={
+              <Button variant="primary" onClick={onCreateClick}>
+                + Create Project
+              </Button>
+            }
+          />
+
+          <Grid cols={1} colsLg={3} gap="lg" className="w-full">
+            <Card variant="soft" padding="lg">
+              <Flex direction="column" gap="sm">
+                <Typography variant="label">Start with structure</Typography>
+                <Typography variant="small" color="secondary">
+                  Set up one project per initiative so priorities, docs, and delivery work stay in
+                  the same place.
+                </Typography>
+              </Flex>
+            </Card>
+            <Card variant="soft" padding="lg">
+              <Flex direction="column" gap="sm">
+                <Typography variant="label">Keep ownership visible</Typography>
+                <Typography variant="small" color="secondary">
+                  Use projects to group issues by team, product area, or client engagement instead
+                  of scattering work across boards.
+                </Typography>
+              </Flex>
+            </Card>
+            <Card variant="soft" padding="lg">
+              <Flex direction="column" gap="sm">
+                <Typography variant="label">Build momentum fast</Typography>
+                <Typography variant="small" color="secondary">
+                  Once the first project exists, your backlog, roadmap, calendar, and analytics
+                  views become much easier to navigate.
+                </Typography>
+              </Flex>
+            </Card>
+          </Grid>
+        </Flex>
       ) : (
-        <Grid cols={1} colsMd={2} colsLg={3} gap="xl">
+        <Grid cols={1} colsLg={2} gap="xl">
           {projects.map((project) => (
             <Link
               key={project._id}
@@ -78,7 +110,7 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
               params={{ orgSlug, key: project.key }}
               className="group"
             >
-              <Card hoverable padding="lg">
+              <Card hoverable padding="lg" className="h-full">
                 <Flex direction="column" gap="md">
                   {/* Project header with avatar and key */}
                   <Flex justify="between" align="start" gap="md">

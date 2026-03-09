@@ -13,6 +13,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatDate, formatTime } from "@/lib/formatting";
 import { Calendar, Check, Clock, LinkIcon, MapPin, Trash2, X } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { MeetingRecordingSection } from "../MeetingRecordingSection";
@@ -54,7 +55,13 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
 
   if (!event) {
     return (
-      <Dialog open={open} onOpenChange={onOpenChange} title="Event Details" size="lg">
+      <Dialog
+        open={open}
+        onOpenChange={onOpenChange}
+        title="Event Details"
+        size="lg"
+        data-testid={TEST_IDS.CALENDAR.EVENT_DETAILS_MODAL}
+      >
         <Flex justify="center" className="p-8">
           <LoadingSpinner size="lg" />
         </Flex>
@@ -113,6 +120,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
       onOpenChange={onOpenChange}
       title={event.title}
       className="sm:max-w-2xl"
+      data-testid={TEST_IDS.CALENDAR.EVENT_DETAILS_MODAL}
       footer={
         <>
           <Button

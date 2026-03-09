@@ -66,7 +66,7 @@ export function Settings() {
 
   return (
     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)} className="w-full">
-      <TabsList className="mb-6 sm:mb-8 w-full justify-start overflow-x-auto">
+      <TabsList className="mb-6 w-full justify-start overflow-x-auto sm:mb-8">
         <TabsTrigger value="profile">Profile</TabsTrigger>
         <TabsTrigger value="security">Security</TabsTrigger>
         <TabsTrigger value="notifications">Notifications</TabsTrigger>
@@ -78,34 +78,34 @@ export function Settings() {
         {showDevTools && <TabsTrigger value="developer">Dev Tools</TabsTrigger>}
       </TabsList>
 
-      <TabsContent value="profile">
+      <TabsContent value="profile" className="mt-0">
         <ProfileTab />
       </TabsContent>
-      <TabsContent value="security">
+      <TabsContent value="security" className="mt-0">
         <TwoFactorSettings />
       </TabsContent>
-      <TabsContent value="notifications">
+      <TabsContent value="notifications" className="mt-0">
         <NotificationsTab />
       </TabsContent>
-      <TabsContent value="integrations">
+      <TabsContent value="integrations" className="mt-0">
         <IntegrationsTab />
       </TabsContent>
-      <TabsContent value="apikeys">
+      <TabsContent value="apikeys" className="mt-0">
         <ApiKeysManager />
       </TabsContent>
-      <TabsContent value="offline">
+      <TabsContent value="offline" className="mt-0">
         <OfflineTab />
       </TabsContent>
-      <TabsContent value="preferences">
+      <TabsContent value="preferences" className="mt-0">
         <PreferencesTab />
       </TabsContent>
       {showAdminTab && (
-        <TabsContent value="admin">
+        <TabsContent value="admin" className="mt-0">
           <AdminTab />
         </TabsContent>
       )}
       {showDevTools && (
-        <TabsContent value="developer">
+        <TabsContent value="developer" className="mt-0">
           <DevToolsTab />
         </TabsContent>
       )}

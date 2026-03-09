@@ -55,6 +55,7 @@ const BROAD_CLASS_PATTERNS = [
 const SKIP_FILES = new Set([
   "e2e/global-setup.ts", // Setup scaffolding, not a test
   "e2e/fixtures.ts", // Test fixture definitions
+  "e2e/screenshot-pages.ts", // Screenshot utility with scoped spinner detection
 ]);
 
 export function run() {

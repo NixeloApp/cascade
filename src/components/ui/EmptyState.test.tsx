@@ -232,7 +232,7 @@ describe("EmptyState", () => {
       render(<EmptyState icon="📦" title="Test" description="Description text" />);
 
       const paragraph = screen.getByText("Description text");
-      expect(paragraph).toHaveClass("max-w-sm");
+      expect(paragraph).toHaveClass("max-w-md");
       expect(paragraph).toHaveClass("mx-auto");
     });
 

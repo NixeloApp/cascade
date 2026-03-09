@@ -23,13 +23,13 @@ describe("NavItem", () => {
   describe("Active State", () => {
     it("should have hover styles when not active", () => {
       const { container } = render(<NavItem>Dashboard</NavItem>);
-      expect(container.firstChild).toHaveClass("hover:bg-ui-bg-hover");
-      expect(container.firstChild).not.toHaveClass("bg-ui-bg-hover");
+      expect(container.firstChild).toHaveClass("hover:bg-ui-bg-elevated/85");
+      expect(container.firstChild).not.toHaveClass("bg-ui-bg-elevated");
     });
 
     it("should have active styles when active", () => {
       const { container } = render(<NavItem active>Dashboard</NavItem>);
-      expect(container.firstChild).toHaveClass("bg-ui-bg-hover");
+      expect(container.firstChild).toHaveClass("bg-ui-bg-elevated");
       expect(container.firstChild).toHaveClass("text-ui-text");
     });
 
@@ -45,19 +45,18 @@ describe("NavItem", () => {
   });
 
   describe("Bordered Variant", () => {
-    it("should have border when active and bordered", () => {
+    it("should have brand ring when active and bordered", () => {
       const { container } = render(
         <NavItem active variant="bordered">
           Dashboard
         </NavItem>,
       );
-      expect(container.firstChild).toHaveClass("border-l-2");
-      expect(container.firstChild).toHaveClass("border-brand");
+      expect(container.firstChild).toHaveClass("ring-brand/20");
     });
 
-    it("should not have border when not active", () => {
+    it("should not have brand ring when not active", () => {
       const { container } = render(<NavItem variant="bordered">Dashboard</NavItem>);
-      expect(container.firstChild).not.toHaveClass("border-l-2");
+      expect(container.firstChild).not.toHaveClass("ring-brand/20");
     });
 
     it("should remove border when collapsed", () => {
@@ -73,14 +72,14 @@ describe("NavItem", () => {
   describe("Sizes", () => {
     it("should apply small size", () => {
       const { container } = render(<NavItem size="sm">Dashboard</NavItem>);
-      expect(container.firstChild).toHaveClass("px-2");
-      expect(container.firstChild).toHaveClass("py-1.5");
+      expect(container.firstChild).toHaveClass("px-2.5");
+      expect(container.firstChild).toHaveClass("py-2");
     });
 
     it("should apply medium size by default", () => {
       const { container } = render(<NavItem>Dashboard</NavItem>);
       expect(container.firstChild).toHaveClass("px-3");
-      expect(container.firstChild).toHaveClass("py-2");
+      expect(container.firstChild).toHaveClass("py-2.5");
     });
   });
 });

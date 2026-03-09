@@ -35,7 +35,12 @@ export function PageHeader({
   className,
 }: PageHeaderProps): ReactNode {
   return (
-    <div className={cn("mb-6", className)}>
+    <div
+      className={cn(
+        "mb-6 rounded-2xl border border-ui-border/45 bg-linear-to-r from-ui-bg-elevated/80 via-ui-bg-elevated/45 to-transparent px-5 py-4 shadow-soft sm:mb-7 sm:px-6",
+        className,
+      )}
+    >
       {breadcrumbs && breadcrumbs.length > 0 && (
         <Breadcrumb className="mb-2">
           <BreadcrumbList>
@@ -56,13 +61,34 @@ export function PageHeader({
           </BreadcrumbList>
         </Breadcrumb>
       )}
-      <Flex justify="between" align="start" gap="md">
-        <Stack gap="xs">
-          <Typography variant="h3">{title}</Typography>
-          {description && <Typography variant="muted">{description}</Typography>}
+      <Flex
+        justify="between"
+        align="start"
+        gap="md"
+        direction="column"
+        className="sm:flex-row sm:items-end"
+      >
+        <Stack gap="xs" className="min-w-0">
+          <Flex align="center" gap="sm" className="mb-1">
+            <span className="h-2 w-2 rounded-full bg-brand shadow-brand-halo" />
+            <Typography
+              variant="caption"
+              className="uppercase tracking-[0.22em] text-ui-text-tertiary"
+            >
+              Workspace view
+            </Typography>
+          </Flex>
+          <Typography variant="h2" className="text-3xl lg:text-4xl">
+            {title}
+          </Typography>
+          {description && (
+            <Typography variant="muted" className="max-w-3xl text-sm sm:text-base">
+              {description}
+            </Typography>
+          )}
         </Stack>
         {actions && (
-          <Flex gap="sm" align="center" className="shrink-0">
+          <Flex gap="sm" align="center" className="w-full shrink-0 sm:w-auto">
             {actions}
           </Flex>
         )}

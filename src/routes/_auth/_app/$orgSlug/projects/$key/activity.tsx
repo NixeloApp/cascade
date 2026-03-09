@@ -26,7 +26,7 @@ function ActivityPage() {
   }
 
   return (
-    <PageLayout maxWidth="md">
+    <PageLayout maxWidth="lg">
       <PageHeader title="Project Activity" />
       <ActivityFeed projectId={project._id} />
     </PageLayout>

@@ -251,7 +251,7 @@ export function MemberOnboarding({
       <Card padding="md" radius="full" className="text-center">
         <Typography variant="small" color="secondary">
           <strong>Pro tip:</strong> Press <KeyboardShortcut shortcut="Ctrl+K" variant="subtle" /> or{" "}
-          <KeyboardShortcut shortcut="Cmd+K" variant="subtle" /> to open the command palette
+          <KeyboardShortcut shortcut="Cmd+K" variant="subtle" /> to open search and commands
         </Typography>
       </Card>
 

@@ -63,7 +63,7 @@ function ModeToggleButton({
     <Button
       variant={isActive ? "secondary" : "ghost"}
       onClick={onClick}
-      className={cn("flex-1 gap-2", isActive && "shadow-sm")}
+      className={cn("min-w-0 w-full justify-center gap-2 px-3", isActive && "shadow-sm")}
     >
       <Icon className="w-4 h-4" />
       {label}
@@ -405,15 +405,17 @@ export function TimeEntryModal({
         </>
       }
     >
-      <form
+      <Stack
+        as="form"
         id="time-entry-form"
+        gap="md"
         onSubmit={(e) => {
           e.preventDefault();
           handleSubmit();
         }}
       >
         {/* Mode Toggle */}
-        <Flex gap="xs" className="p-1 bg-ui-bg-secondary rounded-lg">
+        <Grid cols={1} colsSm={3} gap="sm" className="rounded-xl bg-ui-bg-secondary p-1">
           <ModeToggleButton
             mode="timer"
             currentMode={state.entryMode}
@@ -435,7 +437,7 @@ export function TimeEntryModal({
             label="Time Range"
             onClick={() => actions.setEntryMode("timeRange")}
           />
-        </Flex>
+        </Grid>
 
         {/* Project Selection */}
         <Stack gap="xs">
@@ -568,7 +570,7 @@ export function TimeEntryModal({
             onEndTimeChange={actions.setEndTime}
           />
         )}
-      </form>
+      </Stack>
     </Dialog>
   );
 }

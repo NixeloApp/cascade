@@ -67,6 +67,7 @@ export class DashboardPage extends BasePage {
   readonly commandPaletteInput: Locator;
   readonly shortcutsModal: Locator;
   readonly globalSearchModal: Locator;
+  readonly advancedSearchModal: Locator;
   readonly globalSearchInput: Locator;
   readonly globalSearchResultsGroup: Locator;
   readonly globalSearchResultItems: Locator;
@@ -131,8 +132,8 @@ export class DashboardPage extends BasePage {
 
     // Header actions - using aria-labels for accessibility
     this.mobileMenuButton = page.getByRole("button", { name: /toggle sidebar menu/i });
-    // "Commands ⌘K" button - has aria-label and data-tour attribute
-    this.commandPaletteButton = page.getByRole("button", { name: /open command palette/i });
+    // Unified omnibox trigger in the app header
+    this.commandPaletteButton = page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON);
     // Keyboard shortcuts help button (? icon)
     this.shortcutsHelpButton = page.getByTestId(TEST_IDS.HEADER.SHORTCUTS_BUTTON);
     // Global search button with aria-label "Open search (⌘K)"
@@ -171,11 +172,9 @@ export class DashboardPage extends BasePage {
       .getByRole("tab", { name: /^created/i })
       .or(page.getByRole("button", { name: /^created/i }));
 
-    // Modals - Command Palette (no aria-label, identify by input placeholder)
-    this.commandPaletteInput = page.getByPlaceholder(/type a command/i);
-    this.commandPalette = page.getByRole("dialog").filter({
-      has: this.commandPaletteInput,
-    });
+    // Unified omnibox replaces the old standalone command palette.
+    this.commandPaletteInput = page.getByTestId(TEST_IDS.SEARCH.INPUT);
+    this.commandPalette = page.getByTestId(TEST_IDS.SEARCH.MODAL);
 
     // Modals - Shortcuts (uses title="Keyboard Shortcuts" via aria-labelledby)
     this.shortcutsModal = page.getByRole("dialog", { name: /keyboard shortcuts/i });
@@ -183,6 +182,7 @@ export class DashboardPage extends BasePage {
     // Modals - Global Search (not a dialog role, it's a fixed positioned div)
     // The modal contains "Search issues and documents..." placeholder input
     this.globalSearchModal = page.getByTestId(TEST_IDS.SEARCH.MODAL);
+    this.advancedSearchModal = page.getByTestId(TEST_IDS.SEARCH.ADVANCED_MODAL);
     this.globalSearchInput = page.getByTestId(TEST_IDS.SEARCH.INPUT);
     this.globalSearchResultsGroup = page.getByTestId(TEST_IDS.SEARCH.RESULTS_GROUP);
     this.globalSearchResultItems = page.getByTestId(TEST_IDS.SEARCH.RESULT_ITEM);
@@ -339,57 +339,15 @@ export class DashboardPage extends BasePage {
   // ===================
 
   async openCommandPalette() {
-    await waitForDashboardReady(this.page);
-    await this.closeCommandPaletteIfOpen();
-    await this.clickCommandPaletteButton();
-
-    if (!(await this.waitForCommandPaletteReady())) {
-      await this.clickCommandPaletteButton();
-    }
-
-    await this.expectCommandPaletteReady();
-    await this.commandPaletteInput.focus();
+    await this.openGlobalSearch();
   }
 
   async closeCommandPalette() {
-    await this.closeCommandPaletteIfOpen();
-    await expect(this.commandPalette).not.toBeVisible();
+    await this.closeGlobalSearch();
   }
 
   async closeCommandPaletteIfOpen() {
-    if (!(await this.commandPalette.isVisible().catch(() => false))) {
-      return;
-    }
-
-    // Focus input to ensure keyboard events target the active dialog before Escape.
-    await this.commandPaletteInput.click().catch(() => {});
-    await this.page.keyboard.press("Escape");
-
-    if (await this.commandPalette.isVisible().catch(() => false)) {
-      await this.page.mouse.click(0, 0);
-    }
-
-    await expect(this.commandPalette).not.toBeVisible();
-  }
-
-  private async clickCommandPaletteButton() {
-    await expect(this.commandPaletteButton).toBeVisible();
-    await expect(this.commandPaletteButton).toBeEnabled();
-    await this.commandPaletteButton.click();
-  }
-
-  private async waitForCommandPaletteReady(timeout = 3000) {
-    try {
-      await this.expectCommandPaletteReady(timeout);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  private async expectCommandPaletteReady(timeout = 10000) {
-    await expect(this.commandPalette).toBeVisible({ timeout });
-    await expect(this.commandPaletteInput).toBeVisible({ timeout });
+    await this.closeGlobalSearchIfOpen();
   }
 
   async openShortcutsHelp() {
@@ -659,6 +617,35 @@ export class DashboardPage extends BasePage {
     await expect(this.globalSearchModal).not.toBeVisible();
   }
 
+  async openAdvancedSearch() {
+    await this.openGlobalSearch();
+    const advancedSearchButton = this.globalSearchModal.getByRole("button", {
+      name: /^advanced search$/i,
+    });
+    await expect(advancedSearchButton).toBeVisible();
+    await advancedSearchButton.click();
+    await expect(this.advancedSearchModal).toBeVisible();
+  }
+
+  async closeAdvancedSearch() {
+    await this.closeAdvancedSearchIfOpen();
+    await expect(this.advancedSearchModal).not.toBeVisible();
+  }
+
+  async closeAdvancedSearchIfOpen() {
+    if (!(await this.advancedSearchModal.isVisible().catch(() => false))) {
+      return;
+    }
+
+    await this.page.keyboard.press("Escape");
+
+    if (await this.advancedSearchModal.isVisible().catch(() => false)) {
+      await this.mainContent.click({ position: { x: 10, y: 10 } }).catch(() => {});
+    }
+
+    await expect(this.advancedSearchModal).not.toBeVisible();
+  }
+
   async closeTimeEntryModal() {
     await this.closeTimeEntryModalIfOpen();
     await expect(this.timeEntryModal).not.toBeVisible();
@@ -924,8 +911,7 @@ export class DashboardPage extends BasePage {
   // ===================
 
   async expectDashboard() {
-    // Check for command palette button (always visible in app shell) as indicator of dashboard
-    await expect(this.commandPaletteButton).toBeVisible();
+    await expect(this.globalSearchButton).toBeVisible();
   }
 
   async expectActiveTab(

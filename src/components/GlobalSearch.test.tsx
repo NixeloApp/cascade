@@ -6,36 +6,38 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { act, render, screen, waitFor } from "@/test/custom-render";
 import { GlobalSearch } from "./GlobalSearch";
 
-// Mock Convex hooks
 vi.mock("convex/react", () => ({
   useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
   useQuery: vi.fn(),
 }));
 
-/** Check if useQuery was called with args matching the expected filters */
-function wasCalledWithFilters(mock: typeof useQuery, expected: Record<string, unknown>): boolean {
-  return (mock as any).mock.calls.some((call: unknown[]) => {
-    const args = call[1] as Record<string, unknown> | "skip" | undefined;
-    if (!args || args === "skip") return false;
-
-    return Object.entries(expected).every(([key, value]) => {
-      const argValue = args[key] as unknown[];
-      if (Array.isArray(value)) {
-        return Array.isArray(argValue) && value.every((v) => argValue.includes(v));
-      }
-      return args[key] === value;
-    });
+function withSearchResults({
+  issues = [],
+  issueTotal = issues.length,
+  documents = [],
+  documentTotal = documents.length,
+}: {
+  issues?: unknown[];
+  issueTotal?: number;
+  documents?: unknown[];
+  documentTotal?: number;
+}) {
+  let callCount = 0;
+  vi.mocked(useQuery).mockImplementation(() => {
+    callCount += 1;
+    if (callCount % 2 === 1) {
+      return { page: issues, total: issueTotal, hasMore: false };
+    }
+    return { results: documents, total: documentTotal, hasMore: false };
   });
 }
 
 describe("GlobalSearch", () => {
-  let queryCallCount = 0;
-
   beforeEach(() => {
     vi.clearAllMocks();
-    queryCallCount = 0;
     resetGlobalSearchStateForTests();
-    (useQuery as any).mockReturnValue([]);
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
+    withSearchResults({});
   });
 
   afterEach(() => {
@@ -43,91 +45,110 @@ describe("GlobalSearch", () => {
     vi.restoreAllMocks();
   });
 
-  it("should render search button", () => {
+  it("renders the unified omnibox trigger", () => {
     render(<GlobalSearch />);
 
-    expect(screen.getByRole("button")).toBeInTheDocument();
-    // KeyboardShortcut component renders ⌘ and K in separate kbd elements
-    expect(screen.getByRole("button", { name: /search/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /open search and commands/i })).toBeInTheDocument();
+    expect(screen.getByText(/Search, jump, or create/i)).toBeInTheDocument();
   });
 
-  it("should open modal when search button is clicked", async () => {
+  it("opens from the trigger button", async () => {
     const user = userEvent.setup();
     render(<GlobalSearch />);
 
-    const button = screen.getByRole("button");
-    await user.click(button);
+    await user.click(screen.getByRole("button", { name: /open search and commands/i }));
 
-    expect(screen.getByPlaceholderText(/Search issues and documents/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Search issues, docs, and commands/i)).toBeInTheDocument();
+    expect(screen.getByText(/jump straight into common actions/i)).toBeInTheDocument();
   });
 
-  it("should open modal when Cmd+K is pressed", async () => {
+  it("opens on Cmd+K and Ctrl+K", async () => {
     render(<GlobalSearch />);
 
-    const event = new KeyboardEvent("keydown", {
-      key: "k",
-      metaKey: true,
-      bubbles: true,
-    });
     act(() => {
-      document.dispatchEvent(event);
+      document.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }),
+      );
     });
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText(/Search issues and documents/i)).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/Search issues, docs, and commands/i)).toBeInTheDocument();
     });
-  });
 
-  it("should open modal when Ctrl+K is pressed", async () => {
-    render(<GlobalSearch />);
-
-    const event = new KeyboardEvent("keydown", {
-      key: "k",
-      ctrlKey: true,
-      bubbles: true,
-    });
     act(() => {
-      document.dispatchEvent(event);
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+      document.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }),
+      );
     });
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText(/Search issues and documents/i)).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/Search issues, docs, and commands/i)).toBeInTheDocument();
     });
   });
 
-  it("should not open on other keyboard shortcuts", () => {
+  it("shows command actions before full search kicks in", async () => {
+    const user = userEvent.setup();
+    render(
+      <GlobalSearch
+        commands={[
+          {
+            id: "create-issue",
+            label: "Create Issue",
+            description: "Create a new issue",
+            action: vi.fn(),
+            group: "Create",
+          },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /open search and commands/i }));
+    expect(screen.getByText("Create Issue")).toBeInTheDocument();
+
+    await user.type(screen.getByPlaceholderText(/Search issues, docs, and commands/i), "c");
+    expect(screen.getByText("Create Issue")).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.SEARCH.MIN_QUERY_MESSAGE)).toHaveTextContent(
+      /search issues and docs/i,
+    );
+  });
+
+  it("shows tabs and search results once enough text is entered", async () => {
+    const user = userEvent.setup();
+    withSearchResults({
+      issues: [{ _id: "1", key: "TEST-1", title: "Test Issue", type: "task", projectId: "proj-1" }],
+      documents: [{ _id: "2", title: "Test Doc" }],
+    });
+
     render(<GlobalSearch />);
+    await user.click(screen.getByRole("button", { name: /open search and commands/i }));
+    await user.type(screen.getByPlaceholderText(/Search issues, docs, and commands/i), "test");
 
-    const event = new KeyboardEvent("keydown", {
-      key: "s",
-      metaKey: true,
-      bubbles: true,
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: /All/i })).toBeInTheDocument();
+      expect(screen.getByText("TEST-1")).toBeInTheDocument();
+      expect(screen.getByText("Test Doc")).toBeInTheDocument();
     });
-    act(() => {
-      document.dispatchEvent(event);
-    });
-
-    expect(screen.queryByPlaceholderText(/Search issues and documents/i)).not.toBeInTheDocument();
   });
 
-  it("should show all tabs: All, Issues, Documents", async () => {
+  it("shows empty state and advanced search action when nothing matches", async () => {
     const user = userEvent.setup();
     render(<GlobalSearch />);
 
-    const button = screen.getByRole("button");
-    await user.click(button);
+    await user.click(screen.getByRole("button", { name: /open search and commands/i }));
+    await user.type(screen.getByPlaceholderText(/Search issues, docs, and commands/i), "nomatch");
 
-    expect(screen.getByText("All")).toBeInTheDocument();
-    expect(screen.getByText("Issues")).toBeInTheDocument();
-    expect(screen.getByText("Documents")).toBeInTheDocument();
-    expect(screen.getByText(/Shortcuts:/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/No results found/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Open advanced search/i })).toBeInTheDocument();
+    });
   });
 
-  it("should open advanced search modal from footer action", async () => {
+  it("opens advanced search from the footer action", async () => {
     const user = userEvent.setup();
     render(<GlobalSearch />);
 
-    await user.click(screen.getByRole("button"));
+    await user.click(screen.getByRole("button", { name: /open search and commands/i }));
     await user.click(screen.getByRole("button", { name: /Advanced Search/i }));
 
     await waitFor(() => {
@@ -135,321 +156,17 @@ describe("GlobalSearch", () => {
     });
   });
 
-  it("should filter by tab selection", async () => {
+  it("closes when backdrop is clicked", async () => {
     const user = userEvent.setup();
-    const mockIssues = [
-      { _id: "1", key: "TEST-1", title: "Test Issue", type: "task", projectId: "proj-1" },
-    ];
-    const mockDocuments = [{ _id: "2", title: "Test Doc" }];
-
-    // Component calls useQuery twice per render: first for issues, second for documents
-    (useQuery as any).mockImplementation(() => {
-      queryCallCount++;
-      if (queryCallCount % 2 === 1) return { page: mockIssues, total: 1, hasMore: false }; // Odd calls = issues
-      return { results: mockDocuments, total: 1, hasMore: false }; // Even calls = documents
-    });
-
     render(<GlobalSearch />);
 
-    const button = screen.getByRole("button");
-    await user.click(button);
-
-    const searchInput = screen.getByPlaceholderText(/Search issues and documents/i);
-    await user.type(searchInput, "test");
-
-    // Click Issues tab - note: tab text includes count when query is entered
-    const issuesTab = screen.getByRole("tab", { name: /Issues/i });
-    await user.click(issuesTab);
-
-    await waitFor(() => {
-      expect(screen.getByText("TEST-1")).toBeInTheDocument();
-      expect(screen.queryByText("Test Doc")).not.toBeInTheDocument();
-    });
-
-    // Click Documents tab
-    const documentsTab = screen.getByRole("tab", { name: /Documents/i });
-    await user.click(documentsTab);
-
-    await waitFor(() => {
-      expect(screen.queryByText("TEST-1")).not.toBeInTheDocument();
-      expect(screen.getByText("Test Doc")).toBeInTheDocument();
-    });
-  });
-
-  it("should debounce search input", async () => {
-    const user = userEvent.setup();
-
-    render(<GlobalSearch />);
-
-    const button = screen.getByRole("button");
-    await user.click(button);
-
-    const searchInput = screen.getByPlaceholderText(/Search issues and documents/i);
-
-    // Type single character - should skip
-    await user.type(searchInput, "t");
-
-    // Component should still show "Type at least 2 characters"
-    expect(screen.getByText(/Type at least 2 characters to search/i)).toBeInTheDocument();
-
-    // Type another character - now should search
-    await user.type(searchInput, "e");
-
-    // Component doesn't actually debounce - it uses query length check
-    // The test name is misleading - it tests minimum length, not debouncing
-    expect(searchInput).toHaveValue("te");
-  });
-
-  it("should show empty state when query is empty", async () => {
-    const user = userEvent.setup();
-    (useQuery as any).mockReturnValue([]);
-
-    render(<GlobalSearch />);
-
-    const button = screen.getByRole("button");
-    await user.click(button);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Type at least 2 characters to search/i)).toBeInTheDocument();
-    });
-  });
-
-  it(
-    "should parse shortcuts and pass issue filters to search query",
-    { timeout: 15000 },
-    async () => {
-      const user = userEvent.setup();
-      (useQuery as any).mockReturnValue({ page: [], results: [], total: 0, hasMore: false });
-
-      render(<GlobalSearch />);
-
-      await user.click(screen.getByRole("button"));
-      const searchInput = screen.getByPlaceholderText(/Search issues and documents/i);
-      await user.type(searchInput, "type:bug status:done priority:high label:frontend @me auth");
-
-      await waitFor(() => {
-        expect(
-          wasCalledWithFilters(useQuery, {
-            query: "auth",
-            assigneeId: "me",
-            type: ["bug"],
-            status: ["done"],
-            priority: ["high"],
-            labels: ["frontend"],
-          }),
-        ).toBe(true);
-      });
-    },
-  );
-
-  it("should prompt for non-shortcut text when query only has shortcuts", async () => {
-    const user = userEvent.setup();
-    (useQuery as any).mockReturnValue({ page: [], results: [], total: 0, hasMore: false });
-
-    render(<GlobalSearch />);
-
-    await user.click(screen.getByRole("button"));
-    const searchInput = screen.getByPlaceholderText(/Search issues and documents/i);
-    await user.type(searchInput, "type:bug @me");
+    await user.click(screen.getByRole("button", { name: /open search and commands/i }));
+    await user.click(screen.getByTestId(TEST_IDS.DIALOG.OVERLAY));
 
     await waitFor(() => {
       expect(
-        screen.getByText(/Add at least 2 non-shortcut characters to search/i),
-      ).toBeInTheDocument();
-    });
-  });
-
-  it("should show empty state when no results found", async () => {
-    const user = userEvent.setup();
-    (useQuery as any).mockReturnValue([]);
-
-    render(<GlobalSearch />);
-
-    const button = screen.getByRole("button");
-    await user.click(button);
-
-    const searchInput = screen.getByPlaceholderText(/Search issues and documents/i);
-    await user.type(searchInput, "nonexistent");
-
-    await waitFor(() => {
-      expect(screen.getByText(/No results found/i)).toBeInTheDocument();
-    });
-  });
-
-  it("should display issue results with correct metadata", async () => {
-    const user = userEvent.setup();
-    const mockIssues = [
-      {
-        _id: "1",
-        key: "PROJ-123",
-        title: "Fix authentication bug",
-        type: "bug",
-        status: "in-progress",
-        projectId: "proj-1",
-      },
-    ];
-
-    (useQuery as any).mockImplementation(() => {
-      queryCallCount++;
-      if (queryCallCount % 2 === 1) return { page: mockIssues, total: 1, hasMore: false }; // Odd calls = issues
-      return { results: [], total: 0, hasMore: false }; // Even calls = documents
-    });
-
-    render(<GlobalSearch />);
-
-    const button = screen.getByRole("button");
-    await user.click(button);
-
-    const searchInput = screen.getByPlaceholderText(/Search issues and documents/i);
-    await user.type(searchInput, "auth");
-
-    await waitFor(() => {
-      expect(screen.getByText("PROJ-123")).toBeInTheDocument();
-      expect(screen.getByText(/Fix authentication bug/i)).toBeInTheDocument();
-      // Component uses SVG icons, not emoji
-      expect(screen.getByText("issue")).toBeInTheDocument();
-    });
-  });
-
-  it("should display document results", async () => {
-    const user = userEvent.setup();
-    const mockDocuments = [
-      {
-        _id: "1",
-        title: "API Documentation",
-      },
-    ];
-
-    (useQuery as any).mockImplementation(() => {
-      queryCallCount++;
-      if (queryCallCount % 2 === 1) return { results: [], total: 0, hasMore: false }; // Odd calls = issues (empty)
-      return { results: mockDocuments, total: 1, hasMore: false }; // Even calls = documents
-    });
-
-    render(<GlobalSearch />);
-
-    const button = screen.getByRole("button");
-    await user.click(button);
-
-    const searchInput = screen.getByPlaceholderText(/Search issues and documents/i);
-    await user.type(searchInput, "api");
-
-    await waitFor(() => {
-      expect(screen.getByText(/API Documentation/i)).toBeInTheDocument();
-      // Component uses SVG icons, not emoji
-      expect(screen.getByText("document")).toBeInTheDocument();
-    });
-  });
-
-  it("should close modal when backdrop is clicked", async () => {
-    const user = userEvent.setup();
-    (useQuery as any).mockReturnValue([]);
-
-    render(<GlobalSearch />);
-
-    const button = screen.getByRole("button");
-    await user.click(button);
-
-    await waitFor(() => {
-      expect(screen.getByPlaceholderText(/Search issues and documents/i)).toBeInTheDocument();
-    });
-
-    // Find the overlay and click it to close
-    const overlay = screen.getByTestId(TEST_IDS.DIALOG.OVERLAY);
-    await user.click(overlay);
-
-    await waitFor(() => {
-      expect(screen.queryByPlaceholderText(/Search issues and documents/i)).not.toBeInTheDocument();
-    });
-  });
-
-  it("should close modal when Escape is pressed", async () => {
-    const user = userEvent.setup();
-    (useQuery as any).mockReturnValue([]);
-
-    render(<GlobalSearch />);
-
-    const button = screen.getByRole("button");
-    await user.click(button);
-
-    await waitFor(() => {
-      const searchInput = screen.getByPlaceholderText(/Search issues and documents/i);
-      expect(searchInput).toBeInTheDocument();
-    });
-
-    await user.keyboard("{Escape}");
-
-    await waitFor(() => {
-      expect(screen.queryByPlaceholderText(/Search issues and documents/i)).not.toBeInTheDocument();
-    });
-  });
-
-  it("should show result count", async () => {
-    const user = userEvent.setup();
-    const mockIssues = [
-      { _id: "1", key: "TEST-1", title: "Issue 1", type: "task", projectId: "proj-1" },
-      { _id: "2", key: "TEST-2", title: "Issue 2", type: "bug", projectId: "proj-1" },
-      { _id: "3", key: "TEST-3", title: "Issue 3", type: "story", projectId: "proj-1" },
-    ];
-
-    (useQuery as any).mockImplementation(() => {
-      queryCallCount++;
-      if (queryCallCount % 2 === 1) return { page: mockIssues, total: 3, hasMore: false }; // Odd calls = issues
-      return { results: [], total: 0, hasMore: false }; // Even calls = documents
-    });
-
-    render(<GlobalSearch />);
-
-    const button = screen.getByRole("button");
-    await user.click(button);
-
-    const searchInput = screen.getByPlaceholderText(/Search issues and documents/i);
-    await user.type(searchInput, "test");
-
-    // Component doesn't show result count, so check results are displayed
-    await waitFor(() => {
-      expect(screen.getByText("TEST-1")).toBeInTheDocument();
-      expect(screen.getByText("TEST-2")).toBeInTheDocument();
-      expect(screen.getByText("TEST-3")).toBeInTheDocument();
-    });
-  });
-
-  it("should navigate to issue when result is clicked", async () => {
-    const user = userEvent.setup();
-    const mockIssues = [
-      {
-        _id: "issue-1",
-        key: "TEST-1",
-        title: "Test Issue",
-        type: "task",
-        projectId: "proj-1",
-      },
-    ];
-
-    (useQuery as any).mockImplementation(() => {
-      queryCallCount++;
-      if (queryCallCount % 2 === 1) return { page: mockIssues, total: 1, hasMore: false }; // Odd calls = issues
-      return { results: [], total: 0, hasMore: false }; // Even calls = documents
-    });
-
-    render(<GlobalSearch />);
-
-    const button = screen.getByRole("button");
-    await user.click(button);
-
-    const searchInput = screen.getByPlaceholderText(/Search issues and documents/i);
-    await user.type(searchInput, "test");
-
-    await waitFor(() => {
-      expect(screen.getByText("TEST-1")).toBeInTheDocument();
-    });
-
-    const result = screen.getByText("TEST-1");
-    await user.click(result);
-
-    // Modal should close after navigation
-    await waitFor(() => {
-      expect(screen.queryByPlaceholderText(/Search issues and documents/i)).not.toBeInTheDocument();
+        screen.queryByPlaceholderText(/Search issues, docs, and commands/i),
+      ).not.toBeInTheDocument();
     });
   });
 });

@@ -24,16 +24,27 @@ export function FilterCheckboxGroup<T extends string>({
   maxHeight,
 }: FilterCheckboxGroupProps<T>) {
   return (
-    <Stack gap="sm">
-      <Typography variant="label">{label}</Typography>
+    <Stack
+      gap="sm"
+      className="rounded-2xl border border-ui-border-secondary/70 bg-ui-bg-soft/70 p-4 shadow-soft"
+    >
+      <Typography variant="label" className="uppercase tracking-wider text-ui-text-tertiary">
+        {label}
+      </Typography>
       <Stack gap="sm" className={cn(maxHeight)}>
         {options.map((option) => (
-          <Flex as="label" key={option} align="center" gap="sm" className="cursor-pointer">
+          <Flex
+            as="label"
+            key={option}
+            align="center"
+            gap="sm"
+            className="cursor-pointer rounded-xl border border-transparent px-2 py-1.5 transition-default hover:border-ui-border hover:bg-ui-bg-elevated/80"
+          >
             <input
               type="checkbox"
               checked={selectedValues.includes(option)}
               onChange={() => onToggle(option)}
-              className="rounded"
+              className="rounded border-ui-border-secondary text-brand focus:ring-brand-ring"
             />
             <Typography variant="small" className="capitalize">
               {renderLabel ? renderLabel(option) : option}

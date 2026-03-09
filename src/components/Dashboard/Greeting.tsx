@@ -1,3 +1,4 @@
+import { Flex } from "../ui/Flex";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
@@ -16,20 +17,31 @@ export function Greeting({ userName, completedCount = 0 }: GreetingProps) {
   const firstName = userName?.split(" ")[0] || "there";
 
   return (
-    <Stack gap="xs" className="mb-8">
-      <Typography variant="h1">
-        {greeting}, <strong className="text-brand">{firstName}</strong>.
+    <Stack gap="sm" className="mb-8">
+      <Flex
+        align="center"
+        gap="sm"
+        className="inline-flex w-fit rounded-full border border-ui-border/60 bg-ui-bg-soft/70 px-3 py-1 text-ui-text-tertiary shadow-soft backdrop-blur-sm"
+      >
+        <span className="h-2 w-2 rounded-full bg-brand" aria-hidden="true" />
+        <Typography variant="caption" className="uppercase tracking-widest text-ui-text-tertiary">
+          Command Center
+        </Typography>
+      </Flex>
+      <Typography variant="h1" className="max-w-4xl text-4xl tracking-tight md:text-5xl">
+        {greeting}, <span className="text-brand">{firstName}</span>.
       </Typography>
-      <Typography variant="lead" color="secondary" className="max-w-2xl">
+      <Typography variant="lead" color="secondary" className="max-w-3xl text-balance">
         {completedCount > 0 ? (
           <>
-            <strong>
+            You closed{" "}
+            <strong className="text-ui-text">
               {completedCount} {completedCount === 1 ? "task" : "tasks"}
             </strong>{" "}
-            completed this week.
+            this week. Keep the highest-impact work moving and the rest visible.
           </>
         ) : (
-          "Here's your overview for today."
+          "Your current workload, workspaces, and recent activity are all visible in one place."
         )}
       </Typography>
     </Stack>

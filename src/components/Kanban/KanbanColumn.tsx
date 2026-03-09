@@ -12,6 +12,7 @@ import type { LabelInfo } from "@convex/lib/issueHelpers";
 import type { WorkflowState } from "@convex/shared/types";
 import { Maximize2, Minimize2, Plus } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { IconButton } from "@/components/ui/IconButton";
 import { Tooltip } from "@/components/ui/Tooltip";
@@ -159,7 +160,7 @@ const CollapsedColumn = memo(
       data-testid={TEST_IDS.BOARD.COLUMN}
       data-board-column
       className={cn(
-        "flex-shrink-0 w-11 bg-ui-bg-soft rounded-container animate-slide-up border border-ui-border border-t-2 transition-default flex flex-col items-center",
+        "flex-shrink-0 w-11 rounded-container border border-ui-border-secondary/70 border-t-2 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft shadow-soft transition-default animate-slide-up flex flex-col items-center",
         getWorkflowCategoryColor(state.category),
         isDraggedOver && "ring-2 ring-brand/30 bg-brand/5",
       )}
@@ -229,7 +230,7 @@ const ColumnHeader = memo(
   }) => (
     <div
       data-testid={TEST_IDS.BOARD.COLUMN_HEADER}
-      className="p-3 sm:p-4 border-b border-ui-border/50 bg-transparent rounded-t-container"
+      className="rounded-t-container border-b border-ui-border-secondary/70 bg-ui-bg-elevated/88 p-3 shadow-soft sm:p-4"
     >
       <Flex align="center" justify="between" gap="sm">
         <Flex align="center" gap="sm" className="min-w-0">
@@ -287,18 +288,35 @@ ColumnHeader.displayName = "ColumnHeader";
  */
 const EmptyColumnState = memo(
   ({ canEdit, onCreateIssue }: { canEdit: boolean; onCreateIssue?: () => void }) => (
-    <Flex direction="column" align="center" justify="center" className="py-12 px-4 text-center">
-      <Flex align="center" justify="center" className="w-10 h-10 rounded-full bg-ui-bg-hover mb-3">
-        <Plus className="w-5 h-5 text-ui-text-tertiary" />
+    <Flex
+      direction="column"
+      align="center"
+      justify="center"
+      className="flex-1 rounded-2xl border border-dashed border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-soft px-5 py-8 text-center shadow-card"
+    >
+      <div className="mb-4 inline-flex items-center rounded-full border border-ui-border/70 bg-ui-bg-soft px-3 py-1 text-xs font-medium uppercase tracking-wider text-ui-text-tertiary">
+        Empty column
+      </div>
+      <Flex
+        align="center"
+        justify="center"
+        className="mb-4 h-12 w-12 rounded-full border border-ui-border-secondary/70 bg-ui-bg-elevated shadow-soft"
+      >
+        <Plus className="h-5 w-5 text-ui-text-tertiary" />
       </Flex>
-      <Typography variant="small" className="text-ui-text-tertiary mb-1">
+      <Typography variant="large" className="mb-1">
         No issues yet
       </Typography>
-      {canEdit && onCreateIssue && (
-        <Typography variant="small" className="text-ui-text-tertiary">
-          Drop issues here or click + to add
-        </Typography>
-      )}
+      <Typography variant="small" color="secondary" className="max-w-48">
+        {canEdit && onCreateIssue
+          ? "Drop issues here or use the add button to start this stage."
+          : "This stage is clear right now."}
+      </Typography>
+      {canEdit && onCreateIssue ? (
+        <Button variant="secondary" size="sm" onClick={onCreateIssue} className="mt-5">
+          Add first issue
+        </Button>
+      ) : null}
     </Flex>
   ),
 );
@@ -446,7 +464,7 @@ const KanbanColumnComponent = function KanbanColumn({
       data-testid={TEST_IDS.BOARD.COLUMN}
       data-board-column
       className={cn(
-        "flex-shrink-0 w-full lg:w-80 bg-ui-bg-soft rounded-container animate-slide-up border border-ui-border border-t-2 transition-default",
+        "flex-shrink-0 w-full rounded-container border border-ui-border-secondary/70 border-t-2 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft shadow-soft transition-default animate-slide-up lg:w-80",
         getWorkflowCategoryColor(state.category),
         isDraggedOver && "ring-2 ring-brand/30 bg-brand/5",
         isOverWipLimit && "border-status-error/50 bg-status-error/5",
@@ -470,9 +488,12 @@ const KanbanColumnComponent = function KanbanColumn({
       />
 
       {/* Issues */}
-      <div className="p-2 space-y-2 min-h-96 transition-default">
+      <div className="flex min-h-72 flex-col space-y-2 p-2.5 transition-default lg:min-h-96">
         {stateIssues.length === 0 && hiddenCount === 0 ? (
-          <EmptyColumnState canEdit={canEdit} onCreateIssue={handleCreateIssue} />
+          <EmptyColumnState
+            canEdit={canEdit}
+            onCreateIssue={onCreateIssue ? handleCreateIssue : undefined}
+          />
         ) : (
           <>
             {stateIssues.map((issue, issueIndex) => (

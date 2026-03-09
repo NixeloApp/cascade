@@ -1,117 +1,82 @@
-import { useEffect, useState } from "react";
-import { cn } from "@/lib/utils";
+import { ArrowRight, Building2, KanbanSquare, MessageSquare } from "@/lib/icons";
+import { Badge } from "../ui/Badge";
+import { Card } from "../ui/Card";
+import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
 
-/** Landing page section with animated statistics showcasing benefits. */
+const stories = [
+  {
+    icon: KanbanSquare,
+    title: "Product teams stop rebuilding the same context",
+    body: "Specs, execution, and delivery signals live in the same system, so project updates stop becoming a manual reporting exercise.",
+    stat: "11h saved weekly",
+  },
+  {
+    icon: MessageSquare,
+    title: "Client-facing teams keep updates grounded in real work",
+    body: "Shared issues, docs, and summaries reduce the drift between internal execution and external communication.",
+    stat: "2 fewer tools in the loop",
+  },
+  {
+    icon: Building2,
+    title: "Ops leaders get cleaner visibility without heavier process",
+    body: "Boards, docs, and timers produce a clearer operating picture without asking the team to fill out three extra systems.",
+    stat: "Faster handoffs",
+  },
+];
+
+/** Proof section with outcome-oriented customer-style cards. */
 export function WhyChooseSection() {
-  const stats = [
-    { value: 30, label: "Less time in meetings", category: "cyan" as const },
-    { value: 10, label: "Fewer tools to manage", category: "indigo" as const },
-    { value: 95, label: "Actually use it daily", category: "teal" as const },
-    { value: 95, label: "Would recommend", category: "emerald" as const },
-  ];
-
   return (
-    <section className="px-6 py-24 transition-colors">
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-ui-bg-secondary border border-ui-border rounded-3xl p-12 backdrop-blur-md transition-colors shadow-xl shadow-black/5">
-          <div className="text-center mb-16">
-            <Typography
-              variant="h2"
-              className="text-3xl md:text-5xl font-bold mb-6 text-ui-text tracking-tight"
-            >
-              Teams actually like using it.
-            </Typography>
-            <Typography className="text-ui-text-secondary max-w-2xl mx-auto text-lg leading-relaxed">
-              No training required. No "change management" needed. It just works.
-            </Typography>
-          </div>
-
-          <Grid cols={1} colsSm={2} colsLg={4} gap="lg">
-            {stats.map((stat, index) => (
-              <StatItem key={stat.label} {...stat} delay={index * 150} />
-            ))}
-          </Grid>
+    <section className="px-6 py-24">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-14 text-center">
+          <Badge variant="outline" shape="pill" className="mb-4">
+            Why teams move
+          </Badge>
+          <Typography variant="h2" className="text-4xl md:text-5xl">
+            Better product ops usually starts with fewer disconnected surfaces
+          </Typography>
+          <Typography variant="lead" className="mx-auto mt-4 max-w-3xl">
+            The win is not just prettier UI. It is less repeated searching, less status translation,
+            and fewer places where the truth can drift.
+          </Typography>
         </div>
+
+        <Grid cols={1} colsLg={3} gap="xl">
+          {stories.map((story) => (
+            <Card
+              key={story.title}
+              className="rounded-3xl border-ui-border/50 bg-ui-bg-secondary/80 p-6 transition-all duration-medium hover:-translate-y-1 hover:border-ui-border-secondary"
+            >
+              <Flex align="center" justify="between" className="mb-5">
+                <div className="rounded-full bg-ui-bg-soft p-3 text-brand">
+                  <story.icon className="h-5 w-5" />
+                </div>
+                <Badge variant="neutral" shape="pill">
+                  {story.stat}
+                </Badge>
+              </Flex>
+
+              <Typography variant="h3" className="text-2xl">
+                {story.title}
+              </Typography>
+              <Typography variant="small" color="secondary" className="mt-3 leading-7">
+                {story.body}
+              </Typography>
+
+              <a
+                href="#product-showcase"
+                className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-brand transition-colors hover:text-brand-active"
+              >
+                See the product flow
+                <ArrowRight className="h-4 w-4" />
+              </a>
+            </Card>
+          ))}
+        </Grid>
       </div>
     </section>
-  );
-}
-
-function StatItem({
-  value,
-  label,
-  category,
-  delay,
-}: {
-  value: number;
-  label: string;
-  category: "cyan" | "indigo" | "teal" | "emerald";
-  delay: number;
-}) {
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setProgress(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-
-  // Premium Palette
-  // Note: Brand colors often need specific overrides if semantic brand tokens aren't sufficient,
-  // but we should strive to use standard tokens where possible.
-  // We keep correct specific colors here as they are data-visualization/brand accents.
-  const categoryStyles = {
-    cyan: {
-      valueColor: "text-brand-cyan-text",
-      bar: "bg-brand-cyan-bg",
-      track: "bg-brand-cyan-track",
-    },
-    indigo: {
-      valueColor: "text-brand-indigo-text",
-      bar: "bg-brand-indigo-bg",
-      track: "bg-brand-indigo-track",
-    },
-    teal: {
-      valueColor: "text-brand-teal-text",
-      bar: "bg-brand-teal-bg",
-      track: "bg-brand-teal-track",
-    },
-    emerald: {
-      valueColor: "text-brand-emerald-text",
-      bar: "bg-brand-emerald-bg",
-      track: "bg-brand-emerald-track",
-    },
-  };
-
-  const styles = categoryStyles[category];
-
-  return (
-    <div className="text-center group">
-      <div
-        className={cn(
-          "text-5xl md:text-6xl font-extrabold mb-3 tracking-tighter transition-colors",
-          styles.valueColor,
-        )}
-      >
-        {value}%
-      </div>
-      <Typography
-        variant="small"
-        className="text-ui-text-secondary mb-6 font-medium text-sm uppercase tracking-wide"
-      >
-        {label}
-      </Typography>
-      <div className="relative h-2 w-full rounded-full overflow-hidden">
-        <div className={cn("absolute inset-0 w-full h-full", styles.track)} />
-        <div
-          className={cn(
-            "absolute inset-y-0 left-0 h-full rounded-full transition-all duration-enter-slow ease-out",
-            styles.bar,
-          )}
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-    </div>
   );
 }
