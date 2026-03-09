@@ -22,7 +22,6 @@ import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import {
   CommandDialog,
-  CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
@@ -568,7 +567,6 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
           ) : null}
 
           <CommandList className="max-h-96 sm:max-h-screen">
-            <CommandEmpty>No matches</CommandEmpty>
             <SearchListContent
               query={effectiveQuery}
               hasShortcuts={parsedSearch.hasShortcuts}
