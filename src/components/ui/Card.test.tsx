@@ -20,10 +20,10 @@ describe("Card", () => {
 
       const card = container.firstChild;
       expect(card).toHaveClass("bg-linear-to-b");
-      expect(card).toHaveClass("from-ui-bg-elevated");
+      expect(card).toHaveClass("from-ui-bg");
       expect(card).toHaveClass("rounded-container");
       expect(card).toHaveClass("border");
-      expect(card).toHaveClass("border-ui-border-secondary/80");
+      expect(card).toHaveClass("border-ui-border-secondary/85");
     });
 
     it("should not have hover styles by default", () => {
