@@ -412,12 +412,12 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
   };
 
   return (
-    <div className="px-3 pb-2 pt-3 sm:px-4">
+    <div className="px-2 pb-2 pt-2 sm:px-4 sm:pt-3">
       <div className="overflow-x-auto">
         <Flex
           align="center"
           gap="sm"
-          className="min-w-max rounded-2xl border border-ui-border/70 bg-ui-bg-elevated/90 px-2 py-2 shadow-soft"
+          className="min-w-max rounded-xl border border-ui-border/70 bg-ui-bg-elevated/90 px-1.5 py-1.5 shadow-soft sm:rounded-2xl sm:px-2 sm:py-2"
         >
           {/* Search Input */}
           <Flex align="center" className="relative">
@@ -427,7 +427,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
               placeholder="Search or use status:done priority:high"
               value={filters.query ?? ""}
               onChange={handleSearchChange}
-              className="h-9 w-40 rounded-xl border border-ui-border/60 bg-ui-bg-soft pl-8 pr-3 sm:w-64"
+              className="h-8 w-32 rounded-lg border border-ui-border/60 bg-ui-bg-soft pl-8 pr-3 text-sm sm:h-9 sm:w-64 sm:rounded-xl"
               aria-label="Search issues"
             />
           </Flex>

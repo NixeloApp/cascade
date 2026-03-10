@@ -2848,8 +2848,24 @@ export const seedScreenshotDataInternal = internalMutation({
       });
       project = await ctx.db.get(projId);
     } else {
-      // Update ownership to current user (handles user re-creation between runs)
-      await ctx.db.patch(project._id, { ownerId: userId, updatedAt: now });
+      // Re-home the seeded project so list/detail queries all target the same org/workspace.
+      await ctx.db.patch(project._id, {
+        name: "Demo Project",
+        description: "Demo project for screenshot visual review",
+        organizationId: orgId,
+        workspaceId,
+        teamId,
+        ownerId: userId,
+        updatedAt: now,
+        boardType: "kanban",
+        workflowStates: [
+          { id: "todo", name: "To Do", category: "todo", order: 0 },
+          { id: "in-progress", name: "In Progress", category: "inprogress", order: 1 },
+          { id: "in-review", name: "In Review", category: "inprogress", order: 2 },
+          { id: "done", name: "Done", category: "done", order: 3 },
+        ],
+      });
+      project = await ctx.db.get(project._id);
     }
 
     if (!project) {
@@ -2961,7 +2977,7 @@ export const seedScreenshotDataInternal = internalMutation({
         status: "todo",
         priority: "medium",
         assigned: false,
-        inSprint: false,
+        inSprint: true,
         dueDate: now + 7 * DAY,
       },
       {
@@ -3017,10 +3033,25 @@ export const seedScreenshotDataInternal = internalMutation({
           version: 1,
         });
       } else {
-        // Update ownership to current user (handles user re-creation between runs)
+        // Keep seeded issues attached to the current screenshot project instead of stale globals.
         await ctx.db.patch(existing._id, {
+          projectId,
+          organizationId: orgId,
+          workspaceId,
+          teamId,
+          title: def.title,
+          type: def.type,
+          status: def.status,
+          priority: def.priority,
           reporterId: userId,
           assigneeId: def.assigned ? userId : undefined,
+          sprintId: def.inSprint && sprintId ? sprintId : undefined,
+          dueDate: def.dueDate,
+          order: i,
+          labels: [],
+          linkedDocuments: [],
+          attachments: [],
+          version: existing.version ?? 1,
           updatedAt: now,
         });
       }

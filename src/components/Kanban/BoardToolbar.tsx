@@ -51,10 +51,10 @@ export function BoardToolbar({
       align="center"
       justify="between"
       gap="sm"
-      className="mx-3 mt-3 rounded-2xl border border-ui-border/70 bg-ui-bg-elevated px-4 pb-3 pt-4 shadow-soft sm:mx-6 sm:mt-4 sm:px-5"
+      className="mx-2 mt-2 rounded-xl border border-ui-border/70 bg-ui-bg-elevated px-2.5 py-2 shadow-soft sm:mx-6 sm:mt-4 sm:rounded-2xl sm:px-5 sm:pb-3 sm:pt-4"
     >
       <div>
-        <Typography variant="h2" className="text-base font-semibold tracking-tight sm:text-lg">
+        <Typography variant="h2" className="text-sm font-semibold tracking-tight sm:text-lg">
           {sprintId ? "Sprint Board" : "Kanban Board"}
         </Typography>
         <Typography variant="caption" className="mt-1 hidden sm:block">
@@ -62,7 +62,7 @@ export function BoardToolbar({
         </Typography>
       </div>
       {showControls && (
-        <Flex align="center" gap="xs" className="sm:gap-2 shrink-0">
+        <Flex align="center" gap="xs" className="shrink-0 sm:gap-2">
           {/* Undo/Redo buttons */}
           <Flex align="center" gap="xs" className="hidden sm:flex mr-2 sm:mr-4">
             <Tooltip content="Undo (Ctrl+Z)">
@@ -130,6 +130,7 @@ export function BoardToolbar({
             size="sm"
             onClick={onToggleSelectionMode}
             aria-label={selectionMode ? "Exit selection mode" : "Enable selection mode"}
+            className="px-2.5 sm:px-3"
           >
             <span className="hidden sm:inline">
               {selectionMode ? "Exit Selection" : "Select Multiple"}

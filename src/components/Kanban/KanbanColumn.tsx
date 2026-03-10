@@ -160,7 +160,7 @@ const CollapsedColumn = memo(
       data-testid={TEST_IDS.BOARD.COLUMN}
       data-board-column
       className={cn(
-        "flex-shrink-0 w-11 rounded-container border border-ui-border-secondary/70 border-t-2 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft shadow-soft transition-default animate-slide-up flex flex-col items-center",
+        "flex flex-shrink-0 snap-start flex-col items-center rounded-container border border-ui-border-secondary/70 border-t-2 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft shadow-soft transition-default animate-slide-up w-11",
         getWorkflowCategoryColor(state.category),
         isDraggedOver && "ring-2 ring-brand/30 bg-brand/5",
       )}
@@ -490,7 +490,7 @@ const KanbanColumnComponent = function KanbanColumn({
       data-testid={TEST_IDS.BOARD.COLUMN}
       data-board-column
       className={cn(
-        "flex-shrink-0 w-full rounded-container border border-ui-border-secondary/70 border-t-2 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft shadow-soft transition-default animate-slide-up lg:w-80",
+        "w-72 flex-shrink-0 snap-start rounded-container border border-ui-border-secondary/70 border-t-2 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft shadow-soft transition-default animate-slide-up sm:w-80",
         getWorkflowCategoryColor(state.category),
         isDraggedOver && "ring-2 ring-brand/30 bg-brand/5",
         isOverWipLimit && "border-status-error/50 bg-status-error/5",

@@ -322,6 +322,18 @@ function isSettingsUrl(url: string): boolean {
   return /\/[^/]+\/settings(?:\/profile)?$/.test(url);
 }
 
+function isProjectsUrl(url: string): boolean {
+  return /\/[^/]+\/projects\/?$/.test(url);
+}
+
+function isIssueDetailUrl(url: string): boolean {
+  return /\/[^/]+\/issues\/[^/]+$/.test(url);
+}
+
+function isDocumentEditorUrl(url: string): boolean {
+  return /\/[^/]+\/documents\/[^/]+$/.test(url);
+}
+
 async function waitForCalendarReady(page: Page): Promise<boolean> {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
@@ -374,6 +386,137 @@ async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<bool
   return false;
 }
 
+async function waitForBoardReady(page: Page): Promise<boolean> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      await page.getByTestId(TEST_IDS.BOARD.COLUMN).first().waitFor({
+        state: "visible",
+        timeout: 10000,
+      });
+      await page
+        .getByText(/delivery board|kanban board|sprint board/i)
+        .first()
+        .waitFor({ state: "visible", timeout: 6000 })
+        .catch(() => {});
+      await page
+        .locator(".animate-shimmer")
+        .first()
+        .waitFor({ state: "hidden", timeout: 4000 })
+        .catch(() => {});
+      await page
+        .locator(".animate-spin")
+        .first()
+        .waitFor({ state: "hidden", timeout: 4000 })
+        .catch(() => {});
+      return true;
+    } catch {
+      if (attempt === 0) {
+        await page
+          .goto(page.url(), { waitUntil: "domcontentloaded", timeout: 15000 })
+          .catch(() => {});
+        await waitForScreenshotReady(page);
+      }
+    }
+  }
+
+  return false;
+}
+
+async function waitForProjectsReady(page: Page): Promise<void> {
+  await page
+    .getByRole("heading", { name: /^projects$/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .getByRole("button", { name: /create project/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .locator(".animate-spin")
+    .first()
+    .waitFor({ state: "hidden", timeout: 5000 })
+    .catch(() => {});
+  await page
+    .waitForFunction(
+      () => {
+        const text = document.body.innerText || "";
+        if (text.includes("No projects yet")) {
+          return true;
+        }
+
+        return Array.from(document.querySelectorAll("a[href]")).some((link) => {
+          const href = link.getAttribute("href") || "";
+          return /\/projects\/[^/]+\/board$/.test(href);
+        });
+      },
+      undefined,
+      { timeout: 12000 },
+    )
+    .catch(() => {});
+}
+
+async function waitForIssueDetailReady(page: Page): Promise<void> {
+  await page
+    .locator("[data-testid='issue-detail-layout'], [data-testid='issue-detail-viewer']")
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .locator(".animate-spin")
+    .first()
+    .waitFor({ state: "hidden", timeout: 5000 })
+    .catch(() => {});
+}
+
+async function waitForDocumentsReady(page: Page): Promise<void> {
+  await page
+    .waitForFunction(
+      () => {
+        const text = document.body.innerText || "";
+        if (!/documents/i.test(text)) {
+          return false;
+        }
+
+        return Array.from(document.querySelectorAll("a[href]")).some((link) => {
+          const href = link.getAttribute("href") || "";
+          return /\/documents\/[^/?#]+$/.test(href) && !href.endsWith("/templates");
+        });
+      },
+      undefined,
+      { timeout: 12000 },
+    )
+    .catch(() => {});
+  await page
+    .locator(".animate-spin")
+    .first()
+    .waitFor({ state: "hidden", timeout: 5000 })
+    .catch(() => {});
+}
+
+async function waitForDocumentEditorReady(page: Page): Promise<void> {
+  await page
+    .waitForFunction(
+      () => {
+        const text = document.body.innerText || "";
+        return (
+          text.includes("Project Requirements") ||
+          text.includes("Sprint Retrospective Notes") ||
+          document.querySelector("[contenteditable='true']") !== null
+        );
+      },
+      undefined,
+      { timeout: 12000 },
+    )
+    .catch(() => {});
+  await page
+    .locator(".animate-spin")
+    .first()
+    .waitFor({ state: "hidden", timeout: 5000 })
+    .catch(() => {});
+}
+
 async function waitForExpectedContent(page: Page, url: string, name: string): Promise<void> {
   if (isDashboardUrl(url) || name === "dashboard") {
     await page
@@ -395,16 +538,7 @@ async function waitForExpectedContent(page: Page, url: string, name: string): Pr
   }
 
   if (isProjectBoardUrl(url)) {
-    await page
-      .getByTestId(TEST_IDS.BOARD.COLUMN)
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .locator(".animate-shimmer")
-      .first()
-      .waitFor({ state: "hidden", timeout: 4000 })
-      .catch(() => {});
+    await waitForBoardReady(page);
     return;
   }
 
@@ -452,6 +586,26 @@ async function waitForExpectedContent(page: Page, url: string, name: string): Pr
     return;
   }
 
+  if (isProjectsUrl(url) || name === "projects") {
+    await waitForProjectsReady(page);
+    return;
+  }
+
+  if (isIssueDetailUrl(url)) {
+    await waitForIssueDetailReady(page);
+    return;
+  }
+
+  if (name === "documents" || /\/[^/]+\/documents\/?$/.test(url)) {
+    await waitForDocumentsReady(page);
+    return;
+  }
+
+  if (isDocumentEditorUrl(url) || name === "document-editor") {
+    await waitForDocumentEditorReady(page);
+    return;
+  }
+
   if (
     isProjectCalendarUrl(url) ||
     name === "calendar-event-modal" ||
@@ -496,6 +650,56 @@ async function discoverFirstHref(page: Page, pattern: RegExp): Promise<string | 
       }
     }
   } catch {}
+  return null;
+}
+
+async function discoverIssueKey(
+  page: Page,
+  orgSlug: string,
+  projectKey: string,
+): Promise<string | null> {
+  const candidatePaths = [
+    `/${orgSlug}/issues`,
+    `/${orgSlug}/projects/${projectKey}/backlog`,
+    `/${orgSlug}/projects/${projectKey}/board`,
+  ];
+
+  for (const pathName of candidatePaths) {
+    await page
+      .goto(`${BASE_URL}${pathName}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+      .catch(() => {});
+    await waitForExpectedContent(page, pathName, "issues");
+    await waitForScreenshotReady(page);
+
+    const issueKey = await discoverFirstHref(page, /\/issues\/([^/?#]+)/);
+    if (issueKey) {
+      return issueKey;
+    }
+  }
+
+  return null;
+}
+
+async function discoverDocumentId(page: Page, orgSlug: string): Promise<string | null> {
+  await page
+    .goto(`${BASE_URL}/${orgSlug}/documents`, { waitUntil: "domcontentloaded", timeout: 15000 })
+    .catch(() => {});
+  await waitForExpectedContent(page, `/${orgSlug}/documents`, "documents");
+  await waitForScreenshotReady(page);
+
+  try {
+    const links = page.locator("a");
+    const count = await links.count();
+    for (let i = 0; i < count; i++) {
+      const href = await links.nth(i).getAttribute("href");
+      const match = href?.match(/\/documents\/([^/?#]+)/);
+      const candidate = match?.[1];
+      if (candidate && candidate !== "templates") {
+        return candidate;
+      }
+    }
+  } catch {}
+
   return null;
 }
 
@@ -731,7 +935,7 @@ async function screenshotFilledStates(
   }
 
   // Issue detail
-  const firstIssue = seed.issueKeys?.[0];
+  const firstIssue = (await discoverIssueKey(page, orgSlug, projectKey)) ?? seed.issueKeys?.[0];
   if (firstIssue) {
     await takeScreenshot(
       page,
@@ -761,11 +965,7 @@ async function screenshotFilledStates(
   }
 
   // Document editor
-  await page
-    .goto(`${BASE_URL}/${orgSlug}/documents`, { waitUntil: "domcontentloaded", timeout: 15000 })
-    .catch(() => {});
-  await waitForScreenshotReady(page);
-  const docId = await discoverFirstHref(page, /\/documents\/([a-z0-9]+)/);
+  const docId = await discoverDocumentId(page, orgSlug);
   if (docId) {
     await takeScreenshot(page, p, "document-editor", `/${orgSlug}/documents/${docId}`);
   }
@@ -875,18 +1075,19 @@ async function screenshotBoardModals(
   await waitForExpectedContent(page, boardUrl, "board");
   await waitForScreenshotReady(page);
 
-  const createIssueButton = page.getByRole("button", { name: /add issue/i }).first();
-  if ((await createIssueButton.count()) > 0) {
+  const projectsPage = new ProjectsPage(page, orgSlug);
+  if ((await projectsPage.createIssueButton.count()) > 0) {
     await runCaptureStep("board create-issue modal", async () => {
       await dismissAllDialogs(page);
-      await createIssueButton.waitFor({ state: "visible", timeout: 5000 });
-      await createIssueButton.scrollIntoViewIfNeeded().catch(() => {});
-      await createIssueButton.click({ force: true });
-      const createIssueDialog = page.getByRole("dialog", { name: /create issue/i });
-      await createIssueDialog.waitFor({ state: "visible", timeout: 10000 }).catch(async () => {
-        await createIssueButton.click({ force: true });
-        await createIssueDialog.waitFor({ state: "visible", timeout: 10000 });
-      });
+      await projectsPage.openCreateIssueModal();
+      const createIssueDialog = projectsPage.createIssueModal;
+      const formReadySignal = projectsPage.issueTitleInput
+        .or(projectsPage.submitIssueButton)
+        .or(createIssueDialog.getByRole("button", { name: /get ai suggestions/i }))
+        .or(projectsPage.issueTypeSelect)
+        .first();
+      await formReadySignal.waitFor({ state: "visible", timeout: 12000 });
+      await waitForScreenshotReady(page);
       await captureCurrentView(
         page,
         prefix,

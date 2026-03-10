@@ -16,6 +16,7 @@ import type { Value } from "platejs";
 import { Plate, PlateContent, usePlateEditor } from "platejs/react";
 import { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
@@ -24,7 +25,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Lock } from "@/lib/icons";
-import { getEditorPlugins, getInitialValue } from "@/lib/plate/editor";
+import { getEditorPlugins, getInitialValue, isEmptyValue } from "@/lib/plate/editor";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { DocumentHeader, DocumentSidebar } from "./Documents";
@@ -61,6 +62,7 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
   const [editorValue, setEditorValue] = useState<Value>(getInitialValue());
+  const isEmptyEditor = isEmptyValue(editorValue);
 
   // Create editor with plugins
   const editor = usePlateEditor({
@@ -268,7 +270,7 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
       <Flex className="flex-1 overflow-hidden">
         {/* Editor - Clean Mintlify-inspired layout */}
         <FlexItem flex="1" className="overflow-auto bg-ui-bg scrollbar-subtle">
-          <Card padding="lg" variant="ghost" className="max-w-3xl mx-auto">
+          <Card padding="lg" variant="ghost" className="mx-auto max-w-4xl">
             <ErrorBoundary
               fallback={
                 <Card
@@ -287,6 +289,82 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
               <Plate editor={editor} onChange={handleChange} readOnly={lockStatus?.isLocked}>
                 {!lockStatus?.isLocked && <SlashMenu />}
                 {!lockStatus?.isLocked && <FloatingToolbar />}
+                {isEmptyEditor && (
+                  <Card
+                    padding="xl"
+                    variant="outline"
+                    className="mb-8 border-dashed border-ui-border-secondary/80"
+                  >
+                    <Stack gap="lg">
+                      <Flex
+                        justify="between"
+                        gap="lg"
+                        className="flex-col border-b border-dashed border-ui-border/70 pb-5 lg:flex-row lg:items-start"
+                      >
+                        <Stack gap="sm" className="max-w-2xl">
+                          <Stack gap="xs">
+                            <Typography variant="label">Blank document</Typography>
+                            <Typography variant="small" color="secondary">
+                              Start with a short overview, key decisions, and next steps. Use `/`
+                              for blocks, headings, and lists once you begin writing.
+                            </Typography>
+                          </Stack>
+
+                          <Flex wrap gap="sm">
+                            <Badge variant="secondary" shape="pill">
+                              Overview
+                            </Badge>
+                            <Badge variant="secondary" shape="pill">
+                              Decisions
+                            </Badge>
+                            <Badge variant="secondary" shape="pill">
+                              Risks
+                            </Badge>
+                            <Badge variant="secondary" shape="pill">
+                              Next steps
+                            </Badge>
+                          </Flex>
+                        </Stack>
+
+                        <Card variant="soft" padding="md" className="min-w-0 lg:max-w-xs">
+                          <Stack gap="xs">
+                            <Typography variant="caption" className="uppercase tracking-widest">
+                              Starter flow
+                            </Typography>
+                            <Typography variant="small" color="secondary">
+                              Capture the summary first, then turn action items into tasks or linked
+                              issues.
+                            </Typography>
+                          </Stack>
+                        </Card>
+                      </Flex>
+
+                      <Flex gap="md" className="flex-col lg:flex-row">
+                        <Card variant="soft" padding="md" className="flex-1">
+                          <Stack gap="xs">
+                            <Typography variant="caption" className="uppercase tracking-widest">
+                              Suggested outline
+                            </Typography>
+                            <Typography variant="small" color="secondary">
+                              Summary, decisions, follow-ups, owners, and review date.
+                            </Typography>
+                          </Stack>
+                        </Card>
+                        <Card variant="soft" padding="md" className="flex-1">
+                          <Stack gap="xs">
+                            <Typography variant="caption" className="uppercase tracking-widest">
+                              Quick actions
+                            </Typography>
+                            <Typography variant="small" color="secondary">
+                              Use headings for sections and bullet lists for decisions, risks, and
+                              next steps.
+                            </Typography>
+                          </Stack>
+                        </Card>
+                      </Flex>
+                    </Stack>
+                  </Card>
+                )}
                 <PlateContent
                   className="min-h-96 prose prose-sm max-w-none focus-visible:outline-none text-ui-text leading-relaxed"
                   data-testid={TEST_IDS.EDITOR.PLATE}

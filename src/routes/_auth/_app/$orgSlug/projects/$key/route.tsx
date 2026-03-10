@@ -66,29 +66,28 @@ function ProjectLayout() {
 
   return (
     <Flex direction="column" className="h-full">
-      <div className="border-b border-ui-border/70 bg-ui-bg/80 px-3 py-3 backdrop-blur-xl sm:px-4">
-        <div className="rounded-2xl border border-ui-border/70 bg-ui-bg-elevated/90 px-4 py-3 shadow-soft">
-          <Flex
-            align="center"
-            justify="between"
-            gap="md"
-            className="flex-col sm:flex-row sm:items-start"
-          >
+      <div className="border-b border-ui-border/70 bg-ui-bg/80 px-2 py-1 backdrop-blur-xl sm:px-4 sm:py-3">
+        <div className="rounded-xl border border-ui-border/70 bg-ui-bg-elevated/90 px-2.5 py-2 shadow-soft sm:rounded-2xl sm:px-4 sm:py-3">
+          <Flex align="start" justify="between" gap="sm" className="flex-col sm:flex-row">
             <Flex align="center" gap="sm" className="min-w-0">
               <Flex
                 align="center"
                 justify="center"
-                className="h-10 w-10 shrink-0 rounded-xl bg-brand-subtle text-brand ring-1 ring-brand/15"
+                className="h-8 w-8 shrink-0 rounded-lg bg-brand-subtle text-brand ring-1 ring-brand/15 sm:h-10 sm:w-10 sm:rounded-xl"
               >
                 <Typography variant="small" className="font-semibold text-current">
                   {project.key.slice(0, 2).toUpperCase()}
                 </Typography>
               </Flex>
               <div className="min-w-0">
-                <Typography variant="caption" color="tertiary" className="uppercase tracking-wider">
+                <Typography
+                  variant="caption"
+                  color="tertiary"
+                  className="hidden uppercase tracking-wider sm:block"
+                >
                   {isScrum ? "Scrum project" : "Kanban project"}
                 </Typography>
-                <Typography variant="h4" className="truncate tracking-tight">
+                <Typography variant="h4" className="truncate text-base tracking-tight sm:text-2xl">
                   {project.name}
                 </Typography>
               </div>
@@ -96,20 +95,23 @@ function ProjectLayout() {
             <Badge
               variant="outline"
               shape="pill"
-              className="bg-ui-bg-soft uppercase tracking-wider"
+              className="hidden bg-ui-bg-soft uppercase tracking-wider sm:inline-flex"
             >
               {project.key}
             </Badge>
           </Flex>
 
-          <nav className="mt-3 flex gap-1 overflow-x-auto pb-1" aria-label="Project sections">
+          <nav
+            className="mt-1 flex gap-1 overflow-x-auto pb-1 scrollbar-subtle sm:mt-2"
+            aria-label="Project sections"
+          >
             {tabs.map((tab) => (
               <Link
                 key={tab.name}
                 to={tab.to}
                 params={tab.params}
                 className={cn(
-                  "rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition-default",
+                  "rounded-lg px-2 py-1.5 text-xs font-medium whitespace-nowrap transition-default sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm",
                   "text-ui-text-secondary hover:bg-ui-bg-hover hover:text-ui-text",
                 )}
                 activeProps={{

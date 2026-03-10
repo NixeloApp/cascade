@@ -66,16 +66,41 @@ export function Settings() {
 
   return (
     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)} className="w-full">
-      <TabsList className="mb-6 w-full justify-start overflow-x-auto sm:mb-8">
-        <TabsTrigger value="profile">Profile</TabsTrigger>
-        <TabsTrigger value="security">Security</TabsTrigger>
-        <TabsTrigger value="notifications">Notifications</TabsTrigger>
-        <TabsTrigger value="integrations">Integrations</TabsTrigger>
-        <TabsTrigger value="apikeys">API Keys</TabsTrigger>
-        <TabsTrigger value="offline">Offline Mode</TabsTrigger>
-        <TabsTrigger value="preferences">Preferences</TabsTrigger>
-        {showAdminTab && <TabsTrigger value="admin">Admin</TabsTrigger>}
-        {showDevTools && <TabsTrigger value="developer">Dev Tools</TabsTrigger>}
+      <TabsList
+        size="compact"
+        className="mb-4 grid w-full grid-cols-3 justify-start gap-1 overflow-visible p-1 sm:mb-6 sm:flex sm:flex-wrap sm:gap-1.5 lg:flex-nowrap"
+      >
+        <TabsTrigger value="profile" size="compact" className="w-full sm:w-auto">
+          Profile
+        </TabsTrigger>
+        <TabsTrigger value="security" size="compact" className="w-full sm:w-auto">
+          Security
+        </TabsTrigger>
+        <TabsTrigger value="notifications" size="compact" className="w-full sm:w-auto">
+          Notifications
+        </TabsTrigger>
+        <TabsTrigger value="integrations" size="compact" className="w-full sm:w-auto">
+          Integrations
+        </TabsTrigger>
+        <TabsTrigger value="apikeys" size="compact" className="w-full sm:w-auto">
+          API Keys
+        </TabsTrigger>
+        <TabsTrigger value="offline" size="compact" className="w-full sm:w-auto">
+          Offline Mode
+        </TabsTrigger>
+        <TabsTrigger value="preferences" size="compact" className="w-full sm:w-auto">
+          Preferences
+        </TabsTrigger>
+        {showAdminTab && (
+          <TabsTrigger value="admin" size="compact" className="w-full sm:w-auto">
+            Admin
+          </TabsTrigger>
+        )}
+        {showDevTools && (
+          <TabsTrigger value="developer" size="compact" className="w-full sm:w-auto">
+            Dev Tools
+          </TabsTrigger>
+        )}
       </TabsList>
 
       <TabsContent value="profile" className="mt-0">

@@ -109,10 +109,15 @@ function BoardPage() {
 
   return (
     <Flex direction="column" className="h-full">
-      <div className="px-3 pt-3 sm:px-4">
-        <div className="rounded-2xl border border-ui-border/70 bg-ui-bg-elevated/90 px-4 py-3 shadow-soft">
-          <Flex align="center" justify="between" gap="md" className="flex-col sm:flex-row">
-            <Flex align="center" gap="sm" wrap>
+      <div className="px-2 pt-2 sm:px-4 sm:pt-3">
+        <div className="rounded-xl border border-ui-border/70 bg-ui-bg-elevated/90 px-2.5 py-2 shadow-soft sm:rounded-2xl sm:px-4 sm:py-3">
+          <Flex
+            align="center"
+            justify="between"
+            gap="sm"
+            className="flex-row flex-wrap sm:flex-nowrap sm:gap-4"
+          >
+            <Flex align="center" gap="sm" wrap className="min-w-0">
               <div className="hidden sm:block">
                 <Typography variant="h4" className="tracking-tight">
                   Delivery board
@@ -124,11 +129,11 @@ function BoardPage() {
               <Badge variant="neutral" size="md">
                 {project.key}
               </Badge>
-              <Badge variant="accent" size="md">
+              <Badge variant="accent" size="md" className="hidden sm:inline-flex">
                 {project.boardType}
               </Badge>
             </Flex>
-            <Flex align="center" gap="sm" wrap className="justify-end">
+            <Flex align="center" gap="sm" wrap className="justify-end sm:ml-auto">
               {/* Sprint Progress & Workload */}
               {project.boardType === "scrum" && effectiveSprintId && (
                 <>

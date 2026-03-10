@@ -51,8 +51,8 @@ type ProfileUser = {
  */
 export function UserStatsCards({ stats }: { stats: UserStats }) {
   return (
-    <Grid cols={2} colsMd={5} gap="md">
-      <Card padding="md" variant="default" className="relative overflow-hidden text-center">
+    <Grid cols={2} colsMd={3} colsLg={5} gap="sm">
+      <Card padding="sm" variant="outline" className="relative overflow-hidden text-center">
         <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-brand/70" />
         <Stack gap="xs" align="center" className="relative">
           <Typography variant="h2" color="brand">
@@ -63,7 +63,7 @@ export function UserStatsCards({ stats }: { stats: UserStats }) {
           </Typography>
         </Stack>
       </Card>
-      <Card padding="md" variant="default" className="relative overflow-hidden text-center">
+      <Card padding="sm" variant="outline" className="relative overflow-hidden text-center">
         <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-brand/70" />
         <Stack gap="xs" align="center" className="relative">
           <Typography variant="h2" color="brand">
@@ -74,7 +74,7 @@ export function UserStatsCards({ stats }: { stats: UserStats }) {
           </Typography>
         </Stack>
       </Card>
-      <Card padding="md" variant="default" className="relative overflow-hidden text-center">
+      <Card padding="sm" variant="outline" className="relative overflow-hidden text-center">
         <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-brand/70" />
         <Stack gap="xs" align="center" className="relative">
           <Typography variant="h2" color="brand">
@@ -85,7 +85,7 @@ export function UserStatsCards({ stats }: { stats: UserStats }) {
           </Typography>
         </Stack>
       </Card>
-      <Card padding="md" variant="default" className="relative overflow-hidden text-center">
+      <Card padding="sm" variant="outline" className="relative overflow-hidden text-center">
         <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-brand/70" />
         <Stack gap="xs" align="center" className="relative">
           <Typography variant="h2" color="brand">
@@ -96,7 +96,7 @@ export function UserStatsCards({ stats }: { stats: UserStats }) {
           </Typography>
         </Stack>
       </Card>
-      <Card padding="md" variant="default" className="relative overflow-hidden text-center">
+      <Card padding="sm" variant="outline" className="relative overflow-hidden text-center">
         <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-brand/70" />
         <Stack gap="xs" align="center" className="relative">
           <Typography variant="h2" color="brand">
@@ -114,11 +114,20 @@ export function UserStatsCards({ stats }: { stats: UserStats }) {
 /**
  * User account information section
  */
-export function AccountInfo({ user }: { user: ProfileUser & { _creationTime: number } }) {
+export function AccountInfo({
+  user,
+  className,
+}: {
+  user: ProfileUser & { _creationTime: number };
+  className?: string;
+}) {
   return (
     <Stack
       gap="md"
-      className="rounded-container border border-ui-border-secondary/70 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft/80 p-4 shadow-soft"
+      className={cn(
+        "rounded-container border border-ui-border-secondary/70 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft/80 p-4 shadow-soft",
+        className,
+      )}
     >
       <Typography variant="h5">Account Information</Typography>
       <Stack gap="sm">
@@ -322,13 +331,20 @@ function LoadedProfileContent({
   userStats,
   viewUser,
 }: LoadedProfileContentProps) {
+  const showAccountInfo =
+    isOwnProfile && "_creationTime" in viewUser && typeof viewUser._creationTime === "number";
+
   return (
-    <Card variant="elevated" padding="none" className="overflow-hidden">
+    <Card
+      variant="default"
+      padding="none"
+      className="overflow-hidden border-ui-border-secondary/80"
+    >
       {isOwnProfile && (
         <div className="relative group">
           <div
             className={cn(
-              "h-32 w-full bg-linear-to-r from-brand/18 via-brand-subtle/85 to-accent/14 sm:h-36",
+              "h-24 w-full bg-linear-to-r from-brand/14 via-brand-subtle/75 to-accent/12 sm:h-28",
               coverImageUrl && "bg-none",
             )}
           >
@@ -348,34 +364,45 @@ function LoadedProfileContent({
         </div>
       )}
 
-      <div className="px-4 pb-5 sm:px-5 sm:pb-6">
-        <Stack gap="lg">
-          <Card
-            variant="default"
-            padding="md"
-            className={cn(
-              "border-ui-border-secondary/70 bg-ui-bg-elevated/96 shadow-elevated",
-              isOwnProfile && "-mt-10",
-            )}
+      <div className="p-4 sm:p-5">
+        <Stack gap="md">
+          <Grid
+            cols={1}
+            colsLg={showAccountInfo ? 3 : 1}
+            gap="md"
+            className={cn(isOwnProfile && "-mt-8 sm:-mt-10")}
           >
-            <ProfileHeader
-              user={viewUser}
-              isOwnProfile={isOwnProfile}
-              isEditing={isEditing}
-              name={name}
-              firstName={firstName}
-              lastName={lastName}
-              email={email}
-              onEditClick={onEditClick}
-              onNameChange={onNameChange}
-              onFirstNameChange={onFirstNameChange}
-              onLastNameChange={onLastNameChange}
-              onEmailChange={onEmailChange}
-              onSave={onSave}
-              onCancel={onCancel}
-              onAvatarClick={onAvatarClick}
-            />
-          </Card>
+            <Card
+              variant="elevated"
+              padding="lg"
+              className={cn("border-ui-border-secondary/70", showAccountInfo && "lg:col-span-2")}
+            >
+              <ProfileHeader
+                user={viewUser}
+                isOwnProfile={isOwnProfile}
+                isEditing={isEditing}
+                name={name}
+                firstName={firstName}
+                lastName={lastName}
+                email={email}
+                onEditClick={onEditClick}
+                onNameChange={onNameChange}
+                onFirstNameChange={onFirstNameChange}
+                onLastNameChange={onLastNameChange}
+                onEmailChange={onEmailChange}
+                onSave={onSave}
+                onCancel={onCancel}
+                onAvatarClick={onAvatarClick}
+              />
+            </Card>
+
+            {showAccountInfo && (
+              <AccountInfo
+                user={viewUser as ProfileUser & { _creationTime: number }}
+                className="h-full lg:mt-6"
+              />
+            )}
+          </Grid>
 
           <AvatarUploadModal
             open={showAvatarModal}
@@ -393,22 +420,12 @@ function LoadedProfileContent({
 
           {userStats && <UserStatsCards stats={userStats} />}
 
-          <Grid cols={1} colsLg={3} gap="md">
-            <Card padding="lg" variant="soft" className="lg:col-span-2">
-              <Stack gap="md">
-                <Typography variant="h5">Recent Activity</Typography>
-                <UserActivityFeed userId={viewUser._id} limit={10} />
-              </Stack>
-            </Card>
-
-            {isOwnProfile &&
-              "_creationTime" in viewUser &&
-              typeof viewUser._creationTime === "number" && (
-                <div className="lg:col-span-1">
-                  <AccountInfo user={viewUser as ProfileUser & { _creationTime: number }} />
-                </div>
-              )}
-          </Grid>
+          <Card padding="lg" variant="soft">
+            <Stack gap="md">
+              <Typography variant="h5">Recent Activity</Typography>
+              <UserActivityFeed userId={viewUser._id} limit={10} />
+            </Stack>
+          </Card>
         </Stack>
       </div>
     </Card>

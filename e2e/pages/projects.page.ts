@@ -176,8 +176,12 @@ export class ProjectsPage extends BasePage {
       .or(page.getByRole("heading", { name: /kanban board|scrum board/i }));
     this.boardColumns = page.getByTestId(TEST_IDS.BOARD.COLUMN);
     this.issueCards = page.getByTestId(TEST_IDS.ISSUE.CARD);
-    // Create issue - look for "Add issue" button (column headers have "Add issue to X")
-    this.createIssueButton = page.getByRole("button", { name: /add issue/i }).first();
+    // Create issue - prefer the stable first-column trigger used by the tour and
+    // fall back to any "Add issue" button if the attribute is absent.
+    this.createIssueButton = page
+      .locator("[data-tour='create-issue']")
+      .or(page.getByRole("button", { name: /add issue/i }))
+      .first();
 
     // Create issue modal
     this.createIssueModal = page
@@ -427,7 +431,35 @@ export class ProjectsPage extends BasePage {
   }
 
   async openCreateIssueModal() {
-    await this.createIssueButton.click();
+    const triggerCandidates = [
+      this.page.getByRole("button", { name: /add first issue/i }).first(),
+      this.page.locator("[data-tour='create-issue']").first(),
+      this.page.getByRole("button", { name: /add issue/i }).first(),
+    ];
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      for (const trigger of triggerCandidates) {
+        if ((await trigger.count().catch(() => 0)) === 0) {
+          continue;
+        }
+
+        await trigger.waitFor({ state: "visible", timeout: 2000 }).catch(() => {});
+        if (!(await trigger.isVisible().catch(() => false))) {
+          continue;
+        }
+
+        await trigger.scrollIntoViewIfNeeded().catch(() => {});
+        await trigger.click({ force: true });
+        await this.createIssueModal.waitFor({ state: "visible", timeout: 1500 }).catch(() => {});
+
+        if (await this.createIssueModal.isVisible().catch(() => false)) {
+          return;
+        }
+      }
+
+      await this.page.waitForTimeout(750);
+    }
+
     await expect(this.createIssueModal).toBeVisible();
   }
 
