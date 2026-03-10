@@ -205,7 +205,7 @@ export function UserActivityFeed({
         variant="info"
         align="start"
         size="compact"
-        className="max-w-full min-h-0 border-transparent bg-transparent px-0 py-0 shadow-none"
+        surface="bare"
       />
     );
   }

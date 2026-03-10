@@ -2,6 +2,7 @@ import { api } from "@convex/_generated/api";
 import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { PageContent, PageError } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -197,8 +198,9 @@ function ProjectLayout() {
             {mobileSecondaryTabs.length > 0 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
+                  <Button
+                    variant="unstyled"
+                    size={undefined}
                     className={cn(
                       "inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium transition-default",
                       activeSecondaryTab
@@ -209,7 +211,7 @@ function ProjectLayout() {
                   >
                     <span>More</span>
                     <ChevronDown className="h-3.5 w-3.5" />
-                  </button>
+                  </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-40">
                   {mobileSecondaryTabs.map((tab) => (

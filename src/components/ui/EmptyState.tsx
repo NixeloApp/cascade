@@ -16,6 +16,7 @@ import { Typography } from "./Typography";
 type EmptyStateVariant = "default" | "info" | "warning" | "error";
 type EmptyStateSize = "default" | "compact";
 type EmptyStateAlign = "center" | "start";
+type EmptyStateSurface = "default" | "bare";
 
 interface EmptyStateProps {
   icon: string | LucideIcon;
@@ -33,6 +34,8 @@ interface EmptyStateProps {
   size?: EmptyStateSize;
   /** Horizontal alignment for the shell and copy */
   align?: EmptyStateAlign;
+  /** Surface treatment for embedded versus standalone states */
+  surface?: EmptyStateSurface;
   /** Optional className for the container */
   className?: string;
 }
@@ -120,17 +123,22 @@ export function EmptyState({
   variant = "default",
   size = "default",
   align = "center",
+  surface = "default",
   className,
 }: EmptyStateProps) {
   const iconColorClass = EMPTY_STATE_ICON_COLOR_CLASS[variant];
   const sizeClass = EMPTY_STATE_SIZE_CLASS[size];
   const isStartAligned = align === "start";
+  const isBare = surface === "bare";
 
   return (
     <section
       className={cn(
-        "mx-auto flex w-full flex-col justify-center rounded-container border border-ui-border/70 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-secondary/70 animate-fade-in",
-        size === "compact" ? "shadow-card" : "shadow-soft",
+        "mx-auto flex w-full flex-col justify-center animate-fade-in",
+        isBare
+          ? "rounded-none border-transparent bg-transparent shadow-none"
+          : "rounded-container border border-ui-border/70 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-secondary/70",
+        !isBare && (size === "compact" ? "shadow-card" : "shadow-soft"),
         isStartAligned ? "items-start text-left" : "items-center text-center",
         sizeClass,
         className,

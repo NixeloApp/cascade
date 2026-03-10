@@ -25,6 +25,7 @@ function getFocusHour(events: CalendarEvent[], date: Date, mode: "day" | "week")
   return Math.max(0, earliestHour - 1);
 }
 
+/** Scrolls day and week calendar grids to the first meaningful working-hours band on mount/update. */
 export function useCalendarInitialScroll(
   scrollRef: RefObject<HTMLDivElement | null>,
   events: CalendarEvent[],

@@ -3282,17 +3282,33 @@ export const seedScreenshotDataInternal = internalMutation({
     ];
 
     for (const cal of calendarDefs) {
+      const startTime =
+        todayMs + cal.dayOffset * DAY + cal.startHour * HOUR + cal.startMin * MINUTE;
+      const endTime = todayMs + cal.dayOffset * DAY + cal.endHour * HOUR + cal.endMin * MINUTE;
+
       const existing = await ctx.db
         .query("calendarEvents")
         .withIndex("by_organizer", (q) => q.eq("organizerId", userId))
         .filter((q) => q.eq(q.field("title"), cal.title))
         .first();
 
-      if (!existing) {
-        const startTime =
-          todayMs + cal.dayOffset * DAY + cal.startHour * HOUR + cal.startMin * MINUTE;
-        const endTime = todayMs + cal.dayOffset * DAY + cal.endHour * HOUR + cal.endMin * MINUTE;
-
+      if (existing) {
+        await ctx.db.patch(existing._id, {
+          organizationId: orgId,
+          workspaceId,
+          projectId,
+          description: cal.description,
+          startTime,
+          endTime,
+          eventType: cal.eventType,
+          color: cal.color,
+          attendeeIds: [userId, ...syntheticUserIds],
+          status: "confirmed",
+          isRecurring: false,
+          isRequired: cal.eventType === "meeting",
+          updatedAt: now,
+        });
+      } else {
         await ctx.db.insert("calendarEvents", {
           organizationId: orgId,
           workspaceId,
