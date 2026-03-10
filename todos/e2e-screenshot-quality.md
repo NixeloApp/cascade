@@ -275,62 +275,67 @@ Examples:
 
 ## Active Queue
 
-### P0 - Screenshot Baseline Blockers
+### P0 - Keep The Baseline Trustworthy
 
-- [ ] Fix issue-detail capture so the baseline shows the real issue UI instead of the error state.
-  - Evidence: `docs/design/specs/pages/08-issue/screenshots/desktop-light.png`
-  - Evidence: `docs/design/specs/pages/08-issue/screenshots/mobile-light.png`
-  - Likely fix points: `e2e/screenshot-pages.ts`, `src/routes/_auth/_app/$orgSlug/issues/$key.tsx`
+- [x] Fix issue-detail capture so the baseline shows the real issue UI instead of the error state.
+  - Fixed in: `e2e/screenshot-pages.ts`, `convex/e2e.ts`
+  - Evidence now: `docs/design/specs/pages/08-issue/screenshots/desktop-light.png`
+  - Evidence now: `docs/design/specs/pages/08-issue/screenshots/mobile-light.png`
 
-- [ ] Fix document-editor capture so `10-editor` stops resolving to the templates page.
-  - Evidence: `docs/design/specs/pages/10-editor/screenshots/desktop-light.png`
-  - Evidence: `docs/design/specs/pages/10-editor/screenshots/mobile-light.png`
-  - Likely fix point: document link discovery in `e2e/screenshot-pages.ts`
+- [x] Fix document-editor capture so `10-editor` stops resolving to the templates page.
+  - Fixed in: `e2e/screenshot-pages.ts`
+  - Evidence now: `docs/design/specs/pages/10-editor/screenshots/desktop-light.png`
+  - Evidence now: `docs/design/specs/pages/10-editor/screenshots/mobile-light.png`
 
-- [ ] Fix create-issue modal capture readiness so the modal is not screenshotted as a spinner.
-  - Evidence: `docs/design/specs/pages/06-board/screenshots/desktop-light-create-issue-modal.png`
-  - Evidence: `docs/design/specs/pages/06-board/screenshots/mobile-light-create-issue-modal.png`
-  - Likely fix point: board modal readiness in `e2e/screenshot-pages.ts`
+- [x] Fix create-issue modal capture readiness so the modal is no longer captured as a spinner or skipped state.
+  - Fixed in: `e2e/screenshot-pages.ts`, `e2e/pages/projects.page.ts`
+  - Evidence now: `docs/design/specs/pages/06-board/screenshots/desktop-light-create-issue-modal.png`
+  - Evidence now: `docs/design/specs/pages/06-board/screenshots/mobile-light-create-issue-modal.png`
 
-- [ ] Expand screenshot readiness contracts beyond dashboard/board/settings/calendar.
-  - Evidence: `docs/design/specs/pages/05-projects/screenshots/mobile-light.png`
-  - Evidence: `docs/design/specs/pages/13-analytics/screenshots/desktop-dark.png`
-  - Expected: every captured route has a deterministic loaded-content signal.
+- [x] Restore seeded project and issue data so “filled” screenshots are real again.
+  - Fixed in: `convex/e2e.ts`
+  - Evidence now: `docs/design/specs/pages/05-projects/screenshots/desktop-light.png`
+  - Evidence now: `docs/design/specs/pages/06-board/screenshots/desktop-light.png`
+  - Evidence now: `docs/design/specs/pages/07-backlog/screenshots/desktop-light.png`
 
-### P1 - Highest-Leverage Visual Fixes
+- [ ] Keep expanding screenshot readiness contracts where partial-load captures can still leak through.
+  - Remaining risk: route-specific completion signals are still uneven outside the core auth/project/editor paths.
+  - Expected: every captured route has a deterministic loaded-content signal before capture.
 
-- [ ] Simplify the auth shell so it stops reading like a split marketing card with nested panels.
-  - Evidence: `docs/design/specs/pages/02-signin/screenshots/desktop-light.png`
-  - Evidence: `docs/design/specs/pages/03-signup/screenshots/desktop-light.png`
-  - Evidence: `docs/design/specs/pages/04-forgot-password/screenshots/desktop-light.png`
-  - Likely fix point: `src/components/Auth/AuthPageLayout.tsx`
+### P1 - Highest-Leverage Remaining Visual Fixes
 
-- [ ] Simplify mobile project chrome and tab density.
+- [x] Simplify the auth shell so it stops reading like a nested marketing card pile.
+  - Fixed in: `src/components/Auth/AuthPageLayout.tsx`
+  - Evidence now: `docs/design/specs/pages/02-signin/screenshots/desktop-light.png`
+  - Evidence now: `docs/design/specs/pages/03-signup/screenshots/desktop-light.png`
+  - Evidence now: `docs/design/specs/pages/04-forgot-password/screenshots/desktop-light.png`
+
+- [ ] Simplify mobile project chrome and tab density further.
   - Evidence: `docs/design/specs/pages/06-board/screenshots/mobile-light.png`
   - Evidence: `docs/design/specs/pages/07-backlog/screenshots/mobile-light.png`
   - Evidence: `docs/design/specs/pages/11-calendar/screenshots/mobile-light.png`
-  - Likely fix point: `src/routes/_auth/_app/$orgSlug/projects/$key/route.tsx`
+  - Main fix point: `src/routes/_auth/_app/$orgSlug/projects/$key/route.tsx`
 
-- [ ] Reduce card-inside-card layering and restore light-theme depth/contrast.
-  - Evidence: `docs/design/specs/pages/04-dashboard/screenshots/desktop-light.png`
-  - Evidence: `docs/design/specs/pages/12-settings/screenshots/desktop-light.png`
-  - Evidence: `docs/design/specs/pages/05-projects/screenshots/desktop-light-create-project-modal.png`
-  - Likely fix points: `src/components/ui/Card.tsx`, `src/components/ui/Dialog.tsx`, `src/components/Dashboard.tsx`
-
-- [ ] Make the “filled projects” state credible again.
+- [ ] Continue reducing card layering and restore more light-theme depth/contrast.
   - Evidence: `docs/design/specs/pages/05-projects/screenshots/desktop-light.png`
-  - Evidence: `docs/design/specs/pages/05-projects/screenshots/tablet-light.png`
-  - Evidence: `docs/design/specs/pages/05-projects/screenshots/mobile-light.png`
-  - Likely fix points: `src/components/ProjectsList.tsx`, screenshot readiness in `e2e/screenshot-pages.ts`
+  - Evidence: `docs/design/specs/pages/10-editor/screenshots/desktop-light.png`
+  - Evidence: `docs/design/specs/pages/12-settings/screenshots/desktop-light.png`
+  - Main fix points: `src/components/ui/Card.tsx`, page-level shells, profile/editor surfaces
 
-- [ ] Tighten settings tab density on tablet/mobile.
+- [x] Make the filled projects state credible again.
+  - Fixed in: `convex/e2e.ts`, `src/components/ProjectsList.tsx`
+  - Evidence now: `docs/design/specs/pages/05-projects/screenshots/desktop-light.png`
+  - Evidence now: `docs/design/specs/pages/05-projects/screenshots/tablet-light.png`
+  - Evidence now: `docs/design/specs/pages/05-projects/screenshots/mobile-light.png`
+
+- [ ] Tighten settings tab density and reduce shell weight on tablet/mobile.
   - Evidence: `docs/design/specs/pages/12-settings/screenshots/mobile-light.png`
   - Evidence: `docs/design/specs/pages/12-settings/screenshots/tablet-light.png`
-  - Likely fix point: `src/components/Settings.tsx`
+  - Main fix points: `src/components/Settings.tsx`, `src/components/Settings/ProfileContent.tsx`, shared tab primitives
 
 ### P2 - Follow-Through
 
-- [ ] Refresh affected `CURRENT.md` docs once the screenshots reflect the real UI.
+- [x] Refresh affected `CURRENT.md` docs once the screenshots reflect the real UI.
 - [ ] Rerun `pnpm screenshots` after each meaningful polish round.
 - [ ] Keep screenshot-specific reliability work synced with `todos/e2e-reliability-overhaul.md`.
 
@@ -460,6 +465,31 @@ Each screenshot-driven round should leave a short entry in the active log or com
   - editor captured as templates page
   - create-issue modal captured before hydration
   - projects/analytics still vulnerable to partial-load captures
+
+### 2026-03-09 Follow-Through
+
+- Latest trustworthy full rerun completed successfully: `205 screenshots captured`
+- Main shared fixes that landed:
+  - `convex/e2e.ts`: reattached stale demo seeds to the active org/workspace/project
+  - `e2e/screenshot-pages.ts`: fixed issue/editor route discovery, modal readiness, and document-list capture readiness
+  - `e2e/pages/projects.page.ts`: stabilized create-issue modal entry for screenshots
+  - `src/components/Auth/AuthPageLayout.tsx`: simplified the auth shell
+  - `src/components/ui/Card.tsx`: improved shared light-theme surface depth
+  - `src/routes/_auth/_app/$orgSlug/projects/$key/route.tsx`: reduced shared project-shell density
+  - `src/components/ProjectsList.tsx`: made the single-project filled state feel intentional instead of broken
+  - `src/components/Settings.tsx` and `src/components/Settings/settingsTabs.ts`: moved settings tabs to a typed canonical model
+- Pages materially improved:
+  - `02-signin`, `03-signup`, `04-forgot-password`
+  - `05-projects`
+  - `06-board`
+  - `07-backlog`
+  - `08-issue`
+  - `10-editor`
+  - `12-settings`
+- Remaining below-bar areas:
+  - mobile project chrome on board/backlog/calendar
+  - desktop light-mode depth on projects/editor/settings
+  - settings shell density on smaller viewports
 
 ## Success Criteria
 

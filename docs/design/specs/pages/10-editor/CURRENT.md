@@ -2,147 +2,51 @@
 
 > **Route**: `/:slug/documents/:id`
 > **Status**: 🟡 NEEDS POLISH
-> **Last Updated**: Run `pnpm screenshots` to regenerate
+> **Last Updated**: 2026-03-09
 
 ---
 
 ## Screenshots
 
-| Viewport | Preview |
-|----------|---------|
-| Desktop | ![](screenshots/desktop-dark.png) |
+| Viewport | Theme | Preview |
+|----------|-------|---------|
+| Desktop | Dark | ![](screenshots/desktop-dark.png) |
+| Desktop | Light | ![](screenshots/desktop-light.png) |
+| Tablet | Light | ![](screenshots/tablet-light.png) |
+| Mobile | Light | ![](screenshots/mobile-light.png) |
 
 ---
 
-## Structure
+## Current UI
 
-Full-page editor with header and toolbar:
-
-```
-+-------------------------------------------------------------------------------------------+
-| [=] Nixelo E2E                      [Commands Cmd+K] [?] [> Timer] [Search Cmd+K] [N] [AV]|
-+-------------------------------------------------------------------------------------------+
-| < Documents  |  Welcome                                                                   |
-|              |  ~~~~~~~                                                                   |
-|              |                                                                            |
-|              |  [Edit Title]  [AV] [AV]  [History (3)] [Import] [Export] [🌐] [...] |
-+-------------------------------------------------------------------------------------------+
-|                                                                                           |
-|  +--------------------------------------------------------------------------------------+ |
-|  |                                                                                      | |
-|  |  # Welcome                                                                           | |
-|  |                                                                                      | |
-|  |  Welcome to Nixelo! This is your collaborative documentation space.                  | |
-|  |                                                                                      | |
-|  |  ## Getting Started                                                                  | |
-|  |                                                                                      | |
-|  |  Here's how to get started with your new workspace:                                  | |
-|  |                                                                                      | |
-|  |  1. Create a project to organize your work                                           | |
-|  |  2. Add team members to collaborate                                                  | |
-|  |  3. Start tracking issues and documentation                                          | |
-|  |                                                                                      | |
-|  |  > 💡 **Tip**: Use the slash command (/) to insert blocks                           | |
-|  |                                                                                      | |
-|  +--------------------------------------------------------------------------------------+ |
-|                                                                                           |
-|  Created by Emily Chen · Last updated 2 hours ago                                         |
-|                                                                                           |
-+-------------------------------------------------------------------------------------------+
-```
+- The screenshot baseline now targets the actual editor route again instead of the templates page.
+- The page uses the Plate editor stack with a document header, optional sidebar, floating toolbar, and slash menu.
+- The current empty or near-empty document state is less dead than before, but the document body still reads sparse in the screenshots because the seeded content is minimal.
 
 ---
 
-## Current Elements
+## Recent Improvements
 
-### Header Bar
-- **Back link**: "< Documents" navigation
-- **Document title**: Editable title (click to edit)
-- **Presence indicators**: Active collaborator avatars
-- **History**: Version count badge
-- **Import/Export**: Markdown import/export buttons
-- **Public toggle**: Globe icon for visibility
-- **More actions**: Dropdown menu
-
-### Editor Area
-- **BlockNote editor**: Rich text editing
-- **Max width**: 4xl (896px) centered
-- **Padding**: Responsive p-3 sm:p-6
-- **Placeholder**: "Start writing..."
-
-### Toolbar Features (Floating)
-- Bold, Italic, Underline, Strikethrough
-- Inline Code, Link insertion
-- Appears on text selection
-
-### Slash Menu
-- Triggered by typing "/"
-- Paragraph, Headings (1-3)
-- Lists (bullet, numbered)
-- Quote, Code Block, Table, Image
-- Fuzzy search filtering
-
-### Footer
-- Creator name
-- Last updated timestamp
+- Editor route discovery was fixed in `e2e/screenshot-pages.ts`.
+- The editor empty state was reworked in `src/components/PlateEditor.tsx` so the page no longer reads like a blank broken canvas.
+- Light and dark screenshots now reflect the real document editor surface.
 
 ---
 
-## Files
+## Remaining Gaps
 
-| File | Purpose | Lines |
-|------|---------|-------|
-| `src/routes/_auth/_app/$orgSlug/documents/$id.tsx` | Route definition | ~80 |
-| `src/components/editor/DocumentEditor.tsx` | Main editor wrapper | ~200 |
-| `src/components/editor/DocumentHeader.tsx` | Header with actions | ~150 |
-| `src/components/editor/BlockNoteEditor.tsx` | BlockNote integration | ~250 |
-| `src/components/editor/FloatingToolbar.tsx` | Selection toolbar | ~100 |
-| `src/components/editor/SlashMenu.tsx` | Block insertion menu | ~150 |
+| Problem | Area | Severity |
+|---------|------|----------|
+| The document header still carries too many actions for the amount of visible content | `DocumentHeader` / `PlateEditor` | MEDIUM |
+| Desktop light mode still feels sparse because the seeded document body is thin | Editor composition + seed content | MEDIUM |
+| Overall surface depth is better, but the editor still needs stronger typography and body rhythm | Editor surface system | LOW |
 
 ---
 
-## Problems
+## Source Files
 
-| # | Problem | Location | Severity |
-|---|---------|----------|----------|
-| 1 | Header too cluttered with actions | DocumentHeader | HIGH |
-| 2 | No document sidebar/navigation | DocumentEditor | HIGH |
-| 3 | Editor prose styling basic | BlockNoteEditor | MEDIUM |
-| 4 | No publish/preview workflow | DocumentHeader | MEDIUM |
-| 5 | Missing breadcrumb navigation | DocumentHeader | LOW |
-| 6 | No callout/card blocks | SlashMenu | LOW |
-| 7 | Floating toolbar needs polish | FloatingToolbar | LOW |
-| 8 | No branch indicator | DocumentHeader | LOW |
-
----
-
-## Editor Block Types
-
-```
-Current supported blocks:
-- Paragraph
-- Heading (H1, H2, H3)
-- Bullet List
-- Numbered List
-- Blockquote
-- Code Block
-- Table
-- Image
-
-Missing (target):
-- Callout/Card blocks
-- Card grid layout
-- Embed blocks
-- Divider
-```
-
----
-
-## Summary
-
-The document editor is functional but needs polish:
-- Header is cluttered with too many action buttons
-- Missing document navigation sidebar
-- Editor content needs better typography
-- No publish/preview workflow like Mintlify
-- Could add rich callout and card blocks
+- `src/routes/_auth/_app/$orgSlug/documents/$id.tsx`
+- `src/components/PlateEditor.tsx`
+- `src/components/Documents/DocumentHeader.tsx`
+- `src/components/Plate/FloatingToolbar.tsx`
+- `e2e/screenshot-pages.ts`

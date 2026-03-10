@@ -1,8 +1,8 @@
 # Sign Up Page - Current State
 
 > **Route**: `/signup`
-> **Status**: 🔴 SLOP
-> **Last Updated**: Run `pnpm screenshots` to regenerate
+> **Status**: 🟡 NEEDS POLISH
+> **Last Updated**: 2026-03-09
 
 ---
 
@@ -17,79 +17,37 @@
 
 ---
 
-## Structure
+## Current UI
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                                                             │
-│     bg: bg-ui-bg (white in light, #08090a in dark)                         │
-│                                                                             │
-│         ← Back to Home                    ← SLOP: Delete this              │
-│                                                                             │
-│         ┌─────────────────────────────────────────────┐                     │
-│         │                                             │                     │
-│         │              [Nixelo Logo 48px]             │ ← card-subtle       │
-│         │                                             │   p-8              │
-│         │           Create an account                 │   shadow-card       │
-│         │     Sign up to get started with Nixelo      │                     │
-│         │                                             │   SLOP: Kill card   │
-│         │     [ ● ● ○ ]  ← Step indicator             │ ← Unnecessary here  │
-│         │                                             │                     │
-│         │     ┌───────────────────────────────────┐   │                     │
-│         │     │ G  Sign up with Google            │   │                     │
-│         │     └───────────────────────────────────┘   │                     │
-│         │                                             │                     │
-│         │     ──────────── or ────────────            │                     │
-│         │                                             │                     │
-│         │     ┌───────────────────────────────────┐   │                     │
-│         │     │ ✉  Continue with email            │   │ ← Expands to show   │
-│         │     └───────────────────────────────────┘   │   email/password    │
-│         │                                             │                     │
-│         │     Already have an account? Sign in        │ ← In wrong place    │
-│         │                                             │                     │
-│         │     By continuing, you acknowledge that     │ ← SLOP: Too verbose │
-│         │     you understand and agree to the         │                     │
-│         │     Terms & Conditions and Privacy Policy   │                     │
-│         │                                             │                     │
-│         └─────────────────────────────────────────────┘                     │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+- Signup now shares the same split auth shell as sign-in instead of the older isolated card treatment.
+- The page title is `Create your account`, with the sign-in switch link in the subtitle line.
+- Desktop keeps the marketing rail on the left; mobile collapses to a single stacked auth flow.
+- The main panel still needs to handle the email expansion and verification states without losing hierarchy.
 
 ---
 
-## Files
+## Recent Improvements
 
-| File | Purpose | Lines |
-|------|---------|-------|
-| `src/routes/signup.tsx` | Route definition | 23 |
-| `src/components/auth/AuthPageLayout.tsx` | Shared layout (THE PROBLEM) | 106 |
-| `src/components/auth/SignUpForm.tsx` | Form logic + step indicator | 207 |
-| `src/components/auth/GoogleAuthButton.tsx` | OAuth button | ~50 |
-| `src/components/auth/AuthLink.tsx` | Styled link | ~20 |
-| `src/components/auth/EmailVerificationForm.tsx` | OTP verification | ~100 |
+- The shared auth shell is materially cleaner and more product-like than the previous version.
+- Legal copy is reduced to a compact footer line.
+- The page-level account-switching copy is now in the right place.
+- Theme parity is much better across dark, light, tablet, and mobile captures.
 
 ---
 
-## Problems
+## Remaining Gaps
 
-| # | Problem | Location | Severity |
-|---|---------|----------|----------|
-| 1 | Card wrapper (`card-subtle p-8 shadow-card`) | `AuthPageLayout.tsx:47` | HIGH |
-| 2 | "Back to Home" link with arrow | `AuthPageLayout.tsx:19-44` | HIGH |
-| 3 | Verbose legal text (3 lines) | `AuthPageLayout.tsx:83-100` | MEDIUM |
-| 4 | 6 staggered animations (0.05s - 0.4s delays) | `AuthPageLayout.tsx` throughout | MEDIUM |
-| 5 | Step indicator shown before email expansion | `SignUpForm.tsx:101-111` | MEDIUM |
-| 6 | "Already have account?" placed inside card | `signup.tsx:16-18` | MEDIUM |
-| 7 | Generic subtitle | `signup.tsx:14` | LOW |
-| 8 | Full logo (48px) could be smaller | `AuthPageLayout.tsx:57` | LOW |
-| 9 | `max-w-md` (448px) slightly too wide | `AuthPageLayout.tsx:17` | LOW |
-| 10 | Password hint styling inconsistent | `SignUpForm.tsx:154-156` | LOW |
+| Problem | Area | Severity |
+|---------|------|----------|
+| The email signup and verification states still make the panel taller and busier than sign-in | `SignUpForm` | MEDIUM |
+| Desktop light mode still lets the left marketing rail compete a bit too much with the form | Shared auth shell | MEDIUM |
+| The signup surface is improved, but the panel still has more shell than necessary for a simple auth action | Shared auth shell | LOW |
 
 ---
 
-## Summary
+## Source Files
 
-Same issues as signin, plus:
-- Step indicator visible before user commits to email flow
-- "Already have account?" link in wrong place (should be in subtitle)
+- `src/routes/signup.tsx`
+- `src/components/Auth/AuthPageLayout.tsx`
+- `src/components/Auth/SignUpForm.tsx`
+- `src/components/Auth/EmailVerificationForm.tsx`
