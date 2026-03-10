@@ -66,29 +66,46 @@ function ProjectLayout() {
 
   return (
     <Flex direction="column" className="h-full">
-      <div className="border-b border-ui-border/70 bg-ui-bg/80 px-2 py-1 backdrop-blur-xl sm:px-4 sm:py-3">
-        <div className="rounded-xl border border-ui-border/70 bg-ui-bg-elevated/90 px-2.5 py-2 shadow-soft sm:rounded-2xl sm:px-4 sm:py-3">
-          <Flex align="start" justify="between" gap="sm" className="flex-col sm:flex-row">
+      <div className="border-b border-ui-border/70 bg-ui-bg/78 px-1.5 py-1 backdrop-blur-xl sm:px-4 sm:py-3">
+        <div className="rounded-2xl border border-ui-border-secondary/70 bg-linear-to-r from-ui-bg-elevated via-ui-bg-elevated/96 to-ui-bg-soft/78 px-2 py-1.5 shadow-soft sm:rounded-3xl sm:px-4 sm:py-3">
+          <Flex
+            align="start"
+            justify="between"
+            gap="sm"
+            className="flex-col sm:flex-row sm:items-center"
+          >
             <Flex align="center" gap="sm" className="min-w-0">
               <Flex
                 align="center"
                 justify="center"
-                className="h-8 w-8 shrink-0 rounded-lg bg-brand-subtle text-brand ring-1 ring-brand/15 sm:h-10 sm:w-10 sm:rounded-xl"
+                className="h-9 w-9 shrink-0 rounded-xl bg-brand-subtle text-brand ring-1 ring-brand/15 sm:h-10 sm:w-10"
               >
                 <Typography variant="small" className="font-semibold text-current">
                   {project.key.slice(0, 2).toUpperCase()}
                 </Typography>
               </Flex>
               <div className="min-w-0">
+                <Flex align="center" gap="xs" className="min-w-0">
+                  <Typography
+                    variant="h4"
+                    className="truncate text-base tracking-tight sm:text-2xl"
+                  >
+                    {project.name}
+                  </Typography>
+                  <Badge
+                    variant="outline"
+                    shape="pill"
+                    className="shrink-0 bg-ui-bg-soft/85 text-[10px] uppercase tracking-wider sm:hidden"
+                  >
+                    {project.key}
+                  </Badge>
+                </Flex>
                 <Typography
                   variant="caption"
                   color="tertiary"
-                  className="hidden uppercase tracking-wider sm:block"
+                  className="mt-0.5 hidden uppercase tracking-wider sm:block"
                 >
                   {isScrum ? "Scrum project" : "Kanban project"}
-                </Typography>
-                <Typography variant="h4" className="truncate text-base tracking-tight sm:text-2xl">
-                  {project.name}
                 </Typography>
               </div>
             </Flex>
@@ -102,7 +119,7 @@ function ProjectLayout() {
           </Flex>
 
           <nav
-            className="mt-1 flex gap-1 overflow-x-auto pb-1 scrollbar-subtle sm:mt-2"
+            className="mt-1.5 flex gap-1 overflow-x-auto pb-0.5 pr-1 scrollbar-subtle sm:mt-3 sm:pb-1"
             aria-label="Project sections"
           >
             {tabs.map((tab) => (
@@ -111,11 +128,12 @@ function ProjectLayout() {
                 to={tab.to}
                 params={tab.params}
                 className={cn(
-                  "rounded-lg px-2 py-1.5 text-xs font-medium whitespace-nowrap transition-default sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm",
-                  "text-ui-text-secondary hover:bg-ui-bg-hover hover:text-ui-text",
+                  "shrink-0 rounded-full border border-transparent bg-ui-bg-soft/68 px-2.5 py-1.25 text-xs font-medium whitespace-nowrap transition-default sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm",
+                  "text-ui-text-secondary hover:border-ui-border/60 hover:bg-ui-bg-hover hover:text-ui-text",
                 )}
                 activeProps={{
-                  className: "bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border/70",
+                  className:
+                    "border-ui-border-secondary/70 bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border/70",
                 }}
               >
                 {tab.name}

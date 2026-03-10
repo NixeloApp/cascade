@@ -37,17 +37,17 @@ export function CalendarHeaderDateChevrons(): React.ReactElement {
   }
 
   return (
-    <Flex align="center" gap="sm">
+    <Flex align="center" gap="xs" className="flex-wrap sm:flex-nowrap sm:gap-sm">
       <Button
         variant="outline"
-        className="h-7 px-3 text-xs font-medium border-ui-border hover:bg-ui-bg-hover hover:border-ui-border-secondary transition-colors duration-default"
+        className="h-7 rounded-full px-2.5 text-xs font-medium border-ui-border hover:bg-ui-bg-hover hover:border-ui-border-secondary transition-colors duration-default sm:px-3"
         onClick={() => setDate(new Date())}
       >
         Today
       </Button>
       <Button
         variant="outline"
-        className="h-7 w-7 p-1 border-ui-border hover:bg-ui-bg-hover hover:border-ui-border-secondary transition-colors duration-default"
+        className="h-7 w-7 rounded-full p-1 border-ui-border hover:bg-ui-bg-hover hover:border-ui-border-secondary transition-colors duration-default"
         onClick={handleDateBackward}
         aria-label="Previous month"
       >
@@ -55,13 +55,13 @@ export function CalendarHeaderDateChevrons(): React.ReactElement {
       </Button>
       <time
         dateTime={date.toISOString().split("T")[0]}
-        className="min-w-35 text-center font-medium text-ui-text"
+        className="min-w-28 text-center text-sm font-medium text-ui-text sm:min-w-35 sm:text-base"
       >
         {format(date, "MMMM d, yyyy")}
       </time>
       <Button
         variant="outline"
-        className="h-7 w-7 p-1 border-ui-border hover:bg-ui-bg-hover hover:border-ui-border-secondary transition-colors duration-default"
+        className="h-7 w-7 rounded-full p-1 border-ui-border hover:bg-ui-bg-hover hover:border-ui-border-secondary transition-colors duration-default"
         onClick={handleDateForward}
         aria-label="Next month"
       >

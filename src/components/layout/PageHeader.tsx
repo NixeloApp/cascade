@@ -37,7 +37,7 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        "mb-6 rounded-2xl border border-ui-border/45 bg-linear-to-r from-ui-bg-elevated/80 via-ui-bg-elevated/45 to-transparent px-5 py-4 shadow-soft sm:mb-7 sm:px-6",
+        "mb-5 rounded-3xl border border-ui-border-secondary/70 bg-linear-to-r from-ui-bg-elevated via-ui-bg-elevated/92 to-ui-bg-soft/72 px-4 py-4 shadow-soft sm:mb-6 sm:px-5 sm:py-5",
         className,
       )}
     >
@@ -69,7 +69,7 @@ export function PageHeader({
         className="sm:flex-row sm:items-end"
       >
         <Stack gap="xs" className="min-w-0">
-          <Flex align="center" gap="sm" className="mb-1">
+          <Flex align="center" gap="sm" className="mb-0.5">
             <span className="h-2 w-2 rounded-full bg-brand shadow-brand-halo" />
             <Typography
               variant="caption"
@@ -78,11 +78,11 @@ export function PageHeader({
               Workspace view
             </Typography>
           </Flex>
-          <Typography variant="h2" className="text-3xl lg:text-4xl">
+          <Typography variant="h2" className="text-2xl sm:text-3xl lg:text-4xl">
             {title}
           </Typography>
           {description && (
-            <Typography variant="muted" className="max-w-3xl text-sm sm:text-base">
+            <Typography variant="muted" className="max-w-3xl text-sm">
               {description}
             </Typography>
           )}

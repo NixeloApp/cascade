@@ -1,7 +1,7 @@
 /** Calendar header container with date and action buttons. */
 export function CalendarHeader({ children }: { children: React.ReactNode }): React.ReactElement {
   return (
-    <div className="flex lg:flex-row flex-col lg:items-center justify-between p-4 gap-4 border-b border-ui-border bg-ui-bg">
+    <div className="flex flex-col justify-between gap-3 border-b border-ui-border bg-ui-bg px-3 py-3 sm:px-4 sm:py-4 lg:flex-row lg:items-center lg:gap-4">
       {children}
     </div>
   );

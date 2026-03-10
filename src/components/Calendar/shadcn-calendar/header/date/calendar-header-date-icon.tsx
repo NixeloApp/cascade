@@ -8,8 +8,12 @@ export function CalendarHeaderDateIcon(): React.ReactElement {
   const { calendarIconIsToday, date: calendarDate } = useCalendarContext();
   const date = calendarIconIsToday ? new Date() : calendarDate;
   return (
-    <Flex direction="column" align="start" className="size-14 overflow-hidden rounded-lg border">
-      <Flex align="center" justify="center" className="h-6 w-full bg-brand">
+    <Flex
+      direction="column"
+      align="start"
+      className="size-12 overflow-hidden rounded-lg border sm:size-14"
+    >
+      <Flex align="center" justify="center" className="h-5 w-full bg-brand sm:h-6">
         <Typography
           variant="small"
           className="text-center text-xs font-semibold text-brand-foreground uppercase"
@@ -18,7 +22,7 @@ export function CalendarHeaderDateIcon(): React.ReactElement {
         </Typography>
       </Flex>
       <Flex align="center" justify="center" className="w-full flex-1">
-        <Typography variant="p" className="text-lg font-bold">
+        <Typography variant="p" className="text-base font-bold sm:text-lg">
           {format(date, "dd")}
         </Typography>
       </Flex>

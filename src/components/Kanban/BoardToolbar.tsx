@@ -50,12 +50,13 @@ export function BoardToolbar({
     <Flex
       align="center"
       justify="between"
-      gap="sm"
-      className="mx-2 mt-2 rounded-xl border border-ui-border/70 bg-ui-bg-elevated px-2.5 py-2 shadow-soft sm:mx-6 sm:mt-4 sm:rounded-2xl sm:px-5 sm:pb-3 sm:pt-4"
+      gap="xs"
+      className="mx-2 mt-1.5 rounded-lg border border-ui-border/70 bg-ui-bg-elevated px-2 py-1.5 shadow-soft sm:mx-6 sm:mt-4 sm:gap-sm sm:rounded-2xl sm:px-5 sm:pb-3 sm:pt-4"
     >
       <div>
-        <Typography variant="h2" className="text-sm font-semibold tracking-tight sm:text-lg">
-          {sprintId ? "Sprint Board" : "Kanban Board"}
+        <Typography variant="h2" className="text-xs font-semibold tracking-tight sm:text-lg">
+          <span className="sm:hidden">{sprintId ? "Sprint" : "Board"}</span>
+          <span className="hidden sm:inline">{sprintId ? "Sprint Board" : "Kanban Board"}</span>
         </Typography>
         <Typography variant="caption" className="mt-1 hidden sm:block">
           Move work between stages, keep limits visible, and start new items from the right column.
@@ -130,7 +131,7 @@ export function BoardToolbar({
             size="sm"
             onClick={onToggleSelectionMode}
             aria-label={selectionMode ? "Exit selection mode" : "Enable selection mode"}
-            className="px-2.5 sm:px-3"
+            className="h-8 rounded-lg px-2 text-xs sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm"
           >
             <span className="hidden sm:inline">
               {selectionMode ? "Exit Selection" : "Select Multiple"}

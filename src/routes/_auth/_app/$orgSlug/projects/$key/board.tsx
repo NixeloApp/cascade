@@ -109,12 +109,12 @@ function BoardPage() {
 
   return (
     <Flex direction="column" className="h-full">
-      <div className="px-2 pt-2 sm:px-4 sm:pt-3">
-        <div className="rounded-xl border border-ui-border/70 bg-ui-bg-elevated/90 px-2.5 py-2 shadow-soft sm:rounded-2xl sm:px-4 sm:py-3">
+      <div className="px-2 pt-1.5 sm:px-4 sm:pt-3">
+        <div className="rounded-lg border border-ui-border/70 bg-ui-bg-elevated/90 px-2 py-1.5 shadow-soft sm:rounded-2xl sm:px-4 sm:py-3">
           <Flex
             align="center"
             justify="between"
-            gap="sm"
+            gap="xs"
             className="flex-row flex-wrap sm:flex-nowrap sm:gap-4"
           >
             <Flex align="center" gap="sm" wrap className="min-w-0">
@@ -126,14 +126,14 @@ function BoardPage() {
                   Filter issues, switch sprints, and move work without leaving the board.
                 </Typography>
               </div>
-              <Badge variant="neutral" size="md">
+              <Badge variant="neutral" size="sm" className="sm:text-xs">
                 {project.key}
               </Badge>
               <Badge variant="accent" size="md" className="hidden sm:inline-flex">
                 {project.boardType}
               </Badge>
             </Flex>
-            <Flex align="center" gap="sm" wrap className="justify-end sm:ml-auto">
+            <Flex align="center" gap="xs" wrap className="justify-end sm:ml-auto sm:gap-sm">
               {/* Sprint Progress & Workload */}
               {project.boardType === "scrum" && effectiveSprintId && (
                 <>

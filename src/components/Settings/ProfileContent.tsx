@@ -68,9 +68,9 @@ export function UserStatsCards({ stats }: { stats: UserStats }) {
           key={item.key}
           padding="sm"
           variant="outline"
-          className="relative overflow-hidden text-center"
+          className="relative overflow-hidden text-center border-ui-border-secondary/75 bg-ui-bg/94"
         >
-          <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-brand/70" />
+          <div className="absolute inset-x-4 top-0 h-px rounded-full bg-brand/60" />
           <Stack gap="xs" align="center" className="relative">
             <Typography variant="h2" color="brand">
               {stats[item.key]}
@@ -118,7 +118,7 @@ export function AccountInfo({
     <Stack
       gap="md"
       className={cn(
-        "rounded-container border border-ui-border-secondary/70 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft/80 p-4 shadow-soft",
+        "rounded-container border border-ui-border-secondary/70 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/68 p-4 shadow-soft",
         className,
       )}
     >
@@ -321,15 +321,15 @@ function LoadedProfileContent({
 
   return (
     <Card
-      variant="default"
+      variant="outline"
       padding="none"
-      className="overflow-hidden border-ui-border-secondary/80"
+      className="overflow-hidden border-ui-border-secondary/80 bg-linear-to-b from-ui-bg via-ui-bg-elevated/98 to-ui-bg-soft/78 shadow-card"
     >
       {isOwnProfile && (
         <div className="relative group">
           <div
             className={cn(
-              "h-24 w-full bg-linear-to-r from-brand/14 via-brand-subtle/75 to-accent/12 sm:h-28",
+              "h-14 w-full border-b border-ui-border-secondary/55 bg-linear-to-r from-brand/22 via-brand-subtle/90 to-accent/16 sm:h-18",
               coverImageUrl && "bg-none",
             )}
           >
@@ -340,7 +340,7 @@ function LoadedProfileContent({
           <Button
             variant="ghost"
             size="sm"
-            className="absolute bottom-2 right-2 h-8 px-3 rounded-full bg-ui-bg/80 border border-ui-border shadow-sm backdrop-blur-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:focus:opacity-100 transition-opacity"
+            className="absolute bottom-2 right-2 h-8 rounded-full border border-ui-border bg-ui-bg/82 px-3 shadow-sm backdrop-blur-sm transition-opacity opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:focus:opacity-100"
             onClick={onCoverImageClick}
           >
             <ImageIcon className="h-4 w-4 mr-2" />
@@ -353,14 +353,17 @@ function LoadedProfileContent({
         <Stack gap="md">
           <Grid
             cols={1}
-            colsLg={showAccountInfo ? 3 : 1}
+            colsLg={showAccountInfo ? 5 : 1}
             gap="md"
-            className={cn(isOwnProfile && "-mt-8 sm:-mt-10")}
+            className={cn(isOwnProfile && "-mt-4 sm:-mt-6")}
           >
             <Card
-              variant="elevated"
+              variant="default"
               padding="lg"
-              className={cn("border-ui-border-secondary/70", showAccountInfo && "lg:col-span-2")}
+              className={cn(
+                "border-ui-border-secondary/75 bg-ui-bg shadow-soft",
+                showAccountInfo && "lg:col-span-3",
+              )}
             >
               <ProfileHeader
                 user={viewUser}
@@ -384,7 +387,7 @@ function LoadedProfileContent({
             {showAccountInfo && (
               <AccountInfo
                 user={viewUser as ProfileUser & { _creationTime: number }}
-                className="h-full lg:mt-6"
+                className="h-full lg:col-span-2"
               />
             )}
           </Grid>
@@ -405,7 +408,7 @@ function LoadedProfileContent({
 
           {userStats && <UserStatsCards stats={userStats} />}
 
-          <Card padding="lg" variant="soft">
+          <Card padding="lg" variant="outline" className="border-ui-border-secondary/75 bg-ui-bg">
             <Stack gap="md">
               <Typography variant="h5">Recent Activity</Typography>
               <UserActivityFeed userId={viewUser._id} limit={10} />

@@ -17,6 +17,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Metadata, MetadataItem } from "@/components/ui/Metadata";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthReady } from "@/hooks/useConvexHelpers";
@@ -79,7 +80,7 @@ function getSingleProjectHighlights(issueCount: number) {
 
 function SingleProjectHighlights({ issueCount }: { issueCount: number }) {
   return (
-    <Grid cols={1} colsSm={3} gap="md">
+    <Stack gap="md">
       {getSingleProjectHighlights(issueCount).map((item) => (
         <Card key={item.title} variant="soft" padding="md" className="h-full">
           <Flex direction="column" gap="xs">
@@ -93,7 +94,19 @@ function SingleProjectHighlights({ issueCount }: { issueCount: number }) {
           </Flex>
         </Card>
       ))}
-    </Grid>
+      <Card variant="default" padding="lg">
+        <Flex direction="column" gap="sm">
+          <Typography variant="caption" className="uppercase tracking-widest">
+            Workspace rhythm
+          </Typography>
+          <Typography variant="h4">Keep planning and execution in one lane</Typography>
+          <Typography variant="small" color="secondary">
+            Use this project as the anchor for issue triage, document context, calendar planning,
+            and delivery updates instead of splitting those flows across separate tools.
+          </Typography>
+        </Flex>
+      </Card>
+    </Stack>
   );
 }
 
@@ -112,7 +125,7 @@ function ProjectCard({
         hoverable
         padding={hasSingleProject ? "xl" : "lg"}
         variant={hasSingleProject ? "elevated" : "default"}
-        className="h-full overflow-hidden"
+        className={hasSingleProject ? "self-start overflow-hidden" : "h-full overflow-hidden"}
       >
         <Flex direction="column" gap={hasSingleProject ? "lg" : "md"}>
           {hasSingleProject && (
@@ -160,8 +173,6 @@ function ProjectCard({
             </Typography>
           )}
 
-          {hasSingleProject && <SingleProjectHighlights issueCount={project.issueCount || 0} />}
-
           <Metadata size="sm">
             <MetadataItem>{project.issueCount || 0} issues</MetadataItem>
             <MetadataItem>{project.boardType === "kanban" ? "Kanban" : "Scrum"}</MetadataItem>
@@ -198,6 +209,7 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
   }
 
   const hasSingleProject = projects.length === 1;
+  const featuredProject = hasSingleProject ? projects[0] : null;
 
   return (
     <Flex direction="column" gap="lg">
@@ -229,13 +241,22 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
             ))}
           </Grid>
         </Flex>
+      ) : hasSingleProject && featuredProject ? (
+        <Grid cols={1} colsLg={5} gap="xl" className="max-w-6xl items-start">
+          <div className="lg:col-span-3">
+            <ProjectCard
+              key={featuredProject._id}
+              project={featuredProject}
+              hasSingleProject
+              orgSlug={orgSlug}
+            />
+          </div>
+          <div className="lg:col-span-2">
+            <SingleProjectHighlights issueCount={featuredProject.issueCount || 0} />
+          </div>
+        </Grid>
       ) : (
-        <Grid
-          cols={1}
-          colsLg={hasSingleProject ? 1 : 2}
-          gap="xl"
-          className={hasSingleProject ? "max-w-4xl" : ""}
-        >
+        <Grid cols={1} colsLg={2} gap="xl">
           {projects.map((project) => (
             <ProjectCard
               key={project._id}

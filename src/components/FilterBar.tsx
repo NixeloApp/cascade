@@ -106,7 +106,7 @@ function FilterDropdown<T>({
           variant="ghost"
           size="sm"
           className={cn(
-            "h-9 rounded-xl border border-transparent px-3",
+            "h-8 rounded-lg border border-transparent px-2.5 text-xs sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm",
             isActive
               ? "border-brand/10 bg-brand-subtle text-brand"
               : "hover:border-ui-border/60 hover:bg-ui-bg-hover/80",
@@ -170,7 +170,7 @@ function DateRangeDropdown({ label, value, onChange }: DateRangeDropdownProps) {
           variant="ghost"
           size="sm"
           className={cn(
-            "h-9 rounded-xl border border-transparent px-3",
+            "h-8 rounded-lg border border-transparent px-2.5 text-xs sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm",
             isActive
               ? "border-brand/10 bg-brand-subtle text-brand"
               : "hover:border-ui-border/60 hover:bg-ui-bg-hover/80",
@@ -228,7 +228,7 @@ function SavedFiltersDropdown({
         <Button
           variant="ghost"
           size="sm"
-          className="h-9 rounded-xl border border-transparent px-3 hover:border-ui-border/60 hover:bg-ui-bg-hover/80"
+          className="h-8 rounded-lg border border-transparent px-2.5 text-xs hover:border-ui-border/60 hover:bg-ui-bg-hover/80 sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm"
         >
           Saved Filters ({savedFilters.length})
           <ChevronDown className="ml-1 w-4 h-4" />
@@ -412,28 +412,28 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
   };
 
   return (
-    <div className="px-2 pb-2 pt-2 sm:px-4 sm:pt-3">
-      <div className="overflow-x-auto">
+    <div className="px-2 pb-1.5 pt-1.5 sm:px-4 sm:pb-2 sm:pt-3">
+      <div className="overflow-x-auto pb-1">
         <Flex
           align="center"
-          gap="sm"
-          className="min-w-max rounded-xl border border-ui-border/70 bg-ui-bg-elevated/90 px-1.5 py-1.5 shadow-soft sm:rounded-2xl sm:px-2 sm:py-2"
+          gap="xs"
+          className="min-w-max rounded-lg border border-ui-border/70 bg-ui-bg-elevated/92 px-1 py-1 shadow-soft sm:gap-sm sm:rounded-2xl sm:px-2 sm:py-2"
         >
           {/* Search Input */}
           <Flex align="center" className="relative">
             <Search className="absolute left-2 w-4 h-4 text-ui-text-tertiary pointer-events-none" />
             <Input
               type="text"
-              placeholder="Search or use status:done priority:high"
+              placeholder="Search issues"
               value={filters.query ?? ""}
               onChange={handleSearchChange}
-              className="h-8 w-32 rounded-lg border border-ui-border/60 bg-ui-bg-soft pl-8 pr-3 text-sm sm:h-9 sm:w-64 sm:rounded-xl"
+              className="h-8 w-28 rounded-md border border-ui-border/60 bg-ui-bg-soft pl-8 pr-2.5 text-xs sm:h-9 sm:w-64 sm:rounded-xl sm:pr-3 sm:text-sm"
               aria-label="Search issues"
             />
           </Flex>
 
           {/* Divider */}
-          <div className="h-6 w-px bg-ui-border/70" />
+          <div className="h-5 w-px bg-ui-border/70 sm:h-6" />
 
           {/* Type Filter */}
           <FilterDropdown
@@ -534,11 +534,16 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
           />
 
           {/* Divider */}
-          {hasActiveFilters && <div className="h-6 w-px bg-ui-border/70" />}
+          {hasActiveFilters && <div className="h-5 w-px bg-ui-border/70 sm:h-6" />}
 
           {/* Clear Filters */}
           {hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={handleClearFilters}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearFilters}
+              className="h-8 rounded-lg px-2.5 text-xs sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm"
+            >
               <X className="w-4 h-4 mr-1" />
               Clear ({activeFilterCount})
             </Button>
@@ -546,7 +551,12 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
 
           {/* Save Filter */}
           {hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={() => setShowSaveDialog(true)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowSaveDialog(true)}
+              className="h-8 rounded-lg px-2.5 text-xs sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm"
+            >
               Save Filter
             </Button>
           )}
@@ -554,7 +564,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
           {/* Saved Filters */}
           {savedFilters && savedFilters.length > 0 && (
             <>
-              <div className="h-6 w-px bg-ui-border/70" />
+              <div className="h-5 w-px bg-ui-border/70 sm:h-6" />
               <SavedFiltersDropdown
                 savedFilters={savedFilters}
                 onLoadFilter={handleLoadFilter}
