@@ -19,10 +19,11 @@ describe("Card", () => {
       const { container } = render(<Card>Content</Card>);
 
       const card = container.firstChild;
-      expect(card).toHaveClass("bg-ui-bg-elevated");
+      expect(card).toHaveClass("bg-linear-to-b");
+      expect(card).toHaveClass("from-ui-bg-elevated");
       expect(card).toHaveClass("rounded-container");
       expect(card).toHaveClass("border");
-      expect(card).toHaveClass("border-ui-border");
+      expect(card).toHaveClass("border-ui-border-secondary/80");
     });
 
     it("should not have hover styles by default", () => {
