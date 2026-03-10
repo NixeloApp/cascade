@@ -36,45 +36,63 @@ interface ProjectListItem {
   name: string;
   description?: string;
   issueCount?: number;
-  boardType: string;
+  boardType: "kanban" | "scrum";
+}
+
+const EMPTY_PROJECT_STATE_TIPS = [
+  {
+    description:
+      "Set up one project per initiative so priorities, docs, and delivery work stay in the same place.",
+    title: "Start with structure",
+  },
+  {
+    description:
+      "Use projects to group issues by team, product area, or client engagement instead of scattering work across boards.",
+    title: "Keep ownership visible",
+  },
+  {
+    description:
+      "Once the first project exists, your backlog, roadmap, calendar, and analytics views become much easier to navigate.",
+    title: "Build momentum fast",
+  },
+] as const;
+
+function getSingleProjectHighlights(issueCount: number) {
+  return [
+    {
+      description: "Review backlog, move work across the board, and keep delivery visible.",
+      title: "Delivery",
+      value: `${issueCount} active issues`,
+    },
+    {
+      description: "One workspace entry point for planning, execution, and timing.",
+      title: "Views",
+      value: "Board, roadmap, calendar",
+    },
+    {
+      description: "Continue triage, create issues, or jump into project settings.",
+      title: "Next step",
+      value: "Open the board",
+    },
+  ] as const;
 }
 
 function SingleProjectHighlights({ issueCount }: { issueCount: number }) {
   return (
     <Grid cols={1} colsSm={3} gap="md">
-      <Card variant="soft" padding="md" className="h-full">
-        <Flex direction="column" gap="xs">
-          <Typography variant="caption" className="uppercase tracking-widest">
-            Delivery
-          </Typography>
-          <Typography variant="h4">{issueCount} active issues</Typography>
-          <Typography variant="small" color="secondary">
-            Review backlog, move work across the board, and keep delivery visible.
-          </Typography>
-        </Flex>
-      </Card>
-      <Card variant="soft" padding="md" className="h-full">
-        <Flex direction="column" gap="xs">
-          <Typography variant="caption" className="uppercase tracking-widest">
-            Views
-          </Typography>
-          <Typography variant="h4">Board, roadmap, calendar</Typography>
-          <Typography variant="small" color="secondary">
-            One workspace entry point for planning, execution, and timing.
-          </Typography>
-        </Flex>
-      </Card>
-      <Card variant="soft" padding="md" className="h-full">
-        <Flex direction="column" gap="xs">
-          <Typography variant="caption" className="uppercase tracking-widest">
-            Next step
-          </Typography>
-          <Typography variant="h4">Open the board</Typography>
-          <Typography variant="small" color="secondary">
-            Continue triage, create issues, or jump into project settings.
-          </Typography>
-        </Flex>
-      </Card>
+      {getSingleProjectHighlights(issueCount).map((item) => (
+        <Card key={item.title} variant="soft" padding="md" className="h-full">
+          <Flex direction="column" gap="xs">
+            <Typography variant="caption" className="uppercase tracking-widest">
+              {item.title}
+            </Typography>
+            <Typography variant="h4">{item.value}</Typography>
+            <Typography variant="small" color="secondary">
+              {item.description}
+            </Typography>
+          </Flex>
+        </Card>
+      ))}
     </Grid>
   );
 }
@@ -199,33 +217,16 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
           />
 
           <Grid cols={1} colsLg={3} gap="lg" className="w-full">
-            <Card variant="soft" padding="lg">
-              <Flex direction="column" gap="sm">
-                <Typography variant="label">Start with structure</Typography>
-                <Typography variant="small" color="secondary">
-                  Set up one project per initiative so priorities, docs, and delivery work stay in
-                  the same place.
-                </Typography>
-              </Flex>
-            </Card>
-            <Card variant="soft" padding="lg">
-              <Flex direction="column" gap="sm">
-                <Typography variant="label">Keep ownership visible</Typography>
-                <Typography variant="small" color="secondary">
-                  Use projects to group issues by team, product area, or client engagement instead
-                  of scattering work across boards.
-                </Typography>
-              </Flex>
-            </Card>
-            <Card variant="soft" padding="lg">
-              <Flex direction="column" gap="sm">
-                <Typography variant="label">Build momentum fast</Typography>
-                <Typography variant="small" color="secondary">
-                  Once the first project exists, your backlog, roadmap, calendar, and analytics
-                  views become much easier to navigate.
-                </Typography>
-              </Flex>
-            </Card>
+            {EMPTY_PROJECT_STATE_TIPS.map((tip) => (
+              <Card key={tip.title} variant="soft" padding="lg">
+                <Flex direction="column" gap="sm">
+                  <Typography variant="label">{tip.title}</Typography>
+                  <Typography variant="small" color="secondary">
+                    {tip.description}
+                  </Typography>
+                </Flex>
+              </Card>
+            ))}
           </Grid>
         </Flex>
       ) : (

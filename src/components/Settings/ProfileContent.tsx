@@ -34,6 +34,17 @@ interface UserStats {
   comments: number;
 }
 
+const USER_STATS_ITEMS: ReadonlyArray<{
+  key: keyof UserStats;
+  label: string;
+}> = [
+  { key: "projects", label: "Workspaces" },
+  { key: "issuesCreated", label: "Created" },
+  { key: "issuesAssigned", label: "Assigned" },
+  { key: "issuesCompleted", label: "Completed" },
+  { key: "comments", label: "Comments" },
+];
+
 // User type that matches what the queries return
 type ProfileUser = {
   _id: Id<"users">;
@@ -52,61 +63,24 @@ type ProfileUser = {
 export function UserStatsCards({ stats }: { stats: UserStats }) {
   return (
     <Grid cols={2} colsMd={3} colsLg={5} gap="sm">
-      <Card padding="sm" variant="outline" className="relative overflow-hidden text-center">
-        <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-brand/70" />
-        <Stack gap="xs" align="center" className="relative">
-          <Typography variant="h2" color="brand">
-            {stats.projects}
-          </Typography>
-          <Typography variant="caption" className="uppercase tracking-widest">
-            Workspaces
-          </Typography>
-        </Stack>
-      </Card>
-      <Card padding="sm" variant="outline" className="relative overflow-hidden text-center">
-        <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-brand/70" />
-        <Stack gap="xs" align="center" className="relative">
-          <Typography variant="h2" color="brand">
-            {stats.issuesCreated}
-          </Typography>
-          <Typography variant="caption" className="uppercase tracking-widest">
-            Created
-          </Typography>
-        </Stack>
-      </Card>
-      <Card padding="sm" variant="outline" className="relative overflow-hidden text-center">
-        <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-brand/70" />
-        <Stack gap="xs" align="center" className="relative">
-          <Typography variant="h2" color="brand">
-            {stats.issuesAssigned}
-          </Typography>
-          <Typography variant="caption" className="uppercase tracking-widest">
-            Assigned
-          </Typography>
-        </Stack>
-      </Card>
-      <Card padding="sm" variant="outline" className="relative overflow-hidden text-center">
-        <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-brand/70" />
-        <Stack gap="xs" align="center" className="relative">
-          <Typography variant="h2" color="brand">
-            {stats.issuesCompleted}
-          </Typography>
-          <Typography variant="caption" className="uppercase tracking-widest">
-            Completed
-          </Typography>
-        </Stack>
-      </Card>
-      <Card padding="sm" variant="outline" className="relative overflow-hidden text-center">
-        <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-brand/70" />
-        <Stack gap="xs" align="center" className="relative">
-          <Typography variant="h2" color="brand">
-            {stats.comments}
-          </Typography>
-          <Typography variant="caption" className="uppercase tracking-widest">
-            Comments
-          </Typography>
-        </Stack>
-      </Card>
+      {USER_STATS_ITEMS.map((item) => (
+        <Card
+          key={item.key}
+          padding="sm"
+          variant="outline"
+          className="relative overflow-hidden text-center"
+        >
+          <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-brand/70" />
+          <Stack gap="xs" align="center" className="relative">
+            <Typography variant="h2" color="brand">
+              {stats[item.key]}
+            </Typography>
+            <Typography variant="caption" className="uppercase tracking-widest">
+              {item.label}
+            </Typography>
+          </Stack>
+        </Card>
+      ))}
     </Grid>
   );
 }
@@ -121,6 +95,25 @@ export function AccountInfo({
   user: ProfileUser & { _creationTime: number };
   className?: string;
 }) {
+  const rows = [
+    {
+      label: "User ID:",
+      value: (
+        <Typography variant="mono" className="max-w-40 break-all text-right">
+          {user._id}
+        </Typography>
+      ),
+    },
+    {
+      label: "Member Since:",
+      value: <Typography variant="small">{formatDate(user._creationTime)}</Typography>,
+    },
+    {
+      label: "Email Verified:",
+      value: <Typography variant="small">{user.emailVerificationTime ? "Yes" : "No"}</Typography>,
+    },
+  ];
+
   return (
     <Stack
       gap="md"
@@ -131,20 +124,12 @@ export function AccountInfo({
     >
       <Typography variant="h5">Account Information</Typography>
       <Stack gap="sm">
-        <Flex justify="between" gap="sm">
-          <Typography variant="caption">User ID:</Typography>
-          <Typography variant="mono" className="max-w-40 break-all text-right">
-            {user._id}
-          </Typography>
-        </Flex>
-        <Flex justify="between" gap="sm">
-          <Typography variant="caption">Member Since:</Typography>
-          <Typography variant="small">{formatDate(user._creationTime)}</Typography>
-        </Flex>
-        <Flex justify="between">
-          <Typography variant="caption">Email Verified:</Typography>
-          <Typography variant="small">{user.emailVerificationTime ? "Yes" : "No"}</Typography>
-        </Flex>
+        {rows.map((row) => (
+          <Flex key={row.label} justify="between" gap="sm">
+            <Typography variant="caption">{row.label}</Typography>
+            {row.value}
+          </Flex>
+        ))}
       </Stack>
     </Stack>
   );

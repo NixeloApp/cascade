@@ -41,6 +41,36 @@ export function ProjectSettings({
   isOwner,
   orgSlug,
 }: ProjectSettingsProps) {
+  const sections = [
+    <GeneralSettings
+      key="general"
+      projectId={projectId}
+      name={name}
+      projectKey={projectKey}
+      description={description}
+    />,
+    <MemberManagement
+      key="members"
+      projectId={projectId}
+      members={members}
+      createdBy={createdBy}
+      ownerId={ownerId}
+    />,
+    <WorkflowSettings key="workflow" projectId={projectId} workflowStates={workflowStates} />,
+    ...(isOwner
+      ? [
+          <DangerZone
+            key="danger"
+            projectId={projectId}
+            projectName={name}
+            projectKey={projectKey}
+            isOwner={isOwner}
+            orgSlug={orgSlug}
+          />,
+        ]
+      : []),
+  ];
+
   return (
     <Card padding="lg" className="max-w-3xl mx-auto">
       <CardHeader
@@ -48,33 +78,7 @@ export function ProjectSettings({
         description="Manage your project configuration and team"
       />
       <CardBody>
-        <Stack gap="xl">
-          <GeneralSettings
-            projectId={projectId}
-            name={name}
-            projectKey={projectKey}
-            description={description}
-          />
-
-          <MemberManagement
-            projectId={projectId}
-            members={members}
-            createdBy={createdBy}
-            ownerId={ownerId}
-          />
-
-          <WorkflowSettings projectId={projectId} workflowStates={workflowStates} />
-
-          {isOwner && (
-            <DangerZone
-              projectId={projectId}
-              projectName={name}
-              projectKey={projectKey}
-              isOwner={isOwner}
-              orgSlug={orgSlug}
-            />
-          )}
-        </Stack>
+        <Stack gap="xl">{sections}</Stack>
       </CardBody>
     </Card>
   );
