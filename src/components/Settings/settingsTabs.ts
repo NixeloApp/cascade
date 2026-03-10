@@ -37,6 +37,7 @@ interface SettingsTabVisibilityOptions {
   showDevTools: boolean;
 }
 
+/** Returns true when the provided value matches a supported settings tab key. */
 export function isSettingsTabValue(value: unknown): value is SettingsTabValue {
   return (
     typeof value === "string" &&
@@ -44,6 +45,7 @@ export function isSettingsTabValue(value: unknown): value is SettingsTabValue {
   );
 }
 
+/** Filters the canonical tab list down to the tabs that should be visible for the user. */
 export function getVisibleSettingsTabs(options: SettingsTabVisibilityOptions) {
   return SETTINGS_TABS.filter((tab) => {
     if (tab.visibility === "all") {
@@ -58,6 +60,7 @@ export function getVisibleSettingsTabs(options: SettingsTabVisibilityOptions) {
   });
 }
 
+/** Resolves a requested tab to a visible tab, falling back to the first allowed entry. */
 export function resolveSettingsTab(
   requestedTab: SettingsTabValue,
   visibleTabs: readonly SettingsTabDefinition[],

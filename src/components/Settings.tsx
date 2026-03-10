@@ -101,17 +101,9 @@ export function Settings({ activeTab: requestedTab, onTabChange }: SettingsProps
       }}
       className="w-full"
     >
-      <TabsList
-        size="compact"
-        className="mb-4 grid w-full grid-cols-3 justify-start gap-1 overflow-visible p-1 sm:mb-6 sm:flex sm:flex-wrap sm:gap-1.5 lg:flex-nowrap"
-      >
+      <TabsList size="compact" layout="settings">
         {visibleTabs.map((tab) => (
-          <TabsTrigger
-            key={tab.value}
-            value={tab.value}
-            size="compact"
-            className="w-full sm:w-auto"
-          >
+          <TabsTrigger key={tab.value} value={tab.value} size="compact" width="responsive">
             {tab.label}
           </TabsTrigger>
         ))}

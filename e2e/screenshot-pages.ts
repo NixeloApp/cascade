@@ -459,7 +459,8 @@ async function waitForProjectsReady(page: Page): Promise<void> {
 
 async function waitForIssueDetailReady(page: Page): Promise<void> {
   await page
-    .locator("[data-testid='issue-detail-layout'], [data-testid='issue-detail-viewer']")
+    .getByTestId(TEST_IDS.ISSUE.DESCRIPTION_CONTENT)
+    .or(page.getByTestId(TEST_IDS.ISSUE.DESCRIPTION_EDITOR))
     .first()
     .waitFor({ state: "visible", timeout: 12000 })
     .catch(() => {});

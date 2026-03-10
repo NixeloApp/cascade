@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { Skeleton, SkeletonText } from "@/components/ui/Skeleton";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
@@ -339,8 +340,8 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
                         </Card>
                       </Flex>
 
-                      <Flex gap="md" className="flex-col lg:flex-row">
-                        <Card variant="soft" padding="md" className="flex-1">
+                      <Grid cols={1} colsLg={2} gap="md">
+                        <Card variant="soft" padding="md" className="h-full">
                           <Stack gap="xs">
                             <Typography variant="caption" className="uppercase tracking-widest">
                               Suggested outline
@@ -350,7 +351,7 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
                             </Typography>
                           </Stack>
                         </Card>
-                        <Card variant="soft" padding="md" className="flex-1">
+                        <Card variant="soft" padding="md" className="h-full">
                           <Stack gap="xs">
                             <Typography variant="caption" className="uppercase tracking-widest">
                               Quick actions
@@ -361,7 +362,7 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
                             </Typography>
                           </Stack>
                         </Card>
-                      </Flex>
+                      </Grid>
                     </Stack>
                   </Card>
                 )}

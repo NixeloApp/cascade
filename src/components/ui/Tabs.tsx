@@ -25,10 +25,16 @@ const tabsListVariants = cva("inline-flex max-w-full text-ui-text-secondary", {
       default: "",
       compact: "",
     },
+    layout: {
+      default: "",
+      settings:
+        "mb-4 grid w-full grid-cols-3 justify-start gap-1 overflow-visible p-1 sm:mb-6 sm:flex sm:flex-wrap sm:gap-1.5 lg:flex-nowrap",
+    },
   },
   defaultVariants: {
     variant: "pill",
     size: "default",
+    layout: "default",
   },
 });
 
@@ -37,10 +43,10 @@ interface TabsListProps
     VariantProps<typeof tabsListVariants> {}
 
 const TabsList = React.forwardRef<React.ElementRef<typeof TabsPrimitive.List>, TabsListProps>(
-  ({ className, variant, ...props }, ref) => (
+  ({ className, layout, size, variant, ...props }, ref) => (
     <TabsPrimitive.List
       ref={ref}
-      className={cn(tabsListVariants({ variant }), className)}
+      className={cn(tabsListVariants({ layout, size, variant }), className)}
       {...props}
     />
   ),
@@ -62,10 +68,15 @@ const tabsTriggerVariants = cva(
         default: "",
         compact: "rounded-lg px-2 py-1.5 text-xs sm:px-2.5 sm:py-1.5",
       },
+      width: {
+        default: "",
+        responsive: "w-full sm:w-auto",
+      },
     },
     defaultVariants: {
       variant: "pill",
       size: "default",
+      width: "default",
     },
   },
 );
@@ -77,10 +88,10 @@ interface TabsTriggerProps
 const TabsTrigger = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
   TabsTriggerProps
->(({ className, variant, ...props }, ref) => (
+>(({ className, size, variant, width, ...props }, ref) => (
   <TabsPrimitive.Trigger
     ref={ref}
-    className={cn(tabsTriggerVariants({ variant }), className)}
+    className={cn(tabsTriggerVariants({ size, variant, width }), className)}
     {...props}
   />
 ));
