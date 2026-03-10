@@ -405,6 +405,7 @@
  * ============================================================ */
 :root {
   color-scheme: light dark;
+  --calendar-hour-height: 6rem;
 
   /* White / Black */
   --p-white: #FFFFFF;
@@ -569,6 +570,12 @@
   /* Legacy compat */
   --color-light: #ffffff;
   --color-dark: #171717;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --calendar-hour-height: 8rem;
+  }
 }
 
 /* ============================================================

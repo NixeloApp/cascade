@@ -11,9 +11,9 @@ export function CalendarHeaderDateIcon(): React.ReactElement {
     <Flex
       direction="column"
       align="start"
-      className="size-12 overflow-hidden rounded-lg border sm:size-14"
+      className="size-10 overflow-hidden rounded-lg border sm:size-14"
     >
-      <Flex align="center" justify="center" className="h-5 w-full bg-brand sm:h-6">
+      <Flex align="center" justify="center" className="h-4 w-full bg-brand sm:h-6">
         <Typography
           variant="small"
           className="text-center text-xs font-semibold text-brand-foreground uppercase"
@@ -22,7 +22,7 @@ export function CalendarHeaderDateIcon(): React.ReactElement {
         </Typography>
       </Flex>
       <Flex align="center" justify="center" className="w-full flex-1">
-        <Typography variant="p" className="text-base font-bold sm:text-lg">
+        <Typography variant="p" className="text-sm font-bold sm:text-lg">
           {format(date, "dd")}
         </Typography>
       </Flex>

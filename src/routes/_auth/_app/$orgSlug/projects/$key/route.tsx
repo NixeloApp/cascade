@@ -131,8 +131,8 @@ function ProjectLayout() {
 
   return (
     <Flex direction="column" className="h-full">
-      <div className="border-b border-ui-border/70 bg-ui-bg/78 px-1.5 py-0.5 backdrop-blur-xl sm:px-4 sm:py-3">
-        <div className="rounded-2xl border border-ui-border-secondary/70 bg-linear-to-r from-ui-bg-elevated via-ui-bg-elevated/96 to-ui-bg-soft/78 px-1.5 py-1.25 shadow-soft sm:rounded-3xl sm:px-4 sm:py-3">
+      <div className="border-b border-ui-border/70 bg-ui-bg/78 px-1 py-0.5 backdrop-blur-xl sm:px-4 sm:py-3">
+        <div className="rounded-xl border border-ui-border-secondary/70 bg-linear-to-r from-ui-bg-elevated via-ui-bg-elevated/96 to-ui-bg-soft/78 px-1 py-1 shadow-soft sm:rounded-3xl sm:px-4 sm:py-3">
           <Flex
             align="start"
             justify="between"
@@ -143,7 +143,7 @@ function ProjectLayout() {
               <Flex
                 align="center"
                 justify="center"
-                className="h-8 w-8 shrink-0 rounded-xl bg-brand-subtle text-brand ring-1 ring-brand/15 sm:h-10 sm:w-10"
+                className="h-7 w-7 shrink-0 rounded-lg bg-brand-subtle text-brand ring-1 ring-brand/15 sm:h-10 sm:w-10 sm:rounded-xl"
               >
                 <Typography variant="small" className="font-semibold text-current">
                   {project.key.slice(0, 2).toUpperCase()}
@@ -174,7 +174,7 @@ function ProjectLayout() {
           </Flex>
 
           <nav
-            className="mt-1 flex items-center gap-0.5 overflow-x-auto pb-0.5 pr-1 scrollbar-subtle sm:hidden"
+            className="mt-0.5 flex items-center gap-0.5 overflow-x-auto pb-0 pr-0.5 scrollbar-subtle sm:hidden"
             aria-label="Project sections"
           >
             {mobilePrimaryTabs.map((tab) => (
@@ -183,7 +183,7 @@ function ProjectLayout() {
                 to={tab.to}
                 params={tab.params}
                 className={cn(
-                  "shrink-0 rounded-full border border-transparent bg-ui-bg-soft/68 px-2 py-1 text-xs font-medium whitespace-nowrap transition-default",
+                  "shrink-0 rounded-full border border-transparent bg-ui-bg-soft/68 px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-default",
                   "text-ui-text-secondary hover:border-ui-border/60 hover:bg-ui-bg-hover hover:text-ui-text",
                 )}
                 activeProps={{
@@ -200,14 +200,14 @@ function ProjectLayout() {
                   <button
                     type="button"
                     className={cn(
-                      "inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium transition-default",
+                      "inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium transition-default",
                       activeSecondaryTab
                         ? "border-ui-border-secondary/70 bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border/70"
                         : "border-transparent bg-ui-bg-soft/68 text-ui-text-secondary hover:border-ui-border/60 hover:bg-ui-bg-hover hover:text-ui-text",
                     )}
                     aria-label="More project sections"
                   >
-                    <span>{activeSecondaryTab?.name ?? "More"}</span>
+                    <span>More</span>
                     <ChevronDown className="h-3.5 w-3.5" />
                   </button>
                 </DropdownMenuTrigger>

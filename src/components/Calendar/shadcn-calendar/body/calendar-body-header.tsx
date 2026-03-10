@@ -12,7 +12,7 @@ export function CalendarBodyHeader({
   const isToday = isSameDay(date, new Date());
 
   return (
-    <div className="flex items-center justify-center gap-1.5 py-2.5 w-full sticky top-0 bg-ui-bg z-10 border-b border-ui-border">
+    <div className="sticky top-0 z-10 flex w-full items-center justify-center gap-1 py-1.5 bg-ui-bg border-b border-ui-border sm:gap-1.5 sm:py-2.5">
       <span
         className={cn(
           "text-xs font-medium uppercase tracking-wide",
@@ -24,7 +24,7 @@ export function CalendarBodyHeader({
       {!onlyDay && (
         <span
           className={cn(
-            "text-sm font-semibold w-7 h-7 flex items-center justify-center rounded-full transition-colors",
+            "flex h-6 w-6 items-center justify-center rounded-full text-sm font-semibold transition-colors sm:h-7 sm:w-7",
             isToday ? "bg-brand text-brand-foreground" : "text-ui-text",
           )}
         >

@@ -31,10 +31,11 @@ function SettingsProfilePage() {
 
   return (
     <Suspense fallback={<PageContent isLoading>{null}</PageContent>}>
-      <PageLayout maxWidth="lg">
+      <PageLayout maxWidth="xl">
         <PageHeader
           title="Settings"
           description="Manage your account, integrations, and preferences"
+          className="mb-3 px-3 py-3 sm:mb-4 sm:px-4 sm:py-4"
         />
         <Settings activeTab={search.tab ?? "profile"} onTabChange={handleTabChange} />
       </PageLayout>

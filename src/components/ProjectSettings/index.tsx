@@ -72,13 +72,14 @@ export function ProjectSettings({
   ];
 
   return (
-    <Card padding="lg" className="max-w-3xl mx-auto">
+    <Card padding="none" className="mx-auto max-w-3xl overflow-hidden">
       <CardHeader
         title="Project Settings"
         description="Manage your project configuration and team"
+        className="px-5 py-5 sm:px-6 sm:py-6"
       />
-      <CardBody>
-        <Stack gap="xl">{sections}</Stack>
+      <CardBody className="p-4 sm:p-6">
+        <Stack gap="lg">{sections}</Stack>
       </CardBody>
     </Card>
   );

@@ -51,7 +51,7 @@ export function BoardToolbar({
       align="center"
       justify="between"
       gap="xs"
-      className="mx-2 mt-1 rounded-lg border border-ui-border/70 bg-ui-bg-elevated px-1.5 py-1.5 shadow-soft sm:mx-6 sm:mt-4 sm:gap-sm sm:rounded-2xl sm:px-5 sm:pb-3 sm:pt-4"
+      className="mx-2 mt-0.5 px-0 py-0 sm:mx-6 sm:mt-4 sm:gap-sm sm:rounded-2xl sm:border sm:border-ui-border/70 sm:bg-ui-bg-elevated sm:px-5 sm:pb-3 sm:pt-4 sm:shadow-soft"
     >
       <div className="hidden sm:block">
         <Typography variant="h2" className="text-xs font-semibold tracking-tight sm:text-lg">
@@ -66,7 +66,7 @@ export function BoardToolbar({
         <Flex
           align="center"
           gap="xs"
-          className="w-full shrink-0 justify-between sm:w-auto sm:justify-start sm:gap-2"
+          className="w-full shrink-0 justify-end sm:w-auto sm:justify-start sm:gap-2"
         >
           {/* Undo/Redo buttons */}
           <Flex align="center" gap="xs" className="hidden sm:flex mr-2 sm:mr-4">
@@ -123,12 +123,16 @@ export function BoardToolbar({
 
           {/* Display properties selector */}
           {displayOptions && onDisplayOptionsChange && (
-            <DisplayPropertiesSelector value={displayOptions} onChange={onDisplayOptionsChange} />
+            <div className="hidden sm:block">
+              <DisplayPropertiesSelector value={displayOptions} onChange={onDisplayOptionsChange} />
+            </div>
           )}
 
           {/* Swimlane selector */}
           {onSwimlanGroupByChange && (
-            <SwimlanSelector value={swimlaneGroupBy} onChange={onSwimlanGroupByChange} />
+            <div className="hidden sm:block">
+              <SwimlanSelector value={swimlaneGroupBy} onChange={onSwimlanGroupByChange} />
+            </div>
           )}
 
           {/* Selection mode toggle */}
@@ -137,7 +141,7 @@ export function BoardToolbar({
             size="sm"
             onClick={onToggleSelectionMode}
             aria-label={selectionMode ? "Exit selection mode" : "Enable selection mode"}
-            className="h-8 rounded-lg px-2 text-xs sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm"
+            className="h-7 rounded-full px-2.5 text-xs sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm"
           >
             <span className="hidden sm:inline">
               {selectionMode ? "Exit Selection" : "Select Multiple"}

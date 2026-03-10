@@ -2998,6 +2998,16 @@ export const seedScreenshotDataInternal = internalMutation({
         assigned: false,
         inSprint: false,
       },
+      {
+        key: "DEMO-7",
+        title: "Improve release checklist",
+        type: "task",
+        status: "todo",
+        priority: "high",
+        assigned: true,
+        inSprint: true,
+        dueDate: now + 2 * DAY,
+      },
     ];
 
     const createdIssueKeys: string[] = [];

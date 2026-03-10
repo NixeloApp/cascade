@@ -46,12 +46,12 @@ const EMPTY_STATE_ICON_COLOR_CLASS: Record<EmptyStateVariant, string> = {
 
 const EMPTY_STATE_SIZE_CLASS: Record<EmptyStateSize, string> = {
   default: "min-h-56 max-w-2xl px-6 py-8 sm:px-8 sm:py-9",
-  compact: "min-h-32 px-4 py-4 sm:min-h-36 sm:px-5 sm:py-5",
+  compact: "min-h-24 px-3.5 py-3 sm:min-h-28 sm:px-4.5 sm:py-3.5",
 };
 
 const EMPTY_STATE_ICON_SHELL_CLASS: Record<EmptyStateSize, string> = {
   default: "mb-4 h-14 w-14",
-  compact: "mb-3 h-10 w-10",
+  compact: "mb-2 h-8 w-8",
 };
 
 function EmptyStateBadge({ size }: { size: EmptyStateSize }) {
@@ -59,7 +59,7 @@ function EmptyStateBadge({ size }: { size: EmptyStateSize }) {
     <div
       className={cn(
         "inline-flex items-center rounded-full border border-ui-border/70 bg-ui-bg-soft text-xs font-medium uppercase tracking-wider text-ui-text-tertiary",
-        size === "compact" ? "mb-3 px-2.5 py-0.5" : "mb-4 px-3 py-1",
+        size === "compact" ? "mb-1.5 px-2 py-0.5" : "mb-4 px-3 py-1",
       )}
     >
       {size === "compact" ? "Waiting for updates" : "Nothing here yet"}
@@ -142,7 +142,7 @@ export function EmptyState({
       <Typography
         variant={size === "compact" ? "large" : "h4"}
         as="h3"
-        className={cn("mb-2", size === "compact" && "text-xl")}
+        className={cn("mb-2", size === "compact" && "text-base")}
       >
         {title}
       </Typography>

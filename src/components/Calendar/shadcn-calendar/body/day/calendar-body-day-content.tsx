@@ -20,7 +20,7 @@ export function CalendarBodyDayContent({ date }: { date: Date }): React.ReactEle
         {hours.map((hour) => (
           <div
             key={hour}
-            className="h-32 border-b border-ui-border hover:bg-ui-bg-hover/30 transition-colors duration-default"
+            className="h-24 border-b border-ui-border transition-colors duration-default hover:bg-ui-bg-hover/30 sm:h-32"
           />
         ))}
 

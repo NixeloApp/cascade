@@ -68,7 +68,7 @@ export function UserStatsCards({ stats }: { stats: UserStats }) {
           key={item.key}
           padding="sm"
           variant="outline"
-          className="relative overflow-hidden text-center border-ui-border-secondary/75 bg-ui-bg/94"
+          className="relative overflow-hidden border-ui-border-secondary/75 bg-ui-bg/94 px-3 py-3 text-center sm:px-4"
         >
           <div className="absolute inset-x-4 top-0 h-px rounded-full bg-brand/60" />
           <Stack gap="xs" align="center" className="relative">
@@ -118,7 +118,7 @@ export function AccountInfo({
     <Stack
       gap="md"
       className={cn(
-        "rounded-container border border-ui-border-secondary/70 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/68 p-4 shadow-soft",
+        "rounded-container border border-ui-border-secondary/70 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/68 p-3.5 shadow-soft sm:p-4",
         className,
       )}
     >
@@ -172,20 +172,25 @@ export function ProfileHeader({
   onAvatarClick?: () => void;
 }) {
   return (
-    <Flex align="center" gap="xl" direction="column" className="sm:flex-row sm:items-center">
+    <Flex
+      align="center"
+      gap="lg"
+      direction="column"
+      className="items-start sm:flex-row sm:items-center sm:gap-xl"
+    >
       {/* Avatar */}
       <div className="relative group">
         {user.image ? (
           <img
             src={user.image}
             alt={user.name || "User"}
-            className="h-24 w-24 rounded-full border border-ui-border/70 object-cover shadow-soft"
+            className="h-20 w-20 rounded-full border border-ui-border/70 object-cover shadow-soft sm:h-24 sm:w-24"
           />
         ) : (
           <Flex
             align="center"
             justify="center"
-            className="h-24 w-24 rounded-full bg-brand text-3xl font-bold text-brand-foreground shadow-card"
+            className="h-20 w-20 rounded-full bg-brand text-2xl font-bold text-brand-foreground shadow-card sm:h-24 sm:w-24 sm:text-3xl"
           >
             {(user.name || user.email || "?").charAt(0).toUpperCase()}
           </Flex>
@@ -245,10 +250,10 @@ export function ProfileHeader({
           </Stack>
         ) : (
           <>
-            <Typography variant="h3" className="tracking-tight">
+            <Typography variant="h3" className="tracking-tight text-left">
               {user.name || "Anonymous User"}
             </Typography>
-            <Typography variant="caption" className="max-w-lg">
+            <Typography variant="caption" className="max-w-lg text-left">
               {user.email}
             </Typography>
             {isOwnProfile && (
@@ -323,13 +328,13 @@ function LoadedProfileContent({
     <Card
       variant="outline"
       padding="none"
-      className="overflow-hidden border-ui-border-secondary/80 bg-linear-to-b from-ui-bg via-ui-bg-elevated/98 to-ui-bg-soft/78 shadow-card"
+      className="overflow-hidden border-ui-border-secondary/90 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-secondary/72 shadow-elevated"
     >
       {isOwnProfile && (
         <div className="relative group">
           <div
             className={cn(
-              "h-14 w-full border-b border-ui-border-secondary/55 bg-linear-to-r from-brand/22 via-brand-subtle/90 to-accent/16 sm:h-18",
+              "h-10 w-full border-b border-ui-border-secondary/60 bg-linear-to-r from-brand/18 via-brand-subtle/80 to-accent/14 sm:h-14",
               coverImageUrl && "bg-none",
             )}
           >
@@ -349,19 +354,19 @@ function LoadedProfileContent({
         </div>
       )}
 
-      <div className="p-4 sm:p-5">
+      <div className="p-3 sm:p-5">
         <Stack gap="md">
           <Grid
             cols={1}
             colsLg={showAccountInfo ? 5 : 1}
             gap="md"
-            className={cn(isOwnProfile && "-mt-4 sm:-mt-6")}
+            className={cn(isOwnProfile && "-mt-3 sm:-mt-5")}
           >
             <Card
               variant="default"
-              padding="lg"
+              padding="none"
               className={cn(
-                "border-ui-border-secondary/75 bg-ui-bg shadow-soft",
+                "border-ui-border-secondary/80 bg-ui-bg-elevated p-4 shadow-card sm:p-6",
                 showAccountInfo && "lg:col-span-3",
               )}
             >
@@ -408,8 +413,12 @@ function LoadedProfileContent({
 
           {userStats && <UserStatsCards stats={userStats} />}
 
-          <Card padding="lg" variant="outline" className="border-ui-border-secondary/75 bg-ui-bg">
-            <Stack gap="md">
+          <Card
+            padding="none"
+            variant="outline"
+            className="border-ui-border-secondary/80 bg-linear-to-br from-ui-bg via-ui-bg-secondary/76 to-ui-bg-soft/74 p-4 shadow-soft sm:p-5"
+          >
+            <Stack gap="sm">
               <Typography variant="h5">Recent Activity</Typography>
               <UserActivityFeed userId={viewUser._id} limit={10} />
             </Stack>

@@ -8,7 +8,7 @@ export function CalendarHeaderActionsAdd(): React.ReactElement {
   return (
     <Button
       size="sm"
-      className="h-8 w-8 rounded-lg bg-brand px-0 text-brand-foreground sm:h-9 sm:w-auto sm:rounded-xl sm:px-3"
+      className="h-7 w-7 rounded-full bg-brand px-0 text-brand-foreground sm:h-9 sm:w-auto sm:rounded-xl sm:px-3"
       onClick={() => onAddEvent()}
       aria-label="Add event"
     >

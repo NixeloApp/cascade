@@ -1,4 +1,6 @@
+import { useRef } from "react";
 import { useCalendarContext } from "../../calendar-context";
+import { useCalendarInitialScroll } from "../use-calendar-initial-scroll";
 import { CalendarBodyDayCalendar } from "./calendar-body-day-calendar";
 import { CalendarBodyDayContent } from "./calendar-body-day-content";
 import { CalendarBodyDayEvents } from "./calendar-body-day-events";
@@ -6,11 +8,15 @@ import { CalendarBodyMarginDayMargin } from "./calendar-body-margin-day-margin";
 
 /** Day view layout with time grid, events sidebar, and mini calendar. */
 export function CalendarBodyDay(): React.ReactElement {
-  const { date } = useCalendarContext();
+  const { date, events } = useCalendarContext();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useCalendarInitialScroll(scrollRef, events, date, "day");
+
   return (
     <div className="flex divide-x divide-ui-border flex-grow overflow-hidden bg-ui-bg">
       <div className="flex flex-col flex-grow divide-y divide-ui-border overflow-hidden">
-        <div className="flex flex-col flex-1 overflow-y-auto">
+        <div ref={scrollRef} className="flex flex-col flex-1 overflow-y-auto">
           <div className="relative flex flex-1">
             <CalendarBodyMarginDayMargin />
             <div className="flex-1 border-l border-ui-border">

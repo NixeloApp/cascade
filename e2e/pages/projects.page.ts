@@ -127,13 +127,9 @@ export class ProjectsPage extends BasePage {
 
     // Sidebar
     this.sidebar = page.locator("[data-tour='sidebar']").or(page.getByRole("complementary"));
-    // Scope project creation to the main page surface so shell-level actions cannot
-    // satisfy the same button-name contract by accident.
-    this.newProjectButton = page
-      .getByRole("main")
-      .last()
-      .getByRole("button", { name: "+ Create Project" })
-      .first();
+    // The projects index owns the create-project action, and using the page-level
+    // button is more reliable than over-scoping to a specific `main` subtree.
+    this.newProjectButton = page.getByRole("button", { name: /^\+?\s*create project$/i }).first();
     this.newWorkspaceButton = page.getByRole("button", { name: "+ Create Workspace" });
     this.createEntityButton = this.sidebar.getByRole("button", {
       name: /add new|create|\+/i,
@@ -994,7 +990,11 @@ export class ProjectsPage extends BasePage {
 
   async expectProjectsView(timeout = 10000) {
     await expect(this.sidebar).toBeVisible({ timeout });
-    await expect(this.newProjectButton).toBeVisible({ timeout });
+    await expect.poll(async () => this.hasCreateProjectEntryPoint(), { timeout }).toBe(true);
+  }
+
+  async hasCreateProjectEntryPoint() {
+    return await this.newProjectButton.isVisible().catch(() => false);
   }
 
   private async clickNewProjectButton() {

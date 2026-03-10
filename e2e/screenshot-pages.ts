@@ -38,6 +38,7 @@ const BASE_URL = process.env.BASE_URL || "http://localhost:5555";
 const CONVEX_URL = process.env.VITE_CONVEX_URL || "";
 const SPECS_BASE_DIR = path.join(process.cwd(), "docs", "design", "specs", "pages");
 const FALLBACK_SCREENSHOT_DIR = path.join(process.cwd(), "e2e", "screenshots");
+const SCREENSHOT_STAGING_BASE_DIR = path.join(process.cwd(), ".tmp", "screenshot-staging");
 
 // Map page identifiers to their spec folder names
 // Pages with specs get screenshots in their spec folder
@@ -98,6 +99,8 @@ const SEARCH_SHORTCUT = process.platform === "darwin" ? "Meta+K" : "Control+K";
 let currentConfigPrefix = ""; // e.g. "desktop-dark", "tablet-light"
 let counters = new Map<string, number>();
 let totalScreenshots = 0;
+let stagingRootDir = "";
+let captureFailures = 0;
 
 function resetCounters(): void {
   counters = new Map<string, number>();
@@ -141,7 +144,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-project-[^-]+-settings$/, "12-settings", "-project"],
 ];
 
-function getScreenshotPath(prefix: string, name: string): string {
+function getFinalScreenshotPath(prefix: string, name: string): string {
   const pageId = `${prefix}-${name}`;
 
   // Check static mapping first
@@ -183,6 +186,65 @@ function getScreenshotPath(prefix: string, name: string): string {
   return path.join(FALLBACK_SCREENSHOT_DIR, fallbackFilename);
 }
 
+function ensureStagingRoot(): string {
+  if (!stagingRootDir) {
+    throw new Error("Screenshot staging directory has not been initialized");
+  }
+  return stagingRootDir;
+}
+
+function getStagedScreenshotPath(finalPath: string): string {
+  const relativePath = path.relative(process.cwd(), finalPath);
+  const stagedPath = path.join(ensureStagingRoot(), relativePath);
+  fs.mkdirSync(path.dirname(stagedPath), { recursive: true });
+  return stagedPath;
+}
+
+function getGeneratedSpecFolders(): string[] {
+  return [...new Set(Object.values(PAGE_TO_SPEC_FOLDER))];
+}
+
+function collectFilesRecursively(dir: string): string[] {
+  if (!fs.existsSync(dir)) {
+    return [];
+  }
+
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      return collectFilesRecursively(entryPath);
+    }
+    return [entryPath];
+  });
+}
+
+function promoteStagedScreenshots(): void {
+  for (const folder of getGeneratedSpecFolders()) {
+    const screenshotDir = path.join(SPECS_BASE_DIR, folder, "screenshots");
+    if (!fs.existsSync(screenshotDir)) {
+      continue;
+    }
+
+    for (const file of fs.readdirSync(screenshotDir)) {
+      if (!file.startsWith("reference-") && file.endsWith(".png")) {
+        fs.unlinkSync(path.join(screenshotDir, file));
+      }
+    }
+  }
+
+  if (fs.existsSync(FALLBACK_SCREENSHOT_DIR)) {
+    fs.rmSync(FALLBACK_SCREENSHOT_DIR, { recursive: true });
+  }
+  fs.mkdirSync(FALLBACK_SCREENSHOT_DIR, { recursive: true });
+
+  for (const stagedFile of collectFilesRecursively(ensureStagingRoot())) {
+    const relativePath = path.relative(ensureStagingRoot(), stagedFile);
+    const finalPath = path.join(process.cwd(), relativePath);
+    fs.mkdirSync(path.dirname(finalPath), { recursive: true });
+    fs.copyFileSync(stagedFile, finalPath);
+  }
+}
+
 async function takeScreenshot(
   page: Page,
   prefix: string,
@@ -191,7 +253,8 @@ async function takeScreenshot(
 ): Promise<void> {
   const n = nextIndex(prefix);
   const num = String(n).padStart(2, "0");
-  const screenshotPath = getScreenshotPath(prefix, name);
+  const finalPath = getFinalScreenshotPath(prefix, name);
+  const screenshotPath = getStagedScreenshotPath(finalPath);
 
   try {
     await page.goto(`${BASE_URL}${url}`, { waitUntil: "networkidle", timeout: 15000 });
@@ -205,20 +268,21 @@ async function takeScreenshot(
   totalScreenshots++;
 
   // Show relative path for clarity
-  const relativePath = path.relative(process.cwd(), screenshotPath);
+  const relativePath = path.relative(process.cwd(), finalPath);
   console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}`);
 }
 
 async function captureCurrentView(page: Page, prefix: string, name: string): Promise<void> {
   const n = nextIndex(prefix);
   const num = String(n).padStart(2, "0");
-  const screenshotPath = getScreenshotPath(prefix, name);
+  const finalPath = getFinalScreenshotPath(prefix, name);
+  const screenshotPath = getStagedScreenshotPath(finalPath);
 
   await waitForScreenshotReady(page);
   await page.screenshot({ path: screenshotPath });
   totalScreenshots++;
 
-  const relativePath = path.relative(process.cwd(), screenshotPath);
+  const relativePath = path.relative(process.cwd(), finalPath);
   console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}`);
 }
 
@@ -227,8 +291,21 @@ async function runCaptureStep(label: string, fn: () => Promise<void>): Promise<v
     await fn();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    if (isCrashLikeError(message)) {
+      throw error;
+    }
+    captureFailures++;
     console.log(`    ⚠️  skipped ${label}: ${message}`);
   }
+}
+
+function isCrashLikeError(message: string): boolean {
+  return (
+    message.includes("Target crashed") ||
+    message.includes("Target page, context or browser has been closed") ||
+    message.includes("Page crashed") ||
+    message.includes("Browser has been closed")
+  );
 }
 
 async function dismissIfOpen(page: Page, locator: Locator): Promise<void> {
@@ -882,10 +959,11 @@ async function screenshotFilledStates(
         }
         const n = nextIndex(p);
         const num = String(n).padStart(2, "0");
-        const screenshotPath = getScreenshotPath(p, `calendar-${mode}`);
+        const finalPath = getFinalScreenshotPath(p, `calendar-${mode}`);
+        const screenshotPath = getStagedScreenshotPath(finalPath);
         await page.screenshot({ path: screenshotPath });
         totalScreenshots++;
-        const relativePath = path.relative(process.cwd(), screenshotPath);
+        const relativePath = path.relative(process.cwd(), finalPath);
         console.log(`    ${num}  [${p}] calendar-${mode} → ${relativePath}`);
       }
 
@@ -1050,10 +1128,6 @@ async function screenshotProjectsModal(page: Page, orgSlug: string, prefix: stri
 
   const projectsPage = new ProjectsPage(page, orgSlug);
 
-  if ((await projectsPage.newProjectButton.count()) === 0) {
-    return;
-  }
-
   await runCaptureStep("projects create-project modal", async () => {
     await projectsPage.openCreateProjectForm();
     await waitForScreenshotReady(page);
@@ -1193,6 +1267,10 @@ async function captureForConfig(
       await screenshotFilledStates(page, orgSlug, seedResult);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      if (isCrashLikeError(message)) {
+        throw error;
+      }
+      captureFailures++;
       console.log(
         `    ⚠️ Auth or capture failed for ${currentConfigPrefix}, skipping authenticated pages: ${message}`,
       );
@@ -1207,26 +1285,9 @@ async function captureForConfig(
 // ---------------------------------------------------------------------------
 
 async function run(): Promise<void> {
-  // Clean screenshot folders in spec directories
-  const specFolders = Object.values(PAGE_TO_SPEC_FOLDER);
-  for (const folder of [...new Set(specFolders)]) {
-    const screenshotDir = path.join(SPECS_BASE_DIR, folder, "screenshots");
-    if (fs.existsSync(screenshotDir)) {
-      // Only remove generated screenshots (viewport-theme.png), keep reference-* files
-      const files = fs.readdirSync(screenshotDir);
-      for (const file of files) {
-        if (!file.startsWith("reference-") && file.endsWith(".png")) {
-          fs.unlinkSync(path.join(screenshotDir, file));
-        }
-      }
-    }
-  }
-
-  // Clean fallback directory
-  if (fs.existsSync(FALLBACK_SCREENSHOT_DIR)) {
-    fs.rmSync(FALLBACK_SCREENSHOT_DIR, { recursive: true });
-  }
-  fs.mkdirSync(FALLBACK_SCREENSHOT_DIR, { recursive: true });
+  const specFolders = getGeneratedSpecFolders();
+  fs.mkdirSync(SCREENSHOT_STAGING_BASE_DIR, { recursive: true });
+  stagingRootDir = fs.mkdtempSync(path.join(SCREENSHOT_STAGING_BASE_DIR, "run-"));
 
   console.log("\n╔════════════════════════════════════════════════════════════╗");
   console.log("║         NIXELO SCREENSHOT CAPTURE                          ║");
@@ -1284,13 +1345,39 @@ async function run(): Promise<void> {
 
   // Capture configured combinations
   for (const config of CONFIGS) {
-    const browser = await launchBrowser();
-    try {
-      await captureForConfig(browser, config.viewport, config.theme, orgSlug, seedResult);
-    } finally {
-      await browser.close();
+    let completed = false;
+    for (let attempt = 1; attempt <= 2 && !completed; attempt++) {
+      const browser = await launchBrowser();
+      try {
+        await captureForConfig(browser, config.viewport, config.theme, orgSlug, seedResult);
+        completed = true;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        captureFailures++;
+        const shouldRetry = attempt < 2 && isCrashLikeError(message);
+        console.log(
+          `    ⚠️ ${config.viewport}-${config.theme} failed on attempt ${attempt}: ${message}${shouldRetry ? " (retrying)" : ""}`,
+        );
+        if (!shouldRetry) {
+          break;
+        }
+      } finally {
+        await browser.close();
+      }
     }
   }
+
+  if (captureFailures > 0) {
+    fs.rmSync(ensureStagingRoot(), { recursive: true, force: true });
+    stagingRootDir = "";
+    throw new Error(
+      `Screenshot capture had ${captureFailures} failure(s); staged output was not promoted`,
+    );
+  }
+
+  promoteStagedScreenshots();
+  fs.rmSync(ensureStagingRoot(), { recursive: true, force: true });
+  stagingRootDir = "";
 
   console.log("\n╔════════════════════════════════════════════════════════════╗");
   console.log(`║  ✅ COMPLETE: ${totalScreenshots} screenshots captured`);
@@ -1298,8 +1385,7 @@ async function run(): Promise<void> {
 
   // Summary - count files in each location
   console.log("  Output:");
-  const uniqueSpecFolders = [...new Set(Object.values(PAGE_TO_SPEC_FOLDER))];
-  for (const folder of uniqueSpecFolders) {
+  for (const folder of specFolders) {
     const screenshotDir = path.join(SPECS_BASE_DIR, folder, "screenshots");
     if (fs.existsSync(screenshotDir)) {
       const files = fs

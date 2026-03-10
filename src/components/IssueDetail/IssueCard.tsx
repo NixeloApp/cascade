@@ -270,7 +270,7 @@ export const IssueCard = memo(function IssueCard({
       ref={cardRef}
       data-testid={TEST_IDS.ISSUE.CARD}
       className={cn(
-        "group relative w-full text-left bg-ui-bg-soft p-2 sm:p-3 rounded-container",
+        "group relative w-full rounded-container bg-ui-bg-soft p-1.5 text-left sm:p-3",
         "border transition-default",
         // Apply focus ring to container when inner elements (like the overlay button) are focused
         "focus-within:ring-2 focus-within:ring-brand-ring focus-within:ring-offset-2 focus-within:outline-none",
@@ -298,8 +298,8 @@ export const IssueCard = memo(function IssueCard({
       {/* Content Wrapper - pointer-events-none allows clicks to pass through to overlay */}
       <div className="relative z-10 pointer-events-none">
         {/* Header */}
-        <Flex align="start" justify="between" className="mb-2">
-          <Flex align="center" gap="sm">
+        <Flex align="start" justify="between" className="mb-1.5 sm:mb-2">
+          <Flex align="center" gap="xs" className="min-w-0">
             {/* Drag handle */}
             {canEdit && !selectionMode && (
               <div
@@ -373,7 +373,7 @@ export const IssueCard = memo(function IssueCard({
           <Typography
             variant="label"
             as="p"
-            className="mb-2 line-clamp-2 pointer-events-auto"
+            className="mb-1.5 line-clamp-2 pointer-events-auto text-sm sm:mb-2"
             data-testid={TEST_IDS.ISSUE.TITLE}
             onClick={handleClick}
           >
@@ -437,10 +437,10 @@ export const IssueCard = memo(function IssueCard({
             direction="column"
             align="start"
             justify="between"
-            gap="sm"
+            gap="xs"
             className="sm:flex-row sm:items-center"
           >
-            <Flex align="center" gap="sm">
+            <Flex align="center" gap="xs">
               {display.assignee && issue.assignee && (
                 <Tooltip content={`Assigned to: ${issue.assignee.name}`}>
                   <Flex
