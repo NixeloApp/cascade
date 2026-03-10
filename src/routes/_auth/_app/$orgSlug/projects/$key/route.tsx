@@ -1,12 +1,19 @@
 import { api } from "@convex/_generated/api";
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { PageContent, PageError } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/DropdownMenu";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { ChevronDown } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key")({
   component: ProjectLayout,
@@ -14,6 +21,7 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key")({
 
 function ProjectLayout() {
   const { key, orgSlug } = Route.useParams();
+  const location = useLocation();
   const { user } = useCurrentUser();
   const project = useAuthenticatedQuery(api.projects.getByKey, { key });
   const userRole = useAuthenticatedQuery(
@@ -47,38 +55,95 @@ function ProjectLayout() {
   const isScrum = project.boardType === "scrum";
 
   const tabs = [
-    { name: "Board", to: ROUTES.projects.board.path, params: { orgSlug, key } },
-    { name: "Backlog", to: ROUTES.projects.backlog.path, params: { orgSlug, key } },
-    { name: "Inbox", to: ROUTES.projects.inbox.path, params: { orgSlug, key } },
+    { name: "Board", segment: "board", to: ROUTES.projects.board.path, params: { orgSlug, key } },
+    {
+      name: "Backlog",
+      segment: "backlog",
+      to: ROUTES.projects.backlog.path,
+      params: { orgSlug, key },
+    },
+    { name: "Inbox", segment: "inbox", to: ROUTES.projects.inbox.path, params: { orgSlug, key } },
     ...(isScrum
-      ? [{ name: "Sprints", to: ROUTES.projects.sprints.path, params: { orgSlug, key } }]
+      ? [
+          {
+            name: "Sprints",
+            segment: "sprints",
+            to: ROUTES.projects.sprints.path,
+            params: { orgSlug, key },
+          },
+        ]
       : []),
-    { name: "Roadmap", to: ROUTES.projects.roadmap.path, params: { orgSlug, key } },
-    { name: "Calendar", to: ROUTES.projects.calendar.path, params: { orgSlug, key } },
-    { name: "Activity", to: ROUTES.projects.activity.path, params: { orgSlug, key } },
-    { name: "Analytics", to: ROUTES.projects.analytics.path, params: { orgSlug, key } },
-    { name: "Billing", to: ROUTES.projects.billing.path, params: { orgSlug, key } },
-    { name: "Timesheet", to: ROUTES.projects.timesheet.path, params: { orgSlug, key } },
+    {
+      name: "Roadmap",
+      segment: "roadmap",
+      to: ROUTES.projects.roadmap.path,
+      params: { orgSlug, key },
+    },
+    {
+      name: "Calendar",
+      segment: "calendar",
+      to: ROUTES.projects.calendar.path,
+      params: { orgSlug, key },
+    },
+    {
+      name: "Activity",
+      segment: "activity",
+      to: ROUTES.projects.activity.path,
+      params: { orgSlug, key },
+    },
+    {
+      name: "Analytics",
+      segment: "analytics",
+      to: ROUTES.projects.analytics.path,
+      params: { orgSlug, key },
+    },
+    {
+      name: "Billing",
+      segment: "billing",
+      to: ROUTES.projects.billing.path,
+      params: { orgSlug, key },
+    },
+    {
+      name: "Timesheet",
+      segment: "timesheet",
+      to: ROUTES.projects.timesheet.path,
+      params: { orgSlug, key },
+    },
     ...(isAdmin
-      ? [{ name: "Settings", to: ROUTES.projects.settings.path, params: { orgSlug, key } }]
+      ? [
+          {
+            name: "Settings",
+            segment: "settings",
+            to: ROUTES.projects.settings.path,
+            params: { orgSlug, key },
+          },
+        ]
       : []),
   ];
+  const currentSegment = location.pathname.split("/").pop() ?? "board";
+  const mobilePrimaryTabs = tabs.filter((tab) =>
+    ["board", "backlog", "inbox", "roadmap", "calendar"].includes(tab.segment),
+  );
+  const mobileSecondaryTabs = tabs.filter(
+    (tab) => !["board", "backlog", "inbox", "roadmap", "calendar"].includes(tab.segment),
+  );
+  const activeSecondaryTab = mobileSecondaryTabs.find((tab) => tab.segment === currentSegment);
 
   return (
     <Flex direction="column" className="h-full">
-      <div className="border-b border-ui-border/70 bg-ui-bg/78 px-1.5 py-1 backdrop-blur-xl sm:px-4 sm:py-3">
-        <div className="rounded-2xl border border-ui-border-secondary/70 bg-linear-to-r from-ui-bg-elevated via-ui-bg-elevated/96 to-ui-bg-soft/78 px-2 py-1.5 shadow-soft sm:rounded-3xl sm:px-4 sm:py-3">
+      <div className="border-b border-ui-border/70 bg-ui-bg/78 px-1.5 py-0.5 backdrop-blur-xl sm:px-4 sm:py-3">
+        <div className="rounded-2xl border border-ui-border-secondary/70 bg-linear-to-r from-ui-bg-elevated via-ui-bg-elevated/96 to-ui-bg-soft/78 px-1.5 py-1.25 shadow-soft sm:rounded-3xl sm:px-4 sm:py-3">
           <Flex
             align="start"
             justify="between"
-            gap="sm"
+            gap="xs"
             className="flex-col sm:flex-row sm:items-center"
           >
-            <Flex align="center" gap="sm" className="min-w-0">
+            <Flex align="center" gap="xs" className="min-w-0 sm:gap-sm">
               <Flex
                 align="center"
                 justify="center"
-                className="h-9 w-9 shrink-0 rounded-xl bg-brand-subtle text-brand ring-1 ring-brand/15 sm:h-10 sm:w-10"
+                className="h-8 w-8 shrink-0 rounded-xl bg-brand-subtle text-brand ring-1 ring-brand/15 sm:h-10 sm:w-10"
               >
                 <Typography variant="small" className="font-semibold text-current">
                   {project.key.slice(0, 2).toUpperCase()}
@@ -86,19 +151,9 @@ function ProjectLayout() {
               </Flex>
               <div className="min-w-0">
                 <Flex align="center" gap="xs" className="min-w-0">
-                  <Typography
-                    variant="h4"
-                    className="truncate text-base tracking-tight sm:text-2xl"
-                  >
+                  <Typography variant="h4" className="truncate text-sm tracking-tight sm:text-2xl">
                     {project.name}
                   </Typography>
-                  <Badge
-                    variant="outline"
-                    shape="pill"
-                    className="shrink-0 bg-ui-bg-soft/85 text-[10px] uppercase tracking-wider sm:hidden"
-                  >
-                    {project.key}
-                  </Badge>
                 </Flex>
                 <Typography
                   variant="caption"
@@ -119,7 +174,58 @@ function ProjectLayout() {
           </Flex>
 
           <nav
-            className="mt-1.5 flex gap-1 overflow-x-auto pb-0.5 pr-1 scrollbar-subtle sm:mt-3 sm:pb-1"
+            className="mt-1 flex items-center gap-0.5 overflow-x-auto pb-0.5 pr-1 scrollbar-subtle sm:hidden"
+            aria-label="Project sections"
+          >
+            {mobilePrimaryTabs.map((tab) => (
+              <Link
+                key={tab.name}
+                to={tab.to}
+                params={tab.params}
+                className={cn(
+                  "shrink-0 rounded-full border border-transparent bg-ui-bg-soft/68 px-2 py-1 text-xs font-medium whitespace-nowrap transition-default",
+                  "text-ui-text-secondary hover:border-ui-border/60 hover:bg-ui-bg-hover hover:text-ui-text",
+                )}
+                activeProps={{
+                  className:
+                    "border-ui-border-secondary/70 bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border/70",
+                }}
+              >
+                {tab.name}
+              </Link>
+            ))}
+            {mobileSecondaryTabs.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      "inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium transition-default",
+                      activeSecondaryTab
+                        ? "border-ui-border-secondary/70 bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border/70"
+                        : "border-transparent bg-ui-bg-soft/68 text-ui-text-secondary hover:border-ui-border/60 hover:bg-ui-bg-hover hover:text-ui-text",
+                    )}
+                    aria-label="More project sections"
+                  >
+                    <span>{activeSecondaryTab?.name ?? "More"}</span>
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-40">
+                  {mobileSecondaryTabs.map((tab) => (
+                    <DropdownMenuItem key={tab.name} asChild>
+                      <Link to={tab.to} params={tab.params} className="w-full">
+                        {tab.name}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </nav>
+
+          <nav
+            className="mt-1 hidden gap-1 overflow-x-auto pb-0.5 pr-1 scrollbar-subtle sm:mt-3 sm:flex sm:pb-1"
             aria-label="Project sections"
           >
             {tabs.map((tab) => (
@@ -128,7 +234,7 @@ function ProjectLayout() {
                 to={tab.to}
                 params={tab.params}
                 className={cn(
-                  "shrink-0 rounded-full border border-transparent bg-ui-bg-soft/68 px-2.5 py-1.25 text-xs font-medium whitespace-nowrap transition-default sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm",
+                  "shrink-0 rounded-full border border-transparent bg-ui-bg-soft/68 px-2 py-1 text-xs font-medium whitespace-nowrap transition-default sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm",
                   "text-ui-text-secondary hover:border-ui-border/60 hover:bg-ui-bg-hover hover:text-ui-text",
                 )}
                 activeProps={{

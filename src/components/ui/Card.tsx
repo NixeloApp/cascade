@@ -16,14 +16,14 @@ const cardVariants = cva("border transition-default", {
   variants: {
     variant: {
       default:
-        "bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-secondary/45 border-ui-border-secondary/80 shadow-soft",
+        "bg-linear-to-b from-ui-bg via-ui-bg-elevated/98 to-ui-bg-secondary/50 border-ui-border-secondary/85 shadow-card",
       elevated:
-        "bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-secondary/35 border-ui-border-secondary shadow-elevated",
-      soft: "bg-linear-to-b from-ui-bg-secondary via-ui-bg-elevated/92 to-ui-bg-secondary/80 border-ui-border-secondary/75 shadow-soft",
+        "bg-linear-to-b from-ui-bg via-ui-bg-elevated to-ui-bg-secondary/38 border-ui-border-secondary shadow-elevated",
+      soft: "bg-linear-to-b from-ui-bg-soft/96 via-ui-bg-elevated/94 to-ui-bg-secondary/84 border-ui-border-secondary/80 shadow-soft",
       interactive:
-        "bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-secondary/35 border-ui-border-secondary/80 shadow-soft hover:bg-ui-bg-hover hover:border-ui-border-secondary hover:shadow-card-hover cursor-pointer",
+        "bg-linear-to-b from-ui-bg via-ui-bg-elevated to-ui-bg-secondary/38 border-ui-border-secondary/85 shadow-card hover:bg-ui-bg-hover hover:border-ui-border-secondary hover:shadow-card-hover cursor-pointer",
       outline:
-        "bg-linear-to-b from-ui-bg/96 via-ui-bg-elevated/82 to-ui-bg-secondary/55 border-ui-border-secondary/75 shadow-soft",
+        "bg-linear-to-b from-ui-bg via-ui-bg-elevated/88 to-ui-bg-secondary/58 border-ui-border-secondary/80 shadow-soft",
       ghost: "bg-transparent border-transparent",
       flat: "bg-ui-bg-secondary/80 border-ui-border shadow-none",
     },

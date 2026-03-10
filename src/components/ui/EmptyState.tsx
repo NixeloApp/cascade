@@ -37,6 +37,81 @@ interface EmptyStateProps {
   className?: string;
 }
 
+const EMPTY_STATE_ICON_COLOR_CLASS: Record<EmptyStateVariant, string> = {
+  default: "text-ui-text-tertiary",
+  info: "text-status-info",
+  warning: "text-status-warning",
+  error: "text-status-error",
+};
+
+const EMPTY_STATE_SIZE_CLASS: Record<EmptyStateSize, string> = {
+  default: "min-h-56 max-w-2xl px-6 py-8 sm:px-8 sm:py-9",
+  compact: "min-h-32 px-4 py-4 sm:min-h-36 sm:px-5 sm:py-5",
+};
+
+const EMPTY_STATE_ICON_SHELL_CLASS: Record<EmptyStateSize, string> = {
+  default: "mb-4 h-14 w-14",
+  compact: "mb-3 h-10 w-10",
+};
+
+function EmptyStateBadge({ size }: { size: EmptyStateSize }) {
+  return (
+    <div
+      className={cn(
+        "inline-flex items-center rounded-full border border-ui-border/70 bg-ui-bg-soft text-xs font-medium uppercase tracking-wider text-ui-text-tertiary",
+        size === "compact" ? "mb-3 px-2.5 py-0.5" : "mb-4 px-3 py-1",
+      )}
+    >
+      {size === "compact" ? "Waiting for updates" : "Nothing here yet"}
+    </div>
+  );
+}
+
+function EmptyStateIcon({
+  icon,
+  iconColorClass,
+  size,
+}: {
+  icon: string | LucideIcon;
+  iconColorClass: string;
+  size: EmptyStateSize;
+}) {
+  const iconClass = size === "compact" ? "text-2xl" : "text-3xl";
+
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-center rounded-full border border-ui-border bg-ui-bg-secondary shadow-soft",
+        EMPTY_STATE_ICON_SHELL_CLASS[size],
+        iconColorClass,
+      )}
+    >
+      {typeof icon === "string" ? (
+        <span aria-hidden="true" className={iconClass}>
+          {icon}
+        </span>
+      ) : (
+        <Icon
+          icon={icon}
+          size={size === "compact" ? "md" : "lg"}
+          className="mx-auto"
+          aria-hidden="true"
+        />
+      )}
+    </div>
+  );
+}
+
+function renderEmptyStateAction(action: EmptyStateProps["action"]) {
+  if (!action) return null;
+
+  if (typeof action === "object" && "label" in action && "onClick" in action) {
+    return <Button onClick={action.onClick}>{action.label}</Button>;
+  }
+
+  return action;
+}
+
 export function EmptyState({
   icon,
   title,
@@ -47,37 +122,8 @@ export function EmptyState({
   align = "center",
   className,
 }: EmptyStateProps) {
-  const renderAction = () => {
-    if (!action) return null;
-
-    // Check if action is a button configuration object
-    if (typeof action === "object" && action !== null && "label" in action && "onClick" in action) {
-      const act = action as { label: string; onClick: () => void };
-      if (typeof act.label === "string" && typeof act.onClick === "function") {
-        return <Button onClick={act.onClick}>{act.label}</Button>;
-      }
-    }
-    return action as ReactNode;
-  };
-
-  const iconColorClass = {
-    default: "text-ui-text-tertiary",
-    info: "text-status-info",
-    warning: "text-status-warning",
-    error: "text-status-error",
-  }[variant];
-
-  const sizeClass = {
-    default: "min-h-56 max-w-2xl px-6 py-8 sm:px-8 sm:py-9",
-    compact: "min-h-44 px-5 py-5 sm:px-6",
-  }[size];
-
-  const iconShellClass = {
-    default: "mb-4 h-14 w-14",
-    compact: "mb-4 h-12 w-12",
-  }[size];
-
-  const iconClass = size === "compact" ? "text-2xl" : "text-3xl";
+  const iconColorClass = EMPTY_STATE_ICON_COLOR_CLASS[variant];
+  const sizeClass = EMPTY_STATE_SIZE_CLASS[size];
   const isStartAligned = align === "start";
 
   return (
@@ -91,32 +137,13 @@ export function EmptyState({
       )}
       aria-label={title}
     >
-      {size === "default" || size === "compact" ? (
-        <div className="mb-4 inline-flex items-center rounded-full border border-ui-border/70 bg-ui-bg-soft px-3 py-1 text-xs font-medium uppercase tracking-wider text-ui-text-tertiary">
-          {size === "compact" ? "Waiting for updates" : "Nothing here yet"}
-        </div>
-      ) : null}
-      <div
-        className={cn(
-          "flex items-center justify-center rounded-full border border-ui-border bg-ui-bg-secondary shadow-soft",
-          iconShellClass,
-          iconColorClass,
-        )}
+      <EmptyStateBadge size={size} />
+      <EmptyStateIcon icon={icon} iconColorClass={iconColorClass} size={size} />
+      <Typography
+        variant={size === "compact" ? "large" : "h4"}
+        as="h3"
+        className={cn("mb-2", size === "compact" && "text-xl")}
       >
-        {typeof icon === "string" ? (
-          <span aria-hidden="true" className={iconClass}>
-            {icon}
-          </span>
-        ) : (
-          <Icon
-            icon={icon}
-            size={size === "compact" ? "md" : "lg"}
-            className="mx-auto"
-            aria-hidden="true"
-          />
-        )}
-      </div>
-      <Typography variant={size === "compact" ? "large" : "h4"} as="h3" className="mb-2">
         {title}
       </Typography>
       {description && (
@@ -128,7 +155,9 @@ export function EmptyState({
           {description}
         </Typography>
       )}
-      {action && <div className="mt-6">{renderAction()}</div>}
+      {action && (
+        <div className={size === "compact" ? "mt-4" : "mt-6"}>{renderEmptyStateAction(action)}</div>
+      )}
     </section>
   );
 }

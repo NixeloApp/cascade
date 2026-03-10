@@ -57,7 +57,8 @@ export function CalendarHeaderDateChevrons(): React.ReactElement {
         dateTime={date.toISOString().split("T")[0]}
         className="min-w-28 text-center text-sm font-medium text-ui-text sm:min-w-35 sm:text-base"
       >
-        {format(date, "MMMM d, yyyy")}
+        <span className="sm:hidden">{format(date, "MMM d")}</span>
+        <span className="hidden sm:inline">{format(date, "MMMM d, yyyy")}</span>
       </time>
       <Button
         variant="outline"

@@ -18,7 +18,8 @@ export function CalendarHeaderDate(): React.ReactElement {
             variant="h3"
             className="text-base font-semibold tracking-tight text-ui-text sm:text-lg"
           >
-            {format(date, "MMMM yyyy")}
+            <span className="sm:hidden">{format(date, "MMM yyyy")}</span>
+            <span className="hidden sm:inline">{format(date, "MMMM yyyy")}</span>
           </Typography>
           <CalendarHeaderDateBadge />
         </Flex>

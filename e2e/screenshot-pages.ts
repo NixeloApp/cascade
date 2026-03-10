@@ -1191,8 +1191,11 @@ async function captureForConfig(
 
       // Filled states
       await screenshotFilledStates(page, orgSlug, seedResult);
-    } catch {
-      console.log(`    ⚠️ Auth failed for ${currentConfigPrefix}, skipping authenticated pages`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.log(
+        `    ⚠️ Auth or capture failed for ${currentConfigPrefix}, skipping authenticated pages: ${message}`,
+      );
     }
   }
 
@@ -1233,7 +1236,8 @@ async function run(): Promise<void> {
   console.log(`  Spec folders: ${[...new Set(specFolders)].join(", ")}`);
 
   const headless = !process.argv.includes("--headed");
-  const browser = await chromium.launch({ headless });
+  const launchBrowser = () => chromium.launch({ headless });
+  const setupBrowser = await launchBrowser();
 
   // Setup: Create test user and seed data once
   console.log("\n  🔧 Setting up test data...");
@@ -1245,13 +1249,13 @@ async function run(): Promise<void> {
   );
   if (!createResult.success) {
     console.error(`  ❌ Failed to create user: ${createResult.error}`);
-    await browser.close();
+    await setupBrowser.close();
     return;
   }
   console.log(`  ✓ User: ${SCREENSHOT_USER.email}`);
 
   // Get org slug via initial login
-  const setupContext = await browser.newContext({
+  const setupContext = await setupBrowser.newContext({
     viewport: VIEWPORTS.desktop,
     colorScheme: "dark",
     timezoneId: E2E_TIMEZONE,
@@ -1262,9 +1266,10 @@ async function run(): Promise<void> {
 
   if (!orgSlug) {
     console.error("  ❌ Could not authenticate. Aborting.");
-    await browser.close();
+    await setupBrowser.close();
     return;
   }
+  await setupBrowser.close();
 
   // Seed data for filled states
   console.log("  Seeding screenshot data...");
@@ -1279,10 +1284,13 @@ async function run(): Promise<void> {
 
   // Capture configured combinations
   for (const config of CONFIGS) {
-    await captureForConfig(browser, config.viewport, config.theme, orgSlug, seedResult);
+    const browser = await launchBrowser();
+    try {
+      await captureForConfig(browser, config.viewport, config.theme, orgSlug, seedResult);
+    } finally {
+      await browser.close();
+    }
   }
-
-  await browser.close();
 
   console.log("\n╔════════════════════════════════════════════════════════════╗");
   console.log(`║  ✅ COMPLETE: ${totalScreenshots} screenshots captured`);

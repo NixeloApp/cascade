@@ -31,7 +31,7 @@ function SettingsProfilePage() {
 
   return (
     <Suspense fallback={<PageContent isLoading>{null}</PageContent>}>
-      <PageLayout maxWidth="md">
+      <PageLayout maxWidth="lg">
         <PageHeader
           title="Settings"
           description="Manage your account, integrations, and preferences"

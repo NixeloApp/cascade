@@ -8,12 +8,12 @@ export function CalendarHeaderActionsAdd(): React.ReactElement {
   return (
     <Button
       size="sm"
-      className="h-9 rounded-xl bg-brand px-3 text-brand-foreground"
+      className="h-8 w-8 rounded-lg bg-brand px-0 text-brand-foreground sm:h-9 sm:w-auto sm:rounded-xl sm:px-3"
       onClick={() => onAddEvent()}
+      aria-label="Add event"
     >
       <Plus />
       <span className="hidden sm:inline">Add Event</span>
-      <span className="sm:hidden">Add</span>
     </Button>
   );
 }

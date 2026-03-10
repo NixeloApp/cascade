@@ -119,67 +119,104 @@ function ProjectCard({
   hasSingleProject: boolean;
   orgSlug: string;
 }) {
-  return (
-    <Link to={ROUTES.projects.board.path} params={{ orgSlug, key: project.key }} className="group">
-      <Card
-        hoverable
-        padding={hasSingleProject ? "xl" : "lg"}
-        variant={hasSingleProject ? "elevated" : "default"}
-        className={hasSingleProject ? "self-start overflow-hidden" : "h-full overflow-hidden"}
-      >
-        <Flex direction="column" gap={hasSingleProject ? "lg" : "md"}>
-          {hasSingleProject && (
-            <Flex
-              align="center"
-              justify="between"
-              className="rounded-2xl border border-ui-border/60 bg-ui-bg-soft/80 px-4 py-3"
-            >
-              <Flex direction="column" gap="xs">
-                <Typography variant="label">Primary workspace project</Typography>
-                <Typography variant="small" color="secondary">
-                  Open the board to manage backlog, roadmap, calendar, and delivery in one place.
-                </Typography>
-              </Flex>
-              <Typography
-                variant="caption"
-                className="uppercase tracking-widest text-ui-text-tertiary"
-              >
-                Active
-              </Typography>
-            </Flex>
-          )}
+  const projectParams = { orgSlug, key: project.key };
 
-          <Flex justify="between" align="start" gap="md">
-            <Flex align="center" gap="md">
-              <Flex
-                align="center"
-                justify="center"
-                className="w-10 h-10 rounded-lg bg-brand/10 text-brand font-semibold text-sm shrink-0 ring-1 ring-brand/20 transition-all"
-              >
-                {project.key.substring(0, 2).toUpperCase()}
-              </Flex>
-              <Typography variant="h3" className="tracking-tight">
-                {project.name}
+  const cardContent = (
+    <Card
+      hoverable={!hasSingleProject}
+      padding={hasSingleProject ? "xl" : "lg"}
+      variant={hasSingleProject ? "elevated" : "default"}
+      className={hasSingleProject ? "self-start overflow-hidden" : "h-full overflow-hidden"}
+    >
+      <Flex direction="column" gap={hasSingleProject ? "lg" : "md"}>
+        {hasSingleProject && (
+          <Flex
+            align="center"
+            justify="between"
+            className="rounded-2xl border border-ui-border/60 bg-ui-bg-soft/80 px-4 py-3"
+          >
+            <Flex direction="column" gap="xs">
+              <Typography variant="label">Primary workspace project</Typography>
+              <Typography variant="small" color="secondary">
+                Open the board to manage backlog, roadmap, calendar, and delivery in one place.
               </Typography>
             </Flex>
-            <Typography variant="meta" className="text-ui-text-tertiary font-mono shrink-0">
-              {project.key}
+            <Typography
+              variant="caption"
+              className="uppercase tracking-widest text-ui-text-tertiary"
+            >
+              Active
             </Typography>
           </Flex>
+        )}
 
-          {project.description && (
-            <Typography variant="p" color="secondary" className="line-clamp-2">
-              {project.description}
+        <Flex justify="between" align="start" gap="md">
+          <Flex align="center" gap="md">
+            <Flex
+              align="center"
+              justify="center"
+              className="w-10 h-10 rounded-lg bg-brand/10 text-brand font-semibold text-sm shrink-0 ring-1 ring-brand/20 transition-all"
+            >
+              {project.key.substring(0, 2).toUpperCase()}
+            </Flex>
+            <Typography variant="h3" className="tracking-tight">
+              {project.name}
             </Typography>
-          )}
-
-          <Metadata size="sm">
-            <MetadataItem>{project.issueCount || 0} issues</MetadataItem>
-            <MetadataItem>{project.boardType === "kanban" ? "Kanban" : "Scrum"}</MetadataItem>
-            {hasSingleProject && <MetadataItem>Open board to continue</MetadataItem>}
-          </Metadata>
+          </Flex>
+          <Typography variant="meta" className="text-ui-text-tertiary font-mono shrink-0">
+            {project.key}
+          </Typography>
         </Flex>
-      </Card>
+
+        {project.description && (
+          <Typography variant="p" color="secondary" className="line-clamp-2">
+            {project.description}
+          </Typography>
+        )}
+
+        <Metadata size="sm">
+          <MetadataItem>{project.issueCount || 0} issues</MetadataItem>
+          <MetadataItem>{project.boardType === "kanban" ? "Kanban" : "Scrum"}</MetadataItem>
+          {hasSingleProject && <MetadataItem>Delivery hub</MetadataItem>}
+        </Metadata>
+
+        {hasSingleProject && (
+          <Stack gap="sm">
+            <Typography variant="label">Jump into</Typography>
+            <Flex gap="sm" wrap>
+              <Button asChild variant="secondary" size="sm">
+                <Link to={ROUTES.projects.board.path} params={projectParams}>
+                  Board
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link to={ROUTES.projects.roadmap.path} params={projectParams}>
+                  Roadmap
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link to={ROUTES.projects.calendar.path} params={projectParams}>
+                  Calendar
+                </Link>
+              </Button>
+            </Flex>
+            <Typography variant="small" color="secondary" className="max-w-2xl">
+              Use this project as the workspace anchor for active issues, planning milestones, and
+              delivery timing instead of splitting those flows across separate tools.
+            </Typography>
+          </Stack>
+        )}
+      </Flex>
+    </Card>
+  );
+
+  if (hasSingleProject) {
+    return cardContent;
+  }
+
+  return (
+    <Link to={ROUTES.projects.board.path} params={projectParams} className="group">
+      {cardContent}
     </Link>
   );
 }
@@ -242,7 +279,7 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
           </Grid>
         </Flex>
       ) : hasSingleProject && featuredProject ? (
-        <Grid cols={1} colsLg={5} gap="xl" className="max-w-6xl items-start">
+        <Grid cols={1} colsLg={5} gap="xl" className="max-w-7xl items-start">
           <div className="lg:col-span-3">
             <ProjectCard
               key={featuredProject._id}

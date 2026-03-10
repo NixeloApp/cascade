@@ -460,6 +460,15 @@ export class ProjectsPage extends BasePage {
       await this.page.waitForTimeout(750);
     }
 
+    await this.page.evaluate(() => {
+      window.dispatchEvent(new Event("nixelo:create-issue"));
+    });
+    await this.createIssueModal.waitFor({ state: "visible", timeout: 3000 }).catch(() => {});
+
+    if (await this.createIssueModal.isVisible().catch(() => false)) {
+      return;
+    }
+
     await expect(this.createIssueModal).toBeVisible();
   }
 

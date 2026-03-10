@@ -51,9 +51,9 @@ export function BoardToolbar({
       align="center"
       justify="between"
       gap="xs"
-      className="mx-2 mt-1.5 rounded-lg border border-ui-border/70 bg-ui-bg-elevated px-2 py-1.5 shadow-soft sm:mx-6 sm:mt-4 sm:gap-sm sm:rounded-2xl sm:px-5 sm:pb-3 sm:pt-4"
+      className="mx-2 mt-1 rounded-lg border border-ui-border/70 bg-ui-bg-elevated px-1.5 py-1.5 shadow-soft sm:mx-6 sm:mt-4 sm:gap-sm sm:rounded-2xl sm:px-5 sm:pb-3 sm:pt-4"
     >
-      <div>
+      <div className="hidden sm:block">
         <Typography variant="h2" className="text-xs font-semibold tracking-tight sm:text-lg">
           <span className="sm:hidden">{sprintId ? "Sprint" : "Board"}</span>
           <span className="hidden sm:inline">{sprintId ? "Sprint Board" : "Kanban Board"}</span>
@@ -63,7 +63,11 @@ export function BoardToolbar({
         </Typography>
       </div>
       {showControls && (
-        <Flex align="center" gap="xs" className="shrink-0 sm:gap-2">
+        <Flex
+          align="center"
+          gap="xs"
+          className="w-full shrink-0 justify-between sm:w-auto sm:justify-start sm:gap-2"
+        >
           {/* Undo/Redo buttons */}
           <Flex align="center" gap="xs" className="hidden sm:flex mr-2 sm:mr-4">
             <Tooltip content="Undo (Ctrl+Z)">
@@ -113,7 +117,9 @@ export function BoardToolbar({
           </Flex>
 
           {/* View mode toggle (modal/peek) */}
-          <ViewModeToggle />
+          <div className="hidden sm:block">
+            <ViewModeToggle />
+          </div>
 
           {/* Display properties selector */}
           {displayOptions && onDisplayOptionsChange && (

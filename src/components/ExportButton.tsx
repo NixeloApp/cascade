@@ -29,11 +29,10 @@ export function ExportButton({ projectId, sprintId, status }: ExportButtonProps)
         size="sm"
         onClick={() => setIsModalOpen(true)}
         aria-label="Import and export issues"
-        className="h-8 rounded-lg px-2.5 text-xs sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm"
+        className="h-8 rounded-lg px-2 sm:text-xs sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm"
         leftIcon={<ArrowLeftRight className="w-4 h-4" />}
       >
-        <span className="sm:hidden">Transfer</span>
-        <span className="hidden sm:inline">Import / Export</span>
+        <span className="sr-only sm:not-sr-only sm:inline">Import / Export</span>
       </Button>
 
       <ImportExportModal
