@@ -69,7 +69,7 @@ export function BoardToolbar({
           align="center"
           justify="end"
           gap="xs"
-          className="absolute right-0 top-1 shrink-0 justify-end sm:static sm:w-auto sm:justify-start sm:gap-2"
+          className="absolute right-0 top-1 shrink-0 sm:static sm:w-auto sm:justify-start sm:gap-2"
         >
           {/* Undo/Redo buttons */}
           <Flex align="center" gap="xs" className="hidden sm:flex mr-2 sm:mr-4">
