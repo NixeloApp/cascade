@@ -113,4 +113,4 @@ const ToggleGroupItem = React.forwardRef<
 });
 ToggleGroupItem.displayName = ToggleGroupPrimitive.Item.displayName;
 
-export { ToggleGroup, ToggleGroupItem, toggleGroupVariants, toggleGroupItemVariants };
+export { ToggleGroup, ToggleGroupItem };

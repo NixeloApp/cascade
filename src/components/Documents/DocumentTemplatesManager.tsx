@@ -21,8 +21,8 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { IconPicker, TemplateIcon, toTemplateIconString } from "@/components/ui/IconPicker";
 import { Label } from "@/components/ui/Label";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/SegmentedControl";
 import { Stack } from "@/components/ui/Stack";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { FormInput, FormSelect, FormTextarea } from "@/lib/form";
@@ -208,20 +208,19 @@ export function DocumentTemplatesManager({
       <div>
         {/* Category Filter */}
         <div className="mb-6">
-          <ToggleGroup
-            type="single"
+          <SegmentedControl
             value={selectedCategory}
-            onValueChange={(value) => {
+            onValueChange={(value: string) => {
               if (value) setSelectedCategory(value);
             }}
             className="flex w-full flex-wrap justify-start"
           >
             {categoryFilters.map((cat) => (
-              <ToggleGroupItem key={cat.value} value={cat.value} className="whitespace-nowrap">
+              <SegmentedControlItem key={cat.value} value={cat.value} className="whitespace-nowrap">
                 {cat.label}
-              </ToggleGroupItem>
+              </SegmentedControlItem>
             ))}
-          </ToggleGroup>
+          </SegmentedControl>
         </div>
 
         {!templates || templates.length === 0 ? (

@@ -22,8 +22,8 @@ import { Flex } from "../ui/Flex";
 import { Input } from "../ui/form/Input";
 import { Grid } from "../ui/Grid";
 import { Label } from "../ui/Label";
+import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
-import { ToggleGroup, ToggleGroupItem } from "../ui/ToggleGroup";
 import {
   COLOR_PICKER_CLASSES,
   EVENT_TYPE_DEFAULT_COLOR,
@@ -165,10 +165,9 @@ export function CreateEventModal({
               {/* Event Type */}
               <div>
                 <Label className="mb-1">Event Type</Label>
-                <ToggleGroup
-                  type="single"
+                <SegmentedControl
                   value={eventType}
-                  onValueChange={(value) => {
+                  onValueChange={(value: string) => {
                     if (!eventTypes.includes(value as (typeof eventTypes)[number])) {
                       return;
                     }
@@ -182,15 +181,15 @@ export function CreateEventModal({
                   className="flex w-full flex-wrap"
                 >
                   {eventTypes.map((type) => (
-                    <ToggleGroupItem
+                    <SegmentedControlItem
                       key={type}
                       value={type}
                       className="flex-1 capitalize sm:flex-none"
                     >
                       {type}
-                    </ToggleGroupItem>
+                    </SegmentedControlItem>
                   ))}
-                </ToggleGroup>
+                </SegmentedControl>
               </div>
 
               {/* Color */}

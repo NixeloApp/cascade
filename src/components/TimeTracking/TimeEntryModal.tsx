@@ -22,9 +22,9 @@ import { Flex } from "../ui/Flex";
 import { Textarea } from "../ui/form";
 import { Grid } from "../ui/Grid";
 import { Label } from "../ui/Label";
+import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import { Stack } from "../ui/Stack";
-import { ToggleGroup, ToggleGroupItem } from "../ui/ToggleGroup";
 import { Typography } from "../ui/Typography";
 import {
   calculateEntryTimes,
@@ -389,29 +389,28 @@ export function TimeEntryModal({
         }}
       >
         {/* Mode Toggle */}
-        <ToggleGroup
-          type="single"
+        <SegmentedControl
           value={state.entryMode}
-          onValueChange={(value) => {
+          onValueChange={(value: string) => {
             if (value === "timer" || value === "duration" || value === "timeRange") {
               actions.setEntryMode(value);
             }
           }}
           className="flex w-full flex-col sm:flex-row"
         >
-          <ToggleGroupItem value="timer" className="w-full flex-1 justify-center gap-2">
+          <SegmentedControlItem value="timer" className="w-full flex-1 justify-center gap-2">
             <Play className="w-4 h-4" />
             Start Timer
-          </ToggleGroupItem>
-          <ToggleGroupItem value="duration" className="w-full flex-1 justify-center gap-2">
+          </SegmentedControlItem>
+          <SegmentedControlItem value="duration" className="w-full flex-1 justify-center gap-2">
             <Hourglass className="w-4 h-4" />
             Duration
-          </ToggleGroupItem>
-          <ToggleGroupItem value="timeRange" className="w-full flex-1 justify-center gap-2">
+          </SegmentedControlItem>
+          <SegmentedControlItem value="timeRange" className="w-full flex-1 justify-center gap-2">
             <Clock className="w-4 h-4" />
             Time Range
-          </ToggleGroupItem>
-        </ToggleGroup>
+          </SegmentedControlItem>
+        </SegmentedControl>
 
         {/* Project Selection */}
         <Stack gap="xs">

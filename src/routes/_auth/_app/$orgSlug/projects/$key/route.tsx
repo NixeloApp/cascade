@@ -10,12 +10,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { RouteNav, RouteNavItem } from "@/components/ui/RouteNav";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { ChevronDown } from "@/lib/icons";
-import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key")({
   component: ProjectLayout,
 });
@@ -195,45 +195,37 @@ function ProjectLayout() {
             </Badge>
           </Flex>
 
-          <nav
+          <RouteNav
+            variant="pill"
+            size="sm"
             className="mt-0.5 flex items-center gap-0.5 overflow-x-auto pb-0 pr-0.5 scrollbar-subtle sm:hidden"
             aria-label="Project sections"
           >
             {mobilePrimaryTabs.map((tab) => (
-              <Link
-                key={tab.name}
-                to={tab.to}
-                params={tab.params}
-                className={cn(
-                  "shrink-0 rounded-full border border-transparent bg-ui-bg-soft/68 px-1.5 py-0.5 text-xs font-medium whitespace-nowrap transition-default",
-                  "text-ui-text-secondary hover:border-ui-border/60 hover:bg-ui-bg-hover hover:text-ui-text",
-                )}
-                activeProps={{
-                  className:
-                    "border-ui-border-secondary/70 bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border-secondary/70",
-                }}
-              >
-                {tab.mobileName ?? tab.name}
-              </Link>
+              <RouteNavItem key={tab.name} asChild variant="pill" size="sm">
+                <Link
+                  to={tab.to}
+                  params={tab.params}
+                  activeProps={{ "aria-current": "page", "data-active": "true" }}
+                >
+                  {tab.mobileName ?? tab.name}
+                </Link>
+              </RouteNavItem>
             ))}
             {mobileSecondaryTabs.length > 0 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="unstyled"
-                    size={undefined}
-                    className={cn(
-                      "inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs font-medium transition-default",
-                      activeSecondaryTab &&
-                        "border-ui-border-secondary/70 bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border-secondary/70",
-                      !activeSecondaryTab &&
-                        "border-transparent bg-ui-bg-soft/68 text-ui-text-secondary hover:border-ui-border/60 hover:bg-ui-bg-hover hover:text-ui-text",
-                    )}
-                    aria-label="More project sections"
-                  >
-                    <span>More</span>
-                    <ChevronDown className="h-3.5 w-3.5" />
-                  </Button>
+                  <RouteNavItem asChild variant="pill" size="sm" active={!!activeSecondaryTab}>
+                    <Button
+                      variant="unstyled"
+                      size={undefined}
+                      className="gap-1"
+                      aria-label="More project sections"
+                    >
+                      <span>More</span>
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </Button>
+                  </RouteNavItem>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-40">
                   {mobileSecondaryTabs.map((tab) => (
@@ -246,30 +238,25 @@ function ProjectLayout() {
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
-          </nav>
+          </RouteNav>
 
-          <nav
+          <RouteNav
+            variant="pill"
             className="mt-1 hidden gap-1 overflow-x-auto pb-0.5 pr-1 scrollbar-subtle sm:mt-3 sm:flex sm:pb-1"
             aria-label="Project sections"
           >
             {tabs.map((tab) => (
-              <Link
-                key={tab.name}
-                to={tab.to}
-                params={tab.params}
-                className={cn(
-                  "shrink-0 rounded-full border border-transparent bg-ui-bg-soft/68 px-2 py-1 text-xs font-medium whitespace-nowrap transition-default sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm",
-                  "text-ui-text-secondary hover:border-ui-border/60 hover:bg-ui-bg-hover hover:text-ui-text",
-                )}
-                activeProps={{
-                  className:
-                    "border-ui-border-secondary/70 bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border-secondary/70",
-                }}
-              >
-                {tab.name}
-              </Link>
+              <RouteNavItem key={tab.name} asChild variant="pill">
+                <Link
+                  to={tab.to}
+                  params={tab.params}
+                  activeProps={{ "aria-current": "page", "data-active": "true" }}
+                >
+                  {tab.name}
+                </Link>
+              </RouteNavItem>
             ))}
-          </nav>
+          </RouteNav>
         </div>
       </div>
 
