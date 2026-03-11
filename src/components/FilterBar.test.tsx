@@ -155,8 +155,8 @@ describe("FilterBar", () => {
         />,
       );
 
-      // Open type dropdown
-      await user.click(screen.getByRole("button", { name: /^type$/i }));
+      // Open type dropdown (accessible name includes both responsive labels)
+      await user.click(screen.getByRole("button", { name: /type/i }));
 
       // Select bug type
       const bugOption = await screen.findByRole("menuitemcheckbox", { name: /bug/i });

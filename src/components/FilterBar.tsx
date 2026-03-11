@@ -114,9 +114,7 @@ function FilterDropdown<T>({
               : "hover:border-ui-border/60 hover:bg-ui-bg-hover/80",
           )}
         >
-          <span className="sm:hidden" aria-hidden="true">
-            {shortLabel ?? label}
-          </span>
+          <span className="sm:hidden">{shortLabel ?? label}</span>
           <span className="hidden sm:inline">{label}</span>
           {isActive && ` (${activeCount})`}
           <ChevronDown className="ml-1 w-4 h-4" />
@@ -182,9 +180,7 @@ function DateRangeDropdown({ label, shortLabel, value, onChange }: DateRangeDrop
               : "hover:border-ui-border/60 hover:bg-ui-bg-hover/80",
           )}
         >
-          <span className="sm:hidden" aria-hidden="true">
-            {shortLabel ?? label}
-          </span>
+          <span className="sm:hidden">{shortLabel ?? label}</span>
           <span className="hidden sm:inline">{label}</span>
           {isActive && " (1)"}
           <ChevronDown className="ml-1 w-4 h-4" />
@@ -239,9 +235,7 @@ function SavedFiltersDropdown({
           size="sm"
           className="h-7 rounded-md border border-transparent px-1.5 text-xs hover:border-ui-border/60 hover:bg-ui-bg-hover/80 sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm"
         >
-          <span className="sm:hidden" aria-hidden="true">
-            Saved
-          </span>
+          <span className="sm:hidden">Saved</span>
           <span className="hidden sm:inline">Saved Filters</span> ({savedFilters.length})
           <ChevronDown className="ml-1 w-4 h-4" />
         </Button>
