@@ -389,12 +389,36 @@ function collectFilesRecursively(dir: string): string[] {
 }
 
 function promoteStagedScreenshots(): void {
-  for (const stagedFile of collectFilesRecursively(ensureStagingRoot())) {
+  const stagedFiles = collectFilesRecursively(ensureStagingRoot());
+
+  // Build a map of target directories to the set of files that will be promoted there
+  const targetDirToFiles = new Map<string, Set<string>>();
+  for (const stagedFile of stagedFiles) {
     const relativePath = path.relative(ensureStagingRoot(), stagedFile);
     const finalPath = path.join(process.cwd(), relativePath);
-    if (fs.existsSync(finalPath)) {
-      fs.rmSync(finalPath, { force: true });
+    const targetDir = path.dirname(finalPath);
+    if (!targetDirToFiles.has(targetDir)) {
+      targetDirToFiles.set(targetDir, new Set());
     }
+    targetDirToFiles.get(targetDir)?.add(path.basename(finalPath));
+  }
+
+  // Delete stale screenshots (files in target dirs that won't be overwritten)
+  for (const [targetDir, expectedFiles] of targetDirToFiles) {
+    if (!fs.existsSync(targetDir)) continue;
+    for (const existingFile of fs.readdirSync(targetDir)) {
+      if (existingFile.endsWith(".png") && !expectedFiles.has(existingFile)) {
+        const stalePath = path.join(targetDir, existingFile);
+        fs.rmSync(stalePath, { force: true });
+        console.log(`  🗑️  Removed stale: ${path.relative(process.cwd(), stalePath)}`);
+      }
+    }
+  }
+
+  // Copy staged files to final locations
+  for (const stagedFile of stagedFiles) {
+    const relativePath = path.relative(ensureStagingRoot(), stagedFile);
+    const finalPath = path.join(process.cwd(), relativePath);
     fs.mkdirSync(path.dirname(finalPath), { recursive: true });
     fs.copyFileSync(stagedFile, finalPath);
   }

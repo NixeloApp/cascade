@@ -127,10 +127,12 @@ export class ProjectsPage extends BasePage {
 
     // Sidebar
     this.sidebar = page.locator("[data-tour='sidebar']").or(page.getByRole("complementary"));
-    // Scope to main content area to avoid matching sidebar buttons with similar text
+    // Scope to main content area and take first match (header action or empty-state action)
+    // Both trigger the same create-project modal, so either is valid
     this.newProjectButton = page
       .getByRole("main")
-      .getByRole("button", { name: /^\+?\s*create project$/i });
+      .getByRole("button", { name: /^\+?\s*create project$/i })
+      .first();
     this.newWorkspaceButton = page.getByRole("button", { name: "+ Create Workspace" });
     this.createEntityButton = this.sidebar.getByRole("button", {
       name: /add new|create|\+/i,
