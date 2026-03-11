@@ -2,6 +2,11 @@
  * CHECK: Design System Ownership
  * Enforces that high-drift feature surfaces use primitive-owned recipe/chrome APIs
  * instead of ad hoc visual class stacks.
+ *
+ * KEY ENFORCEMENT:
+ * - Detects className with 4+ visual token groups (bg, border, rounded, shadow, etc.)
+ * - Flags recipe/chrome props combined with excess visual overrides
+ * - Identifies legacy surfaceRecipes usage
  */
 
 import fs from "node:fs";
@@ -17,6 +22,31 @@ import {
   LEGACY_RECIPE_IMPORT_PATTERN,
 } from "./tailwind-policy.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
+
+/**
+ * Patterns that indicate a component is using design system props.
+ * These DON'T escape scrutiny - they just provide context for better error messages.
+ */
+const RECIPE_PROP_PATTERNS = [/\brecipe\s*=\s*["']/, /\bchrome\s*=\s*["']/, /\bvariant\s*=\s*["']/];
+
+/**
+ * Visual classes that shouldn't be needed if recipe/chrome is properly configured.
+ * These are redundant when the design system should handle them.
+ */
+const REDUNDANT_WITH_RECIPE_PATTERNS = {
+  border: /\bborder(?:-[^"'\s}]+)?/,
+  background: /\bbg-(?!transparent)\S+/,
+  shadow: /\bshadow(?:-[^"'\s}]+)?/,
+  text: /\btext-(?:xs|sm|base|lg|xl|\d|ui-)/,
+};
+
+function hasRecipeProp(tagText) {
+  return RECIPE_PROP_PATTERNS.some((p) => p.test(tagText));
+}
+
+function countRedundantClasses(span) {
+  return Object.values(REDUNDANT_WITH_RECIPE_PATTERNS).filter((p) => p.test(span)).length;
+}
 
 export function run() {
   const srcDir = path.join(ROOT, "src/components");
@@ -38,6 +68,7 @@ export function run() {
         file: rel,
         line: content.slice(0, legacyMatch.index).split("\n").length,
         replacement: "move legacy surfaceRecipes usage into Card/Button/Dialog recipe props",
+        severity: "high",
       });
     }
 
@@ -48,6 +79,8 @@ export function run() {
       const { span, endIndex } = collectClassNameSpan(lines, index);
       const tagText = findOpeningTag(lines, index);
 
+      // Only variant FUNCTION calls (e.g., cardVariants(...)) are full escapes
+      // Recipe/chrome PROPS don't escape - we check for redundant classes
       if (
         DESIGN_SYSTEM_ESCAPE_HATCHES.some(
           (token) => span.includes(token) || tagText.includes(token),
@@ -57,18 +90,31 @@ export function run() {
         continue;
       }
 
+      const usesRecipeProp = hasRecipeProp(tagText);
       const tokenCount = countMatchingTokenGroups(span, DESIGN_SYSTEM_TOKEN_PATTERNS);
-      if (tokenCount < 4) {
-        index = endIndex;
-        continue;
-      }
+      const redundantCount = usesRecipeProp ? countRedundantClasses(span) : 0;
 
-      violations.push({
-        file: rel,
-        line: index + 1,
-        replacement:
-          "extract to Card/Button/Dialog recipe APIs or shared primitive recipe variants",
-      });
+      // Violation scenarios:
+      // 1. Using recipe prop + 2+ redundant visual classes = recipe should handle this
+      // 2. No recipe prop + 4+ visual token groups = should use recipe API
+      if (usesRecipeProp && redundantCount >= 2) {
+        violations.push({
+          file: rel,
+          line: index + 1,
+          replacement:
+            "recipe/chrome prop present but className overrides visual styling. " +
+            "Extract these classes into the recipe variant or use chrome prop",
+          severity: "high",
+        });
+      } else if (!usesRecipeProp && tokenCount >= 4) {
+        violations.push({
+          file: rel,
+          line: index + 1,
+          replacement:
+            "extract to Card/Button/Dialog recipe APIs or shared primitive recipe variants",
+          severity: "medium",
+        });
+      }
 
       index = endIndex;
     }
@@ -80,12 +126,17 @@ export function run() {
     const byFile = groupByFile(violations);
 
     for (const [file, items] of Object.entries(byFile).sort()) {
-      messages.push(`  ${c.bold}${file}${c.reset} (${items.length})`);
-      for (const item of items.slice(0, 4)) {
-        messages.push(`    ${c.dim}L${item.line}${c.reset} → ${item.replacement}`);
+      const highCount = items.filter((i) => i.severity === "high").length;
+      const severityNote = highCount > 0 ? ` (${highCount} high severity)` : "";
+      messages.push(`  ${c.bold}${file}${c.reset} (${items.length})${severityNote}`);
+      for (const item of items.slice(0, 6)) {
+        const marker = item.severity === "high" ? c.red : c.yellow;
+        messages.push(
+          `    ${c.dim}L${item.line}${c.reset} ${marker}→${c.reset} ${item.replacement}`,
+        );
       }
-      if (items.length > 4) {
-        messages.push(`    ${c.dim}... and ${items.length - 4} more${c.reset}`);
+      if (items.length > 6) {
+        messages.push(`    ${c.dim}... and ${items.length - 6} more${c.reset}`);
       }
     }
   }
