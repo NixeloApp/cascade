@@ -124,7 +124,8 @@ const RouteNavItem = React.forwardRef<HTMLElement, RouteNavItemProps>(
       return <Slot ref={ref as React.Ref<HTMLElement>} {...sharedProps} />;
     }
 
-    return <div ref={ref as React.Ref<HTMLDivElement>} {...sharedProps} />;
+    // Fallback to button for keyboard accessibility when not using asChild
+    return <button type="button" ref={ref as React.Ref<HTMLButtonElement>} {...sharedProps} />;
   },
 );
 RouteNavItem.displayName = "RouteNavItem";
