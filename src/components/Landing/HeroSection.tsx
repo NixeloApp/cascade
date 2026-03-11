@@ -13,21 +13,8 @@ export function HeroSection() {
   return (
     <section className="relative overflow-hidden px-6 pb-6 pt-20 sm:pb-8 sm:pt-24">
       <div className="absolute inset-0 bg-ui-bg-hero">
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse 80% 50% at 50% 0%, color-mix(in oklab, var(--color-brand) 14%, transparent), transparent)",
-          }}
-        />
-        <div
-          className="absolute inset-0 opacity-[0.045] dark:opacity-5"
-          style={{
-            backgroundImage:
-              "linear-gradient(color-mix(in oklab, var(--color-ui-border) 44%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in oklab, var(--color-ui-border) 44%, transparent) 1px, transparent 1px)",
-            backgroundSize: "64px 64px",
-          }}
-        />
+        <div className="absolute inset-0 hero-radial-bg" />
+        <div className="absolute inset-0 hero-grid-bg" />
         <div className="absolute left-1/2 top-0 h-px w-full max-w-4xl -translate-x-1/2 bg-linear-to-r from-transparent via-landing-accent/50 to-transparent" />
       </div>
 

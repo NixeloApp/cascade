@@ -127,9 +127,10 @@ export class ProjectsPage extends BasePage {
 
     // Sidebar
     this.sidebar = page.locator("[data-tour='sidebar']").or(page.getByRole("complementary"));
-    // The projects index owns the create-project action, and using the page-level
-    // button is more reliable than over-scoping to a specific `main` subtree.
-    this.newProjectButton = page.getByRole("button", { name: /^\+?\s*create project$/i }).first();
+    // Scope to main content area to avoid matching sidebar buttons with similar text
+    this.newProjectButton = page
+      .getByRole("main")
+      .getByRole("button", { name: /^\+?\s*create project$/i });
     this.newWorkspaceButton = page.getByRole("button", { name: "+ Create Workspace" });
     this.createEntityButton = this.sidebar.getByRole("button", {
       name: /add new|create|\+/i,

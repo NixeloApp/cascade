@@ -3112,6 +3112,21 @@ export const seedScreenshotDataInternal = internalMutation({
     }
 
     const secondaryProjectId = secondaryProject._id;
+
+    // Normalize OPS project membership: remove stale members from previous runs
+    // (autoLogin recreates the screenshot user, so old membership rows accumulate)
+    const opsMembers = await ctx.db
+      .query("projectMembers")
+      .withIndex("by_project", (q) => q.eq("projectId", secondaryProjectId))
+      .filter(notDeleted)
+      .collect();
+    for (const member of opsMembers) {
+      if (member.userId !== userId) {
+        await ctx.db.delete(member._id);
+      }
+    }
+
+    // Ensure current user is an OPS project member
     const secondaryProjectMember = await ctx.db
       .query("projectMembers")
       .withIndex("by_project_user", (q) =>
@@ -3408,10 +3423,15 @@ export const seedScreenshotDataInternal = internalMutation({
         .first();
 
       const seededSnapshot = SCREENSHOT_DOCUMENT_SNAPSHOTS[title];
-      if (!latestVersion && seededSnapshot) {
+      // Insert a new version if no version exists OR if the snapshot has changed
+      // (allows re-seeding to update stale document content across runs)
+      if (
+        seededSnapshot &&
+        JSON.stringify(latestVersion?.snapshot ?? null) !== JSON.stringify(seededSnapshot)
+      ) {
         await ctx.db.insert("documentVersions", {
           documentId: existingDoc._id,
-          version: 1,
+          version: (latestVersion?.version ?? 0) + 1,
           snapshot: seededSnapshot,
           title,
           createdBy: userId,

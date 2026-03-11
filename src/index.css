@@ -945,6 +945,27 @@ body {
   background: var(--color-scrollbar-thumb-hover);
 }
 
+/* Hero section background effects (radial glow + grid pattern) */
+.hero-radial-bg {
+  background: radial-gradient(
+    ellipse 80% 50% at 50% 0%,
+    color-mix(in oklab, var(--color-brand) 14%, transparent),
+    transparent
+  );
+}
+
+.hero-grid-bg {
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--color-ui-border) 44%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--color-ui-border) 44%, transparent) 1px, transparent 1px);
+  background-size: 64px 64px;
+  opacity: 0.045;
+}
+
+:is(.dark, [data-theme="dark"]) .hero-grid-bg {
+  opacity: 0.05;
+}
+
 /* Typography utilities with tight letter-spacing */
 .tracking-tight {
   letter-spacing: var(--tracking-tight);
