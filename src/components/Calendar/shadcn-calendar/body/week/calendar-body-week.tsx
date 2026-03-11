@@ -17,6 +17,7 @@ export function CalendarBodyWeek(): React.ReactElement {
 
   useCalendarInitialScroll(scrollRef, events, date, "week");
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: date determines which element gets activeDayRef
   useLayoutEffect(() => {
     const scrollElement = scrollRef.current;
     const activeDayElement = activeDayRef.current;
@@ -32,7 +33,7 @@ export function CalendarBodyWeek(): React.ReactElement {
     });
 
     return () => window.cancelAnimationFrame(frame);
-  });
+  }, [date]);
 
   return (
     <div className="flex divide-x divide-ui-border flex-grow overflow-hidden bg-ui-bg">

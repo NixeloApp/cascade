@@ -186,7 +186,9 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
   const initialEditorValue = versions?.[0]
     ? proseMirrorSnapshotToValue(versions[0].snapshot)
     : getInitialValue();
-  const isEmptyEditor = isEmptyValue(editorValue);
+  // Derive empty state from initialEditorValue when versions are loaded to avoid flash
+  const isEmptyEditor =
+    versions !== undefined ? isEmptyValue(initialEditorValue) : isEmptyValue(editorValue);
 
   useEffect(() => {
     if (typeof window === "undefined") {

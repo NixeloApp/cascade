@@ -6,7 +6,7 @@
  */
 
 import { matchesKeyboardEvent, type ParsedHotkey, parseHotkey } from "@tanstack/hotkeys";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 
 export interface KeyboardShortcut {
   key: string;
@@ -194,14 +194,22 @@ export function useKeyboardShortcutsWithSequences(
   sequences: KeySequence[] = [],
   enabled = true,
 ) {
-  const parsedShortcuts = shortcuts.map((shortcut) => ({
-    definition: shortcut,
-    parsed: parseShortcut(shortcut),
-  }));
-  const parsedSequences = sequences.map((sequence) => ({
-    definition: sequence,
-    parsed: sequence.keys.map((sequenceKey) => parseSequenceKey(sequenceKey)),
-  }));
+  const parsedShortcuts = useMemo(
+    () =>
+      shortcuts.map((shortcut) => ({
+        definition: shortcut,
+        parsed: parseShortcut(shortcut),
+      })),
+    [shortcuts],
+  );
+  const parsedSequences = useMemo(
+    () =>
+      sequences.map((sequence) => ({
+        definition: sequence,
+        parsed: sequence.keys.map((sequenceKey) => parseSequenceKey(sequenceKey)),
+      })),
+    [sequences],
+  );
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
