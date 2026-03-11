@@ -902,7 +902,8 @@ export class DashboardPage extends BasePage {
 
   async pressShortcutsHelpShortcut() {
     await this.waitForLoad();
-    await this.page.keyboard.press("Shift+?");
+    // Press Shift+/ which produces "?" - TanStack hotkeys normalizes this to Shift+/
+    await this.page.keyboard.press("Shift+/");
     await expect(this.shortcutsModal).toBeVisible();
   }
 
