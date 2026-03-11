@@ -1,6 +1,9 @@
+import { matchesKeyboardEvent, parseHotkey } from "@tanstack/hotkeys";
 import { useCallback, useEffect, useState } from "react";
 
 type TabType = "all" | "issues" | "documents";
+const OPEN_SEARCH_HOTKEYS = [parseHotkey("Meta+K"), parseHotkey("Control+K")];
+const CLOSE_SEARCH_HOTKEY = parseHotkey("Escape");
 
 const initialSearchState = {
   isOpen: false,
@@ -41,12 +44,14 @@ export function useSearchKeyboard() {
   }, []);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (OPEN_SEARCH_HOTKEYS.some((hotkey) => matchesKeyboardEvent(event, hotkey))) {
+        event.preventDefault();
         setIsOpen(true);
+        return;
       }
-      if (e.key === "Escape") {
+
+      if (matchesKeyboardEvent(event, CLOSE_SEARCH_HOTKEY)) {
         setIsOpen(false);
       }
     };
