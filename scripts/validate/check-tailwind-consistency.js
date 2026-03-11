@@ -117,8 +117,12 @@ const HIGH_Z_PATTERN = /\bz-(\d+)\b/g;
 // 5. GROUP-HOVER ORPHANS
 // ============================================================
 
-// Group variant patterns that need a parent with `group` class
-const GROUP_VARIANT_PATTERN = /\b(group-hover|group-focus|group-active|peer-hover|peer-focus):/;
+// Group/peer variant patterns that need a parent marker on the surrounding JSX.
+const GROUP_VARIANT_PATTERN =
+  /\b(?:group|peer)-(?:hover|focus|focus-within|active)(?:\/[A-Za-z0-9_-]+)?:/;
+
+const GROUP_CLASS_PATTERN = /\bgroup(?:\/[A-Za-z0-9_-]+)?\b/;
+const PEER_CLASS_PATTERN = /\bpeer(?:\/[A-Za-z0-9_-]+)?\b/;
 
 // ============================================================
 // 6. RESPONSIVE BREAKPOINT CONSISTENCY
@@ -144,6 +148,15 @@ const SKIP_FILES_ANIMATION = new Set([
   "tailwind.config",
   "index.css",
 ]);
+
+function hasMarkerClassInContext(text, marker) {
+  const markerPattern = marker === "group" ? GROUP_CLASS_PATTERN : PEER_CLASS_PATTERN;
+  const classNamePattern = new RegExp(
+    `className\\s*=\\s*(?:\\{[\\s\\S]*?${markerPattern.source}[\\s\\S]*?\\}|["'][^"']*${markerPattern.source}[^"']*["'])`,
+  );
+
+  return classNamePattern.test(text);
+}
 
 export function run() {
   const SRC_DIR = path.join(ROOT, "src");
@@ -172,10 +185,6 @@ export function run() {
 
     const content = fs.readFileSync(filePath, "utf-8");
     const lines = content.split("\n");
-
-    // Track if file has `group` or `peer` class for group-hover/peer-hover check
-    const hasGroupClass = /\bgroup\b/.test(content) || /className.*group/.test(content);
-    const hasPeerClass = /\bpeer\b/.test(content) || /className.*peer/.test(content);
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -261,34 +270,20 @@ export function run() {
       // ---- 5. Group-Hover Orphans Check ----
       if (GROUP_VARIANT_PATTERN.test(line)) {
         // Check if line uses peer-* variant
-        const usesPeerVariant = /\bpeer-(hover|focus|active):/.test(line);
+        const usesPeerVariant =
+          /\bpeer-(?:hover|focus|focus-within|active)(?:\/[A-Za-z0-9_-]+)?:/.test(line);
         // Check if line uses group-* variant
-        const usesGroupVariant = /\bgroup-(hover|focus|active):/.test(line);
+        const usesGroupVariant =
+          /\bgroup-(?:hover|focus|focus-within|active)(?:\/[A-Za-z0-9_-]+)?:/.test(line);
 
-        // For peer variants, check if file has peer class
-        // For group variants, check if file has group class
-        const hasRequiredClass = usesPeerVariant
-          ? hasPeerClass
-          : usesGroupVariant
-            ? hasGroupClass
-            : false;
-
-        if (
-          !hasRequiredClass &&
-          !line.includes("group ") &&
-          !line.includes('group"') &&
-          !line.includes("group'") &&
-          !line.includes("peer ") &&
-          !line.includes('peer"') &&
-          !line.includes("peer'")
-        ) {
+        if (!hasMarkerClassInContext(line, "group") && !hasMarkerClassInContext(line, "peer")) {
           // Check in a small window around this line
           const windowStart = Math.max(0, i - 20);
           const windowEnd = Math.min(lines.length, i + 20);
           const window = lines.slice(windowStart, windowEnd).join("\n");
 
-          const hasGroupInWindow = /\bgroup\b/.test(window) || /className=.*group/.test(window);
-          const hasPeerInWindow = /\bpeer\b/.test(window) || /className=.*peer/.test(window);
+          const hasGroupInWindow = hasMarkerClassInContext(window, "group");
+          const hasPeerInWindow = hasMarkerClassInContext(window, "peer");
 
           const windowHasRequiredClass = usesPeerVariant
             ? hasPeerInWindow
