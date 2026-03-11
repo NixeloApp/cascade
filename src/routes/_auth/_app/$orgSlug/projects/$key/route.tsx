@@ -10,7 +10,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import { Flex, FlexItem } from "@/components/ui/Flex";
-import { tabsTriggerVariants } from "@/components/ui/Tabs";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -20,8 +19,6 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key")({
   component: ProjectLayout,
 });
-
-const projectNavTriggerClassName = tabsTriggerVariants({ variant: "pill", size: "compact" });
 
 function ProjectLayout() {
   const { key, orgSlug } = Route.useParams();
@@ -207,9 +204,13 @@ function ProjectLayout() {
                 key={tab.name}
                 to={tab.to}
                 params={tab.params}
-                className={cn(projectNavTriggerClassName, "shrink-0")}
+                className={cn(
+                  "shrink-0 rounded-full border border-transparent bg-ui-bg-soft/68 px-1.5 py-0.5 text-xs font-medium whitespace-nowrap transition-default",
+                  "text-ui-text-secondary hover:border-ui-border/60 hover:bg-ui-bg-hover hover:text-ui-text",
+                )}
                 activeProps={{
-                  className: "bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border-secondary/70",
+                  className:
+                    "border-ui-border-secondary/70 bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border-secondary/70",
                 }}
               >
                 {tab.mobileName ?? tab.name}
@@ -222,10 +223,11 @@ function ProjectLayout() {
                     variant="unstyled"
                     size={undefined}
                     className={cn(
-                      projectNavTriggerClassName,
-                      "shrink-0 gap-1",
+                      "inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs font-medium transition-default",
                       activeSecondaryTab &&
-                        "bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border-secondary/70",
+                        "border-ui-border-secondary/70 bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border-secondary/70",
+                      !activeSecondaryTab &&
+                        "border-transparent bg-ui-bg-soft/68 text-ui-text-secondary hover:border-ui-border/60 hover:bg-ui-bg-hover hover:text-ui-text",
                     )}
                     aria-label="More project sections"
                   >
@@ -255,9 +257,13 @@ function ProjectLayout() {
                 key={tab.name}
                 to={tab.to}
                 params={tab.params}
-                className={cn(projectNavTriggerClassName, "shrink-0")}
+                className={cn(
+                  "shrink-0 rounded-full border border-transparent bg-ui-bg-soft/68 px-2 py-1 text-xs font-medium whitespace-nowrap transition-default sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm",
+                  "text-ui-text-secondary hover:border-ui-border/60 hover:bg-ui-bg-hover hover:text-ui-text",
+                )}
                 activeProps={{
-                  className: "bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border-secondary/70",
+                  className:
+                    "border-ui-border-secondary/70 bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border-secondary/70",
                 }}
               >
                 {tab.name}

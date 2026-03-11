@@ -22,7 +22,7 @@ import {
 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
-import { Button, buttonVariants } from "./ui/Button";
+import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Flex, FlexItem } from "./ui/Flex";
@@ -115,6 +115,13 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
     setDragOver(false);
   };
 
+  const handleUploadAreaKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      fileInputRef.current?.click();
+    }
+  };
+
   const handleDelete = async () => {
     if (!deleteConfirm) return;
 
@@ -163,13 +170,14 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
         id="file-upload"
         tabIndex={-1}
       />
-      <Button
-        variant="unstyled"
+      <Card
+        variant="ghost"
         aria-label="File upload area. Drag and drop files here, or click to browse."
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onClick={() => fileInputRef.current?.click()}
+        onKeyDown={handleUploadAreaKeyDown}
         className={cn(
           "w-full h-auto border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-2 transition-colors duration-default cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring",
           dragOver
@@ -179,22 +187,19 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
       >
         <Icon icon={Paperclip} size="xl" className="mx-auto text-ui-text-tertiary" />
         <Typography variant="muted">Drag and drop files here, or click to browse</Typography>
-        <div
-          className={cn(
-            buttonVariants({ variant: "secondary", size: "sm" }),
-            "pointer-events-none",
-          )}
-        >
-          {uploading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin mr-2" aria-hidden="true" />
-              Uploading...
-            </>
-          ) : (
-            "Choose Files"
-          )}
+        <div className="pointer-events-none">
+          <Button variant="secondary" size="sm" type="button">
+            {uploading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                Uploading...
+              </>
+            ) : (
+              "Choose Files"
+            )}
+          </Button>
         </div>
-      </Button>
+      </Card>
 
       {/* Attachments List */}
       {attachments && attachments.length > 0 && (

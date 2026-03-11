@@ -23,18 +23,19 @@
  *  19. Component naming        — PascalCase components, {Component}Props interfaces
  *  20. Component props         — consistent prop naming across component definitions
  *  21. Duplicate components    — detect components with same name in different directories
- *  22. Interactive Tailwind    — hover:/focus: should be in CVA components, not scattered
- *  23. Tailwind consistency    — duration tokens, focus rings, disabled states, z-index, group-hover
- *  24. JSDoc coverage          — exported functions/components should have JSDoc documentation
- *  25. Import paths            — validates import path conventions
- *  26. Hook patterns           — custom hooks should follow consistent patterns
- *  27. Async patterns          — consistent error handling in async operations
- *  28. Time constants          — enforces use of timeUtils constants instead of magic numbers
- *  29. Unused parameters       — flags underscore-prefixed unused params (remove or use them)
- *  30. Test coverage           — critical files should have corresponding tests
- *  31. Weak assertions         — toBeDefined(), toBeTruthy(), {} as Type in tests
- *  32. Native confirm()        — ensure custom dialogs used instead of native confirm()
- *  33. Convex hooks            — validates Convex hook usage patterns
+ *  22. CVA boundaries          — ban importing exported CVA recipes outside shared ui primitives
+ *  23. Interactive Tailwind    — hover:/focus: should be in CVA components, not scattered
+ *  24. Tailwind consistency    — duration tokens, focus rings, disabled states, z-index, group-hover
+ *  25. JSDoc coverage          — exported functions/components should have JSDoc documentation
+ *  26. Import paths            — validates import path conventions
+ *  27. Hook patterns           — custom hooks should follow consistent patterns
+ *  28. Async patterns          — consistent error handling in async operations
+ *  29. Time constants          — enforces use of timeUtils constants instead of magic numbers
+ *  30. Unused parameters       — flags underscore-prefixed unused params (remove or use them)
+ *  31. Test coverage           — critical files should have corresponding tests
+ *  32. Weak assertions         — toBeDefined(), toBeTruthy(), {} as Type in tests
+ *  33. Native confirm()        — ensure custom dialogs used instead of native confirm()
+ *  34. Convex hooks            — validates Convex hook usage patterns
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -175,6 +176,10 @@ const checks = [
   {
     name: "Duplicate components",
     modulePath: new URL("./validate/check-duplicate-components.js", import.meta.url).href,
+  },
+  {
+    name: "CVA boundaries",
+    modulePath: new URL("./validate/check-cva-boundaries.js", import.meta.url).href,
   },
   {
     name: "Interactive Tailwind",
