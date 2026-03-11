@@ -75,19 +75,17 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
           onValueChange={(value: string) =>
             setSelectedType(value === "all" ? undefined : (value as SuggestionType))
           }
-          className="mt-3 flex-wrap"
+          className="mt-3 flex w-full flex-wrap justify-start"
           size="sm"
         >
-          <ToggleGroupItem value="all" variant="brand">
-            All
-          </ToggleGroupItem>
-          <ToggleGroupItem value="risk_detection" variant="error">
+          <ToggleGroupItem value="all">All</ToggleGroupItem>
+          <ToggleGroupItem value="risk_detection">
             <Icon icon={AlertTriangle} size="sm" className="inline mr-1" /> Risks
           </ToggleGroupItem>
-          <ToggleGroupItem value="insight" variant="accent">
+          <ToggleGroupItem value="insight">
             <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> Insights
           </ToggleGroupItem>
-          <ToggleGroupItem value="sprint_planning" variant="success">
+          <ToggleGroupItem value="sprint_planning">
             <Icon icon={Calendar} size="sm" className="inline mr-1" /> Planning
           </ToggleGroupItem>
         </ToggleGroup>

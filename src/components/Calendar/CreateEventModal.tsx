@@ -23,6 +23,7 @@ import { Input } from "../ui/form/Input";
 import { Grid } from "../ui/Grid";
 import { Label } from "../ui/Label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { ToggleGroup, ToggleGroupItem } from "../ui/ToggleGroup";
 import {
   COLOR_PICKER_CLASSES,
   EVENT_TYPE_DEFAULT_COLOR,
@@ -164,24 +165,32 @@ export function CreateEventModal({
               {/* Event Type */}
               <div>
                 <Label className="mb-1">Event Type</Label>
-                <Grid cols={4} gap="sm">
+                <ToggleGroup
+                  type="single"
+                  value={eventType}
+                  onValueChange={(value) => {
+                    if (!eventTypes.includes(value as (typeof eventTypes)[number])) {
+                      return;
+                    }
+
+                    const nextType = value as CreateEventForm["eventType"];
+                    form.setFieldValue("eventType", nextType);
+                    if (!selectedColor) {
+                      setSelectedColor(EVENT_TYPE_DEFAULT_COLOR[nextType]);
+                    }
+                  }}
+                  className="flex w-full flex-wrap"
+                >
                   {eventTypes.map((type) => (
-                    <Button
+                    <ToggleGroupItem
                       key={type}
-                      variant={eventType === type ? "primary" : "secondary"}
-                      size="sm"
-                      onClick={() => {
-                        form.setFieldValue("eventType", type as (typeof eventTypes)[number]);
-                        if (!selectedColor) {
-                          setSelectedColor(EVENT_TYPE_DEFAULT_COLOR[type]);
-                        }
-                      }}
-                      className="capitalize"
+                      value={type}
+                      className="flex-1 capitalize sm:flex-none"
                     >
                       {type}
-                    </Button>
+                    </ToggleGroupItem>
                   ))}
-                </Grid>
+                </ToggleGroup>
               </div>
 
               {/* Color */}

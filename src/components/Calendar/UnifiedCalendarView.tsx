@@ -28,7 +28,6 @@ export function UnifiedCalendarView({ projectId }: UnifiedCalendarViewProps) {
           type="single"
           value={viewType}
           onValueChange={(value) => value && setViewType(value as ViewType)}
-          variant="brand"
         >
           <ToggleGroupItem value="calendar">
             <Icon icon={Calendar} size="sm" className="mr-1" />

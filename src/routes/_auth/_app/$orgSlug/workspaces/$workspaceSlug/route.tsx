@@ -3,13 +3,17 @@ import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { PageHeader, PageLayout } from "@/components/layout";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { tabsTriggerVariants } from "@/components/ui/Tabs";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspaceSlug")({
   component: WorkspaceLayout,
 });
+
+const workspaceNavLinkClassName = tabsTriggerVariants({ variant: "underline" });
 
 function WorkspaceLayout() {
   const { organizationId, orgSlug } = useOrganization();
@@ -53,49 +57,57 @@ function WorkspaceLayout() {
           <Link
             to={ROUTES.workspaces.detail.path}
             params={{ orgSlug, workspaceSlug }}
-            className="px-1 py-3 border-b-2 border-brand font-medium text-brand"
+            activeOptions={{ exact: true }}
+            className={cn(workspaceNavLinkClassName, "font-medium")}
+            activeProps={{ className: "border-brand text-ui-text" }}
           >
             Teams
           </Link>
           <Link
             to={ROUTES.workspaces.backlog.path}
             params={{ orgSlug, workspaceSlug }}
-            className="px-1 py-3 border-b-2 border-transparent hover:border-ui-border-secondary text-ui-text-secondary hover:text-ui-text"
+            className={workspaceNavLinkClassName}
+            activeProps={{ className: "border-brand text-ui-text" }}
           >
             Backlog
           </Link>
           <Link
             to={ROUTES.workspaces.sprints.path}
             params={{ orgSlug, workspaceSlug }}
-            className="px-1 py-3 border-b-2 border-transparent hover:border-ui-border-secondary text-ui-text-secondary hover:text-ui-text"
+            className={workspaceNavLinkClassName}
+            activeProps={{ className: "border-brand text-ui-text" }}
           >
             Sprints
           </Link>
           <Link
             to={ROUTES.workspaces.dependencies.path}
             params={{ orgSlug, workspaceSlug }}
-            className="px-1 py-3 border-b-2 border-transparent hover:border-ui-border-secondary text-ui-text-secondary hover:text-ui-text"
+            className={workspaceNavLinkClassName}
+            activeProps={{ className: "border-brand text-ui-text" }}
           >
             Dependencies
           </Link>
           <Link
             to={ROUTES.workspaces.calendar.path}
             params={{ orgSlug, workspaceSlug }}
-            className="px-1 py-3 border-b-2 border-transparent hover:border-ui-border-secondary text-ui-text-secondary hover:text-ui-text"
+            className={workspaceNavLinkClassName}
+            activeProps={{ className: "border-brand text-ui-text" }}
           >
             Calendar
           </Link>
           <Link
             to={ROUTES.workspaces.wiki.path}
             params={{ orgSlug, workspaceSlug }}
-            className="px-1 py-3 border-b-2 border-transparent hover:border-ui-border-secondary text-ui-text-secondary hover:text-ui-text"
+            className={workspaceNavLinkClassName}
+            activeProps={{ className: "border-brand text-ui-text" }}
           >
             Wiki
           </Link>
           <Link
             to={ROUTES.workspaces.settings.path}
             params={{ orgSlug, workspaceSlug }}
-            className="px-1 py-3 border-b-2 border-transparent hover:border-ui-border-secondary text-ui-text-secondary hover:text-ui-text"
+            className={workspaceNavLinkClassName}
+            activeProps={{ className: "border-brand text-ui-text" }}
           >
             Settings
           </Link>
