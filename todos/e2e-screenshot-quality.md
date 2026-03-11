@@ -9,7 +9,7 @@
 
 Keep `pnpm screenshots` trustworthy and useful.
 
-That means two things must stay true at the same time:
+That means three things must stay true at the same time:
 
 1. the screenshot runner captures real, loaded UI states deterministically
 2. the resulting screenshots drive disciplined visual improvements instead of ad hoc page tweaks

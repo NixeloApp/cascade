@@ -17,6 +17,7 @@ import { useSearchKeyboard, useSearchPagination } from "@/hooks/useGlobalSearch"
 import { ArrowRight, Command, Filter, Plus, Search } from "@/lib/icons";
 import { parseIssueSearchShortcuts } from "@/lib/search-shortcuts";
 import { TEST_IDS } from "@/lib/test-ids";
+import { cn } from "@/lib/utils";
 import type { CommandAction } from "./CommandPalette";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
@@ -29,6 +30,7 @@ import {
   Command as CommandMenu,
 } from "./ui/Command";
 import { KeyboardShortcut, ShortcutHint } from "./ui/KeyboardShortcut";
+import { chromeButtonVariants, surfaceRecipeVariants } from "./ui/surfaceRecipes";
 import { Tabs, TabsList, TabsTrigger } from "./ui/Tabs";
 import { Typography } from "./ui/Typography";
 
@@ -496,13 +498,19 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
         }}
         aria-label="Open search and commands"
         data-testid={TEST_IDS.HEADER.SEARCH_BUTTON}
-        className="h-10 w-10 shrink-0 justify-center rounded-full border border-transparent bg-transparent px-0 text-ui-text-secondary shadow-none transition-all duration-default hover:border-ui-border/70 hover:bg-ui-bg-soft/80 hover:text-ui-text sm:min-w-0 sm:max-w-md sm:flex-1 sm:justify-between sm:px-2"
+        className={cn(
+          chromeButtonVariants({ tone: "framed", size: "pill" }),
+          "w-full min-w-0 justify-center gap-2 px-2.5 sm:justify-between sm:px-3",
+        )}
       >
         <Flex align="center" gap="sm" className="min-w-0">
           <Flex
             align="center"
             justify="center"
-            className="h-8 w-8 shrink-0 rounded-full border border-ui-border/60 bg-linear-to-br from-ui-bg-secondary to-ui-bg-soft text-ui-text-tertiary shadow-soft sm:h-7 sm:w-7"
+            className={cn(
+              surfaceRecipeVariants({ recipe: "controlStrip" }),
+              "h-8 w-8 shrink-0 rounded-full border-ui-border/60 text-ui-text-tertiary sm:h-7 sm:w-7",
+            )}
           >
             <Search className="h-4 w-4" />
           </Flex>
@@ -526,7 +534,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
       >
         <CommandMenu
           data-testid={TEST_IDS.SEARCH.MODAL}
-          className="bg-linear-to-b from-ui-bg to-ui-bg-secondary/70"
+          className="flex min-h-0 flex-1 flex-col bg-transparent"
           shouldFilter={false}
         >
           <CommandInput
@@ -573,7 +581,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
             </Tabs>
           ) : null}
 
-          <CommandList className="max-h-96 sm:max-h-screen">
+          <CommandList className="min-h-0 flex-1">
             <SearchListContent
               query={effectiveQuery}
               hasShortcuts={parsedSearch.hasShortcuts}
@@ -609,7 +617,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
                 size="sm"
                 onClick={handleOpenAdvancedSearch}
                 leftIcon={<Filter className="h-4 w-4" />}
-                className="rounded-full border border-ui-border/40 bg-ui-bg-soft/60"
+                className={chromeButtonVariants({ tone: "framed", size: "compactPill" })}
               >
                 Advanced Search
               </Button>
@@ -618,7 +626,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
                 size="sm"
                 onClick={() => setQuery("@")}
                 leftIcon={<Plus className="h-4 w-4" />}
-                className="rounded-full border border-ui-border/40 bg-ui-bg-soft/60"
+                className={chromeButtonVariants({ tone: "framed", size: "compactPill" })}
               >
                 Search with filters
               </Button>

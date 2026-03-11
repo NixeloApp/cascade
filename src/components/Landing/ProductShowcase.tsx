@@ -5,6 +5,7 @@ import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
+import { surfaceRecipeVariants } from "../ui/surfaceRecipes";
 import { Typography } from "../ui/Typography";
 
 const boardColumns = [
@@ -31,11 +32,8 @@ export function ProductShowcase() {
     <div id="product-showcase" className="relative mx-auto mt-0 max-w-6xl sm:mt-1">
       <div className="pointer-events-none absolute inset-x-16 top-8 h-52 rounded-full bg-landing-accent/10 blur-glow" />
 
-      <Card
-        variant="outline"
-        className="relative overflow-hidden rounded-3xl border-ui-border-secondary/75 bg-ui-bg-elevated/98 shadow-elevated"
-      >
-        <div className="border-b border-ui-border/60 bg-ui-bg-soft/82 px-4 py-3">
+      <Card variant="ghost" className={surfaceRecipeVariants({ recipe: "showcaseShell" })}>
+        <div className="border-b border-ui-border/60 bg-ui-bg-soft/82 px-4 py-3 sm:px-5">
           <Flex align="center" justify="between" gap="md">
             <Flex align="center" gap="sm">
               <div className="h-2.5 w-2.5 rounded-full bg-status-error/80" />
@@ -61,61 +59,81 @@ export function ProductShowcase() {
 
         <Grid
           cols={1}
-          colsLg={3}
+          colsLg={12}
           gap="lg"
-          className="bg-linear-to-b from-ui-bg-soft/78 to-ui-bg px-4 py-4"
+          className="bg-linear-to-b from-ui-bg-soft/78 to-ui-bg px-4 py-4 sm:px-5"
         >
-          <div className="space-y-4 lg:col-span-2">
-            <Card
-              variant="soft"
-              className="rounded-2xl border-ui-border/60 bg-ui-bg-secondary/80 p-5"
-            >
-              <Flex justify="between" align="start" gap="md" className="mb-4">
-                <div>
-                  <Typography variant="h3" className="text-2xl">
-                    Product control tower
-                  </Typography>
-                  <Typography variant="small" color="secondary" className="mt-1 max-w-xl">
-                    Specs, tasks, docs, and delivery signals stay connected instead of spreading
-                    across five tools.
-                  </Typography>
+          <div className="space-y-4 lg:col-span-8">
+            <Card variant="ghost" className={surfaceRecipeVariants({ recipe: "showcasePanel" })}>
+              <Grid cols={1} colsXl={12} gap="lg" className="p-4 sm:p-5">
+                <div className="space-y-4 xl:col-span-4">
+                  <div>
+                    <Badge variant="outline" shape="pill">
+                      Product workspace
+                    </Badge>
+                    <Typography variant="h3" className="mt-4 text-2xl sm:text-3xl">
+                      Product control tower
+                    </Typography>
+                    <Typography variant="small" color="secondary" className="mt-2 max-w-sm">
+                      Specs, tasks, docs, and delivery signals stay connected instead of spreading
+                      across five tools and three disconnected update loops.
+                    </Typography>
+                  </div>
+
+                  <div className="space-y-3">
+                    {[
+                      "Planning stays attached to delivery work instead of drifting into separate docs",
+                      "Board movement, AI help, and time context live in the same surface",
+                    ].map((item) => (
+                      <Flex key={item} align="start" gap="sm">
+                        <div className="mt-1 rounded-full bg-status-success/15 p-1 text-status-success-text">
+                          <ArrowRight className="h-3 w-3" />
+                        </div>
+                        <Typography variant="small" color="secondary">
+                          {item}
+                        </Typography>
+                      </Flex>
+                    ))}
+                  </div>
+
+                  <Button variant="secondary" size="sm" className="w-full sm:w-auto">
+                    Open board
+                  </Button>
                 </div>
 
-                <Button variant="secondary" size="sm" className="hidden md:inline-flex">
-                  Open board
-                </Button>
-              </Flex>
+                <Grid cols={1} colsMd={3} gap="md" className="xl:col-span-8">
+                  {boardColumns.map((column) => (
+                    <div
+                      key={column.title}
+                      className={cn(surfaceRecipeVariants({ recipe: "showcasePanelQuiet" }), "p-3")}
+                    >
+                      <Flex align="center" justify="between" className="mb-3">
+                        <Typography variant="label">{column.title}</Typography>
+                        <div className={cn("h-2 w-2 rounded-full", column.accent)} />
+                      </Flex>
 
-              <Grid cols={1} colsMd={3} gap="md">
-                {boardColumns.map((column) => (
-                  <div
-                    key={column.title}
-                    className="rounded-2xl border border-ui-border/50 bg-ui-bg/80 p-3"
-                  >
-                    <Flex align="center" justify="between" className="mb-3">
-                      <Typography variant="label">{column.title}</Typography>
-                      <div className={cn("h-2 w-2 rounded-full", column.accent)} />
-                    </Flex>
-
-                    <div className="space-y-2">
-                      {column.cards.map((card) => (
-                        <Card
-                          key={card}
-                          variant="soft"
-                          padding="sm"
-                          className="rounded-xl border-ui-border/40 bg-ui-bg-secondary/70"
-                        >
-                          <Typography variant="small">{card}</Typography>
-                        </Card>
-                      ))}
+                      <div className="space-y-2">
+                        {column.cards.map((card) => (
+                          <Card
+                            key={card}
+                            variant="ghost"
+                            className={cn(surfaceRecipeVariants({ recipe: "overlayInset" }), "p-3")}
+                          >
+                            <Typography variant="small">{card}</Typography>
+                          </Card>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </Grid>
               </Grid>
             </Card>
 
             <Grid cols={1} colsMd={3} gap="lg">
-              <Card className="rounded-2xl border-ui-border/50 bg-ui-bg-secondary/80 p-4">
+              <Card
+                variant="ghost"
+                className={cn(surfaceRecipeVariants({ recipe: "metricTile" }), "p-4")}
+              >
                 <Typography variant="meta" className="uppercase tracking-widest">
                   Active projects
                 </Typography>
@@ -127,7 +145,10 @@ export function ProductShowcase() {
                 </Typography>
               </Card>
 
-              <Card className="rounded-2xl border-ui-border/50 bg-ui-bg-secondary/80 p-4">
+              <Card
+                variant="ghost"
+                className={cn(surfaceRecipeVariants({ recipe: "metricTile" }), "p-4")}
+              >
                 <Typography variant="meta" className="uppercase tracking-widest">
                   AI assists today
                 </Typography>
@@ -139,7 +160,10 @@ export function ProductShowcase() {
                 </Typography>
               </Card>
 
-              <Card className="rounded-2xl border-ui-border/50 bg-ui-bg-secondary/80 p-4">
+              <Card
+                variant="ghost"
+                className={cn(surfaceRecipeVariants({ recipe: "metricTile" }), "p-4")}
+              >
                 <Typography variant="meta" className="uppercase tracking-widest">
                   Time recovered
                 </Typography>
@@ -153,8 +177,11 @@ export function ProductShowcase() {
             </Grid>
           </div>
 
-          <div className="space-y-4">
-            <Card className="rounded-2xl border-ui-border/50 bg-ui-bg-secondary/80 p-5">
+          <div className="space-y-4 lg:col-span-4">
+            <Card
+              variant="ghost"
+              className={cn(surfaceRecipeVariants({ recipe: "showcasePanel" }), "p-5")}
+            >
               <Flex align="center" gap="sm" className="mb-4">
                 <div className="rounded-full bg-brand-subtle p-2 text-brand">
                   <Sparkles className="h-4 w-4" />
@@ -167,7 +194,10 @@ export function ProductShowcase() {
                 </div>
               </Flex>
 
-              <Card variant="soft" padding="md" className="rounded-2xl border-ui-border/40">
+              <Card
+                variant="ghost"
+                className={cn(surfaceRecipeVariants({ recipe: "overlayInset" }), "p-4")}
+              >
                 <Typography variant="small" color="secondary">
                   “Summarize what changed since the last client review and flag blockers.”
                 </Typography>
@@ -191,7 +221,10 @@ export function ProductShowcase() {
               </div>
             </Card>
 
-            <Card className="rounded-2xl border-ui-border/50 bg-ui-bg-secondary/80 p-5">
+            <Card
+              variant="ghost"
+              className={cn(surfaceRecipeVariants({ recipe: "showcasePanel" }), "p-5")}
+            >
               <Flex align="center" justify="between" className="mb-4">
                 <div>
                   <Typography variant="label">Connected surfaces</Typography>
@@ -208,9 +241,8 @@ export function ProductShowcase() {
                 ].map((item) => (
                   <Card
                     key={item}
-                    variant="soft"
-                    padding="sm"
-                    className="rounded-xl border-ui-border/40"
+                    variant="ghost"
+                    className={cn(surfaceRecipeVariants({ recipe: "overlayInset" }), "p-3")}
                   >
                     <Typography variant="small">{item}</Typography>
                   </Card>

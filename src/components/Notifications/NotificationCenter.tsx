@@ -33,6 +33,7 @@ import { Inbox } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
 import { cn } from "@/lib/utils";
+import { chromeButtonVariants, surfaceRecipeVariants } from "../ui/surfaceRecipes";
 import { NotificationItem, type NotificationWithActor } from "./NotificationItem";
 
 /** Notification filter categories */
@@ -173,7 +174,7 @@ export function NotificationCenter() {
           <Button
             variant="ghost"
             size="icon"
-            className="relative h-9 w-9 rounded-full border border-transparent bg-transparent text-ui-text-secondary shadow-none hover:border-ui-border/70 hover:bg-ui-bg-soft/80 hover:text-ui-text"
+            className={cn(chromeButtonVariants({ tone: "quiet", size: "icon" }), "relative")}
             aria-label={dynamicLabel}
             data-testid={TEST_IDS.HEADER.NOTIFICATION_BUTTON}
           >
@@ -195,7 +196,10 @@ export function NotificationCenter() {
 
       <PopoverContent
         align="end"
-        className="w-full sm:w-96 max-w-[calc(100vw-2rem)] p-0 bg-ui-bg border-ui-border max-h-[80vh]"
+        className={cn(
+          surfaceRecipeVariants({ recipe: "overlayInset" }),
+          "max-h-[80vh] w-full max-w-[calc(100vw-2rem)] p-0 sm:w-96",
+        )}
         data-testid={TEST_IDS.HEADER.NOTIFICATION_PANEL}
       >
         <Stack gap="none" className="h-full">

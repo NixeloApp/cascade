@@ -17,7 +17,9 @@ import { Typography } from "@/components/ui/Typography";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import { Menu } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
+import { cn } from "@/lib/utils";
 import type { CommandAction } from "../CommandPalette";
+import { chromeButtonVariants, surfaceRecipeVariants } from "../ui/surfaceRecipes";
 
 interface AppHeaderProps {
   commands?: CommandAction[];
@@ -32,16 +34,15 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-ui-border/50 bg-linear-to-b from-ui-bg/95 via-ui-bg/90 to-ui-bg/80 px-3 py-2 backdrop-blur-xl transition-all duration-default sm:px-6 sm:py-3">
-      <Flex align="center" justify="between" gap="md" className="relative">
+      <div className="relative mx-auto flex max-w-screen-2xl items-center gap-2 sm:gap-3">
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-brand/15 to-transparent" />
 
         <Flex align="center" gap="sm" className="sm:gap-3">
-          {/* Mobile Hamburger Menu */}
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleMobile}
-            className="h-10 w-10 rounded-full border border-ui-border/60 bg-ui-bg-elevated/90 text-ui-text-secondary shadow-soft backdrop-blur-sm hover:border-ui-border-secondary hover:bg-ui-bg-hover hover:text-ui-text lg:hidden"
+            className={cn(chromeButtonVariants({ tone: "framed", size: "icon" }), "lg:hidden")}
             aria-label="Toggle sidebar menu"
             aria-expanded={isMobileOpen}
           >
@@ -64,10 +65,17 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
           </div>
         </Flex>
 
+        <div className="min-w-0 flex-1">
+          <GlobalSearch commands={commands} />
+        </div>
+
         <Flex
           align="center"
           gap="xs"
-          className="min-w-0 shrink-0 rounded-full border border-ui-border/70 bg-linear-to-r from-ui-bg-elevated/95 via-ui-bg-elevated/92 to-ui-bg-soft/90 p-0.5 shadow-card backdrop-blur-xl sm:gap-2 sm:p-1"
+          className={cn(
+            surfaceRecipeVariants({ recipe: "controlRail" }),
+            "shrink-0 p-1 sm:gap-1.5",
+          )}
         >
           {onShowShortcutsHelp && (
             <Tooltip content="Keyboard shortcuts">
@@ -75,7 +83,10 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
                 variant="ghost"
                 size="icon"
                 onClick={onShowShortcutsHelp}
-                className="hidden h-9 w-9 rounded-full border border-transparent bg-transparent text-ui-text-secondary shadow-none transition-all duration-default hover:border-ui-border/70 hover:bg-ui-bg-soft hover:text-ui-text sm:flex"
+                className={cn(
+                  chromeButtonVariants({ tone: "quiet", size: "icon" }),
+                  "hidden sm:inline-flex",
+                )}
                 aria-label="Keyboard shortcuts"
                 data-testid={TEST_IDS.HEADER.SHORTCUTS_BUTTON}
               >
@@ -98,11 +109,10 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
           )}
 
           <NavTimerWidget />
-          <GlobalSearch commands={commands} />
           <NotificationCenter />
           <UserMenu />
         </Flex>
-      </Flex>
+      </div>
     </header>
   );
 }

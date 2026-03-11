@@ -13,11 +13,12 @@ import { Search } from "lucide-react";
 import * as React from "react";
 import { Dialog } from "@/components/ui/Dialog";
 import { cn } from "@/lib/utils";
+import { surfaceRecipeVariants } from "./surfaceRecipes";
 
 const Command = ({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) => (
   <CommandPrimitive
     className={cn(
-      "flex h-full w-full flex-col overflow-hidden rounded-2xl bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg text-ui-text",
+      "flex h-full w-full flex-col overflow-hidden bg-transparent text-ui-text",
       className,
     )}
     {...props}
@@ -53,7 +54,8 @@ function CommandDialog({
       title={title}
       description={description}
       onFocusOutside={onFocusOutside}
-      className="overflow-hidden rounded-2xl border-ui-border-secondary/80 bg-ui-bg-elevated p-0 shadow-elevated animate-scale-in"
+      className="animate-scale-in p-0"
+      bodyClassName="min-h-0 flex-1 overflow-hidden p-0"
     >
       <Command className="[&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:pb-2 [&_[cmdk-group-heading]]:pt-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-ui-text-tertiary [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-2 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-3 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
         {children}
@@ -90,7 +92,7 @@ const CommandList = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.List
     ref={ref}
-    className={cn("max-h-75 overflow-y-auto overflow-x-hidden px-3 pb-4 pt-4", className)}
+    className={cn("min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3 pb-4 pt-3", className)}
     {...props}
   />
 ));
@@ -113,7 +115,8 @@ const CommandGroup = React.forwardRef<
   <CommandPrimitive.Group
     ref={ref}
     className={cn(
-      "overflow-hidden rounded-2xl border border-transparent bg-transparent p-1 text-ui-text",
+      surfaceRecipeVariants({ recipe: "commandSection" }),
+      "overflow-hidden p-1 text-ui-text",
       className,
     )}
     {...props}

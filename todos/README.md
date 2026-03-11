@@ -7,9 +7,9 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 
 ## Portfolio Snapshot
 
-- Total todo markdown files (including control files): `21`
-- Tracked execution docs (excluding `README.md` and `TODO.md`): `19`
-- Checkbox rollup across tracked docs: `160 done / 108 open / 0 in-progress`
+- Total todo markdown files (including control files): `22`
+- Tracked execution docs (excluding `README.md` and `TODO.md`): `20`
+- Checkbox rollup across tracked docs: tracked within each doc; see individual files for per-track progress
 - Highest-risk unresolved queue: design cohesion/system drift, calendar access control, invoice integrity, Slack auth/scoping
 
 ## Current Focus
