@@ -9,8 +9,9 @@
  * - Empty search state
  */
 
+import { cva, type VariantProps } from "class-variance-authority";
 import { Search } from "lucide-react";
-import { useState } from "react";
+import { type ElementType, type HTMLAttributes, type ReactNode, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
@@ -175,11 +176,74 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
 // Components
 // =============================================================================
 
-const KEY_BADGE_CLASSNAME =
-  "inline-flex h-6 min-w-6 items-center justify-center rounded-lg border border-ui-border-secondary/70 bg-ui-bg-elevated px-2 font-mono text-xs font-medium text-ui-text-secondary shadow-soft";
+const shortcutHelpFrameVariants = cva("", {
+  variants: {
+    surface: {
+      footer: "block text-center sm:text-left",
+      searchShell: "relative",
+      searchIcon:
+        "pointer-events-none absolute left-6 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ui-text-tertiary",
+      categoryHeader: "border-b border-ui-border-secondary/50 px-4 py-3",
+      categoryBody: "p-3",
+      itemRow: "px-4 py-3",
+      emptyState: "px-6 py-8 text-center",
+    },
+  },
+});
 
-function KeyBadge({ children }: { children: React.ReactNode }) {
-  return <kbd className={KEY_BADGE_CLASSNAME}>{children}</kbd>;
+interface ShortcutHelpFrameProps
+  extends HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof shortcutHelpFrameVariants> {
+  as?: ElementType;
+}
+
+function ShortcutHelpFrame({
+  as: Component = "div",
+  className,
+  surface,
+  ...props
+}: ShortcutHelpFrameProps) {
+  return <Component className={cn(shortcutHelpFrameVariants({ surface }), className)} {...props} />;
+}
+
+const keyBadgeVariants = cva(
+  "inline-flex min-w-6 items-center justify-center rounded-lg border border-ui-border-secondary/70 bg-ui-bg-elevated font-mono shadow-soft",
+  {
+    variants: {
+      size: {
+        sm: "h-6 px-2 text-xs font-medium",
+        md: "h-7 px-2.5 text-sm font-semibold",
+      },
+      tone: {
+        subtle: "text-ui-text-secondary",
+        strong: "text-ui-text",
+      },
+    },
+    defaultVariants: {
+      size: "sm",
+      tone: "subtle",
+    },
+  },
+);
+
+interface KeyBadgeProps extends HTMLAttributes<HTMLElement>, VariantProps<typeof keyBadgeVariants> {
+  as?: ElementType;
+  children: ReactNode;
+}
+
+function KeyBadge({
+  as: Component = "kbd",
+  children,
+  className,
+  size,
+  tone,
+  ...props
+}: KeyBadgeProps) {
+  return (
+    <Component className={cn(keyBadgeVariants({ size, tone }), className)} {...props}>
+      {children}
+    </Component>
+  );
 }
 
 function ModifierShortcutBadge({ shortcut }: { shortcut: string }) {
@@ -194,12 +258,17 @@ function ModifierShortcutBadge({ shortcut }: { shortcut: string }) {
 }
 
 function KeySequenceBadge({ sequence }: { sequence: string }) {
-  const chars = sequence.split("");
+  const charCounts = new Map<string, number>();
+  const chars = sequence.split("").map((char) => {
+    const nextCount = (charCounts.get(char) ?? 0) + 1;
+    charCounts.set(char, nextCount);
+    return { char, key: `${char}-${nextCount}` };
+  });
+
   return (
     <Flex gap="xs" align="center">
-      {chars.map((char, charIndex) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: static key sequence chars, index needed for separator
-        <Flex key={charIndex} gap="xs" align="center">
+      {chars.map(({ char, key }, charIndex) => (
+        <Flex key={`${sequence}-${key}`} gap="xs" align="center">
           <KeyBadge>{char.toUpperCase()}</KeyBadge>
           {charIndex < chars.length - 1 && (
             <Typography variant="caption" color="tertiary">
@@ -265,19 +334,23 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
       size="lg"
       footerClassName="justify-between"
       footer={
-        <Typography variant="caption" color="tertiary" className="block text-center sm:text-left">
+        <Typography
+          variant="caption"
+          color="tertiary"
+          className={shortcutHelpFrameVariants({ surface: "footer" })}
+        >
           Press{" "}
-          <Typography as="kbd" variant="mono" className={cn(KEY_BADGE_CLASSNAME, "text-xs")}>
+          <KeyBadge as="span" tone="strong">
             {isMacPlatform() ? "⌘" : "Ctrl"}+K
-          </Typography>{" "}
+          </KeyBadge>{" "}
           to open search and commands
         </Typography>
       }
     >
       <Stack gap="md">
-        <Card recipe="overlayInset">
-          <div className="relative p-4">
-            <Search className="absolute left-6 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ui-text-tertiary" />
+        <Card recipe="overlayInset" padding="md">
+          <ShortcutHelpFrame surface="searchShell">
+            <Search className={shortcutHelpFrameVariants({ surface: "searchIcon" })} />
             <Input
               type="text"
               placeholder="Search shortcuts..."
@@ -286,14 +359,14 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
               className="h-10 pl-9 text-sm"
               autoFocus
             />
-          </div>
+          </ShortcutHelpFrame>
         </Card>
 
         {hasResults ? (
           <Flex direction="column" gap="md">
             {filteredCategories.map((category) => (
               <Card key={category.id} recipe="commandSection">
-                <div className="border-b border-ui-border-secondary/50 px-4 py-3">
+                <ShortcutHelpFrame surface="categoryHeader">
                   <Typography
                     variant="label"
                     color="secondary"
@@ -301,11 +374,16 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
                   >
                     {category.title}
                   </Typography>
-                </div>
-                <Flex direction="column" gap="xs" className="p-3">
+                </ShortcutHelpFrame>
+                <Stack gap="xs" className={shortcutHelpFrameVariants({ surface: "categoryBody" })}>
                   {category.items.map((item) => (
                     <Card key={item.id} recipe="overlayInset">
-                      <Flex align="center" justify="between" gap="md" className="px-4 py-3">
+                      <Flex
+                        align="center"
+                        justify="between"
+                        gap="md"
+                        className={shortcutHelpFrameVariants({ surface: "itemRow" })}
+                      >
                         <Typography variant="small" color="secondary">
                           {item.description}
                         </Typography>
@@ -313,7 +391,7 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
                       </Flex>
                     </Card>
                   ))}
-                </Flex>
+                </Stack>
               </Card>
             ))}
           </Flex>
@@ -323,7 +401,7 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
               direction="column"
               align="center"
               justify="center"
-              className="px-6 py-8 text-center"
+              className={shortcutHelpFrameVariants({ surface: "emptyState" })}
             >
               <Typography variant="small" color="secondary">
                 No shortcuts found for{" "}
