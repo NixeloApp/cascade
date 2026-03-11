@@ -58,10 +58,10 @@ describe("CreateEventModal", () => {
     it("should render event type buttons", () => {
       render(<CreateEventModal {...defaultProps} />);
 
-      expect(screen.getByRole("button", { name: /meeting/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /deadline/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /timeblock/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /personal/i })).toBeInTheDocument();
+      expect(screen.getByRole("radio", { name: /meeting/i })).toBeInTheDocument();
+      expect(screen.getByRole("radio", { name: /deadline/i })).toBeInTheDocument();
+      expect(screen.getByRole("radio", { name: /timeblock/i })).toBeInTheDocument();
+      expect(screen.getByRole("radio", { name: /personal/i })).toBeInTheDocument();
     });
 
     it("should render date input", () => {
@@ -105,19 +105,23 @@ describe("CreateEventModal", () => {
     it("should select meeting type by default", () => {
       render(<CreateEventModal {...defaultProps} />);
 
-      const meetingButton = screen.getByRole("button", { name: /meeting/i });
-      // Primary variant indicates selection
-      expect(meetingButton).toHaveClass("bg-linear-to-r");
+      const meetingOption = screen.getByRole("radio", { name: /meeting/i });
+      expect(meetingOption).toHaveAttribute("aria-checked", "true");
+      expect(meetingOption).toHaveAttribute("data-state", "on");
     });
 
     it("should change event type when clicking different type", async () => {
       const user = userEvent.setup();
       render(<CreateEventModal {...defaultProps} />);
 
-      await user.click(screen.getByRole("button", { name: /deadline/i }));
+      await user.click(screen.getByRole("radio", { name: /deadline/i }));
 
-      const deadlineButton = screen.getByRole("button", { name: /deadline/i });
-      expect(deadlineButton).toHaveClass("bg-linear-to-r");
+      const meetingOption = screen.getByRole("radio", { name: /meeting/i });
+      const deadlineOption = screen.getByRole("radio", { name: /deadline/i });
+      expect(deadlineOption).toHaveAttribute("aria-checked", "true");
+      expect(deadlineOption).toHaveAttribute("data-state", "on");
+      expect(meetingOption).toHaveAttribute("aria-checked", "false");
+      expect(meetingOption).toHaveAttribute("data-state", "off");
     });
 
     it("should show meeting URL input only for meeting type", () => {
@@ -136,7 +140,7 @@ describe("CreateEventModal", () => {
       const user = userEvent.setup();
       render(<CreateEventModal {...defaultProps} />);
 
-      await user.click(screen.getByRole("button", { name: /deadline/i }));
+      await user.click(screen.getByRole("radio", { name: /deadline/i }));
 
       expect(screen.queryByLabelText(/Meeting Link/i)).not.toBeInTheDocument();
     });

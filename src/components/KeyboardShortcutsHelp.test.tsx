@@ -44,6 +44,8 @@ describe("KeyboardShortcutsHelp", () => {
   it("renders the updated footer hint", () => {
     render(<KeyboardShortcutsHelp open={true} onOpenChange={vi.fn()} />);
 
-    expect(screen.getByText(/to open search and commands/i)).toBeInTheDocument();
+    expect(screen.getByText("Navigate")).toBeInTheDocument();
+    expect(screen.getAllByText("Close").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Esc").length).toBeGreaterThan(0);
   });
 });
