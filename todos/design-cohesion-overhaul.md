@@ -20,6 +20,21 @@ remaining failures are structural:
 
 This doc is the execution plan for fixing that.
 
+## Progress Since Start
+
+Completed:
+- semantic interaction ownership foundation is in place
+- `SegmentedControl` exists as the owned single-select primitive
+- `RouteNav` exists as the owned route-navigation primitive
+- Storybook coverage was added for both primitives
+- validators now block:
+  - importing exported CVA helpers outside shared ui primitives
+  - using low-level `ToggleGroup` in app code outside approved special cases
+
+What this changes:
+- we should stop doing ad hoc “tab cleanup” passes
+- remaining work should migrate real surfaces onto owned shells and tighten docs/review quality around them
+
 ## Non-Negotiables
 
 - Screenshot pass does not mean design pass.
@@ -118,13 +133,18 @@ Needed next:
 - flag suspicious class mixtures even in allowed files
 - shrink the allowlist over time instead of treating it as permanent
 
+Done in this track already:
+- CVA ownership boundary validator added
+- control-ownership validator added
+- route nav and segmented single-select controls now have owned primitives instead of app-level styling clones
+
 ## Execution Order
 
 1. Restore the landing/auth/board `CURRENT.md` docs so reviews are honest again.
-2. Fix landing hero + showcase composition.
-3. Fix internal app header control grouping.
-4. Fix modal anatomy and scrolling as a shared system.
-5. Upgrade validators to catch recipe drift and class soup.
+2. Finish app header control grouping using the new semantic control primitives.
+3. Fix modal anatomy and scrolling as a shared system.
+4. Fix landing hero + showcase composition.
+5. Expand validator coverage from interaction ownership into shared shell recipes and class-soup detection.
 
 ## Deliverables
 
@@ -142,8 +162,12 @@ Needed next:
 - [ ] Make search/commands modal scroll correctly when content exceeds frame
 - [ ] Make advanced search modal scroll and footer treatment match the family
 - [ ] Redesign keyboard shortcuts modal so scrolling is useful and the surface does not look improvised
+- [x] Define owned semantic primitives for route nav and segmented single-select controls
+- [x] Add Storybook coverage for those interaction primitives
+- [x] Expand validation to enforce CVA ownership boundaries
+- [x] Expand validation to enforce semantic control ownership
 - [ ] Define reusable recipes for header clusters, modal bodies, and showcase/stat cards
-- [ ] Expand validation to flag suspicious recipe drift
+- [ ] Expand validation to flag suspicious recipe drift beyond control ownership
 
 ## Done Looks Like
 
