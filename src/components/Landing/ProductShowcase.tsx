@@ -28,14 +28,14 @@ const boardColumns = [
 /** Product preview card used in the landing hero. */
 export function ProductShowcase() {
   return (
-    <div id="product-showcase" className="relative mx-auto mt-16 max-w-6xl">
-      <div className="pointer-events-none absolute inset-x-16 top-10 h-56 rounded-full bg-landing-accent/15 blur-glow" />
+    <div id="product-showcase" className="relative mx-auto mt-5 max-w-6xl sm:mt-6">
+      <div className="pointer-events-none absolute inset-x-16 top-10 h-56 rounded-full bg-landing-accent/10 blur-glow dark:bg-landing-accent/15" />
 
       <Card
         variant="outline"
-        className="relative overflow-hidden rounded-3xl border-ui-border/60 bg-ui-bg-elevated/95 shadow-2xl shadow-black/30"
+        className="relative overflow-hidden rounded-3xl border-ui-border-secondary/75 bg-ui-bg-elevated/98 shadow-elevated"
       >
-        <div className="border-b border-ui-border/60 bg-ui-bg-soft/70 px-4 py-3">
+        <div className="border-b border-ui-border/60 bg-ui-bg-soft/82 px-4 py-3">
           <Flex align="center" justify="between" gap="md">
             <Flex align="center" gap="sm">
               <div className="h-2.5 w-2.5 rounded-full bg-status-error/80" />
@@ -63,7 +63,7 @@ export function ProductShowcase() {
           cols={1}
           colsLg={3}
           gap="lg"
-          className="bg-linear-to-b from-ui-bg-soft/70 to-ui-bg px-4 py-4"
+          className="bg-linear-to-b from-ui-bg-soft/78 to-ui-bg px-4 py-4"
         >
           <div className="space-y-4 lg:col-span-2">
             <Card

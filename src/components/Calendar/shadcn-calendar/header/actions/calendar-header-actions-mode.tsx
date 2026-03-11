@@ -41,7 +41,7 @@ export function CalendarHeaderActionsMode(): React.ReactElement {
                 value={modeValue}
                 data-testid={`calendar-mode-${modeValue}`}
                 className={cn(
-                  "relative flex h-7 w-full items-center justify-center gap-1 rounded-none border-none text-xs shadow-none transition-colors duration-default focus-visible:z-10 sm:h-auto sm:gap-2 sm:text-base",
+                  "relative flex h-6 w-full items-center justify-center gap-1 rounded-none border-none text-xs shadow-none transition-colors duration-default focus-visible:z-10 sm:h-auto sm:gap-2 sm:text-base",
                   isSelected
                     ? "bg-ui-bg-tertiary text-ui-text z-10"
                     : "bg-ui-bg text-ui-text-secondary hover:bg-ui-bg-hover hover:text-ui-text",
@@ -49,7 +49,7 @@ export function CalendarHeaderActionsMode(): React.ReactElement {
               >
                 <motion.div
                   layout
-                  className="flex items-center justify-center gap-1 px-1 py-1 sm:gap-2 sm:px-3 sm:py-2"
+                  className="flex items-center justify-center gap-1 px-1 py-0.5 sm:gap-2 sm:px-3 sm:py-2"
                   initial={false}
                   animate={{
                     scale: isSelected ? 1 : 0.95,

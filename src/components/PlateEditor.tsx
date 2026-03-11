@@ -272,7 +272,7 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
       <Flex className="flex-1 overflow-hidden">
         {/* Editor - Clean Mintlify-inspired layout */}
         <FlexItem flex="1" className="overflow-auto bg-ui-bg scrollbar-subtle">
-          <Card padding="lg" variant="ghost" className="mx-auto max-w-5xl">
+          <Card padding="md" variant="ghost" className="mx-auto w-full max-w-4xl">
             <ErrorBoundary
               fallback={
                 <Card
@@ -292,90 +292,90 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
                 {!lockStatus?.isLocked && <SlashMenu />}
                 {!lockStatus?.isLocked && <FloatingToolbar />}
                 {isEmptyEditor && (
-                  <Card padding="xl" variant="soft" className="mb-6 border-ui-border-secondary/80">
-                    <Stack gap="lg">
-                      <Grid cols={1} colsLg={3} gap="md">
-                        <Card variant="outline" padding="md" className="h-full lg:col-span-2">
-                          <Stack gap="sm">
+                  <Card padding="lg" variant="soft" className="mb-4 border-ui-border-secondary/85">
+                    <Grid cols={1} colsLg={3} gap="md">
+                      <Card variant="outline" padding="md" className="h-full lg:col-span-2">
+                        <Stack gap="sm">
+                          <Stack gap="xs">
+                            <Typography variant="label">Blank document</Typography>
+                            <Typography variant="small" color="secondary">
+                              Start with a short overview, key decisions, and next steps. Use `/`
+                              for blocks, headings, and lists once you begin writing.
+                            </Typography>
+                          </Stack>
+
+                          <Flex wrap gap="sm">
+                            <Badge variant="secondary" shape="pill">
+                              Overview
+                            </Badge>
+                            <Badge variant="secondary" shape="pill">
+                              Decisions
+                            </Badge>
+                            <Badge variant="secondary" shape="pill">
+                              Risks
+                            </Badge>
+                            <Badge variant="secondary" shape="pill">
+                              Next steps
+                            </Badge>
+                          </Flex>
+
+                          <Grid cols={1} colsSm={2} gap="md">
                             <Stack gap="xs">
-                              <Typography variant="label">Blank document</Typography>
+                              <Typography variant="caption" className="uppercase tracking-widest">
+                                Suggested outline
+                              </Typography>
                               <Typography variant="small" color="secondary">
-                                Start with a short overview, key decisions, and next steps. Use `/`
-                                for blocks, headings, and lists once you begin writing.
+                                Summary, decisions, follow-ups, owners, and review date.
                               </Typography>
                             </Stack>
+                            <Stack gap="xs">
+                              <Typography variant="caption" className="uppercase tracking-widest">
+                                Quick actions
+                              </Typography>
+                              <Typography variant="small" color="secondary">
+                                Turn decisions into checklists, link risks to issues, and assign
+                                owners while the discussion is still fresh.
+                              </Typography>
+                            </Stack>
+                          </Grid>
+                        </Stack>
+                      </Card>
 
-                            <Flex wrap gap="sm">
-                              <Badge variant="secondary" shape="pill">
-                                Overview
-                              </Badge>
-                              <Badge variant="secondary" shape="pill">
-                                Decisions
-                              </Badge>
-                              <Badge variant="secondary" shape="pill">
-                                Risks
-                              </Badge>
-                              <Badge variant="secondary" shape="pill">
-                                Next steps
-                              </Badge>
-                            </Flex>
+                      <Card variant="outline" padding="md" className="h-full">
+                        <Stack gap="xs">
+                          <Typography variant="caption" className="uppercase tracking-widest">
+                            Starter flow
+                          </Typography>
+                          <Typography variant="small" color="secondary">
+                            Capture the summary first, then turn action items into tasks or linked
+                            issues.
+                          </Typography>
+                        </Stack>
+                      </Card>
 
-                            <Grid cols={1} colsSm={2} gap="md">
-                              <Stack gap="xs">
-                                <Typography variant="caption" className="uppercase tracking-widest">
-                                  Suggested outline
-                                </Typography>
-                                <Typography variant="small" color="secondary">
-                                  Summary, decisions, follow-ups, owners, and review date.
-                                </Typography>
-                              </Stack>
-                              <Stack gap="xs">
-                                <Typography variant="caption" className="uppercase tracking-widest">
-                                  Quick actions
-                                </Typography>
-                                <Typography variant="small" color="secondary">
-                                  Turn decisions into checklists, link risks to issues, and assign
-                                  owners while the discussion is still fresh.
-                                </Typography>
-                              </Stack>
-                            </Grid>
-                          </Stack>
-                        </Card>
-
-                        <Card variant="outline" padding="md" className="h-full">
-                          <Stack gap="xs">
-                            <Typography variant="caption" className="uppercase tracking-widest">
-                              Starter flow
-                            </Typography>
-                            <Typography variant="small" color="secondary">
-                              Capture the summary first, then turn action items into tasks or linked
-                              issues.
-                            </Typography>
-                          </Stack>
-                        </Card>
-
-                        <Card variant="outline" padding="md" className="h-full lg:col-span-3">
-                          <Stack gap="xs">
-                            <Typography variant="caption" className="uppercase tracking-widest">
-                              Suggested first section
-                            </Typography>
-                            <Typography variant="small" color="secondary">
-                              Add a short context paragraph, then break out the decisions, open
-                              risks, and next steps before expanding into full notes.
-                            </Typography>
-                          </Stack>
-                        </Card>
-                      </Grid>
-                    </Stack>
+                      <Card variant="outline" padding="md" className="h-full lg:col-span-3">
+                        <Stack gap="xs">
+                          <Typography variant="caption" className="uppercase tracking-widest">
+                            Suggested first section
+                          </Typography>
+                          <Typography variant="small" color="secondary">
+                            Add a short context paragraph, then break out the decisions, open risks,
+                            and next steps before expanding into full notes.
+                          </Typography>
+                        </Stack>
+                      </Card>
+                    </Grid>
                   </Card>
                 )}
                 <PlateContent
                   className={cn(
-                    "prose prose-sm max-w-none focus-visible:outline-none text-ui-text leading-relaxed",
-                    isEmptyEditor ? "min-h-40" : "min-h-96",
+                    "prose prose-sm max-w-none text-ui-text leading-relaxed focus-visible:outline-none",
+                    isEmptyEditor
+                      ? "min-h-64 rounded-2xl border border-dashed border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-soft/55 via-ui-bg-soft/35 to-ui-bg px-5 py-5"
+                      : "min-h-80",
                   )}
                   data-testid={TEST_IDS.EDITOR.PLATE}
-                  placeholder="Start writing..."
+                  placeholder="Start with a summary or press / for blocks"
                   readOnly={lockStatus?.isLocked}
                 />
               </Plate>

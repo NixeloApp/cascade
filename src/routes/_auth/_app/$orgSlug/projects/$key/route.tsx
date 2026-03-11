@@ -56,18 +56,32 @@ function ProjectLayout() {
   const isScrum = project.boardType === "scrum";
 
   const tabs = [
-    { name: "Board", segment: "board", to: ROUTES.projects.board.path, params: { orgSlug, key } },
+    {
+      name: "Board",
+      mobileName: "Board",
+      segment: "board",
+      to: ROUTES.projects.board.path,
+      params: { orgSlug, key },
+    },
     {
       name: "Backlog",
+      mobileName: "Backlog",
       segment: "backlog",
       to: ROUTES.projects.backlog.path,
       params: { orgSlug, key },
     },
-    { name: "Inbox", segment: "inbox", to: ROUTES.projects.inbox.path, params: { orgSlug, key } },
+    {
+      name: "Inbox",
+      mobileName: "Inbox",
+      segment: "inbox",
+      to: ROUTES.projects.inbox.path,
+      params: { orgSlug, key },
+    },
     ...(isScrum
       ? [
           {
             name: "Sprints",
+            mobileName: "Sprints",
             segment: "sprints",
             to: ROUTES.projects.sprints.path,
             params: { orgSlug, key },
@@ -76,36 +90,42 @@ function ProjectLayout() {
       : []),
     {
       name: "Roadmap",
+      mobileName: "Plan",
       segment: "roadmap",
       to: ROUTES.projects.roadmap.path,
       params: { orgSlug, key },
     },
     {
       name: "Calendar",
+      mobileName: "Cal",
       segment: "calendar",
       to: ROUTES.projects.calendar.path,
       params: { orgSlug, key },
     },
     {
       name: "Activity",
+      mobileName: "Activity",
       segment: "activity",
       to: ROUTES.projects.activity.path,
       params: { orgSlug, key },
     },
     {
       name: "Analytics",
+      mobileName: "Stats",
       segment: "analytics",
       to: ROUTES.projects.analytics.path,
       params: { orgSlug, key },
     },
     {
       name: "Billing",
+      mobileName: "Billing",
       segment: "billing",
       to: ROUTES.projects.billing.path,
       params: { orgSlug, key },
     },
     {
       name: "Timesheet",
+      mobileName: "Time",
       segment: "timesheet",
       to: ROUTES.projects.timesheet.path,
       params: { orgSlug, key },
@@ -114,6 +134,7 @@ function ProjectLayout() {
       ? [
           {
             name: "Settings",
+            mobileName: "Settings",
             segment: "settings",
             to: ROUTES.projects.settings.path,
             params: { orgSlug, key },
@@ -133,7 +154,7 @@ function ProjectLayout() {
   return (
     <Flex direction="column" className="h-full">
       <div className="border-b border-ui-border/70 bg-ui-bg/78 px-1 py-0.5 backdrop-blur-xl sm:px-4 sm:py-3">
-        <div className="rounded-xl border border-ui-border-secondary/70 bg-linear-to-r from-ui-bg-elevated via-ui-bg-elevated/96 to-ui-bg-soft/78 px-1 py-1 shadow-soft sm:rounded-3xl sm:px-4 sm:py-3">
+        <div className="bg-transparent px-0 py-0 shadow-none sm:rounded-3xl sm:border sm:border-ui-border-secondary/70 sm:bg-linear-to-r sm:from-ui-bg-elevated sm:via-ui-bg-elevated/96 sm:to-ui-bg-soft/78 sm:px-4 sm:py-3 sm:shadow-soft">
           <Flex
             align="start"
             justify="between"
@@ -144,7 +165,7 @@ function ProjectLayout() {
               <Flex
                 align="center"
                 justify="center"
-                className="h-7 w-7 shrink-0 rounded-lg bg-brand-subtle text-brand ring-1 ring-brand/15 sm:h-10 sm:w-10 sm:rounded-xl"
+                className="h-7 w-7 shrink-0 rounded-full bg-brand-subtle text-brand ring-1 ring-brand/15 sm:h-10 sm:w-10 sm:rounded-xl"
               >
                 <Typography variant="small" className="font-semibold text-current">
                   {project.key.slice(0, 2).toUpperCase()}
@@ -184,7 +205,7 @@ function ProjectLayout() {
                 to={tab.to}
                 params={tab.params}
                 className={cn(
-                  "shrink-0 rounded-full border border-transparent bg-ui-bg-soft/68 px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-default",
+                  "shrink-0 rounded-full border border-transparent bg-ui-bg-soft/68 px-1.5 py-0.5 text-xs font-medium whitespace-nowrap transition-default",
                   "text-ui-text-secondary hover:border-ui-border/60 hover:bg-ui-bg-hover hover:text-ui-text",
                 )}
                 activeProps={{
@@ -192,7 +213,7 @@ function ProjectLayout() {
                     "border-ui-border-secondary/70 bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border/70",
                 }}
               >
-                {tab.name}
+                {tab.mobileName ?? tab.name}
               </Link>
             ))}
             {mobileSecondaryTabs.length > 0 && (
@@ -202,7 +223,7 @@ function ProjectLayout() {
                     variant="unstyled"
                     size={undefined}
                     className={cn(
-                      "inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium transition-default",
+                      "inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs font-medium transition-default",
                       activeSecondaryTab
                         ? "border-ui-border-secondary/70 bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border/70"
                         : "border-transparent bg-ui-bg-soft/68 text-ui-text-secondary hover:border-ui-border/60 hover:bg-ui-bg-hover hover:text-ui-text",

@@ -18,76 +18,81 @@ interface AuthPageLayoutProps {
  */
 export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProps) {
   return (
-    <div className="relative isolate min-h-screen w-full overflow-hidden bg-ui-bg bg-auth-gradient px-4 py-6 sm:px-6">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-linear-to-b from-ui-bg-elevated/45 to-transparent" />
+    <div className="bg-auth-gradient relative isolate min-h-screen w-full overflow-hidden bg-ui-bg px-4 py-6 sm:px-6">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-linear-to-b from-ui-bg-elevated/42 to-transparent" />
       <Flex
         align="center"
         className="mx-auto min-h-[calc(100vh-3rem)] w-full max-w-5xl animate-fade-in"
       >
         <Grid
           cols={1}
-          className="w-full items-center gap-8 lg:grid-cols-[minmax(0,1.08fr)_360px] lg:gap-12"
+          className="w-full items-center gap-8 lg:grid-cols-[minmax(0,0.98fr)_420px] lg:gap-8"
         >
-          <div className="hidden lg:block lg:pr-8">
-            <Badge variant="brand" shape="pill" className="mb-5 w-fit">
-              Unified delivery workspace
-            </Badge>
+          <div className="hidden lg:block lg:pr-2">
+            <div className="rounded-[2rem] border border-ui-border-secondary/65 bg-ui-bg-elevated/70 px-8 py-9 shadow-soft backdrop-blur-sm xl:px-10 xl:py-10">
+              <Badge variant="outline" shape="pill" className="mb-5 w-fit">
+                Unified delivery workspace
+              </Badge>
 
-            <Link
-              to={ROUTES.home.path}
-              className="inline-flex w-fit items-center rounded-full border border-ui-border/70 bg-ui-bg-elevated/65 px-4 py-2 shadow-soft transition-opacity hover:opacity-80"
-            >
-              <NixeloLogo size={32} />
-            </Link>
-
-            <div className="mt-10 max-w-xl">
-              <Typography variant="h1" className="text-5xl leading-tight tracking-tight">
-                Keep specs, execution, and client delivery in one calmer system.
-              </Typography>
-              <Typography
-                variant="muted"
-                className="mt-5 max-w-lg text-base leading-7 text-ui-text-secondary"
+              <Link
+                to={ROUTES.home.path}
+                className="inline-flex w-fit items-center rounded-full border border-ui-border/70 bg-ui-bg-elevated/88 px-4 py-2 shadow-soft transition-opacity hover:opacity-80"
               >
-                Docs, issues, calendars, time tracking, and team context stay inside the same
-                operating surface, so teams stop losing momentum across tools.
-              </Typography>
-            </div>
+                <NixeloLogo size={32} />
+              </Link>
 
-            <Grid cols={1} colsSm={3} gap="md" className="mt-8 max-w-3xl">
-              <div className="rounded-2xl border border-ui-border/60 bg-ui-bg-elevated/62 p-4 shadow-soft">
+              <div className="mt-8 max-w-xl">
                 <Typography
-                  variant="caption"
-                  className="uppercase tracking-wider text-ui-text-tertiary"
+                  variant="h1"
+                  className="text-5xl leading-tight tracking-tight xl:text-6xl"
                 >
-                  Search
+                  Keep specs, execution, and client delivery in one calmer system.
                 </Typography>
-                <Typography variant="h4" className="mt-2 tracking-tight">
-                  Omnibox
+                <Typography
+                  variant="muted"
+                  className="mt-5 max-w-xl text-base leading-7 text-ui-text-secondary"
+                >
+                  Docs, issues, calendars, time tracking, and team context stay inside the same
+                  operating surface, so teams stop losing momentum across tools.
                 </Typography>
               </div>
-              <div className="rounded-2xl border border-ui-border/60 bg-ui-bg-elevated/62 p-4 shadow-soft">
-                <Typography
-                  variant="caption"
-                  className="uppercase tracking-wider text-ui-text-tertiary"
-                >
-                  Plan
-                </Typography>
-                <Typography variant="h4" className="mt-2 tracking-tight">
-                  Boards
-                </Typography>
-              </div>
-              <div className="rounded-2xl border border-ui-border/60 bg-ui-bg-elevated/62 p-4 shadow-soft">
-                <Typography
-                  variant="caption"
-                  className="uppercase tracking-wider text-ui-text-tertiary"
-                >
-                  Deliver
-                </Typography>
-                <Typography variant="h4" className="mt-2 tracking-tight">
-                  Clients
-                </Typography>
-              </div>
-            </Grid>
+
+              <Grid cols={1} colsSm={3} gap="md" className="mt-7 max-w-3xl">
+                <div className="rounded-2xl border border-ui-border-secondary/65 bg-ui-bg-elevated/96 p-4 shadow-card">
+                  <Typography
+                    variant="caption"
+                    className="uppercase tracking-wider text-ui-text-tertiary"
+                  >
+                    Search
+                  </Typography>
+                  <Typography variant="h4" className="mt-2 tracking-tight">
+                    Omnibox
+                  </Typography>
+                </div>
+                <div className="rounded-2xl border border-ui-border-secondary/65 bg-ui-bg-elevated/96 p-4 shadow-card">
+                  <Typography
+                    variant="caption"
+                    className="uppercase tracking-wider text-ui-text-tertiary"
+                  >
+                    Plan
+                  </Typography>
+                  <Typography variant="h4" className="mt-2 tracking-tight">
+                    Boards
+                  </Typography>
+                </div>
+                <div className="rounded-2xl border border-ui-border-secondary/65 bg-ui-bg-elevated/96 p-4 shadow-card">
+                  <Typography
+                    variant="caption"
+                    className="uppercase tracking-wider text-ui-text-tertiary"
+                  >
+                    Deliver
+                  </Typography>
+                  <Typography variant="h4" className="mt-2 tracking-tight">
+                    Clients
+                  </Typography>
+                </div>
+              </Grid>
+            </div>
           </div>
 
           <Flex align="center" justify="center" className="w-full">
@@ -95,7 +100,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
               <div className="mb-5 lg:hidden">
                 <Link
                   to={ROUTES.home.path}
-                  className="inline-flex w-fit items-center gap-2 rounded-full border border-ui-border/70 bg-ui-bg-elevated/72 px-3 py-2 shadow-soft transition-opacity hover:opacity-80"
+                  className="inline-flex w-fit items-center gap-2 rounded-full border border-ui-border/70 bg-ui-bg-elevated/82 px-3 py-2 shadow-soft transition-opacity hover:opacity-80"
                 >
                   <NixeloLogo size={28} />
                   <Typography variant="small" className="font-semibold text-ui-text">
@@ -111,8 +116,8 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
                 </Typography>
               </div>
 
-              <div className="relative rounded-3xl border border-ui-border-secondary/70 bg-ui-bg-elevated/92 p-6 shadow-elevated sm:p-8">
-                <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-linear-to-r from-transparent via-brand/35 to-transparent" />
+              <div className="relative rounded-3xl border border-ui-border-secondary/75 bg-ui-bg-elevated/98 p-6 shadow-elevated sm:p-8">
+                <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-linear-to-r from-transparent via-brand/14 to-transparent" />
                 <Badge variant="outline" shape="pill" className="mb-4 w-fit">
                   Secure account access
                 </Badge>

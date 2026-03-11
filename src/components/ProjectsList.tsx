@@ -10,6 +10,7 @@ import { api } from "@convex/_generated/api";
 import { Link } from "@tanstack/react-router";
 import { usePaginatedQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -66,14 +67,9 @@ function getSingleProjectHighlights(issueCount: number) {
       value: `${issueCount} active issues`,
     },
     {
-      description: "One workspace entry point for planning, execution, and timing.",
-      title: "Views",
+      description: "Keep planning, docs, and timing tied to the same project hub.",
+      title: "Coverage",
       value: "Board, roadmap, calendar",
-    },
-    {
-      description: "Continue triage, create issues, or jump into project settings.",
-      title: "Next step",
-      value: "Open the board",
     },
   ] as const;
 }
@@ -81,20 +77,22 @@ function getSingleProjectHighlights(issueCount: number) {
 function SingleProjectHighlights({ issueCount }: { issueCount: number }) {
   return (
     <Stack gap="md">
-      {getSingleProjectHighlights(issueCount).map((item) => (
-        <Card key={item.title} variant="soft" padding="md" className="h-full">
-          <Flex direction="column" gap="xs">
-            <Typography variant="caption" className="uppercase tracking-widest">
-              {item.title}
-            </Typography>
-            <Typography variant="h4">{item.value}</Typography>
-            <Typography variant="small" color="secondary">
-              {item.description}
-            </Typography>
-          </Flex>
-        </Card>
-      ))}
-      <Card variant="default" padding="lg">
+      <Grid cols={1} colsSm={2} colsLg={1} gap="md">
+        {getSingleProjectHighlights(issueCount).map((item) => (
+          <Card key={item.title} variant="soft" padding="md" className="h-full">
+            <Flex direction="column" gap="xs">
+              <Typography variant="caption" className="uppercase tracking-widest">
+                {item.title}
+              </Typography>
+              <Typography variant="h4">{item.value}</Typography>
+              <Typography variant="small" color="secondary">
+                {item.description}
+              </Typography>
+            </Flex>
+          </Card>
+        ))}
+      </Grid>
+      <Card variant="default" padding="md">
         <Flex direction="column" gap="sm">
           <Typography variant="caption" className="uppercase tracking-widest">
             Workspace rhythm
@@ -124,7 +122,7 @@ function ProjectCard({
   const cardContent = (
     <Card
       hoverable={!hasSingleProject}
-      padding={hasSingleProject ? "xl" : "lg"}
+      padding="lg"
       variant={hasSingleProject ? "elevated" : "default"}
       className={hasSingleProject ? "self-start overflow-hidden" : "h-full overflow-hidden"}
     >
@@ -133,12 +131,16 @@ function ProjectCard({
           <Flex
             align="center"
             justify="between"
-            className="rounded-2xl border border-ui-border/60 bg-ui-bg-soft/80 px-4 py-3"
+            gap="sm"
+            wrap
+            className="rounded-2xl border border-ui-border/60 bg-ui-bg-soft/80 px-4 py-2.5"
           >
-            <Flex direction="column" gap="xs">
-              <Typography variant="label">Primary workspace project</Typography>
+            <Flex align="center" gap="sm" wrap>
+              <Badge variant="secondary" shape="pill">
+                Primary workspace project
+              </Badge>
               <Typography variant="small" color="secondary">
-                Open the board to manage backlog, roadmap, calendar, and delivery in one place.
+                Board, roadmap, calendar, and delivery in one lane.
               </Typography>
             </Flex>
             <Typography
@@ -200,7 +202,7 @@ function ProjectCard({
                 </Link>
               </Button>
             </Flex>
-            <Typography variant="small" color="secondary" className="max-w-2xl">
+            <Typography variant="small" color="secondary" className="max-w-xl">
               Use this project as the workspace anchor for active issues, planning milestones, and
               delivery timing instead of splitting those flows across separate tools.
             </Typography>
@@ -279,8 +281,8 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
           </Grid>
         </Flex>
       ) : hasSingleProject && featuredProject ? (
-        <Grid cols={1} colsLg={5} gap="xl" className="max-w-7xl items-start">
-          <div className="lg:col-span-3">
+        <Grid cols={1} colsLg={12} gap="lg" className="max-w-6xl items-start">
+          <div className="lg:col-span-7">
             <ProjectCard
               key={featuredProject._id}
               project={featuredProject}
@@ -288,7 +290,7 @@ export function ProjectsList({ onCreateClick }: ProjectsListProps) {
               orgSlug={orgSlug}
             />
           </div>
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-5">
             <SingleProjectHighlights issueCount={featuredProject.issueCount || 0} />
           </div>
         </Grid>

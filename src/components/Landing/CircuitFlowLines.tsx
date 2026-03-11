@@ -3,7 +3,7 @@ export function CircuitFlowLines() {
   return (
     <svg
       aria-hidden="true"
-      className="absolute inset-0 w-full h-full pointer-events-none opacity-60"
+      className="pointer-events-none absolute inset-0 h-full w-full opacity-30 dark:opacity-60"
       preserveAspectRatio="xMidYMin slice"
       fill="none"
     >

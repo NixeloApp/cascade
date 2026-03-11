@@ -190,10 +190,10 @@
   --color-issue-type-subtask: var(--color-palette-gray);
 
   /* --- Landing (4 vars) --- */
-  --color-landing-accent: light-dark(var(--p-cyan-500), var(--p-cyan-400));
-  --color-landing-accent-alt: light-dark(var(--p-purple-500), var(--p-purple-400));
-  --color-landing-accent-teal: light-dark(var(--p-teal-500), var(--p-teal-400));
-  --color-ui-bg-hero: var(--p-gray-950);
+  --color-landing-accent: light-dark(var(--p-blue-500), var(--p-cyan-400));
+  --color-landing-accent-alt: light-dark(var(--p-cyan-400), var(--p-purple-400));
+  --color-landing-accent-teal: light-dark(var(--p-emerald-400), var(--p-teal-400));
+  --color-ui-bg-hero: light-dark(#f8fbff, var(--p-gray-950));
 
   /* --- Brand feature accents (used by time tracking, calendar, onboarding) --- */
   --color-brand-cyan-text: light-dark(var(--p-cyan-600), var(--p-cyan-400));
@@ -224,7 +224,7 @@
   --max-width-toast: 90%;
 
   /* Auth Content Width */
-  --max-width-auth: 360px;
+  --max-width-auth: 400px;
 
   /* Decorative Blur */
   --blur-glow: 120px;
@@ -881,10 +881,41 @@ body {
 /* Auth page gradient (theme-aware, decorative background) */
 .bg-auth-gradient {
   background-image:
-    radial-gradient(circle at top left, color-mix(in oklab, var(--color-status-info) 24%, transparent), transparent 34%),
-    radial-gradient(circle at top right, color-mix(in oklab, var(--color-brand) 20%, transparent), transparent 38%),
-    radial-gradient(circle at bottom center, color-mix(in oklab, var(--color-status-success) 12%, transparent), transparent 30%),
-    linear-gradient(135deg, color-mix(in oklab, var(--color-ui-bg-elevated) 82%, transparent), color-mix(in oklab, var(--color-brand-subtle) 24%, var(--color-ui-bg-elevated)) 48%, var(--color-ui-bg-elevated));
+    radial-gradient(circle at top left, color-mix(in oklab, var(--color-status-info) 10%, transparent), transparent 34%),
+    radial-gradient(circle at top right, color-mix(in oklab, var(--color-landing-accent-teal) 8%, transparent), transparent 38%),
+    radial-gradient(circle at bottom center, color-mix(in oklab, var(--color-status-success) 6%, transparent), transparent 28%),
+    linear-gradient(
+      145deg,
+      color-mix(in oklab, var(--color-ui-bg) 95%, var(--color-ui-bg-elevated)) 0%,
+      color-mix(in oklab, var(--color-brand-subtle) 6%, var(--color-ui-bg-elevated)) 52%,
+      color-mix(in oklab, var(--color-ui-bg-elevated) 96%, white) 100%
+    );
+}
+
+/* Public landing/auth shell background */
+.public-page-bg {
+  background:
+    radial-gradient(
+      circle at top left,
+      color-mix(in oklab, var(--color-status-info) 7%, transparent),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at top center,
+      color-mix(in oklab, var(--color-brand-subtle) 18%, transparent),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      color-mix(in oklab, var(--color-status-success) 6%, transparent),
+      transparent 22%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-ui-bg-hero) 92%, white) 0%,
+      color-mix(in oklab, var(--color-ui-bg) 94%, var(--color-ui-bg-secondary)) 360px,
+      var(--color-ui-bg) 100%
+    );
 }
 
 /* Premium scrollbar styling (uses scrollbar tokens from @theme) */

@@ -3,7 +3,9 @@ import { Flex } from "@/components/ui/Flex";
 import { IconButton } from "@/components/ui/IconButton";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { CardDisplayOptions } from "@/lib/card-display-utils";
+import { CheckSquare } from "@/lib/icons";
 import type { SwimlanGroupBy } from "@/lib/swimlane-utils";
+import { cn } from "@/lib/utils";
 import { Typography } from "../ui/Typography";
 import { DisplayPropertiesSelector } from "./DisplayPropertiesSelector";
 import { SwimlanSelector } from "./SwimlanSelector";
@@ -51,7 +53,7 @@ export function BoardToolbar({
       align="center"
       justify="between"
       gap="xs"
-      className="mx-2 mt-0.5 px-0 py-0 sm:mx-6 sm:mt-4 sm:gap-sm sm:rounded-2xl sm:border sm:border-ui-border/70 sm:bg-ui-bg-elevated sm:px-5 sm:pb-3 sm:pt-4 sm:shadow-soft"
+      className="relative z-10 mx-2 h-0 overflow-visible px-0 py-0 sm:mx-6 sm:mt-4 sm:h-auto sm:gap-sm sm:rounded-2xl sm:border sm:border-ui-border/70 sm:bg-ui-bg-elevated sm:px-5 sm:pb-3 sm:pt-4 sm:shadow-soft"
     >
       <div className="hidden sm:block">
         <Typography variant="h2" className="text-xs font-semibold tracking-tight sm:text-lg">
@@ -66,7 +68,7 @@ export function BoardToolbar({
         <Flex
           align="center"
           gap="xs"
-          className="w-full shrink-0 justify-end sm:w-auto sm:justify-start sm:gap-2"
+          className="absolute right-0 top-1 shrink-0 justify-end sm:static sm:w-auto sm:justify-start sm:gap-2"
         >
           {/* Undo/Redo buttons */}
           <Flex align="center" gap="xs" className="hidden sm:flex mr-2 sm:mr-4">
@@ -141,12 +143,17 @@ export function BoardToolbar({
             size="sm"
             onClick={onToggleSelectionMode}
             aria-label={selectionMode ? "Exit selection mode" : "Enable selection mode"}
-            className="h-7 rounded-full px-2.5 text-xs sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm"
+            className={cn(
+              "h-5 w-5 rounded-full px-0 text-xs shadow-none sm:h-9 sm:w-auto sm:rounded-xl sm:px-3 sm:text-sm",
+              selectionMode
+                ? "sm:shadow-soft"
+                : "border-ui-border/35 bg-ui-bg/78 text-ui-text-tertiary opacity-80 sm:border-ui-border sm:bg-ui-bg-elevated sm:text-ui-text sm:opacity-100",
+            )}
           >
+            <CheckSquare className="h-3.5 w-3.5 sm:hidden" />
             <span className="hidden sm:inline">
               {selectionMode ? "Exit Selection" : "Select Multiple"}
             </span>
-            <span className="sm:hidden">{selectionMode ? "Exit" : "Select"}</span>
           </Button>
         </Flex>
       )}

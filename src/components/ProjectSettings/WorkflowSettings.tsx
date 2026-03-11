@@ -151,8 +151,8 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
   };
 
   return (
-    <Card variant="soft" padding="lg">
-      <Flex justify="between" align="center" className="mb-6">
+    <Card variant="outline" padding="md" className="sm:p-6">
+      <Flex justify="between" align="center" className="mb-4 sm:mb-6">
         <Stack gap="xs">
           <Typography variant="label">Workflow</Typography>
           <Typography variant="small" color="secondary">
@@ -170,7 +170,10 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
         <Stack gap="md">
           <Stack gap="sm">
             {states.map((state, index) => (
-              <Card key={state.id} padding="md" hoverable className="bg-ui-bg-tertiary">
+              <div
+                key={state.id}
+                className="rounded-xl border border-ui-border-secondary/75 bg-ui-bg px-4 py-4"
+              >
                 <Flex align="center" gap="md">
                   <Flex gap="xs" direction="column">
                     <Button
@@ -208,7 +211,7 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
                     Remove
                   </Button>
                 </Flex>
-              </Card>
+              </div>
             ))}
           </Stack>
 
@@ -228,7 +231,10 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
       ) : (
         <Stack gap="lg">
           {(["todo", "inprogress", "done"] as const).map((category) => (
-            <Card key={category} padding="md" className="bg-ui-bg-tertiary">
+            <div
+              key={category}
+              className="rounded-xl border border-ui-border-secondary/75 bg-ui-bg px-4 py-4"
+            >
               <Typography variant="label" color="secondary" className="mb-2.5">
                 {category === "inprogress" ? "In Progress" : category === "todo" ? "To Do" : "Done"}
               </Typography>
@@ -239,7 +245,7 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
                   </Badge>
                 ))}
               </Flex>
-            </Card>
+            </div>
           ))}
         </Stack>
       )}

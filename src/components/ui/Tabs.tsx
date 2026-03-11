@@ -28,7 +28,7 @@ const tabsListVariants = cva("inline-flex max-w-full text-ui-text-secondary", {
     layout: {
       default: "",
       settings:
-        "mb-3 flex w-full flex-nowrap gap-0.5 overflow-x-auto p-0.5 pb-1 scrollbar-subtle sm:mb-4 sm:flex-wrap sm:overflow-visible sm:pb-0.5 lg:flex-nowrap",
+        "mb-3 flex w-full flex-nowrap gap-0.5 overflow-x-auto px-0.5 py-0.5 pb-1.5 scrollbar-subtle sm:mb-4 sm:flex-wrap sm:overflow-visible sm:py-1 sm:pb-0.5 lg:flex-nowrap",
     },
   },
   defaultVariants: {

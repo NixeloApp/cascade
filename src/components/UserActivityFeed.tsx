@@ -25,7 +25,6 @@ import {
 } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Card } from "./ui/Card";
-import { EmptyState } from "./ui/EmptyState";
 import { Flex, FlexItem } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
 import { SkeletonList } from "./ui/Skeleton";
@@ -198,15 +197,29 @@ export function UserActivityFeed({
 
   if (activities.length === 0) {
     return (
-      <EmptyState
-        icon={Clock}
-        title="No activity yet"
-        description="Activity will appear here as work progresses"
-        variant="info"
-        align="start"
-        size="compact"
-        surface="bare"
-      />
+      <Flex
+        align="center"
+        gap="sm"
+        direction="column"
+        className="rounded-2xl border border-dashed border-ui-border-secondary/80 bg-ui-bg-soft/45 px-4 py-4 text-left sm:flex-row sm:items-center"
+      >
+        <Flex
+          align="center"
+          justify="center"
+          className="h-9 w-9 shrink-0 rounded-full border border-ui-border bg-ui-bg text-status-info shadow-soft"
+        >
+          <Icon icon={Clock} size="sm" aria-hidden="true" />
+        </Flex>
+        <Stack gap="xs" className="min-w-0">
+          <Typography variant="caption" className="uppercase tracking-widest text-ui-text-tertiary">
+            Waiting for updates
+          </Typography>
+          <Typography variant="label">No recent activity</Typography>
+          <Typography variant="small" color="secondary">
+            Updates appear here as work moves.
+          </Typography>
+        </Stack>
+      </Flex>
     );
   }
 

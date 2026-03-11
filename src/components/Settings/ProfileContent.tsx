@@ -415,8 +415,8 @@ function LoadedProfileContent({
 
           <Card
             padding="none"
-            variant="outline"
-            className="border-ui-border-secondary/80 bg-linear-to-br from-ui-bg via-ui-bg-secondary/76 to-ui-bg-soft/74 p-4 shadow-soft sm:p-5"
+            variant="default"
+            className="border-ui-border-secondary/80 bg-linear-to-br from-ui-bg via-ui-bg-secondary/82 to-ui-bg-soft/70 p-3.5 shadow-soft sm:p-4"
           >
             <Stack gap="sm">
               <Typography variant="h5">Recent Activity</Typography>

@@ -104,7 +104,8 @@ export function Settings({ activeTab: requestedTab, onTabChange }: SettingsProps
       <TabsList size="compact" layout="settings">
         {visibleTabs.map((tab) => (
           <TabsTrigger key={tab.value} value={tab.value} size="compact" width="responsive">
-            {tab.label}
+            <span className="sm:hidden">{tab.shortLabel ?? tab.label}</span>
+            <span className="hidden sm:inline">{tab.label}</span>
           </TabsTrigger>
         ))}
       </TabsList>

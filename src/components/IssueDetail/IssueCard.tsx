@@ -270,7 +270,7 @@ export const IssueCard = memo(function IssueCard({
       ref={cardRef}
       data-testid={TEST_IDS.ISSUE.CARD}
       className={cn(
-        "group relative w-full rounded-container bg-ui-bg-soft p-1.5 text-left sm:p-3",
+        "group relative w-full rounded-container bg-ui-bg-soft p-1.25 text-left sm:p-3",
         "border transition-default",
         // Apply focus ring to container when inner elements (like the overlay button) are focused
         "focus-within:ring-2 focus-within:ring-brand-ring focus-within:ring-offset-2 focus-within:outline-none",
@@ -298,7 +298,7 @@ export const IssueCard = memo(function IssueCard({
       {/* Content Wrapper - pointer-events-none allows clicks to pass through to overlay */}
       <div className="relative z-10 pointer-events-none">
         {/* Header */}
-        <Flex align="start" justify="between" className="mb-1.5 sm:mb-2">
+        <Flex align="start" justify="between" className="mb-1 sm:mb-2">
           <Flex align="center" gap="xs" className="min-w-0">
             {/* Drag handle */}
             {canEdit && !selectionMode && (
@@ -308,7 +308,7 @@ export const IssueCard = memo(function IssueCard({
                 className="cursor-grab active:cursor-grabbing pointer-events-auto"
               >
                 <GripVertical
-                  className="w-3 h-3 text-ui-text-tertiary opacity-0 group-hover:opacity-40 transition-fast -ml-0.5 shrink-0"
+                  className="h-3 w-3 shrink-0 -ml-0.5 text-ui-text-tertiary opacity-0 transition-fast group-hover:opacity-40"
                   aria-hidden="true"
                 />
               </div>
@@ -373,7 +373,7 @@ export const IssueCard = memo(function IssueCard({
           <Typography
             variant="label"
             as="p"
-            className="mb-1.5 line-clamp-2 pointer-events-auto text-sm sm:mb-2"
+            className="mb-1 line-clamp-2 pointer-events-auto text-sm leading-snug sm:mb-2"
             data-testid={TEST_IDS.ISSUE.TITLE}
             onClick={handleClick}
           >
@@ -383,7 +383,7 @@ export const IssueCard = memo(function IssueCard({
 
         {/* Labels */}
         {display.labels && issue.labels.length > 0 && (
-          <Flex wrap gap="xs" className="mb-2">
+          <Flex wrap gap="xs" className="mb-1.5 sm:mb-2">
             {issue.labels.slice(0, 3).map((label) => (
               <Tooltip key={label.name} content={label.description || label.name}>
                 <Flex

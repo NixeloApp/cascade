@@ -65,7 +65,7 @@ export function DangerZone({
   }
 
   return (
-    <Card padding="lg" className="border-status-error/30 bg-status-error-bg/30">
+    <Card padding="md" className="border-status-error/30 bg-status-error-bg/30 sm:p-6">
       <Stack gap="lg">
         <Flex justify="between" align="center">
           <Stack gap="xs">
@@ -78,7 +78,7 @@ export function DangerZone({
           </Stack>
         </Flex>
 
-        <Card padding="md" className="bg-status-error/5 border-status-error/15">
+        <div className="rounded-xl border border-status-error/15 bg-status-error/5 px-4 py-4">
           <Flex justify="between" align="start" gap="lg">
             <FlexItem flex="1">
               <Typography variant="label" color="error">
@@ -97,12 +97,7 @@ export function DangerZone({
           </Flex>
 
           {showConfirm && (
-            <Card
-              padding="md"
-              variant="ghost"
-              radius="none"
-              className="mt-5 border-t border-status-error/15"
-            >
+            <div className="mt-5 border-t border-status-error/15 pt-5">
               <Stack gap="md">
                 <Typography variant="small" color="error">
                   To confirm, type{" "}
@@ -137,9 +132,9 @@ export function DangerZone({
                   </Button>
                 </Flex>
               </Stack>
-            </Card>
+            </div>
           )}
-        </Card>
+        </div>
       </Stack>
     </Card>
   );

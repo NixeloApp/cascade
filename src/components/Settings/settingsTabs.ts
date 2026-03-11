@@ -16,6 +16,7 @@ type SettingsTabVisibility = "all" | "admin" | "devtools";
 
 export interface SettingsTabDefinition {
   label: string;
+  shortLabel?: string;
   value: SettingsTabValue;
   visibility: SettingsTabVisibility;
 }
@@ -23,13 +24,13 @@ export interface SettingsTabDefinition {
 export const SETTINGS_TABS: readonly SettingsTabDefinition[] = [
   { value: "profile", label: "Profile", visibility: "all" },
   { value: "security", label: "Security", visibility: "all" },
-  { value: "notifications", label: "Notifications", visibility: "all" },
-  { value: "integrations", label: "Integrations", visibility: "all" },
-  { value: "apikeys", label: "API Keys", visibility: "all" },
-  { value: "offline", label: "Offline Mode", visibility: "all" },
-  { value: "preferences", label: "Preferences", visibility: "all" },
+  { value: "notifications", label: "Notifications", shortLabel: "Alerts", visibility: "all" },
+  { value: "integrations", label: "Integrations", shortLabel: "Apps", visibility: "all" },
+  { value: "apikeys", label: "API Keys", shortLabel: "API", visibility: "all" },
+  { value: "offline", label: "Offline Mode", shortLabel: "Offline", visibility: "all" },
+  { value: "preferences", label: "Preferences", shortLabel: "Prefs", visibility: "all" },
   { value: "admin", label: "Admin", visibility: "admin" },
-  { value: "developer", label: "Dev Tools", visibility: "devtools" },
+  { value: "developer", label: "Dev Tools", shortLabel: "Dev", visibility: "devtools" },
 ];
 
 interface SettingsTabVisibilityOptions {

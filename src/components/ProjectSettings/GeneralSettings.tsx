@@ -73,7 +73,7 @@ export function GeneralSettings({
   };
 
   return (
-    <Card variant="soft" padding="none" className="p-5 sm:p-6">
+    <Card variant="outline" padding="none" className="p-4 sm:p-6">
       <Flex justify="between" align="center" className="mb-4 sm:mb-6">
         <Stack gap="xs">
           <Typography variant="h4">General</Typography>
@@ -126,22 +126,22 @@ export function GeneralSettings({
         </Stack>
       ) : (
         <Stack gap="sm">
-          <Card variant="soft" padding="sm" className="bg-ui-bg-tertiary">
+          <div className="rounded-xl border border-ui-border-secondary/75 bg-ui-bg px-3 py-3">
             <Label className="mb-1">Project Name</Label>
             <Typography variant="label">{name}</Typography>
-          </Card>
-          <Card variant="soft" padding="sm" className="bg-ui-bg-tertiary">
+          </div>
+          <div className="rounded-xl border border-ui-border-secondary/75 bg-ui-bg px-3 py-3">
             <Label className="mb-1">Project Key</Label>
             <Typography variant="mono" color="secondary">
               {projectKey}
             </Typography>
-          </Card>
-          <Card variant="soft" padding="sm" className="bg-ui-bg-tertiary">
+          </div>
+          <div className="rounded-xl border border-ui-border-secondary/75 bg-ui-bg px-3 py-3">
             <Label className="mb-1">Description</Label>
             <Typography variant="p" color="secondary">
               {description || "No description"}
             </Typography>
-          </Card>
+          </div>
         </Stack>
       )}
     </Card>

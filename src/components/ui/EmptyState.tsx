@@ -49,20 +49,24 @@ const EMPTY_STATE_ICON_COLOR_CLASS: Record<EmptyStateVariant, string> = {
 
 const EMPTY_STATE_SIZE_CLASS: Record<EmptyStateSize, string> = {
   default: "min-h-56 max-w-2xl px-6 py-8 sm:px-8 sm:py-9",
-  compact: "min-h-24 px-3.5 py-3 sm:min-h-28 sm:px-4.5 sm:py-3.5",
+  compact: "min-h-20 px-3 py-2.5 sm:min-h-24 sm:px-4 sm:py-3",
 };
 
 const EMPTY_STATE_ICON_SHELL_CLASS: Record<EmptyStateSize, string> = {
   default: "mb-4 h-14 w-14",
-  compact: "mb-2 h-8 w-8",
+  compact: "mb-1.5 h-7 w-7",
 };
 
-function EmptyStateBadge({ size }: { size: EmptyStateSize }) {
+function EmptyStateBadge({ size, surface }: { size: EmptyStateSize; surface: EmptyStateSurface }) {
   return (
     <div
       className={cn(
         "inline-flex items-center rounded-full border border-ui-border/70 bg-ui-bg-soft text-xs font-medium uppercase tracking-wider text-ui-text-tertiary",
-        size === "compact" ? "mb-1.5 px-2 py-0.5" : "mb-4 px-3 py-1",
+        size === "compact"
+          ? surface === "bare"
+            ? "mb-1 px-1.5 py-0.5 text-[9px]"
+            : "mb-1.5 px-2 py-0.5"
+          : "mb-4 px-3 py-1",
       )}
     >
       {size === "compact" ? "Waiting for updates" : "Nothing here yet"}
@@ -138,6 +142,7 @@ export function EmptyState({
         isBare
           ? "rounded-none border-transparent bg-transparent shadow-none"
           : "rounded-container border border-ui-border/70 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-secondary/70",
+        isBare && size === "compact" && "max-w-none px-0 py-0",
         !isBare && (size === "compact" ? "shadow-card" : "shadow-soft"),
         isStartAligned ? "items-start text-left" : "items-center text-center",
         sizeClass,
@@ -145,12 +150,12 @@ export function EmptyState({
       )}
       aria-label={title}
     >
-      <EmptyStateBadge size={size} />
+      <EmptyStateBadge size={size} surface={surface} />
       <EmptyStateIcon icon={icon} iconColorClass={iconColorClass} size={size} />
       <Typography
         variant={size === "compact" ? "large" : "h4"}
         as="h3"
-        className={cn("mb-2", size === "compact" && "text-base")}
+        className={cn("mb-2", size === "compact" && "text-sm")}
       >
         {title}
       </Typography>
