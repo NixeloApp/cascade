@@ -29,7 +29,7 @@ const tabsListVariants = cva("inline-flex max-w-full items-center text-ui-text-s
     layout: {
       default: "",
       settings:
-        "relative mb-3 flex w-full flex-nowrap gap-0.5 overflow-x-auto px-0.5 py-0.5 pb-1.5 scrollbar-subtle after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:w-6 after:bg-linear-to-l after:from-ui-bg-elevated after:to-transparent sm:mb-4 sm:flex-wrap sm:overflow-visible sm:py-1 sm:pb-0.5 sm:after:hidden lg:flex-nowrap",
+        "mb-3 grid w-full grid-cols-4 gap-1 rounded-2xl border border-ui-border-secondary/70 bg-ui-bg-secondary/88 p-1 shadow-soft sm:mb-4 sm:flex sm:flex-wrap sm:gap-0.5 sm:overflow-visible sm:rounded-2xl sm:p-1 lg:flex-nowrap",
     },
   },
   defaultVariants: {
@@ -67,11 +67,12 @@ const tabsTriggerVariants = cva(
       },
       size: {
         default: "",
-        compact: "min-h-7 rounded-full px-2.5 py-1 text-xs sm:min-h-8 sm:px-3 sm:text-sm",
+        compact:
+          "min-h-8 rounded-full px-2.5 py-1.5 text-xs leading-tight sm:min-h-8 sm:px-3 sm:py-1 sm:text-sm",
       },
       width: {
         default: "",
-        responsive: "w-auto shrink-0",
+        responsive: "w-full min-w-0 sm:w-auto sm:shrink-0",
       },
     },
     defaultVariants: {
