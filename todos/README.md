@@ -16,7 +16,9 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 
 1. Active product cohesion loop:
    - [design-cohesion-overhaul.md](./design-cohesion-overhaul.md)
-   - first fix the review/docs/process gap, then fix the shared hero/header/modal/system failures
+   - semantic interaction ownership is now in place: `Tabs` for panels, `SegmentedControl` for single-select mode/filter switches, `RouteNav` for route navigation
+   - validator boundaries now block exported CVA helper misuse and low-level `ToggleGroup` leakage in app code
+   - next fix the review/docs/process gap, then finish the remaining shared hero/header/modal/system failures on top of the new primitives
    - do not treat screenshot validity as proof that the UI is visually acceptable
 2. Active screenshot and visual-baseline loop:
    - [e2e-screenshot-quality.md](./e2e-screenshot-quality.md) as the canonical screenshot determinism + visual review execution doc
@@ -46,7 +48,7 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 
 | Priority | File | Role | Next Action |
 |---|---|---|---|
-| P0 | [design-cohesion-overhaul.md](./design-cohesion-overhaul.md) | Visual-system, shared-shell, and review-discipline repair | Restore diagram-first specs, then fix hero, header, modal, and validator cohesion gaps |
+| P0 | [design-cohesion-overhaul.md](./design-cohesion-overhaul.md) | Visual-system, shared-shell, and review-discipline repair | Use the new `SegmentedControl`/`RouteNav` foundation to finish header, modal, and page-shell cleanup, then restore diagram-first specs |
 | P0 | [e2e-screenshot-quality.md](./e2e-screenshot-quality.md) | Screenshot determinism + visual review control plane | Keep the baseline trustworthy, then finish the shared theme-parity/mobile-chrome/light-surface/settings-density polish queue |
 | P0 | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Reliability sustainment while UI churn continues | Keep full suite green and keep replacing retry-heavy helpers with explicit completion contracts |
 | P1 | [calendar-access-control.md](./calendar-access-control.md) | Cross-scope event injection risk | Gate scope derivation with `canAccessProject()` and add regression test |
