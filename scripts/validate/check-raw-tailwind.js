@@ -204,14 +204,12 @@ export function run() {
    */
   function findOpeningTag(lines, classNameLineIndex) {
     // Search backward to find the opening <
-    let tagStart = classNameLineIndex;
     let tagContent = "";
 
     for (let j = classNameLineIndex; j >= Math.max(0, classNameLineIndex - 10); j--) {
       const line = lines[j];
       tagContent = line + " " + tagContent;
       if (line.includes("<")) {
-        tagStart = j;
         break;
       }
     }
