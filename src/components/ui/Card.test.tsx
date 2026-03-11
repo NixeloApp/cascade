@@ -1,7 +1,7 @@
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@/test/custom-render";
-import { Card, CardBody, CardHeader } from "./Card";
+import { Card, CardBody, CardHeader, cardRecipeVariants } from "./Card";
 
 describe("Card", () => {
   describe("Basic Rendering", () => {
@@ -57,6 +57,20 @@ describe("Card", () => {
       expect(card).toHaveClass("bg-blue-50");
       expect(card).toHaveClass("rounded-container");
       expect(card).toHaveClass("border");
+    });
+
+    it("should apply recipe styling without inheriting the default card surface", () => {
+      const { container } = render(
+        <Card recipe="overlayInset" data-testid="card">
+          Content
+        </Card>,
+      );
+
+      const card = container.firstChild;
+      expect(card).toHaveClass("rounded-2xl");
+      expect(card).toHaveClass("bg-linear-to-b");
+      expect(card).toHaveClass("from-ui-bg-soft/80");
+      expect(card).not.toHaveClass("from-ui-bg");
     });
   });
 
@@ -215,6 +229,19 @@ describe("Card", () => {
 
       await user.click(screen.getByRole("button"));
       expect(onClick).toHaveBeenCalled();
+    });
+
+    it("should compose recipe styling with padding props", () => {
+      const { container } = render(
+        <Card recipe="metricTile" padding="md">
+          Metrics
+        </Card>,
+      );
+
+      const card = container.firstChild;
+      expect(card).toHaveClass("p-4");
+      expect(card).toHaveClass("rounded-2xl");
+      expect(card).toHaveClass("shadow-soft");
     });
   });
 
@@ -397,6 +424,15 @@ describe("CardHeader", () => {
       expect(screen.getByText("Desc")).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Act" })).toBeInTheDocument();
     });
+  });
+});
+
+describe("cardRecipeVariants", () => {
+  it("returns the expected classes for control rail surfaces", () => {
+    const classes = cardRecipeVariants({ recipe: "controlRail" });
+    expect(classes).toContain("rounded-full");
+    expect(classes).toContain("shadow-card");
+    expect(classes).toContain("backdrop-blur-xl");
   });
 });
 

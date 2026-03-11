@@ -55,9 +55,35 @@ const cardVariants = cva("border transition-default", {
   },
 });
 
+const cardRecipeVariants = cva("", {
+  variants: {
+    recipe: {
+      overlayInset:
+        "rounded-2xl border-ui-border-secondary/70 bg-linear-to-b from-ui-bg-soft/80 via-ui-bg-elevated/96 to-ui-bg-secondary/84 shadow-soft",
+      showcaseShell:
+        "relative overflow-hidden rounded-3xl border-ui-border-secondary/75 bg-linear-to-b from-ui-bg-elevated/98 via-ui-bg-elevated to-ui-bg-secondary/78 shadow-elevated",
+      showcasePanel:
+        "rounded-2xl border-ui-border-secondary/70 bg-linear-to-b from-ui-bg/98 via-ui-bg-elevated/96 to-ui-bg-secondary/84 shadow-soft",
+      showcasePanelQuiet:
+        "rounded-2xl border-ui-border/60 bg-linear-to-b from-ui-bg-secondary/84 to-ui-bg-secondary/72 shadow-soft",
+      metricTile:
+        "rounded-2xl border-ui-border-secondary/70 bg-linear-to-b from-ui-bg/96 via-ui-bg-elevated/94 to-ui-bg-secondary/78 shadow-soft",
+      controlRail:
+        "rounded-full border-ui-border-secondary/70 bg-linear-to-r from-ui-bg-elevated/96 via-ui-bg-elevated/94 to-ui-bg-soft/90 shadow-card backdrop-blur-xl",
+      controlStrip:
+        "rounded-full border-ui-border-secondary/70 bg-ui-bg-elevated/94 shadow-soft backdrop-blur-sm",
+      commandSection:
+        "rounded-2xl border-ui-border-secondary/60 bg-linear-to-b from-ui-bg-soft/70 to-ui-bg-elevated/94 shadow-soft",
+      commandIntro:
+        "rounded-2xl border-ui-border/70 bg-linear-to-br from-brand-subtle/70 via-ui-bg-soft to-ui-bg-secondary/85 shadow-soft",
+    },
+  },
+});
+
 export interface CardProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof cardVariants> {}
+    VariantProps<typeof cardVariants>,
+    VariantProps<typeof cardRecipeVariants> {}
 
 /**
  * Card container component for grouping related content.
@@ -75,6 +101,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       className,
       hoverable = false,
       variant = "default",
+      recipe,
       padding,
       radius,
       onClick,
@@ -97,10 +124,16 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
         }
       : {};
 
+    const resolvedVariant = recipe ? "ghost" : variant;
+
     return (
       <div
         ref={ref}
-        className={cn(cardVariants({ hoverable, variant, padding, radius }), className)}
+        className={cn(
+          cardVariants({ hoverable, variant: resolvedVariant, padding, radius }),
+          cardRecipeVariants({ recipe }),
+          className,
+        )}
         {...interactiveProps}
         {...props}
       >
@@ -209,4 +242,5 @@ export {
   CardBody,
   CardFooter,
   cardVariants,
+  cardRecipeVariants,
 };

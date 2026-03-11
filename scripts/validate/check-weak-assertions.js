@@ -127,7 +127,6 @@ export function run() {
   return {
     passed: allIssues.length === 0,
     errors: allIssues.length,
-    warnings: 0,
     detail: allIssues.length > 0 ? `${allIssues.length} weak assertion(s)` : null,
     messages,
   };

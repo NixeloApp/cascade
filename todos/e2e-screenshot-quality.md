@@ -2,17 +2,18 @@
 
 > **Priority:** P0
 > **Status:** Active canonical doc for screenshot determinism, screenshot-driven UI review, and screenshot-specific E2E quality work
-> **Last Updated:** 2026-03-10
+> **Last Updated:** 2026-03-11
 > **Supersedes:** previous screenshot review loop docs and separate visual-polish todo files
 
 ## Objective
 
 Keep `pnpm screenshots` trustworthy and useful.
 
-That means two things must stay true at the same time:
+That means three things must stay true at the same time:
 
 1. the screenshot runner captures real, loaded UI states deterministically
 2. the resulting screenshots drive disciplined visual improvements instead of ad hoc page tweaks
+3. a screenshot that is technically valid but visually broken must still be called broken in review
 
 This is the single control doc for both.
 
@@ -97,6 +98,16 @@ Common invalid-baseline cases:
 - empty/error state captured instead of seeded state
 
 These are harness/data issues first.
+
+### 1A. Do Not Mistake A Valid Capture For A Good UI
+
+Examples:
+
+- header controls overlap or float awkwardly but the page is fully loaded
+- a modal technically opens, but the content obviously exceeds the frame and the scroll behavior is wrong
+- a hero/showcase composition is cramped, noisy, or internally inconsistent
+
+These are review-quality failures, not harness successes.
 
 ### 2. Review All Variants
 
@@ -223,6 +234,8 @@ Check:
 - header/body/footer rhythm
 - visual consistency across omnibox/create/detail flows
 - mobile fit
+- whether overflowing content has a deliberate scroll region
+- whether the modal family feels like one system instead of separate one-off surfaces
 
 ## Defect Taxonomy
 

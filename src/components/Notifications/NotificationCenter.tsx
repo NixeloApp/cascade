@@ -15,7 +15,7 @@ import { Bell, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Card, cardRecipeVariants } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
@@ -171,9 +171,9 @@ export function NotificationCenter() {
         <PopoverTrigger asChild>
           {/* Notification Bell Button */}
           <Button
-            variant="ghost"
-            size="icon"
-            className="relative h-9 w-9 rounded-full border border-transparent bg-transparent text-ui-text-secondary shadow-none hover:border-ui-border/70 hover:bg-ui-bg-soft/80 hover:text-ui-text"
+            chrome="quiet"
+            chromeSize="icon"
+            className="relative"
             aria-label={dynamicLabel}
             data-testid={TEST_IDS.HEADER.NOTIFICATION_BUTTON}
           >
@@ -195,7 +195,10 @@ export function NotificationCenter() {
 
       <PopoverContent
         align="end"
-        className="w-full sm:w-96 max-w-[calc(100vw-2rem)] p-0 bg-ui-bg border-ui-border max-h-[80vh]"
+        className={cn(
+          cardRecipeVariants({ recipe: "overlayInset" }),
+          "max-h-[80vh] w-full max-w-[calc(100vw-2rem)] p-0 sm:w-96",
+        )}
         data-testid={TEST_IDS.HEADER.NOTIFICATION_PANEL}
       >
         <Stack gap="none" className="h-full">
@@ -235,15 +238,10 @@ export function NotificationCenter() {
                 ).map(({ key, label }) => (
                   <Button
                     key={key}
-                    variant="ghost"
-                    size="sm"
+                    chrome={filter === key ? "active" : "quiet"}
+                    chromeSize="compactPill"
                     onClick={() => setFilter(key)}
-                    className={cn(
-                      "shrink-0 px-3 h-7",
-                      filter === key
-                        ? "bg-ui-bg-secondary text-ui-text"
-                        : "text-ui-text-secondary hover:text-ui-text",
-                    )}
+                    className="h-7 shrink-0"
                   >
                     {label}
                   </Button>

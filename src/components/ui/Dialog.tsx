@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { Flex } from "./Flex";
 
 const dialogVariants = cva(
-  "fixed top-1/2 left-1/2 z-50 grid w-full max-w-dialog-mobile -translate-x-1/2 -translate-y-1/2 gap-5 overflow-y-auto overscroll-contain rounded-3xl border border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg p-6 shadow-elevated origin-center [perspective:800px] data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out",
+  "fixed top-1/2 left-1/2 z-50 flex w-full max-w-dialog-mobile -translate-x-1/2 -translate-y-1/2 flex-col overscroll-contain overflow-hidden origin-center [perspective:800px] data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out",
   {
     variants: {
       size: {
@@ -33,6 +33,46 @@ const dialogVariants = cva(
     },
   },
 );
+
+const dialogSurfaceVariants = cva(
+  "rounded-3xl border border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg shadow-elevated",
+  {
+    variants: {
+      recipe: {
+        default: "",
+        command: "p-0",
+      },
+    },
+    defaultVariants: {
+      recipe: "default",
+    },
+  },
+);
+
+const dialogSectionVariants = cva("", {
+  variants: {
+    recipe: {
+      default: "",
+      command: "",
+    },
+    slot: {
+      header: "border-b border-ui-border-secondary/60 px-6 py-5",
+      body: "min-h-0 flex-1 overflow-y-auto px-6 pb-6",
+      footer:
+        "border-t border-ui-border-secondary/60 px-6 py-4 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end",
+    },
+  },
+  compoundVariants: [
+    {
+      recipe: "command",
+      slot: "body",
+      className: "min-h-0 flex-1 overflow-hidden p-0",
+    },
+  ],
+  defaultVariants: {
+    recipe: "default",
+  },
+});
 
 // =============================================================================
 // Dialog - Clean API with required title/description
@@ -53,6 +93,14 @@ interface DialogProps extends VariantProps<typeof dialogVariants> {
   className?: string;
   /** Footer content (buttons, etc.) */
   footer?: React.ReactNode;
+  /** Shared dialog anatomy preset */
+  recipe?: VariantProps<typeof dialogSurfaceVariants>["recipe"];
+  /** Additional class for the scrollable body region */
+  bodyClassName?: string;
+  /** Additional class for the header region */
+  headerClassName?: string;
+  /** Additional class for the footer region */
+  footerClassName?: string;
   /** Whether to show the close button. Default: true */
   showCloseButton?: boolean;
   /** Optional focus-outside handler for Radix dialog content */
@@ -85,7 +133,11 @@ function Dialog({
   children,
   className,
   footer,
+  bodyClassName,
+  headerClassName,
+  footerClassName,
   size,
+  recipe = "default",
   showCloseButton = true,
   onFocusOutside,
   "data-testid": testId,
@@ -99,11 +151,19 @@ function Dialog({
         />
         <DialogPrimitive.Content
           data-testid={testId}
-          className={cn(dialogVariants({ size }), className)}
+          className={cn(dialogVariants({ size }), dialogSurfaceVariants({ recipe }), className)}
           onFocusOutside={onFocusOutside}
         >
           {/* Header */}
-          <Flex direction="column" gap="xs" className="pr-10 text-center sm:text-left">
+          <Flex
+            direction="column"
+            gap="xs"
+            className={cn(
+              dialogSectionVariants({ recipe, slot: "header" }),
+              "pr-10 text-center sm:text-left",
+              headerClassName,
+            )}
+          >
             <DialogPrimitive.Title className="text-xl leading-none font-semibold tracking-tight text-ui-text">
               {title}
             </DialogPrimitive.Title>
@@ -118,11 +178,21 @@ function Dialog({
           </Flex>
 
           {/* Content */}
-          {children}
+          <div
+            className={cn(
+              "flex min-h-0 flex-1 flex-col",
+              dialogSectionVariants({ recipe, slot: "body" }),
+              bodyClassName,
+            )}
+          >
+            {children}
+          </div>
 
           {/* Footer */}
           {footer && (
-            <Flex className="border-t border-ui-border-secondary/60 pt-4 flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <Flex
+              className={cn(dialogSectionVariants({ recipe, slot: "footer" }), footerClassName)}
+            >
               {footer}
             </Flex>
           )}

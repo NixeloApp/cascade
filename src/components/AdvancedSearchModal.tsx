@@ -97,17 +97,13 @@ export function AdvancedSearchModal({
       size="lg"
       data-testid={TEST_IDS.SEARCH.ADVANCED_MODAL}
       footer={
-        <Button onClick={() => onOpenChange(false)} variant="secondary">
+        <Button onClick={() => onOpenChange(false)} chrome="framed" chromeSize="compactPill">
           Close
         </Button>
       }
     >
       <Stack gap="lg">
-        <Card
-          variant="flat"
-          padding="md"
-          className="border-ui-border-secondary/70 bg-linear-to-br from-ui-bg-soft to-ui-bg-elevated"
-        >
+        <Card recipe="overlayInset" padding="md">
           <Stack gap="xs">
             <Typography variant="label" className="uppercase tracking-wider text-ui-text-tertiary">
               Search playbook
@@ -191,10 +187,7 @@ export function AdvancedSearchModal({
               )}
             </Flex>
 
-            <Card
-              radius="full"
-              className="overflow-hidden border-ui-border-secondary/70 bg-ui-bg-elevated/95 shadow-soft"
-            >
+            <Card recipe="overlayInset">
               <SearchResultsList
                 searchQuery={searchQuery}
                 results={results}
@@ -206,11 +199,7 @@ export function AdvancedSearchModal({
             </Card>
           </Stack>
         ) : (
-          <Card
-            variant="flat"
-            padding="md"
-            className="border-ui-border-secondary/70 bg-ui-bg-soft/70"
-          >
+          <Card recipe="overlayInset" padding="md">
             <Typography variant="small" color="secondary">
               Results appear once you type at least 2 characters.
             </Typography>

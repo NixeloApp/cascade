@@ -58,7 +58,6 @@ export function run() {
   return {
     passed: errorCount === 0,
     errors: errorCount,
-    warnings: 0,
     detail,
     messages: errors,
   };

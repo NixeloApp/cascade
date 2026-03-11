@@ -7,12 +7,12 @@
  * - Hooks in src/hooks/
  * - Convex functions in convex/ (queries, mutations, actions)
  *
- * WARN-ONLY: Reports issues but doesn't fail validation.
- * This allows incremental adoption of test coverage requirements.
+ * Enforced. Missing tests are validation errors.
  */
 
 import fs from "node:fs";
 import path from "node:path";
+import { TEST_COVERAGE_BASELINE } from "./test-coverage-baseline.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 // Directories to check for test coverage
@@ -160,20 +160,37 @@ export function run() {
     }
   }
 
-  const messages = issues.map(
-    (issue) => `  ${c.red}ERROR${c.reset} ${issue.file} - ${issue.message}`,
+  const currentIssueFiles = new Set(issues.map((issue) => issue.file));
+  const baselineEntries = new Set(TEST_COVERAGE_BASELINE);
+  const regressions = issues.filter((issue) => !baselineEntries.has(issue.file));
+  const staleBaselineEntries = TEST_COVERAGE_BASELINE.filter(
+    (file) => !currentIssueFiles.has(file),
   );
 
-  if (issues.length > 0) {
-    console.log(`${c.red}Found ${issues.length} file(s) missing tests:${c.reset}`);
+  const regressionMessages = regressions.map(
+    (issue) =>
+      `  ${c.red}ERROR${c.reset} ${issue.file} - ${issue.message} (new uncovered file outside baseline)`,
+  );
+  const staleBaselineMessages = staleBaselineEntries.map(
+    (file) =>
+      `  ${c.red}ERROR${c.reset} ${file} - Remove this file from test-coverage-baseline.js; it no longer needs a baseline entry`,
+  );
+  const errors = [...regressionMessages, ...staleBaselineMessages];
+  const errorCount = regressions.length + staleBaselineEntries.length;
+  const detailParts = [];
+  if (regressions.length > 0) {
+    detailParts.push(`${regressions.length} uncovered file(s) outside baseline`);
+  }
+  if (staleBaselineEntries.length > 0) {
+    detailParts.push(
+      `${staleBaselineEntries.length} stale baseline entr${staleBaselineEntries.length === 1 ? "y" : "ies"}`,
+    );
   }
 
-  // Warn-only: always pass but report issues as warnings
   return {
-    passed: true,
-    errors: 0,
-    warnings: issues.length,
-    detail: issues.length > 0 ? `${issues.length} file(s) missing tests (warn-only)` : null,
-    messages,
+    passed: errorCount === 0,
+    errors: errorCount,
+    detail: errorCount > 0 ? detailParts.join(", ") : null,
+    messages: errorCount > 0 ? errors : [],
   };
 }

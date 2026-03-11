@@ -11,11 +11,11 @@
 
 import { Search } from "lucide-react";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
 import { Input } from "./ui/Input";
-import { ScrollArea } from "./ui/ScrollArea";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
@@ -175,12 +175,11 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
 // Components
 // =============================================================================
 
+const KEY_BADGE_CLASSNAME =
+  "inline-flex h-6 min-w-6 items-center justify-center rounded-lg border border-ui-border-secondary/70 bg-ui-bg-elevated px-2 font-mono text-xs font-medium text-ui-text-secondary shadow-soft";
+
 function KeyBadge({ children }: { children: React.ReactNode }) {
-  return (
-    <kbd className="inline-flex h-6 min-w-6 items-center justify-center rounded-lg border border-ui-border-secondary/70 bg-ui-bg-elevated px-2 font-mono text-xs font-medium text-ui-text-secondary shadow-soft">
-      {children}
-    </kbd>
-  );
+  return <kbd className={KEY_BADGE_CLASSNAME}>{children}</kbd>;
 }
 
 function ModifierShortcutBadge({ shortcut }: { shortcut: string }) {
@@ -263,56 +262,50 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
       onOpenChange={handleOpenChange}
       title="Keyboard Shortcuts"
       description="Available keyboard shortcuts for navigation and actions"
-      size="md"
+      size="lg"
+      footerClassName="justify-between"
+      footer={
+        <Typography variant="caption" color="tertiary" className="block text-center sm:text-left">
+          Press{" "}
+          <Typography as="kbd" variant="mono" className={cn(KEY_BADGE_CLASSNAME, "text-xs")}>
+            {isMacPlatform() ? "⌘" : "Ctrl"}+K
+          </Typography>{" "}
+          to open search and commands
+        </Typography>
+      }
     >
-      {/* Search Input */}
       <Stack gap="md">
-        <Card
-          variant="flat"
-          padding="sm"
-          className="border-ui-border-secondary/70 bg-linear-to-br from-ui-bg-soft to-ui-bg-elevated"
-        >
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ui-text-tertiary" />
+        <Card recipe="overlayInset">
+          <div className="relative p-4">
+            <Search className="absolute left-6 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ui-text-tertiary" />
             <Input
               type="text"
               placeholder="Search shortcuts..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-9 pl-8 text-sm"
+              className="h-10 pl-9 text-sm"
               autoFocus
             />
           </div>
         </Card>
-      </Stack>
 
-      {/* Shortcuts List */}
-      <ScrollArea className="max-h-[60vh]">
         {hasResults ? (
           <Flex direction="column" gap="md">
             {filteredCategories.map((category) => (
-              <Card
-                key={category.id}
-                variant="flat"
-                padding="md"
-                className="border-ui-border-secondary/70 bg-ui-bg-soft/60"
-              >
-                <Typography
-                  variant="label"
-                  color="secondary"
-                  className="uppercase tracking-wider mb-2"
-                >
-                  {category.title}
-                </Typography>
-                <Flex direction="column" gap="xs">
+              <Card key={category.id} recipe="commandSection">
+                <div className="border-b border-ui-border-secondary/50 px-4 py-3">
+                  <Typography
+                    variant="label"
+                    color="secondary"
+                    className="uppercase tracking-wider"
+                  >
+                    {category.title}
+                  </Typography>
+                </div>
+                <Flex direction="column" gap="xs" className="p-3">
                   {category.items.map((item) => (
-                    <Card
-                      key={item.id}
-                      padding="sm"
-                      variant="default"
-                      className="border-ui-border/70 bg-ui-bg-elevated/90"
-                    >
-                      <Flex align="center" justify="between">
+                    <Card key={item.id} recipe="overlayInset">
+                      <Flex align="center" justify="between" gap="md" className="px-4 py-3">
                         <Typography variant="small" color="secondary">
                           {item.description}
                         </Typography>
@@ -325,8 +318,13 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
             ))}
           </Flex>
         ) : (
-          <Card padding="lg" variant="flat">
-            <Flex direction="column" align="center" justify="center" className="text-center">
+          <Card recipe="overlayInset">
+            <Flex
+              direction="column"
+              align="center"
+              justify="center"
+              className="px-6 py-8 text-center"
+            >
               <Typography variant="small" color="secondary">
                 No shortcuts found for{" "}
                 <Typography as="span" variant="label" className="italic">
@@ -336,27 +334,7 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
             </Flex>
           </Card>
         )}
-      </ScrollArea>
-
-      {/* Footer Tip */}
-      <Card
-        padding="md"
-        radius="none"
-        variant="ghost"
-        className="border-t border-ui-border border-x-0 border-b-0"
-      >
-        <Typography variant="caption" color="tertiary" className="text-center block">
-          Press{" "}
-          <Typography
-            as="kbd"
-            variant="mono"
-            className="rounded border border-ui-border bg-ui-bg text-xs"
-          >
-            {isMacPlatform() ? "⌘" : "Ctrl"}+K
-          </Typography>{" "}
-          to open search and commands
-        </Typography>
-      </Card>
+      </Stack>
     </Dialog>
   );
 }

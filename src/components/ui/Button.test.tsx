@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { Plus } from "lucide-react";
 import { describe, expect, it, vi } from "vitest";
-import { Button, buttonVariants } from "./Button";
+import { Button, buttonChromeVariants, buttonVariants } from "./Button";
 
 describe("Button", () => {
   describe("rendering", () => {
@@ -102,6 +102,18 @@ describe("Button", () => {
       expect(btn.className).toContain("bg-transparent");
       expect(btn.className).toContain("border");
     });
+
+    it("applies chrome styling through explicit props", () => {
+      render(
+        <Button chrome="framed" chromeSize="pill" data-testid="btn">
+          Chrome
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("bg-ui-bg-elevated/94");
+      expect(btn.className).toContain("rounded-full");
+      expect(btn.className).not.toContain("bg-linear-to-r");
+    });
   });
 
   describe("sizes", () => {
@@ -143,6 +155,18 @@ describe("Button", () => {
       const btn = screen.getByTestId("btn");
       expect(btn.className).toContain("h-10");
       expect(btn.className).toContain("w-10");
+    });
+
+    it("applies chrome icon size without inheriting default button sizing", () => {
+      render(
+        <Button chrome="quiet" chromeSize="icon" data-testid="btn">
+          <Plus />
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("h-9");
+      expect(btn.className).toContain("w-9");
+      expect(btn.className).not.toContain("h-10");
     });
   });
 
@@ -327,6 +351,15 @@ describe("Button", () => {
       const classes = buttonVariants();
       expect(classes).toContain("bg-linear-to-r");
       expect(classes).toContain("h-10");
+    });
+  });
+
+  describe("buttonChromeVariants", () => {
+    it("returns chrome classes for framed compact pill buttons", () => {
+      const classes = buttonChromeVariants({ chrome: "framed", chromeSize: "compactPill" });
+      expect(classes).toContain("bg-ui-bg-elevated/94");
+      expect(classes).toContain("h-8");
+      expect(classes).toContain("rounded-full");
     });
   });
 });
