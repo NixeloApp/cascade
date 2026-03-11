@@ -15,7 +15,7 @@ import { Bell, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Card, cardRecipeVariants } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
@@ -32,7 +32,6 @@ import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Inbox } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { NotificationItem, type NotificationWithActor } from "./NotificationItem";
 
 /** Notification filter categories */
@@ -195,10 +194,8 @@ export function NotificationCenter() {
 
       <PopoverContent
         align="end"
-        className={cn(
-          cardRecipeVariants({ recipe: "overlayInset" }),
-          "max-h-[80vh] w-full max-w-[calc(100vw-2rem)] p-0 sm:w-96",
-        )}
+        recipe="overlayInset"
+        className="max-h-[80vh] w-full max-w-[calc(100vw-2rem)] p-0 sm:w-96"
         data-testid={TEST_IDS.HEADER.NOTIFICATION_PANEL}
       >
         <Stack gap="none" className="h-full">
