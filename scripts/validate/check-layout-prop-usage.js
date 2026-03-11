@@ -55,13 +55,15 @@ export function run() {
       const line = lines[index];
       if (!line.includes("className")) continue;
 
-      // Collect multiline className spans and inspect the full opening tag so
-      // validators can catch className={cn(...)} and multiline JSX props.
-      const { endIndex } = collectClassNameSpan(lines, index);
+      // Collect multiline className spans (up to 20 lines) for pattern matching.
+      // Use the full span for layout token detection, not the truncated opening tag.
+      const { span, endIndex } = collectClassNameSpan(lines, index);
       const tagText = findOpeningTag(lines, index);
+      // Combine span and tagText to ensure we catch tokens in both className value and tag context
+      const matchText = `${tagText} ${span}`;
 
       for (const { pattern, component, prop, tokenType } of LAYOUT_PROP_PATTERNS) {
-        const match = tagText.match(pattern);
+        const match = matchText.match(pattern);
         if (!match) continue;
 
         issues.push({
