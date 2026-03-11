@@ -2,7 +2,6 @@
  * CHECK: Native Confirm Dialog
  * Finds native confirm() usage that should use ConfirmDialog component.
  *
- * @strictness STRICT - Blocks CI. Use ConfirmDialog from @/components/ui/ConfirmDialog.
  */
 
 import fs from "node:fs";

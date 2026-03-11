@@ -1,5 +1,5 @@
 /**
- * CHECK 8: E2E Test Quality
+ * CHECK: E2E Test Quality
  *
  * Catches common anti-patterns in E2E spec files that lead to flaky or
  * meaningless tests.
@@ -9,8 +9,6 @@
  * 2. Generic CSS-class selectors on page (page.locator(".animate-pulse"))
  * 3. `waitForSelector` usage (use locator assertions instead)
  * 4. `waitForLoadState("networkidle")` — flaky, prefer element assertions
- *
- * @strictness MEDIUM - Reports anti-patterns. Enforces Playwright best practices.
  */
 
 import fs from "node:fs";

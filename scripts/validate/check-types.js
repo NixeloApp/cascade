@@ -1,5 +1,6 @@
 /**
- * CHECK 6: Type Consistency
+ * CHECK: Type Consistency
+ *
  * Ensures TypeScript types are imported from canonical sources, not duplicated.
  *
  * Canonical sources:
@@ -9,8 +10,6 @@
  * Flags:
  * - Local type definitions that duplicate canonical types
  * - Type annotations using string literals instead of importing the type
- *
- * @strictness INFO - Reports only. Does not block CI.
  */
 
 import fs from "node:fs";

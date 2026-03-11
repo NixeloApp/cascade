@@ -8,7 +8,6 @@
  *
  * All three checks are enforced and block CI on violations.
  *
- * @strictness STRICT - Blocks CI for all violations.
  */
 
 import fs from "node:fs";

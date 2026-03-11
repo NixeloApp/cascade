@@ -11,7 +11,6 @@
  * 6. Responsive breakpoint consistency - Ensure mobile-first approach
  * 7. Transition completeness - Warn when transition-* without corresponding state change
  *
- * @strictness STRICT - Reports inconsistencies as validation errors.
  */
 
 import fs from "node:fs";

@@ -7,8 +7,6 @@
  * This validator focuses on:
  * 1. Repeated "rounded + bg + border + shadow" combinations
  * 2. Similar visual shells that could benefit from centralization
- *
- * @strictness INFO - Reports as informational warnings, not blocking errors.
  */
 
 import fs from "node:fs";
@@ -25,6 +23,36 @@ const SURFACE_CLASS_PATTERNS = [
 
 // Files/directories to skip
 const SKIP_PATTERNS = ["node_modules", ".test.", ".spec.", ".stories.", "src/components/ui/"];
+
+// Files allowed to have surface patterns (gradual migration to Card recipes)
+// Remove files as they get migrated to use Card component with recipe prop
+const ALLOWED_FILES = [
+  // Project settings - uses consistent rounded-xl bg-ui-bg pattern
+  "ProjectSettings/GeneralSettings.tsx",
+  "ProjectSettings/MemberManagement.tsx",
+  "ProjectSettings/WorkflowSettings.tsx",
+  // Modal/overlay surfaces - need recipe extraction
+  "BulkOperationsBar.tsx",
+  "IssueDetailModal.tsx",
+  "Plate/SlashMenu.tsx",
+  // Settings panels
+  "Calendar/CreateEventModal.tsx",
+  "Settings/LinkedRepositories.tsx",
+  "Settings/PumbleIntegration.tsx",
+  "TimeTracker/BillingReport.tsx",
+  // Dashboard surfaces
+  "Dashboard/RecentActivity.tsx",
+  "Dashboard/WorkspacesList.tsx",
+  "Dashboard.tsx",
+  // Roadmap
+  "RoadmapView.tsx",
+  // Import/Export
+  "CreateProjectFromTemplate.tsx",
+  "ImportExport/ImportPanel.tsx",
+  // Settings - avatar patterns
+  "Settings/AvatarUploadModal.tsx",
+  "Settings/ProfileContent.tsx",
+];
 
 /**
  * Extract visual surface class combinations from a className value.
@@ -88,14 +116,18 @@ export function run() {
   const srcDir = path.join(ROOT, "src/components");
   const files = walkDir(srcDir, { extensions: new Set([".tsx"]) });
 
-  // Track pattern occurrences: signature -> [{ file, line }]
+  // Track pattern occurrences: signature -> [{ file, line, allowed }]
   const patternOccurrences = new Map();
+  let allowedCount = 0;
 
   for (const filePath of files) {
     const rel = relPath(filePath);
 
     // Skip test files, stories, and ui/ primitives
     if (SKIP_PATTERNS.some((p) => rel.includes(p))) continue;
+
+    // Check if file is in allowed list (gradual migration)
+    const isAllowed = ALLOWED_FILES.some((pattern) => rel.includes(pattern));
 
     const content = fs.readFileSync(filePath, "utf-8");
     const lines = content.split("\n");
@@ -112,18 +144,21 @@ export function run() {
       for (const className of classNames) {
         const patterns = extractSurfacePatterns(className);
         for (const pattern of patterns) {
-          const occurrences = patternOccurrences.get(pattern) || [];
-          occurrences.push({ file: rel, line: i + 1 });
-          patternOccurrences.set(pattern, occurrences);
+          if (isAllowed) {
+            allowedCount++;
+          } else {
+            const occurrences = patternOccurrences.get(pattern) || [];
+            occurrences.push({ file: rel, line: i + 1 });
+            patternOccurrences.set(pattern, occurrences);
+          }
         }
       }
     }
   }
 
-  // Find patterns that appear in multiple files (potential recipe candidates)
+  // Find patterns that appear in multiple non-allowed files
   const duplicatePatterns = [];
   for (const [pattern, occurrences] of patternOccurrences) {
-    // Get unique files
     const uniqueFiles = new Set(occurrences.map((o) => o.file));
     if (uniqueFiles.size >= 2) {
       duplicatePatterns.push({
@@ -139,27 +174,29 @@ export function run() {
 
   const messages = [];
   if (duplicatePatterns.length > 0) {
-    messages.push(`${c.yellow}Potential recipe drift (repeated visual patterns):${c.reset}`);
+    messages.push(`${c.red}Recipe drift detected (repeated visual patterns):${c.reset}`);
     for (const { pattern, files, count } of duplicatePatterns.slice(0, 5)) {
-      messages.push(`  ${c.dim}Pattern:${c.reset} ${pattern}`);
+      messages.push(`  ${c.red}ERROR${c.reset} Pattern: ${pattern}`);
       messages.push(
-        `    ${c.dim}Used ${count}x in ${files.length} files: ${files.slice(0, 3).join(", ")}${files.length > 3 ? "..." : ""}${c.reset}`,
+        `    Used ${count}x in ${files.length} files: ${files.slice(0, 3).join(", ")}${files.length > 3 ? "..." : ""}`,
       );
     }
     if (duplicatePatterns.length > 5) {
-      messages.push(`  ${c.dim}... and ${duplicatePatterns.length - 5} more patterns${c.reset}`);
+      messages.push(`  ... and ${duplicatePatterns.length - 5} more patterns`);
     }
   }
 
-  // This is informational - always passes but shows warnings
+  const detail =
+    duplicatePatterns.length > 0
+      ? `${duplicatePatterns.length} repeated visual patterns`
+      : allowedCount > 0
+        ? `${allowedCount} in migration allowlist`
+        : null;
+
   return {
-    passed: true,
-    errors: 0,
-    warnings: duplicatePatterns.length,
-    detail:
-      duplicatePatterns.length > 0
-        ? `${duplicatePatterns.length} repeated visual patterns (consider recipes)`
-        : "no repeated visual patterns",
+    passed: duplicatePatterns.length === 0,
+    errors: duplicatePatterns.length,
+    detail,
     messages,
   };
 }
