@@ -270,33 +270,63 @@ export function run() {
 
       // ---- 5. Group-Hover Orphans Check ----
       if (GROUP_VARIANT_PATTERN.test(line)) {
-        // Check if line uses peer-* variant
-        const usesPeerVariant =
-          /\bpeer-(?:hover|focus|focus-within|active)(?:\/[A-Za-z0-9_-]+)?:/.test(line);
-        // Check if line uses group-* variant
-        const usesGroupVariant =
-          /\bgroup-(?:hover|focus|focus-within|active)(?:\/[A-Za-z0-9_-]+)?:/.test(line);
+        // Extract named variant identifiers (e.g., "sidebar" from "group-hover/sidebar:")
+        const groupVariantMatch = line.match(
+          /\bgroup-(?:hover|focus|focus-within|active)(?:\/([A-Za-z0-9_-]+))?:/,
+        );
+        const peerVariantMatch = line.match(
+          /\bpeer-(?:hover|focus|focus-within|active)(?:\/([A-Za-z0-9_-]+))?:/,
+        );
 
-        if (!hasMarkerClassInContext(line, "group") && !hasMarkerClassInContext(line, "peer")) {
+        const groupVariantName = groupVariantMatch?.[1] || null; // e.g., "sidebar" or null for plain
+        const peerVariantName = peerVariantMatch?.[1] || null;
+
+        // Build the required marker patterns based on variant names
+        // Named variants like group-hover/sidebar: need group/sidebar marker
+        // Plain variants like group-hover: need group marker
+        const requiredGroupMarker = groupVariantName ? `group/${groupVariantName}` : "group";
+        const requiredPeerMarker = peerVariantName ? `peer/${peerVariantName}` : "peer";
+
+        // Check if the required marker is present on this line
+        const hasRequiredGroupOnLine = groupVariantMatch
+          ? new RegExp(
+              `\\bclassName\\s*=\\s*(?:\\{[\\s\\S]*?|["'][^"']*)\\b${requiredGroupMarker}\\b`,
+            ).test(line)
+          : false;
+        const hasRequiredPeerOnLine = peerVariantMatch
+          ? new RegExp(
+              `\\bclassName\\s*=\\s*(?:\\{[\\s\\S]*?|["'][^"']*)\\b${requiredPeerMarker}\\b`,
+            ).test(line)
+          : false;
+
+        if (!hasRequiredGroupOnLine && !hasRequiredPeerOnLine) {
           // Check in a small window around this line
           const windowStart = Math.max(0, i - 20);
           const windowEnd = Math.min(lines.length, i + 20);
           const window = lines.slice(windowStart, windowEnd).join("\n");
 
-          const hasGroupInWindow = hasMarkerClassInContext(window, "group");
-          const hasPeerInWindow = hasMarkerClassInContext(window, "peer");
+          // Check for required markers in window
+          const hasRequiredGroupInWindow = groupVariantMatch
+            ? new RegExp(
+                `\\bclassName\\s*=\\s*(?:\\{[\\s\\S]*?|["'][^"']*)\\b${requiredGroupMarker}(?!-)\\b`,
+              ).test(window)
+            : false;
+          const hasRequiredPeerInWindow = peerVariantMatch
+            ? new RegExp(
+                `\\bclassName\\s*=\\s*(?:\\{[\\s\\S]*?|["'][^"']*)\\b${requiredPeerMarker}(?!-)\\b`,
+              ).test(window)
+            : false;
 
-          const windowHasRequiredClass = usesPeerVariant
-            ? hasPeerInWindow
-            : usesGroupVariant
-              ? hasGroupInWindow
-              : false;
+          const windowHasRequiredClass =
+            (groupVariantMatch && hasRequiredGroupInWindow) ||
+            (peerVariantMatch && hasRequiredPeerInWindow);
 
           if (!windowHasRequiredClass) {
             counts.groupHover++;
-            // This is more of a warning - the group/peer might be in a parent component
+            // Build a helpful message showing required marker
+            const requiredMarker = groupVariantMatch ? requiredGroupMarker : requiredPeerMarker;
             errors.push(
-              `  ${c.dim}INFO${c.reset} ${rel}:${lineNum} - group-hover/peer-hover without visible group/peer class. Ensure parent has 'group' or sibling has 'peer'.`,
+              `  ${c.dim}INFO${c.reset} ${rel}:${lineNum} - group-hover/peer-hover without visible '${requiredMarker}' class. Ensure parent has the required marker.`,
             );
           }
         }
