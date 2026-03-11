@@ -156,17 +156,17 @@ Done in this track already:
 
 ## Checklist
 
-- [ ] Restore diagram-first style across active `CURRENT.md` docs
-- [ ] Redesign `ProductShowcase` hierarchy and width distribution
-- [ ] Recompose app-header right-side actions into intentional groups
-- [ ] Make search/commands modal scroll correctly when content exceeds frame
-- [ ] Make advanced search modal scroll and footer treatment match the family
-- [ ] Redesign keyboard shortcuts modal so scrolling is useful and the surface does not look improvised
+- [x] Restore diagram-first style across active `CURRENT.md` docs
+- [x] Redesign `ProductShowcase` hierarchy and width distribution
+- [x] Recompose app-header right-side actions into intentional groups
+- [x] Make search/commands modal scroll correctly when content exceeds frame
+- [x] Make advanced search modal scroll and footer treatment match the family
+- [x] Redesign keyboard shortcuts modal so scrolling is useful and the surface does not look improvised
 - [x] Define owned semantic primitives for route nav and segmented single-select controls
 - [x] Add Storybook coverage for those interaction primitives
 - [x] Expand validation to enforce CVA ownership boundaries
 - [x] Expand validation to enforce semantic control ownership
-- [ ] Define reusable recipes for header clusters, modal bodies, and showcase/stat cards
+- [x] Define reusable recipes for header clusters, modal bodies, and showcase/stat cards
 - [ ] Expand validation to flag suspicious recipe drift beyond control ownership
 
 ## Done Looks Like

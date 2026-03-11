@@ -13,10 +13,12 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Search } from "lucide-react";
 import { type ElementType, type HTMLAttributes, type ReactNode, useState } from "react";
 import { cn } from "@/lib/utils";
+import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
 import { Input } from "./ui/Input";
+import { ShortcutHint } from "./ui/KeyboardShortcut";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
@@ -332,19 +334,17 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
       title="Keyboard Shortcuts"
       description="Available keyboard shortcuts for navigation and actions"
       size="lg"
-      footerClassName="justify-between"
+      footerClassName="sm:justify-between"
       footer={
-        <Typography
-          variant="caption"
-          color="tertiary"
-          className={shortcutHelpFrameVariants({ surface: "footer" })}
-        >
-          Press{" "}
-          <KeyBadge as="span" tone="strong">
-            {isMacPlatform() ? "⌘" : "Ctrl"}+K
-          </KeyBadge>{" "}
-          to open search and commands
-        </Typography>
+        <>
+          <Button onClick={() => handleOpenChange(false)} chrome="framed" chromeSize="compactPill">
+            Close
+          </Button>
+          <Flex align="center" gap="lg" className="hidden sm:inline-flex">
+            <ShortcutHint keys="up+down">Navigate</ShortcutHint>
+            <ShortcutHint keys="Esc">Close</ShortcutHint>
+          </Flex>
+        </>
       }
     >
       <Stack gap="md">

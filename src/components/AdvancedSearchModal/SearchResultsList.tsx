@@ -70,13 +70,14 @@ export function SearchResultsList({
 
   return (
     <>
-      <div className="max-h-96 overflow-y-auto divide-y divide-ui-border-secondary">
+      {/* Results list - let parent Dialog handle scrolling */}
+      <div className="divide-y divide-ui-border-secondary">
         {results.map((issue) => (
           <Button
             variant="unstyled"
             key={issue._id}
             onClick={() => onSelectIssue(issue._id, issue.projectId)}
-            className="w-full p-4 hover:bg-ui-bg-secondary transition-colors text-left h-auto rounded-none"
+            className="h-auto w-full rounded-none p-4 text-left transition-colors hover:bg-ui-bg-secondary"
           >
             <Flex gap="md" align="start">
               <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="md" className="shrink-0" />

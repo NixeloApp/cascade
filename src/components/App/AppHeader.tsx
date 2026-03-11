@@ -2,8 +2,13 @@
  * App Header
  *
  * Main application header with global navigation controls.
- * Contains search trigger, notification center, timer widget, and user menu.
- * Responsive with mobile hamburger menu for sidebar toggle.
+ * Contains search trigger, productivity controls (timer, shortcuts),
+ * notification center, and user menu.
+ *
+ * Control groups are intentional:
+ * - Left: branding/context chip (desktop only)
+ * - Center: global search (grows to fill)
+ * - Right: productivity | notifications | identity
  */
 
 import { GlobalSearch } from "@/components/GlobalSearch";
@@ -16,7 +21,7 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { useSidebarState } from "@/hooks/useSidebarState";
-import { Menu } from "@/lib/icons";
+import { CircleHelp, Menu } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import type { CommandAction } from "../CommandPalette";
 
@@ -36,7 +41,8 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
       <Flex align="center" gap="sm" className="relative mx-auto max-w-screen-2xl sm:gap-3">
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-brand/15 to-transparent" />
 
-        <Flex align="center" gap="sm" className="sm:gap-3">
+        {/* Left section: Mobile menu + branding chip */}
+        <Flex align="center" gap="sm" className="shrink-0 sm:gap-3">
           <Button
             chrome="framed"
             chromeSize="icon"
@@ -45,7 +51,7 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
             aria-label="Toggle sidebar menu"
             aria-expanded={isMobileOpen}
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="h-5 w-5" />
           </Button>
 
           <Card
@@ -68,12 +74,17 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
           </Card>
         </Flex>
 
+        {/* Center section: Global search (grows to fill available space) */}
         <FlexItem grow className="min-w-0">
           <GlobalSearch commands={commands} />
         </FlexItem>
 
-        <Card recipe="controlRail" padding="none" className="shrink-0 p-1">
-          <Flex align="center" gap="xs" className="sm:gap-1.5">
+        {/* Right section: Intentional control groups */}
+        <Flex align="center" gap="sm" className="shrink-0 sm:gap-2">
+          {/* Group 1: Productivity controls (timer + shortcuts) */}
+          <Flex align="center" gap="xs" className="sm:gap-1">
+            <NavTimerWidget />
+
             {onShowShortcutsHelp && (
               <Tooltip content="Keyboard shortcuts">
                 <Button
@@ -84,29 +95,24 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
                   aria-label="Keyboard shortcuts"
                   data-testid={TEST_IDS.HEADER.SHORTCUTS_BUTTON}
                 >
-                  <svg
-                    aria-hidden="true"
-                    className="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+                  <CircleHelp className="h-5 w-5" />
                 </Button>
               </Tooltip>
             )}
-
-            <NavTimerWidget />
-            <NotificationCenter />
-            <UserMenu />
           </Flex>
-        </Card>
+
+          {/* Visual separator between groups (desktop only) */}
+          <div className="hidden h-5 w-px bg-ui-border/50 sm:block" aria-hidden="true" />
+
+          {/* Group 2: Communication (notifications) */}
+          <NotificationCenter />
+
+          {/* Visual separator before identity (desktop only) */}
+          <div className="hidden h-5 w-px bg-ui-border/50 sm:block" aria-hidden="true" />
+
+          {/* Group 3: Identity (user menu) */}
+          <UserMenu />
+        </Flex>
       </Flex>
     </header>
   );
