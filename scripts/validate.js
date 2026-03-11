@@ -81,10 +81,13 @@ function runIsolatedCheck(modulePath) {
   }
 
   const result = JSON.parse(lastJsonLine);
+  const passed = child.status === 0 && result.passed !== false && (result.errors ?? 0) === 0;
+  // Normalize errors: if check failed (passed=false), ensure at least 1 error is reported
+  const errors = passed ? 0 : Math.max(1, result.errors ?? 0);
   return {
     ...result,
-    passed: child.status === 0 && result.passed !== false && (result.errors ?? 0) === 0,
-    errors: child.status === 0 ? (result.errors ?? 0) : Math.max(1, result.errors ?? 0),
+    passed,
+    errors,
   };
 }
 

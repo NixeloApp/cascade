@@ -123,7 +123,16 @@ export const DESIGN_SYSTEM_ESCAPE_HATCHES = [
   "recipe='",
 ];
 
-export const LEGACY_RECIPE_IMPORT_PATTERN = /^\s*import\s+.*\bsurfaceRecipes\b.*$/m;
+/**
+ * Pattern to detect legacy surfaceRecipes imports.
+ * Matches both single-line and multiline imports where surfaceRecipes
+ * may appear on its own line within destructured imports.
+ * Example multiline:
+ *   import {
+ *     surfaceRecipes,
+ *   } from "./recipes";
+ */
+export const LEGACY_RECIPE_IMPORT_PATTERN = /\bsurfaceRecipes\b/;
 
 export const DESIGN_SYSTEM_TOKEN_PATTERNS = {
   background: /\bbg-(?!transparent)\S+/,
@@ -240,10 +249,41 @@ export function findOpeningTag(lines, classNameLineIndex) {
   return tagContent;
 }
 
+/**
+ * Collects the full className attribute span, handling multiline cases:
+ * - className={cn(...)} with unbalanced braces/parens
+ * - className="...\n..." with unclosed quotes spanning lines
+ *
+ * @param {string[]} lines - All lines of the file
+ * @param {number} startIndex - Line index where className appears
+ * @returns {{ span: string, endIndex: number }} - Full span and ending line index
+ */
 export function collectClassNameSpan(lines, startIndex) {
   let span = lines[startIndex];
   let endIndex = startIndex;
 
+  // Check for unclosed string quotes (className="... or className='...)
+  const classNameMatch = span.match(/className\s*=\s*(["'])/);
+  if (classNameMatch) {
+    const quote = classNameMatch[1];
+    // Count quotes after className= to check if closed on same line
+    const afterClassName = span.slice(span.indexOf("className"));
+    const quoteMatches = afterClassName.match(new RegExp(quote, "g")) || [];
+    // Odd number means unclosed quote
+    if (quoteMatches.length % 2 === 1) {
+      for (let index = startIndex + 1; index < lines.length && index < startIndex + 20; index++) {
+        const nextLine = lines[index];
+        span += ` ${nextLine}`;
+        endIndex = index;
+        if (nextLine.includes(quote)) {
+          break;
+        }
+      }
+      return { span, endIndex };
+    }
+  }
+
+  // Handle className={...} with unbalanced braces/parens
   const openBraces = (span.match(/\{/g) || []).length;
   const closeBraces = (span.match(/\}/g) || []).length;
   const openParens = (span.match(/\(/g) || []).length;

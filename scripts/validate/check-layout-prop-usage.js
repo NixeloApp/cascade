@@ -9,7 +9,12 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { groupByFile, LAYOUT_PROP_GAP_MAP, LAYOUT_PROP_PATTERNS } from "./tailwind-policy.js";
+import {
+  collectClassNameSpan,
+  groupByFile,
+  LAYOUT_PROP_GAP_MAP,
+  LAYOUT_PROP_PATTERNS,
+} from "./tailwind-policy.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 function getReplacement(match, component, prop, tokenType) {
@@ -49,8 +54,11 @@ export function run() {
       const line = lines[index];
       if (!line.includes("className")) continue;
 
+      // Collect full className span for multiline attributes
+      const { span } = collectClassNameSpan(lines, index);
+
       for (const { pattern, component, prop, tokenType } of LAYOUT_PROP_PATTERNS) {
-        const match = line.match(pattern);
+        const match = span.match(pattern);
         if (!match) continue;
 
         issues.push({
