@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { cva } from "class-variance-authority";
 import { ROUTES } from "@/config/routes";
 import { ArrowRight, Rocket, ShieldCheck } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
@@ -8,12 +9,31 @@ import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
 
+const finalCtaVariants = {
+  section: cva("px-6 py-24"),
+  shell: cva(
+    "rounded-3xl border-ui-border/50 bg-linear-to-br from-ui-bg-secondary via-ui-bg-elevated to-ui-bg-secondary p-8 shadow-elevated md:p-12",
+  ),
+  featureCard: cva("rounded-2xl border-ui-border/50 bg-ui-bg-soft/80 p-5"),
+  featureLink: cva(
+    "mt-4 inline-flex items-center gap-2 text-sm font-medium text-brand transition-colors hover:text-brand-active",
+  ),
+  iconBadge: cva("rounded-full p-2", {
+    variants: {
+      tone: {
+        brand: "bg-brand-subtle text-brand",
+        success: "bg-status-success/15 text-status-success-text",
+      },
+    },
+  }),
+};
+
 /** Closing CTA section for the landing page. */
 export function FinalCTASection() {
   return (
-    <section className="px-6 py-24">
+    <section className={finalCtaVariants.section()}>
       <div className="mx-auto max-w-6xl">
-        <Card className="rounded-3xl border-ui-border/50 bg-linear-to-br from-ui-bg-secondary via-ui-bg-elevated to-ui-bg-secondary p-8 shadow-elevated md:p-12">
+        <Card className={finalCtaVariants.shell()}>
           <div className="mx-auto max-w-3xl text-center">
             <Badge variant="outline" shape="pill" className="mb-5">
               Built for teams that need one system, not another tab
@@ -37,9 +57,9 @@ export function FinalCTASection() {
           </div>
 
           <Grid cols={1} colsMd={2} gap="lg" className="mt-10">
-            <Card className="rounded-2xl border-ui-border/50 bg-ui-bg-soft/80 p-5">
+            <Card className={finalCtaVariants.featureCard()}>
               <Flex align="center" gap="sm" className="mb-3">
-                <div className="rounded-full bg-brand-subtle p-2 text-brand">
+                <div className={finalCtaVariants.iconBadge({ tone: "brand" })}>
                   <Rocket className="h-4 w-4" />
                 </div>
                 <Typography variant="label">Quickstart without churn</Typography>
@@ -48,18 +68,15 @@ export function FinalCTASection() {
                 Import the basics, keep your team moving, and expand into docs, client views, and
                 time tracking as needed.
               </Typography>
-              <a
-                href="#features"
-                className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-brand transition-colors hover:text-brand-active"
-              >
+              <a href="#features" className={finalCtaVariants.featureLink()}>
                 Explore the product
                 <ArrowRight className="h-4 w-4" />
               </a>
             </Card>
 
-            <Card className="rounded-2xl border-ui-border/50 bg-ui-bg-soft/80 p-5">
+            <Card className={finalCtaVariants.featureCard()}>
               <Flex align="center" gap="sm" className="mb-3">
-                <div className="rounded-full bg-status-success/15 p-2 text-status-success-text">
+                <div className={finalCtaVariants.iconBadge({ tone: "success" })}>
                   <ShieldCheck className="h-4 w-4" />
                 </div>
                 <Typography variant="label">Ready for serious teams</Typography>
@@ -68,10 +85,7 @@ export function FinalCTASection() {
                 Flexible pricing, enterprise controls, and a product model that can handle internal
                 execution plus external-facing updates.
               </Typography>
-              <a
-                href="#pricing"
-                className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-brand transition-colors hover:text-brand-active"
-              >
+              <a href="#pricing" className={finalCtaVariants.featureLink()}>
                 Review pricing
                 <ArrowRight className="h-4 w-4" />
               </a>

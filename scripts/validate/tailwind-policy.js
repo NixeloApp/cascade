@@ -4,7 +4,6 @@
 
 export const RAW_TAILWIND_ALLOWED_DIRS = [
   "src/components/ui/",
-  "src/components/Landing/",
   "src/components/Kanban/",
   "src/components/Calendar/",
   "src/components/Auth/",
