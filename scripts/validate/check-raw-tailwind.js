@@ -142,7 +142,7 @@ export function run() {
     "variant='", // Component variant prop (single quote)
   ];
 
-  const LEGACY_RECIPE_IMPORT_PATTERN = /surfaceRecipes/;
+  const LEGACY_RECIPE_IMPORT_PATTERN = /^\s*import\s+.*\bsurfaceRecipes\b.*$/m;
 
   const RECIPE_TOKEN_PATTERNS = {
     background: /\bbg-(?!transparent)\S+/,
@@ -199,6 +199,38 @@ export function run() {
   }
 
   /**
+   * Find the opening tag that contains a className at the given line index.
+   * Returns the full tag text from < to > (may span multiple lines).
+   */
+  function findOpeningTag(lines, classNameLineIndex) {
+    // Search backward to find the opening <
+    let tagStart = classNameLineIndex;
+    let tagContent = "";
+
+    for (let j = classNameLineIndex; j >= Math.max(0, classNameLineIndex - 10); j--) {
+      const line = lines[j];
+      tagContent = line + " " + tagContent;
+      if (line.includes("<")) {
+        tagStart = j;
+        break;
+      }
+    }
+
+    // Search forward to find the closing > of the opening tag
+    for (let j = classNameLineIndex; j < Math.min(lines.length, classNameLineIndex + 10); j++) {
+      if (j > classNameLineIndex) {
+        tagContent += " " + lines[j];
+      }
+      // Check for end of opening tag (> but not /> or ><)
+      if (lines[j].includes(">")) {
+        break;
+      }
+    }
+
+    return tagContent;
+  }
+
+  /**
    * Collect the full className attribute span, which may span multiple lines.
    * Returns the concatenated text and the ending line index.
    */
@@ -243,10 +275,11 @@ export function run() {
     const content = fs.readFileSync(filePath, "utf-8");
     const lines = content.split("\n");
 
-    if (LEGACY_RECIPE_IMPORT_PATTERN.test(content)) {
+    const legacyMatch = content.match(LEGACY_RECIPE_IMPORT_PATTERN);
+    if (legacyMatch && legacyMatch.index != null) {
       recipeViolations.push({
         file: rel,
-        line: 1,
+        line: content.slice(0, legacyMatch.index).split("\n").length,
         replacement: "move legacy surfaceRecipes usage into Card/Button/Dialog recipe props",
       });
     }
@@ -258,16 +291,11 @@ export function run() {
       // Collect the full className span (may be multiline)
       const { span, endIndex } = collectClassNameSpan(lines, i);
 
-      // Collect element context (few lines before className for props like chrome=)
-      const contextStart = Math.max(0, i - 5);
-      const elementContext = lines.slice(contextStart, i + 1).join(" ");
+      // Find the current opening tag to check for escape hatch props
+      const tagText = findOpeningTag(lines, i);
 
-      // Skip if any escape hatch token is present in the span or element context
-      if (
-        RECIPE_ESCAPE_HATCHES.some(
-          (token) => span.includes(token) || elementContext.includes(token),
-        )
-      ) {
+      // Skip if any escape hatch token is present in the span or tag
+      if (RECIPE_ESCAPE_HATCHES.some((token) => span.includes(token) || tagText.includes(token))) {
         i = endIndex; // Skip to end of this span
         continue;
       }
