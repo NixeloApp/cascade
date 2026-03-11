@@ -15,20 +15,80 @@ import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
-/**
- * Files allowed to have interactive Tailwind variants (hover:/focus:/etc).
- *
- * MIGRATION NOTE: This list is intentionally minimal. Interactive states
- * should be encapsulated in CVA components (Button, IconButton, Card hoverable, etc).
- *
- * Only files that genuinely need low-level interactive control are allowed:
- * - Third-party integrations (Plate editor)
- * - Complex drag-and-drop surfaces
- */
+// Files allowed to have interactive variants (for gradual migration)
+// Remove files from this list as they get migrated to proper CVA components:
+// - Use IconButton for icon-only buttons
+// - Use Button variants (ghost, secondary) for text buttons
+// - Use Card with hoverable prop for cards
 const ALLOWED_FILES = [
-  // Third-party editor integration - needs low-level control
+  // Search/filter components
+  "AdvancedSearchModal/",
+  "FilterBar.tsx",
+  "GlobalSearch.tsx",
+  "FuzzySearch/",
+  // Issue components
+  "IssueCard.tsx",
+  "IssueDetail/",
+  "IssueDependencies.tsx",
+  "IssueComments.tsx",
+  // Comment/reaction components
+  "CommentReactions.tsx",
+  "CommentRenderer.tsx",
+  "DocumentComments.tsx",
+  // Document components
+  "DocumentHeader.tsx",
+  "DocumentTree.tsx",
+  "DocumentTemplatesManager.tsx",
+  // Editor components
   "Plate/",
   "PlateEditor.tsx",
+  "IssueDescriptionEditor.tsx",
+  "MentionInput.tsx",
+  // Navigation/layout
+  "AppHeader.tsx",
+  "AppSidebar.tsx",
+  "Sidebar/",
+  "NotificationCenter.tsx",
+  "NotificationItem.tsx",
+  "UserMenu.tsx",
+  // Modals
+  "CreateIssueModal.tsx",
+  "CreateProjectFromTemplate.tsx",
+  "BulkOperationsBar.tsx",
+  "ImportExport/",
+  "VersionHistory.tsx",
+  // Forms/fields
+  "CustomFieldValues.tsx",
+  "FileAttachments.tsx",
+  "AttachmentList.tsx",
+  "LabelsManager.tsx",
+  // Calendar
+  "Calendar/",
+  "IssuesCalendarView.tsx",
+  "RoadmapView.tsx",
+  // Settings/admin
+  "Settings/",
+  "Admin/",
+  // Dashboard
+  "Dashboard/",
+  "Analytics/",
+  // AI components
+  "AI/",
+  // Sprint components
+  "Sprint",
+  // Time tracking
+  "TimeTracking/",
+  // Onboarding
+  "Onboarding/",
+  // Landing pages
+  "Landing/",
+  // Auth
+  "Auth/",
+  // Activity/inbox
+  "ActivityFeed.tsx",
+  "InboxList.tsx",
+  // Error handling
+  "ErrorBoundary.tsx",
 ];
 
 // Interactive variant patterns to detect

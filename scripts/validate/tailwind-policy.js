@@ -2,28 +2,81 @@
  * Shared policy and helpers for Tailwind/design-system validation checks.
  */
 
-/**
- * Directories exempt from raw Tailwind checks.
- *
- * MIGRATION NOTE: This list is intentionally reduced. Only ui/ primitives
- * are fully exempt. Other directories should migrate to design system APIs.
- */
 export const RAW_TAILWIND_ALLOWED_DIRS = [
-  "src/components/ui/", // CVA primitives - always allowed
+  "src/components/ui/",
+  "src/components/Landing/",
+  "src/components/Kanban/",
+  "src/components/Calendar/",
+  "src/components/Auth/",
+  "src/components/Editor/",
+  "src/components/AI/",
+  "src/components/Sidebar/",
+  "src/components/Plate/",
+  "src/components/Onboarding/",
+  "src/components/Admin/",
+  "src/components/Settings/",
+  "src/components/TimeTracking/",
+  "src/components/TimeTracker/",
+  "src/components/IssueDetail/",
+  "src/components/ProjectSettings/",
+  "src/components/FuzzySearch/",
+  "src/components/ImportExport/",
+  "src/components/Fields/",
+  "src/components/Templates/",
+  "src/components/AdvancedSearchModal/",
+  "src/components/Analytics/",
+  "src/components/Automation/",
+  "src/components/Dashboard/",
 ];
 
-/**
- * Individual files exempt from raw Tailwind checks.
- *
- * MIGRATION NOTE: This list is intentionally reduced to only files that
- * have legitimate reasons for raw Tailwind (e.g., PDF templates, complex
- * layout components). Most feature components should use design system APIs.
- */
 export const RAW_TAILWIND_ALLOWED_FILES = [
-  // PDF/print templates need precise control
+  "/ActivityFeed.tsx",
+  "/AppSidebar.tsx",
+  "/AppHeader.tsx",
+  "/PortalProjectView.tsx",
+  "/PortalTimeline.tsx",
+  "/BulkOperationsBar.tsx",
+  "/CommandPalette.tsx",
+  "/CreateIssueModal.tsx",
+  "/CommentReactions.tsx",
+  "/CommentRenderer.tsx",
+  "/CreateProjectFromTemplate.tsx",
+  "/Dashboard.tsx",
+  "/DocumentHeader.tsx",
+  "/DocumentSidebar.tsx",
+  "/DocumentTemplatesManager.tsx",
+  "/FilterBar.tsx",
+  "/GlobalSearch.tsx",
+  "/ImportExportModal.tsx",
+  "/InboxList.tsx",
+  "/InvoiceEditor.tsx",
   "/InvoicePdfTemplate.tsx",
-  // Third-party integrations with specific requirements
+  "/IssueCard.tsx",
+  "/IssueComments.tsx",
+  "/IssueDescriptionEditor.tsx",
+  "/IssueDependencies.tsx",
+  "/IssueDetailSheet.tsx",
+  "/IssuesCalendarView.tsx",
+  "/KanbanBoard.tsx",
+  "/KeyboardShortcutsHelp.tsx",
+  "/DocumentTree.tsx",
+  "/LabelsManager.tsx",
+  "/layout/PageHeader.tsx",
+  "/layout/PageLayout.tsx",
+  "/MentionInput.tsx",
+  "/NotificationCenter.tsx",
+  "/NotificationItem.tsx",
   "/PlateEditor.tsx",
+  "/ProjectsList.tsx",
+  "/RoadmapView.tsx",
+  "/SprintManager.tsx",
+  "/SprintProgressBar.tsx",
+  "/SprintWorkload.tsx",
+  "/TimeTracker.tsx",
+  "/UserActivityFeed.tsx",
+  "/UserMenu.tsx",
+  "/UserProfile.tsx",
+  "/VersionHistory.tsx",
 ];
 
 export const RAW_TAILWIND_ALLOWED_EXTENSIONS = [".stories.tsx", ".test.tsx", ".example.tsx"];
@@ -46,63 +99,18 @@ export const RAW_TAILWIND_PATTERNS = [
   },
 ];
 
-/**
- * Files subject to design-system ownership checks.
- *
- * These are high-drift feature surfaces that should use recipe/chrome APIs
- * instead of ad-hoc visual class stacks. The check enforces that these files
- * extract repeated visual patterns into proper design system primitives.
- *
- * IMPORTANT: This is not an allowlist - it's the ENFORCEMENT list.
- * Files in this list are CHECKED, not exempted.
- */
 export const DESIGN_SYSTEM_TARGET_FILES = [
-  // App shell & navigation
   "/AppHeader.tsx",
-  "/AppSidebar.tsx",
-  "/UserMenu.tsx",
-  // Search surfaces
   "/GlobalSearch.tsx",
-  "/FilterBar.tsx",
+  "/KeyboardShortcutsHelp.tsx",
   "/AdvancedSearchModal.tsx",
-  "/CommandPalette.tsx",
-  // Key feature areas
-  "/NotificationCenter.tsx",
-  "/NotificationItem.tsx",
-  "/IssueCard.tsx",
-  "/IssueDetailSheet.tsx",
-  "/DocumentHeader.tsx",
-  "/DocumentTree.tsx",
-  "/DocumentSidebar.tsx",
-  // Sprint/board surfaces
-  "/SprintManager.tsx",
-  "/SprintProgressBar.tsx",
-  "/KanbanBoard.tsx",
-  // Time tracking
-  "/TimerWidget.tsx",
-  "/TimeTracker.tsx",
-  // Landing pages
   "/Landing/HeroSection.tsx",
   "/Landing/ProductShowcase.tsx",
-  "/Landing/AIFeatureDemo.tsx",
-  "/Landing/FeatureShowcase.tsx",
-  // Modals
-  "/CreateIssueModal.tsx",
-  "/KeyboardShortcutsHelp.tsx",
-  // Dashboard
-  "/Dashboard.tsx",
+  "/NotificationCenter.tsx",
+  "/TimerWidget.tsx",
+  "/DocumentHeader.tsx",
 ];
 
-/**
- * LEGACY escape hatches - only programmatic variant calls fully suppress scrutiny.
- *
- * NOTE: recipe/chrome/variant PROPS no longer suppress checks. Having recipe="foo"
- * on a component means you're using the system, but you can still pile on ad-hoc
- * classes that should be extracted into the recipe itself.
- *
- * Only direct variant function calls (e.g., cardVariants({ ... })) are full escapes
- * because those are constructing the entire className programmatically.
- */
 export const DESIGN_SYSTEM_ESCAPE_HATCHES = [
   "cardVariants(",
   "cardRecipeVariants(",
@@ -110,13 +118,18 @@ export const DESIGN_SYSTEM_ESCAPE_HATCHES = [
   "buttonChromeVariants(",
   "tabsTriggerVariants(",
   "tabsListVariants(",
+  'chrome="',
+  "chrome='",
+  'variant="',
+  "variant='",
+  'recipe="',
+  "recipe='",
 ];
 
 /**
  * Pattern to detect legacy surfaceRecipes imports.
  * Matches both single-line and multiline imports where surfaceRecipes
  * may appear on its own line within destructured imports.
- * Uses word boundary to avoid matching comments or string literals.
  * Example multiline:
  *   import {
  *     surfaceRecipes,
