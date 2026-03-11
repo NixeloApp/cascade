@@ -3,6 +3,7 @@ import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { PageHeader, PageLayout } from "@/components/layout";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { RouteNav, RouteNavItem } from "@/components/ui/RouteNav";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -48,67 +49,72 @@ function WorkspaceLayout() {
       />
 
       {/* Tabs */}
-      <div className="border-b border-ui-border mb-6">
-        <nav className="flex gap-6">
+      <RouteNav className="mb-6" aria-label="Workspace sections">
+        <RouteNavItem asChild>
           <Link
             to={ROUTES.workspaces.detail.path}
             params={{ orgSlug, workspaceSlug }}
             activeOptions={{ exact: true }}
-            className="px-1 py-3 border-b-2 border-transparent font-medium text-ui-text-secondary hover:border-ui-border-secondary hover:text-ui-text"
-            activeProps={{ className: "border-brand text-ui-text" }}
+            activeProps={{ "aria-current": "page", "data-active": "true" }}
           >
             Teams
           </Link>
+        </RouteNavItem>
+        <RouteNavItem asChild>
           <Link
             to={ROUTES.workspaces.backlog.path}
             params={{ orgSlug, workspaceSlug }}
-            className="px-1 py-3 border-b-2 border-transparent font-medium text-ui-text-secondary hover:border-ui-border-secondary hover:text-ui-text"
-            activeProps={{ className: "border-brand text-ui-text" }}
+            activeProps={{ "aria-current": "page", "data-active": "true" }}
           >
             Backlog
           </Link>
+        </RouteNavItem>
+        <RouteNavItem asChild>
           <Link
             to={ROUTES.workspaces.sprints.path}
             params={{ orgSlug, workspaceSlug }}
-            className="px-1 py-3 border-b-2 border-transparent font-medium text-ui-text-secondary hover:border-ui-border-secondary hover:text-ui-text"
-            activeProps={{ className: "border-brand text-ui-text" }}
+            activeProps={{ "aria-current": "page", "data-active": "true" }}
           >
             Sprints
           </Link>
+        </RouteNavItem>
+        <RouteNavItem asChild>
           <Link
             to={ROUTES.workspaces.dependencies.path}
             params={{ orgSlug, workspaceSlug }}
-            className="px-1 py-3 border-b-2 border-transparent font-medium text-ui-text-secondary hover:border-ui-border-secondary hover:text-ui-text"
-            activeProps={{ className: "border-brand text-ui-text" }}
+            activeProps={{ "aria-current": "page", "data-active": "true" }}
           >
             Dependencies
           </Link>
+        </RouteNavItem>
+        <RouteNavItem asChild>
           <Link
             to={ROUTES.workspaces.calendar.path}
             params={{ orgSlug, workspaceSlug }}
-            className="px-1 py-3 border-b-2 border-transparent font-medium text-ui-text-secondary hover:border-ui-border-secondary hover:text-ui-text"
-            activeProps={{ className: "border-brand text-ui-text" }}
+            activeProps={{ "aria-current": "page", "data-active": "true" }}
           >
             Calendar
           </Link>
+        </RouteNavItem>
+        <RouteNavItem asChild>
           <Link
             to={ROUTES.workspaces.wiki.path}
             params={{ orgSlug, workspaceSlug }}
-            className="px-1 py-3 border-b-2 border-transparent font-medium text-ui-text-secondary hover:border-ui-border-secondary hover:text-ui-text"
-            activeProps={{ className: "border-brand text-ui-text" }}
+            activeProps={{ "aria-current": "page", "data-active": "true" }}
           >
             Wiki
           </Link>
+        </RouteNavItem>
+        <RouteNavItem asChild>
           <Link
             to={ROUTES.workspaces.settings.path}
             params={{ orgSlug, workspaceSlug }}
-            className="px-1 py-3 border-b-2 border-transparent font-medium text-ui-text-secondary hover:border-ui-border-secondary hover:text-ui-text"
-            activeProps={{ className: "border-brand text-ui-text" }}
+            activeProps={{ "aria-current": "page", "data-active": "true" }}
           >
             Settings
           </Link>
-        </nav>
-      </div>
+        </RouteNavItem>
+      </RouteNav>
 
       {/* Content */}
       <Outlet />

@@ -25,10 +25,10 @@ import { IssueDetailViewer } from "./IssueDetailViewer";
 import { Card } from "./ui/Card";
 import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
+import { SegmentedControl, SegmentedControlItem } from "./ui/SegmentedControl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
 import { Skeleton } from "./ui/Skeleton";
 import { Stack } from "./ui/Stack";
-import { ToggleGroup, ToggleGroupItem } from "./ui/ToggleGroup";
 import { Typography } from "./ui/Typography";
 
 // Pure function - no need to be inside component
@@ -577,15 +577,14 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
             </Select>
 
             {/* View Mode Toggle */}
-            <ToggleGroup
-              type="single"
+            <SegmentedControl
               value={viewMode}
-              onValueChange={(value) => value && setViewMode(value as "months" | "weeks")}
+              onValueChange={(value: string) => value && setViewMode(value as "months" | "weeks")}
               size="sm"
             >
-              <ToggleGroupItem value="months">Months</ToggleGroupItem>
-              <ToggleGroupItem value="weeks">Weeks</ToggleGroupItem>
-            </ToggleGroup>
+              <SegmentedControlItem value="months">Months</SegmentedControlItem>
+              <SegmentedControlItem value="weeks">Weeks</SegmentedControlItem>
+            </SegmentedControl>
 
             {/* Dependency Lines Toggle */}
             <Button

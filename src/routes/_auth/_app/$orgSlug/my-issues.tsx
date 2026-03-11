@@ -5,7 +5,7 @@ import { useState } from "react";
 import { PageContent } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/SegmentedControl";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useOrganization } from "@/hooks/useOrgContext";
@@ -45,14 +45,13 @@ function MyIssuesBoardPage() {
     <Flex direction="column" gap="lg">
       <Flex justify="between" align="center" className="flex-wrap gap-3">
         <Typography variant="h2">My Issues Board</Typography>
-        <ToggleGroup
-          type="single"
+        <SegmentedControl
           value={groupBy}
-          onValueChange={(value) => value && setGroupBy(value as GroupBy)}
+          onValueChange={(value: string) => value && setGroupBy(value as GroupBy)}
         >
-          <ToggleGroupItem value="status">Group by status</ToggleGroupItem>
-          <ToggleGroupItem value="project">Group by project</ToggleGroupItem>
-        </ToggleGroup>
+          <SegmentedControlItem value="status">Group by status</SegmentedControlItem>
+          <SegmentedControlItem value="project">Group by project</SegmentedControlItem>
+        </SegmentedControl>
       </Flex>
 
       <Flex gap="md" className="overflow-x-auto pb-2">

@@ -114,4 +114,4 @@ const NavItem = React.forwardRef<HTMLElement, NavItemProps>(
 );
 NavItem.displayName = "NavItem";
 
-export { NavItem, navItemVariants };
+export { NavItem };

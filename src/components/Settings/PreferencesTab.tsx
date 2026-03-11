@@ -17,9 +17,9 @@ import { Monitor, Moon, Sun } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { useTheme } from "../../contexts/ThemeContext";
 import { Card } from "../ui/Card";
+import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import { Switch } from "../ui/Switch";
-import { ToggleGroup, ToggleGroupItem } from "../ui/ToggleGroup";
 import { Typography } from "../ui/Typography";
 /**
  * User preferences tab
@@ -104,25 +104,22 @@ export function PreferencesTab() {
               </Typography>
             </Stack>
 
-            <ToggleGroup
-              type="single"
+            <SegmentedControl
               value={theme}
-              onValueChange={(value) => {
+              onValueChange={(value: string) => {
                 if (value) handleThemeChange(value as "light" | "dark" | "system");
               }}
-              variant="default"
-              size="md"
             >
-              <ToggleGroupItem value="light" aria-label="Light theme">
+              <SegmentedControlItem value="light" aria-label="Light theme">
                 <Icon icon={Sun} size="sm" className="mr-2" /> Light
-              </ToggleGroupItem>
-              <ToggleGroupItem value="dark" aria-label="Dark theme">
+              </SegmentedControlItem>
+              <SegmentedControlItem value="dark" aria-label="Dark theme">
                 <Icon icon={Moon} size="sm" className="mr-2" /> Dark
-              </ToggleGroupItem>
-              <ToggleGroupItem value="system" aria-label="System theme">
+              </SegmentedControlItem>
+              <SegmentedControlItem value="system" aria-label="System theme">
                 <Icon icon={Monitor} size="sm" className="mr-2" /> System
-              </ToggleGroupItem>
-            </ToggleGroup>
+              </SegmentedControlItem>
+            </SegmentedControl>
           </Flex>
         </Stack>
       </Card>
