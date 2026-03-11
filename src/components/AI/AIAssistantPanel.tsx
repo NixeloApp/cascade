@@ -86,14 +86,10 @@ export function AIAssistantPanel({ projectId, isOpen, onClose }: AIAssistantPane
           <Tabs
             value={activeTab}
             onValueChange={(value) => handleTabChange(value as "chat" | "suggestions")}
-            className="border-b border-ui-border bg-ui-bg-secondary"
+            className="border-b border-ui-border bg-ui-bg-secondary px-3 py-3"
           >
-            <TabsList variant="underline" className="w-full">
-              <TabsTrigger
-                value="chat"
-                variant="underline"
-                className="flex-1 data-[state=active]:bg-ui-bg"
-              >
+            <TabsList className="flex w-full">
+              <TabsTrigger value="chat" className="flex-1">
                 <Icon icon={MessageSquare} size="sm" className="inline mr-1" /> Chat
                 {chats && chats.length > 0 && (
                   <Badge variant="secondary" size="sm" className="ml-2">
@@ -101,11 +97,7 @@ export function AIAssistantPanel({ projectId, isOpen, onClose }: AIAssistantPane
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger
-                value="suggestions"
-                variant="underline"
-                className="flex-1 data-[state=active]:bg-ui-bg"
-              >
+              <TabsTrigger value="suggestions" className="flex-1">
                 <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> Suggestions
                 {unreadSuggestions > 0 && (
                   <Badge variant="error" size="sm" className="ml-2">

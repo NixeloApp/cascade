@@ -24,13 +24,14 @@ import { Grid } from "../ui/Grid";
 import { Label } from "../ui/Label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import { Stack } from "../ui/Stack";
+import { ToggleGroup, ToggleGroupItem } from "../ui/ToggleGroup";
 import { Typography } from "../ui/Typography";
 import {
   calculateEntryTimes,
   validateContext,
   validateLogTimeSubmission,
 } from "./timeEntryValidation";
-import { type EntryMode, useTimeEntryForm } from "./useTimeEntryForm";
+import { useTimeEntryForm } from "./useTimeEntryForm";
 
 type ProjectItem = FunctionReturnType<typeof api.projects.getCurrentUserProjects>["page"][number];
 type IssueItem = FunctionReturnType<typeof api.issues.listSelectableIssues>[number];
@@ -42,33 +43,6 @@ interface TimeEntryModalProps {
   issueId?: Id<"issues">;
   defaultMode?: "timer" | "log";
   billingEnabled?: boolean;
-}
-
-// Mode toggle button component
-function ModeToggleButton({
-  mode,
-  currentMode,
-  icon: Icon,
-  label,
-  onClick,
-}: {
-  mode: EntryMode;
-  currentMode: EntryMode;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  onClick: () => void;
-}) {
-  const isActive = currentMode === mode;
-  return (
-    <Button
-      variant={isActive ? "secondary" : "ghost"}
-      onClick={onClick}
-      className={cn("min-w-0 w-full justify-center gap-2 px-3", isActive && "shadow-sm")}
-    >
-      <Icon className="w-4 h-4" />
-      {label}
-    </Button>
-  );
 }
 
 // Tags input component
@@ -415,29 +389,29 @@ export function TimeEntryModal({
         }}
       >
         {/* Mode Toggle */}
-        <Grid cols={1} colsSm={3} gap="sm" className="rounded-xl bg-ui-bg-secondary p-1">
-          <ModeToggleButton
-            mode="timer"
-            currentMode={state.entryMode}
-            icon={Play}
-            label="Start Timer"
-            onClick={() => actions.setEntryMode("timer")}
-          />
-          <ModeToggleButton
-            mode="duration"
-            currentMode={state.entryMode}
-            icon={Hourglass}
-            label="Duration"
-            onClick={() => actions.setEntryMode("duration")}
-          />
-          <ModeToggleButton
-            mode="timeRange"
-            currentMode={state.entryMode}
-            icon={Clock}
-            label="Time Range"
-            onClick={() => actions.setEntryMode("timeRange")}
-          />
-        </Grid>
+        <ToggleGroup
+          type="single"
+          value={state.entryMode}
+          onValueChange={(value) => {
+            if (value === "timer" || value === "duration" || value === "timeRange") {
+              actions.setEntryMode(value);
+            }
+          }}
+          className="flex w-full flex-col sm:flex-row"
+        >
+          <ToggleGroupItem value="timer" className="w-full flex-1 justify-center gap-2">
+            <Play className="w-4 h-4" />
+            Start Timer
+          </ToggleGroupItem>
+          <ToggleGroupItem value="duration" className="w-full flex-1 justify-center gap-2">
+            <Hourglass className="w-4 h-4" />
+            Duration
+          </ToggleGroupItem>
+          <ToggleGroupItem value="timeRange" className="w-full flex-1 justify-center gap-2">
+            <Clock className="w-4 h-4" />
+            Time Range
+          </ToggleGroupItem>
+        </ToggleGroup>
 
         {/* Project Selection */}
         <Stack gap="xs">

@@ -49,7 +49,6 @@ function MyIssuesBoardPage() {
           type="single"
           value={groupBy}
           onValueChange={(value) => value && setGroupBy(value as GroupBy)}
-          variant="brand"
         >
           <ToggleGroupItem value="status">Group by status</ToggleGroupItem>
           <ToggleGroupItem value="project">Group by project</ToggleGroupItem>
