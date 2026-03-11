@@ -96,7 +96,7 @@ function BoardPage() {
   const activeSprint = sprints?.find((s: Doc<"sprints">) => s.status === "active");
   const selectedSprintId = sprintParam as Id<"sprints"> | undefined;
   const effectiveSprintId = selectedSprintId || activeSprint?._id;
-  const showMobileBoardActions = project.boardType === "scrum" && !!sprints;
+  const showMobileSprintControls = project.boardType === "scrum" && !!sprints;
 
   const handleSprintChange = (value: string) => {
     navigate({
@@ -169,15 +169,15 @@ function BoardPage() {
         </div>
       </div>
 
-      {showMobileBoardActions && (
-        <div className="px-2 pt-1 sm:hidden">
-          <div className="rounded-xl border border-ui-border/70 bg-ui-bg-elevated/92 px-2 py-1.5 shadow-soft">
-            <Flex align="center" justify="between" gap="xs">
-              <Typography variant="small" className="font-medium text-ui-text-secondary">
-                Sprint controls
-              </Typography>
-              <Flex align="center" gap="xs">
-                <ExportButton projectId={project._id} sprintId={effectiveSprintId} />
+      <div className="px-2 pt-1 sm:hidden">
+        <div className="rounded-xl border border-ui-border/70 bg-ui-bg-elevated/92 px-2 py-1.5 shadow-soft">
+          <Flex align="center" justify="between" gap="xs">
+            <Typography variant="small" className="font-medium text-ui-text-secondary">
+              {showMobileSprintControls ? "Sprint controls" : "Board actions"}
+            </Typography>
+            <Flex align="center" gap="xs">
+              <ExportButton projectId={project._id} sprintId={effectiveSprintId} />
+              {showMobileSprintControls && sprints && (
                 <Select value={selectedSprintId || "active"} onValueChange={handleSprintChange}>
                   <SelectTrigger className="h-8 min-w-32 rounded-lg border border-ui-border px-2 text-xs">
                     <SelectValue placeholder="Sprint" />
@@ -191,11 +191,11 @@ function BoardPage() {
                     ))}
                   </SelectContent>
                 </Select>
-              </Flex>
+              )}
             </Flex>
-          </div>
+          </Flex>
         </div>
-      )}
+      </div>
 
       {/* Filter Bar */}
       <FilterBar projectId={project._id} filters={filters} onFilterChange={handleFilterChange} />

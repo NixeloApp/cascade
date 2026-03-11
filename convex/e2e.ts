@@ -3060,10 +3060,11 @@ export const seedScreenshotDataInternal = internalMutation({
     // Add a second seeded project so the projects index reflects a real workspace instead
     // of stretching a single demo project across a list page.
     const secondaryProjectKey = "OPS";
+    // Only look for projects in our org to avoid hijacking projects from other orgs
     let secondaryProject = await ctx.db
       .query("projects")
-      .withIndex("by_key", (q) => q.eq("key", secondaryProjectKey))
-      .filter(notDeleted)
+      .withIndex("by_organization", (q) => q.eq("organizationId", orgId))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), secondaryProjectKey)))
       .first();
 
     if (!secondaryProject) {
