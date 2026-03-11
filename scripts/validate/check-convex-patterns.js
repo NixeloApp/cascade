@@ -3,14 +3,14 @@
  *
  * Validates Convex backend code follows established patterns:
  * 1. Security: addProjectMember/addTeamMember must check org membership (ENFORCED)
- * 2. Mutations that create resources must return objects (Envelope Pattern) - warnings only
+ * 2. Mutations that create resources must return objects (Envelope Pattern)
  * 3. Test files must destructure API returns - disabled for gradual adoption
  *
  * NOTE: This validator focuses on SECURITY issues first.
  * Envelope Pattern and test destructuring are documented standards but not
  * strictly enforced yet to allow gradual adoption across the codebase.
  *
- * @strictness STRICT - Blocks CI for security issues (org membership). Warnings for envelope pattern.
+ * @strictness STRICT - Blocks CI for security issues and envelope-pattern violations.
  */
 
 import fs from "node:fs";

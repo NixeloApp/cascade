@@ -126,7 +126,6 @@ export function run() {
   return {
     passed: found === 0,
     errors: found,
-    warnings: 0,
     detail: found > 0 ? `${found} invalid call(s)` : `${apiCalls.size} calls validated`,
     messages: errors,
   };

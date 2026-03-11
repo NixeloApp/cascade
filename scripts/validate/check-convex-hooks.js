@@ -77,7 +77,6 @@ export function run() {
   return {
     passed: errors.length === 0,
     errors: errors.length,
-    warnings: 0,
     detail: errors.length > 0 ? `${errors.length} raw Convex hook import(s)` : null,
     messages: errors,
   };

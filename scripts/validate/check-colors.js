@@ -280,7 +280,6 @@ export function run() {
   return {
     passed: violations.length === 0,
     errors: violations.length,
-    warnings: 0,
     detail:
       violations.length > 0
         ? `${violations.length} violation(s)`

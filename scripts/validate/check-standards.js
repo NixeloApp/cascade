@@ -44,7 +44,7 @@ export function run() {
     "/Greeting.tsx", // Emphasized counts and names
     "/FocusZone.tsx", // Emphasized text
     "/MemberOnboarding.tsx", // Emphasized text in onboarding
-    "/ApiKeysManager.tsx", // Emphasized warnings
+    "/ApiKeysManager.tsx", // Emphasized status messaging
     "/HourComplianceDashboard.tsx", // Emphasized data
     "/EmailVerificationRequired.tsx", // Emphasized email
     "/ResetPasswordForm.tsx", // Emphasized email

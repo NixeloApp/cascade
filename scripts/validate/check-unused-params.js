@@ -7,7 +7,7 @@
  * - Props passed but never used
  * - API mismatches between caller and callee
  *
- * Instead of using underscore prefix to silence linter warnings,
+ * Instead of using underscore prefix to silence linter noise,
  * remove the binding entirely, restructure the API, or use the value.
  *
  * Enforced. Underscore-prefixed bindings fail validation.

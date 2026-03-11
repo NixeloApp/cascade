@@ -11,7 +11,7 @@
  * 6. Responsive breakpoint consistency - Ensure mobile-first approach
  * 7. Transition completeness - Warn when transition-* without corresponding state change
  *
- * @strictness MEDIUM - Warnings only. Reports inconsistencies but doesn't block CI.
+ * @strictness STRICT - Reports inconsistencies as validation errors.
  */
 
 import fs from "node:fs";
@@ -148,7 +148,7 @@ const SKIP_FILES_ANIMATION = new Set([
 export function run() {
   const SRC_DIR = path.join(ROOT, "src");
   const errors = [];
-  let warningCount = 0;
+  let issueCount = 0;
 
   // Counters for each check type
   const counts = {
@@ -196,9 +196,9 @@ export function run() {
           // Only error for now if it's outside ui/ - warn for ui/ files
           if (!rel.includes("components/ui/")) {
             errors.push(
-              `  ${c.yellow}WARN${c.reset} ${rel}:${lineNum} - Raw duration-${value}. Use semantic token (duration-fast, duration-default, etc.)`,
+              `  ${c.red}ERROR${c.reset} ${rel}:${lineNum} - Raw duration-${value}. Use semantic token (duration-fast, duration-default, etc.)`,
             );
-            warningCount++;
+            issueCount++;
           }
         }
       }
@@ -212,8 +212,8 @@ export function run() {
           if (rel.includes("components/ui/")) continue;
 
           counts.focusRing++;
-          errors.push(`  ${c.yellow}WARN${c.reset} ${rel}:${lineNum} - ${msg}`);
-          warningCount++;
+          errors.push(`  ${c.red}ERROR${c.reset} ${rel}:${lineNum} - ${msg}`);
+          issueCount++;
         }
       }
 
@@ -227,8 +227,8 @@ export function run() {
             if (rel.includes("components/ui/")) continue;
 
             counts.disabled++;
-            errors.push(`  ${c.yellow}WARN${c.reset} ${rel}:${lineNum} - ${msg}`);
-            warningCount++;
+            errors.push(`  ${c.red}ERROR${c.reset} ${rel}:${lineNum} - ${msg}`);
+            issueCount++;
           }
         }
       }
@@ -240,9 +240,9 @@ export function run() {
         const value = match[1];
         counts.zIndex++;
         errors.push(
-          `  ${c.yellow}WARN${c.reset} ${rel}:${lineNum} - Arbitrary z-[${value}]. Define a semantic token in index.css.`,
+          `  ${c.red}ERROR${c.reset} ${rel}:${lineNum} - Arbitrary z-[${value}]. Define a semantic token in index.css.`,
         );
-        warningCount++;
+        issueCount++;
       }
 
       // Check for high z-index values
@@ -252,9 +252,9 @@ export function run() {
         if (!ALLOWED_Z_INDEX.has(zClass) && parseInt(match[1], 10) > 50) {
           counts.zIndex++;
           errors.push(
-            `  ${c.yellow}WARN${c.reset} ${rel}:${lineNum} - High z-index ${zClass}. Consider using a semantic token.`,
+            `  ${c.red}ERROR${c.reset} ${rel}:${lineNum} - High z-index ${zClass}. Consider using a semantic token.`,
           );
-          warningCount++;
+          issueCount++;
         }
       }
 
@@ -357,15 +357,13 @@ export function run() {
   if (counts.transition > 0) details.push(`${counts.transition} transition`);
 
   const detail =
-    warningCount > 0
-      ? `${warningCount} warnings (${details.join(", ")})`
+    issueCount > 0
+      ? `${issueCount} consistency issues (${details.join(", ")})`
       : "all patterns consistent";
 
-  // For now, warnings don't fail the build - this is informational
   return {
-    passed: true, // Warnings don't fail
-    errors: 0,
-    warnings: warningCount,
+    passed: issueCount === 0,
+    errors: issueCount,
     detail,
     messages: errors.slice(0, 20), // Limit output
   };

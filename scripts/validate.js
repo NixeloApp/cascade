@@ -6,32 +6,35 @@
  *   2. Color audit          — raw TW colors, hardcoded hex, rgb/hsl, style props + allowlists
  *   3. API calls            — validates api.X.Y calls match Convex exports
  *   4. Query issues         — N+1 queries, unbounded .collect(), missing indexes
- *   5. Arbitrary Tailwind   — arbitrary values like h-[50px]
- *   6. Type consistency     — ensures types imported from canonical sources, not duplicated
- *   7. Type safety          — flags unsafe type assertions and lint suppressions
- *   8. Emoji usage          — finds emoji that should be replaced with Lucide icons
- *   9. Test ID constants    — ensures data-testid uses TEST_IDS constants, not strings
- *  10. E2E hard rules       — waitForTimeout, Promise sleep, force:true, XPath, page.$
- *  11. E2E quality          — catches broad selectors, networkidle, waitForSelector
- *  12. UI patterns          — DialogDescription in dialogs, AuthPageLayout for auth pages
- *  13. Route constants      — use ROUTES from @/config/routes instead of hardcoded paths
- *  14. Convex patterns      — Envelope Pattern returns, security checks, test destructuring
- *  15. Convex naming        — function naming conventions (get/list/create/update/delete)
- *  16. Component naming     — PascalCase components, {Component}Props interfaces
- *  17. Component props      — consistent prop naming across components
- *  18. Duplicate components — detect components with same name in different directories
- *  19. Interactive Tailwind — hover:/focus: should be in CVA components, not scattered
- *  20. Tailwind consistency — duration tokens, focus rings, disabled states, z-index, group-hover
- *  21. JSDoc coverage       — exported functions/components should have JSDoc documentation
- *  22. Import paths         — validates import path conventions
- *  23. Hook patterns        — custom hooks should follow consistent patterns
- *  24. Async patterns       — consistent error handling in async operations
- *  25. Time constants       — enforces use of timeUtils constants instead of magic numbers
- *  26. Unused parameters    — flags underscore-prefixed unused params (remove or use them)
- *  27. Test coverage        — critical files should have corresponding tests
- *  28. Weak assertions      — toBeDefined(), toBeTruthy(), {} as Type in tests
- *  29. Native confirm()     — ensure custom dialogs used instead of native confirm()
- *  30. Convex hooks         — validates Convex hook usage patterns
+ *   5. Arbitrary Tailwind      — arbitrary values like h-[50px]
+ *   6. Raw Tailwind            — generic raw utility misuse outside approved areas
+ *   7. Design-system ownership — recipe/chrome APIs required in high-drift surfaces
+ *   8. Layout prop usage       — JSX should use Flex/Stack props instead of className hacks
+ *   9. Type consistency        — ensures types imported from canonical sources, not duplicated
+ *  10. Type safety             — flags unsafe type assertions and lint suppressions
+ *  11. Emoji usage             — finds emoji that should be replaced with Lucide icons
+ *  12. Test ID constants       — ensures data-testid uses TEST_IDS constants, not strings
+ *  13. E2E hard rules          — waitForTimeout, Promise sleep, force:true, XPath, page.$
+ *  14. E2E quality             — catches broad selectors, networkidle, waitForSelector
+ *  15. UI patterns             — DialogDescription in dialogs, AuthPageLayout for auth pages
+ *  16. Route constants         — use ROUTES from @/config/routes instead of hardcoded paths
+ *  17. Convex patterns         — Envelope Pattern returns, security checks, test destructuring
+ *  18. Convex naming           — function naming conventions (get/list/create/update/delete)
+ *  19. Component naming        — PascalCase components, {Component}Props interfaces
+ *  20. Component props         — consistent prop naming across component definitions
+ *  21. Duplicate components    — detect components with same name in different directories
+ *  22. Interactive Tailwind    — hover:/focus: should be in CVA components, not scattered
+ *  23. Tailwind consistency    — duration tokens, focus rings, disabled states, z-index, group-hover
+ *  24. JSDoc coverage          — exported functions/components should have JSDoc documentation
+ *  25. Import paths            — validates import path conventions
+ *  26. Hook patterns           — custom hooks should follow consistent patterns
+ *  27. Async patterns          — consistent error handling in async operations
+ *  28. Time constants          — enforces use of timeUtils constants instead of magic numbers
+ *  29. Unused parameters       — flags underscore-prefixed unused params (remove or use them)
+ *  30. Test coverage           — critical files should have corresponding tests
+ *  31. Weak assertions         — toBeDefined(), toBeTruthy(), {} as Type in tests
+ *  32. Native confirm()        — ensure custom dialogs used instead of native confirm()
+ *  33. Convex hooks            — validates Convex hook usage patterns
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -54,7 +57,6 @@ function runIsolatedCheck(modulePath) {
     return {
       passed: false,
       errors: 1,
-      warnings: 0,
       detail: "isolated check execution failed",
       messages: [`  ${c.red}ERROR${c.reset} Failed to run isolated check: ${child.error.message}`],
     };
@@ -70,7 +72,6 @@ function runIsolatedCheck(modulePath) {
     return {
       passed: false,
       errors: 1,
-      warnings: 0,
       detail: "isolated check returned no structured result",
       messages: [
         `  ${c.red}ERROR${c.reset} Isolated check produced no JSON result`,
@@ -82,7 +83,7 @@ function runIsolatedCheck(modulePath) {
   const result = JSON.parse(lastJsonLine);
   return {
     ...result,
-    passed: child.status === 0 && result.passed !== false,
+    passed: child.status === 0 && result.passed !== false && (result.errors ?? 0) === 0,
     errors: child.status === 0 ? (result.errors ?? 0) : Math.max(1, result.errors ?? 0),
   };
 }
@@ -114,6 +115,14 @@ const checks = [
   {
     name: "Raw Tailwind",
     modulePath: new URL("./validate/check-raw-tailwind.js", import.meta.url).href,
+  },
+  {
+    name: "Design-system ownership",
+    modulePath: new URL("./validate/check-design-system-ownership.js", import.meta.url).href,
+  },
+  {
+    name: "Layout prop usage",
+    modulePath: new URL("./validate/check-layout-prop-usage.js", import.meta.url).href,
   },
   {
     name: "Type consistency",
@@ -233,11 +242,8 @@ for (let i = 0; i < results.length; i++) {
   console.log(formatResultLine(i, checks.length, results[i]));
 }
 
-// Print detailed messages for failed checks and warnings.
+// Print detailed messages for failed checks.
 const failedResults = results.filter((r) => !r.passed && r.messages && r.messages.length > 0);
-const warningResults = results.filter(
-  (r) => r.passed && r.warnings > 0 && r.messages && r.messages.length > 0,
-);
 
 if (failedResults.length > 0) {
   console.log(`\n${c.bold}Failed checks:${c.reset}`);
@@ -248,19 +254,6 @@ if (failedResults.length > 0) {
 
   for (const result of failedResults) {
     console.log(`\n${c.bold}── ${result.name} details ──${c.reset}`);
-    for (const msg of result.messages) console.log(msg);
-  }
-}
-
-if (warningResults.length > 0) {
-  console.log(`\n${c.bold}Warnings:${c.reset}`);
-  for (const result of warningResults) {
-    const detail = result.detail ? ` (${result.detail})` : "";
-    console.log(`  ${c.yellow}-${c.reset} ${result.name}${detail}`);
-  }
-
-  for (const result of warningResults) {
-    console.log(`\n${c.bold}── ${result.name} warnings ──${c.reset}`);
     for (const msg of result.messages) console.log(msg);
   }
 }

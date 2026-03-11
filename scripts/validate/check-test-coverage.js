@@ -7,8 +7,7 @@
  * - Hooks in src/hooks/
  * - Convex functions in convex/ (queries, mutations, actions)
  *
- * WARN-ONLY: Reports issues but doesn't fail validation.
- * This allows incremental adoption of test coverage requirements.
+ * Enforced. Missing tests are validation errors.
  */
 
 import fs from "node:fs";
@@ -164,16 +163,10 @@ export function run() {
     (issue) => `  ${c.red}ERROR${c.reset} ${issue.file} - ${issue.message}`,
   );
 
-  if (issues.length > 0) {
-    console.log(`${c.red}Found ${issues.length} file(s) missing tests:${c.reset}`);
-  }
-
-  // Warn-only: always pass but report issues as warnings
   return {
-    passed: true,
-    errors: 0,
-    warnings: issues.length,
-    detail: issues.length > 0 ? `${issues.length} file(s) missing tests (warn-only)` : null,
+    passed: issues.length === 0,
+    errors: issues.length,
+    detail: issues.length > 0 ? `${issues.length} file(s) missing tests` : null,
     messages,
   };
 }
