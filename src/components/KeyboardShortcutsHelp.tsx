@@ -12,11 +12,11 @@
 import { Search } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
 import { Input } from "./ui/Input";
 import { Stack } from "./ui/Stack";
-import { surfaceRecipeVariants } from "./ui/surfaceRecipes";
 import { Typography } from "./ui/Typography";
 
 // =============================================================================
@@ -175,17 +175,11 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
 // Components
 // =============================================================================
 
+const KEY_BADGE_CLASSNAME =
+  "inline-flex h-6 min-w-6 items-center justify-center rounded-lg border border-ui-border-secondary/70 bg-ui-bg-elevated px-2 font-mono text-xs font-medium text-ui-text-secondary shadow-soft";
+
 function KeyBadge({ children }: { children: React.ReactNode }) {
-  return (
-    <kbd
-      className={cn(
-        surfaceRecipeVariants({ recipe: "keyBadge" }),
-        "inline-flex h-6 min-w-6 items-center justify-center px-2 font-mono text-xs font-medium text-ui-text-secondary",
-      )}
-    >
-      {children}
-    </kbd>
-  );
+  return <kbd className={KEY_BADGE_CLASSNAME}>{children}</kbd>;
 }
 
 function ModifierShortcutBadge({ shortcut }: { shortcut: string }) {
@@ -273,11 +267,7 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
       footer={
         <Typography variant="caption" color="tertiary" className="block text-center sm:text-left">
           Press{" "}
-          <Typography
-            as="kbd"
-            variant="mono"
-            className={cn(surfaceRecipeVariants({ recipe: "keyBadge" }), "text-xs")}
-          >
+          <Typography as="kbd" variant="mono" className={cn(KEY_BADGE_CLASSNAME, "text-xs")}>
             {isMacPlatform() ? "⌘" : "Ctrl"}+K
           </Typography>{" "}
           to open search and commands
@@ -285,7 +275,7 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
       }
     >
       <Stack gap="md">
-        <div className={surfaceRecipeVariants({ recipe: "overlayInset" })}>
+        <Card recipe="overlayInset">
           <div className="relative p-4">
             <Search className="absolute left-6 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ui-text-tertiary" />
             <Input
@@ -297,15 +287,12 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
               autoFocus
             />
           </div>
-        </div>
+        </Card>
 
         {hasResults ? (
           <Flex direction="column" gap="md">
             {filteredCategories.map((category) => (
-              <div
-                key={category.id}
-                className={surfaceRecipeVariants({ recipe: "commandSection" })}
-              >
+              <Card key={category.id} recipe="commandSection">
                 <div className="border-b border-ui-border-secondary/50 px-4 py-3">
                   <Typography
                     variant="label"
@@ -317,24 +304,21 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
                 </div>
                 <Flex direction="column" gap="xs" className="p-3">
                   {category.items.map((item) => (
-                    <div
-                      key={item.id}
-                      className={surfaceRecipeVariants({ recipe: "overlayInset" })}
-                    >
+                    <Card key={item.id} recipe="overlayInset">
                       <Flex align="center" justify="between" gap="md" className="px-4 py-3">
                         <Typography variant="small" color="secondary">
                           {item.description}
                         </Typography>
                         <ShortcutBadge item={item} />
                       </Flex>
-                    </div>
+                    </Card>
                   ))}
                 </Flex>
-              </div>
+              </Card>
             ))}
           </Flex>
         ) : (
-          <div className={surfaceRecipeVariants({ recipe: "overlayInset" })}>
+          <Card recipe="overlayInset">
             <Flex
               direction="column"
               align="center"
@@ -348,7 +332,7 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
                 </Typography>
               </Typography>
             </Flex>
-          </div>
+          </Card>
         )}
       </Stack>
     </Dialog>

@@ -5,7 +5,6 @@ import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
-import { surfaceRecipeVariants } from "../ui/surfaceRecipes";
 import { Typography } from "../ui/Typography";
 
 const boardColumns = [
@@ -32,7 +31,7 @@ export function ProductShowcase() {
     <div id="product-showcase" className="relative mx-auto mt-0 max-w-6xl sm:mt-1">
       <div className="pointer-events-none absolute inset-x-16 top-8 h-52 rounded-full bg-landing-accent/10 blur-glow" />
 
-      <Card variant="ghost" className={surfaceRecipeVariants({ recipe: "showcaseShell" })}>
+      <Card recipe="showcaseShell">
         <div className="border-b border-ui-border/60 bg-ui-bg-soft/82 px-4 py-3 sm:px-5">
           <Flex align="center" justify="between" gap="md">
             <Flex align="center" gap="sm">
@@ -64,7 +63,7 @@ export function ProductShowcase() {
           className="bg-linear-to-b from-ui-bg-soft/78 to-ui-bg px-4 py-4 sm:px-5"
         >
           <div className="space-y-4 lg:col-span-8">
-            <Card variant="ghost" className={surfaceRecipeVariants({ recipe: "showcasePanel" })}>
+            <Card recipe="showcasePanel">
               <Grid cols={1} colsXl={12} gap="lg" className="p-4 sm:p-5">
                 <div className="space-y-4 xl:col-span-4">
                   <div>
@@ -96,17 +95,14 @@ export function ProductShowcase() {
                     ))}
                   </div>
 
-                  <Button variant="secondary" size="sm" className="w-full sm:w-auto">
+                  <Button variant="secondary" size="sm" className="w-full sm:w-auto" disabled>
                     Open board
                   </Button>
                 </div>
 
                 <Grid cols={1} colsMd={3} gap="md" className="xl:col-span-8">
                   {boardColumns.map((column) => (
-                    <div
-                      key={column.title}
-                      className={cn(surfaceRecipeVariants({ recipe: "showcasePanelQuiet" }), "p-3")}
-                    >
+                    <Card key={column.title} recipe="showcasePanelQuiet" padding="sm">
                       <Flex align="center" justify="between" className="mb-3">
                         <Typography variant="label">{column.title}</Typography>
                         <div className={cn("h-2 w-2 rounded-full", column.accent)} />
@@ -114,26 +110,19 @@ export function ProductShowcase() {
 
                       <div className="space-y-2">
                         {column.cards.map((card) => (
-                          <Card
-                            key={card}
-                            variant="ghost"
-                            className={cn(surfaceRecipeVariants({ recipe: "overlayInset" }), "p-3")}
-                          >
+                          <Card key={card} recipe="overlayInset" padding="sm">
                             <Typography variant="small">{card}</Typography>
                           </Card>
                         ))}
                       </div>
-                    </div>
+                    </Card>
                   ))}
                 </Grid>
               </Grid>
             </Card>
 
             <Grid cols={1} colsMd={3} gap="lg">
-              <Card
-                variant="ghost"
-                className={cn(surfaceRecipeVariants({ recipe: "metricTile" }), "p-4")}
-              >
+              <Card recipe="metricTile" padding="md">
                 <Typography variant="meta" className="uppercase tracking-widest">
                   Active projects
                 </Typography>
@@ -145,10 +134,7 @@ export function ProductShowcase() {
                 </Typography>
               </Card>
 
-              <Card
-                variant="ghost"
-                className={cn(surfaceRecipeVariants({ recipe: "metricTile" }), "p-4")}
-              >
+              <Card recipe="metricTile" padding="md">
                 <Typography variant="meta" className="uppercase tracking-widest">
                   AI assists today
                 </Typography>
@@ -160,10 +146,7 @@ export function ProductShowcase() {
                 </Typography>
               </Card>
 
-              <Card
-                variant="ghost"
-                className={cn(surfaceRecipeVariants({ recipe: "metricTile" }), "p-4")}
-              >
+              <Card recipe="metricTile" padding="md">
                 <Typography variant="meta" className="uppercase tracking-widest">
                   Time recovered
                 </Typography>
@@ -178,10 +161,7 @@ export function ProductShowcase() {
           </div>
 
           <div className="space-y-4 lg:col-span-4">
-            <Card
-              variant="ghost"
-              className={cn(surfaceRecipeVariants({ recipe: "showcasePanel" }), "p-5")}
-            >
+            <Card recipe="showcasePanel" padding="lg">
               <Flex align="center" gap="sm" className="mb-4">
                 <div className="rounded-full bg-brand-subtle p-2 text-brand">
                   <Sparkles className="h-4 w-4" />
@@ -194,10 +174,7 @@ export function ProductShowcase() {
                 </div>
               </Flex>
 
-              <Card
-                variant="ghost"
-                className={cn(surfaceRecipeVariants({ recipe: "overlayInset" }), "p-4")}
-              >
+              <Card recipe="overlayInset" padding="md">
                 <Typography variant="small" color="secondary">
                   “Summarize what changed since the last client review and flag blockers.”
                 </Typography>
@@ -221,10 +198,7 @@ export function ProductShowcase() {
               </div>
             </Card>
 
-            <Card
-              variant="ghost"
-              className={cn(surfaceRecipeVariants({ recipe: "showcasePanel" }), "p-5")}
-            >
+            <Card recipe="showcasePanel" padding="lg">
               <Flex align="center" justify="between" className="mb-4">
                 <div>
                   <Typography variant="label">Connected surfaces</Typography>
@@ -239,11 +213,7 @@ export function ProductShowcase() {
                   "Client updates can be generated from live project state",
                   "Time entries roll up without separate admin tooling",
                 ].map((item) => (
-                  <Card
-                    key={item}
-                    variant="ghost"
-                    className={cn(surfaceRecipeVariants({ recipe: "overlayInset" }), "p-3")}
-                  >
+                  <Card key={item} recipe="overlayInset" padding="sm">
                     <Typography variant="small">{item}</Typography>
                   </Card>
                 ))}

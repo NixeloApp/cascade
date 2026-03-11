@@ -129,14 +129,20 @@ export function run() {
   ];
 
   const RECIPE_ESCAPE_HATCHES = [
-    "surfaceRecipeVariants(",
-    "chromeButtonVariants(",
-    "modalSectionVariants(",
     "cardVariants(",
+    "cardRecipeVariants(",
     "buttonVariants(",
+    "buttonChromeVariants(",
     "tabsTriggerVariants(",
     "tabsListVariants(",
+    "chromeButtonVariants(",
+    'chrome="', // Button chrome prop
+    "chrome='", // Button chrome prop (single quote)
+    'variant="', // Component variant prop
+    "variant='", // Component variant prop (single quote)
   ];
+
+  const LEGACY_RECIPE_IMPORT_PATTERN = /surfaceRecipes/;
 
   const RECIPE_TOKEN_PATTERNS = {
     background: /\bbg-(?!transparent)\S+/,
@@ -188,8 +194,44 @@ export function run() {
   const files = walkDir(SRC, { extensions: new Set([".tsx"]) });
   for (const f of files) checkFile(f);
 
-  function countRecipeTokens(line) {
-    return Object.values(RECIPE_TOKEN_PATTERNS).filter((pattern) => pattern.test(line)).length;
+  function countRecipeTokens(text) {
+    return Object.values(RECIPE_TOKEN_PATTERNS).filter((pattern) => pattern.test(text)).length;
+  }
+
+  /**
+   * Collect the full className attribute span, which may span multiple lines.
+   * Returns the concatenated text and the ending line index.
+   */
+  function collectClassNameSpan(lines, startIndex) {
+    let span = lines[startIndex];
+    let endIndex = startIndex;
+
+    // Quick check: if the line has balanced quotes/braces, it's single-line
+    const openBraces = (span.match(/\{/g) || []).length;
+    const closeBraces = (span.match(/\}/g) || []).length;
+    const openParens = (span.match(/\(/g) || []).length;
+    const closeParens = (span.match(/\)/g) || []).length;
+
+    // If braces/parens are unbalanced, collect more lines
+    if (openBraces !== closeBraces || openParens !== closeParens) {
+      let braceCount = openBraces - closeBraces;
+      let parenCount = openParens - closeParens;
+
+      for (let j = startIndex + 1; j < lines.length && j < startIndex + 20; j++) {
+        const nextLine = lines[j];
+        span += " " + nextLine;
+        endIndex = j;
+
+        braceCount += (nextLine.match(/\{/g) || []).length;
+        braceCount -= (nextLine.match(/\}/g) || []).length;
+        parenCount += (nextLine.match(/\(/g) || []).length;
+        parenCount -= (nextLine.match(/\)/g) || []).length;
+
+        if (braceCount <= 0 && parenCount <= 0) break;
+      }
+    }
+
+    return { span, endIndex };
   }
 
   function checkRecipeEnforcement(filePath) {
@@ -201,19 +243,49 @@ export function run() {
     const content = fs.readFileSync(filePath, "utf-8");
     const lines = content.split("\n");
 
+    if (LEGACY_RECIPE_IMPORT_PATTERN.test(content)) {
+      recipeViolations.push({
+        file: rel,
+        line: 1,
+        replacement: "move legacy surfaceRecipes usage into Card/Button/Dialog recipe props",
+      });
+    }
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       if (!line.includes("className")) continue;
-      if (RECIPE_ESCAPE_HATCHES.some((token) => line.includes(token))) continue;
 
-      const tokenCount = countRecipeTokens(line);
-      if (tokenCount < 4) continue;
+      // Collect the full className span (may be multiline)
+      const { span, endIndex } = collectClassNameSpan(lines, i);
+
+      // Collect element context (few lines before className for props like chrome=)
+      const contextStart = Math.max(0, i - 5);
+      const elementContext = lines.slice(contextStart, i + 1).join(" ");
+
+      // Skip if any escape hatch token is present in the span or element context
+      if (
+        RECIPE_ESCAPE_HATCHES.some(
+          (token) => span.includes(token) || elementContext.includes(token),
+        )
+      ) {
+        i = endIndex; // Skip to end of this span
+        continue;
+      }
+
+      const tokenCount = countRecipeTokens(span);
+      if (tokenCount < 4) {
+        i = endIndex; // Skip to end of this span
+        continue;
+      }
 
       recipeViolations.push({
         file: rel,
         line: i + 1,
-        replacement: "extract to shared CVA recipe or surfaceRecipeVariants/chromeButtonVariants",
+        replacement:
+          "extract to Card/Button/Dialog recipe APIs or cardRecipeVariants/buttonChromeVariants",
       });
+
+      i = endIndex; // Skip to end of this span to avoid duplicate reports
     }
   }
 

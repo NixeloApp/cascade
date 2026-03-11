@@ -33,6 +33,7 @@ const buttonVariants = cva(
         unstyled: "focus-visible:ring-brand-ring",
       },
       size: {
+        none: "",
         sm: "h-9 px-3 text-sm",
         md: "h-10 px-4 text-sm",
         lg: "h-11 px-6 text-base",
@@ -52,6 +53,24 @@ const buttonVariants = cva(
   },
 );
 
+const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-brand-ring", {
+  variants: {
+    chrome: {
+      quiet:
+        "border-transparent bg-transparent text-ui-text-secondary hover:border-ui-border/70 hover:bg-ui-bg-soft/80 hover:text-ui-text",
+      framed:
+        "border-ui-border-secondary/70 bg-ui-bg-elevated/94 text-ui-text-secondary shadow-soft hover:border-ui-border-secondary hover:bg-ui-bg-hover hover:text-ui-text",
+      active:
+        "border-ui-border-secondary/80 bg-ui-bg text-ui-text shadow-card hover:border-ui-border-secondary hover:bg-ui-bg-hover",
+    },
+    chromeSize: {
+      icon: "h-9 w-9 rounded-full",
+      pill: "h-10 rounded-full px-4 text-sm",
+      compactPill: "h-8 rounded-full px-3 text-sm",
+    },
+  },
+});
+
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
@@ -59,6 +78,8 @@ export interface ButtonProps
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  chrome?: VariantProps<typeof buttonChromeVariants>["chrome"];
+  chromeSize?: VariantProps<typeof buttonChromeVariants>["chromeSize"];
 }
 
 /**
@@ -84,6 +105,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       variant,
       size,
       reveal,
+      chrome,
+      chromeSize,
       asChild = false,
       isLoading = false,
       leftIcon,
@@ -96,9 +119,17 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref,
   ) => {
     const Comp = asChild ? Slot : "button";
+    const resolvedVariant = chrome ? "unstyled" : variant;
+    const resolvedSize = chromeSize ? "none" : size;
+    const isIconButton = chromeSize === "icon" || size === "icon";
+
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, reveal, className }))}
+        className={cn(
+          buttonVariants({ variant: resolvedVariant, size: resolvedSize, reveal }),
+          buttonChromeVariants({ chrome, chromeSize }),
+          className,
+        )}
         ref={ref}
         disabled={disabled || isLoading}
         aria-busy={isLoading}
@@ -110,7 +141,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ) : isLoading ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            {size !== "icon" ? children : <span className="sr-only">{children}</span>}
+            {!isIconButton ? children : <span className="sr-only">{children}</span>}
           </>
         ) : (
           <>
@@ -125,4 +156,4 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 );
 Button.displayName = "Button";
 
-export { Button, buttonVariants };
+export { Button, buttonVariants, buttonChromeVariants };

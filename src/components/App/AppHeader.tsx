@@ -11,15 +11,14 @@ import { NotificationCenter } from "@/components/Notifications";
 import { TimerWidget as NavTimerWidget } from "@/components/TimeTracking/TimerWidget";
 import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import { Menu } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
-import { cn } from "@/lib/utils";
 import type { CommandAction } from "../CommandPalette";
-import { chromeButtonVariants, surfaceRecipeVariants } from "../ui/surfaceRecipes";
 
 interface AppHeaderProps {
   commands?: CommandAction[];
@@ -39,21 +38,20 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
 
         <Flex align="center" gap="sm" className="sm:gap-3">
           <Button
-            variant="ghost"
-            size="icon"
+            chrome="framed"
+            chromeSize="icon"
             onClick={toggleMobile}
-            className={cn(chromeButtonVariants({ tone: "framed", size: "icon" }), "lg:hidden")}
+            className="lg:hidden"
             aria-label="Toggle sidebar menu"
             aria-expanded={isMobileOpen}
           >
             <Menu className="w-5 h-5" />
           </Button>
 
-          <div
-            className={cn(
-              surfaceRecipeVariants({ recipe: "controlStrip" }),
-              "hidden px-3 py-1.5 lg:flex lg:items-center lg:gap-3",
-            )}
+          <Card
+            recipe="controlStrip"
+            padding="none"
+            className="hidden px-3 py-1.5 lg:flex lg:items-center lg:gap-3"
           >
             <div className="h-2.5 w-2.5 rounded-full bg-brand shadow-brand-halo" />
             <div className="min-w-0">
@@ -67,56 +65,48 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
                 Search, track, and act from one surface
               </Typography>
             </div>
-          </div>
+          </Card>
         </Flex>
 
         <FlexItem grow className="min-w-0">
           <GlobalSearch commands={commands} />
         </FlexItem>
 
-        <Flex
-          align="center"
-          gap="xs"
-          className={cn(
-            surfaceRecipeVariants({ recipe: "controlRail" }),
-            "shrink-0 p-1 sm:gap-1.5",
-          )}
-        >
-          {onShowShortcutsHelp && (
-            <Tooltip content="Keyboard shortcuts">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onShowShortcutsHelp}
-                className={cn(
-                  chromeButtonVariants({ tone: "quiet", size: "icon" }),
-                  "hidden sm:inline-flex",
-                )}
-                aria-label="Keyboard shortcuts"
-                data-testid={TEST_IDS.HEADER.SHORTCUTS_BUTTON}
-              >
-                <svg
-                  aria-hidden="true"
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+        <Card recipe="controlRail" padding="none" className="shrink-0 p-1">
+          <Flex align="center" gap="xs" className="sm:gap-1.5">
+            {onShowShortcutsHelp && (
+              <Tooltip content="Keyboard shortcuts">
+                <Button
+                  chrome="quiet"
+                  chromeSize="icon"
+                  onClick={onShowShortcutsHelp}
+                  className="hidden sm:inline-flex"
+                  aria-label="Keyboard shortcuts"
+                  data-testid={TEST_IDS.HEADER.SHORTCUTS_BUTTON}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </Button>
-            </Tooltip>
-          )}
+                  <svg
+                    aria-hidden="true"
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </Button>
+              </Tooltip>
+            )}
 
-          <NavTimerWidget />
-          <NotificationCenter />
-          <UserMenu />
-        </Flex>
+            <NavTimerWidget />
+            <NotificationCenter />
+            <UserMenu />
+          </Flex>
+        </Card>
       </Flex>
     </header>
   );

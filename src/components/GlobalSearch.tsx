@@ -17,7 +17,6 @@ import { useSearchKeyboard, useSearchPagination } from "@/hooks/useGlobalSearch"
 import { ArrowRight, Command, Filter, Plus, Search } from "@/lib/icons";
 import { parseIssueSearchShortcuts } from "@/lib/search-shortcuts";
 import { TEST_IDS } from "@/lib/test-ids";
-import { cn } from "@/lib/utils";
 import type { CommandAction } from "./CommandPalette";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
@@ -31,7 +30,6 @@ import {
   Command as CommandMenu,
 } from "./ui/Command";
 import { KeyboardShortcut, ShortcutHint } from "./ui/KeyboardShortcut";
-import { chromeButtonVariants, surfaceRecipeVariants } from "./ui/surfaceRecipes";
 import { Tabs, TabsList, TabsTrigger } from "./ui/Tabs";
 import { Typography } from "./ui/Typography";
 
@@ -144,16 +142,13 @@ function CommandActionItem({ command, onClose }: { command: CommandAction; onClo
       className="cursor-pointer data-[selected=true]:bg-ui-bg-secondary"
     >
       <Flex align="start" gap="md" className="w-full">
-        <Flex
-          align="center"
-          justify="center"
-          className={cn(
-            surfaceRecipeVariants({ recipe: "controlStrip" }),
-            "h-9 w-9 shrink-0 text-ui-text-tertiary",
-          )}
+        <Card
+          recipe="controlStrip"
+          padding="none"
+          className="flex h-9 w-9 shrink-0 items-center justify-center text-ui-text-tertiary"
         >
           {command.icon ? <Icon icon={command.icon} size="md" /> : <Command className="h-4 w-4" />}
-        </Flex>
+        </Card>
         <FlexItem flex="1" className="min-w-0">
           <Flex align="center" gap="sm" wrap>
             <Typography variant="label" as="p" className="truncate">
@@ -194,10 +189,10 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
       data-testid={TEST_IDS.SEARCH.RESULT_ITEM}
     >
       <Flex align="start" gap="md" className="w-full">
-        <Flex
-          align="center"
-          justify="center"
-          className={cn(surfaceRecipeVariants({ recipe: "controlStrip" }), "h-9 w-9 shrink-0")}
+        <Card
+          recipe="controlStrip"
+          padding="none"
+          className="flex h-9 w-9 shrink-0 items-center justify-center"
         >
           {result.type === "issue" ? (
             <svg
@@ -226,7 +221,7 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
               />
             </svg>
           )}
-        </Flex>
+        </Card>
 
         <FlexItem flex="1" className="min-w-0">
           <Flex align="center" gap="sm" wrap>
@@ -278,11 +273,7 @@ function SearchListContent({
     return (
       <>
         <div className="px-2 pb-3">
-          <Card
-            variant="ghost"
-            padding="md"
-            className={surfaceRecipeVariants({ recipe: "commandIntro" })}
-          >
+          <Card recipe="commandIntro" padding="md">
             <Flex direction="column" gap="md">
               <div>
                 <Badge variant="brand" shape="pill">
@@ -390,9 +381,9 @@ function SearchListContent({
           data-testid={TEST_IDS.GLOBAL_SEARCH.NO_RESULTS}
           className="px-4 py-10 text-ui-text-secondary"
         >
-          <div className={cn(surfaceRecipeVariants({ recipe: "controlStrip" }), "mb-4 p-3")}>
+          <Card recipe="controlStrip" padding="sm" className="mb-4">
             <Icon icon={Search} size="xl" />
-          </div>
+          </Card>
           <Typography variant="label">
             {hasCommandMatches ? "No issue or document results" : "No results found"}
           </Typography>
@@ -498,30 +489,24 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
   return (
     <>
       <Button
-        variant="secondary"
-        size="sm"
+        chrome="framed"
+        chromeSize="pill"
         onClick={() => {
           setShouldOpenAdvancedSearch(false); // Reset handoff flag to prevent stale state
           setIsOpen(true);
         }}
         aria-label="Open search and commands"
         data-testid={TEST_IDS.HEADER.SEARCH_BUTTON}
-        className={cn(
-          chromeButtonVariants({ tone: "framed", size: "pill" }),
-          "w-full min-w-0 justify-center gap-2 px-2.5 sm:justify-between sm:px-3",
-        )}
+        className="w-full min-w-0 justify-center gap-2 px-2.5 sm:justify-between sm:px-3"
       >
         <Flex align="center" gap="sm" className="min-w-0">
-          <Flex
-            align="center"
-            justify="center"
-            className={cn(
-              surfaceRecipeVariants({ recipe: "controlStrip" }),
-              "h-8 w-8 shrink-0 rounded-full border-ui-border/60 text-ui-text-tertiary sm:h-7 sm:w-7",
-            )}
+          <Card
+            recipe="controlStrip"
+            padding="none"
+            className="flex h-8 w-8 shrink-0 items-center justify-center border-ui-border/60 text-ui-text-tertiary sm:h-7 sm:w-7"
           >
             <Search className="h-4 w-4" />
-          </Flex>
+          </Card>
           <Typography
             variant="small"
             color="secondary"
@@ -621,20 +606,18 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
           >
             <Flex align="center" gap="sm" wrap>
               <Button
-                variant="ghost"
-                size="sm"
+                chrome="framed"
+                chromeSize="compactPill"
                 onClick={handleOpenAdvancedSearch}
                 leftIcon={<Filter className="h-4 w-4" />}
-                className={chromeButtonVariants({ tone: "framed", size: "compactPill" })}
               >
                 Advanced Search
               </Button>
               <Button
-                variant="ghost"
-                size="sm"
+                chrome="framed"
+                chromeSize="compactPill"
                 onClick={() => setQuery("@")}
                 leftIcon={<Plus className="h-4 w-4" />}
-                className={chromeButtonVariants({ tone: "framed", size: "compactPill" })}
               >
                 Search with filters
               </Button>

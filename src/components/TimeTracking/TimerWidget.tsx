@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
-import { chromeButtonVariants, surfaceRecipeVariants } from "../ui/surfaceRecipes";
 import { Tooltip } from "../ui/Tooltip";
 import { Typography } from "../ui/Typography";
 import { TimeEntryModal } from "./TimeEntryModal";
@@ -59,9 +58,9 @@ export function TimerWidget() {
   if (runningTimer) {
     return (
       <Card
+        recipe="controlStrip"
         padding="sm"
         className={cn(
-          surfaceRecipeVariants({ recipe: "controlStrip" }),
           "rounded-full border-brand-indigo-border/70 bg-linear-to-r from-brand-indigo-track via-brand-indigo-track to-brand-indigo-bg/70",
         )}
       >
@@ -103,10 +102,9 @@ export function TimerWidget() {
           {/* Stop button */}
           <Button
             onClick={handleStop}
-            variant="ghost"
-            size="sm"
+            chrome="quiet"
+            chromeSize="compactPill"
             className={cn(
-              chromeButtonVariants({ tone: "quiet", size: "compactPill" }),
               "border-transparent px-3 text-xs text-brand-indigo-text hover:bg-brand-indigo-bg/10 hover:text-brand-indigo-text",
             )}
             aria-label="Stop timer"
@@ -122,11 +120,11 @@ export function TimerWidget() {
     <>
       <Button
         onClick={() => setShowTimeEntryModal(true)}
-        variant="secondary"
-        size="sm"
+        chrome="framed"
+        chromeSize="pill"
         leftIcon={<Play className="w-4 h-4" fill="currentColor" />}
         aria-label="Start timer"
-        className={cn(chromeButtonVariants({ tone: "framed", size: "pill" }), "px-4")}
+        className="px-4"
       >
         <span className="hidden sm:inline">Start Timer</span>
       </Button>

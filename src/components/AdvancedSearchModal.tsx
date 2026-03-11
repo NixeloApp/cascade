@@ -24,7 +24,6 @@ import { Input } from "./ui/form";
 import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
 import { Stack } from "./ui/Stack";
-import { chromeButtonVariants, surfaceRecipeVariants } from "./ui/surfaceRecipes";
 
 interface AdvancedSearchModalProps {
   open: boolean;
@@ -98,21 +97,13 @@ export function AdvancedSearchModal({
       size="lg"
       data-testid={TEST_IDS.SEARCH.ADVANCED_MODAL}
       footer={
-        <Button
-          onClick={() => onOpenChange(false)}
-          variant="secondary"
-          className={chromeButtonVariants({ tone: "framed", size: "compactPill" })}
-        >
+        <Button onClick={() => onOpenChange(false)} chrome="framed" chromeSize="compactPill">
           Close
         </Button>
       }
     >
       <Stack gap="lg">
-        <Card
-          variant="ghost"
-          padding="md"
-          className={surfaceRecipeVariants({ recipe: "overlayInset" })}
-        >
+        <Card recipe="overlayInset" padding="md">
           <Stack gap="xs">
             <Typography variant="label" className="uppercase tracking-wider text-ui-text-tertiary">
               Search playbook
@@ -196,7 +187,7 @@ export function AdvancedSearchModal({
               )}
             </Flex>
 
-            <div className={surfaceRecipeVariants({ recipe: "overlayInset" })}>
+            <Card recipe="overlayInset">
               <SearchResultsList
                 searchQuery={searchQuery}
                 results={results}
@@ -205,14 +196,10 @@ export function AdvancedSearchModal({
                 onSelectIssue={handleSelectIssue}
                 onLoadMore={handleLoadMore}
               />
-            </div>
+            </Card>
           </Stack>
         ) : (
-          <Card
-            variant="ghost"
-            padding="md"
-            className={surfaceRecipeVariants({ recipe: "overlayInset" })}
-          >
+          <Card recipe="overlayInset" padding="md">
             <Typography variant="small" color="secondary">
               Results appear once you type at least 2 characters.
             </Typography>

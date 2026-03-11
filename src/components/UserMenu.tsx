@@ -26,7 +26,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/DropdownMenu";
-import { chromeButtonVariants } from "./ui/surfaceRecipes";
 import { Typography } from "./ui/Typography";
 /** User dropdown menu with settings and sign out options. */
 export function UserMenu() {
@@ -43,11 +42,7 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="unstyled"
-          className={chromeButtonVariants({ tone: "quiet", size: "icon" })}
-          aria-label="User menu"
-        >
+        <Button chrome="quiet" chromeSize="icon" aria-label="User menu">
           <Avatar name={user.name} email={user.email} src={user.image} size="md" variant="brand" />
         </Button>
       </DropdownMenuTrigger>
