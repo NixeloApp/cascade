@@ -64,7 +64,7 @@ function EmptyStateBadge({ size, surface }: { size: EmptyStateSize; surface: Emp
         "inline-flex items-center rounded-full border border-ui-border/70 bg-ui-bg-soft text-xs font-medium uppercase tracking-wider text-ui-text-tertiary",
         size === "compact"
           ? surface === "bare"
-            ? "mb-1 px-1.5 py-0.5 text-[9px]"
+            ? "mb-1 px-1.5 py-0.5 text-micro"
             : "mb-1.5 px-2 py-0.5"
           : "mb-4 px-3 py-1",
       )}

@@ -26,7 +26,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
       >
         <Grid cols={1} className="w-full items-center gap-6 lg:grid-cols-2 lg:gap-6">
           <div className="hidden lg:block">
-            <div className="rounded-[2rem] border border-ui-border-secondary/65 bg-ui-bg-elevated/76 px-7 py-8 shadow-soft backdrop-blur-sm xl:px-8 xl:py-9">
+            <div className="rounded-3xl border border-ui-border-secondary/65 bg-ui-bg-elevated/76 px-7 py-8 shadow-soft backdrop-blur-sm xl:px-8 xl:py-9">
               <Badge variant="outline" shape="pill" className="mb-4 w-fit">
                 Unified delivery workspace
               </Badge>

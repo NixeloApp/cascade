@@ -14,6 +14,8 @@
   --radius-secondary: 4px;
   --radius-container: 12px;
   --radius-lg: 16px;
+  --radius-2xl: 24px;
+  --radius-3xl: 32px;
   --radius-pill: 9999px;
 
   /* Box Shadows - Premium tiers */
@@ -233,6 +235,7 @@
   --z-toast-critical: 9999;
 
   /* Small Label Text */
+  --text-micro: 9px;
   --text-caption: 10px;
   --text-calendar-weekday: 0.8rem;
 

@@ -29,7 +29,7 @@ const boardColumns = [
 export function ProductShowcase() {
   return (
     <div id="product-showcase" className="relative mx-auto mt-0 max-w-6xl sm:mt-1">
-      <div className="pointer-events-none absolute inset-x-16 top-8 h-52 rounded-full bg-landing-accent/10 blur-glow dark:bg-landing-accent/15" />
+      <div className="pointer-events-none absolute inset-x-16 top-8 h-52 rounded-full bg-landing-accent/10 blur-glow" />
 
       <Card
         variant="outline"
