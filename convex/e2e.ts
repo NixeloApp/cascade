@@ -2907,19 +2907,27 @@ export const seedScreenshotDataInternal = internalMutation({
     }
 
     // 5. Create project (idempotent)
-    // Only look for projects in our org to avoid hijacking projects from other orgs
+    // Only re-use projects that were created by this seeding process (identified by
+    // the specific description), to avoid hijacking legitimate DEMO projects in shared orgs
     const projectKey = "DEMO";
+    const screenshotProjectDescription = "Demo project for screenshot visual review";
     let project = await ctx.db
       .query("projects")
       .withIndex("by_organization", (q) => q.eq("organizationId", orgId))
-      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), projectKey)))
+      .filter((q) =>
+        q.and(
+          notDeleted(q),
+          q.eq(q.field("key"), projectKey),
+          q.eq(q.field("description"), screenshotProjectDescription),
+        ),
+      )
       .first();
 
     if (!project) {
       const projId = await ctx.db.insert("projects", {
         name: "Demo Project",
         key: projectKey,
-        description: "Demo project for screenshot visual review",
+        description: screenshotProjectDescription,
         organizationId: orgId,
         workspaceId,
         teamId,
@@ -2939,7 +2947,7 @@ export const seedScreenshotDataInternal = internalMutation({
       // Re-home the seeded project so list/detail queries all target the same org/workspace.
       await ctx.db.patch(project._id, {
         name: "Demo Project",
-        description: "Demo project for screenshot visual review",
+        description: screenshotProjectDescription,
         organizationId: orgId,
         workspaceId,
         teamId,

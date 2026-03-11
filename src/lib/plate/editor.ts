@@ -127,7 +127,7 @@ function toTextLeaves(nodes: ProseMirrorNodeLike[] | undefined): Array<Record<st
   return leaves.length > 0 ? leaves : [{ text: "" }];
 }
 
-function toBlockFromNode(node: ProseMirrorNodeLike) {
+function toBlockFromNode(node: ProseMirrorNodeLike): Array<Record<string, unknown>> {
   if (node.type === "heading") {
     const level = node.attrs?.level;
     const headingType =
@@ -169,6 +169,47 @@ function toBlockFromNode(node: ProseMirrorNodeLike) {
       {
         type: "p",
         children: toTextLeaves(node.content),
+      },
+    ];
+  }
+
+  if (node.type === "bulletList") {
+    return [
+      {
+        type: "ul",
+        children: node.content?.flatMap(toBlockFromNode) ?? [
+          { type: "li", children: [{ text: "" }] },
+        ],
+      },
+    ];
+  }
+
+  if (node.type === "orderedList") {
+    return [
+      {
+        type: "ol",
+        children: node.content?.flatMap(toBlockFromNode) ?? [
+          { type: "li", children: [{ text: "" }] },
+        ],
+      },
+    ];
+  }
+
+  if (node.type === "listItem") {
+    // List items contain paragraphs or other blocks; extract their content
+    const innerContent: Array<Record<string, unknown>> = node.content?.flatMap(
+      (child): Array<Record<string, unknown>> => {
+        if (child.type === "paragraph") {
+          return toTextLeaves(child.content);
+        }
+        return toBlockFromNode(child);
+      },
+    ) ?? [{ text: "" }];
+
+    return [
+      {
+        type: "li",
+        children: innerContent,
       },
     ];
   }
