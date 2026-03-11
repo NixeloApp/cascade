@@ -115,8 +115,8 @@ function BoardPage() {
           <Flex
             align="center"
             justify="between"
-            gap="xs"
-            className="flex-row flex-wrap gap-4 sm:flex-nowrap"
+            gap="md"
+            className="flex-row flex-wrap sm:flex-nowrap"
           >
             <Flex align="center" gap="sm" wrap className="min-w-0">
               <div>
@@ -170,7 +170,7 @@ function BoardPage() {
       </div>
 
       <div className="px-2 pt-1 sm:hidden">
-        <div className="rounded-xl border border-ui-border/70 bg-ui-bg-elevated/92 px-2 py-1.5 shadow-soft">
+        <div className="rounded-xl border border-ui-border/70 bg-ui-bg-elevated/90 px-2 py-1.5 shadow-soft">
           <Flex align="center" justify="between" gap="xs">
             <Typography variant="small" className="font-medium text-ui-text-secondary">
               {showMobileSprintControls ? "Sprint controls" : "Board actions"}

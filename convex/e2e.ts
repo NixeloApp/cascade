@@ -2907,11 +2907,12 @@ export const seedScreenshotDataInternal = internalMutation({
     }
 
     // 5. Create project (idempotent)
+    // Only look for projects in our org to avoid hijacking projects from other orgs
     const projectKey = "DEMO";
     let project = await ctx.db
       .query("projects")
-      .withIndex("by_key", (q) => q.eq("key", projectKey))
-      .filter(notDeleted)
+      .withIndex("by_organization", (q) => q.eq("organizationId", orgId))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), projectKey)))
       .first();
 
     if (!project) {
