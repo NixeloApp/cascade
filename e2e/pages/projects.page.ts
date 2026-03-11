@@ -199,9 +199,9 @@ export class ProjectsPage extends BasePage {
       .or(this.createIssueModal.locator('button[type="submit"]'));
 
     // Project tabs - scope to the project tab strip to avoid collisions with global nav links.
-    this.projectTabs = page
-      .getByRole("navigation", { name: "Project sections" })
-      .or(page.getByLabel("Project sections"));
+    // There are separate mobile (sm:hidden) and desktop (sm:flex) navs, so use .first() to
+    // get whichever is in DOM order (mobile) - the actual tab link clicks work on either.
+    this.projectTabs = page.getByRole("navigation", { name: "Project sections" }).first();
     this.boardTab = this.projectTabs.getByRole("link", { name: /^Board$/ });
     this.backlogTab = this.projectTabs.getByRole("link", { name: /^Backlog$/ });
     this.calendarTab = this.projectTabs.getByRole("link", { name: /^Calendar$/ });
