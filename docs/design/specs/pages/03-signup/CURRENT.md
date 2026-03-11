@@ -39,6 +39,7 @@
 
 | Problem | Area | Severity |
 |---------|------|----------|
+| Light mode still feels visually awkward because the darker purple / blue rail treatment has not been rebalanced for a light canvas | Shared auth shell / theme parity | HIGH |
 | The email signup and verification states still make the panel taller and busier than sign-in | `SignUpForm` | MEDIUM |
 | Desktop light mode still lets the left marketing rail compete a bit too much with the form | Shared auth shell | MEDIUM |
 | The signup surface is improved, but the panel still has more shell than necessary for a simple auth action | Shared auth shell | LOW |

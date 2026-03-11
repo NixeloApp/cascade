@@ -40,6 +40,7 @@
 
 | Problem | Area | Severity |
 |---------|------|----------|
+| Light mode still feels visually wrong, not just a bit flat: the dark purple / blue marketing treatment clashes with the light canvas | Shared auth shell / theme parity | HIGH |
 | Desktop light mode still gives the left marketing rail slightly too much attention versus the form | Shared auth shell | MEDIUM |
 | The auth panel is calmer than before, but still a little over-shelled for such a simple task | Shared auth shell | MEDIUM |
 | CTA weighting between Google and email could be tighter in the collapsed email state | `SignInForm` | LOW |

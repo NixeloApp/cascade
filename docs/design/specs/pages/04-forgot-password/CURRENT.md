@@ -39,6 +39,7 @@
 
 | Problem | Area | Severity |
 |---------|------|----------|
+| Light mode still feels mismatched to the public palette; the darker marketing rail treatment is awkward for a utility-first page on a light canvas | Shared auth shell / theme parity | HIGH |
 | The reset-code step is still visually sparse once the user reaches the second state | `ResetPasswordForm` | MEDIUM |
 | Desktop light mode still over-emphasizes the marketing rail for a utility flow | Shared auth shell | MEDIUM |
 | This page does not need much shell, so the panel can still be simplified further | Shared auth shell | LOW |

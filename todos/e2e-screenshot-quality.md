@@ -2,7 +2,7 @@
 
 > **Priority:** P0
 > **Status:** Active canonical doc for screenshot determinism, screenshot-driven UI review, and screenshot-specific E2E quality work
-> **Last Updated:** 2026-03-09
+> **Last Updated:** 2026-03-10
 > **Supersedes:** previous screenshot review loop docs and separate visual-polish todo files
 
 ## Objective
@@ -22,12 +22,15 @@ This is the single control doc for both.
 
 ```bash
 pnpm screenshots
+pnpm screenshots -- --spec 01-landing --config desktop-dark,desktop-light
+pnpm screenshots -- --spec 02-signin,03-signup,04-forgot-password --config desktop-dark,desktop-light,mobile-light
 pnpm exec playwright test --reporter=line
 ```
 
 ### Interpretation
 
 - `pnpm screenshots` is the visual baseline generator.
+- Use targeted `pnpm screenshots -- --spec ... --config ...` runs while iterating on a single page family, then rerun the full matrix once the shared fix is credible.
 - `pnpm exec playwright test --reporter=line` is the reliability gate for the broader E2E path.
 - If screenshot capture is invalid, fix the harness first before doing design critique.
 
@@ -304,6 +307,15 @@ Examples:
 
 ### P1 - Highest-Leverage Remaining Visual Fixes
 
+- [ ] Fix public-page theme parity, especially landing/auth light mode.
+  - Problem: the public palette is coherent enough in dark mode but awkward in light mode, where dark purple / dark blue surfaces and gradients read muddy and out of place instead of intentional.
+  - Evidence: `docs/design/specs/pages/01-landing/screenshots/desktop-light.png`
+  - Evidence: `docs/design/specs/pages/02-signin/screenshots/desktop-light.png`
+  - Evidence: `docs/design/specs/pages/03-signup/screenshots/desktop-light.png`
+  - Evidence: `docs/design/specs/pages/04-forgot-password/screenshots/desktop-light.png`
+  - Main fix points: landing/auth color tokens, `src/components/Auth/AuthPageLayout.tsx`, public-page background and accent primitives
+  - Done means: dark and light both feel designed on purpose, not like dark-mode art pasted onto a light canvas
+
 - [x] Simplify the auth shell so it stops reading like a nested marketing card pile.
   - Fixed in: `src/components/Auth/AuthPageLayout.tsx`
   - Evidence now: `docs/design/specs/pages/02-signin/screenshots/desktop-light.png`
@@ -316,11 +328,11 @@ Examples:
   - Evidence: `docs/design/specs/pages/11-calendar/screenshots/mobile-light.png`
   - Main fix point: `src/routes/_auth/_app/$orgSlug/projects/$key/route.tsx`
 
-- [ ] Continue reducing card layering and restore more light-theme depth/contrast.
+- [ ] Continue reducing card layering and restore theme parity for internal app surfaces, especially light-mode depth/contrast.
   - Evidence: `docs/design/specs/pages/05-projects/screenshots/desktop-light.png`
   - Evidence: `docs/design/specs/pages/10-editor/screenshots/desktop-light.png`
   - Evidence: `docs/design/specs/pages/12-settings/screenshots/desktop-light.png`
-  - Main fix points: `src/components/ui/Card.tsx`, page-level shells, profile/editor surfaces
+  - Main fix points: `src/components/ui/Card.tsx`, page-level shells, profile/editor surfaces, shared light/dark surface tokens
 
 - [x] Make the filled projects state credible again.
   - Fixed in: `convex/e2e.ts`, `src/components/ProjectsList.tsx`
@@ -384,6 +396,7 @@ A good round usually targets one to three themes:
 
 - screenshot determinism
 - auth/landing cohesion
+- theme parity across light and dark
 - shell density
 - modal consistency
 - light-theme contrast and depth
@@ -472,6 +485,7 @@ Each screenshot-driven round should leave a short entry in the active log or com
 - Main shared fixes that landed:
   - `convex/e2e.ts`: reattached stale demo seeds to the active org/workspace/project
   - `e2e/screenshot-pages.ts`: fixed issue/editor route discovery, modal readiness, and document-list capture readiness
+  - `e2e/screenshot-pages.ts`: added targeted `--spec`, `--config`, and `--match` capture support so single page families can be iterated without rerunning the full matrix
   - `e2e/pages/projects.page.ts`: stabilized create-issue modal entry for screenshots
   - `src/components/Auth/AuthPageLayout.tsx`: simplified the auth shell
   - `src/components/ui/Card.tsx`: improved shared light-theme surface depth
@@ -487,6 +501,7 @@ Each screenshot-driven round should leave a short entry in the active log or com
   - `10-editor`
   - `12-settings`
 - Remaining below-bar areas:
+  - landing/auth light-mode palette and background treatment versus dark mode
   - mobile project chrome on board/backlog/calendar
   - desktop light-mode depth on projects/editor/settings
   - settings shell density on smaller viewports
