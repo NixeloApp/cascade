@@ -11,6 +11,7 @@
 
 import { Search } from "lucide-react";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { Dialog } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
 import { Input } from "./ui/Input";
@@ -176,7 +177,12 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
 
 function KeyBadge({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="inline-flex h-6 min-w-6 items-center justify-center rounded-lg border border-ui-border-secondary/70 bg-ui-bg-elevated px-2 font-mono text-xs font-medium text-ui-text-secondary shadow-soft">
+    <kbd
+      className={cn(
+        surfaceRecipeVariants({ recipe: "keyBadge" }),
+        "inline-flex h-6 min-w-6 items-center justify-center px-2 font-mono text-xs font-medium text-ui-text-secondary",
+      )}
+    >
       {children}
     </kbd>
   );
@@ -270,7 +276,7 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
           <Typography
             as="kbd"
             variant="mono"
-            className="rounded border border-ui-border bg-ui-bg text-xs"
+            className={cn(surfaceRecipeVariants({ recipe: "keyBadge" }), "text-xs")}
           >
             {isMacPlatform() ? "⌘" : "Ctrl"}+K
           </Typography>{" "}

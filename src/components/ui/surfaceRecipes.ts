@@ -21,6 +21,9 @@ export const surfaceRecipeVariants = cva("border transition-default", {
         "rounded-full border-ui-border-secondary/70 bg-ui-bg-elevated/94 shadow-soft backdrop-blur-sm",
       commandSection:
         "rounded-2xl border-ui-border-secondary/60 bg-linear-to-b from-ui-bg-soft/70 to-ui-bg-elevated/94 shadow-soft",
+      commandIntro:
+        "rounded-2xl border-ui-border/70 bg-linear-to-br from-brand-subtle/70 via-ui-bg-soft to-ui-bg-secondary/85 shadow-soft",
+      keyBadge: "rounded-lg border-ui-border-secondary/70 bg-ui-bg-elevated shadow-soft",
     },
   },
 });

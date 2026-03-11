@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import type { CommandAction } from "./CommandPalette";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import {
   CommandDialog,
   CommandGroup,
@@ -146,7 +147,10 @@ function CommandActionItem({ command, onClose }: { command: CommandAction; onClo
         <Flex
           align="center"
           justify="center"
-          className="h-9 w-9 shrink-0 rounded-xl border border-ui-border/60 bg-ui-bg-soft text-ui-text-tertiary shadow-soft"
+          className={cn(
+            surfaceRecipeVariants({ recipe: "controlStrip" }),
+            "h-9 w-9 shrink-0 text-ui-text-tertiary",
+          )}
         >
           {command.icon ? <Icon icon={command.icon} size="md" /> : <Command className="h-4 w-4" />}
         </Flex>
@@ -193,7 +197,7 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
         <Flex
           align="center"
           justify="center"
-          className="h-9 w-9 shrink-0 rounded-xl border border-ui-border/60 bg-ui-bg-soft shadow-soft"
+          className={cn(surfaceRecipeVariants({ recipe: "controlStrip" }), "h-9 w-9 shrink-0")}
         >
           {result.type === "issue" ? (
             <svg
@@ -274,7 +278,11 @@ function SearchListContent({
     return (
       <>
         <div className="px-2 pb-3">
-          <div className="rounded-2xl border border-ui-border/70 bg-linear-to-br from-brand-subtle/70 via-ui-bg-soft to-ui-bg-secondary/85 p-4 shadow-soft">
+          <Card
+            variant="ghost"
+            padding="md"
+            className={surfaceRecipeVariants({ recipe: "commandIntro" })}
+          >
             <Flex direction="column" gap="md">
               <div>
                 <Badge variant="brand" shape="pill">
@@ -300,7 +308,7 @@ function SearchListContent({
                 </Badge>
               </Flex>
             </Flex>
-          </div>
+          </Card>
         </div>
 
         {commandGroupEntries.map(([group, commands]) => (
@@ -382,7 +390,7 @@ function SearchListContent({
           data-testid={TEST_IDS.GLOBAL_SEARCH.NO_RESULTS}
           className="px-4 py-10 text-ui-text-secondary"
         >
-          <div className="mb-4 rounded-full border border-ui-border/50 bg-ui-bg-soft p-3 shadow-soft">
+          <div className={cn(surfaceRecipeVariants({ recipe: "controlStrip" }), "mb-4 p-3")}>
             <Icon icon={Search} size="xl" />
           </div>
           <Typography variant="label">
