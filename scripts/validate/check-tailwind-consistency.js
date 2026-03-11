@@ -150,15 +150,6 @@ const SKIP_FILES_ANIMATION = new Set([
   "index.css",
 ]);
 
-function hasMarkerClassInContext(text, marker) {
-  const markerPattern = marker === "group" ? GROUP_CLASS_PATTERN : PEER_CLASS_PATTERN;
-  const classNamePattern = new RegExp(
-    `className\\s*=\\s*(?:\\{[\\s\\S]*?${markerPattern.source}[\\s\\S]*?\\}|["'][^"']*${markerPattern.source}[^"']*["'])`,
-  );
-
-  return classNamePattern.test(text);
-}
-
 export function run() {
   const SRC_DIR = path.join(ROOT, "src");
   const errors = [];
