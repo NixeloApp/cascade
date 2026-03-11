@@ -155,8 +155,8 @@ describe("FilterBar", () => {
         />,
       );
 
-      // Open type dropdown (button has responsive text pattern: "Type Type")
-      await user.click(screen.getByRole("button", { name: /^type\s*type$/i }));
+      // Open type dropdown
+      await user.click(screen.getByRole("button", { name: /^type$/i }));
 
       // Select bug type
       const bugOption = await screen.findByRole("menuitemcheckbox", { name: /bug/i });

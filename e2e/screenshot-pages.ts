@@ -1638,12 +1638,12 @@ async function run(): Promise<void> {
         completed = true;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        captureFailures++;
         const shouldRetry = attempt < 2 && isCrashLikeError(message);
         console.log(
           `    ⚠️ ${config.viewport}-${config.theme} failed on attempt ${attempt}: ${message}${shouldRetry ? " (retrying)" : ""}`,
         );
         if (!shouldRetry) {
+          captureFailures++;
           break;
         }
       } finally {
