@@ -159,18 +159,9 @@ export const LAYOUT_PROP_GAP_MAP = {
   8: "2xl",
 };
 
-// Helper: matches className value content (quoted string or braced expression)
-// Uses [^"']* for quoted strings and [^}]* for braced expressions to stay within className
-const CLS_VAL = `(?:"[^"]*"|'[^']*'|\\{[^}]*\\})`;
-
+// Layout prop patterns constrained to className values only (quoted strings or braced expressions)
+// Uses (?:"[^"]*|'[^']*|\{[^}]*) to stay within className value, not scan into other props
 export const LAYOUT_PROP_PATTERNS = [
-  {
-    pattern: new RegExp(
-      `<Flex\\b(?![^>]*\\bgap=)[^>]*\\bclassName\\s*=\\s*${CLS_VAL.replace(/\*\]/, "*](?<![a-z]:)\\bgap-(\\d+)(?!\\.)")}`,
-    ),
-    component: "Flex",
-    prop: "gap",
-  },
   {
     pattern:
       /<Flex\b(?![^>]*\bgap=)[^>]*\bclassName\s*=\s*(?:"[^"]*|'[^']*|\{[^}]*)(?<![a-z]:)\bgap-(\d+)(?!\.)\b/,
