@@ -116,6 +116,7 @@ export const DESIGN_SYSTEM_ESCAPE_HATCHES = [
  * Pattern to detect legacy surfaceRecipes imports.
  * Matches both single-line and multiline imports where surfaceRecipes
  * may appear on its own line within destructured imports.
+ * Uses word boundary to avoid matching comments or string literals.
  * Example multiline:
  *   import {
  *     surfaceRecipes,

@@ -11,6 +11,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import {
+  collectClassNameSpan,
+  findOpeningTag,
   isAllowedByPolicy,
   RAW_TAILWIND_ALLOWED_DIRS,
   RAW_TAILWIND_ALLOWED_EXTENSIONS,
@@ -18,6 +20,28 @@ import {
   RAW_TAILWIND_PATTERNS,
 } from "./tailwind-policy.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
+
+/**
+ * Escape hatches for raw Tailwind check.
+ * If a tag uses recipe/chrome/variant props or variant function calls,
+ * it's using the design system and raw utilities are acceptable.
+ */
+const RAW_TW_ESCAPE_HATCHES = [
+  // Direct props on components
+  'recipe="',
+  "recipe='",
+  'chrome="',
+  "chrome='",
+  'variant="',
+  "variant='",
+  // Programmatic variant calls
+  "cardVariants(",
+  "cardRecipeVariants(",
+  "buttonVariants(",
+  "buttonChromeVariants(",
+  "tabsTriggerVariants(",
+  "tabsListVariants(",
+];
 
 export function run() {
   const srcDir = path.join(ROOT, "src/components");
@@ -42,8 +66,20 @@ export function run() {
       const line = lines[index];
       if (!line.includes("className")) continue;
 
+      // Collect full className span for multiline attributes
+      const { span, endIndex } = collectClassNameSpan(lines, index);
+
+      // Get the opening tag to check for escape hatches
+      const tagText = findOpeningTag(lines, index);
+
+      // Skip if using design system APIs (recipe, chrome, variant props or variant calls)
+      if (RAW_TW_ESCAPE_HATCHES.some((token) => span.includes(token) || tagText.includes(token))) {
+        index = endIndex;
+        continue;
+      }
+
       for (const { pattern, replacement } of RAW_TAILWIND_PATTERNS) {
-        if (!pattern.test(line)) continue;
+        if (!pattern.test(span)) continue;
 
         violations.push({
           file: rel,
@@ -52,6 +88,9 @@ export function run() {
         });
         break;
       }
+
+      // Skip past multiline spans to avoid double-counting
+      index = endIndex;
     }
   }
 
