@@ -3007,13 +3007,21 @@ export const seedScreenshotDataInternal = internalMutation({
         .withIndex("by_project", (q) => q.eq("projectId", projectId))
         .filter(notDeleted)
         .take(BOUNDED_LIST_LIMIT);
+
+      // Exit if we've processed all memberships (no more to fetch)
+      if (activeProjectMemberships.length === 0) {
+        break;
+      }
+
       let deletedThisPass = 0;
+      let newRecordsThisPass = 0;
 
       for (const membership of activeProjectMemberships) {
         if (keptProjectMembershipIds.has(membership._id)) {
           continue;
         }
 
+        newRecordsThisPass += 1;
         const intendedRole = intendedProjectMembers.get(membership.userId);
 
         if (!intendedRole) {
@@ -3040,7 +3048,9 @@ export const seedScreenshotDataInternal = internalMutation({
         });
       }
 
-      if (deletedThisPass === 0) {
+      // Exit only if no deletions AND no new records were processed
+      // (meaning we've seen all remaining records before)
+      if (deletedThisPass === 0 && newRecordsThisPass === 0) {
         break;
       }
     }
@@ -3389,14 +3399,14 @@ export const seedScreenshotDataInternal = internalMutation({
       createdIssueKeys.push(def.key);
     }
 
-    // 8. Create documents (idempotent by title + org)
+    // 8. Create documents (idempotent by title + project)
+    // Only look for documents in our screenshot project to avoid overwriting real docs
     const docTitles = ["Project Requirements", "Sprint Retrospective Notes"] as const;
     for (const title of docTitles) {
       let existingDoc = await ctx.db
         .query("documents")
-        .withIndex("by_organization", (q) => q.eq("organizationId", orgId))
-        .filter((q) => q.eq(q.field("title"), title))
-        .filter(notDeleted)
+        .withIndex("by_project", (q) => q.eq("projectId", projectId))
+        .filter((q) => q.and(notDeleted(q), q.eq(q.field("title"), title)))
         .first();
 
       if (!existingDoc) {

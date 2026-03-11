@@ -134,12 +134,7 @@ function BoardPage() {
                 {project.boardType}
               </Badge>
             </Flex>
-            <Flex
-              align="center"
-              gap="xs"
-              wrap
-              className="w-full justify-end sm:ml-auto sm:w-auto sm:gap-sm"
-            >
+            <Flex align="center" gap="sm" wrap className="w-full justify-end sm:ml-auto sm:w-auto">
               {/* Sprint Progress & Workload */}
               {project.boardType === "scrum" && effectiveSprintId && (
                 <>

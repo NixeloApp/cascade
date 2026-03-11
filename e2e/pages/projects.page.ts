@@ -175,11 +175,11 @@ export class ProjectsPage extends BasePage {
       .or(page.getByRole("heading", { name: /kanban board|scrum board/i }));
     this.boardColumns = page.getByTestId(TEST_IDS.BOARD.COLUMN);
     this.issueCards = page.getByTestId(TEST_IDS.ISSUE.CARD);
-    // Create issue - prefer the stable first-column trigger used by the tour and
-    // fall back to any "Add issue" button if the attribute is absent.
+    // Create issue - prefer the stable first-column trigger used by the tour,
+    // fall back to "Add issue" or empty-state "Add first issue" button.
     this.createIssueButton = page
       .locator("[data-tour='create-issue']")
-      .or(page.getByRole("button", { name: /add issue/i }))
+      .or(page.getByRole("button", { name: /add (first )?issue/i }))
       .first();
 
     // Create issue modal

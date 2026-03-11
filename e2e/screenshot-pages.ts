@@ -403,14 +403,24 @@ function promoteStagedScreenshots(): void {
     targetDirToFiles.get(targetDir)?.add(path.basename(finalPath));
   }
 
-  // Delete stale screenshots (files in target dirs that won't be overwritten)
-  for (const [targetDir, expectedFiles] of targetDirToFiles) {
-    if (!fs.existsSync(targetDir)) continue;
-    for (const existingFile of fs.readdirSync(targetDir)) {
-      if (existingFile.endsWith(".png") && !expectedFiles.has(existingFile)) {
-        const stalePath = path.join(targetDir, existingFile);
-        fs.rmSync(stalePath, { force: true });
-        console.log(`  🗑️  Removed stale: ${path.relative(process.cwd(), stalePath)}`);
+  // Delete stale screenshots only during exhaustive runs (no filters applied)
+  // to avoid accidentally removing valid baselines for untargeted configs/pages
+  const isExhaustiveRun =
+    !cliOptions.configFilters &&
+    cliOptions.specFilters.length === 0 &&
+    cliOptions.matchFilters.length === 0;
+
+  if (isExhaustiveRun) {
+    for (const [targetDir, expectedFiles] of targetDirToFiles) {
+      if (!fs.existsSync(targetDir)) continue;
+      for (const existingFile of fs.readdirSync(targetDir)) {
+        // Preserve reference-*.png baselines used by design review
+        if (existingFile.startsWith("reference-")) continue;
+        if (existingFile.endsWith(".png") && !expectedFiles.has(existingFile)) {
+          const stalePath = path.join(targetDir, existingFile);
+          fs.rmSync(stalePath, { force: true });
+          console.log(`  🗑️  Removed stale: ${path.relative(process.cwd(), stalePath)}`);
+        }
       }
     }
   }
@@ -1483,6 +1493,12 @@ async function screenshotBoardModals(
       await issueCard.click({ force: true });
       const issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
       await issueDetailDialog.waitFor({ state: "visible", timeout: 5000 });
+      // Wait for issue content to hydrate - issue key pattern indicates content is loaded
+      await issueDetailDialog
+        .getByText(/[A-Z][A-Z0-9]+-\d+/)
+        .first()
+        .waitFor({ timeout: 5000 });
+      await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, issueDetailModalName);
       await dismissIfOpen(page, issueDetailDialog);
     });
