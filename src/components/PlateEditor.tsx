@@ -14,7 +14,7 @@ import type { Id } from "@convex/_generated/dataModel";
 
 import type { Value } from "platejs";
 import { Plate, PlateContent, usePlateEditor } from "platejs/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -26,7 +26,12 @@ import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Lock } from "@/lib/icons";
-import { getEditorPlugins, getInitialValue, isEmptyValue } from "@/lib/plate/editor";
+import {
+  getEditorPlugins,
+  getInitialValue,
+  isEmptyValue,
+  proseMirrorSnapshotToValue,
+} from "@/lib/plate/editor";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -39,6 +44,119 @@ import { VersionHistory } from "./VersionHistory";
 
 interface PlateEditorProps {
   documentId: Id<"documents">;
+}
+
+interface EditorCanvasProps {
+  initialEditorValue: Value;
+  isEmptyEditor: boolean;
+  isLocked: boolean;
+  onChange: (value: Value) => void;
+}
+
+function EditorCanvas({
+  initialEditorValue,
+  isEmptyEditor,
+  isLocked,
+  onChange,
+}: EditorCanvasProps) {
+  const editor = usePlateEditor({
+    plugins: getEditorPlugins(),
+    value: initialEditorValue,
+  });
+
+  return (
+    <Plate editor={editor} onChange={({ value }) => onChange(value)} readOnly={isLocked}>
+      {!isLocked && <SlashMenu />}
+      {!isLocked && <FloatingToolbar />}
+      {isEmptyEditor && (
+        <Card
+          padding="lg"
+          variant="soft"
+          className="mb-4 border-ui-border-secondary/85 bg-linear-to-br from-ui-bg via-ui-bg-elevated/96 to-ui-bg-secondary/78"
+        >
+          <Grid cols={1} colsLg={5} gap="md">
+            <Stack gap="sm" className="lg:col-span-3">
+              <Stack gap="xs">
+                <Typography variant="label">Blank document</Typography>
+                <Typography variant="small" color="secondary">
+                  Start with a short overview, key decisions, and next steps. Use `/` for blocks,
+                  headings, and lists once you begin writing.
+                </Typography>
+              </Stack>
+
+              <Flex wrap gap="sm">
+                <Badge variant="secondary" shape="pill">
+                  Overview
+                </Badge>
+                <Badge variant="secondary" shape="pill">
+                  Decisions
+                </Badge>
+                <Badge variant="secondary" shape="pill">
+                  Risks
+                </Badge>
+                <Badge variant="secondary" shape="pill">
+                  Next steps
+                </Badge>
+              </Flex>
+
+              <Grid cols={1} colsSm={2} gap="md">
+                <Stack gap="xs">
+                  <Typography variant="caption" className="uppercase tracking-widest">
+                    Suggested outline
+                  </Typography>
+                  <Typography variant="small" color="secondary">
+                    Summary, decisions, follow-ups, owners, and review date.
+                  </Typography>
+                </Stack>
+                <Stack gap="xs">
+                  <Typography variant="caption" className="uppercase tracking-widest">
+                    Quick actions
+                  </Typography>
+                  <Typography variant="small" color="secondary">
+                    Turn decisions into checklists, link risks to issues, and assign owners while
+                    the discussion is still fresh.
+                  </Typography>
+                </Stack>
+              </Grid>
+            </Stack>
+
+            <Card variant="outline" padding="md" className="h-full bg-ui-bg/88 lg:col-span-2">
+              <Stack gap="sm">
+                <Stack gap="xs">
+                  <Typography variant="caption" className="uppercase tracking-widest">
+                    Starter flow
+                  </Typography>
+                  <Typography variant="small" color="secondary">
+                    Capture the summary first, then turn action items into tasks or linked issues.
+                  </Typography>
+                </Stack>
+                <Stack gap="xs">
+                  <Typography variant="caption" className="uppercase tracking-widest">
+                    Suggested first section
+                  </Typography>
+                  <Typography variant="small" color="secondary">
+                    Add a short context paragraph, then break out the decisions, open risks, and
+                    next steps before expanding into full notes.
+                  </Typography>
+                </Stack>
+              </Stack>
+            </Card>
+          </Grid>
+        </Card>
+      )}
+      <PlateContent
+        className={cn(
+          "prose prose-sm max-w-none text-ui-text leading-relaxed focus-visible:outline-none",
+          isEmptyEditor
+            ? "min-h-56 rounded-2xl border border-dashed border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-soft/58 via-ui-bg-soft/38 to-ui-bg px-5 py-5"
+            : "min-h-80",
+        )}
+        data-testid={TEST_IDS.EDITOR.PLATE}
+        placeholder="Start with a summary or press / for blocks"
+        readOnly={isLocked}
+      />
+    </Plate>
+  );
 }
 
 /**
@@ -59,18 +177,37 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
   const lockStatus = useAuthenticatedQuery(api.documents.getLockStatus, { documentId });
   const userId = useAuthenticatedQuery(api.presence.getUserId, {});
   const versionCount = useAuthenticatedQuery(api.documentVersions.getVersionCount, { documentId });
+  const versions = useAuthenticatedQuery(api.documentVersions.listVersions, { documentId });
 
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [editorValue, setEditorValue] = useState<Value>(getInitialValue());
+  const initialEditorValue = versions?.[0]
+    ? proseMirrorSnapshotToValue(versions[0].snapshot)
+    : getInitialValue();
   const isEmptyEditor = isEmptyValue(editorValue);
 
-  // Create editor with plugins
-  const editor = usePlateEditor({
-    plugins: getEditorPlugins(),
-    value: getInitialValue(),
-  });
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (window.matchMedia("(min-width: 1280px)").matches) {
+      setShowSidebar(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (versions === undefined) {
+      return;
+    }
+
+    const latestVersion = versions[0];
+    setEditorValue(
+      latestVersion ? proseMirrorSnapshotToValue(latestVersion.snapshot) : getInitialValue(),
+    );
+  }, [versions]);
 
   // Handle title edit
   const handleTitleEdit = async (title: string) => {
@@ -134,7 +271,7 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
   };
 
   // Handle content change (debounced save would go here)
-  const handleChange = ({ value }: { value: Value }) => {
+  const handleChange = (value: Value) => {
     // Track editor value for sidebar TOC
     setEditorValue(value);
     // TODO: Implement Y.js sync or direct Convex save
@@ -165,7 +302,7 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
   };
 
   // Loading state - while data is loading
-  if (document === undefined || userId === undefined) {
+  if (document === undefined || userId === undefined || versions === undefined) {
     return (
       <Flex direction="column" className="h-full bg-ui-bg">
         <Card padding="lg" radius="none" className="border-x-0 border-t-0">
@@ -272,7 +409,7 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
       <Flex className="flex-1 overflow-hidden">
         {/* Editor - Clean Mintlify-inspired layout */}
         <FlexItem flex="1" className="overflow-auto bg-ui-bg scrollbar-subtle">
-          <Card padding="md" variant="ghost" className="mx-auto w-full max-w-4xl">
+          <Card padding="md" variant="ghost" className="mx-auto w-full max-w-5xl">
             <ErrorBoundary
               fallback={
                 <Card
@@ -288,97 +425,13 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
                 </Card>
               }
             >
-              <Plate editor={editor} onChange={handleChange} readOnly={lockStatus?.isLocked}>
-                {!lockStatus?.isLocked && <SlashMenu />}
-                {!lockStatus?.isLocked && <FloatingToolbar />}
-                {isEmptyEditor && (
-                  <Card padding="lg" variant="soft" className="mb-4 border-ui-border-secondary/85">
-                    <Grid cols={1} colsLg={3} gap="md">
-                      <Card variant="outline" padding="md" className="h-full lg:col-span-2">
-                        <Stack gap="sm">
-                          <Stack gap="xs">
-                            <Typography variant="label">Blank document</Typography>
-                            <Typography variant="small" color="secondary">
-                              Start with a short overview, key decisions, and next steps. Use `/`
-                              for blocks, headings, and lists once you begin writing.
-                            </Typography>
-                          </Stack>
-
-                          <Flex wrap gap="sm">
-                            <Badge variant="secondary" shape="pill">
-                              Overview
-                            </Badge>
-                            <Badge variant="secondary" shape="pill">
-                              Decisions
-                            </Badge>
-                            <Badge variant="secondary" shape="pill">
-                              Risks
-                            </Badge>
-                            <Badge variant="secondary" shape="pill">
-                              Next steps
-                            </Badge>
-                          </Flex>
-
-                          <Grid cols={1} colsSm={2} gap="md">
-                            <Stack gap="xs">
-                              <Typography variant="caption" className="uppercase tracking-widest">
-                                Suggested outline
-                              </Typography>
-                              <Typography variant="small" color="secondary">
-                                Summary, decisions, follow-ups, owners, and review date.
-                              </Typography>
-                            </Stack>
-                            <Stack gap="xs">
-                              <Typography variant="caption" className="uppercase tracking-widest">
-                                Quick actions
-                              </Typography>
-                              <Typography variant="small" color="secondary">
-                                Turn decisions into checklists, link risks to issues, and assign
-                                owners while the discussion is still fresh.
-                              </Typography>
-                            </Stack>
-                          </Grid>
-                        </Stack>
-                      </Card>
-
-                      <Card variant="outline" padding="md" className="h-full">
-                        <Stack gap="xs">
-                          <Typography variant="caption" className="uppercase tracking-widest">
-                            Starter flow
-                          </Typography>
-                          <Typography variant="small" color="secondary">
-                            Capture the summary first, then turn action items into tasks or linked
-                            issues.
-                          </Typography>
-                        </Stack>
-                      </Card>
-
-                      <Card variant="outline" padding="md" className="h-full lg:col-span-3">
-                        <Stack gap="xs">
-                          <Typography variant="caption" className="uppercase tracking-widest">
-                            Suggested first section
-                          </Typography>
-                          <Typography variant="small" color="secondary">
-                            Add a short context paragraph, then break out the decisions, open risks,
-                            and next steps before expanding into full notes.
-                          </Typography>
-                        </Stack>
-                      </Card>
-                    </Grid>
-                  </Card>
-                )}
-                <PlateContent
-                  className={cn(
-                    "prose prose-sm max-w-none text-ui-text leading-relaxed focus-visible:outline-none",
-                    isEmptyEditor
-                      ? "min-h-64 rounded-2xl border border-dashed border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-soft/55 via-ui-bg-soft/35 to-ui-bg px-5 py-5"
-                      : "min-h-80",
-                  )}
-                  data-testid={TEST_IDS.EDITOR.PLATE}
-                  placeholder="Start with a summary or press / for blocks"
-                  readOnly={lockStatus?.isLocked}
-                />
-              </Plate>
+              <EditorCanvas
+                key={`${documentId}:${versions[0]?._id ?? "empty"}`}
+                initialEditorValue={initialEditorValue}
+                isEmptyEditor={isEmptyEditor}
+                isLocked={lockStatus?.isLocked === true}
+                onChange={handleChange}
+              />
             </ErrorBoundary>
           </Card>
         </FlexItem>

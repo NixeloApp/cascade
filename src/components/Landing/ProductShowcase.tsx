@@ -28,8 +28,8 @@ const boardColumns = [
 /** Product preview card used in the landing hero. */
 export function ProductShowcase() {
   return (
-    <div id="product-showcase" className="relative mx-auto mt-5 max-w-6xl sm:mt-6">
-      <div className="pointer-events-none absolute inset-x-16 top-10 h-56 rounded-full bg-landing-accent/10 blur-glow dark:bg-landing-accent/15" />
+    <div id="product-showcase" className="relative mx-auto mt-0 max-w-6xl sm:mt-1">
+      <div className="pointer-events-none absolute inset-x-16 top-8 h-52 rounded-full bg-landing-accent/10 blur-glow dark:bg-landing-accent/15" />
 
       <Card
         variant="outline"

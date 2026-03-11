@@ -17,10 +17,11 @@ import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { type ActionCtx, httpAction, internalMutation, internalQuery } from "./_generated/server";
 import { constantTimeEqual } from "./lib/apiAuth";
+import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { decryptE2EData, encryptE2EData } from "./lib/e2eCrypto";
 import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { logger } from "./lib/logger";
-import { notDeleted } from "./lib/softDeleteHelpers";
+import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { DAY, HOUR, MINUTE, MONTH, SECOND, WEEK } from "./lib/timeUtils";
 import { type CalendarEventColor, otpCodeTypes } from "./validators";
 
@@ -28,6 +29,92 @@ import { type CalendarEventColor, otpCodeTypes } from "./validators";
 const TEST_USER_EXPIRATION_MS = HOUR;
 
 import { api } from "./_generated/api";
+
+const SCREENSHOT_DOCUMENT_SNAPSHOTS: Record<
+  "Project Requirements" | "Sprint Retrospective Notes",
+  { type: "doc"; content: Array<Record<string, unknown>> }
+> = {
+  "Project Requirements": {
+    type: "doc",
+    content: [
+      {
+        type: "heading",
+        attrs: { level: 1 },
+        content: [{ type: "text", text: "Project Requirements" }],
+      },
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "Cascade should unify board planning, client delivery, and documentation in one calmer workspace.",
+          },
+        ],
+      },
+      {
+        type: "heading",
+        attrs: { level: 2 },
+        content: [{ type: "text", text: "Success criteria" }],
+      },
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "Teams can move from specs to execution without losing linked context, approvals, or delivery timing.",
+          },
+        ],
+      },
+    ],
+  },
+  "Sprint Retrospective Notes": {
+    type: "doc",
+    content: [
+      {
+        type: "heading",
+        attrs: { level: 1 },
+        content: [{ type: "text", text: "Sprint Retrospective" }],
+      },
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "The team closed the auth refresh, improved mobile board density, and stabilized screenshot capture across configs.",
+          },
+        ],
+      },
+      {
+        type: "heading",
+        attrs: { level: 2 },
+        content: [{ type: "text", text: "Wins" }],
+      },
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "Landing light mode feels more intentional, settings tabs compress cleanly on mobile, and project screenshots now use trustworthy seeded data.",
+          },
+        ],
+      },
+      {
+        type: "heading",
+        attrs: { level: 2 },
+        content: [{ type: "text", text: "Next steps" }],
+      },
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "Hydrate the editor from saved document versions and keep pushing page-level polish where screenshots still feel thin.",
+          },
+        ],
+      },
+    ],
+  },
+};
 
 /**
  * Check if email is a test email
@@ -2905,6 +2992,221 @@ export const seedScreenshotDataInternal = internalMutation({
       }
     }
 
+    // Normalize screenshot project membership so stale test users don't accumulate
+    // across repeated runs against the shared DEMO project.
+    const intendedProjectMembers = new Map<Id<"users">, "admin" | "editor">([[userId, "admin"]]);
+    for (const memberId of syntheticUserIds) {
+      intendedProjectMembers.set(memberId, "editor");
+    }
+    const keptProjectMembershipIds = new Set<string>();
+    const seenProjectMemberIds = new Set<Id<"users">>();
+    while (true) {
+      const activeProjectMemberships = await ctx.db
+        .query("projectMembers")
+        .withIndex("by_project", (q) => q.eq("projectId", projectId))
+        .filter(notDeleted)
+        .take(BOUNDED_LIST_LIMIT);
+      let deletedThisPass = 0;
+
+      for (const membership of activeProjectMemberships) {
+        if (keptProjectMembershipIds.has(membership._id)) {
+          continue;
+        }
+
+        const intendedRole = intendedProjectMembers.get(membership.userId);
+
+        if (!intendedRole) {
+          await ctx.db.patch(membership._id, softDeleteFields(userId));
+          deletedThisPass += 1;
+          continue;
+        }
+
+        if (seenProjectMemberIds.has(membership.userId)) {
+          await ctx.db.patch(membership._id, softDeleteFields(userId));
+          deletedThisPass += 1;
+          continue;
+        }
+
+        seenProjectMemberIds.add(membership.userId);
+        keptProjectMembershipIds.add(membership._id);
+
+        await ctx.db.patch(membership._id, {
+          role: intendedRole,
+          addedBy: userId,
+          isDeleted: undefined,
+          deletedAt: undefined,
+          deletedBy: undefined,
+        });
+      }
+
+      if (deletedThisPass === 0) {
+        break;
+      }
+    }
+
+    for (const [memberId, intendedRole] of intendedProjectMembers) {
+      if (seenProjectMemberIds.has(memberId)) {
+        continue;
+      }
+
+      await ctx.db.insert("projectMembers", {
+        projectId,
+        userId: memberId,
+        role: intendedRole,
+        addedBy: userId,
+      });
+    }
+
+    // Add a second seeded project so the projects index reflects a real workspace instead
+    // of stretching a single demo project across a list page.
+    const secondaryProjectKey = "OPS";
+    let secondaryProject = await ctx.db
+      .query("projects")
+      .withIndex("by_key", (q) => q.eq("key", secondaryProjectKey))
+      .filter(notDeleted)
+      .first();
+
+    if (!secondaryProject) {
+      const secondaryProjectId = await ctx.db.insert("projects", {
+        name: "Client Operations Hub",
+        key: secondaryProjectKey,
+        description: "Launch checklists, client handoffs, and delivery follow-through.",
+        organizationId: orgId,
+        workspaceId,
+        teamId,
+        ownerId: userId,
+        createdBy: userId,
+        updatedAt: now,
+        boardType: "scrum",
+        workflowStates: [
+          { id: "todo", name: "To Do", category: "todo", order: 0 },
+          { id: "in-progress", name: "In Progress", category: "inprogress", order: 1 },
+          { id: "in-review", name: "In Review", category: "inprogress", order: 2 },
+          { id: "done", name: "Done", category: "done", order: 3 },
+        ],
+      });
+      secondaryProject = await ctx.db.get(secondaryProjectId);
+    } else {
+      await ctx.db.patch(secondaryProject._id, {
+        name: "Client Operations Hub",
+        description: "Launch checklists, client handoffs, and delivery follow-through.",
+        organizationId: orgId,
+        workspaceId,
+        teamId,
+        ownerId: userId,
+        updatedAt: now,
+        boardType: "scrum",
+        workflowStates: [
+          { id: "todo", name: "To Do", category: "todo", order: 0 },
+          { id: "in-progress", name: "In Progress", category: "inprogress", order: 1 },
+          { id: "in-review", name: "In Review", category: "inprogress", order: 2 },
+          { id: "done", name: "Done", category: "done", order: 3 },
+        ],
+      });
+      secondaryProject = await ctx.db.get(secondaryProject._id);
+    }
+
+    if (!secondaryProject) {
+      return { success: false, error: "Failed to create secondary project" };
+    }
+
+    const secondaryProjectId = secondaryProject._id;
+    const secondaryProjectMember = await ctx.db
+      .query("projectMembers")
+      .withIndex("by_project_user", (q) =>
+        q.eq("projectId", secondaryProjectId).eq("userId", userId),
+      )
+      .filter(notDeleted)
+      .first();
+    if (!secondaryProjectMember) {
+      await ctx.db.insert("projectMembers", {
+        projectId: secondaryProjectId,
+        userId,
+        role: "admin",
+        addedBy: userId,
+      });
+    }
+
+    const secondaryIssueDefinitions: Array<{
+      key: string;
+      title: string;
+      priority: "lowest" | "low" | "medium" | "high" | "highest";
+      status: string;
+      type: "task" | "bug" | "story" | "epic";
+    }> = [
+      {
+        key: "OPS-1",
+        title: "Prepare customer launch checklist",
+        priority: "high",
+        status: "in-progress",
+        type: "task",
+      },
+      {
+        key: "OPS-2",
+        title: "Collect approval notes for handoff packet",
+        priority: "medium",
+        status: "todo",
+        type: "story",
+      },
+      {
+        key: "OPS-3",
+        title: "Confirm support rotation for go-live week",
+        priority: "high",
+        status: "in-review",
+        type: "task",
+      },
+    ];
+
+    for (let i = 0; i < secondaryIssueDefinitions.length; i++) {
+      const def = secondaryIssueDefinitions[i];
+      const existing = await ctx.db
+        .query("issues")
+        .withIndex("by_key", (q) => q.eq("key", def.key))
+        .filter(notDeleted)
+        .first();
+
+      if (!existing) {
+        await ctx.db.insert("issues", {
+          projectId: secondaryProjectId,
+          organizationId: orgId,
+          workspaceId,
+          teamId,
+          key: def.key,
+          title: def.title,
+          type: def.type,
+          status: def.status,
+          priority: def.priority,
+          reporterId: userId,
+          assigneeId: userId,
+          updatedAt: now,
+          labels: [],
+          linkedDocuments: [],
+          attachments: [],
+          order: i,
+          version: 1,
+        });
+      } else {
+        await ctx.db.patch(existing._id, {
+          projectId: secondaryProjectId,
+          organizationId: orgId,
+          workspaceId,
+          teamId,
+          title: def.title,
+          type: def.type,
+          status: def.status,
+          priority: def.priority,
+          reporterId: userId,
+          assigneeId: userId,
+          order: i,
+          labels: [],
+          linkedDocuments: [],
+          attachments: [],
+          version: existing.version ?? 1,
+          updatedAt: now,
+        });
+      }
+    }
+
     // 6. Create sprint (idempotent - check by project + name)
     let sprint = await ctx.db
       .query("sprints")
@@ -3069,9 +3371,9 @@ export const seedScreenshotDataInternal = internalMutation({
     }
 
     // 8. Create documents (idempotent by title + org)
-    const docTitles = ["Project Requirements", "Sprint Retrospective Notes"];
+    const docTitles = ["Project Requirements", "Sprint Retrospective Notes"] as const;
     for (const title of docTitles) {
-      const existingDoc = await ctx.db
+      let existingDoc = await ctx.db
         .query("documents")
         .withIndex("by_organization", (q) => q.eq("organizationId", orgId))
         .filter((q) => q.eq(q.field("title"), title))
@@ -3079,7 +3381,7 @@ export const seedScreenshotDataInternal = internalMutation({
         .first();
 
       if (!existingDoc) {
-        await ctx.db.insert("documents", {
+        const insertedId = await ctx.db.insert("documents", {
           title,
           isPublic: false,
           createdBy: userId,
@@ -3087,6 +3389,29 @@ export const seedScreenshotDataInternal = internalMutation({
           organizationId: orgId,
           workspaceId,
           projectId,
+        });
+
+        existingDoc = await ctx.db.get(insertedId);
+      }
+
+      if (!existingDoc) {
+        continue;
+      }
+
+      const latestVersion = await ctx.db
+        .query("documentVersions")
+        .withIndex("by_document", (q) => q.eq("documentId", existingDoc._id))
+        .order("desc")
+        .first();
+
+      const seededSnapshot = SCREENSHOT_DOCUMENT_SNAPSHOTS[title];
+      if (!latestVersion && seededSnapshot) {
+        await ctx.db.insert("documentVersions", {
+          documentId: existingDoc._id,
+          version: 1,
+          snapshot: seededSnapshot,
+          title,
+          createdBy: userId,
         });
       }
     }

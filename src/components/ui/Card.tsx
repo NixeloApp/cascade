@@ -25,7 +25,7 @@ const cardVariants = cva("border transition-default", {
       outline:
         "bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-secondary/70 border-ui-border-secondary/90 shadow-card",
       ghost: "bg-transparent border-transparent",
-      flat: "bg-ui-bg-secondary/80 border-ui-border shadow-none",
+      flat: "bg-linear-to-b from-ui-bg/98 via-ui-bg-secondary/90 to-ui-bg-secondary/78 border-ui-border-secondary/75 shadow-soft",
     },
     padding: {
       none: "",

@@ -38,6 +38,7 @@ import { Stack } from "./ui/Stack";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/Tabs";
 
 const isTestEmail = (email?: string) => email?.endsWith("@inbox.mailtrap.io") ?? false;
+const isScreenshotSeedEmail = (email?: string) => email?.includes("-screenshots@") ?? false;
 const INTEGRATION_SECTIONS = [
   { key: "github", Component: GitHubIntegration },
   { key: "slack", Component: SlackIntegration },
@@ -75,7 +76,8 @@ interface SettingsProps {
 export function Settings({ activeTab: requestedTab, onTabChange }: SettingsProps) {
   const currentUser = useAuthenticatedQuery(api.users.getCurrent, {});
   const isAdmin = useAuthenticatedQuery(api.users.isOrganizationAdmin, {});
-  const showDevTools = isTestEmail(currentUser?.email);
+  const showDevTools =
+    isTestEmail(currentUser?.email) && !isScreenshotSeedEmail(currentUser?.email);
   const visibleTabs = getVisibleSettingsTabs({
     isAdmin: isAdmin === true,
     showDevTools,

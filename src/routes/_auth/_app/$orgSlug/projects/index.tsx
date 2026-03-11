@@ -30,10 +30,10 @@ function ProjectsPage() {
   };
 
   return (
-    <PageLayout maxWidth="lg">
+    <PageLayout maxWidth="lg" className="max-w-5xl">
       <PageHeader
         title="Projects"
-        description="Manage your projects and initiatives"
+        description="Track active project hubs, ownership, and planning surfaces from one place."
         actions={
           <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
             + Create Project

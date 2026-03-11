@@ -123,12 +123,12 @@ export function DocumentHeader({
 
   return (
     <Card
-      variant="flat"
+      variant="default"
       padding="md"
       radius="none"
       className="border-b border-ui-border border-x-0 border-t-0"
     >
-      <div className="mx-auto w-full max-w-4xl">
+      <div className="mx-auto w-full max-w-5xl">
         <Stack gap="sm">
           <Flex
             direction="column"

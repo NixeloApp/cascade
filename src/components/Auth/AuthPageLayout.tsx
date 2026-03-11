@@ -22,15 +22,12 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
       <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-linear-to-b from-ui-bg-elevated/42 to-transparent" />
       <Flex
         align="center"
-        className="mx-auto min-h-[calc(100vh-3rem)] w-full max-w-5xl animate-fade-in"
+        className="mx-auto min-h-[calc(100vh-3rem)] w-full max-w-4xl animate-fade-in"
       >
-        <Grid
-          cols={1}
-          className="w-full items-center gap-8 lg:grid-cols-[minmax(0,0.98fr)_420px] lg:gap-8"
-        >
-          <div className="hidden lg:block lg:pr-2">
-            <div className="rounded-[2rem] border border-ui-border-secondary/65 bg-ui-bg-elevated/70 px-8 py-9 shadow-soft backdrop-blur-sm xl:px-10 xl:py-10">
-              <Badge variant="outline" shape="pill" className="mb-5 w-fit">
+        <Grid cols={1} className="w-full items-center gap-6 lg:grid-cols-2 lg:gap-6">
+          <div className="hidden lg:block">
+            <div className="rounded-[2rem] border border-ui-border-secondary/65 bg-ui-bg-elevated/76 px-7 py-8 shadow-soft backdrop-blur-sm xl:px-8 xl:py-9">
+              <Badge variant="outline" shape="pill" className="mb-4 w-fit">
                 Unified delivery workspace
               </Badge>
 
@@ -41,23 +38,23 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
                 <NixeloLogo size={32} />
               </Link>
 
-              <div className="mt-8 max-w-xl">
+              <div className="mt-6 max-w-lg">
                 <Typography
                   variant="h1"
-                  className="text-5xl leading-tight tracking-tight xl:text-6xl"
+                  className="text-4xl leading-tight tracking-tight xl:text-5xl"
                 >
                   Keep specs, execution, and client delivery in one calmer system.
                 </Typography>
                 <Typography
                   variant="muted"
-                  className="mt-5 max-w-xl text-base leading-7 text-ui-text-secondary"
+                  className="mt-4 max-w-lg text-base leading-7 text-ui-text-secondary"
                 >
                   Docs, issues, calendars, time tracking, and team context stay inside the same
                   operating surface, so teams stop losing momentum across tools.
                 </Typography>
               </div>
 
-              <Grid cols={1} colsSm={3} gap="md" className="mt-7 max-w-3xl">
+              <Grid cols={1} colsSm={3} gap="md" className="mt-6 max-w-3xl">
                 <div className="rounded-2xl border border-ui-border-secondary/65 bg-ui-bg-elevated/96 p-4 shadow-card">
                   <Typography
                     variant="caption"
@@ -95,8 +92,8 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
             </div>
           </div>
 
-          <Flex align="center" justify="center" className="w-full">
-            <div className="w-full max-w-auth">
+          <Flex align="center" justify="center" className="w-full lg:justify-start">
+            <div className="w-full max-w-auth lg:max-w-md">
               <div className="mb-5 lg:hidden">
                 <Link
                   to={ROUTES.home.path}

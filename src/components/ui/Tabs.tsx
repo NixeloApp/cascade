@@ -28,7 +28,7 @@ const tabsListVariants = cva("inline-flex max-w-full text-ui-text-secondary", {
     layout: {
       default: "",
       settings:
-        "mb-3 flex w-full flex-nowrap gap-0.5 overflow-x-auto px-0.5 py-0.5 pb-1.5 scrollbar-subtle sm:mb-4 sm:flex-wrap sm:overflow-visible sm:py-1 sm:pb-0.5 lg:flex-nowrap",
+        "relative mb-3 flex w-full flex-nowrap gap-0.5 overflow-x-auto px-0.5 py-0.5 pb-1.5 scrollbar-subtle after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:w-6 after:bg-linear-to-l after:from-ui-bg-elevated after:to-transparent sm:mb-4 sm:flex-wrap sm:overflow-visible sm:py-1 sm:pb-0.5 sm:after:hidden lg:flex-nowrap",
     },
   },
   defaultVariants: {
@@ -66,7 +66,7 @@ const tabsTriggerVariants = cva(
       },
       size: {
         default: "",
-        compact: "rounded-full px-2.5 py-1 text-xs sm:rounded-lg sm:px-2.5 sm:py-1",
+        compact: "rounded-full px-1.5 py-1 text-xs sm:rounded-lg sm:px-2.5 sm:py-1",
       },
       width: {
         default: "",

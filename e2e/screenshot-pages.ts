@@ -421,7 +421,7 @@ async function takeScreenshot(
     // networkidle often times out on real-time apps -- page is still usable
   }
   await waitForScreenshotReady(page);
-  await waitForExpectedContent(page, url, name);
+  await waitForExpectedContent(page, url, name, prefix);
   await waitForScreenshotReady(page);
   await page.screenshot({ path: screenshotPath });
   totalScreenshots++;
@@ -662,7 +662,7 @@ async function waitForBoardReady(page: Page): Promise<boolean> {
   return false;
 }
 
-async function waitForProjectsReady(page: Page): Promise<void> {
+async function waitForProjectsReady(page: Page, prefix?: string): Promise<void> {
   await page
     .getByRole("heading", { name: /^projects$/i })
     .first()
@@ -680,9 +680,13 @@ async function waitForProjectsReady(page: Page): Promise<void> {
     .catch(() => {});
   await page
     .waitForFunction(
-      () => {
+      (capturePrefix) => {
         const text = document.body.innerText || "";
-        if (text.includes("No projects yet")) {
+        if (capturePrefix === "empty") {
+          return text.includes("No projects yet");
+        }
+
+        if (text.includes("Client Operations Hub")) {
           return true;
         }
 
@@ -691,7 +695,7 @@ async function waitForProjectsReady(page: Page): Promise<void> {
           return /\/projects\/[^/]+\/board$/.test(href);
         });
       },
-      undefined,
+      prefix,
       { timeout: 12000 },
     )
     .catch(() => {});
@@ -738,12 +742,18 @@ async function waitForDocumentsReady(page: Page): Promise<void> {
 
 async function waitForDocumentEditorReady(page: Page): Promise<void> {
   await page
+    .getByRole("heading", { name: /project requirements|sprint retrospective notes/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
     .waitForFunction(
       () => {
         const text = document.body.innerText || "";
         return (
-          text.includes("Project Requirements") ||
-          text.includes("Sprint Retrospective Notes") ||
+          text.includes("The team closed the auth refresh") ||
+          text.includes("Teams can move from specs to execution") ||
+          text.includes("Hydrate the editor from saved document versions") ||
           document.querySelector("[contenteditable='true']") !== null
         );
       },
@@ -758,7 +768,12 @@ async function waitForDocumentEditorReady(page: Page): Promise<void> {
     .catch(() => {});
 }
 
-async function waitForExpectedContent(page: Page, url: string, name: string): Promise<void> {
+async function waitForExpectedContent(
+  page: Page,
+  url: string,
+  name: string,
+  prefix?: string,
+): Promise<void> {
   if (isDashboardUrl(url) || name === "dashboard") {
     await page
       .getByRole("heading", { name: /^dashboard$/i })
@@ -828,7 +843,7 @@ async function waitForExpectedContent(page: Page, url: string, name: string): Pr
   }
 
   if (isProjectsUrl(url) || name === "projects") {
-    await waitForProjectsReady(page);
+    await waitForProjectsReady(page, prefix);
     return;
   }
 
