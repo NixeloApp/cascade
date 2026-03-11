@@ -67,6 +67,7 @@ export function BoardToolbar({
       {showControls && (
         <Flex
           align="center"
+          justify="end"
           gap="xs"
           className="absolute right-0 top-1 shrink-0 justify-end sm:static sm:w-auto sm:justify-start sm:gap-2"
         >

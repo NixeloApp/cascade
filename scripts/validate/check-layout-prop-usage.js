@@ -11,6 +11,7 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   collectClassNameSpan,
+  findOpeningTag,
   groupByFile,
   LAYOUT_PROP_GAP_MAP,
   LAYOUT_PROP_PATTERNS,
@@ -54,11 +55,13 @@ export function run() {
       const line = lines[index];
       if (!line.includes("className")) continue;
 
-      // Collect full className span for multiline attributes
-      const { span } = collectClassNameSpan(lines, index);
+      // Collect multiline className spans and inspect the full opening tag so
+      // validators can catch className={cn(...)} and multiline JSX props.
+      const { endIndex } = collectClassNameSpan(lines, index);
+      const tagText = findOpeningTag(lines, index);
 
       for (const { pattern, component, prop, tokenType } of LAYOUT_PROP_PATTERNS) {
-        const match = span.match(pattern);
+        const match = tagText.match(pattern);
         if (!match) continue;
 
         issues.push({
@@ -66,6 +69,7 @@ export function run() {
           line: index + 1,
           replacement: getReplacement(match, component, prop, tokenType),
         });
+        index = endIndex;
         break;
       }
     }

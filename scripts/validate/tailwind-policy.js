@@ -159,55 +159,60 @@ export const LAYOUT_PROP_GAP_MAP = {
 
 export const LAYOUT_PROP_PATTERNS = [
   {
-    pattern: /<Flex(?![^>]*\bgap=)[^>]*className=["'][^"']*(?<![a-z]:)\bgap-(\d+)(?!\.)\b/,
+    pattern:
+      /<Flex\b(?![^>]*\bgap=)[^>]*\bclassName\s*=\s*(?:\{)?[^>]*?(?<![a-z]:)\bgap-(\d+)(?!\.)\b/,
     component: "Flex",
     prop: "gap",
   },
   {
-    pattern: /<Stack(?![^>]*\bgap=)[^>]*className=["'][^"']*(?<![a-z]:)\bgap-(\d+)(?!\.)\b/,
-    component: "Stack",
-    prop: "gap",
-  },
-  {
-    pattern: /<Flex(?![^>]*\bgap=)[^>]*className=["'][^"']*(?<![a-z]:)\bspace-x-(\d+)(?!\.)\b/,
-    component: "Flex",
-    prop: "gap",
-  },
-  {
-    pattern: /<Stack(?![^>]*\bgap=)[^>]*className=["'][^"']*(?<![a-z]:)\bspace-y-(\d+)(?!\.)\b/,
+    pattern:
+      /<Stack\b(?![^>]*\bgap=)[^>]*\bclassName\s*=\s*(?:\{)?[^>]*?(?<![a-z]:)\bgap-(\d+)(?!\.)\b/,
     component: "Stack",
     prop: "gap",
   },
   {
     pattern:
-      /<Flex(?![^>]*\balign=)[^>]*className=["'][^"']*(?<![a-z]:)\bitems-(start|center|end|stretch|baseline)\b/,
+      /<Flex\b(?![^>]*\bgap=)[^>]*\bclassName\s*=\s*(?:\{)?[^>]*?(?<!-)(?<![a-z]:)\bspace-x-(\d+)(?!\.)\b/,
+    component: "Flex",
+    prop: "gap",
+  },
+  {
+    pattern:
+      /<Stack\b(?![^>]*\bgap=)[^>]*\bclassName\s*=\s*(?:\{)?[^>]*?(?<!-)(?<![a-z]:)\bspace-y-(\d+)(?!\.)\b/,
+    component: "Stack",
+    prop: "gap",
+  },
+  {
+    pattern:
+      /<Flex\b(?![^>]*\balign=)[^>]*\bclassName\s*=\s*(?:\{)?[^>]*?(?<![a-z]:)\bitems-(start|center|end|stretch|baseline)\b/,
     component: "Flex",
     prop: "align",
     tokenType: "align",
   },
   {
     pattern:
-      /<Flex(?![^>]*\bjustify=)[^>]*className=["'][^"']*(?<![a-z]:)\bjustify-(start|center|end|between|around|evenly)\b/,
+      /<Flex\b(?![^>]*\bjustify=)[^>]*\bclassName\s*=\s*(?:\{)?[^>]*?(?<![a-z]:)\bjustify-(start|center|end|between|around|evenly)\b/,
     component: "Flex",
     prop: "justify",
     tokenType: "justify",
   },
   {
-    pattern: /<Flex(?![^>]*\bdirection=)[^>]*className=["'][^"']*(?<![a-z]:)\bflex-(row|col)\b/,
+    pattern:
+      /<Flex\b(?![^>]*\bdirection=)[^>]*\bclassName\s*=\s*(?:\{)?[^>]*?(?<![a-z]:)\bflex-(row|col)\b/,
     component: "Flex",
     prop: "direction",
     tokenType: "direction",
   },
   {
     pattern:
-      /<Stack(?![^>]*\balign=)[^>]*className=["'][^"']*(?<![a-z]:)\bitems-(start|center|end|stretch)\b/,
+      /<Stack\b(?![^>]*\balign=)[^>]*\bclassName\s*=\s*(?:\{)?[^>]*?(?<![a-z]:)\bitems-(start|center|end|stretch)\b/,
     component: "Stack",
     prop: "align",
     tokenType: "align",
   },
   {
     pattern:
-      /<Stack[^>]*className=["'][^"']*(?<![a-z]:)\bjustify-(start|center|end|between|around|evenly)\b/,
+      /<Stack\b[^>]*\bclassName\s*=\s*(?:\{)?[^>]*?(?<![a-z]:)\bjustify-(start|center|end|between|around|evenly)\b/,
     component: "Stack",
     prop: "justify",
     tokenType: "stack-unsupported-justify",

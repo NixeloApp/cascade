@@ -156,13 +156,15 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
         <Flex
           direction="column"
           gap="md"
-          className="sm:flex-row items-stretch sm:items-center justify-between sm:gap-4"
+          align="stretch"
+          justify="between"
+          className="sm:flex-row sm:items-center sm:gap-4"
         >
-          <Flex gap="lg" align="center" className="gap-2 sm:gap-4">
+          <Flex gap="sm" align="center" className="sm:gap-4">
             <Button variant="secondary" size="sm" onClick={handleToday}>
               Today
             </Button>
-            <Flex gap="sm" align="center" className="gap-1 sm:gap-2">
+            <Flex gap="xs" align="center" className="sm:gap-2">
               <Button
                 variant="ghost"
                 size="icon"
@@ -270,7 +272,7 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
                     shrink={false}
                     className="w-40 sm:w-48 md:w-64 p-2 sm:p-3 border-r border-ui-border"
                   >
-                    <Flex gap="sm" align="center" className="gap-1 sm:gap-2">
+                    <Flex gap="xs" align="center" className="sm:gap-2">
                       {item.type === "sprint" ? (
                         <Badge variant="accent" size="md">
                           Sprint
