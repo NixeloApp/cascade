@@ -29,15 +29,15 @@
  *  25. Tailwind consistency    — duration tokens, focus rings, disabled states, z-index, group-hover
  *  26. Recipe drift            — repeated visual patterns that should be Card recipes (info only)
  *  27. JSDoc coverage          — exported functions/components should have JSDoc documentation
- *  27. Import paths            — validates import path conventions
- *  28. Hook patterns           — custom hooks should follow consistent patterns
- *  29. Async patterns          — consistent error handling in async operations
- *  30. Time constants          — enforces use of timeUtils constants instead of magic numbers
- *  31. Unused parameters       — flags underscore-prefixed unused params (remove or use them)
- *  32. Test coverage           — critical files should have corresponding tests
- *  33. Weak assertions         — toBeDefined(), toBeTruthy(), {} as Type in tests
- *  34. Native confirm()        — ensure custom dialogs used instead of native confirm()
- *  35. Convex hooks            — validates Convex hook usage patterns
+ *  28. Import paths            — validates import path conventions
+ *  29. Hook patterns           — custom hooks should follow consistent patterns
+ *  30. Async patterns          — consistent error handling in async operations
+ *  31. Time constants          — enforces use of timeUtils constants instead of magic numbers
+ *  32. Unused parameters       — flags underscore-prefixed unused params (remove or use them)
+ *  33. Test coverage           — critical files should have corresponding tests
+ *  34. Weak assertions         — toBeDefined(), toBeTruthy(), {} as Type in tests
+ *  35. Native confirm()        — ensure custom dialogs used instead of native confirm()
+ *  36. Convex hooks            — validates Convex hook usage patterns
  *
  * Exit code 1 if any check reports blocking issues.
  *

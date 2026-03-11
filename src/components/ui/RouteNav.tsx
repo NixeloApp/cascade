@@ -92,7 +92,7 @@ interface RouteNavItemProps
   asChild?: boolean;
 }
 
-const RouteNavItem = React.forwardRef<HTMLDivElement, RouteNavItemProps>(
+const RouteNavItem = React.forwardRef<HTMLElement, RouteNavItemProps>(
   (
     {
       "aria-current": ariaCurrent,
@@ -121,10 +121,10 @@ const RouteNavItem = React.forwardRef<HTMLDivElement, RouteNavItemProps>(
     };
 
     if (asChild) {
-      return <Slot {...sharedProps} />;
+      return <Slot ref={ref as React.Ref<HTMLElement>} {...sharedProps} />;
     }
 
-    return <div ref={ref} {...sharedProps} />;
+    return <div ref={ref as React.Ref<HTMLDivElement>} {...sharedProps} />;
   },
 );
 RouteNavItem.displayName = "RouteNavItem";

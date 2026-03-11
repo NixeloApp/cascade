@@ -187,8 +187,8 @@ export function FileAttachments({ issueId }: FileAttachmentsProps) {
       >
         <Icon icon={Paperclip} size="xl" className="mx-auto text-ui-text-tertiary" />
         <Typography variant="muted">Drag and drop files here, or click to browse</Typography>
-        <div className="pointer-events-none">
-          <Button variant="secondary" size="sm" type="button">
+        <div className="pointer-events-none" aria-hidden="true">
+          <Button variant="secondary" size="sm" type="button" tabIndex={-1}>
             {uploading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />

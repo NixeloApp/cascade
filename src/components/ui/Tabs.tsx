@@ -2,7 +2,7 @@
  * Tabs Component
  *
  * Tabbed interface with content panels.
- * Supports segmented and underline style variants.
+ * Supports pill (segmented) and underline style variants.
  * Wraps Radix UI Tabs with accessible navigation.
  */
 

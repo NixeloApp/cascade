@@ -20,10 +20,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
   return (
     <div className="bg-auth-gradient relative isolate min-h-screen w-full overflow-hidden bg-ui-bg px-4 py-6 sm:px-6">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-linear-to-b from-ui-bg-elevated/42 to-transparent" />
-      <Flex
-        align="center"
-        className="mx-auto min-h-[calc(100vh-3rem)] w-full max-w-5xl animate-fade-in"
-      >
+      <Flex align="center" className="mx-auto min-h-auth-shell w-full max-w-5xl animate-fade-in">
         <Grid cols={1} className="w-full items-center gap-6 lg:grid-cols-5 lg:gap-10">
           <div className="hidden lg:col-span-3 lg:block">
             <div className="px-3 py-4 xl:px-4 xl:py-5">
