@@ -57,7 +57,28 @@ const EMPTY_STATE_ICON_SHELL_CLASS: Record<EmptyStateSize, string> = {
   compact: "mb-1.5 h-7 w-7",
 };
 
-function EmptyStateBadge({ size, surface }: { size: EmptyStateSize; surface: EmptyStateSurface }) {
+const EMPTY_STATE_BADGE_TEXT: Record<
+  EmptyStateVariant,
+  { default: string; compact: string } | null
+> = {
+  default: { default: "Nothing here yet", compact: "Waiting for updates" },
+  info: { default: "Information", compact: "Info" },
+  warning: { default: "Attention required", compact: "Warning" },
+  error: { default: "Something went wrong", compact: "Error" },
+};
+
+function EmptyStateBadge({
+  size,
+  surface,
+  variant,
+}: {
+  size: EmptyStateSize;
+  surface: EmptyStateSurface;
+  variant: EmptyStateVariant;
+}) {
+  const badgeText = EMPTY_STATE_BADGE_TEXT[variant];
+  if (!badgeText) return null;
+
   return (
     <div
       className={cn(
@@ -69,7 +90,7 @@ function EmptyStateBadge({ size, surface }: { size: EmptyStateSize; surface: Emp
           : "mb-4 px-3 py-1",
       )}
     >
-      {size === "compact" ? "Waiting for updates" : "Nothing here yet"}
+      {size === "compact" ? badgeText.compact : badgeText.default}
     </div>
   );
 }
@@ -150,7 +171,7 @@ export function EmptyState({
       )}
       aria-label={title}
     >
-      <EmptyStateBadge size={size} surface={surface} />
+      <EmptyStateBadge size={size} surface={surface} variant={variant} />
       <EmptyStateIcon icon={icon} iconColorClass={iconColorClass} size={size} />
       <Typography
         variant={size === "compact" ? "large" : "h4"}

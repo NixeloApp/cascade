@@ -21,7 +21,7 @@ const cardVariants = cva("border transition-default", {
         "bg-linear-to-b from-ui-bg via-ui-bg-elevated to-ui-bg-secondary/38 border-ui-border-secondary shadow-elevated",
       soft: "bg-linear-to-b from-ui-bg-soft/96 via-ui-bg-elevated/94 to-ui-bg-secondary/84 border-ui-border-secondary/80 shadow-soft",
       interactive:
-        "bg-linear-to-b from-ui-bg via-ui-bg-elevated to-ui-bg-secondary/38 border-ui-border-secondary/85 shadow-card hover:bg-ui-bg-hover hover:border-ui-border-secondary hover:shadow-card-hover cursor-pointer",
+        "bg-ui-bg-elevated border-ui-border-secondary/85 shadow-card hover:bg-ui-bg-hover hover:border-ui-border-secondary hover:shadow-card-hover cursor-pointer",
       outline:
         "bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-secondary/70 border-ui-border-secondary/90 shadow-card",
       ghost: "bg-transparent border-transparent",
