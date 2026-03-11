@@ -1,5 +1,5 @@
+import { cva } from "class-variance-authority";
 import { Check } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
@@ -40,16 +40,35 @@ const plans: PlanCard[] = [
   },
 ];
 
+const pricingVariants = {
+  section: cva("px-6 py-24 transition-colors"),
+  intro: cva("text-center mb-14"),
+  heading: cva("text-3xl md:text-4xl font-bold mb-4 text-ui-text"),
+  lead: cva("text-ui-text-secondary max-w-2xl mx-auto"),
+  card: cva(
+    "rounded-2xl border p-6 bg-linear-to-b from-ui-bg-soft/80 to-ui-bg-secondary/40 transition-all duration-medium hover:-translate-y-1 hover:shadow-xl",
+    {
+      variants: {
+        featured: {
+          true: "border-brand-ring shadow-brand-ring/20 shadow-lg",
+          false: "border-ui-border/40",
+        },
+      },
+    },
+  ),
+  featureList: cva("space-y-2 mb-6"),
+};
+
 /** Landing pricing section with plan tiers and enterprise-oriented feature matrix. */
 export function PricingSection() {
   return (
-    <section id="pricing" className="px-6 py-24 transition-colors">
+    <section id="pricing" className={pricingVariants.section()}>
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-14">
-          <Typography variant="h2" className="text-3xl md:text-4xl font-bold mb-4 text-ui-text">
+        <div className={pricingVariants.intro()}>
+          <Typography variant="h2" className={pricingVariants.heading()}>
             Pricing that scales with your team
           </Typography>
-          <Typography variant="lead" className="text-ui-text-secondary max-w-2xl mx-auto">
+          <Typography variant="lead" className={pricingVariants.lead()}>
             Start self-hosted for free, then add enterprise controls as your org grows.
           </Typography>
         </div>
@@ -58,13 +77,7 @@ export function PricingSection() {
           {plans.map((plan) => (
             <article
               key={plan.name}
-              className={cn(
-                "rounded-2xl border p-6 bg-linear-to-b from-ui-bg-soft/80 to-ui-bg-secondary/40",
-                "transition-all duration-medium hover:-translate-y-1 hover:shadow-xl",
-                plan.featured
-                  ? "border-brand-ring shadow-brand-ring/20 shadow-lg"
-                  : "border-ui-border/40",
-              )}
+              className={pricingVariants.card({ featured: !!plan.featured })}
             >
               <div className="mb-4">
                 <Typography variant="h3" className="text-xl text-ui-text">
@@ -84,7 +97,7 @@ export function PricingSection() {
                 </Badge>
               ) : null}
 
-              <ul className="space-y-2 mb-6">
+              <ul className={pricingVariants.featureList()}>
                 {plan.features.map((feature) => (
                   <Flex key={feature} as="li" align="center" gap="sm">
                     <Check className="w-4 h-4 text-status-success-text shrink-0" />

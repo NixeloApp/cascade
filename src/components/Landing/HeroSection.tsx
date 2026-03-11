@@ -1,43 +1,57 @@
 import { Link } from "@tanstack/react-router";
+import { cva } from "class-variance-authority";
 import { ROUTES } from "@/config/routes";
 import { ArrowRight } from "@/lib/icons";
-import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Flex } from "../ui/Flex";
 import { Typography } from "../ui/Typography";
 import { ProductShowcase } from "./ProductShowcase";
 
+const heroVariants = {
+  section: cva("relative overflow-hidden px-6 pb-6 pt-20 sm:pb-8 sm:pt-24"),
+  backgroundGrid: cva("absolute inset-0 hero-grid-bg"),
+  topBeam: cva(
+    "absolute left-1/2 top-0 h-px w-full max-w-4xl -translate-x-1/2 bg-linear-to-r from-transparent via-landing-accent/50 to-transparent",
+  ),
+  badgeRow: cva("mb-3 animate-fade-in sm:mb-4"),
+  badge: cva(
+    "bg-ui-bg-soft px-4 py-2 backdrop-blur-sm transition-default hover:border-ui-border-secondary",
+  ),
+  title: cva(
+    "mb-3 text-4xl font-bold leading-tight tracking-tighter text-ui-text animate-slide-up md:text-6xl lg:text-7xl",
+  ),
+  lead: cva(
+    "mx-auto mb-4 max-w-3xl text-lg leading-relaxed text-ui-text-secondary animate-slide-up md:text-xl",
+  ),
+  ctaRow: cva("animate-slide-up sm:flex-row"),
+  ctaButton: cva("rounded-full px-8"),
+  statRow: cva("mt-2 animate-slide-up text-sm text-ui-text-secondary"),
+  glow: cva(
+    "pointer-events-none absolute -bottom-20 left-1/2 h-48 w-96 -translate-x-1/2 rounded-full bg-landing-accent/10 blur-glow",
+  ),
+};
+
 /** Landing page hero section with headline, CTA buttons, and product preview. */
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden px-6 pb-6 pt-20 sm:pb-8 sm:pt-24">
+    <section className={heroVariants.section()}>
       <div className="absolute inset-0 bg-ui-bg-hero">
         <div className="absolute inset-0 hero-radial-bg" />
-        <div className="absolute inset-0 hero-grid-bg" />
-        <div className="absolute left-1/2 top-0 h-px w-full max-w-4xl -translate-x-1/2 bg-linear-to-r from-transparent via-landing-accent/50 to-transparent" />
+        <div className={heroVariants.backgroundGrid()} />
+        <div className={heroVariants.topBeam()} />
       </div>
 
       <div className="relative mx-auto max-w-5xl text-center">
-        <Flex justify="center" className="mb-3 animate-fade-in sm:mb-4">
-          <Badge
-            variant="outline"
-            shape="pill"
-            className={cn(
-              "bg-ui-bg-soft px-4 py-2 backdrop-blur-sm",
-              "transition-default hover:border-ui-border-secondary",
-            )}
-          >
+        <Flex justify="center" className={heroVariants.badgeRow()}>
+          <Badge variant="outline" shape="pill" className={heroVariants.badge()}>
             Docs, delivery, and time tracking in one operating system
           </Badge>
         </Flex>
 
         <Typography
           variant="h1"
-          className={cn(
-            "mb-3 text-4xl font-bold leading-tight tracking-tighter text-ui-text md:text-6xl lg:text-7xl",
-            "animate-slide-up",
-          )}
+          className={heroVariants.title()}
           style={{ animationDelay: "0.1s", animationFillMode: "backwards" }}
         >
           Replace scattered project tools
@@ -49,10 +63,7 @@ export function HeroSection() {
 
         <Typography
           variant="lead"
-          className={cn(
-            "mx-auto mb-4 max-w-3xl text-lg leading-relaxed text-ui-text-secondary md:text-xl",
-            "animate-slide-up",
-          )}
+          className={heroVariants.lead()}
           style={{ animationDelay: "0.2s", animationFillMode: "backwards" }}
         >
           Nixelo keeps specs, tasks, client updates, and AI assistance in the same flow so teams can
@@ -64,13 +75,13 @@ export function HeroSection() {
           gap="md"
           align="center"
           justify="center"
-          className={cn("animate-slide-up sm:flex-row")}
+          className={heroVariants.ctaRow()}
           style={{ animationDelay: "0.3s", animationFillMode: "backwards" }}
         >
-          <Button asChild size="lg" className="rounded-full px-8">
+          <Button asChild size="lg" className={heroVariants.ctaButton()}>
             <Link to={ROUTES.signup.path}>Get Started Free</Link>
           </Button>
-          <Button asChild variant="secondary" size="lg" className="rounded-full px-8">
+          <Button asChild variant="secondary" size="lg" className={heroVariants.ctaButton()}>
             <a href="#product-showcase">
               See workflow tour
               <ArrowRight className="h-4 w-4" />
@@ -82,7 +93,7 @@ export function HeroSection() {
           justify="center"
           gap="lg"
           wrap
-          className="mt-2 animate-slide-up text-sm text-ui-text-secondary"
+          className={heroVariants.statRow()}
           style={{ animationDelay: "0.4s", animationFillMode: "backwards" }}
         >
           <span>Built for product, ops, and client delivery teams</span>
@@ -93,7 +104,7 @@ export function HeroSection() {
         <ProductShowcase />
 
         <div
-          className="pointer-events-none absolute -bottom-20 left-1/2 h-48 w-96 -translate-x-1/2 rounded-full bg-landing-accent/10 blur-glow"
+          className={heroVariants.glow()}
           style={{ animationDelay: "0.5s", animationFillMode: "backwards" }}
         />
       </div>

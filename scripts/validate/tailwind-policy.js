@@ -4,7 +4,6 @@
 
 export const RAW_TAILWIND_ALLOWED_DIRS = [
   "src/components/ui/",
-  "src/components/Landing/",
   "src/components/Kanban/",
   "src/components/Calendar/",
   "src/components/Auth/",
@@ -100,15 +99,17 @@ export const RAW_TAILWIND_PATTERNS = [
 ];
 
 export const DESIGN_SYSTEM_TARGET_FILES = [
+  "/AI/AIChat.tsx",
   "/AppHeader.tsx",
   "/GlobalSearch.tsx",
   "/KeyboardShortcutsHelp.tsx",
   "/AdvancedSearchModal.tsx",
+  "/Documents/DocumentHeader.tsx",
+  "/FuzzySearch/FuzzySearchInput.tsx",
   "/Landing/HeroSection.tsx",
   "/Landing/ProductShowcase.tsx",
   "/NotificationCenter.tsx",
   "/TimerWidget.tsx",
-  "/DocumentHeader.tsx",
 ];
 
 export const DESIGN_SYSTEM_ESCAPE_HATCHES = [
@@ -143,6 +144,8 @@ export const DESIGN_SYSTEM_TOKEN_PATTERNS = {
   radius: /\brounded(?:-[^"'\s}]+)?/,
   shadow: /\bshadow(?:-[^"'\s}]+)?/,
   spacing: /\b(?:p|px|py|pt|pr|pb|pl)-\d/,
+  focus:
+    /\bfocus-visible:(?:outline-none|ring-\d|ring-[^"'\s}]+|ring-offset-\d|ring-offset-[^"'\s}]+)\b/,
   typography:
     /\b(?:text-(?:xs|sm|base|lg|xl|\d)|font-(?:thin|light|normal|medium|semibold|bold)|tracking-(?:tight|tighter|wide|wider|widest))/,
 };
@@ -157,57 +160,64 @@ export const LAYOUT_PROP_GAP_MAP = {
   8: "2xl",
 };
 
+// Layout prop patterns constrained to className values only (quoted strings or braced expressions)
+// Uses (?:"[^"]*|'[^']*|\{[^}]*) to stay within className value, not scan into other props
 export const LAYOUT_PROP_PATTERNS = [
   {
-    pattern: /<Flex(?![^>]*\bgap=)[^>]*className=["'][^"']*(?<![a-z]:)\bgap-(\d+)(?!\.)\b/,
+    pattern:
+      /<Flex\b(?![^>]*\bgap=)[^>]*\bclassName\s*=\s*(?:"[^"]*|'[^']*|\{[^}]*)(?<![a-z]:)\bgap-(\d+)(?!\.)\b/,
     component: "Flex",
     prop: "gap",
   },
   {
-    pattern: /<Stack(?![^>]*\bgap=)[^>]*className=["'][^"']*(?<![a-z]:)\bgap-(\d+)(?!\.)\b/,
-    component: "Stack",
-    prop: "gap",
-  },
-  {
-    pattern: /<Flex(?![^>]*\bgap=)[^>]*className=["'][^"']*(?<![a-z]:)\bspace-x-(\d+)(?!\.)\b/,
-    component: "Flex",
-    prop: "gap",
-  },
-  {
-    pattern: /<Stack(?![^>]*\bgap=)[^>]*className=["'][^"']*(?<![a-z]:)\bspace-y-(\d+)(?!\.)\b/,
+    pattern:
+      /<Stack\b(?![^>]*\bgap=)[^>]*\bclassName\s*=\s*(?:"[^"]*|'[^']*|\{[^}]*)(?<![a-z]:)\bgap-(\d+)(?!\.)\b/,
     component: "Stack",
     prop: "gap",
   },
   {
     pattern:
-      /<Flex(?![^>]*\balign=)[^>]*className=["'][^"']*(?<![a-z]:)\bitems-(start|center|end|stretch|baseline)\b/,
+      /<Flex\b(?![^>]*\bgap=)[^>]*\bclassName\s*=\s*(?:"[^"]*|'[^']*|\{[^}]*)(?<!-)(?<![a-z]:)\bspace-x-(\d+)(?!\.)\b/,
+    component: "Flex",
+    prop: "gap",
+  },
+  {
+    pattern:
+      /<Stack\b(?![^>]*\bgap=)[^>]*\bclassName\s*=\s*(?:"[^"]*|'[^']*|\{[^}]*)(?<!-)(?<![a-z]:)\bspace-y-(\d+)(?!\.)\b/,
+    component: "Stack",
+    prop: "gap",
+  },
+  {
+    pattern:
+      /<Flex\b(?![^>]*\balign=)[^>]*\bclassName\s*=\s*(?:"[^"]*|'[^']*|\{[^}]*)(?<![a-z]:)\bitems-(start|center|end|stretch|baseline)\b/,
     component: "Flex",
     prop: "align",
     tokenType: "align",
   },
   {
     pattern:
-      /<Flex(?![^>]*\bjustify=)[^>]*className=["'][^"']*(?<![a-z]:)\bjustify-(start|center|end|between|around|evenly)\b/,
+      /<Flex\b(?![^>]*\bjustify=)[^>]*\bclassName\s*=\s*(?:"[^"]*|'[^']*|\{[^}]*)(?<![a-z]:)\bjustify-(start|center|end|between|around|evenly)\b/,
     component: "Flex",
     prop: "justify",
     tokenType: "justify",
   },
   {
-    pattern: /<Flex(?![^>]*\bdirection=)[^>]*className=["'][^"']*(?<![a-z]:)\bflex-(row|col)\b/,
+    pattern:
+      /<Flex\b(?![^>]*\bdirection=)[^>]*\bclassName\s*=\s*(?:"[^"]*|'[^']*|\{[^}]*)(?<![a-z]:)\bflex-(row|col)\b/,
     component: "Flex",
     prop: "direction",
     tokenType: "direction",
   },
   {
     pattern:
-      /<Stack(?![^>]*\balign=)[^>]*className=["'][^"']*(?<![a-z]:)\bitems-(start|center|end|stretch)\b/,
+      /<Stack\b(?![^>]*\balign=)[^>]*\bclassName\s*=\s*(?:"[^"]*|'[^']*|\{[^}]*)(?<![a-z]:)\bitems-(start|center|end|stretch)\b/,
     component: "Stack",
     prop: "align",
     tokenType: "align",
   },
   {
     pattern:
-      /<Stack[^>]*className=["'][^"']*(?<![a-z]:)\bjustify-(start|center|end|between|around|evenly)\b/,
+      /<Stack\b[^>]*\bclassName\s*=\s*(?:"[^"]*|'[^']*|\{[^}]*)(?<![a-z]:)\bjustify-(start|center|end|between|around|evenly)\b/,
     component: "Stack",
     prop: "justify",
     tokenType: "stack-unsupported-justify",

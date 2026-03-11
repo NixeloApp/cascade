@@ -5,12 +5,26 @@
  * and keyboard navigation support.
  */
 
+import { cva } from "class-variance-authority";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { FlexItem } from "@/components/ui/Flex";
+import { Input } from "@/components/ui/Input";
 import { Typography } from "@/components/ui/Typography";
 import { type FuzzySearchResult, highlightMatches } from "@/hooks/useFuzzySearch";
 import { cn } from "@/lib/utils";
+
+const fuzzySearchVariants = cva("", {
+  variants: {
+    surface: {
+      input: "rounded-md hover:border-ui-border-secondary",
+      dropdown:
+        "absolute z-50 mt-1.5 w-full max-h-60 overflow-y-auto rounded-md border border-ui-border bg-ui-bg-elevated shadow-elevated scrollbar-subtle animate-scale-in",
+      clearButton:
+        "absolute right-3 top-1/2 h-auto -translate-y-1/2 rounded p-0.5 text-ui-text-tertiary transition-fast hover:bg-ui-bg-hover hover:text-ui-text",
+    },
+  },
+});
 
 interface FuzzySearchInputProps<T> {
   /**
@@ -176,9 +190,10 @@ export function FuzzySearchInput<T>({
     <div className="relative w-full">
       {/* Search Input */}
       <div className="relative">
-        <input
+        <Input
           ref={inputRef}
           type="text"
+          variant="search"
           role="combobox"
           value={query}
           onChange={(e) => onSearch(e.target.value)}
@@ -189,16 +204,7 @@ export function FuzzySearchInput<T>({
           aria-autocomplete="list"
           aria-controls="fuzzy-search-results"
           aria-expanded={showDropdown}
-          className={cn(
-            "w-full px-3 py-2.5 border rounded-md text-sm transition-default",
-            "bg-ui-bg-soft",
-            "text-ui-text",
-            "placeholder-ui-text-tertiary",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:border-ui-border-focus",
-            "hover:border-ui-border-secondary",
-            "border-ui-border",
-            className,
-          )}
+          className={cn(fuzzySearchVariants({ surface: "input" }), className)}
         />
 
         {/* Loading indicator */}
@@ -213,7 +219,7 @@ export function FuzzySearchInput<T>({
           <Button
             variant="unstyled"
             onClick={handleClear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-ui-text-tertiary hover:text-ui-text transition-fast p-0.5 rounded hover:bg-ui-bg-hover h-auto"
+            className={fuzzySearchVariants({ surface: "clearButton" })}
             aria-label="Clear search"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -235,7 +241,7 @@ export function FuzzySearchInput<T>({
           ref={dropdownRef}
           id="fuzzy-search-results"
           role="listbox"
-          className="absolute z-50 w-full mt-1.5 bg-ui-bg-elevated border border-ui-border rounded-md shadow-elevated max-h-60 overflow-y-auto scrollbar-subtle animate-scale-in"
+          className={fuzzySearchVariants({ surface: "dropdown" })}
         >
           {results.length === 0 ? (
             <Typography variant="small" color="tertiary" className="px-4 py-3">

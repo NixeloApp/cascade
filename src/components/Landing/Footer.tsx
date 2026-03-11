@@ -1,3 +1,4 @@
+import { cva } from "class-variance-authority";
 import { ShieldCheck } from "@/lib/icons";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
@@ -23,10 +24,22 @@ const footerColumns = [
   },
 ];
 
+const footerVariants = {
+  section: cva("border-t border-ui-border/20 bg-transparent px-6 py-16 transition-colors"),
+  signalCard: cva("rounded-3xl border border-ui-border/40 bg-ui-bg-soft/80 p-5 lg:col-span-3"),
+  signalIcon: cva("rounded-full bg-status-success/15 p-2 text-status-success-text"),
+  statusChip: cva("rounded-full border border-ui-border/50 bg-ui-bg px-3 py-1"),
+  statusMeta: cva("flex items-center gap-2"),
+  list: cva("space-y-2"),
+  link: cva("text-sm text-ui-text-tertiary transition-colors hover:text-ui-text"),
+  bottomBar: cva("border-t border-ui-border/20 pt-8 sm:flex-row"),
+  socialLink: cva("text-ui-text-tertiary transition-colors hover:text-ui-text"),
+};
+
 /** Landing page footer with richer structure and trust signals. */
 export function Footer() {
   return (
-    <footer className="border-t border-ui-border/20 bg-transparent px-6 py-16 transition-colors">
+    <footer className={footerVariants.section()}>
       <div className="mx-auto max-w-6xl">
         <Grid cols={1} colsLg={5} gap="xl" className="mb-10">
           <div className="lg:col-span-2">
@@ -42,9 +55,9 @@ export function Footer() {
             </Typography>
           </div>
 
-          <div className="rounded-3xl border border-ui-border/40 bg-ui-bg-soft/80 p-5 lg:col-span-3">
+          <div className={footerVariants.signalCard()}>
             <Flex align="start" gap="md">
-              <div className="rounded-full bg-status-success/15 p-2 text-status-success-text">
+              <div className={footerVariants.signalIcon()}>
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <FlexItem flex="1">
@@ -54,8 +67,8 @@ export function Footer() {
                   client communication into separate systems.
                 </Typography>
               </FlexItem>
-              <div className="rounded-full border border-ui-border/50 bg-ui-bg px-3 py-1">
-                <Typography variant="meta" className="flex items-center gap-2">
+              <div className={footerVariants.statusChip()}>
+                <Typography variant="meta" className={footerVariants.statusMeta()}>
                   <span className="h-2 w-2 rounded-full bg-status-success-text" />
                   All systems normal
                 </Typography>
@@ -70,13 +83,10 @@ export function Footer() {
               <Typography variant="h4" className="mb-4 text-base">
                 {column.title}
               </Typography>
-              <ul className="space-y-2">
+              <ul className={footerVariants.list()}>
                 {column.links.map((item) => (
                   <li key={item}>
-                    <a
-                      href="/"
-                      className="text-sm text-ui-text-tertiary transition-colors hover:text-ui-text"
-                    >
+                    <a href="/" className={footerVariants.link()}>
                       {item}
                     </a>
                   </li>
@@ -91,7 +101,7 @@ export function Footer() {
           justify="between"
           align="center"
           gap="lg"
-          className="border-t border-ui-border/20 pt-8 sm:flex-row"
+          className={footerVariants.bottomBar()}
         >
           <Typography variant="muted" className="text-ui-text-secondary">
             © 2026 Nixelo. All rights reserved.
@@ -102,7 +112,7 @@ export function Footer() {
               href="https://www.facebook.com/nixeloapp/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-ui-text-tertiary transition-colors hover:text-ui-text"
+              className={footerVariants.socialLink()}
             >
               <span className="sr-only">Follow us on Facebook</span>
               <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -113,7 +123,7 @@ export function Footer() {
               href="https://www.tiktok.com/@nixeloapp"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-ui-text-tertiary transition-colors hover:text-ui-text"
+              className={footerVariants.socialLink()}
             >
               <span className="sr-only">Follow us on TikTok</span>
               <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -124,7 +134,7 @@ export function Footer() {
               href="https://www.patreon.com/nixelo"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-ui-text-tertiary transition-colors hover:text-ui-text"
+              className={footerVariants.socialLink()}
             >
               <span className="sr-only">Support us on Patreon</span>
               <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">

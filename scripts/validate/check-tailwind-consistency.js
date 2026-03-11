@@ -117,8 +117,9 @@ const HIGH_Z_PATTERN = /\bz-(\d+)\b/g;
 // 5. GROUP-HOVER ORPHANS
 // ============================================================
 
-// Group variant patterns that need a parent with `group` class
-const GROUP_VARIANT_PATTERN = /\b(group-hover|group-focus|group-active|peer-hover|peer-focus):/;
+// Group/peer variant patterns that need a parent marker on the surrounding JSX.
+const GROUP_VARIANT_PATTERN =
+  /\b(?:group|peer)-(?:hover|focus|focus-within|active)(?:\/[A-Za-z0-9_-]+)?:/;
 
 // ============================================================
 // 6. RESPONSIVE BREAKPOINT CONSISTENCY
@@ -172,10 +173,6 @@ export function run() {
 
     const content = fs.readFileSync(filePath, "utf-8");
     const lines = content.split("\n");
-
-    // Track if file has `group` or `peer` class for group-hover/peer-hover check
-    const hasGroupClass = /\bgroup\b/.test(content) || /className.*group/.test(content);
-    const hasPeerClass = /\bpeer\b/.test(content) || /className.*peer/.test(content);
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -260,47 +257,63 @@ export function run() {
 
       // ---- 5. Group-Hover Orphans Check ----
       if (GROUP_VARIANT_PATTERN.test(line)) {
-        // Check if line uses peer-* variant
-        const usesPeerVariant = /\bpeer-(hover|focus|active):/.test(line);
-        // Check if line uses group-* variant
-        const usesGroupVariant = /\bgroup-(hover|focus|active):/.test(line);
+        // Extract named variant identifiers (e.g., "sidebar" from "group-hover/sidebar:")
+        const groupVariantMatch = line.match(
+          /\bgroup-(?:hover|focus|focus-within|active)(?:\/([A-Za-z0-9_-]+))?:/,
+        );
+        const peerVariantMatch = line.match(
+          /\bpeer-(?:hover|focus|focus-within|active)(?:\/([A-Za-z0-9_-]+))?:/,
+        );
 
-        // For peer variants, check if file has peer class
-        // For group variants, check if file has group class
-        const hasRequiredClass = usesPeerVariant
-          ? hasPeerClass
-          : usesGroupVariant
-            ? hasGroupClass
-            : false;
+        const groupVariantName = groupVariantMatch?.[1] || null; // e.g., "sidebar" or null for plain
+        const peerVariantName = peerVariantMatch?.[1] || null;
 
-        if (
-          !hasRequiredClass &&
-          !line.includes("group ") &&
-          !line.includes('group"') &&
-          !line.includes("group'") &&
-          !line.includes("peer ") &&
-          !line.includes('peer"') &&
-          !line.includes("peer'")
-        ) {
+        // Build the required marker patterns based on variant names
+        // Named variants like group-hover/sidebar: need group/sidebar marker
+        // Plain variants like group-hover: need group marker
+        const requiredGroupMarker = groupVariantName ? `group/${groupVariantName}` : "group";
+        const requiredPeerMarker = peerVariantName ? `peer/${peerVariantName}` : "peer";
+
+        // Check if the required marker is present on this line
+        const hasRequiredGroupOnLine = groupVariantMatch
+          ? new RegExp(
+              `\\bclassName\\s*=\\s*(?:\\{[\\s\\S]*?|["'][^"']*)\\b${requiredGroupMarker}\\b`,
+            ).test(line)
+          : false;
+        const hasRequiredPeerOnLine = peerVariantMatch
+          ? new RegExp(
+              `\\bclassName\\s*=\\s*(?:\\{[\\s\\S]*?|["'][^"']*)\\b${requiredPeerMarker}\\b`,
+            ).test(line)
+          : false;
+
+        if (!hasRequiredGroupOnLine && !hasRequiredPeerOnLine) {
           // Check in a small window around this line
           const windowStart = Math.max(0, i - 20);
           const windowEnd = Math.min(lines.length, i + 20);
           const window = lines.slice(windowStart, windowEnd).join("\n");
 
-          const hasGroupInWindow = /\bgroup\b/.test(window) || /className=.*group/.test(window);
-          const hasPeerInWindow = /\bpeer\b/.test(window) || /className=.*peer/.test(window);
+          // Check for required markers in window
+          const hasRequiredGroupInWindow = groupVariantMatch
+            ? new RegExp(
+                `\\bclassName\\s*=\\s*(?:\\{[\\s\\S]*?|["'][^"']*)\\b${requiredGroupMarker}(?!-)\\b`,
+              ).test(window)
+            : false;
+          const hasRequiredPeerInWindow = peerVariantMatch
+            ? new RegExp(
+                `\\bclassName\\s*=\\s*(?:\\{[\\s\\S]*?|["'][^"']*)\\b${requiredPeerMarker}(?!-)\\b`,
+              ).test(window)
+            : false;
 
-          const windowHasRequiredClass = usesPeerVariant
-            ? hasPeerInWindow
-            : usesGroupVariant
-              ? hasGroupInWindow
-              : false;
+          const windowHasRequiredClass =
+            (groupVariantMatch && hasRequiredGroupInWindow) ||
+            (peerVariantMatch && hasRequiredPeerInWindow);
 
           if (!windowHasRequiredClass) {
             counts.groupHover++;
-            // This is more of a warning - the group/peer might be in a parent component
+            // Build a helpful message showing required marker
+            const requiredMarker = groupVariantMatch ? requiredGroupMarker : requiredPeerMarker;
             errors.push(
-              `  ${c.dim}INFO${c.reset} ${rel}:${lineNum} - group-hover/peer-hover without visible group/peer class. Ensure parent has 'group' or sibling has 'peer'.`,
+              `  ${c.dim}INFO${c.reset} ${rel}:${lineNum} - group-hover/peer-hover without visible '${requiredMarker}' class. Ensure parent has the required marker.`,
             );
           }
         }

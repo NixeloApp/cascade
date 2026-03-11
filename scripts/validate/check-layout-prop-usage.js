@@ -11,6 +11,7 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   collectClassNameSpan,
+  findOpeningTag,
   groupByFile,
   LAYOUT_PROP_GAP_MAP,
   LAYOUT_PROP_PATTERNS,
@@ -54,11 +55,15 @@ export function run() {
       const line = lines[index];
       if (!line.includes("className")) continue;
 
-      // Collect full className span for multiline attributes
-      const { span } = collectClassNameSpan(lines, index);
+      // Collect multiline className spans (up to 20 lines) for pattern matching.
+      // Use the full span for layout token detection, not the truncated opening tag.
+      const { span, endIndex } = collectClassNameSpan(lines, index);
+      const tagText = findOpeningTag(lines, index);
+      // Combine span and tagText to ensure we catch tokens in both className value and tag context
+      const matchText = `${tagText} ${span}`;
 
       for (const { pattern, component, prop, tokenType } of LAYOUT_PROP_PATTERNS) {
-        const match = span.match(pattern);
+        const match = matchText.match(pattern);
         if (!match) continue;
 
         issues.push({
@@ -66,6 +71,7 @@ export function run() {
           line: index + 1,
           replacement: getReplacement(match, component, prop, tokenType),
         });
+        index = endIndex;
         break;
       }
     }
