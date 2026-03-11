@@ -3,19 +3,30 @@
  */
 
 import type { Id } from "@convex/_generated/dataModel";
+import { cva } from "class-variance-authority";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Bot, Lightbulb } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Skeleton } from "../ui/Skeleton";
+import { Textarea } from "../ui/Textarea";
 import { Tooltip } from "../ui/Tooltip";
 import { Typography } from "../ui/Typography";
 import { AI_CONFIG } from "./config";
 import { useAIChat } from "./hooks";
+
+const aiChatComposerVariants = cva("", {
+  variants: {
+    surface: {
+      textarea:
+        "resize-none overflow-hidden rounded-lg border-ui-border bg-ui-bg px-3 py-2 text-sm text-ui-text transition-all focus-visible:ring-2 focus-visible:ring-brand-ring sm:px-4 sm:py-3 sm:text-base",
+    },
+  },
+});
 
 interface AIChatProps {
   projectId?: Id<"projects">;
@@ -233,20 +244,22 @@ export function AIChat({ projectId, chatId: initialChatId, onChatCreated }: AICh
       {/* Input Area */}
       <div className="border-t border-ui-border p-3 sm:p-4 bg-ui-bg-secondary safe-area-inset-bottom">
         <Flex gap="sm" align="end">
-          <textarea
-            ref={textareaRef}
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Ask me anything about your project..."
-            disabled={isSending}
-            className="flex-1 resize-none rounded-lg border border-ui-border bg-ui-bg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base text-ui-text placeholder-ui-text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring disabled:opacity-50 disabled:pointer-events-none overflow-hidden transition-all"
-            rows={1}
-            style={{
-              minHeight: `${AI_CONFIG.textarea.minHeight}px`,
-              maxHeight: `${AI_CONFIG.textarea.maxHeight}px`,
-            }}
-          />
+          <FlexItem flex="1">
+            <Textarea
+              ref={textareaRef}
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Ask me anything about your project..."
+              disabled={isSending}
+              className={aiChatComposerVariants({ surface: "textarea" })}
+              rows={1}
+              style={{
+                minHeight: `${AI_CONFIG.textarea.minHeight}px`,
+                maxHeight: `${AI_CONFIG.textarea.maxHeight}px`,
+              }}
+            />
+          </FlexItem>
           <Button
             variant="primary"
             size="icon"

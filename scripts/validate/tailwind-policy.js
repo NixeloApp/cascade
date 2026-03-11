@@ -100,11 +100,13 @@ export const RAW_TAILWIND_PATTERNS = [
 ];
 
 export const DESIGN_SYSTEM_TARGET_FILES = [
+  "/AI/AIChat.tsx",
   "/AppHeader.tsx",
   "/GlobalSearch.tsx",
   "/KeyboardShortcutsHelp.tsx",
   "/AdvancedSearchModal.tsx",
   "/Documents/DocumentHeader.tsx",
+  "/FuzzySearch/FuzzySearchInput.tsx",
   "/Landing/HeroSection.tsx",
   "/Landing/ProductShowcase.tsx",
   "/NotificationCenter.tsx",
