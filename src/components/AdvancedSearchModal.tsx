@@ -17,13 +17,13 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { FilterCheckboxGroup } from "./AdvancedSearchModal/FilterCheckboxGroup";
 import { SearchResultsList } from "./AdvancedSearchModal/SearchResultsList";
 import { Button } from "./ui/Button";
-import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
 import { Input } from "./ui/form";
 import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
 import { Stack } from "./ui/Stack";
+import { chromeButtonVariants, surfaceRecipeVariants } from "./ui/surfaceRecipes";
 
 interface AdvancedSearchModalProps {
   open: boolean;
@@ -97,18 +97,18 @@ export function AdvancedSearchModal({
       size="lg"
       data-testid={TEST_IDS.SEARCH.ADVANCED_MODAL}
       footer={
-        <Button onClick={() => onOpenChange(false)} variant="secondary">
+        <Button
+          onClick={() => onOpenChange(false)}
+          variant="secondary"
+          className={chromeButtonVariants({ tone: "framed", size: "compactPill" })}
+        >
           Close
         </Button>
       }
     >
       <Stack gap="lg">
-        <Card
-          variant="flat"
-          padding="md"
-          className="border-ui-border-secondary/70 bg-linear-to-br from-ui-bg-soft to-ui-bg-elevated"
-        >
-          <Stack gap="xs">
+        <div className={surfaceRecipeVariants({ recipe: "overlayInset" })}>
+          <Stack gap="xs" className="p-4">
             <Typography variant="label" className="uppercase tracking-wider text-ui-text-tertiary">
               Search playbook
             </Typography>
@@ -117,7 +117,7 @@ export function AdvancedSearchModal({
               cut a large result set down.
             </Typography>
           </Stack>
-        </Card>
+        </div>
 
         {/* Search Input */}
         <Input
@@ -191,10 +191,7 @@ export function AdvancedSearchModal({
               )}
             </Flex>
 
-            <Card
-              radius="full"
-              className="overflow-hidden border-ui-border-secondary/70 bg-ui-bg-elevated/95 shadow-soft"
-            >
+            <div className={surfaceRecipeVariants({ recipe: "overlayInset" })}>
               <SearchResultsList
                 searchQuery={searchQuery}
                 results={results}
@@ -203,18 +200,14 @@ export function AdvancedSearchModal({
                 onSelectIssue={handleSelectIssue}
                 onLoadMore={handleLoadMore}
               />
-            </Card>
+            </div>
           </Stack>
         ) : (
-          <Card
-            variant="flat"
-            padding="md"
-            className="border-ui-border-secondary/70 bg-ui-bg-soft/70"
-          >
-            <Typography variant="small" color="secondary">
+          <div className={surfaceRecipeVariants({ recipe: "overlayInset" })}>
+            <Typography variant="small" color="secondary" className="px-4 py-4">
               Results appear once you type at least 2 characters.
             </Typography>
-          </Card>
+          </div>
         )}
       </Stack>
     </Dialog>

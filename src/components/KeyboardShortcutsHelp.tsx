@@ -11,12 +11,11 @@
 
 import { Search } from "lucide-react";
 import { useState } from "react";
-import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
 import { Input } from "./ui/Input";
-import { ScrollArea } from "./ui/ScrollArea";
 import { Stack } from "./ui/Stack";
+import { surfaceRecipeVariants } from "./ui/surfaceRecipes";
 import { Typography } from "./ui/Typography";
 
 // =============================================================================
@@ -263,89 +262,10 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
       onOpenChange={handleOpenChange}
       title="Keyboard Shortcuts"
       description="Available keyboard shortcuts for navigation and actions"
-      size="md"
-    >
-      {/* Search Input */}
-      <Stack gap="md">
-        <Card
-          variant="flat"
-          padding="sm"
-          className="border-ui-border-secondary/70 bg-linear-to-br from-ui-bg-soft to-ui-bg-elevated"
-        >
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ui-text-tertiary" />
-            <Input
-              type="text"
-              placeholder="Search shortcuts..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-9 pl-8 text-sm"
-              autoFocus
-            />
-          </div>
-        </Card>
-      </Stack>
-
-      {/* Shortcuts List */}
-      <ScrollArea className="max-h-[60vh]">
-        {hasResults ? (
-          <Flex direction="column" gap="md">
-            {filteredCategories.map((category) => (
-              <Card
-                key={category.id}
-                variant="flat"
-                padding="md"
-                className="border-ui-border-secondary/70 bg-ui-bg-soft/60"
-              >
-                <Typography
-                  variant="label"
-                  color="secondary"
-                  className="uppercase tracking-wider mb-2"
-                >
-                  {category.title}
-                </Typography>
-                <Flex direction="column" gap="xs">
-                  {category.items.map((item) => (
-                    <Card
-                      key={item.id}
-                      padding="sm"
-                      variant="default"
-                      className="border-ui-border/70 bg-ui-bg-elevated/90"
-                    >
-                      <Flex align="center" justify="between">
-                        <Typography variant="small" color="secondary">
-                          {item.description}
-                        </Typography>
-                        <ShortcutBadge item={item} />
-                      </Flex>
-                    </Card>
-                  ))}
-                </Flex>
-              </Card>
-            ))}
-          </Flex>
-        ) : (
-          <Card padding="lg" variant="flat">
-            <Flex direction="column" align="center" justify="center" className="text-center">
-              <Typography variant="small" color="secondary">
-                No shortcuts found for{" "}
-                <Typography as="span" variant="label" className="italic">
-                  "{searchQuery}"
-                </Typography>
-              </Typography>
-            </Flex>
-          </Card>
-        )}
-      </ScrollArea>
-
-      {/* Footer Tip */}
-      <Card
-        padding="md"
-        radius="none"
-        variant="ghost"
-        className="border-t border-ui-border border-x-0 border-b-0"
-      >
-        <Typography variant="caption" color="tertiary" className="text-center block">
+      size="lg"
+      footerClassName="justify-between"
+      footer={
+        <Typography variant="caption" color="tertiary" className="block text-center sm:text-left">
           Press{" "}
           <Typography
             as="kbd"
@@ -356,7 +276,75 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
           </Typography>{" "}
           to open search and commands
         </Typography>
-      </Card>
+      }
+    >
+      <Stack gap="md">
+        <div className={surfaceRecipeVariants({ recipe: "overlayInset" })}>
+          <div className="relative p-4">
+            <Search className="absolute left-6 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ui-text-tertiary" />
+            <Input
+              type="text"
+              placeholder="Search shortcuts..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-10 pl-9 text-sm"
+              autoFocus
+            />
+          </div>
+        </div>
+
+        {hasResults ? (
+          <Flex direction="column" gap="md">
+            {filteredCategories.map((category) => (
+              <div
+                key={category.id}
+                className={surfaceRecipeVariants({ recipe: "commandSection" })}
+              >
+                <div className="border-b border-ui-border-secondary/50 px-4 py-3">
+                  <Typography
+                    variant="label"
+                    color="secondary"
+                    className="uppercase tracking-wider"
+                  >
+                    {category.title}
+                  </Typography>
+                </div>
+                <Flex direction="column" gap="xs" className="p-3">
+                  {category.items.map((item) => (
+                    <div
+                      key={item.id}
+                      className={surfaceRecipeVariants({ recipe: "overlayInset" })}
+                    >
+                      <Flex align="center" justify="between" gap="md" className="px-4 py-3">
+                        <Typography variant="small" color="secondary">
+                          {item.description}
+                        </Typography>
+                        <ShortcutBadge item={item} />
+                      </Flex>
+                    </div>
+                  ))}
+                </Flex>
+              </div>
+            ))}
+          </Flex>
+        ) : (
+          <div className={surfaceRecipeVariants({ recipe: "overlayInset" })}>
+            <Flex
+              direction="column"
+              align="center"
+              justify="center"
+              className="px-6 py-8 text-center"
+            >
+              <Typography variant="small" color="secondary">
+                No shortcuts found for{" "}
+                <Typography as="span" variant="label" className="italic">
+                  "{searchQuery}"
+                </Typography>
+              </Typography>
+            </Flex>
+          </div>
+        )}
+      </Stack>
     </Dialog>
   );
 }

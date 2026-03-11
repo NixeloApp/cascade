@@ -11,7 +11,7 @@ import { NotificationCenter } from "@/components/Notifications";
 import { TimerWidget as NavTimerWidget } from "@/components/TimeTracking/TimerWidget";
 import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/Button";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { useSidebarState } from "@/hooks/useSidebarState";
@@ -34,7 +34,7 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-ui-border/50 bg-linear-to-b from-ui-bg/95 via-ui-bg/90 to-ui-bg/80 px-3 py-2 backdrop-blur-xl transition-all duration-default sm:px-6 sm:py-3">
-      <div className="relative mx-auto flex max-w-screen-2xl items-center gap-2 sm:gap-3">
+      <Flex align="center" gap="sm" className="relative mx-auto max-w-screen-2xl sm:gap-3">
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-brand/15 to-transparent" />
 
         <Flex align="center" gap="sm" className="sm:gap-3">
@@ -65,9 +65,9 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
           </div>
         </Flex>
 
-        <div className="min-w-0 flex-1">
+        <FlexItem grow className="min-w-0">
           <GlobalSearch commands={commands} />
-        </div>
+        </FlexItem>
 
         <Flex
           align="center"
@@ -112,7 +112,7 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
           <NotificationCenter />
           <UserMenu />
         </Flex>
-      </div>
+      </Flex>
     </header>
   );
 }
