@@ -16,16 +16,16 @@ import { cn } from "@/lib/utils";
 import { Flex } from "./Flex";
 
 const dialogVariants = cva(
-  "fixed top-1/2 left-1/2 z-50 flex w-full max-w-dialog-mobile -translate-x-1/2 -translate-y-1/2 flex-col overscroll-contain overflow-hidden origin-center [perspective:800px] data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out",
+  "fixed inset-x-3 top-3 bottom-3 z-50 flex flex-col overscroll-contain overflow-hidden origin-center [perspective:800px] data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out sm:top-1/2 sm:right-auto sm:bottom-auto sm:left-1/2 sm:w-full sm:max-w-dialog-mobile sm:-translate-x-1/2 sm:-translate-y-1/2",
   {
     variants: {
       size: {
-        sm: "sm:max-w-md max-h-[50vh]",
-        md: "sm:max-w-lg max-h-[60vh]",
-        lg: "sm:max-w-2xl max-h-[80vh]",
-        xl: "sm:max-w-4xl max-h-[80vh]",
-        "2xl": "sm:max-w-5xl max-h-[85vh]",
-        full: "sm:max-w-6xl max-h-[90vh]",
+        sm: "sm:max-w-md sm:max-h-[50vh]",
+        md: "sm:max-w-lg sm:max-h-[60vh]",
+        lg: "sm:max-w-2xl sm:max-h-[80vh]",
+        xl: "sm:max-w-4xl sm:max-h-[80vh]",
+        "2xl": "sm:max-w-5xl sm:max-h-[85vh]",
+        full: "sm:max-w-6xl sm:max-h-[90vh]",
       },
     },
     defaultVariants: {
@@ -35,7 +35,7 @@ const dialogVariants = cva(
 );
 
 const dialogSurfaceVariants = cva(
-  "rounded-3xl border border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg shadow-elevated",
+  "rounded-2xl border border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg shadow-elevated sm:rounded-3xl",
   {
     variants: {
       recipe: {
@@ -56,10 +56,10 @@ const dialogSectionVariants = cva("", {
       command: "",
     },
     slot: {
-      header: "border-b border-ui-border-secondary/60 px-6 py-5",
-      body: "min-h-0 flex-1 overflow-y-auto px-6 pb-6",
+      header: "border-b border-ui-border-secondary/60 px-4 py-4 sm:px-6 sm:py-5",
+      body: "min-h-0 flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6",
       footer:
-        "border-t border-ui-border-secondary/60 px-6 py-4 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end",
+        "border-t border-ui-border-secondary/60 px-4 py-4 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:px-6",
     },
   },
   compoundVariants: [
