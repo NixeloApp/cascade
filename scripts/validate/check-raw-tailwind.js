@@ -114,6 +114,39 @@ export function run() {
   ];
 
   const violations = [];
+  const recipeViolations = [];
+
+  const RECIPE_ENFORCEMENT_FILES = [
+    "/AppHeader.tsx",
+    "/GlobalSearch.tsx",
+    "/KeyboardShortcutsHelp.tsx",
+    "/AdvancedSearchModal.tsx",
+    "/Landing/HeroSection.tsx",
+    "/Landing/ProductShowcase.tsx",
+    "/NotificationCenter.tsx",
+    "/TimerWidget.tsx",
+    "/DocumentHeader.tsx",
+  ];
+
+  const RECIPE_ESCAPE_HATCHES = [
+    "surfaceRecipeVariants(",
+    "chromeButtonVariants(",
+    "modalSectionVariants(",
+    "cardVariants(",
+    "buttonVariants(",
+    "tabsTriggerVariants(",
+    "tabsListVariants(",
+  ];
+
+  const RECIPE_TOKEN_PATTERNS = {
+    background: /\bbg-(?!transparent)\S+/,
+    border: /\bborder(?:-[^"'\s}]+)?/,
+    radius: /\brounded(?:-[^"'\s}]+)?/,
+    shadow: /\bshadow(?:-[^"'\s}]+)?/,
+    spacing: /\b(?:p|px|py|pt|pr|pb|pl)-\d/,
+    typography:
+      /\b(?:text-(?:xs|sm|base|lg|xl|\d)|font-(?:thin|light|normal|medium|semibold|bold)|tracking-(?:tight|tighter|wide|wider|widest))/,
+  };
 
   function isAllowed(filePath) {
     const rel = relPath(filePath);
@@ -154,6 +187,37 @@ export function run() {
 
   const files = walkDir(SRC, { extensions: new Set([".tsx"]) });
   for (const f of files) checkFile(f);
+
+  function countRecipeTokens(line) {
+    return Object.values(RECIPE_TOKEN_PATTERNS).filter((pattern) => pattern.test(line)).length;
+  }
+
+  function checkRecipeEnforcement(filePath) {
+    const rel = relPath(filePath);
+    if (!RECIPE_ENFORCEMENT_FILES.some((file) => rel.endsWith(file))) {
+      return;
+    }
+
+    const content = fs.readFileSync(filePath, "utf-8");
+    const lines = content.split("\n");
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line.includes("className")) continue;
+      if (RECIPE_ESCAPE_HATCHES.some((token) => line.includes(token))) continue;
+
+      const tokenCount = countRecipeTokens(line);
+      if (tokenCount < 4) continue;
+
+      recipeViolations.push({
+        file: rel,
+        line: i + 1,
+        replacement: "extract to shared CVA recipe or surfaceRecipeVariants/chromeButtonVariants",
+      });
+    }
+  }
+
+  for (const f of files) checkRecipeEnforcement(f);
 
   // === Component Prop Misuse Check ===
   // Detects when components use className with spacing classes instead of props
@@ -339,13 +403,35 @@ export function run() {
     }
   }
 
+  if (recipeViolations.length > 0) {
+    if (messages.length > 0) messages.push("");
+    messages.push(`${c.red}Recipe enforcement violations:${c.reset}`);
+    const byFile = {};
+    for (const v of recipeViolations) {
+      if (!byFile[v.file]) byFile[v.file] = [];
+      byFile[v.file].push(v);
+    }
+
+    for (const [file, items] of Object.entries(byFile).sort()) {
+      messages.push(`  ${c.bold}${file}${c.reset} (${items.length})`);
+      for (const item of items.slice(0, 4)) {
+        messages.push(`    ${c.dim}L${item.line}${c.reset} → ${item.replacement}`);
+      }
+      if (items.length > 4) {
+        messages.push(`    ${c.dim}... and ${items.length - 4} more${c.reset}`);
+      }
+    }
+  }
+
   // Build result
-  const totalErrors = violations.length;
+  const totalErrors = violations.length + recipeViolations.length;
   const totalWarnings = propViolations.length;
   let detail = null;
   if (totalErrors > 0 || totalWarnings > 0) {
     const parts = [];
-    if (totalErrors > 0) parts.push(`${totalErrors} raw Tailwind violations`);
+    if (violations.length > 0) parts.push(`${violations.length} raw Tailwind violations`);
+    if (recipeViolations.length > 0)
+      parts.push(`${recipeViolations.length} recipe enforcement violations`);
     if (totalWarnings > 0) parts.push(`${totalWarnings} component prop issues`);
     detail = parts.join(", ");
   }
@@ -353,8 +439,8 @@ export function run() {
   // Phase 7 migration complete - raw Tailwind is a hard check
   // Component prop misuse is a warning (new check, needs baseline cleanup)
   return {
-    passed: violations.length === 0,
-    errors: violations.length,
+    passed: violations.length === 0 && recipeViolations.length === 0,
+    errors: violations.length + recipeViolations.length,
     warnings: propViolations.length,
     detail,
     messages,

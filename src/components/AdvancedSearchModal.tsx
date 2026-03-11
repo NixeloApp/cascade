@@ -17,6 +17,7 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { FilterCheckboxGroup } from "./AdvancedSearchModal/FilterCheckboxGroup";
 import { SearchResultsList } from "./AdvancedSearchModal/SearchResultsList";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import { Flex } from "./ui/Flex";
 import { Input } from "./ui/form";
@@ -107,8 +108,12 @@ export function AdvancedSearchModal({
       }
     >
       <Stack gap="lg">
-        <div className={surfaceRecipeVariants({ recipe: "overlayInset" })}>
-          <Stack gap="xs" className="p-4">
+        <Card
+          variant="ghost"
+          padding="md"
+          className={surfaceRecipeVariants({ recipe: "overlayInset" })}
+        >
+          <Stack gap="xs">
             <Typography variant="label" className="uppercase tracking-wider text-ui-text-tertiary">
               Search playbook
             </Typography>
@@ -117,7 +122,7 @@ export function AdvancedSearchModal({
               cut a large result set down.
             </Typography>
           </Stack>
-        </div>
+        </Card>
 
         {/* Search Input */}
         <Input
@@ -203,11 +208,15 @@ export function AdvancedSearchModal({
             </div>
           </Stack>
         ) : (
-          <div className={surfaceRecipeVariants({ recipe: "overlayInset" })}>
-            <Typography variant="small" color="secondary" className="px-4 py-4">
+          <Card
+            variant="ghost"
+            padding="md"
+            className={surfaceRecipeVariants({ recipe: "overlayInset" })}
+          >
+            <Typography variant="small" color="secondary">
               Results appear once you type at least 2 characters.
             </Typography>
-          </div>
+          </Card>
         )}
       </Stack>
     </Dialog>
