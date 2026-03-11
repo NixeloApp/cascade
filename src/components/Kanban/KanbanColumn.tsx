@@ -160,7 +160,7 @@ const CollapsedColumn = memo(
       data-testid={TEST_IDS.BOARD.COLUMN}
       data-board-column
       className={cn(
-        "flex-shrink-0 w-11 rounded-container border border-ui-border-secondary/70 border-t-2 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft shadow-soft transition-default animate-slide-up flex flex-col items-center",
+        "flex flex-shrink-0 snap-start flex-col items-center rounded-container border border-ui-border-secondary/70 border-t-2 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft shadow-soft transition-default animate-slide-up w-11",
         getWorkflowCategoryColor(state.category),
         isDraggedOver && "ring-2 ring-brand/30 bg-brand/5",
       )}
@@ -230,10 +230,10 @@ const ColumnHeader = memo(
   }) => (
     <div
       data-testid={TEST_IDS.BOARD.COLUMN_HEADER}
-      className="rounded-t-container border-b border-ui-border-secondary/70 bg-ui-bg-elevated/88 p-3 shadow-soft sm:p-4"
+      className="rounded-t-container border-b border-ui-border-secondary/70 bg-ui-bg-elevated/88 p-2 shadow-soft sm:p-4"
     >
-      <Flex align="center" justify="between" gap="sm">
-        <Flex align="center" gap="sm" className="min-w-0">
+      <Flex align="center" justify="between" gap="xs">
+        <Flex align="center" gap="xs" className="min-w-0">
           <Typography
             variant="h3"
             className="font-medium text-ui-text-secondary truncate tracking-tight text-sm"
@@ -257,10 +257,14 @@ const ColumnHeader = memo(
             </Tooltip>
           )}
         </Flex>
-        <Flex align="center" gap="xs">
+        <Flex align="center" gap="xs" className="shrink-0">
           {onToggleCollapse && (
             <Tooltip content={`Collapse ${state.name}`}>
-              <IconButton onClick={onToggleCollapse} aria-label={`Collapse ${state.name} column`}>
+              <IconButton
+                onClick={onToggleCollapse}
+                aria-label={`Collapse ${state.name} column`}
+                className="h-7 w-7 sm:h-8 sm:w-8"
+              >
                 <Minimize2 className="w-3.5 h-3.5" />
               </IconButton>
             </Tooltip>
@@ -270,6 +274,7 @@ const ColumnHeader = memo(
               <IconButton
                 onClick={onCreateIssue}
                 aria-label={`Add issue to ${state.name}`}
+                className="h-7 w-7 sm:h-8 sm:w-8"
                 {...(columnIndex === 0 ? { "data-tour": "create-issue" } : {})}
               >
                 <Plus className="w-4 h-4" />
@@ -345,6 +350,55 @@ function areFocusedIssuesEqual(prev: KanbanColumnProps, next: KanbanColumnProps)
   return !(wasFocusedInColumn || isFocusedInColumn);
 }
 
+function getStateIssues(state: WorkflowState, issues: Issue[]): Issue[] {
+  return state.category !== "done" ? issues : [...issues].sort((a, b) => a.order - b.order);
+}
+
+function getWipLimitState(wipLimit: number | undefined, issueCount: number) {
+  const normalizedLimit = wipLimit ?? 0;
+  const hasWipLimit = normalizedLimit > 0;
+
+  return {
+    isAtWipLimit: hasWipLimit && issueCount === normalizedLimit,
+    isOverWipLimit: hasWipLimit && issueCount > normalizedLimit,
+  };
+}
+
+function useKanbanColumnDropTarget({
+  columnRef,
+  stateId,
+  onIssueDrop,
+  setIsDraggedOver,
+}: {
+  columnRef: React.RefObject<HTMLElement | null>;
+  stateId: string;
+  onIssueDrop?: (issueId: Id<"issues">, sourceStatus: string, targetStatus: string) => void;
+  setIsDraggedOver: (value: boolean) => void;
+}) {
+  useEffect(() => {
+    const element = columnRef.current;
+    if (!element) return;
+
+    return dropTargetForElements({
+      element,
+      getData: () => createColumnData(stateId, stateId),
+      canDrop: ({ source }) => {
+        // Only accept issue cards
+        return isIssueCardData(source.data as Record<string, unknown>);
+      },
+      onDragEnter: () => setIsDraggedOver(true),
+      onDragLeave: () => setIsDraggedOver(false),
+      onDrop: ({ source }) => {
+        setIsDraggedOver(false);
+        const data = source.data as IssueCardData;
+        if (isIssueCardData(source.data as Record<string, unknown>)) {
+          onIssueDrop?.(data.issueId, data.status, stateId);
+        }
+      },
+    });
+  }, [columnRef, onIssueDrop, setIsDraggedOver, stateId]);
+}
+
 /**
  * Custom equality check for KanbanColumn props
  * Optimizes performance by checking if selectedIssueIds actually affects this column
@@ -399,47 +453,24 @@ const KanbanColumnComponent = function KanbanColumn({
   const columnRef = useRef<HTMLElement>(null);
   const [isDraggedOver, setIsDraggedOver] = useState(false);
 
-  // Issues are now pre-filtered by status from parent
-  const stateIssues =
-    // "todo" and "inprogress" columns are already sorted by order from the server.
-    // "done" columns are sorted by updatedAt, so we need to resort them if we want order-based sorting.
-    state.category !== "done" ? issues : [...issues].sort((a, b) => a.order - b.order);
+  // Issues are now pre-filtered by status from parent.
+  // "done" columns are sorted by updatedAt, so we resort them if order-based rendering is needed.
+  const stateIssues = getStateIssues(state, issues);
+  const { isAtWipLimit, isOverWipLimit } = getWipLimitState(state.wipLimit, stateIssues.length);
 
-  // WIP limit checks
-  const wipLimit = state.wipLimit ?? 0;
-  const hasWipLimit = wipLimit > 0;
-  const isAtWipLimit = hasWipLimit && stateIssues.length === wipLimit;
-  const isOverWipLimit = hasWipLimit && stateIssues.length > wipLimit;
-
-  // Set up Pragmatic DnD drop target
-  useEffect(() => {
-    const element = columnRef.current;
-    if (!element) return;
-
-    return dropTargetForElements({
-      element,
-      getData: () => createColumnData(state.id, state.id),
-      canDrop: ({ source }) => {
-        // Only accept issue cards
-        return isIssueCardData(source.data as Record<string, unknown>);
-      },
-      onDragEnter: () => setIsDraggedOver(true),
-      onDragLeave: () => setIsDraggedOver(false),
-      onDrop: ({ source }) => {
-        setIsDraggedOver(false);
-        const data = source.data as IssueCardData;
-        if (isIssueCardData(source.data as Record<string, unknown>)) {
-          onIssueDrop?.(data.issueId, data.status, state.id);
-        }
-      },
-    });
-  }, [state.id, onIssueDrop]);
+  useKanbanColumnDropTarget({
+    columnRef,
+    stateId: state.id,
+    onIssueDrop,
+    setIsDraggedOver,
+  });
 
   const handleCreateIssue = () => onCreateIssue?.(state.id);
-
+  const createIssueHandler = onCreateIssue ? handleCreateIssue : undefined;
   const handleLoadMore = () => onLoadMore?.();
-
   const handleToggleCollapse = () => onToggleCollapse?.(state.id);
+  const collapseHandler = onToggleCollapse ? handleToggleCollapse : undefined;
+  const showEmptyState = stateIssues.length === 0 && hiddenCount === 0;
 
   // Render collapsed column view
   if (isCollapsed) {
@@ -464,7 +495,7 @@ const KanbanColumnComponent = function KanbanColumn({
       data-testid={TEST_IDS.BOARD.COLUMN}
       data-board-column
       className={cn(
-        "flex-shrink-0 w-full rounded-container border border-ui-border-secondary/70 border-t-2 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft shadow-soft transition-default animate-slide-up lg:w-80",
+        "w-60 flex-shrink-0 snap-start rounded-container border border-ui-border-secondary/70 border-t-2 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft shadow-soft transition-default animate-slide-up sm:w-80",
         getWorkflowCategoryColor(state.category),
         isDraggedOver && "ring-2 ring-brand/30 bg-brand/5",
         isOverWipLimit && "border-status-error/50 bg-status-error/5",
@@ -483,17 +514,14 @@ const KanbanColumnComponent = function KanbanColumn({
         isAtWipLimit={isAtWipLimit}
         canEdit={canEdit}
         columnIndex={columnIndex}
-        onToggleCollapse={onToggleCollapse ? handleToggleCollapse : undefined}
-        onCreateIssue={onCreateIssue ? handleCreateIssue : undefined}
+        onToggleCollapse={collapseHandler}
+        onCreateIssue={createIssueHandler}
       />
 
       {/* Issues */}
-      <div className="flex min-h-72 flex-col space-y-2 p-2.5 transition-default lg:min-h-96">
-        {stateIssues.length === 0 && hiddenCount === 0 ? (
-          <EmptyColumnState
-            canEdit={canEdit}
-            onCreateIssue={onCreateIssue ? handleCreateIssue : undefined}
-          />
+      <div className="flex min-h-56 flex-col space-y-1.5 p-1.5 transition-default sm:p-2 lg:min-h-96 lg:space-y-2 lg:p-2.5">
+        {showEmptyState ? (
+          <EmptyColumnState canEdit={canEdit} onCreateIssue={createIssueHandler} />
         ) : (
           <>
             {stateIssues.map((issue, issueIndex) => (

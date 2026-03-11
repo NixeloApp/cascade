@@ -13,7 +13,7 @@ export function FinalCTASection() {
   return (
     <section className="px-6 py-24">
       <div className="mx-auto max-w-6xl">
-        <Card className="rounded-3xl border-ui-border/50 bg-linear-to-br from-ui-bg-secondary via-ui-bg-elevated to-ui-bg-secondary p-8 shadow-2xl shadow-black/20 md:p-12">
+        <Card className="rounded-3xl border-ui-border/50 bg-linear-to-br from-ui-bg-secondary via-ui-bg-elevated to-ui-bg-secondary p-8 shadow-elevated md:p-12">
           <div className="mx-auto max-w-3xl text-center">
             <Badge variant="outline" shape="pill" className="mb-5">
               Built for teams that need one system, not another tab

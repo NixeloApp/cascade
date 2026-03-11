@@ -15,14 +15,17 @@ import { Typography } from "./Typography";
 const cardVariants = cva("border transition-default", {
   variants: {
     variant: {
-      default: "bg-ui-bg-elevated border-ui-border shadow-card",
-      elevated: "bg-ui-bg-elevated border-ui-border-secondary shadow-elevated",
-      soft: "bg-ui-bg-secondary border-ui-border shadow-soft",
+      default:
+        "bg-linear-to-b from-ui-bg via-ui-bg-elevated/98 to-ui-bg-secondary/50 border-ui-border-secondary/85 shadow-card",
+      elevated:
+        "bg-linear-to-b from-ui-bg via-ui-bg-elevated to-ui-bg-secondary/38 border-ui-border-secondary shadow-elevated",
+      soft: "bg-linear-to-b from-ui-bg-soft/96 via-ui-bg-elevated/94 to-ui-bg-secondary/84 border-ui-border-secondary/80 shadow-soft",
       interactive:
-        "bg-ui-bg-elevated border-ui-border shadow-soft hover:bg-ui-bg-hover hover:border-ui-border-secondary hover:shadow-card-hover cursor-pointer",
-      outline: "bg-ui-bg/80 border-ui-border shadow-soft",
+        "bg-ui-bg-elevated border-ui-border-secondary/85 shadow-card hover:bg-ui-bg-hover hover:border-ui-border-secondary hover:shadow-card-hover cursor-pointer",
+      outline:
+        "bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-secondary/70 border-ui-border-secondary/90 shadow-card",
       ghost: "bg-transparent border-transparent",
-      flat: "bg-ui-bg-secondary/80 border-ui-border shadow-none",
+      flat: "bg-linear-to-b from-ui-bg/98 via-ui-bg-secondary/90 to-ui-bg-secondary/78 border-ui-border-secondary/75 shadow-soft",
     },
     padding: {
       none: "",

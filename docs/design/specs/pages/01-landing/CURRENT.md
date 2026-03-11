@@ -1,8 +1,8 @@
 # Landing Page - Current State
 
 > **Route**: `/`
-> **Status**: 🟡 Much closer to target; needs fresh screenshots and another visual pass
-> **Last Updated**: 2026-03-08 (code updated; run `pnpm screenshots` to refresh captures)
+> **Status**: 🟡 Structure is much closer to target, but public theme parity is still off
+> **Last Updated**: 2026-03-10
 
 ---
 
@@ -101,12 +101,13 @@ The landing page now renders:
 
 | # | Problem | Severity |
 |---|---------|----------|
-| 1 | Screenshot references are stale and still reflect the older landing baseline | HIGH |
-| 2 | Logo strip uses text placeholders rather than real customer/brand assets | MEDIUM |
-| 3 | Hero/product preview is a crafted mockup, not a captured real app screenshot | MEDIUM |
-| 4 | No announcement banner yet | LOW |
-| 5 | No dedicated enterprise section yet | LOW |
-| 6 | Footer/legal/resources links are still placeholders | LOW |
+| 1 | Light mode palette is awkward: dark purple / dark blue accents and atmospherics read pasted in from dark mode instead of designed for a light canvas | HIGH |
+| 2 | Screenshot references need a fresh targeted rerun against the current landing implementation | HIGH |
+| 3 | Logo strip uses text placeholders rather than real customer/brand assets | MEDIUM |
+| 4 | Hero/product preview is a crafted mockup, not a captured real app screenshot | MEDIUM |
+| 5 | No announcement banner yet | LOW |
+| 6 | No dedicated enterprise section yet | LOW |
+| 7 | Footer/legal/resources links are still placeholders | LOW |
 
 ---
 
@@ -114,8 +115,11 @@ The landing page now renders:
 
 The landing page is no longer the earlier generic hero + feature grid. It now has the core structure the target doc expected: product-led hero, proof strip, AI narrative, stronger conversion flow, and a richer close.
 
+The current blocker is theme design, not page structure. Dark mode is directionally coherent; light mode still feels like the same dark gradients and accents were dropped onto a white page without being rebalanced.
+
 The next step is visual verification, not another blind rewrite:
 
-1. Run `pnpm screenshots`
+1. Run `pnpm screenshots -- --spec 01-landing --config desktop-dark,desktop-light`
 2. Replace the stale screenshot refs in this folder
+3. Redesign the public light-mode palette so it is intentionally lighter and cleaner than dark mode instead of simply reusing dark chroma
 3. Re-score remaining gaps after looking at actual captures

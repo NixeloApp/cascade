@@ -7,9 +7,8 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { useSearch } from "@tanstack/react-router";
-
-import { useState } from "react";
+import type { ComponentType } from "react";
+import { useEffect } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { HourComplianceDashboard } from "./Admin/HourComplianceDashboard";
 import { IpRestrictionsSettings } from "./Admin/IpRestrictionsSettings";
@@ -28,87 +27,100 @@ import { PreferencesTab } from "./Settings/PreferencesTab";
 import { ProfileTab } from "./Settings/ProfileTab";
 import { PumbleIntegration } from "./Settings/PumbleIntegration";
 import { SlackIntegration } from "./Settings/SlackIntegration";
+import {
+  getVisibleSettingsTabs,
+  isSettingsTabValue,
+  resolveSettingsTab,
+  type SettingsTabValue,
+} from "./Settings/settingsTabs";
 import { TwoFactorSettings } from "./Settings/TwoFactorSettings";
 import { Stack } from "./ui/Stack";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/Tabs";
 
 const isTestEmail = (email?: string) => email?.endsWith("@inbox.mailtrap.io") ?? false;
-
-const validTabs = [
-  "profile",
-  "security",
-  "notifications",
-  "integrations",
-  "apikeys",
-  "offline",
-  "preferences",
-  "admin",
-  "developer",
+const isScreenshotSeedEmail = (email?: string) => email?.includes("-screenshots@") ?? false;
+const INTEGRATION_SECTIONS = [
+  { key: "github", Component: GitHubIntegration },
+  { key: "slack", Component: SlackIntegration },
+  { key: "google-calendar", Component: GoogleCalendarIntegration },
+  { key: "pumble", Component: PumbleIntegration },
 ] as const;
-type TabValue = (typeof validTabs)[number];
+const ADMIN_SECTIONS = [
+  { key: "organization", Component: OrganizationSettings },
+  { key: "oauth-health", Component: OAuthHealthDashboard },
+  { key: "oauth-flags", Component: OAuthFeatureFlagSettings },
+  { key: "ip-restrictions", Component: IpRestrictionsSettings },
+  { key: "user-management", Component: UserManagement },
+  { key: "user-types", Component: UserTypeManager },
+  { key: "hour-compliance", Component: HourComplianceDashboard },
+] as const;
+
+const SETTINGS_TAB_CONTENT = {
+  profile: ProfileTab,
+  security: TwoFactorSettings,
+  notifications: NotificationsTab,
+  integrations: IntegrationsTab,
+  apikeys: ApiKeysManager,
+  offline: OfflineTab,
+  preferences: PreferencesTab,
+  admin: AdminTab,
+  developer: DevToolsTab,
+} satisfies Record<SettingsTabValue, ComponentType>;
+
+interface SettingsProps {
+  activeTab: SettingsTabValue;
+  onTabChange: (tab: SettingsTabValue) => void;
+}
 
 /** Main settings page with tabs for profile, preferences, integrations, and admin. */
-export function Settings() {
+export function Settings({ activeTab: requestedTab, onTabChange }: SettingsProps) {
   const currentUser = useAuthenticatedQuery(api.users.getCurrent, {});
   const isAdmin = useAuthenticatedQuery(api.users.isOrganizationAdmin, {});
-  const showDevTools = isTestEmail(currentUser?.email);
-  // Don't show admin tab while loading to prevent UI flicker
-  const showAdminTab = isAdmin === true;
+  const showDevTools =
+    isTestEmail(currentUser?.email) && !isScreenshotSeedEmail(currentUser?.email);
+  const visibleTabs = getVisibleSettingsTabs({
+    isAdmin: isAdmin === true,
+    showDevTools,
+  });
+  const activeTab = resolveSettingsTab(requestedTab, visibleTabs);
+  const canCanonicalizeRequestedTab =
+    (requestedTab !== "admin" || isAdmin !== undefined) &&
+    (requestedTab !== "developer" || currentUser !== undefined);
 
-  // Get tab from URL search params (e.g., /settings/profile?tab=admin)
-  const search = useSearch({ strict: false }) as { tab?: string };
-  const urlTab = search?.tab;
-  const initialTab: TabValue =
-    urlTab && validTabs.includes(urlTab as TabValue) ? (urlTab as TabValue) : "profile";
-
-  // Use controlled tabs for URL-based navigation
-  const [activeTab, setActiveTab] = useState<TabValue>(initialTab);
+  useEffect(() => {
+    if (canCanonicalizeRequestedTab && activeTab !== requestedTab) {
+      onTabChange(activeTab);
+    }
+  }, [activeTab, canCanonicalizeRequestedTab, onTabChange, requestedTab]);
 
   return (
-    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)} className="w-full">
-      <TabsList className="mb-6 w-full justify-start overflow-x-auto sm:mb-8">
-        <TabsTrigger value="profile">Profile</TabsTrigger>
-        <TabsTrigger value="security">Security</TabsTrigger>
-        <TabsTrigger value="notifications">Notifications</TabsTrigger>
-        <TabsTrigger value="integrations">Integrations</TabsTrigger>
-        <TabsTrigger value="apikeys">API Keys</TabsTrigger>
-        <TabsTrigger value="offline">Offline Mode</TabsTrigger>
-        <TabsTrigger value="preferences">Preferences</TabsTrigger>
-        {showAdminTab && <TabsTrigger value="admin">Admin</TabsTrigger>}
-        {showDevTools && <TabsTrigger value="developer">Dev Tools</TabsTrigger>}
+    <Tabs
+      value={activeTab}
+      onValueChange={(value) => {
+        if (isSettingsTabValue(value)) {
+          onTabChange(value);
+        }
+      }}
+      className="w-full"
+    >
+      <TabsList size="compact" layout="settings">
+        {visibleTabs.map((tab) => (
+          <TabsTrigger key={tab.value} value={tab.value} size="compact" width="responsive">
+            <span className="sm:hidden">{tab.shortLabel ?? tab.label}</span>
+            <span className="hidden sm:inline">{tab.label}</span>
+          </TabsTrigger>
+        ))}
       </TabsList>
 
-      <TabsContent value="profile" className="mt-0">
-        <ProfileTab />
-      </TabsContent>
-      <TabsContent value="security" className="mt-0">
-        <TwoFactorSettings />
-      </TabsContent>
-      <TabsContent value="notifications" className="mt-0">
-        <NotificationsTab />
-      </TabsContent>
-      <TabsContent value="integrations" className="mt-0">
-        <IntegrationsTab />
-      </TabsContent>
-      <TabsContent value="apikeys" className="mt-0">
-        <ApiKeysManager />
-      </TabsContent>
-      <TabsContent value="offline" className="mt-0">
-        <OfflineTab />
-      </TabsContent>
-      <TabsContent value="preferences" className="mt-0">
-        <PreferencesTab />
-      </TabsContent>
-      {showAdminTab && (
-        <TabsContent value="admin" className="mt-0">
-          <AdminTab />
-        </TabsContent>
-      )}
-      {showDevTools && (
-        <TabsContent value="developer" className="mt-0">
-          <DevToolsTab />
-        </TabsContent>
-      )}
+      {visibleTabs.map((tab) => {
+        const Content = SETTINGS_TAB_CONTENT[tab.value];
+
+        return (
+          <TabsContent key={tab.value} value={tab.value} className="mt-0">
+            <Content />
+          </TabsContent>
+        );
+      })}
     </Tabs>
   );
 }
@@ -116,10 +128,9 @@ export function Settings() {
 function IntegrationsTab() {
   return (
     <Stack gap="lg">
-      <GitHubIntegration />
-      <SlackIntegration />
-      <GoogleCalendarIntegration />
-      <PumbleIntegration />
+      {INTEGRATION_SECTIONS.map(({ key, Component }) => (
+        <Component key={key} />
+      ))}
     </Stack>
   );
 }
@@ -127,13 +138,9 @@ function IntegrationsTab() {
 function AdminTab() {
   return (
     <Stack gap="xl">
-      <OrganizationSettings />
-      <OAuthHealthDashboard />
-      <OAuthFeatureFlagSettings />
-      <IpRestrictionsSettings />
-      <UserManagement />
-      <UserTypeManager />
-      <HourComplianceDashboard />
+      {ADMIN_SECTIONS.map(({ key, Component }) => (
+        <Component key={key} />
+      ))}
     </Stack>
   );
 }

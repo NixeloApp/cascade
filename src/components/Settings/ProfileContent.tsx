@@ -34,6 +34,17 @@ interface UserStats {
   comments: number;
 }
 
+const USER_STATS_ITEMS: ReadonlyArray<{
+  key: keyof UserStats;
+  label: string;
+}> = [
+  { key: "projects", label: "Workspaces" },
+  { key: "issuesCreated", label: "Created" },
+  { key: "issuesAssigned", label: "Assigned" },
+  { key: "issuesCompleted", label: "Completed" },
+  { key: "comments", label: "Comments" },
+];
+
 // User type that matches what the queries return
 type ProfileUser = {
   _id: Id<"users">;
@@ -51,62 +62,25 @@ type ProfileUser = {
  */
 export function UserStatsCards({ stats }: { stats: UserStats }) {
   return (
-    <Grid cols={2} colsMd={5} gap="md">
-      <Card padding="md" variant="default" className="relative overflow-hidden text-center">
-        <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-brand/70" />
-        <Stack gap="xs" align="center" className="relative">
-          <Typography variant="h2" color="brand">
-            {stats.projects}
-          </Typography>
-          <Typography variant="caption" className="uppercase tracking-widest">
-            Workspaces
-          </Typography>
-        </Stack>
-      </Card>
-      <Card padding="md" variant="default" className="relative overflow-hidden text-center">
-        <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-brand/70" />
-        <Stack gap="xs" align="center" className="relative">
-          <Typography variant="h2" color="brand">
-            {stats.issuesCreated}
-          </Typography>
-          <Typography variant="caption" className="uppercase tracking-widest">
-            Created
-          </Typography>
-        </Stack>
-      </Card>
-      <Card padding="md" variant="default" className="relative overflow-hidden text-center">
-        <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-brand/70" />
-        <Stack gap="xs" align="center" className="relative">
-          <Typography variant="h2" color="brand">
-            {stats.issuesAssigned}
-          </Typography>
-          <Typography variant="caption" className="uppercase tracking-widest">
-            Assigned
-          </Typography>
-        </Stack>
-      </Card>
-      <Card padding="md" variant="default" className="relative overflow-hidden text-center">
-        <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-brand/70" />
-        <Stack gap="xs" align="center" className="relative">
-          <Typography variant="h2" color="brand">
-            {stats.issuesCompleted}
-          </Typography>
-          <Typography variant="caption" className="uppercase tracking-widest">
-            Completed
-          </Typography>
-        </Stack>
-      </Card>
-      <Card padding="md" variant="default" className="relative overflow-hidden text-center">
-        <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-brand/70" />
-        <Stack gap="xs" align="center" className="relative">
-          <Typography variant="h2" color="brand">
-            {stats.comments}
-          </Typography>
-          <Typography variant="caption" className="uppercase tracking-widest">
-            Comments
-          </Typography>
-        </Stack>
-      </Card>
+    <Grid cols={2} colsMd={3} colsLg={5} gap="sm">
+      {USER_STATS_ITEMS.map((item) => (
+        <Card
+          key={item.key}
+          padding="sm"
+          variant="outline"
+          className="relative overflow-hidden border-ui-border-secondary/75 bg-ui-bg/94 px-3 py-3 text-center sm:px-4"
+        >
+          <div className="absolute inset-x-4 top-0 h-px rounded-full bg-brand/60" />
+          <Stack gap="xs" align="center" className="relative">
+            <Typography variant="h2" color="brand">
+              {stats[item.key]}
+            </Typography>
+            <Typography variant="caption" className="uppercase tracking-widest">
+              {item.label}
+            </Typography>
+          </Stack>
+        </Card>
+      ))}
     </Grid>
   );
 }
@@ -114,28 +88,48 @@ export function UserStatsCards({ stats }: { stats: UserStats }) {
 /**
  * User account information section
  */
-export function AccountInfo({ user }: { user: ProfileUser & { _creationTime: number } }) {
+export function AccountInfo({
+  user,
+  className,
+}: {
+  user: ProfileUser & { _creationTime: number };
+  className?: string;
+}) {
+  const rows = [
+    {
+      label: "User ID:",
+      value: (
+        <Typography variant="mono" className="max-w-40 break-all text-right">
+          {user._id}
+        </Typography>
+      ),
+    },
+    {
+      label: "Member Since:",
+      value: <Typography variant="small">{formatDate(user._creationTime)}</Typography>,
+    },
+    {
+      label: "Email Verified:",
+      value: <Typography variant="small">{user.emailVerificationTime ? "Yes" : "No"}</Typography>,
+    },
+  ];
+
   return (
     <Stack
       gap="md"
-      className="rounded-container border border-ui-border-secondary/70 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft/80 p-4 shadow-soft"
+      className={cn(
+        "rounded-container border border-ui-border-secondary/70 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/68 p-3.5 shadow-soft sm:p-4",
+        className,
+      )}
     >
       <Typography variant="h5">Account Information</Typography>
       <Stack gap="sm">
-        <Flex justify="between" gap="sm">
-          <Typography variant="caption">User ID:</Typography>
-          <Typography variant="mono" className="max-w-40 break-all text-right">
-            {user._id}
-          </Typography>
-        </Flex>
-        <Flex justify="between" gap="sm">
-          <Typography variant="caption">Member Since:</Typography>
-          <Typography variant="small">{formatDate(user._creationTime)}</Typography>
-        </Flex>
-        <Flex justify="between">
-          <Typography variant="caption">Email Verified:</Typography>
-          <Typography variant="small">{user.emailVerificationTime ? "Yes" : "No"}</Typography>
-        </Flex>
+        {rows.map((row) => (
+          <Flex key={row.label} justify="between" gap="sm">
+            <Typography variant="caption">{row.label}</Typography>
+            {row.value}
+          </Flex>
+        ))}
       </Stack>
     </Stack>
   );
@@ -178,20 +172,25 @@ export function ProfileHeader({
   onAvatarClick?: () => void;
 }) {
   return (
-    <Flex align="center" gap="xl" direction="column" className="sm:flex-row sm:items-center">
+    <Flex
+      align="center"
+      gap="lg"
+      direction="column"
+      className="items-start sm:flex-row sm:items-center sm:gap-xl"
+    >
       {/* Avatar */}
       <div className="relative group">
         {user.image ? (
           <img
             src={user.image}
             alt={user.name || "User"}
-            className="h-24 w-24 rounded-full border border-ui-border/70 object-cover shadow-soft"
+            className="h-20 w-20 rounded-full border border-ui-border/70 object-cover shadow-soft sm:h-24 sm:w-24"
           />
         ) : (
           <Flex
             align="center"
             justify="center"
-            className="h-24 w-24 rounded-full bg-brand text-3xl font-bold text-brand-foreground shadow-card"
+            className="h-20 w-20 rounded-full bg-brand text-2xl font-bold text-brand-foreground shadow-card sm:h-24 sm:w-24 sm:text-3xl"
           >
             {(user.name || user.email || "?").charAt(0).toUpperCase()}
           </Flex>
@@ -251,10 +250,10 @@ export function ProfileHeader({
           </Stack>
         ) : (
           <>
-            <Typography variant="h3" className="tracking-tight">
+            <Typography variant="h3" className="tracking-tight text-left">
               {user.name || "Anonymous User"}
             </Typography>
-            <Typography variant="caption" className="max-w-lg">
+            <Typography variant="caption" className="max-w-lg text-left">
               {user.email}
             </Typography>
             {isOwnProfile && (
@@ -322,13 +321,20 @@ function LoadedProfileContent({
   userStats,
   viewUser,
 }: LoadedProfileContentProps) {
+  const showAccountInfo =
+    isOwnProfile && "_creationTime" in viewUser && typeof viewUser._creationTime === "number";
+
   return (
-    <Card variant="elevated" padding="none" className="overflow-hidden">
+    <Card
+      variant="outline"
+      padding="none"
+      className="overflow-hidden border-ui-border-secondary/90 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-secondary/72 shadow-elevated"
+    >
       {isOwnProfile && (
         <div className="relative group">
           <div
             className={cn(
-              "h-32 w-full bg-linear-to-r from-brand/18 via-brand-subtle/85 to-accent/14 sm:h-36",
+              "h-10 w-full border-b border-ui-border-secondary/60 bg-linear-to-r from-brand/18 via-brand-subtle/80 to-accent/14 sm:h-14",
               coverImageUrl && "bg-none",
             )}
           >
@@ -339,7 +345,7 @@ function LoadedProfileContent({
           <Button
             variant="ghost"
             size="sm"
-            className="absolute bottom-2 right-2 h-8 px-3 rounded-full bg-ui-bg/80 border border-ui-border shadow-sm backdrop-blur-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:focus:opacity-100 transition-opacity"
+            className="absolute bottom-2 right-2 h-8 rounded-full border border-ui-border bg-ui-bg/82 px-3 shadow-sm backdrop-blur-sm transition-opacity opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:focus:opacity-100"
             onClick={onCoverImageClick}
           >
             <ImageIcon className="h-4 w-4 mr-2" />
@@ -348,34 +354,48 @@ function LoadedProfileContent({
         </div>
       )}
 
-      <div className="px-4 pb-5 sm:px-5 sm:pb-6">
-        <Stack gap="lg">
-          <Card
-            variant="default"
-            padding="md"
-            className={cn(
-              "border-ui-border-secondary/70 bg-ui-bg-elevated/96 shadow-elevated",
-              isOwnProfile && "-mt-10",
-            )}
+      <div className="p-3 sm:p-5">
+        <Stack gap="md">
+          <Grid
+            cols={1}
+            colsLg={showAccountInfo ? 5 : 1}
+            gap="md"
+            className={cn(isOwnProfile && "-mt-3 sm:-mt-5")}
           >
-            <ProfileHeader
-              user={viewUser}
-              isOwnProfile={isOwnProfile}
-              isEditing={isEditing}
-              name={name}
-              firstName={firstName}
-              lastName={lastName}
-              email={email}
-              onEditClick={onEditClick}
-              onNameChange={onNameChange}
-              onFirstNameChange={onFirstNameChange}
-              onLastNameChange={onLastNameChange}
-              onEmailChange={onEmailChange}
-              onSave={onSave}
-              onCancel={onCancel}
-              onAvatarClick={onAvatarClick}
-            />
-          </Card>
+            <Card
+              variant="default"
+              padding="none"
+              className={cn(
+                "border-ui-border-secondary/80 bg-ui-bg-elevated p-4 shadow-card sm:p-6",
+                showAccountInfo && "lg:col-span-3",
+              )}
+            >
+              <ProfileHeader
+                user={viewUser}
+                isOwnProfile={isOwnProfile}
+                isEditing={isEditing}
+                name={name}
+                firstName={firstName}
+                lastName={lastName}
+                email={email}
+                onEditClick={onEditClick}
+                onNameChange={onNameChange}
+                onFirstNameChange={onFirstNameChange}
+                onLastNameChange={onLastNameChange}
+                onEmailChange={onEmailChange}
+                onSave={onSave}
+                onCancel={onCancel}
+                onAvatarClick={onAvatarClick}
+              />
+            </Card>
+
+            {showAccountInfo && (
+              <AccountInfo
+                user={viewUser as ProfileUser & { _creationTime: number }}
+                className="h-full lg:col-span-2"
+              />
+            )}
+          </Grid>
 
           <AvatarUploadModal
             open={showAvatarModal}
@@ -393,22 +413,16 @@ function LoadedProfileContent({
 
           {userStats && <UserStatsCards stats={userStats} />}
 
-          <Grid cols={1} colsLg={3} gap="md">
-            <Card padding="lg" variant="soft" className="lg:col-span-2">
-              <Stack gap="md">
-                <Typography variant="h5">Recent Activity</Typography>
-                <UserActivityFeed userId={viewUser._id} limit={10} />
-              </Stack>
-            </Card>
-
-            {isOwnProfile &&
-              "_creationTime" in viewUser &&
-              typeof viewUser._creationTime === "number" && (
-                <div className="lg:col-span-1">
-                  <AccountInfo user={viewUser as ProfileUser & { _creationTime: number }} />
-                </div>
-              )}
-          </Grid>
+          <Card
+            padding="none"
+            variant="default"
+            className="border-ui-border-secondary/80 bg-linear-to-br from-ui-bg via-ui-bg-secondary/82 to-ui-bg-soft/70 p-3.5 shadow-soft sm:p-4"
+          >
+            <Stack gap="sm">
+              <Typography variant="h5">Recent Activity</Typography>
+              <UserActivityFeed userId={viewUser._id} limit={10} />
+            </Stack>
+          </Card>
         </Stack>
       </div>
     </Card>

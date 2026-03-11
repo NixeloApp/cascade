@@ -1,8 +1,8 @@
 # Sign In Page - Current State
 
 > **Route**: `/signin`
-> **Status**: 🔴 SLOP
-> **Last Updated**: Run `pnpm screenshots` to regenerate
+> **Status**: 🟡 NEEDS POLISH
+> **Last Updated**: 2026-03-09
 
 ---
 
@@ -17,77 +17,39 @@
 
 ---
 
-## Structure
+## Current UI
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                                                             │
-│     bg: bg-ui-bg (white in light, #08090a in dark)                         │
-│                                                                             │
-│         ← Back to Home                    ← SLOP: Delete this              │
-│                                                                             │
-│         ┌─────────────────────────────────────────────┐                     │
-│         │                                             │                     │
-│         │              [Nixelo Logo 48px]             │ ← card-subtle       │
-│         │                                             │   p-8              │
-│         │              Welcome back                   │   shadow-card       │
-│         │     Sign in to your account to continue     │                     │
-│         │                                             │   SLOP: Kill card   │
-│         │     ┌───────────────────────────────┐       │                     │
-│         │     │ G  Sign in with Google        │       │                     │
-│         │     └───────────────────────────────┘       │                     │
-│         │                                             │                     │
-│         │     ──────────── or ────────────            │                     │
-│         │                                             │                     │
-│         │     ┌───────────────────────────────┐       │                     │
-│         │     │ ✉  Continue with email        │       │ ← Expands to show  │
-│         │     └───────────────────────────────┘       │   email/password    │
-│         │                                             │                     │
-│         │     Don't have an account? Sign up          │                     │
-│         │                                             │                     │
-│         │     By continuing, you acknowledge that     │ ← SLOP: Too verbose │
-│         │     you understand and agree to the         │                     │
-│         │     Terms & Conditions and Privacy Policy   │                     │
-│         │                                             │                     │
-│         └─────────────────────────────────────────────┘                     │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+- Shared auth shell now uses a split layout on desktop: a restrained marketing rail on the left and the sign-in form in a single elevated panel on the right.
+- Mobile collapses into a single column with a compact logo pill, short product strapline, and the auth panel directly underneath.
+- The page title is now explicit: `Sign in to Nixelo`.
+- The account-switch link lives in the subtitle row instead of being buried below the form.
+- Legal copy was reduced to a compact footer line with `Terms of Service` and `Privacy Policy`.
 
 ---
 
-## Files
+## Recent Improvements
 
-| File | Purpose | Lines |
-|------|---------|-------|
-| `src/routes/signin.tsx` | Route definition | 23 |
-| `src/components/auth/AuthPageLayout.tsx` | Shared layout (THE PROBLEM) | 106 |
-| `src/components/auth/SignInForm.tsx` | Form logic | 160 |
-| `src/components/auth/GoogleAuthButton.tsx` | OAuth button | ~50 |
-| `src/components/auth/AuthLink.tsx` | Styled link | ~20 |
+- Removed the old back-link and the heavier nested-card auth treatment.
+- Simplified the shared auth shell in `src/components/Auth/AuthPageLayout.tsx`.
+- Kept the sign-in flow focused on the two real choices: Google or email/password.
+- Brought light and dark screenshots into the same layout system.
 
 ---
 
-## Problems
+## Remaining Gaps
 
-| # | Problem | Location | Severity |
-|---|---------|----------|----------|
-| 1 | Card wrapper (`card-subtle p-8 shadow-card`) | `AuthPageLayout.tsx:47` | HIGH |
-| 2 | "Back to Home" link with arrow | `AuthPageLayout.tsx:19-44` | HIGH |
-| 3 | Verbose legal text (3 lines) | `AuthPageLayout.tsx:83-100` | MEDIUM |
-| 4 | 6 staggered animations (0.05s - 0.4s delays) | `AuthPageLayout.tsx` throughout | MEDIUM |
-| 5 | Generic heading "Welcome back" | `signin.tsx:14` | LOW |
-| 6 | Generic subtitle | `signin.tsx:14` | LOW |
-| 7 | Full logo (48px) could be smaller | `AuthPageLayout.tsx:57` | LOW |
-| 8 | `max-w-md` (448px) slightly too wide | `AuthPageLayout.tsx:17` | LOW |
+| Problem | Area | Severity |
+|---------|------|----------|
+| Light mode still feels visually wrong, not just a bit flat: the dark purple / blue marketing treatment clashes with the light canvas | Shared auth shell / theme parity | HIGH |
+| Desktop light mode still gives the left marketing rail slightly too much attention versus the form | Shared auth shell | MEDIUM |
+| The auth panel is calmer than before, but still a little over-shelled for such a simple task | Shared auth shell | MEDIUM |
+| CTA weighting between Google and email could be tighter in the collapsed email state | `SignInForm` | LOW |
 
 ---
 
-## Summary
+## Source Files
 
-Classic AI-slop patterns:
-- Unnecessary card wrapper
-- Patronizing "Back to Home" link
-- Verbose legal text
-- Staggered animations that feel gimmicky
-- Template-speak heading ("Welcome back")
+- `src/routes/signin.tsx`
+- `src/components/Auth/AuthPageLayout.tsx`
+- `src/components/Auth/SignInForm.tsx`
+- `src/components/Auth/GoogleAuthButton.tsx`

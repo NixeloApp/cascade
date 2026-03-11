@@ -50,6 +50,7 @@ docs/design/specs/pages/*/screenshots/*.png
 *.txt
 !.agents/*.txt
 !**/.agents/*.txt
+.tmp/
 
 .vercel
 

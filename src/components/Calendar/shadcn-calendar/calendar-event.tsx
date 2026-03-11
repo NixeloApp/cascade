@@ -57,15 +57,15 @@ function calculateEventPosition(
     endMinutes = 59;
   }
 
-  const topPosition = startHour * 128 + (startMinutes / 60) * 128;
+  const topPosition = startHour + startMinutes / 60;
   const duration = endHour * 60 + endMinutes - (startHour * 60 + startMinutes);
-  const height = (duration / 60) * 128;
+  const height = duration / 60;
 
   return {
     left,
     width,
-    top: `${topPosition}px`,
-    height: `${height}px`,
+    top: `calc(${topPosition} * var(--calendar-hour-height))`,
+    height: `calc(${height} * var(--calendar-hour-height))`,
   };
 }
 

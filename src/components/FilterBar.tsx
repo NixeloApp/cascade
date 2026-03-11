@@ -77,6 +77,7 @@ function countActiveFilters(filters: BoardFilters): number {
 /** Reusable filter dropdown to reduce component complexity */
 interface FilterDropdownProps<T> {
   label: string;
+  shortLabel?: string;
   activeCount: number;
   items: readonly T[] | T[] | undefined;
   selectedValues: T[] | undefined;
@@ -89,6 +90,7 @@ interface FilterDropdownProps<T> {
 
 function FilterDropdown<T>({
   label,
+  shortLabel,
   activeCount,
   items,
   selectedValues,
@@ -106,13 +108,14 @@ function FilterDropdown<T>({
           variant="ghost"
           size="sm"
           className={cn(
-            "h-9 rounded-xl border border-transparent px-3",
+            "h-7 rounded-md border border-transparent px-1.5 text-xs sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm",
             isActive
               ? "border-brand/10 bg-brand-subtle text-brand"
               : "hover:border-ui-border/60 hover:bg-ui-bg-hover/80",
           )}
         >
-          {label}
+          <span className="sm:hidden">{shortLabel ?? label}</span>
+          <span className="hidden sm:inline">{label}</span>
           {isActive && ` (${activeCount})`}
           <ChevronDown className="ml-1 w-4 h-4" />
         </Button>
@@ -142,11 +145,12 @@ function FilterDropdown<T>({
 /** Date range filter dropdown component */
 interface DateRangeDropdownProps {
   label: string;
+  shortLabel?: string;
   value?: DateRangeFilter;
   onChange: (value: DateRangeFilter | undefined) => void;
 }
 
-function DateRangeDropdown({ label, value, onChange }: DateRangeDropdownProps) {
+function DateRangeDropdown({ label, shortLabel, value, onChange }: DateRangeDropdownProps) {
   const isActive = hasDateRange(value);
 
   const handleFromChange = (from: string) => {
@@ -170,13 +174,14 @@ function DateRangeDropdown({ label, value, onChange }: DateRangeDropdownProps) {
           variant="ghost"
           size="sm"
           className={cn(
-            "h-9 rounded-xl border border-transparent px-3",
+            "h-7 rounded-md border border-transparent px-1.5 text-xs sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm",
             isActive
               ? "border-brand/10 bg-brand-subtle text-brand"
               : "hover:border-ui-border/60 hover:bg-ui-bg-hover/80",
           )}
         >
-          {label}
+          <span className="sm:hidden">{shortLabel ?? label}</span>
+          <span className="hidden sm:inline">{label}</span>
           {isActive && " (1)"}
           <ChevronDown className="ml-1 w-4 h-4" />
         </Button>
@@ -228,9 +233,10 @@ function SavedFiltersDropdown({
         <Button
           variant="ghost"
           size="sm"
-          className="h-9 rounded-xl border border-transparent px-3 hover:border-ui-border/60 hover:bg-ui-bg-hover/80"
+          className="h-7 rounded-md border border-transparent px-1.5 text-xs hover:border-ui-border/60 hover:bg-ui-bg-hover/80 sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm"
         >
-          Saved Filters ({savedFilters.length})
+          <span className="sm:hidden">Saved</span>
+          <span className="hidden sm:inline">Saved Filters</span> ({savedFilters.length})
           <ChevronDown className="ml-1 w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>
@@ -412,32 +418,33 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
   };
 
   return (
-    <div className="px-3 pb-2 pt-3 sm:px-4">
-      <div className="overflow-x-auto">
+    <div className="px-1 pb-1 pt-0.5 sm:px-4 sm:pb-2 sm:pt-3">
+      <div className="overflow-x-auto pb-1">
         <Flex
           align="center"
-          gap="sm"
-          className="min-w-max rounded-2xl border border-ui-border/70 bg-ui-bg-elevated/90 px-2 py-2 shadow-soft"
+          gap="xs"
+          className="min-w-max rounded-md border border-ui-border/70 bg-ui-bg-elevated/92 px-1 py-0.5 shadow-soft sm:gap-sm sm:rounded-2xl sm:px-2 sm:py-2"
         >
           {/* Search Input */}
           <Flex align="center" className="relative">
             <Search className="absolute left-2 w-4 h-4 text-ui-text-tertiary pointer-events-none" />
             <Input
               type="text"
-              placeholder="Search or use status:done priority:high"
+              placeholder="Search"
               value={filters.query ?? ""}
               onChange={handleSearchChange}
-              className="h-9 w-40 rounded-xl border border-ui-border/60 bg-ui-bg-soft pl-8 pr-3 sm:w-64"
+              className="h-7 w-20 rounded-md border border-ui-border/60 bg-ui-bg-soft pl-7 pr-2 text-xs sm:h-9 sm:w-64 sm:rounded-xl sm:pr-3 sm:text-sm"
               aria-label="Search issues"
             />
           </Flex>
 
           {/* Divider */}
-          <div className="h-6 w-px bg-ui-border/70" />
+          <div className="hidden h-5 w-px bg-ui-border/70 sm:block sm:h-6" />
 
           {/* Type Filter */}
           <FilterDropdown
             label="Type"
+            shortLabel="Type"
             activeCount={filters.type?.length ?? 0}
             items={ISSUE_TYPES}
             selectedValues={filters.type}
@@ -456,6 +463,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
           {/* Priority Filter */}
           <FilterDropdown
             label="Priority"
+            shortLabel="Pri"
             activeCount={filters.priority?.length ?? 0}
             items={PRIORITIES_DISPLAY_ORDER}
             selectedValues={filters.priority}
@@ -471,6 +479,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
           {/* Assignee Filter */}
           <FilterDropdown
             label="Assignee"
+            shortLabel="Assign"
             activeCount={filters.assigneeId?.length ?? 0}
             items={members?.map((m) => m.userId)}
             selectedValues={filters.assigneeId}
@@ -486,6 +495,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
           {/* Labels Filter */}
           <FilterDropdown
             label="Labels"
+            shortLabel="Tags"
             activeCount={filters.labels?.length ?? 0}
             items={labels?.map((l) => l.name)}
             selectedValues={filters.labels}
@@ -510,11 +520,12 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
           />
 
           {/* Date divider */}
-          <div className="h-6 w-px bg-ui-border/70" />
+          <div className="hidden h-6 w-px bg-ui-border/70 sm:block" />
 
           {/* Due Date Filter */}
           <DateRangeDropdown
             label="Due Date"
+            shortLabel="Due"
             value={filters.dueDate}
             onChange={(dueDate) => onFilterChange({ ...filters, dueDate })}
           />
@@ -522,6 +533,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
           {/* Start Date Filter */}
           <DateRangeDropdown
             label="Start Date"
+            shortLabel="Start"
             value={filters.startDate}
             onChange={(startDate) => onFilterChange({ ...filters, startDate })}
           />
@@ -529,16 +541,22 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
           {/* Created Date Filter */}
           <DateRangeDropdown
             label="Created"
+            shortLabel="Created"
             value={filters.createdAt}
             onChange={(createdAt) => onFilterChange({ ...filters, createdAt })}
           />
 
           {/* Divider */}
-          {hasActiveFilters && <div className="h-6 w-px bg-ui-border/70" />}
+          {hasActiveFilters && <div className="hidden h-5 w-px bg-ui-border/70 sm:block sm:h-6" />}
 
           {/* Clear Filters */}
           {hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={handleClearFilters}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearFilters}
+              className="h-7 rounded-md px-2 text-xs sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm"
+            >
               <X className="w-4 h-4 mr-1" />
               Clear ({activeFilterCount})
             </Button>
@@ -546,7 +564,12 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
 
           {/* Save Filter */}
           {hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={() => setShowSaveDialog(true)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowSaveDialog(true)}
+              className="h-7 rounded-md px-2 text-xs sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm"
+            >
               Save Filter
             </Button>
           )}
@@ -554,7 +577,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
           {/* Saved Filters */}
           {savedFilters && savedFilters.length > 0 && (
             <>
-              <div className="h-6 w-px bg-ui-border/70" />
+              <div className="hidden h-5 w-px bg-ui-border/70 sm:block sm:h-6" />
               <SavedFiltersDropdown
                 savedFilters={savedFilters}
                 onLoadFilter={handleLoadFilter}

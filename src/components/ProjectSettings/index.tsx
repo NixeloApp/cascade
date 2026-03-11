@@ -41,40 +41,49 @@ export function ProjectSettings({
   isOwner,
   orgSlug,
 }: ProjectSettingsProps) {
+  const sections = [
+    <GeneralSettings
+      key="general"
+      projectId={projectId}
+      name={name}
+      projectKey={projectKey}
+      description={description}
+    />,
+    <MemberManagement
+      key="members"
+      projectId={projectId}
+      members={members}
+      createdBy={createdBy}
+      ownerId={ownerId}
+    />,
+    <WorkflowSettings key="workflow" projectId={projectId} workflowStates={workflowStates} />,
+    ...(isOwner
+      ? [
+          <DangerZone
+            key="danger"
+            projectId={projectId}
+            projectName={name}
+            projectKey={projectKey}
+            isOwner={isOwner}
+            orgSlug={orgSlug}
+          />,
+        ]
+      : []),
+  ];
+
   return (
-    <Card padding="lg" className="max-w-3xl mx-auto">
+    <Card
+      variant="ghost"
+      padding="none"
+      className="mx-auto max-w-3xl overflow-hidden sm:border sm:border-ui-border-secondary/85 sm:bg-linear-to-b sm:from-ui-bg sm:via-ui-bg-elevated/98 sm:to-ui-bg-secondary/50 sm:shadow-card"
+    >
       <CardHeader
         title="Project Settings"
         description="Manage your project configuration and team"
+        className="border-b-0 px-1 py-1 sm:border-b sm:border-ui-border sm:px-6 sm:py-5"
       />
-      <CardBody>
-        <Stack gap="xl">
-          <GeneralSettings
-            projectId={projectId}
-            name={name}
-            projectKey={projectKey}
-            description={description}
-          />
-
-          <MemberManagement
-            projectId={projectId}
-            members={members}
-            createdBy={createdBy}
-            ownerId={ownerId}
-          />
-
-          <WorkflowSettings projectId={projectId} workflowStates={workflowStates} />
-
-          {isOwner && (
-            <DangerZone
-              projectId={projectId}
-              projectName={name}
-              projectKey={projectKey}
-              isOwner={isOwner}
-              orgSlug={orgSlug}
-            />
-          )}
-        </Stack>
+      <CardBody className="p-0 sm:p-6">
+        <Stack gap="lg">{sections}</Stack>
       </CardBody>
     </Card>
   );

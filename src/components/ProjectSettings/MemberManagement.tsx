@@ -134,8 +134,8 @@ export function MemberManagement({
 
   return (
     <>
-      <Card variant="soft" padding="lg">
-        <Flex justify="between" align="center" className="mb-6">
+      <Card variant="outline" padding="md" className="sm:p-6">
+        <Flex justify="between" align="center" className="mb-4 sm:mb-6">
           <Stack gap="xs">
             <Typography variant="h4">Members</Typography>
             <Typography variant="small" color="secondary">
@@ -150,7 +150,7 @@ export function MemberManagement({
         </Flex>
 
         {showAddForm && (
-          <Card padding="lg" className="mb-6 bg-ui-bg-tertiary">
+          <div className="mb-5 rounded-xl border border-ui-border-secondary/75 bg-ui-bg px-4 py-4">
             <Typography variant="label" className="mb-4">
               Add New Member
             </Typography>
@@ -191,12 +191,15 @@ export function MemberManagement({
                 </Button>
               </Flex>
             </Stack>
-          </Card>
+          </div>
         )}
 
         <Stack gap="sm">
           {members.map((member) => (
-            <Card padding="sm" key={member._id} hoverable className="bg-ui-bg-tertiary">
+            <div
+              key={member._id}
+              className="rounded-xl border border-ui-border-secondary/75 bg-ui-bg px-3 py-3 transition-default hover:border-ui-border-secondary hover:bg-ui-bg-hover"
+            >
               <Flex align="center" justify="between">
                 <Flex gap="md" align="center">
                   <Avatar src={member.image} name={member.name} email={member.email} size="sm" />
@@ -245,7 +248,7 @@ export function MemberManagement({
                   )}
                 </Flex>
               </Flex>
-            </Card>
+            </div>
           ))}
         </Stack>
       </Card>

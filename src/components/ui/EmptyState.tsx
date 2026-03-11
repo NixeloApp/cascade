@@ -16,6 +16,7 @@ import { Typography } from "./Typography";
 type EmptyStateVariant = "default" | "info" | "warning" | "error";
 type EmptyStateSize = "default" | "compact";
 type EmptyStateAlign = "center" | "start";
+type EmptyStateSurface = "default" | "bare";
 
 interface EmptyStateProps {
   icon: string | LucideIcon;
@@ -33,8 +34,100 @@ interface EmptyStateProps {
   size?: EmptyStateSize;
   /** Horizontal alignment for the shell and copy */
   align?: EmptyStateAlign;
+  /** Surface treatment for embedded versus standalone states */
+  surface?: EmptyStateSurface;
   /** Optional className for the container */
   className?: string;
+}
+
+const EMPTY_STATE_ICON_COLOR_CLASS: Record<EmptyStateVariant, string> = {
+  default: "text-ui-text-tertiary",
+  info: "text-status-info",
+  warning: "text-status-warning",
+  error: "text-status-error",
+};
+
+const EMPTY_STATE_SIZE_CLASS: Record<EmptyStateSize, string> = {
+  default: "min-h-56 max-w-2xl px-6 py-8 sm:px-8 sm:py-9",
+  compact: "min-h-20 px-3 py-2.5 sm:min-h-24 sm:px-4 sm:py-3",
+};
+
+const EMPTY_STATE_ICON_SHELL_CLASS: Record<EmptyStateSize, string> = {
+  default: "mb-4 h-14 w-14",
+  compact: "mb-1.5 h-7 w-7",
+};
+
+function EmptyStateBadge({
+  size,
+  surface,
+  variant,
+}: {
+  size: EmptyStateSize;
+  surface: EmptyStateSurface;
+  variant: EmptyStateVariant;
+}) {
+  // Only show badge for default variant; other variants use icon color to convey meaning
+  if (variant !== "default") return null;
+
+  return (
+    <div
+      className={cn(
+        "inline-flex items-center rounded-full border border-ui-border/70 bg-ui-bg-soft text-xs font-medium uppercase tracking-wider text-ui-text-tertiary",
+        size === "compact"
+          ? surface === "bare"
+            ? "mb-1 px-1.5 py-0.5 text-micro"
+            : "mb-1.5 px-2 py-0.5"
+          : "mb-4 px-3 py-1",
+      )}
+    >
+      {size === "compact" ? "Waiting for updates" : "Nothing here yet"}
+    </div>
+  );
+}
+
+function EmptyStateIcon({
+  icon,
+  iconColorClass,
+  size,
+}: {
+  icon: string | LucideIcon;
+  iconColorClass: string;
+  size: EmptyStateSize;
+}) {
+  const iconClass = size === "compact" ? "text-2xl" : "text-3xl";
+
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-center rounded-full border border-ui-border bg-ui-bg-secondary shadow-soft",
+        EMPTY_STATE_ICON_SHELL_CLASS[size],
+        iconColorClass,
+      )}
+    >
+      {typeof icon === "string" ? (
+        <span aria-hidden="true" className={iconClass}>
+          {icon}
+        </span>
+      ) : (
+        <Icon
+          icon={icon}
+          size={size === "compact" ? "md" : "lg"}
+          className="mx-auto"
+          aria-hidden="true"
+        />
+      )}
+    </div>
+  );
+}
+
+function renderEmptyStateAction(action: EmptyStateProps["action"]) {
+  if (!action) return null;
+
+  if (typeof action === "object" && "label" in action && "onClick" in action) {
+    return <Button onClick={action.onClick}>{action.label}</Button>;
+  }
+
+  return action;
 }
 
 export function EmptyState({
@@ -45,78 +138,36 @@ export function EmptyState({
   variant = "default",
   size = "default",
   align = "center",
+  surface = "default",
   className,
 }: EmptyStateProps) {
-  const renderAction = () => {
-    if (!action) return null;
-
-    // Check if action is a button configuration object
-    if (typeof action === "object" && action !== null && "label" in action && "onClick" in action) {
-      const act = action as { label: string; onClick: () => void };
-      if (typeof act.label === "string" && typeof act.onClick === "function") {
-        return <Button onClick={act.onClick}>{act.label}</Button>;
-      }
-    }
-    return action as ReactNode;
-  };
-
-  const iconColorClass = {
-    default: "text-ui-text-tertiary",
-    info: "text-status-info",
-    warning: "text-status-warning",
-    error: "text-status-error",
-  }[variant];
-
-  const sizeClass = {
-    default: "min-h-56 max-w-2xl px-6 py-8 sm:px-8 sm:py-9",
-    compact: "min-h-44 px-5 py-5 sm:px-6",
-  }[size];
-
-  const iconShellClass = {
-    default: "mb-4 h-14 w-14",
-    compact: "mb-4 h-12 w-12",
-  }[size];
-
-  const iconClass = size === "compact" ? "text-2xl" : "text-3xl";
+  const iconColorClass = EMPTY_STATE_ICON_COLOR_CLASS[variant];
+  const sizeClass = EMPTY_STATE_SIZE_CLASS[size];
   const isStartAligned = align === "start";
+  const isBare = surface === "bare";
 
   return (
     <section
       className={cn(
-        "mx-auto flex w-full flex-col justify-center rounded-container border border-ui-border/70 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-secondary/70 animate-fade-in",
-        size === "compact" ? "shadow-card" : "shadow-soft",
+        "mx-auto flex w-full flex-col justify-center animate-fade-in",
+        isBare
+          ? "rounded-none border-transparent bg-transparent shadow-none"
+          : "rounded-container border border-ui-border/70 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-secondary/70",
+        isBare && size === "compact" && "max-w-none px-0 py-0",
+        !isBare && (size === "compact" ? "shadow-card" : "shadow-soft"),
         isStartAligned ? "items-start text-left" : "items-center text-center",
         sizeClass,
         className,
       )}
       aria-label={title}
     >
-      {size === "default" || size === "compact" ? (
-        <div className="mb-4 inline-flex items-center rounded-full border border-ui-border/70 bg-ui-bg-soft px-3 py-1 text-xs font-medium uppercase tracking-wider text-ui-text-tertiary">
-          {size === "compact" ? "Waiting for updates" : "Nothing here yet"}
-        </div>
-      ) : null}
-      <div
-        className={cn(
-          "flex items-center justify-center rounded-full border border-ui-border bg-ui-bg-secondary shadow-soft",
-          iconShellClass,
-          iconColorClass,
-        )}
+      <EmptyStateBadge size={size} surface={surface} variant={variant} />
+      <EmptyStateIcon icon={icon} iconColorClass={iconColorClass} size={size} />
+      <Typography
+        variant={size === "compact" ? "large" : "h4"}
+        as="h3"
+        className={cn("mb-2", size === "compact" && "text-sm")}
       >
-        {typeof icon === "string" ? (
-          <span aria-hidden="true" className={iconClass}>
-            {icon}
-          </span>
-        ) : (
-          <Icon
-            icon={icon}
-            size={size === "compact" ? "md" : "lg"}
-            className="mx-auto"
-            aria-hidden="true"
-          />
-        )}
-      </div>
-      <Typography variant={size === "compact" ? "large" : "h4"} as="h3" className="mb-2">
         {title}
       </Typography>
       {description && (
@@ -128,7 +179,9 @@ export function EmptyState({
           {description}
         </Typography>
       )}
-      {action && <div className="mt-6">{renderAction()}</div>}
+      {action && (
+        <div className={size === "compact" ? "mt-4" : "mt-6"}>{renderEmptyStateAction(action)}</div>
+      )}
     </section>
   );
 }

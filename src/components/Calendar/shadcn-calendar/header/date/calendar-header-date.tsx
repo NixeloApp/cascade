@@ -10,12 +10,18 @@ import { CalendarHeaderDateIcon } from "./calendar-header-date-icon";
 export function CalendarHeaderDate(): React.ReactElement {
   const { date } = useCalendarContext();
   return (
-    <Flex align="center" gap="md">
-      <CalendarHeaderDateIcon />
-      <div>
-        <Flex align="center" gap="sm">
-          <Typography variant="h3" className="text-lg font-semibold tracking-tight text-ui-text">
-            {format(date, "MMMM yyyy")}
+    <Flex align="center" gap="xs" className="min-w-0 sm:gap-sm">
+      <div className="hidden sm:block">
+        <CalendarHeaderDateIcon />
+      </div>
+      <div className="min-w-0">
+        <Flex align="center" gap="xs" className="sm:gap-sm">
+          <Typography
+            variant="h3"
+            className="text-sm font-semibold tracking-tight text-ui-text sm:text-lg"
+          >
+            <span className="sm:hidden">{format(date, "MMM yyyy")}</span>
+            <span className="hidden sm:inline">{format(date, "MMMM yyyy")}</span>
           </Typography>
           <CalendarHeaderDateBadge />
         </Flex>

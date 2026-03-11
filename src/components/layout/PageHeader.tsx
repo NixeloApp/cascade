@@ -37,7 +37,7 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        "mb-6 rounded-2xl border border-ui-border/45 bg-linear-to-r from-ui-bg-elevated/80 via-ui-bg-elevated/45 to-transparent px-5 py-4 shadow-soft sm:mb-7 sm:px-6",
+        "mb-4 rounded-2xl border border-ui-border-secondary/75 bg-linear-to-r from-ui-bg via-ui-bg-elevated/96 to-ui-bg-soft/78 px-3.5 py-3 shadow-card sm:mb-5 sm:rounded-3xl sm:px-5 sm:py-4",
         className,
       )}
     >
@@ -69,20 +69,20 @@ export function PageHeader({
         className="sm:flex-row sm:items-end"
       >
         <Stack gap="xs" className="min-w-0">
-          <Flex align="center" gap="sm" className="mb-1">
-            <span className="h-2 w-2 rounded-full bg-brand shadow-brand-halo" />
+          <Flex align="center" gap="xs" className="mb-0.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-brand shadow-brand-halo ring-2 ring-brand/8 sm:h-2 sm:w-2" />
             <Typography
               variant="caption"
-              className="uppercase tracking-[0.22em] text-ui-text-tertiary"
+              className="uppercase tracking-[0.18em] text-ui-text-tertiary sm:tracking-[0.22em]"
             >
               Workspace view
             </Typography>
           </Flex>
-          <Typography variant="h2" className="text-3xl lg:text-4xl">
+          <Typography variant="h2" className="text-xl leading-tight sm:text-2xl lg:text-3xl">
             {title}
           </Typography>
           {description && (
-            <Typography variant="muted" className="max-w-3xl text-sm sm:text-base">
+            <Typography variant="muted" className="max-w-3xl text-xs leading-5 sm:text-sm">
               {description}
             </Typography>
           )}

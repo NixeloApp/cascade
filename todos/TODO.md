@@ -12,3 +12,8 @@ All feature specifications and roadmap items are in [`/todos/README.md`](./READM
 - [Blocked By External Dependencies](./README.md#blocked-by-external-dependencies)
 - [Completed Baselines](./README.md#completed-baselines)
 - [Open Jules Issues](./README.md#jules-issues-open)
+
+## Active P0 Docs
+
+- [e2e-screenshot-quality.md](./e2e-screenshot-quality.md)
+- [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md)

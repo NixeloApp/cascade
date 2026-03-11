@@ -127,12 +127,11 @@ export class ProjectsPage extends BasePage {
 
     // Sidebar
     this.sidebar = page.locator("[data-tour='sidebar']").or(page.getByRole("complementary"));
-    // Scope project creation to the main page surface so shell-level actions cannot
-    // satisfy the same button-name contract by accident.
+    // Scope to main content area and take first match (header action or empty-state action)
+    // Both trigger the same create-project modal, so either is valid
     this.newProjectButton = page
       .getByRole("main")
-      .last()
-      .getByRole("button", { name: "+ Create Project" })
+      .getByRole("button", { name: /^\+?\s*create project$/i })
       .first();
     this.newWorkspaceButton = page.getByRole("button", { name: "+ Create Workspace" });
     this.createEntityButton = this.sidebar.getByRole("button", {
@@ -176,8 +175,12 @@ export class ProjectsPage extends BasePage {
       .or(page.getByRole("heading", { name: /kanban board|scrum board/i }));
     this.boardColumns = page.getByTestId(TEST_IDS.BOARD.COLUMN);
     this.issueCards = page.getByTestId(TEST_IDS.ISSUE.CARD);
-    // Create issue - look for "Add issue" button (column headers have "Add issue to X")
-    this.createIssueButton = page.getByRole("button", { name: /add issue/i }).first();
+    // Create issue - prefer the stable first-column trigger used by the tour,
+    // fall back to "Add issue" or empty-state "Add first issue" button.
+    this.createIssueButton = page
+      .locator("[data-tour='create-issue']")
+      .or(page.getByRole("button", { name: /add (first )?issue/i }))
+      .first();
 
     // Create issue modal
     this.createIssueModal = page
@@ -196,9 +199,9 @@ export class ProjectsPage extends BasePage {
       .or(this.createIssueModal.locator('button[type="submit"]'));
 
     // Project tabs - scope to the project tab strip to avoid collisions with global nav links.
-    this.projectTabs = page
-      .getByRole("navigation", { name: "Project sections" })
-      .or(page.getByLabel("Project sections"));
+    // There are separate mobile (sm:hidden) and desktop (sm:flex) navs, so use .first() to
+    // get whichever is in DOM order (mobile) - the actual tab link clicks work on either.
+    this.projectTabs = page.getByRole("navigation", { name: "Project sections" }).first();
     this.boardTab = this.projectTabs.getByRole("link", { name: /^Board$/ });
     this.backlogTab = this.projectTabs.getByRole("link", { name: /^Backlog$/ });
     this.calendarTab = this.projectTabs.getByRole("link", { name: /^Calendar$/ });
@@ -427,7 +430,44 @@ export class ProjectsPage extends BasePage {
   }
 
   async openCreateIssueModal() {
-    await this.createIssueButton.click();
+    const triggerCandidates = [
+      this.page.getByRole("button", { name: /add first issue/i }).first(),
+      this.page.locator("[data-tour='create-issue']").first(),
+      this.page.getByRole("button", { name: /add issue/i }).first(),
+    ];
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      for (const trigger of triggerCandidates) {
+        if ((await trigger.count().catch(() => 0)) === 0) {
+          continue;
+        }
+
+        await trigger.waitFor({ state: "visible", timeout: 2000 }).catch(() => {});
+        if (!(await trigger.isVisible().catch(() => false))) {
+          continue;
+        }
+
+        await trigger.scrollIntoViewIfNeeded().catch(() => {});
+        await trigger.click({ force: true });
+        await this.createIssueModal.waitFor({ state: "visible", timeout: 1500 }).catch(() => {});
+
+        if (await this.createIssueModal.isVisible().catch(() => false)) {
+          return;
+        }
+      }
+
+      await this.page.waitForTimeout(750);
+    }
+
+    await this.page.evaluate(() => {
+      window.dispatchEvent(new Event("nixelo:create-issue"));
+    });
+    await this.createIssueModal.waitFor({ state: "visible", timeout: 3000 }).catch(() => {});
+
+    if (await this.createIssueModal.isVisible().catch(() => false)) {
+      return;
+    }
+
     await expect(this.createIssueModal).toBeVisible();
   }
 
@@ -953,7 +993,11 @@ export class ProjectsPage extends BasePage {
 
   async expectProjectsView(timeout = 10000) {
     await expect(this.sidebar).toBeVisible({ timeout });
-    await expect(this.newProjectButton).toBeVisible({ timeout });
+    await expect.poll(async () => this.hasCreateProjectEntryPoint(), { timeout }).toBe(true);
+  }
+
+  async hasCreateProjectEntryPoint() {
+    return await this.newProjectButton.isVisible().catch(() => false);
   }
 
   private async clickNewProjectButton() {

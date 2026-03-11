@@ -96,6 +96,7 @@ function BoardPage() {
   const activeSprint = sprints?.find((s: Doc<"sprints">) => s.status === "active");
   const selectedSprintId = sprintParam as Id<"sprints"> | undefined;
   const effectiveSprintId = selectedSprintId || activeSprint?._id;
+  const showMobileSprintControls = project.boardType === "scrum" && !!sprints;
 
   const handleSprintChange = (value: string) => {
     navigate({
@@ -109,11 +110,16 @@ function BoardPage() {
 
   return (
     <Flex direction="column" className="h-full">
-      <div className="px-3 pt-3 sm:px-4">
+      <div className="hidden px-2 pt-1.5 sm:block sm:px-4 sm:pt-3">
         <div className="rounded-2xl border border-ui-border/70 bg-ui-bg-elevated/90 px-4 py-3 shadow-soft">
-          <Flex align="center" justify="between" gap="md" className="flex-col sm:flex-row">
-            <Flex align="center" gap="sm" wrap>
-              <div className="hidden sm:block">
+          <Flex
+            align="center"
+            justify="between"
+            gap="md"
+            className="flex-row flex-wrap sm:flex-nowrap"
+          >
+            <Flex align="center" gap="sm" wrap className="min-w-0">
+              <div>
                 <Typography variant="h4" className="tracking-tight">
                   Delivery board
                 </Typography>
@@ -121,14 +127,14 @@ function BoardPage() {
                   Filter issues, switch sprints, and move work without leaving the board.
                 </Typography>
               </div>
-              <Badge variant="neutral" size="md">
+              <Badge variant="neutral" size="sm" className="inline-flex text-xs">
                 {project.key}
               </Badge>
-              <Badge variant="accent" size="md">
+              <Badge variant="accent" size="md" className="inline-flex">
                 {project.boardType}
               </Badge>
             </Flex>
-            <Flex align="center" gap="sm" wrap className="justify-end">
+            <Flex align="center" gap="sm" wrap className="w-full justify-end sm:ml-auto sm:w-auto">
               {/* Sprint Progress & Workload */}
               {project.boardType === "scrum" && effectiveSprintId && (
                 <>
@@ -142,6 +148,34 @@ function BoardPage() {
                 <Select value={selectedSprintId || "active"} onValueChange={handleSprintChange}>
                   <SelectTrigger className="w-48 px-3 py-2 border border-ui-border rounded-md text-sm">
                     <SelectValue placeholder="Active Sprint" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active Sprint</SelectItem>
+                    {sprints.map((sprint: Doc<"sprints">) => (
+                      <SelectItem key={sprint._id} value={sprint._id}>
+                        {sprint.name} ({sprint.status})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </Flex>
+          </Flex>
+        </div>
+      </div>
+
+      <div className="px-2 pt-1 sm:hidden">
+        <div className="rounded-xl border border-ui-border/70 bg-ui-bg-elevated/90 px-2 py-1.5 shadow-soft">
+          <Flex align="center" justify="between" gap="xs">
+            <Typography variant="small" className="font-medium text-ui-text-secondary">
+              {showMobileSprintControls ? "Sprint controls" : "Board actions"}
+            </Typography>
+            <Flex align="center" gap="xs">
+              <ExportButton projectId={project._id} sprintId={effectiveSprintId} />
+              {showMobileSprintControls && sprints && (
+                <Select value={selectedSprintId || "active"} onValueChange={handleSprintChange}>
+                  <SelectTrigger className="h-8 min-w-32 rounded-lg border border-ui-border px-2 text-xs">
+                    <SelectValue placeholder="Sprint" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="active">Active Sprint</SelectItem>

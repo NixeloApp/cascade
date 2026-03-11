@@ -13,7 +13,7 @@ export function CalendarHeaderActionsMode(): React.ReactElement {
   return (
     <LayoutGroup>
       <ToggleGroup
-        className="flex gap-0 -space-x-px rounded-secondary border border-ui-border overflow-hidden shadow-soft rtl:space-x-reverse"
+        className="flex gap-0 -space-x-px overflow-hidden rounded-md border border-ui-border shadow-soft rtl:space-x-reverse sm:rounded-secondary"
         type="single"
         variant="outline"
         value={mode}
@@ -41,7 +41,7 @@ export function CalendarHeaderActionsMode(): React.ReactElement {
                 value={modeValue}
                 data-testid={`calendar-mode-${modeValue}`}
                 className={cn(
-                  "w-full rounded-none shadow-none focus-visible:z-10 text-base flex items-center justify-center gap-2 relative border-none transition-colors duration-default",
+                  "relative flex h-6 w-full items-center justify-center gap-1 rounded-none border-none text-xs shadow-none transition-colors duration-default focus-visible:z-10 sm:h-auto sm:gap-2 sm:text-base",
                   isSelected
                     ? "bg-ui-bg-tertiary text-ui-text z-10"
                     : "bg-ui-bg text-ui-text-secondary hover:bg-ui-bg-hover hover:text-ui-text",
@@ -49,7 +49,7 @@ export function CalendarHeaderActionsMode(): React.ReactElement {
               >
                 <motion.div
                   layout
-                  className="flex items-center justify-center gap-2 py-2 px-3"
+                  className="flex items-center justify-center gap-1 px-1 py-0.5 sm:gap-2 sm:px-3 sm:py-2"
                   initial={false}
                   animate={{
                     scale: isSelected ? 1 : 0.95,
@@ -88,7 +88,7 @@ export function CalendarHeaderActionsMode(): React.ReactElement {
                       <motion.p
                         layout="position"
                         key={`text-${modeValue}`}
-                        className="font-medium origin-left whitespace-nowrap"
+                        className="hidden origin-left whitespace-nowrap text-sm font-medium sm:block"
                         initial={{
                           opacity: 0,
                           x: -2,

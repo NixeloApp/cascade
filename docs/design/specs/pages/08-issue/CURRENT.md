@@ -2,166 +2,51 @@
 
 > **Route**: `/:slug/issues/:key`
 > **Status**: 🟡 NEEDS POLISH
-> **Last Updated**: Run `pnpm screenshots` to regenerate
+> **Last Updated**: 2026-03-09
 
 ---
 
 ## Screenshots
 
-| Viewport | Preview |
-|----------|---------|
-| Desktop | ![](screenshots/desktop-dark.png) |
+| Viewport | Theme | Preview |
+|----------|-------|---------|
+| Desktop | Dark | ![](screenshots/desktop-dark.png) |
+| Desktop | Light | ![](screenshots/desktop-light.png) |
+| Tablet | Light | ![](screenshots/tablet-light.png) |
+| Mobile | Light | ![](screenshots/mobile-light.png) |
 
 ---
 
-## Structure
+## Current UI
 
-Two-column layout with main content and properties sidebar:
-
-```
-+-------------------------------------------------------------------------------------------+
-| [=] Nixelo E2E                      [Commands Cmd+K] [?] [> Timer] [Search Cmd+K] [N] [AV]|
-+-------------------------------------------------------------------------------------------+
-| Demo Project / Issues / DEMO-2                                             [Close] [...]  |
-+-------------------------------------------------------------------------------------------+
-|                                                                                           |
-|  +------------------------------------------------------------------+  +---------------+ |
-|  |                                                                  |  |               | |
-|  |  [BUG] DEMO-2                                                    |  |  Details      | |
-|  |                                                                  |  |  ------------ | |
-|  |  Fix login timeout on mobile                                     |  |               | |
-|  |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                    |  |  Status       | |
-|  |                                                                  |  |  [IN PROGRESS]| |
-|  |  +-----------------------------------------------------------+  |  |               | |
-|  |  | Description                                     [Edit]    |  |  |  Priority     | |
-|  |  |                                                           |  |  |  [HIGH]       | |
-|  |  | When users attempt to login on mobile devices, the        |  |  |               | |
-|  |  | session times out after 30 seconds, which is too short... |  |  |  Assignee     | |
-|  |  |                                                           |  |  |  [Emily Chen] | |
-|  |  +-----------------------------------------------------------+  |  |               | |
-|  |                                                                  |  |  Reporter     | |
-|  |  Activity                                                        |  |  [Alex Rivera]| |
-|  |  ~~~~~~~~                                                        |  |               | |
-|  |                                                                  |  |  Sprint       | |
-|  |  • Emily Chen changed status to IN PROGRESS                      |  |  [Sprint 1]   | |
-|  |    2 hours ago                                                   |  |               | |
-|  |                                                                  |  |  Labels       | |
-|  |  • Alex Rivera created this issue                                |  |  [mobile]     | |
-|  |    1 day ago                                                     |  |  [auth]       | |
-|  |                                                                  |  |               | |
-|  |  Comments                                                        |  |  Due Date     | |
-|  |  ~~~~~~~~                                                        |  |  [Jan 29]     | |
-|  |                                                                  |  |               | |
-|  |  +-----------------------------------------------------------+  |  |  Estimate     | |
-|  |  | [Avatar] Add a comment...                                 |  |  |  [3 points]   | |
-|  |  +-----------------------------------------------------------+  |  |               | |
-|  |                                                                  |  +---------------+ |
-|  +------------------------------------------------------------------+                    |
-|                                                                                           |
-+-------------------------------------------------------------------------------------------+
-```
+- The screenshot baseline now captures the real issue detail route again instead of the `Issue not found` error state.
+- The page uses the expected split layout: main issue content on the left and detail fields in the right sidebar.
+- Modal variants for issue detail overlays are also capturing correctly again.
 
 ---
 
-## Current Elements
+## Recent Improvements
 
-### Breadcrumb Navigation
-- Project name → Issues → Issue key
-- Clickable links back to parent views
-
-### Header Area
-- Issue type icon (bug, task, story)
-- Issue key (DEMO-2)
-- Issue title (large heading)
-- Close button and more options menu
-
-### Description Section
-- Editable rich text area
-- Edit button to toggle editing mode
-- Markdown/rich text support
-
-### Activity Feed
-- Timeline of changes
-- Shows status changes, assignments, comments
-- Timestamp display
-
-### Comments Section
-- Comment list (if any)
-- Add comment input
-- Avatar display
-
-### Properties Sidebar
-- **Status**: Dropdown with workflow states
-- **Priority**: Dropdown (Highest, High, Medium, Low, Lowest)
-- **Assignee**: User picker with avatar
-- **Reporter**: Display only
-- **Sprint**: Sprint picker
-- **Labels**: Multi-select tag input
-- **Due Date**: Date picker
-- **Estimate**: Story point picker
+- Route discovery and seeded issue linkage were fixed in the screenshot harness.
+- The issue page is reviewable again across desktop, tablet, and mobile screenshots.
+- The current screenshots now reflect real issue content rather than harness failure.
 
 ---
 
-## Files
+## Remaining Gaps
 
-| File | Purpose | Lines |
-|------|---------|-------|
-| `src/routes/_auth/_app/$orgSlug/issues/$key.tsx` | Route definition | ~100 |
-| `src/components/issues/IssueDetail.tsx` | Main layout | ~200 |
-| `src/components/issues/IssueSidebar.tsx` | Properties sidebar | ~180 |
-| `src/components/issues/IssueDescription.tsx` | Description editor | ~100 |
-| `src/components/issues/ActivityFeed.tsx` | Activity timeline | ~150 |
-| `src/components/issues/CommentSection.tsx` | Comments | ~120 |
+| Problem | Area | Severity |
+|---------|------|----------|
+| Sidebar controls still need more consistent field treatment and hover behavior | `IssueSidebar` | MEDIUM |
+| Activity feed still lacks a stronger timeline treatment | `ActivityFeed` | MEDIUM |
+| Comment entry and description surfaces are serviceable but not yet polished | Main content sections | LOW |
 
 ---
 
-## Problems
+## Source Files
 
-| # | Problem | Location | Severity |
-|---|---------|----------|----------|
-| 1 | Sidebar fields need consistent styling | IssueSidebar | MEDIUM |
-| 2 | Activity feed lacks visual timeline | ActivityFeed | MEDIUM |
-| 3 | Comment input needs better styling | CommentSection | LOW |
-| 4 | No keyboard shortcuts for actions | IssueDetail | MEDIUM |
-| 5 | Description editor polish needed | IssueDescription | LOW |
-| 6 | Field labels inconsistent | IssueSidebar | LOW |
-| 7 | No hover states on sidebar fields | IssueSidebar | LOW |
-| 8 | Activity timestamps format | ActivityFeed | LOW |
-
----
-
-## Sidebar Field Detail
-
-```
-+---------------------------+
-|  Details                  |
-+---------------------------+
-|                           |
-|  Status                   |   <- Label (muted text)
-|  +---------------------+  |
-|  | IN PROGRESS       ▼|  |   <- Dropdown field
-|  +---------------------+  |
-|                           |
-|  Priority                 |
-|  +---------------------+  |
-|  | [!!] HIGH          ▼|  |
-|  +---------------------+  |
-|                           |
-|  Assignee                 |
-|  +---------------------+  |
-|  | [AV] Emily Chen    ▼|  |
-|  +---------------------+  |
-|                           |
-+---------------------------+
-```
-
----
-
-## Summary
-
-The issue detail page is functional but needs polish:
-- Sidebar fields need consistent styling and hover states
-- Activity feed should have visual timeline (dots and lines)
-- Comment input needs better styling
-- Add keyboard shortcuts for common actions
-- Description editor needs minor polish
+- `src/routes/_auth/_app/$orgSlug/issues/$key.tsx`
+- `src/components/issues/IssueDetail.tsx`
+- `src/components/issues/IssueSidebar.tsx`
+- `src/components/issues/ActivityFeed.tsx`
+- `e2e/screenshot-pages.ts`

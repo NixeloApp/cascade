@@ -1,24 +1,23 @@
 # Nixelo Todo Portfolio
 
-> **Last Updated:** 2026-03-09  
+> **Last Updated:** 2026-03-10
 > **Scope:** `todos/*.md` + `todos/jules/open/*.md`
 
 Canonical control plane for all todo docs: what to do first, what is blocked externally, and what is already done.
 
 ## Portfolio Snapshot
 
-- Total todo markdown files (including control files): `20`
-- Tracked execution docs (excluding `README.md` and `TODO.md`): `18`
-- Checkbox rollup across tracked docs: `162 done / 99 open / 1 in-progress`
+- Total todo markdown files (including control files): `21`
+- Tracked execution docs (excluding `README.md` and `TODO.md`): `19`
+- Checkbox rollup across tracked docs: `160 done / 108 open / 0 in-progress`
 - Highest-risk unresolved queue: calendar access control, invoice integrity, Slack auth/scoping
 
 ## Current Focus
 
 1. Active product polish loop:
-   - [visual-inconsistencies-2026-03-04.md](./visual-inconsistencies-2026-03-04.md) as the visual baseline (`200` captures)
-   - [docs/design-perfection/SCREENSHOT_REVIEW_LOOP.md](../docs/design-perfection/SCREENSHOT_REVIEW_LOOP.md) as the operating playbook for each screenshot iteration
-   - landing/dashboard design CURRENT docs for screenshot-reference sync and next-round review
-   - keep iterating on shell, sidebar, landing, and modal quality until the screenshots look intentional rather than merely "fixed"
+   - [e2e-screenshot-quality.md](./e2e-screenshot-quality.md) as the canonical screenshot determinism + visual review execution doc
+   - core harness blockers are fixed; the remaining high-leverage visual targets are landing/auth light-vs-dark theme parity, mobile project chrome, internal light-theme depth, and settings density
+   - keep the screenshot docs in sync with the real UI after each polish round so the spec folders stay trustworthy
 2. P1 correctness/security defects:
    - [calendar-access-control.md](./calendar-access-control.md)
    - [invoice-system-issues.md](./invoice-system-issues.md)
@@ -43,8 +42,7 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 
 | Priority | File | Role | Next Action |
 |---|---|---|---|
-| P0 | [visual-inconsistencies-2026-03-04.md](./visual-inconsistencies-2026-03-04.md) | Active visual review baseline | Keep iterating on shell/sidebar/landing polish and refresh design docs against the latest screenshot set |
-| P0 | [docs/design-perfection/SCREENSHOT_REVIEW_LOOP.md](../docs/design-perfection/SCREENSHOT_REVIEW_LOOP.md) | Screenshot review operating manual | Use this loop for every visual pass so issues get classified and fixed through shared primitives first |
+| P0 | [e2e-screenshot-quality.md](./e2e-screenshot-quality.md) | Screenshot determinism + visual review control plane | Keep the baseline trustworthy, then finish the shared theme-parity/mobile-chrome/light-surface/settings-density polish queue |
 | P0 | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Reliability sustainment while UI churn continues | Keep full suite green and keep replacing retry-heavy helpers with explicit completion contracts |
 | P1 | [calendar-access-control.md](./calendar-access-control.md) | Cross-scope event injection risk | Gate scope derivation with `canAccessProject()` and add regression test |
 | P1 | [invoice-system-issues.md](./invoice-system-issues.md) | Billing data integrity and numbering collisions | Fix unlinking, uniqueness, scoped fetch, and line-item linkage |
@@ -89,7 +87,6 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 
 | File | Role | State |
 |---|---|---|
-| [visual-inconsistencies-2026-03-04.md](./visual-inconsistencies-2026-03-04.md) | Screenshot audit baseline (200 captures) | Checklist is complete, but the file still serves as the visual baseline while active polish rounds continue; remaining non-checklist work is design-doc screenshot-reference sync |
 | [consistency-tracking.md](./consistency-tracking.md) | Standards/validator ledger | Operational tracking ongoing (`23/23` checklist complete) |
 
 ## Jules Issues (Open)
@@ -105,9 +102,10 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 
 ## Suggested Execution Order
 
-1. Keep running visual polish rounds using the screenshot baseline until the shell and landing feel cohesive.
-2. While visual work continues, keep the full E2E/screenshot path green via [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md).
-3. Then fix the P1 defect docs: calendar access, invoices, Slack integration.
-4. Close P2 correctness docs next: query filtering, security/migration, performance.
-5. Unblock and close near-complete tracks: bandwidth, multi-level views, OAuth monitoring, growth.
-6. Then execute strategic tracks: public launch, enterprise, uptime.
+1. Keep screenshot capture deterministic in [e2e-screenshot-quality.md](./e2e-screenshot-quality.md) so the baseline stays trustworthy as visuals keep moving.
+2. Use the same doc to fix the shared visual defects with the biggest remaining cross-page payoff: landing/auth theme parity across light and dark, mobile project chrome, internal light-theme depth, and settings shell density.
+3. While visual work continues, keep the full E2E/screenshot path green via [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md).
+4. Then fix the P1 defect docs: calendar access, invoices, Slack integration.
+5. Close P2 correctness docs next: query filtering, security/migration, performance.
+6. Unblock and close near-complete tracks: bandwidth, multi-level views, OAuth monitoring, growth.
+7. Then execute strategic tracks: public launch, enterprise, uptime.

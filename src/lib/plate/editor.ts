@@ -70,6 +70,180 @@ export function deserializeValue(json: string | null | undefined): Value {
   }
 }
 
+interface ProseMirrorMark {
+  type?: string;
+}
+
+interface ProseMirrorNodeLike {
+  attrs?: {
+    level?: number;
+  };
+  content?: ProseMirrorNodeLike[];
+  marks?: ProseMirrorMark[];
+  text?: string;
+  type?: string;
+}
+
+interface ProseMirrorSnapshotLike {
+  content?: ProseMirrorNodeLike[];
+  type?: string;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object";
+}
+
+function applyTextMarks(leaf: Record<string, unknown>, marks: ProseMirrorMark[] | undefined) {
+  for (const mark of marks ?? []) {
+    if (mark.type === "bold") leaf.bold = true;
+    if (mark.type === "italic") leaf.italic = true;
+    if (mark.type === "underline") leaf.underline = true;
+    if (mark.type === "strike") leaf.strikethrough = true;
+    if (mark.type === "code") leaf.code = true;
+  }
+}
+
+function toTextLeaf(node: ProseMirrorNodeLike): Array<Record<string, unknown>> {
+  if (node.type === "text") {
+    const leaf: Record<string, unknown> = { text: node.text ?? "" };
+    applyTextMarks(leaf, node.marks);
+    return [leaf];
+  }
+
+  if (node.type === "hardBreak") {
+    return [{ text: "\n" }];
+  }
+
+  return toTextLeaves(node.content);
+}
+
+function toTextLeaves(nodes: ProseMirrorNodeLike[] | undefined): Array<Record<string, unknown>> {
+  if (!nodes || nodes.length === 0) {
+    return [{ text: "" }];
+  }
+
+  const leaves = nodes.flatMap(toTextLeaf);
+
+  return leaves.length > 0 ? leaves : [{ text: "" }];
+}
+
+function toBlockFromNode(node: ProseMirrorNodeLike): Array<Record<string, unknown>> {
+  if (node.type === "heading") {
+    const level = node.attrs?.level;
+    const headingType =
+      level && level >= 1 && level <= 6 ? (`h${level}` as const) : ("h2" as const);
+
+    return [
+      {
+        type: headingType,
+        children: toTextLeaves(node.content),
+      },
+    ];
+  }
+
+  if (node.type === "blockquote") {
+    return [
+      {
+        type: "blockquote",
+        children: toTextLeaves(node.content),
+      },
+    ];
+  }
+
+  if (node.type === "codeBlock") {
+    return [
+      {
+        type: "code_block",
+        children: [
+          {
+            type: "code_line",
+            children: toTextLeaves(node.content),
+          },
+        ],
+      },
+    ];
+  }
+
+  if (node.type === "paragraph") {
+    return [
+      {
+        type: "p",
+        children: toTextLeaves(node.content),
+      },
+    ];
+  }
+
+  if (node.type === "bulletList") {
+    return [
+      {
+        type: "ul",
+        children: node.content?.flatMap(toBlockFromNode) ?? [
+          { type: "li", children: [{ text: "" }] },
+        ],
+      },
+    ];
+  }
+
+  if (node.type === "orderedList") {
+    return [
+      {
+        type: "ol",
+        children: node.content?.flatMap(toBlockFromNode) ?? [
+          { type: "li", children: [{ text: "" }] },
+        ],
+      },
+    ];
+  }
+
+  if (node.type === "listItem") {
+    // List items contain paragraphs or other blocks; extract their content
+    const innerContent: Array<Record<string, unknown>> = node.content?.flatMap(
+      (child): Array<Record<string, unknown>> => {
+        if (child.type === "paragraph") {
+          return toTextLeaves(child.content);
+        }
+        return toBlockFromNode(child);
+      },
+    ) ?? [{ text: "" }];
+
+    return [
+      {
+        type: "li",
+        children: innerContent,
+      },
+    ];
+  }
+
+  return node.content ? toPlateBlocks(node.content) : [];
+}
+
+function toPlateBlocks(nodes: ProseMirrorNodeLike[] | undefined): Value {
+  if (!nodes || nodes.length === 0) {
+    return getInitialValue();
+  }
+
+  const blocks = nodes.flatMap(toBlockFromNode);
+
+  return blocks.length > 0 ? (blocks as Value) : getInitialValue();
+}
+
+/**
+ * Convert a stored ProseMirror snapshot into Plate/Slate value for initial hydration.
+ * Supports the common block types used in seeded documents and version history.
+ */
+export function proseMirrorSnapshotToValue(snapshot: unknown): Value {
+  if (!isRecord(snapshot)) {
+    return getInitialValue();
+  }
+
+  const parsedSnapshot = snapshot as ProseMirrorSnapshotLike;
+  if (parsedSnapshot.type !== "doc") {
+    return getInitialValue();
+  }
+
+  return toPlateBlocks(parsedSnapshot.content);
+}
+
 /** Check if a node is an empty text node */
 function isEmptyTextNode(node: unknown): boolean {
   return (

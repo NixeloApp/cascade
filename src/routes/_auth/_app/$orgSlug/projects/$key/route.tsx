@@ -1,12 +1,20 @@
 import { api } from "@convex/_generated/api";
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { PageContent, PageError } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/DropdownMenu";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { ChevronDown } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key")({
   component: ProjectLayout,
@@ -14,6 +22,7 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key")({
 
 function ProjectLayout() {
   const { key, orgSlug } = Route.useParams();
+  const location = useLocation();
   const { user } = useCurrentUser();
   const project = useAuthenticatedQuery(api.projects.getByKey, { key });
   const userRole = useAuthenticatedQuery(
@@ -47,73 +56,213 @@ function ProjectLayout() {
   const isScrum = project.boardType === "scrum";
 
   const tabs = [
-    { name: "Board", to: ROUTES.projects.board.path, params: { orgSlug, key } },
-    { name: "Backlog", to: ROUTES.projects.backlog.path, params: { orgSlug, key } },
-    { name: "Inbox", to: ROUTES.projects.inbox.path, params: { orgSlug, key } },
+    {
+      name: "Board",
+      mobileName: "Board",
+      segment: "board",
+      to: ROUTES.projects.board.path,
+      params: { orgSlug, key },
+    },
+    {
+      name: "Backlog",
+      mobileName: "Backlog",
+      segment: "backlog",
+      to: ROUTES.projects.backlog.path,
+      params: { orgSlug, key },
+    },
+    {
+      name: "Inbox",
+      mobileName: "Inbox",
+      segment: "inbox",
+      to: ROUTES.projects.inbox.path,
+      params: { orgSlug, key },
+    },
     ...(isScrum
-      ? [{ name: "Sprints", to: ROUTES.projects.sprints.path, params: { orgSlug, key } }]
+      ? [
+          {
+            name: "Sprints",
+            mobileName: "Sprints",
+            segment: "sprints",
+            to: ROUTES.projects.sprints.path,
+            params: { orgSlug, key },
+          },
+        ]
       : []),
-    { name: "Roadmap", to: ROUTES.projects.roadmap.path, params: { orgSlug, key } },
-    { name: "Calendar", to: ROUTES.projects.calendar.path, params: { orgSlug, key } },
-    { name: "Activity", to: ROUTES.projects.activity.path, params: { orgSlug, key } },
-    { name: "Analytics", to: ROUTES.projects.analytics.path, params: { orgSlug, key } },
-    { name: "Billing", to: ROUTES.projects.billing.path, params: { orgSlug, key } },
-    { name: "Timesheet", to: ROUTES.projects.timesheet.path, params: { orgSlug, key } },
+    {
+      name: "Roadmap",
+      mobileName: "Plan",
+      segment: "roadmap",
+      to: ROUTES.projects.roadmap.path,
+      params: { orgSlug, key },
+    },
+    {
+      name: "Calendar",
+      mobileName: "Cal",
+      segment: "calendar",
+      to: ROUTES.projects.calendar.path,
+      params: { orgSlug, key },
+    },
+    {
+      name: "Activity",
+      mobileName: "Activity",
+      segment: "activity",
+      to: ROUTES.projects.activity.path,
+      params: { orgSlug, key },
+    },
+    {
+      name: "Analytics",
+      mobileName: "Stats",
+      segment: "analytics",
+      to: ROUTES.projects.analytics.path,
+      params: { orgSlug, key },
+    },
+    {
+      name: "Billing",
+      mobileName: "Billing",
+      segment: "billing",
+      to: ROUTES.projects.billing.path,
+      params: { orgSlug, key },
+    },
+    {
+      name: "Timesheet",
+      mobileName: "Time",
+      segment: "timesheet",
+      to: ROUTES.projects.timesheet.path,
+      params: { orgSlug, key },
+    },
     ...(isAdmin
-      ? [{ name: "Settings", to: ROUTES.projects.settings.path, params: { orgSlug, key } }]
+      ? [
+          {
+            name: "Settings",
+            mobileName: "Settings",
+            segment: "settings",
+            to: ROUTES.projects.settings.path,
+            params: { orgSlug, key },
+          },
+        ]
       : []),
   ];
+  const currentSegment = location.pathname.split("/").pop() ?? "board";
+  const mobilePrimaryTabs = tabs.filter((tab) =>
+    ["board", "backlog", "inbox", "roadmap", "calendar"].includes(tab.segment),
+  );
+  const mobileSecondaryTabs = tabs.filter(
+    (tab) => !["board", "backlog", "inbox", "roadmap", "calendar"].includes(tab.segment),
+  );
+  const activeSecondaryTab = mobileSecondaryTabs.find((tab) => tab.segment === currentSegment);
 
   return (
     <Flex direction="column" className="h-full">
-      <div className="border-b border-ui-border/70 bg-ui-bg/80 px-3 py-3 backdrop-blur-xl sm:px-4">
-        <div className="rounded-2xl border border-ui-border/70 bg-ui-bg-elevated/90 px-4 py-3 shadow-soft">
+      <div className="border-b border-ui-border/70 bg-ui-bg/78 px-1 py-0.5 backdrop-blur-xl sm:px-4 sm:py-3">
+        <div className="bg-transparent px-0 py-0 shadow-none sm:rounded-3xl sm:border sm:border-ui-border-secondary/70 sm:bg-linear-to-r sm:from-ui-bg-elevated sm:via-ui-bg-elevated/96 sm:to-ui-bg-soft/78 sm:px-4 sm:py-3 sm:shadow-soft">
           <Flex
-            align="center"
+            align="start"
             justify="between"
-            gap="md"
-            className="flex-col sm:flex-row sm:items-start"
+            gap="xs"
+            className="flex-col sm:flex-row sm:items-center"
           >
-            <Flex align="center" gap="sm" className="min-w-0">
+            <Flex align="center" gap="xs" className="min-w-0 sm:gap-sm">
               <Flex
                 align="center"
                 justify="center"
-                className="h-10 w-10 shrink-0 rounded-xl bg-brand-subtle text-brand ring-1 ring-brand/15"
+                className="h-7 w-7 shrink-0 rounded-full bg-brand-subtle text-brand ring-1 ring-brand/15 sm:h-10 sm:w-10 sm:rounded-xl"
               >
                 <Typography variant="small" className="font-semibold text-current">
                   {project.key.slice(0, 2).toUpperCase()}
                 </Typography>
               </Flex>
               <div className="min-w-0">
-                <Typography variant="caption" color="tertiary" className="uppercase tracking-wider">
+                <Flex align="center" gap="xs" className="min-w-0">
+                  <Typography variant="h4" className="truncate text-sm tracking-tight sm:text-2xl">
+                    {project.name}
+                  </Typography>
+                </Flex>
+                <Typography
+                  variant="caption"
+                  color="tertiary"
+                  className="mt-0.5 hidden uppercase tracking-wider sm:block"
+                >
                   {isScrum ? "Scrum project" : "Kanban project"}
-                </Typography>
-                <Typography variant="h4" className="truncate tracking-tight">
-                  {project.name}
                 </Typography>
               </div>
             </Flex>
             <Badge
               variant="outline"
               shape="pill"
-              className="bg-ui-bg-soft uppercase tracking-wider"
+              className="hidden bg-ui-bg-soft uppercase tracking-wider sm:inline-flex"
             >
               {project.key}
             </Badge>
           </Flex>
 
-          <nav className="mt-3 flex gap-1 overflow-x-auto pb-1" aria-label="Project sections">
+          <nav
+            className="mt-0.5 flex items-center gap-0.5 overflow-x-auto pb-0 pr-0.5 scrollbar-subtle sm:hidden"
+            aria-label="Project sections"
+          >
+            {mobilePrimaryTabs.map((tab) => (
+              <Link
+                key={tab.name}
+                to={tab.to}
+                params={tab.params}
+                className={cn(
+                  "shrink-0 rounded-full border border-transparent bg-ui-bg-soft/68 px-1.5 py-0.5 text-xs font-medium whitespace-nowrap transition-default",
+                  "text-ui-text-secondary hover:border-ui-border/60 hover:bg-ui-bg-hover hover:text-ui-text",
+                )}
+                activeProps={{
+                  className:
+                    "border-ui-border-secondary/70 bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border/70",
+                }}
+              >
+                {tab.mobileName ?? tab.name}
+              </Link>
+            ))}
+            {mobileSecondaryTabs.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="unstyled"
+                    size={undefined}
+                    className={cn(
+                      "inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs font-medium transition-default",
+                      activeSecondaryTab
+                        ? "border-ui-border-secondary/70 bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border/70"
+                        : "border-transparent bg-ui-bg-soft/68 text-ui-text-secondary hover:border-ui-border/60 hover:bg-ui-bg-hover hover:text-ui-text",
+                    )}
+                    aria-label="More project sections"
+                  >
+                    <span>More</span>
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-40">
+                  {mobileSecondaryTabs.map((tab) => (
+                    <DropdownMenuItem key={tab.name} asChild>
+                      <Link to={tab.to} params={tab.params} className="w-full">
+                        {tab.name}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </nav>
+
+          <nav
+            className="mt-1 hidden gap-1 overflow-x-auto pb-0.5 pr-1 scrollbar-subtle sm:mt-3 sm:flex sm:pb-1"
+            aria-label="Project sections"
+          >
             {tabs.map((tab) => (
               <Link
                 key={tab.name}
                 to={tab.to}
                 params={tab.params}
                 className={cn(
-                  "rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition-default",
-                  "text-ui-text-secondary hover:bg-ui-bg-hover hover:text-ui-text",
+                  "shrink-0 rounded-full border border-transparent bg-ui-bg-soft/68 px-2 py-1 text-xs font-medium whitespace-nowrap transition-default sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm",
+                  "text-ui-text-secondary hover:border-ui-border/60 hover:bg-ui-bg-hover hover:text-ui-text",
                 )}
                 activeProps={{
-                  className: "bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border/70",
+                  className:
+                    "border-ui-border-secondary/70 bg-ui-bg text-ui-text shadow-soft ring-1 ring-ui-border/70",
                 }}
               >
                 {tab.name}

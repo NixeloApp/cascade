@@ -3,7 +3,9 @@ import { Flex } from "@/components/ui/Flex";
 import { IconButton } from "@/components/ui/IconButton";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { CardDisplayOptions } from "@/lib/card-display-utils";
+import { CheckSquare } from "@/lib/icons";
 import type { SwimlanGroupBy } from "@/lib/swimlane-utils";
+import { cn } from "@/lib/utils";
 import { Typography } from "../ui/Typography";
 import { DisplayPropertiesSelector } from "./DisplayPropertiesSelector";
 import { SwimlanSelector } from "./SwimlanSelector";
@@ -50,19 +52,24 @@ export function BoardToolbar({
     <Flex
       align="center"
       justify="between"
-      gap="sm"
-      className="mx-3 mt-3 rounded-2xl border border-ui-border/70 bg-ui-bg-elevated px-4 pb-3 pt-4 shadow-soft sm:mx-6 sm:mt-4 sm:px-5"
+      gap="xs"
+      className="relative z-10 mx-2 h-0 overflow-visible px-0 py-0 sm:mx-6 sm:mt-4 sm:h-auto sm:gap-sm sm:rounded-2xl sm:border sm:border-ui-border/70 sm:bg-ui-bg-elevated sm:px-5 sm:pb-3 sm:pt-4 sm:shadow-soft"
     >
-      <div>
-        <Typography variant="h2" className="text-base font-semibold tracking-tight sm:text-lg">
-          {sprintId ? "Sprint Board" : "Kanban Board"}
+      <div className="hidden sm:block">
+        <Typography variant="h2" className="text-xs font-semibold tracking-tight sm:text-lg">
+          <span className="sm:hidden">{sprintId ? "Sprint" : "Board"}</span>
+          <span className="hidden sm:inline">{sprintId ? "Sprint Board" : "Kanban Board"}</span>
         </Typography>
         <Typography variant="caption" className="mt-1 hidden sm:block">
           Move work between stages, keep limits visible, and start new items from the right column.
         </Typography>
       </div>
       {showControls && (
-        <Flex align="center" gap="xs" className="sm:gap-2 shrink-0">
+        <Flex
+          align="center"
+          gap="xs"
+          className="absolute right-0 top-1 shrink-0 justify-end sm:static sm:w-auto sm:justify-start sm:gap-2"
+        >
           {/* Undo/Redo buttons */}
           <Flex align="center" gap="xs" className="hidden sm:flex mr-2 sm:mr-4">
             <Tooltip content="Undo (Ctrl+Z)">
@@ -112,16 +119,22 @@ export function BoardToolbar({
           </Flex>
 
           {/* View mode toggle (modal/peek) */}
-          <ViewModeToggle />
+          <div className="hidden sm:block">
+            <ViewModeToggle />
+          </div>
 
           {/* Display properties selector */}
           {displayOptions && onDisplayOptionsChange && (
-            <DisplayPropertiesSelector value={displayOptions} onChange={onDisplayOptionsChange} />
+            <div className="hidden sm:block">
+              <DisplayPropertiesSelector value={displayOptions} onChange={onDisplayOptionsChange} />
+            </div>
           )}
 
           {/* Swimlane selector */}
           {onSwimlanGroupByChange && (
-            <SwimlanSelector value={swimlaneGroupBy} onChange={onSwimlanGroupByChange} />
+            <div className="hidden sm:block">
+              <SwimlanSelector value={swimlaneGroupBy} onChange={onSwimlanGroupByChange} />
+            </div>
           )}
 
           {/* Selection mode toggle */}
@@ -130,11 +143,17 @@ export function BoardToolbar({
             size="sm"
             onClick={onToggleSelectionMode}
             aria-label={selectionMode ? "Exit selection mode" : "Enable selection mode"}
+            className={cn(
+              "h-5 w-5 rounded-full px-0 text-xs shadow-none sm:h-9 sm:w-auto sm:rounded-xl sm:px-3 sm:text-sm",
+              selectionMode
+                ? "sm:shadow-soft"
+                : "border-ui-border/35 bg-ui-bg/78 text-ui-text-tertiary opacity-80 sm:border-ui-border sm:bg-ui-bg-elevated sm:text-ui-text sm:opacity-100",
+            )}
           >
+            <CheckSquare className="h-3.5 w-3.5 sm:hidden" />
             <span className="hidden sm:inline">
               {selectionMode ? "Exit Selection" : "Select Multiple"}
             </span>
-            <span className="sm:hidden">{selectionMode ? "Exit" : "Select"}</span>
           </Button>
         </Flex>
       )}
