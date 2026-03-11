@@ -3159,10 +3159,11 @@ export const seedScreenshotDataInternal = internalMutation({
 
     for (let i = 0; i < secondaryIssueDefinitions.length; i++) {
       const def = secondaryIssueDefinitions[i];
+      // Only look for issues in our secondary project to avoid hijacking issues from other orgs
       const existing = await ctx.db
         .query("issues")
-        .withIndex("by_key", (q) => q.eq("key", def.key))
-        .filter(notDeleted)
+        .withIndex("by_project_status", (q) => q.eq("projectId", secondaryProjectId))
+        .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), def.key)))
         .first();
 
       if (!existing) {
@@ -3316,10 +3317,11 @@ export const seedScreenshotDataInternal = internalMutation({
 
     for (let i = 0; i < issueDefinitions.length; i++) {
       const def = issueDefinitions[i];
+      // Only look for issues in our screenshot project to avoid hijacking issues from other orgs
       const existing = await ctx.db
         .query("issues")
-        .withIndex("by_key", (q) => q.eq("key", def.key))
-        .filter(notDeleted)
+        .withIndex("by_project_status", (q) => q.eq("projectId", projectId))
+        .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), def.key)))
         .first();
 
       if (!existing) {
