@@ -127,7 +127,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <Comp
         className={cn(
           buttonVariants({ variant: resolvedVariant, size: resolvedSize, reveal }),
-          buttonChromeVariants({ chrome, chromeSize }),
+          (chrome || chromeSize) && buttonChromeVariants({ chrome, chromeSize }),
           className,
         )}
         ref={ref}
