@@ -57,16 +57,6 @@ const EMPTY_STATE_ICON_SHELL_CLASS: Record<EmptyStateSize, string> = {
   compact: "mb-1.5 h-7 w-7",
 };
 
-const EMPTY_STATE_BADGE_TEXT: Record<
-  EmptyStateVariant,
-  { default: string; compact: string } | null
-> = {
-  default: { default: "Nothing here yet", compact: "Waiting for updates" },
-  info: { default: "Information", compact: "Info" },
-  warning: { default: "Attention required", compact: "Warning" },
-  error: { default: "Something went wrong", compact: "Error" },
-};
-
 function EmptyStateBadge({
   size,
   surface,
@@ -76,8 +66,8 @@ function EmptyStateBadge({
   surface: EmptyStateSurface;
   variant: EmptyStateVariant;
 }) {
-  const badgeText = EMPTY_STATE_BADGE_TEXT[variant];
-  if (!badgeText) return null;
+  // Only show badge for default variant; other variants use icon color to convey meaning
+  if (variant !== "default") return null;
 
   return (
     <div
@@ -90,7 +80,7 @@ function EmptyStateBadge({
           : "mb-4 px-3 py-1",
       )}
     >
-      {size === "compact" ? badgeText.compact : badgeText.default}
+      {size === "compact" ? "Waiting for updates" : "Nothing here yet"}
     </div>
   );
 }
