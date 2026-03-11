@@ -17,6 +17,8 @@
  * Usage:
  *   pnpm screenshots              # capture all
  *   pnpm screenshots -- --headed  # visible browser
+ *   pnpm screenshots -- --spec 11-calendar --config mobile-light
+ *   pnpm screenshots -- --spec calendar --match event
  *
  * Requires dev server running (pnpm dev).
  */
@@ -92,6 +94,20 @@ const SCREENSHOT_USER = {
 };
 const SEARCH_SHORTCUT = process.platform === "darwin" ? "Meta+K" : "Control+K";
 
+interface CliOptions {
+  headless: boolean;
+  configFilters: Set<string> | null;
+  specFilters: string[];
+  matchFilters: string[];
+  help: boolean;
+}
+
+interface CaptureTarget {
+  pageId: string;
+  specFolder: string | null;
+  filenameSuffix: string;
+}
+
 // ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
@@ -101,6 +117,13 @@ let counters = new Map<string, number>();
 let totalScreenshots = 0;
 let stagingRootDir = "";
 let captureFailures = 0;
+let cliOptions: CliOptions = {
+  headless: true,
+  configFilters: null,
+  specFilters: [],
+  matchFilters: [],
+  help: false,
+};
 
 function resetCounters(): void {
   counters = new Map<string, number>();
@@ -144,19 +167,78 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-project-[^-]+-settings$/, "12-settings", "-project"],
 ];
 
-function getFinalScreenshotPath(prefix: string, name: string): string {
+function parseCsvValues(rawValues: string[]): string[] {
+  return rawValues
+    .flatMap((value) => value.split(","))
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0);
+}
+
+function collectFlagValues(args: string[], flag: string): string[] {
+  const values: string[] = [];
+
+  for (let index = 0; index < args.length; index++) {
+    const current = args[index];
+    if (current === flag) {
+      const next = args[index + 1];
+      if (next && !next.startsWith("--")) {
+        values.push(next);
+        index++;
+      }
+      continue;
+    }
+
+    if (current.startsWith(`${flag}=`)) {
+      values.push(current.slice(flag.length + 1));
+    }
+  }
+
+  return parseCsvValues(values);
+}
+
+function parseCliOptions(args: string[]): CliOptions {
+  const configFilters = collectFlagValues(args, "--config");
+  const specFilters = collectFlagValues(args, "--spec").map((value) => value.toLowerCase());
+  const matchFilters = collectFlagValues(args, "--match").map((value) => value.toLowerCase());
+
+  return {
+    headless: !args.includes("--headed"),
+    configFilters: configFilters.length > 0 ? new Set(configFilters) : null,
+    specFilters,
+    matchFilters,
+    help: args.includes("--help"),
+  };
+}
+
+function printUsage(): void {
+  console.log("Usage:");
+  console.log("  pnpm screenshots");
+  console.log("  pnpm screenshots -- --headed");
+  console.log("  pnpm screenshots -- --spec 11-calendar --config mobile-light");
+  console.log(
+    "  pnpm screenshots -- --spec calendar --match event --config desktop-light,mobile-light",
+  );
+  console.log("");
+  console.log("Flags:");
+  console.log("  --headed              Run the browser visibly");
+  console.log("  --config <list>       Filter configs, e.g. desktop-light,mobile-light");
+  console.log("  --spec <list>         Filter spec folders or names, e.g. 11-calendar,settings");
+  console.log(
+    "  --match <list>        Filter by page id/name/spec substring, e.g. calendar,event-modal",
+  );
+  console.log("  --help                Show this help");
+}
+
+function resolveCaptureTarget(prefix: string, name: string): CaptureTarget {
   const pageId = `${prefix}-${name}`;
 
-  // Check static mapping first
-  let specFolder = PAGE_TO_SPEC_FOLDER[pageId];
+  let specFolder = PAGE_TO_SPEC_FOLDER[pageId] ?? null;
   let filenameSuffix = "";
 
-  // Check dynamic patterns if no static match
   if (!specFolder) {
     for (const [pattern, folder, suffix] of DYNAMIC_PAGE_PATTERNS) {
       if (pattern.test(pageId)) {
         specFolder = folder;
-        // Replace $1 with captured group if present
         const match = pageId.match(pattern);
         filenameSuffix = suffix.replace("$1", match?.[1] ?? "");
         break;
@@ -164,14 +246,68 @@ function getFinalScreenshotPath(prefix: string, name: string): string {
     }
   }
 
+  return { pageId, specFolder, filenameSuffix };
+}
+
+function matchesSpecFilters(specFolder: string | null): boolean {
+  if (cliOptions.specFilters.length === 0) {
+    return true;
+  }
+
+  if (!specFolder) {
+    return false;
+  }
+
+  const normalizedFolder = specFolder.toLowerCase();
+  return cliOptions.specFilters.some((filter) => normalizedFolder.includes(filter));
+}
+
+function matchesMatchFilters(prefix: string, name: string, target: CaptureTarget): boolean {
+  if (cliOptions.matchFilters.length === 0) {
+    return true;
+  }
+
+  const haystacks = [prefix, name, target.pageId, target.specFolder ?? ""].map((value) =>
+    value.toLowerCase(),
+  );
+
+  return cliOptions.matchFilters.some((filter) =>
+    haystacks.some((candidate) => candidate.includes(filter)),
+  );
+}
+
+function isConfigSelected(viewport: ViewportName, theme: ThemeName): boolean {
+  if (!cliOptions.configFilters) {
+    return true;
+  }
+
+  return cliOptions.configFilters.has(`${viewport}-${theme}`);
+}
+
+function shouldCapture(prefix: string, name: string): boolean {
+  if (cliOptions.configFilters && !cliOptions.configFilters.has(currentConfigPrefix)) {
+    return false;
+  }
+
+  const target = resolveCaptureTarget(prefix, name);
+  return matchesSpecFilters(target.specFolder) && matchesMatchFilters(prefix, name, target);
+}
+
+function shouldCaptureAny(prefix: string, names: string[]): boolean {
+  return names.some((name) => shouldCapture(prefix, name));
+}
+
+function getFinalScreenshotPath(prefix: string, name: string): string {
+  const target = resolveCaptureTarget(prefix, name);
+
   // Filename: viewport-theme.png or viewport-theme-suffix.png
-  const filename = filenameSuffix
-    ? `${currentConfigPrefix}${filenameSuffix}.png`
+  const filename = target.filenameSuffix
+    ? `${currentConfigPrefix}${target.filenameSuffix}.png`
     : `${currentConfigPrefix}.png`;
 
-  if (specFolder) {
+  if (target.specFolder) {
     // Page has a spec folder - put screenshot there
-    const specScreenshotDir = path.join(SPECS_BASE_DIR, specFolder, "screenshots");
+    const specScreenshotDir = path.join(SPECS_BASE_DIR, target.specFolder, "screenshots");
     if (!fs.existsSync(specScreenshotDir)) {
       fs.mkdirSync(specScreenshotDir, { recursive: true });
     }
@@ -201,7 +337,41 @@ function getStagedScreenshotPath(finalPath: string): string {
 }
 
 function getGeneratedSpecFolders(): string[] {
-  return [...new Set(Object.values(PAGE_TO_SPEC_FOLDER))];
+  return [
+    ...new Set([
+      ...Object.values(PAGE_TO_SPEC_FOLDER),
+      ...DYNAMIC_PAGE_PATTERNS.map(([, folder]) => folder),
+    ]),
+  ];
+}
+
+function getStagedOutputSummary(): Map<string, number> {
+  const summary = new Map<string, number>();
+  const specsPrefix = path.join("docs", "design", "specs", "pages") + path.sep;
+  const fallbackPrefix = path.join("e2e", "screenshots") + path.sep;
+
+  for (const stagedFile of collectFilesRecursively(ensureStagingRoot())) {
+    const relativePath = path.relative(ensureStagingRoot(), stagedFile);
+    let bucket: string | null = null;
+
+    if (relativePath.startsWith(specsPrefix)) {
+      const specRelativePath = relativePath.slice(specsPrefix.length);
+      const [specFolder, screenshotsFolder] = specRelativePath.split(path.sep);
+      if (specFolder && screenshotsFolder === "screenshots") {
+        bucket = path.join("docs/design/specs/pages", specFolder, "screenshots");
+      }
+    } else if (relativePath.startsWith(fallbackPrefix)) {
+      bucket = "e2e/screenshots";
+    }
+
+    if (!bucket) {
+      continue;
+    }
+
+    summary.set(bucket, (summary.get(bucket) ?? 0) + 1);
+  }
+
+  return new Map([...summary.entries()].sort(([a], [b]) => a.localeCompare(b)));
 }
 
 function collectFilesRecursively(dir: string): string[] {
@@ -219,27 +389,12 @@ function collectFilesRecursively(dir: string): string[] {
 }
 
 function promoteStagedScreenshots(): void {
-  for (const folder of getGeneratedSpecFolders()) {
-    const screenshotDir = path.join(SPECS_BASE_DIR, folder, "screenshots");
-    if (!fs.existsSync(screenshotDir)) {
-      continue;
-    }
-
-    for (const file of fs.readdirSync(screenshotDir)) {
-      if (!file.startsWith("reference-") && file.endsWith(".png")) {
-        fs.unlinkSync(path.join(screenshotDir, file));
-      }
-    }
-  }
-
-  if (fs.existsSync(FALLBACK_SCREENSHOT_DIR)) {
-    fs.rmSync(FALLBACK_SCREENSHOT_DIR, { recursive: true });
-  }
-  fs.mkdirSync(FALLBACK_SCREENSHOT_DIR, { recursive: true });
-
   for (const stagedFile of collectFilesRecursively(ensureStagingRoot())) {
     const relativePath = path.relative(ensureStagingRoot(), stagedFile);
     const finalPath = path.join(process.cwd(), relativePath);
+    if (fs.existsSync(finalPath)) {
+      fs.rmSync(finalPath, { force: true });
+    }
     fs.mkdirSync(path.dirname(finalPath), { recursive: true });
     fs.copyFileSync(stagedFile, finalPath);
   }
@@ -251,6 +406,10 @@ async function takeScreenshot(
   name: string,
   url: string,
 ): Promise<void> {
+  if (!shouldCapture(prefix, name)) {
+    return;
+  }
+
   const n = nextIndex(prefix);
   const num = String(n).padStart(2, "0");
   const finalPath = getFinalScreenshotPath(prefix, name);
@@ -273,6 +432,10 @@ async function takeScreenshot(
 }
 
 async function captureCurrentView(page: Page, prefix: string, name: string): Promise<void> {
+  if (!shouldCapture(prefix, name)) {
+    return;
+  }
+
   const n = nextIndex(prefix);
   const num = String(n).padStart(2, "0");
   const finalPath = getFinalScreenshotPath(prefix, name);
@@ -854,6 +1017,11 @@ async function autoLogin(page: Page): Promise<string | null> {
 // ---------------------------------------------------------------------------
 
 async function screenshotPublicPages(page: Page): Promise<void> {
+  const publicNames = ["landing", "signin", "signup", "forgot-password", "invite-invalid"];
+  if (!shouldCaptureAny("public", publicNames)) {
+    return;
+  }
+
   console.log("    --- Public pages ---");
   await takeScreenshot(page, "public", "landing", "/");
   await takeScreenshot(page, "public", "signin", "/signin");
@@ -863,6 +1031,21 @@ async function screenshotPublicPages(page: Page): Promise<void> {
 }
 
 async function screenshotEmptyStates(page: Page, orgSlug: string): Promise<void> {
+  const emptyNames = [
+    "dashboard",
+    "projects",
+    "issues",
+    "documents",
+    "documents-templates",
+    "workspaces",
+    "time-tracking",
+    "settings",
+    "settings-profile",
+  ];
+  if (!shouldCaptureAny("empty", emptyNames)) {
+    return;
+  }
+
   console.log("    --- Empty states ---");
   const p = "empty";
   await takeScreenshot(page, p, "dashboard", `/${orgSlug}/dashboard`);
@@ -883,6 +1066,9 @@ async function screenshotFilledStates(
 ): Promise<void> {
   console.log("    --- Filled states ---");
   const p = "filled";
+  const projectKey = seed.projectKey;
+  const normalizedProjectKey = projectKey?.toLowerCase() ?? "";
+  const firstIssueKey = seed.issueKeys?.[0];
 
   // Top-level pages
   await takeScreenshot(page, p, "dashboard", `/${orgSlug}/dashboard`);
@@ -895,12 +1081,21 @@ async function screenshotFilledStates(
   await takeScreenshot(page, p, "settings", `/${orgSlug}/settings`);
   await takeScreenshot(page, p, "settings-profile", `/${orgSlug}/settings/profile`);
 
-  await screenshotDashboardModals(page, orgSlug, p);
-  await screenshotProjectsModal(page, orgSlug, p);
+  if (
+    shouldCaptureAny(p, [
+      "dashboard-omnibox",
+      "dashboard-advanced-search-modal",
+      "dashboard-shortcuts-modal",
+      "dashboard-time-entry-modal",
+    ])
+  ) {
+    await screenshotDashboardModals(page, orgSlug, p);
+  }
+  if (shouldCaptureAny(p, ["projects-create-project-modal"])) {
+    await screenshotProjectsModal(page, orgSlug, p);
+  }
 
   // Project sub-pages
-  const projectKey = seed.projectKey;
-  const firstIssueKey = seed.issueKeys?.[0];
   if (projectKey) {
     const tabs = [
       "board",
@@ -914,114 +1109,140 @@ async function screenshotFilledStates(
       "timesheet",
       "settings",
     ];
-    for (const tab of tabs) {
+    const selectedProjectTabs = tabs.filter((tab) =>
+      shouldCapture(p, `project-${normalizedProjectKey}-${tab}`),
+    );
+    for (const tab of selectedProjectTabs) {
       await takeScreenshot(
         page,
         p,
-        `project-${projectKey.toLowerCase()}-${tab}`,
+        `project-${normalizedProjectKey}-${tab}`,
         `/${orgSlug}/projects/${projectKey}/${tab}`,
       );
     }
 
-    await screenshotBoardModals(page, orgSlug, projectKey, firstIssueKey, p);
+    if (
+      shouldCaptureAny(p, [
+        `project-${normalizedProjectKey}-create-issue-modal`,
+        `project-${normalizedProjectKey}-issue-detail-modal`,
+      ])
+    ) {
+      await screenshotBoardModals(page, orgSlug, projectKey, firstIssueKey, p);
+    }
 
     // Calendar view modes
-    const calendarUrl = `/${orgSlug}/projects/${projectKey}/calendar`;
-    try {
-      await page.goto(`${BASE_URL}${calendarUrl}`, { waitUntil: "networkidle", timeout: 15000 });
-    } catch {}
-    await waitForScreenshotReady(page);
-    const isCalendarReady = await waitForCalendarReady(page);
-    if (!isCalendarReady) {
-      console.log("    ⚠️  [filled] calendar not ready, skipping mode-specific screenshots");
-    } else {
-      // Calendar view-mode screenshots: day, week, month
-      const calendarModeTestIds = {
-        day: TEST_IDS.CALENDAR.MODE_DAY,
-        week: TEST_IDS.CALENDAR.MODE_WEEK,
-        month: TEST_IDS.CALENDAR.MODE_MONTH,
-      } as const;
-      for (const mode of ["day", "week", "month"] as const) {
-        const toggleItem = page.getByTestId(calendarModeTestIds[mode]);
-        // Retry up to 3 times if toggle not found
-        for (let attempt = 0; attempt < 3; attempt++) {
-          if ((await toggleItem.count()) > 0) break;
-          await page.waitForTimeout(500);
-        }
-        if ((await toggleItem.count()) === 0) {
-          throw new Error(`[${p}] calendar-${mode} toggle not found after retries`);
-        }
-        await toggleItem.first().click();
-        await waitForScreenshotReady(page);
-        const modeReady = await waitForCalendarReady(page);
-        if (!modeReady) {
-          throw new Error(`[${p}] calendar-${mode} not ready after mode switch`);
-        }
-        const n = nextIndex(p);
-        const num = String(n).padStart(2, "0");
-        const finalPath = getFinalScreenshotPath(p, `calendar-${mode}`);
-        const screenshotPath = getStagedScreenshotPath(finalPath);
-        await page.screenshot({ path: screenshotPath });
-        totalScreenshots++;
-        const relativePath = path.relative(process.cwd(), finalPath);
-        console.log(`    ${num}  [${p}] calendar-${mode} → ${relativePath}`);
-      }
-
-      await runCaptureStep("calendar event-detail modal", async () => {
-        const openDayView = async (): Promise<void> => {
-          const dayToggle = page.getByTestId(TEST_IDS.CALENDAR.MODE_DAY);
-          if ((await dayToggle.count()) > 0) {
-            await dayToggle.first().click();
-            await waitForScreenshotReady(page);
-            await waitForCalendarReady(page);
+    if (
+      shouldCaptureAny(p, [
+        "calendar-day",
+        "calendar-week",
+        "calendar-month",
+        "calendar-event-modal",
+      ])
+    ) {
+      const calendarUrl = `/${orgSlug}/projects/${projectKey}/calendar`;
+      try {
+        await page.goto(`${BASE_URL}${calendarUrl}`, { waitUntil: "networkidle", timeout: 15000 });
+      } catch {}
+      await waitForScreenshotReady(page);
+      const isCalendarReady = await waitForCalendarReady(page);
+      if (!isCalendarReady) {
+        console.log("    ⚠️  [filled] calendar not ready, skipping mode-specific screenshots");
+      } else {
+        // Calendar view-mode screenshots: day, week, month
+        const calendarModeTestIds = {
+          day: TEST_IDS.CALENDAR.MODE_DAY,
+          week: TEST_IDS.CALENDAR.MODE_WEEK,
+          month: TEST_IDS.CALENDAR.MODE_MONTH,
+        } as const;
+        for (const mode of ["day", "week", "month"] as const) {
+          if (!shouldCapture(p, `calendar-${mode}`)) {
+            continue;
           }
-        };
-
-        const locateEvent = () => page.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM).first();
-
-        let eventItem = locateEvent();
-        if (typeof seed.workspaceSlug === "string") {
-          await page
-            .goto(`${BASE_URL}/${orgSlug}/workspaces/${seed.workspaceSlug}/calendar`, {
-              waitUntil: "domcontentloaded",
-              timeout: 15000,
-            })
-            .catch(() => {});
+          const toggleItem = page.getByTestId(calendarModeTestIds[mode]);
+          for (let attempt = 0; attempt < 3; attempt++) {
+            if ((await toggleItem.count()) > 0) break;
+            await page.waitForTimeout(500);
+          }
+          if ((await toggleItem.count()) === 0) {
+            throw new Error(`[${p}] calendar-${mode} toggle not found after retries`);
+          }
+          await toggleItem.first().click();
           await waitForScreenshotReady(page);
-          const workspaceCalendarReady = await waitForCalendarReady(page);
-          if (workspaceCalendarReady) {
-            await openDayView();
-            eventItem = locateEvent();
+          const modeReady = await waitForCalendarReady(page);
+          if (!modeReady) {
+            throw new Error(`[${p}] calendar-${mode} not ready after mode switch`);
           }
-        } else {
-          await openDayView();
-          eventItem = locateEvent();
+          const n = nextIndex(p);
+          const num = String(n).padStart(2, "0");
+          const finalPath = getFinalScreenshotPath(p, `calendar-${mode}`);
+          const screenshotPath = getStagedScreenshotPath(finalPath);
+          await page.screenshot({ path: screenshotPath });
+          totalScreenshots++;
+          const relativePath = path.relative(process.cwd(), finalPath);
+          console.log(`    ${num}  [${p}] calendar-${mode} → ${relativePath}`);
         }
 
-        if (!(await waitForCalendarEvents(page))) {
-          throw new Error(`[${p}] No calendar events found for modal screenshot`);
-        }
+        if (shouldCapture(p, "calendar-event-modal")) {
+          await runCaptureStep("calendar event-detail modal", async () => {
+            const openDayView = async (): Promise<void> => {
+              const dayToggle = page.getByTestId(TEST_IDS.CALENDAR.MODE_DAY);
+              if ((await dayToggle.count()) > 0) {
+                await dayToggle.first().click();
+                await waitForScreenshotReady(page);
+                await waitForCalendarReady(page);
+              }
+            };
 
-        eventItem = locateEvent();
-        await eventItem.scrollIntoViewIfNeeded().catch(() => {});
-        await eventItem.click({ force: true });
-        const dialog = page.getByTestId(TEST_IDS.CALENDAR.EVENT_DETAILS_MODAL);
-        await dialog.waitFor({ state: "visible", timeout: 5000 });
-        await captureCurrentView(page, p, "calendar-event-modal");
-        await dismissIfOpen(page, dialog);
-      });
+            const locateEvent = () => page.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM).first();
+
+            let eventItem = locateEvent();
+            if (typeof seed.workspaceSlug === "string") {
+              await page
+                .goto(`${BASE_URL}/${orgSlug}/workspaces/${seed.workspaceSlug}/calendar`, {
+                  waitUntil: "domcontentloaded",
+                  timeout: 15000,
+                })
+                .catch(() => {});
+              await waitForScreenshotReady(page);
+              const workspaceCalendarReady = await waitForCalendarReady(page);
+              if (workspaceCalendarReady) {
+                await openDayView();
+                eventItem = locateEvent();
+              }
+            } else {
+              await openDayView();
+              eventItem = locateEvent();
+            }
+
+            if (!(await waitForCalendarEvents(page))) {
+              throw new Error(`[${p}] No calendar events found for modal screenshot`);
+            }
+
+            eventItem = locateEvent();
+            await eventItem.scrollIntoViewIfNeeded().catch(() => {});
+            await eventItem.click({ force: true });
+            const dialog = page.getByTestId(TEST_IDS.CALENDAR.EVENT_DETAILS_MODAL);
+            await dialog.waitFor({ state: "visible", timeout: 5000 });
+            await captureCurrentView(page, p, "calendar-event-modal");
+            await dismissIfOpen(page, dialog);
+          });
+        }
+      }
     }
   }
 
   // Issue detail
-  const firstIssue = (await discoverIssueKey(page, orgSlug, projectKey)) ?? seed.issueKeys?.[0];
-  if (firstIssue) {
-    await takeScreenshot(
-      page,
-      p,
-      `issue-${firstIssue.toLowerCase()}`,
-      `/${orgSlug}/issues/${firstIssue}`,
-    );
+  const seededIssueKey = seed.issueKeys?.[0];
+  if (seededIssueKey && shouldCapture(p, `issue-${seededIssueKey.toLowerCase()}`)) {
+    const firstIssue = (await discoverIssueKey(page, orgSlug, projectKey)) ?? seededIssueKey;
+    if (firstIssue) {
+      await takeScreenshot(
+        page,
+        p,
+        `issue-${firstIssue.toLowerCase()}`,
+        `/${orgSlug}/issues/${firstIssue}`,
+      );
+    }
   }
 
   // Workspace & team pages
@@ -1030,23 +1251,36 @@ async function screenshotFilledStates(
 
   if (wsSlug) {
     const wsBase = `/${orgSlug}/workspaces/${wsSlug}`;
-    await takeScreenshot(page, p, `workspace-${wsSlug}`, wsBase);
-    await takeScreenshot(page, p, `workspace-${wsSlug}-settings`, `${wsBase}/settings`);
+    const workspaceTargets = [`workspace-${wsSlug}`, `workspace-${wsSlug}-settings`];
+    if (shouldCaptureAny(p, workspaceTargets)) {
+      await takeScreenshot(page, p, `workspace-${wsSlug}`, wsBase);
+      await takeScreenshot(page, p, `workspace-${wsSlug}-settings`, `${wsBase}/settings`);
+    }
 
     const resolvedTeam = teamSlug ?? (await discoverFirstHref(page, /\/teams\/([^/]+)/));
     if (resolvedTeam) {
       const teamBase = `${wsBase}/teams/${resolvedTeam}`;
-      await takeScreenshot(page, p, `team-${resolvedTeam}`, teamBase);
-      for (const tab of ["board", "calendar", "settings"] as const) {
-        await takeScreenshot(page, p, `team-${resolvedTeam}-${tab}`, `${teamBase}/${tab}`);
+      const teamTargets = [
+        `team-${resolvedTeam}`,
+        `team-${resolvedTeam}-board`,
+        `team-${resolvedTeam}-calendar`,
+        `team-${resolvedTeam}-settings`,
+      ];
+      if (shouldCaptureAny(p, teamTargets)) {
+        await takeScreenshot(page, p, `team-${resolvedTeam}`, teamBase);
+        for (const tab of ["board", "calendar", "settings"] as const) {
+          await takeScreenshot(page, p, `team-${resolvedTeam}-${tab}`, `${teamBase}/${tab}`);
+        }
       }
     }
   }
 
   // Document editor
-  const docId = await discoverDocumentId(page, orgSlug);
-  if (docId) {
-    await takeScreenshot(page, p, "document-editor", `/${orgSlug}/documents/${docId}`);
+  if (shouldCapture(p, "document-editor")) {
+    const docId = await discoverDocumentId(page, orgSlug);
+    if (docId) {
+      await takeScreenshot(page, p, "document-editor", `/${orgSlug}/documents/${docId}`);
+    }
   }
 }
 
@@ -1055,6 +1289,17 @@ async function screenshotDashboardModals(
   orgSlug: string,
   prefix: string,
 ): Promise<void> {
+  if (
+    !shouldCaptureAny(prefix, [
+      "dashboard-omnibox",
+      "dashboard-advanced-search-modal",
+      "dashboard-shortcuts-modal",
+      "dashboard-time-entry-modal",
+    ])
+  ) {
+    return;
+  }
+
   await page
     .goto(`${BASE_URL}/${orgSlug}/dashboard`, { waitUntil: "domcontentloaded", timeout: 15000 })
     .catch(() => {});
@@ -1121,6 +1366,10 @@ async function screenshotDashboardModals(
 }
 
 async function screenshotProjectsModal(page: Page, orgSlug: string, prefix: string): Promise<void> {
+  if (!shouldCapture(prefix, "projects-create-project-modal")) {
+    return;
+  }
+
   await page
     .goto(`${BASE_URL}/${orgSlug}/projects`, { waitUntil: "domcontentloaded", timeout: 15000 })
     .catch(() => {});
@@ -1143,6 +1392,13 @@ async function screenshotBoardModals(
   issueKey: string | undefined,
   prefix: string,
 ): Promise<void> {
+  const normalizedProjectKey = projectKey.toLowerCase();
+  const createIssueModalName = `project-${normalizedProjectKey}-create-issue-modal`;
+  const issueDetailModalName = `project-${normalizedProjectKey}-issue-detail-modal`;
+  if (!shouldCaptureAny(prefix, [createIssueModalName, issueDetailModalName])) {
+    return;
+  }
+
   const boardUrl = `/${orgSlug}/projects/${projectKey}/board`;
   await page
     .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
@@ -1151,7 +1407,10 @@ async function screenshotBoardModals(
   await waitForScreenshotReady(page);
 
   const projectsPage = new ProjectsPage(page, orgSlug);
-  if ((await projectsPage.createIssueButton.count()) > 0) {
+  if (
+    shouldCapture(prefix, createIssueModalName) &&
+    (await projectsPage.createIssueButton.count()) > 0
+  ) {
     await runCaptureStep("board create-issue modal", async () => {
       await dismissAllDialogs(page);
       await projectsPage.openCreateIssueModal();
@@ -1163,11 +1422,7 @@ async function screenshotBoardModals(
         .first();
       await formReadySignal.waitFor({ state: "visible", timeout: 12000 });
       await waitForScreenshotReady(page);
-      await captureCurrentView(
-        page,
-        prefix,
-        `project-${projectKey.toLowerCase()}-create-issue-modal`,
-      );
+      await captureCurrentView(page, prefix, createIssueModalName);
       await dismissIfOpen(page, createIssueDialog);
     });
   }
@@ -1183,17 +1438,13 @@ async function screenshotBoardModals(
     }
   }
 
-  if ((await issueCard.count()) > 0) {
+  if (shouldCapture(prefix, issueDetailModalName) && (await issueCard.count()) > 0) {
     await runCaptureStep("board issue-detail modal", async () => {
       await issueCard.scrollIntoViewIfNeeded().catch(() => {});
       await issueCard.click({ force: true });
       const issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
       await issueDetailDialog.waitFor({ state: "visible", timeout: 5000 });
-      await captureCurrentView(
-        page,
-        prefix,
-        `project-${projectKey.toLowerCase()}-issue-detail-modal`,
-      );
+      await captureCurrentView(page, prefix, issueDetailModalName);
       await dismissIfOpen(page, issueDetailDialog);
     });
   }
@@ -1285,18 +1536,37 @@ async function captureForConfig(
 // ---------------------------------------------------------------------------
 
 async function run(): Promise<void> {
+  cliOptions = parseCliOptions(process.argv.slice(2));
+  if (cliOptions.help) {
+    printUsage();
+    return;
+  }
+
   const specFolders = getGeneratedSpecFolders();
   fs.mkdirSync(SCREENSHOT_STAGING_BASE_DIR, { recursive: true });
   stagingRootDir = fs.mkdtempSync(path.join(SCREENSHOT_STAGING_BASE_DIR, "run-"));
+  const selectedConfigs = CONFIGS.filter((config) =>
+    isConfigSelected(config.viewport, config.theme),
+  );
+
+  if (selectedConfigs.length === 0) {
+    throw new Error("No screenshot configs matched the provided --config filter");
+  }
 
   console.log("\n╔════════════════════════════════════════════════════════════╗");
   console.log("║         NIXELO SCREENSHOT CAPTURE                          ║");
   console.log("╚════════════════════════════════════════════════════════════╝");
   console.log(`\n  Base URL: ${BASE_URL}`);
-  console.log(`  Configs: ${CONFIGS.map((c) => `${c.viewport}-${c.theme}`).join(", ")}`);
+  console.log(`  Configs: ${selectedConfigs.map((c) => `${c.viewport}-${c.theme}`).join(", ")}`);
   console.log(`  Spec folders: ${[...new Set(specFolders)].join(", ")}`);
+  if (cliOptions.specFilters.length > 0) {
+    console.log(`  Spec filter: ${cliOptions.specFilters.join(", ")}`);
+  }
+  if (cliOptions.matchFilters.length > 0) {
+    console.log(`  Match filter: ${cliOptions.matchFilters.join(", ")}`);
+  }
 
-  const headless = !process.argv.includes("--headed");
+  const headless = cliOptions.headless;
   const launchBrowser = () => chromium.launch({ headless });
   const setupBrowser = await launchBrowser();
 
@@ -1344,7 +1614,7 @@ async function run(): Promise<void> {
   }
 
   // Capture configured combinations
-  for (const config of CONFIGS) {
+  for (const config of selectedConfigs) {
     let completed = false;
     for (let attempt = 1; attempt <= 2 && !completed; attempt++) {
       const browser = await launchBrowser();
@@ -1375,7 +1645,14 @@ async function run(): Promise<void> {
     );
   }
 
+  if (totalScreenshots === 0) {
+    fs.rmSync(ensureStagingRoot(), { recursive: true, force: true });
+    stagingRootDir = "";
+    throw new Error("No screenshots matched the provided filters");
+  }
+
   promoteStagedScreenshots();
+  const outputSummary = getStagedOutputSummary();
   fs.rmSync(ensureStagingRoot(), { recursive: true, force: true });
   stagingRootDir = "";
 
@@ -1383,24 +1660,9 @@ async function run(): Promise<void> {
   console.log(`║  ✅ COMPLETE: ${totalScreenshots} screenshots captured`);
   console.log("╚════════════════════════════════════════════════════════════╝\n");
 
-  // Summary - count files in each location
   console.log("  Output:");
-  for (const folder of specFolders) {
-    const screenshotDir = path.join(SPECS_BASE_DIR, folder, "screenshots");
-    if (fs.existsSync(screenshotDir)) {
-      const files = fs
-        .readdirSync(screenshotDir)
-        .filter((f) => f.endsWith(".png") && !f.startsWith("reference-"));
-      if (files.length > 0) {
-        console.log(`    ${folder}/screenshots/ (${files.length} screenshots)`);
-      }
-    }
-  }
-  if (fs.existsSync(FALLBACK_SCREENSHOT_DIR)) {
-    const fallbackFiles = fs.readdirSync(FALLBACK_SCREENSHOT_DIR).filter((f) => f.endsWith(".png"));
-    if (fallbackFiles.length > 0) {
-      console.log(`    e2e/screenshots/ (${fallbackFiles.length} screenshots without specs)`);
-    }
+  for (const [folder, count] of outputSummary) {
+    console.log(`    ${count.toString().padStart(3, " ")}  ${folder}`);
   }
   console.log("");
 }
