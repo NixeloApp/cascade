@@ -121,10 +121,6 @@ const HIGH_Z_PATTERN = /\bz-(\d+)\b/g;
 const GROUP_VARIANT_PATTERN =
   /\b(?:group|peer)-(?:hover|focus|focus-within|active)(?:\/[A-Za-z0-9_-]+)?:/;
 
-// Match standalone group/peer marker classes, NOT followed by hyphen (to exclude group-hover: etc)
-const GROUP_CLASS_PATTERN = /\bgroup(?:\/[A-Za-z0-9_-]+)?(?!-)\b/;
-const PEER_CLASS_PATTERN = /\bpeer(?:\/[A-Za-z0-9_-]+)?(?!-)\b/;
-
 // ============================================================
 // 6. RESPONSIVE BREAKPOINT CONSISTENCY
 // ============================================================
