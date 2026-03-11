@@ -23,6 +23,7 @@ import { Flex } from "./ui/Flex";
 import { Input } from "./ui/form";
 import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
+import { ShortcutHint } from "./ui/KeyboardShortcut";
 import { Stack } from "./ui/Stack";
 
 interface AdvancedSearchModalProps {
@@ -96,10 +97,18 @@ export function AdvancedSearchModal({
       description="Search issues by text, then narrow the result set with a few precise filters."
       size="lg"
       data-testid={TEST_IDS.SEARCH.ADVANCED_MODAL}
+      footerClassName="sm:justify-between"
       footer={
-        <Button onClick={() => onOpenChange(false)} chrome="framed" chromeSize="compactPill">
-          Close
-        </Button>
+        <>
+          <Button onClick={() => onOpenChange(false)} chrome="framed" chromeSize="compactPill">
+            Close
+          </Button>
+          <Flex align="center" gap="lg" className="hidden sm:inline-flex">
+            <ShortcutHint keys="up+down">Navigate</ShortcutHint>
+            <ShortcutHint keys="Enter">Select</ShortcutHint>
+            <ShortcutHint keys="Esc">Close</ShortcutHint>
+          </Flex>
+        </>
       }
     >
       <Stack gap="lg">

@@ -8,6 +8,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/Breadcrumb";
+import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
@@ -35,11 +36,10 @@ export function PageHeader({
   className,
 }: PageHeaderProps): ReactNode {
   return (
-    <div
-      className={cn(
-        "mb-4 rounded-2xl border border-ui-border-secondary/75 bg-linear-to-r from-ui-bg via-ui-bg-elevated/96 to-ui-bg-soft/78 px-3.5 py-3 shadow-card sm:mb-5 sm:rounded-3xl sm:px-5 sm:py-4",
-        className,
-      )}
+    <Card
+      recipe="pageHeader"
+      padding="none"
+      className={cn("mb-4 px-3.5 py-3 sm:mb-5 sm:px-5 sm:py-4", className)}
     >
       {breadcrumbs && breadcrumbs.length > 0 && (
         <Breadcrumb className="mb-2">
@@ -93,6 +93,6 @@ export function PageHeader({
           </Flex>
         )}
       </Flex>
-    </div>
+    </Card>
   );
 }
