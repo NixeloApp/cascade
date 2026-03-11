@@ -27,7 +27,8 @@
  *  23. Control ownership       — block low-level ToggleGroup in app code; use semantic primitives
  *  24. Interactive Tailwind    — hover:/focus: should be in CVA components, not scattered
  *  25. Tailwind consistency    — duration tokens, focus rings, disabled states, z-index, group-hover
- *  26. JSDoc coverage          — exported functions/components should have JSDoc documentation
+ *  26. Recipe drift            — repeated visual patterns that should be Card recipes (info only)
+ *  27. JSDoc coverage          — exported functions/components should have JSDoc documentation
  *  27. Import paths            — validates import path conventions
  *  28. Hook patterns           — custom hooks should follow consistent patterns
  *  29. Async patterns          — consistent error handling in async operations
@@ -193,6 +194,10 @@ const checks = [
   {
     name: "Tailwind consistency",
     modulePath: new URL("./validate/check-tailwind-consistency.js", import.meta.url).href,
+  },
+  {
+    name: "Recipe drift",
+    modulePath: new URL("./validate/check-recipe-drift.js", import.meta.url).href,
   },
   {
     name: "JSDoc coverage",

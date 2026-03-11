@@ -167,7 +167,7 @@ Done in this track already:
 - [x] Expand validation to enforce CVA ownership boundaries
 - [x] Expand validation to enforce semantic control ownership
 - [x] Define reusable recipes for header clusters, modal bodies, and showcase/stat cards
-- [ ] Expand validation to flag suspicious recipe drift beyond control ownership
+- [x] Expand validation to flag suspicious recipe drift beyond control ownership
 
 ## Done Looks Like
 
