@@ -195,9 +195,7 @@ export class AuthPage extends BasePage {
    */
   async gotoForgotPassword() {
     await this.page.goto("/forgot-password");
-    await this.forgotPasswordHeading.waitFor({ state: "visible", timeout: 15000 });
-    await this.waitForHydration();
-    await this.emailInput.waitFor({ state: "visible" });
+    await this.expectForgotPasswordEntryFormReady();
   }
 
   /**
@@ -532,27 +530,6 @@ export class AuthPage extends BasePage {
   // ===================
 
   /**
-   * Wait for React app to be hydrated
-   * Uses global body.app-hydrated class set by root component (best practice)
-   * Falls back to document ready state if class not found (CI resilience)
-   * @see https://spin.atomicobject.com/hydration-sveltekit-tests/
-   */
-  async waitForHydration() {
-    try {
-      await this.page.locator("body.app-hydrated").waitFor({
-        state: "attached",
-        timeout: 10000,
-      });
-    } catch {
-      // Fallback: ensure page is at least loaded and has rendered content
-      // This handles CI environments where React might be slower to mount
-      await this.page.waitForLoadState("domcontentloaded");
-      // Wait for any form to be visible as a proxy for React mounting
-      await this.page.locator("form").first().waitFor({ state: "visible", timeout: 15000 });
-    }
-  }
-
-  /**
    * Wait for form to be expanded (email/password fields visible)
    * Uses data-expanded attribute set by React component
    */
@@ -700,7 +677,10 @@ export class AuthPage extends BasePage {
       return "pending";
     }
 
-    await this.waitForAuthFormHydrated().catch(() => {});
+    const hydrated = await this.authForm.getAttribute("data-hydrated").catch(() => null);
+    if (hydrated !== "true") {
+      return "pending";
+    }
 
     const buttonText =
       (await this.submitButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
@@ -755,6 +735,17 @@ export class AuthPage extends BasePage {
         intervals: [250, 500, 1000],
       })
       .not.toBe("pending");
+  }
+
+  async expectForgotPasswordEntryFormReady(timeout = 15000) {
+    await expect(this.page).toHaveURL(/forgot-password/, { timeout });
+    await expect
+      .poll(async () => this.getPasswordResetEntryState(), {
+        timeout,
+        intervals: [250, 500, 1000],
+      })
+      .toBe("forgot");
+    await expect(this.emailInput).toBeVisible({ timeout });
   }
 
   async ensureForgotPasswordEntry() {
