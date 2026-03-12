@@ -2762,16 +2762,34 @@ export const seedScreenshotDataInternal = internalMutation({
 
       organizationId = organizationBySlug._id;
     } else {
-      const membership = await ctx.db
-        .query("organizationMembers")
-        .withIndex("by_user", (q) => q.eq("userId", userId))
-        .first();
-
-      if (!membership) {
-        return { success: false, error: "User has no organization membership" };
+      // Prefer user's defaultOrganizationId for deterministic org selection
+      const defaultOrgId = user.defaultOrganizationId;
+      if (defaultOrgId) {
+        // Verify membership still exists
+        const defaultMembership = await ctx.db
+          .query("organizationMembers")
+          .withIndex("by_organization_user", (q) =>
+            q.eq("organizationId", defaultOrgId).eq("userId", userId),
+          )
+          .first();
+        if (defaultMembership) {
+          organizationId = defaultOrgId;
+        }
       }
 
-      organizationId = membership.organizationId;
+      // Fall back to first membership only if defaultOrganizationId not usable
+      if (!organizationId) {
+        const membership = await ctx.db
+          .query("organizationMembers")
+          .withIndex("by_user", (q) => q.eq("userId", userId))
+          .first();
+
+        if (!membership) {
+          return { success: false, error: "User has no organization membership" };
+        }
+
+        organizationId = membership.organizationId;
+      }
     }
 
     const organization = organizationId ? await ctx.db.get(organizationId) : null;

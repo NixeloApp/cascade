@@ -354,8 +354,12 @@ export class OnboardingPage {
       return;
     }
 
-    if (await this.backButton.isVisible().catch(() => false)) {
-      await expect(this.backButton).toBeEnabled();
+    // Only retry if back button is visible AND enabled AND role selection is still not ready
+    const backVisible = await this.backButton.isVisible().catch(() => false);
+    const backEnabled = backVisible && !(await this.backButton.isDisabled().catch(() => true));
+    const roleReady = await this.waitForRoleSelectionReady(0);
+
+    if (backVisible && backEnabled && !roleReady) {
       await this.backButton.click();
     }
 
@@ -385,11 +389,12 @@ export class OnboardingPage {
     await expect(this.createProjectButton).toBeEnabled();
     await this.createProjectButton.click();
 
-    if (!(await this.waitForProjectCreateSubmitStart(3000))) {
-      await expect(this.createProjectButton).toBeVisible({ timeout: TRANSITION_TIMEOUT });
-      await expect(this.createProjectButton).toBeEnabled();
-      await this.createProjectButton.click();
-      await this.waitForProjectCreateSubmitStart(5000);
+    // Don't retry non-idempotent create - just wait longer for submit state
+    const submitStarted = await this.waitForProjectCreateSubmitStart(8000);
+    if (!submitStarted) {
+      throw new Error(
+        "Project creation did not start within timeout - refusing to retry non-idempotent action",
+      );
     }
 
     await this.expectTeamMemberComplete();

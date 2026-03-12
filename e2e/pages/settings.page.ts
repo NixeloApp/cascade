@@ -716,8 +716,12 @@ export class SettingsPage extends BasePage {
       if (await this.saveSettingsButton.isDisabled().catch(() => true)) {
         return false;
       }
-      await this.saveSettingsButton.click({ timeout: 2000 });
-      return true;
+      try {
+        await this.saveSettingsButton.click({ timeout: 2000 });
+        return true;
+      } catch {
+        return false;
+      }
     }
   }
 

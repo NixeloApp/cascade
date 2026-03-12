@@ -687,11 +687,11 @@ Full-suite evidence in this TODO is considered stale if older than 24 hours.
 - Run command:
   - `pnpm exec playwright test --reporter=line`
 - Run date:
-  - `2026-03-07`
+  - `2026-03-12`
 - Outcome:
-  - `160 passed` `(7.8m)`
+  - `161 passed` `(5.6m)`
 - Consecutive green full runs:
-  - `2`
+  - `3`
 - Failing specs:
   - `none`
 - Immediate next action:

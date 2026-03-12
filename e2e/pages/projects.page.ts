@@ -504,24 +504,8 @@ export class ProjectsPage extends BasePage {
     await this.submitIssueButton.scrollIntoViewIfNeeded().catch(() => {});
     await this.submitIssueButton.click();
 
-    if (await this.waitForCreateIssueSubmitStart(3000)) {
-      return;
-    }
-
-    await expect(this.submitIssueButton).toBeVisible();
-    await expect(this.submitIssueButton).toBeEnabled();
-    await this.submitIssueButton.scrollIntoViewIfNeeded().catch(() => {});
-    await this.submitIssueButton.click();
-    await this.expectCreateIssueSubmitStarted();
-  }
-
-  private async waitForCreateIssueSubmitStart(timeout = 3000) {
-    try {
-      await this.expectCreateIssueSubmitStarted(timeout);
-      return true;
-    } catch {
-      return false;
-    }
+    // Don't retry non-idempotent issue creation - wait longer for submit state instead
+    await this.expectCreateIssueSubmitStarted(8000);
   }
 
   private async expectCreateIssueSubmitStarted(timeout = 10000) {
@@ -951,7 +935,10 @@ export class ProjectsPage extends BasePage {
       return;
     }
 
-    await this.clickWithBoundedSecondAttempt(this.createButton, 2000);
+    // Don't use bounded retry for non-idempotent project creation
+    await expect(this.createButton).toBeVisible();
+    await this.createButton.scrollIntoViewIfNeeded().catch(() => {});
+    await this.createButton.click();
   }
 
   async waitForCreateProjectSubmitStart(timeout = 10000) {

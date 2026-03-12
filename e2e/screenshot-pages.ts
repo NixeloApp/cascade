@@ -1028,15 +1028,12 @@ async function waitForWorkspaceSettingsReady(page: Page): Promise<void> {
 }
 
 async function waitForWorkspaceBacklogReady(page: Page): Promise<void> {
+  // Wait for actual backlog content - empty state text OR board column (issues present)
   await page
-    .waitForFunction(
-      () => {
-        const text = document.body.innerText || "";
-        return text.includes("Backlog is empty") || document.querySelectorAll("div").length > 0;
-      },
-      undefined,
-      { timeout: 12000 },
-    )
+    .getByText(/backlog is empty/i)
+    .or(page.getByTestId(TEST_IDS.BOARD.COLUMN).first())
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
     .catch(() => {});
   await page
     .locator(".animate-spin")

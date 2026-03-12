@@ -26,25 +26,24 @@ export async function injectContextAuthTokens(
 ): Promise<void> {
   await context.addInitScript(
     ({ token: jwt, refreshToken: refresh, convexUrl }) => {
-      const setIfMissing = (key: string, value: string) => {
-        if (!localStorage.getItem(key)) {
+      // Helper to set or clear a token - always overwrite to avoid stale tokens
+      const setToken = (key: string, value?: string) => {
+        if (value) {
           localStorage.setItem(key, value);
+        } else {
+          localStorage.removeItem(key);
         }
       };
 
-      setIfMissing("convexAuthToken", jwt);
-      if (refresh) {
-        setIfMissing("convexAuthRefreshToken", refresh);
-      }
+      setToken("convexAuthToken", jwt);
+      setToken("convexAuthRefreshToken", refresh);
 
       if (convexUrl) {
         const namespace = convexUrl.replace(/[^a-zA-Z0-9]/g, "");
         const jwtKey = `__convexAuthJWT_${namespace}`;
         const refreshKey = `__convexAuthRefreshToken_${namespace}`;
-        setIfMissing(jwtKey, jwt);
-        if (refresh) {
-          setIfMissing(refreshKey, refresh);
-        }
+        setToken(jwtKey, jwt);
+        setToken(refreshKey, refresh);
       }
     },
     {

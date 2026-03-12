@@ -27,7 +27,7 @@ const inputVariants = cva(
         sm: "h-9 px-3 text-sm",
         md: "h-10 px-4 text-sm",
         lg: "h-11 px-4 text-base",
-        filterPill: "h-6 rounded-full px-2 text-xs sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm",
+        filterPill: "h-8 rounded-full px-3 text-base sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm",
       },
     },
     defaultVariants: {

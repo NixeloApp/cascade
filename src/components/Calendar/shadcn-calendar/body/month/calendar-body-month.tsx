@@ -50,15 +50,19 @@ export function CalendarBodyMonth(): React.ReactElement {
   return (
     <div className="flex flex-col flex-grow overflow-hidden bg-ui-bg">
       <div className="grid grid-cols-7 bg-ui-bg-secondary/50">
-        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
-          <div
-            key={day}
-            className="border-b border-r border-ui-border py-1.5 text-center text-xs font-medium uppercase tracking-wide text-ui-text-tertiary last:border-r-0 md:py-2.5"
-          >
-            <span className="md:hidden">{day.charAt(0)}</span>
-            <span className="hidden md:inline">{day}</span>
-          </div>
-        ))}
+        {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(
+          (day) => (
+            <div
+              key={day}
+              className="border-b border-r border-ui-border py-1.5 text-center text-xs font-medium uppercase tracking-wide text-ui-text-tertiary last:border-r-0 md:py-2.5"
+            >
+              <span className="md:hidden" aria-hidden="true">
+                {day.charAt(0)}
+              </span>
+              <span className="sr-only md:not-sr-only">{day.slice(0, 3)}</span>
+            </div>
+          ),
+        )}
       </div>
 
       <AnimatePresence mode="wait" initial={false}>

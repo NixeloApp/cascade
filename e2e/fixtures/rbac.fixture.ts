@@ -237,7 +237,16 @@ export { expect };
 
 async function ensureAuthenticatedDashboardIfNeeded(page: Page, orgSlug: string): Promise<void> {
   const targetUrl = page.url();
-  if (targetUrl === "http://localhost:5555/" || targetUrl.endsWith("/signin")) {
+
+  // Fresh pages start at about:blank - treat as unauthenticated
+  if (!targetUrl.startsWith("http")) {
+    await ensureAuthenticatedDashboardReady(page, orgSlug);
+    return;
+  }
+
+  // Check pathname rather than hardcoded URL for BASE_URL flexibility
+  const { pathname } = new URL(targetUrl);
+  if (pathname === "/" || pathname === "/signin") {
     await ensureAuthenticatedDashboardReady(page, orgSlug);
   }
 }

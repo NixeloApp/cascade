@@ -146,7 +146,13 @@ export function CalendarEvent({
           layoutId={`event-${animationKey}-${month ? "month" : "day"}`}
         >
           <motion.div
-            className={cn("flex flex-col w-full", colors.text, month && "items-start gap-0.5")}
+            className={cn(
+              "w-full",
+              colors.text,
+              month
+                ? "flex flex-col items-start gap-0.5"
+                : "flex items-center justify-between gap-2",
+            )}
             layout="position"
           >
             <Typography

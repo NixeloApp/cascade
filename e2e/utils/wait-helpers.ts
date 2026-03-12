@@ -77,8 +77,28 @@ export async function waitForFormReady(page: Page, timeout = 5000): Promise<bool
     )
     .not.toBe("pending");
 
-  const formReady = await form.getAttribute("data-form-ready").catch(() => null);
-  return formReady === "true";
+  // Check if form is ready via marker OR via fallback conditions
+  const formReadyAttr = await form.getAttribute("data-form-ready").catch(() => null);
+  if (formReadyAttr === "true") {
+    return true;
+  }
+
+  // Re-check fallback conditions if marker not set
+  const expanded = await form.getAttribute("data-expanded").catch(() => null);
+  const hydrated = await form.getAttribute("data-hydrated").catch(() => null);
+  const emailVisible = await emailInput.isVisible().catch(() => false);
+  const passwordVisible = await passwordInput.isVisible().catch(() => false);
+  const submitVisible = await submitButton.isVisible().catch(() => false);
+  const submitEnabled = submitVisible && !(await submitButton.isDisabled().catch(() => true));
+
+  return (
+    expanded === "true" &&
+    hydrated !== "false" &&
+    emailVisible &&
+    passwordVisible &&
+    submitVisible &&
+    submitEnabled
+  );
 }
 
 /**

@@ -535,19 +535,27 @@ export class AuthPage extends BasePage {
   async waitForEmailFormExpanded(timeout = 3000, mode?: "signin" | "signup") {
     const expectedMode = mode ?? (await this.getCurrentAuthRoute());
     const targetState = expectedMode === "signin" ? "signin-expanded" : "signup-expanded";
-    return await this.waitForStateReady(() => this.getAuthFormState(), (state) => state === targetState, {
-      timeout,
-      intervals: [200, 500, 1000],
-    });
+    return await this.waitForStateReady(
+      () => this.getAuthFormState(),
+      (state) => state === targetState,
+      {
+        timeout,
+        intervals: [200, 500, 1000],
+      },
+    );
   }
 
   async expectEmailFormExpanded(mode?: "signin" | "signup", timeout = 10000) {
     const expectedMode = mode ?? (await this.getCurrentAuthRoute());
     const targetState = expectedMode === "signin" ? "signin-expanded" : "signup-expanded";
-    await this.waitForState(() => this.getAuthFormState(), (state) => state === targetState, {
-      timeout,
-      intervals: [200, 500, 1000],
-    });
+    await this.waitForState(
+      () => this.getAuthFormState(),
+      (state) => state === targetState,
+      {
+        timeout,
+        intervals: [200, 500, 1000],
+      },
+    );
   }
 
   private async waitForStableEmailFormExpanded(timeout = 3000, mode?: "signin" | "signup") {
@@ -614,18 +622,26 @@ export class AuthPage extends BasePage {
 
   private async waitForAuthLanding(mode: "signin" | "signup", timeout = 15000) {
     const targetState = mode === "signin" ? "signin-landing" : "signup-landing";
-    await this.waitForState(() => this.getAuthFormState(), (state) => state === targetState, {
-      timeout,
-      intervals: [200, 500, 1000],
-    });
+    await this.waitForState(
+      () => this.getAuthFormState(),
+      (state) => state === targetState,
+      {
+        timeout,
+        intervals: [200, 500, 1000],
+      },
+    );
   }
 
   private async waitForAuthLandingReady(mode: "signin" | "signup", timeout = 3000) {
     const targetState = mode === "signin" ? "signin-landing" : "signup-landing";
-    return await this.waitForStateReady(() => this.getAuthFormState(), (state) => state === targetState, {
-      timeout,
-      intervals: [200, 500, 1000],
-    });
+    return await this.waitForStateReady(
+      () => this.getAuthFormState(),
+      (state) => state === targetState,
+      {
+        timeout,
+        intervals: [200, 500, 1000],
+      },
+    );
   }
 
   private async getCurrentAuthRoute(): Promise<"signin" | "signup"> {
@@ -733,10 +749,14 @@ export class AuthPage extends BasePage {
 
   async expectForgotPasswordEntryFormReady(timeout = 15000) {
     await expect(this.page).toHaveURL(/forgot-password/, { timeout });
-    await this.waitForState(() => this.getPasswordResetEntryState(), (state) => state === "forgot", {
-      timeout,
-      intervals: [250, 500, 1000],
-    });
+    await this.waitForState(
+      () => this.getPasswordResetEntryState(),
+      (state) => state === "forgot",
+      {
+        timeout,
+        intervals: [250, 500, 1000],
+      },
+    );
     await expect(this.emailInput).toBeVisible({ timeout });
   }
 
@@ -771,10 +791,14 @@ export class AuthPage extends BasePage {
   }
 
   private async expectVerificationFormReady(timeout = 30000) {
-    await this.waitForState(() => this.getSignUpVerificationFormState(), (state) => state === "verify", {
-      timeout,
-      intervals: [250, 500, 1000],
-    });
+    await this.waitForState(
+      () => this.getSignUpVerificationFormState(),
+      (state) => state === "verify",
+      {
+        timeout,
+        intervals: [250, 500, 1000],
+      },
+    );
   }
 
   async getOAuthErrorSettleState(): Promise<"signin" | "alert" | "toast" | "pending"> {
@@ -1071,10 +1095,14 @@ export class AuthPage extends BasePage {
   }
 
   private async expectPasswordResetCodeStep(timeout = 30000) {
-    await this.waitForState(() => this.getPasswordResetCodeStepState(), (state) => state === "code", {
-      timeout,
-      intervals: [250, 500, 1000, 2000],
-    });
+    await this.waitForState(
+      () => this.getPasswordResetCodeStepState(),
+      (state) => state === "code",
+      {
+        timeout,
+        intervals: [250, 500, 1000, 2000],
+      },
+    );
     await expect(this.codeInput).toBeVisible({ timeout });
   }
 

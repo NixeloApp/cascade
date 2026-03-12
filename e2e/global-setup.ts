@@ -156,13 +156,23 @@ async function waitForBackendReady(
   let lastSiteResult: BackendProbeResult = { error: "not checked yet" };
   let lastClientResult: BackendProbeResult = { error: "not checked yet" };
 
+  const PROBE_TIMEOUT_MS = Math.max(intervalMs, 2000);
+
   const probeBackend = async (url: string): Promise<BackendProbeResult> => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
+
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, { signal: controller.signal });
       return { status: response.status };
     } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return { error: `Request timed out after ${PROBE_TIMEOUT_MS}ms` };
+      }
       const message = error instanceof Error ? error.message : String(error);
       return { error: message };
+    } finally {
+      clearTimeout(timeoutId);
     }
   };
 
