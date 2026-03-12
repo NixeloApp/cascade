@@ -18,13 +18,22 @@
   - `FocusZone.tsx`
   - `RecentActivity.tsx`
   - `WorkspacesList.tsx`
-
-### Next batch
-
-- Tighten the next product-shell exemptions:
+- Removed the broad raw-Tailwind directory exemptions for:
   - `src/components/Settings/`
   - `src/components/Admin/`
   - `src/components/ProjectSettings/`
+- Replaced those directory-wide raw-Tailwind escapes with explicit file-level migration debt entries.
+- Removed the broad interactive-state allowlist exemptions for:
+  - `Settings/`
+  - `Admin/`
+- Replaced those interactive directory escapes with explicit file-level migration debt entries.
+
+### Next batch
+
+- Burn down the explicit file-level debt entries added for:
+  - settings surfaces
+  - admin surfaces
+  - project settings surfaces
 - Keep `src/components/Analytics/` temporarily allowed until its shell patterns are migrated; it was tested in this pass and still contains validator-breaking drift.
 - After the next exemption reduction, add a stricter surface-shell validator for `rounded + bg + border + shadow + overflow` stacks so recipe drift is blocked more directly than the current generic raw-Tailwind patterns.
 
