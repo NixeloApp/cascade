@@ -56,12 +56,11 @@ function BackupCodesView({
         <Card padding="md" className="bg-ui-bg-secondary">
           <Grid cols={2} gap="sm">
             {backupCodes.map((code) => (
-              <code
-                key={code}
-                className="font-mono text-sm bg-ui-bg p-2 rounded border border-ui-border text-center"
-              >
-                {code}
-              </code>
+              <Card key={code} variant="outline" padding="sm" className="bg-ui-bg">
+                <Typography as="code" variant="mono" className="block text-center">
+                  {code}
+                </Typography>
+              </Card>
             ))}
           </Grid>
         </Card>
@@ -119,9 +118,11 @@ function SetupWizardView({
 
             <Stack align="center" gap="xs">
               <Typography variant="caption">Can&apos;t scan? Enter this code manually:</Typography>
-              <code className="font-mono text-sm bg-ui-bg-secondary p-2 rounded select-all">
-                {secret}
-              </code>
+              <Card padding="sm" variant="flat">
+                <Typography as="code" variant="mono" className="select-all">
+                  {secret}
+                </Typography>
+              </Card>
             </Stack>
           </Stack>
         </Card>
@@ -136,7 +137,6 @@ function SetupWizardView({
                 value={verificationCode}
                 onChange={(e) => onCodeChange(e.target.value.replace(/\D/g, "").slice(0, 6))}
                 placeholder="000000"
-                className="font-mono text-center text-lg tracking-widest"
                 maxLength={6}
               />
               <Button onClick={onVerify} disabled={isLoading || verificationCode.length !== 6}>
@@ -298,9 +298,11 @@ export function TwoFactorSettings() {
   if (status === undefined) {
     return (
       <Card padding="lg">
-        <Flex align="center" justify="center" className="py-4">
-          <LoadingSpinner size="md" />
-        </Flex>
+        <Card padding="md" variant="ghost">
+          <Flex align="center" justify="center">
+            <LoadingSpinner size="md" />
+          </Flex>
+        </Card>
       </Card>
     );
   }
@@ -402,7 +404,6 @@ export function TwoFactorSettings() {
           value={disableCode}
           onChange={(e) => setDisableCode(e.target.value)}
           placeholder="6-digit code or backup code"
-          className="font-mono"
         />
       </Dialog>
 
@@ -428,7 +429,6 @@ export function TwoFactorSettings() {
           value={regenerateCode}
           onChange={(e) => setRegenerateCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
           placeholder="000000"
-          className="font-mono text-center tracking-widest"
           maxLength={6}
         />
       </Dialog>

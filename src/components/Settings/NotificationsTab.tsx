@@ -29,109 +29,111 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Input } from "../ui/form";
+import { RadioGroup, RadioGroupItem } from "../ui/RadioGroup";
+import { SkeletonText } from "../ui/Skeleton";
 import { Stack } from "../ui/Stack";
 import { Switch } from "../ui/Switch";
 import { Typography } from "../ui/Typography";
 
 /** Reusable preference toggle row */
+interface PreferenceRowProps {
+  icon: LucideIcon;
+  label: string;
+  description: string;
+  checked: boolean;
+  isDisabled: boolean;
+  onChange: (value: boolean) => void;
+  isLast?: boolean;
+}
+
 function PreferenceRow({
   icon,
   label,
   description,
   checked,
-  disabled,
+  isDisabled,
   onChange,
   isLast = false,
-}: {
-  icon: LucideIcon;
-  label: string;
-  description: string;
-  checked: boolean;
-  disabled: boolean;
-  onChange: (value: boolean) => void;
-  isLast?: boolean;
-}) {
+}: PreferenceRowProps) {
   return (
-    <Flex
-      align="start"
-      justify="between"
-      className={isLast ? "py-3" : "py-3 border-b border-ui-border-secondary"}
+    <Card
+      variant="ghost"
+      padding="sm"
+      radius="none"
+      className={!isLast ? "border-b border-ui-border-secondary" : undefined}
     >
-      <FlexItem flex="1">
-        <Flex align="center" gap="sm">
-          <Icon icon={icon} size="md" />
-          <Typography variant="label">{label}</Typography>
-        </Flex>
-        <Typography variant="caption" className="mt-1">
-          {description}
-        </Typography>
-      </FlexItem>
-      <Switch checked={checked} onCheckedChange={onChange} disabled={disabled} className="ml-4" />
-    </Flex>
+      <Flex align="start" justify="between">
+        <FlexItem flex="1">
+          <Flex align="center" gap="sm">
+            <Icon icon={icon} size="md" />
+            <Typography variant="label">{label}</Typography>
+          </Flex>
+          <Typography variant="caption" className="mt-1">
+            {description}
+          </Typography>
+        </FlexItem>
+        <Switch
+          checked={checked}
+          onCheckedChange={onChange}
+          disabled={isDisabled}
+          className="ml-4"
+        />
+      </Flex>
+    </Card>
   );
 }
 
 /** Push notification preference toggle (smaller) */
-function PushPreferenceRow({
-  icon,
-  label,
-  checked,
-  disabled,
-  onChange,
-}: {
+interface PushPreferenceRowProps {
   icon: LucideIcon;
   label: string;
   checked: boolean;
-  disabled: boolean;
+  isDisabled: boolean;
   onChange: (value: boolean) => void;
-}) {
+}
+
+function PushPreferenceRow({ icon, label, checked, isDisabled, onChange }: PushPreferenceRowProps) {
   return (
-    <Flex align="center" justify="between" className="py-2">
-      <Flex align="center" gap="sm">
-        <Icon icon={icon} size="sm" />
-        <Typography variant="small">{label}</Typography>
+    <Card variant="ghost" padding="xs" radius="none">
+      <Flex align="center" justify="between">
+        <Flex align="center" gap="sm">
+          <Icon icon={icon} size="sm" />
+          <Typography variant="small">{label}</Typography>
+        </Flex>
+        <Switch checked={checked} onCheckedChange={onChange} disabled={isDisabled} />
       </Flex>
-      <Switch checked={checked} onCheckedChange={onChange} disabled={disabled} />
-    </Flex>
+    </Card>
   );
 }
 
-/** Digest option radio button */
-function DigestOption({
-  value,
-  label,
-  description,
-  checked,
-  disabled,
-  onChange,
-}: {
+/** Digest option card */
+interface DigestOptionCardProps {
   value: "none" | "daily" | "weekly";
   label: string;
   description: string;
   checked: boolean;
-  disabled: boolean;
+  isDisabled: boolean;
   onChange: () => void;
-}) {
+}
+
+function DigestOptionCard({
+  value,
+  label,
+  description,
+  checked,
+  isDisabled,
+  onChange,
+}: DigestOptionCardProps) {
   return (
-    <label className="cursor-pointer">
-      <Card padding="sm" hoverable>
-        <Flex align="center" gap="md">
-          <input
-            type="radio"
-            name="digest"
-            value={value}
-            checked={checked}
-            onChange={onChange}
-            disabled={disabled}
-            className="w-4 h-4 text-brand focus-visible:ring-brand-ring focus-visible:ring-2"
-          />
-          <Stack gap="none">
-            <Typography variant="label">{label}</Typography>
-            <Typography variant="caption">{description}</Typography>
-          </Stack>
-        </Flex>
-      </Card>
-    </label>
+    <Card padding="sm" hoverable variant={checked ? "outline" : "ghost"}>
+      <RadioGroupItem
+        value={value}
+        label={label}
+        description={description}
+        disabled={isDisabled}
+        onClick={onChange}
+      />
+    </Card>
   );
 }
 
@@ -232,28 +234,28 @@ function PushNotificationsCard({
               label="Mentions"
               checked={pushPreferences.pushMentions}
               onChange={(value) => onPushToggle("pushMentions", value)}
-              disabled={isSaving}
+              isDisabled={isSaving}
             />
             <PushPreferenceRow
               icon={User}
               label="Assignments"
               checked={pushPreferences.pushAssignments}
               onChange={(value) => onPushToggle("pushAssignments", value)}
-              disabled={isSaving}
+              isDisabled={isSaving}
             />
             <PushPreferenceRow
               icon={MessageSquare}
               label="Comments"
               checked={pushPreferences.pushComments}
               onChange={(value) => onPushToggle("pushComments", value)}
-              disabled={isSaving}
+              isDisabled={isSaving}
             />
             <PushPreferenceRow
               icon={RefreshCw}
               label="Status Changes"
               checked={pushPreferences.pushStatusChanges}
               onChange={(value) => onPushToggle("pushStatusChanges", value)}
-              disabled={isSaving}
+              isDisabled={isSaving}
             />
           </Stack>
         )}
@@ -302,13 +304,18 @@ export function NotificationsTab() {
   if (!preferences) {
     return (
       <Card padding="lg">
-        <Stack gap="md" className="animate-pulse">
-          <div className="h-6 bg-ui-bg-tertiary rounded w-1/3" />
-          <div className="h-4 bg-ui-bg-tertiary rounded w-2/3" />
+        <Stack gap="md">
+          <SkeletonText lines={2} />
           <Stack gap="sm">
-            <div className="h-10 bg-ui-bg-tertiary rounded" />
-            <div className="h-10 bg-ui-bg-tertiary rounded" />
-            <div className="h-10 bg-ui-bg-tertiary rounded" />
+            <Card padding="sm" variant="flat">
+              <SkeletonText lines={1} />
+            </Card>
+            <Card padding="sm" variant="flat">
+              <SkeletonText lines={1} />
+            </Card>
+            <Card padding="sm" variant="flat">
+              <SkeletonText lines={1} />
+            </Card>
           </Stack>
         </Stack>
       </Card>
@@ -410,7 +417,7 @@ export function NotificationsTab() {
               description="When someone @mentions you in a comment or description"
               checked={preferences.emailMentions}
               onChange={(value) => handleToggle("emailMentions", value)}
-              disabled={isSaving || !preferences.emailEnabled}
+              isDisabled={isSaving || !preferences.emailEnabled}
             />
             <PreferenceRow
               icon={User}
@@ -418,7 +425,7 @@ export function NotificationsTab() {
               description="When you are assigned to an issue"
               checked={preferences.emailAssignments}
               onChange={(value) => handleToggle("emailAssignments", value)}
-              disabled={isSaving || !preferences.emailEnabled}
+              isDisabled={isSaving || !preferences.emailEnabled}
             />
             <PreferenceRow
               icon={MessageSquare}
@@ -426,7 +433,7 @@ export function NotificationsTab() {
               description="When someone comments on your issues"
               checked={preferences.emailComments}
               onChange={(value) => handleToggle("emailComments", value)}
-              disabled={isSaving || !preferences.emailEnabled}
+              isDisabled={isSaving || !preferences.emailEnabled}
             />
             <PreferenceRow
               icon={RefreshCw}
@@ -434,7 +441,7 @@ export function NotificationsTab() {
               description="When issue status changes on issues you're watching"
               checked={preferences.emailStatusChanges}
               onChange={(value) => handleToggle("emailStatusChanges", value)}
-              disabled={isSaving || !preferences.emailEnabled}
+              isDisabled={isSaving || !preferences.emailEnabled}
               isLast
             />
           </Stack>
@@ -452,30 +459,36 @@ export function NotificationsTab() {
           </Stack>
 
           <Stack gap="sm">
-            <DigestOption
-              value="none"
-              label="No digest"
-              description="Receive emails as events happen"
-              checked={preferences.emailDigest === "none"}
-              onChange={() => handleDigestChange("none")}
+            <RadioGroup
+              value={preferences.emailDigest}
+              onValueChange={(value) => handleDigestChange(value as "none" | "daily" | "weekly")}
               disabled={isSaving || !preferences.emailEnabled}
-            />
-            <DigestOption
-              value="daily"
-              label="Daily digest"
-              description="One email per day with all activity (coming soon)"
-              checked={preferences.emailDigest === "daily"}
-              onChange={() => handleDigestChange("daily")}
-              disabled={isSaving || !preferences.emailEnabled}
-            />
-            <DigestOption
-              value="weekly"
-              label="Weekly digest"
-              description="One email per week with all activity (coming soon)"
-              checked={preferences.emailDigest === "weekly"}
-              onChange={() => handleDigestChange("weekly")}
-              disabled={isSaving || !preferences.emailEnabled}
-            />
+            >
+              <DigestOptionCard
+                value="none"
+                label="No digest"
+                description="Receive emails as events happen"
+                checked={preferences.emailDigest === "none"}
+                onChange={() => handleDigestChange("none")}
+                isDisabled={isSaving || !preferences.emailEnabled}
+              />
+              <DigestOptionCard
+                value="daily"
+                label="Daily digest"
+                description="One email per day with all activity (coming soon)"
+                checked={preferences.emailDigest === "daily"}
+                onChange={() => handleDigestChange("daily")}
+                isDisabled={isSaving || !preferences.emailEnabled}
+              />
+              <DigestOptionCard
+                value="weekly"
+                label="Weekly digest"
+                description="One email per week with all activity (coming soon)"
+                checked={preferences.emailDigest === "weekly"}
+                onChange={() => handleDigestChange("weekly")}
+                isDisabled={isSaving || !preferences.emailEnabled}
+              />
+            </RadioGroup>
           </Stack>
         </Stack>
       </Card>

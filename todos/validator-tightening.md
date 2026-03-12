@@ -29,6 +29,9 @@
 - Replaced those interactive directory escapes with explicit file-level migration debt entries.
 - Removed the `ProjectSettings` file-level raw-Tailwind debt entries by migrating the project settings surfaces onto owned `Card` and layout primitives.
 - Added the main project settings shell to `check-design-system-ownership.js` targeting so future shell drift there is validated directly.
+- Removed `Settings/NotificationsTab.tsx`, `Settings/LinkedRepositories.tsx`, and `Settings/TwoFactorSettings.tsx` from the raw-Tailwind migration debt list by migrating them onto owned form and surface primitives.
+- Removed `Settings/NotificationsTab.tsx` from the interactive-state migration debt list.
+- Added `Settings/NotificationsTab.tsx` to design-system ownership targeting so future shell drift there is validated directly.
 
 ### Next batch
 

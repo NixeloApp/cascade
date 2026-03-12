@@ -72,7 +72,6 @@ const ALLOWED_FILES = [
   "Settings/AvatarUploadModal.tsx",
   "Settings/CoverImageUploadModal.tsx",
   "Settings/GoogleCalendarIntegration.tsx",
-  "Settings/NotificationsTab.tsx",
   "Settings/ProfileContent.tsx",
   "Settings/PumbleIntegration.tsx",
   // Analytics
