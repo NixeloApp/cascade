@@ -55,14 +55,12 @@ const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
   // Workspace-level pages (empty states)
   "empty-dashboard": "04-dashboard",
   "empty-projects": "05-projects",
-  "empty-issues": "07-backlog",
   "empty-documents": "09-documents",
   "empty-settings": "12-settings",
 
   // Workspace-level pages (filled states)
   "filled-dashboard": "04-dashboard",
   "filled-projects": "05-projects",
-  "filled-issues": "07-backlog",
   "filled-documents": "09-documents",
   "filled-settings": "12-settings",
 
@@ -630,12 +628,56 @@ function isProjectsUrl(url: string): boolean {
   return /\/[^/]+\/projects\/?$/.test(url);
 }
 
+function isIssuesUrl(url: string): boolean {
+  return /\/[^/]+\/issues\/?$/.test(url);
+}
+
+function isWorkspacesUrl(url: string): boolean {
+  return /\/[^/]+\/workspaces\/?$/.test(url);
+}
+
+function isTimeTrackingUrl(url: string): boolean {
+  return /\/[^/]+\/time-tracking$/.test(url);
+}
+
+function isWorkspaceDetailUrl(url: string): boolean {
+  return /\/[^/]+\/workspaces\/[^/]+\/?$/.test(url);
+}
+
+function isWorkspaceSettingsUrl(url: string): boolean {
+  return /\/[^/]+\/workspaces\/[^/]+\/settings$/.test(url);
+}
+
+function isWorkspaceBacklogUrl(url: string): boolean {
+  return /\/[^/]+\/workspaces\/[^/]+\/backlog$/.test(url);
+}
+
+function isWorkspaceCalendarUrl(url: string): boolean {
+  return /\/[^/]+\/workspaces\/[^/]+\/calendar$/.test(url);
+}
+
+function isTeamDetailUrl(url: string): boolean {
+  return /\/[^/]+\/workspaces\/[^/]+\/teams\/[^/]+\/?$/.test(url);
+}
+
+function isTeamCalendarUrl(url: string): boolean {
+  return /\/[^/]+\/workspaces\/[^/]+\/teams\/[^/]+\/calendar$/.test(url);
+}
+
+function isTeamSettingsUrl(url: string): boolean {
+  return /\/[^/]+\/workspaces\/[^/]+\/teams\/[^/]+\/settings$/.test(url);
+}
+
 function isIssueDetailUrl(url: string): boolean {
   return /\/[^/]+\/issues\/[^/]+$/.test(url);
 }
 
 function isDocumentEditorUrl(url: string): boolean {
   return /\/[^/]+\/documents\/[^/]+$/.test(url);
+}
+
+function isDocumentTemplatesUrl(url: string): boolean {
+  return /\/[^/]+\/documents\/templates$/.test(url);
 }
 
 async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
@@ -821,6 +863,225 @@ async function waitForProjectsReady(page: Page, prefix?: string): Promise<void> 
     .catch(() => {});
 }
 
+async function waitForIssuesReady(page: Page, prefix?: string): Promise<void> {
+  await page
+    .getByRole("heading", { name: /^issues$/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .getByRole("button", { name: /create issue/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .waitForFunction(
+      (capturePrefix) => {
+        const text = document.body.innerText || "";
+        if (capturePrefix === "empty") {
+          return text.includes("No issues found");
+        }
+
+        return (
+          document.querySelector("[data-testid='issue-card']") !== null ||
+          text.includes("No issues found")
+        );
+      },
+      prefix,
+      { timeout: 12000 },
+    )
+    .catch(() => {});
+  await page
+    .locator(".animate-spin")
+    .first()
+    .waitFor({ state: "hidden", timeout: 5000 })
+    .catch(() => {});
+}
+
+async function waitForWorkspacesReady(page: Page, prefix?: string): Promise<void> {
+  await page
+    .getByRole("heading", { name: /^workspaces$/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .getByRole("button", { name: /create workspace/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .waitForFunction(
+      (capturePrefix) => {
+        const text = document.body.innerText || "";
+        if (capturePrefix === "empty") {
+          return text.includes("No workspaces yet");
+        }
+
+        return (
+          text.includes("Workspace map") ||
+          text.includes("Operating structure") ||
+          Array.from(document.querySelectorAll("a[href]")).some((link) => {
+            const href = link.getAttribute("href") || "";
+            return /\/workspaces\/[^/]+/.test(href);
+          })
+        );
+      },
+      prefix,
+      { timeout: 12000 },
+    )
+    .catch(() => {});
+  await page
+    .locator(".animate-spin")
+    .first()
+    .waitFor({ state: "hidden", timeout: 5000 })
+    .catch(() => {});
+}
+
+async function waitForTimeTrackingReady(page: Page): Promise<void> {
+  await page
+    .getByRole("heading", { name: /^time tracking$/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .getByRole("tab", { name: /time entries/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .waitForFunction(
+      () => {
+        const text = document.body.innerText || "";
+        return (
+          text.includes("Track time with enough context to understand cost") ||
+          text.includes("Select a project to continue.") ||
+          text.includes("Choose a project to view burn rate and cost analysis")
+        );
+      },
+      undefined,
+      { timeout: 12000 },
+    )
+    .catch(() => {});
+  await page
+    .locator(".animate-spin")
+    .first()
+    .waitFor({ state: "hidden", timeout: 5000 })
+    .catch(() => {});
+}
+
+async function waitForWorkspaceDetailReady(page: Page): Promise<void> {
+  await page
+    .getByRole("navigation", { name: /workspace sections/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .getByRole("heading", { name: /^teams$/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .getByRole("button", { name: /create team/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .waitForFunction(
+      () => {
+        const text = document.body.innerText || "";
+        return (
+          text.includes("Organize your workspace into focused teams") &&
+          (text.includes("No teams yet") ||
+            Array.from(document.querySelectorAll("a[href]")).some((link) => {
+              const href = link.getAttribute("href") || "";
+              return /\/teams\/[^/]+$/.test(href);
+            }))
+        );
+      },
+      undefined,
+      { timeout: 12000 },
+    )
+    .catch(() => {});
+  await page
+    .locator(".animate-spin")
+    .first()
+    .waitFor({ state: "hidden", timeout: 5000 })
+    .catch(() => {});
+}
+
+async function waitForWorkspaceSettingsReady(page: Page): Promise<void> {
+  await page
+    .getByRole("heading", { name: /workspace settings/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .getByRole("button", { name: /save changes/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .locator(".animate-spin")
+    .first()
+    .waitFor({ state: "hidden", timeout: 5000 })
+    .catch(() => {});
+}
+
+async function waitForWorkspaceBacklogReady(page: Page): Promise<void> {
+  await page
+    .waitForFunction(
+      () => {
+        const text = document.body.innerText || "";
+        return text.includes("Backlog is empty") || document.querySelectorAll("div").length > 0;
+      },
+      undefined,
+      { timeout: 12000 },
+    )
+    .catch(() => {});
+  await page
+    .locator(".animate-spin")
+    .first()
+    .waitFor({ state: "hidden", timeout: 5000 })
+    .catch(() => {});
+}
+
+async function waitForTeamDetailReady(page: Page): Promise<void> {
+  await waitForBoardReady(page);
+  await page
+    .waitForFunction(
+      () => {
+        const text = document.body.innerText || "";
+        return (
+          text.includes("Projects") &&
+          (text.includes("Delivery board") ||
+            text.includes("Kanban board") ||
+            text.includes("Sprint board"))
+        );
+      },
+      undefined,
+      { timeout: 12000 },
+    )
+    .catch(() => {});
+}
+
+async function waitForTeamSettingsReady(page: Page): Promise<void> {
+  await page
+    .getByRole("heading", { name: /team settings/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .getByText(/coming soon|manage team members and preferences/i)
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .locator(".animate-spin")
+    .first()
+    .waitFor({ state: "hidden", timeout: 5000 })
+    .catch(() => {});
+}
+
 async function waitForIssueDetailReady(page: Page): Promise<void> {
   await page
     .getByTestId(TEST_IDS.ISSUE.DESCRIPTION_CONTENT)
@@ -875,6 +1136,38 @@ async function waitForDocumentEditorReady(page: Page): Promise<void> {
           text.includes("Teams can move from specs to execution") ||
           text.includes("Hydrate the editor from saved document versions") ||
           document.querySelector("[contenteditable='true']") !== null
+        );
+      },
+      undefined,
+      { timeout: 12000 },
+    )
+    .catch(() => {});
+  await page
+    .locator(".animate-spin")
+    .first()
+    .waitFor({ state: "hidden", timeout: 5000 })
+    .catch(() => {});
+}
+
+async function waitForDocumentTemplatesReady(page: Page): Promise<void> {
+  await page
+    .getByRole("heading", { name: /document templates/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .getByRole("button", { name: /new template/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .waitForFunction(
+      () => {
+        const text = document.body.innerText || "";
+        return (
+          text.includes("Built-in Templates") ||
+          text.includes("Custom Templates") ||
+          text.includes("No templates yet")
         );
       },
       undefined,
@@ -1100,6 +1393,46 @@ async function waitForExpectedContent(
     return;
   }
 
+  if (isIssuesUrl(url) || name === "issues") {
+    await waitForIssuesReady(page, prefix);
+    return;
+  }
+
+  if (isWorkspacesUrl(url) || name === "workspaces") {
+    await waitForWorkspacesReady(page, prefix);
+    return;
+  }
+
+  if (isTimeTrackingUrl(url) || name === "time-tracking") {
+    await waitForTimeTrackingReady(page);
+    return;
+  }
+
+  if (isWorkspaceDetailUrl(url) || /^workspace-[^-]+$/.test(name)) {
+    await waitForWorkspaceDetailReady(page);
+    return;
+  }
+
+  if (isWorkspaceSettingsUrl(url) || /^workspace-[^-]+-settings$/.test(name)) {
+    await waitForWorkspaceSettingsReady(page);
+    return;
+  }
+
+  if (isWorkspaceBacklogUrl(url)) {
+    await waitForWorkspaceBacklogReady(page);
+    return;
+  }
+
+  if (isTeamSettingsUrl(url) || /^team-[^-]+-settings$/.test(name)) {
+    await waitForTeamSettingsReady(page);
+    return;
+  }
+
+  if (isTeamDetailUrl(url)) {
+    await waitForTeamDetailReady(page);
+    return;
+  }
+
   if (isIssueDetailUrl(url)) {
     await waitForIssueDetailReady(page);
     return;
@@ -1107,6 +1440,11 @@ async function waitForExpectedContent(
 
   if (name === "documents" || /\/[^/]+\/documents\/?$/.test(url)) {
     await waitForDocumentsReady(page);
+    return;
+  }
+
+  if (isDocumentTemplatesUrl(url) || name === "documents-templates") {
+    await waitForDocumentTemplatesReady(page);
     return;
   }
 
@@ -1147,6 +1485,8 @@ async function waitForExpectedContent(
 
   if (
     isProjectCalendarUrl(url) ||
+    isWorkspaceCalendarUrl(url) ||
+    isTeamCalendarUrl(url) ||
     name === "calendar-event-modal" ||
     /^calendar-(day|week|month)$/.test(name)
   ) {

@@ -52,12 +52,16 @@ export function BoardToolbar({
   onDisplayOptionsChange,
   mobileActions,
 }: BoardToolbarProps) {
+  if (!showControls) {
+    return null;
+  }
+
   return (
     <Flex
       align="center"
       justify="between"
       gap="xs"
-      className="z-10 mb-1.5 px-1.5 py-0 sm:mx-6 sm:mt-4 sm:mb-0 sm:gap-sm sm:rounded-2xl sm:border sm:border-ui-border/70 sm:bg-ui-bg-elevated sm:px-5 sm:pb-3 sm:pt-4 sm:shadow-soft"
+      className="pointer-events-auto absolute right-2 top-2 z-20 mb-0 w-fit max-w-full rounded-full border border-ui-border/75 bg-ui-bg-elevated/96 px-1.5 py-1 shadow-soft backdrop-blur-sm sm:static sm:mx-6 sm:mt-4 sm:mb-0 sm:max-w-none sm:gap-sm sm:rounded-2xl sm:border sm:border-ui-border/70 sm:bg-ui-bg-elevated sm:px-5 sm:pb-3 sm:pt-4 sm:shadow-soft sm:backdrop-blur-0"
     >
       <div className="hidden sm:block">
         <Typography variant="h2" className="text-xs font-semibold tracking-tight sm:text-lg">
@@ -73,7 +77,7 @@ export function BoardToolbar({
           align="center"
           justify="end"
           gap="xs"
-          className="w-full shrink-0 justify-between sm:w-auto sm:justify-start sm:gap-2"
+          className="w-auto shrink-0 justify-end sm:w-auto sm:justify-start sm:gap-2"
         >
           <Flex align="center" gap="xs" className="min-w-0 sm:hidden">
             {mobileActions}

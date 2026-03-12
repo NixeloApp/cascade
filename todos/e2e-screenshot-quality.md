@@ -1,7 +1,7 @@
 # E2E Screenshot Quality
 
 > **Priority:** P0
-> **Status:** Active
+> **Status:** Complete
 > **Last Updated:** 2026-03-12
 > **Supersedes:** previous screenshot review loop docs and separate visual-polish todo files
 > **Scope:** canonical doc for screenshot determinism, screenshot-driven UI review, and screenshot-specific E2E quality work
@@ -316,13 +316,20 @@ Examples:
   - Evidence now: `docs/design/specs/pages/06-board/screenshots/desktop-light.png`
   - Evidence now: `docs/design/specs/pages/07-backlog/screenshots/desktop-light.png`
 
-- [ ] Keep expanding screenshot readiness contracts where partial-load captures can still leak through.
-  - 2026-03-12 hardening added route-specific readiness for public pages, project backlog, project activity, project analytics, project timesheet, project sprints, project roadmap, project billing, calendar event content, project modal navigation, and create-issue modal form readiness.
+- [x] Keep expanding screenshot readiness contracts where partial-load captures can still leak through.
+  - 2026-03-12 hardening added route-specific readiness for public pages, workspace issues, workspaces, workspace/team detail redirects, workspace settings, team settings, team calendar, time tracking, document templates, project backlog, project activity, project analytics, project timesheet, project sprints, project roadmap, project billing, calendar event content, project modal navigation, and create-issue modal form readiness.
   - 2026-03-12 also restored spec-folder promotion for `project-demo-sprints`, so the sprints route now stays in the tracked screenshot baseline instead of only landing in `e2e/screenshots`.
-  - Remaining risk: route-specific completion signals are still uneven outside the now-covered auth/project/editor/calendar/analytics/sprints paths.
+  - 2026-03-12 also removed the incorrect `filled-issues`/`empty-issues` mapping to `07-backlog`, which had allowed org-level issues captures to overwrite the backlog spec baseline.
+  - Verified on `2026-03-12` by rerunning the full fallback-only slice across `desktop-dark`, `desktop-light`, `tablet-light`, and `mobile-light` for `invite-invalid`, `issues`, `documents-templates`, `workspaces`, `time-tracking`, `settings-profile`, `workspace-product*`, and `team-engineering*`.
+  - Remaining risk: new screenshot routes can still regress if they are added without an explicit completion signal.
   - Expected: every captured route has a deterministic loaded-content signal before capture.
 
 ### P1 - Highest-Leverage Remaining Visual Fixes
+
+- [x] Collapse the mobile board/backlog utility stack so the work surface starts sooner.
+  - Fixed in: `src/components/Kanban/BoardToolbar.tsx`, `src/components/KanbanBoard.tsx`
+  - Evidence now: `docs/design/specs/pages/06-board/screenshots/mobile-light.png`
+  - Evidence now: `docs/design/specs/pages/07-backlog/screenshots/mobile-light.png`
 
 - [x] Fix public-page theme parity, especially landing/auth light mode.
   - Fixed in: `src/index.css`, `src/components/Auth/AuthPageLayout.tsx`, `src/components/Landing/NavHeader.tsx`, `src/components/Landing/ProductShowcase.tsx`, `src/components/ui/Card.tsx`, `e2e/screenshot-pages.ts`
@@ -553,6 +560,11 @@ Each screenshot-driven round should leave a short entry in the active log or com
   - `src/components/KanbanBoard.tsx` and `src/components/Kanban/KanbanColumn.tsx`: moved mobile board/backlog lanes to a staged snap layout so the first column owns the frame and the next lane peeks in deliberately
   - `src/routes/_auth/_app/$orgSlug/projects/$key/board.tsx` and `src/components/Kanban/BoardToolbar.tsx`: folded mobile export/sprint controls into the shared toolbar so board loses one full utility row before the work surface
   - `src/components/ExportButton.tsx`: switched mobile export affordance to compact shared button treatment so the remaining board toolbar row stays visually thin
+  - `e2e/screenshot-pages.ts`: added explicit readiness for app-level issues, workspaces, and time-tracking captures
+  - `e2e/screenshot-pages.ts`: added explicit readiness for workspace teams-list redirects and team board redirects so `workspace-*` and `team-*` captures stop depending on generic settling
+  - `e2e/screenshot-pages.ts`: added explicit calendar readiness for team calendar captures so `team-*-calendar` uses real `CalendarView` completion instead of generic network idle
+  - `e2e/screenshot-pages.ts`: added explicit readiness for `documents/templates` so template-library captures stop depending on generic settling
+  - `e2e/screenshot-pages.ts`: removed the incorrect backlog-spec mapping for org issues so backlog screenshots stop being silently overwritten by the global issues page
   - `src/index.css`, `src/components/Auth/AuthPageLayout.tsx`, `src/components/Landing/NavHeader.tsx`, `src/components/Landing/ProductShowcase.tsx`, and `src/components/ui/Card.tsx`: rebalanced public light-mode backgrounds and shared landing/auth surfaces so light mode no longer reads like dimmed dark-mode art
   - `src/components/ui/Card.tsx` and `src/index.css`: improved shared app-surface depth so light pages stop stacking pale cards on pale page backgrounds
   - `src/components/PlateEditor.tsx` and `src/components/Documents/DocumentHeader.tsx`: gave the editor a clearer paper/header relationship in desktop light mode

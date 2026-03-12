@@ -1,7 +1,7 @@
 # Backlog Page - Current State
 
 > **Route**: `/:slug/projects/:key/backlog`
-> **Status**: 🟡 NEEDS POLISH
+> **Status**: 🟢 Good
 > **Last Updated**: 2026-03-12
 
 ---
@@ -33,9 +33,9 @@
 - The mobile project shell and tabs are tighter than the previous pass, so more of the backlog shows on first paint.
 - Mobile columns are narrower, so the first two lanes read more cleanly instead of clipping immediately at the viewport edge.
 - Mobile filter/search controls now inherit the quieter shared filter chrome, so the backlog lanes get more of the first visual hit.
-- The mobile selection toggle now sits in a real toolbar row instead of appearing as a detached floating control.
+- The mobile selection toggle now sits in the same shared floating toolbar cluster used by board, so backlog no longer burns a detached utility row before the first lane.
 - Mobile lanes now use a staged snap layout, so backlog starts with one dominant lane instead of two equally compressed columns.
-- The shared toolbar is slimmer now that board-specific mobile actions no longer require a separate row outside the kanban surface.
+- The shared floating toolbar keeps controls available without stealing the first visual hit from the backlog content.
 
 ---
 
@@ -43,7 +43,6 @@
 
 | Problem | Area | Severity |
 |---------|------|----------|
-| The backlog chrome is lighter, but the remaining toolbar band still competes slightly with the first lane on mobile | Shared board/filter chrome | LOW |
 | Light-mode hierarchy inside the backlog lanes could still be stronger | Backlog/card styling | LOW |
 
 ---

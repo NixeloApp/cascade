@@ -1,7 +1,7 @@
 # Board Page - Current State
 
 > **Route**: `/:slug/projects/:key/board`
-> **Status**: 🟡 Trustworthy baseline, remaining mobile/filter polish
+> **Status**: 🟢 Trustworthy baseline
 > **Last Updated**: 2026-03-12
 
 ---
@@ -27,10 +27,10 @@
 - The shared project shell and mobile tab row are tighter than the last round, so the board starts sooner and reads less like stacked chrome.
 - The extra mobile board-actions card is gone; export/sprint controls now sit as a lighter utility row above filters instead of a full-width chrome block.
 - Mobile filter controls now use the quieter shared filter button/input chrome instead of a heavier custom pill treatment.
-- The mobile selection toggle is anchored in a real toolbar row instead of floating over the board surface.
+- The mobile selection toggle now lives in a shared floating toolbar cluster, so it stops consuming a full row before the lanes begin.
 - Mobile lanes now use a staged snap layout, so the first column owns the frame and the next lane peeks in deliberately.
-- Mobile export and sprint controls now share the same toolbar row as selection, which removes one full board-only utility band before the lanes begin.
-- The export action now uses compact mobile treatment, so the remaining toolbar row reads as a thin utility strip instead of another full button shelf.
+- Mobile export and sprint controls now share that same floating cluster as selection, which removes the last detached board-only toolbar row before the lanes begin.
+- The export action still uses compact mobile treatment, but it now rides inside the floating cluster instead of a separate strip.
 - The board baseline is now operationally trustworthy, so the remaining issues are visual rather than harness-related.
 
 ---
@@ -59,13 +59,12 @@
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | The mobile board has one less utility band now, but the filter row plus one compact toolbar strip still delay the work surface more than ideal | shared board/filter chrome | MEDIUM |
-| 2 | The staged mobile columns are better, but card hierarchy inside the first lane could still feel a little stronger in light mode | `src/components/Kanban/KanbanColumn.tsx`, `src/components/IssueDetail/IssueCard.tsx` | LOW |
-| 3 | Desktop board chrome is cleaner than before, but the stacked shell/filter/toolbar layers are still a little busier than the issue content beneath them | shared board/page shell | LOW |
+| 1 | Card hierarchy inside the first lane could still feel a little stronger in light mode | `src/components/Kanban/KanbanColumn.tsx`, `src/components/IssueDetail/IssueCard.tsx` | LOW |
+| 2 | Desktop board chrome is cleaner than before, but the stacked shell/filter/toolbar layers are still a little busier than the issue content beneath them | shared board/page shell | LOW |
 
 ---
 
 ## Summary
 
-The board screenshot baseline is trustworthy again. The next pass should stay focused on trimming
-the remaining mobile utility stack and strengthening card hierarchy, not harness repair.
+The board screenshot baseline is trustworthy again. The next pass can stay focused on card hierarchy
+and optional desktop polish, not harness repair or mobile toolbar cleanup.

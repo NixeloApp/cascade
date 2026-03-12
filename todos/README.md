@@ -10,23 +10,18 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 - Total todo markdown files (including control files): `22`
 - Tracked execution docs (excluding `README.md` and `TODO.md`): `20`
 - Checkbox rollup across tracked docs: tracked within each doc; see individual files for per-track progress
-- Highest-risk unresolved queue: screenshot baseline trust, Slack org scoping, query filter-after-limit paths, external unblock decisions
+- Highest-risk unresolved queue: E2E suite sustainment, Slack org scoping, query filter-after-limit paths, external unblock decisions
 
 ## Current Focus
 
-1. Active screenshot and visual-baseline loop:
-   - [e2e-screenshot-quality.md](./e2e-screenshot-quality.md) as the canonical screenshot determinism + visual review execution doc
-   - design-cohesion foundation is complete; remaining visual follow-through now runs through screenshot review and shared-surface polish
-   - keep route-specific readiness contracts expanding past the core project subroutes and shared mobile/filter chrome polish moving together so the spec folders stay trustworthy
+1. E2E and screenshot sustainment:
+   - [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md)
+   - screenshot capture is now trustworthy; the next loop is keeping the broader suite green and replacing retry-heavy helpers with explicit completion contracts
 2. P1 correctness/security defects:
    - [slack-integration-issues.md](./slack-integration-issues.md)
-3. E2E and screenshot sustainment:
-   - [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md)
-   - keep the full Playwright suite green while visual work continues
-   - keep screenshot capture deterministic as modal/shell visuals change
-4. P2 correctness-at-scale defects:
+3. P2 correctness-at-scale defects:
    - [query-filter-ordering.md](./query-filter-ordering.md)
-5. Near-complete blocked tracks (minimal remaining in-repo scope):
+4. Near-complete blocked tracks (minimal remaining in-repo scope):
    - [bandwidth_optimization.md](./bandwidth_optimization.md) (`14/16`)
    - [multi-level-views.md](./multi-level-views.md) (`36/37`)
    - [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) (`20/21`)
@@ -38,7 +33,6 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 
 | Priority | File | Role | Next Action |
 |---|---|---|---|
-| P0 | [e2e-screenshot-quality.md](./e2e-screenshot-quality.md) | Screenshot determinism + visual review control plane | Keep extending explicit route readiness beyond the covered core project flows and continue shared mobile/filter chrome follow-through on top of a clean full screenshot matrix |
 | P0 | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Reliability sustainment while UI churn continues | Keep full suite green and keep replacing retry-heavy helpers with explicit completion contracts |
 | P1 | [slack-integration-issues.md](./slack-integration-issues.md) | Remaining Slack multi-org delivery isolation defect | Add organization-scoped Slack connection storage and destination lookup |
 
@@ -79,6 +73,7 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 
 | File | Role | State |
 |---|---|---|
+| [e2e-screenshot-quality.md](./e2e-screenshot-quality.md) | Screenshot determinism + visual review control plane | Complete (`2026-03-12`: readiness coverage closed and mobile board/backlog utility stack collapsed) |
 | [calendar-access-control.md](./calendar-access-control.md) | Calendar scope access-control guard | Complete (verified fixed in `convex/calendarEvents.ts`) |
 | [design-cohesion-overhaul.md](./design-cohesion-overhaul.md) | Visual-system foundation and validator-boundary overhaul | Complete (`12/12` checklist complete; follow-through continues in screenshot-quality loop) |
 | [invoice-system-issues.md](./invoice-system-issues.md) | Invoice integrity defect set | Complete (verified fixed in `convex/invoices.ts` and invoice editor route) |
@@ -99,9 +94,8 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 
 ## Suggested Execution Order
 
-1. Keep screenshot capture deterministic in [e2e-screenshot-quality.md](./e2e-screenshot-quality.md) so the baseline stays trustworthy while visual follow-through continues.
-2. While visual work continues, keep the full E2E/screenshot path green via [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md).
-3. Then fix the remaining P1 defect doc: Slack organization-scoped delivery isolation.
-4. Close the remaining P2 correctness doc: query filtering/order-of-operations.
-5. Unblock and close near-complete tracks: bandwidth, multi-level views, OAuth monitoring, growth.
-6. Then execute strategic tracks: public launch, enterprise, uptime.
+1. Keep the full E2E/screenshot path green via [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md).
+2. Then fix the remaining P1 defect doc: Slack organization-scoped delivery isolation.
+3. Close the remaining P2 correctness doc: query filtering/order-of-operations.
+4. Unblock and close near-complete tracks: bandwidth, multi-level views, OAuth monitoring, growth.
+5. Then execute strategic tracks: public launch, enterprise, uptime.

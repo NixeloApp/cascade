@@ -438,44 +438,51 @@ export class ProjectsPage extends BasePage {
   }
 
   async openCreateIssueModal() {
-    const triggerCandidates = [
-      this.page.getByRole("button", { name: /add first issue/i }).first(),
-      this.page.locator("[data-tour='create-issue']").first(),
-      this.page.getByRole("button", { name: /add issue/i }).first(),
-    ];
-
-    for (let attempt = 0; attempt < 3; attempt++) {
-      for (const trigger of triggerCandidates) {
-        if ((await trigger.count().catch(() => 0)) === 0) {
-          continue;
-        }
-
-        await trigger.waitFor({ state: "visible", timeout: 2000 }).catch(() => {});
-        if (!(await trigger.isVisible().catch(() => false))) {
-          continue;
-        }
-
-        await trigger.scrollIntoViewIfNeeded().catch(() => {});
-        await trigger.click({ force: true });
-        const isModalReady = await this.waitForCreateIssueModalReady(4000);
-
-        if (isModalReady) {
-          return;
-        }
-      }
-
-      await this.page.waitForTimeout(750);
+    const trigger = await this.findVisibleCreateIssueTrigger();
+    if (trigger && (await this.tryOpenCreateIssueModalFromTrigger(trigger, 4000))) {
+      return;
     }
 
-    await this.page.evaluate(() => {
-      window.dispatchEvent(new Event("nixelo:create-issue"));
-    });
+    await this.dispatchCreateIssueModalOpen();
     if (await this.waitForCreateIssueModalReady(6000)) {
       return;
     }
 
     await expect(this.createIssueModal).toBeVisible();
     await this.expectCreateIssueModalReady();
+  }
+
+  private async findVisibleCreateIssueTrigger(): Promise<Locator | null> {
+    const triggerCandidates = [
+      this.page.getByRole("button", { name: /add first issue/i }).first(),
+      this.page.locator("[data-tour='create-issue']").first(),
+      this.page.getByRole("button", { name: /add issue/i }).first(),
+    ];
+
+    for (const trigger of triggerCandidates) {
+      if ((await trigger.count().catch(() => 0)) === 0) {
+        continue;
+      }
+
+      await trigger.waitFor({ state: "visible", timeout: 2000 }).catch(() => {});
+      if (await trigger.isVisible().catch(() => false)) {
+        return trigger;
+      }
+    }
+
+    return null;
+  }
+
+  private async tryOpenCreateIssueModalFromTrigger(trigger: Locator, timeout = 4000) {
+    await trigger.scrollIntoViewIfNeeded().catch(() => {});
+    await trigger.click({ force: true });
+    return this.waitForCreateIssueModalReady(timeout);
+  }
+
+  private async dispatchCreateIssueModalOpen() {
+    await this.page.evaluate(() => {
+      window.dispatchEvent(new Event("nixelo:create-issue"));
+    });
   }
 
   async createIssue(title: string, type?: string, priority?: string) {
