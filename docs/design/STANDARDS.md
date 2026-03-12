@@ -4,6 +4,15 @@
 
 ## Core Principles
 
+### 0. Migration-Safe Composition
+
+The goal is not only cleaner pages. The goal is a design system that is hard to drift and easier to migrate later.
+
+- Route and feature code should mostly compose owned primitives and page shells.
+- Repeated visual patterns should move into components or CVA-backed recipes quickly.
+- If spacing or positioning feels fragile, that usually means the component boundary is wrong.
+- Raw Tailwind is acceptable for one-off composition, but it should not become the permanent API for repeated shells or states.
+
 ### 1. Semantic Tokens Only
 
 Never use raw Tailwind colors. All colors go through the token system.
@@ -52,6 +61,8 @@ Components handle their own styling. Don't scatter classes across children.
 
 If 3+ elements appear twice, make a component.
 
+If a pattern is interactive, stateful, or used across page families, extract sooner and prefer CVA.
+
 ### 5. Semantic HTML
 
 ```tsx
@@ -78,6 +89,7 @@ Tokens use `light-dark()`. Never add `dark:` prefixes to semantic classes.
 - [ ] Uses semantic components not raw spans
 - [ ] Uses `cn()` for class merging
 - [ ] No inline style soup
+- [ ] Repeated spacing, shell, and state patterns live behind props or CVA variants
 
 ### Colors
 - [ ] Backgrounds: `bg-ui-*`, `bg-brand`, `bg-status-*`
@@ -107,6 +119,15 @@ Tokens use `light-dark()`. Never add `dark:` prefixes to semantic classes.
 | Section gaps | `gap-8` |
 | Card gaps | `gap-4` |
 
+### Extraction Triggers
+
+Move styling into a component or variant when any of these are true:
+
+- The same spacing or shell pattern appears in more than one page family.
+- A surface has hover, selected, disabled, loading, or error states.
+- Multiple children need coordinated spacing and alignment rules.
+- A future design migration would require touching more than one feature file.
+
 ---
 
 ## Shadows
@@ -135,5 +156,5 @@ Never use `shadow-sm`, `shadow-md`, `shadow-lg`.
 
 ```bash
 node scripts/validate.js
-# Target: 0 errors, 0 warnings
+# Target: 0 errors
 ```

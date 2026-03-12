@@ -108,6 +108,10 @@
 <Flex align="center" gap="sm">
 ```
 
+**Rules:**
+- Prefer layout primitives for recurring alignment and spacing patterns.
+- One-off page composition with raw Tailwind is acceptable, but repeated layout shells should move into owned components.
+
 ---
 
 ## Font Styles
@@ -145,6 +149,27 @@
 // Better - if pattern repeats 3+ times, extract component
 <LabelBadge color={label.color}>{label.name}</LabelBadge>
 ```
+
+---
+
+## Tailwind Escape Hatch
+
+```tsx
+// Acceptable - one-off page composition
+<section className="mx-auto flex max-w-5xl flex-col gap-8">
+  ...
+</section>
+
+// Better - repeated shell or stateful pattern
+<PageSection size="wide" spacing="lg">
+  ...
+</PageSection>
+```
+
+**Rules:**
+- Raw Tailwind in routes and feature composition is allowed.
+- Treat it as composition glue, not the long-term source of truth for repeated spacing, shells, or states.
+- If the same cluster of classes appears again, or the element gains states, extract or extend a component or CVA.
 
 ---
 
@@ -193,3 +218,4 @@ The validator checks for:
 - Raw Tailwind colors
 - Arbitrary values
 - Raw `data-testid` strings
+- Advisory drift for raw Tailwind and interactive states outside primitives

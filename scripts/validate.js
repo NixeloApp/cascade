@@ -244,7 +244,6 @@ const checks = [
 console.log(`\n${c.bold}Running validation...${c.reset}\n`);
 
 let totalErrors = 0;
-
 const results = [];
 for (let i = 0; i < checks.length; i++) {
   const { name, modulePath } = checks[i];
