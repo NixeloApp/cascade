@@ -42,6 +42,8 @@
 - Removed `Admin/UserManagement.tsx` from the raw-Tailwind and interactive-state migration debt lists by migrating its tabs and admin tables onto owned `Tabs`, `Table`, `Badge`, and `Button` primitives.
 - Removed `Admin/OAuthHealthDashboard.tsx` from the raw-Tailwind migration debt list by moving its failure-entry shell onto owned `Card` and `Icon` primitives.
 - Added `Admin/UserManagement.tsx` and `Admin/OAuthHealthDashboard.tsx` to design-system ownership targeting so admin-shell drift is blocked directly.
+- Removed `Admin/HourComplianceDashboard.tsx` and `Admin/UserTypeManager.tsx` from the interactive-state migration debt list by moving their hover shells onto owned `Card` interaction props and replacing raw checkbox controls with the shared `Checkbox` primitive.
+- Added `Admin/HourComplianceDashboard.tsx` and `Admin/UserTypeManager.tsx` to design-system ownership targeting so future admin-shell drift is validated directly.
 
 ### Next batch
 

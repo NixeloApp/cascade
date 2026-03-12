@@ -64,9 +64,6 @@ const ALLOWED_FILES = [
   "Calendar/",
   "IssuesCalendarView.tsx",
   "RoadmapView.tsx",
-  // Explicit migration-debt exemptions replacing broad Settings/Admin directory escapes.
-  "Admin/HourComplianceDashboard.tsx",
-  "Admin/UserTypeManager.tsx",
   // Analytics
   "Analytics/",
   // AI components

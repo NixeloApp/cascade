@@ -17,7 +17,6 @@ import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { AlertTriangle, CheckCircle, Gem, TrendingUp, XCircle, Zap } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
@@ -122,13 +121,13 @@ export function HourComplianceDashboard() {
   const getStatusColor = (status: ComplianceStatus) => {
     switch (status) {
       case "compliant":
-        return "bg-status-success/10 text-status-success";
+        return "success";
       case "under_hours":
-        return "bg-status-warning/10 text-status-warning";
+        return "warning";
       case "over_hours":
-        return "bg-status-error/10 text-status-error";
+        return "error";
       case "equity_under":
-        return "bg-brand-subtle text-brand-hover";
+        return "brand";
     }
   };
 
@@ -158,66 +157,34 @@ export function HourComplianceDashboard() {
       {/* Summary Stats */}
       {summary && (
         <Grid cols={2} colsMd={5} gap="lg">
-          <Card>
-            <CardBody>
-              <Stack align="center" gap="xs">
-                <Typography variant="h3">{summary.complianceRate.toFixed(1)}%</Typography>
-                <Typography variant="caption">Compliance Rate</Typography>
-              </Stack>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardBody>
-              <Stack align="center" gap="xs">
-                <Typography variant="h3" color="success">
-                  {summary.compliant}
-                </Typography>
-                <Typography variant="caption">
-                  <Icon icon={CheckCircle} size="sm" className="inline mr-1" /> Compliant
-                </Typography>
-              </Stack>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardBody>
-              <Stack align="center" gap="xs">
-                <Typography variant="h3" color="warning">
-                  {summary.underHours}
-                </Typography>
-                <Typography variant="caption">
-                  <Icon icon={AlertTriangle} size="sm" className="inline mr-1" /> Under Hours
-                </Typography>
-              </Stack>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardBody>
-              <Stack align="center" gap="xs">
-                <Typography variant="h3" color="error">
-                  {summary.overHours}
-                </Typography>
-                <Typography variant="caption">
-                  <Icon icon={XCircle} size="sm" className="inline mr-1" /> Over Hours
-                </Typography>
-              </Stack>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardBody>
-              <Stack align="center" gap="xs">
-                <Typography variant="h3" color="brand">
-                  {summary.equityUnder}
-                </Typography>
-                <Typography variant="caption">
-                  <Icon icon={Gem} size="sm" className="inline mr-1" /> Equity Short
-                </Typography>
-              </Stack>
-            </CardBody>
-          </Card>
+          <SummaryStatCard
+            label="Compliance Rate"
+            value={`${summary.complianceRate.toFixed(1)}%`}
+          />
+          <SummaryStatCard
+            icon={CheckCircle}
+            label="Compliant"
+            value={summary.compliant}
+            valueColor="success"
+          />
+          <SummaryStatCard
+            icon={AlertTriangle}
+            label="Under Hours"
+            value={summary.underHours}
+            valueColor="warning"
+          />
+          <SummaryStatCard
+            icon={XCircle}
+            label="Over Hours"
+            value={summary.overHours}
+            valueColor="error"
+          />
+          <SummaryStatCard
+            icon={Gem}
+            label="Equity Short"
+            value={summary.equityUnder}
+            valueColor="brand"
+          />
         </Grid>
       )}
 
@@ -234,143 +201,127 @@ export function HourComplianceDashboard() {
         />
 
         <CardBody>
-          {/* Filters */}
-          <Grid cols={1} colsMd={3} gap="lg" className="mb-6">
-            <Select
-              label="Status"
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value as ComplianceStatus | "all")}
-            >
-              <option value="all">All Statuses</option>
-              <option value="compliant">Compliant</option>
-              <option value="under_hours">Under Hours</option>
-              <option value="over_hours">Over Hours</option>
-              <option value="equity_under">Equity Short</option>
-            </Select>
+          <Stack gap="lg">
+            <Grid cols={1} colsMd={3} gap="lg">
+              <Select
+                label="Status"
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value as ComplianceStatus | "all")}
+              >
+                <option value="all">All Statuses</option>
+                <option value="compliant">Compliant</option>
+                <option value="under_hours">Under Hours</option>
+                <option value="over_hours">Over Hours</option>
+                <option value="equity_under">Equity Short</option>
+              </Select>
 
-            <Input
-              label="Start Date"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
+              <Input
+                label="Start Date"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
 
-            <Input
-              label="End Date"
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-          </Grid>
+              <Input
+                label="End Date"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </Grid>
 
-          {/* Records List */}
-          {!records ? (
-            <Flex justify="center" align="center" className="min-h-32">
-              <Typography variant="small" color="secondary">
-                Loading...
-              </Typography>
-            </Flex>
-          ) : records.length === 0 ? (
-            <EmptyState
-              icon={TrendingUp}
-              title="No compliance records"
-              description="Check compliance to start tracking"
-              action={{
-                label: "Check All Users",
-                onClick: () => setCheckAllConfirmOpen(true),
-              }}
-            />
-          ) : (
-            <Stack gap="sm">
-              {records?.map((record) => (
-                <Card
-                  key={record._id}
-                  padding="md"
-                  className="hover:bg-ui-bg-tertiary transition-colors"
-                >
-                  <Flex justify="between" align="start">
-                    <FlexItem flex="1">
-                      <Flex gap="md" align="center" className="mb-2">
-                        <Icon icon={getStatusIcon(record.status)} size="md" />
-                        <Stack gap="xs">
-                          <Typography variant="label">
-                            {record.user?.name || record.user?.email || "Unknown User"}
-                          </Typography>
-                          <Flex gap="sm">
-                            <Badge size="sm" className={cn(getStatusColor(record.status))}>
-                              {getStatusLabel(record.status)}
-                            </Badge>
-                            <Badge variant="neutral" className="capitalize">
-                              {record.periodType}ly
-                            </Badge>
-                            {record.reviewedBy && <Badge variant="accent">Reviewed</Badge>}
+            {!records ? (
+              <Flex justify="center" align="center" className="min-h-32">
+                <Typography variant="small" color="secondary">
+                  Loading...
+                </Typography>
+              </Flex>
+            ) : records.length === 0 ? (
+              <EmptyState
+                icon={TrendingUp}
+                title="No compliance records"
+                description="Check compliance to start tracking"
+                action={{
+                  label: "Check All Users",
+                  onClick: () => setCheckAllConfirmOpen(true),
+                }}
+              />
+            ) : (
+              <Stack gap="sm">
+                {records.map((record) => (
+                  <Card key={record._id} padding="md" hoverable>
+                    <Flex justify="between" align="start" gap="md">
+                      <FlexItem flex="1">
+                        <Stack gap="md">
+                          <Flex gap="md" align="center">
+                            <Icon icon={getStatusIcon(record.status)} size="md" />
+                            <Stack gap="xs">
+                              <Typography variant="label">
+                                {record.user?.name || record.user?.email || "Unknown User"}
+                              </Typography>
+                              <Flex gap="sm">
+                                <Badge size="sm" variant={getStatusColor(record.status)}>
+                                  {getStatusLabel(record.status)}
+                                </Badge>
+                                <Badge variant="neutral" className="capitalize">
+                                  {record.periodType}ly
+                                </Badge>
+                                {record.reviewedBy ? (
+                                  <Badge variant="accent">Reviewed</Badge>
+                                ) : null}
+                              </Flex>
+                            </Stack>
                           </Flex>
+
+                          <Grid cols={2} colsMd={4} gap="md">
+                            <MetricField
+                              label="Period"
+                              value={`${formatDate(record.periodStart)} - ${formatDate(record.periodEnd)}`}
+                            />
+                            <MetricField
+                              label="Hours Worked"
+                              value={`${record.totalHoursWorked.toFixed(1)}h`}
+                            />
+                            {record.hoursDeficit ? (
+                              <MetricField
+                                label="Deficit"
+                                value={`-${record.hoursDeficit.toFixed(1)}h`}
+                                valueColor="warning"
+                              />
+                            ) : null}
+                            {record.hoursExcess ? (
+                              <MetricField
+                                label="Excess"
+                                value={`+${record.hoursExcess.toFixed(1)}h`}
+                                valueColor="error"
+                              />
+                            ) : null}
+                            {record.equityHoursDeficit ? (
+                              <MetricField
+                                label="Equity Short"
+                                value={`-${record.equityHoursDeficit.toFixed(1)}h`}
+                                valueColor="brand"
+                              />
+                            ) : null}
+                            {record.totalEquityHours ? (
+                              <MetricField
+                                label="Equity Hours"
+                                value={`${record.totalEquityHours.toFixed(1)}h`}
+                              />
+                            ) : null}
+                          </Grid>
+
+                          {record.reviewNotes ? (
+                            <Card variant="flat" padding="sm">
+                              <Typography variant="small">
+                                <strong>Review Notes:</strong> {record.reviewNotes}
+                              </Typography>
+                            </Card>
+                          ) : null}
                         </Stack>
-                      </Flex>
+                      </FlexItem>
 
-                      <Grid cols={2} colsMd={4} gap="md" className="mt-3">
-                        <Stack gap="none">
-                          <Typography variant="meta">Period:</Typography>
-                          <Typography variant="label">
-                            {formatDate(record.periodStart)} - {formatDate(record.periodEnd)}
-                          </Typography>
-                        </Stack>
-
-                        <Stack gap="none">
-                          <Typography variant="meta">Hours Worked:</Typography>
-                          <Typography variant="label">
-                            {record.totalHoursWorked.toFixed(1)}h
-                          </Typography>
-                        </Stack>
-
-                        {record.hoursDeficit && (
-                          <Stack gap="none">
-                            <Typography variant="meta">Deficit:</Typography>
-                            <Typography variant="label" color="warning">
-                              -{record.hoursDeficit.toFixed(1)}h
-                            </Typography>
-                          </Stack>
-                        )}
-
-                        {record.hoursExcess && (
-                          <Stack gap="none">
-                            <Typography variant="meta">Excess:</Typography>
-                            <Typography variant="label" color="error">
-                              +{record.hoursExcess.toFixed(1)}h
-                            </Typography>
-                          </Stack>
-                        )}
-
-                        {record.equityHoursDeficit && (
-                          <Stack gap="none">
-                            <Typography variant="meta">Equity Short:</Typography>
-                            <Typography variant="label" color="brand">
-                              -{record.equityHoursDeficit.toFixed(1)}h
-                            </Typography>
-                          </Stack>
-                        )}
-
-                        {record.totalEquityHours && (
-                          <Stack gap="none">
-                            <Typography variant="meta">Equity Hours:</Typography>
-                            <Typography variant="label">
-                              {record.totalEquityHours.toFixed(1)}h
-                            </Typography>
-                          </Stack>
-                        )}
-                      </Grid>
-
-                      {record.reviewNotes && (
-                        <Card padding="sm" className="mt-3 bg-accent-subtle">
-                          <Typography variant="small">
-                            <strong>Review Notes:</strong> {record.reviewNotes}
-                          </Typography>
-                        </Card>
-                      )}
-                    </FlexItem>
-
-                    <Flex gap="sm" className="ml-4">
-                      {!record.reviewedBy && (
+                      {!record.reviewedBy ? (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -378,13 +329,13 @@ export function HourComplianceDashboard() {
                         >
                           Review
                         </Button>
-                      )}
+                      ) : null}
                     </Flex>
-                  </Flex>
-                </Card>
-              ))}
-            </Stack>
-          )}
+                  </Card>
+                ))}
+              </Stack>
+            )}
+          </Stack>
         </CardBody>
       </Card>
 
@@ -440,5 +391,52 @@ export function HourComplianceDashboard() {
         confirmLabel="Check All"
       />
     </Flex>
+  );
+}
+
+function SummaryStatCard({
+  icon,
+  label,
+  value,
+  valueColor,
+}: {
+  icon?: LucideIcon;
+  label: string;
+  value: number | string;
+  valueColor?: React.ComponentProps<typeof Typography>["color"];
+}) {
+  return (
+    <Card>
+      <CardBody>
+        <Stack align="center" gap="xs">
+          <Typography variant="h3" color={valueColor}>
+            {value}
+          </Typography>
+          <Flex align="center" gap="xs">
+            {icon ? <Icon icon={icon} size="sm" /> : null}
+            <Typography variant="caption">{label}</Typography>
+          </Flex>
+        </Stack>
+      </CardBody>
+    </Card>
+  );
+}
+
+function MetricField({
+  label,
+  value,
+  valueColor,
+}: {
+  label: string;
+  value: string;
+  valueColor?: React.ComponentProps<typeof Typography>["color"];
+}) {
+  return (
+    <Stack gap="none">
+      <Typography variant="meta">{label}</Typography>
+      <Typography variant="label" color={valueColor}>
+        {value}
+      </Typography>
+    </Stack>
   );
 }

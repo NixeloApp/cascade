@@ -13,7 +13,6 @@ import { useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Briefcase, Gem, GraduationCap, Lightbulb, Settings, Users, Wrench } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
@@ -21,7 +20,7 @@ import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Dialog } from "../ui/Dialog";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
-import { Input, Select, Textarea } from "../ui/form";
+import { Checkbox, Input, Select, Textarea } from "../ui/form";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { Stack } from "../ui/Stack";
@@ -327,25 +326,25 @@ export function UserTypeManager() {
     }
   };
 
-  const getTypeIcon = (type: EmploymentType, size = "w-5 h-5") => {
+  const getTypeIcon = (type: EmploymentType) => {
     switch (type) {
       case "employee":
-        return <Briefcase className={size} />;
+        return Briefcase;
       case "contractor":
-        return <Wrench className={size} />;
+        return Wrench;
       case "intern":
-        return <GraduationCap className={size} />;
+        return GraduationCap;
     }
   };
 
-  const getTypeColor = (type: EmploymentType) => {
+  const getTypeColor = (type: EmploymentType): React.ComponentProps<typeof Badge>["variant"] => {
     switch (type) {
       case "employee":
-        return "bg-brand-subtle text-brand-hover";
+        return "brand";
       case "contractor":
-        return "bg-accent-subtle text-accent-hover";
+        return "accent";
       case "intern":
-        return "bg-status-success-bg text-status-success-text";
+        return "success";
     }
   };
 
@@ -382,18 +381,18 @@ export function UserTypeManager() {
           ) : (
             <Grid cols={1} colsMd={3} gap="lg">
               {configs.map((config: EmploymentTypeConfig) => (
-                <Card
-                  key={config.type}
-                  padding="md"
-                  className="transition-default hover:bg-ui-bg-hover"
-                >
+                <Card key={config.type} padding="md" hoverable>
                   <Stack gap="sm">
                     <Flex justify="between" align="start">
                       <Flex align="center" gap="sm">
-                        {getTypeIcon(config.type, "w-7 h-7")}
+                        <Icon icon={getTypeIcon(config.type)} size="lg" />
                         <Stack gap="xs">
                           <Typography variant="label">{config.name}</Typography>
-                          <Badge size="sm" className={cn("capitalize", getTypeColor(config.type))}>
+                          <Badge
+                            size="sm"
+                            variant={getTypeColor(config.type)}
+                            className="capitalize"
+                          >
                             {config.type}
                           </Badge>
                         </Stack>
@@ -469,11 +468,7 @@ export function UserTypeManager() {
                 </Typography>
                 <Stack gap="sm">
                   {usersWithoutProfiles.slice(0, 5).map((user: UserWithoutProfile) => (
-                    <Card
-                      key={user._id}
-                      padding="sm"
-                      className="bg-ui-bg transition-default hover:bg-ui-bg-hover"
-                    >
+                    <Card key={user._id} padding="sm" variant="interactive">
                       <Flex justify="between" align="center">
                         <Typography variant="small">
                           {user.name || user.email || "Unknown User"}
@@ -510,16 +505,12 @@ export function UserTypeManager() {
           ) : (
             <Stack gap="sm">
               {profiles.map((profile: UserProfileWithUser) => (
-                <Card
-                  key={profile._id}
-                  padding="md"
-                  className="transition-default hover:bg-ui-bg-hover"
-                >
-                  <Flex justify="between" align="start">
+                <Card key={profile._id} padding="md" hoverable>
+                  <Flex justify="between" align="start" gap="md">
                     <FlexItem flex="1">
                       <Stack gap="sm">
                         <Flex gap="md" align="center">
-                          {getTypeIcon(profile.employmentType, "w-5 h-5")}
+                          <Icon icon={getTypeIcon(profile.employmentType)} size="md" />
                           <Stack gap="xs">
                             <Typography variant="label">
                               {profile.user?.name || profile.user?.email || "Unknown User"}
@@ -527,7 +518,8 @@ export function UserTypeManager() {
                             <Flex gap="sm">
                               <Badge
                                 size="sm"
-                                className={cn("capitalize", getTypeColor(profile.employmentType))}
+                                variant={getTypeColor(profile.employmentType)}
+                                className="capitalize"
                               >
                                 {profile.employmentType}
                               </Badge>
@@ -577,7 +569,7 @@ export function UserTypeManager() {
                       </Stack>
                     </FlexItem>
 
-                    <Flex gap="sm" className="ml-4">
+                    <Flex gap="sm">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -667,55 +659,26 @@ export function UserTypeManager() {
             </Grid>
 
             <Stack gap="md">
-              <label>
-                <Flex align="center" gap="sm">
-                  <input
-                    type="checkbox"
-                    checked={configRequiresApproval}
-                    onChange={(e) => setConfigRequiresApproval(e.target.checked)}
-                    className="w-4 h-4"
-                  />
-                  <Typography variant="small">
-                    Requires manager approval for time entries
-                  </Typography>
-                </Flex>
-              </label>
-
-              <label>
-                <Flex align="center" gap="sm">
-                  <input
-                    type="checkbox"
-                    checked={configCanOvertime}
-                    onChange={(e) => setConfigCanOvertime(e.target.checked)}
-                    className="w-4 h-4"
-                  />
-                  <Typography variant="small">Can work overtime hours</Typography>
-                </Flex>
-              </label>
-
-              <label>
-                <Flex align="center" gap="sm">
-                  <input
-                    type="checkbox"
-                    checked={configCanBilling}
-                    onChange={(e) => setConfigCanBilling(e.target.checked)}
-                    className="w-4 h-4"
-                  />
-                  <Typography variant="small">Can access billing information</Typography>
-                </Flex>
-              </label>
-
-              <label>
-                <Flex align="center" gap="sm">
-                  <input
-                    type="checkbox"
-                    checked={configCanManageProjects}
-                    onChange={(e) => setConfigCanManageProjects(e.target.checked)}
-                    className="w-4 h-4"
-                  />
-                  <Typography variant="small">Can manage projects</Typography>
-                </Flex>
-              </label>
+              <Checkbox
+                checked={configRequiresApproval}
+                onChange={(e) => setConfigRequiresApproval(e.target.checked)}
+                label="Requires manager approval for time entries"
+              />
+              <Checkbox
+                checked={configCanOvertime}
+                onChange={(e) => setConfigCanOvertime(e.target.checked)}
+                label="Can work overtime hours"
+              />
+              <Checkbox
+                checked={configCanBilling}
+                onChange={(e) => setConfigCanBilling(e.target.checked)}
+                label="Can access billing information"
+              />
+              <Checkbox
+                checked={configCanManageProjects}
+                onChange={(e) => setConfigCanManageProjects(e.target.checked)}
+                label="Can manage projects"
+              />
             </Stack>
           </Stack>
         </form>
@@ -836,19 +799,11 @@ export function UserTypeManager() {
                         Equity Compensation
                       </Typography>
                     </Flex>
-                    <label>
-                      <Flex align="center" gap="sm">
-                        <input
-                          type="checkbox"
-                          checked={profileHasEquity}
-                          onChange={(e) => setProfileHasEquity(e.target.checked)}
-                          className="w-4 h-4"
-                        />
-                        <Typography variant="label" className="text-brand-active">
-                          Has Equity
-                        </Typography>
-                      </Flex>
-                    </label>
+                    <Checkbox
+                      checked={profileHasEquity}
+                      onChange={(e) => setProfileHasEquity(e.target.checked)}
+                      label="Has Equity"
+                    />
                   </Flex>
 
                   {profileHasEquity && (
@@ -931,17 +886,11 @@ export function UserTypeManager() {
             )}
 
             <Stack gap="md">
-              <label>
-                <Flex align="center" gap="sm">
-                  <input
-                    type="checkbox"
-                    checked={profileIsActive}
-                    onChange={(e) => setProfileIsActive(e.target.checked)}
-                    className="w-4 h-4"
-                  />
-                  <Typography variant="label">Active Employment</Typography>
-                </Flex>
-              </label>
+              <Checkbox
+                checked={profileIsActive}
+                onChange={(e) => setProfileIsActive(e.target.checked)}
+                label="Active Employment"
+              />
             </Stack>
           </Stack>
         </form>
