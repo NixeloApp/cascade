@@ -37,6 +37,8 @@
 - Added `Settings/ProfileContent.tsx` and `Settings/PumbleIntegration.tsx` to design-system ownership targeting so shell drift there is blocked directly.
 - Removed `Settings/ApiKeysManager.tsx` and `Settings/GoogleCalendarIntegration.tsx` from the interactive-state migration debt list by migrating their local cards, callouts, and option shells onto owned primitives.
 - Added `Settings/ApiKeysManager.tsx` and `Settings/GoogleCalendarIntegration.tsx` to design-system ownership targeting so future settings-shell drift there is caught directly.
+- Removed `Settings/AvatarUploadModal.tsx` and `Settings/CoverImageUploadModal.tsx` from the raw-Tailwind and interactive-state migration debt lists by extracting the shared upload dropzone into an owned UI primitive and moving modal shells onto `Card` and `IconButton`.
+- Added `Settings/AvatarUploadModal.tsx` and `Settings/CoverImageUploadModal.tsx` to design-system ownership targeting so upload-surface drift is blocked directly.
 
 ### Next batch
 

@@ -5,17 +5,19 @@
  */
 
 import { api } from "@convex/_generated/api";
-import { Camera, Trash2, Upload } from "lucide-react";
+import { Camera, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Dialog } from "@/components/ui/Dialog";
 import { Flex } from "@/components/ui/Flex";
+import { IconButton } from "@/components/ui/IconButton";
+import { ImageUploadDropzone } from "@/components/ui/ImageUploadDropzone";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 
 interface AvatarUploadModalProps {
   open: boolean;
@@ -165,7 +167,7 @@ export function AvatarUploadModal({
       <Stack gap="lg">
         {/* Preview */}
         <Flex justify="center">
-          <div className="relative">
+          <Card padding="none" variant="ghost" className="relative">
             <Avatar
               name={userName}
               email={userEmail}
@@ -174,67 +176,43 @@ export function AvatarUploadModal({
               className="w-32 h-32"
             />
             {displayImage && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-ui-bg border border-ui-border shadow-sm"
+              <IconButton
+                variant="solid"
+                size="sm"
+                className="absolute -bottom-1 -right-1"
                 onClick={() => fileInputRef.current?.click()}
+                tooltip="Choose another avatar"
               >
                 <Camera className="h-4 w-4" />
-              </Button>
+              </IconButton>
             )}
-          </div>
+          </Card>
         </Flex>
 
-        {/* Drop zone - uses div with role="button" because button elements don't support drag-drop properly */}
-        {/* biome-ignore lint/a11y/useSemanticElements: Drop zones require div for drag-drop support */}
-        <div
-          className={cn(
-            "border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer",
-            isDragging
-              ? "border-brand bg-brand-subtle/50"
-              : "border-ui-border hover:border-brand/50 hover:bg-ui-bg-hover",
-          )}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
+        <ImageUploadDropzone
+          acceptedTypes={ACCEPTED_TYPES}
+          fileInputRef={fileInputRef}
+          helperText="JPG, PNG, GIF or WebP."
+          isDragging={isDragging}
+          maxSizeLabel={`${MAX_SIZE_MB}MB`}
           onDragLeave={handleDragLeave}
-          onClick={() => fileInputRef.current?.click()}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              fileInputRef.current?.click();
-            }
-          }}
-          role="button"
-          tabIndex={0}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={ACCEPTED_TYPES.join(",")}
-            onChange={handleInputChange}
-            className="hidden"
-          />
-          <Stack gap="sm" align="center">
-            <Upload className="h-8 w-8 text-ui-text-tertiary" />
-            <Typography variant="small" color="secondary">
-              Drag and drop an image, or click to browse
-            </Typography>
-            <Typography variant="caption" color="tertiary">
-              JPG, PNG, GIF or WebP. Max {MAX_SIZE_MB}MB.
-            </Typography>
-          </Stack>
-        </div>
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+          onInputChange={handleInputChange}
+        />
 
         {/* Selected file info */}
         {selectedFile && (
-          <Flex align="center" justify="between" className="px-2">
-            <Typography variant="small" className="truncate">
-              {selectedFile.name}
-            </Typography>
-            <Typography variant="caption" color="secondary">
-              {(selectedFile.size / 1024).toFixed(0)} KB
-            </Typography>
-          </Flex>
+          <Card padding="sm" variant="flat">
+            <Flex align="center" justify="between" gap="sm">
+              <Typography variant="small" className="truncate">
+                {selectedFile.name}
+              </Typography>
+              <Typography variant="caption" color="secondary">
+                {(selectedFile.size / 1024).toFixed(0)} KB
+              </Typography>
+            </Flex>
+          </Card>
         )}
 
         {/* Actions */}
