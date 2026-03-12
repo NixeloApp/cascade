@@ -4,6 +4,8 @@
 > **Effort:** Medium (~1-2 weeks)
 > **Value:** High differentiator - competitors charge $29+/mo for status pages
 > **Status:** Blocked (architecture + infra prerequisites)
+> **Last Reviewed:** 2026-03-12
+> **Review Outcome:** blocked state unchanged; architecture decisions are still required before schema, routes, or infra work should resume.
 
 ## Overview
 

@@ -4,7 +4,8 @@
 **Priority:** P2
 **Related:** `/docs/oauth-monitoring-runbook.md`
 **Status:** Blocked (awaiting external monitoring destination decision)
-**Last Audited:** 2026-03-02
+**Last Audited:** 2026-03-12
+**Review Outcome:** blocked state unchanged; all remaining in-repo work still depends on choosing and provisioning the external monitoring destination.
 
 ## Overview
 

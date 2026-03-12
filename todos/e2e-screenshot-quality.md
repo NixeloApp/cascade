@@ -1,9 +1,10 @@
 # E2E Screenshot Quality
 
 > **Priority:** P0
-> **Status:** Active canonical doc for screenshot determinism, screenshot-driven UI review, and screenshot-specific E2E quality work
-> **Last Updated:** 2026-03-11
+> **Status:** Active
+> **Last Updated:** 2026-03-12
 > **Supersedes:** previous screenshot review loop docs and separate visual-polish todo files
+> **Scope:** canonical doc for screenshot determinism, screenshot-driven UI review, and screenshot-specific E2E quality work
 
 ## Objective
 

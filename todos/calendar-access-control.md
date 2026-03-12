@@ -1,6 +1,18 @@
 # Calendar Access Control Issue
 
-## P1 - Enforce project access before deriving calendar scope
+> **Priority:** P1
+> **Status:** Complete
+> **Last Updated:** 2026-03-12
+> **Verification:** `convex/calendarEvents.ts` now calls `canAccessProject()` before deriving calendar scope from a referenced project or issue.
+
+## Resolution
+
+- Verified fixed in the current repository on `2026-03-12`.
+- Keep this doc as historical record until defect docs are archived.
+
+## Historical Issue
+
+### P1 - Enforce project access before deriving calendar scope
 
 **File:** `convex/calendarEvents.ts:141`
 
@@ -10,6 +22,6 @@ Since `create`/`update` use this helper and scoped calendar queries return all e
 
 **Fix:** Call `canAccessProject()` in `resolveScopeFromProjectOrIssue` and throw if user lacks access.
 
-## Priority
+## Outcome
 
-P1 - This is an access control bypass allowing cross-tenant data injection.
+Resolved. This access-control bypass is no longer present in the current code.

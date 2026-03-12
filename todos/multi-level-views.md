@@ -3,7 +3,8 @@
 > **Priority:** P1 (Core MVP)
 > **Effort:** Large
 > **Status:** Blocked (external package install required for final dependency graph)
-> **Last Audited:** 2026-03-02
+> **Last Audited:** 2026-03-12
+> **Review Outcome:** repository-side scoped views work remains complete; final dependency-graph close still depends on restoring package install/DNS access for `@xyflow/react`.
 
 ---
 
