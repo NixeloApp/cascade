@@ -8,7 +8,7 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
@@ -24,6 +24,22 @@ interface GeneralSettingsProps {
   name: string;
   projectKey: string;
   description: string | undefined;
+}
+
+interface ReadonlyFieldProps {
+  label: string;
+  children: ReactNode;
+}
+
+function ReadonlyField({ label, children }: ReadonlyFieldProps) {
+  return (
+    <Card variant="outline" padding="sm" className="bg-ui-bg">
+      <Stack gap="xs">
+        <Label>{label}</Label>
+        {children}
+      </Stack>
+    </Card>
+  );
 }
 
 /** Project name and description editor with save/cancel controls. */
@@ -126,22 +142,19 @@ export function GeneralSettings({
         </Stack>
       ) : (
         <Stack gap="sm">
-          <div className="rounded-xl border border-ui-border-secondary/75 bg-ui-bg px-3 py-3">
-            <Label className="mb-1">Project Name</Label>
+          <ReadonlyField label="Project Name">
             <Typography variant="label">{name}</Typography>
-          </div>
-          <div className="rounded-xl border border-ui-border-secondary/75 bg-ui-bg px-3 py-3">
-            <Label className="mb-1">Project Key</Label>
+          </ReadonlyField>
+          <ReadonlyField label="Project Key">
             <Typography variant="mono" color="secondary">
               {projectKey}
             </Typography>
-          </div>
-          <div className="rounded-xl border border-ui-border-secondary/75 bg-ui-bg px-3 py-3">
-            <Label className="mb-1">Description</Label>
+          </ReadonlyField>
+          <ReadonlyField label="Description">
             <Typography variant="p" color="secondary">
               {description || "No description"}
             </Typography>
-          </div>
+          </ReadonlyField>
         </Stack>
       )}
     </Card>

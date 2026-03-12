@@ -27,13 +27,14 @@
   - `Settings/`
   - `Admin/`
 - Replaced those interactive directory escapes with explicit file-level migration debt entries.
+- Removed the `ProjectSettings` file-level raw-Tailwind debt entries by migrating the project settings surfaces onto owned `Card` and layout primitives.
+- Added the main project settings shell to `check-design-system-ownership.js` targeting so future shell drift there is validated directly.
 
 ### Next batch
 
 - Burn down the explicit file-level debt entries added for:
   - settings surfaces
   - admin surfaces
-  - project settings surfaces
 - Keep `src/components/Analytics/` temporarily allowed until its shell patterns are migrated; it was tested in this pass and still contains validator-breaking drift.
 - After the next exemption reduction, add a stricter surface-shell validator for `rounded + bg + border + shadow + overflow` stacks so recipe drift is blocked more directly than the current generic raw-Tailwind patterns.
 
