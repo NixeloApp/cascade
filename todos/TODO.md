@@ -15,5 +15,8 @@ All feature specifications and roadmap items are in [`/todos/README.md`](./READM
 
 ## Active P0 Docs
 
-- [e2e-screenshot-quality.md](./e2e-screenshot-quality.md)
 - [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md)
+
+## Completed P0 Baselines
+
+- [e2e-screenshot-quality.md](./e2e-screenshot-quality.md)
