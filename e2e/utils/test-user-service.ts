@@ -51,6 +51,16 @@ export interface GoogleOAuthLoginResult {
   error?: string;
 }
 
+export interface TestUserLoginResult {
+  success: boolean;
+  token?: string;
+  refreshToken?: string;
+  error?: string;
+  status?: number;
+  repairedAccount?: boolean;
+  repairAttempted?: boolean;
+}
+
 /**
  * Service class for E2E test user API operations
  */
@@ -98,10 +108,7 @@ export class TestUserService {
   /**
    * Login a test user via E2E API (bypassing UI)
    */
-  async loginTestUser(
-    email: string,
-    password: string,
-  ): Promise<{ success: boolean; token?: string; refreshToken?: string; error?: string }> {
+  async loginTestUser(email: string, password: string): Promise<TestUserLoginResult> {
     try {
       const response = await fetch(E2E_ENDPOINTS.loginTestUser, {
         method: "POST",
@@ -110,13 +117,55 @@ export class TestUserService {
       });
       const result = await response.json();
       if (response.ok && result.token) {
-        return { success: true, token: result.token, refreshToken: result.refreshToken };
+        return {
+          success: true,
+          token: result.token,
+          refreshToken: result.refreshToken,
+          status: response.status,
+        };
       }
-      return { success: false, error: result.error || "Login failed" };
+      return {
+        success: false,
+        error: result.error || "Login failed",
+        status: response.status,
+      };
     } catch (error) {
       console.warn(`  ⚠️ Failed to login user ${email}:`, error);
       return { success: false, error: String(error) };
     }
+  }
+
+  /**
+   * Login a test user via E2E API and repair stale seeded-account state when needed.
+   * Owns the known `InvalidAccountId` recovery path so auth helpers can use one contract.
+   */
+  async loginTestUserWithRepair(
+    email: string,
+    password: string,
+    skipOnboarding = false,
+  ): Promise<TestUserLoginResult> {
+    let loginResult = await this.loginTestUser(email, password);
+
+    if (!loginResult.success && loginResult.error?.includes("InvalidAccountId")) {
+      const repairResult = await this.createTestUser(email, password, skipOnboarding);
+      if (repairResult.success || repairResult.existing) {
+        loginResult = await this.loginTestUser(email, password);
+        return {
+          ...loginResult,
+          repairedAccount: loginResult.success,
+          repairAttempted: true,
+        };
+      }
+
+      return {
+        ...loginResult,
+        error: repairResult.error || loginResult.error,
+        repairedAccount: false,
+        repairAttempted: true,
+      };
+    }
+
+    return loginResult;
   }
 
   /**
@@ -305,12 +354,15 @@ export class TestUserService {
   /**
    * Seed screenshot data (workspace, team, project, sprint, issues, documents)
    */
-  async seedScreenshotData(email: string): Promise<SeedScreenshotResult> {
+  async seedScreenshotData(
+    email: string,
+    options: { orgSlug?: string } = {},
+  ): Promise<SeedScreenshotResult> {
     try {
       const response = await fetch(E2E_ENDPOINTS.seedScreenshotData, {
         method: "POST",
         headers: getE2EHeaders(),
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, orgSlug: options.orgSlug }),
       });
       return await response.json();
     } catch (error) {

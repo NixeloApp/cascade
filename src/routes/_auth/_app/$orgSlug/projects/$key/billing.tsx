@@ -1,8 +1,7 @@
-import { api } from "@convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageContent, PageError, PageLayout } from "@/components/layout";
 import { BillingReport } from "@/components/TimeTracker/BillingReport";
-import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useProjectByKey } from "@/hooks/useProjectByKey";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key/billing")({
   component: BillingPage,
@@ -10,7 +9,7 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key/billing
 
 function BillingPage() {
   const { key } = Route.useParams();
-  const project = useAuthenticatedQuery(api.projects.getByKey, { key });
+  const project = useProjectByKey(key);
 
   if (project === undefined) {
     return <PageContent isLoading>{null}</PageContent>;

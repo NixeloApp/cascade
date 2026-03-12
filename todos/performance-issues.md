@@ -1,8 +1,20 @@
 # Performance Issues
 
+> **Priority:** P2
+> **Status:** Complete
+> **Last Updated:** 2026-03-12
+> **Verification:** project issue totals now use `MAX_PROJECT_ISSUES` + `efficientCount`, and `RoadmapView` now memoizes `issueIndexMap` and `dependencyLines`.
+
 UI and backend performance optimizations.
 
-## P2 - Project issue count uses sprint-specific limit
+## Resolution
+
+- Verified fixed in the current repository on `2026-03-12`.
+- Keep this doc as historical record until defect docs are archived.
+
+## Historical Issues
+
+### P2 - Project issue count uses sprint-specific limit
 
 **File:** `convex/lib/projectIssueStats.ts`
 
@@ -10,7 +22,7 @@ UI and backend performance optimizations.
 
 **Fix:** Use a project-specific limit or unbounded count for project totals.
 
-## P2 - RoadmapView missing memoization
+### P2 - RoadmapView missing memoization
 
 **File:** `src/components/RoadmapView.tsx`
 
@@ -18,6 +30,6 @@ UI and backend performance optimizations.
 
 **Fix:** Wrap in `useMemo` keyed on `filteredIssues`, `showDependencies`, and `issueLinks`.
 
-## Priority
+## Outcome
 
-P2 - Performance degradation at scale but functional.
+Resolved. The tracked performance issues are no longer present in the current code.

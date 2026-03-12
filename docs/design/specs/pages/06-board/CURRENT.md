@@ -1,8 +1,8 @@
 # Board Page - Current State
 
 > **Route**: `/:slug/projects/:key/board`
-> **Status**: 🔴 Functional capture, weak chrome discipline
-> **Last Updated**: 2026-03-11
+> **Status**: 🟢 Trustworthy baseline
+> **Last Updated**: 2026-03-12
 
 ---
 
@@ -18,46 +18,20 @@
 
 ---
 
-## Structure
-
-```text
-┌──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ AppHeader                                                                                    │
-│ [menu] [workspace cockpit]                      [ ? ] [timer] [search] [notifications] [me] │
-│                                                ^ overpacked right cluster inside one pill    │
-│                                                ^ controls look like they float over each     │
-│                                                  other instead of being intentionally staged  │
-├──────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Project shell                                                                                │
-│ [project identity]                                                                           │
-│ [board][backlog][inbox][roadmap][calendar][more...]                                          │
-├──────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Board page header / mobile actions                                                           │
-│ [delivery board copy] [badges] [export] [sprint selector]                                    │
-├──────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Filter bar                                                                                   │
-│ [search][type][priority][assignee][labels][dates][clear][save]                               │
-├──────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Board toolbar                                                                                │
-│ [board title]                                                   [selection toggle]           │
-├──────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Columns                                                                                      │
-│ [To Do] [In Progress] [In Review] [Done]                                                     │
-│ cards                                                                                        │
-└──────────────────────────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
 ## Current UI
 
 - The board uses the slimmer shared project shell instead of the older heavy page chrome.
 - Filled-state screenshots now show real seeded issues instead of broken empty baselines.
-- Mobile surfaces actual board content on the first screen.
-- The create-issue modal captures reliably again.
-
-The state is better operationally, but the chrome now has a new problem: several shared surfaces
-are technically working while still looking compositionally wrong.
+- Mobile now fits two real lanes comfortably instead of clipping the second lane immediately.
+- The create-issue modal captures reliably again across the full screenshot matrix.
+- The shared project shell and mobile tab row are tighter than the last round, so the board starts sooner and reads less like stacked chrome.
+- The extra mobile board-actions card is gone; export/sprint controls now sit as a lighter utility row above filters instead of a full-width chrome block.
+- Mobile filter controls now use the quieter shared filter button/input chrome instead of a heavier custom pill treatment.
+- The mobile selection toggle now lives in a shared floating toolbar cluster, so it stops consuming a full row before the lanes begin.
+- Mobile lanes now use a staged snap layout, so the first column owns the frame and the next lane peeks in deliberately.
+- Mobile export and sprint controls now share that same floating cluster as selection, which removes the last detached board-only toolbar row before the lanes begin.
+- The export action still uses compact mobile treatment, but it now rides inside the floating cluster instead of a separate strip.
+- The board baseline is now operationally trustworthy, so the remaining issues are visual rather than harness-related.
 
 ---
 
@@ -76,6 +50,8 @@ are technically working while still looking compositionally wrong.
 | `src/components/KanbanBoard.tsx` | Board columns |
 | `src/components/Kanban/KanbanColumn.tsx` | Column shell |
 | `src/components/IssueCard.tsx` | Issue cards |
+| `e2e/screenshot-pages.ts` | Screenshot readiness for board/backlog/modal capture |
+| `e2e/pages/projects.page.ts` | Shared create-issue modal readiness contract |
 
 ---
 
@@ -83,26 +59,12 @@ are technically working while still looking compositionally wrong.
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | The app-header action pill is overstuffed; shortcuts, timer, search, notifications, and user menu read like loose controls floating in one shared blob | `AppHeader.tsx` | HIGH |
-| 2 | Screenshot capture succeeded, but visual review still missed an obvious header composition failure | review process | HIGH |
-| 3 | Search/commands, advanced search, and keyboard shortcuts do not share one coherent modal anatomy | shared dialogs | HIGH |
-| 4 | Some modal bodies contain more content than their frame comfortably holds, but scrolling behavior and footer treatment are inconsistent | `GlobalSearch.tsx`, `AdvancedSearchModal.tsx`, `KeyboardShortcutsHelp.tsx`, `Dialog.tsx` | HIGH |
-| 5 | Mobile and desktop project chrome are slimmer than before, but not yet rhythmically aligned | shared shell | MEDIUM |
-| 6 | Board lanes/cards are cleaner, but the surrounding chrome still competes with the actual work surface | page composition | MEDIUM |
-
----
-
-## Review Notes
-
-- Screenshot readiness is necessary, not sufficient.
-- This page now proves the current gap clearly:
-  - harness/data correctness is better
-  - design review quality is still not disciplined enough
-- The next board pass should fix the shared header and modal system before doing more local board polish.
+| 1 | Card hierarchy inside the first lane could still feel a little stronger in light mode | `src/components/Kanban/KanbanColumn.tsx`, `src/components/IssueDetail/IssueCard.tsx` | LOW |
+| 2 | Desktop board chrome is cleaner than before, but the stacked shell/filter/toolbar layers are still a little busier than the issue content beneath them | shared board/page shell | LOW |
 
 ---
 
 ## Summary
 
-The board is no longer failing because of bad seeded data. It is failing because shared chrome and
-overlay anatomy are inconsistent, crowded, and visually under-directed.
+The board screenshot baseline is trustworthy again. The next pass can stay focused on card hierarchy
+and optional desktop polish, not harness repair or mobile toolbar cleanup.

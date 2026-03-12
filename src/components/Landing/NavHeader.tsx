@@ -20,18 +20,18 @@ const navHeaderVariants = {
     "absolute inset-x-0 top-0 z-50 px-4 py-4 text-ui-text transition-all duration-default sm:px-6",
   ),
   shell: cva(
-    "relative mx-auto flex max-w-6xl items-center justify-between rounded-full border border-ui-border-secondary/70 bg-ui-bg/92 px-3 py-2.5 shadow-card backdrop-blur-xl sm:px-5 sm:py-3",
+    "relative mx-auto flex max-w-6xl items-center justify-between rounded-full border border-ui-border-secondary/70 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/96 to-ui-bg-soft/90 px-3 py-2.5 shadow-card backdrop-blur-xl sm:px-5 sm:py-3",
   ),
   brandLink: cva("flex items-center gap-2.5 transition-opacity duration-default hover:opacity-80"),
   centerRail: cva(
-    "absolute left-1/2 hidden -translate-x-1/2 items-center justify-center gap-2 rounded-full border border-ui-border/60 bg-ui-bg-soft/92 px-2 py-1 shadow-soft md:flex",
+    "absolute left-1/2 hidden -translate-x-1/2 items-center justify-center gap-2 rounded-full border border-ui-border/60 bg-linear-to-r from-ui-bg-soft/94 via-ui-bg-elevated/92 to-ui-bg-soft/90 px-2 py-1 shadow-soft md:flex",
   ),
   centerLink: cva(
     "rounded-full px-4 py-2 text-sm text-ui-text-secondary transition-all duration-default hover:bg-ui-bg-hover hover:text-ui-text",
   ),
   controls: cva("shrink-0 sm:gap-sm"),
   themeButton: cva(
-    "h-9 w-9 rounded-full border border-ui-border/60 bg-ui-bg-soft/92 text-ui-text-secondary transition-all duration-default hover:bg-ui-bg-hover hover:text-ui-text sm:h-10 sm:w-10",
+    "h-9 w-9 rounded-full border border-ui-border/60 bg-ui-bg-elevated/92 text-ui-text-secondary transition-all duration-default hover:bg-ui-bg-hover hover:text-ui-text sm:h-10 sm:w-10",
   ),
   authLink: cva(
     "rounded-full px-2 py-2 text-sm font-medium whitespace-nowrap text-ui-text-secondary transition-all duration-default hover:bg-ui-bg-hover hover:text-ui-text sm:px-4",

@@ -1,10 +1,9 @@
-import { api } from "@convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PageContent, PageError } from "@/components/layout";
 import { SectionErrorFallback } from "@/components/SectionErrorFallback";
-import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useProjectByKey } from "@/hooks/useProjectByKey";
 
 // Lazy load AnalyticsDashboard (heavy charts/recharts dependency)
 const AnalyticsDashboard = lazy(() =>
@@ -17,7 +16,7 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key/analyti
 
 function AnalyticsPage() {
   const { key } = Route.useParams();
-  const project = useAuthenticatedQuery(api.projects.getByKey, { key });
+  const project = useProjectByKey(key);
 
   if (project === undefined) {
     return <PageContent isLoading>{null}</PageContent>;

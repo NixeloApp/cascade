@@ -1,8 +1,20 @@
 # Invoice System Issues
 
+> **Priority:** P1
+> **Status:** Complete
+> **Last Updated:** 2026-03-12
+> **Verification:** current code uses max-sequence invoice numbering, uniqueness checks in both create paths, scoped time-entry fetches, delete-time-entry unlinking, and preserved `timeEntryIds` in the editor route.
+
 Critical issues with invoice generation, editing, and deletion that can cause data integrity problems.
 
-## P1 - Clear linked time entries when deleting an invoice
+## Resolution
+
+- Verified fixed in the current repository on `2026-03-12`.
+- Keep this doc as historical record until defect docs are archived.
+
+## Historical Issues
+
+### P1 - Clear linked time entries when deleting an invoice
 
 **File:** `convex/invoices.ts:674`
 
@@ -42,9 +54,9 @@ The invoice editor strips `timeEntryIds` when mapping line items, severing linka
 
 **Fix:** Preserve `timeEntryIds` when mapping existing line items.
 
-## Priority
+## Outcome
 
-P1 - These cause data integrity issues and can block invoicing workflows.
+Resolved. The tracked invoice integrity issues are no longer present in the current code.
 
 ## Notes
 

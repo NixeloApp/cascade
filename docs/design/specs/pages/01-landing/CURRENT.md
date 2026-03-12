@@ -1,8 +1,8 @@
 # Landing Page - Current State
 
 > **Route**: `/`
-> **Status**: 🔴 Stronger structure, but still visually incoherent in key places
-> **Last Updated**: 2026-03-11
+> **Status**: 🟡 Stronger structure, but still needs showcase discipline
+> **Last Updated**: 2026-03-12
 
 ---
 
@@ -103,6 +103,8 @@ not feel compositionally disciplined enough to carry the page.
 | 5 | Story/proof sections are more concrete than before | Improved |
 | 6 | Final CTA section exists | Fixed |
 | 7 | Footer has more trust/depth than the earlier minimal version | Improved |
+| 8 | Light mode now uses a deliberate airy palette instead of washed-out dark-mode atmospherics | Fixed |
+| 9 | Landing capture now waits for the hero/showcase entrance state instead of grabbing a half-faded frame | Fixed |
 
 ---
 
@@ -111,11 +113,9 @@ not feel compositionally disciplined enough to carry the page.
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
 | 1 | `Product control tower` is visibly squeezed because the showcase tries to be a board preview, a metrics deck, and a marketing card stack at the same time | `ProductShowcase.tsx` | HIGH |
-| 2 | Light mode still reads like dark-mode atmospherics dropped on white instead of a palette designed for light surfaces | hero + shared public tokens | HIGH |
-| 3 | The showcase uses mixed visual grammar: some cards feel app-real, others feel decorative brochure filler | `ProductShowcase.tsx` | HIGH |
-| 4 | The hero is closer to target, but the page still relies on a crafted mockup instead of a truly convincing product artifact | showcase strategy | MEDIUM |
-| 5 | Screenshot references need another targeted run after the next hero/showcase pass | screenshot docs | MEDIUM |
-| 6 | Logo strip still uses placeholder brand text instead of real proof | `LogoBar.tsx` | LOW |
+| 2 | The showcase uses mixed visual grammar: some cards feel app-real, others feel decorative brochure filler | `ProductShowcase.tsx` | HIGH |
+| 3 | The hero is closer to target, but the page still relies on a crafted mockup instead of a truly convincing product artifact | showcase strategy | MEDIUM |
+| 4 | Logo strip still uses placeholder brand text instead of real proof | `LogoBar.tsx` | LOW |
 
 ---
 

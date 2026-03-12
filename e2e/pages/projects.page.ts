@@ -4,6 +4,7 @@ import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import {
   createWorkspaceFromDialog,
+  dismissWorkspaceDialogIfOpen,
   getWorkspaceDialogElements,
   waitForBoardLoaded,
   waitForIssueCreateSuccess,
@@ -186,13 +187,21 @@ export class ProjectsPage extends BasePage {
     this.createIssueModal = page
       .getByRole("dialog")
       .filter({ hasText: /create.*issue|new.*issue/i });
-    this.issueTitleInput = page.getByPlaceholder(/title|issue.*title/i);
-    this.issueDescriptionInput = page
+    this.issueTitleInput = this.createIssueModal
+      .getByPlaceholder(/title|issue.*title/i)
+      .or(this.createIssueModal.getByRole("textbox", { name: /title/i }))
+      .first();
+    this.issueDescriptionInput = this.createIssueModal
       .getByPlaceholder(/description/i)
-      .or(page.locator("[data-issue-description]"));
-    this.issueTypeSelect = page.getByRole("combobox", { name: /type/i });
-    this.issuePrioritySelect = page.getByRole("combobox", { name: /priority/i });
-    this.issueAssigneeSelect = page.getByRole("combobox", { name: /assignee/i });
+      .or(this.createIssueModal.locator("[data-issue-description]"))
+      .first();
+    this.issueTypeSelect = this.createIssueModal.getByRole("combobox", { name: /type/i }).first();
+    this.issuePrioritySelect = this.createIssueModal
+      .getByRole("combobox", { name: /priority/i })
+      .first();
+    this.issueAssigneeSelect = this.createIssueModal
+      .getByRole("combobox", { name: /assignee/i })
+      .first();
     this.createIssueForm = this.createIssueModal.locator("form").first();
     this.submitIssueButton = this.createIssueModal
       .getByRole("button", { name: /^create issue$/i })
@@ -306,7 +315,7 @@ export class ProjectsPage extends BasePage {
   }
 
   async gotoProjectBoard(projectKey: string) {
-    await this.page.goto(`/${this.orgSlug}/projects/${projectKey}/board`);
+    await this.gotoPath(`/${this.orgSlug}/projects/${projectKey}/board`);
     await this.waitForLoad();
   }
 
@@ -375,7 +384,7 @@ export class ProjectsPage extends BasePage {
       await waitForProjectCreateSuccess(this.page);
 
       if (!boardUrlPattern.test(this.page.url())) {
-        await this.page.goto(boardPath);
+        await this.gotoPath(boardPath);
       }
 
       await expect(this.page).toHaveURL(boardUrlPattern);
@@ -407,8 +416,7 @@ export class ProjectsPage extends BasePage {
       workspaceName: name,
       workspaceDescription: description,
       openDialog: async () => {
-        await this.page.keyboard.press("Escape");
-        await expect(dialog).not.toBeVisible();
+        await dismissWorkspaceDialogIfOpen(this.page, dialog);
         await expect(this.newWorkspaceButton).toBeVisible();
         await this.newWorkspaceButton.scrollIntoViewIfNeeded();
         await this.newWorkspaceButton.click();
@@ -430,45 +438,48 @@ export class ProjectsPage extends BasePage {
   }
 
   async openCreateIssueModal() {
+    if (await this.tryOpenCreateIssueModal(2000, 4000)) {
+      return;
+    }
+
+    if (await this.tryOpenCreateIssueModal(5000, 6000)) {
+      return;
+    }
+
+    await expect(this.createIssueModal).toBeVisible();
+    await this.expectCreateIssueModalReady();
+  }
+
+  private async findVisibleCreateIssueTrigger(timeout = 2000): Promise<Locator | null> {
     const triggerCandidates = [
       this.page.getByRole("button", { name: /add first issue/i }).first(),
       this.page.locator("[data-tour='create-issue']").first(),
       this.page.getByRole("button", { name: /add issue/i }).first(),
     ];
 
-    for (let attempt = 0; attempt < 3; attempt++) {
-      for (const trigger of triggerCandidates) {
-        if ((await trigger.count().catch(() => 0)) === 0) {
-          continue;
-        }
-
-        await trigger.waitFor({ state: "visible", timeout: 2000 }).catch(() => {});
-        if (!(await trigger.isVisible().catch(() => false))) {
-          continue;
-        }
-
-        await trigger.scrollIntoViewIfNeeded().catch(() => {});
-        await trigger.click({ force: true });
-        await this.createIssueModal.waitFor({ state: "visible", timeout: 1500 }).catch(() => {});
-
-        if (await this.createIssueModal.isVisible().catch(() => false)) {
-          return;
-        }
+    for (const trigger of triggerCandidates) {
+      if ((await trigger.count().catch(() => 0)) === 0) {
+        continue;
       }
 
-      await this.page.waitForTimeout(750);
+      await trigger.waitFor({ state: "visible", timeout }).catch(() => {});
+      if (await trigger.isVisible().catch(() => false)) {
+        return trigger;
+      }
     }
 
-    await this.page.evaluate(() => {
-      window.dispatchEvent(new Event("nixelo:create-issue"));
-    });
-    await this.createIssueModal.waitFor({ state: "visible", timeout: 3000 }).catch(() => {});
+    return null;
+  }
 
-    if (await this.createIssueModal.isVisible().catch(() => false)) {
-      return;
+  private async tryOpenCreateIssueModal(triggerTimeout = 2000, readyTimeout = 4000) {
+    const trigger = await this.findVisibleCreateIssueTrigger(triggerTimeout);
+    if (!trigger) {
+      return false;
     }
 
-    await expect(this.createIssueModal).toBeVisible();
+    await trigger.scrollIntoViewIfNeeded().catch(() => {});
+    await trigger.click({ force: true });
+    return this.waitForCreateIssueModalReady(readyTimeout);
   }
 
   async createIssue(title: string, type?: string, priority?: string) {
@@ -482,15 +493,59 @@ export class ProjectsPage extends BasePage {
     }
     await expect(this.submitIssueButton).toBeVisible();
     await expect(this.submitIssueButton).toBeEnabled();
-
-    // Submit the form directly to avoid viewport/actionability flakiness on modal footer buttons.
-    if (await this.createIssueForm.isVisible()) {
-      await this.createIssueForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
-    } else {
-      await this.submitIssueButton.click();
-    }
+    await this.submitCreateIssue();
 
     await waitForIssueCreateSuccess(this.page, title);
+  }
+
+  private async submitCreateIssue() {
+    await expect(this.submitIssueButton).toBeVisible();
+    await expect(this.submitIssueButton).toBeEnabled();
+    await this.submitIssueButton.scrollIntoViewIfNeeded().catch(() => {});
+    await this.submitIssueButton.click();
+
+    // Don't retry non-idempotent issue creation - wait longer for submit state instead
+    await this.expectCreateIssueSubmitStarted(8000);
+  }
+
+  private async expectCreateIssueSubmitStarted(timeout = 10000) {
+    await expect
+      .poll(async () => this.getCreateIssueSubmitState(), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .not.toBe("open");
+  }
+
+  private async getCreateIssueSubmitState() {
+    if (!(await this.createIssueModal.isVisible().catch(() => false))) {
+      return "closed";
+    }
+
+    if (await this.submitIssueButton.isDisabled().catch(() => false)) {
+      return "submitting";
+    }
+
+    return "open";
+  }
+
+  private async waitForCreateIssueModalReady(timeout = 12000) {
+    try {
+      await this.expectCreateIssueModalReady(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectCreateIssueModalReady(timeout = 12000) {
+    await this.createIssueModal.waitFor({ state: "visible", timeout });
+    await this.issueTitleInput
+      .or(this.submitIssueButton)
+      .or(this.createIssueModal.getByRole("button", { name: /get ai suggestions/i }))
+      .or(this.issueTypeSelect)
+      .first()
+      .waitFor({ state: "visible", timeout });
   }
 
   async switchToTab(
@@ -880,17 +935,10 @@ export class ProjectsPage extends BasePage {
       return;
     }
 
+    // Don't use bounded retry for non-idempotent project creation
     await expect(this.createButton).toBeVisible();
-    await this.createButton.scrollIntoViewIfNeeded();
-
-    try {
-      await this.createButton.click({ timeout: 2000 });
-    } catch {
-      // The modal footer can remain logically visible while its sticky layout leaves the
-      // button outside Playwright's viewport checks. Fall back to a DOM click instead of
-      // polling repeated actionability retries.
-      await this.createButton.evaluate((button: HTMLButtonElement) => button.click());
-    }
+    await this.createButton.scrollIntoViewIfNeeded().catch(() => {});
+    await this.createButton.click();
   }
 
   async waitForCreateProjectSubmitStart(timeout = 10000) {
@@ -898,15 +946,13 @@ export class ProjectsPage extends BasePage {
       return true;
     }
 
-    const creatingButton = this.createProjectForm.getByRole("button", { name: /creating/i });
-
     try {
-      await Promise.race([
-        creatingButton.waitFor({ state: "visible", timeout }),
-        this.createProjectForm.waitFor({ state: "hidden", timeout }),
-        // Button becomes disabled when submitting
-        expect(this.createButton).toBeDisabled({ timeout }),
-      ]);
+      await expect
+        .poll(() => this.getCreateProjectSubmitState(), {
+          timeout,
+          intervals: [200, 500, 1000],
+        })
+        .not.toBe("pending");
       return true;
     } catch {
       return false;
@@ -916,6 +962,23 @@ export class ProjectsPage extends BasePage {
   async expectCreateProjectSubmitStarted(timeout = 10000) {
     const submitStarted = await this.waitForCreateProjectSubmitStart(timeout);
     expect(submitStarted).toBe(true);
+  }
+
+  private async getCreateProjectSubmitState(): Promise<"submitting" | "closed" | "pending"> {
+    if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+      return "closed";
+    }
+
+    const creatingButton = this.createProjectForm.getByRole("button", { name: /creating/i });
+    if (await creatingButton.isVisible().catch(() => false)) {
+      return "submitting";
+    }
+
+    if (await this.createButton.isDisabled().catch(() => false)) {
+      return "submitting";
+    }
+
+    return "pending";
   }
 
   async editIssueTitle(nextTitle: string) {
@@ -1001,16 +1064,7 @@ export class ProjectsPage extends BasePage {
   }
 
   private async clickNewProjectButton() {
-    await expect(this.newProjectButton).toBeVisible();
-    await expect(this.newProjectButton).toBeEnabled();
-
-    try {
-      await this.newProjectButton.click({ timeout: 3000 });
-    } catch {
-      await expect(this.newProjectButton).toBeVisible();
-      await expect(this.newProjectButton).toBeEnabled();
-      await this.newProjectButton.evaluate((button: HTMLButtonElement) => button.click());
-    }
+    await this.clickWithBoundedSecondAttempt(this.newProjectButton);
   }
 
   private async waitForProjectsView(timeout = 3000) {
@@ -1032,7 +1086,7 @@ export class ProjectsPage extends BasePage {
   }
 
   private async navigateToProjectsRoute() {
-    await this.page.goto(ROUTES.projects.list.build(this.orgSlug), {
+    await this.gotoPath(ROUTES.projects.list.build(this.orgSlug), {
       waitUntil: "domcontentloaded",
     });
     await this.page.waitForLoadState("load");
@@ -1042,9 +1096,9 @@ export class ProjectsPage extends BasePage {
       return;
     }
 
-    await this.page.goto(ROUTES.app.build(), { waitUntil: "domcontentloaded" });
+    await this.gotoPath(ROUTES.app.build(), { waitUntil: "domcontentloaded" });
     await this.page.waitForLoadState("load");
-    await this.page.goto(ROUTES.projects.list.build(this.orgSlug), {
+    await this.gotoPath(ROUTES.projects.list.build(this.orgSlug), {
       waitUntil: "domcontentloaded",
     });
     await this.page.waitForLoadState("load");
@@ -1154,15 +1208,21 @@ export class ProjectsPage extends BasePage {
   }
 
   private async clickFirstProjectTemplate() {
-    await expect(this.templateOptionButtons.first()).toBeVisible();
+    await this.clickWithBoundedSecondAttempt(this.templateOptionButtons.first());
+  }
+
+  private async clickWithBoundedSecondAttempt(locator: Locator, timeout = 3000) {
+    await expect(locator).toBeVisible();
+    await locator.scrollIntoViewIfNeeded().catch(() => {});
 
     try {
-      await this.templateOptionButtons.first().click({ timeout: 3000 });
+      await locator.click({ timeout });
+      return;
     } catch {
-      await expect(this.templateOptionButtons.first()).toBeVisible();
-      await this.templateOptionButtons
-        .first()
-        .evaluate((button: HTMLButtonElement) => button.click());
+      await expect(locator).toBeVisible();
+      await expect(locator).toBeEnabled();
+      await locator.scrollIntoViewIfNeeded().catch(() => {});
+      await locator.click({ timeout });
     }
   }
 

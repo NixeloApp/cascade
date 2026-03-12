@@ -868,33 +868,34 @@ body {
   background:
     radial-gradient(
       circle at top left,
-      color-mix(in oklab, var(--color-brand-subtle) 50%, transparent),
-      transparent 22%
+      color-mix(in oklab, var(--color-brand-subtle) 68%, transparent),
+      transparent 24%
     ),
     radial-gradient(
-      circle at top center,
-      color-mix(in oklab, var(--color-ui-bg-elevated) 94%, transparent),
-      transparent 34%
+      circle at top right,
+      color-mix(in oklab, var(--color-landing-accent) 8%, transparent),
+      transparent 30%
     ),
     linear-gradient(
       180deg,
-      color-mix(in oklab, var(--color-brand-subtle) 42%, var(--color-ui-bg-secondary)) 0%,
-      color-mix(in oklab, var(--color-ui-bg-elevated) 76%, var(--color-ui-bg)) 160px,
-      var(--color-ui-bg) 340px
+      color-mix(in oklab, var(--color-brand-subtle) 48%, var(--color-ui-bg-secondary)) 0%,
+      color-mix(in oklab, var(--color-ui-bg-elevated) 86%, var(--color-ui-bg-secondary)) 180px,
+      color-mix(in oklab, var(--color-ui-bg) 96%, var(--color-ui-bg-secondary)) 100%
     );
 }
 
 /* Auth page gradient (theme-aware, decorative background) */
 .bg-auth-gradient {
   background-image:
-    radial-gradient(circle at top left, color-mix(in oklab, var(--color-status-info) 10%, transparent), transparent 34%),
-    radial-gradient(circle at top right, color-mix(in oklab, var(--color-landing-accent-teal) 8%, transparent), transparent 38%),
-    radial-gradient(circle at bottom center, color-mix(in oklab, var(--color-status-success) 6%, transparent), transparent 28%),
+    radial-gradient(circle at top left, color-mix(in oklab, var(--color-brand) 16%, transparent), transparent 32%),
+    radial-gradient(circle at top right, color-mix(in oklab, var(--color-landing-accent) 14%, transparent), transparent 34%),
+    radial-gradient(circle at 50% 18%, color-mix(in oklab, var(--color-landing-accent-teal) 12%, transparent), transparent 42%),
+    radial-gradient(circle at bottom center, color-mix(in oklab, var(--color-brand-subtle) 34%, transparent), transparent 32%),
     linear-gradient(
-      145deg,
-      color-mix(in oklab, var(--color-ui-bg) 95%, var(--color-ui-bg-elevated)) 0%,
-      color-mix(in oklab, var(--color-brand-subtle) 6%, var(--color-ui-bg-elevated)) 52%,
-      color-mix(in oklab, var(--color-ui-bg-elevated) 96%, white) 100%
+      160deg,
+      color-mix(in oklab, var(--color-ui-bg-hero) 88%, white) 0%,
+      color-mix(in oklab, var(--color-brand-subtle) 16%, var(--color-ui-bg-elevated)) 54%,
+      color-mix(in oklab, var(--color-ui-bg-elevated) 92%, var(--color-ui-bg-soft)) 100%
     );
 }
 
@@ -903,24 +904,29 @@ body {
   background:
     radial-gradient(
       circle at top left,
-      color-mix(in oklab, var(--color-status-info) 7%, transparent),
+      color-mix(in oklab, var(--color-brand) 16%, transparent),
       transparent 24%
     ),
     radial-gradient(
-      circle at top center,
-      color-mix(in oklab, var(--color-brand-subtle) 18%, transparent),
-      transparent 30%
+      circle at top right,
+      color-mix(in oklab, var(--color-landing-accent-teal) 14%, transparent),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 50% 18%,
+      color-mix(in oklab, var(--color-brand-subtle) 42%, transparent),
+      transparent 36%
     ),
     radial-gradient(
       circle at bottom right,
-      color-mix(in oklab, var(--color-status-success) 6%, transparent),
-      transparent 22%
+      color-mix(in oklab, var(--color-landing-accent) 10%, transparent),
+      transparent 26%
     ),
     linear-gradient(
       180deg,
-      color-mix(in oklab, var(--color-ui-bg-hero) 92%, white) 0%,
-      color-mix(in oklab, var(--color-ui-bg) 94%, var(--color-ui-bg-secondary)) 360px,
-      var(--color-ui-bg) 100%
+      color-mix(in oklab, var(--color-ui-bg-hero) 82%, white) 0%,
+      color-mix(in oklab, var(--color-brand-subtle) 16%, var(--color-ui-bg-elevated)) 220px,
+      color-mix(in oklab, var(--color-ui-bg) 90%, var(--color-ui-bg-secondary)) 100%
     );
 }
 
@@ -951,9 +957,10 @@ body {
 /* Hero section background effects (radial glow + grid pattern) */
 .hero-radial-bg {
   background: radial-gradient(
-    ellipse 80% 50% at 50% 0%,
-    color-mix(in oklab, var(--color-brand) 14%, transparent),
-    transparent
+    ellipse 78% 55% at 50% 0%,
+    color-mix(in oklab, var(--color-landing-accent) 18%, transparent),
+    color-mix(in oklab, var(--color-landing-accent-teal) 10%, transparent) 42%,
+    transparent 74%
   );
 }
 

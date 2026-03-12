@@ -1,6 +1,8 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
+const FALLBACK_BASE_URL = process.env.BASE_URL || "http://localhost:5555";
+
 /**
  * Base Page Object with common functionality
  * All page objects should extend this class
@@ -33,25 +35,31 @@ export abstract class BasePage {
   async waitForLoad() {
     // Wait for scripts to load and execute
     await this.page.waitForLoadState("load");
+    await this.page.locator("body.app-hydrated").waitFor({ state: "attached", timeout: 10000 });
+    await expect
+      .poll(
+        async () => {
+          const mainVisible = await this.page
+            .getByRole("main")
+            .last()
+            .isVisible()
+            .catch(() => false);
+          if (mainVisible) {
+            return true;
+          }
 
-    // Wait for React hydration by checking for __reactFiber on interactive elements
-    // This is more reliable than checking body since these elements are interactive
-    await this.page.waitForFunction(() => {
-      const elements = document.querySelectorAll("a, button");
-      if (elements.length === 0) return true; // No interactive elements, assume ready
-
-      // Check if at least one element has React fiber attached
-      for (const element of elements) {
-        const keys = Object.keys(element);
-        if (keys.some((k) => k.startsWith("__reactFiber") || k.startsWith("__reactProps"))) {
-          return true;
-        }
-      }
-      return false;
-    }, {});
-
-    // React fiber check confirms hydration is complete
-    // Event handlers are attached during hydration, no additional wait needed
+          const visibleInteractiveCount = await this.page
+            .locator("a:visible, button:visible, input:visible, textarea:visible")
+            .count()
+            .catch(() => 0);
+          return visibleInteractiveCount > 0;
+        },
+        {
+          timeout: 10000,
+          intervals: [200, 500, 1000],
+        },
+      )
+      .toBe(true);
   }
 
   /**
@@ -74,21 +82,28 @@ export abstract class BasePage {
   }
 
   /**
-   * Wait for navigation to complete
-   */
-  async waitForNavigation(url?: string | RegExp) {
-    if (url) {
-      await this.page.waitForURL(url);
-    } else {
-      await this.page.waitForFunction(() => document.readyState === "complete");
-    }
-  }
-
-  /**
    * Take a screenshot with a descriptive name
    */
   async screenshot(name: string) {
     await this.page.screenshot({ path: `test-results/screenshots/${name}.png` });
+  }
+
+  protected resolveUrl(target: string): string {
+    if (/^https?:\/\//.test(target)) {
+      return target;
+    }
+
+    const currentUrl = this.page.url();
+    const baseUrl =
+      currentUrl.startsWith("http://") || currentUrl.startsWith("https://")
+        ? currentUrl
+        : FALLBACK_BASE_URL;
+
+    return new URL(target, baseUrl).toString();
+  }
+
+  protected async gotoPath(target: string, options?: Parameters<Page["goto"]>[1]) {
+    await this.page.goto(this.resolveUrl(target), options);
   }
 
   /**

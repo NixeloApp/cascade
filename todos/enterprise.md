@@ -3,6 +3,8 @@
 > **Priority:** P4 (Post-Launch)
 > **Effort:** Large
 > **Status:** Blocked (external dependencies)
+> **Last Reviewed:** 2026-03-12
+> **Review Outcome:** blocked state unchanged; remaining work still depends on external billing, IdP, and infrastructure decisions.
 
 ---
 

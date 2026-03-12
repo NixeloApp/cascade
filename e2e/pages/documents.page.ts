@@ -177,20 +177,46 @@ export class DocumentsPage extends BasePage {
   }
 
   async expectEditorVisible() {
-    // Wait for full document readiness before checking editor hydration state.
-    await this.page.waitForFunction(() => document.readyState === "complete");
+    await expect
+      .poll(() => this.getEditorReadyState(), {
+        timeout: 10000,
+        intervals: [200, 500, 1000],
+      })
+      .not.toBe("pending");
 
-    // Check for React error boundary before interacting with the editor shell.
     await this.throwIfAppErrorVisible();
 
-    // Handle the one-time empty-state initializer used for fresh documents.
-    const initButton = this.page.getByRole("button", { name: /initialize.*document/i });
-    if (await initButton.isVisible().catch(() => false)) {
+    if ((await this.getEditorReadyState()) === "initializer") {
+      const initButton = this.page.getByRole("button", { name: /initialize.*document/i });
       await initButton.click();
+
+      await expect
+        .poll(() => this.getEditorReadyState(), {
+          timeout: 10000,
+          intervals: [200, 500, 1000],
+        })
+        .not.toBe("initializer");
     }
 
     await this.throwIfAppErrorVisible();
     await expect(this.editor).toBeVisible();
+  }
+
+  private async getEditorReadyState(): Promise<"editor" | "initializer" | "error" | "pending"> {
+    if (await this.appErrorHeading.isVisible().catch(() => false)) {
+      return "error";
+    }
+
+    const initButton = this.page.getByRole("button", { name: /initialize.*document/i });
+    if (await initButton.isVisible().catch(() => false)) {
+      return "initializer";
+    }
+
+    if (await this.editor.isVisible().catch(() => false)) {
+      return "editor";
+    }
+
+    return "pending";
   }
 
   private async throwIfAppErrorVisible() {

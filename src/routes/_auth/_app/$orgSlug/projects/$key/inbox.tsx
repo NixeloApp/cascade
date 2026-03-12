@@ -1,8 +1,7 @@
-import { api } from "@convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { InboxList } from "@/components/InboxList";
 import { PageContent, PageError } from "@/components/layout";
-import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useProjectByKey } from "@/hooks/useProjectByKey";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key/inbox")({
   component: InboxPage,
@@ -10,7 +9,7 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key/inbox")
 
 function InboxPage() {
   const { key } = Route.useParams();
-  const project = useAuthenticatedQuery(api.projects.getByKey, { key });
+  const project = useProjectByKey(key);
 
   if (project === undefined) {
     return <PageContent isLoading>{null}</PageContent>;

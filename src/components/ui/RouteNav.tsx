@@ -7,7 +7,7 @@ const routeNavVariants = cva("flex max-w-full items-center overflow-x-auto scrol
   variants: {
     variant: {
       underline: "gap-6 border-b border-ui-border/70",
-      pill: "gap-1 rounded-2xl border border-ui-border-secondary/70 bg-ui-bg-secondary/90 p-1 shadow-soft",
+      pill: "gap-0.5 rounded-xl border border-ui-border-secondary/75 bg-ui-bg-elevated/94 p-0.5 shadow-soft sm:gap-1 sm:rounded-2xl sm:p-1 sm:shadow-card",
     },
     size: {
       sm: "",
@@ -48,7 +48,7 @@ const routeNavItemVariants = cva(
       {
         variant: "pill",
         size: "sm",
-        className: "rounded-full px-1.5 py-0.5 text-xs",
+        className: "rounded-lg px-2 py-0.5 text-xs sm:rounded-xl sm:py-1",
       },
       {
         variant: "pill",

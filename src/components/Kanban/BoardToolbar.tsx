@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { IconButton } from "@/components/ui/IconButton";
@@ -28,6 +29,8 @@ interface BoardToolbarProps {
   displayOptions?: CardDisplayOptions;
   /** Callback when display options change */
   onDisplayOptionsChange?: (value: CardDisplayOptions) => void;
+  /** Optional mobile-only controls injected by the route shell */
+  mobileActions?: ReactNode;
 }
 
 /**
@@ -47,13 +50,18 @@ export function BoardToolbar({
   onSwimlanGroupByChange,
   displayOptions,
   onDisplayOptionsChange,
+  mobileActions,
 }: BoardToolbarProps) {
+  if (!showControls) {
+    return null;
+  }
+
   return (
     <Flex
       align="center"
       justify="between"
       gap="xs"
-      className="relative z-10 mx-2 h-0 overflow-visible px-0 py-0 sm:mx-6 sm:mt-4 sm:h-auto sm:gap-sm sm:rounded-2xl sm:border sm:border-ui-border/70 sm:bg-ui-bg-elevated sm:px-5 sm:pb-3 sm:pt-4 sm:shadow-soft"
+      className="pointer-events-auto absolute right-2 top-2 z-20 mb-0 w-fit max-w-full rounded-full border border-ui-border/75 bg-ui-bg-elevated/96 px-1.5 py-1 shadow-soft backdrop-blur-sm sm:static sm:mx-6 sm:mt-4 sm:mb-0 sm:max-w-none sm:gap-sm sm:rounded-2xl sm:border sm:border-ui-border/70 sm:bg-ui-bg-elevated sm:px-5 sm:pb-3 sm:pt-4 sm:shadow-soft sm:backdrop-blur-0"
     >
       <div className="hidden sm:block">
         <Typography variant="h2" className="text-xs font-semibold tracking-tight sm:text-lg">
@@ -69,8 +77,12 @@ export function BoardToolbar({
           align="center"
           justify="end"
           gap="xs"
-          className="absolute right-0 top-1 shrink-0 sm:static sm:w-auto sm:justify-start sm:gap-2"
+          className="w-auto shrink-0 justify-end sm:w-auto sm:justify-start sm:gap-2"
         >
+          <Flex align="center" gap="xs" className="min-w-0 sm:hidden">
+            {mobileActions}
+          </Flex>
+
           {/* Undo/Redo buttons */}
           <Flex align="center" gap="xs" className="hidden sm:flex mr-2 sm:mr-4">
             <Tooltip content="Undo (Ctrl+Z)">
@@ -139,22 +151,28 @@ export function BoardToolbar({
           )}
 
           {/* Selection mode toggle */}
+          <IconButton
+            variant={selectionMode ? "brand" : "solid"}
+            size="xs"
+            onClick={onToggleSelectionMode}
+            aria-label={selectionMode ? "Exit selection mode" : "Enable selection mode"}
+            className="sm:hidden"
+          >
+            <CheckSquare className="h-3.5 w-3.5" />
+          </IconButton>
           <Button
             variant={selectionMode ? "primary" : "outline"}
             size="sm"
             onClick={onToggleSelectionMode}
             aria-label={selectionMode ? "Exit selection mode" : "Enable selection mode"}
             className={cn(
-              "h-5 w-5 rounded-full px-0 text-xs shadow-none sm:h-9 sm:w-auto sm:rounded-xl sm:px-3 sm:text-sm",
+              "hidden sm:inline-flex",
               selectionMode
-                ? "sm:shadow-soft"
-                : "border-ui-border/35 bg-ui-bg/78 text-ui-text-tertiary opacity-80 sm:border-ui-border sm:bg-ui-bg-elevated sm:text-ui-text sm:opacity-100",
+                ? "shadow-soft"
+                : "border-ui-border sm:bg-ui-bg-elevated sm:text-ui-text",
             )}
           >
-            <CheckSquare className="h-3.5 w-3.5 sm:hidden" />
-            <span className="hidden sm:inline">
-              {selectionMode ? "Exit Selection" : "Select Multiple"}
-            </span>
+            <span>{selectionMode ? "Exit Selection" : "Select Multiple"}</span>
           </Button>
         </Flex>
       )}

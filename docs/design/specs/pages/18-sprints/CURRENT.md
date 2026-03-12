@@ -1,8 +1,8 @@
 # Sprints Page - Current State
 
 > **Route**: `/:slug/projects/:key/sprints`
-> **Status**: 🟡 FUNCTIONAL but BASIC
-> **Last Updated**: 2026-02-13
+> **Status**: 🟡 Functional baseline, now tracked by the screenshot harness
+> **Last Updated**: 2026-03-12
 
 ---
 
@@ -13,6 +13,14 @@
 | Desktop | Dark | ![](screenshots/desktop-dark.png) |
 | Desktop | Light | ![](screenshots/desktop-light.png) |
 | Mobile | Light | ![](screenshots/mobile-light.png) |
+
+---
+
+## Current UI
+
+- The sprints route now participates in the promoted screenshot baseline instead of only landing in `e2e/screenshots`.
+- Desktop and mobile captures are both valid and show the real sprint-management state rather than a partial shell.
+- The page still reads as a straightforward management surface, not a polished planning workspace.
 
 ---
 
@@ -128,15 +136,12 @@ interface Sprint {
 
 ## Summary
 
-The sprints page is **functional** with basic sprint lifecycle:
+The sprints page is now part of the trustworthy screenshot baseline. Functionally it still covers
+the basic lifecycle only:
 - Create → Start → Complete
 
-However, it's missing features expected in a mature sprint system:
-- Edit sprint details
-- Issue-based progress (not time-based)
-- Sprint planning (drag issues to sprints)
-- Sprint velocity/burndown
-- Completed sprints history
+The remaining product gap is not harness-related anymore. It is the feature depth of the sprint
+surface itself: editing, issue-based progress, planning, history, and richer analytics.
 
 Current implementation is a good MVP. Main UX issues:
 - Time-based progress bar is misleading (shows time elapsed, not work done)

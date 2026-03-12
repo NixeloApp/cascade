@@ -3,7 +3,8 @@
 > **Priority:** P4 (Post-Launch)
 > **Effort:** Medium-Large
 > **Status:** Blocked (external Outlook integration setup required)
-> **Last Audited:** 2026-03-02
+> **Last Audited:** 2026-03-12
+> **Review Outcome:** blocked state unchanged; Outlook setup remains the only material unblock for this lane.
 
 ---
 

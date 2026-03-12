@@ -1,9 +1,10 @@
 # Design Cohesion Overhaul
 
 > **Priority:** P0
-> **Status:** Active
-> **Last Updated:** 2026-03-11
+> **Status:** Complete
+> **Last Updated:** 2026-03-12
 > **Owner:** visual-system, page-shell, and doc-quality cleanup
+> **Follow-Through:** remaining screenshot-driven visual polish now lives in `todos/e2e-screenshot-quality.md`
 
 ## Why This Exists
 
@@ -18,7 +19,7 @@ remaining failures are structural:
 4. search, commands, shortcuts, and advanced search do not behave like one modal family
 5. our validator story mostly catches raw Tailwind usage, not design-system drift or composition slop
 
-This doc is the execution plan for fixing that.
+This doc captured the execution plan for fixing that.
 
 ## Progress Since Start
 
@@ -31,7 +32,7 @@ Completed:
   - importing exported CVA helpers outside shared ui primitives
   - using low-level `ToggleGroup` in app code outside approved special cases
 
-What this changes:
+What this changed:
 - we should stop doing ad hoc “tab cleanup” passes
 - remaining work should migrate real surfaces onto owned shells and tighten docs/review quality around them
 
@@ -42,7 +43,7 @@ What this changes:
 - `CURRENT.md` docs must be useful for critique, not just status notes.
 - If a surface cannot be explained as a reusable recipe, it is probably slop.
 
-## Immediate Tracks
+## Completed Tracks
 
 ### 1. Restore Spec Docs As Review Tools
 

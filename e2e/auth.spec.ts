@@ -1,9 +1,7 @@
 import { TEST_USERS } from "./config";
 import { expect, test } from "./fixtures";
-import { trySignInUser } from "./utils/auth-helpers";
 import { getTestEmailAddress } from "./utils/helpers";
 import { waitForMockOTP } from "./utils/otp-helpers";
-import { ROUTES } from "./utils/routes";
 import { testUserService } from "./utils/test-user-service";
 
 /**
@@ -161,10 +159,7 @@ test.describe("Integration", () => {
     await authPage.expectAuthenticatedApp({ recoverFromLanding: true });
   });
 
-  test("can sign in with existing user and lands on dashboard", async ({
-    authPage,
-    page,
-  }, testInfo) => {
+  test("can sign in with existing user and lands on dashboard", async ({ authPage }, testInfo) => {
     // Use the pre-existing teamLead test user (with worker-specific email)
     const workerSuffix = `w${testInfo.parallelIndex}`;
     const email = TEST_USERS.teamLead.email.replace("@", `-${workerSuffix}@`);
@@ -172,47 +167,14 @@ test.describe("Integration", () => {
     await authPage.gotoSignIn();
 
     // Sign in with existing user
-    await authPage.signIn(email, password);
-
-    // If we are still on landing page or signin page after a short wait, force navigation to app.
-    const isStuck = () => {
-      const url = page.url();
-      return url.endsWith("/") || url.endsWith("localhost:5555") || url.includes("/signin");
-    };
-
-    if (isStuck()) {
-      await expect
-        .poll(() => !isStuck(), {
-          timeout: 5000,
-          message: "Expected auth redirect to leave landing/signin pages",
-        })
-        .toBe(true)
-        .catch(async () => {
-          console.log(`[Test] Stuck on ${page.url()}, forcing navigation to app...`);
-          await page.goto(ROUTES.app.build());
-        });
-    }
-
-    // Retry UI sign-in once if first attempt does not reach authenticated shell.
-    const shellVisible = await authPage
-      .expectAuthenticatedApp()
-      .then(() => true)
-      .catch(() => false);
-
-    if (!shellVisible) {
-      console.log(
-        "[Test] First UI sign-in attempt did not reach app shell, trying API-assisted recovery...",
-      );
-      // Don't retry UI sign-in - user might already be authenticated but stuck on wrong page
-      // Use API helper which navigates to /app gateway and handles auth state properly
-      await trySignInUser(page, process.env.BASE_URL || "http://localhost:5555", {
+    await authPage.signInAndReachAuthenticatedApp(email, password, {
+      baseURL: process.env.BASE_URL || "http://localhost:5555",
+      fallbackUser: {
         ...TEST_USERS.teamLead,
         email,
         password,
-      });
-    }
-
-    await authPage.expectAuthenticatedApp({ recoverFromLanding: true });
+      },
+    });
     console.log("[Test] Successfully signed in and landed on dashboard");
   });
 

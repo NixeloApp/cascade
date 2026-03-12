@@ -35,6 +35,11 @@ interface SetupResult {
   orgSlug?: string;
 }
 
+interface BackendProbeResult {
+  error?: string;
+  status?: number;
+}
+
 /**
  * Extract organization slug from URL (e.g., /e2e-dashboard-xxxxx/dashboard -> e2e-dashboard-xxxxx)
  */
@@ -148,32 +153,66 @@ async function waitForBackendReady(
 
   const siteUrl = CONVEX_SITE_URL;
   console.log(`⏳ Waiting for Convex Backend (checking ${clientUrl} OR ${siteUrl}) ...`);
+  let lastSiteResult: BackendProbeResult = { error: "not checked yet" };
+  let lastClientResult: BackendProbeResult = { error: "not checked yet" };
 
-  for (let i = 0; i < maxRetries; i++) {
+  const PROBE_TIMEOUT_MS = Math.max(intervalMs, 2000);
+
+  const probeBackend = async (url: string): Promise<BackendProbeResult> => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
+
     try {
-      // Try Site URL first (HTTP Actions)
-      const resSite = await fetch(siteUrl).catch(() => null);
-      if (resSite && resSite.status !== undefined) {
-        console.log(`✓ Convex Backend (Site) is ready at ${siteUrl} (status: ${resSite.status})`);
-        return true;
+      const response = await fetch(url, { signal: controller.signal });
+      return { status: response.status };
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return { error: `Request timed out after ${PROBE_TIMEOUT_MS}ms` };
       }
+      const message = error instanceof Error ? error.message : String(error);
+      return { error: message };
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  };
 
-      // Fallback: Try Client URL (WebSocket/Dashboard) - it serves HTTP too
-      const resClient = await fetch(clientUrl).catch(() => null);
-      if (resClient && resClient.status !== undefined) {
-        console.log(
-          `✓ Convex Backend (Client) is ready at ${clientUrl} (status: ${resClient.status})`,
-        );
-        return true;
-      }
-    } catch {
-      // Ignore errors and retry
+  const formatProbeResult = (label: string, url: string, result: BackendProbeResult): string => {
+    if (typeof result.status === "number") {
+      return `${label} ${url} responded with status ${result.status}`;
     }
 
-    if (i % 5 === 0) console.log(`  ...waiting (${i}/${maxRetries})`);
+    return `${label} ${url} failed: ${result.error ?? "unknown error"}`;
+  };
+
+  for (let i = 0; i < maxRetries; i++) {
+    // Try Site URL first (HTTP Actions)
+    lastSiteResult = await probeBackend(siteUrl);
+    if (typeof lastSiteResult.status === "number") {
+      console.log(
+        `✓ Convex Backend (Site) is ready at ${siteUrl} (status: ${lastSiteResult.status})`,
+      );
+      return true;
+    }
+
+    // Fallback: Try Client URL (WebSocket/Dashboard) - it serves HTTP too
+    lastClientResult = await probeBackend(clientUrl);
+    if (typeof lastClientResult.status === "number") {
+      console.log(
+        `✓ Convex Backend (Client) is ready at ${clientUrl} (status: ${lastClientResult.status})`,
+      );
+      return true;
+    }
+
+    if (i % 5 === 0) {
+      console.log(`  ...waiting (${i}/${maxRetries})`);
+      console.log(`    ${formatProbeResult("Site", siteUrl, lastSiteResult)}`);
+      console.log(`    ${formatProbeResult("Client", clientUrl, lastClientResult)}`);
+    }
     await new Promise((resolve) => setTimeout(resolve, intervalMs));
   }
   console.error("❌ Convex Backend failed to start within timeout");
+  console.error(`   ${formatProbeResult("Site", siteUrl, lastSiteResult)}`);
+  console.error(`   ${formatProbeResult("Client", clientUrl, lastClientResult)}`);
   return false;
 }
 

@@ -3,6 +3,8 @@
 > **Priority:** P2
 > **Effort:** Medium
 > **Status:** Blocked (External Slack Dashboard Actions Pending)
+> **Last Reviewed:** 2026-03-12
+> **Review Outcome:** comment and core Slack implementation remain complete in-repo; the remaining blocker is still external Slack dashboard/app configuration.
 
 ---
 

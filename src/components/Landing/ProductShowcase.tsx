@@ -28,10 +28,14 @@ const boardColumns = [
 
 const showcaseVariants = {
   glow: cva(
-    "pointer-events-none absolute inset-x-16 top-8 h-52 rounded-full bg-landing-accent/10 blur-glow",
+    "pointer-events-none absolute inset-x-16 top-8 h-52 rounded-full bg-landing-accent/14 blur-glow",
   ),
-  frameHeader: cva("border-b border-ui-border/60 bg-ui-bg-soft/82 px-4 py-3 sm:px-5"),
-  frameBody: cva("bg-linear-to-b from-ui-bg-soft/78 to-ui-bg px-4 py-5 sm:px-6 sm:py-6"),
+  frameHeader: cva(
+    "border-b border-ui-border/60 bg-linear-to-r from-ui-bg-soft/88 via-ui-bg-elevated/92 to-ui-bg-soft/84 px-4 py-3 sm:px-5",
+  ),
+  frameBody: cva(
+    "bg-linear-to-b from-ui-bg-soft/82 via-ui-bg-elevated/96 to-ui-bg px-4 py-5 sm:px-6 sm:py-6",
+  ),
   railBadges: cva("hidden sm:flex"),
   bulletIcon: cva("mt-0.5 shrink-0 rounded-full bg-status-success/15 p-1 text-status-success-text"),
   sparkBadge: cva("shrink-0 rounded-full bg-brand-subtle p-2 text-brand"),

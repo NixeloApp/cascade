@@ -252,7 +252,7 @@ export class SettingsPage extends BasePage {
     const currentUrl = new URL(this.page.url());
     currentUrl.searchParams.set("tab", tabParam);
     await this.page.goto(currentUrl.toString());
-    await this.page.waitForFunction(() => document.readyState === "complete");
+    await expect(this.page).toHaveURL(currentUrl.toString());
 
     // For admin tab, wait for the tab to appear (requires isOrganizationAdmin query)
     const waitTimeout = tab === "admin" ? 60000 : 30000;
@@ -616,11 +616,14 @@ export class SettingsPage extends BasePage {
 
     await this.setTimeApprovalDraftState(enabled);
 
-    if (!(await this.trySaveOrganizationSettings())) {
-      await this.setTimeApprovalDraftState(enabled);
-      await this.expectTimeApprovalDraftState(enabled);
-      await this.saveOrganizationSettings();
+    if (await this.saveOrganizationSettingsAttempt()) {
+      await this.expectTimeApprovalEnabled(enabled);
+      return;
     }
+
+    await this.setTimeApprovalDraftState(enabled);
+    await this.expectTimeApprovalDraftState(enabled);
+    await this.saveOrganizationSettings();
     await this.expectTimeApprovalEnabled(enabled);
   }
 
@@ -661,7 +664,7 @@ export class SettingsPage extends BasePage {
     );
   }
 
-  async trySaveOrganizationSettings() {
+  private async saveOrganizationSettingsAttempt() {
     await this.saveSettingsButton.waitFor({ state: "visible" });
 
     if (!(await this.waitForSettingsSaveReady())) {
@@ -669,7 +672,9 @@ export class SettingsPage extends BasePage {
     }
 
     await this.waitForSettingsSuccessToastReset();
-    await this.saveSettingsButton.evaluate((button: HTMLButtonElement) => button.click());
+    if (!(await this.tryClickSaveSettingsButton())) {
+      return false;
+    }
 
     try {
       await this.waitForOrganizationSettingsSaved();
@@ -682,7 +687,9 @@ export class SettingsPage extends BasePage {
   async saveOrganizationSettings() {
     await this.expectSettingsSaveReady();
     await this.waitForSettingsSuccessToastReset();
-    await this.saveSettingsButton.evaluate((button: HTMLButtonElement) => button.click());
+    if (!(await this.tryClickSaveSettingsButton())) {
+      throw new Error("Save Changes button became unavailable before organization settings submit");
+    }
     await this.waitForOrganizationSettingsSaved();
   }
 
@@ -696,6 +703,26 @@ export class SettingsPage extends BasePage {
       .first()
       .waitFor({ state: "hidden", timeout: 1000 })
       .catch(() => {});
+  }
+
+  private async tryClickSaveSettingsButton() {
+    await this.saveSettingsButton.waitFor({ state: "visible" });
+
+    try {
+      await this.saveSettingsButton.click({ timeout: 2000 });
+      return true;
+    } catch {
+      await this.saveSettingsButton.waitFor({ state: "visible" });
+      if (await this.saveSettingsButton.isDisabled().catch(() => true)) {
+        return false;
+      }
+      try {
+        await this.saveSettingsButton.click({ timeout: 2000 });
+        return true;
+      } catch {
+        return false;
+      }
+    }
   }
 
   async expectOrganizationName(name: string) {

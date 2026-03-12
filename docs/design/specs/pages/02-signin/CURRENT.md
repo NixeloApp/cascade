@@ -1,8 +1,8 @@
 # Sign In Page - Current State
 
 > **Route**: `/signin`
-> **Status**: 🟡 Cleaner than before, but still not documented sharply enough
-> **Last Updated**: 2026-03-11
+> **Status**: 🟡 Cleaner and visually coherent, with smaller remaining weighting issues
+> **Last Updated**: 2026-03-12
 
 ---
 
@@ -69,6 +69,7 @@
 | 2 | Shared auth shell is simpler than the older version | Improved |
 | 3 | Sign-in flow now emphasizes the real choices instead of ornamental chrome | Improved |
 | 4 | Light and dark now share the same structural layout | Fixed |
+| 5 | Light mode now sits in the same palette family as landing instead of fighting it | Fixed |
 
 ---
 
@@ -76,11 +77,9 @@
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | Light mode still feels visually wrong, not just slightly flat: the marketing rail chroma and atmospherics do not belong to the same system as the light form canvas | shared auth shell | HIGH |
-| 2 | Desktop light mode still gives the left rail slightly too much attention versus the actual sign-in task | layout weighting | MEDIUM |
-| 3 | The auth panel is calmer, but it still carries more shell than the interaction earns | auth shell / panel recipe | MEDIUM |
-| 4 | The CURRENT doc had lost its structural diagnostics; that made the page easier to misread in reviews | design docs | MEDIUM |
-| 5 | CTA weighting between Google and collapsed email state could still be tighter | `SignInForm` | LOW |
+| 1 | Desktop light mode still gives the left rail slightly too much attention versus the actual sign-in task | layout weighting | MEDIUM |
+| 2 | The auth panel is calmer, but it still carries more shell than the interaction earns | auth shell / panel recipe | MEDIUM |
+| 3 | CTA weighting between Google and collapsed email state could still be tighter | `SignInForm` | LOW |
 
 ---
 
@@ -88,13 +87,12 @@
 
 - Keep this doc diagram-first. The auth pages are simple enough that the structural mistakes should
   be obvious in one screen.
-- The next pass should focus on light-mode balance, not re-adding decorative complexity.
+- The next pass should focus on task weighting, not light-mode rescue.
 - If the left rail stays, it needs to support the form, not compete with it.
 
 ---
 
 ## Summary
 
-The auth shell is materially better than the earlier version, but the light-theme relationship
-between the marketing rail and the task panel is still not resolved. The doc is now back to being
-useful for review instead of just describing what exists.
+The auth shell is now visually coherent in light mode. The remaining issue is simpler: the left
+rail still needs slightly less emphasis so the sign-in task wins immediately.

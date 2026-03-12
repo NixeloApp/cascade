@@ -99,7 +99,10 @@ export function AccountInfo({
     {
       label: "User ID:",
       value: (
-        <Typography variant="mono" className="max-w-40 break-all text-right">
+        <Typography
+          variant="mono"
+          className="max-w-full break-all text-left text-xs sm:max-w-40 sm:text-right"
+        >
           {user._id}
         </Typography>
       ),
@@ -125,7 +128,14 @@ export function AccountInfo({
       <Typography variant="h5">Account Information</Typography>
       <Stack gap="sm">
         {rows.map((row) => (
-          <Flex key={row.label} justify="between" gap="sm">
+          <Flex
+            key={row.label}
+            direction="column"
+            align="start"
+            justify="between"
+            gap="xs"
+            className="sm:flex-row sm:items-center sm:gap-sm"
+          >
             <Typography variant="caption">{row.label}</Typography>
             {row.value}
           </Flex>
@@ -328,13 +338,13 @@ function LoadedProfileContent({
     <Card
       variant="outline"
       padding="none"
-      className="overflow-hidden border-ui-border-secondary/90 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-secondary/72 shadow-elevated"
+      className="overflow-hidden border-ui-border-secondary/90 bg-linear-to-b from-ui-bg-elevated/98 via-ui-bg-elevated/96 to-ui-bg-soft/80 shadow-card"
     >
       {isOwnProfile && (
         <div className="relative group">
           <div
             className={cn(
-              "h-10 w-full border-b border-ui-border-secondary/60 bg-linear-to-r from-brand/18 via-brand-subtle/80 to-accent/14 sm:h-14",
+              "h-8 w-full border-b border-ui-border-secondary/60 bg-linear-to-r from-brand/18 via-brand-subtle/80 to-accent/14 sm:h-12",
               coverImageUrl && "bg-none",
             )}
           >
@@ -360,13 +370,13 @@ function LoadedProfileContent({
             cols={1}
             colsLg={showAccountInfo ? 5 : 1}
             gap="md"
-            className={cn(isOwnProfile && "-mt-3 sm:-mt-5")}
+            className={cn(isOwnProfile && "-mt-2 sm:-mt-4")}
           >
             <Card
-              variant="default"
+              variant="outline"
               padding="none"
               className={cn(
-                "border-ui-border-secondary/80 bg-ui-bg-elevated p-4 shadow-card sm:p-6",
+                "border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-elevated/98 via-ui-bg-elevated/96 to-ui-bg-soft/74 p-4 shadow-soft sm:p-6",
                 showAccountInfo && "lg:col-span-3",
               )}
             >
@@ -415,8 +425,8 @@ function LoadedProfileContent({
 
           <Card
             padding="none"
-            variant="default"
-            className="border-ui-border-secondary/80 bg-linear-to-br from-ui-bg via-ui-bg-secondary/82 to-ui-bg-soft/70 p-3.5 shadow-soft sm:p-4"
+            variant="outline"
+            className="border-ui-border-secondary/80 bg-linear-to-br from-ui-bg-elevated/98 via-ui-bg-elevated/94 to-ui-bg-soft/72 p-3.5 shadow-soft sm:p-4"
           >
             <Stack gap="sm">
               <Typography variant="h5">Recent Activity</Typography>

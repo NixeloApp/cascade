@@ -45,6 +45,7 @@ export function useCalendarInitialScroll(
 
     const frame = window.requestAnimationFrame(() => {
       scrollElement.scrollTo({
+        left: scrollElement.scrollLeft,
         top: focusHour * hourHeight,
         behavior: "auto",
       });

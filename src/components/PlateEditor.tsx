@@ -149,7 +149,7 @@ function EditorCanvas({
           "prose prose-sm max-w-none text-ui-text leading-relaxed focus-visible:outline-none",
           isEmptyEditor
             ? "min-h-56 rounded-2xl border border-dashed border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-soft/58 via-ui-bg-soft/38 to-ui-bg px-5 py-5"
-            : "min-h-80",
+            : "min-h-80 rounded-3xl border border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/76 px-6 py-6 shadow-soft",
         )}
         data-testid={TEST_IDS.EDITOR.PLATE}
         placeholder="Start with a summary or press / for blocks"

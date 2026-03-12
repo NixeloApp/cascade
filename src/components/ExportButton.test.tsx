@@ -25,7 +25,8 @@ describe("ExportButton", () => {
   it("should render import/export button", () => {
     render(<ExportButton projectId={mockProjectId} />);
 
-    expect(screen.getByRole("button", { name: /Import \/ Export/i })).toBeInTheDocument();
+    // Both mobile and desktop buttons render - check that at least one exists
+    expect(screen.getAllByRole("button", { name: /Import \/ Export/i }).length).toBeGreaterThan(0);
   });
 
   it("should not show modal initially", () => {
@@ -38,7 +39,8 @@ describe("ExportButton", () => {
     const user = userEvent.setup();
     render(<ExportButton projectId={mockProjectId} />);
 
-    const button = screen.getByRole("button", { name: /Import \/ Export/i });
+    // Use first button (both mobile and desktop render the same functionality)
+    const button = screen.getAllByRole("button", { name: /Import \/ Export/i })[0];
     await user.click(button);
 
     expect(screen.getByTestId("import-export-modal")).toBeInTheDocument();
@@ -48,8 +50,8 @@ describe("ExportButton", () => {
     const user = userEvent.setup();
     render(<ExportButton projectId={mockProjectId} />);
 
-    // Open modal
-    const button = screen.getByRole("button", { name: /Import \/ Export/i });
+    // Open modal - use first button (both mobile and desktop render the same functionality)
+    const button = screen.getAllByRole("button", { name: /Import \/ Export/i })[0];
     await user.click(button);
 
     expect(screen.getByTestId("import-export-modal")).toBeInTheDocument();
@@ -65,7 +67,7 @@ describe("ExportButton", () => {
     const user = userEvent.setup();
     render(<ExportButton projectId={mockProjectId} />);
 
-    const button = screen.getByRole("button", { name: /Import \/ Export/i });
+    const button = screen.getAllByRole("button", { name: /Import \/ Export/i })[0];
     await user.click(button);
 
     expect(screen.getByTestId("modal-project-id")).toHaveTextContent(mockProjectId);
@@ -74,7 +76,7 @@ describe("ExportButton", () => {
   it("should display icon", () => {
     render(<ExportButton projectId={mockProjectId} />);
 
-    const button = screen.getByRole("button", { name: /Import \/ Export/i });
+    const button = screen.getAllByRole("button", { name: /Import \/ Export/i })[0];
     const svg = button.querySelector("svg");
 
     expect(svg).toBeInTheDocument();
@@ -84,16 +86,18 @@ describe("ExportButton", () => {
   it("should have correct styling classes from Button component", () => {
     render(<ExportButton projectId={mockProjectId} />);
 
-    const button = screen.getByRole("button", { name: /Import \/ Export/i });
+    // Get the desktop Button (second one) - mobile IconButton has different classes
+    const buttons = screen.getAllByRole("button", { name: /Import \/ Export/i });
+    const desktopButton = buttons[buttons.length - 1];
 
     // Uses Button component with secondary variant
-    expect(button).toHaveClass("inline-flex", "items-center", "gap-2");
+    expect(desktopButton).toHaveClass("inline-flex", "items-center", "gap-2");
   });
 
   it("should be type button", () => {
     render(<ExportButton projectId={mockProjectId} />);
 
-    const button = screen.getByRole("button", { name: /Import \/ Export/i });
+    const button = screen.getAllByRole("button", { name: /Import \/ Export/i })[0];
 
     expect(button).toHaveAttribute("type", "button");
   });
@@ -103,7 +107,7 @@ describe("ExportButton", () => {
     const { rerender } = render(<ExportButton projectId={mockProjectId} />);
 
     // Open modal
-    const button = screen.getByRole("button", { name: /Import \/ Export/i });
+    const button = screen.getAllByRole("button", { name: /Import \/ Export/i })[0];
     await user.click(button);
 
     expect(screen.getByTestId("import-export-modal")).toBeInTheDocument();
@@ -119,8 +123,8 @@ describe("ExportButton", () => {
     const differentProjectId = "project-456" as Id<"projects">;
     const { rerender } = render(<ExportButton projectId={mockProjectId} />);
 
-    // Open modal with first project
-    let button = screen.getByRole("button", { name: /Import \/ Export/i });
+    // Open modal with first project - use first button
+    let button = screen.getAllByRole("button", { name: /Import \/ Export/i })[0];
     await user.click(button);
 
     expect(screen.getByTestId("modal-project-id")).toHaveTextContent(mockProjectId);
@@ -132,8 +136,8 @@ describe("ExportButton", () => {
     // Rerender with different project
     rerender(<ExportButton projectId={differentProjectId} />);
 
-    // Open modal again
-    button = screen.getByRole("button", { name: /Import \/ Export/i });
+    // Open modal again - use first button
+    button = screen.getAllByRole("button", { name: /Import \/ Export/i })[0];
     await user.click(button);
 
     expect(screen.getByTestId("modal-project-id")).toHaveTextContent(differentProjectId);

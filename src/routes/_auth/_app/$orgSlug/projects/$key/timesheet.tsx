@@ -1,10 +1,9 @@
-import { api } from "@convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import React from "react";
 import { PageContent, PageError, PageLayout } from "@/components/layout";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useProjectByKey } from "@/hooks/useProjectByKey";
 
 // Lazy load the timesheet component for better performance
 const ProjectTimesheet = React.lazy(() =>
@@ -19,7 +18,7 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key/timeshe
 
 function TimesheetPage() {
   const { key } = Route.useParams();
-  const project = useAuthenticatedQuery(api.projects.getByKey, { key });
+  const project = useProjectByKey(key);
 
   if (project === undefined) {
     return <PageContent isLoading>{null}</PageContent>;

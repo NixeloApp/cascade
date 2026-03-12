@@ -105,12 +105,25 @@ export class IssueDetailPage extends BasePage {
     );
   }
 
+  private async getEditModeState(): Promise<"edit" | "pending"> {
+    if (
+      (await this.issueTitleInput.isVisible().catch(() => false)) ||
+      (await this.issueDescriptionEditor.isVisible().catch(() => false))
+    ) {
+      return "edit";
+    }
+
+    return "pending";
+  }
+
   async waitForEditMode(timeout = 3000) {
     try {
-      await Promise.race([
-        this.issueTitleInput.waitFor({ state: "visible", timeout }),
-        this.issueDescriptionEditor.waitFor({ state: "visible", timeout }),
-      ]);
+      await expect
+        .poll(() => this.getEditModeState(), {
+          timeout,
+          intervals: [200, 500, 1000],
+        })
+        .toBe("edit");
       return true;
     } catch {
       return false;

@@ -1,7 +1,11 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
-import { createWorkspaceFromDialog, getWorkspaceDialogElements } from "../utils/wait-helpers";
+import {
+  createWorkspaceFromDialog,
+  dismissWorkspaceDialogIfOpen,
+  getWorkspaceDialogElements,
+} from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -86,10 +90,7 @@ export class WorkspacesPage extends BasePage {
   }
 
   async closeCreateWorkspaceDialogIfOpen(dialog = getWorkspaceDialogElements(this.page).dialog) {
-    // Preserve the previous blanket Escape reset because stale overlays can
-    // keep the next workspace-create retry from reaching an interactive dialog.
-    await this.page.keyboard.press("Escape");
-    await expect(dialog).not.toBeVisible();
+    await dismissWorkspaceDialogIfOpen(this.page, dialog);
   }
 
   async expectWorkspacesView() {
@@ -219,7 +220,7 @@ export class WorkspacesPage extends BasePage {
   private async navigateToWorkspacesRoute() {
     const workspacesUrl = ROUTES.workspaces.list.build(this.orgSlug);
 
-    await this.page.goto(workspacesUrl, { waitUntil: "domcontentloaded" });
+    await this.gotoPath(workspacesUrl, { waitUntil: "domcontentloaded" });
     await this.page.waitForLoadState("load");
     await this.expectLoaded();
 
@@ -227,9 +228,9 @@ export class WorkspacesPage extends BasePage {
       return;
     }
 
-    await this.page.goto(ROUTES.app.build(), { waitUntil: "domcontentloaded" });
+    await this.gotoPath(ROUTES.app.build(), { waitUntil: "domcontentloaded" });
     await this.page.waitForLoadState("load");
-    await this.page.goto(workspacesUrl, { waitUntil: "domcontentloaded" });
+    await this.gotoPath(workspacesUrl, { waitUntil: "domcontentloaded" });
     await this.page.waitForLoadState("load");
     await this.expectLoaded();
   }
@@ -238,13 +239,16 @@ export class WorkspacesPage extends BasePage {
     const createButton = this.newWorkspaceButton.first();
     await expect(createButton).toBeVisible();
     await expect(createButton).toBeEnabled();
+    await createButton.scrollIntoViewIfNeeded().catch(() => {});
 
     try {
       await createButton.click({ timeout: 3000 });
+      return;
     } catch {
       await expect(createButton).toBeVisible();
       await expect(createButton).toBeEnabled();
-      await createButton.evaluate((button: HTMLButtonElement) => button.click());
+      await createButton.scrollIntoViewIfNeeded().catch(() => {});
+      await createButton.click({ timeout: 3000 });
     }
   }
 }

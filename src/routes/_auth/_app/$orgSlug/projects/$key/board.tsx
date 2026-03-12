@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/Select";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useProjectByKey } from "@/hooks/useProjectByKey";
 import {
   type BoardSearchFilters,
   filtersToSearchParams,
@@ -74,7 +75,7 @@ function BoardPage() {
     });
   };
 
-  const project = useAuthenticatedQuery(api.projects.getByKey, { key });
+  const project = useProjectByKey(key);
   const sprints = useAuthenticatedQuery(
     api.sprints.listByProject,
     project ? { projectId: project._id } : "skip",
@@ -164,17 +165,20 @@ function BoardPage() {
         </div>
       </div>
 
-      <div className="px-2 pt-1 sm:hidden">
-        <div className="rounded-xl border border-ui-border/70 bg-ui-bg-elevated/90 px-2 py-1.5 shadow-soft">
-          <Flex align="center" justify="between" gap="xs">
-            <Typography variant="small" className="font-medium text-ui-text-secondary">
-              {showMobileSprintControls ? "Sprint controls" : "Board actions"}
-            </Typography>
-            <Flex align="center" gap="xs">
-              <ExportButton projectId={project._id} sprintId={effectiveSprintId} />
+      {/* Filter Bar */}
+      <FilterBar projectId={project._id} filters={filters} onFilterChange={handleFilterChange} />
+
+      {/* Board Content */}
+      <FlexItem flex="1" className="overflow-hidden">
+        <KanbanBoard
+          projectId={project._id}
+          sprintId={effectiveSprintId}
+          filters={filters}
+          mobileActions={
+            <>
               {showMobileSprintControls && sprints && (
                 <Select value={selectedSprintId || "active"} onValueChange={handleSprintChange}>
-                  <SelectTrigger className="h-8 min-w-32 rounded-lg border border-ui-border px-2 text-xs">
+                  <SelectTrigger className="h-7 min-w-24 rounded-lg border border-ui-border/70 bg-ui-bg-elevated/92 px-2 text-xs shadow-soft">
                     <SelectValue placeholder="Sprint" />
                   </SelectTrigger>
                   <SelectContent>
@@ -187,17 +191,10 @@ function BoardPage() {
                   </SelectContent>
                 </Select>
               )}
-            </Flex>
-          </Flex>
-        </div>
-      </div>
-
-      {/* Filter Bar */}
-      <FilterBar projectId={project._id} filters={filters} onFilterChange={handleFilterChange} />
-
-      {/* Board Content */}
-      <FlexItem flex="1" className="overflow-hidden">
-        <KanbanBoard projectId={project._id} sprintId={effectiveSprintId} filters={filters} />
+              <ExportButton projectId={project._id} sprintId={effectiveSprintId} />
+            </>
+          }
+        />
       </FlexItem>
     </Flex>
   );

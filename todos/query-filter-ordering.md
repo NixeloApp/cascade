@@ -1,5 +1,10 @@
 # Query Filter Ordering Issues
 
+> **Priority:** P2
+> **Status:** Queued
+> **Last Updated:** 2026-03-12
+> **Verification Summary:** `5` verified unresolved query-shape issues remain; `1` original item is already fixed in the current codebase.
+
 Several queries apply filters **after** `take(limit)`, which can return incomplete or incorrect results when the dataset exceeds the limit.
 
 ## Pattern
@@ -17,7 +22,7 @@ const items = await ctx.db.query("items")
   .take(100);
 ```
 
-## Affected Queries
+## Verified Unresolved Queries
 
 ### workspaces.ts - Backlog filter
 - `getBacklogIssues` takes limit, then filters `sprintId === undefined && status !== "done"`
@@ -31,10 +36,6 @@ const items = await ctx.db.query("items")
 - Takes limit before evaluating link type and cross-team conditions
 - Fix: Filter before limit or use appropriate index
 
-### calendarEvents.ts - Workspace calendar with team filter
-- `listByWorkspaceDateRange` takes `MAX_PAGE_SIZE`, then filters by `teamId`
-- Fix: Use `by_team` index when teamId provided (partially done, verify)
-
 ### calendarEvents.ts - Org calendar with workspace/team filter
 - `listByOrganizationDateRange` takes limit, then filters workspace/team in memory
 - Fix: Use more specific index or restructure query
@@ -42,6 +43,11 @@ const items = await ctx.db.query("items")
 ### invoices.ts - Client filter
 - `list` takes `BOUNDED_LIST_LIMIT`, then filters by `clientId`
 - Fix: Add index `by_client` or `by_org_client`
+
+## Verified Fixed On 2026-03-12
+
+### calendarEvents.ts - Workspace calendar with team filter
+- `listByWorkspaceDateRange` now switches to a team-specific query path when `teamId` is provided, so this item no longer belongs in the unresolved queue.
 
 ## Priority
 

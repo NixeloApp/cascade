@@ -93,7 +93,7 @@ export function CalendarEvent({
           tabIndex={0}
           data-testid={TEST_IDS.CALENDAR.EVENT_ITEM}
           className={cn(
-            month ? "px-2 py-0.5 rounded-secondary" : "px-3 py-1.5 rounded-lg",
+            month ? "rounded-md px-1.5 py-1 shadow-sm" : "px-3 py-1.5 rounded-lg",
             "truncate cursor-pointer transition-all duration-medium",
             colors.bg,
             colors.hover,
@@ -147,24 +147,29 @@ export function CalendarEvent({
         >
           <motion.div
             className={cn(
-              "flex flex-col w-full",
+              "w-full",
               colors.text,
-              month && "flex-row items-center justify-between",
+              month
+                ? "flex flex-col items-start gap-0.5"
+                : "flex items-center justify-between gap-2",
             )}
             layout="position"
           >
-            <Typography variant="p" className={cn("font-bold truncate", month && "text-xs")}>
+            <Typography
+              variant="p"
+              className={cn("font-bold truncate", month && "w-full text-xs leading-tight")}
+            >
               {event.title}
             </Typography>
-            <Typography variant="small" className={cn("text-sm", month && "text-xs")}>
-              <time dateTime={event.start.toISOString()}>{format(event.start, "h:mm a")}</time>
-              <span className={cn("mx-1", month && "hidden")} aria-hidden="true">
-                -
-              </span>
-              <time dateTime={event.end.toISOString()} className={cn(month && "hidden")}>
-                {format(event.end, "h:mm a")}
-              </time>
-            </Typography>
+            {!month && (
+              <Typography variant="small" className="text-sm">
+                <time dateTime={event.start.toISOString()}>{format(event.start, "h:mm a")}</time>
+                <span className="mx-1" aria-hidden="true">
+                  -
+                </span>
+                <time dateTime={event.end.toISOString()}>{format(event.end, "h:mm a")}</time>
+              </Typography>
+            )}
           </motion.div>
         </motion.div>
       </AnimatePresence>

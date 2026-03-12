@@ -5,20 +5,26 @@
  * Used by both global-setup.ts and auth.fixture.ts to avoid duplication.
  */
 
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import type { ConvexReactClient } from "convex/react";
 import type { TestUser } from "../config";
 import {
   authFormLocators,
   dashboardLocators,
   onboardingLocators,
+  TEST_IDS,
   toastLocators,
   urlPatterns,
 } from "../locators";
 import { waitForMockOTP } from "./otp-helpers";
 import { ROUTES } from "./routes";
 import { testUserService } from "./test-user-service";
-import { waitForFormReady } from "./wait-helpers";
+import {
+  getConvexConnectionInfo,
+  waitForConvexConnectionReady,
+  waitForDashboardReady,
+  waitForFormReady,
+} from "./wait-helpers";
 
 /**
  * Complete email verification with OTP from Mock Backend
@@ -36,12 +42,166 @@ export async function completeEmailVerification(page: Page, email: string): Prom
     await locators.verifyCodeInput.fill(otp);
 
     await locators.verifyEmailButton.click();
-    // Wait for redirect to onboarding or organization dashboard
-    await page.waitForURL(urlPatterns.dashboardOrOnboarding);
+    if (!(await waitForEmailVerificationSubmitStart(page))) {
+      await expect(locators.verifyEmailButton).toBeVisible();
+      await expect(locators.verifyEmailButton).toBeEnabled();
+      await locators.verifyEmailButton.click();
+
+      if (!(await waitForEmailVerificationSubmitStart(page, 8000))) {
+        console.error(`  ❌ Email verification submit did not start for ${email}`);
+        return false;
+      }
+    }
+
+    const outcome = await waitForEmailVerificationOutcome(page);
+    if (outcome === "error") {
+      const errorText = await toastLocators(page)
+        .error.first()
+        .textContent()
+        .catch(() => "");
+      console.error(`  ❌ Email verification reached error state for ${email}: ${errorText}`);
+      return false;
+    }
+
+    if (!outcome) {
+      console.error(`  ❌ Email verification timed out for ${email} at ${page.url()}`);
+      return false;
+    }
+
+    console.log(`  ✓ Email verification reached ${outcome} state`);
     return true;
   } catch (verifyError) {
     console.error(`  ❌ Email verification failed for ${email}:`, verifyError);
     return false;
+  }
+}
+
+async function waitForDashboardShell(page: Page, timeout = 15000): Promise<boolean> {
+  try {
+    await page.waitForURL(urlPatterns.dashboard, { timeout });
+    await waitForDashboardReady(page);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+type PostAuthDestinationState = "dashboard" | "onboarding" | "pending";
+
+async function getPostAuthDestinationState(page: Page): Promise<PostAuthDestinationState> {
+  const dashboard = dashboardLocators(page);
+  if (
+    urlPatterns.dashboard.test(page.url()) ||
+    (await dashboard.myWorkHeading.isVisible().catch(() => false))
+  ) {
+    return "dashboard";
+  }
+
+  const onboarding = onboardingLocators(page);
+  if (
+    urlPatterns.onboarding.test(page.url()) ||
+    (await onboarding.welcomeHeading.isVisible().catch(() => false))
+  ) {
+    return "onboarding";
+  }
+
+  return "pending";
+}
+
+async function waitForPostAuthDestination(
+  page: Page,
+  timeout = 15000,
+): Promise<Exclude<PostAuthDestinationState, "pending"> | null> {
+  try {
+    await expect
+      .poll(() => getPostAuthDestinationState(page), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .not.toBe("pending");
+
+    const state = await getPostAuthDestinationState(page);
+    return state === "pending" ? null : state;
+  } catch {
+    return null;
+  }
+}
+
+async function getEmailVerificationSubmitState(
+  page: Page,
+): Promise<"submitting" | "redirect" | "success" | "error" | "pending"> {
+  const locators = authFormLocators(page);
+
+  if (urlPatterns.dashboardOrOnboarding.test(page.url())) {
+    return "redirect";
+  }
+
+  if (
+    await toastLocators(page)
+      .success.first()
+      .isVisible()
+      .catch(() => false)
+  ) {
+    return "success";
+  }
+
+  if (
+    await toastLocators(page)
+      .error.first()
+      .isVisible()
+      .catch(() => false)
+  ) {
+    return "error";
+  }
+
+  const buttonText =
+    (await locators.verifyEmailButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
+  if (/verifying/.test(buttonText)) {
+    return "submitting";
+  }
+
+  return "pending";
+}
+
+async function waitForEmailVerificationSubmitStart(page: Page, timeout = 5000): Promise<boolean> {
+  try {
+    await expect
+      .poll(() => getEmailVerificationSubmitState(page), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .not.toBe("pending");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function waitForEmailVerificationOutcome(
+  page: Page,
+  timeout = 15000,
+): Promise<"redirect" | "success" | "error" | null> {
+  try {
+    await expect
+      .poll(
+        async () => {
+          const state = await getEmailVerificationSubmitState(page);
+          return state === "submitting" ? "pending" : state;
+        },
+        {
+          timeout,
+          intervals: [200, 500, 1000],
+        },
+      )
+      .not.toBe("pending");
+
+    const result = await getEmailVerificationSubmitState(page);
+    if (result === "redirect" || result === "success" || result === "error") {
+      return result;
+    }
+    return null;
+  } catch {
+    return null;
   }
 }
 
@@ -93,25 +253,133 @@ export async function isOnOnboarding(page: Page): Promise<boolean> {
   return false;
 }
 
+type SharedAuthRoute = "signin" | "signup";
+type SharedAuthFormState =
+  | "signin-landing"
+  | "signin-expanded"
+  | "signup-landing"
+  | "signup-expanded"
+  | "pending";
+
+async function getCurrentAuthRoute(page: Page): Promise<SharedAuthRoute | null> {
+  try {
+    const pathname = new URL(page.url()).pathname;
+    if (pathname === ROUTES.signin.path) {
+      return "signin";
+    }
+    if (pathname === ROUTES.signup.path) {
+      return "signup";
+    }
+  } catch {}
+
+  const locators = authFormLocators(page);
+  if (await locators.signInHeading.isVisible().catch(() => false)) {
+    return "signin";
+  }
+  if (await locators.signUpHeading.isVisible().catch(() => false)) {
+    return "signup";
+  }
+
+  return null;
+}
+
+async function getSharedAuthFormState(page: Page): Promise<SharedAuthFormState> {
+  const route = await getCurrentAuthRoute(page);
+  if (!route) {
+    return "pending";
+  }
+
+  const form = page.getByTestId(TEST_IDS.AUTH.FORM);
+  if (!(await form.isVisible().catch(() => false))) {
+    return "pending";
+  }
+
+  const locators = authFormLocators(page);
+  const expanded = await form.getAttribute("data-expanded").catch(() => null);
+  const emailVisible = await locators.emailInput.isVisible().catch(() => false);
+
+  // For landing state, check the "Continue with email" button
+  if (expanded === "false") {
+    const continueButtonVisible = await locators.continueWithEmailButton
+      .isVisible()
+      .catch(() => false);
+    if (continueButtonVisible) {
+      return route === "signin" ? "signin-landing" : "signup-landing";
+    }
+  }
+
+  // For expanded state, check the submit button text
+  const submitButtonText =
+    (await locators.submitButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
+
+  if (route === "signin") {
+    if (
+      expanded === "true" &&
+      /sign in|signing in/.test(submitButtonText) &&
+      emailVisible &&
+      (await locators.forgotPasswordLink.isVisible().catch(() => false))
+    ) {
+      return "signin-expanded";
+    }
+
+    return "pending";
+  }
+
+  if (
+    expanded === "true" &&
+    /create account|creating account/.test(submitButtonText) &&
+    emailVisible
+  ) {
+    return "signup-expanded";
+  }
+
+  return "pending";
+}
+
+async function waitForSharedAuthFormState(
+  page: Page,
+  expectedState: Exclude<SharedAuthFormState, "pending">,
+  timeout: number,
+): Promise<boolean> {
+  try {
+    await expect
+      .poll(() => getSharedAuthFormState(page), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .toBe(expectedState);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Click the "Continue with email" button and wait for form to expand
  * Waits specifically for the button text to change to "Sign in" or "Create account"
  */
 export async function clickContinueWithEmail(page: Page): Promise<boolean> {
   const locators = authFormLocators(page);
+  const route = await getCurrentAuthRoute(page);
+
+  if (!route) {
+    console.log("❌ Could not determine auth route before expanding email form");
+    return false;
+  }
+
+  const expandedState = route === "signin" ? "signin-expanded" : "signup-expanded";
 
   // Check if form is already expanded by looking for the submit button
-  const signInVisible = await locators.signInButton.isVisible().catch(() => false);
-  const createAccountVisible = await locators.signUpButton.isVisible().catch(() => false);
-
-  if (signInVisible || createAccountVisible) {
-    console.log("✓ Form already expanded (submit button visible)");
+  if (await waitForSharedAuthFormState(page, expandedState, 1200)) {
+    await waitForFormReady(page);
+    console.log("✓ Form already expanded");
     return true;
   }
 
   // Check if continue button exists and is ready
   try {
     await locators.continueWithEmailButton.waitFor({ state: "visible" });
+    await expect(locators.continueWithEmailButton).toBeEnabled();
   } catch {
     console.log("❌ Continue button not found");
     return false;
@@ -120,20 +388,252 @@ export async function clickContinueWithEmail(page: Page): Promise<boolean> {
   // Click the button
   await locators.continueWithEmailButton.click();
 
-  // Wait for form to expand
-  try {
-    await Promise.race([
-      locators.signInButton.waitFor({ state: "visible" }),
-      locators.signUpButton.waitFor({ state: "visible" }),
-    ]);
-    // Wait for form to be ready (SignInForm/SignUpForm have 350ms delay before formReady=true)
+  if (await waitForSharedAuthFormState(page, expandedState, 2500)) {
     await waitForFormReady(page);
     console.log("✓ Form expanded successfully");
     return true;
-  } catch {
-    console.log("❌ Form did not expand after click");
+  }
+
+  await locators.continueWithEmailButton.waitFor({ state: "visible" }).catch(() => {});
+  if (!(await locators.continueWithEmailButton.isVisible().catch(() => false))) {
+    console.log("❌ Form did not expand and continue button disappeared");
     return false;
   }
+
+  await expect(locators.continueWithEmailButton).toBeEnabled();
+  await locators.continueWithEmailButton.click();
+
+  if (await waitForSharedAuthFormState(page, expandedState, 4000)) {
+    await waitForFormReady(page);
+    console.log("✓ Form expanded successfully after second attempt");
+    return true;
+  }
+
+  console.log("❌ Form did not expand after bounded retries");
+  return false;
+}
+
+async function waitForSignInSurface(page: Page, timeout = 30000): Promise<void> {
+  const locators = authFormLocators(page);
+
+  try {
+    await expect
+      .poll(() => getSharedAuthFormState(page), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .toMatch(/signin-(landing|expanded)/);
+    console.log("  ✓ Sign-in page loaded");
+    return;
+  } catch (error) {
+    await page.screenshot({ path: "e2e/.auth/signin-timeout-debug.png" }).catch(() => {});
+    const bodyText =
+      (await page
+        .locator("body")
+        .textContent()
+        .catch(() => "")) || "";
+    const headingVisible = await locators.signInHeading.isVisible().catch(() => false);
+    const formVisible = await page
+      .getByTestId(TEST_IDS.AUTH.FORM)
+      .isVisible()
+      .catch(() => false);
+    throw new Error(
+      [
+        `Sign-in surface did not load within ${timeout}ms`,
+        `URL: ${page.url()}`,
+        `surfaceState: ${await getSharedAuthFormState(page).catch(() => "pending")}`,
+        `headingVisible: ${headingVisible}`,
+        `formVisible: ${formVisible}`,
+        `body: ${bodyText.slice(0, 200)}`,
+        `cause: ${String(error).slice(0, 200)}`,
+      ].join(" | "),
+    );
+  }
+}
+
+async function ensureSignInPage(page: Page, baseURL: string, timeout = 15000): Promise<void> {
+  const isOnSignInRoute = () => {
+    try {
+      return new URL(page.url()).pathname === ROUTES.signin.path;
+    } catch {
+      return false;
+    }
+  };
+
+  if (isOnSignInRoute()) {
+    return;
+  }
+
+  const waitForSignInRoute = async (waitTimeout: number): Promise<boolean> => {
+    try {
+      await page.waitForURL((url) => new URL(url.toString()).pathname === ROUTES.signin.path, {
+        timeout: waitTimeout,
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const signInLink = page.getByRole("link", { name: /^sign in$/i }).first();
+  if (await signInLink.isVisible().catch(() => false)) {
+    console.log("  ↩️ Recovering sign-in route from public shell...");
+    await signInLink.click();
+    if (await waitForSignInRoute(timeout)) {
+      return;
+    }
+  }
+
+  if (isOnSignInRoute()) {
+    return;
+  }
+
+  await page.goto(`${baseURL}${ROUTES.signin.path}`, { waitUntil: "domcontentloaded" });
+  await waitForSignInRoute(timeout);
+}
+
+async function waitForUiSignInSubmitStart(page: Page, timeout = 5000): Promise<boolean> {
+  const locators = authFormLocators(page);
+
+  try {
+    await expect
+      .poll(
+        async () => {
+          if (urlPatterns.dashboardOrOnboarding.test(page.url())) {
+            return "redirect";
+          }
+
+          const submitText = (await locators.signInButton.textContent().catch(() => "")) ?? "";
+          if (submitText.toLowerCase().includes("signing in")) {
+            return "submitting";
+          }
+
+          if (
+            await toastLocators(page)
+              .error.first()
+              .isVisible()
+              .catch(() => false)
+          ) {
+            return "error";
+          }
+
+          return "pending";
+        },
+        {
+          timeout,
+          intervals: [200, 500, 1000],
+        },
+      )
+      .not.toBe("pending");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function waitForConvexWebSocketReady(page: Page, timeout = 30000): Promise<boolean> {
+  try {
+    if (!(await waitForConvexConnectionReady(page, { timeout }))) {
+      throw new Error("Convex WebSocket did not connect in time");
+    }
+    console.log("  ✓ Convex WebSocket connected");
+    return true;
+  } catch {
+    const connectionInfo = await getConvexConnectionInfo(page);
+    console.log(`  ⚠️ Convex WebSocket connection timed out: ${JSON.stringify(connectionInfo)}`);
+    return false;
+  }
+}
+
+type OnboardingSkipControlState = "button" | "link" | "text" | "pending";
+
+async function getOnboardingSkipControlState(page: Page): Promise<OnboardingSkipControlState> {
+  const locators = onboardingLocators(page);
+  if (await locators.skipButton.isVisible().catch(() => false)) {
+    return "button";
+  }
+
+  if (await locators.skipLink.isVisible().catch(() => false)) {
+    return "link";
+  }
+
+  if (await locators.skipText.isVisible().catch(() => false)) {
+    return "text";
+  }
+
+  return "pending";
+}
+
+async function findVisibleOnboardingSkipControl(page: Page, timeout = 15000) {
+  const locators = onboardingLocators(page);
+
+  try {
+    await expect
+      .poll(() => getOnboardingSkipControlState(page), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .not.toBe("pending");
+  } catch {
+    return null;
+  }
+
+  const state = await getOnboardingSkipControlState(page);
+  switch (state) {
+    case "button":
+      return locators.skipButton;
+    case "link":
+      return locators.skipLink;
+    case "text":
+      return locators.skipText;
+    default:
+      return null;
+  }
+}
+
+async function clickOnboardingSkipControlOnce(page: Page, timeout = 15000): Promise<boolean> {
+  const skipControl = await findVisibleOnboardingSkipControl(page, timeout);
+  if (!skipControl) {
+    return false;
+  }
+
+  try {
+    await expect(skipControl).toBeVisible();
+    await skipControl.click();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function skipOnboardingToDashboard(page: Page): Promise<boolean> {
+  const skipControl = await findVisibleOnboardingSkipControl(page);
+  if (!skipControl) {
+    console.log("⚠️ Onboarding skip control did not become visible");
+    return false;
+  }
+
+  const controlLabel =
+    (await skipControl.textContent().catch(() => null))?.trim() || "skip control";
+  console.log(`✓ Onboarding skip control ready: ${controlLabel}`);
+  await skipControl.click();
+  if (await waitForDashboardShell(page, 5000)) {
+    console.log("✓ Successfully skipped to dashboard");
+    return true;
+  }
+
+  if (!(await clickOnboardingSkipControlOnce(page, 5000))) {
+    console.log("⚠️ Skip control could not be clicked again after the first attempt");
+    return false;
+  }
+
+  if (await waitForDashboardShell(page, 15000)) {
+    console.log("✓ Successfully skipped to dashboard");
+    return true;
+  }
+
+  console.log("⚠️ Skip control clicked but dashboard shell did not settle");
+  return false;
 }
 
 /**
@@ -143,56 +643,21 @@ export async function handleOnboardingOrDashboard(
   page: Page,
   autoCompleteOnboarding = true,
 ): Promise<boolean> {
-  // Allow auth redirects to settle to either dashboard or onboarding route.
-  await page.waitForURL(urlPatterns.dashboardOrOnboarding, { timeout: 15000 }).catch(() => {});
-
-  if (await isOnDashboard(page)) {
+  const destination = await waitForPostAuthDestination(page, 15000);
+  if (destination === "dashboard") {
+    await waitForDashboardReady(page);
     console.log("✓ Already on dashboard");
     return true;
   }
 
-  if (await isOnOnboarding(page)) {
+  if (destination === "onboarding") {
     if (!autoCompleteOnboarding) {
       console.log("📋 On onboarding - staying here as requested");
       return true;
     }
     console.log("📋 On onboarding - completing...");
-
-    const locators = onboardingLocators(page);
-
-    try {
-      // Wait up to 15 seconds for the skip button to appear (queries need to load)
-      await locators.skipButton.waitFor({ state: "visible" });
-      console.log("✓ Skip button found, clicking...");
-      await locators.skipButton.click();
-
-      // Wait for navigation to dashboard
-      await page.waitForURL(urlPatterns.dashboard);
-
-      if (await isOnDashboard(page)) {
-        console.log("✓ Successfully skipped to dashboard");
-        return true;
-      }
-    } catch (error) {
-      console.log("⚠️ Skip button not found after waiting:", String(error).slice(0, 100));
-    }
-
-    // Fallback: try other selectors
-    const fallbackSelectors = [locators.skipLink, locators.skipText];
-
-    for (const skipElement of fallbackSelectors) {
-      try {
-        if (await skipElement.isVisible().catch(() => false)) {
-          await skipElement.click();
-          await page.waitForURL(urlPatterns.dashboard).catch(() => {});
-          if (await isOnDashboard(page)) {
-            return true;
-          }
-          break;
-        }
-      } catch {
-        // Continue to next selector
-      }
+    if (await skipOnboardingToDashboard(page)) {
+      return true;
     }
     console.log("⚠️ Could not skip onboarding");
   }
@@ -210,8 +675,25 @@ export async function trySignInUser(
   autoCompleteOnboarding = true,
 ): Promise<boolean> {
   const injectAuthTokens = async (token: string, refreshToken?: string): Promise<void> => {
+    const convexUrl = process.env.VITE_CONVEX_URL;
+    if (!convexUrl) {
+      console.log("  ⚠️ VITE_CONVEX_URL not set, token injection may fail");
+    }
+
     await page.evaluate(
-      ({ token: jwt, refreshToken: refresh, convexUrl }) => {
+      ({ token: jwt, refreshToken: refresh, convexUrl: url }) => {
+        // Clear any stale auth tokens first (important after sign-out)
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.includes("convexAuth") || key.includes("__convexAuth"))) {
+            keysToRemove.push(key);
+          }
+        }
+        for (const key of keysToRemove) {
+          localStorage.removeItem(key);
+        }
+
         // Legacy keys (for ConvexReactClient direct usage)
         localStorage.setItem("convexAuthToken", jwt);
         if (refresh) {
@@ -219,8 +701,8 @@ export async function trySignInUser(
         }
 
         // @convex-dev/auth keys (namespaced by convex URL)
-        if (convexUrl) {
-          const namespace = convexUrl.replace(/[^a-zA-Z0-9]/g, "");
+        if (url) {
+          const namespace = url.replace(/[^a-zA-Z0-9]/g, "");
           const jwtKey = `__convexAuthJWT_${namespace}`;
           const refreshKey = `__convexAuthRefreshToken_${namespace}`;
 
@@ -233,7 +715,7 @@ export async function trySignInUser(
       {
         token,
         refreshToken,
-        convexUrl: process.env.VITE_CONVEX_URL,
+        convexUrl: convexUrl,
       },
     );
   };
@@ -241,24 +723,35 @@ export async function trySignInUser(
   const tryNavigateToAppGateway = async (): Promise<boolean> => {
     await page.goto(`${baseURL}${ROUTES.app.build()}`, { waitUntil: "load" });
 
-    // Wait to confirm we are logged in - app gateway will redirect to /:orgSlug/dashboard or /onboarding
-    await page.waitForURL(urlPatterns.dashboardOrOnboarding, { timeout: 15000 });
-
-    if (await isOnDashboard(page)) {
+    const destination = await waitForPostAuthDestination(page, 15000);
+    if (destination === "dashboard") {
+      await waitForDashboardReady(page);
       console.log("  ✓ Automatically redirected to dashboard");
       return true;
     }
-    // For users with incomplete onboarding, landing on /onboarding is success
-    if (!autoCompleteOnboarding && urlPatterns.onboarding.test(page.url())) {
+
+    if (destination === "onboarding" && !autoCompleteOnboarding) {
       console.log("  ✓ Automatically redirected to onboarding (as expected)");
       return true;
     }
+
+    if (destination === "onboarding") {
+      return await handleOnboardingOrDashboard(page, autoCompleteOnboarding);
+    }
+
+    console.log(
+      `  ℹ️ Gateway navigation ended at: ${page.url()} (destination: ${destination ?? "null"})`,
+    );
     return false;
   };
 
   const resolvePostSignInRedirect = async (): Promise<boolean> => {
     try {
-      await page.waitForURL(urlPatterns.dashboardOrOnboarding, { timeout: 15000 });
+      const destination = await waitForPostAuthDestination(page, 15000);
+      if (!destination) {
+        throw new Error("Post-auth destination did not settle");
+      }
+
       console.log("  ✓ Redirected to:", page.url());
       return await handleOnboardingOrDashboard(page, autoCompleteOnboarding);
     } catch {
@@ -303,6 +796,28 @@ export async function trySignInUser(
       }
 
       console.log("  🔁 Attempting app-gateway recovery after redirect timeout...");
+
+      // On landing page after sign-in, auth state may not be reflected yet.
+      // Reload the page to force Convex client to re-initialize with fresh auth state.
+      if (page.url().endsWith("/") || page.url().includes("localhost:5555/$")) {
+        console.log("  ↻ Reloading page to refresh auth state...");
+        await page.reload({ waitUntil: "domcontentloaded" });
+
+        // Check for "Go to App" link which indicates authenticated state
+        const goToAppLink = page.getByRole("link", { name: /go to app/i });
+        try {
+          await goToAppLink.waitFor({ state: "visible", timeout: 10000 });
+          console.log("  ✓ User is authenticated (Go to App visible). Clicking to enter app...");
+          await goToAppLink.click();
+          const destination = await waitForPostAuthDestination(page, 15000);
+          if (destination) {
+            return await handleOnboardingOrDashboard(page, autoCompleteOnboarding);
+          }
+        } catch {
+          console.log("  ℹ️ Go to App link not visible after reload");
+        }
+      }
+
       try {
         if (await tryNavigateToAppGateway()) {
           return await handleOnboardingOrDashboard(page, autoCompleteOnboarding);
@@ -332,19 +847,18 @@ export async function trySignInUser(
 
     // --- API FAST LOGIN ---
     console.log("  ⚡ Attempting API login...");
-    let loginResult = await testUserService.loginTestUser(user.email, user.password);
+    const loginResult = await testUserService.loginTestUserWithRepair(
+      user.email,
+      user.password,
+      autoCompleteOnboarding,
+    );
 
-    // Repair known transient auth state drift for seeded users, then retry once.
-    if (!loginResult.success && loginResult.error?.includes("InvalidAccountId")) {
-      console.log("  ⚠️ API login returned InvalidAccountId. Attempting account repair...");
-      const repairResult = await testUserService.createTestUser(
-        user.email,
-        user.password,
-        autoCompleteOnboarding,
+    if (loginResult.repairAttempted) {
+      console.log(
+        loginResult.repairedAccount
+          ? "  ✓ API login repaired stale seeded account state."
+          : "  ⚠️ API login attempted seeded-account repair but the follow-up login still failed.",
       );
-      if (repairResult.success || repairResult.existing) {
-        loginResult = await testUserService.loginTestUser(user.email, user.password);
-      }
     }
 
     if (loginResult.success && loginResult.token) {
@@ -355,8 +869,22 @@ export async function trySignInUser(
         if (await tryNavigateToAppGateway()) {
           return true;
         }
-      } catch {
-        console.log("  ⚠️ API login injection failed to redirect. Falling back to UI login.");
+        console.log("  ⚠️ API login gateway navigation returned false. Checking current state...");
+      } catch (e) {
+        console.log(`  ⚠️ API login injection failed to redirect: ${String(e).slice(0, 100)}`);
+      }
+
+      // After token injection, check if we're already on an authenticated page
+      // This can happen when token injection succeeded but gateway navigation timing failed
+      const currentDestination = await getPostAuthDestinationState(page);
+      if (currentDestination === "dashboard") {
+        console.log("  ✓ Already on dashboard after token injection");
+        await waitForDashboardReady(page);
+        return true;
+      }
+      if (currentDestination === "onboarding") {
+        console.log("  ✓ Already on onboarding after token injection");
+        return await handleOnboardingOrDashboard(page, autoCompleteOnboarding);
       }
     } else {
       console.log(`  ⚠️ API login failed: ${loginResult.error}. Falling back to UI login.`);
@@ -364,181 +892,40 @@ export async function trySignInUser(
 
     // --- UI LOGIN FALLBACK ---
 
-    const locators = authFormLocators(page);
-
-    // DIAGNOSTIC: Log page state while waiting
-    const startTime = Date.now();
-    let lastLog = startTime;
-    const diagnosticInterval = setInterval(async () => {
-      const now = Date.now();
-      if (now - lastLog > 5000) {
-        // Log every 5 seconds
-        const headingVisible = await locators.signInHeading.isVisible().catch(() => false);
-        const formVisible = await page
-          .locator("form")
-          .isVisible()
-          .catch(() => false);
-        const elapsed = Math.floor((now - startTime) / 1000);
-        console.log(`  ⏱️ Waiting ${elapsed}s - heading:${headingVisible}, form:${formVisible}`);
-        lastLog = now;
-      }
-    }, 1000);
-
-    try {
-      // Wait for EITHER heading OR form (whichever appears first)
-      await Promise.race([
-        locators.signInHeading.waitFor({ state: "visible" }),
-        page.locator("form").waitFor({ state: "visible" }),
-      ]);
-      clearInterval(diagnosticInterval);
-      console.log("  ✓ Sign-in page loaded");
-    } catch (error) {
-      clearInterval(diagnosticInterval);
-      // Take screenshot for debugging
-      await page.screenshot({ path: "e2e/.auth/signin-timeout-debug.png" });
-      const bodyText =
-        (await page
-          .locator("body")
-          .textContent()
-          .catch(() => "")) || "";
-      console.log("  ❌ Sign-in page did not load within 30s. Body text:", bodyText.slice(0, 200));
-      throw error;
+    // Double-check we're not already authenticated before attempting UI login
+    if (await isOnDashboard(page)) {
+      console.log("  ✓ Already authenticated - on dashboard");
+      await waitForDashboardReady(page);
+      return true;
     }
+
+    await ensureSignInPage(page, baseURL);
+    await waitForSignInSurface(page);
 
     // Wait for Convex WebSocket to be fully connected before attempting auth
     // On cold starts, the WebSocket needs time to establish connection
     // We exposed window.__convex_test_client in __root.tsx for this purpose
-    await page
-      .waitForFunction(
-        () => {
-          const convex = window.__convex_test_client;
-          if (!convex) {
-            console.log("    ⚠️ window.__convex_test_client is missing!");
-            // Check if we can find the script tag or env var in DOM
-            return false;
-          }
-          // Check connection state
-          const state = convex.connectionState();
-          if (!state.isWebSocketConnected) {
-            // Log occasionally to browser console (visible in headed mode or trace)
-            console.log(`    ⏳ AuthHelper: Waiting for WS. State: ${JSON.stringify(state)}.`);
-          }
-          return state.isWebSocketConnected;
-        },
-        undefined,
-        {}, // Wait up to 30s for connection
-      )
-      .catch(() => {
-        console.log("  ⚠️ Convex WebSocket connection timed out, attempting anyway");
-        // Getting the config from the page for diagnosis
-        page
-          .evaluate(() => {
-            const convex = window.__convex_test_client;
-            return convex ? { state: convex.connectionState() } : "No Client";
-          })
-          .then((info) => console.log("  🔍 Debug Info:", JSON.stringify(info)));
-      });
+    await waitForConvexWebSocketReady(page);
 
-    // Use evaluate to interact with the form directly
-    const submitResult = await page.evaluate(
-      async ({ email, password }) => {
-        // Helper to wait for condition with timeout
-        const waitFor = (condition: () => boolean, timeout = 5000): Promise<boolean> => {
-          return new Promise((resolve) => {
-            const start = Date.now();
-            const check = () => {
-              if (condition()) {
-                resolve(true);
-              } else if (Date.now() - start > timeout) {
-                resolve(false);
-              } else {
-                requestAnimationFrame(check);
-              }
-            };
-            check();
-          });
-        };
-
-        // Find or click "Continue with email" button to expand form
-        const buttons = Array.from(document.querySelectorAll("button"));
-        const continueBtn = buttons.find((b) => b.textContent?.includes("Continue with email"));
-        if (continueBtn) {
-          continueBtn.click();
-        }
-
-        // Wait for form to be ready (data-form-ready="true")
-        const formReady = await waitFor(() => {
-          const form = document.querySelector('form[data-form-ready="true"]');
-          return form !== null;
-        });
-
-        if (!formReady) {
-          return { success: false, error: "Form did not become ready" };
-        }
-
-        // Find and fill email input
-        const emailInput = document.querySelector('input[type="email"]') as HTMLInputElement;
-        const passwordInput = document.querySelector('input[type="password"]') as HTMLInputElement;
-
-        if (!(emailInput && passwordInput)) {
-          return { success: false, error: "Inputs not found" };
-        }
-
-        // Set values using native value setter to trigger React
-        const nativeEmailSetter = Object.getOwnPropertyDescriptor(
-          window.HTMLInputElement.prototype,
-          "value",
-        )?.set;
-        const nativePasswordSetter = Object.getOwnPropertyDescriptor(
-          window.HTMLInputElement.prototype,
-          "value",
-        )?.set;
-
-        if (nativeEmailSetter && nativePasswordSetter) {
-          nativeEmailSetter.call(emailInput, email);
-          emailInput.dispatchEvent(new Event("input", { bubbles: true }));
-
-          nativePasswordSetter.call(passwordInput, password);
-          passwordInput.dispatchEvent(new Event("input", { bubbles: true }));
-        }
-
-        // Verify values were set
-        if (emailInput.value !== email || passwordInput.value !== password) {
-          return {
-            success: false,
-            error: `Values not set correctly. Email: ${emailInput.value}, Password length: ${passwordInput.value.length}`,
-          };
-        }
-
-        // Find and click submit button
-        const submitBtn = document.querySelector('button[type="submit"]') as HTMLButtonElement;
-        if (!submitBtn) {
-          return { success: false, error: "Submit button not found" };
-        }
-
-        submitBtn.click();
-
-        // Wait for button to show "Signing in..." to confirm form is processing
-        const isSubmitting = await waitFor(() => {
-          return submitBtn.textContent?.includes("Signing in") ?? false;
-        }, 3000);
-
-        return {
-          success: true,
-          isSubmitting,
-          buttonText: submitBtn.textContent,
-        };
-      },
-      { email: user.email, password: user.password },
-    );
-
-    if (!submitResult.success) {
-      console.log(`  ❌ Form submission failed: ${submitResult.error}`);
+    const locators = authFormLocators(page);
+    if (!(await clickContinueWithEmail(page))) {
+      console.log("  ❌ UI login fallback could not expand the email form.");
       return false;
     }
-    console.log(
-      `  🚀 Form submitted (submitting state: ${submitResult.isSubmitting}, button: "${submitResult.buttonText}")`,
-    );
+
+    await waitForFormReady(page);
+    await locators.emailInput.fill(user.email);
+    await locators.passwordInput.fill(user.password);
+    await expect(locators.emailInput).toHaveValue(user.email);
+    await expect(locators.passwordInput).toHaveValue(user.password);
+
+    await locators.signInButton.click();
+    if (!(await waitForUiSignInSubmitStart(page))) {
+      console.log("  ❌ UI login fallback did not reach a submit-start state.");
+      return false;
+    }
+
+    console.log("  🚀 Form submitted via shared page-level auth contract.");
     return await resolvePostSignInRedirect();
   } catch (error) {
     console.log("  ❌ Sign-in error:", String(error).slice(0, 200));
@@ -546,32 +933,50 @@ export async function trySignInUser(
   }
 }
 
+async function getSignUpResultState(
+  page: Page,
+): Promise<"verification" | "redirect" | "error" | "pending"> {
+  const locators = authFormLocators(page);
+
+  if (await locators.verifyEmailHeading.isVisible().catch(() => false)) {
+    return "verification";
+  }
+
+  if (urlPatterns.dashboardOrOnboarding.test(page.url())) {
+    return "redirect";
+  }
+
+  if (
+    await toastLocators(page)
+      .error.first()
+      .isVisible()
+      .catch(() => false)
+  ) {
+    return "error";
+  }
+
+  return "pending";
+}
+
 /**
  * Wait for either verification screen or redirect after signup
  */
-export async function waitForSignUpResult(page: Page): Promise<"verification" | "redirect" | null> {
-  const locators = authFormLocators(page);
-
-  // Use Promise.race with proper waitFor patterns instead of polling
+export async function waitForSignUpResult(
+  page: Page,
+): Promise<"verification" | "redirect" | "error" | null> {
   try {
-    await Promise.race([
-      locators.verifyEmailHeading
-        .waitFor({ state: "visible", timeout: 15000 })
-        .then(() => "verification"),
-      page.waitForURL(urlPatterns.dashboardOrOnboarding, { timeout: 15000 }).then(() => "redirect"),
-    ]);
+    await expect
+      .poll(() => getSignUpResultState(page), {
+        timeout: 15000,
+        intervals: [200, 500, 1000],
+      })
+      .not.toBe("pending");
 
-    // Check which one succeeded
-    if (await locators.verifyEmailHeading.isVisible().catch(() => false)) {
-      return "verification";
-    }
-    if (urlPatterns.dashboardOrOnboarding.test(page.url())) {
-      return "redirect";
-    }
+    const result = await getSignUpResultState(page);
+    return result === "pending" ? null : result;
   } catch {
-    // Both timed out
+    return null;
   }
-  return null;
 }
 
 /**
@@ -587,8 +992,7 @@ export async function signUpUserViaUI(
   try {
     await page.goto(`${baseURL}/signup`);
 
-    // Check for onboarding or dashboard patterns (both old and new URL structures)
-    if (urlPatterns.dashboardOrOnboarding.test(page.url())) {
+    if ((await getPostAuthDestinationState(page)) !== "pending") {
       return await handleOnboardingOrDashboard(page, autoCompleteOnboarding);
     }
 
@@ -596,7 +1000,7 @@ export async function signUpUserViaUI(
     await locators.signUpHeading.waitFor({ state: "visible" }).catch(() => {});
 
     if (!(await locators.signUpHeading.isVisible().catch(() => false))) {
-      return await isOnDashboard(page);
+      return (await getPostAuthDestinationState(page)) === "dashboard";
     }
 
     const formExpanded = await clickContinueWithEmail(page);
@@ -616,6 +1020,13 @@ export async function signUpUserViaUI(
     if (signUpResult === "verification") {
       const emailVerified = await completeEmailVerification(page, user.email);
       if (!emailVerified) return false;
+    } else if (signUpResult === "error") {
+      const errorText = await toastLocators(page)
+        .error.first()
+        .textContent()
+        .catch(() => "");
+      console.log(`  ❌ Sign-up reached error state: ${errorText || "unknown error toast"}`);
+      return false;
     } else if (signUpResult === null) {
       console.log(`  📍 Current URL after timeout: ${page.url()}`);
       return false;

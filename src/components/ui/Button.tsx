@@ -62,11 +62,17 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
         "border-ui-border-secondary/70 bg-ui-bg-elevated/94 text-ui-text-secondary shadow-soft hover:border-ui-border-secondary hover:bg-ui-bg-hover hover:text-ui-text",
       active:
         "border-ui-border-secondary/80 bg-ui-bg text-ui-text shadow-card hover:border-ui-border-secondary hover:bg-ui-bg-hover",
+      filter:
+        "border-ui-border/45 bg-transparent text-ui-text-secondary shadow-none hover:border-ui-border/60 hover:bg-ui-bg-hover/72 sm:border-ui-border/55 sm:bg-ui-bg-elevated/86 sm:hover:bg-ui-bg-hover/80",
+      filterActive:
+        "border-brand/15 bg-brand-subtle/78 text-brand shadow-none hover:bg-brand-subtle sm:border-brand/10 sm:bg-brand-subtle",
     },
     chromeSize: {
       icon: "h-9 w-9 rounded-full",
       pill: "h-10 rounded-full px-4 text-sm",
       compactPill: "h-8 rounded-full px-3 text-sm",
+      filterPill:
+        "h-6 rounded-full px-2 text-xs sm:h-9 sm:rounded-xl sm:border-transparent sm:bg-transparent sm:px-3 sm:text-sm",
     },
   },
 });
