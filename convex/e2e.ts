@@ -2740,6 +2740,7 @@ export const seedScreenshotDataInternal = internalMutation({
       const organizationBySlug = await ctx.db
         .query("organizations")
         .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug as string))
+        .filter(notDeleted)
         .first();
 
       if (!organizationBySlug) {
@@ -2765,15 +2766,19 @@ export const seedScreenshotDataInternal = internalMutation({
       // Prefer user's defaultOrganizationId for deterministic org selection
       const defaultOrgId = user.defaultOrganizationId;
       if (defaultOrgId) {
-        // Verify membership still exists
-        const defaultMembership = await ctx.db
-          .query("organizationMembers")
-          .withIndex("by_organization_user", (q) =>
-            q.eq("organizationId", defaultOrgId).eq("userId", userId),
-          )
-          .first();
-        if (defaultMembership) {
-          organizationId = defaultOrgId;
+        // Verify organization still exists (not hard-deleted)
+        const defaultOrg = await ctx.db.get(defaultOrgId);
+        if (defaultOrg) {
+          // Verify membership still exists
+          const defaultMembership = await ctx.db
+            .query("organizationMembers")
+            .withIndex("by_organization_user", (q) =>
+              q.eq("organizationId", defaultOrgId).eq("userId", userId),
+            )
+            .first();
+          if (defaultMembership) {
+            organizationId = defaultOrgId;
+          }
         }
       }
 

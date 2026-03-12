@@ -514,8 +514,17 @@ export class OnboardingPage {
       await expect(nextStepHeading).toBeVisible({ timeout: CARD_SELECTION_TIMEOUT });
       return;
     } catch {
+      // Before resetting, check if the click actually succeeded but heading was slow
+      if (await nextStepHeading.isVisible().catch(() => false)) {
+        return;
+      }
       await this.recoverOnboardingRouteIfNeeded();
       await this.waitForRoleCardsReady();
+    }
+
+    // Check one more time if heading became visible during recovery
+    if (await nextStepHeading.isVisible().catch(() => false)) {
+      return;
     }
 
     if (!(await this.hasRoleSelectionStarted(card))) {
