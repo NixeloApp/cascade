@@ -1,13 +1,11 @@
 /**
- * CHECK 6: Undefined Tailwind color classes
+ * CHECK: Undefined Tailwind color classes
  *
  * Detects Tailwind utility classes that reference color names NOT defined
  * in tailwind.config.js. These silently fail — no CSS is generated, but
  * no error is thrown either. Common cause: vendored shadcn/ui components
  * using shadcn naming conventions (bg-background, text-muted-foreground)
  * that don't exist in our semantic color system.
- *
- * @strictness MEDIUM - Reports only. Identifies undefined theme references.
  */
 
 import fs from "node:fs";

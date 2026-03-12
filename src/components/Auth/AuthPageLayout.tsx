@@ -20,20 +20,17 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
   return (
     <div className="bg-auth-gradient relative isolate min-h-screen w-full overflow-hidden bg-ui-bg px-4 py-6 sm:px-6">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-linear-to-b from-ui-bg-elevated/42 to-transparent" />
-      <Flex
-        align="center"
-        className="mx-auto min-h-[calc(100vh-3rem)] w-full max-w-4xl animate-fade-in"
-      >
-        <Grid cols={1} className="w-full items-center gap-6 lg:grid-cols-2 lg:gap-6">
-          <div className="hidden lg:block">
-            <div className="rounded-3xl border border-ui-border-secondary/65 bg-ui-bg-elevated/76 px-7 py-8 shadow-soft backdrop-blur-sm xl:px-8 xl:py-9">
+      <Flex align="center" className="mx-auto min-h-auth-shell w-full max-w-5xl animate-fade-in">
+        <Grid cols={1} className="w-full items-center gap-6 lg:grid-cols-5 lg:gap-10">
+          <div className="hidden lg:col-span-3 lg:block">
+            <div className="px-3 py-4 xl:px-4 xl:py-5">
               <Badge variant="outline" shape="pill" className="mb-4 w-fit">
                 Unified delivery workspace
               </Badge>
 
               <Link
                 to={ROUTES.home.path}
-                className="inline-flex w-fit items-center rounded-full border border-ui-border/70 bg-ui-bg-elevated/88 px-4 py-2 shadow-soft transition-opacity hover:opacity-80"
+                className="inline-flex w-fit items-center transition-opacity hover:opacity-80"
               >
                 <NixeloLogo size={32} />
               </Link>
@@ -55,7 +52,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
               </div>
 
               <Grid cols={1} colsSm={3} gap="md" className="mt-6 max-w-3xl">
-                <div className="rounded-2xl border border-ui-border-secondary/65 bg-ui-bg-elevated/96 p-4 shadow-card">
+                <div className="rounded-2xl border border-ui-border-secondary/60 bg-ui-bg-soft/78 p-4 shadow-soft">
                   <Typography
                     variant="caption"
                     className="uppercase tracking-wider text-ui-text-tertiary"
@@ -66,7 +63,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
                     Omnibox
                   </Typography>
                 </div>
-                <div className="rounded-2xl border border-ui-border-secondary/65 bg-ui-bg-elevated/96 p-4 shadow-card">
+                <div className="rounded-2xl border border-ui-border-secondary/60 bg-ui-bg-soft/78 p-4 shadow-soft">
                   <Typography
                     variant="caption"
                     className="uppercase tracking-wider text-ui-text-tertiary"
@@ -77,7 +74,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
                     Boards
                   </Typography>
                 </div>
-                <div className="rounded-2xl border border-ui-border-secondary/65 bg-ui-bg-elevated/96 p-4 shadow-card">
+                <div className="rounded-2xl border border-ui-border-secondary/60 bg-ui-bg-soft/78 p-4 shadow-soft">
                   <Typography
                     variant="caption"
                     className="uppercase tracking-wider text-ui-text-tertiary"
@@ -92,7 +89,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
             </div>
           </div>
 
-          <Flex align="center" justify="center" className="w-full lg:justify-start">
+          <Flex align="center" justify="center" className="w-full lg:col-span-2 lg:justify-start">
             <div className="w-full max-w-auth lg:max-w-md">
               <div className="mb-5 lg:hidden">
                 <Link

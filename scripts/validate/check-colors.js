@@ -2,7 +2,6 @@
  * CHECK 2: Color audit
  * Raw TW colors, hardcoded hex, rgb/hsl, style props + allowlists
  *
- * @strictness STRICT - Blocks CI. No hardcoded colors, all must use semantic tokens.
  */
 
 import fs from "node:fs";

@@ -4,43 +4,53 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const toggleGroupVariants = cva(
-  "inline-flex items-center justify-center rounded-lg bg-ui-bg-soft border border-ui-border p-1",
+  "inline-flex max-w-full items-center justify-center rounded-2xl p-1 shadow-soft",
   {
     variants: {
+      variant: {
+        default: "gap-1 border border-ui-border-secondary/70 bg-ui-bg-secondary/90",
+        brand: "gap-1 border border-ui-border-secondary/70 bg-ui-bg-secondary/90",
+        error: "gap-1 border border-ui-border-secondary/70 bg-ui-bg-secondary/90",
+        success: "gap-1 border border-ui-border-secondary/70 bg-ui-bg-secondary/90",
+        accent: "gap-1 border border-ui-border-secondary/70 bg-ui-bg-secondary/90",
+        outline:
+          "gap-0 overflow-hidden rounded-xl border border-ui-border-secondary/80 bg-ui-bg/95",
+      },
       size: {
-        sm: "gap-0.5",
-        md: "gap-1",
-        lg: "gap-1.5",
+        sm: "",
+        md: "",
+        lg: "",
       },
     },
     defaultVariants: {
+      variant: "default",
       size: "md",
     },
   },
 );
 
 const toggleGroupItemVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-ui-bg transition-[background-color,color,box-shadow] duration-default ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap font-medium ring-offset-ui-bg transition-[background-color,color,box-shadow] duration-default ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
         default:
-          "bg-transparent text-ui-text-secondary hover:bg-ui-bg-hover hover:text-ui-text data-[state=on]:bg-ui-bg data-[state=on]:text-ui-text data-[state=on]:shadow-soft",
+          "rounded-xl bg-transparent text-ui-text-secondary hover:bg-ui-bg-hover hover:text-ui-text data-[state=on]:bg-ui-bg data-[state=on]:text-ui-text data-[state=on]:shadow-soft data-[state=on]:ring-1 data-[state=on]:ring-ui-border-secondary/70",
         brand:
-          "bg-transparent text-ui-text-secondary hover:bg-brand-subtle hover:text-brand-hover data-[state=on]:bg-brand data-[state=on]:text-brand-foreground data-[state=on]:shadow-soft",
+          "rounded-xl bg-transparent text-ui-text-secondary hover:bg-ui-bg-hover hover:text-ui-text data-[state=on]:bg-brand data-[state=on]:text-brand-foreground data-[state=on]:shadow-soft",
         error:
-          "bg-transparent text-ui-text-secondary hover:bg-status-error-bg hover:text-status-error-text data-[state=on]:bg-status-error data-[state=on]:text-brand-foreground data-[state=on]:shadow-soft",
+          "rounded-xl bg-transparent text-ui-text-secondary hover:bg-ui-bg-hover hover:text-ui-text data-[state=on]:bg-status-error data-[state=on]:text-brand-foreground data-[state=on]:shadow-soft",
         success:
-          "bg-transparent text-ui-text-secondary hover:bg-status-success-bg hover:text-status-success-text data-[state=on]:bg-status-success data-[state=on]:text-brand-foreground data-[state=on]:shadow-soft",
+          "rounded-xl bg-transparent text-ui-text-secondary hover:bg-ui-bg-hover hover:text-ui-text data-[state=on]:bg-status-success data-[state=on]:text-brand-foreground data-[state=on]:shadow-soft",
         accent:
-          "bg-transparent text-ui-text-secondary hover:bg-accent-subtle hover:text-accent-hover data-[state=on]:bg-accent data-[state=on]:text-accent-foreground data-[state=on]:shadow-soft",
+          "rounded-xl bg-transparent text-ui-text-secondary hover:bg-ui-bg-hover hover:text-ui-text data-[state=on]:bg-accent data-[state=on]:text-accent-foreground data-[state=on]:shadow-soft",
         outline:
-          "border border-ui-border bg-transparent hover:bg-ui-bg-hover hover:border-ui-border-secondary data-[state=on]:bg-ui-bg data-[state=on]:border-brand-ring data-[state=on]:shadow-soft",
+          "rounded-none border-none bg-transparent text-ui-text-secondary shadow-none hover:bg-ui-bg-hover hover:text-ui-text data-[state=on]:bg-ui-bg data-[state=on]:text-ui-text data-[state=on]:shadow-none",
       },
       size: {
-        sm: "h-8 px-2.5 text-xs",
-        md: "h-9 px-3 text-sm",
-        lg: "h-10 px-4 text-sm",
+        sm: "min-h-7 px-2.5 py-1 text-xs",
+        md: "min-h-8 px-3 py-1.5 text-sm",
+        lg: "min-h-10 px-4 py-2 text-sm",
       },
     },
     defaultVariants: {
@@ -69,7 +79,7 @@ const ToggleGroup = React.forwardRef<
 >(({ className, variant, size, children, ...props }, ref) => (
   <ToggleGroupPrimitive.Root
     ref={ref}
-    className={cn(toggleGroupVariants({ size, className }))}
+    className={cn(toggleGroupVariants({ size, variant }), className)}
     {...props}
   >
     <ToggleGroupContext.Provider value={{ variant, size }}>{children}</ToggleGroupContext.Provider>
@@ -103,4 +113,4 @@ const ToggleGroupItem = React.forwardRef<
 });
 ToggleGroupItem.displayName = ToggleGroupPrimitive.Item.displayName;
 
-export { ToggleGroup, ToggleGroupItem, toggleGroupVariants, toggleGroupItemVariants };
+export { ToggleGroup, ToggleGroupItem };

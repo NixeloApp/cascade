@@ -106,13 +106,9 @@ function AssistantConfig() {
   return (
     <div className="max-w-4xl">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-6 bg-ui-bg-secondary p-1 rounded-lg inline-flex">
-          <TabsTrigger value="general" className="px-4 py-1.5 text-sm">
-            General
-          </TabsTrigger>
-          <TabsTrigger value="billing" className="px-4 py-1.5 text-sm">
-            Billing
-          </TabsTrigger>
+        <TabsList className="mb-6">
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="billing">Billing</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-6 animate-fade-in">

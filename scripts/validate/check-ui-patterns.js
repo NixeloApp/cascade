@@ -5,7 +5,6 @@
  *
  * Note: DialogDescription is now enforced via TypeScript (required `description` prop)
  *
- * @strictness STRICT - Blocks CI. Button aria-labels, form labels, link accessibility.
  */
 
 import fs from "node:fs";

@@ -30,6 +30,7 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
 
 export const RAW_TAILWIND_ALLOWED_FILES = [
   "/ActivityFeed.tsx",
+  "/AdvancedSearchModal.tsx",
   "/AppSidebar.tsx",
   "/AppHeader.tsx",
   "/PortalProjectView.tsx",

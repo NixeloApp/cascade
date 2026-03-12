@@ -2,7 +2,6 @@
  * CHECK: Convex Hook Imports
  * Ensures useQuery/useMutation/useConvexAuth are imported from @/hooks/useConvexHelpers, not convex/react.
  *
- * @strictness STRICT - Blocks CI. All raw imports must use auth-aware wrappers.
  */
 
 import fs from "node:fs";

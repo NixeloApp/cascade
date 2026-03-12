@@ -21,13 +21,13 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { IconPicker, TemplateIcon, toTemplateIconString } from "@/components/ui/IconPicker";
 import { Label } from "@/components/ui/Label";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/SegmentedControl";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { FormInput, FormSelect, FormTextarea } from "@/lib/form";
 import { FileText } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 
 // =============================================================================
 // Schema
@@ -208,23 +208,19 @@ export function DocumentTemplatesManager({
       <div>
         {/* Category Filter */}
         <div className="mb-6">
-          <Flex gap="sm" className="overflow-x-auto pb-2">
+          <SegmentedControl
+            value={selectedCategory}
+            onValueChange={(value: string) => {
+              if (value) setSelectedCategory(value);
+            }}
+            className="flex w-full flex-wrap justify-start"
+          >
             {categoryFilters.map((cat) => (
-              <Button
-                key={cat.value}
-                variant="unstyled"
-                onClick={() => setSelectedCategory(cat.value)}
-                className={cn(
-                  "px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors h-auto",
-                  selectedCategory === cat.value
-                    ? "bg-brand text-brand-foreground"
-                    : "bg-ui-bg-tertiary text-ui-text hover:bg-ui-bg-secondary",
-                )}
-              >
+              <SegmentedControlItem key={cat.value} value={cat.value} className="whitespace-nowrap">
                 {cat.label}
-              </Button>
+              </SegmentedControlItem>
             ))}
-          </Flex>
+          </SegmentedControl>
         </div>
 
         {!templates || templates.length === 0 ? (

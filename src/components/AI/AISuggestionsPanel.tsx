@@ -10,8 +10,8 @@ import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { MetadataTimestamp } from "../ui/Metadata";
 import { Progress } from "../ui/Progress";
+import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
 import { Skeleton } from "../ui/Skeleton";
-import { ToggleGroup, ToggleGroupItem } from "../ui/ToggleGroup";
 import { Typography } from "../ui/Typography";
 import { SUGGESTION_METADATA, type SuggestionType } from "./config";
 import { useAISuggestions } from "./hooks";
@@ -69,28 +69,25 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
         </Button>
 
         {/* Filter Tabs */}
-        <ToggleGroup
-          type="single"
+        <SegmentedControl
           value={selectedType ?? "all"}
           onValueChange={(value: string) =>
             setSelectedType(value === "all" ? undefined : (value as SuggestionType))
           }
-          className="mt-3 flex-wrap"
+          className="mt-3 flex w-full flex-wrap justify-start"
           size="sm"
         >
-          <ToggleGroupItem value="all" variant="brand">
-            All
-          </ToggleGroupItem>
-          <ToggleGroupItem value="risk_detection" variant="error">
+          <SegmentedControlItem value="all">All</SegmentedControlItem>
+          <SegmentedControlItem value="risk_detection">
             <Icon icon={AlertTriangle} size="sm" className="inline mr-1" /> Risks
-          </ToggleGroupItem>
-          <ToggleGroupItem value="insight" variant="accent">
+          </SegmentedControlItem>
+          <SegmentedControlItem value="insight">
             <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> Insights
-          </ToggleGroupItem>
-          <ToggleGroupItem value="sprint_planning" variant="success">
+          </SegmentedControlItem>
+          <SegmentedControlItem value="sprint_planning">
             <Icon icon={Calendar} size="sm" className="inline mr-1" /> Planning
-          </ToggleGroupItem>
-        </ToggleGroup>
+          </SegmentedControlItem>
+        </SegmentedControl>
       </div>
 
       {/* Suggestions List */}

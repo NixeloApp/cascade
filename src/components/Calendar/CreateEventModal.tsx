@@ -22,6 +22,7 @@ import { Flex } from "../ui/Flex";
 import { Input } from "../ui/form/Input";
 import { Grid } from "../ui/Grid";
 import { Label } from "../ui/Label";
+import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import {
   COLOR_PICKER_CLASSES,
@@ -164,24 +165,31 @@ export function CreateEventModal({
               {/* Event Type */}
               <div>
                 <Label className="mb-1">Event Type</Label>
-                <Grid cols={4} gap="sm">
+                <SegmentedControl
+                  value={eventType}
+                  onValueChange={(value: string) => {
+                    if (!eventTypes.includes(value as (typeof eventTypes)[number])) {
+                      return;
+                    }
+
+                    const nextType = value as CreateEventForm["eventType"];
+                    form.setFieldValue("eventType", nextType);
+                    if (!selectedColor) {
+                      setSelectedColor(EVENT_TYPE_DEFAULT_COLOR[nextType]);
+                    }
+                  }}
+                  className="flex w-full flex-wrap"
+                >
                   {eventTypes.map((type) => (
-                    <Button
+                    <SegmentedControlItem
                       key={type}
-                      variant={eventType === type ? "primary" : "secondary"}
-                      size="sm"
-                      onClick={() => {
-                        form.setFieldValue("eventType", type as (typeof eventTypes)[number]);
-                        if (!selectedColor) {
-                          setSelectedColor(EVENT_TYPE_DEFAULT_COLOR[type]);
-                        }
-                      }}
-                      className="capitalize"
+                      value={type}
+                      className="flex-1 capitalize sm:flex-none"
                     >
                       {type}
-                    </Button>
+                    </SegmentedControlItem>
                   ))}
-                </Grid>
+                </SegmentedControl>
               </div>
 
               {/* Color */}

@@ -23,18 +23,21 @@
  *  19. Component naming        — PascalCase components, {Component}Props interfaces
  *  20. Component props         — consistent prop naming across component definitions
  *  21. Duplicate components    — detect components with same name in different directories
- *  22. Interactive Tailwind    — hover:/focus: should be in CVA components, not scattered
- *  23. Tailwind consistency    — duration tokens, focus rings, disabled states, z-index, group-hover
- *  24. JSDoc coverage          — exported functions/components should have JSDoc documentation
- *  25. Import paths            — validates import path conventions
- *  26. Hook patterns           — custom hooks should follow consistent patterns
- *  27. Async patterns          — consistent error handling in async operations
- *  28. Time constants          — enforces use of timeUtils constants instead of magic numbers
- *  29. Unused parameters       — flags underscore-prefixed unused params (remove or use them)
- *  30. Test coverage           — critical files should have corresponding tests
- *  31. Weak assertions         — toBeDefined(), toBeTruthy(), {} as Type in tests
- *  32. Native confirm()        — ensure custom dialogs used instead of native confirm()
- *  33. Convex hooks            — validates Convex hook usage patterns
+ *  22. CVA boundaries          — ban importing exported CVA recipes outside shared ui primitives
+ *  23. Control ownership       — block low-level ToggleGroup in app code; use semantic primitives
+ *  24. Interactive Tailwind    — hover:/focus: should be in CVA components, not scattered
+ *  25. Tailwind consistency    — duration tokens, focus rings, disabled states, z-index, group-hover
+ *  26. Recipe drift            — repeated visual patterns that should be Card recipes (info only)
+ *  27. JSDoc coverage          — exported functions/components should have JSDoc documentation
+ *  28. Import paths            — validates import path conventions
+ *  29. Hook patterns           — custom hooks should follow consistent patterns
+ *  30. Async patterns          — consistent error handling in async operations
+ *  31. Time constants          — enforces use of timeUtils constants instead of magic numbers
+ *  32. Unused parameters       — flags underscore-prefixed unused params (remove or use them)
+ *  33. Test coverage           — critical files should have corresponding tests
+ *  34. Weak assertions         — toBeDefined(), toBeTruthy(), {} as Type in tests
+ *  35. Native confirm()        — ensure custom dialogs used instead of native confirm()
+ *  36. Convex hooks            — validates Convex hook usage patterns
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -177,12 +180,24 @@ const checks = [
     modulePath: new URL("./validate/check-duplicate-components.js", import.meta.url).href,
   },
   {
+    name: "CVA boundaries",
+    modulePath: new URL("./validate/check-cva-boundaries.js", import.meta.url).href,
+  },
+  {
+    name: "Control ownership",
+    modulePath: new URL("./validate/check-control-ownership.js", import.meta.url).href,
+  },
+  {
     name: "Interactive Tailwind",
     modulePath: new URL("./validate/check-interactive-tw.js", import.meta.url).href,
   },
   {
     name: "Tailwind consistency",
     modulePath: new URL("./validate/check-tailwind-consistency.js", import.meta.url).href,
+  },
+  {
+    name: "Recipe drift",
+    modulePath: new URL("./validate/check-recipe-drift.js", import.meta.url).href,
   },
   {
     name: "JSDoc coverage",

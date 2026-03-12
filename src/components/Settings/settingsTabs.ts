@@ -26,10 +26,10 @@ export const SETTINGS_TABS: readonly SettingsTabDefinition[] = [
   { value: "security", label: "Security", shortLabel: "Lock", visibility: "all" },
   { value: "notifications", label: "Notifications", shortLabel: "Alerts", visibility: "all" },
   { value: "integrations", label: "Integrations", shortLabel: "Apps", visibility: "all" },
-  { value: "apikeys", label: "API Keys", shortLabel: "API", visibility: "all" },
-  { value: "offline", label: "Offline Mode", shortLabel: "Off", visibility: "all" },
+  { value: "apikeys", label: "API Keys", shortLabel: "API Keys", visibility: "all" },
+  { value: "offline", label: "Offline Mode", shortLabel: "Offline", visibility: "all" },
   { value: "preferences", label: "Preferences", shortLabel: "Prefs", visibility: "all" },
-  { value: "admin", label: "Admin", shortLabel: "Adm", visibility: "admin" },
+  { value: "admin", label: "Admin", shortLabel: "Admin", visibility: "admin" },
   { value: "developer", label: "Dev Tools", shortLabel: "Dev", visibility: "devtools" },
 ];
 

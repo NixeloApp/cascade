@@ -10,7 +10,6 @@
  * - XPath selectors - brittle
  * - Selector anti-patterns (text=, nth-child, etc.)
  *
- * @strictness HIGH - Any violation fails the check.
  */
 
 import fs from "node:fs";

@@ -530,20 +530,22 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
           className="flex min-h-0 flex-1 flex-col bg-transparent"
           shouldFilter={false}
         >
+          {/* Fixed header: search input */}
           <CommandInput
             placeholder="Search issues, docs, and commands..."
             value={query}
             onValueChange={setQuery}
-            className="text-ui-text"
+            className="shrink-0 text-ui-text"
             data-testid={TEST_IDS.SEARCH.INPUT}
             aria-label="Search and commands"
           />
 
+          {/* Fixed header: filter tabs (when searching) */}
           {effectiveQuery.length >= 2 ? (
             <Tabs
               value={activeTab}
               onValueChange={(value) => setActiveTab(value as "all" | "issues" | "documents")}
-              className="overflow-x-auto border-b border-ui-border/50 bg-ui-bg-soft/30"
+              className="shrink-0 overflow-x-auto border-b border-ui-border/50 bg-ui-bg-soft/30"
             >
               <TabsList variant="underline" className="gap-5 px-3">
                 <TabsTrigger
@@ -574,7 +576,8 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
             </Tabs>
           ) : null}
 
-          <CommandList className="min-h-0 flex-1">
+          {/* Scrollable body: search results and commands */}
+          <CommandList className="min-h-0 flex-1 overflow-y-auto">
             <SearchListContent
               query={effectiveQuery}
               hasShortcuts={parsedSearch.hasShortcuts}
@@ -589,7 +592,11 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
             />
           </CommandList>
 
-          <div className="border-t border-ui-border/50 bg-ui-bg-soft/20 px-4 py-2.5 text-ui-text-tertiary">
+          {/* Fixed footer: search hints */}
+          <FlexItem
+            shrink={false}
+            className="border-t border-ui-border/50 bg-ui-bg-soft/20 px-4 py-2.5 text-ui-text-tertiary"
+          >
             <Typography variant="meta" className="hidden sm:block">
               Search filters: <code>type:bug</code> <code>status:done</code>{" "}
               <code>priority:high</code> <code>label:frontend</code> <code>@me</code>
@@ -597,12 +604,13 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
             <Typography variant="meta" className="sm:hidden">
               Try <code>@me</code>, <code>type:bug</code>, or <code>status:done</code>
             </Typography>
-          </div>
+          </FlexItem>
 
+          {/* Fixed footer: action buttons and shortcuts */}
           <Flex
             align="center"
             justify="between"
-            className="border-t border-ui-border/50 bg-ui-bg-soft/10 px-4 py-3"
+            className="shrink-0 border-t border-ui-border/50 bg-ui-bg-soft/10 px-4 py-3"
           >
             <Flex align="center" gap="sm" wrap>
               <Button
