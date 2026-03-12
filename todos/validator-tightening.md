@@ -44,6 +44,8 @@
 - Added `Admin/UserManagement.tsx` and `Admin/OAuthHealthDashboard.tsx` to design-system ownership targeting so admin-shell drift is blocked directly.
 - Removed `Admin/HourComplianceDashboard.tsx` and `Admin/UserTypeManager.tsx` from the interactive-state migration debt list by moving their hover shells onto owned `Card` interaction props and replacing raw checkbox controls with the shared `Checkbox` primitive.
 - Added `Admin/HourComplianceDashboard.tsx` and `Admin/UserTypeManager.tsx` to design-system ownership targeting so future admin-shell drift is validated directly.
+- Added a dedicated blocking validator in `scripts/validate/check-surface-shells.js` for raw reusable shell stacks (`rounded + bg + border + shadow + overflow/state`) outside temporary Tailwind escape hatches, and wired it into `scripts/validate.js`.
+- Fixed the first surfaced violations in `Dashboard/WorkspacesList.tsx` and `IssueDetailModal.tsx` by moving their shell styling back behind owned `Card` and `Dialog` recipes instead of local class stacks.
 
 ### Next batch
 
@@ -51,7 +53,7 @@
   - settings surfaces
   - admin surfaces
 - Keep `src/components/Analytics/` temporarily allowed until its shell patterns are migrated; it was tested in this pass and still contains validator-breaking drift.
-- After the next exemption reduction, add a stricter surface-shell validator for `rounded + bg + border + shadow + overflow` stacks so recipe drift is blocked more directly than the current generic raw-Tailwind patterns.
+- Shrink the remaining broad raw-Tailwind escape hatches, with `src/components/Analytics/` first, now that shell drift is blocked everywhere else by a dedicated validator.
 
 ## Problem
 

@@ -69,7 +69,6 @@ export function IssueDetailModal({
       title={issue.title}
       description={`${issue.key} - View and edit issue details`}
       size="2xl"
-      className="overflow-y-auto bg-ui-bg-elevated border border-ui-border shadow-elevated"
       data-testid={TEST_IDS.ISSUE.DETAIL_MODAL}
     >
       {/* Additional issue metadata with icon, badge, and edit button */}
