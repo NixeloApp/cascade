@@ -41,6 +41,7 @@ interface KanbanBoardProps {
   teamId?: Id<"teams">;
   sprintId?: Id<"sprints">;
   filters?: BoardFilters;
+  mobileActions?: React.ReactNode;
 }
 
 /** Check if issue matches type filter */
@@ -142,7 +143,13 @@ function applyFilters(
 }
 
 /** Drag-and-drop Kanban board with swimlanes, filters, and bulk selection. */
-export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoardProps) {
+export function KanbanBoard({
+  projectId,
+  teamId,
+  sprintId,
+  filters,
+  mobileActions,
+}: KanbanBoardProps) {
   const [showCreateIssue, setShowCreateIssue] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState<Id<"issues"> | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
@@ -348,13 +355,13 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
         </Flex>
         <Flex
           gap="none"
-          className="overflow-x-auto gap-1.5 px-1.5 pb-2.5 sm:gap-3 sm:px-4 sm:pb-3 lg:px-6"
+          className="overflow-x-auto overscroll-x-contain snap-x snap-mandatory scroll-px-2 gap-2 px-2 pb-3 sm:snap-none sm:gap-3 sm:px-4 sm:pb-3 lg:px-6"
         >
           {[1, 2, 3, 4].map((i) => (
             <FlexItem
               key={i}
               shrink={false}
-              className="w-44 rounded-container border border-ui-border bg-ui-bg-soft sm:w-72 lg:w-80"
+              className="w-72 rounded-container border border-ui-border bg-ui-bg-soft lg:w-80"
             >
               <div className="border-b border-ui-border/50 bg-transparent rounded-t-container">
                 <SkeletonText lines={1} className="w-24" />
@@ -388,6 +395,7 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
         onSwimlanGroupByChange={isTeamMode ? undefined : setSwimlanGroupBy}
         displayOptions={displayOptions}
         onDisplayOptionsChange={setDisplayOptions}
+        mobileActions={mobileActions}
       />
 
       {swimlaneGroupBy === "none" ? (
@@ -396,7 +404,7 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
           ref={boardContainerRef}
           align="start"
           gap="none"
-          className="overflow-x-auto gap-1.5 px-1.5 pb-2.5 sm:gap-3 sm:px-4 sm:pb-3 lg:px-6"
+          className="overflow-x-auto overscroll-x-contain snap-x snap-mandatory scroll-px-2 gap-2 px-2 pb-3 sm:snap-none sm:gap-3 sm:px-4 sm:pb-3 lg:px-6"
         >
           {workflowStates.map((state, columnIndex: number) => {
             const counts = statusCounts[state.id] || {

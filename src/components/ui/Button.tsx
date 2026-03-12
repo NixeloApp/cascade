@@ -63,8 +63,9 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
       active:
         "border-ui-border-secondary/80 bg-ui-bg text-ui-text shadow-card hover:border-ui-border-secondary hover:bg-ui-bg-hover",
       filter:
-        "border-ui-border/55 bg-ui-bg-elevated/86 text-ui-text-secondary shadow-none hover:border-ui-border/60 hover:bg-ui-bg-hover/80",
-      filterActive: "border-brand/10 bg-brand-subtle text-brand shadow-none hover:bg-brand-subtle",
+        "border-ui-border/45 bg-transparent text-ui-text-secondary shadow-none hover:border-ui-border/60 hover:bg-ui-bg-hover/72 sm:border-ui-border/55 sm:bg-ui-bg-elevated/86 sm:hover:bg-ui-bg-hover/80",
+      filterActive:
+        "border-brand/15 bg-brand-subtle/78 text-brand shadow-none hover:bg-brand-subtle sm:border-brand/10 sm:bg-brand-subtle",
     },
     chromeSize: {
       icon: "h-9 w-9 rounded-full",

@@ -32,6 +32,10 @@
 - The backlog baseline is now useful for review again because the page waits for a real loaded board state before capture.
 - The mobile project shell and tabs are tighter than the previous pass, so more of the backlog shows on first paint.
 - Mobile columns are narrower, so the first two lanes read more cleanly instead of clipping immediately at the viewport edge.
+- Mobile filter/search controls now inherit the quieter shared filter chrome, so the backlog lanes get more of the first visual hit.
+- The mobile selection toggle now sits in a real toolbar row instead of appearing as a detached floating control.
+- Mobile lanes now use a staged snap layout, so backlog starts with one dominant lane instead of two equally compressed columns.
+- The shared toolbar is slimmer now that board-specific mobile actions no longer require a separate row outside the kanban surface.
 
 ---
 
@@ -39,8 +43,7 @@
 
 | Problem | Area | Severity |
 |---------|------|----------|
-| The filter row still carries more visual weight than the first backlog lanes on mobile | Shared board/filter chrome | MEDIUM |
-| The mobile backlog is more readable, but it still depends on horizontal compression rather than a stronger staged mobile hierarchy | Backlog composition | MEDIUM |
+| The backlog chrome is lighter, but the remaining toolbar band still competes slightly with the first lane on mobile | Shared board/filter chrome | LOW |
 | Light-mode hierarchy inside the backlog lanes could still be stronger | Backlog/card styling | LOW |
 
 ---

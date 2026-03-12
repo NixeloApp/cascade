@@ -165,33 +165,36 @@ function BoardPage() {
         </div>
       </div>
 
-      <div className="px-1 pt-0.5 sm:hidden">
-        <Flex align="center" justify="end" gap="xs">
-          {showMobileSprintControls && sprints && (
-            <Select value={selectedSprintId || "active"} onValueChange={handleSprintChange}>
-              <SelectTrigger className="h-7 min-w-28 rounded-lg border border-ui-border/70 bg-ui-bg-elevated/92 px-2 text-xs shadow-soft">
-                <SelectValue placeholder="Sprint" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Active Sprint</SelectItem>
-                {sprints.map((sprint: Doc<"sprints">) => (
-                  <SelectItem key={sprint._id} value={sprint._id}>
-                    {sprint.name} ({sprint.status})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          <ExportButton projectId={project._id} sprintId={effectiveSprintId} />
-        </Flex>
-      </div>
-
       {/* Filter Bar */}
       <FilterBar projectId={project._id} filters={filters} onFilterChange={handleFilterChange} />
 
       {/* Board Content */}
       <FlexItem flex="1" className="overflow-hidden">
-        <KanbanBoard projectId={project._id} sprintId={effectiveSprintId} filters={filters} />
+        <KanbanBoard
+          projectId={project._id}
+          sprintId={effectiveSprintId}
+          filters={filters}
+          mobileActions={
+            <>
+              {showMobileSprintControls && sprints && (
+                <Select value={selectedSprintId || "active"} onValueChange={handleSprintChange}>
+                  <SelectTrigger className="h-7 min-w-24 rounded-lg border border-ui-border/70 bg-ui-bg-elevated/92 px-2 text-xs shadow-soft">
+                    <SelectValue placeholder="Sprint" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active Sprint</SelectItem>
+                    {sprints.map((sprint: Doc<"sprints">) => (
+                      <SelectItem key={sprint._id} value={sprint._id}>
+                        {sprint.name} ({sprint.status})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <ExportButton projectId={project._id} sprintId={effectiveSprintId} />
+            </>
+          }
+        />
       </FlexItem>
     </Flex>
   );

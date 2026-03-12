@@ -152,6 +152,8 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-project-[^-]+-create-issue-modal$/, "06-board", "-create-issue-modal"],
   // Project backlog: filled-project-xxx-backlog → 07-backlog
   [/^filled-project-[^-]+-backlog$/, "07-backlog", ""],
+  // Project sprints: filled-project-xxx-sprints → 18-sprints
+  [/^filled-project-[^-]+-sprints$/, "18-sprints", ""],
   // Issue detail: filled-issue-xxx → 08-issue
   [/^filled-issue-/, "08-issue", ""],
   [/^filled-project-[^-]+-issue-detail-modal$/, "08-issue", "-detail-modal"],
@@ -592,6 +594,30 @@ function isProjectCalendarUrl(url: string): boolean {
   return /\/projects\/[^/]+\/calendar$/.test(url);
 }
 
+function isProjectActivityUrl(url: string): boolean {
+  return /\/projects\/[^/]+\/activity$/.test(url);
+}
+
+function isProjectAnalyticsUrl(url: string): boolean {
+  return /\/projects\/[^/]+\/analytics$/.test(url);
+}
+
+function isProjectTimesheetUrl(url: string): boolean {
+  return /\/projects\/[^/]+\/timesheet$/.test(url);
+}
+
+function isProjectSprintsUrl(url: string): boolean {
+  return /\/projects\/[^/]+\/sprints$/.test(url);
+}
+
+function isProjectRoadmapUrl(url: string): boolean {
+  return /\/projects\/[^/]+\/roadmap$/.test(url);
+}
+
+function isProjectBillingUrl(url: string): boolean {
+  return /\/projects\/[^/]+\/billing$/.test(url);
+}
+
 function isProjectSettingsUrl(url: string): boolean {
   return /\/projects\/[^/]+\/settings$/.test(url);
 }
@@ -862,6 +888,134 @@ async function waitForDocumentEditorReady(page: Page): Promise<void> {
     .catch(() => {});
 }
 
+async function waitForActivityReady(page: Page): Promise<void> {
+  await page
+    .getByRole("heading", { name: /project activity/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .getByTestId(TEST_IDS.ACTIVITY.FEED)
+    .or(page.getByTestId(TEST_IDS.ACTIVITY.EMPTY_STATE))
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .locator(".animate-spin")
+    .first()
+    .waitFor({ state: "hidden", timeout: 5000 })
+    .catch(() => {});
+}
+
+async function waitForAnalyticsReady(page: Page): Promise<void> {
+  await page
+    .getByRole("heading", { name: /analytics dashboard/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .getByTestId(TEST_IDS.ANALYTICS.METRIC_TOTAL_ISSUES)
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .locator(".animate-spin")
+    .first()
+    .waitFor({ state: "hidden", timeout: 5000 })
+    .catch(() => {});
+  await page
+    .locator(".animate-shimmer")
+    .first()
+    .waitFor({ state: "hidden", timeout: 5000 })
+    .catch(() => {});
+}
+
+async function waitForTimesheetReady(page: Page): Promise<void> {
+  await page
+    .getByRole("tab", { name: /time entries/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .getByText(/track time with enough context to understand cost/i)
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .locator(".animate-spin")
+    .first()
+    .waitFor({ state: "hidden", timeout: 5000 })
+    .catch(() => {});
+}
+
+async function waitForSprintsReady(page: Page): Promise<void> {
+  await page
+    .getByText(/sprint management/i)
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .getByRole("button", { name: /create sprint|\+ sprint/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .locator(".animate-spin")
+    .first()
+    .waitFor({ state: "hidden", timeout: 5000 })
+    .catch(() => {});
+}
+
+async function waitForRoadmapReady(page: Page): Promise<void> {
+  await page
+    .getByText(/^roadmap$/i)
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .waitForFunction(
+      () => {
+        const text = document.body.innerText || "";
+        return (
+          text.includes("Roadmap is ready for planning") ||
+          text.includes("Timeline") ||
+          text.includes("No issues with target dates")
+        );
+      },
+      undefined,
+      { timeout: 12000 },
+    )
+    .catch(() => {});
+  await page
+    .locator(".animate-spin")
+    .first()
+    .waitFor({ state: "hidden", timeout: 5000 })
+    .catch(() => {});
+}
+
+async function waitForBillingReady(page: Page): Promise<void> {
+  await page
+    .getByText(/billing report/i)
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .waitForFunction(
+      () => {
+        const text = document.body.innerText || "";
+        return text.includes("Billable Hours") || text.includes("Revenue") || text.includes("Rate");
+      },
+      undefined,
+      { timeout: 12000 },
+    )
+    .catch(() => {});
+  await page
+    .locator(".animate-spin")
+    .first()
+    .waitFor({ state: "hidden", timeout: 5000 })
+    .catch(() => {});
+}
+
 async function waitForExpectedContent(
   page: Page,
   url: string,
@@ -958,6 +1112,36 @@ async function waitForExpectedContent(
 
   if (isDocumentEditorUrl(url) || name === "document-editor") {
     await waitForDocumentEditorReady(page);
+    return;
+  }
+
+  if (isProjectActivityUrl(url)) {
+    await waitForActivityReady(page);
+    return;
+  }
+
+  if (isProjectAnalyticsUrl(url)) {
+    await waitForAnalyticsReady(page);
+    return;
+  }
+
+  if (isProjectTimesheetUrl(url)) {
+    await waitForTimesheetReady(page);
+    return;
+  }
+
+  if (isProjectSprintsUrl(url)) {
+    await waitForSprintsReady(page);
+    return;
+  }
+
+  if (isProjectRoadmapUrl(url)) {
+    await waitForRoadmapReady(page);
+    return;
+  }
+
+  if (isProjectBillingUrl(url)) {
+    await waitForBillingReady(page);
     return;
   }
 

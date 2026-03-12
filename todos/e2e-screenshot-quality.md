@@ -317,8 +317,9 @@ Examples:
   - Evidence now: `docs/design/specs/pages/07-backlog/screenshots/desktop-light.png`
 
 - [ ] Keep expanding screenshot readiness contracts where partial-load captures can still leak through.
-  - 2026-03-12 hardening added route-specific readiness for public pages, project backlog, calendar event content, project modal navigation, and create-issue modal form readiness.
-  - Remaining risk: route-specific completion signals are still uneven outside the core auth/project/editor/calendar paths.
+  - 2026-03-12 hardening added route-specific readiness for public pages, project backlog, project activity, project analytics, project timesheet, project sprints, project roadmap, project billing, calendar event content, project modal navigation, and create-issue modal form readiness.
+  - 2026-03-12 also restored spec-folder promotion for `project-demo-sprints`, so the sprints route now stays in the tracked screenshot baseline instead of only landing in `e2e/screenshots`.
+  - Remaining risk: route-specific completion signals are still uneven outside the now-covered auth/project/editor/calendar/analytics/sprints paths.
   - Expected: every captured route has a deterministic loaded-content signal before capture.
 
 ### P1 - Highest-Leverage Remaining Visual Fixes
@@ -535,6 +536,8 @@ Each screenshot-driven round should leave a short entry in the active log or com
   - `pnpm screenshots -- --spec 12-settings --config desktop-light`
 - Additional settings-density reruns completed successfully:
   - `pnpm screenshots -- --spec 12-settings --config tablet-light,mobile-light`
+- Additional board/backlog follow-through reruns completed successfully:
+  - `pnpm screenshots -- --spec 06-board,07-backlog --config mobile-light`
 - Main shared fixes that landed:
   - `e2e/screenshot-pages.ts`: calendar captures now wait for real event content instead of trusting a loaded shell alone
   - `e2e/screenshot-pages.ts`: public pages now wait for real hero/form content and entrance animations before capture
@@ -545,6 +548,11 @@ Each screenshot-driven round should leave a short entry in the active log or com
   - `src/components/Calendar/shadcn-calendar/header/*`: reduced mobile calendar-header density
   - `src/components/ui/RouteNav.tsx` and `src/routes/_auth/_app/$orgSlug/projects/$key/route.tsx`: tightened the shared mobile project shell and tab pills
   - `src/routes/_auth/_app/$orgSlug/projects/$key/board.tsx` and `src/components/FilterBar.tsx`: removed extra mobile board shell and reduced the filter row's top-weight
+  - `src/components/ui/Button.tsx` and `src/components/ui/Input.tsx`: moved mobile filter chrome into shared button/input variants so board/backlog search and filter pills no longer rely on ad hoc class strings
+  - `src/components/Kanban/BoardToolbar.tsx`: moved the mobile selection toggle into a real toolbar row and switched it to shared icon-button treatment instead of a floating custom button
+  - `src/components/KanbanBoard.tsx` and `src/components/Kanban/KanbanColumn.tsx`: moved mobile board/backlog lanes to a staged snap layout so the first column owns the frame and the next lane peeks in deliberately
+  - `src/routes/_auth/_app/$orgSlug/projects/$key/board.tsx` and `src/components/Kanban/BoardToolbar.tsx`: folded mobile export/sprint controls into the shared toolbar so board loses one full utility row before the work surface
+  - `src/components/ExportButton.tsx`: switched mobile export affordance to compact shared button treatment so the remaining board toolbar row stays visually thin
   - `src/index.css`, `src/components/Auth/AuthPageLayout.tsx`, `src/components/Landing/NavHeader.tsx`, `src/components/Landing/ProductShowcase.tsx`, and `src/components/ui/Card.tsx`: rebalanced public light-mode backgrounds and shared landing/auth surfaces so light mode no longer reads like dimmed dark-mode art
   - `src/components/ui/Card.tsx` and `src/index.css`: improved shared app-surface depth so light pages stop stacking pale cards on pale page backgrounds
   - `src/components/PlateEditor.tsx` and `src/components/Documents/DocumentHeader.tsx`: gave the editor a clearer paper/header relationship in desktop light mode
@@ -562,6 +570,7 @@ Each screenshot-driven round should leave a short entry in the active log or com
   - mobile `07-backlog`
   - `12-settings`
 - Remaining below-bar areas:
+  - board still spends too much top-of-screen area on the remaining filter row plus one compact toolbar strip before the work surface begins
   - backlog still needs stronger row/section hierarchy in light mode
 
 ## Success Criteria

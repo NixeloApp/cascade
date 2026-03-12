@@ -495,7 +495,7 @@ const KanbanColumnComponent = function KanbanColumn({
       data-testid={TEST_IDS.BOARD.COLUMN}
       data-board-column
       className={cn(
-        "w-44 flex-shrink-0 snap-start rounded-container border border-ui-border-secondary/70 border-t-2 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft shadow-soft transition-default animate-slide-up sm:w-72 lg:w-80",
+        "w-72 flex-shrink-0 snap-start rounded-container border border-ui-border-secondary/70 border-t-2 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft shadow-soft transition-default animate-slide-up lg:w-80",
         getWorkflowCategoryColor(state.category),
         isDraggedOver && "ring-2 ring-brand/30 bg-brand/5",
         isOverWipLimit && "border-status-error/50 bg-status-error/5",

@@ -26,9 +26,10 @@ import {
   DropdownMenuTrigger,
 } from "./ui/DropdownMenu";
 import { Flex, FlexItem } from "./ui/Flex";
-import { Checkbox, Input } from "./ui/form";
+import { Checkbox, Input as FormInput } from "./ui/form";
 import { Icon } from "./ui/Icon";
 import { IconButton } from "./ui/IconButton";
+import { Input } from "./ui/Input";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 export interface DateRangeFilter {
@@ -170,13 +171,13 @@ function DateRangeDropdown({ label, shortLabel, value, onChange }: DateRangeDrop
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="p-3 min-w-56">
         <Stack gap="sm">
-          <Input
+          <FormInput
             label="From"
             type="date"
             value={value?.from ?? ""}
             onChange={(e) => handleFromChange(e.target.value)}
           />
-          <Input
+          <FormInput
             label="To"
             type="date"
             value={value?.to ?? ""}
@@ -299,7 +300,7 @@ function SaveFilterDialog({
       }
     >
       <Stack gap="md">
-        <Input
+        <FormInput
           label="Filter Name"
           type="text"
           value={filterName}
@@ -409,9 +410,11 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
             <Input
               type="text"
               placeholder="Search"
+              variant="filter"
+              inputSize="filterPill"
               value={filters.query ?? ""}
               onChange={handleSearchChange}
-              className="h-6 w-20 rounded-full border border-ui-border/55 bg-ui-bg-elevated/90 pl-7 pr-2 text-xs shadow-none sm:h-9 sm:w-64 sm:rounded-xl sm:border-ui-border/60 sm:bg-ui-bg-soft sm:pr-3 sm:text-sm sm:shadow-none"
+              className="w-20 pl-7 pr-2 sm:w-64 sm:pr-3"
               aria-label="Search issues"
             />
           </Flex>

@@ -101,7 +101,7 @@ export function AccountInfo({
       value: (
         <Typography
           variant="mono"
-          className="max-w-full break-all text-left text-[11px] sm:max-w-40 sm:text-right sm:text-xs"
+          className="max-w-full break-all text-left text-xs sm:max-w-40 sm:text-right"
         >
           {user._id}
         </Typography>
@@ -130,9 +130,11 @@ export function AccountInfo({
         {rows.map((row) => (
           <Flex
             key={row.label}
+            direction="column"
+            align="start"
             justify="between"
             gap="xs"
-            className="flex-col items-start sm:flex-row sm:items-center sm:gap-sm"
+            className="sm:flex-row sm:items-center sm:gap-sm"
           >
             <Typography variant="caption">{row.label}</Typography>
             {row.value}

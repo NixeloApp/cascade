@@ -18,6 +18,8 @@ const inputVariants = cva(
       variant: {
         default: "bg-transparent text-ui-text border-ui-border",
         search: "bg-ui-bg-soft text-ui-text pl-9 border-ui-border",
+        filter:
+          "border-ui-border/45 bg-transparent text-ui-text-secondary placeholder:text-ui-text-tertiary hover:border-ui-border/60 focus-visible:border-ui-border-secondary focus-visible:bg-ui-bg-elevated/80 sm:border-ui-border/60 sm:bg-ui-bg-soft sm:text-ui-text",
         ghost: "border-transparent bg-transparent text-ui-text hover:bg-ui-bg-secondary",
         error: "border-status-error focus-visible:border-status-error",
       },
@@ -25,6 +27,7 @@ const inputVariants = cva(
         sm: "h-9 px-3 text-sm",
         md: "h-10 px-4 text-sm",
         lg: "h-11 px-4 text-base",
+        filterPill: "h-6 rounded-full px-2 text-xs sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm",
       },
     },
     defaultVariants: {
@@ -40,7 +43,7 @@ export interface InputProps
   /** Error message to display */
   error?: string;
   /** Size variant for the input */
-  inputSize?: "sm" | "md" | "lg";
+  inputSize?: "sm" | "md" | "lg" | "filterPill";
 }
 
 /**
