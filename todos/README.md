@@ -11,6 +11,8 @@
    - Add organization-scoped Slack connection storage and destination lookup.
 3. [query-filter-ordering.md](./query-filter-ordering.md)
    - Fix the remaining filter-after-limit query paths and add over-limit coverage.
+4. [validator-tightening.md](./validator-tightening.md)
+   - Tighten validator escape hatches and add shell-ownership enforcement for migration-safe UI work.
 
 ## Open Tracks
 
@@ -19,6 +21,7 @@
 | P0 | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | Finish deterministic E2E hardening |
 | P1 | [slack-integration-issues.md](./slack-integration-issues.md) | Active | Scope Slack connections by organization |
 | P2 | [query-filter-ordering.md](./query-filter-ordering.md) | Queued | Fix remaining query-shape bugs |
+| P2 | [validator-tightening.md](./validator-tightening.md) | Queued | Shrink allowlists and add shell ownership checks |
 | P2 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Blocked | Finish field-projection audit and publish metrics report |
 | P2 | [feature-gaps.md](./feature-gaps.md) | Blocked | Complete external Slack dashboard setup |
 | P2 | [emoji-overhaul.md](./emoji-overhaul.md) | Blocked | Finish manual accessibility QA |
