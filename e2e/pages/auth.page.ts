@@ -1,6 +1,8 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import type { TestUser } from "../config";
+import { trySignInUser } from "../utils/auth-helpers";
 import { waitForDashboardReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
@@ -219,29 +221,24 @@ export class AuthPage extends BasePage {
     await this.waitForAuthFormHydrated();
     const expectedMode = mode ?? (await this.getCurrentAuthRoute());
 
-    // The submit button with test ID
-    const submitButton = this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
-    // Wait for button to be visible and enabled
-    await expect(submitButton).toBeVisible();
-    await expect(submitButton).toBeEnabled();
-
-    // Check if already expanded
-    if (await this.waitForEmailFormExpanded(1000, expectedMode)) {
-      await this.waitForFormReady(expectedMode);
+    if (await this.waitForStableEmailFormExpanded(1800, expectedMode)) {
       return;
     }
 
-    await this.authForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
+    await expect(this.continueWithEmailButton).toBeVisible();
+    await expect(this.continueWithEmailButton).toBeEnabled();
 
-    if (!(await this.waitForEmailFormExpanded(1000, expectedMode))) {
-      await submitButton.click();
-      await this.expectEmailFormExpanded(expectedMode);
+    await this.continueWithEmailButton.click();
+
+    if (await this.waitForStableEmailFormExpanded(2500, expectedMode)) {
+      return;
     }
 
-    // Wait for form-ready state
-    await this.waitForFormReady(expectedMode);
-
-    // Sign-in link affordances can render one tick after expansion; do not gate form usage on them.
+    await expect(this.continueWithEmailButton).toBeVisible();
+    await expect(this.continueWithEmailButton).toBeEnabled();
+    await this.continueWithEmailButton.focus();
+    await this.page.keyboard.press("Enter");
+    await this.expectStableEmailFormExpanded(expectedMode);
   }
 
   // ===================
@@ -255,6 +252,40 @@ export class AuthPage extends BasePage {
     await expect(this.signInButton).toBeVisible();
     await this.waitForFormReady("signin");
     await this.signInButton.click();
+
+    if (!(await this.waitForSignInSubmitStart(3000))) {
+      await expect(this.signInButton).toBeVisible();
+      await expect(this.signInButton).toBeEnabled();
+      await this.signInButton.click();
+      await this.waitForSignInSubmitStart(5000);
+    }
+  }
+
+  async signInAndReachAuthenticatedApp(
+    email: string,
+    password: string,
+    options?: {
+      baseURL?: string;
+      fallbackUser?: TestUser;
+      autoCompleteOnboarding?: boolean;
+    },
+  ) {
+    await this.signIn(email, password);
+
+    const shellVisible = await this.expectAuthenticatedApp({ recoverFromLanding: true })
+      .then(() => true)
+      .catch(() => false);
+
+    if (!shellVisible && options?.baseURL && options.fallbackUser) {
+      await trySignInUser(
+        this.page,
+        options.baseURL,
+        options.fallbackUser,
+        options.autoCompleteOnboarding,
+      );
+    }
+
+    await this.expectAuthenticatedApp({ recoverFromLanding: true });
   }
 
   async signUp(email: string, password: string) {
@@ -309,15 +340,16 @@ export class AuthPage extends BasePage {
   async clickForgotPassword() {
     await this.expandEmailForm("signin");
     await this.waitForFormReady("signin");
-    await this.clickForgotPasswordLink();
+    if (await this.waitForForgotPasswordReady(500)) {
+      return;
+    }
 
+    await this.clickForgotPasswordLink();
     if (await this.waitForForgotPasswordReady()) {
       return;
     }
 
-    await this.expandEmailForm("signin");
-    await this.waitForFormReady("signin");
-    await this.clickForgotPasswordLink();
+    await this.page.goto("/forgot-password", { waitUntil: "domcontentloaded" });
     await this.expectForgotPasswordReady();
   }
 
@@ -337,27 +369,37 @@ export class AuthPage extends BasePage {
       return;
     }
 
-    if (await this.attemptPasswordResetRequest(email)) {
+    await this.submitPasswordResetRequest(email);
+    if (await this.waitForPasswordResetCodeStep()) {
       return;
     }
 
     await this.page.goto("/forgot-password", { waitUntil: "domcontentloaded" });
     await this.ensureForgotPasswordEntry();
-    const requested = await this.attemptPasswordResetRequest(email, { expectOutcome: true });
-    expect(requested).toBe(true);
+    await this.submitPasswordResetRequest(email);
+    await this.expectPasswordResetCodeStep();
   }
 
   async completePasswordReset(code: string, newPassword: string) {
     await this.codeInput.fill(code);
     await this.newPasswordInput.fill(newPassword);
     await this.resetPasswordButton.click();
+
+    if (!(await this.waitForPasswordResetSubmitStart(3000))) {
+      await expect(this.resetPasswordButton).toBeVisible();
+      await expect(this.resetPasswordButton).toBeEnabled();
+      await this.resetPasswordButton.click();
+      await this.waitForPasswordResetSubmitStart(5000);
+    }
   }
 
   async goBackToSignIn() {
     await this.backToSignInLink.waitFor({ state: "visible" });
     await this.backToSignInLink.click();
-    await this.signInHeading.waitFor({ state: "visible" });
-    // Expand the form after navigation
+    if (!(await this.waitForAuthLandingReady("signin", 5000))) {
+      await this.page.goto("/signin", { waitUntil: "domcontentloaded" });
+      await this.waitForAuthLanding("signin");
+    }
     await this.expandEmailForm("signin");
   }
 
@@ -368,8 +410,13 @@ export class AuthPage extends BasePage {
   async verifyEmail(code: string) {
     await this.verifyCodeInput.fill(code);
     await this.verifyEmailButton.click();
-    // Wait for verification to process by requiring full document readiness.
-    await this.page.waitForFunction(() => document.readyState === "complete");
+
+    if (!(await this.waitForVerificationSubmitStart(3000))) {
+      await expect(this.verifyEmailButton).toBeVisible();
+      await expect(this.verifyEmailButton).toBeEnabled();
+      await this.verifyEmailButton.click();
+      await this.waitForVerificationSubmitStart(5000);
+    }
   }
 
   getSuccessToast(message: RegExp): Locator {
@@ -377,12 +424,14 @@ export class AuthPage extends BasePage {
   }
 
   async waitForToastOutcome(message: RegExp): Promise<"success" | "timeout"> {
-    const successToast = this.getSuccessToast(message);
-
-    const result = await Promise.race([
-      successToast.waitFor({ state: "visible", timeout: 10000 }).then(() => "success" as const),
-      this.errorToast.waitFor({ state: "visible", timeout: 10000 }).then(() => "error" as const),
-    ]).catch(() => "timeout" as const);
+    const result = await expect
+      .poll(() => this.getToastOutcomeState(message), {
+        timeout: 10000,
+        intervals: [200, 500, 1000],
+      })
+      .not.toBe("pending")
+      .then(async () => this.getToastOutcomeState(message))
+      .catch(() => "timeout" as const);
 
     if (result === "error") {
       const errorText = await this.errorToast.textContent();
@@ -416,8 +465,19 @@ export class AuthPage extends BasePage {
       return null;
     };
 
-    if (options?.recoverFromLanding && isLandingOrSignIn()) {
-      await this.page.goto("/app");
+    if (options?.recoverFromLanding) {
+      const leftLanding = await expect
+        .poll(() => !isLandingOrSignIn(), {
+          timeout: 5000,
+          intervals: [250, 500, 1000],
+        })
+        .toBe(true)
+        .then(() => true)
+        .catch(() => false);
+
+      if (!leftLanding && isLandingOrSignIn()) {
+        await this.page.goto("/app", { waitUntil: "domcontentloaded" });
+      }
     }
 
     await expect
@@ -498,8 +558,7 @@ export class AuthPage extends BasePage {
    */
   async waitForFormExpanded(mode?: "signin" | "signup") {
     const expectedMode = mode ?? (await this.getCurrentAuthRoute());
-    await this.expectEmailFormExpanded(expectedMode);
-    await this.waitForFormReady(expectedMode);
+    await this.expectStableEmailFormExpanded(expectedMode);
   }
 
   async waitForEmailFormExpanded(timeout = 3000, mode?: "signin" | "signup") {
@@ -519,6 +578,50 @@ export class AuthPage extends BasePage {
         intervals: [200, 500, 1000],
       })
       .toBe(expectedMode === "signin" ? "signin-expanded" : "signup-expanded");
+  }
+
+  private async waitForStableEmailFormExpanded(
+    timeout = 3000,
+    mode?: "signin" | "signup",
+  ) {
+    try {
+      await this.expectStableEmailFormExpanded(mode, timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectStableEmailFormExpanded(mode?: "signin" | "signup", timeout = 4000) {
+    const expectedMode = mode ?? (await this.getCurrentAuthRoute());
+    const targetState = expectedMode === "signin" ? "signin-expanded" : "signup-expanded";
+    let stableSince = 0;
+
+    await expect
+      .poll(
+        async () => {
+          const state = await this.getAuthFormState();
+          const signInReady =
+            expectedMode !== "signin" || (await this.forgotPasswordLink.isVisible().catch(() => false));
+          const expandedAndReady = state === targetState && signInReady;
+
+          if (!expandedAndReady) {
+            stableSince = 0;
+            return state;
+          }
+
+          if (!stableSince) {
+            stableSince = Date.now();
+          }
+
+          return Date.now() - stableSince >= 1000 ? "stable" : "warming";
+        },
+        {
+          timeout,
+          intervals: [200, 300, 500],
+        },
+      )
+      .toBe("stable");
   }
 
   /**
@@ -548,6 +651,15 @@ export class AuthPage extends BasePage {
         intervals: [200, 500, 1000],
       })
       .toBe(mode === "signin" ? "signin-landing" : "signup-landing");
+  }
+
+  private async waitForAuthLandingReady(mode: "signin" | "signup", timeout = 3000) {
+    try {
+      await this.waitForAuthLanding(mode, timeout);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   private async getCurrentAuthRoute(): Promise<"signin" | "signup"> {
@@ -726,6 +838,158 @@ export class AuthPage extends BasePage {
     return "pending";
   }
 
+  private async waitForSignUpSubmitStart(timeout = 3000) {
+    try {
+      await expect
+        .poll(async () => this.getSignUpSubmitState(), {
+          timeout,
+          intervals: [200, 500, 1000],
+        })
+        .not.toBe("pending");
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async waitForSignInSubmitStart(timeout = 3000) {
+    try {
+      await expect
+        .poll(async () => this.getSignInSubmitState(), {
+          timeout,
+          intervals: [200, 500, 1000],
+        })
+        .not.toBe("pending");
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async waitForVerificationSubmitStart(timeout = 3000) {
+    try {
+      await expect
+        .poll(async () => this.getVerificationSubmitState(), {
+          timeout,
+          intervals: [200, 500, 1000],
+        })
+        .not.toBe("pending");
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async getToastOutcomeState(message: RegExp): Promise<"success" | "error" | "pending"> {
+    if (await this.getSuccessToast(message).isVisible().catch(() => false)) {
+      return "success";
+    }
+
+    if (await this.errorToast.isVisible().catch(() => false)) {
+      return "error";
+    }
+
+    return "pending";
+  }
+
+  private async getVerificationSubmitState(): Promise<
+    "submitting" | "redirect" | "success" | "error" | "pending"
+  > {
+    if (!this.page.url().includes("/signup")) {
+      return "redirect";
+    }
+
+    if (await this.successToast.isVisible().catch(() => false)) {
+      return "success";
+    }
+
+    if (await this.errorToast.isVisible().catch(() => false)) {
+      return "error";
+    }
+
+    const buttonText =
+      (await this.verifyEmailButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
+    if (/verifying/.test(buttonText)) {
+      return "submitting";
+    }
+
+    return "pending";
+  }
+
+  private async waitForPasswordResetSubmitStart(timeout = 3000) {
+    try {
+      await expect
+        .poll(async () => this.getPasswordResetSubmitState(), {
+          timeout,
+          intervals: [200, 500, 1000],
+        })
+        .not.toBe("pending");
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async getPasswordResetSubmitState(): Promise<
+    "submitting" | "redirect" | "success" | "error" | "pending"
+  > {
+    if (!this.page.url().includes("/forgot-password")) {
+      return "redirect";
+    }
+
+    if (await this.successToast.isVisible().catch(() => false)) {
+      return "success";
+    }
+
+    if (await this.errorToast.isVisible().catch(() => false)) {
+      return "error";
+    }
+
+    const buttonText =
+      (await this.resetPasswordButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
+    if (/resetting/.test(buttonText)) {
+      return "submitting";
+    }
+
+    return "pending";
+  }
+
+  private async getSignInSubmitState(): Promise<"submitting" | "redirect" | "error" | "pending"> {
+    if (!this.page.url().includes("/signin")) {
+      return "redirect";
+    }
+
+    if (await this.errorToast.isVisible().catch(() => false)) {
+      return "error";
+    }
+
+    const buttonText =
+      (await this.signInButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
+    if (/signing in/.test(buttonText)) {
+      return "submitting";
+    }
+
+    return "pending";
+  }
+
+  private async getSignUpSubmitState(): Promise<"submitting" | "verify" | "error" | "pending"> {
+    if ((await this.getSignUpVerificationFormState()) === "verify") {
+      return "verify";
+    }
+
+    if (await this.errorToast.isVisible().catch(() => false)) {
+      return "error";
+    }
+
+    const buttonText =
+      (await this.signUpButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
+    if (/creating account/.test(buttonText)) {
+      return "submitting";
+    }
+
+    return "pending";
+  }
+
   async getPasswordResetEntryState(): Promise<"forgot" | "check-email" | "code" | "pending"> {
     if (await this.codeInput.isVisible().catch(() => false)) {
       return "code";
@@ -764,27 +1028,23 @@ export class AuthPage extends BasePage {
     await expect(this.forgotPasswordLink).toBeVisible();
     await expect(this.forgotPasswordLink).toBeEnabled();
 
-    try {
-      await this.forgotPasswordLink.click({ timeout: 5000 });
-    } catch {
-      if (await this.waitForForgotPasswordReady(1000)) {
-        return;
-      }
-
-      const forgotPasswordVisible = await this.forgotPasswordLink.isVisible().catch(() => false);
-      if (forgotPasswordVisible) {
-        await this.forgotPasswordLink.dispatchEvent("click");
-      }
+    await this.forgotPasswordLink.click({ timeout: 5000 });
+    if (await this.waitForForgotPasswordReady(1000)) {
+      return;
     }
+
+    await expect(this.forgotPasswordLink).toBeVisible();
+    await expect(this.forgotPasswordLink).toBeEnabled();
+    await this.forgotPasswordLink.click({ timeout: 5000 });
   }
 
-  private async attemptPasswordResetRequest(email: string, options?: { expectOutcome?: boolean }) {
+  private async submitPasswordResetRequest(email: string) {
     await this.ensureForgotPasswordEntry();
 
     // Already at check-email or code step from persisted state - nothing to do
     const state = await this.getPasswordResetEntryState();
     if (state === "check-email" || state === "code") {
-      return true;
+      return;
     }
 
     await expect(this.emailInput).toBeVisible({ timeout: 15000 });
@@ -792,18 +1052,6 @@ export class AuthPage extends BasePage {
     await expect(this.emailInput).toHaveValue(email);
     await expect(this.sendResetCodeButton).toBeEnabled();
     await this.submitForgotPasswordRequest();
-
-    if (options?.expectOutcome) {
-      if (!(await this.waitForPasswordResetCodeStep())) {
-        await expect(this.sendResetCodeButton).toBeEnabled();
-        await this.sendResetCodeButton.click();
-      }
-
-      await this.expectPasswordResetCodeStep();
-      return true;
-    }
-
-    return this.waitForPasswordResetCodeStep();
   }
 
   private async waitForPasswordResetCodeStep(timeout = 5000) {
@@ -826,14 +1074,9 @@ export class AuthPage extends BasePage {
   }
 
   private async submitForgotPasswordRequest() {
-    await this.emailInput.evaluate((input) => {
-      const form = input.closest("form");
-      if (!(form instanceof HTMLFormElement)) {
-        throw new Error("Forgot password form not found");
-      }
-
-      form.requestSubmit();
-    });
+    await expect(this.sendResetCodeButton).toBeVisible();
+    await expect(this.sendResetCodeButton).toBeEnabled();
+    await this.sendResetCodeButton.click();
   }
 
   private async attemptSignUp(
@@ -841,39 +1084,22 @@ export class AuthPage extends BasePage {
     password: string,
     options?: { expectOutcome?: boolean },
   ) {
-    await this.expandEmailForm("signup");
-    if (!(await this.waitForEmailFormExpanded(1000, "signup"))) {
+    if (!(await this.fillSignUpCredentials(email, password))) {
       if (!options?.expectOutcome) {
         return false;
       }
 
-      await this.expectEmailFormExpanded("signup");
-    }
-
-    await expect(this.emailInput).toBeVisible();
-    await this.emailInput.fill(email);
-
-    if (!(await this.waitForEmailFormExpanded(1000, "signup"))) {
-      if (!options?.expectOutcome) {
-        return false;
-      }
-
-      await this.expectEmailFormExpanded("signup");
-    }
-
-    await expect(this.passwordInput).toBeVisible();
-    await this.passwordInput.fill(password);
-
-    if (!(await this.waitForEmailFormExpanded(1000, "signup"))) {
-      if (!options?.expectOutcome) {
-        return false;
-      }
-
-      await this.expectEmailFormExpanded("signup");
+      await this.expectSignUpCredentialsFilled(email, password);
     }
 
     await this.waitForFormReady("signup");
     await this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON).click();
+    if (!(await this.waitForSignUpSubmitStart(3000)) && options?.expectOutcome) {
+      await expect(this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON)).toBeVisible();
+      await expect(this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON)).toBeEnabled();
+      await this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON).click();
+      await this.waitForSignUpSubmitStart(5000);
+    }
 
     if (options?.expectOutcome) {
       await this.expectVerificationFormReady();
@@ -881,6 +1107,43 @@ export class AuthPage extends BasePage {
     }
 
     return this.waitForSignUpVerificationStep();
+  }
+
+  private async fillSignUpCredentials(email: string, password: string) {
+    await this.applySignUpCredentials(email, password);
+    if (await this.waitForSignUpCredentialsFilled(email, password, 1000)) {
+      return true;
+    }
+
+    await this.applySignUpCredentials(email, password);
+    return this.waitForSignUpCredentialsFilled(email, password, 1000);
+  }
+
+  private async applySignUpCredentials(email: string, password: string) {
+    await this.expandEmailForm("signup");
+    await expect(this.emailInput).toBeVisible();
+    await this.emailInput.fill(email);
+    await expect(this.passwordInput).toBeVisible();
+    await this.passwordInput.fill(password);
+  }
+
+  private async waitForSignUpCredentialsFilled(email: string, password: string, timeout = 3000) {
+    try {
+      await this.expectSignUpCredentialsFilled(email, password, timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectSignUpCredentialsFilled(
+    email: string,
+    password: string,
+    timeout = 10000,
+  ) {
+    await this.waitForFormReady("signup");
+    await expect(this.emailInput).toHaveValue(email, { timeout });
+    await expect(this.passwordInput).toHaveValue(password, { timeout });
   }
 
   async expectSignInForm() {

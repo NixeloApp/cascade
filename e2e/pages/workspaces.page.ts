@@ -238,13 +238,16 @@ export class WorkspacesPage extends BasePage {
     const createButton = this.newWorkspaceButton.first();
     await expect(createButton).toBeVisible();
     await expect(createButton).toBeEnabled();
+    await createButton.scrollIntoViewIfNeeded().catch(() => {});
 
     try {
       await createButton.click({ timeout: 3000 });
+      return;
     } catch {
       await expect(createButton).toBeVisible();
       await expect(createButton).toBeEnabled();
-      await createButton.evaluate((button: HTMLButtonElement) => button.click());
+      await createButton.scrollIntoViewIfNeeded().catch(() => {});
+      await createButton.click({ timeout: 3000 });
     }
   }
 }

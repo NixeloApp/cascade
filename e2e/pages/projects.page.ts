@@ -438,13 +438,11 @@ export class ProjectsPage extends BasePage {
   }
 
   async openCreateIssueModal() {
-    const trigger = await this.findVisibleCreateIssueTrigger();
-    if (trigger && (await this.tryOpenCreateIssueModalFromTrigger(trigger, 4000))) {
+    if (await this.tryOpenCreateIssueModal(2000, 4000)) {
       return;
     }
 
-    await this.dispatchCreateIssueModalOpen();
-    if (await this.waitForCreateIssueModalReady(6000)) {
+    if (await this.tryOpenCreateIssueModal(5000, 6000)) {
       return;
     }
 
@@ -452,7 +450,7 @@ export class ProjectsPage extends BasePage {
     await this.expectCreateIssueModalReady();
   }
 
-  private async findVisibleCreateIssueTrigger(): Promise<Locator | null> {
+  private async findVisibleCreateIssueTrigger(timeout = 2000): Promise<Locator | null> {
     const triggerCandidates = [
       this.page.getByRole("button", { name: /add first issue/i }).first(),
       this.page.locator("[data-tour='create-issue']").first(),
@@ -464,7 +462,7 @@ export class ProjectsPage extends BasePage {
         continue;
       }
 
-      await trigger.waitFor({ state: "visible", timeout: 2000 }).catch(() => {});
+      await trigger.waitFor({ state: "visible", timeout }).catch(() => {});
       if (await trigger.isVisible().catch(() => false)) {
         return trigger;
       }
@@ -473,16 +471,15 @@ export class ProjectsPage extends BasePage {
     return null;
   }
 
-  private async tryOpenCreateIssueModalFromTrigger(trigger: Locator, timeout = 4000) {
+  private async tryOpenCreateIssueModal(triggerTimeout = 2000, readyTimeout = 4000) {
+    const trigger = await this.findVisibleCreateIssueTrigger(triggerTimeout);
+    if (!trigger) {
+      return false;
+    }
+
     await trigger.scrollIntoViewIfNeeded().catch(() => {});
     await trigger.click({ force: true });
-    return this.waitForCreateIssueModalReady(timeout);
-  }
-
-  private async dispatchCreateIssueModalOpen() {
-    await this.page.evaluate(() => {
-      window.dispatchEvent(new Event("nixelo:create-issue"));
-    });
+    return this.waitForCreateIssueModalReady(readyTimeout);
   }
 
   async createIssue(title: string, type?: string, priority?: string) {
@@ -496,15 +493,56 @@ export class ProjectsPage extends BasePage {
     }
     await expect(this.submitIssueButton).toBeVisible();
     await expect(this.submitIssueButton).toBeEnabled();
-
-    // Submit the form directly to avoid viewport/actionability flakiness on modal footer buttons.
-    if (await this.createIssueForm.isVisible()) {
-      await this.createIssueForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
-    } else {
-      await this.submitIssueButton.click();
-    }
+    await this.submitCreateIssue();
 
     await waitForIssueCreateSuccess(this.page, title);
+  }
+
+  private async submitCreateIssue() {
+    await expect(this.submitIssueButton).toBeVisible();
+    await expect(this.submitIssueButton).toBeEnabled();
+    await this.submitIssueButton.scrollIntoViewIfNeeded().catch(() => {});
+    await this.submitIssueButton.click();
+
+    if (await this.waitForCreateIssueSubmitStart(3000)) {
+      return;
+    }
+
+    await expect(this.submitIssueButton).toBeVisible();
+    await expect(this.submitIssueButton).toBeEnabled();
+    await this.submitIssueButton.scrollIntoViewIfNeeded().catch(() => {});
+    await this.submitIssueButton.click();
+    await this.expectCreateIssueSubmitStarted();
+  }
+
+  private async waitForCreateIssueSubmitStart(timeout = 3000) {
+    try {
+      await this.expectCreateIssueSubmitStarted(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectCreateIssueSubmitStarted(timeout = 10000) {
+    await expect
+      .poll(async () => this.getCreateIssueSubmitState(), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .not.toBe("open");
+  }
+
+  private async getCreateIssueSubmitState() {
+    if (!(await this.createIssueModal.isVisible().catch(() => false))) {
+      return "closed";
+    }
+
+    if (await this.submitIssueButton.isDisabled().catch(() => false)) {
+      return "submitting";
+    }
+
+    return "open";
   }
 
   private async waitForCreateIssueModalReady(timeout = 12000) {
@@ -913,17 +951,7 @@ export class ProjectsPage extends BasePage {
       return;
     }
 
-    await expect(this.createButton).toBeVisible();
-    await this.createButton.scrollIntoViewIfNeeded();
-
-    try {
-      await this.createButton.click({ timeout: 2000 });
-    } catch {
-      // The modal footer can remain logically visible while its sticky layout leaves the
-      // button outside Playwright's viewport checks. Fall back to a DOM click instead of
-      // polling repeated actionability retries.
-      await this.createButton.evaluate((button: HTMLButtonElement) => button.click());
-    }
+    await this.clickWithBoundedSecondAttempt(this.createButton, 2000);
   }
 
   async waitForCreateProjectSubmitStart(timeout = 10000) {
@@ -931,15 +959,13 @@ export class ProjectsPage extends BasePage {
       return true;
     }
 
-    const creatingButton = this.createProjectForm.getByRole("button", { name: /creating/i });
-
     try {
-      await Promise.race([
-        creatingButton.waitFor({ state: "visible", timeout }),
-        this.createProjectForm.waitFor({ state: "hidden", timeout }),
-        // Button becomes disabled when submitting
-        expect(this.createButton).toBeDisabled({ timeout }),
-      ]);
+      await expect
+        .poll(() => this.getCreateProjectSubmitState(), {
+          timeout,
+          intervals: [200, 500, 1000],
+        })
+        .not.toBe("pending");
       return true;
     } catch {
       return false;
@@ -949,6 +975,23 @@ export class ProjectsPage extends BasePage {
   async expectCreateProjectSubmitStarted(timeout = 10000) {
     const submitStarted = await this.waitForCreateProjectSubmitStart(timeout);
     expect(submitStarted).toBe(true);
+  }
+
+  private async getCreateProjectSubmitState(): Promise<"submitting" | "closed" | "pending"> {
+    if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+      return "closed";
+    }
+
+    const creatingButton = this.createProjectForm.getByRole("button", { name: /creating/i });
+    if (await creatingButton.isVisible().catch(() => false)) {
+      return "submitting";
+    }
+
+    if (await this.createButton.isDisabled().catch(() => false)) {
+      return "submitting";
+    }
+
+    return "pending";
   }
 
   async editIssueTitle(nextTitle: string) {
@@ -1034,16 +1077,7 @@ export class ProjectsPage extends BasePage {
   }
 
   private async clickNewProjectButton() {
-    await expect(this.newProjectButton).toBeVisible();
-    await expect(this.newProjectButton).toBeEnabled();
-
-    try {
-      await this.newProjectButton.click({ timeout: 3000 });
-    } catch {
-      await expect(this.newProjectButton).toBeVisible();
-      await expect(this.newProjectButton).toBeEnabled();
-      await this.newProjectButton.evaluate((button: HTMLButtonElement) => button.click());
-    }
+    await this.clickWithBoundedSecondAttempt(this.newProjectButton);
   }
 
   private async waitForProjectsView(timeout = 3000) {
@@ -1187,15 +1221,21 @@ export class ProjectsPage extends BasePage {
   }
 
   private async clickFirstProjectTemplate() {
-    await expect(this.templateOptionButtons.first()).toBeVisible();
+    await this.clickWithBoundedSecondAttempt(this.templateOptionButtons.first());
+  }
+
+  private async clickWithBoundedSecondAttempt(locator: Locator, timeout = 3000) {
+    await expect(locator).toBeVisible();
+    await locator.scrollIntoViewIfNeeded().catch(() => {});
 
     try {
-      await this.templateOptionButtons.first().click({ timeout: 3000 });
+      await locator.click({ timeout });
+      return;
     } catch {
-      await expect(this.templateOptionButtons.first()).toBeVisible();
-      await this.templateOptionButtons
-        .first()
-        .evaluate((button: HTMLButtonElement) => button.click());
+      await expect(locator).toBeVisible();
+      await expect(locator).toBeEnabled();
+      await locator.scrollIntoViewIfNeeded().catch(() => {});
+      await locator.click({ timeout });
     }
   }
 

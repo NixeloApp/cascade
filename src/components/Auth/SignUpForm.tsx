@@ -177,7 +177,8 @@ export function SignUpForm() {
           </Flex>
         </div>
         <Button
-          type="submit"
+          type={showEmailForm ? "submit" : "button"}
+          onClick={!showEmailForm ? handleShowEmailForm : undefined}
           variant={showEmailForm ? "primary" : "secondary"}
           size="lg"
           className={cn("w-full transition-all duration-medium", showEmailForm && "shadow-card")}

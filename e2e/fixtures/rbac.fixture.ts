@@ -5,7 +5,8 @@ import { type BrowserContext, test as base, expect, type Page } from "@playwrigh
 import { AUTH_PATHS, RBAC_TEST_CONFIG, TEST_USERS } from "../config";
 import { E2E_TIMEZONE } from "../constants";
 import { ProjectsPage, SettingsPage, WorkspacesPage } from "../pages";
-import { testUserService } from "../utils";
+import { loginFixtureUserWithRepair } from "../utils/fixture-auth";
+import { ensureAuthenticatedDashboardReady, waitForConvexConnectionReady } from "../utils/wait-helpers";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,46 +36,6 @@ function _getAuthPath(role: UserRole, workerIndex = 0): string {
   const filename = path.basename(paths[role]);
   const fullPath = path.join(AUTH_DIR, filename);
   return fullPath;
-}
-
-// Helper to inject tokens into context
-async function injectAuth(context: BrowserContext, email: string, password: string) {
-  const loginResult = await testUserService.loginTestUser(email, password);
-  if (!(loginResult.success && loginResult.token)) {
-    throw new Error(`Failed to login as ${email}: ${loginResult.error}`);
-  }
-
-  await context.addInitScript(
-    ({ token, refreshToken, convexUrl }) => {
-      const setIfMissing = (key: string, value: string) => {
-        if (!localStorage.getItem(key)) {
-          localStorage.setItem(key, value);
-        }
-      };
-
-      // Legacy keys
-      setIfMissing("convexAuthToken", token);
-      if (refreshToken) {
-        setIfMissing("convexAuthRefreshToken", refreshToken);
-      }
-
-      // Namespaced keys
-      if (convexUrl) {
-        const namespace = convexUrl.replace(/[^a-zA-Z0-9]/g, "");
-        const jwtKey = `__convexAuthJWT_${namespace}`;
-        const refreshKey = `__convexAuthRefreshToken_${namespace}`;
-        setIfMissing(jwtKey, token);
-        if (refreshToken) {
-          setIfMissing(refreshKey, refreshToken);
-        }
-      }
-    },
-    {
-      token: loginResult.token,
-      refreshToken: loginResult.refreshToken ?? undefined,
-      convexUrl: process.env.VITE_CONVEX_URL,
-    },
-  );
 }
 
 export type RbacFixtures = {
@@ -127,7 +88,11 @@ export const rbacTest = base.extend<RbacFixtures>({
     const email = TEST_USERS.teamLead.email.replace("@", `-${workerSuffix}@`);
 
     console.log(`  🔐 adminContext: Logging in as ${email}...`);
-    await injectAuth(context, email, TEST_USERS.teamLead.password);
+    await loginFixtureUserWithRepair(
+      context,
+      { ...TEST_USERS.teamLead, email },
+      "RBAC bootstrap",
+    );
 
     (context as BrowserContext & { _role?: string; _workerIndex?: number })._role = "admin";
     (context as BrowserContext & { _workerIndex?: number })._workerIndex = workerIndex;
@@ -143,7 +108,11 @@ export const rbacTest = base.extend<RbacFixtures>({
     const email = TEST_USERS.teamMember.email.replace("@", `-${workerSuffix}@`);
 
     console.log(`  🔐 editorContext: Logging in as ${email}...`);
-    await injectAuth(context, email, TEST_USERS.teamMember.password);
+    await loginFixtureUserWithRepair(
+      context,
+      { ...TEST_USERS.teamMember, email },
+      "RBAC bootstrap",
+    );
 
     (context as BrowserContext & { _role?: string; _workerIndex?: number })._role = "editor";
     (context as BrowserContext & { _workerIndex?: number })._workerIndex = workerIndex;
@@ -159,7 +128,11 @@ export const rbacTest = base.extend<RbacFixtures>({
     const email = TEST_USERS.viewer.email.replace("@", `-${workerSuffix}@`);
 
     console.log(`  🔐 viewerContext: Logging in as ${email}...`);
-    await injectAuth(context, email, TEST_USERS.viewer.password);
+    await loginFixtureUserWithRepair(
+      context,
+      { ...TEST_USERS.viewer, email },
+      "RBAC bootstrap",
+    );
 
     (context as BrowserContext & { _role?: string; _workerIndex?: number })._role = "viewer";
     (context as BrowserContext & { _workerIndex?: number })._workerIndex = workerIndex;
@@ -178,13 +151,7 @@ export const rbacTest = base.extend<RbacFixtures>({
     await page.close();
   },
   adminProjectsPage: async ({ adminPage, rbacOrgSlug }, use) => {
-    // Add re-auth check for admin (handle redirect to landing page)
-    const targetUrl = adminPage.url();
-    if (targetUrl === "http://localhost:5555/" || targetUrl.endsWith("/signin")) {
-      await adminPage.goto(`/${rbacOrgSlug}/dashboard`);
-      await expect(adminPage).toHaveURL(/\/dashboard/);
-      await expect(adminPage.getByRole("navigation")).toBeVisible();
-    }
+    await ensureAuthenticatedDashboardIfNeeded(adminPage, rbacOrgSlug);
     await use(new ProjectsPage(adminPage, rbacOrgSlug));
   },
   adminWorkspacesPage: async ({ adminPage, rbacOrgSlug }, use) => {
@@ -202,13 +169,7 @@ export const rbacTest = base.extend<RbacFixtures>({
     await page.close();
   },
   editorProjectsPage: async ({ editorPage, rbacOrgSlug }, use) => {
-    // Add re-auth check for editor
-    const targetUrl = editorPage.url();
-    if (targetUrl === "http://localhost:5555/" || targetUrl.endsWith("/signin")) {
-      await editorPage.goto(`/${rbacOrgSlug}/dashboard`);
-      await expect(editorPage).toHaveURL(/\/dashboard/);
-      await expect(editorPage.getByRole("navigation")).toBeVisible();
-    }
+    await ensureAuthenticatedDashboardIfNeeded(editorPage, rbacOrgSlug);
     await use(new ProjectsPage(editorPage, rbacOrgSlug));
   },
   editorWorkspacesPage: async ({ editorPage, rbacOrgSlug }, use) => {
@@ -226,13 +187,7 @@ export const rbacTest = base.extend<RbacFixtures>({
     await page.close();
   },
   viewerProjectsPage: async ({ viewerPage, rbacOrgSlug }, use) => {
-    // Add re-auth check for viewer
-    const targetUrl = viewerPage.url();
-    if (targetUrl === "http://localhost:5555/" || targetUrl.endsWith("/signin")) {
-      await viewerPage.goto(`/${rbacOrgSlug}/dashboard`);
-      await expect(viewerPage).toHaveURL(/\/dashboard/);
-      await expect(viewerPage.getByRole("navigation")).toBeVisible();
-    }
+    await ensureAuthenticatedDashboardIfNeeded(viewerPage, rbacOrgSlug);
     await use(new ProjectsPage(viewerPage, rbacOrgSlug));
   },
   viewerWorkspacesPage: async ({ viewerPage, rbacOrgSlug }, use) => {
@@ -271,18 +226,9 @@ export const rbacTest = base.extend<RbacFixtures>({
       await page.goto(targetUrl);
 
       // 2. Wait for Convex WebSocket synchronization
-      await page
-        .waitForFunction(() => {
-          const convex = (
-            window as Window & {
-              __convex_test_client?: { connectionState: () => { isWebSocketConnected: boolean } };
-            }
-          ).__convex_test_client;
-          return convex?.connectionState().isWebSocketConnected;
-        }, {})
-        .catch(() => {
-          console.warn("⚠️ Convex WebSocket timed out, proceeding anyway...");
-        });
+      if (!(await waitForConvexConnectionReady(page))) {
+        console.warn("⚠️ Convex WebSocket timed out, proceeding anyway...");
+      }
 
       // Final check: URL should contain /board
       await expect(page).toHaveURL(/.*\/board/);
@@ -293,6 +239,13 @@ export const rbacTest = base.extend<RbacFixtures>({
 });
 
 export { expect };
+
+async function ensureAuthenticatedDashboardIfNeeded(page: Page, orgSlug: string): Promise<void> {
+  const targetUrl = page.url();
+  if (targetUrl === "http://localhost:5555/" || targetUrl.endsWith("/signin")) {
+    await ensureAuthenticatedDashboardReady(page, orgSlug);
+  }
+}
 
 export function hasAdminAuth(workerIndex = 0): boolean {
   try {

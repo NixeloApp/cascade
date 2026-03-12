@@ -186,13 +186,7 @@ export class CalendarPage extends BasePage {
     if (options?.isRequired) {
       await this.isRequiredCheckbox.check();
     }
-    await this.saveEventButton.scrollIntoViewIfNeeded();
-
-    try {
-      await this.saveEventButton.click({ timeout: 2000 });
-    } catch {
-      await this.saveEventButton.evaluate((button: HTMLButtonElement) => button.click());
-    }
+    await this.clickSaveEventButton();
     await expect(this.createEventModal).not.toBeVisible();
     await expect(this.eventItems.filter({ hasText: title }).first()).toBeVisible();
   }
@@ -200,6 +194,20 @@ export class CalendarPage extends BasePage {
   async cancelCreateEvent() {
     await this.cancelEventButton.click();
     await expect(this.createEventModal).not.toBeVisible();
+  }
+
+  private async clickSaveEventButton() {
+    await this.saveEventButton.scrollIntoViewIfNeeded();
+
+    try {
+      await this.saveEventButton.click({ timeout: 2000 });
+      return;
+    } catch {
+      await expect(this.saveEventButton).toBeVisible();
+      await expect(this.saveEventButton).toBeEnabled();
+      await this.saveEventButton.scrollIntoViewIfNeeded();
+      await this.saveEventButton.click({ timeout: 2000 });
+    }
   }
 
   async selectEvent(index: number) {

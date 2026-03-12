@@ -353,13 +353,33 @@ export class DashboardPage extends BasePage {
   async openShortcutsHelp() {
     await this.shortcutsHelpButton.waitFor({ state: "visible" });
     await this.closeShortcutsHelpIfOpen();
-    await this.shortcutsHelpButton.click();
+    await this.clickShortcutsHelpTrigger();
 
-    if (!(await this.shortcutsModal.isVisible().catch(() => false))) {
-      await this.shortcutsHelpButton.click();
+    if (await this.waitForShortcutsHelpVisible()) {
+      return;
     }
 
-    await expect(this.shortcutsModal).toBeVisible();
+    await this.clickShortcutsHelpTrigger();
+    await this.expectShortcutsHelpVisible();
+  }
+
+  private async clickShortcutsHelpTrigger() {
+    await expect(this.shortcutsHelpButton).toBeVisible();
+    await expect(this.shortcutsHelpButton).toBeEnabled();
+    await this.shortcutsHelpButton.click();
+  }
+
+  private async waitForShortcutsHelpVisible(timeout = 3000) {
+    try {
+      await this.expectShortcutsHelpVisible(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectShortcutsHelpVisible(timeout = 10000) {
+    await expect(this.shortcutsModal).toBeVisible({ timeout });
   }
 
   async closeShortcutsHelp() {
@@ -449,17 +469,32 @@ export class DashboardPage extends BasePage {
 
   private async attemptSignOutViaUserMenu() {
     await this.openUserMenu();
+    await this.clickVisibleUserMenuSignOutItem();
+  }
 
-    try {
-      await this.getVisibleUserMenuSignOutItem().click();
-    } catch {
-      await this.openUserMenu();
-      await this.getVisibleUserMenuSignOutItem().click();
+  private async clickVisibleUserMenuSignOutItem() {
+    await expect(this.getVisibleUserMenuSignOutItem()).toBeVisible();
+    if (await this.tryClickVisibleUserMenuSignOutItem()) {
+      return;
     }
+
+    await this.openUserMenu();
+    await expect(this.getVisibleUserMenuSignOutItem()).toBeVisible();
+    const clicked = await this.tryClickVisibleUserMenuSignOutItem();
+    expect(clicked).toBe(true);
   }
 
   private getVisibleUserMenuSignOutItem() {
     return this.page.getByRole("menuitem", { name: /sign out/i }).last();
+  }
+
+  private async tryClickVisibleUserMenuSignOutItem() {
+    try {
+      await this.getVisibleUserMenuSignOutItem().click();
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   private async openUserMenu() {
@@ -506,18 +541,26 @@ export class DashboardPage extends BasePage {
     await waitForDashboardReady(this.page);
     await this.throwIfAppErrorVisible();
     await this.closeGlobalSearchIfOpen();
-    await this.globalSearchButton.click();
+    await this.clickGlobalSearchTrigger();
     await this.throwIfAppErrorVisible();
 
-    if (!(await this.waitForGlobalSearchReady())) {
-      await this.globalSearchButton.click();
-      await this.throwIfAppErrorVisible();
-      await this.expectGlobalSearchReady();
+    if (await this.waitForGlobalSearchReady()) {
+      await this.globalSearchInput.focus();
+      await expect(this.globalSearchInput).toBeVisible();
       return;
     }
 
+    await this.clickGlobalSearchTrigger();
+    await this.throwIfAppErrorVisible();
+    await this.expectGlobalSearchReady();
     await this.globalSearchInput.focus();
     await expect(this.globalSearchInput).toBeVisible();
+  }
+
+  private async clickGlobalSearchTrigger() {
+    await expect(this.globalSearchButton).toBeVisible();
+    await expect(this.globalSearchButton).toBeEnabled();
+    await this.globalSearchButton.click();
   }
 
   private async throwIfAppErrorVisible() {
@@ -662,15 +705,20 @@ export class DashboardPage extends BasePage {
 
   private async openTimeEntryModalOnce() {
     await this.closeTimeEntryModalIfOpen();
-    await expect(this.headerStartTimerButton).toBeVisible();
-    await this.headerStartTimerButton.click();
+    await this.clickTimeEntryTrigger();
 
     if (await this.waitForTimeEntryModalVisible()) {
       return;
     }
 
-    await this.headerStartTimerButton.click();
+    await this.clickTimeEntryTrigger();
     await this.expectTimeEntryModalVisible();
+  }
+
+  private async clickTimeEntryTrigger() {
+    await expect(this.headerStartTimerButton).toBeVisible();
+    await expect(this.headerStartTimerButton).toBeEnabled();
+    await this.headerStartTimerButton.click();
   }
 
   private async resyncTimeEntryModalBillingState() {

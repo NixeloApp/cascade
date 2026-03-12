@@ -616,11 +616,14 @@ export class SettingsPage extends BasePage {
 
     await this.setTimeApprovalDraftState(enabled);
 
-    if (!(await this.trySaveOrganizationSettings())) {
-      await this.setTimeApprovalDraftState(enabled);
-      await this.expectTimeApprovalDraftState(enabled);
-      await this.saveOrganizationSettings();
+    if (await this.saveOrganizationSettingsAttempt()) {
+      await this.expectTimeApprovalEnabled(enabled);
+      return;
     }
+
+    await this.setTimeApprovalDraftState(enabled);
+    await this.expectTimeApprovalDraftState(enabled);
+    await this.saveOrganizationSettings();
     await this.expectTimeApprovalEnabled(enabled);
   }
 
@@ -661,7 +664,7 @@ export class SettingsPage extends BasePage {
     );
   }
 
-  async trySaveOrganizationSettings() {
+  private async saveOrganizationSettingsAttempt() {
     await this.saveSettingsButton.waitFor({ state: "visible" });
 
     if (!(await this.waitForSettingsSaveReady())) {
@@ -669,7 +672,7 @@ export class SettingsPage extends BasePage {
     }
 
     await this.waitForSettingsSuccessToastReset();
-    await this.saveSettingsButton.evaluate((button: HTMLButtonElement) => button.click());
+    await this.clickSaveSettingsButton();
 
     try {
       await this.waitForOrganizationSettingsSaved();
@@ -682,7 +685,7 @@ export class SettingsPage extends BasePage {
   async saveOrganizationSettings() {
     await this.expectSettingsSaveReady();
     await this.waitForSettingsSuccessToastReset();
-    await this.saveSettingsButton.evaluate((button: HTMLButtonElement) => button.click());
+    await this.clickSaveSettingsButton();
     await this.waitForOrganizationSettingsSaved();
   }
 
@@ -696,6 +699,11 @@ export class SettingsPage extends BasePage {
       .first()
       .waitFor({ state: "hidden", timeout: 1000 })
       .catch(() => {});
+  }
+
+  private async clickSaveSettingsButton() {
+    await this.saveSettingsButton.scrollIntoViewIfNeeded();
+    await this.saveSettingsButton.click();
   }
 
   async expectOrganizationName(name: string) {

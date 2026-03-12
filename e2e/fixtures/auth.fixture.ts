@@ -14,8 +14,8 @@ import {
   SettingsPage,
   WorkspacesPage,
 } from "../pages";
-import { testUserService } from "../utils";
-import { waitForDashboardReady } from "../utils/wait-helpers";
+import { loginFixtureUserWithRepair } from "../utils/fixture-auth";
+import { ensureAuthenticatedDashboardReady } from "../utils/wait-helpers";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -60,97 +60,18 @@ export type AuthFixtures = {
   skipAuthSave: boolean;
 };
 
-async function injectAuthTokens(page: Page, token: string, refreshToken?: string): Promise<void> {
-  await page.context().addInitScript(
-    ({ token: jwt, refreshToken: refresh, convexUrl }) => {
-      const setIfMissing = (key: string, value: string) => {
-        if (!localStorage.getItem(key)) {
-          localStorage.setItem(key, value);
-        }
-      };
+async function bootstrapFixtureUser(
+  page: Page,
+  user: { email: string; password: string },
+  logPrefix: string,
+  ready: () => Promise<void>,
+): Promise<void> {
+  await page.context().clearCookies();
 
-      setIfMissing("convexAuthToken", jwt);
-      if (refresh) {
-        setIfMissing("convexAuthRefreshToken", refresh);
-      }
+  console.log(`  🔐 ${logPrefix}: Logging in as ${user.email}...`);
 
-      if (convexUrl) {
-        const namespace = convexUrl.replace(/[^a-zA-Z0-9]/g, "");
-        const jwtKey = `__convexAuthJWT_${namespace}`;
-        const refreshKey = `__convexAuthRefreshToken_${namespace}`;
-        setIfMissing(jwtKey, jwt);
-        if (refresh) {
-          setIfMissing(refreshKey, refresh);
-        }
-      }
-    },
-    {
-      token,
-      refreshToken,
-      convexUrl: process.env.VITE_CONVEX_URL,
-    },
-  );
-}
-
-async function waitForAuthenticatedDashboard(page: Page, orgSlug: string): Promise<void> {
-  const escapedOrgSlug = orgSlug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const dashboardPath = `/${orgSlug}/dashboard`;
-  const dashboardUrl = new RegExp(`/${escapedOrgSlug}/dashboard(?:\\?.*)?$`);
-  const appErrorHeading = page.getByRole("heading", { name: "500" });
-  const appErrorDetails = page.locator("details pre");
-  const expectAuthenticatedDashboardReady = async (timeout = 15000) => {
-    await expect(page).toHaveURL(dashboardUrl, { timeout });
-    await page.waitForLoadState("domcontentloaded");
-
-    if (await appErrorHeading.isVisible().catch(() => false)) {
-      throw new Error("App error boundary displayed during authenticated dashboard bootstrap");
-    }
-
-    await waitForDashboardReady(page);
-  };
-
-  const tryAuthenticatedDashboardReady = async (timeout = 10000) => {
-    try {
-      await expectAuthenticatedDashboardReady(timeout);
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
-  const recoverAuthenticatedDashboard = async () => {
-    const currentUrl = page.url();
-    const isOutsideOrgShell =
-      currentUrl.endsWith("/") || currentUrl.includes("/signin") || !currentUrl.includes(orgSlug);
-
-    await page.goto(isOutsideOrgShell ? dashboardPath : "/app", {
-      waitUntil: "domcontentloaded",
-    });
-    await page.waitForLoadState("load");
-
-    if (await tryAuthenticatedDashboardReady(5000)) {
-      return;
-    }
-
-    await page.goto(dashboardPath, { waitUntil: "domcontentloaded" });
-    await page.waitForLoadState("load");
-  };
-
-  if (await tryAuthenticatedDashboardReady()) {
-    return;
-  }
-
-  await recoverAuthenticatedDashboard();
-  try {
-    await expectAuthenticatedDashboardReady();
-  } catch (error) {
-    const lastError = error instanceof Error ? error : new Error(String(error));
-    const errorDetails = (await appErrorDetails.textContent().catch(() => null))?.trim();
-    const suffix = errorDetails ? `: ${errorDetails}` : "";
-    throw new Error(
-      `Failed to bootstrap authenticated dashboard for ${orgSlug}: ${lastError.message}${suffix}`,
-    );
-  }
+  await loginFixtureUserWithRepair(page.context(), user, "fixture bootstrap");
+  await ready();
 }
 
 export const authenticatedTest = base.extend<AuthFixtures>({
@@ -170,36 +91,21 @@ export const authenticatedTest = base.extend<AuthFixtures>({
         return;
       }
 
-      // 1. Clear any existing state (redundant if new context, but safe)
-      await page.context().clearCookies();
-
-      // 2. Construct worker-specific user
       const workerSuffix = `w${testInfo.parallelIndex}`;
       const workerUser = {
         ...TEST_USERS.teamLead,
         email: TEST_USERS.teamLead.email.replace("@", `-${workerSuffix}@`),
       };
 
-      console.log(`  🔐 ensureAuthenticated: Logging in as ${workerUser.email}...`);
-
-      // 3. Login via E2E API and preload auth into the context before the app boots.
-      const loginResult = await testUserService.loginTestUser(
-        workerUser.email,
-        workerUser.password,
-      );
-      if (!(loginResult.success && loginResult.token)) {
-        throw new Error(`Failed to authenticate as ${workerUser.email}`);
-      }
-      await injectAuthTokens(page, loginResult.token, loginResult.refreshToken);
-
-      // 4. Navigate to the intended destination
-      const destination = orgSlug ? "/app" : "/";
-      await page.goto(destination, { waitUntil: "domcontentloaded" });
-      if (orgSlug) {
-        await waitForAuthenticatedDashboard(page, orgSlug);
-      } else {
-        await expect(page).toHaveURL(/\/$/);
-      }
+      await bootstrapFixtureUser(page, workerUser, "ensureAuthenticated", async () => {
+        const destination = orgSlug ? "/app" : "/";
+        await page.goto(destination, { waitUntil: "domcontentloaded" });
+        if (orgSlug) {
+          await ensureAuthenticatedDashboardReady(page, orgSlug);
+        } else {
+          await expect(page).toHaveURL(/\/$/);
+        }
+      });
 
       didAuthenticateThisTest = true;
     };
@@ -283,31 +189,16 @@ export const onboardingTest = base.extend<AuthFixtures>({
         return;
       }
 
-      // 1. Clear any existing state
-      await page.context().clearCookies();
-
-      // 2. Construct worker-specific user
       const workerSuffix = `w${testInfo.parallelIndex}`;
       const onboardingUser = {
         ...TEST_USERS.onboarding,
         email: TEST_USERS.onboarding.email.replace("@", `-${workerSuffix}@`),
       };
 
-      console.log(`  🔐 onboardingTest: Logging in as ${onboardingUser.email}...`);
-
-      // 3. Login via E2E API and preload auth into the context before the app boots.
-      const loginResult = await testUserService.loginTestUser(
-        onboardingUser.email,
-        onboardingUser.password,
-      );
-      if (!(loginResult.success && loginResult.token)) {
-        throw new Error(`Failed to authenticate as ${onboardingUser.email}`);
-      }
-      await injectAuthTokens(page, loginResult.token, loginResult.refreshToken);
-
-      // 4. Ensure we are at /onboarding
-      await page.goto(onboardingUrl, { waitUntil: "domcontentloaded" });
-      await expect(page).toHaveURL(/\/onboarding/);
+      await bootstrapFixtureUser(page, onboardingUser, "onboardingTest", async () => {
+        await page.goto(onboardingUrl, { waitUntil: "domcontentloaded" });
+        await expect(page).toHaveURL(/\/onboarding/);
+      });
 
       didAuthenticateThisTest = true;
     };

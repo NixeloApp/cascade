@@ -9,27 +9,28 @@
  */
 
 import type { Page } from "@playwright/test";
+import { TEST_IDS } from "../../src/lib/test-ids";
 
 /**
  * Auth form locators - for sign in/sign up forms
  */
 export const authFormLocators = (page: Page) => ({
   // Headings
-  signInHeading: page.getByRole("heading", { name: /welcome back/i }),
-  signUpHeading: page.getByRole("heading", { name: /create an account/i }),
-  forgotPasswordHeading: page.getByRole("heading", { name: /forgot password/i }),
-  verifyEmailHeading: page.getByRole("heading", { name: /verify your email/i }),
+  signInHeading: page.getByRole("heading", { name: /sign in to nixelo/i }),
+  signUpHeading: page.getByRole("heading", { name: /create your account/i }),
+  forgotPasswordHeading: page.getByRole("heading", { name: /reset your password/i }),
+  verifyEmailHeading: page.getByRole("heading", { name: /check your email/i }),
 
   // Form elements
   continueWithEmailButton: page.getByRole("button", { name: /continue with email/i }),
-  emailInput: page.getByPlaceholder("Email"),
-  passwordInput: page.getByPlaceholder("Password"),
-  signInButton: page.getByRole("button", { name: "Sign in", exact: true }),
-  signUpButton: page.getByRole("button", { name: "Create account", exact: true }),
+  emailInput: page.getByTestId(TEST_IDS.AUTH.EMAIL_INPUT),
+  passwordInput: page.getByTestId(TEST_IDS.AUTH.PASSWORD_INPUT),
+  signInButton: page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON),
+  signUpButton: page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON),
   submitButton: page.getByRole("button", { name: /^(sign in|create account)$/i }),
 
   // Form state
-  formReady: page.locator('form[data-form-ready="true"]'),
+  formReady: page.locator(`[data-testid="${TEST_IDS.AUTH.FORM}"][data-form-ready="true"]`),
 
   // Links
   forgotPasswordLink: page.getByRole("button", { name: /forgot password/i }),

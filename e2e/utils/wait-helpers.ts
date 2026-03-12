@@ -33,17 +33,53 @@ export const WAIT_TIMEOUTS = {
  * This waits for the data-form-ready attribute to be "true".
  */
 export async function waitForFormReady(page: Page, timeout = 5000): Promise<boolean> {
-  try {
-    await page.locator('form[data-form-ready="true"]').waitFor({
-      state: "attached",
-      timeout,
-    });
-    return true;
-  } catch {
-    // Fallback: require full document readiness if form-ready attribute is absent.
-    await page.waitForFunction(() => document.readyState === "complete");
-    return false;
-  }
+  const form = page.getByTestId(TEST_IDS.AUTH.FORM);
+  const emailInput = page.getByTestId(TEST_IDS.AUTH.EMAIL_INPUT);
+  const passwordInput = page.getByTestId(TEST_IDS.AUTH.PASSWORD_INPUT);
+  const submitButton = page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
+
+  await expect
+    .poll(
+      async () => {
+        if (!(await form.isVisible().catch(() => false))) {
+          return "pending";
+        }
+
+        const formReady = await form.getAttribute("data-form-ready").catch(() => null);
+        if (formReady === "true") {
+          return "marker-ready";
+        }
+
+        const expanded = await form.getAttribute("data-expanded").catch(() => null);
+        const hydrated = await form.getAttribute("data-hydrated").catch(() => null);
+        const emailVisible = await emailInput.isVisible().catch(() => false);
+        const passwordVisible = await passwordInput.isVisible().catch(() => false);
+        const submitVisible = await submitButton.isVisible().catch(() => false);
+        const submitEnabled =
+          submitVisible && !(await submitButton.isDisabled().catch(() => true));
+
+        if (
+          expanded === "true" &&
+          hydrated !== "false" &&
+          emailVisible &&
+          passwordVisible &&
+          submitVisible &&
+          submitEnabled
+        ) {
+          return "fallback-ready";
+        }
+
+        return "pending";
+      },
+      {
+        timeout,
+        intervals: [100, 200, 500],
+      },
+    )
+    .not.toBe("pending");
+
+  const formReady = await form.getAttribute("data-form-ready").catch(() => null);
+  return formReady === "true";
 }
 
 /**
@@ -162,6 +198,128 @@ export async function waitForDashboardReady(page: Page): Promise<void> {
   await expect(page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON)).toBeVisible();
   const loadingSpinner = page.getByLabel("Loading").or(page.locator("[data-loading-spinner]"));
   await expect(loadingSpinner).not.toBeVisible();
+}
+
+type ConvexConnectionInfo =
+  | { state: { isWebSocketConnected?: boolean } }
+  | { state: "No Client" | "Unavailable" };
+
+/**
+ * Wait for the exposed Convex test client to reach a connected WebSocket state.
+ * Optionally also require the React app shell hydration marker.
+ */
+export async function waitForConvexConnectionReady(
+  page: Page,
+  options?: { timeout?: number; requireHydration?: boolean },
+): Promise<boolean> {
+  const timeout = options?.timeout ?? 30000;
+  const requireHydration = options?.requireHydration ?? false;
+
+  try {
+    await page.waitForFunction(
+      ({ needsHydration }) => {
+        const convex = (
+          window as Window & {
+            __convex_test_client?: { connectionState: () => { isWebSocketConnected: boolean } };
+          }
+        ).__convex_test_client;
+
+        if (needsHydration && !document.body.classList.contains("app-hydrated")) {
+          return false;
+        }
+
+        return convex?.connectionState().isWebSocketConnected ?? false;
+      },
+      { needsHydration: requireHydration },
+      { timeout },
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function getConvexConnectionInfo(page: Page): Promise<ConvexConnectionInfo> {
+  return page
+    .evaluate(() => {
+      const convex = (
+        window as Window & {
+          __convex_test_client?: { connectionState: () => { isWebSocketConnected: boolean } };
+        }
+      ).__convex_test_client;
+
+      return convex ? { state: convex.connectionState() } : { state: "No Client" };
+    })
+    .catch(() => ({ state: "Unavailable" }));
+}
+
+/**
+ * Ensure an authenticated org dashboard is actually bootstrapped.
+ * This owns the shared "/app" vs direct dashboard recovery path used by fixture bootstrap.
+ */
+export async function ensureAuthenticatedDashboardReady(
+  page: Page,
+  orgSlug: string,
+): Promise<void> {
+  const escapedOrgSlug = orgSlug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const dashboardPath = `/${orgSlug}/dashboard`;
+  const dashboardUrl = new RegExp(`/${escapedOrgSlug}/dashboard(?:\\?.*)?$`);
+  const appErrorHeading = page.getByRole("heading", { name: "500" });
+  const appErrorDetails = page.locator("details pre");
+
+  const expectAuthenticatedDashboardReady = async (timeout = 15000) => {
+    await expect(page).toHaveURL(dashboardUrl, { timeout });
+    await page.waitForLoadState("domcontentloaded");
+
+    if (await appErrorHeading.isVisible().catch(() => false)) {
+      throw new Error("App error boundary displayed during authenticated dashboard bootstrap");
+    }
+
+    await waitForDashboardReady(page);
+  };
+
+  const tryAuthenticatedDashboardReady = async (timeout = 10000) => {
+    try {
+      await expectAuthenticatedDashboardReady(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const recoverAuthenticatedDashboard = async () => {
+    const currentUrl = page.url();
+    const isOutsideOrgShell =
+      currentUrl.endsWith("/") || currentUrl.includes("/signin") || !currentUrl.includes(orgSlug);
+
+    await page.goto(isOutsideOrgShell ? dashboardPath : "/app", {
+      waitUntil: "domcontentloaded",
+    });
+    await page.waitForLoadState("load");
+
+    if (await tryAuthenticatedDashboardReady(5000)) {
+      return;
+    }
+
+    await page.goto(dashboardPath, { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("load");
+  };
+
+  if (await tryAuthenticatedDashboardReady()) {
+    return;
+  }
+
+  await recoverAuthenticatedDashboard();
+  try {
+    await expectAuthenticatedDashboardReady();
+  } catch (error) {
+    const lastError = error instanceof Error ? error : new Error(String(error));
+    const errorDetails = (await appErrorDetails.textContent().catch(() => null))?.trim();
+    const suffix = errorDetails ? `: ${errorDetails}` : "";
+    throw new Error(
+      `Failed to bootstrap authenticated dashboard for ${orgSlug}: ${lastError.message}${suffix}`,
+    );
+  }
 }
 
 /**
@@ -387,14 +545,9 @@ async function tryStartWorkspaceDialogSubmit(options: {
   submitButton: Locator;
   createForm?: Locator;
 }) {
-  const { dialog, submitButton, createForm } = options;
+  const { dialog, submitButton } = options;
 
   if (!(await dialog.isVisible().catch(() => false))) {
-    return;
-  }
-
-  if (createForm && (await createForm.isVisible().catch(() => false))) {
-    await createForm.evaluate((form: HTMLFormElement) => form.requestSubmit());
     return;
   }
 

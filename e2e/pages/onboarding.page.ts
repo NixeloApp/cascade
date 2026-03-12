@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { waitForConvexConnectionReady } from "../utils/wait-helpers";
 
 const TRANSITION_TIMEOUT = 15000;
 const CLICK_RETRY_TIMEOUT = 3000;
@@ -129,22 +130,11 @@ export class OnboardingPage {
   }
 
   async waitForConvexConnection() {
-    await this.page.waitForFunction(
-      () => {
-        const convex = (
-          window as Window & {
-            __convex_test_client?: { connectionState: () => { isWebSocketConnected: boolean } };
-          }
-        ).__convex_test_client;
-
-        return (
-          document.body.classList.contains("app-hydrated") &&
-          !!convex?.connectionState().isWebSocketConnected
-        );
-      },
-      undefined,
-      { timeout: CONVEX_CONNECTION_TIMEOUT },
-    );
+    const connected = await waitForConvexConnectionReady(this.page, {
+      timeout: CONVEX_CONNECTION_TIMEOUT,
+      requireHydration: true,
+    });
+    expect(connected).toBe(true);
   }
 
   async hasRoleSelectionStarted(card: Locator) {
@@ -305,27 +295,25 @@ export class OnboardingPage {
    */
   async waitForWizard(timeout = TRANSITION_TIMEOUT) {
     await this.prepareOnboardingWizard();
-
-    if (await this.waitForWizardVisible(timeout)) {
-      return;
+    try {
+      await this.expectWizardVisible(timeout);
+    } catch {
+      await this.recoverOnboardingRouteIfNeeded();
+      await this.prepareOnboardingWizard();
+      await this.expectWizardVisible(timeout);
     }
-
-    await this.recoverOnboardingRouteIfNeeded();
-    await this.prepareOnboardingWizard();
-    await this.expectWizardVisible(timeout);
   }
 
   /** Wait for role selection cards to be interactive */
   async waitForRoleCardsReady() {
     await this.waitForWizard();
-
-    if (await this.waitForRoleCardsInteractive()) {
-      return;
+    try {
+      await this.expectRoleCardsInteractive();
+    } catch {
+      await this.recoverOnboardingRouteIfNeeded();
+      await this.waitForWizard();
+      await this.expectRoleCardsInteractive();
     }
-
-    await this.recoverOnboardingRouteIfNeeded();
-    await this.waitForWizard();
-    await this.expectRoleCardsInteractive();
   }
 
   /**
@@ -333,24 +321,7 @@ export class OnboardingPage {
    */
   async selectTeamLead() {
     console.log("Selecting Team Lead role...");
-
-    if (await this.teamLeadHeading.isVisible().catch(() => false)) {
-      console.log("Successfully transitioned to Team Lead setup.");
-      return;
-    }
-
-    if (!(await this.attemptRoleSelection(this.teamLeadCard, this.teamLeadHeading))) {
-      await this.recoverOnboardingRouteIfNeeded();
-      const transitioned = await this.attemptRoleSelection(
-        this.teamLeadCard,
-        this.teamLeadHeading,
-        {
-          expectOutcome: true,
-        },
-      );
-      expect(transitioned).toBe(true);
-    }
-
+    await this.selectRoleAndWaitForStep(this.teamLeadCard, this.teamLeadHeading);
     console.log("Successfully transitioned to Team Lead setup.");
   }
 
@@ -359,22 +330,7 @@ export class OnboardingPage {
    */
   async selectTeamMember() {
     console.log("Selecting Team Member role...");
-
-    if (await this.nameProjectHeading.isVisible().catch(() => false)) {
-      console.log("Successfully transitioned to Team Member project naming.");
-      return;
-    }
-
-    if (!(await this.attemptRoleSelection(this.teamMemberCard, this.nameProjectHeading))) {
-      await this.recoverOnboardingRouteIfNeeded();
-      const transitioned = await this.attemptRoleSelection(
-        this.teamMemberCard,
-        this.nameProjectHeading,
-        { expectOutcome: true },
-      );
-      expect(transitioned).toBe(true);
-    }
-
+    await this.selectRoleAndWaitForStep(this.teamMemberCard, this.nameProjectHeading);
     console.log("Successfully transitioned to Team Member project naming.");
   }
 
@@ -390,7 +346,20 @@ export class OnboardingPage {
    * Click back button
    */
   async clickBack() {
+    await expect(this.backButton).toBeVisible({ timeout: TRANSITION_TIMEOUT });
+    await expect(this.backButton).toBeEnabled();
     await this.backButton.click();
+
+    if (await this.waitForRoleSelectionReady(5000)) {
+      return;
+    }
+
+    if (await this.backButton.isVisible().catch(() => false)) {
+      await expect(this.backButton).toBeEnabled();
+      await this.backButton.click();
+    }
+
+    await this.waitForWizard();
   }
 
   /**
@@ -398,8 +367,7 @@ export class OnboardingPage {
    */
   async skipOnboarding() {
     const skipAction = await this.getVisibleSkipAction();
-    await skipAction.click();
-    await this.expectDashboard();
+    await this.clickToDashboard(skipAction);
   }
 
   /**
@@ -413,14 +381,15 @@ export class OnboardingPage {
    * Click create project button
    */
   async createProject() {
-    const creatingButton = this.page.getByRole("button", { name: /creating/i });
-
     await expect(this.createProjectButton).toBeVisible({ timeout: TRANSITION_TIMEOUT });
     await expect(this.createProjectButton).toBeEnabled();
     await this.createProjectButton.click();
 
-    if (await creatingButton.isVisible().catch(() => false)) {
-      await expect(creatingButton).toBeDisabled();
+    if (!(await this.waitForProjectCreateSubmitStart(3000))) {
+      await expect(this.createProjectButton).toBeVisible({ timeout: TRANSITION_TIMEOUT });
+      await expect(this.createProjectButton).toBeEnabled();
+      await this.createProjectButton.click();
+      await this.waitForProjectCreateSubmitStart(5000);
     }
 
     await this.expectTeamMemberComplete();
@@ -437,8 +406,7 @@ export class OnboardingPage {
   async goToDashboard() {
     await expect(this.goToDashboardButton).toBeVisible({ timeout: TRANSITION_TIMEOUT });
     await expect(this.goToDashboardButton).toBeEnabled();
-    await this.goToDashboardButton.click();
-    await this.expectDashboard();
+    await this.clickToDashboard(this.goToDashboardButton);
   }
 
   // ===================
@@ -501,20 +469,21 @@ export class OnboardingPage {
     return this.skipText;
   }
 
+  private async clickToDashboard(trigger: Locator) {
+    await trigger.click();
+    if (await this.waitForDashboardReady(5000)) {
+      return;
+    }
+
+    await trigger.click();
+    await this.expectDashboard();
+  }
+
   private async prepareOnboardingWizard() {
     await this.recoverOnboardingRouteIfNeeded();
     await this.expectOnboardingRoute();
     await this.waitForConvexConnection();
     await this.waitForSplashScreen();
-  }
-
-  private async waitForWizardVisible(timeout = 3000) {
-    try {
-      await this.expectWizardVisible(timeout);
-      return true;
-    } catch {
-      return false;
-    }
   }
 
   private async expectWizardVisible(timeout = TRANSITION_TIMEOUT) {
@@ -523,45 +492,78 @@ export class OnboardingPage {
     await expect(this.teamMemberCard).toBeVisible({ timeout });
   }
 
-  private async waitForRoleCardsInteractive(timeout = 3000) {
-    try {
-      await this.expectRoleCardsInteractive(timeout);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
   private async expectRoleCardsInteractive(timeout = TRANSITION_TIMEOUT) {
     await expect(this.teamLeadCard).toBeEnabled({ timeout });
     await expect(this.teamMemberCard).toBeEnabled({ timeout });
   }
 
-  private async attemptRoleSelection(
-    card: Locator,
-    nextStepHeading: Locator,
-    options?: { expectOutcome?: boolean },
-  ) {
+  private async selectRoleAndWaitForStep(card: Locator, nextStepHeading: Locator) {
     await this.waitForRoleCardsReady();
+
+    if (await nextStepHeading.isVisible().catch(() => false)) {
+      return;
+    }
+
+    try {
+      if (!(await this.hasRoleSelectionStarted(card))) {
+        await card.click({ timeout: CLICK_RETRY_TIMEOUT });
+      }
+      await expect(nextStepHeading).toBeVisible({ timeout: CARD_SELECTION_TIMEOUT });
+      return;
+    } catch {
+      await this.recoverOnboardingRouteIfNeeded();
+      await this.waitForRoleCardsReady();
+    }
 
     if (!(await this.hasRoleSelectionStarted(card))) {
       await card.click({ timeout: CLICK_RETRY_TIMEOUT });
     }
 
-    if (options?.expectOutcome) {
-      await expect(nextStepHeading).toBeVisible({ timeout: TRANSITION_TIMEOUT });
-      return true;
-    }
-
-    return this.waitForVisible(nextStepHeading, CARD_SELECTION_TIMEOUT);
+    await expect(nextStepHeading).toBeVisible({ timeout: TRANSITION_TIMEOUT });
   }
 
-  private async waitForVisible(locator: Locator, timeout = 3000) {
+  private async waitForDashboardReady(timeout = 3000) {
     try {
-      await locator.waitFor({ state: "visible", timeout });
+      await this.expectDashboard(timeout);
       return true;
     } catch {
       return false;
     }
+  }
+
+  private async waitForRoleSelectionReady(timeout = 3000) {
+    try {
+      await this.expectWizardVisible(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async waitForProjectCreateSubmitStart(timeout = 3000) {
+    try {
+      await expect
+        .poll(async () => this.getProjectCreateSubmitState(), {
+          timeout,
+          intervals: [200, 500, 1000],
+        })
+        .not.toBe("pending");
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async getProjectCreateSubmitState(): Promise<"submitting" | "complete" | "pending"> {
+    if (await this.allSetHeading.isVisible().catch(() => false)) {
+      return "complete";
+    }
+
+    const creatingButton = this.page.getByRole("button", { name: /creating/i });
+    if (await creatingButton.isVisible().catch(() => false)) {
+      return "submitting";
+    }
+
+    return "pending";
   }
 }
