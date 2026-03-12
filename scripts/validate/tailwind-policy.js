@@ -114,6 +114,8 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/Landing/ProductShowcase.tsx",
   "/NotificationCenter.tsx",
   "/Notifications/NotificationCenter.tsx",
+  "/Settings/ApiKeysManager.tsx",
+  "/Settings/GoogleCalendarIntegration.tsx",
   "/Settings/NotificationsTab.tsx",
   "/Settings/ProfileContent.tsx",
   "/Settings/PumbleIntegration.tsx",

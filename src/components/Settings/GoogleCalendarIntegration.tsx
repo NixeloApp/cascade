@@ -9,10 +9,11 @@
 import { api } from "@convex/_generated/api";
 import { useEffect, useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { Calendar, Check } from "@/lib/icons";
+import { Calendar } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
+import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Card } from "../ui/Card";
+import { Card, CardHeader } from "../ui/Card";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
@@ -133,48 +134,52 @@ export function GoogleCalendarIntegration() {
 
   return (
     <Card padding="lg">
-      <Flex justify="between" align="start">
-        <Flex gap="lg" align="center">
-          <Card padding="sm" radius="md" variant="ghost" className="bg-brand-ring">
-            <Calendar className="h-6 w-6 text-brand-foreground" />
-          </Card>
+      <Stack gap="lg">
+        <CardHeader
+          action={
+            calendarConnection ? (
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => setDisconnectConfirmOpen(true)}
+                disabled={isDisconnecting}
+              >
+                {isDisconnecting ? "Disconnecting..." : "Disconnect"}
+              </Button>
+            ) : (
+              <Button variant="primary" size="sm" onClick={handleConnect} disabled={isConnecting}>
+                {isConnecting ? "Connecting..." : "Connect Google"}
+              </Button>
+            )
+          }
+        >
+          <Flex gap="lg" align="center">
+            <Card padding="sm" radius="md" variant="flat">
+              <Icon icon={Calendar} size="lg" color="currentColor" className="text-brand" />
+            </Card>
+            <Stack gap="xs">
+              <Typography variant="h3">Google Calendar</Typography>
+              <Typography variant="small" color="secondary">
+                Sync calendar events between Nixelo and Google Calendar
+              </Typography>
+            </Stack>
+          </Flex>
+        </CardHeader>
+
+        {calendarConnection && (
           <Stack gap="xs">
-            <Typography variant="h3">Google Calendar</Typography>
-            <Typography variant="small" color="secondary">
-              Sync calendar events between Nixelo and Google Calendar
-            </Typography>
-            {calendarConnection && (
-              <Stack gap="xs">
-                <Flex align="center" gap="xs" className="text-status-success">
-                  <Icon icon={Check} size="sm" />
-                  <Typography variant="small">
-                    Connected to {calendarConnection.providerAccountId}
-                  </Typography>
-                </Flex>
-                {calendarConnection.lastSyncAt && (
-                  <Typography variant="caption" color="tertiary">
-                    Last synced: {new Date(calendarConnection.lastSyncAt).toLocaleString()}
-                  </Typography>
-                )}
-              </Stack>
+            <Flex align="center" gap="xs">
+              <Badge variant="success">Connected</Badge>
+              <Typography variant="small">{calendarConnection.providerAccountId}</Typography>
+            </Flex>
+            {calendarConnection.lastSyncAt && (
+              <Typography variant="caption" color="tertiary">
+                Last synced: {new Date(calendarConnection.lastSyncAt).toLocaleString()}
+              </Typography>
             )}
           </Stack>
-        </Flex>
-        {calendarConnection ? (
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={() => setDisconnectConfirmOpen(true)}
-            disabled={isDisconnecting}
-          >
-            {isDisconnecting ? "Disconnecting..." : "Disconnect"}
-          </Button>
-        ) : (
-          <Button variant="primary" size="sm" onClick={handleConnect} disabled={isConnecting}>
-            {isConnecting ? "Connecting..." : "Connect Google"}
-          </Button>
         )}
-      </Flex>
+      </Stack>
 
       <ConfirmDialog
         isOpen={disconnectConfirmOpen}
@@ -187,62 +192,55 @@ export function GoogleCalendarIntegration() {
       />
 
       {calendarConnection && (
-        <Stack gap="xl" className="mt-6 pt-6 border-t border-ui-border">
+        <Card padding="md" variant="flat" className="mt-6">
           {/* Sync Toggle */}
-          <Switch
-            label="Enable Sync"
-            description="Automatically sync events between Nixelo and Google Calendar"
-            labelSide="left"
-            checked={calendarConnection.syncEnabled}
-            onCheckedChange={handleToggleSync}
-            disabled={isSaving}
-          />
+          <Stack gap="xl">
+            <Switch
+              label="Enable Sync"
+              description="Automatically sync events between Nixelo and Google Calendar"
+              labelSide="left"
+              checked={calendarConnection.syncEnabled}
+              onCheckedChange={handleToggleSync}
+              disabled={isSaving}
+            />
 
-          {/* Sync Direction */}
-          {calendarConnection.syncEnabled && (
-            <Stack gap="sm">
-              <Typography variant="label">Sync Direction</Typography>
-              <RadioGroup
-                value={calendarConnection.syncDirection}
-                onValueChange={(value) =>
-                  handleChangeSyncDirection(value as "bidirectional" | "import" | "export")
-                }
-                disabled={isSaving}
-              >
-                <Card
-                  padding="sm"
-                  className="bg-ui-bg-secondary hover:bg-ui-bg-tertiary cursor-pointer"
+            {/* Sync Direction */}
+            {calendarConnection.syncEnabled && (
+              <Stack gap="sm">
+                <Typography variant="label">Sync Direction</Typography>
+                <RadioGroup
+                  value={calendarConnection.syncDirection}
+                  onValueChange={(value) =>
+                    handleChangeSyncDirection(value as "bidirectional" | "import" | "export")
+                  }
+                  disabled={isSaving}
                 >
-                  <RadioGroupItem
-                    value="bidirectional"
-                    label="Bidirectional"
-                    description="Sync both ways (recommended)"
-                  />
-                </Card>
-                <Card
-                  padding="sm"
-                  className="bg-ui-bg-secondary hover:bg-ui-bg-tertiary cursor-pointer"
-                >
-                  <RadioGroupItem
-                    value="import"
-                    label="Import Only"
-                    description="Only import from Google to Nixelo"
-                  />
-                </Card>
-                <Card
-                  padding="sm"
-                  className="bg-ui-bg-secondary hover:bg-ui-bg-tertiary cursor-pointer"
-                >
-                  <RadioGroupItem
-                    value="export"
-                    label="Export Only"
-                    description="Only export from Nixelo to Google"
-                  />
-                </Card>
-              </RadioGroup>
-            </Stack>
-          )}
-        </Stack>
+                  <Card padding="sm" variant="interactive">
+                    <RadioGroupItem
+                      value="bidirectional"
+                      label="Bidirectional"
+                      description="Sync both ways (recommended)"
+                    />
+                  </Card>
+                  <Card padding="sm" variant="interactive">
+                    <RadioGroupItem
+                      value="import"
+                      label="Import Only"
+                      description="Only import from Google to Nixelo"
+                    />
+                  </Card>
+                  <Card padding="sm" variant="interactive">
+                    <RadioGroupItem
+                      value="export"
+                      label="Export Only"
+                      description="Only export from Nixelo to Google"
+                    />
+                  </Card>
+                </RadioGroup>
+              </Stack>
+            )}
+          </Stack>
+        </Card>
       )}
     </Card>
   );

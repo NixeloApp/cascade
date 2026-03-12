@@ -35,6 +35,8 @@
 - Removed `Settings/ProfileContent.tsx` and `Settings/PumbleIntegration.tsx` from the raw-Tailwind migration debt list by migrating them onto owned card, avatar, empty-state, and form primitives.
 - Removed `Settings/ProfileContent.tsx` and `Settings/PumbleIntegration.tsx` from the interactive-state migration debt list.
 - Added `Settings/ProfileContent.tsx` and `Settings/PumbleIntegration.tsx` to design-system ownership targeting so shell drift there is blocked directly.
+- Removed `Settings/ApiKeysManager.tsx` and `Settings/GoogleCalendarIntegration.tsx` from the interactive-state migration debt list by migrating their local cards, callouts, and option shells onto owned primitives.
+- Added `Settings/ApiKeysManager.tsx` and `Settings/GoogleCalendarIntegration.tsx` to design-system ownership targeting so future settings-shell drift there is caught directly.
 
 ### Next batch
 

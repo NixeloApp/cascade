@@ -83,7 +83,7 @@ describe("ApiKeysManager", () => {
 
       expect(screen.getByText("No API keys yet")).toBeInTheDocument();
       expect(
-        screen.getByText("Generate your first API key to access Nixelo programmatically"),
+        screen.getByText("Generate your first API key to access Nixelo programmatically."),
       ).toBeInTheDocument();
     });
 

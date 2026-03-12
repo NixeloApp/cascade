@@ -11,18 +11,19 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { AlertTriangle, BookOpen, Copy, Key, Plus, Trash2, TrendingUp } from "@/lib/icons";
+import { Copy, Key, Plus, Trash2, TrendingUp } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
+import { Alert, AlertDescription, AlertTitle } from "../ui/Alert";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Card } from "../ui/Card";
+import { Card, CardHeader } from "../ui/Card";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Dialog } from "../ui/Dialog";
+import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Input } from "../ui/form/Input";
 import { Grid } from "../ui/Grid";
-import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/IconButton";
 import { Label } from "../ui/Label";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
@@ -54,47 +55,36 @@ export function ApiKeysManager() {
   return (
     <Card padding="lg">
       <Stack gap="lg">
-        {/* Header */}
-        <Flex justify="between" align="center">
-          <Stack gap="xs">
-            <Typography variant="h3">
+        <CardHeader
+          action={
+            <Button variant="primary" size="sm" onClick={() => setShowGenerateModal(true)}>
               <Flex gap="sm" align="center">
-                <Key className="h-5 w-5" />
-                API Keys
+                <Plus className="h-4 w-4" />
+                Generate Key
               </Flex>
-            </Typography>
-            <Typography variant="small" color="secondary">
-              Generate API keys for CLI tools, AI agents, and external integrations
-            </Typography>
-          </Stack>
-          <Button variant="primary" size="sm" onClick={() => setShowGenerateModal(true)}>
+            </Button>
+          }
+          title={
             <Flex gap="sm" align="center">
-              <Plus className="h-4 w-4" />
-              Generate Key
+              <Key className="h-5 w-5" />
+              <span>API Keys</span>
             </Flex>
-          </Button>
-        </Flex>
+          }
+          description="Generate API keys for CLI tools, AI agents, and external integrations"
+        />
 
         {/* API Keys List */}
         {!apiKeys || apiKeys.length === 0 ? (
-          <Card
-            padding="lg"
-            className="text-center bg-ui-bg-secondary border-2 border-dashed border-ui-border"
-          >
-            <Stack gap="sm" align="center">
-              <Key className="h-12 w-12 text-ui-text-tertiary" />
-              <Typography variant="label">No API keys yet</Typography>
-              <Typography variant="small" color="secondary">
-                Generate your first API key to access Nixelo programmatically
-              </Typography>
-              <Button variant="primary" size="sm" onClick={() => setShowGenerateModal(true)}>
-                <Flex gap="sm" align="center">
-                  <Plus className="h-4 w-4" />
-                  Generate Your First Key
-                </Flex>
-              </Button>
-            </Stack>
-          </Card>
+          <EmptyState
+            icon={Key}
+            title="No API keys yet"
+            description="Generate your first API key to access Nixelo programmatically."
+            action={{
+              label: "Generate Your First Key",
+              onClick: () => setShowGenerateModal(true),
+            }}
+            variant="info"
+          />
         ) : (
           <Stack gap="lg">
             {apiKeys.map((key) => (
@@ -104,23 +94,18 @@ export function ApiKeysManager() {
         )}
 
         {/* Documentation Link */}
-        <Card padding="md" className="bg-brand-subtle border-brand-border">
-          <Flex align="center" gap="sm">
-            <Icon icon={BookOpen} size="sm" className="text-brand-active" />
-            <Typography variant="small" className="text-brand-active">
-              <strong>Need help?</strong> Check out the{" "}
-              <a
-                href="/docs/API.md"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-brand-hover"
-              >
+        <Alert variant="info">
+          <AlertTitle>Need help?</AlertTitle>
+          <AlertDescription>
+            Check out the{" "}
+            <Button asChild variant="link" size="none">
+              <a href="/docs/API.md" target="_blank" rel="noopener noreferrer">
                 API Documentation
-              </a>{" "}
-              for usage examples and integration guides.
-            </Typography>
-          </Flex>
-        </Card>
+              </a>
+            </Button>{" "}
+            for usage examples and integration guides.
+          </AlertDescription>
+        </Alert>
       </Stack>
 
       {/* Generate Key Modal */}
@@ -177,7 +162,7 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
   };
 
   return (
-    <Card padding="md" className="bg-ui-bg-secondary">
+    <Card padding="md" variant="flat">
       <Flex justify="between" align="start">
         <FlexItem flex="1">
           <Stack gap="sm">
@@ -195,15 +180,14 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
             <Flex gap="sm" align="center">
               <Typography variant="inlineCode">{apiKey.keyPrefix}...</Typography>
               <Tooltip content="Copy key prefix">
-                <Button
+                <IconButton
                   onClick={copyKeyPrefix}
                   variant="ghost"
                   size="sm"
-                  className="p-1 min-w-0"
                   aria-label="Copy key prefix"
                 >
                   <Copy className="h-4 w-4" />
-                </Button>
+                </IconButton>
               </Tooltip>
             </Flex>
 
@@ -255,10 +239,9 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
           {apiKey.isActive && (
             <Button
               onClick={() => setRevokeConfirmOpen(true)}
-              variant="ghost"
+              variant="secondary"
               size="sm"
               isLoading={isRevoking}
-              className="text-status-warning hover:bg-status-warning-bg"
               aria-label="Revoke key"
             >
               {isRevoking ? "Revoking..." : "Revoke"}
@@ -395,7 +378,7 @@ function GenerateKeyModal({
                     htmlFor={`scope-${scope.value}`}
                     className="cursor-pointer"
                   >
-                    <Card padding="sm" hoverable className="bg-ui-bg-secondary">
+                    <Card padding="sm" variant="flat" hoverable>
                       <Flex align="start" gap="md">
                         <Checkbox
                           id={`scope-${scope.value}`}
@@ -426,69 +409,68 @@ function GenerateKeyModal({
             />
 
             {/* Actions */}
-            <Flex justify="end" gap="sm" className="pt-4 border-t border-ui-border">
-              <Button variant="secondary" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button variant="primary" onClick={handleGenerate} disabled={isGenerating}>
-                {isGenerating ? "Generating..." : "Generate API Key"}
-              </Button>
-            </Flex>
+            <Card padding="sm" variant="flat">
+              <Flex justify="end" gap="sm">
+                <Button variant="secondary" onClick={() => onOpenChange(false)}>
+                  Cancel
+                </Button>
+                <Button variant="primary" onClick={handleGenerate} disabled={isGenerating}>
+                  {isGenerating ? "Generating..." : "Generate API Key"}
+                </Button>
+              </Flex>
+            </Card>
           </>
         ) : (
           <>
             {/* Success - Show Generated Key */}
             <Stack gap="lg" align="center" className="text-center">
-              <Flex
-                justify="center"
-                align="center"
-                className="h-12 w-12 rounded-full bg-status-success-bg"
-              >
-                <Key className="h-6 w-6 text-status-success" />
-              </Flex>
+              <Badge variant="success" shape="pill">
+                API Key Ready
+              </Badge>
               <Stack gap="sm" align="center">
                 <Typography variant="h3">API Key Generated!</Typography>
-                <Typography variant="small" color="secondary">
-                  <Icon icon={AlertTriangle} size="sm" className="inline mr-1" />{" "}
-                  <strong>Save this key now!</strong> You won't be able to see it again.
-                </Typography>
+                <Alert variant="warning" className="w-full text-left">
+                  <AlertTitle>Save this key now</AlertTitle>
+                  <AlertDescription>
+                    You won't be able to see it again after closing this dialog.
+                  </AlertDescription>
+                </Alert>
               </Stack>
 
               {/* Generated Key Display */}
-              <Card padding="md" className="w-full bg-ui-bg-tertiary">
-                <Typography
-                  variant="inlineCode"
-                  className="text-status-success break-all select-all"
-                >
+              <Card padding="md" variant="flat" className="w-full">
+                <Typography variant="inlineCode" color="success" className="break-all select-all">
                   {generatedKey}
                 </Typography>
               </Card>
 
               {/* Copy Instructions */}
-              <Card padding="md" className="w-full text-left bg-status-info-bg">
+              <Alert variant="info" className="w-full text-left">
                 <Stack gap="sm">
-                  <Typography variant="label" className="text-status-info-text">
-                    Usage Example:
-                  </Typography>
-                  <Typography variant="inlineCode" className="block bg-ui-bg p-2 rounded text-xs">
-                    curl -H "Authorization: Bearer {generatedKey.substring(0, 20)}..."
-                    https://nixelo.app/api/issues
-                  </Typography>
+                  <AlertTitle>Usage Example</AlertTitle>
+                  <Card padding="xs" radius="md" variant="ghost">
+                    <Typography variant="inlineCode" className="block">
+                      curl -H "Authorization: Bearer {generatedKey.substring(0, 20)}..."
+                      https://nixelo.app/api/issues
+                    </Typography>
+                  </Card>
                 </Stack>
-              </Card>
+              </Alert>
 
               {/* Actions */}
-              <Flex justify="end" gap="sm" className="w-full pt-4 border-t border-ui-border">
-                <Button variant="secondary" onClick={() => onOpenChange(false)}>
-                  I've Saved It
-                </Button>
-                <Button variant="primary" onClick={copyAndClose} className="flex-1">
-                  <Flex justify="center" gap="sm" align="center">
-                    <Copy className="h-4 w-4" />
-                    Copy & Close
-                  </Flex>
-                </Button>
-              </Flex>
+              <Card padding="sm" variant="flat" className="w-full">
+                <Flex justify="end" gap="sm">
+                  <Button variant="secondary" onClick={() => onOpenChange(false)}>
+                    I've Saved It
+                  </Button>
+                  <Button variant="primary" onClick={copyAndClose}>
+                    <Flex justify="center" gap="sm" align="center">
+                      <Copy className="h-4 w-4" />
+                      Copy & Close
+                    </Flex>
+                  </Button>
+                </Flex>
+              </Card>
             </Stack>
           </>
         )}
@@ -524,32 +506,34 @@ function UsageStatsModal({
       }
     >
       {!stats ? (
-        <Flex direction="column" gap="sm" align="center" justify="center" className="min-h-32">
-          <LoadingSpinner size="lg" />
-          <Typography variant="small" color="tertiary">
-            Loading statistics...
-          </Typography>
-        </Flex>
+        <Card padding="lg" variant="flat">
+          <Flex direction="column" gap="sm" align="center" justify="center" className="min-h-32">
+            <LoadingSpinner size="lg" />
+            <Typography variant="small" color="tertiary">
+              Loading statistics...
+            </Typography>
+          </Flex>
+        </Card>
       ) : (
         <Stack gap="lg">
           {/* Overview Stats */}
           <Grid cols={2} colsSm={4} gap="lg">
-            <Card padding="md" className="bg-ui-bg-secondary">
+            <Card padding="md" variant="flat">
               <Stack gap="xs">
                 <Typography variant="caption">Total Calls</Typography>
                 <Typography variant="h3">{stats.totalCalls.toLocaleString()}</Typography>
               </Stack>
             </Card>
-            <Card padding="md" className="bg-ui-bg-secondary">
+            <Card padding="md" variant="flat">
               <Stack gap="xs">
                 <Typography variant="caption">Last 24 Hours</Typography>
                 <Typography variant="h3">{stats.last24Hours.toLocaleString()}</Typography>
               </Stack>
             </Card>
-            <Card padding="md" className="bg-ui-bg-secondary">
+            <Card padding="md" variant="flat">
               <Stack gap="xs">
                 <Typography variant="caption">Success Rate</Typography>
-                <Typography variant="h3" className="text-status-success">
+                <Typography variant="h3" color="success">
                   {stats.last24Hours > 0
                     ? Math.round((stats.successCount / stats.last24Hours) * 100)
                     : 100}
@@ -557,7 +541,7 @@ function UsageStatsModal({
                 </Typography>
               </Stack>
             </Card>
-            <Card padding="md" className="bg-ui-bg-secondary">
+            <Card padding="md" variant="flat">
               <Stack gap="xs">
                 <Typography variant="caption">Avg Response</Typography>
                 <Typography variant="h3">{stats.avgResponseTime}ms</Typography>
@@ -569,17 +553,17 @@ function UsageStatsModal({
           <Stack gap="sm">
             <Typography variant="label">Recent Requests</Typography>
             {stats.recentLogs.length === 0 ? (
-              <Typography variant="small" color="tertiary" className="py-4 text-center">
-                No recent requests
-              </Typography>
+              <Card padding="md" variant="flat">
+                <Flex justify="center">
+                  <Typography variant="small" color="tertiary">
+                    No recent requests
+                  </Typography>
+                </Flex>
+              </Card>
             ) : (
               <Stack gap="sm" className="max-h-64 overflow-y-auto">
                 {stats.recentLogs.map((log: UsageLog) => (
-                  <Card
-                    padding="sm"
-                    key={`${log.endpoint}-${log.createdAt}`}
-                    className="bg-ui-bg-secondary"
-                  >
+                  <Card padding="sm" key={`${log.endpoint}-${log.createdAt}`} variant="flat">
                     <Stack gap="xs">
                       <Flex justify="between" align="center">
                         <Flex gap="sm" align="center">

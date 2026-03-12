@@ -68,10 +68,8 @@ const ALLOWED_FILES = [
   "Admin/HourComplianceDashboard.tsx",
   "Admin/UserManagement.tsx",
   "Admin/UserTypeManager.tsx",
-  "Settings/ApiKeysManager.tsx",
   "Settings/AvatarUploadModal.tsx",
   "Settings/CoverImageUploadModal.tsx",
-  "Settings/GoogleCalendarIntegration.tsx",
   // Analytics
   "Analytics/",
   // AI components
