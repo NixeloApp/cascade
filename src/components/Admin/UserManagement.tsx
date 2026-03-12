@@ -14,7 +14,6 @@ import { useOrganization } from "@/hooks/useOrgContext";
 import { Mail, Users } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -27,6 +26,7 @@ import { Label } from "../ui/Label";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import { Stack } from "../ui/Stack";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/Table";
 import { Tabs, TabsList, TabsTrigger } from "../ui/Tabs";
 import { Typography } from "../ui/Typography";
 
@@ -39,19 +39,19 @@ function UserRow({
   user: Doc<"users"> & { projectsCreated: number; projectMemberships: number };
 }) {
   return (
-    <tr className="transition-default hover:bg-ui-bg-hover">
-      <td className="px-6 py-4 whitespace-nowrap">
+    <TableRow>
+      <TableCell className="whitespace-nowrap">
         <Flex align="center" gap="md">
           <Avatar src={user.image} name={user.name} email={user.email} size="sm" />
           <Typography variant="label">{user.name || "Anonymous"}</Typography>
         </Flex>
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap">
+      </TableCell>
+      <TableCell className="whitespace-nowrap">
         <Typography variant="small" color="secondary">
           {user.email || "No email"}
         </Typography>
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap">
+      </TableCell>
+      <TableCell className="whitespace-nowrap">
         {user.isAnonymous ? (
           <Badge variant="neutral" size="sm">
             Anonymous
@@ -65,18 +65,18 @@ function UserRow({
             Unverified
           </Badge>
         )}
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap">
+      </TableCell>
+      <TableCell className="whitespace-nowrap">
         <Typography variant="small" color="secondary">
           {user.projectsCreated}
         </Typography>
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap">
+      </TableCell>
+      <TableCell className="whitespace-nowrap">
         <Typography variant="small" color="secondary">
           {user.projectMemberships}
         </Typography>
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -160,13 +160,13 @@ export function UserManagement() {
     });
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadgeVariant = (status: string): React.ComponentProps<typeof Badge>["variant"] => {
     const badges = {
-      pending: "bg-status-warning-bg text-status-warning",
-      accepted: "bg-status-success-bg text-status-success",
-      revoked: "bg-status-error-bg text-status-error",
-      expired: "bg-ui-bg-tertiary text-ui-text-secondary",
-    };
+      pending: "warning",
+      accepted: "success",
+      revoked: "error",
+      expired: "neutral",
+    } as const;
     return badges[status as keyof typeof badges] || badges.pending;
   };
 
@@ -186,16 +186,12 @@ export function UserManagement() {
       </Flex>
 
       {/* Tabs */}
-      <Tabs
-        value={activeTab}
-        onValueChange={(value) => setActiveTab(value as "invites" | "users")}
-        className="border-b border-ui-border"
-      >
-        <TabsList variant="underline" className="gap-8">
-          <TabsTrigger value="invites" variant="underline" className="py-4 px-1">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "invites" | "users")}>
+        <TabsList variant="underline">
+          <TabsTrigger value="invites" variant="underline">
             Invitations
           </TabsTrigger>
-          <TabsTrigger value="users" variant="underline" className="py-4 px-1">
+          <TabsTrigger value="users" variant="underline">
             Users
           </TabsTrigger>
         </TabsList>
@@ -290,128 +286,90 @@ export function UserManagement() {
                 }}
               />
             ) : (
-              <div className="overflow-x-auto">
-                <table
-                  className="min-w-full divide-y divide-ui-border"
-                  aria-label="User invitations"
-                  data-testid={TEST_IDS.INVITE.TABLE}
-                >
-                  <thead className="bg-ui-bg-secondary">
-                    <tr>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-ui-text-secondary uppercase tracking-wider"
-                      >
-                        Email
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-ui-text-secondary uppercase tracking-wider"
-                      >
-                        Role
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-ui-text-secondary uppercase tracking-wider"
-                      >
-                        Status
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-ui-text-secondary uppercase tracking-wider"
-                      >
-                        Invited By
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-ui-text-secondary uppercase tracking-wider"
-                      >
-                        Sent
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-ui-text-secondary uppercase tracking-wider"
-                      >
-                        Expires
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-right text-xs font-medium text-ui-text-secondary uppercase tracking-wider"
-                      >
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-ui-bg divide-y divide-ui-border">
-                    {invites.map(
-                      (
-                        invite: Doc<"invites"> & { acceptedByName?: string; inviterName?: string },
-                      ) => (
-                        <tr key={invite._id} data-testid={TEST_IDS.INVITE.ROW}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-ui-text">
-                            {invite.email}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <Badge
-                              size="sm"
-                              className="capitalize bg-brand-subtle text-brand-active"
-                            >
-                              {invite.role}
-                            </Badge>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <Badge
-                              size="sm"
-                              className={cn("capitalize", getStatusBadge(invite.status))}
-                            >
-                              {invite.status}
-                            </Badge>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-ui-text-secondary">
+              <Table aria-label="User invitations" data-testid={TEST_IDS.INVITE.TABLE}>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="whitespace-nowrap">Email</TableHead>
+                    <TableHead className="whitespace-nowrap">Role</TableHead>
+                    <TableHead className="whitespace-nowrap">Status</TableHead>
+                    <TableHead className="whitespace-nowrap">Invited By</TableHead>
+                    <TableHead className="whitespace-nowrap">Sent</TableHead>
+                    <TableHead className="whitespace-nowrap">Expires</TableHead>
+                    <TableHead className="whitespace-nowrap text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {invites.map(
+                    (
+                      invite: Doc<"invites"> & { acceptedByName?: string; inviterName?: string },
+                    ) => (
+                      <TableRow key={invite._id} data-testid={TEST_IDS.INVITE.ROW}>
+                        <TableCell className="whitespace-nowrap">
+                          <Typography variant="small">{invite.email}</Typography>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <Badge size="sm" variant="brand" className="capitalize">
+                            {invite.role}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <Badge
+                            size="sm"
+                            variant={getStatusBadgeVariant(invite.status)}
+                            className="capitalize"
+                          >
+                            {invite.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <Typography variant="small" color="secondary">
                             {invite.inviterName}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-ui-text-secondary">
+                          </Typography>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <Typography variant="small" color="secondary">
                             {formatDate(invite._creationTime)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-ui-text-secondary">
+                          </Typography>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <Typography variant="small" color="secondary">
                             {invite.status === "pending" ? formatDate(invite.expiresAt) : "-"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <Flex justify="end" gap="sm">
-                              {invite.status === "pending" && (
-                                <>
-                                  <Button
-                                    onClick={() => handleResendInvite(invite._id)}
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-brand hover:text-brand-hover"
-                                    aria-label="Resend invitation"
-                                  >
-                                    Resend
-                                  </Button>
-                                  <Button
-                                    onClick={() => handleRevokeClick(invite._id)}
-                                    variant="ghostDanger"
-                                    size="sm"
-                                    aria-label="Revoke invitation"
-                                  >
-                                    Revoke
-                                  </Button>
-                                </>
-                              )}
-                              {invite.status === "accepted" && invite.acceptedByName && (
-                                <Typography variant="caption" color="secondary">
-                                  Accepted by {invite.acceptedByName}
-                                </Typography>
-                              )}
-                            </Flex>
-                          </td>
-                        </tr>
-                      ),
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                          </Typography>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-right">
+                          <Flex justify="end" gap="sm">
+                            {invite.status === "pending" && (
+                              <>
+                                <Button
+                                  onClick={() => handleResendInvite(invite._id)}
+                                  variant="link"
+                                  size="sm"
+                                  aria-label="Resend invitation"
+                                >
+                                  Resend
+                                </Button>
+                                <Button
+                                  onClick={() => handleRevokeClick(invite._id)}
+                                  variant="ghostDanger"
+                                  size="sm"
+                                  aria-label="Revoke invitation"
+                                >
+                                  Revoke
+                                </Button>
+                              </>
+                            )}
+                            {invite.status === "accepted" && invite.acceptedByName && (
+                              <Typography variant="caption" color="secondary">
+                                Accepted by {invite.acceptedByName}
+                              </Typography>
+                            )}
+                          </Flex>
+                        </TableCell>
+                      </TableRow>
+                    ),
+                  )}
+                </TableBody>
+              </Table>
             )}
           </CardBody>
         </Card>
@@ -427,49 +385,22 @@ export function UserManagement() {
             ) : users.length === 0 ? (
               <EmptyState icon={Users} title="No users" description="No users have joined yet" />
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-ui-border" aria-label="Platform users">
-                  <thead className="bg-ui-bg-secondary">
-                    <tr>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-ui-text-secondary uppercase tracking-wider"
-                      >
-                        User
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-ui-text-secondary uppercase tracking-wider"
-                      >
-                        Email
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-ui-text-secondary uppercase tracking-wider"
-                      >
-                        Type
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-ui-text-secondary uppercase tracking-wider"
-                      >
-                        Workspaces Created
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-ui-text-secondary uppercase tracking-wider"
-                      >
-                        Project Memberships
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-ui-bg divide-y divide-ui-border">
-                    {users.map((user) => (
-                      <UserRow key={user._id} user={user} />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table aria-label="Platform users">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="whitespace-nowrap">User</TableHead>
+                    <TableHead className="whitespace-nowrap">Email</TableHead>
+                    <TableHead className="whitespace-nowrap">Type</TableHead>
+                    <TableHead className="whitespace-nowrap">Workspaces Created</TableHead>
+                    <TableHead className="whitespace-nowrap">Project Memberships</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <UserRow key={user._id} user={user} />
+                  ))}
+                </TableBody>
+              </Table>
             )}
           </CardBody>
         </Card>

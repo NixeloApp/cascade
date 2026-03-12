@@ -30,8 +30,6 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   "/AppSidebar.tsx",
   "/AppHeader.tsx",
   // Explicit migration-debt exemptions replacing broad Settings/Admin/ProjectSettings directory escapes.
-  "/Admin/OAuthHealthDashboard.tsx",
-  "/Admin/UserManagement.tsx",
   "/PortalProjectView.tsx",
   "/PortalTimeline.tsx",
   "/BulkOperationsBar.tsx",
@@ -106,6 +104,8 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/GlobalSearch.tsx",
   "/KeyboardShortcutsHelp.tsx",
   "/AdvancedSearchModal.tsx",
+  "/Admin/OAuthHealthDashboard.tsx",
+  "/Admin/UserManagement.tsx",
   "/Documents/DocumentHeader.tsx",
   "/FuzzySearch/FuzzySearchInput.tsx",
   "/Landing/HeroSection.tsx",

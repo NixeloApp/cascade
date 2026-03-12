@@ -66,7 +66,6 @@ const ALLOWED_FILES = [
   "RoadmapView.tsx",
   // Explicit migration-debt exemptions replacing broad Settings/Admin directory escapes.
   "Admin/HourComplianceDashboard.tsx",
-  "Admin/UserManagement.tsx",
   "Admin/UserTypeManager.tsx",
   // Analytics
   "Analytics/",

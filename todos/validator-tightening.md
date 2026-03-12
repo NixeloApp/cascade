@@ -39,6 +39,9 @@
 - Added `Settings/ApiKeysManager.tsx` and `Settings/GoogleCalendarIntegration.tsx` to design-system ownership targeting so future settings-shell drift there is caught directly.
 - Removed `Settings/AvatarUploadModal.tsx` and `Settings/CoverImageUploadModal.tsx` from the raw-Tailwind and interactive-state migration debt lists by extracting the shared upload dropzone into an owned UI primitive and moving modal shells onto `Card` and `IconButton`.
 - Added `Settings/AvatarUploadModal.tsx` and `Settings/CoverImageUploadModal.tsx` to design-system ownership targeting so upload-surface drift is blocked directly.
+- Removed `Admin/UserManagement.tsx` from the raw-Tailwind and interactive-state migration debt lists by migrating its tabs and admin tables onto owned `Tabs`, `Table`, `Badge`, and `Button` primitives.
+- Removed `Admin/OAuthHealthDashboard.tsx` from the raw-Tailwind migration debt list by moving its failure-entry shell onto owned `Card` and `Icon` primitives.
+- Added `Admin/UserManagement.tsx` and `Admin/OAuthHealthDashboard.tsx` to design-system ownership targeting so admin-shell drift is blocked directly.
 
 ### Next batch
 
