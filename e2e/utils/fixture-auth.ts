@@ -59,8 +59,14 @@ export async function loginFixtureUserWithRepair(
   context: BrowserContext,
   user: TestUser,
   contextLabel = "fixture bootstrap",
+  /** Skip onboarding when repairing stale accounts (fixture users expect org membership) */
+  skipOnboarding = true,
 ): Promise<void> {
-  const loginResult = await testUserService.loginTestUserWithRepair(user.email, user.password);
+  const loginResult = await testUserService.loginTestUserWithRepair(
+    user.email,
+    user.password,
+    skipOnboarding,
+  );
   logLoginRepair(
     user.email,
     loginResult.repairAttempted,
