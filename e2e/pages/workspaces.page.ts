@@ -1,7 +1,11 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { ROUTES } from "../../convex/shared/routes";
-import { createWorkspaceFromDialog, getWorkspaceDialogElements } from "../utils/wait-helpers";
+import {
+  createWorkspaceFromDialog,
+  dismissWorkspaceDialogIfOpen,
+  getWorkspaceDialogElements,
+} from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
 /**
@@ -86,10 +90,7 @@ export class WorkspacesPage extends BasePage {
   }
 
   async closeCreateWorkspaceDialogIfOpen(dialog = getWorkspaceDialogElements(this.page).dialog) {
-    // Preserve the previous blanket Escape reset because stale overlays can
-    // keep the next workspace-create retry from reaching an interactive dialog.
-    await this.page.keyboard.press("Escape");
-    await expect(dialog).not.toBeVisible();
+    await dismissWorkspaceDialogIfOpen(this.page, dialog);
   }
 
   async expectWorkspacesView() {

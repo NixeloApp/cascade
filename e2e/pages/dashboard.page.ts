@@ -388,17 +388,9 @@ export class DashboardPage extends BasePage {
   }
 
   async closeShortcutsHelpIfOpen() {
-    if (!(await this.shortcutsModal.isVisible().catch(() => false))) {
-      return;
-    }
-
-    await this.page.keyboard.press("Escape");
-
-    if (await this.shortcutsModal.isVisible().catch(() => false)) {
+    await this.dismissModalIfOpen(this.shortcutsModal, async () => {
       await this.mainContent.click({ position: { x: 10, y: 10 } }).catch(() => {});
-    }
-
-    await expect(this.shortcutsModal).not.toBeVisible();
+    });
   }
 
   async setTheme(theme: "light" | "dark" | "system") {
@@ -411,11 +403,25 @@ export class DashboardPage extends BasePage {
   }
 
   async openNotifications() {
-    await this.notificationButton.click();
+    await waitForDashboardReady(this.page);
+    await this.closeNotificationsIfOpen();
+    await this.clickNotificationTrigger();
+
+    if (await this.waitForNotificationsPanelVisible()) {
+      return;
+    }
+
+    await this.clickNotificationTrigger();
+    await this.expectNotificationsPanelVisible();
   }
 
   async closeNotifications() {
-    await this.page.keyboard.press("Escape");
+    await this.closeNotificationsIfOpen();
+    await expect(this.notificationPanel).not.toBeVisible();
+  }
+
+  async closeNotificationsIfOpen() {
+    await this.dismissModalIfOpen(this.notificationPanel);
   }
 
   async signOut() {
@@ -563,6 +569,12 @@ export class DashboardPage extends BasePage {
     await this.globalSearchButton.click();
   }
 
+  private async clickNotificationTrigger() {
+    await expect(this.notificationButton).toBeVisible();
+    await expect(this.notificationButton).toBeEnabled();
+    await this.notificationButton.click();
+  }
+
   private async throwIfAppErrorVisible() {
     if (!(await this.appErrorHeading.isVisible().catch(() => false))) {
       return;
@@ -641,17 +653,9 @@ export class DashboardPage extends BasePage {
   }
 
   async closeGlobalSearchIfOpen() {
-    if (!(await this.globalSearchModal.isVisible().catch(() => false))) {
-      return;
-    }
-
-    await this.page.keyboard.press("Escape");
-
-    if (await this.globalSearchModal.isVisible().catch(() => false)) {
+    await this.dismissModalIfOpen(this.globalSearchModal, async () => {
       await this.page.mouse.click(10, 10);
-    }
-
-    await expect(this.globalSearchModal).not.toBeVisible();
+    });
   }
 
   async closeGlobalSearchWithEscape() {
@@ -676,17 +680,9 @@ export class DashboardPage extends BasePage {
   }
 
   async closeAdvancedSearchIfOpen() {
-    if (!(await this.advancedSearchModal.isVisible().catch(() => false))) {
-      return;
-    }
-
-    await this.page.keyboard.press("Escape");
-
-    if (await this.advancedSearchModal.isVisible().catch(() => false)) {
+    await this.dismissModalIfOpen(this.advancedSearchModal, async () => {
       await this.mainContent.click({ position: { x: 10, y: 10 } }).catch(() => {});
-    }
-
-    await expect(this.advancedSearchModal).not.toBeVisible();
+    });
   }
 
   async closeTimeEntryModal() {
@@ -695,12 +691,7 @@ export class DashboardPage extends BasePage {
   }
 
   async closeTimeEntryModalIfOpen() {
-    if (!(await this.timeEntryModal.isVisible().catch(() => false))) {
-      return;
-    }
-
-    await this.page.keyboard.press("Escape");
-    await expect(this.timeEntryModal).not.toBeVisible();
+    await this.dismissModalIfOpen(this.timeEntryModal);
   }
 
   private async openTimeEntryModalOnce() {
@@ -719,6 +710,42 @@ export class DashboardPage extends BasePage {
     await expect(this.headerStartTimerButton).toBeVisible();
     await expect(this.headerStartTimerButton).toBeEnabled();
     await this.headerStartTimerButton.click();
+  }
+
+  private async dismissModalIfOpen(modal: Locator, fallbackDismiss?: () => Promise<void>) {
+    if (!(await modal.isVisible().catch(() => false))) {
+      return;
+    }
+
+    await this.page.keyboard.press("Escape");
+
+    if (!(await this.waitForModalHidden(modal))) {
+      if (fallbackDismiss) {
+        await fallbackDismiss();
+      }
+      await expect(modal).not.toBeVisible();
+      return;
+    }
+
+    await expect(modal).not.toBeVisible();
+  }
+
+  private async waitForModalHidden(modal: Locator, timeout = 1000) {
+    try {
+      await modal.waitFor({ state: "hidden", timeout });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async waitForNotificationsPanelVisible(timeout = 3000) {
+    try {
+      await this.notificationPanel.waitFor({ state: "visible", timeout });
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   private async resyncTimeEntryModalBillingState() {

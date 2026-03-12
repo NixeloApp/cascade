@@ -5,15 +5,6 @@ import type { Page, TestInfo } from "@playwright/test";
  */
 
 /**
- * Wait for page to be ready for interaction.
- * Prefer using specific element assertions instead.
- * @deprecated Use explicit element waits (e.g., expect(element).toBeVisible()) instead
- */
-export async function waitForNetworkIdle(page: Page, _timeout = 5000): Promise<void> {
-  await page.waitForFunction(() => document.readyState === "complete");
-}
-
-/**
  * Wait for all animations to complete
  */
 export async function waitForAnimations(page: Page): Promise<void> {

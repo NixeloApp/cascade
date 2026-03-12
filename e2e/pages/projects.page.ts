@@ -4,6 +4,7 @@ import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import {
   createWorkspaceFromDialog,
+  dismissWorkspaceDialogIfOpen,
   getWorkspaceDialogElements,
   waitForBoardLoaded,
   waitForIssueCreateSuccess,
@@ -415,8 +416,7 @@ export class ProjectsPage extends BasePage {
       workspaceName: name,
       workspaceDescription: description,
       openDialog: async () => {
-        await this.page.keyboard.press("Escape");
-        await expect(dialog).not.toBeVisible();
+        await dismissWorkspaceDialogIfOpen(this.page, dialog);
         await expect(this.newWorkspaceButton).toBeVisible();
         await this.newWorkspaceButton.scrollIntoViewIfNeeded();
         await this.newWorkspaceButton.click();

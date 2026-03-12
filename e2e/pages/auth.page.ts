@@ -580,10 +580,7 @@ export class AuthPage extends BasePage {
       .toBe(expectedMode === "signin" ? "signin-expanded" : "signup-expanded");
   }
 
-  private async waitForStableEmailFormExpanded(
-    timeout = 3000,
-    mode?: "signin" | "signup",
-  ) {
+  private async waitForStableEmailFormExpanded(timeout = 3000, mode?: "signin" | "signup") {
     try {
       await this.expectStableEmailFormExpanded(mode, timeout);
       return true;
@@ -602,7 +599,8 @@ export class AuthPage extends BasePage {
         async () => {
           const state = await this.getAuthFormState();
           const signInReady =
-            expectedMode !== "signin" || (await this.forgotPasswordLink.isVisible().catch(() => false));
+            expectedMode !== "signin" ||
+            (await this.forgotPasswordLink.isVisible().catch(() => false));
           const expandedAndReady = state === targetState && signInReady;
 
           if (!expandedAndReady) {
@@ -881,7 +879,11 @@ export class AuthPage extends BasePage {
   }
 
   private async getToastOutcomeState(message: RegExp): Promise<"success" | "error" | "pending"> {
-    if (await this.getSuccessToast(message).isVisible().catch(() => false)) {
+    if (
+      await this.getSuccessToast(message)
+        .isVisible()
+        .catch(() => false)
+    ) {
       return "success";
     }
 
@@ -1136,11 +1138,7 @@ export class AuthPage extends BasePage {
     }
   }
 
-  private async expectSignUpCredentialsFilled(
-    email: string,
-    password: string,
-    timeout = 10000,
-  ) {
+  private async expectSignUpCredentialsFilled(email: string, password: string, timeout = 10000) {
     await this.waitForFormReady("signup");
     await expect(this.emailInput).toHaveValue(email, { timeout });
     await expect(this.passwordInput).toHaveValue(password, { timeout });

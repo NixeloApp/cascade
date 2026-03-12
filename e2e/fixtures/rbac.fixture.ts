@@ -6,7 +6,10 @@ import { AUTH_PATHS, RBAC_TEST_CONFIG, TEST_USERS } from "../config";
 import { E2E_TIMEZONE } from "../constants";
 import { ProjectsPage, SettingsPage, WorkspacesPage } from "../pages";
 import { loginFixtureUserWithRepair } from "../utils/fixture-auth";
-import { ensureAuthenticatedDashboardReady, waitForConvexConnectionReady } from "../utils/wait-helpers";
+import {
+  ensureAuthenticatedDashboardReady,
+  waitForConvexConnectionReady,
+} from "../utils/wait-helpers";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -88,11 +91,7 @@ export const rbacTest = base.extend<RbacFixtures>({
     const email = TEST_USERS.teamLead.email.replace("@", `-${workerSuffix}@`);
 
     console.log(`  🔐 adminContext: Logging in as ${email}...`);
-    await loginFixtureUserWithRepair(
-      context,
-      { ...TEST_USERS.teamLead, email },
-      "RBAC bootstrap",
-    );
+    await loginFixtureUserWithRepair(context, { ...TEST_USERS.teamLead, email }, "RBAC bootstrap");
 
     (context as BrowserContext & { _role?: string; _workerIndex?: number })._role = "admin";
     (context as BrowserContext & { _workerIndex?: number })._workerIndex = workerIndex;
@@ -128,11 +127,7 @@ export const rbacTest = base.extend<RbacFixtures>({
     const email = TEST_USERS.viewer.email.replace("@", `-${workerSuffix}@`);
 
     console.log(`  🔐 viewerContext: Logging in as ${email}...`);
-    await loginFixtureUserWithRepair(
-      context,
-      { ...TEST_USERS.viewer, email },
-      "RBAC bootstrap",
-    );
+    await loginFixtureUserWithRepair(context, { ...TEST_USERS.viewer, email }, "RBAC bootstrap");
 
     (context as BrowserContext & { _role?: string; _workerIndex?: number })._role = "viewer";
     (context as BrowserContext & { _workerIndex?: number })._workerIndex = workerIndex;

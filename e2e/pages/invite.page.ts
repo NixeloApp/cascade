@@ -2,6 +2,8 @@ import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { ROUTES } from "../utils/routes";
 
+type InviteRouteState = "loading" | "invalid" | "pending";
+
 /**
  * Page object for the public invite route: /invite/$token
  */
@@ -40,16 +42,22 @@ export class InvitePage {
   }
 
   async expectLoadingOrInvalid() {
-    await expect
-      .poll(async () => {
-        const hasLoading = await this.loadingMessage.isVisible().catch(() => false);
-        const hasInvalid = await this.invalidHeading.isVisible().catch(() => false);
-        return hasLoading || hasInvalid;
-      })
-      .toBe(true);
+    await expect.poll(async () => this.getInviteRouteState()).not.toBe("pending");
   }
 
   async expectInvalidInvitationBranding() {
     await expect(this.errorIcon).toBeVisible();
+  }
+
+  private async getInviteRouteState(): Promise<InviteRouteState> {
+    if (await this.invalidHeading.isVisible().catch(() => false)) {
+      return "invalid";
+    }
+
+    if (await this.loadingMessage.isVisible().catch(() => false)) {
+      return "loading";
+    }
+
+    return "pending";
   }
 }

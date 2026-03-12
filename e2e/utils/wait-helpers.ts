@@ -55,8 +55,7 @@ export async function waitForFormReady(page: Page, timeout = 5000): Promise<bool
         const emailVisible = await emailInput.isVisible().catch(() => false);
         const passwordVisible = await passwordInput.isVisible().catch(() => false);
         const submitVisible = await submitButton.isVisible().catch(() => false);
-        const submitEnabled =
-          submitVisible && !(await submitButton.isDisabled().catch(() => true));
+        const submitEnabled = submitVisible && !(await submitButton.isDisabled().catch(() => true));
 
         if (
           expanded === "true" &&
@@ -96,14 +95,6 @@ export async function waitForAnimation(page: Page): Promise<void> {
     if (!animations.length) return Promise.resolve();
     return Promise.all(animations.map((a) => a.finished));
   });
-}
-
-/**
- * Wait for React to hydrate after page load.
- * Use this on cold starts when elements might not be interactive yet.
- */
-export async function waitForReactHydration(page: Page): Promise<void> {
-  await page.waitForFunction(() => document.readyState === "complete");
 }
 
 /**
@@ -160,17 +151,6 @@ export async function waitForToast(
 }
 
 /**
- * Wait for page navigation to complete and settle.
- * Use after actions that trigger route changes.
- */
-export async function waitForNavigation(page: Page, urlPattern?: RegExp): Promise<void> {
-  if (urlPattern) {
-    await page.waitForURL(urlPattern);
-  }
-  await page.waitForFunction(() => document.readyState === "complete");
-}
-
-/**
  * Wait for an element to be both visible and enabled (clickable).
  */
 export async function waitForClickable(
@@ -193,7 +173,33 @@ export async function waitForClickable(
  * This is the shared readiness contract for dashboard-adjacent specs.
  */
 export async function waitForDashboardReady(page: Page): Promise<void> {
-  await page.waitForFunction(() => document.readyState === "complete");
+  await expect
+    .poll(
+      async () => {
+        const main = page.getByRole("main").last();
+        const searchButton = page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON);
+        const loadingSpinner = page
+          .getByLabel("Loading")
+          .or(page.locator("[data-loading-spinner]"));
+
+        const mainVisible = await main.isVisible().catch(() => false);
+        const searchVisible = await searchButton.isVisible().catch(() => false);
+        const searchEnabled = searchVisible && !(await searchButton.isDisabled().catch(() => true));
+        const spinnerVisible = await loadingSpinner.isVisible().catch(() => false);
+
+        if (mainVisible && searchVisible && searchEnabled && !spinnerVisible) {
+          return "ready";
+        }
+
+        return "pending";
+      },
+      {
+        timeout: 10000,
+        intervals: [200, 500, 1000],
+      },
+    )
+    .toBe("ready");
+
   await expect(page.getByRole("main").last()).toBeVisible();
   await expect(page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON)).toBeVisible();
   const loadingSpinner = page.getByLabel("Loading").or(page.locator("[data-loading-spinner]"));
@@ -201,8 +207,28 @@ export async function waitForDashboardReady(page: Page): Promise<void> {
 }
 
 type ConvexConnectionInfo =
-  | { state: { isWebSocketConnected?: boolean } }
-  | { state: "No Client" | "Unavailable" };
+  | { state: { isWebSocketConnected?: boolean }; hydrated: boolean }
+  | { state: "No Client" | "Unavailable"; hydrated?: boolean };
+
+async function getConvexConnectionReadyState(
+  page: Page,
+  requireHydration: boolean,
+): Promise<"connected" | "pending"> {
+  const connectionInfo = await getConvexConnectionInfo(page);
+
+  if (requireHydration && connectionInfo.hydrated !== true) {
+    return "pending";
+  }
+
+  if (
+    typeof connectionInfo.state === "object" &&
+    connectionInfo.state?.isWebSocketConnected === true
+  ) {
+    return "connected";
+  }
+
+  return "pending";
+}
 
 /**
  * Wait for the exposed Convex test client to reach a connected WebSocket state.
@@ -216,23 +242,12 @@ export async function waitForConvexConnectionReady(
   const requireHydration = options?.requireHydration ?? false;
 
   try {
-    await page.waitForFunction(
-      ({ needsHydration }) => {
-        const convex = (
-          window as Window & {
-            __convex_test_client?: { connectionState: () => { isWebSocketConnected: boolean } };
-          }
-        ).__convex_test_client;
-
-        if (needsHydration && !document.body.classList.contains("app-hydrated")) {
-          return false;
-        }
-
-        return convex?.connectionState().isWebSocketConnected ?? false;
-      },
-      { needsHydration: requireHydration },
-      { timeout },
-    );
+    await expect
+      .poll(() => getConvexConnectionReadyState(page, requireHydration), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .toBe("connected");
     return true;
   } catch {
     return false;
@@ -248,9 +263,17 @@ export async function getConvexConnectionInfo(page: Page): Promise<ConvexConnect
         }
       ).__convex_test_client;
 
-      return convex ? { state: convex.connectionState() } : { state: "No Client" };
+      return convex
+        ? {
+            state: convex.connectionState(),
+            hydrated: document.body.classList.contains("app-hydrated"),
+          }
+        : {
+            state: "No Client" as const,
+            hydrated: document.body.classList.contains("app-hydrated"),
+          };
     })
-    .catch(() => ({ state: "Unavailable" }));
+    .catch(() => ({ state: "Unavailable" as const }));
 }
 
 /**
@@ -423,6 +446,21 @@ export function getWorkspaceDialogElements(page: Page): WorkspaceDialogElements 
   };
 }
 
+export async function dismissWorkspaceDialogIfOpen(page: Page, dialog: Locator): Promise<void> {
+  await page.keyboard.press("Escape");
+
+  if (!(await dialog.isVisible().catch(() => false))) {
+    return;
+  }
+
+  if (await waitForWorkspaceDialogHidden(dialog, 1000)) {
+    return;
+  }
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toBeVisible();
+}
+
 /**
  * Deterministically create a workspace through the "Create Workspace" modal dialog.
  * Shared by page objects to avoid duplicated retry/open/fill/submit logic.
@@ -581,6 +619,15 @@ async function expectWorkspaceDialogSubmitStarted(
 ) {
   const started = await waitForWorkspaceDialogSubmitStart(dialog, submitButton, timeout);
   expect(started).toBe(true);
+}
+
+async function waitForWorkspaceDialogHidden(dialog: Locator, timeout = 1000) {
+  try {
+    await dialog.waitFor({ state: "hidden", timeout });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function getWorkspaceDialogSubmitState(dialog: Locator, submitButton: Locator) {

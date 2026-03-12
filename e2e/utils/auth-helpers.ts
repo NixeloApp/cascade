@@ -42,8 +42,33 @@ export async function completeEmailVerification(page: Page, email: string): Prom
     await locators.verifyCodeInput.fill(otp);
 
     await locators.verifyEmailButton.click();
-    // Wait for redirect to onboarding or organization dashboard
-    await page.waitForURL(urlPatterns.dashboardOrOnboarding);
+    if (!(await waitForEmailVerificationSubmitStart(page))) {
+      await expect(locators.verifyEmailButton).toBeVisible();
+      await expect(locators.verifyEmailButton).toBeEnabled();
+      await locators.verifyEmailButton.click();
+
+      if (!(await waitForEmailVerificationSubmitStart(page, 8000))) {
+        console.error(`  ❌ Email verification submit did not start for ${email}`);
+        return false;
+      }
+    }
+
+    const outcome = await waitForEmailVerificationOutcome(page);
+    if (outcome === "error") {
+      const errorText = await toastLocators(page)
+        .error.first()
+        .textContent()
+        .catch(() => "");
+      console.error(`  ❌ Email verification reached error state for ${email}: ${errorText}`);
+      return false;
+    }
+
+    if (!outcome) {
+      console.error(`  ❌ Email verification timed out for ${email} at ${page.url()}`);
+      return false;
+    }
+
+    console.log(`  ✓ Email verification reached ${outcome} state`);
     return true;
   } catch (verifyError) {
     console.error(`  ❌ Email verification failed for ${email}:`, verifyError);
@@ -58,6 +83,125 @@ async function waitForDashboardShell(page: Page, timeout = 15000): Promise<boole
     return true;
   } catch {
     return false;
+  }
+}
+
+type PostAuthDestinationState = "dashboard" | "onboarding" | "pending";
+
+async function getPostAuthDestinationState(page: Page): Promise<PostAuthDestinationState> {
+  const dashboard = dashboardLocators(page);
+  if (
+    urlPatterns.dashboard.test(page.url()) ||
+    (await dashboard.myWorkHeading.isVisible().catch(() => false))
+  ) {
+    return "dashboard";
+  }
+
+  const onboarding = onboardingLocators(page);
+  if (
+    urlPatterns.onboarding.test(page.url()) ||
+    (await onboarding.welcomeHeading.isVisible().catch(() => false))
+  ) {
+    return "onboarding";
+  }
+
+  return "pending";
+}
+
+async function waitForPostAuthDestination(
+  page: Page,
+  timeout = 15000,
+): Promise<Exclude<PostAuthDestinationState, "pending"> | null> {
+  try {
+    await expect
+      .poll(() => getPostAuthDestinationState(page), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .not.toBe("pending");
+
+    const state = await getPostAuthDestinationState(page);
+    return state === "pending" ? null : state;
+  } catch {
+    return null;
+  }
+}
+
+async function getEmailVerificationSubmitState(
+  page: Page,
+): Promise<"submitting" | "redirect" | "success" | "error" | "pending"> {
+  const locators = authFormLocators(page);
+
+  if (urlPatterns.dashboardOrOnboarding.test(page.url())) {
+    return "redirect";
+  }
+
+  if (
+    await toastLocators(page)
+      .success.first()
+      .isVisible()
+      .catch(() => false)
+  ) {
+    return "success";
+  }
+
+  if (
+    await toastLocators(page)
+      .error.first()
+      .isVisible()
+      .catch(() => false)
+  ) {
+    return "error";
+  }
+
+  const buttonText =
+    (await locators.verifyEmailButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
+  if (/verifying/.test(buttonText)) {
+    return "submitting";
+  }
+
+  return "pending";
+}
+
+async function waitForEmailVerificationSubmitStart(page: Page, timeout = 5000): Promise<boolean> {
+  try {
+    await expect
+      .poll(() => getEmailVerificationSubmitState(page), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .not.toBe("pending");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function waitForEmailVerificationOutcome(
+  page: Page,
+  timeout = 15000,
+): Promise<"redirect" | "success" | "error" | null> {
+  try {
+    await expect
+      .poll(
+        async () => {
+          const state = await getEmailVerificationSubmitState(page);
+          return state === "submitting" ? "pending" : state;
+        },
+        {
+          timeout,
+          intervals: [200, 500, 1000],
+        },
+      )
+      .not.toBe("pending");
+
+    const result = await getEmailVerificationSubmitState(page);
+    if (result === "redirect" || result === "success" || result === "error") {
+      return result;
+    }
+    return null;
+  } catch {
+    return null;
   }
 }
 
@@ -151,7 +295,8 @@ async function getSharedAuthFormState(page: Page): Promise<SharedAuthFormState> 
   }
 
   const locators = authFormLocators(page);
-  const buttonText = (await locators.submitButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
+  const buttonText =
+    (await locators.submitButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
   const expanded = await form.getAttribute("data-expanded").catch(() => null);
   const emailVisible = await locators.emailInput.isVisible().catch(() => false);
 
@@ -311,15 +456,24 @@ async function ensureSignInPage(page: Page, baseURL: string, timeout = 15000): P
     return;
   }
 
+  const waitForSignInRoute = async (waitTimeout: number): Promise<boolean> => {
+    try {
+      await page.waitForURL((url) => new URL(url.toString()).pathname === ROUTES.signin.path, {
+        timeout: waitTimeout,
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const signInLink = page.getByRole("link", { name: /^sign in$/i }).first();
   if (await signInLink.isVisible().catch(() => false)) {
     console.log("  ↩️ Recovering sign-in route from public shell...");
-    await Promise.allSettled([
-      page.waitForURL((url) => new URL(url.toString()).pathname === ROUTES.signin.path, {
-        timeout,
-      }),
-      signInLink.click(),
-    ]);
+    await signInLink.click();
+    if (await waitForSignInRoute(timeout)) {
+      return;
+    }
   }
 
   if (isOnSignInRoute()) {
@@ -327,6 +481,7 @@ async function ensureSignInPage(page: Page, baseURL: string, timeout = 15000): P
   }
 
   await page.goto(`${baseURL}${ROUTES.signin.path}`, { waitUntil: "domcontentloaded" });
+  await waitForSignInRoute(timeout);
 }
 
 async function waitForUiSignInSubmitStart(page: Page, timeout = 5000): Promise<boolean> {
@@ -345,7 +500,12 @@ async function waitForUiSignInSubmitStart(page: Page, timeout = 5000): Promise<b
             return "submitting";
           }
 
-          if (await toastLocators(page).error.first().isVisible().catch(() => false)) {
+          if (
+            await toastLocators(page)
+              .error.first()
+              .isVisible()
+              .catch(() => false)
+          ) {
             return "error";
           }
 
@@ -377,36 +537,65 @@ async function waitForConvexWebSocketReady(page: Page, timeout = 30000): Promise
   }
 }
 
-async function findVisibleOnboardingSkipControl(page: Page, timeout = 15000) {
+type OnboardingSkipControlState = "button" | "link" | "text" | "pending";
+
+async function getOnboardingSkipControlState(page: Page): Promise<OnboardingSkipControlState> {
   const locators = onboardingLocators(page);
-  const skipControls = [locators.skipButton, locators.skipLink, locators.skipText];
-
-  await expect
-    .poll(
-      async () => {
-        for (const control of skipControls) {
-          if (await control.isVisible().catch(() => false)) {
-            return true;
-          }
-        }
-
-        return false;
-      },
-      {
-        timeout,
-        intervals: [200, 500, 1000],
-      },
-    )
-    .toBe(true)
-    .catch(() => {});
-
-  for (const control of skipControls) {
-    if (await control.isVisible().catch(() => false)) {
-      return control;
-    }
+  if (await locators.skipButton.isVisible().catch(() => false)) {
+    return "button";
   }
 
-  return null;
+  if (await locators.skipLink.isVisible().catch(() => false)) {
+    return "link";
+  }
+
+  if (await locators.skipText.isVisible().catch(() => false)) {
+    return "text";
+  }
+
+  return "pending";
+}
+
+async function findVisibleOnboardingSkipControl(page: Page, timeout = 15000) {
+  const locators = onboardingLocators(page);
+
+  try {
+    await expect
+      .poll(() => getOnboardingSkipControlState(page), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .not.toBe("pending");
+  } catch {
+    return null;
+  }
+
+  const state = await getOnboardingSkipControlState(page);
+  switch (state) {
+    case "button":
+      return locators.skipButton;
+    case "link":
+      return locators.skipLink;
+    case "text":
+      return locators.skipText;
+    default:
+      return null;
+  }
+}
+
+async function clickOnboardingSkipControlOnce(page: Page, timeout = 15000): Promise<boolean> {
+  const skipControl = await findVisibleOnboardingSkipControl(page, timeout);
+  if (!skipControl) {
+    return false;
+  }
+
+  try {
+    await expect(skipControl).toBeVisible();
+    await skipControl.click();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function skipOnboardingToDashboard(page: Page): Promise<boolean> {
@@ -425,7 +614,11 @@ async function skipOnboardingToDashboard(page: Page): Promise<boolean> {
     return true;
   }
 
-  await skipControl.click().catch(() => {});
+  if (!(await clickOnboardingSkipControlOnce(page, 5000))) {
+    console.log("⚠️ Skip control could not be clicked again after the first attempt");
+    return false;
+  }
+
   if (await waitForDashboardShell(page, 15000)) {
     console.log("✓ Successfully skipped to dashboard");
     return true;
@@ -442,16 +635,14 @@ export async function handleOnboardingOrDashboard(
   page: Page,
   autoCompleteOnboarding = true,
 ): Promise<boolean> {
-  // Allow auth redirects to settle to either dashboard or onboarding route.
-  await page.waitForURL(urlPatterns.dashboardOrOnboarding, { timeout: 15000 }).catch(() => {});
-
-  if (await isOnDashboard(page)) {
+  const destination = await waitForPostAuthDestination(page, 15000);
+  if (destination === "dashboard") {
     await waitForDashboardReady(page);
     console.log("✓ Already on dashboard");
     return true;
   }
 
-  if (await isOnOnboarding(page)) {
+  if (destination === "onboarding") {
     if (!autoCompleteOnboarding) {
       console.log("📋 On onboarding - staying here as requested");
       return true;
@@ -507,24 +698,32 @@ export async function trySignInUser(
   const tryNavigateToAppGateway = async (): Promise<boolean> => {
     await page.goto(`${baseURL}${ROUTES.app.build()}`, { waitUntil: "load" });
 
-    // Wait to confirm we are logged in - app gateway will redirect to /:orgSlug/dashboard or /onboarding
-    await page.waitForURL(urlPatterns.dashboardOrOnboarding, { timeout: 15000 });
-
-    if (await waitForDashboardShell(page, 5000)) {
+    const destination = await waitForPostAuthDestination(page, 15000);
+    if (destination === "dashboard") {
+      await waitForDashboardReady(page);
       console.log("  ✓ Automatically redirected to dashboard");
       return true;
     }
-    // For users with incomplete onboarding, landing on /onboarding is success
-    if (!autoCompleteOnboarding && urlPatterns.onboarding.test(page.url())) {
+
+    if (destination === "onboarding" && !autoCompleteOnboarding) {
       console.log("  ✓ Automatically redirected to onboarding (as expected)");
       return true;
     }
+
+    if (destination === "onboarding") {
+      return await handleOnboardingOrDashboard(page, autoCompleteOnboarding);
+    }
+
     return false;
   };
 
   const resolvePostSignInRedirect = async (): Promise<boolean> => {
     try {
-      await page.waitForURL(urlPatterns.dashboardOrOnboarding, { timeout: 15000 });
+      const destination = await waitForPostAuthDestination(page, 15000);
+      if (!destination) {
+        throw new Error("Post-auth destination did not settle");
+      }
+
       console.log("  ✓ Redirected to:", page.url());
       return await handleOnboardingOrDashboard(page, autoCompleteOnboarding);
     } catch {
@@ -676,7 +875,12 @@ async function getSignUpResultState(
     return "redirect";
   }
 
-  if (await toastLocators(page).error.first().isVisible().catch(() => false)) {
+  if (
+    await toastLocators(page)
+      .error.first()
+      .isVisible()
+      .catch(() => false)
+  ) {
     return "error";
   }
 
@@ -717,8 +921,7 @@ export async function signUpUserViaUI(
   try {
     await page.goto(`${baseURL}/signup`);
 
-    // Check for onboarding or dashboard patterns (both old and new URL structures)
-    if (urlPatterns.dashboardOrOnboarding.test(page.url())) {
+    if ((await getPostAuthDestinationState(page)) !== "pending") {
       return await handleOnboardingOrDashboard(page, autoCompleteOnboarding);
     }
 
@@ -726,7 +929,7 @@ export async function signUpUserViaUI(
     await locators.signUpHeading.waitFor({ state: "visible" }).catch(() => {});
 
     if (!(await locators.signUpHeading.isVisible().catch(() => false))) {
-      return await isOnDashboard(page);
+      return (await getPostAuthDestinationState(page)) === "dashboard";
     }
 
     const formExpanded = await clickContinueWithEmail(page);
@@ -747,7 +950,10 @@ export async function signUpUserViaUI(
       const emailVerified = await completeEmailVerification(page, user.email);
       if (!emailVerified) return false;
     } else if (signUpResult === "error") {
-      const errorText = await toastLocators(page).error.first().textContent().catch(() => "");
+      const errorText = await toastLocators(page)
+        .error.first()
+        .textContent()
+        .catch(() => "");
       console.log(`  ❌ Sign-up reached error state: ${errorText || "unknown error toast"}`);
       return false;
     } else if (signUpResult === null) {

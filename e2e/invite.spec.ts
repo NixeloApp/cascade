@@ -36,7 +36,6 @@ test.describe("Invite Page", () => {
     const invitePage = new InvitePage(page);
 
     // Navigate to invite page
-    // We use Promise.race to catch the loading state before it resolves to invalid
     await invitePage.goto("test-loading-state", "commit");
     await invitePage.expectLoadingOrInvalid();
   });
