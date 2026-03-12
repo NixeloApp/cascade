@@ -1,6 +1,6 @@
 import { api } from "@convex/_generated/api";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { useAuthenticatedQuery } from "./useConvexHelpers";
 
 /** Look up a project by key within the active organization context. */
 export function useProjectByKey(key: string) {

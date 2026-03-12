@@ -464,22 +464,17 @@ export const getByKey = authenticatedQuery({
   },
   handler: async (ctx, args) => {
     const normalizedKey = args.key.toUpperCase();
-    let project: Doc<"projects"> | null;
 
-    if (args.organizationId) {
-      const organizationId = args.organizationId;
-      project = await ctx.db
-        .query("projects")
-        .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
-        .filter(notDeleted)
-        .filter((q) => q.eq(q.field("key"), normalizedKey))
-        .first();
-    } else {
-      project = await ctx.db
-        .query("projects")
-        .withIndex("by_key", (q) => q.eq("key", normalizedKey))
-        .filter(notDeleted)
-        .first();
+    // Always query by_key index (single lookup) since keys are globally unique
+    let project = await ctx.db
+      .query("projects")
+      .withIndex("by_key", (q) => q.eq("key", normalizedKey))
+      .filter(notDeleted)
+      .first();
+
+    // If organizationId provided, validate the project belongs to that org
+    if (project && args.organizationId && project.organizationId !== args.organizationId) {
+      project = null;
     }
 
     if (!project) {
