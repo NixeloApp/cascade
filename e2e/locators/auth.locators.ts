@@ -19,7 +19,7 @@ export const authFormLocators = (page: Page) => ({
   signInHeading: page.getByRole("heading", { name: /sign in to nixelo/i }),
   signUpHeading: page.getByRole("heading", { name: /create your account/i }),
   forgotPasswordHeading: page.getByRole("heading", { name: /reset your password/i }),
-  verifyEmailHeading: page.getByRole("heading", { name: /check your email/i }),
+  verifyEmailHeading: page.getByRole("heading", { name: /verify your email|check your email/i }),
 
   // Form elements
   continueWithEmailButton: page.getByRole("button", { name: /continue with email/i }),
