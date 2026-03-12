@@ -1570,7 +1570,8 @@ async function captureForConfig(
       await screenshotEmptyStates(page, orgSlug);
 
       // Filled states
-      await screenshotFilledStates(page, orgSlug, seedResult);
+      const filledOrgSlug = seedResult.orgSlug ?? orgSlug;
+      await screenshotFilledStates(page, filledOrgSlug, seedResult);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (isCrashLikeError(message)) {
@@ -1659,10 +1660,10 @@ async function run(): Promise<void> {
 
   // Seed data for filled states
   console.log("  Seeding screenshot data...");
-  const seedResult = await testUserService.seedScreenshotData(SCREENSHOT_USER.email);
+  const seedResult = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, { orgSlug });
   if (seedResult.success) {
     console.log(
-      `  ✓ Seeded: project=${seedResult.projectKey}, issues=${seedResult.issueKeys?.length ?? 0}`,
+      `  ✓ Seeded: org=${seedResult.orgSlug ?? orgSlug}, project=${seedResult.projectKey}, issues=${seedResult.issueKeys?.length ?? 0}`,
     );
   } else {
     console.log(`  ⚠️ Seed failed: ${seedResult.error} (continuing anyway)`);

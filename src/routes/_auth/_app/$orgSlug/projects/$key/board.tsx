@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/Select";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useProjectByKey } from "@/hooks/useProjectByKey";
 import {
   type BoardSearchFilters,
   filtersToSearchParams,
@@ -74,7 +75,7 @@ function BoardPage() {
     });
   };
 
-  const project = useAuthenticatedQuery(api.projects.getByKey, { key });
+  const project = useProjectByKey(key);
   const sprints = useAuthenticatedQuery(
     api.sprints.listByProject,
     project ? { projectId: project._id } : "skip",

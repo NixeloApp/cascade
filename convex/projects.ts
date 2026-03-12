@@ -458,14 +458,29 @@ export const getProject = authenticatedQuery({
  * @returns Project object with metadata, or null if not found or no access.
  */
 export const getByKey = authenticatedQuery({
-  args: { key: v.string() },
+  args: {
+    key: v.string(),
+    organizationId: v.optional(v.id("organizations")),
+  },
   handler: async (ctx, args) => {
-    // Find project by key
-    const project = await ctx.db
-      .query("projects")
-      .withIndex("by_key", (q) => q.eq("key", args.key))
-      .filter(notDeleted)
-      .first();
+    const normalizedKey = args.key.toUpperCase();
+    let project: Doc<"projects"> | null;
+
+    if (args.organizationId) {
+      const organizationId = args.organizationId;
+      project = await ctx.db
+        .query("projects")
+        .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
+        .filter(notDeleted)
+        .filter((q) => q.eq(q.field("key"), normalizedKey))
+        .first();
+    } else {
+      project = await ctx.db
+        .query("projects")
+        .withIndex("by_key", (q) => q.eq("key", normalizedKey))
+        .filter(notDeleted)
+        .first();
+    }
 
     if (!project) {
       return null;

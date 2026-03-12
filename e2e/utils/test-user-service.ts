@@ -305,12 +305,15 @@ export class TestUserService {
   /**
    * Seed screenshot data (workspace, team, project, sprint, issues, documents)
    */
-  async seedScreenshotData(email: string): Promise<SeedScreenshotResult> {
+  async seedScreenshotData(
+    email: string,
+    options: { orgSlug?: string } = {},
+  ): Promise<SeedScreenshotResult> {
     try {
       const response = await fetch(E2E_ENDPOINTS.seedScreenshotData, {
         method: "POST",
         headers: getE2EHeaders(),
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, orgSlug: options.orgSlug }),
       });
       return await response.json();
     } catch (error) {

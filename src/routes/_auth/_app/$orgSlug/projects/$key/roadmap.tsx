@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PageContent, PageError } from "@/components/layout";
 import { RoadmapView } from "@/components/RoadmapView";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useProjectByKey } from "@/hooks/useProjectByKey";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key/roadmap")({
   component: RoadmapPage,
@@ -11,7 +12,7 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key/roadmap
 
 function RoadmapPage() {
   const { key } = Route.useParams();
-  const project = useAuthenticatedQuery(api.projects.getByKey, { key });
+  const project = useProjectByKey(key);
   const sprints = useAuthenticatedQuery(
     api.sprints.listByProject,
     project ? { projectId: project._id } : "skip",

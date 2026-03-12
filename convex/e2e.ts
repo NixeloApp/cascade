@@ -2662,7 +2662,7 @@ export const seedScreenshotDataEndpoint = httpAction(async (ctx, request) => {
 
   try {
     const body = await request.json();
-    const { email } = body;
+    const { email, orgSlug } = body;
 
     if (!email) {
       return new Response(JSON.stringify({ error: "Missing email" }), {
@@ -2678,7 +2678,10 @@ export const seedScreenshotDataEndpoint = httpAction(async (ctx, request) => {
       });
     }
 
-    const result = await ctx.runMutation(internal.e2e.seedScreenshotDataInternal, { email });
+    const result = await ctx.runMutation(internal.e2e.seedScreenshotDataInternal, {
+      email,
+      orgSlug,
+    });
 
     return new Response(JSON.stringify(result), {
       status: result.success ? 200 : 500,
@@ -2698,6 +2701,7 @@ export const seedScreenshotDataEndpoint = httpAction(async (ctx, request) => {
 export const seedScreenshotDataInternal = internalMutation({
   args: {
     email: v.string(),
+    orgSlug: v.optional(v.string()),
   },
   returns: v.object({
     success: v.boolean(),
@@ -2729,17 +2733,48 @@ export const seedScreenshotDataInternal = internalMutation({
       await ctx.db.patch(userId, { name: "Emily Chen" });
     }
 
-    // 2. Find user's organization
-    const membership = await ctx.db
-      .query("organizationMembers")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
+    // 2. Resolve the organization to seed against.
+    let organizationId: Id<"organizations"> | null = null;
 
-    if (!membership) {
-      return { success: false, error: "User has no organization membership" };
+    if (args.orgSlug) {
+      const organizationBySlug = await ctx.db
+        .query("organizations")
+        .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug as string))
+        .first();
+
+      if (!organizationBySlug) {
+        return { success: false, error: `Organization not found: ${args.orgSlug}` };
+      }
+
+      const membership = await ctx.db
+        .query("organizationMembers")
+        .withIndex("by_organization_user", (q) =>
+          q.eq("organizationId", organizationBySlug._id).eq("userId", userId),
+        )
+        .first();
+
+      if (!membership) {
+        return {
+          success: false,
+          error: `User is not a member of organization: ${args.orgSlug}`,
+        };
+      }
+
+      organizationId = organizationBySlug._id;
+    } else {
+      const membership = await ctx.db
+        .query("organizationMembers")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .first();
+
+      if (!membership) {
+        return { success: false, error: "User has no organization membership" };
+      }
+
+      organizationId = membership.organizationId;
     }
 
-    const organization = await ctx.db.get(membership.organizationId);
+    const organization = organizationId ? await ctx.db.get(organizationId) : null;
     if (!organization) {
       return { success: false, error: "Organization not found" };
     }

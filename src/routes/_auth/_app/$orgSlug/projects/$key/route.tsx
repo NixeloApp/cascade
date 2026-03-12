@@ -15,6 +15,7 @@ import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useProjectByKey } from "@/hooks/useProjectByKey";
 import { ChevronDown } from "@/lib/icons";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key")({
   component: ProjectLayout,
@@ -24,7 +25,7 @@ function ProjectLayout() {
   const { key, orgSlug } = Route.useParams();
   const location = useLocation();
   const { user } = useCurrentUser();
-  const project = useAuthenticatedQuery(api.projects.getByKey, { key });
+  const project = useProjectByKey(key);
   const userRole = useAuthenticatedQuery(
     api.projects.getProjectUserRole,
     project ? { projectId: project._id } : "skip",
@@ -144,17 +145,17 @@ function ProjectLayout() {
   ];
   const currentSegment = location.pathname.split("/").pop() ?? "board";
   const mobilePrimaryTabs = tabs.filter((tab) =>
-    ["board", "backlog", "inbox", "roadmap", "calendar"].includes(tab.segment),
+    ["board", "backlog", "calendar"].includes(tab.segment),
   );
   const mobileSecondaryTabs = tabs.filter(
-    (tab) => !["board", "backlog", "inbox", "roadmap", "calendar"].includes(tab.segment),
+    (tab) => !["board", "backlog", "calendar"].includes(tab.segment),
   );
   const activeSecondaryTab = mobileSecondaryTabs.find((tab) => tab.segment === currentSegment);
 
   return (
     <Flex direction="column" className="h-full">
-      <div className="border-b border-ui-border/70 bg-ui-bg/78 px-1 py-0.5 backdrop-blur-xl sm:px-4 sm:py-3">
-        <div className="bg-transparent px-0 py-0 shadow-none sm:rounded-3xl sm:border sm:border-ui-border-secondary/70 sm:bg-linear-to-r sm:from-ui-bg-elevated sm:via-ui-bg-elevated/96 sm:to-ui-bg-soft/78 sm:px-4 sm:py-3 sm:shadow-soft">
+      <div className="border-b border-ui-border/70 bg-ui-bg/84 px-1 py-0.5 backdrop-blur-xl sm:px-4 sm:py-3">
+        <div className="bg-transparent px-0 py-0 shadow-none sm:rounded-3xl sm:border sm:border-ui-border-secondary/75 sm:bg-linear-to-r sm:from-ui-bg-elevated sm:via-ui-bg-elevated/98 sm:to-ui-bg-soft/76 sm:px-4 sm:py-3 sm:shadow-card">
           <Flex
             align="start"
             justify="between"
@@ -165,7 +166,7 @@ function ProjectLayout() {
               <Flex
                 align="center"
                 justify="center"
-                className="h-7 w-7 shrink-0 rounded-full bg-brand-subtle text-brand ring-1 ring-brand/15 sm:h-10 sm:w-10 sm:rounded-xl"
+                className="h-7 w-7 shrink-0 rounded-full bg-brand-subtle text-brand ring-1 ring-brand/18 sm:h-10 sm:w-10 sm:rounded-xl"
               >
                 <Typography variant="small" className="font-semibold text-current">
                   {project.key.slice(0, 2).toUpperCase()}
@@ -198,7 +199,7 @@ function ProjectLayout() {
           <RouteNav
             variant="pill"
             size="sm"
-            className="mt-0.5 flex items-center gap-0.5 overflow-x-auto pb-0 pr-0.5 scrollbar-subtle sm:hidden"
+            className="mt-1 flex items-center gap-1 overflow-x-auto pb-0.5 pr-0.5 scrollbar-subtle sm:hidden"
             aria-label="Project sections"
           >
             {mobilePrimaryTabs.map((tab) => (

@@ -16,16 +16,16 @@ const cardVariants = cva("border transition-default", {
   variants: {
     variant: {
       default:
-        "bg-linear-to-b from-ui-bg via-ui-bg-elevated/98 to-ui-bg-secondary/50 border-ui-border-secondary/85 shadow-card",
+        "bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-secondary/62 border-ui-border-secondary/90 shadow-elevated",
       elevated:
-        "bg-linear-to-b from-ui-bg via-ui-bg-elevated to-ui-bg-secondary/38 border-ui-border-secondary shadow-elevated",
-      soft: "bg-linear-to-b from-ui-bg-soft/96 via-ui-bg-elevated/94 to-ui-bg-secondary/84 border-ui-border-secondary/80 shadow-soft",
+        "bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-secondary/46 border-ui-border-secondary shadow-elevated",
+      soft: "bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78 border-ui-border-secondary/85 shadow-card",
       interactive:
-        "bg-ui-bg-elevated border-ui-border-secondary/85 shadow-card hover:bg-ui-bg-hover hover:border-ui-border-secondary hover:shadow-card-hover cursor-pointer",
+        "bg-ui-bg-elevated border-ui-border-secondary/90 shadow-card hover:bg-ui-bg-hover hover:border-ui-border-secondary hover:shadow-card-hover cursor-pointer",
       outline:
-        "bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-secondary/70 border-ui-border-secondary/90 shadow-card",
+        "bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-secondary/64 border-ui-border-secondary/90 shadow-card",
       ghost: "bg-transparent border-transparent",
-      flat: "bg-linear-to-b from-ui-bg/98 via-ui-bg-secondary/90 to-ui-bg-secondary/78 border-ui-border-secondary/75 shadow-soft",
+      flat: "bg-linear-to-b from-ui-bg-elevated/98 via-ui-bg-secondary/88 to-ui-bg-secondary/74 border-ui-border-secondary/80 shadow-soft",
     },
     padding: {
       none: "",
@@ -68,18 +68,19 @@ const cardRecipeVariants = cva("", {
 
       // Page layout surfaces
       pageHeader:
-        "rounded-2xl border-ui-border-secondary/75 bg-linear-to-r from-ui-bg via-ui-bg-elevated/96 to-ui-bg-soft/78 shadow-card sm:rounded-3xl",
-      filterBar: "rounded-md border-ui-border/70 bg-ui-bg-elevated/92 shadow-soft sm:rounded-2xl",
+        "rounded-2xl border-ui-border-secondary/80 bg-linear-to-r from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/76 shadow-elevated sm:rounded-3xl",
+      filterBar:
+        "rounded-md border-ui-border-secondary/75 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/94 to-ui-bg-soft/92 shadow-card sm:rounded-2xl",
 
       // Landing/showcase surfaces
       showcaseShell:
-        "relative overflow-hidden rounded-3xl border-ui-border-secondary/75 bg-linear-to-b from-ui-bg-elevated/98 via-ui-bg-elevated to-ui-bg-secondary/78 shadow-elevated",
+        "relative overflow-hidden rounded-3xl border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-elevated/98 via-ui-bg-elevated to-ui-bg-secondary/72 shadow-elevated",
       showcasePanel:
-        "rounded-2xl border-ui-border-secondary/70 bg-linear-to-b from-ui-bg/98 via-ui-bg-elevated/96 to-ui-bg-secondary/84 shadow-soft",
+        "rounded-2xl border-ui-border-secondary/75 bg-linear-to-b from-ui-bg-elevated/98 via-ui-bg-elevated/96 to-ui-bg-secondary/78 shadow-card",
       showcasePanelQuiet:
-        "rounded-2xl border-ui-border/60 bg-linear-to-b from-ui-bg-secondary/84 to-ui-bg-secondary/72 shadow-soft",
+        "rounded-2xl border-ui-border-secondary/65 bg-linear-to-b from-ui-bg-secondary/88 to-ui-bg-secondary/76 shadow-soft",
       metricTile:
-        "rounded-2xl border-ui-border-secondary/70 bg-linear-to-b from-ui-bg/96 via-ui-bg-elevated/94 to-ui-bg-secondary/78 shadow-soft",
+        "rounded-2xl border-ui-border-secondary/75 bg-linear-to-b from-ui-bg-elevated/96 via-ui-bg-elevated/94 to-ui-bg-secondary/74 shadow-card",
 
       // Header control surfaces
       controlRail:
