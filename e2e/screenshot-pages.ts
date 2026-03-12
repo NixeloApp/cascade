@@ -660,6 +660,10 @@ function isTeamDetailUrl(url: string): boolean {
   return /\/[^/]+\/workspaces\/[^/]+\/teams\/[^/]+\/?$/.test(url);
 }
 
+function isTeamBoardUrl(url: string): boolean {
+  return /\/[^/]+\/workspaces\/[^/]+\/teams\/[^/]+\/board$/.test(url);
+}
+
 function isTeamCalendarUrl(url: string): boolean {
   return /\/[^/]+\/workspaces\/[^/]+\/teams\/[^/]+\/calendar$/.test(url);
 }
@@ -1425,7 +1429,7 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (isTeamDetailUrl(url)) {
+  if (isTeamDetailUrl(url) || isTeamBoardUrl(url) || /^team-[^-]+-board$/.test(name)) {
     await waitForTeamDetailReady(page);
     return;
   }

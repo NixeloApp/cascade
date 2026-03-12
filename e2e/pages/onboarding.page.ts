@@ -476,20 +476,10 @@ export class OnboardingPage {
 
   private async clickToDashboard(trigger: Locator) {
     await trigger.click();
-    if (await this.waitForDashboardReady(5000)) {
-      return;
+    const ready = await this.waitForDashboardReady(8000);
+    if (!ready) {
+      throw new Error("Dashboard did not become ready after onboarding action");
     }
-
-    // Only retry if we're still on onboarding - the trigger may no longer exist if we navigated
-    const stillOnOnboarding = await this.page
-      .url()
-      .then((url) => url.includes("/onboarding"))
-      .catch(() => false);
-    if (stillOnOnboarding && (await trigger.isVisible().catch(() => false))) {
-      await trigger.click();
-    }
-
-    await this.expectDashboard();
   }
 
   private async prepareOnboardingWizard() {

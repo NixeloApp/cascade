@@ -255,7 +255,10 @@ export class AuthPage extends BasePage {
       await expect(this.signInButton).toBeVisible();
       await expect(this.signInButton).toBeEnabled();
       await this.signInButton.click();
-      await this.waitForSignInSubmitStart(5000);
+      const started = await this.waitForSignInSubmitStart(5000);
+      if (!started) {
+        throw new Error("Sign-in submission did not start after retry");
+      }
     }
   }
 
@@ -381,7 +384,10 @@ export class AuthPage extends BasePage {
       await expect(this.resetPasswordButton).toBeVisible();
       await expect(this.resetPasswordButton).toBeEnabled();
       await this.resetPasswordButton.click();
-      await this.waitForPasswordResetSubmitStart(5000);
+      const started = await this.waitForPasswordResetSubmitStart(5000);
+      if (!started) {
+        throw new Error("Password reset submission did not start after retry");
+      }
     }
   }
 
@@ -407,7 +413,10 @@ export class AuthPage extends BasePage {
       await expect(this.verifyEmailButton).toBeVisible();
       await expect(this.verifyEmailButton).toBeEnabled();
       await this.verifyEmailButton.click();
-      await this.waitForVerificationSubmitStart(5000);
+      const started = await this.waitForVerificationSubmitStart(5000);
+      if (!started) {
+        throw new Error("Email verification submission did not start after retry");
+      }
     }
   }
 
@@ -1143,7 +1152,10 @@ export class AuthPage extends BasePage {
       await expect(this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON)).toBeVisible();
       await expect(this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON)).toBeEnabled();
       await this.page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON).click();
-      await this.waitForSignUpSubmitStart(5000);
+      const started = await this.waitForSignUpSubmitStart(5000);
+      if (!started) {
+        throw new Error("Sign-up submission did not start after retry");
+      }
     }
 
     if (options?.expectOutcome) {

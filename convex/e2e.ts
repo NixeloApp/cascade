@@ -2797,6 +2797,16 @@ export const seedScreenshotDataInternal = internalMutation({
       return { success: false, error: "Organization not found" };
     }
 
+    // Validate this is an E2E test organization to avoid seeding shared/production orgs
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to seed non-E2E organization: ${organization.slug}. Use an org with 'nixelo-e2e' prefix.`,
+      };
+    }
+
     const orgId = organization._id;
     const orgSlug = organization.slug;
     const now = Date.now();
