@@ -295,34 +295,42 @@ async function getSharedAuthFormState(page: Page): Promise<SharedAuthFormState> 
   }
 
   const locators = authFormLocators(page);
-  const buttonText =
-    (await locators.submitButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
   const expanded = await form.getAttribute("data-expanded").catch(() => null);
   const emailVisible = await locators.emailInput.isVisible().catch(() => false);
+
+  // For landing state, check the "Continue with email" button
+  if (expanded === "false") {
+    const continueButtonVisible = await locators.continueWithEmailButton
+      .isVisible()
+      .catch(() => false);
+    if (continueButtonVisible) {
+      return route === "signin" ? "signin-landing" : "signup-landing";
+    }
+  }
+
+  // For expanded state, check the submit button text
+  const submitButtonText =
+    (await locators.submitButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
 
   if (route === "signin") {
     if (
       expanded === "true" &&
-      /sign in|signing in/.test(buttonText) &&
+      /sign in|signing in/.test(submitButtonText) &&
       emailVisible &&
       (await locators.forgotPasswordLink.isVisible().catch(() => false))
     ) {
       return "signin-expanded";
     }
 
-    if (expanded === "false" && /continue with email/.test(buttonText)) {
-      return "signin-landing";
-    }
-
     return "pending";
   }
 
-  if (expanded === "true" && /create account|creating account/.test(buttonText) && emailVisible) {
+  if (
+    expanded === "true" &&
+    /create account|creating account/.test(submitButtonText) &&
+    emailVisible
+  ) {
     return "signup-expanded";
-  }
-
-  if (expanded === "false" && /continue with email/.test(buttonText)) {
-    return "signup-landing";
   }
 
   return "pending";
@@ -667,8 +675,25 @@ export async function trySignInUser(
   autoCompleteOnboarding = true,
 ): Promise<boolean> {
   const injectAuthTokens = async (token: string, refreshToken?: string): Promise<void> => {
+    const convexUrl = process.env.VITE_CONVEX_URL;
+    if (!convexUrl) {
+      console.log("  ⚠️ VITE_CONVEX_URL not set, token injection may fail");
+    }
+
     await page.evaluate(
-      ({ token: jwt, refreshToken: refresh, convexUrl }) => {
+      ({ token: jwt, refreshToken: refresh, convexUrl: url }) => {
+        // Clear any stale auth tokens first (important after sign-out)
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.includes("convexAuth") || key.includes("__convexAuth"))) {
+            keysToRemove.push(key);
+          }
+        }
+        for (const key of keysToRemove) {
+          localStorage.removeItem(key);
+        }
+
         // Legacy keys (for ConvexReactClient direct usage)
         localStorage.setItem("convexAuthToken", jwt);
         if (refresh) {
@@ -676,8 +701,8 @@ export async function trySignInUser(
         }
 
         // @convex-dev/auth keys (namespaced by convex URL)
-        if (convexUrl) {
-          const namespace = convexUrl.replace(/[^a-zA-Z0-9]/g, "");
+        if (url) {
+          const namespace = url.replace(/[^a-zA-Z0-9]/g, "");
           const jwtKey = `__convexAuthJWT_${namespace}`;
           const refreshKey = `__convexAuthRefreshToken_${namespace}`;
 
@@ -690,7 +715,7 @@ export async function trySignInUser(
       {
         token,
         refreshToken,
-        convexUrl: process.env.VITE_CONVEX_URL,
+        convexUrl: convexUrl,
       },
     );
   };
@@ -714,6 +739,9 @@ export async function trySignInUser(
       return await handleOnboardingOrDashboard(page, autoCompleteOnboarding);
     }
 
+    console.log(
+      `  ℹ️ Gateway navigation ended at: ${page.url()} (destination: ${destination ?? "null"})`,
+    );
     return false;
   };
 
@@ -768,6 +796,28 @@ export async function trySignInUser(
       }
 
       console.log("  🔁 Attempting app-gateway recovery after redirect timeout...");
+
+      // On landing page after sign-in, auth state may not be reflected yet.
+      // Reload the page to force Convex client to re-initialize with fresh auth state.
+      if (page.url().endsWith("/") || page.url().includes("localhost:5555/$")) {
+        console.log("  ↻ Reloading page to refresh auth state...");
+        await page.reload({ waitUntil: "domcontentloaded" });
+
+        // Check for "Go to App" link which indicates authenticated state
+        const goToAppLink = page.getByRole("link", { name: /go to app/i });
+        try {
+          await goToAppLink.waitFor({ state: "visible", timeout: 10000 });
+          console.log("  ✓ User is authenticated (Go to App visible). Clicking to enter app...");
+          await goToAppLink.click();
+          const destination = await waitForPostAuthDestination(page, 15000);
+          if (destination) {
+            return await handleOnboardingOrDashboard(page, autoCompleteOnboarding);
+          }
+        } catch {
+          console.log("  ℹ️ Go to App link not visible after reload");
+        }
+      }
+
       try {
         if (await tryNavigateToAppGateway()) {
           return await handleOnboardingOrDashboard(page, autoCompleteOnboarding);
@@ -819,14 +869,35 @@ export async function trySignInUser(
         if (await tryNavigateToAppGateway()) {
           return true;
         }
-      } catch {
-        console.log("  ⚠️ API login injection failed to redirect. Falling back to UI login.");
+        console.log("  ⚠️ API login gateway navigation returned false. Checking current state...");
+      } catch (e) {
+        console.log(`  ⚠️ API login injection failed to redirect: ${String(e).slice(0, 100)}`);
+      }
+
+      // After token injection, check if we're already on an authenticated page
+      // This can happen when token injection succeeded but gateway navigation timing failed
+      const currentDestination = await getPostAuthDestinationState(page);
+      if (currentDestination === "dashboard") {
+        console.log("  ✓ Already on dashboard after token injection");
+        await waitForDashboardReady(page);
+        return true;
+      }
+      if (currentDestination === "onboarding") {
+        console.log("  ✓ Already on onboarding after token injection");
+        return await handleOnboardingOrDashboard(page, autoCompleteOnboarding);
       }
     } else {
       console.log(`  ⚠️ API login failed: ${loginResult.error}. Falling back to UI login.`);
     }
 
     // --- UI LOGIN FALLBACK ---
+
+    // Double-check we're not already authenticated before attempting UI login
+    if (await isOnDashboard(page)) {
+      console.log("  ✓ Already authenticated - on dashboard");
+      await waitForDashboardReady(page);
+      return true;
+    }
 
     await ensureSignInPage(page, baseURL);
     await waitForSignInSurface(page);
