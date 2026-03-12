@@ -16,7 +16,6 @@ import { Inbox } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
-import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
@@ -153,65 +152,62 @@ export function MyIssuesList({
               }}
             />
           ) : (
-            <Flex
-              direction="column"
-              gap="xs"
-              className="flex-1 overflow-y-auto pr-2 custom-scrollbar"
+            <FlexItem
+              flex="1"
+              className="overflow-y-auto pr-2 custom-scrollbar"
               ref={issueNavigation.listRef}
             >
-              {displayIssues.map((issue, index) => (
-                <Button
-                  key={issue._id}
-                  variant="unstyled"
-                  onClick={() => navigateToWorkspace(issue.projectKey)}
-                  {...issueNavigation.getItemProps(index)}
-                  className={cn(
-                    "h-auto w-full rounded-xl border border-transparent bg-ui-bg-soft/60 p-4 text-left shadow-soft transition-all duration-default hover:border-ui-border/60 hover:bg-ui-bg-soft group cursor-pointer",
-                    issueNavigation.getItemProps(index).className,
-                  )}
-                >
-                  <Flex justify="between" align="start">
-                    <FlexItem flex="1">
-                      <Flex gap="sm" align="center" wrap className="mb-2">
-                        <Typography
-                          variant="inlineCode"
-                          color="tertiary"
-                          className="group-hover:text-brand transition-colors"
-                        >
-                          {issue.key}
-                        </Typography>
-                        <Badge
-                          variant="neutral"
-                          className="bg-ui-bg-tertiary/60 text-xs uppercase font-bold"
-                        >
-                          {issue.priority}
-                        </Badge>
-                      </Flex>
-                      <Typography
-                        variant="label"
-                        className="mb-2 text-base group-hover:text-brand transition-colors"
-                      >
-                        {issue.title}
-                      </Typography>
-                      <Metadata size="xs" gap="xs" className="uppercase tracking-widest">
-                        <MetadataItem>{issue.projectName}</MetadataItem>
-                        <MetadataItem>{issue.status}</MetadataItem>
-                      </Metadata>
-                    </FlexItem>
-                  </Flex>
-                </Button>
-              ))}
+              <Flex direction="column" gap="xs">
+                {displayIssues.map((issue, index) => {
+                  const itemProps = issueNavigation.getItemProps(index);
 
-              {showLoadMore && loadMore && (
-                <div className="pt-4">
-                  <LoadMoreButton
-                    onClick={() => loadMore(20)}
-                    isLoading={isLoadingMore}
-                    className="w-full"
-                  />
-                </div>
-              )}
-            </Flex>
+                  return (
+                    <Card
+                      key={issue._id}
+                      onClick={() => navigateToWorkspace(issue.projectKey)}
+                      hoverable
+                      variant="outline"
+                      padding="md"
+                      {...itemProps}
+                      className={cn("bg-ui-bg-soft/60 text-left shadow-soft", itemProps.className)}
+                    >
+                      <Flex justify="between" align="start">
+                        <FlexItem flex="1">
+                          <Flex gap="sm" align="center" wrap className="mb-2">
+                            <Typography variant="inlineCode" color="tertiary">
+                              {issue.key}
+                            </Typography>
+                            <Badge
+                              variant="neutral"
+                              className="bg-ui-bg-tertiary/60 text-xs uppercase font-bold"
+                            >
+                              {issue.priority}
+                            </Badge>
+                          </Flex>
+                          <Typography variant="label" className="mb-2 text-base">
+                            {issue.title}
+                          </Typography>
+                          <Metadata size="xs" gap="xs" className="uppercase tracking-widest">
+                            <MetadataItem>{issue.projectName}</MetadataItem>
+                            <MetadataItem>{issue.status}</MetadataItem>
+                          </Metadata>
+                        </FlexItem>
+                      </Flex>
+                    </Card>
+                  );
+                })}
+
+                {showLoadMore && loadMore && (
+                  <div className="pt-4">
+                    <LoadMoreButton
+                      onClick={() => loadMore(20)}
+                      isLoading={isLoadingMore}
+                      className="w-full"
+                    />
+                  </div>
+                )}
+              </Flex>
+            </FlexItem>
           )}
         </Flex>
       </Card>

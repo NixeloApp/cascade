@@ -67,8 +67,6 @@ const ALLOWED_FILES = [
   // Settings/admin
   "Settings/",
   "Admin/",
-  // Dashboard
-  "Dashboard/",
   "Analytics/",
   // AI components
   "AI/",

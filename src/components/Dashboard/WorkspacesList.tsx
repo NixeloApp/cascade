@@ -93,44 +93,45 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
           />
         ) : (
           <Flex direction="column" gap="xs" ref={projectNavigation.listRef}>
-            {projects.map((project, index) => (
-              <Card
-                key={project._id}
-                onClick={() => navigateToWorkspace(project.key)}
-                hoverable
-                padding="md"
-                {...projectNavigation.getItemProps(index)}
-                className={cn(
-                  "group border-ui-border/50 bg-ui-bg-soft/70 shadow-soft transition-all duration-default hover:border-ui-border hover:bg-ui-bg-soft",
-                  projectNavigation.getItemProps(index).className,
-                )}
-              >
-                <Flex align="center" gap="sm">
-                  {/* Project avatar/icon */}
-                  <Avatar name={project.name} size="md" variant="brand" hoverRing />
-                  <FlexItem flex="1" className="min-w-0">
-                    <Flex justify="between" align="center" gap="sm">
-                      <Typography
-                        variant="label"
-                        className="truncate tracking-tight transition-colors group-hover:text-brand"
-                      >
-                        {project.name}
+            {projects.map((project, index) => {
+              const itemProps = projectNavigation.getItemProps(index);
+
+              return (
+                <Card
+                  key={project._id}
+                  onClick={() => navigateToWorkspace(project.key)}
+                  hoverable
+                  padding="md"
+                  {...itemProps}
+                  className={cn(
+                    "border-ui-border/50 bg-ui-bg-soft/70 shadow-soft",
+                    itemProps.className,
+                  )}
+                >
+                  <Flex align="center" gap="sm">
+                    {/* Project avatar/icon */}
+                    <Avatar name={project.name} size="md" variant="brand" hoverRing />
+                    <FlexItem flex="1" className="min-w-0">
+                      <Flex justify="between" align="center" gap="sm">
+                        <Typography variant="label" className="truncate tracking-tight">
+                          {project.name}
+                        </Typography>
+                        <Badge
+                          variant="neutral"
+                          size="sm"
+                          className="bg-ui-bg-tertiary/60 uppercase text-ui-text-secondary"
+                        >
+                          {project.role}
+                        </Badge>
+                      </Flex>
+                      <Typography variant="small" color="secondary" className="mt-1">
+                        {project.myIssues} assigned issues · {project.totalIssues} total tracked
                       </Typography>
-                      <Badge
-                        variant="neutral"
-                        size="sm"
-                        className="bg-ui-bg-tertiary/60 uppercase text-ui-text-secondary"
-                      >
-                        {project.role}
-                      </Badge>
-                    </Flex>
-                    <Typography variant="small" color="secondary" className="mt-1">
-                      {project.myIssues} assigned issues · {project.totalIssues} total tracked
-                    </Typography>
-                  </FlexItem>
-                </Flex>
-              </Card>
-            ))}
+                    </FlexItem>
+                  </Flex>
+                </Card>
+              );
+            })}
           </Flex>
         )}
       </CardBody>

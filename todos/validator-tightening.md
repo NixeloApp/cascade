@@ -4,6 +4,30 @@
 >
 > Constraint: keep validators errors-only. No warning mode.
 
+## Status
+
+### Completed on 2026-03-12
+
+- Removed `src/components/Dashboard/` from `RAW_TAILWIND_ALLOWED_DIRS`.
+- Removed `Dashboard/` from the `check-interactive-tw.js` migration allowlist.
+- Expanded `DESIGN_SYSTEM_TARGET_FILES` to cover dashboard and navigation surfaces that were previously escaping ownership checks.
+- Migrated the dashboard shells surfaced by the tighter rules to owned primitives:
+  - `Greeting.tsx`
+  - `MyIssuesList.tsx`
+  - `QuickStats.tsx`
+  - `FocusZone.tsx`
+  - `RecentActivity.tsx`
+  - `WorkspacesList.tsx`
+
+### Next batch
+
+- Tighten the next product-shell exemptions:
+  - `src/components/Settings/`
+  - `src/components/Admin/`
+  - `src/components/ProjectSettings/`
+- Keep `src/components/Analytics/` temporarily allowed until its shell patterns are migrated; it was tested in this pass and still contains validator-breaking drift.
+- After the next exemption reduction, add a stricter surface-shell validator for `rounded + bg + border + shadow + overflow` stacks so recipe drift is blocked more directly than the current generic raw-Tailwind patterns.
+
 ## Problem
 
 The real migration risk is not one-off Tailwind usage. The risk is visual identity being defined ad hoc inside feature files.

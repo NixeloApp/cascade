@@ -66,7 +66,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                   variant="ghost"
                   padding="none"
                   hoverable
-                  className="relative rounded-xl border border-transparent px-2 py-2 hover:border-ui-border/50 hover:bg-ui-bg-soft/50"
+                  className="relative rounded-xl border border-transparent px-2 py-2"
                 >
                   <Flex gap="md" align="start">
                     {/* User avatar */}

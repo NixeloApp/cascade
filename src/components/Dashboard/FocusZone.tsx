@@ -52,7 +52,7 @@ export function FocusZone({ task }: FocusZoneProps) {
         onClick={handleClick}
         aria-label={`Focus task: ${task.title}`}
         variant="outline"
-        className="group relative overflow-hidden border-ui-border/50 bg-ui-bg/80 shadow-soft backdrop-blur-sm"
+        className="relative overflow-hidden border-ui-border/50 bg-ui-bg/80 shadow-soft backdrop-blur-sm"
       >
         <div className="absolute inset-x-0 top-0 h-24 bg-linear-to-b from-brand-subtle/30 to-transparent" />
         <div className="absolute left-0 top-0 h-full w-1 bg-brand" />
@@ -93,11 +93,7 @@ export function FocusZone({ task }: FocusZoneProps) {
                 <Typography variant="label" className="text-brand">
                   View task
                 </Typography>
-                <Icon
-                  icon={ArrowRight}
-                  size="sm"
-                  className="text-brand transition-transform group-hover:translate-x-0.5"
-                />
+                <Icon icon={ArrowRight} size="sm" className="text-brand" />
               </Flex>
             </Flex>
           </Stack>

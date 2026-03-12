@@ -7,6 +7,7 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
   "src/components/Kanban/",
   "src/components/Calendar/",
   "src/components/Auth/",
+  "src/components/Analytics/",
   "src/components/Editor/",
   "src/components/AI/",
   "src/components/Sidebar/",
@@ -23,9 +24,7 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
   "src/components/Fields/",
   "src/components/Templates/",
   "src/components/AdvancedSearchModal/",
-  "src/components/Analytics/",
   "src/components/Automation/",
-  "src/components/Dashboard/",
 ];
 
 export const RAW_TAILWIND_ALLOWED_FILES = [
@@ -102,6 +101,8 @@ export const RAW_TAILWIND_PATTERNS = [
 export const DESIGN_SYSTEM_TARGET_FILES = [
   "/AI/AIChat.tsx",
   "/AppHeader.tsx",
+  "/Dashboard/RecentActivity.tsx",
+  "/Dashboard/WorkspacesList.tsx",
   "/GlobalSearch.tsx",
   "/KeyboardShortcutsHelp.tsx",
   "/AdvancedSearchModal.tsx",
@@ -110,7 +111,9 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/Landing/HeroSection.tsx",
   "/Landing/ProductShowcase.tsx",
   "/NotificationCenter.tsx",
+  "/Notifications/NotificationCenter.tsx",
   "/TimerWidget.tsx",
+  "/UserMenu.tsx",
 ];
 
 export const DESIGN_SYSTEM_ESCAPE_HATCHES = [
