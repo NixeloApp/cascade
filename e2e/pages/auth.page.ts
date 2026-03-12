@@ -359,10 +359,7 @@ export class AuthPage extends BasePage {
   }
 
   async requestPasswordReset(email: string) {
-    await this.ensureForgotPasswordEntry();
-
-    // Already at check-email or code step from persisted state - nothing to do
-    const state = await this.getPasswordResetEntryState();
+    const state = await this.ensureForgotPasswordEntry();
     if (state === "check-email" || state === "code") {
       return;
     }
@@ -372,10 +369,7 @@ export class AuthPage extends BasePage {
       return;
     }
 
-    await this.page.goto("/forgot-password", { waitUntil: "domcontentloaded" });
-    await this.ensureForgotPasswordEntry();
-    await this.submitPasswordResetRequest(email);
-    await this.expectPasswordResetCodeStep();
+    await this.retryPasswordResetRequest(email);
   }
 
   async completePasswordReset(code: string, newPassword: string) {
@@ -539,22 +533,21 @@ export class AuthPage extends BasePage {
   }
 
   async waitForEmailFormExpanded(timeout = 3000, mode?: "signin" | "signup") {
-    try {
-      await this.expectEmailFormExpanded(mode, timeout);
-      return true;
-    } catch {
-      return false;
-    }
+    const expectedMode = mode ?? (await this.getCurrentAuthRoute());
+    const targetState = expectedMode === "signin" ? "signin-expanded" : "signup-expanded";
+    return await this.waitForStateReady(() => this.getAuthFormState(), (state) => state === targetState, {
+      timeout,
+      intervals: [200, 500, 1000],
+    });
   }
 
   async expectEmailFormExpanded(mode?: "signin" | "signup", timeout = 10000) {
     const expectedMode = mode ?? (await this.getCurrentAuthRoute());
-    await expect
-      .poll(async () => this.getAuthFormState(), {
-        timeout,
-        intervals: [200, 500, 1000],
-      })
-      .toBe(expectedMode === "signin" ? "signin-expanded" : "signup-expanded");
+    const targetState = expectedMode === "signin" ? "signin-expanded" : "signup-expanded";
+    await this.waitForState(() => this.getAuthFormState(), (state) => state === targetState, {
+      timeout,
+      intervals: [200, 500, 1000],
+    });
   }
 
   private async waitForStableEmailFormExpanded(timeout = 3000, mode?: "signin" | "signup") {
@@ -620,21 +613,19 @@ export class AuthPage extends BasePage {
   }
 
   private async waitForAuthLanding(mode: "signin" | "signup", timeout = 15000) {
-    await expect
-      .poll(async () => this.getAuthFormState(), {
-        timeout,
-        intervals: [200, 500, 1000],
-      })
-      .toBe(mode === "signin" ? "signin-landing" : "signup-landing");
+    const targetState = mode === "signin" ? "signin-landing" : "signup-landing";
+    await this.waitForState(() => this.getAuthFormState(), (state) => state === targetState, {
+      timeout,
+      intervals: [200, 500, 1000],
+    });
   }
 
   private async waitForAuthLandingReady(mode: "signin" | "signup", timeout = 3000) {
-    try {
-      await this.waitForAuthLanding(mode, timeout);
-      return true;
-    } catch {
-      return false;
-    }
+    const targetState = mode === "signin" ? "signin-landing" : "signup-landing";
+    return await this.waitForStateReady(() => this.getAuthFormState(), (state) => state === targetState, {
+      timeout,
+      intervals: [200, 500, 1000],
+    });
   }
 
   private async getCurrentAuthRoute(): Promise<"signin" | "signup"> {
@@ -718,56 +709,61 @@ export class AuthPage extends BasePage {
   }
 
   async waitForForgotPasswordReady(timeout = 3000) {
-    try {
-      await this.expectForgotPasswordReady(timeout);
-      return true;
-    } catch {
-      return false;
-    }
+    return await this.waitForStateReady(
+      () => this.getPasswordResetEntryState(),
+      (state) => state !== "pending",
+      {
+        timeout,
+        intervals: [250, 500, 1000],
+      },
+    );
   }
 
   async expectForgotPasswordReady(timeout = 15000) {
     await expect(this.page).toHaveURL(/forgot-password/, { timeout });
-    // Accept any valid forgot-password state: entry form, check-email, or code input
-    await expect
-      .poll(async () => this.getPasswordResetEntryState(), {
+    await this.waitForState(
+      () => this.getPasswordResetEntryState(),
+      (state) => state !== "pending",
+      {
         timeout,
         intervals: [250, 500, 1000],
-      })
-      .not.toBe("pending");
+      },
+    );
   }
 
   async expectForgotPasswordEntryFormReady(timeout = 15000) {
     await expect(this.page).toHaveURL(/forgot-password/, { timeout });
-    await expect
-      .poll(async () => this.getPasswordResetEntryState(), {
-        timeout,
-        intervals: [250, 500, 1000],
-      })
-      .toBe("forgot");
+    await this.waitForState(() => this.getPasswordResetEntryState(), (state) => state === "forgot", {
+      timeout,
+      intervals: [250, 500, 1000],
+    });
     await expect(this.emailInput).toBeVisible({ timeout });
   }
 
-  async ensureForgotPasswordEntry() {
+  async ensureForgotPasswordEntry(): Promise<"forgot" | "check-email" | "code"> {
     if (!this.page.url().includes("/forgot-password")) {
       await this.page.goto("/forgot-password", { waitUntil: "domcontentloaded" });
     }
 
-    await expect
-      .poll(async () => this.getPasswordResetEntryState(), {
+    return await this.waitForState(
+      () => this.getPasswordResetEntryState(),
+      (state) => state !== "pending",
+      {
         timeout: 15000,
         intervals: [250, 500, 1000],
-      })
-      .not.toBe("pending");
+      },
+    );
   }
 
   async waitForSignUpVerificationStep(timeout = 3000) {
-    try {
-      await this.expectVerificationFormReady(timeout);
-      return true;
-    } catch {
-      return false;
-    }
+    return await this.waitForStateReady(
+      () => this.getSignUpVerificationFormState(),
+      (state) => state === "verify",
+      {
+        timeout,
+        intervals: [250, 500, 1000],
+      },
+    );
   }
 
   async expectSignUpVerificationStep(timeout = 15000) {
@@ -775,12 +771,10 @@ export class AuthPage extends BasePage {
   }
 
   private async expectVerificationFormReady(timeout = 30000) {
-    await expect
-      .poll(async () => this.getSignUpVerificationFormState(), {
-        timeout,
-        intervals: [250, 500, 1000],
-      })
-      .toBe("verify");
+    await this.waitForState(() => this.getSignUpVerificationFormState(), (state) => state === "verify", {
+      timeout,
+      intervals: [250, 500, 1000],
+    });
   }
 
   async getOAuthErrorSettleState(): Promise<"signin" | "alert" | "toast" | "pending"> {
@@ -827,46 +821,77 @@ export class AuthPage extends BasePage {
     return "pending";
   }
 
-  private async waitForSignUpSubmitStart(timeout = 3000) {
+  private async waitForState<T extends string>(
+    getState: () => Promise<T>,
+    isReady: (state: T) => boolean,
+    options?: {
+      timeout?: number;
+      intervals?: number[];
+    },
+  ): Promise<T> {
+    let matchedState: T | null = null;
+
+    await expect
+      .poll(
+        async () => {
+          const state = await getState();
+          if (isReady(state)) {
+            matchedState = state;
+            return "ready";
+          }
+
+          return "pending";
+        },
+        {
+          timeout: options?.timeout ?? 3000,
+          intervals: options?.intervals ?? [200, 500, 1000],
+        },
+      )
+      .toBe("ready");
+
+    if (matchedState === null) {
+      throw new Error("Auth state did not settle before timeout");
+    }
+
+    return matchedState;
+  }
+
+  private async waitForStateReady<T extends string>(
+    getState: () => Promise<T>,
+    isReady: (state: T) => boolean,
+    options?: {
+      timeout?: number;
+      intervals?: number[];
+    },
+  ) {
     try {
-      await expect
-        .poll(async () => this.getSignUpSubmitState(), {
-          timeout,
-          intervals: [200, 500, 1000],
-        })
-        .not.toBe("pending");
+      await this.waitForState(getState, isReady, options);
       return true;
     } catch {
       return false;
     }
+  }
+
+  private async waitForSubmitStateStart(
+    getState: () => Promise<"pending" | string>,
+    timeout = 3000,
+  ) {
+    return await this.waitForStateReady(getState, (state) => state !== "pending", {
+      timeout,
+      intervals: [200, 500, 1000],
+    });
+  }
+
+  private async waitForSignUpSubmitStart(timeout = 3000) {
+    return await this.waitForSubmitStateStart(() => this.getSignUpSubmitState(), timeout);
   }
 
   private async waitForSignInSubmitStart(timeout = 3000) {
-    try {
-      await expect
-        .poll(async () => this.getSignInSubmitState(), {
-          timeout,
-          intervals: [200, 500, 1000],
-        })
-        .not.toBe("pending");
-      return true;
-    } catch {
-      return false;
-    }
+    return await this.waitForSubmitStateStart(() => this.getSignInSubmitState(), timeout);
   }
 
   private async waitForVerificationSubmitStart(timeout = 3000) {
-    try {
-      await expect
-        .poll(async () => this.getVerificationSubmitState(), {
-          timeout,
-          intervals: [200, 500, 1000],
-        })
-        .not.toBe("pending");
-      return true;
-    } catch {
-      return false;
-    }
+    return await this.waitForSubmitStateStart(() => this.getVerificationSubmitState(), timeout);
   }
 
   private async getToastOutcomeState(message: RegExp): Promise<"success" | "error" | "pending"> {
@@ -910,17 +935,7 @@ export class AuthPage extends BasePage {
   }
 
   private async waitForPasswordResetSubmitStart(timeout = 3000) {
-    try {
-      await expect
-        .poll(async () => this.getPasswordResetSubmitState(), {
-          timeout,
-          intervals: [200, 500, 1000],
-        })
-        .not.toBe("pending");
-      return true;
-    } catch {
-      return false;
-    }
+    return await this.waitForSubmitStateStart(() => this.getPasswordResetSubmitState(), timeout);
   }
 
   private async getPasswordResetSubmitState(): Promise<
@@ -1032,10 +1047,7 @@ export class AuthPage extends BasePage {
   }
 
   private async submitPasswordResetRequest(email: string) {
-    await this.ensureForgotPasswordEntry();
-
-    // Already at check-email or code step from persisted state - nothing to do
-    const state = await this.getPasswordResetEntryState();
+    const state = await this.ensureForgotPasswordEntry();
     if (state === "check-email" || state === "code") {
       return;
     }
@@ -1048,21 +1060,21 @@ export class AuthPage extends BasePage {
   }
 
   private async waitForPasswordResetCodeStep(timeout = 5000) {
-    try {
-      await this.expectPasswordResetCodeStep(timeout);
-      return true;
-    } catch {
-      return false;
-    }
+    return await this.waitForStateReady(
+      () => this.getPasswordResetCodeStepState(),
+      (state) => state === "code",
+      {
+        timeout,
+        intervals: [250, 500, 1000, 2000],
+      },
+    );
   }
 
   private async expectPasswordResetCodeStep(timeout = 30000) {
-    await expect
-      .poll(async () => this.getPasswordResetCodeStepState(), {
-        timeout,
-        intervals: [250, 500, 1000, 2000],
-      })
-      .not.toBe("pending");
+    await this.waitForState(() => this.getPasswordResetCodeStepState(), (state) => state === "code", {
+      timeout,
+      intervals: [250, 500, 1000, 2000],
+    });
     await expect(this.codeInput).toBeVisible({ timeout });
   }
 
@@ -1070,6 +1082,18 @@ export class AuthPage extends BasePage {
     await expect(this.sendResetCodeButton).toBeVisible();
     await expect(this.sendResetCodeButton).toBeEnabled();
     await this.sendResetCodeButton.click();
+  }
+
+  private async retryPasswordResetRequest(email: string) {
+    await this.page.goto("/forgot-password", { waitUntil: "domcontentloaded" });
+    const state = await this.ensureForgotPasswordEntry();
+    if (state === "check-email" || state === "code") {
+      await this.expectPasswordResetCodeStep();
+      return;
+    }
+
+    await this.submitPasswordResetRequest(email);
+    await this.expectPasswordResetCodeStep();
   }
 
   private async attemptSignUp(
@@ -1121,18 +1145,54 @@ export class AuthPage extends BasePage {
   }
 
   private async waitForSignUpCredentialsFilled(email: string, password: string, timeout = 3000) {
-    try {
-      await this.expectSignUpCredentialsFilled(email, password, timeout);
-      return true;
-    } catch {
-      return false;
-    }
+    return await this.waitForStateReady(
+      () => this.getSignUpCredentialsFillState(email, password),
+      (state) => state === "filled",
+      {
+        timeout,
+        intervals: [200, 500, 1000],
+      },
+    );
   }
 
   private async expectSignUpCredentialsFilled(email: string, password: string, timeout = 10000) {
-    await this.waitForFormReady("signup");
-    await expect(this.emailInput).toHaveValue(email, { timeout });
-    await expect(this.passwordInput).toHaveValue(password, { timeout });
+    await this.waitForState(
+      () => this.getSignUpCredentialsFillState(email, password),
+      (state) => state === "filled",
+      {
+        timeout,
+        intervals: [200, 500, 1000],
+      },
+    );
+  }
+
+  private async getSignUpCredentialsFillState(
+    email: string,
+    password: string,
+  ): Promise<"filled" | "pending"> {
+    if ((await this.getAuthFormState()) !== "signup-expanded") {
+      return "pending";
+    }
+
+    if (!(await this.emailInput.isVisible().catch(() => false))) {
+      return "pending";
+    }
+
+    if (!(await this.passwordInput.isVisible().catch(() => false))) {
+      return "pending";
+    }
+
+    const currentEmail = await this.emailInput.inputValue().catch(() => null);
+    if (currentEmail !== email) {
+      return "pending";
+    }
+
+    const currentPassword = await this.passwordInput.inputValue().catch(() => null);
+    if (currentPassword !== password) {
+      return "pending";
+    }
+
+    return "filled";
   }
 
   async expectSignInForm() {
