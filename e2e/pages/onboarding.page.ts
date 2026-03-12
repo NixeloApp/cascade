@@ -480,7 +480,15 @@ export class OnboardingPage {
       return;
     }
 
-    await trigger.click();
+    // Only retry if we're still on onboarding - the trigger may no longer exist if we navigated
+    const stillOnOnboarding = await this.page
+      .url()
+      .then((url) => url.includes("/onboarding"))
+      .catch(() => false);
+    if (stillOnOnboarding && (await trigger.isVisible().catch(() => false))) {
+      await trigger.click();
+    }
+
     await this.expectDashboard();
   }
 
