@@ -26,11 +26,10 @@ export function BarChart({
             {item.label}
           </Typography>
           <FlexItem flex="1" className="bg-ui-bg-tertiary rounded-full h-6 relative">
-            <div
-              className={cn(
-                color,
-                "h-6 rounded-full transition-all duration-slow flex items-center justify-end pr-2",
-              )}
+            <Flex
+              align="center"
+              justify="end"
+              className={cn(color, "h-6 rounded-full transition-all duration-slow pr-2")}
               style={{
                 width: `${(item.value / maxValue) * 100}%`,
                 minWidth: item.value > 0 ? "2rem" : "0",
@@ -39,7 +38,7 @@ export function BarChart({
               <Typography variant="label" className="text-brand-foreground">
                 {item.value}
               </Typography>
-            </div>
+            </Flex>
           </FlexItem>
         </Flex>
       ))}

@@ -64,8 +64,6 @@ const ALLOWED_FILES = [
   "Calendar/",
   "IssuesCalendarView.tsx",
   "RoadmapView.tsx",
-  // Analytics
-  "Analytics/",
   // AI components
   "AI/",
   // Sprint components

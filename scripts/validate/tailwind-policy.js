@@ -7,7 +7,6 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
   "src/components/Kanban/",
   "src/components/Calendar/",
   "src/components/Auth/",
-  "src/components/Analytics/",
   "src/components/Editor/",
   "src/components/AI/",
   "src/components/Sidebar/",
@@ -98,6 +97,7 @@ export const RAW_TAILWIND_PATTERNS = [
 
 export const DESIGN_SYSTEM_TARGET_FILES = [
   "/AI/AIChat.tsx",
+  "/Analytics/RecentActivity.tsx",
   "/AppHeader.tsx",
   "/Dashboard/RecentActivity.tsx",
   "/Dashboard/WorkspacesList.tsx",

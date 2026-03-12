@@ -46,14 +46,16 @@
 - Added `Admin/HourComplianceDashboard.tsx` and `Admin/UserTypeManager.tsx` to design-system ownership targeting so future admin-shell drift is validated directly.
 - Added a dedicated blocking validator in `scripts/validate/check-surface-shells.js` for raw reusable shell stacks (`rounded + bg + border + shadow + overflow/state`) outside temporary Tailwind escape hatches, and wired it into `scripts/validate.js`.
 - Fixed the first surfaced violations in `Dashboard/WorkspacesList.tsx` and `IssueDetailModal.tsx` by moving their shell styling back behind owned `Card` and `Dialog` recipes instead of local class stacks.
+- Removed `src/components/Analytics/` from `RAW_TAILWIND_ALLOWED_DIRS` and removed `Analytics/` from the interactive-state migration allowlist.
+- Migrated `Analytics/RecentActivity.tsx` off its local hover/surface shell by moving the timeline row styling behind an owned `Card` recipe, and cleaned `Analytics/BarChart.tsx` so its fill track no longer depends on raw flex utility stacks.
+- Added `Analytics/RecentActivity.tsx` to design-system ownership targeting so future analytics shell drift is blocked directly.
 
 ### Next batch
 
 - Burn down the explicit file-level debt entries added for:
   - settings surfaces
   - admin surfaces
-- Keep `src/components/Analytics/` temporarily allowed until its shell patterns are migrated; it was tested in this pass and still contains validator-breaking drift.
-- Shrink the remaining broad raw-Tailwind escape hatches, with `src/components/Analytics/` first, now that shell drift is blocked everywhere else by a dedicated validator.
+- Shrink the remaining broad raw-Tailwind escape hatches, with `src/components/TimeTracking/` and `src/components/TimeTracker/` next now that `src/components/Analytics/` is no longer broadly exempt.
 
 ## Problem
 
