@@ -2,7 +2,7 @@
 
 > **Route**: `/:slug/documents/:id`
 > **Status**: 🟡 NEEDS POLISH
-> **Last Updated**: 2026-03-09
+> **Last Updated**: 2026-03-12
 
 ---
 
@@ -30,6 +30,7 @@
 - Editor route discovery was fixed in `e2e/screenshot-pages.ts`.
 - The editor empty state was reworked in `src/components/PlateEditor.tsx` so the page no longer reads like a blank broken canvas.
 - Light and dark screenshots now reflect the real document editor surface.
+- Desktop light mode now frames the editor body and header more intentionally instead of letting them dissolve into one pale slab.
 
 ---
 
@@ -39,7 +40,7 @@
 |---------|------|----------|
 | The document header still carries too many actions for the amount of visible content | `DocumentHeader` / `PlateEditor` | MEDIUM |
 | Desktop light mode still feels sparse because the seeded document body is thin | Editor composition + seed content | MEDIUM |
-| Overall surface depth is better, but the editor still needs stronger typography and body rhythm | Editor surface system | LOW |
+| The editor still needs stronger typography and body rhythm once the seed content grows beyond the first paragraph | Editor surface system | LOW |
 
 ---
 

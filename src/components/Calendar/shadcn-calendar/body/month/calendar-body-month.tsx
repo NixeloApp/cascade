@@ -18,6 +18,7 @@ import {
   startOfWeek,
 } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
+import { getDotColorClass } from "@/components/Calendar/calendar-colors";
 import { cn } from "@/lib/utils";
 import { useCalendarContext } from "../../calendar-context";
 import { CalendarEvent } from "../../calendar-event";
@@ -48,13 +49,14 @@ export function CalendarBodyMonth(): React.ReactElement {
 
   return (
     <div className="flex flex-col flex-grow overflow-hidden bg-ui-bg">
-      <div className="hidden md:grid grid-cols-7 bg-ui-bg-secondary/50">
+      <div className="grid grid-cols-7 bg-ui-bg-secondary/50">
         {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
           <div
             key={day}
-            className="py-2.5 text-center text-xs font-medium uppercase tracking-wide text-ui-text-tertiary border-b border-r border-ui-border last:border-r-0"
+            className="border-b border-r border-ui-border py-1.5 text-center text-xs font-medium uppercase tracking-wide text-ui-text-tertiary last:border-r-0 md:py-2.5"
           >
-            {day}
+            <span className="md:hidden">{day.charAt(0)}</span>
+            <span className="hidden md:inline">{day}</span>
           </div>
         ))}
       </div>
@@ -62,7 +64,7 @@ export function CalendarBodyMonth(): React.ReactElement {
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={monthStart.toISOString()}
-          className="grid md:grid-cols-7 flex-grow overflow-y-auto relative"
+          className="grid grid-cols-7 flex-grow overflow-y-auto relative"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -82,10 +84,10 @@ export function CalendarBodyMonth(): React.ReactElement {
                 role="button"
                 tabIndex={0}
                 className={cn(
-                  "relative flex flex-col border-b border-r border-ui-border p-2 min-h-30 cursor-pointer transition-colors duration-default",
+                  "relative flex min-h-16 flex-col overflow-hidden border-b border-r border-ui-border p-1.5 transition-colors duration-default sm:min-h-24 sm:p-2 lg:min-h-28 xl:min-h-32",
                   isCurrentMonth
-                    ? "bg-ui-bg hover:bg-ui-bg-hover"
-                    : "bg-ui-bg-secondary/30 hidden md:flex hover:bg-ui-bg-secondary/50",
+                    ? "cursor-pointer bg-ui-bg hover:bg-ui-bg-hover"
+                    : "cursor-pointer bg-ui-bg-secondary/30 hover:bg-ui-bg-secondary/50",
                 )}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -102,7 +104,7 @@ export function CalendarBodyMonth(): React.ReactElement {
               >
                 <div
                   className={cn(
-                    "text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full transition-colors duration-default",
+                    "flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium transition-colors duration-default sm:h-7 sm:w-7 sm:text-sm",
                     isToday
                       ? "bg-brand text-brand-foreground shadow-sm"
                       : isCurrentMonth
@@ -112,8 +114,23 @@ export function CalendarBodyMonth(): React.ReactElement {
                 >
                   {format(day, "d")}
                 </div>
+                <div className="mt-1 flex flex-wrap gap-1 md:hidden">
+                  {dayEvents.slice(0, 3).map((event) => (
+                    <span
+                      key={`dot-${event.id}`}
+                      aria-hidden="true"
+                      title={event.title}
+                      className={cn("h-1.5 w-1.5 rounded-full", getDotColorClass(event.color))}
+                    />
+                  ))}
+                  {dayEvents.length > 3 && (
+                    <span className="text-xs font-semibold leading-none text-ui-text-secondary">
+                      +{dayEvents.length - 3}
+                    </span>
+                  )}
+                </div>
                 <AnimatePresence mode="wait">
-                  <div className="flex flex-col gap-1 mt-1">
+                  <div className="mt-1 hidden flex-col gap-1 md:flex">
                     {dayEvents.slice(0, 3).map((event) => (
                       <CalendarEvent
                         key={event.id}

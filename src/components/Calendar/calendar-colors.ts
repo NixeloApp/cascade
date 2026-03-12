@@ -163,3 +163,8 @@ export function getEventBadgeClass(eventType: string, color?: string | null): st
   const resolved = (color ?? EVENT_TYPE_DEFAULT_COLOR[eventType] ?? "blue") as EventColor;
   return EVENT_COLOR_BADGE[resolved] ?? EVENT_COLOR_BADGE.blue;
 }
+
+/** Returns the dot color class for compact calendar indicators. */
+export function getDotColorClass(color: string): string {
+  return DOT_COLOR_CLASSES[color as EventColor] ?? DOT_COLOR_CLASSES.blue;
+}

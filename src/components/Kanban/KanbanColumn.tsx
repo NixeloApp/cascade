@@ -230,13 +230,13 @@ const ColumnHeader = memo(
   }) => (
     <div
       data-testid={TEST_IDS.BOARD.COLUMN_HEADER}
-      className="rounded-t-container border-b border-ui-border-secondary/70 bg-ui-bg-elevated/88 p-2 shadow-soft sm:p-4"
+      className="rounded-t-container border-b border-ui-border-secondary/70 bg-ui-bg-elevated/88 p-1.5 shadow-soft sm:p-4"
     >
       <Flex align="center" justify="between" gap="xs">
         <Flex align="center" gap="xs" className="min-w-0">
           <Typography
             variant="h3"
-            className="font-medium text-ui-text-secondary truncate tracking-tight text-sm"
+            className="truncate text-xs font-medium tracking-tight text-ui-text-secondary sm:text-sm"
           >
             {state.name}
           </Typography>
@@ -263,9 +263,9 @@ const ColumnHeader = memo(
               <IconButton
                 onClick={onToggleCollapse}
                 aria-label={`Collapse ${state.name} column`}
-                className="h-7 w-7 sm:h-8 sm:w-8"
+                className="h-6 w-6 sm:h-8 sm:w-8"
               >
-                <Minimize2 className="w-3.5 h-3.5" />
+                <Minimize2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               </IconButton>
             </Tooltip>
           )}
@@ -274,10 +274,10 @@ const ColumnHeader = memo(
               <IconButton
                 onClick={onCreateIssue}
                 aria-label={`Add issue to ${state.name}`}
-                className="h-7 w-7 sm:h-8 sm:w-8"
+                className="h-6 w-6 sm:h-8 sm:w-8"
                 {...(columnIndex === 0 ? { "data-tour": "create-issue" } : {})}
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </IconButton>
             </Tooltip>
           )}
@@ -495,7 +495,7 @@ const KanbanColumnComponent = function KanbanColumn({
       data-testid={TEST_IDS.BOARD.COLUMN}
       data-board-column
       className={cn(
-        "w-60 flex-shrink-0 snap-start rounded-container border border-ui-border-secondary/70 border-t-2 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft shadow-soft transition-default animate-slide-up sm:w-80",
+        "w-44 flex-shrink-0 snap-start rounded-container border border-ui-border-secondary/70 border-t-2 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft shadow-soft transition-default animate-slide-up sm:w-72 lg:w-80",
         getWorkflowCategoryColor(state.category),
         isDraggedOver && "ring-2 ring-brand/30 bg-brand/5",
         isOverWipLimit && "border-status-error/50 bg-status-error/5",
@@ -519,7 +519,7 @@ const KanbanColumnComponent = function KanbanColumn({
       />
 
       {/* Issues */}
-      <div className="flex min-h-56 flex-col space-y-1.5 p-1.5 transition-default sm:p-2 lg:min-h-96 lg:space-y-2 lg:p-2.5">
+      <div className="flex min-h-52 flex-col space-y-1 p-0.75 transition-default sm:min-h-56 sm:space-y-1.5 sm:p-2 lg:min-h-96 lg:space-y-2 lg:p-2.5">
         {showEmptyState ? (
           <EmptyColumnState canEdit={canEdit} onCreateIssue={createIssueHandler} />
         ) : (

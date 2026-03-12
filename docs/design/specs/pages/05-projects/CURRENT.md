@@ -2,7 +2,7 @@
 
 > **Route**: `/:slug/projects`
 > **Status**: 🟡 NEEDS POLISH
-> **Last Updated**: 2026-03-09
+> **Last Updated**: 2026-03-12
 
 ---
 
@@ -34,6 +34,7 @@
 - Shared card depth improved through `src/components/ui/Card.tsx`.
 - `src/components/ProjectsList.tsx` now gives the single-project case a more intentional composition instead of a broken-looking sparse grid.
 - The page width is better constrained through the projects route shell.
+- Desktop light mode now has clearer surface separation between the page header, project cards, and background.
 
 ---
 
@@ -42,7 +43,6 @@
 | Problem | Area | Severity |
 |---------|------|----------|
 | Desktop light mode still feels underfilled when the seed only produces one project card | Filled state composition | MEDIUM |
-| Surface depth is better, but the light-theme page still needs more hierarchy and contrast | Shared card/page shell | MEDIUM |
 | The create-project modal still inherits more shell than necessary from the surrounding dialog system | Shared dialog surface | LOW |
 
 ---

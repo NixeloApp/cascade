@@ -580,6 +580,10 @@ function isProjectBoardUrl(url: string): boolean {
   return /\/projects\/[^/]+\/board$/.test(url);
 }
 
+function isProjectBacklogUrl(url: string): boolean {
+  return /\/projects\/[^/]+\/backlog$/.test(url);
+}
+
 function isDashboardUrl(url: string): boolean {
   return /\/[^/]+\/dashboard$/.test(url);
 }
@@ -606,6 +610,32 @@ function isIssueDetailUrl(url: string): boolean {
 
 function isDocumentEditorUrl(url: string): boolean {
   return /\/[^/]+\/documents\/[^/]+$/.test(url);
+}
+
+async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
+  if (name === "landing") {
+    await page
+      .getByRole("heading", { name: /replace scattered project tools/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByText(/product control tower/i)
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page.waitForTimeout(900);
+    return;
+  }
+
+  if (["signin", "signup", "forgot-password", "invite-invalid"].includes(name)) {
+    await page
+      .getByText(/secure account access/i)
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page.waitForTimeout(350);
+  }
 }
 
 async function waitForCalendarReady(page: Page): Promise<boolean> {
@@ -640,6 +670,27 @@ async function waitForCalendarReady(page: Page): Promise<boolean> {
 async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<boolean> {
   const eventItems = page.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM);
   const attempts = Math.max(1, Math.ceil(timeoutMs / 500));
+  const previousButton = page.getByRole("button", { name: /^previous month$/i }).first();
+  const nextButton = page.getByRole("button", { name: /^next month$/i }).first();
+
+  const waitForCalendarState = async () => {
+    await waitForScreenshotReady(page);
+    await waitForCalendarReady(page);
+  };
+
+  const navigateUntilVisible = async (direction: "previous" | "next", steps: number) => {
+    const button = direction === "previous" ? previousButton : nextButton;
+
+    for (let step = 0; step < steps; step++) {
+      await button.click().catch(() => {});
+      await waitForCalendarState();
+      if ((await eventItems.count().catch(() => 0)) > 0) {
+        return true;
+      }
+    }
+
+    return false;
+  };
 
   for (let attempt = 0; attempt < attempts; attempt++) {
     if ((await eventItems.count().catch(() => 0)) > 0) {
@@ -652,9 +703,18 @@ async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<bool
         .first()
         .click()
         .catch(() => {});
+      await waitForCalendarState();
     }
 
     await page.waitForTimeout(500);
+  }
+
+  if (await navigateUntilVisible("previous", 2)) {
+    return true;
+  }
+
+  if (await navigateUntilVisible("next", 4)) {
+    return true;
   }
 
   return false;
@@ -808,6 +868,11 @@ async function waitForExpectedContent(
   name: string,
   prefix?: string,
 ): Promise<void> {
+  if (prefix === "public") {
+    await waitForPublicPageReady(page, name);
+    return;
+  }
+
   if (isDashboardUrl(url) || name === "dashboard") {
     await page
       .getByRole("heading", { name: /^dashboard$/i })
@@ -827,7 +892,7 @@ async function waitForExpectedContent(
     return;
   }
 
-  if (isProjectBoardUrl(url)) {
+  if (isProjectBoardUrl(url) || isProjectBacklogUrl(url)) {
     await waitForBoardReady(page);
     return;
   }
@@ -902,6 +967,7 @@ async function waitForExpectedContent(
     /^calendar-(day|week|month)$/.test(name)
   ) {
     await waitForCalendarReady(page);
+    await waitForCalendarEvents(page, 5000).catch(() => {});
   }
 }
 
@@ -1463,16 +1529,9 @@ async function screenshotBoardModals(
     await runCaptureStep("board create-issue modal", async () => {
       await dismissAllDialogs(page);
       await projectsPage.openCreateIssueModal();
-      const createIssueDialog = projectsPage.createIssueModal;
-      const formReadySignal = projectsPage.issueTitleInput
-        .or(projectsPage.submitIssueButton)
-        .or(createIssueDialog.getByRole("button", { name: /get ai suggestions/i }))
-        .or(projectsPage.issueTypeSelect)
-        .first();
-      await formReadySignal.waitFor({ state: "visible", timeout: 12000 });
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, createIssueModalName);
-      await dismissIfOpen(page, createIssueDialog);
+      await dismissIfOpen(page, projectsPage.createIssueModal);
     });
   }
 

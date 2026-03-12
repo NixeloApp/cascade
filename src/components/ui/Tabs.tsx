@@ -29,7 +29,7 @@ const tabsListVariants = cva("inline-flex max-w-full items-center text-ui-text-s
     layout: {
       default: "",
       settings:
-        "mb-3 flex w-full gap-1 overflow-x-auto rounded-2xl border border-ui-border-secondary/75 bg-ui-bg-elevated/94 p-1 shadow-card scrollbar-subtle sm:mb-4 sm:flex-wrap sm:overflow-visible sm:gap-0.5 lg:flex-nowrap",
+        "mb-3 flex w-full gap-0.5 overflow-x-auto rounded-2xl border border-ui-border-secondary/75 bg-ui-bg-elevated/94 p-0.5 shadow-card scrollbar-subtle sm:mb-4 lg:overflow-visible lg:gap-0.5 lg:p-1",
     },
   },
   defaultVariants: {
@@ -68,7 +68,7 @@ const tabsTriggerVariants = cva(
       size: {
         default: "",
         compact:
-          "min-h-8 rounded-full px-2.5 py-1.5 text-xs leading-tight sm:min-h-8 sm:px-3 sm:py-1 sm:text-sm",
+          "min-h-8 rounded-full px-2 py-1 text-xs leading-tight sm:min-h-8 sm:px-2.5 sm:py-1 sm:text-xs lg:px-3 lg:text-sm",
       },
       width: {
         default: "",

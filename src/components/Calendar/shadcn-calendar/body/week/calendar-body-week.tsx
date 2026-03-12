@@ -1,4 +1,4 @@
-import { addDays, startOfWeek } from "date-fns";
+import { addDays, isSameDay, startOfWeek } from "date-fns";
 import { useLayoutEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useCalendarContext } from "../../calendar-context";
@@ -15,7 +15,7 @@ export function CalendarBodyWeek(): React.ReactElement {
 
   const weekStart = startOfWeek(date, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  const activeDateString = date.toDateString();
+  const activeDateString = `${date.toDateString()}-${events.length}`;
 
   useCalendarInitialScroll(scrollRef, events, date, "week");
 
@@ -51,10 +51,10 @@ export function CalendarBodyWeek(): React.ReactElement {
             {weekDays.map((day) => (
               <div
                 key={day.toISOString()}
-                ref={day.toDateString() === date.toDateString() ? activeDayRef : undefined}
+                ref={isSameDay(day, date) ? activeDayRef : undefined}
                 className={cn(
                   "flex w-56 shrink-0 border-r border-ui-border last:border-r-0 sm:w-64 md:w-auto md:flex-1",
-                  day.toDateString() === date.toDateString() && "bg-brand/[0.02]",
+                  isSameDay(day, date) && "bg-brand/[0.02]",
                 )}
               >
                 <CalendarBodyMarginDayMargin className="block md:hidden" />

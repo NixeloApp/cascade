@@ -166,7 +166,7 @@ function ProjectLayout() {
               <Flex
                 align="center"
                 justify="center"
-                className="h-7 w-7 shrink-0 rounded-full bg-brand-subtle text-brand ring-1 ring-brand/18 sm:h-10 sm:w-10 sm:rounded-xl"
+                className="h-6 w-6 shrink-0 rounded-full bg-brand-subtle text-brand ring-1 ring-brand/18 sm:h-10 sm:w-10 sm:rounded-xl"
               >
                 <Typography variant="small" className="font-semibold text-current">
                   {project.key.slice(0, 2).toUpperCase()}
@@ -199,7 +199,7 @@ function ProjectLayout() {
           <RouteNav
             variant="pill"
             size="sm"
-            className="mt-1 flex items-center gap-1 overflow-x-auto pb-0.5 pr-0.5 scrollbar-subtle sm:hidden"
+            className="mt-0.5 flex items-center overflow-x-auto pb-0 pr-0 sm:hidden"
             aria-label="Project sections"
           >
             {mobilePrimaryTabs.map((tab) => (
@@ -220,11 +220,11 @@ function ProjectLayout() {
                     <Button
                       variant="unstyled"
                       size={undefined}
-                      className="gap-1"
+                      className="gap-0.5"
                       aria-label="More project sections"
                     >
                       <span>More</span>
-                      <ChevronDown className="h-3.5 w-3.5" />
+                      <ChevronDown className="h-3 w-3" />
                     </Button>
                   </RouteNavItem>
                 </DropdownMenuTrigger>

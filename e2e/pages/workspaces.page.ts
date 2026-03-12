@@ -219,7 +219,7 @@ export class WorkspacesPage extends BasePage {
   private async navigateToWorkspacesRoute() {
     const workspacesUrl = ROUTES.workspaces.list.build(this.orgSlug);
 
-    await this.page.goto(workspacesUrl, { waitUntil: "domcontentloaded" });
+    await this.gotoPath(workspacesUrl, { waitUntil: "domcontentloaded" });
     await this.page.waitForLoadState("load");
     await this.expectLoaded();
 
@@ -227,9 +227,9 @@ export class WorkspacesPage extends BasePage {
       return;
     }
 
-    await this.page.goto(ROUTES.app.build(), { waitUntil: "domcontentloaded" });
+    await this.gotoPath(ROUTES.app.build(), { waitUntil: "domcontentloaded" });
     await this.page.waitForLoadState("load");
-    await this.page.goto(workspacesUrl, { waitUntil: "domcontentloaded" });
+    await this.gotoPath(workspacesUrl, { waitUntil: "domcontentloaded" });
     await this.page.waitForLoadState("load");
     await this.expectLoaded();
   }

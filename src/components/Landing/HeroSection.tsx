@@ -16,7 +16,7 @@ const heroVariants = {
   ),
   badgeRow: cva("mb-3 animate-fade-in sm:mb-4"),
   badge: cva(
-    "bg-ui-bg-soft px-4 py-2 backdrop-blur-sm transition-default hover:border-ui-border-secondary",
+    "bg-ui-bg-elevated/88 px-4 py-2 shadow-soft backdrop-blur-sm transition-default hover:border-ui-border-secondary",
   ),
   title: cva(
     "mb-3 text-4xl font-bold leading-tight tracking-tighter text-ui-text animate-slide-up md:text-6xl lg:text-7xl",

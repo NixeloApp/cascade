@@ -186,13 +186,21 @@ export class ProjectsPage extends BasePage {
     this.createIssueModal = page
       .getByRole("dialog")
       .filter({ hasText: /create.*issue|new.*issue/i });
-    this.issueTitleInput = page.getByPlaceholder(/title|issue.*title/i);
-    this.issueDescriptionInput = page
+    this.issueTitleInput = this.createIssueModal
+      .getByPlaceholder(/title|issue.*title/i)
+      .or(this.createIssueModal.getByRole("textbox", { name: /title/i }))
+      .first();
+    this.issueDescriptionInput = this.createIssueModal
       .getByPlaceholder(/description/i)
-      .or(page.locator("[data-issue-description]"));
-    this.issueTypeSelect = page.getByRole("combobox", { name: /type/i });
-    this.issuePrioritySelect = page.getByRole("combobox", { name: /priority/i });
-    this.issueAssigneeSelect = page.getByRole("combobox", { name: /assignee/i });
+      .or(this.createIssueModal.locator("[data-issue-description]"))
+      .first();
+    this.issueTypeSelect = this.createIssueModal.getByRole("combobox", { name: /type/i }).first();
+    this.issuePrioritySelect = this.createIssueModal
+      .getByRole("combobox", { name: /priority/i })
+      .first();
+    this.issueAssigneeSelect = this.createIssueModal
+      .getByRole("combobox", { name: /assignee/i })
+      .first();
     this.createIssueForm = this.createIssueModal.locator("form").first();
     this.submitIssueButton = this.createIssueModal
       .getByRole("button", { name: /^create issue$/i })
@@ -306,7 +314,7 @@ export class ProjectsPage extends BasePage {
   }
 
   async gotoProjectBoard(projectKey: string) {
-    await this.page.goto(`/${this.orgSlug}/projects/${projectKey}/board`);
+    await this.gotoPath(`/${this.orgSlug}/projects/${projectKey}/board`);
     await this.waitForLoad();
   }
 
@@ -375,7 +383,7 @@ export class ProjectsPage extends BasePage {
       await waitForProjectCreateSuccess(this.page);
 
       if (!boardUrlPattern.test(this.page.url())) {
-        await this.page.goto(boardPath);
+        await this.gotoPath(boardPath);
       }
 
       await expect(this.page).toHaveURL(boardUrlPattern);
@@ -449,9 +457,9 @@ export class ProjectsPage extends BasePage {
 
         await trigger.scrollIntoViewIfNeeded().catch(() => {});
         await trigger.click({ force: true });
-        await this.createIssueModal.waitFor({ state: "visible", timeout: 1500 }).catch(() => {});
+        const isModalReady = await this.waitForCreateIssueModalReady(4000);
 
-        if (await this.createIssueModal.isVisible().catch(() => false)) {
+        if (isModalReady) {
           return;
         }
       }
@@ -462,13 +470,12 @@ export class ProjectsPage extends BasePage {
     await this.page.evaluate(() => {
       window.dispatchEvent(new Event("nixelo:create-issue"));
     });
-    await this.createIssueModal.waitFor({ state: "visible", timeout: 3000 }).catch(() => {});
-
-    if (await this.createIssueModal.isVisible().catch(() => false)) {
+    if (await this.waitForCreateIssueModalReady(6000)) {
       return;
     }
 
     await expect(this.createIssueModal).toBeVisible();
+    await this.expectCreateIssueModalReady();
   }
 
   async createIssue(title: string, type?: string, priority?: string) {
@@ -491,6 +498,25 @@ export class ProjectsPage extends BasePage {
     }
 
     await waitForIssueCreateSuccess(this.page, title);
+  }
+
+  private async waitForCreateIssueModalReady(timeout = 12000) {
+    try {
+      await this.expectCreateIssueModalReady(timeout);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async expectCreateIssueModalReady(timeout = 12000) {
+    await this.createIssueModal.waitFor({ state: "visible", timeout });
+    await this.issueTitleInput
+      .or(this.submitIssueButton)
+      .or(this.createIssueModal.getByRole("button", { name: /get ai suggestions/i }))
+      .or(this.issueTypeSelect)
+      .first()
+      .waitFor({ state: "visible", timeout });
   }
 
   async switchToTab(
@@ -1032,7 +1058,7 @@ export class ProjectsPage extends BasePage {
   }
 
   private async navigateToProjectsRoute() {
-    await this.page.goto(ROUTES.projects.list.build(this.orgSlug), {
+    await this.gotoPath(ROUTES.projects.list.build(this.orgSlug), {
       waitUntil: "domcontentloaded",
     });
     await this.page.waitForLoadState("load");
@@ -1042,9 +1068,9 @@ export class ProjectsPage extends BasePage {
       return;
     }
 
-    await this.page.goto(ROUTES.app.build(), { waitUntil: "domcontentloaded" });
+    await this.gotoPath(ROUTES.app.build(), { waitUntil: "domcontentloaded" });
     await this.page.waitForLoadState("load");
-    await this.page.goto(ROUTES.projects.list.build(this.orgSlug), {
+    await this.gotoPath(ROUTES.projects.list.build(this.orgSlug), {
       waitUntil: "domcontentloaded",
     });
     await this.page.waitForLoadState("load");

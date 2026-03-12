@@ -306,6 +306,7 @@ Examples:
 
 - [x] Fix create-issue modal capture readiness so the modal is no longer captured as a spinner or skipped state.
   - Fixed in: `e2e/screenshot-pages.ts`, `e2e/pages/projects.page.ts`
+  - Evidence now: `docs/design/specs/pages/06-board/screenshots/desktop-dark-create-issue-modal.png`
   - Evidence now: `docs/design/specs/pages/06-board/screenshots/desktop-light-create-issue-modal.png`
   - Evidence now: `docs/design/specs/pages/06-board/screenshots/mobile-light-create-issue-modal.png`
 
@@ -316,19 +317,18 @@ Examples:
   - Evidence now: `docs/design/specs/pages/07-backlog/screenshots/desktop-light.png`
 
 - [ ] Keep expanding screenshot readiness contracts where partial-load captures can still leak through.
-  - Remaining risk: route-specific completion signals are still uneven outside the core auth/project/editor paths.
+  - 2026-03-12 hardening added route-specific readiness for public pages, project backlog, calendar event content, project modal navigation, and create-issue modal form readiness.
+  - Remaining risk: route-specific completion signals are still uneven outside the core auth/project/editor/calendar paths.
   - Expected: every captured route has a deterministic loaded-content signal before capture.
 
 ### P1 - Highest-Leverage Remaining Visual Fixes
 
-- [ ] Fix public-page theme parity, especially landing/auth light mode.
-  - Problem: the public palette is coherent enough in dark mode but awkward in light mode, where dark purple / dark blue surfaces and gradients read muddy and out of place instead of intentional.
-  - Evidence: `docs/design/specs/pages/01-landing/screenshots/desktop-light.png`
-  - Evidence: `docs/design/specs/pages/02-signin/screenshots/desktop-light.png`
-  - Evidence: `docs/design/specs/pages/03-signup/screenshots/desktop-light.png`
-  - Evidence: `docs/design/specs/pages/04-forgot-password/screenshots/desktop-light.png`
-  - Main fix points: landing/auth color tokens, `src/components/Auth/AuthPageLayout.tsx`, public-page background and accent primitives
-  - Done means: dark and light both feel designed on purpose, not like dark-mode art pasted onto a light canvas
+- [x] Fix public-page theme parity, especially landing/auth light mode.
+  - Fixed in: `src/index.css`, `src/components/Auth/AuthPageLayout.tsx`, `src/components/Landing/NavHeader.tsx`, `src/components/Landing/ProductShowcase.tsx`, `src/components/ui/Card.tsx`, `e2e/screenshot-pages.ts`
+  - Evidence now: `docs/design/specs/pages/01-landing/screenshots/desktop-light.png`
+  - Evidence now: `docs/design/specs/pages/02-signin/screenshots/desktop-light.png`
+  - Evidence now: `docs/design/specs/pages/03-signup/screenshots/desktop-light.png`
+  - Evidence now: `docs/design/specs/pages/04-forgot-password/screenshots/desktop-light.png`
 
 - [x] Simplify the auth shell so it stops reading like a nested marketing card pile.
   - Fixed in: `src/components/Auth/AuthPageLayout.tsx`
@@ -336,17 +336,17 @@ Examples:
   - Evidence now: `docs/design/specs/pages/03-signup/screenshots/desktop-light.png`
   - Evidence now: `docs/design/specs/pages/04-forgot-password/screenshots/desktop-light.png`
 
-- [ ] Simplify mobile project chrome and tab density further.
-  - Evidence: `docs/design/specs/pages/06-board/screenshots/mobile-light.png`
-  - Evidence: `docs/design/specs/pages/07-backlog/screenshots/mobile-light.png`
-  - Evidence: `docs/design/specs/pages/11-calendar/screenshots/mobile-light.png`
-  - Main fix point: `src/routes/_auth/_app/$orgSlug/projects/$key/route.tsx`
+- [x] Simplify mobile project chrome and tab density further.
+  - Fixed in: `src/components/ui/RouteNav.tsx`, `src/routes/_auth/_app/$orgSlug/projects/$key/route.tsx`, `src/routes/_auth/_app/$orgSlug/projects/$key/board.tsx`, `src/components/FilterBar.tsx`, `src/components/Calendar/shadcn-calendar/header/*`
+  - Evidence now: `docs/design/specs/pages/06-board/screenshots/mobile-light.png`
+  - Evidence now: `docs/design/specs/pages/07-backlog/screenshots/mobile-light.png`
+  - Evidence now: `docs/design/specs/pages/11-calendar/screenshots/mobile-light.png`
 
-- [ ] Continue reducing card layering and restore theme parity for internal app surfaces, especially light-mode depth/contrast.
-  - Evidence: `docs/design/specs/pages/05-projects/screenshots/desktop-light.png`
-  - Evidence: `docs/design/specs/pages/10-editor/screenshots/desktop-light.png`
-  - Evidence: `docs/design/specs/pages/12-settings/screenshots/desktop-light.png`
-  - Main fix points: `src/components/ui/Card.tsx`, page-level shells, profile/editor surfaces, shared light/dark surface tokens
+- [x] Continue reducing card layering and restore theme parity for internal app surfaces, especially light-mode depth/contrast.
+  - Fixed in: `src/components/ui/Card.tsx`, `src/index.css`, `src/components/PlateEditor.tsx`, `src/components/Documents/DocumentHeader.tsx`, `src/components/Settings/ProfileContent.tsx`
+  - Evidence now: `docs/design/specs/pages/05-projects/screenshots/desktop-light.png`
+  - Evidence now: `docs/design/specs/pages/10-editor/screenshots/desktop-light.png`
+  - Evidence now: `docs/design/specs/pages/12-settings/screenshots/desktop-light.png`
 
 - [x] Make the filled projects state credible again.
   - Fixed in: `convex/e2e.ts`, `src/components/ProjectsList.tsx`
@@ -354,16 +354,18 @@ Examples:
   - Evidence now: `docs/design/specs/pages/05-projects/screenshots/tablet-light.png`
   - Evidence now: `docs/design/specs/pages/05-projects/screenshots/mobile-light.png`
 
-- [ ] Tighten settings tab density and reduce shell weight on tablet/mobile.
-  - Evidence: `docs/design/specs/pages/12-settings/screenshots/mobile-light.png`
-  - Evidence: `docs/design/specs/pages/12-settings/screenshots/tablet-light.png`
-  - Main fix points: `src/components/Settings.tsx`, `src/components/Settings/ProfileContent.tsx`, shared tab primitives
+- [x] Tighten settings tab density and reduce shell weight on tablet/mobile.
+  - Fixed in: `src/components/Settings.tsx`, `src/components/ui/Tabs.tsx`, `src/components/Settings/ProfileContent.tsx`
+  - Evidence now: `docs/design/specs/pages/12-settings/screenshots/mobile-light.png`
+  - Evidence now: `docs/design/specs/pages/12-settings/screenshots/tablet-light.png`
 
 ### P2 - Follow-Through
 
 - [x] Refresh affected `CURRENT.md` docs once the screenshots reflect the real UI.
-- [ ] Rerun `pnpm screenshots` after each meaningful polish round.
-- [ ] Keep screenshot-specific reliability work synced with `todos/e2e-reliability-overhaul.md`.
+- [x] Rerun `pnpm screenshots` after each meaningful polish round.
+  - Latest evidence: `2026-03-12` full matrix rerun passed with `207 screenshots captured` and promoted output.
+- [x] Keep screenshot-specific reliability work synced with `todos/e2e-reliability-overhaul.md`.
+  - Synced on `2026-03-12` with the latest screenshot-harness readiness and page-object navigation fixes.
 
 ## Execution Loop
 
@@ -519,6 +521,48 @@ Each screenshot-driven round should leave a short entry in the active log or com
   - mobile project chrome on board/backlog/calendar
   - desktop light-mode depth on projects/editor/settings
   - settings shell density on smaller viewports
+
+### 2026-03-12 Follow-Through
+
+- Targeted screenshot reruns completed successfully for calendar, then mobile board/backlog/calendar:
+  - `pnpm screenshots -- --spec 11-calendar --config desktop-light,tablet-light,mobile-light`
+  - `pnpm screenshots -- --spec 06-board,07-backlog,11-calendar --config mobile-light`
+- Additional public-page reruns completed successfully:
+  - `pnpm screenshots -- --spec 01-landing --config desktop-light`
+  - `pnpm screenshots -- --spec 02-signin,03-signup,04-forgot-password --config desktop-light,mobile-light`
+- Additional internal-surface reruns completed successfully:
+  - `pnpm screenshots -- --spec 05-projects,10-editor,12-settings --config desktop-light`
+  - `pnpm screenshots -- --spec 12-settings --config desktop-light`
+- Additional settings-density reruns completed successfully:
+  - `pnpm screenshots -- --spec 12-settings --config tablet-light,mobile-light`
+- Main shared fixes that landed:
+  - `e2e/screenshot-pages.ts`: calendar captures now wait for real event content instead of trusting a loaded shell alone
+  - `e2e/screenshot-pages.ts`: public pages now wait for real hero/form content and entrance animations before capture
+  - `src/components/Calendar/shadcn-calendar/body/use-calendar-initial-scroll.ts`: preserved horizontal scroll when applying the initial hour anchor
+  - `src/components/Calendar/shadcn-calendar/body/week/calendar-body-week.tsx`: re-anchored the active day once event content is present, which restored valid mobile week/day framing
+  - `src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx`: made month view responsive at every breakpoint and added compact mobile event indicators instead of an effectively empty list layout
+  - `src/components/Calendar/shadcn-calendar/calendar-event.tsx`: simplified month event chips so desktop/tablet month view reads at a glance
+  - `src/components/Calendar/shadcn-calendar/header/*`: reduced mobile calendar-header density
+  - `src/components/ui/RouteNav.tsx` and `src/routes/_auth/_app/$orgSlug/projects/$key/route.tsx`: tightened the shared mobile project shell and tab pills
+  - `src/routes/_auth/_app/$orgSlug/projects/$key/board.tsx` and `src/components/FilterBar.tsx`: removed extra mobile board shell and reduced the filter row's top-weight
+  - `src/index.css`, `src/components/Auth/AuthPageLayout.tsx`, `src/components/Landing/NavHeader.tsx`, `src/components/Landing/ProductShowcase.tsx`, and `src/components/ui/Card.tsx`: rebalanced public light-mode backgrounds and shared landing/auth surfaces so light mode no longer reads like dimmed dark-mode art
+  - `src/components/ui/Card.tsx` and `src/index.css`: improved shared app-surface depth so light pages stop stacking pale cards on pale page backgrounds
+  - `src/components/PlateEditor.tsx` and `src/components/Documents/DocumentHeader.tsx`: gave the editor a clearer paper/header relationship in desktop light mode
+  - `src/components/Settings/ProfileContent.tsx`: reduced the profile shell weight after the shared surface pass landed
+  - `src/components/Settings.tsx` and `src/components/ui/Tabs.tsx`: switched settings to short labels until large viewports and tightened compact tab spacing so tablet/mobile tab rows stop collapsing under the tab count
+- Pages materially improved:
+  - `01-landing`
+  - `02-signin`
+  - `03-signup`
+  - `04-forgot-password`
+  - `05-projects`
+  - `10-editor`
+  - `11-calendar`
+  - mobile `06-board`
+  - mobile `07-backlog`
+  - `12-settings`
+- Remaining below-bar areas:
+  - backlog still needs stronger row/section hierarchy in light mode
 
 ## Success Criteria
 

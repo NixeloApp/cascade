@@ -346,12 +346,15 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
           <SkeletonText lines={1} className="w-32" />
           <SkeletonText lines={1} className="w-32" />
         </Flex>
-        <Flex gap="md" className="overflow-x-auto px-3 pb-4 sm:px-6">
+        <Flex
+          gap="none"
+          className="overflow-x-auto gap-1.5 px-1.5 pb-2.5 sm:gap-3 sm:px-4 sm:pb-3 lg:px-6"
+        >
           {[1, 2, 3, 4].map((i) => (
             <FlexItem
               key={i}
               shrink={false}
-              className="w-72 rounded-container border border-ui-border bg-ui-bg-soft sm:w-80"
+              className="w-44 rounded-container border border-ui-border bg-ui-bg-soft sm:w-72 lg:w-80"
             >
               <div className="border-b border-ui-border/50 bg-transparent rounded-t-container">
                 <SkeletonText lines={1} className="w-24" />
@@ -392,8 +395,8 @@ export function KanbanBoard({ projectId, teamId, sprintId, filters }: KanbanBoar
         <Flex
           ref={boardContainerRef}
           align="start"
-          gap="md"
-          className="overflow-x-auto px-3 pb-4 sm:px-6"
+          gap="none"
+          className="overflow-x-auto gap-1.5 px-1.5 pb-2.5 sm:gap-3 sm:px-4 sm:pb-3 lg:px-6"
         >
           {workflowStates.map((state, columnIndex: number) => {
             const counts = statusCounts[state.id] || {

@@ -4,7 +4,7 @@
 > **Effort:** Large
 > **Status:** In Progress (`11/33` checklist items complete; latest recorded local full-suite runs are green repeatedly; validation passing)
 > **Last Updated:** 2026-03-12
-> **Review Outcome:** status unchanged in this audit; latest recorded full-suite evidence remains the documented 2026-03-09 green baseline until a newer full run is logged here.
+> **Review Outcome:** status unchanged in this audit; latest recorded full-suite evidence remains the documented 2026-03-09 green baseline until a newer full run is logged here. Screenshot-specific reliability was refreshed on 2026-03-12 with a clean `pnpm screenshots` run (`207 screenshots captured`).
 
 ## Objective
 
@@ -215,6 +215,7 @@ This is the concrete "what's left" list for reliability hardening after the late
 - `DashboardPage.openTimeEntryModal({ expectBillable })` now uses one direct billing-state check plus one named app-shell resync instead of a generic three-attempt loop, after the focused billing rerun confirmed the helper only needs a single stale-context recovery path when org settings change out of band.
 - `DashboardPage.signOutViaUserMenu()` now reacquires the visible `Sign out` menu item inside the retry loop and waits for a signed-out destination, after the isolated signout rerun showed the previous locator could detach between menu-open and click.
 - `DashboardPage.signOutViaUserMenu()` now uses a direct menu-open -> sign-out click contract with one bounded second attempt and a named signed-out destination check, after the isolated signout rerun confirmed the full flow does not need a blanket retry wrapper.
+- Screenshot capture hardening on `2026-03-12` now resolves shared page-object route navigation to absolute URLs, waits for `/projects/:key/backlog` with the same board-ready contract as `/board`, and makes `ProjectsPage.openCreateIssueModal()` wait for dialog-scoped form controls before returning; latest full screenshot matrix passed with `207 screenshots captured`.
 - historical full-suite run on `2026-03-07`: `160 passed` in `5.4m`.
 - latest full-suite run on `2026-03-09`: `161 passed` in `5.7m`.
 - the previous three exposed regressions now have targeted green evidence plus a restored full-suite green confirmation:

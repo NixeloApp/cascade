@@ -165,32 +165,25 @@ function BoardPage() {
         </div>
       </div>
 
-      <div className="px-2 pt-1 sm:hidden">
-        <div className="rounded-xl border border-ui-border/70 bg-ui-bg-elevated/90 px-2 py-1.5 shadow-soft">
-          <Flex align="center" justify="between" gap="xs">
-            <Typography variant="small" className="font-medium text-ui-text-secondary">
-              {showMobileSprintControls ? "Sprint controls" : "Board actions"}
-            </Typography>
-            <Flex align="center" gap="xs">
-              <ExportButton projectId={project._id} sprintId={effectiveSprintId} />
-              {showMobileSprintControls && sprints && (
-                <Select value={selectedSprintId || "active"} onValueChange={handleSprintChange}>
-                  <SelectTrigger className="h-8 min-w-32 rounded-lg border border-ui-border px-2 text-xs">
-                    <SelectValue placeholder="Sprint" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active Sprint</SelectItem>
-                    {sprints.map((sprint: Doc<"sprints">) => (
-                      <SelectItem key={sprint._id} value={sprint._id}>
-                        {sprint.name} ({sprint.status})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </Flex>
-          </Flex>
-        </div>
+      <div className="px-1 pt-0.5 sm:hidden">
+        <Flex align="center" justify="end" gap="xs">
+          {showMobileSprintControls && sprints && (
+            <Select value={selectedSprintId || "active"} onValueChange={handleSprintChange}>
+              <SelectTrigger className="h-7 min-w-28 rounded-lg border border-ui-border/70 bg-ui-bg-elevated/92 px-2 text-xs shadow-soft">
+                <SelectValue placeholder="Sprint" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active Sprint</SelectItem>
+                {sprints.map((sprint: Doc<"sprints">) => (
+                  <SelectItem key={sprint._id} value={sprint._id}>
+                    {sprint.name} ({sprint.status})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <ExportButton projectId={project._id} sprintId={effectiveSprintId} />
+        </Flex>
       </div>
 
       {/* Filter Bar */}

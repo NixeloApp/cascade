@@ -2,7 +2,7 @@
 
 > **Route**: `/:slug/settings/profile`
 > **Status**: 🟡 NEEDS POLISH
-> **Last Updated**: 2026-03-09
+> **Last Updated**: 2026-03-12
 
 ---
 
@@ -33,6 +33,8 @@
 - `src/routes/_auth/_app/$orgSlug/settings/profile.tsx` now validates and canonicalizes the route search state.
 - `src/components/Settings/ProfileContent.tsx` was simplified so the profile tab is less ad hoc than before.
 - Shared tab primitives now support the denser settings layout.
+- Desktop light mode is less over-shelled now that the profile surface uses lighter shared card depth and a smaller outer shell.
+- Tablet and mobile now keep the settings tabs readable by using shorter labels until larger viewports.
 
 ---
 
@@ -40,9 +42,7 @@
 
 | Problem | Area | Severity |
 |---------|------|----------|
-| Desktop light mode still feels over-shelled, especially in the profile surface | Settings composition | HIGH |
-| Tablet and mobile tab density are improved but still too tight for the number of sections | Settings tabs | HIGH |
-| Profile cards and stats are cleaner, but they still layer too many surfaces on top of each other | `ProfileContent` | MEDIUM |
+| Profile cards and stats are cleaner, but the settings surface still wants one more pass on smaller screens | `ProfileContent` | MEDIUM |
 
 ---
 

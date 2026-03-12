@@ -1,6 +1,8 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
+const FALLBACK_BASE_URL = process.env.BASE_URL || "http://localhost:5555";
+
 /**
  * Base Page Object with common functionality
  * All page objects should extend this class
@@ -89,6 +91,24 @@ export abstract class BasePage {
    */
   async screenshot(name: string) {
     await this.page.screenshot({ path: `test-results/screenshots/${name}.png` });
+  }
+
+  protected resolveUrl(target: string): string {
+    if (/^https?:\/\//.test(target)) {
+      return target;
+    }
+
+    const currentUrl = this.page.url();
+    const baseUrl =
+      currentUrl.startsWith("http://") || currentUrl.startsWith("https://")
+        ? currentUrl
+        : FALLBACK_BASE_URL;
+
+    return new URL(target, baseUrl).toString();
+  }
+
+  protected async gotoPath(target: string, options?: Parameters<Page["goto"]>[1]) {
+    await this.page.goto(this.resolveUrl(target), options);
   }
 
   /**

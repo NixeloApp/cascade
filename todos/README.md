@@ -17,7 +17,7 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 1. Active screenshot and visual-baseline loop:
    - [e2e-screenshot-quality.md](./e2e-screenshot-quality.md) as the canonical screenshot determinism + visual review execution doc
    - design-cohesion foundation is complete; remaining visual follow-through now runs through screenshot review and shared-surface polish
-   - keep the screenshot docs in sync with the real UI after each polish round so the spec folders stay trustworthy
+   - keep route-specific readiness contracts and shared mobile/filter chrome polish moving together so the spec folders stay trustworthy
 2. P1 correctness/security defects:
    - [slack-integration-issues.md](./slack-integration-issues.md)
 3. E2E and screenshot sustainment:
@@ -38,7 +38,7 @@ Canonical control plane for all todo docs: what to do first, what is blocked ext
 
 | Priority | File | Role | Next Action |
 |---|---|---|---|
-| P0 | [e2e-screenshot-quality.md](./e2e-screenshot-quality.md) | Screenshot determinism + visual review control plane | Keep the baseline trustworthy, then finish the shared theme-parity/mobile-chrome/light-surface/settings-density polish queue |
+| P0 | [e2e-screenshot-quality.md](./e2e-screenshot-quality.md) | Screenshot determinism + visual review control plane | Keep route-specific readiness complete and continue shared mobile/filter chrome follow-through on top of a clean full screenshot matrix |
 | P0 | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Reliability sustainment while UI churn continues | Keep full suite green and keep replacing retry-heavy helpers with explicit completion contracts |
 | P1 | [slack-integration-issues.md](./slack-integration-issues.md) | Remaining Slack multi-org delivery isolation defect | Add organization-scoped Slack connection storage and destination lookup |
 
