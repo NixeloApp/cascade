@@ -104,16 +104,7 @@ function FilterDropdown<T>({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "h-6 rounded-full border border-ui-border/55 bg-ui-bg-elevated/86 px-2 text-xs shadow-none sm:h-9 sm:rounded-xl sm:border-transparent sm:bg-transparent sm:px-3 sm:text-sm",
-            isActive
-              ? "border-brand/10 bg-brand-subtle text-brand"
-              : "text-ui-text-secondary hover:border-ui-border/60 hover:bg-ui-bg-hover/80",
-          )}
-        >
+        <Button chrome={isActive ? "filterActive" : "filter"} chromeSize="filterPill">
           <span className="sm:hidden">{shortLabel ?? label}</span>
           <span className="hidden sm:inline">{label}</span>
           {isActive && ` (${activeCount})`}
@@ -170,16 +161,7 @@ function DateRangeDropdown({ label, shortLabel, value, onChange }: DateRangeDrop
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "h-6 rounded-full border border-ui-border/55 bg-ui-bg-elevated/86 px-2 text-xs shadow-none sm:h-9 sm:rounded-xl sm:border-transparent sm:bg-transparent sm:px-3 sm:text-sm",
-            isActive
-              ? "border-brand/10 bg-brand-subtle text-brand"
-              : "text-ui-text-secondary hover:border-ui-border/60 hover:bg-ui-bg-hover/80",
-          )}
-        >
+        <Button chrome={isActive ? "filterActive" : "filter"} chromeSize="filterPill">
           <span className="sm:hidden">{shortLabel ?? label}</span>
           <span className="hidden sm:inline">{label}</span>
           {isActive && " (1)"}
@@ -230,11 +212,7 @@ function SavedFiltersDropdown({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-6 rounded-full border border-ui-border/55 bg-ui-bg-elevated/86 px-2 text-xs text-ui-text-secondary shadow-none hover:border-ui-border/60 hover:bg-ui-bg-hover/80 sm:h-9 sm:rounded-xl sm:border-transparent sm:bg-transparent sm:px-3 sm:text-sm"
-        >
+        <Button chrome="filter" chromeSize="filterPill">
           <span className="sm:hidden">Saved</span>
           <span className="hidden sm:inline">Saved Filters</span> ({savedFilters.length})
           <ChevronDown className="ml-1 w-4 h-4" />
@@ -551,12 +529,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
 
           {/* Clear Filters */}
           {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClearFilters}
-              className="h-6 rounded-full border border-ui-border/55 bg-ui-bg-elevated/86 px-2 text-xs text-ui-text-secondary shadow-none hover:border-ui-border/60 hover:bg-ui-bg-hover/80 sm:h-9 sm:rounded-xl sm:border-transparent sm:bg-transparent sm:px-3 sm:text-sm"
-            >
+            <Button chrome="filter" chromeSize="filterPill" onClick={handleClearFilters}>
               <X className="w-4 h-4 mr-1" />
               Clear ({activeFilterCount})
             </Button>
@@ -564,12 +537,7 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
 
           {/* Save Filter */}
           {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowSaveDialog(true)}
-              className="h-6 rounded-full border border-ui-border/55 bg-ui-bg-elevated/86 px-2 text-xs text-ui-text-secondary shadow-none hover:border-ui-border/60 hover:bg-ui-bg-hover/80 sm:h-9 sm:rounded-xl sm:border-transparent sm:bg-transparent sm:px-3 sm:text-sm"
-            >
+            <Button chrome="filter" chromeSize="filterPill" onClick={() => setShowSaveDialog(true)}>
               Save Filter
             </Button>
           )}
