@@ -32,6 +32,9 @@
 - Removed `Settings/NotificationsTab.tsx`, `Settings/LinkedRepositories.tsx`, and `Settings/TwoFactorSettings.tsx` from the raw-Tailwind migration debt list by migrating them onto owned form and surface primitives.
 - Removed `Settings/NotificationsTab.tsx` from the interactive-state migration debt list.
 - Added `Settings/NotificationsTab.tsx` to design-system ownership targeting so future shell drift there is validated directly.
+- Removed `Settings/ProfileContent.tsx` and `Settings/PumbleIntegration.tsx` from the raw-Tailwind migration debt list by migrating them onto owned card, avatar, empty-state, and form primitives.
+- Removed `Settings/ProfileContent.tsx` and `Settings/PumbleIntegration.tsx` from the interactive-state migration debt list.
+- Added `Settings/ProfileContent.tsx` and `Settings/PumbleIntegration.tsx` to design-system ownership targeting so shell drift there is blocked directly.
 
 ### Next batch
 
