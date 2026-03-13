@@ -97,6 +97,7 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/AI/AIChat.tsx",
   "/Analytics/RecentActivity.tsx",
   "/AppHeader.tsx",
+  "/BulkOperationsBar.tsx",
   "/Dashboard/RecentActivity.tsx",
   "/Dashboard/WorkspacesList.tsx",
   "/GlobalSearch.tsx",

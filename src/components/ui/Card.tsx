@@ -110,6 +110,8 @@ const cardRecipeVariants = cva("", {
         "rounded-full border-ui-border-secondary/70 bg-ui-bg-elevated/94 shadow-soft backdrop-blur-sm",
       timerStripActive:
         "rounded-full border-brand-indigo-border/70 bg-linear-to-r from-brand-indigo-track via-brand-indigo-track to-brand-indigo-bg/70 shadow-soft backdrop-blur-sm",
+      bulkActionBar:
+        "border-x-0 border-b-0 border-t border-ui-border bg-ui-bg-elevated shadow-elevated",
     },
   },
 });

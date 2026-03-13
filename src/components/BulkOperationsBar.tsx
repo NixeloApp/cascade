@@ -13,6 +13,7 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { Archive } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Flex } from "./ui/Flex";
 import { Grid } from "./ui/Grid";
@@ -198,7 +199,11 @@ export function BulkOperationsBar({
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 bg-ui-bg-elevated border-t border-ui-border shadow-elevated z-30 animate-slide-up">
+      <Card
+        recipe="bulkActionBar"
+        radius="none"
+        className="fixed right-0 bottom-0 left-0 z-30 animate-slide-up"
+      >
         <div className="max-w-7xl mx-auto px-4 py-3">
           <Flex align="center" justify="between" gap="lg">
             {/* Selection Info */}
@@ -364,7 +369,7 @@ export function BulkOperationsBar({
             </Stack>
           )}
         </div>
-      </div>
+      </Card>
 
       {/* Archive Confirmation */}
       <ConfirmDialog

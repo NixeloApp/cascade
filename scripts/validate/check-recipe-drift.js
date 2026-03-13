@@ -32,7 +32,6 @@ const ALLOWED_FILES = [
   "ProjectSettings/MemberManagement.tsx",
   "ProjectSettings/WorkflowSettings.tsx",
   // Modal/overlay surfaces - need recipe extraction
-  "BulkOperationsBar.tsx",
   "Plate/SlashMenu.tsx",
   // Settings panels
   "Calendar/CreateEventModal.tsx",
