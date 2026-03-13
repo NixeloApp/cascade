@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
+import { IconButton } from "@/components/ui/IconButton";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { cn } from "@/lib/utils";
@@ -71,12 +72,14 @@ function SidebarSection({
         variant="ghost"
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full justify-start rounded-none"
+        className="w-full justify-between rounded-none"
       >
-        <Icon className="h-4 w-4" />
-        <Typography variant="caption" className="uppercase tracking-widest flex-1 text-left">
-          {title}
-        </Typography>
+        <Flex align="center" gap="sm">
+          <Icon className="h-4 w-4" />
+          <Typography variant="eyebrow" as="span" className="text-left">
+            {title}
+          </Typography>
+        </Flex>
         <ChevronDown
           className={cn("h-3 w-3 transition-transform duration-default", !isOpen && "-rotate-90")}
         />
@@ -173,10 +176,12 @@ function TableOfContents({
 }) {
   if (headings.length === 0) {
     return (
-      <Flex align="center" gap="sm" className="text-ui-text-tertiary py-2">
-        <FileText className="h-4 w-4" />
-        <Typography variant="small">No headings found</Typography>
-      </Flex>
+      <Card variant="ghost" padding="xs" className="text-ui-text-tertiary">
+        <Flex align="center" gap="sm">
+          <FileText className="h-4 w-4" />
+          <Typography variant="small">No headings found</Typography>
+        </Flex>
+      </Card>
     );
   }
 
@@ -207,20 +212,22 @@ function InfoRow({ label, value }: { label: string; value: ReactNode }) {
   const isPlainValue = typeof value === "string" || typeof value === "number";
 
   return (
-    <Flex align="center" justify="between" className="py-1">
-      <Typography variant="small" color="secondary">
-        {label}
-      </Typography>
-      {isPlainValue ? (
-        <Typography variant="small" as="span">
-          {value}
+    <Card recipe="documentSidebarInfoRow" padding="xs">
+      <Flex align="center" justify="between">
+        <Typography variant="small" color="secondary">
+          {label}
         </Typography>
-      ) : (
-        <Flex align="center" justify="end">
-          {value}
-        </Flex>
-      )}
-    </Flex>
+        {isPlainValue ? (
+          <Typography variant="small" as="span">
+            {value}
+          </Typography>
+        ) : (
+          <Flex align="center" justify="end">
+            {value}
+          </Flex>
+        )}
+      </Flex>
+    </Card>
   );
 }
 
@@ -264,22 +271,25 @@ export function DocumentSidebar({
 
   return (
     <Card
+      recipe="documentSidebarShell"
       padding="none"
-      className="w-64 shrink-0 border-l border-ui-border bg-ui-bg-soft h-full overflow-y-auto"
+      className="h-full w-64 shrink-0 overflow-y-auto"
     >
       {/* Close button */}
-      <Flex align="center" justify="between" className="px-3 py-2 border-b border-ui-border/30">
-        <Typography variant="label">Document</Typography>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggle}
-          aria-label="Close sidebar"
-          className="h-6 w-6 p-0"
-        >
-          ×
-        </Button>
-      </Flex>
+      <Card recipe="documentSidebarHeader" padding="sm">
+        <Flex align="center" justify="between">
+          <Typography variant="label">Document</Typography>
+          <IconButton
+            variant="ghost"
+            size="xs"
+            tooltip="Close sidebar"
+            onClick={onToggle}
+            aria-label="Close sidebar"
+          >
+            ×
+          </IconButton>
+        </Flex>
+      </Card>
 
       {/* Document Info */}
       <SidebarSection title="Info" icon={Info}>

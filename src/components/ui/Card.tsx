@@ -76,6 +76,12 @@ const cardRecipeVariants = cva("", {
         "h-1.5 w-1.5 rounded-full border-transparent bg-brand shadow-brand-halo ring-2 ring-brand/8 sm:h-2 sm:w-2",
       documentHeaderShell:
         "border-x-0 border-t-0 rounded-none border-ui-border-secondary/85 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/96 to-ui-bg-soft/84 shadow-soft",
+      documentSidebarShell:
+        "h-full rounded-none border-x-0 border-y-0 border-l border-ui-border bg-ui-bg-soft shadow-none",
+      documentSidebarHeader:
+        "rounded-none border-x-0 border-t-0 border-b border-ui-border/30 bg-transparent shadow-none",
+      documentSidebarInfoRow:
+        "rounded-none border-transparent bg-transparent px-0 py-1 shadow-none",
       templateBuiltInTile:
         "h-full border-2 border-transparent bg-linear-to-br from-brand-subtle to-brand-subtle text-left shadow-none hover:border-brand-muted hover:shadow-card-hover",
       templateCustomTile: "bg-ui-bg-secondary shadow-none hover:bg-ui-bg-tertiary",
