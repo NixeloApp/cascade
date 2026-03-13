@@ -38,7 +38,6 @@ export function run() {
     /src\/components\/PlateEditor\.tsx$/, // Complexity: editor operations - TODO: extract DocumentControls
     /src\/components\/RoadmapView\.tsx$/, // Complexity: timeline + SVG - TODO: extract TimelineRenderer
     /convex\/users\.ts$/, // Complexity: search with filters - TODO: extract searchUsersHelper
-    /src\/components\/Plate\/MentionInputElement\.tsx$/, // Intentional useEffect deps pattern for combobox reset
     /src\/components\/IssueDetail\/IssueMetadataSection\.tsx$/, // Complexity: conditional inline editing for each field
   ];
 

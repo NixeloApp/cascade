@@ -84,11 +84,13 @@ export function MentionInputElement({
         image: user.image,
       }));
 
-  // Reset selection when search results change
-  // biome-ignore lint/correctness/useExhaustiveDependencies: We intentionally want to reset on searchResults change
+  const selectionResetKey = `${search}:${items.map((item) => item.id).join("|")}`;
+
   useEffect(() => {
-    setSelectedIndex(0);
-  }, [searchResults]);
+    if (selectionResetKey) {
+      setSelectedIndex(0);
+    }
+  }, [selectionResetKey]);
 
   // Combobox input handling
   const { props: inputProps, removeInput } = useComboboxInput({
