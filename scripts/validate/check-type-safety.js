@@ -36,7 +36,6 @@ export function run() {
     /convex\/lib\/safeFetch\.test\.ts$/, // Legacy module mock casts
     /convex\/lib\/userUtils\.test\.ts$/, // Legacy runtime property assertions
     /convex\/lib\/webhookHelpers\.test\.ts$/, // Legacy fetch mocks
-    /convex\/softDeleteCleanup\.ts$/, // Convex internal cleanup utility
   ];
 
   let errorCount = 0;
