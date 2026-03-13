@@ -20,7 +20,6 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
 
 export const RAW_TAILWIND_ALLOWED_FILES = [
   // Explicit migration-debt exemptions replacing broad Settings/Admin/ProjectSettings directory escapes.
-  "/PortalProjectView.tsx",
   "/PortalTimeline.tsx",
   "/BulkOperationsBar.tsx",
   "/CommentRenderer.tsx",
@@ -125,6 +124,7 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/Onboarding/OnboardingChecklist.tsx",
   "/Plate/MentionInputElement.tsx",
   "/Plate/FloatingToolbar.tsx",
+  "/ClientPortal/PortalProjectView.tsx",
   "/TimeTracking/BurnRateDashboard.tsx",
   "/TimeTracking/TimeEntriesList.tsx",
   "/TimeTracking/ManualTimeEntryModal.tsx",
