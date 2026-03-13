@@ -21,7 +21,6 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
 export const RAW_TAILWIND_ALLOWED_FILES = [
   // Explicit migration-debt exemptions replacing broad Settings/Admin/ProjectSettings directory escapes.
   "/BulkOperationsBar.tsx",
-  "/CommentRenderer.tsx",
   "/CreateProjectFromTemplate.tsx",
   "/Dashboard.tsx",
   "/InvoiceEditor.tsx",
@@ -87,6 +86,7 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/ActivityFeed.tsx",
   "/AttachmentList.tsx",
   "/CommentReactions.tsx",
+  "/CommentRenderer.tsx",
   "/FuzzySearch/FuzzySearchInput.tsx",
   "/FilterBar.tsx",
   "/Landing/HeroSection.tsx",

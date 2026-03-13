@@ -23,8 +23,6 @@ const ALLOWED_FILES = [
   "FuzzySearch/AssigneeSearchDropdown.example.tsx",
   // Issue components
   "IssueDetail/",
-  // Comment/reaction components
-  "CommentRenderer.tsx",
   // Document components
   // Editor components
   "Plate/",

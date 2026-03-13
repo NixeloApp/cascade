@@ -126,6 +126,20 @@ describe("CommentRenderer", () => {
   });
 
   describe("Mixed Content", () => {
+    it("should render inline code and markdown links with owned primitives", () => {
+      render(
+        <CommentRenderer
+          content={"Use `pnpm check` before opening [the docs](https://example.com)."}
+        />,
+      );
+
+      expect(screen.getByText("pnpm check").tagName).toBe("CODE");
+      expect(screen.getByRole("link", { name: "the docs" })).toHaveAttribute(
+        "href",
+        "https://example.com",
+      );
+    });
+
     it("should render text before and after mentions", () => {
       const content = "Hey @[Alice](user-1), can you help @[Bob](user-2) with this?";
       render(<CommentRenderer content={content} />);

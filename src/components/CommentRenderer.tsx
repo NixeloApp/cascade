@@ -8,6 +8,8 @@
 
 import type { Id } from "@convex/_generated/dataModel";
 import { Badge } from "./ui/Badge";
+import { Button } from "./ui/Button";
+import { Typography } from "./ui/Typography";
 
 interface CommentRendererProps {
   content: string;
@@ -71,7 +73,9 @@ const MARKDOWN_PATTERNS: Array<{
   {
     regex: /`([^`]+)`/g,
     render: (match) => (
-      <code className="bg-ui-bg-tertiary px-1 py-0.5 rounded text-brand text-sm">{match}</code>
+      <Typography as="code" variant="inlineCode" color="brand">
+        {match}
+      </Typography>
     ),
   },
   { regex: /~~(.+?)~~/g, render: (match) => <s>{match}</s> },
@@ -79,14 +83,11 @@ const MARKDOWN_PATTERNS: Array<{
     regex: /\[([^\]]+)\]\(([^)]+)\)/g,
     hasSecondCapture: true,
     render: (text, url) => (
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-brand hover:text-brand-hover underline"
-      >
-        {text}
-      </a>
+      <Button asChild variant="link" size="none">
+        <a href={url} target="_blank" rel="noopener noreferrer">
+          {text}
+        </a>
+      </Button>
     ),
   },
 ];
@@ -168,12 +169,7 @@ interface MentionBadgeProps {
 
 function MentionBadge({ userName }: MentionBadgeProps) {
   return (
-    <Badge
-      variant="brand"
-      size="sm"
-      className="transition-colors duration-default hover:bg-brand-border cursor-default"
-      title={`@${userName}`}
-    >
+    <Badge variant="brand" size="sm" className="cursor-default" title={`@${userName}`}>
       @{userName}
     </Badge>
   );
