@@ -3,30 +3,23 @@
  */
 
 import type { Id } from "@convex/_generated/dataModel";
-import { cva } from "class-variance-authority";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Bot, Check, Copy, Lightbulb } from "@/lib/icons";
-import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
+import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/IconButton";
-import { LoadingSpinner } from "../ui/LoadingSpinner";
+import { InlineSpinner, LoadingSpinner } from "../ui/LoadingSpinner";
+import { MarkdownContent } from "../ui/MarkdownContent";
+import { Metadata, MetadataItem } from "../ui/Metadata";
 import { Skeleton } from "../ui/Skeleton";
 import { Textarea } from "../ui/Textarea";
 import { Typography } from "../ui/Typography";
 import { AI_CONFIG } from "./config";
 import { useAIChat } from "./hooks";
-
-const aiChatComposerVariants = cva("", {
-  variants: {
-    surface: {
-      textarea:
-        "resize-none overflow-hidden rounded-lg border-ui-border bg-ui-bg px-3 py-2 text-sm text-ui-text transition-all focus-visible:ring-2 focus-visible:ring-brand-ring sm:px-4 sm:py-3 sm:text-base",
-    },
-  },
-});
 
 interface AIChatProps {
   projectId?: Id<"projects">;
@@ -54,16 +47,16 @@ function MessageItem({
 }) {
   const messageId = `${chatId}-${message._creationTime}-${message.role}-${message.content.slice(0, 32)}`;
   const isCopied = copiedMessageId === messageId;
+  const messageTime = new Date(message._creationTime).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   return (
-    <div className={cn("flex group", message.role === "user" ? "justify-end" : "justify-start")}>
-      <div
-        className={cn(
-          "relative max-w-chat-bubble md:max-w-chat-bubble-md rounded-lg px-4 py-3",
-          message.role === "user"
-            ? "bg-brand text-brand-foreground"
-            : "bg-ui-bg-secondary text-ui-text",
-        )}
+    <Flex className="group" justify={message.role === "user" ? "end" : "start"}>
+      <Card
+        recipe={message.role === "user" ? "chatBubbleUser" : "chatBubbleAssistant"}
+        padding="md"
       >
         {/* Copy button for assistant messages */}
         {message.role === "assistant" && (
@@ -86,32 +79,27 @@ function MessageItem({
 
         {/* Message content with markdown for assistant */}
         {message.role === "assistant" ? (
-          <div className="prose prose-sm max-w-none prose-pre:bg-ui-bg-hero prose-pre:text-ui-text-inverse prose-code:text-sm">
+          <MarkdownContent variant="chat">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
-          </div>
+          </MarkdownContent>
         ) : (
           <div className="whitespace-pre-wrap break-words">{message.content}</div>
         )}
 
         {/* Message metadata */}
-        <Flex align="center" gap="sm" className="mt-2 text-xs opacity-70">
-          <span>
-            {new Date(message._creationTime).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span>
+        <Metadata className="mt-2 opacity-70">
+          <MetadataItem>{messageTime}</MetadataItem>
           {message.role === "assistant" && message.modelUsed && (
-            <span className="hidden sm:inline">
-              • {message.modelUsed.split("-").slice(0, 2).join("-")}
-            </span>
+            <MetadataItem hideBelow="sm">
+              {message.modelUsed.split("-").slice(0, 2).join("-")}
+            </MetadataItem>
           )}
           {message.role === "assistant" && message.responseTime && (
-            <span className="hidden md:inline">• {(message.responseTime / 1000).toFixed(1)}s</span>
+            <MetadataItem hideBelow="md">{(message.responseTime / 1000).toFixed(1)}s</MetadataItem>
           )}
-        </Flex>
-      </div>
-    </div>
+        </Metadata>
+      </Card>
+    </Flex>
   );
 }
 
@@ -141,7 +129,7 @@ export function AIChat({ projectId, chatId: initialChatId, onChatCreated }: AICh
   return (
     <Flex direction="column" className="h-full bg-ui-bg">
       {/* Messages Area */}
-      <Flex direction="column" gap="lg" className="flex-1 overflow-y-auto p-4">
+      <Card variant="ghost" padding="md" radius="none" className="flex-1 overflow-y-auto">
         {!messages ? (
           <Flex direction="column" gap="lg">
             <Skeleton className="h-16 w-3/4" />
@@ -149,31 +137,28 @@ export function AIChat({ projectId, chatId: initialChatId, onChatCreated }: AICh
             <Skeleton className="h-20 w-3/4" />
           </Flex>
         ) : messages.length === 0 ? (
-          <Flex align="center" justify="center" className="h-full text-center">
-            <div>
-              <Icon icon={Bot} size="xl" className="mx-auto mb-4" />
-              <Typography variant="h5" className="mb-2">
-                AI Assistant
+          <EmptyState
+            icon={Bot}
+            title="AI Assistant"
+            description="Ask me anything about your project, or use natural language commands."
+            surface="bare"
+            className="min-h-full"
+          >
+            <Flex direction="column" gap="xs" className="mt-4">
+              <Typography variant="meta">
+                <Icon icon={Lightbulb} size="sm" className="mr-1 inline" /> "What's our team
+                velocity?"
               </Typography>
-              <Typography variant="muted" className="mb-4">
-                Ask me anything about your project, or use natural language commands.
+              <Typography variant="meta">
+                <Icon icon={Lightbulb} size="sm" className="mr-1 inline" /> "Which issues are
+                blocking the sprint?"
               </Typography>
-              <Flex direction="column" gap="xs">
-                <Typography variant="meta">
-                  <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> "What's our team
-                  velocity?"
-                </Typography>
-                <Typography variant="meta">
-                  <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> "Which issues are
-                  blocking the sprint?"
-                </Typography>
-                <Typography variant="meta">
-                  <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> "Summarize this week's
-                  progress"
-                </Typography>
-              </Flex>
-            </div>
-          </Flex>
+              <Typography variant="meta">
+                <Icon icon={Lightbulb} size="sm" className="mr-1 inline" /> "Summarize this week's
+                progress"
+              </Typography>
+            </Flex>
+          </EmptyState>
         ) : (
           <>
             {messages
@@ -189,34 +174,21 @@ export function AIChat({ projectId, chatId: initialChatId, onChatCreated }: AICh
               ))}
             {isSending && (
               <Flex>
-                <div className="bg-ui-bg-secondary rounded-lg px-4 py-3">
+                <Card recipe="chatBubbleAssistant" padding="sm" className="w-fit">
                   <Flex align="center" gap="sm">
-                    <Flex gap="xs">
-                      <div
-                        className="w-2 h-2 bg-ui-text-tertiary rounded-full animate-bounce"
-                        style={{ animationDelay: "0ms" }}
-                      />
-                      <div
-                        className="w-2 h-2 bg-ui-text-tertiary rounded-full animate-bounce"
-                        style={{ animationDelay: "150ms" }}
-                      />
-                      <div
-                        className="w-2 h-2 bg-ui-text-tertiary rounded-full animate-bounce"
-                        style={{ animationDelay: "300ms" }}
-                      />
-                    </Flex>
+                    <InlineSpinner size="xs" variant="secondary" />
                     <Typography variant="caption">AI is thinking...</Typography>
                   </Flex>
-                </div>
+                </Card>
               </Flex>
             )}
             <div ref={messagesEndRef} />
           </>
         )}
-      </Flex>
+      </Card>
 
       {/* Input Area */}
-      <div className="border-t border-ui-border p-3 sm:p-4 bg-ui-bg-secondary safe-area-inset-bottom">
+      <Card recipe="assistantComposer" radius="none" className="safe-area-inset-bottom">
         <Flex gap="sm" align="end">
           <FlexItem flex="1">
             <Textarea
@@ -226,7 +198,7 @@ export function AIChat({ projectId, chatId: initialChatId, onChatCreated }: AICh
               onKeyPress={handleKeyPress}
               placeholder="Ask me anything about your project..."
               disabled={isSending}
-              className={aiChatComposerVariants({ surface: "textarea" })}
+              variant="chatComposer"
               rows={1}
               style={{
                 minHeight: `${AI_CONFIG.textarea.minHeight}px`,
@@ -257,7 +229,7 @@ export function AIChat({ projectId, chatId: initialChatId, onChatCreated }: AICh
         <Typography variant="meta" className="mt-2 hidden sm:block">
           Press Enter to send, Shift+Enter for new line
         </Typography>
-      </div>
+      </Card>
     </Flex>
   );
 }

@@ -111,6 +111,12 @@ const cardRecipeVariants = cva("", {
         "rounded-full border-ui-border-secondary/70 bg-ui-bg-elevated/94 shadow-soft backdrop-blur-sm",
       assistantPanelHeader:
         "border-x-0 border-t-0 border-b border-ui-border bg-linear-to-r from-brand to-accent shadow-none",
+      assistantComposer:
+        "border-x-0 border-b-0 border-t border-ui-border bg-ui-bg-secondary p-3 shadow-none sm:p-4",
+      chatBubbleAssistant:
+        "relative max-w-chat-bubble rounded-lg border-transparent bg-ui-bg-secondary text-ui-text shadow-none md:max-w-chat-bubble-md",
+      chatBubbleUser:
+        "relative max-w-chat-bubble rounded-lg border-transparent bg-brand text-brand-foreground shadow-none md:max-w-chat-bubble-md",
       landingNavShell:
         "rounded-full border-ui-border-secondary/70 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/96 to-ui-bg-soft/90 shadow-card backdrop-blur-xl",
       landingNavRail:

@@ -125,12 +125,13 @@
 - Removed `AI/AIAssistantPanel.tsx` from the raw-Tailwind debt list by moving its sheet body layout into an owned `Sheet` layout variant, its gradient header into an owned `Card` recipe, and its tab fill/stretch behavior into owned `Tabs` variants.
 - Removed `AI/AIAssistantPanel.tsx` from the interactive-state debt list.
 - Added `AI/AIAssistantPanel.tsx` to design-system ownership targeting so future assistant-panel shell drift is blocked directly.
+- Removed `AI/AIChat.tsx` from the raw-Tailwind and interactive-state debt lists by moving its message bubbles and composer chrome behind owned `Card` and `Textarea` variants, replacing inline metadata/timing shells with `Metadata` and `InlineSpinner`, and moving markdown message styling into a shared `MarkdownContent` primitive.
 
 ### Next batch
 
 - Continue shrinking the explicit `AI` debt now that the broad directory escapes are gone.
-- Prioritize `AI/AIChat.tsx` next: its composer and assistant-thinking state still carry the most remaining AI-owned shell/form drift.
-- After that, burn down `AI/AIErrorFallback.tsx`, then keep working through smaller helper controls rather than decorative backdrops.
+- Prioritize `AI/AIErrorFallback.tsx` next. It is now the last explicit `AI` raw-Tailwind debt entry and the remaining high-impact assistant fallback surface.
+- After that, keep working through smaller helper controls rather than decorative backdrops.
 
 ## Problem
 

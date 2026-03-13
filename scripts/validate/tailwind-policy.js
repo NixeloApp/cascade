@@ -22,7 +22,6 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
 export const RAW_TAILWIND_ALLOWED_FILES = [
   "/ActivityFeed.tsx",
   "/AdvancedSearchModal.tsx",
-  "/AI/AIChat.tsx",
   "/AI/AIErrorFallback.tsx",
   "/AppSidebar.tsx",
   "/AppHeader.tsx",
