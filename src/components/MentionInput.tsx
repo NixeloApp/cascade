@@ -273,7 +273,7 @@ export function MentionInput({
 
       {/* Mention Suggestions Dropdown */}
       {showSuggestions && filteredMembers.length > 0 && !isPreviewMode && (
-        <Command className="absolute bottom-full left-0 mb-2 w-64 border border-ui-border rounded-lg shadow-lg z-50">
+        <Command recipe="suggestionMenu" className="absolute bottom-full left-0 z-50 mb-2 w-64">
           <CommandList className="max-h-48">
             {filteredMembers.map((member, index) => (
               <CommandItem

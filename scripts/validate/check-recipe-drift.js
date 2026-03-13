@@ -7,6 +7,7 @@
  * This validator focuses on:
  * 1. Repeated "rounded + bg + border + shadow" combinations
  * 2. Similar visual shells that should not remain duplicated in feature code
+ * 3. Positioned command/menu shell chrome that should live behind owned overlay primitives
  */
 
 import fs from "node:fs";
@@ -20,6 +21,17 @@ const SURFACE_CLASS_PATTERNS = [
   /\bborder-(?:ui-|brand-)[^\s"']+/,
   /\bshadow-(?:soft|card|elevated|none)\b/,
 ];
+const OVERLAY_POSITION_PATTERN = /\b(?:absolute|fixed)\b/;
+const OVERLAY_LAYER_PATTERN = /\bz-\d+\b/;
+const OVERLAY_SHELL_PATTERNS = [
+  /\brounded-(?:md|lg|xl|2xl|3xl|full|container)\b/,
+  /\bbg-(?!transparent)(?:ui-|brand-|linear-to)[^\s"']+/,
+  /\bborder-(?:ui-|brand-)[^\s"']+/,
+  /\bshadow-(?:soft|card|elevated|lg|xl|2xl|none)\b/,
+  /\boverflow-hidden\b/,
+];
+const OVERLAY_COMPONENT_PATTERN =
+  /<(?:Command|PopoverContent|DropdownMenuContent|DropdownMenuSubContent)\b/;
 
 // Files/directories to skip
 const SKIP_PATTERNS = ["node_modules", ".test.", ".spec.", ".stories.", "src/components/ui/"];
@@ -55,6 +67,27 @@ function extractSurfacePatterns(classNameValue) {
   return patterns;
 }
 
+function extractOverlayShellPattern(line, classNameValue) {
+  if (!OVERLAY_COMPONENT_PATTERN.test(line)) return null;
+
+  const hasPosition = OVERLAY_POSITION_PATTERN.test(classNameValue);
+  const hasLayer = OVERLAY_LAYER_PATTERN.test(classNameValue);
+  const matchingShellParts = OVERLAY_SHELL_PATTERNS.map(
+    (pattern) => classNameValue.match(pattern)?.[0] || "",
+  );
+  const shellCount = matchingShellParts.filter(Boolean).length;
+
+  if (!hasPosition || !hasLayer || shellCount < 2) return null;
+
+  const componentMatch = line.match(OVERLAY_COMPONENT_PATTERN)?.[0]?.replace("<", "") || "overlay";
+  const signature = [componentMatch, ...matchingShellParts.filter(Boolean)].join(" ");
+
+  return {
+    component: componentMatch,
+    signature,
+  };
+}
+
 /**
  * Extract className values from a line of code.
  */
@@ -88,6 +121,7 @@ export function run() {
 
   // Track pattern occurrences: signature -> [{ file, line }]
   const patternOccurrences = new Map();
+  const overlayShellViolations = [];
 
   for (const filePath of files) {
     const rel = relPath(filePath);
@@ -108,6 +142,15 @@ export function run() {
 
       const classNames = extractClassNames(line);
       for (const className of classNames) {
+        const overlayShellPattern = extractOverlayShellPattern(line, className);
+        if (overlayShellPattern) {
+          overlayShellViolations.push({
+            ...overlayShellPattern,
+            file: rel,
+            line: i + 1,
+          });
+        }
+
         const patterns = extractSurfacePatterns(className);
         for (const pattern of patterns) {
           const occurrences = patternOccurrences.get(pattern) || [];
@@ -147,12 +190,32 @@ export function run() {
       messages.push(`  ... and ${duplicatePatterns.length - 5} more patterns`);
     }
   }
+  if (overlayShellViolations.length > 0) {
+    messages.push(`${c.red}Overlay/menu shell drift detected:${c.reset}`);
+    for (const { component, file, line, signature } of overlayShellViolations.slice(0, 5)) {
+      messages.push(
+        `  ${c.red}ERROR${c.reset} ${component} owns positioned shell chrome at ${file}:${line} (${signature})`,
+      );
+    }
+    if (overlayShellViolations.length > 5) {
+      messages.push(
+        `  ... and ${overlayShellViolations.length - 5} more overlay/menu shell violations`,
+      );
+    }
+  }
+
+  const errorCount = duplicatePatterns.length + overlayShellViolations.length;
+  const detailParts = [];
+  if (duplicatePatterns.length > 0)
+    detailParts.push(`${duplicatePatterns.length} repeated visual patterns`);
+  if (overlayShellViolations.length > 0) {
+    detailParts.push(`${overlayShellViolations.length} overlay/menu shell violations`);
+  }
 
   return {
-    passed: duplicatePatterns.length === 0,
-    errors: duplicatePatterns.length,
-    detail:
-      duplicatePatterns.length > 0 ? `${duplicatePatterns.length} repeated visual patterns` : null,
+    passed: errorCount === 0,
+    errors: errorCount,
+    detail: detailParts.length > 0 ? detailParts.join(", ") : null,
     messages,
   };
 }

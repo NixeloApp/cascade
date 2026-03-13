@@ -8,6 +8,7 @@
 
 "use client";
 
+import { cva, type VariantProps } from "class-variance-authority";
 import { Command as CommandPrimitive } from "cmdk";
 import { Search } from "lucide-react";
 import * as React from "react";
@@ -15,14 +16,23 @@ import { cardRecipeVariants } from "@/components/ui/Card";
 import { Dialog } from "@/components/ui/Dialog";
 import { cn } from "@/lib/utils";
 
-const Command = ({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) => (
-  <CommandPrimitive
-    className={cn(
-      "flex h-full w-full flex-col overflow-hidden bg-transparent text-ui-text",
-      className,
-    )}
-    {...props}
-  />
+const commandVariants = cva("flex h-full w-full flex-col overflow-hidden text-ui-text", {
+  variants: {
+    recipe: {
+      default: "bg-transparent",
+      suggestionMenu: "rounded-lg border border-ui-border bg-ui-bg-elevated shadow-elevated",
+    },
+  },
+  defaultVariants: {
+    recipe: "default",
+  },
+});
+
+type CommandProps = React.ComponentProps<typeof CommandPrimitive> &
+  VariantProps<typeof commandVariants>;
+
+const Command = ({ className, recipe, ...props }: CommandProps) => (
+  <CommandPrimitive className={cn(commandVariants({ recipe }), className)} {...props} />
 );
 Command.displayName = CommandPrimitive.displayName;
 

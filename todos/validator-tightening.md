@@ -78,6 +78,8 @@
 - Removed `ProjectSettings/GeneralSettings.tsx`, `ProjectSettings/MemberManagement.tsx`, and `ProjectSettings/WorkflowSettings.tsx` from the `check-recipe-drift.js` migration allowlist by replacing the last inline project-key surface in `GeneralSettings` with owned `Card` composition and confirming the other two files no longer define reusable inline surface recipes.
 - Removed `Plate/SlashMenu.tsx` from the `check-recipe-drift.js` migration allowlist by moving its popover shell behind an owned `Popover` recipe, reducing the recipe-drift allowlist to zero.
 - Removed the dead migration framing from `check-recipe-drift.js` now that the recipe-drift allowlist is at zero, so the validator reads and reports as direct ownership enforcement instead of temporary migration logic.
+- Expanded `check-recipe-drift.js` to block positioned command/menu shell chrome on feature-level `Command`, `PopoverContent`, and `DropdownMenuContent` usage when border/background/shadow/rounded shell styling is still defined inline instead of behind owned overlay primitives.
+- Added a `suggestionMenu` recipe to `ui/Command.tsx` and migrated `MentionInput.tsx` autocomplete to that owned recipe so command-surface chrome no longer lives inline in feature code.
 - Added `TimeTracking/TimeEntryModal.tsx` and `TimeTracking/UserRatesManagement.tsx` to design-system ownership targeting so future time-entry shell drift is validated directly.
 - Added `TimeTracking/ManualTimeEntryModal.tsx` to design-system ownership targeting so future manual-entry shell drift is validated directly.
 - Added `TimeTracking/TimeEntriesList.tsx` to design-system ownership targeting so future list-row shell drift is validated directly.
@@ -90,8 +92,8 @@
 
 ### Next batch
 
-- Tighten `check-recipe-drift.js` itself now that migration debt is gone.
-- Expand the detector so repeated command/overlay/menu shells are only valid behind owned primitives like `Popover`, `Dialog`, and shared menu surfaces rather than surviving as duplicate feature-level stacks.
+- Extend the same ownership tightening from command/menu shells to remaining floating product shells that still define their chrome inline, especially fixed or absolute panels such as onboarding widgets and toolbar overlays.
+- Prefer moving those shells behind owned `Card`, `Popover`, `Sheet`, or other overlay recipes instead of leaving one-off floating-surface contracts in feature code.
 
 ## Problem
 
