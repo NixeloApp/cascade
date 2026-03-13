@@ -12,9 +12,11 @@ import type { LabelInfo } from "@convex/lib/issueHelpers";
 import type { WorkflowState } from "@convex/shared/types";
 import { Maximize2, Minimize2, Plus } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { IconButton } from "@/components/ui/IconButton";
+import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import type { CardDisplayOptions } from "@/lib/card-display-utils";
@@ -159,43 +161,46 @@ const CollapsedColumn = memo(
       aria-label={`${state.name} column (collapsed)`}
       data-testid={TEST_IDS.BOARD.COLUMN}
       data-board-column
-      className={cn(
-        "flex flex-shrink-0 snap-start flex-col items-center rounded-container border border-ui-border-secondary/70 border-t-2 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft shadow-soft transition-default animate-slide-up w-11",
-        getWorkflowCategoryColor(state.category),
-        isDraggedOver && "ring-2 ring-brand/30 bg-brand/5",
-      )}
+      className="w-11 shrink-0 snap-start animate-slide-up"
       style={{
         animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2)}ms`,
       }}
     >
-      <Tooltip content={`Expand ${state.name}`}>
-        <IconButton
-          onClick={onToggleCollapse}
-          className="mt-2"
-          aria-label={`Expand ${state.name} column`}
-        >
-          <Maximize2 className="w-4 h-4" />
-        </IconButton>
-      </Tooltip>
-      <div
-        className="flex-1 flex items-center justify-center py-4"
-        style={{ writingMode: "vertical-lr" }}
+      <Card
+        recipe="kanbanColumnCollapsedShell"
+        className={cn(
+          getWorkflowCategoryColor(state.category),
+          isDraggedOver && "bg-brand/5 ring-2 ring-brand/30",
+        )}
       >
-        <Typography
-          variant="h3"
-          className="font-medium text-ui-text-secondary tracking-tight text-sm transform rotate-180"
-        >
-          {state.name}
-        </Typography>
-      </div>
-      <Badge
-        variant={isOverWipLimit ? "error" : isAtWipLimit ? "warning" : "neutral"}
-        shape="pill"
-        className="mb-3"
-      >
-        {stateIssues.length}
-        {state.wipLimit ? `/${state.wipLimit}` : ""}
-      </Badge>
+        <Flex direction="column" align="center" gap="sm" className="h-full">
+          <Tooltip content={`Expand ${state.name}`}>
+            <IconButton
+              onClick={onToggleCollapse}
+              size="xs"
+              aria-label={`Expand ${state.name} column`}
+            >
+              <Maximize2 className="h-4 w-4" />
+            </IconButton>
+          </Tooltip>
+          <Flex flex="1" align="center" justify="center" style={{ writingMode: "vertical-lr" }}>
+            <Typography
+              variant="h3"
+              className="text-sm font-medium tracking-tight text-ui-text-secondary"
+              style={{ transform: "rotate(180deg)" }}
+            >
+              {state.name}
+            </Typography>
+          </Flex>
+          <Badge
+            variant={isOverWipLimit ? "error" : isAtWipLimit ? "warning" : "neutral"}
+            shape="pill"
+          >
+            {stateIssues.length}
+            {state.wipLimit ? `/${state.wipLimit}` : ""}
+          </Badge>
+        </Flex>
+      </Card>
     </section>
   ),
 );
@@ -228,10 +233,7 @@ const ColumnHeader = memo(
     onToggleCollapse?: () => void;
     onCreateIssue?: () => void;
   }) => (
-    <div
-      data-testid={TEST_IDS.BOARD.COLUMN_HEADER}
-      className="rounded-t-container border-b border-ui-border-secondary/70 bg-ui-bg-elevated/88 p-1.5 shadow-soft sm:p-4"
-    >
+    <Card data-testid={TEST_IDS.BOARD.COLUMN_HEADER} recipe="kanbanColumnHeader">
       <Flex align="center" justify="between" gap="xs">
         <Flex align="center" gap="xs" className="min-w-0">
           <Typography
@@ -263,7 +265,7 @@ const ColumnHeader = memo(
               <IconButton
                 onClick={onToggleCollapse}
                 aria-label={`Collapse ${state.name} column`}
-                className="h-6 w-6 sm:h-8 sm:w-8"
+                size="xs"
               >
                 <Minimize2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               </IconButton>
@@ -274,7 +276,7 @@ const ColumnHeader = memo(
               <IconButton
                 onClick={onCreateIssue}
                 aria-label={`Add issue to ${state.name}`}
-                className="h-6 w-6 sm:h-8 sm:w-8"
+                size="xs"
                 {...(columnIndex === 0 ? { "data-tour": "create-issue" } : {})}
               >
                 <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -283,7 +285,7 @@ const ColumnHeader = memo(
           )}
         </Flex>
       </Flex>
-    </div>
+    </Card>
   ),
 );
 ColumnHeader.displayName = "ColumnHeader";
@@ -293,36 +295,18 @@ ColumnHeader.displayName = "ColumnHeader";
  */
 const EmptyColumnState = memo(
   ({ canEdit, onCreateIssue }: { canEdit: boolean; onCreateIssue?: () => void }) => (
-    <Flex
-      direction="column"
-      align="center"
-      justify="center"
-      className="flex-1 rounded-2xl border border-dashed border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated to-ui-bg-soft px-5 py-8 text-center shadow-card"
-    >
-      <div className="mb-4 inline-flex items-center rounded-full border border-ui-border/70 bg-ui-bg-soft px-3 py-1 text-xs font-medium uppercase tracking-wider text-ui-text-tertiary">
-        Empty column
-      </div>
-      <Flex
-        align="center"
-        justify="center"
-        className="mb-4 h-12 w-12 rounded-full border border-ui-border-secondary/70 bg-ui-bg-elevated shadow-soft"
-      >
-        <Plus className="h-5 w-5 text-ui-text-tertiary" />
-      </Flex>
-      <Typography variant="large" className="mb-1">
-        No issues yet
-      </Typography>
-      <Typography variant="small" color="secondary" className="max-w-48">
-        {canEdit && onCreateIssue
+    <EmptyState
+      icon={Plus}
+      title="No issues yet"
+      description={
+        canEdit && onCreateIssue
           ? "Drop issues here or use the add button to start this stage."
-          : "This stage is clear right now."}
-      </Typography>
-      {canEdit && onCreateIssue ? (
-        <Button variant="secondary" size="sm" onClick={onCreateIssue} className="mt-5">
-          Add first issue
-        </Button>
-      ) : null}
-    </Flex>
+          : "This stage is clear right now."
+      }
+      action={
+        canEdit && onCreateIssue ? { label: "Add first issue", onClick: onCreateIssue } : undefined
+      }
+    />
   ),
 );
 EmptyColumnState.displayName = "EmptyColumnState";
@@ -494,76 +478,73 @@ const KanbanColumnComponent = function KanbanColumn({
       aria-label={`${state.name} column`}
       data-testid={TEST_IDS.BOARD.COLUMN}
       data-board-column
-      className={cn(
-        "w-72 flex-shrink-0 snap-start rounded-container border border-ui-border-secondary/70 border-t-2 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft shadow-soft transition-default animate-slide-up lg:w-80",
-        getWorkflowCategoryColor(state.category),
-        isDraggedOver && "ring-2 ring-brand/30 bg-brand/5",
-        isOverWipLimit && "border-status-error/50 bg-status-error/5",
-        isAtWipLimit && !isOverWipLimit && "border-status-warning/50",
-      )}
+      className="w-72 shrink-0 snap-start animate-slide-up lg:w-80"
       style={{
         animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2)}ms`,
       }}
     >
-      <ColumnHeader
-        state={state}
-        stateIssues={stateIssues}
-        hiddenCount={hiddenCount}
-        totalCount={totalCount}
-        isOverWipLimit={isOverWipLimit}
-        isAtWipLimit={isAtWipLimit}
-        canEdit={canEdit}
-        columnIndex={columnIndex}
-        onToggleCollapse={collapseHandler}
-        onCreateIssue={createIssueHandler}
-      />
+      <Card
+        recipe="kanbanColumnShell"
+        className={cn(
+          "h-full",
+          getWorkflowCategoryColor(state.category),
+          isDraggedOver && "bg-brand/5 ring-2 ring-brand/30",
+          isOverWipLimit && "border-status-error/50 bg-status-error/5",
+          isAtWipLimit && !isOverWipLimit && "border-status-warning/50",
+        )}
+      >
+        <ColumnHeader
+          state={state}
+          stateIssues={stateIssues}
+          hiddenCount={hiddenCount}
+          totalCount={totalCount}
+          isOverWipLimit={isOverWipLimit}
+          isAtWipLimit={isAtWipLimit}
+          canEdit={canEdit}
+          columnIndex={columnIndex}
+          onToggleCollapse={collapseHandler}
+          onCreateIssue={createIssueHandler}
+        />
 
-      {/* Issues */}
-      <div className="flex min-h-52 flex-col space-y-1 p-0.75 transition-default sm:min-h-56 sm:space-y-1.5 sm:p-2 lg:min-h-96 lg:space-y-2 lg:p-2.5">
-        {showEmptyState ? (
-          <EmptyColumnState canEdit={canEdit} onCreateIssue={createIssueHandler} />
-        ) : (
-          <>
-            {stateIssues.map((issue, issueIndex) => (
-              <KanbanIssueItem
-                key={issue._id}
-                issue={issue}
-                columnIndex={columnIndex}
-                index={issueIndex}
-                onClick={onIssueClick}
-                selectionMode={selectionMode}
-                isSelected={selectedIssueIds.has(issue._id)}
-                isFocused={issue._id === focusedIssueId}
-                onToggleSelect={onToggleSelect}
-                canEdit={canEdit}
-                displayOptions={displayOptions}
-              />
-            ))}
+        <Card recipe="kanbanColumnBody">
+          {showEmptyState ? (
+            <Flex flex="1">
+              <EmptyColumnState canEdit={canEdit} onCreateIssue={createIssueHandler} />
+            </Flex>
+          ) : (
+            <Stack gap="sm">
+              {stateIssues.map((issue, issueIndex) => (
+                <KanbanIssueItem
+                  key={issue._id}
+                  issue={issue}
+                  columnIndex={columnIndex}
+                  index={issueIndex}
+                  onClick={onIssueClick}
+                  selectionMode={selectionMode}
+                  isSelected={selectedIssueIds.has(issue._id)}
+                  isFocused={issue._id === focusedIssueId}
+                  onToggleSelect={onToggleSelect}
+                  canEdit={canEdit}
+                  displayOptions={displayOptions}
+                />
+              ))}
 
-            {/* Load More Button for done columns with hidden items */}
-            {onLoadMore && hiddenCount > 0 && (
-              <div className="pt-2">
+              {onLoadMore && hiddenCount > 0 && (
                 <LoadMoreButton
                   onClick={handleLoadMore}
                   isLoading={isLoadingMore}
                   remainingCount={hiddenCount}
                   className="w-full"
                 />
-              </div>
-            )}
+              )}
 
-            {/* Pagination info when there are hidden items */}
-            {hiddenCount > 0 && (
-              <PaginationInfo
-                loaded={stateIssues.length}
-                total={totalCount}
-                itemName="issues"
-                className="text-center pt-1"
-              />
-            )}
-          </>
-        )}
-      </div>
+              {hiddenCount > 0 && (
+                <PaginationInfo loaded={stateIssues.length} total={totalCount} itemName="issues" />
+              )}
+            </Stack>
+          )}
+        </Card>
+      </Card>
     </section>
   );
 };

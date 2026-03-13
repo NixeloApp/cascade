@@ -235,6 +235,13 @@ const cardRecipeVariants = cva("", {
         "rounded-none border-transparent bg-transparent px-2 py-2 shadow-none",
       calendarViewSwitcherBar:
         "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",
+      kanbanColumnShell:
+        "overflow-hidden rounded-container border-ui-border-secondary/70 border-t-2 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft shadow-soft",
+      kanbanColumnCollapsedShell:
+        "h-full overflow-hidden rounded-container border-ui-border-secondary/70 border-t-2 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft p-2 pb-3 shadow-soft",
+      kanbanColumnHeader:
+        "rounded-none border-x-0 border-t-0 border-b border-ui-border-secondary/70 bg-ui-bg-elevated/88 p-1.5 shadow-soft sm:p-4",
+      kanbanColumnBody: "flex min-h-52 flex-col p-0.75 sm:min-h-56 sm:p-2 lg:min-h-96 lg:p-2.5",
       kanbanBoardRail:
         "overflow-x-auto overscroll-x-contain snap-x snap-mandatory px-2 pb-3 scroll-px-2 sm:snap-none sm:px-4 lg:px-6",
       kanbanSwimlaneWrapper: "px-4 pb-6 lg:px-6",
