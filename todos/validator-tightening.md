@@ -254,7 +254,9 @@
   - `Onboarding/ProjectWizard.tsx`
   - `Onboarding/RoleSelector.tsx`
   - `Onboarding/SampleProjectModal.tsx`
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on burning down the new explicit onboarding debt first, then tightening the remaining intentional islands and broad directory escape hatches rather than adding new ad hoc exemptions.
+- Removed `Onboarding/FeatureHighlights.tsx`, `Onboarding/InvitedWelcome.tsx`, and `Onboarding/RoleSelector.tsx` from the raw-Tailwind and interactive-state migration debt lists by moving their feature cards, invite hero/panel shells, and role-selection surfaces onto owned `Card`, `Button`, `Stack`, and `Typography` primitives instead of local shell and hover stacks.
+- Added `Onboarding/FeatureHighlights.tsx`, `Onboarding/InvitedWelcome.tsx`, and `Onboarding/RoleSelector.tsx` to design-system ownership targeting so future onboarding surface drift in those entry points is blocked directly.
+- Keep burning down the remaining explicit onboarding debt next, with `LeadOnboarding.tsx`, `ProjectWizard.tsx`, and `MemberOnboarding.tsx` first, then `OnboardingChecklist.tsx` and `SampleProjectModal.tsx`.
 
 ## Problem
 

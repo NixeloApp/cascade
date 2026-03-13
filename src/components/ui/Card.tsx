@@ -131,6 +131,33 @@ const cardRecipeVariants = cva("", {
       metricTileWarning:
         "rounded-2xl border-status-warning/30 bg-linear-to-b from-status-warning-bg via-ui-bg-elevated/96 to-ui-bg-soft/82 shadow-card",
       successCallout: "rounded-lg border-status-success/20 bg-status-success-bg shadow-none",
+      onboardingFeatureCard:
+        "rounded-container border-ui-border bg-ui-bg-soft text-center shadow-none hover:border-ui-border-secondary hover:shadow-card-hover",
+      onboardingFeatureIconBrand:
+        "rounded-xl border-transparent bg-brand-subtle text-brand shadow-none",
+      onboardingFeatureIconSuccess:
+        "rounded-xl border-transparent bg-status-success-bg text-status-success shadow-none",
+      onboardingFeatureIconWarning:
+        "rounded-xl border-transparent bg-status-warning-bg text-status-warning shadow-none",
+      onboardingInviteHero:
+        "rounded-full border-transparent bg-brand-subtle text-brand shadow-none ring-8 ring-brand/10",
+      onboardingInviteHeroBadge:
+        "rounded-full border-transparent bg-status-success text-brand-foreground shadow-none ring-4 ring-ui-bg-secondary",
+      onboardingInvitePanel: "rounded-container border-ui-border bg-ui-bg-soft shadow-none",
+      onboardingInviteBullet:
+        "rounded-full border-transparent bg-brand-subtle text-brand shadow-none",
+      onboardingRoleCard:
+        "rounded-container border-2 border-ui-border bg-ui-bg shadow-none hover:-translate-y-1 hover:border-ui-border-secondary hover:shadow-card-hover",
+      onboardingRoleCardSelected:
+        "rounded-container border-2 border-brand bg-brand-subtle/50 shadow-card ring-4 ring-brand/10",
+      onboardingRoleIndicator:
+        "rounded-full border-2 border-ui-border-secondary bg-transparent shadow-none group-hover:border-brand-muted",
+      onboardingRoleIndicatorSelected:
+        "rounded-full border-transparent bg-brand text-brand-foreground shadow-none",
+      onboardingRoleIconShell:
+        "rounded-xl border-transparent bg-ui-bg-tertiary text-ui-text-secondary shadow-none group-hover:scale-105 group-hover:bg-brand-subtle group-hover:text-brand",
+      onboardingRoleIconShellSelected:
+        "rounded-xl border-transparent bg-brand text-brand-foreground shadow-none",
 
       // Header control surfaces
       controlRail:
