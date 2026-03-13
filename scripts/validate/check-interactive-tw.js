@@ -42,7 +42,6 @@ const ALLOWED_FILES = [
   // Calendar
   "Calendar/",
   "IssuesCalendarView.tsx",
-  "RoadmapView.tsx",
   // Sprint components
   "Sprint",
   // Onboarding

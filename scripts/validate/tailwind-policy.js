@@ -35,7 +35,6 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   "/layout/PageHeader.tsx",
   "/layout/PageLayout.tsx",
   "/PlateEditor.tsx",
-  "/RoadmapView.tsx",
   "/SprintManager.tsx",
   "/SprintProgressBar.tsx",
   "/SprintWorkload.tsx",

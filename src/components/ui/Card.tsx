@@ -121,6 +121,15 @@ const cardRecipeVariants = cva("", {
         "rounded-full border-ui-border-secondary/70 bg-linear-to-r from-ui-bg-elevated/96 via-ui-bg-elevated/94 to-ui-bg-soft/90 shadow-card backdrop-blur-xl",
       controlStrip:
         "rounded-full border-ui-border-secondary/70 bg-ui-bg-elevated/94 shadow-soft backdrop-blur-sm",
+      roadmapRow:
+        "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-transparent shadow-none hover:bg-ui-bg-secondary",
+      roadmapRowSelected:
+        "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-brand-subtle/50 shadow-none ring-1 ring-inset ring-brand-ring/50",
+      roadmapTimelineBar: "rounded-full border-transparent shadow-none opacity-80",
+      roadmapTimelineBarActive:
+        "rounded-full border-transparent shadow-none opacity-100 ring-2 ring-brand-ring",
+      roadmapMonthHeaderCell:
+        "rounded-none border-y-0 border-r-0 border-l border-ui-border bg-transparent px-2 py-0 shadow-none",
       notificationPanelHeader:
         "sticky top-0 rounded-t-lg border-x-0 border-t-0 bg-ui-bg shadow-none",
       notificationPanelSectionHeader:
