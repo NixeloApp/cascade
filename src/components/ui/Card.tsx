@@ -144,6 +144,14 @@ const cardRecipeVariants = cva("", {
       roadmapTimelineBar: "rounded-full border-transparent shadow-none opacity-80",
       roadmapTimelineBarActive:
         "rounded-full border-transparent shadow-none opacity-100 ring-2 ring-brand-ring",
+      roadmapTimelineBarSprint:
+        "rounded-full border-transparent bg-accent-ring px-2 text-xs font-medium text-brand-foreground shadow-none",
+      roadmapTimelineBarHigh:
+        "rounded-full border-transparent bg-status-error px-2 text-xs font-medium text-brand-foreground shadow-none",
+      roadmapTimelineBarMedium:
+        "rounded-full border-transparent bg-status-warning px-2 text-xs font-medium text-brand-foreground shadow-none",
+      roadmapTimelineBarLow:
+        "rounded-full border-transparent bg-brand-ring px-2 text-xs font-medium text-brand-foreground shadow-none",
       roadmapMonthHeaderCell:
         "rounded-none border-y-0 border-r-0 border-l border-ui-border bg-transparent px-2 py-0 shadow-none",
       notificationPanelHeader:
@@ -235,6 +243,21 @@ const cardRecipeVariants = cva("", {
         "rounded-none border-transparent bg-transparent px-2 py-2 shadow-none",
       calendarViewSwitcherBar:
         "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",
+      calendarRoadmapShell: "h-full rounded-none border-transparent bg-ui-bg shadow-none",
+      calendarRoadmapHeader:
+        "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",
+      calendarRoadmapTimelineHeader:
+        "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg-secondary shadow-none",
+      calendarRoadmapItemHeader:
+        "w-40 shrink-0 rounded-none border-y-0 border-l-0 border-r border-ui-border bg-transparent px-2 py-2 shadow-none sm:w-48 sm:px-3 sm:py-3 md:w-64",
+      calendarRoadmapDateHeader:
+        "rounded-none border-y-0 border-r border-l-0 border-ui-border bg-transparent px-2 py-2 shadow-none sm:px-3 sm:py-3",
+      calendarRoadmapItemInfo:
+        "w-40 shrink-0 rounded-none border-y-0 border-l-0 border-r border-ui-border bg-transparent px-2 py-2 shadow-none sm:w-48 sm:px-3 sm:py-3 md:w-64",
+      calendarRoadmapTimelineCell:
+        "h-full rounded-none border-y-0 border-r border-l-0 border-ui-border bg-transparent shadow-none",
+      calendarRoadmapBarLane:
+        "absolute inset-y-0 rounded-none border-transparent bg-transparent px-2 shadow-none",
       kanbanColumnShell:
         "overflow-hidden rounded-container border-ui-border-secondary/70 border-t-2 bg-linear-to-b from-ui-bg-elevated to-ui-bg-soft shadow-soft",
       kanbanColumnCollapsedShell:

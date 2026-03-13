@@ -14,7 +14,6 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
 export const RAW_TAILWIND_ALLOWED_FILES = [
   // Explicit migration-debt exemptions replacing broad Settings/Admin/ProjectSettings directory escapes.
   "/BulkOperationsBar.tsx",
-  "/Calendar/RoadmapView.tsx",
 ];
 
 export const RAW_TAILWIND_ALLOWED_EXTENSIONS = [".stories.tsx", ".test.tsx", ".example.tsx"];
@@ -75,6 +74,7 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/CommentReactions.tsx",
   "/CommentRenderer.tsx",
   "/Calendar/EventDetailsModal.tsx",
+  "/Calendar/RoadmapView.tsx",
   "/FuzzySearch/FuzzySearchInput.tsx",
   "/FilterBar.tsx",
   "/Landing/HeroSection.tsx",

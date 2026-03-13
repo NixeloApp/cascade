@@ -11,14 +11,17 @@ import type { Id } from "@convex/_generated/dataModel";
 import { DAY } from "@convex/lib/timeUtils";
 import type { FunctionReturnType } from "convex/server";
 import { useMemo, useState } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { ChevronLeft, ChevronRight } from "@/lib/icons";
-import { cn } from "@/lib/utils";
+import { CalendarDays, ChevronLeft, ChevronRight } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
+import { IconButton } from "../ui/IconButton";
 import { ResponsiveText } from "../ui/ResponsiveText";
+import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
 
 interface RoadmapViewProps {
   projectId: Id<"projects">;
@@ -45,6 +48,12 @@ type IssueRoadmapItem = BaseRoadmapItem & {
 };
 
 type RoadmapItem = SprintRoadmapItem | IssueRoadmapItem;
+
+const TIME_SCALE_OPTIONS: Array<{ value: TimeScale; short: string; long: string }> = [
+  { value: "week", short: "W", long: "Week" },
+  { value: "month", short: "M", long: "Month" },
+  { value: "quarter", short: "Q", long: "Quarter" },
+];
 
 /**
  * Timeline/Gantt-style roadmap view showing issues and sprints on a timeline.
@@ -137,6 +146,12 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
     setCurrentDate(new Date());
   };
 
+  const handleTimeScaleChange = (value: string) => {
+    if (value === "week" || value === "month" || value === "quarter") {
+      setTimeScale(value);
+    }
+  };
+
   const getHeaderText = () => {
     if (timeScale === "week") {
       const endOfWeek = new Date(startDate.getTime() + 6 * DAY);
@@ -150,168 +165,147 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
   };
 
   return (
-    <Flex direction="column" className="h-full bg-ui-bg">
+    <Card recipe="calendarRoadmapShell">
       {/* Header */}
-      <div className="border-b border-ui-border p-3 sm:p-4">
+      <Card recipe="calendarRoadmapHeader" padding="sm" radius="none">
         <Flex
           direction="column"
+          directionSm="row"
           gap="md"
+          gapSm="lg"
           align="stretch"
+          alignSm="center"
           justify="between"
-          className="sm:flex-row sm:items-center sm:gap-4"
         >
-          <Flex gap="sm" align="center" className="sm:gap-4">
+          <Flex gap="sm" gapSm="lg" align="center">
             <Button variant="secondary" size="sm" onClick={handleToday}>
               Today
             </Button>
-            <Flex gap="xs" align="center" className="sm:gap-2">
-              <Button
+            <Flex gap="xs" gapSm="sm" align="center">
+              <IconButton
                 variant="ghost"
-                size="icon"
+                size="sm"
                 onClick={handlePrevious}
-                className="h-8 w-8"
                 aria-label={`Previous ${getTimeScaleLabel()}`}
               >
-                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-              </Button>
-              <Button
+                <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+              </IconButton>
+              <IconButton
                 variant="ghost"
-                size="icon"
+                size="sm"
                 onClick={handleNext}
-                className="h-8 w-8"
                 aria-label={`Next ${getTimeScaleLabel()}`}
               >
-                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-              </Button>
+                <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
+              </IconButton>
             </Flex>
-            <Typography
-              variant="h2"
-              className="text-base sm:text-lg font-semibold text-ui-text truncate"
-            >
+            <Typography variant="h2" className="truncate">
               {getHeaderText()}
             </Typography>
           </Flex>
 
           {/* Time Scale Toggle */}
-          <Flex
-            className="border border-ui-border rounded-md shrink-0"
-            role="group"
+          <SegmentedControl
+            value={timeScale}
+            onValueChange={handleTimeScaleChange}
+            variant="outline"
+            size="sm"
             aria-label="Time scale"
           >
-            <Button
-              variant={timeScale === "week" ? "primary" : "ghost"}
-              size="sm"
-              onClick={() => setTimeScale("week")}
-              className="rounded-r-none border-r border-ui-border"
-              aria-pressed={timeScale === "week"}
-            >
-              <ResponsiveText short="W" long="Week" />
-            </Button>
-            <Button
-              variant={timeScale === "month" ? "primary" : "ghost"}
-              size="sm"
-              onClick={() => setTimeScale("month")}
-              className="rounded-none border-r border-ui-border"
-              aria-pressed={timeScale === "month"}
-            >
-              <ResponsiveText short="M" long="Month" />
-            </Button>
-            <Button
-              variant={timeScale === "quarter" ? "primary" : "ghost"}
-              size="sm"
-              onClick={() => setTimeScale("quarter")}
-              className="rounded-l-none"
-              aria-pressed={timeScale === "quarter"}
-            >
-              <ResponsiveText short="Q" long="Quarter" />
-            </Button>
-          </Flex>
+            {TIME_SCALE_OPTIONS.map((option) => (
+              <SegmentedControlItem
+                key={option.value}
+                value={option.value}
+                aria-label={option.long}
+              >
+                <ResponsiveText short={option.short} long={option.long} />
+              </SegmentedControlItem>
+            ))}
+          </SegmentedControl>
         </Flex>
-      </div>
+      </Card>
 
       {/* Roadmap Grid */}
       <FlexItem flex="1" className="overflow-auto">
         <div className="min-w-max">
           {/* Timeline Header */}
-          <div className="sticky top-0 z-10 bg-ui-bg-secondary border-b border-ui-border">
+          <Card recipe="calendarRoadmapTimelineHeader" className="sticky top-0 z-10">
             <Flex>
-              <Typography
-                variant="label"
-                className="w-40 sm:w-48 md:w-64 shrink-0 p-2 sm:p-3 border-r border-ui-border text-ui-text"
-              >
-                Item
-              </Typography>
+              <Card recipe="calendarRoadmapItemHeader">
+                <Typography variant="label">Item</Typography>
+              </Card>
               <FlexItem flex="1">
                 <Flex>
                   {columns.map((col) => (
                     <FlexItem key={col.date.getTime()} flex="1">
-                      <Typography
-                        variant="label"
-                        className="p-2 sm:p-3 border-r border-ui-border text-center text-ui-text"
-                      >
-                        {col.label}
-                      </Typography>
+                      <Card recipe="calendarRoadmapDateHeader">
+                        <Typography className="text-center" variant="label">
+                          {col.label}
+                        </Typography>
+                      </Card>
                     </FlexItem>
                   ))}
                 </Flex>
               </FlexItem>
             </Flex>
-          </div>
+          </Card>
 
           {/* Roadmap Items */}
           {sortedItems.length === 0 ? (
-            <Typography variant="muted" className="p-4 sm:p-8 text-center">
-              No items with dates found. Add due dates to issues or create sprints to see them here.
-            </Typography>
+            <EmptyState
+              icon={CalendarDays}
+              title="No roadmap items yet"
+              description="Add due dates to issues or create dated sprints to see them here."
+              size="compact"
+              surface="bare"
+            />
           ) : (
-            <ul className="list-none p-0 m-0">
+            <ul className="list-none" style={{ margin: 0, padding: 0 }}>
               {sortedItems.map((item) => (
-                <Flex as="li" className="border-b border-ui-border" key={`${item.type}-${item.id}`}>
-                  {/* Item Info */}
-                  <FlexItem
-                    shrink={false}
-                    className="w-40 sm:w-48 md:w-64 p-2 sm:p-3 border-r border-ui-border"
-                  >
-                    <Flex gap="xs" align="center" className="sm:gap-2">
-                      {item.type === "sprint" ? (
-                        <Badge variant="accent" size="md">
-                          Sprint
-                        </Badge>
-                      ) : (
-                        <Badge variant={getIssueTypeVariant(item.issueType)} size="md">
-                          {item.issueType}
-                        </Badge>
-                      )}
-                    </Flex>
-                    <Typography variant="label" className="text-ui-text mt-1 truncate">
-                      {item.title}
-                    </Typography>
-                  </FlexItem>
+                <li key={`${item.type}-${item.id}`}>
+                  <Card recipe={item.type === "sprint" ? "roadmapRowSelected" : "roadmapRow"}>
+                    <Flex>
+                      <Card recipe="calendarRoadmapItemInfo">
+                        <Flex direction="column" gap="xs">
+                          {item.type === "sprint" ? (
+                            <Badge variant="accent" size="md">
+                              Sprint
+                            </Badge>
+                          ) : (
+                            <Badge variant={getIssueTypeVariant(item.issueType)} size="md">
+                              {item.issueType}
+                            </Badge>
+                          )}
+                          <Typography variant="label" className="truncate">
+                            {item.title}
+                          </Typography>
+                        </Flex>
+                      </Card>
 
-                  {/* Timeline Bar */}
-                  <FlexItem flex="1" className="relative">
-                    <Flex className="absolute inset-0">
-                      {columns.map((col) => (
-                        <FlexItem
-                          key={col.date.getTime()}
-                          flex="1"
-                          className="border-r border-ui-border"
-                        />
-                      ))}
-                    </Flex>
+                      {/* Timeline Bar */}
+                      <FlexItem flex="1" className="relative">
+                        <Flex className="absolute inset-0">
+                          {columns.map((col) => (
+                            <FlexItem key={col.date.getTime()} flex="1">
+                              <Card recipe="calendarRoadmapTimelineCell" />
+                            </FlexItem>
+                          ))}
+                        </Flex>
 
-                    {/* Date Bar */}
-                    <Flex align="center" className="absolute inset-y-0 px-2">
-                      {renderDateBar(item, startDate, endDate)}
+                        {/* Date Bar */}
+                        <Card recipe="calendarRoadmapBarLane" className="w-full">
+                          {renderDateBar(item, startDate, endDate)}
+                        </Card>
+                      </FlexItem>
                     </Flex>
-                  </FlexItem>
-                </Flex>
+                  </Card>
+                </li>
               ))}
             </ul>
           )}
         </div>
       </FlexItem>
-    </Flex>
+    </Card>
   );
 }
 
@@ -339,25 +333,12 @@ function renderDateBar(
   const leftPercent = ((itemStartTime - rangeStartTime) / rangeDuration) * 100;
   const widthPercent = ((itemEndTime - itemStartTime) / rangeDuration) * 100;
 
-  const color =
-    item.type === "sprint"
-      ? "bg-accent-ring"
-      : item.priority === "highest" || item.priority === "high"
-        ? "bg-status-error"
-        : item.priority === "medium"
-          ? "bg-status-warning"
-          : "bg-brand-ring";
-
   const dateRangeLabel = `${itemStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${itemEnd.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
 
   return (
-    <Flex
-      align="center"
-      justify="center"
-      className={cn(
-        color,
-        "rounded-full h-6 text-brand-foreground text-xs font-medium overflow-hidden whitespace-nowrap px-2",
-      )}
+    <Card
+      recipe={getRoadmapBarRecipe(item)}
+      className="h-6 overflow-hidden whitespace-nowrap"
       style={{
         marginLeft: `${leftPercent}%`,
         width: `${widthPercent}%`,
@@ -365,8 +346,10 @@ function renderDateBar(
       }}
       title={dateRangeLabel}
     >
-      {dateRangeLabel}
-    </Flex>
+      <Typography className="truncate text-brand-foreground text-center" variant="small">
+        {dateRangeLabel}
+      </Typography>
+    </Card>
   );
 }
 
@@ -476,4 +459,28 @@ function getIssueTypeVariant(
     default:
       return "neutral";
   }
+}
+
+function getRoadmapBarRecipe(item: {
+  [key: string]: unknown;
+  type?: unknown;
+  priority?: unknown;
+}):
+  | "roadmapTimelineBarSprint"
+  | "roadmapTimelineBarHigh"
+  | "roadmapTimelineBarMedium"
+  | "roadmapTimelineBarLow" {
+  if (item.type === "sprint") {
+    return "roadmapTimelineBarSprint";
+  }
+
+  if (item.priority === "highest" || item.priority === "high") {
+    return "roadmapTimelineBarHigh";
+  }
+
+  if (item.priority === "medium") {
+    return "roadmapTimelineBarMedium";
+  }
+
+  return "roadmapTimelineBarLow";
 }
