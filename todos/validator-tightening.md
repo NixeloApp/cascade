@@ -139,12 +139,14 @@
 - Removed `App/AppSidebar.tsx` from the raw-Tailwind and interactive-state debt lists by moving the sidebar shell, header/footer rails, primary nav icon shells, section toggles, and collapsible section icon chrome onto owned `Card` recipes and shared `IconButton` sizing instead of inline navigation shell classes.
 - Added `App/AppSidebar.tsx` to design-system ownership targeting so future shared-navigation shell drift is blocked directly.
 - Removed `GlobalSearch.tsx` from the raw-Tailwind and interactive-state debt lists by moving its loading, empty, intro, pagination, and footer shells onto owned `Card`, `LoadingSpinner`, `KeyboardShortcut`, and `Button` composition instead of raw search-surface padding, flex, and hover classes.
+- Removed `FilterBar.tsx` from the raw-Tailwind and interactive-state debt lists by moving its filter bar shell onto an owned `Card` recipe, collapsing the saved-filter row interaction onto owned `DropdownMenuItem` and `IconButton` primitives, and replacing the date-menu padding shell with owned `Card` composition.
+- Added `FilterBar.tsx` to design-system ownership targeting so future search/filter shell drift is blocked directly.
 
 ### Next batch
 
 - Continue shrinking the explicit `AI` debt now that the broad directory escapes are gone.
 - The explicit `AI` raw-Tailwind debt list is now empty.
-- Keep working through smaller helper controls and shared reveal surfaces rather than decorative backdrops, with the next pass focused on `FilterBar.tsx`, which is now the next high-impact shared search/filter surface still sitting behind explicit raw-Tailwind and interactive-state debt.
+- Keep working through smaller helper controls and shared search surfaces rather than decorative backdrops, with the next pass focused on `AdvancedSearchModal.tsx`, which is now the next high-impact shared search/filter surface still sitting behind explicit raw-Tailwind and interactive-state debt.
 
 ## Problem
 
