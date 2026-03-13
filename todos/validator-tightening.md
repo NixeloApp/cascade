@@ -326,6 +326,7 @@
 - Tightened `check-colors.js` again by removing stale hardcoded-color exemptions for `Landing/Icons.tsx`, `LabelsManager.tsx`, `Settings/DevToolsTab.tsx`, and `AI/config.ts`, and moved `LabelsManager.tsx` onto the shared `COLORS.DEFAULT_LABEL` runtime constant so that product-surface color debt keeps shrinking instead of hiding in per-file exceptions.
 - Removed `Auth/GoogleAuthButton.tsx` from the hardcoded-color allowlist by moving the Google mark off inline hex fills and onto explicit provider color tokens in `src/index.css`, so product-surface color debt is no longer hiding in auth components either.
 - Cleared the last two standing Biome complexity warnings that were still polluting the validator/check path by extracting the records/filter rendering out of `Admin/HourComplianceDashboard.tsx` and splitting `Onboarding/LeadOnboarding.tsx` into step components instead of keeping all onboarding branches in one function.
+- Tightened `check-colors.js` further by replacing the broad `convex/http/` hardcoded-color escape hatch with explicit OAuth HTML handler files only, dropping the redundant `convex/labels.test.ts` entry, and removing `convex/schema.ts` from the allowlist after cleaning its inline hex example comment.
 - The embedded calendar island is now narrowed from directory-wide escape hatches to explicit file debt. Burn that list down surface by surface instead of allowing new embedded drift by default.
 
 ## Problem

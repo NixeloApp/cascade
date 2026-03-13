@@ -20,19 +20,18 @@ export function run() {
     "src/components/ui/ColorPicker.test.tsx",
     "src/components/Plate/ColorPickerButton.tsx", // Text color picker for Plate editor
     "src/index.css",
-    "convex/http/",
+    "convex/http/githubOAuth.ts",
+    "convex/http/googleOAuth.ts",
     "convex/pumble.ts",
     "convex/invites.ts",
     "convex/bookingPages.ts",
     "convex/projectTemplates.ts",
     "convex/onboarding.ts",
-    "convex/schema.ts",
     "convex/lib/issueHelpers.ts",
     "src/lib/constants.ts", // Runtime color constants (hex strings for database storage)
     "src/lib/yjs/", // Y.js collaboration cursor colors (dynamic per-user)
     "*.test.ts",
     "*.test.tsx",
-    "convex/labels.test.ts",
   ];
 
   const SEMANTIC_PREFIXES = [
