@@ -74,6 +74,7 @@
 - Removed `Settings/AvatarUploadModal.tsx` and `Settings/ProfileContent.tsx` from the `check-recipe-drift.js` migration allowlist after confirming their remaining classes are layout/adornment-only and no longer define reusable surface recipes outside owned primitives.
 - Removed `Dashboard/RecentActivity.tsx` and `Dashboard/WorkspacesList.tsx` from the `check-recipe-drift.js` migration allowlist after confirming their remaining classes are owned-card composition, spacing, and label adornment only rather than reusable inline surface recipes.
 - Removed `Calendar/CreateEventModal.tsx` and `Settings/LinkedRepositories.tsx` from the `check-recipe-drift.js` migration allowlist by dropping the last local select-trigger surface override in `CreateEventModal` and confirming `LinkedRepositories` no longer defines reusable inline surface recipes outside owned primitives.
+- Removed `Settings/PumbleIntegration.tsx` and `TimeTracker/BillingReport.tsx` from the `check-recipe-drift.js` migration allowlist after confirming their remaining classes are owned-primitives composition, spacing, and typography only rather than inline reusable surface recipes.
 - Added `TimeTracking/TimeEntryModal.tsx` and `TimeTracking/UserRatesManagement.tsx` to design-system ownership targeting so future time-entry shell drift is validated directly.
 - Added `TimeTracking/ManualTimeEntryModal.tsx` to design-system ownership targeting so future manual-entry shell drift is validated directly.
 - Added `TimeTracking/TimeEntriesList.tsx` to design-system ownership targeting so future list-row shell drift is validated directly.
@@ -87,7 +88,7 @@
 ### Next batch
 
 - Keep shrinking the remaining `check-recipe-drift.js` migration allowlist.
-- `Settings/PumbleIntegration.tsx` and `TimeTracker/BillingReport.tsx` are the next remaining explicit recipe-drift exemptions and should be burned down so the allowlist keeps shrinking.
+- `ProjectSettings/GeneralSettings.tsx`, `ProjectSettings/MemberManagement.tsx`, and `ProjectSettings/WorkflowSettings.tsx` are the next remaining product-surface recipe-drift exemptions and should be burned down so only the truly complex `Plate/SlashMenu.tsx` overlay remains.
 
 ## Problem
 

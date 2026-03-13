@@ -33,9 +33,6 @@ const ALLOWED_FILES = [
   "ProjectSettings/WorkflowSettings.tsx",
   // Modal/overlay surfaces - need recipe extraction
   "Plate/SlashMenu.tsx",
-  // Settings panels
-  "Settings/PumbleIntegration.tsx",
-  "TimeTracker/BillingReport.tsx",
 ];
 
 /**
