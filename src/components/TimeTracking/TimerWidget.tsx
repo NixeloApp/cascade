@@ -124,7 +124,6 @@ export function TimerWidget() {
         chromeSize="pill"
         leftIcon={<Play className="w-4 h-4" fill="currentColor" />}
         aria-label="Start timer"
-        className="px-4"
       >
         <span className="hidden sm:inline">Start Timer</span>
       </Button>

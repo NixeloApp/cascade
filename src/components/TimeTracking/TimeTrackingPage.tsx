@@ -230,7 +230,7 @@ function TimeTrackingControls({
           </TabsList>
         </Tabs>
 
-        <Flex align="center" gap="lg" className="flex-wrap">
+        <Flex align="center" gap="lg" wrap>
           {!projectId && (
             <Stack gap="xs">
               <Label htmlFor="tracking-project-filter">Project</Label>
@@ -240,7 +240,7 @@ function TimeTrackingControls({
                   onProjectChange(value === "all" ? "all" : (value as Id<"projects">))
                 }
               >
-                <SelectTrigger id="tracking-project-filter" className="px-3 py-2 text-sm">
+                <SelectTrigger id="tracking-project-filter">
                   <SelectValue placeholder="Select project..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -262,7 +262,7 @@ function TimeTrackingControls({
                 value={dateRange}
                 onValueChange={(value) => onDateRangeChange(value as TimeTrackingDateRange)}
               >
-                <SelectTrigger id="tracking-date-range" className="px-3 py-2 text-sm">
+                <SelectTrigger id="tracking-date-range">
                   <SelectValue placeholder="Select range..." />
                 </SelectTrigger>
                 <SelectContent>

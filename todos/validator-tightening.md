@@ -52,13 +52,21 @@
 - Removed `src/components/TimeTracker/` from `RAW_TAILWIND_ALLOWED_DIRS`.
 - Removed the last surfaced `TimeTracker` shell override in `TimeTracker/BillingReport.tsx` by dropping the locally-styled `SelectTrigger` chrome and relying on the owned select primitive.
 - Added `TimeTracker/BillingReport.tsx` and `TimeTracker/Timesheet.tsx` to design-system ownership targeting so future time-tracker shell drift is validated directly.
+- Removed `src/components/TimeTracking/` from `RAW_TAILWIND_ALLOWED_DIRS`.
+- Replaced that broad `TimeTracking/` escape hatch with explicit file-level migration debt entries for the remaining high-drift files:
+  - `TimeTracking/BurnRateDashboard.tsx`
+  - `TimeTracking/ManualTimeEntryModal.tsx`
+  - `TimeTracking/TimeEntriesList.tsx`
+  - `TimeTracking/TimeEntryModal.tsx`
+  - `TimeTracking/UserRatesManagement.tsx`
+- Removed `TimeTracking/TimeTrackingPage.tsx` and `TimeTracking/TimerWidget.tsx` from raw-Tailwind debt immediately by switching `TimeTrackingPage` to owned `Flex` wrap/select trigger APIs and dropping redundant button chrome overrides from `TimerWidget`.
 
 ### Next batch
 
 - Burn down the explicit file-level debt entries added for:
   - settings surfaces
   - admin surfaces
-- Shrink the remaining broad raw-Tailwind escape hatches, with `src/components/TimeTracking/` next now that `src/components/Analytics/` and `src/components/TimeTracker/` are no longer broadly exempt.
+- Burn down the remaining explicit `TimeTracking` file-level debt, with `TimeEntryModal.tsx`, `UserRatesManagement.tsx`, and `ManualTimeEntryModal.tsx` first because they still hold the heaviest raw shell and form drift.
 
 ## Problem
 
