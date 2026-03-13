@@ -15,7 +15,6 @@ export function run() {
     /\.stories\.tsx?$/, // Storybook files
     /check-type-safety\.js$/, // This file (contains pattern strings)
     // Legacy test files with violations - fix incrementally, do NOT add new files
-    /hourCompliance\.test\.ts$/, // 9 violations - TODO: fix biome-ignore
     /githubOAuth\.test\.ts$/, // 1 violation - TODO: fix biome-ignore
     /googleOAuth\.test\.ts$/, // 1 violation - TODO: fix biome-ignore
     /meetingBotPending\.test\.ts$/, // 1 violation - TODO: fix biome-ignore
