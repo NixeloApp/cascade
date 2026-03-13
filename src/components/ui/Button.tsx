@@ -90,6 +90,9 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
         "border-brand/15 bg-brand-subtle/78 text-brand shadow-none hover:bg-brand-subtle sm:border-brand/10 sm:bg-brand-subtle",
       calendarIssue:
         "border-transparent bg-transparent text-ui-text shadow-none hover:bg-ui-bg-hover focus-visible:ring-brand-ring",
+      sprintPreset:
+        "border-ui-border-secondary bg-ui-bg text-ui-text shadow-none hover:border-ui-border-hover",
+      sprintPresetSelected: "border-brand bg-ui-bg-secondary text-ui-text shadow-none",
       roadmapResizeHandle:
         "border-transparent bg-ui-bg-elevated/50 text-ui-text-tertiary shadow-none hover:bg-ui-bg-elevated/60",
     },
@@ -103,6 +106,7 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
       filterPill:
         "h-6 rounded-full px-2 text-xs sm:h-9 sm:rounded-xl sm:border-transparent sm:bg-transparent sm:px-3 sm:text-sm",
       calendarIssue: "h-auto rounded-md px-1.5 py-1.5 text-xs",
+      sprintPreset: "h-auto rounded-lg px-3 py-3 text-sm",
     },
   },
 });

@@ -200,7 +200,12 @@
 - Added `Invoices/InvoiceEditor.tsx` and `Invoices/InvoicePdfTemplate.tsx` to design-system ownership targeting so future invoice-surface drift is blocked directly.
 - Removed `IssuesCalendarView.tsx` from the raw-Tailwind and interactive-state debt lists by moving its calendar day shells onto owned `Card` recipes, replacing the quick-add reveal behavior with owned `IconButton` APIs, and pushing issue row chrome into owned `Button` chrome variants.
 - Added `IssuesCalendarView.tsx` to design-system ownership targeting so future calendar-surface drift is blocked directly.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `KanbanBoard.tsx` and `SprintManager.tsx`, which are now the next higher-impact shared surfaces still sitting behind explicit validator debt.
+- Removed `KanbanBoard.tsx` from the raw-Tailwind debt list by moving its loading rail, loading column shells, and swimlane wrapper chrome onto owned `Card` recipes instead of feature-level border/padding/snap shells.
+- Removed `Sprints/SprintManager.tsx` from live raw-Tailwind debt by replacing its hand-built progress bar with the shared `Progress` primitive, moving preset-tile button chrome onto owned `Button` variants, and replacing responsive flex utility fallbacks with `Flex` props.
+- Removed the stale `SprintManager.tsx` raw-Tailwind allowlist entry; the old root-level path was no longer the real source of sprint-surface debt.
+- Added `KanbanBoard.tsx` to design-system ownership targeting so future board-surface drift is blocked directly.
+- Added `Sprints/SprintManager.tsx` to design-system ownership targeting so future sprint-manager shell drift is blocked directly.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `SprintProgressBar.tsx`, `SprintWorkload.tsx`, and the remaining broad `Sprint` interactive allowlist, which are now the real next sprint-surface validator debt.
 
 ## Problem
 

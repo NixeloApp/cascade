@@ -20,6 +20,7 @@ import { Checkbox } from "@/components/ui/form/Checkbox";
 import { Input } from "@/components/ui/form/Input";
 import { Textarea } from "@/components/ui/form/Textarea";
 import { Grid } from "@/components/ui/Grid";
+import { Progress } from "@/components/ui/Progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/RadioGroup";
 import {
   Select,
@@ -42,7 +43,6 @@ import {
   SPRINT_DURATION_PRESETS,
 } from "@/lib/sprint-presets";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 
 type SprintWithCounts = Doc<"sprints"> & { issueCount: number; completedCount: number };
 
@@ -103,54 +103,52 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
       <Flex
         direction="column"
         align="start"
+        directionSm="row"
+        alignSm="center"
         justify="between"
         gap="lg"
-        className="sm:flex-row sm:items-center"
       >
-        <Flex direction="column" className="flex-1 w-full sm:w-auto">
-          <Flex wrap align="center" gap="sm" className="mb-2">
-            <Typography variant="h5">{sprint.name}</Typography>
-            <Badge size="md" className={getStatusColor(sprint.status)}>
-              {sprint.status}
-            </Badge>
-            <Badge variant="neutral" size="sm">
-              {sprint.issueCount} issues
-            </Badge>
-          </Flex>
-          {sprint.goal && (
-            <Typography variant="small" color="secondary" className="mb-2">
-              {sprint.goal}
-            </Typography>
-          )}
+        <FlexItem flex="1" className="w-full sm:w-auto">
+          <Stack gap="xs">
+            <Flex wrap align="center" gap="sm" className="mb-2">
+              <Typography variant="h5">{sprint.name}</Typography>
+              <Badge size="md" className={getStatusColor(sprint.status)}>
+                {sprint.status}
+              </Badge>
+              <Badge variant="neutral" size="sm">
+                {sprint.issueCount} issues
+              </Badge>
+            </Flex>
+            {sprint.goal && (
+              <Typography variant="small" color="secondary" className="mb-2">
+                {sprint.goal}
+              </Typography>
+            )}
 
-          {/* Progress bar for active sprints - issue-based */}
-          {sprint.status === "active" && (
-            <Stack gap="xs" className="mt-3 mb-2">
-              <Flex justify="between">
-                <Typography variant="caption">
-                  {sprint.completedCount} of {sprint.issueCount} completed
-                </Typography>
-                <Typography variant="caption" className="text-brand">
-                  {Math.round(progress)}%
-                </Typography>
-              </Flex>
-              <div className="h-1.5 bg-ui-bg-tertiary rounded-pill overflow-hidden">
-                <div
-                  className="size-full bg-brand rounded-pill transition-default"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </Stack>
-          )}
+            {/* Progress bar for active sprints - issue-based */}
+            {sprint.status === "active" && (
+              <Stack gap="xs" className="mt-3 mb-2">
+                <Flex justify="between">
+                  <Typography variant="caption">
+                    {sprint.completedCount} of {sprint.issueCount} completed
+                  </Typography>
+                  <Typography variant="caption" color="brand">
+                    {Math.round(progress)}%
+                  </Typography>
+                </Flex>
+                <Progress value={progress} className="h-1.5" />
+              </Stack>
+            )}
 
-          {sprint.startDate && sprint.endDate && (
-            <Typography variant="caption">
-              {formatDate(sprint.startDate)} - {formatDate(sprint.endDate)}
-            </Typography>
-          )}
-        </Flex>
+            {sprint.startDate && sprint.endDate && (
+              <Typography variant="caption">
+                {formatDate(sprint.startDate)} - {formatDate(sprint.endDate)}
+              </Typography>
+            )}
+          </Stack>
+        </FlexItem>
         {canEdit && (
-          <Flex direction="column" gap="sm" className="sm:flex-row w-full sm:w-auto">
+          <Flex direction="column" directionSm="row" gap="sm" className="w-full sm:w-auto">
             {sprint.status === "future" && (
               <Button onClick={() => void onStartSprint(sprint._id)} variant="success" size="sm">
                 Start Sprint
@@ -394,9 +392,10 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
       <Flex
         direction="column"
         align="start"
+        directionSm="row"
+        alignSm="center"
         justify="between"
         gap="md"
-        className="sm:flex-row sm:items-center"
       >
         <Typography variant="h4">Sprint Management</Typography>
         {canEdit && (
@@ -433,14 +432,11 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                 {SPRINT_DURATION_PRESETS.map((preset) => (
                   <Button
                     key={preset.id}
-                    variant="ghost"
+                    variant="unstyled"
+                    chrome={selectedPreset === preset.id ? "sprintPresetSelected" : "sprintPreset"}
+                    chromeSize="sprintPreset"
                     onClick={() => setSelectedPreset(preset.id)}
-                    className={cn(
-                      "h-auto p-3 rounded-lg border text-left justify-start items-start flex-col",
-                      selectedPreset === preset.id
-                        ? "border-brand bg-ui-bg-secondary"
-                        : "border-ui-border-secondary bg-ui-bg hover:border-ui-border-hover",
-                    )}
+                    className="items-start justify-start text-left flex-col"
                   >
                     <Typography variant="label" className="block">
                       {preset.label}
@@ -456,7 +452,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
             {/* Custom date inputs (shown when "Custom" is selected) */}
             {selectedPreset === "custom" && (
               <Stack gap="md">
-                <Flex direction="column" gap="md" className="sm:flex-row">
+                <Flex direction="column" directionSm="row" gap="md">
                   <FlexItem flex="1">
                     <Input
                       label="Start Date"
@@ -487,7 +483,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
               </Stack>
             )}
 
-            <Flex direction="column" gap="sm" className="sm:flex-row">
+            <Flex direction="column" directionSm="row" gap="sm">
               <Button type="submit" variant="primary">
                 Create Sprint
               </Button>
@@ -717,14 +713,11 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
                   {SPRINT_DURATION_PRESETS.map((preset) => (
                     <Button
                       key={preset.id}
-                      variant="ghost"
+                      variant="unstyled"
+                      chrome={startPreset === preset.id ? "sprintPresetSelected" : "sprintPreset"}
+                      chromeSize="sprintPreset"
                       onClick={() => setStartPreset(preset.id)}
-                      className={cn(
-                        "h-auto p-3 rounded-lg border text-left justify-start items-start flex-col",
-                        startPreset === preset.id
-                          ? "border-brand bg-ui-bg-secondary"
-                          : "border-ui-border-secondary bg-ui-bg hover:border-ui-border-hover",
-                      )}
+                      className="items-start justify-start text-left flex-col"
                     >
                       <Typography variant="label" className="block">
                         {preset.label}
@@ -739,7 +732,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
 
               {/* Custom date inputs */}
               {startPreset === "custom" && (
-                <Flex direction="column" gap="md" className="sm:flex-row">
+                <Flex direction="column" directionSm="row" gap="md">
                   <FlexItem flex="1">
                     <Input
                       label="Start Date"

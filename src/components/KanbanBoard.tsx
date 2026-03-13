@@ -34,6 +34,7 @@ import { IssueDetailViewer } from "./IssueDetailViewer";
 import { BoardToolbar } from "./Kanban/BoardToolbar";
 import { KanbanColumn } from "./Kanban/KanbanColumn";
 import { SwimlanRow } from "./Kanban/SwimlanRow";
+import { Card } from "./ui/Card";
 import { SkeletonKanbanCard, SkeletonText } from "./ui/Skeleton";
 
 interface KanbanBoardProps {
@@ -353,27 +354,22 @@ export function KanbanBoard({
           <SkeletonText lines={1} className="w-32" />
           <SkeletonText lines={1} className="w-32" />
         </Flex>
-        <Flex
-          gap="none"
-          className="overflow-x-auto overscroll-x-contain snap-x snap-mandatory scroll-px-2 gap-2 px-2 pb-3 sm:snap-none sm:gap-3 sm:px-4 sm:pb-3 lg:px-6"
-        >
-          {[1, 2, 3, 4].map((i) => (
-            <FlexItem
-              key={i}
-              shrink={false}
-              className="w-72 rounded-container border border-ui-border bg-ui-bg-soft lg:w-80"
-            >
-              <div className="border-b border-ui-border/50 bg-transparent rounded-t-container">
-                <SkeletonText lines={1} className="w-24" />
-              </div>
-              <div className="min-h-96">
-                <SkeletonKanbanCard />
-                <SkeletonKanbanCard />
-                <SkeletonKanbanCard />
-              </div>
-            </FlexItem>
-          ))}
-        </Flex>
+        <Card variant="ghost" recipe="kanbanBoardRail" ref={boardContainerRef}>
+          <Flex gap="sm" align="start">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i} recipe="kanbanLoadingColumn" padding="none" radius="lg">
+                <Card recipe="kanbanLoadingColumnHeader" padding="sm">
+                  <SkeletonText lines={1} className="w-24" />
+                </Card>
+                <div className="min-h-96">
+                  <SkeletonKanbanCard />
+                  <SkeletonKanbanCard />
+                  <SkeletonKanbanCard />
+                </div>
+              </Card>
+            ))}
+          </Flex>
+        </Card>
       </FlexItem>
     );
   }
@@ -400,47 +396,44 @@ export function KanbanBoard({
 
       {swimlaneGroupBy === "none" ? (
         /* Standard board view without swimlanes */
-        <Flex
-          ref={boardContainerRef}
-          align="start"
-          gap="none"
-          className="overflow-x-auto overscroll-x-contain snap-x snap-mandatory scroll-px-2 gap-2 px-2 pb-3 sm:snap-none sm:gap-3 sm:px-4 sm:pb-3 lg:px-6"
-        >
-          {workflowStates.map((state, columnIndex: number) => {
-            const counts = statusCounts[state.id] || {
-              total: 0,
-              loaded: 0,
-              hidden: 0,
-            };
-            return (
-              <KanbanColumn
-                key={state.id}
-                state={state}
-                issues={filteredIssuesByStatus[state.id] || []}
-                columnIndex={columnIndex}
-                selectionMode={selectionMode}
-                selectedIssueIds={selectedIssueIds}
-                focusedIssueId={focusedIssueId}
-                canEdit={canEdit}
-                onCreateIssue={isTeamMode || !canEdit ? undefined : handleCreateIssue}
-                onIssueClick={setSelectedIssue}
-                onToggleSelect={handleToggleSelect}
-                hiddenCount={counts.hidden}
-                totalCount={counts.total}
-                onLoadMore={loadMoreDone}
-                isLoadingMore={isLoadingMore}
-                onIssueDrop={handleIssueDrop}
-                onIssueReorder={handleIssueReorder}
-                isCollapsed={collapsedColumns.has(state.id)}
-                onToggleCollapse={handleToggleColumnCollapse}
-                displayOptions={displayOptions}
-              />
-            );
-          })}
-        </Flex>
+        <Card ref={boardContainerRef} variant="ghost" recipe="kanbanBoardRail">
+          <Flex align="start" gap="sm">
+            {workflowStates.map((state, columnIndex: number) => {
+              const counts = statusCounts[state.id] || {
+                total: 0,
+                loaded: 0,
+                hidden: 0,
+              };
+              return (
+                <KanbanColumn
+                  key={state.id}
+                  state={state}
+                  issues={filteredIssuesByStatus[state.id] || []}
+                  columnIndex={columnIndex}
+                  selectionMode={selectionMode}
+                  selectedIssueIds={selectedIssueIds}
+                  focusedIssueId={focusedIssueId}
+                  canEdit={canEdit}
+                  onCreateIssue={isTeamMode || !canEdit ? undefined : handleCreateIssue}
+                  onIssueClick={setSelectedIssue}
+                  onToggleSelect={handleToggleSelect}
+                  hiddenCount={counts.hidden}
+                  totalCount={counts.total}
+                  onLoadMore={loadMoreDone}
+                  isLoadingMore={isLoadingMore}
+                  onIssueDrop={handleIssueDrop}
+                  onIssueReorder={handleIssueReorder}
+                  isCollapsed={collapsedColumns.has(state.id)}
+                  onToggleCollapse={handleToggleColumnCollapse}
+                  displayOptions={displayOptions}
+                />
+              );
+            })}
+          </Flex>
+        </Card>
       ) : (
         /* Swimlane view */
-        <div ref={boardContainerRef} className="px-4 lg:px-6 pb-6">
+        <Card ref={boardContainerRef} variant="ghost" recipe="kanbanSwimlaneWrapper">
           {swimlaneConfigs.map((config) => (
             <SwimlanRow
               key={config.id}
@@ -463,7 +456,7 @@ export function KanbanBoard({
               onIssueReorder={handleIssueReorder}
             />
           ))}
-        </div>
+        </Card>
       )}
 
       {isProjectMode && (
