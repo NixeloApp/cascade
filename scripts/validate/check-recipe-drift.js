@@ -2,11 +2,11 @@
  * CHECK: Recipe Drift
  *
  * Detects visual class patterns that appear multiple times across files,
- * suggesting they should be extracted into Card recipes or shared primitives.
+ * requiring them to be extracted into owned recipes or shared primitives.
  *
  * This validator focuses on:
  * 1. Repeated "rounded + bg + border + shadow" combinations
- * 2. Similar visual shells that could benefit from centralization
+ * 2. Similar visual shells that should not remain duplicated in feature code
  */
 
 import fs from "node:fs";
@@ -23,10 +23,6 @@ const SURFACE_CLASS_PATTERNS = [
 
 // Files/directories to skip
 const SKIP_PATTERNS = ["node_modules", ".test.", ".spec.", ".stories.", "src/components/ui/"];
-
-// Files allowed to have surface patterns (gradual migration to Card recipes)
-// Keep empty once remaining debt is migrated behind owned primitives.
-const ALLOWED_FILES = [];
 
 /**
  * Extract visual surface class combinations from a className value.
@@ -90,18 +86,14 @@ export function run() {
   const srcDir = path.join(ROOT, "src/components");
   const files = walkDir(srcDir, { extensions: new Set([".tsx"]) });
 
-  // Track pattern occurrences: signature -> [{ file, line, allowed }]
+  // Track pattern occurrences: signature -> [{ file, line }]
   const patternOccurrences = new Map();
-  let allowedCount = 0;
 
   for (const filePath of files) {
     const rel = relPath(filePath);
 
     // Skip test files, stories, and ui/ primitives
     if (SKIP_PATTERNS.some((p) => rel.includes(p))) continue;
-
-    // Check if file is in allowed list (gradual migration)
-    const isAllowed = ALLOWED_FILES.some((pattern) => rel.includes(pattern));
 
     const content = fs.readFileSync(filePath, "utf-8");
     const lines = content.split("\n");
@@ -118,19 +110,15 @@ export function run() {
       for (const className of classNames) {
         const patterns = extractSurfacePatterns(className);
         for (const pattern of patterns) {
-          if (isAllowed) {
-            allowedCount++;
-          } else {
-            const occurrences = patternOccurrences.get(pattern) || [];
-            occurrences.push({ file: rel, line: i + 1 });
-            patternOccurrences.set(pattern, occurrences);
-          }
+          const occurrences = patternOccurrences.get(pattern) || [];
+          occurrences.push({ file: rel, line: i + 1 });
+          patternOccurrences.set(pattern, occurrences);
         }
       }
     }
   }
 
-  // Find patterns that appear in multiple non-allowed files
+  // Find patterns that appear in multiple files
   const duplicatePatterns = [];
   for (const [pattern, occurrences] of patternOccurrences) {
     const uniqueFiles = new Set(occurrences.map((o) => o.file));
@@ -160,17 +148,11 @@ export function run() {
     }
   }
 
-  const detail =
-    duplicatePatterns.length > 0
-      ? `${duplicatePatterns.length} repeated visual patterns`
-      : allowedCount > 0
-        ? `${allowedCount} in migration allowlist`
-        : null;
-
   return {
     passed: duplicatePatterns.length === 0,
     errors: duplicatePatterns.length,
-    detail,
+    detail:
+      duplicatePatterns.length > 0 ? `${duplicatePatterns.length} repeated visual patterns` : null,
     messages,
   };
 }

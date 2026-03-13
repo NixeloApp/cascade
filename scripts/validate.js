@@ -28,7 +28,7 @@
  *  24. Control ownership       — block low-level ToggleGroup in app code; use semantic primitives
  *  25. Interactive Tailwind    — hover:/focus: should be in CVA components, not scattered
  *  26. Tailwind consistency    — duration tokens, focus rings, disabled states, z-index, group-hover
- *  27. Recipe drift            — repeated visual patterns that should be Card recipes (info only)
+ *  27. Recipe drift            — repeated visual shell patterns must move behind owned recipes
  *  28. JSDoc coverage          — exported functions/components should have JSDoc documentation
  *  29. Import paths            — validates import path conventions
  *  30. Hook patterns           — custom hooks should follow consistent patterns

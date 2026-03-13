@@ -77,6 +77,7 @@
 - Removed `Settings/PumbleIntegration.tsx` and `TimeTracker/BillingReport.tsx` from the `check-recipe-drift.js` migration allowlist after confirming their remaining classes are owned-primitives composition, spacing, and typography only rather than inline reusable surface recipes.
 - Removed `ProjectSettings/GeneralSettings.tsx`, `ProjectSettings/MemberManagement.tsx`, and `ProjectSettings/WorkflowSettings.tsx` from the `check-recipe-drift.js` migration allowlist by replacing the last inline project-key surface in `GeneralSettings` with owned `Card` composition and confirming the other two files no longer define reusable inline surface recipes.
 - Removed `Plate/SlashMenu.tsx` from the `check-recipe-drift.js` migration allowlist by moving its popover shell behind an owned `Popover` recipe, reducing the recipe-drift allowlist to zero.
+- Removed the dead migration framing from `check-recipe-drift.js` now that the recipe-drift allowlist is at zero, so the validator reads and reports as direct ownership enforcement instead of temporary migration logic.
 - Added `TimeTracking/TimeEntryModal.tsx` and `TimeTracking/UserRatesManagement.tsx` to design-system ownership targeting so future time-entry shell drift is validated directly.
 - Added `TimeTracking/ManualTimeEntryModal.tsx` to design-system ownership targeting so future manual-entry shell drift is validated directly.
 - Added `TimeTracking/TimeEntriesList.tsx` to design-system ownership targeting so future list-row shell drift is validated directly.
@@ -89,8 +90,8 @@
 
 ### Next batch
 
-- Keep tightening the validator now that the `check-recipe-drift.js` migration allowlist is at zero.
-- Remove the now-dead migration framing from `check-recipe-drift.js` and consider tightening the detector so owned overlay/menu primitives are the only valid place for these remaining command-surface patterns.
+- Tighten `check-recipe-drift.js` itself now that migration debt is gone.
+- Expand the detector so repeated command/overlay/menu shells are only valid behind owned primitives like `Popover`, `Dialog`, and shared menu surfaces rather than surviving as duplicate feature-level stacks.
 
 ## Problem
 
