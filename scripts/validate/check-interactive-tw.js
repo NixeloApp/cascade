@@ -24,7 +24,6 @@ const ALLOWED_FILES = [
   // Issue components
   "IssueCard.tsx",
   "IssueDetail/",
-  "IssueDependencies.tsx",
   // Comment/reaction components
   "CommentRenderer.tsx",
   "DocumentComments.tsx",
@@ -46,7 +45,6 @@ const ALLOWED_FILES = [
   "VersionHistory.tsx",
   // Forms/fields
   "CustomFieldValues.tsx",
-  "LabelsManager.tsx",
   // Calendar
   "Calendar/",
   "IssuesCalendarView.tsx",

@@ -152,12 +152,16 @@
 - Added `IssueComments.tsx` to design-system ownership targeting so future comment-thread shell drift is blocked directly.
 - Removed `AttachmentList.tsx` and `FileAttachments.tsx` from the interactive-state debt list by extracting shared `AttachmentRow` and `FileUploadDropzone` primitives and moving file-link, action-reveal, and dropzone interaction chrome into owned UI components.
 - Added `AttachmentList.tsx` and `FileAttachments.tsx` to design-system ownership targeting so future attachment-shell drift is blocked directly.
+- Removed `IssueDependencies.tsx` from the raw-Tailwind and interactive-state debt lists by moving dependency rows onto owned `Card` recipes and replacing its search-result button shell with owned `selectionRow` card recipes.
+- Added `IssueDependencies.tsx` to design-system ownership targeting so future dependency-surface drift is blocked directly.
+- Removed `LabelsManager.tsx` from the raw-Tailwind and interactive-state debt lists by moving group headers and label rows onto owned `Card` recipes and dropping the remaining feature-level link-shell override in the empty group state.
+- Added `LabelsManager.tsx` to design-system ownership targeting so future label-management shell drift is blocked directly.
 
 ### Next batch
 
 - Continue shrinking the explicit `AI` debt now that the broad directory escapes are gone.
 - The explicit `AI` raw-Tailwind debt list is now empty.
-- Keep working through smaller helper controls and shared workflow surfaces rather than decorative backdrops, with the next pass focused on `LabelsManager.tsx` and `IssueDependencies.tsx`, which are now among the next higher-impact workflow surfaces still sitting behind explicit validator debt.
+- Keep working through smaller helper controls and shared workflow surfaces rather than decorative backdrops, with the next pass focused on `IssueCard.tsx` and `MentionInput.tsx`, which are now among the next higher-impact workflow/editor surfaces still sitting behind explicit validator debt.
 
 ## Problem
 

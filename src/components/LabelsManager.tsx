@@ -286,19 +286,10 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                   <Card key={groupKey} padding="none" className="overflow-hidden">
                     {/* Group Header */}
                     <Card
+                      recipe="labelGroupHeader"
                       padding="sm"
                       radius="none"
-                      variant="ghost"
-                      className="bg-ui-bg-secondary cursor-pointer hover:bg-ui-bg-tertiary transition-colors"
                       onClick={() => toggleGroup(groupKey)}
-                      onKeyDown={(e: React.KeyboardEvent) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          toggleGroup(groupKey);
-                        }
-                      }}
-                      tabIndex={0}
-                      role="button"
                       aria-expanded={!isCollapsed}
                     >
                       <Flex justify="between" align="center">
@@ -323,15 +314,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                           )}
                         </Flex>
 
-                        <Flex
-                          gap="sm"
-                          onClick={(e) => e.stopPropagation()}
-                          onKeyDown={(e: React.KeyboardEvent) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.stopPropagation();
-                            }
-                          }}
-                        >
+                        <Flex gap="sm" onClick={(e) => e.stopPropagation()}>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -368,13 +351,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                     {!isCollapsed && group.labels.length > 0 && (
                       <Flex direction="column" className="divide-y divide-ui-border">
                         {group.labels.map((label) => (
-                          <Card
-                            key={label._id}
-                            padding="sm"
-                            radius="none"
-                            variant="ghost"
-                            className="hover:bg-ui-bg-secondary transition-colors"
-                          >
+                          <Card key={label._id} recipe="labelGroupRow" padding="sm" radius="none">
                             <Flex justify="between" align="center">
                               <Flex gap="md" align="center">
                                 <Badge
@@ -424,9 +401,8 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                           No labels in this group.{" "}
                           <Button
                             variant="link"
-                            size="sm"
+                            size="none"
                             onClick={() => handleCreateLabel(group._id)}
-                            className="p-0 h-auto text-brand hover:underline"
                           >
                             Add one
                           </Button>

@@ -12,14 +12,13 @@ import type { FunctionReturnType } from "convex/server";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { getTypeLabel, ISSUE_TYPE_ICONS, type IssueType } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
@@ -157,20 +156,22 @@ export function IssueDependencies({ issueId }: IssueDependenciesProps) {
           <Typography variant="label">Dependencies</Typography>
           <Stack gap="sm">
             {links.outgoing.map((link: IssueLinkWithDetails) => (
-              <Card padding="sm" key={link._id} className="bg-ui-bg-secondary">
+              <Card recipe="dependencyRow" padding="sm" key={link._id}>
                 <Flex align="center" justify="between">
-                  <Flex align="center" gap="md" className="flex-1 min-w-0">
-                    <Badge variant="brand" size="md">
-                      {getLinkTypeLabel(link.linkType, "outgoing")}
-                    </Badge>
-                    {link.issue && (
-                      <IssueDisplay
-                        type={link.issue.type}
-                        issueKey={link.issue.key}
-                        title={link.issue.title}
-                      />
-                    )}
-                  </Flex>
+                  <FlexItem flex="1" className="min-w-0">
+                    <Flex align="center" gap="md">
+                      <Badge variant="brand" size="md">
+                        {getLinkTypeLabel(link.linkType, "outgoing")}
+                      </Badge>
+                      {link.issue && (
+                        <IssueDisplay
+                          type={link.issue.type}
+                          issueKey={link.issue.key}
+                          title={link.issue.title}
+                        />
+                      )}
+                    </Flex>
+                  </FlexItem>
                   <Tooltip content="Remove dependency">
                     <IconButton
                       variant="danger"
@@ -194,20 +195,22 @@ export function IssueDependencies({ issueId }: IssueDependenciesProps) {
           <Typography variant="label">Referenced By</Typography>
           <Stack gap="sm">
             {links.incoming.map((link: IssueLinkWithDetails) => (
-              <Card padding="sm" key={link._id} className="bg-ui-bg-secondary">
+              <Card recipe="dependencyRow" padding="sm" key={link._id}>
                 <Flex align="center" justify="between">
-                  <Flex align="center" gap="md" className="flex-1 min-w-0">
-                    <Badge variant="accent" size="md">
-                      {getLinkTypeLabel(link.linkType, "incoming")}
-                    </Badge>
-                    {link.issue && (
-                      <IssueDisplay
-                        type={link.issue.type}
-                        issueKey={link.issue.key}
-                        title={link.issue.title}
-                      />
-                    )}
-                  </Flex>
+                  <FlexItem flex="1" className="min-w-0">
+                    <Flex align="center" gap="md">
+                      <Badge variant="accent" size="md">
+                        {getLinkTypeLabel(link.linkType, "incoming")}
+                      </Badge>
+                      {link.issue && (
+                        <IssueDisplay
+                          type={link.issue.type}
+                          issueKey={link.issue.key}
+                          title={link.issue.title}
+                        />
+                      )}
+                    </Flex>
+                  </FlexItem>
                   <Tooltip content="Remove dependency">
                     <IconButton
                       variant="danger"
@@ -290,20 +293,20 @@ export function IssueDependencies({ issueId }: IssueDependenciesProps) {
             {searchResults?.page && searchResults.page.length > 0 && (
               <Card padding="none" className="max-h-48 overflow-y-auto">
                 {searchResults.page.map((issue: Issue) => (
-                  <Button
+                  <Card
                     key={issue._id}
-                    variant="ghost"
+                    recipe={
+                      selectedIssue?.id === issue._id ? "selectionRowSelected" : "selectionRow"
+                    }
+                    padding="sm"
+                    radius="none"
                     onClick={() => {
                       setSelectedIssue({ id: issue._id, key: issue.key });
                       setSearchQuery("");
                     }}
-                    className={cn(
-                      "w-full p-3 justify-start text-left rounded-none hover:bg-ui-bg-tertiary border-b border-ui-border-secondary last:border-0",
-                      selectedIssue?.id === issue._id && "bg-brand-subtle",
-                    )}
                   >
                     <IssueDisplay type={issue.type} issueKey={issue.key} title={issue.title} />
-                  </Button>
+                  </Card>
                 ))}
               </Card>
             )}
