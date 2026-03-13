@@ -11,13 +11,13 @@ import type { PlateElementProps } from "platejs/react";
 import { useEditorRef } from "platejs/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { cn } from "@/lib/utils";
 
 interface MentionUser extends TMentionItemBase {
   id: string;
@@ -135,30 +135,28 @@ export function MentionInputElement({
   );
 
   return (
-    <span
+    <Badge
       {...attributes}
       ref={inputRef}
+      variant="mentionInput"
+      size="mentionInput"
       role="combobox"
       tabIndex={0}
       aria-expanded="true"
       aria-haspopup="listbox"
-      className={cn("inline-block rounded-sm bg-ui-bg-secondary px-1 relative", className)}
+      className={className}
       onKeyDown={handleKeyDown}
       onBlur={inputProps.onBlur}
     >
       @{children}
       {/* Combobox dropdown */}
-      <Card
-        recipe="mentionMenu"
-        padding="none"
-        className="absolute left-0 top-full z-50 mt-1 min-w-52 max-w-xs"
-      >
+      <Card recipe="mentionInputMenu" padding="none">
         {items.length === 0 ? (
-          <div className="px-3 py-2">
+          <Card variant="ghost" padding="sm" radius="none">
             <Typography variant="small" color="secondary">
               {search ? "No users found" : "Type to search users..."}
             </Typography>
-          </div>
+          </Card>
         ) : (
           <Stack gap="none">
             {items.map((item, index) => (
@@ -173,9 +171,7 @@ export function MentionInputElement({
                 <Flex align="center" gap="sm">
                   <Avatar name={item.text} src={item.image} size="sm" />
                   <Stack gap="none">
-                    <Typography variant="small" className="font-medium">
-                      {item.text}
-                    </Typography>
+                    <Typography variant="label">{item.text}</Typography>
                     {item.email && (
                       <Typography variant="caption" color="secondary">
                         {item.email}
@@ -188,6 +184,6 @@ export function MentionInputElement({
           </Stack>
         )}
       </Card>
-    </span>
+    </Badge>
   );
 }

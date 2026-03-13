@@ -434,6 +434,8 @@ const cardRecipeVariants = cva("", {
       versionHistoryDiffPane: "rounded-xl border-ui-border-secondary/70 bg-ui-bg shadow-none",
       mentionMenu:
         "overflow-hidden rounded-container border-ui-border-secondary bg-linear-to-br from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/70 shadow-lg",
+      mentionInputMenu:
+        "absolute left-0 top-full z-50 mt-1 min-w-52 max-w-xs overflow-hidden rounded-container border-ui-border-secondary bg-linear-to-br from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/70 shadow-lg",
       floatingWidget: "overflow-hidden rounded-container border-ui-border bg-ui-bg shadow-elevated",
       floatingToolbar:
         "rounded-full border-ui-border/75 bg-ui-bg-elevated/96 shadow-soft backdrop-blur-sm sm:rounded-2xl sm:border-ui-border/70 sm:bg-ui-bg-elevated sm:backdrop-blur-0",

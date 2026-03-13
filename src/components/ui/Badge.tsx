@@ -15,6 +15,8 @@ const badgeVariants = cva("inline-flex items-center font-medium transition-color
     variant: {
       primary: "bg-brand-subtle text-brand-active border border-brand-border",
       mention: "bg-brand-subtle text-brand border border-transparent",
+      mentionInput:
+        "relative inline-block border border-transparent bg-ui-bg-secondary text-ui-text font-normal shadow-none",
       secondary: "bg-ui-bg-soft text-ui-text-secondary border border-ui-border",
       alertCount: "bg-status-error text-brand-foreground border border-status-error/20 shadow-md",
       success: "bg-status-success-bg text-status-success-text border border-status-success/20",
@@ -32,6 +34,7 @@ const badgeVariants = cva("inline-flex items-center font-medium transition-color
         "bg-transparent text-ui-text-secondary border border-ui-border hover:border-ui-border-secondary hover:bg-ui-bg-soft",
     },
     size: {
+      mentionInput: "px-1 py-0 text-sm",
       sm: "text-xs px-2 py-0.5",
       md: "text-xs px-2 py-1",
       calendarHeaderCount: "px-1.5 py-0.5 text-xs",

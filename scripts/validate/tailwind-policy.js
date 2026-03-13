@@ -10,7 +10,6 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   "/Plate/ColorPickerButton.tsx",
   "/Plate/DragHandle.tsx",
   "/Plate/MentionElement.tsx",
-  "/Plate/MentionInputElement.tsx",
 ];
 
 export const RAW_TAILWIND_ALLOWED_EXTENSIONS = [".stories.tsx", ".test.tsx", ".example.tsx"];
