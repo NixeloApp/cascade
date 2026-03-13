@@ -158,6 +158,26 @@ const cardRecipeVariants = cva("", {
         "rounded-xl border-transparent bg-ui-bg-tertiary text-ui-text-secondary shadow-none group-hover:scale-105 group-hover:bg-brand-subtle group-hover:text-brand",
       onboardingRoleIconShellSelected:
         "rounded-xl border-transparent bg-brand text-brand-foreground shadow-none",
+      onboardingHeroCircle:
+        "rounded-full border-transparent bg-brand-indigo-track text-brand shadow-none",
+      onboardingActionTile:
+        "rounded-container border-2 border-ui-border bg-ui-bg text-left shadow-none hover:border-ui-border-secondary hover:shadow-card-hover",
+      onboardingActionTileRecommended:
+        "rounded-container border-2 border-brand/30 bg-brand-subtle/30 text-left shadow-none hover:shadow-card-hover",
+      onboardingActionIconBrand:
+        "rounded-lg border-transparent bg-brand-subtle text-brand shadow-none",
+      onboardingActionIconNeutral:
+        "rounded-lg border-transparent bg-ui-bg-tertiary text-ui-text-secondary shadow-none",
+      onboardingMemberFeatureIconBlue:
+        "rounded-lg border-transparent bg-palette-blue-bg text-palette-blue shadow-none",
+      onboardingMemberFeatureIconSuccess:
+        "rounded-lg border-transparent bg-status-success-bg text-status-success shadow-none",
+      onboardingMemberFeatureIconWarning:
+        "rounded-lg border-transparent bg-status-warning-bg text-status-warning shadow-none",
+      onboardingMemberFeatureIconPurple:
+        "rounded-lg border-transparent bg-palette-purple-bg text-palette-purple shadow-none",
+      onboardingWizardFooter:
+        "rounded-none border-x-0 border-b-0 border-t border-ui-border bg-transparent shadow-none",
 
       // Header control surfaces
       controlRail:

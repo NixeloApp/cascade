@@ -256,7 +256,9 @@
   - `Onboarding/SampleProjectModal.tsx`
 - Removed `Onboarding/FeatureHighlights.tsx`, `Onboarding/InvitedWelcome.tsx`, and `Onboarding/RoleSelector.tsx` from the raw-Tailwind and interactive-state migration debt lists by moving their feature cards, invite hero/panel shells, and role-selection surfaces onto owned `Card`, `Button`, `Stack`, and `Typography` primitives instead of local shell and hover stacks.
 - Added `Onboarding/FeatureHighlights.tsx`, `Onboarding/InvitedWelcome.tsx`, and `Onboarding/RoleSelector.tsx` to design-system ownership targeting so future onboarding surface drift in those entry points is blocked directly.
-- Keep burning down the remaining explicit onboarding debt next, with `LeadOnboarding.tsx`, `ProjectWizard.tsx`, and `MemberOnboarding.tsx` first, then `OnboardingChecklist.tsx` and `SampleProjectModal.tsx`.
+- Removed `Onboarding/LeadOnboarding.tsx`, `Onboarding/ProjectWizard.tsx`, and `Onboarding/MemberOnboarding.tsx` from the raw-Tailwind and interactive-state migration debt lists by moving their hero shells, action tiles, step progress, board selection, and onboarding feature cards onto owned `Card`, `Progress`, `Button`, `Badge`, and `Typography` primitives instead of local shell and state stacks.
+- Added `Onboarding/LeadOnboarding.tsx`, `Onboarding/ProjectWizard.tsx`, and `Onboarding/MemberOnboarding.tsx` to design-system ownership targeting so future onboarding flow drift in those main entry flows is blocked directly.
+- Keep burning down the remaining explicit onboarding debt next, with `OnboardingChecklist.tsx` and `SampleProjectModal.tsx`, then tighten the next intentional raw/interactivity island after onboarding is cleared.
 
 ## Problem
 

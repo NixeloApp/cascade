@@ -33,10 +33,7 @@ const ALLOWED_FILES = [
   // Calendar
   "Calendar/shadcn-calendar/",
   "Calendar/EventDetailsModal.tsx",
-  "Onboarding/LeadOnboarding.tsx",
-  "Onboarding/MemberOnboarding.tsx",
   "Onboarding/OnboardingChecklist.tsx",
-  "Onboarding/ProjectWizard.tsx",
   // Landing pages
   "Landing/",
   // Auth

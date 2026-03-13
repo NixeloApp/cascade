@@ -18,7 +18,6 @@ import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
@@ -114,14 +113,14 @@ export function LeadOnboarding({
   if (step === "features") {
     return (
       <Stack gap="xl">
-        {/* Back button - Mintlify-inspired */}
-        <Button variant="ghost" size="sm" onClick={onBack} className="self-start group">
-          <Flex align="center" gap="xs">
-            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-            <Typography variant="caption" className="font-medium">
-              Back
-            </Typography>
-          </Flex>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onBack}
+          className="self-start"
+          leftIcon={<ArrowLeft className="h-4 w-4" />}
+        >
+          Back
         </Button>
 
         {/* Header */}
@@ -176,31 +175,23 @@ export function LeadOnboarding({
   if (step === "project") {
     return (
       <Stack gap="xl">
-        {/* Back button - Mintlify-inspired */}
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setStep("features")}
-          className="self-start group"
+          className="self-start"
+          leftIcon={<ArrowLeft className="h-4 w-4" />}
         >
-          <Flex align="center" gap="xs">
-            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-            <Typography variant="caption" className="font-medium">
-              Back
-            </Typography>
-          </Flex>
+          Back
         </Button>
 
         {/* Header */}
         <Stack gap="md" className="text-center">
-          <Flex
-            inline
-            align="center"
-            justify="center"
-            className="w-16 h-16 rounded-full bg-brand-indigo-track mx-auto"
-          >
-            <Icon icon={Building2} size="xl" className="text-brand" />
-          </Flex>
+          <Card recipe="onboardingHeroCircle" className="mx-auto h-16 w-16">
+            <Flex align="center" justify="center" className="h-full w-full">
+              <Icon icon={Building2} size="xl" className="text-brand" />
+            </Flex>
+          </Card>
           <Stack gap="sm">
             <Typography variant="h1">Name Your Project</Typography>
             <Typography variant="lead">This is where your team will collaborate</Typography>
@@ -208,7 +199,7 @@ export function LeadOnboarding({
         </Stack>
 
         {/* Project Name Input */}
-        <Stack gap="md" className="max-w-md mx-auto">
+        <Stack gap="md" className="mx-auto max-w-md">
           <Stack gap="xs">
             <Input
               type="text"
@@ -223,7 +214,7 @@ export function LeadOnboarding({
                   handleCreateOrganization();
                 }
               }}
-              className="text-center text-lg"
+              className="text-center"
               autoFocus
             />
             {projectError && (
@@ -250,19 +241,14 @@ export function LeadOnboarding({
   if (step === "project-choice") {
     return (
       <Stack gap="xl">
-        {/* Back button - Mintlify-inspired subtle styling */}
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setStep("project")}
-          className="self-start group"
+          className="self-start"
+          leftIcon={<ArrowLeft className="h-4 w-4" />}
         >
-          <Flex align="center" gap="xs">
-            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-            <Typography variant="caption" className="font-medium">
-              Back
-            </Typography>
-          </Flex>
+          Back
         </Button>
 
         {/* Header */}
@@ -275,24 +261,19 @@ export function LeadOnboarding({
         <Grid cols={1} colsSm={2} gap="lg">
           {/* Sample Project - Highlighted as recommended */}
           <Card
-            hoverable
+            recipe="onboardingActionTileRecommended"
             padding="lg"
-            onClick={handleCreateSample}
-            className={cn(
-              "group border-2 border-brand/30 bg-brand-subtle/30 text-left",
-              isCreating && "opacity-50 pointer-events-none",
-            )}
+            onClick={isCreating ? undefined : handleCreateSample}
+            className={isCreating ? "opacity-50" : undefined}
             aria-disabled={isCreating}
           >
             <Stack gap="lg">
               <Flex align="center" justify="between">
-                <Flex
-                  align="center"
-                  justify="center"
-                  className="p-3 rounded-lg bg-brand-subtle group-hover:bg-brand/10 transition-colors"
-                >
-                  <Icon icon={Sparkles} size="lg" className="text-brand" />
-                </Flex>
+                <Card recipe="onboardingActionIconBrand" padding="md">
+                  <Flex align="center" justify="center">
+                    <Icon icon={Sparkles} size="lg" className="text-brand" />
+                  </Flex>
+                </Card>
                 <Badge variant="brand" shape="pill" size="md">
                   Recommended
                 </Badge>
@@ -310,23 +291,18 @@ export function LeadOnboarding({
 
           {/* Start Fresh */}
           <Card
-            hoverable
+            recipe="onboardingActionTile"
             padding="lg"
-            onClick={handleFinishWithoutProject}
-            className={cn(
-              "group border-2 text-left",
-              isCreating && "opacity-50 pointer-events-none",
-            )}
+            onClick={isCreating ? undefined : handleFinishWithoutProject}
+            className={isCreating ? "opacity-50" : undefined}
             aria-disabled={isCreating}
           >
             <Stack gap="lg">
-              <Flex
-                align="center"
-                justify="center"
-                className="p-3 rounded-lg bg-ui-bg-tertiary group-hover:bg-ui-bg-hover transition-colors w-fit"
-              >
-                <Icon icon={FolderPlus} size="lg" className="text-ui-text-secondary" />
-              </Flex>
+              <Card recipe="onboardingActionIconNeutral" padding="md" className="w-fit">
+                <Flex align="center" justify="center">
+                  <Icon icon={FolderPlus} size="lg" className="text-ui-text-secondary" />
+                </Flex>
+              </Card>
               <Stack gap="xs">
                 <Typography variant="h3">Start from Scratch</Typography>
                 <Typography variant="small" color="secondary">

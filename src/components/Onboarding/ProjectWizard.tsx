@@ -11,15 +11,15 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
+import { Progress } from "@/components/ui/Progress";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { Check, KanbanSquare, ListTodo } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Dialog } from "../ui/Dialog";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Textarea } from "../ui/form";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
@@ -129,56 +129,15 @@ export function ProjectWizard({
       size="lg"
     >
       <Stack gap="lg">
-        {/* Mintlify-inspired step indicator */}
-        <div className="mb-8">
-          <Flex gap="sm" className="mb-4">
-            {[1, 2, 3, 4].map((stepNum) => (
-              <Flex key={stepNum} align="center" gap="sm" className="flex-1">
-                <Flex
-                  align="center"
-                  justify="center"
-                  className={cn(
-                    "w-8 h-8 rounded-full text-sm font-medium transition-all duration-default shrink-0",
-                    stepNum < step
-                      ? "bg-status-success text-brand-foreground"
-                      : stepNum === step
-                        ? "bg-brand text-brand-foreground ring-4 ring-brand/20"
-                        : "bg-ui-bg-tertiary text-ui-text-tertiary",
-                  )}
-                >
-                  {stepNum < step ? (
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={3}
-                      aria-hidden="true"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  ) : (
-                    stepNum
-                  )}
-                </Flex>
-                {stepNum < 4 && (
-                  <div
-                    className={cn(
-                      "flex-1 h-0.5 rounded-full transition-colors duration-default",
-                      stepNum < step ? "bg-status-success" : "bg-ui-border",
-                    )}
-                  />
-                )}
-              </Flex>
-            ))}
-          </Flex>
-          <Flex justify="between" className="px-1">
-            <Typography className="text-sm font-medium text-ui-text">Step {step} of 4</Typography>
-            <Typography className="text-sm text-ui-text-tertiary">
+        <Stack gap="sm">
+          <Progress value={(step / 4) * 100} variant={step === 4 ? "success" : "default"} />
+          <Flex justify="between" align="center">
+            <Typography variant="small">Step {step} of 4</Typography>
+            <Badge variant="secondary" shape="pill" size="sm">
               {Math.round((step / 4) * 100)}% complete
-            </Typography>
+            </Badge>
           </Flex>
-        </div>
+        </Stack>
 
         {/* Step 1: Project Name & Key */}
         {step === 1 && (
@@ -218,7 +177,6 @@ export function ProjectWizard({
                 value={projectKey}
                 onChange={(e) => setProjectKey(e.target.value.toUpperCase())}
                 placeholder="e.g., WEB, MOBILE, Q1"
-                className="font-mono"
                 maxLength={10}
               />
               <Typography variant="meta">
@@ -249,15 +207,10 @@ export function ProjectWizard({
 
             <Grid cols={2} gap="lg">
               <Card
-                hoverable
+                recipe={boardType === "kanban" ? "optionTileSelected" : "optionTile"}
                 padding="lg"
                 onClick={() => setBoardType("kanban")}
-                className={cn(
-                  "border-2 text-left",
-                  boardType === "kanban"
-                    ? "border-brand bg-brand-indigo-track"
-                    : "hover:border-brand-muted",
-                )}
+                className="text-left"
               >
                 <Stack gap="sm">
                   <Flex align="center" gap="sm">
@@ -283,15 +236,10 @@ export function ProjectWizard({
               </Card>
 
               <Card
-                hoverable
+                recipe={boardType === "scrum" ? "optionTileSelected" : "optionTile"}
                 padding="lg"
                 onClick={() => setBoardType("scrum")}
-                className={cn(
-                  "border-2 text-left",
-                  boardType === "scrum"
-                    ? "border-brand bg-brand-indigo-track"
-                    : "hover:border-brand-muted",
-                )}
+                className="text-left"
               >
                 <Stack gap="sm">
                   <Flex align="center" gap="sm">
@@ -336,16 +284,17 @@ export function ProjectWizard({
                   <Typography variant="mono" className="w-6">
                     {index + 1}.
                   </Typography>
-                  <Input
-                    type="text"
-                    value={state.name}
-                    onChange={(e) => {
-                      const newStates = [...workflowStates];
-                      newStates[index].name = e.target.value;
-                      setWorkflowStates(newStates);
-                    }}
-                    className="flex-1"
-                  />
+                  <FlexItem flex="1">
+                    <Input
+                      type="text"
+                      value={state.name}
+                      onChange={(e) => {
+                        const newStates = [...workflowStates];
+                        newStates[index].name = e.target.value;
+                        setWorkflowStates(newStates);
+                      }}
+                    />
+                  </FlexItem>
                   <Badge
                     variant={
                       state.category === "todo"
@@ -433,58 +382,59 @@ export function ProjectWizard({
           </Stack>
         )}
 
-        {/* Navigation Buttons - Mintlify-inspired with proper spacing */}
-        <Flex justify="between" className="pt-6 border-t border-ui-border sm:justify-between">
-          <div>
+        <Card recipe="onboardingWizardFooter" padding="lg">
+          <Flex justify="between" align="center">
             {step > 1 && (
               <Button
                 onClick={handlePrevious}
                 variant="ghost"
-                className="text-ui-text-secondary hover:text-ui-text"
+                leftIcon={
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    aria-hidden="true"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
+                }
               >
-                <svg
-                  className="w-4 h-4 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  aria-hidden="true"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
                 Previous
               </Button>
             )}
-          </div>
-          <Flex gap="md">
-            <Button
-              onClick={() => onOpenChange(false)}
-              variant="ghost"
-              className="text-ui-text-tertiary hover:text-ui-text"
-            >
-              Cancel
-            </Button>
-            {step < 4 ? (
-              <Button onClick={handleNext} variant="primary" className="min-w-24">
-                Next
-                <svg
-                  className="w-4 h-4 ml-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  aria-hidden="true"
+            <Flex gap="md">
+              <Button onClick={() => onOpenChange(false)} variant="ghost">
+                Cancel
+              </Button>
+              {step < 4 ? (
+                <Button
+                  onClick={handleNext}
+                  variant="primary"
+                  rightIcon={
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      aria-hidden="true"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  }
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </Button>
-            ) : (
-              <Button onClick={handleFinish} variant="primary" className="font-medium min-w-36">
-                Create Project
-              </Button>
-            )}
+                  Next
+                </Button>
+              ) : (
+                <Button onClick={handleFinish} variant="primary">
+                  Create Project
+                </Button>
+              )}
+            </Flex>
           </Flex>
-        </Flex>
+        </Card>
       </Stack>
     </Dialog>
   );

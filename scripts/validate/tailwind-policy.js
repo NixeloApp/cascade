@@ -12,10 +12,7 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
 export const RAW_TAILWIND_ALLOWED_FILES = [
   // Explicit migration-debt exemptions replacing broad Settings/Admin/ProjectSettings directory escapes.
   "/BulkOperationsBar.tsx",
-  "/Onboarding/LeadOnboarding.tsx",
-  "/Onboarding/MemberOnboarding.tsx",
   "/Onboarding/OnboardingChecklist.tsx",
-  "/Onboarding/ProjectWizard.tsx",
   "/Onboarding/SampleProjectModal.tsx",
 ];
 
@@ -112,7 +109,10 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/MentionInput.tsx",
   "/Onboarding/FeatureHighlights.tsx",
   "/Onboarding/InvitedWelcome.tsx",
+  "/Onboarding/LeadOnboarding.tsx",
+  "/Onboarding/MemberOnboarding.tsx",
   "/Onboarding/RoleSelector.tsx",
+  "/Onboarding/ProjectWizard.tsx",
   "/ProjectsList.tsx",
   "/RoadmapView.tsx",
   "/Sprints/SprintProgressBar.tsx",
