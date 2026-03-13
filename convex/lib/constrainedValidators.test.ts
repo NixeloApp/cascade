@@ -12,12 +12,31 @@ import {
   validateUrl,
 } from "./constrainedValidators";
 
+type ValidationErrorData = {
+  code: string;
+  message: string;
+};
+
+function isValidationErrorData(value: unknown): value is ValidationErrorData {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "code" in value &&
+    typeof value.code === "string" &&
+    "message" in value &&
+    typeof value.message === "string"
+  );
+}
+
 function expectValidationError(fn: () => void, messagePart?: string) {
   try {
     fn();
   } catch (e) {
     if (e instanceof ConvexError) {
-      const data = e.data as any;
+      const data = e.data;
+      if (!isValidationErrorData(data)) {
+        throw new Error("Expected ConvexError validation payload");
+      }
       expect(data.code).toBe("VALIDATION");
       if (messagePart) {
         expect(data.message).toContain(messagePart);
