@@ -210,7 +210,9 @@
 - Added `Sprints/SprintProgressBar.tsx` and `Sprints/SprintWorkload.tsx` to design-system ownership targeting so future sprint-support shell drift is blocked directly.
 - Removed the broad `Sprint` interactive allowlist entry from `check-interactive-tw.js`; sprint interactive debt is now explicit instead of directory-wide.
 - Tightened `check-raw-tailwind.js` so it only scans real JSX `className=` attributes, avoiding false positives on `className?:` prop declarations while keeping the rule fully blocking.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on the remaining broader interactive escape hatches in shared folders like `IssueDetail/`, `Plate/`, and `ImportExport/`, which are now materially larger sources of validator debt than the sprint surfaces.
+- Removed the broad `IssueDetail/` interactive allowlist entry from `check-interactive-tw.js` by moving inline property editing onto owned `SelectTrigger` and `Input` variants instead of feature-level hover/focus shell classes.
+- Added `IssueDetail/InlinePropertyEdit.tsx` and `IssueDetail/IssueMetadataSection.tsx` to design-system ownership targeting so future issue-detail property drift is blocked directly.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on the remaining broader interactive escape hatches in shared folders like `Plate/` and `ImportExport/`, which are now materially larger sources of validator debt than the issue-detail surfaces.
 
 ## Problem
 

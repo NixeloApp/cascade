@@ -21,8 +21,6 @@ import { c, ROOT, relPath, walkDir } from "./utils.js";
 const ALLOWED_FILES = [
   // Search/filter components
   "FuzzySearch/AssigneeSearchDropdown.example.tsx",
-  // Issue components
-  "IssueDetail/",
   // Document components
   // Editor components
   "Plate/",

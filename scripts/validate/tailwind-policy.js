@@ -103,6 +103,8 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/IssueDependencies.tsx",
   "/IssueDetailSheet.tsx",
   "/IssueDetail/IssueCard.tsx",
+  "/IssueDetail/InlinePropertyEdit.tsx",
+  "/IssueDetail/IssueMetadataSection.tsx",
   "/LabelsManager.tsx",
   "/MentionInput.tsx",
   "/ProjectsList.tsx",

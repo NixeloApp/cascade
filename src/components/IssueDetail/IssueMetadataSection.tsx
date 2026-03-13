@@ -168,7 +168,7 @@ export function IssueMetadataSection({
               <Badge
                 key={label.name}
                 size="sm"
-                className="text-brand-foreground transition-transform duration-default hover:scale-105"
+                className="text-brand-foreground"
                 style={{ backgroundColor: label.color }}
               >
                 {label.name}
