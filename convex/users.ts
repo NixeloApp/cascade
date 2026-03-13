@@ -6,12 +6,16 @@
  * Manages organization memberships and cross-org user resolution.
  */
 
-import type { FunctionReference } from "convex/server";
 import { v } from "convex/values";
 import { pruneNull } from "convex-helpers";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { internalAction, internalQuery, type MutationCtx } from "./_generated/server";
+import {
+  internalAction,
+  internalQuery,
+  type MutationCtx,
+  type QueryCtx,
+} from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { constantTimeEqual } from "./lib/apiAuth";
 import { batchFetchIssues, batchFetchProjects, batchFetchUsers } from "./lib/batchHelpers";
@@ -140,6 +144,80 @@ export const getCoverImageUrl = authenticatedQuery({
   },
 });
 
+type SearchUserResult = {
+  _id: Id<"users">;
+  name?: string;
+  email?: string;
+  image?: string;
+};
+
+async function getSearchableUserIds(ctx: QueryCtx & { userId: Id<"users"> }) {
+  const { items: myMemberships } = await getOrganizationMemberships(ctx, ctx.userId);
+  if (myMemberships.length === 0) {
+    return [];
+  }
+
+  const organizationIds = myMemberships.map((membership) => membership.organizationId);
+  const seenUserIds = new Set<string>();
+  const userIdsToFetch: Id<"users">[] = [];
+
+  const allMembersArrays = await Promise.all(
+    organizationIds.map((organizationId) =>
+      ctx.db
+        .query("organizationMembers")
+        .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
+        .filter(notDeleted)
+        .take(500),
+    ),
+  );
+
+  for (const members of allMembersArrays) {
+    for (const member of members) {
+      if (!seenUserIds.has(member.userId)) {
+        seenUserIds.add(member.userId);
+        userIdsToFetch.push(member.userId);
+      }
+    }
+  }
+
+  return userIdsToFetch;
+}
+
+async function buildSearchUserResults(
+  ctx: QueryCtx,
+  userIds: Id<"users">[],
+  searchQuery: string,
+  searchLimit: number,
+) {
+  const userMap = await batchFetchUsers(ctx, userIds);
+  const results: SearchUserResult[] = [];
+
+  for (const userId of userIds) {
+    const user = userMap.get(userId);
+    if (!user) {
+      continue;
+    }
+
+    if (results.length >= searchLimit) {
+      break;
+    }
+
+    const userName = (user.name || "").toLowerCase();
+    const userEmail = (user.email || "").toLowerCase();
+
+    if (searchQuery === "" || userName.includes(searchQuery) || userEmail.includes(searchQuery)) {
+      results.push({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        image: user.image,
+      });
+    }
+  }
+
+  return results;
+}
+
 /**
  * Search for users by name or email.
  * Returns users that share an organization with the current user.
@@ -158,74 +236,15 @@ export const searchUsers = authenticatedQuery({
       image: v.optional(v.string()),
     }),
   ),
-  // TODO: Refactor into helpers (fetchMemberships, fetchUsersByIds, filterAndBuildResults)
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Search with multi-org membership + name/email filtering
   handler: async (ctx, args) => {
     const searchLimit = args.limit ?? 10;
     const searchQuery = args.query.toLowerCase().trim();
-
-    // Get current user's organizations
-    const { items: myMemberships } = await getOrganizationMemberships(ctx, ctx.userId);
-    if (myMemberships.length === 0) {
+    const userIds = await getSearchableUserIds(ctx);
+    if (userIds.length === 0) {
       return [];
     }
 
-    // Get all users from the same organizations
-    const organizationIds = myMemberships.map((m) => m.organizationId);
-    const seenUserIds = new Set<string>();
-    const results: Array<{
-      _id: typeof ctx.userId;
-      name?: string;
-      email?: string;
-      image?: string;
-    }> = [];
-
-    // Fetch all organization members in parallel (bounded to reasonable org size)
-    const allMembersArrays = await Promise.all(
-      organizationIds.map(
-        (orgId) =>
-          ctx.db
-            .query("organizationMembers")
-            .withIndex("by_organization", (q) => q.eq("organizationId", orgId))
-            .filter(notDeleted)
-            .take(500), // Increased limit for larger orgs, bounded for performance
-      ),
-    );
-
-    // Collect unique user IDs
-    const userIdsToFetch: (typeof ctx.userId)[] = [];
-    for (const members of allMembersArrays) {
-      for (const member of members) {
-        if (!seenUserIds.has(member.userId)) {
-          seenUserIds.add(member.userId);
-          userIdsToFetch.push(member.userId);
-        }
-      }
-    }
-
-    // Batch fetch all users
-    const userMap = await batchFetchUsers(ctx, userIdsToFetch);
-    const users = userIdsToFetch.map((id) => userMap.get(id)).filter((u) => u !== undefined);
-
-    // Filter and build results
-    for (const user of users) {
-      if (results.length >= searchLimit) break;
-
-      // Search in name and email
-      const userName = (user.name || "").toLowerCase();
-      const userEmail = (user.email || "").toLowerCase();
-
-      if (searchQuery === "" || userName.includes(searchQuery) || userEmail.includes(searchQuery)) {
-        results.push({
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
-        });
-      }
-    }
-
-    return results;
+    return await buildSearchUserResults(ctx, userIds, searchQuery, searchLimit);
   },
 });
 
@@ -567,16 +586,11 @@ async function handleEmailChange(
   if (!existingUser || existingUser._id === ctx.userId) {
     // Schedule email sending asynchronously to avoid blocking the mutation
     // and preventing "fetch in mutation" errors.
-    // Use strict casting to avoid "any" and Biome errors
-    const usersInternal = internal.users as unknown as {
-      sendVerificationEmailAction: FunctionReference<"action">;
-    };
-
     // In unit tests (convex-test), we skip scheduling to avoid "Write outside of transaction" errors
     // from the test environment tearing down before the async action completes.
     // E2E tests run against real deployments where IS_TEST_ENV is false, so they will run this.
     if (!process.env.IS_TEST_ENV) {
-      await ctx.scheduler.runAfter(0, usersInternal.sendVerificationEmailAction, {
+      await ctx.scheduler.runAfter(0, internal.users.sendVerificationEmailAction, {
         email: normalizedEmail,
         token,
         isTestUser: currentUser?.isTestUser,

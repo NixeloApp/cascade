@@ -35,7 +35,6 @@ export function run() {
     /src\/components\/IssueDetail\/CreateIssueModal\.tsx$/, // Complexity: form + validation + AI - TODO: extract form sections
     /src\/components\/PlateEditor\.tsx$/, // Complexity: editor operations - TODO: extract DocumentControls
     /src\/components\/RoadmapView\.tsx$/, // Complexity: timeline + SVG - TODO: extract TimelineRenderer
-    /convex\/users\.ts$/, // Complexity: search with filters - TODO: extract searchUsersHelper
   ];
 
   let errorCount = 0;
