@@ -145,6 +145,7 @@ import type * as router from "../router.js";
 import type * as savedFilters from "../savedFilters.js";
 import type * as schemaFields from "../schemaFields.js";
 import type * as serviceRotation from "../serviceRotation.js";
+import type * as shared_colors from "../shared/colors.js";
 import type * as shared_constants from "../shared/constants.js";
 import type * as shared_routes from "../shared/routes.js";
 import type * as shared_types from "../shared/types.js";
@@ -314,6 +315,7 @@ declare const fullApi: ApiFromModules<{
   savedFilters: typeof savedFilters;
   schemaFields: typeof schemaFields;
   serviceRotation: typeof serviceRotation;
+  "shared/colors": typeof shared_colors;
   "shared/constants": typeof shared_constants;
   "shared/routes": typeof shared_routes;
   "shared/types": typeof shared_types;
