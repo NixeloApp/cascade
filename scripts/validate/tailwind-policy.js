@@ -111,6 +111,7 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/Documents/DocumentHeader.tsx",
   "/FuzzySearch/FuzzySearchInput.tsx",
   "/Landing/HeroSection.tsx",
+  "/Landing/NavHeader.tsx",
   "/Landing/ProductShowcase.tsx",
   "/NotificationCenter.tsx",
   "/Notifications/NotificationCenter.tsx",

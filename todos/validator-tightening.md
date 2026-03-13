@@ -107,11 +107,13 @@
 
 - Moved `FuzzySearch/FuzzySearchInput.tsx` off its inline absolute dropdown shell by introducing an owned `Card` `searchDropdown` recipe for the results surface.
 - Removed the broad `src/components/FuzzySearch/` raw-Tailwind escape hatch. The only non-production file in that folder is the `.example.tsx`, which is already covered by the example-file extension escape hatch.
+- Moved the landing navigation chrome behind owned recipes by adding `Card` `landingNavShell` and `landingNavRail` recipes and wiring `Landing/NavHeader.tsx` to them.
+- Added `Landing/NavHeader.tsx` to design-system ownership targeting so future nav-shell drift is validated directly.
 
 ### Next batch
 
 - Continue the floating-surface pass with remaining positioned overlays surfaced by the stronger scan, especially files that still define chrome on `fixed` or `absolute` panels instead of plain backdrops.
-- Prioritize the next shared navigation/search overlays next so any remaining real floating shell contracts move behind owned `Popover`, `Dialog`, `Sheet`, or `Card` recipes rather than staying in feature code.
+- Prioritize the next shared floating shells in product navigation and assistant surfaces, especially inline hover-reveal controls or badge shells that still combine positioned chrome with border/background/shadow outside owned primitives.
 
 ## Problem
 
