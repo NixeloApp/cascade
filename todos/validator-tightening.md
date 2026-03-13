@@ -122,12 +122,15 @@
 - Moved `FuzzySearch/FuzzySearchInput.tsx` off its inline clear-button and loading-spinner chrome by using owned `IconButton` and the shared `InlineSpinner` primitive.
 - Migrated `AI/AISuggestionsPanel.tsx` off its inline CTA and suggestion-card shells by using an owned `Button` gradient variant, `Card` interactive surface, `EmptyState`, `InlineSpinner`, and `SegmentedControl` wrap props.
 - Added `AI/AISuggestionsPanel.tsx` to design-system ownership targeting so future suggestion-shell drift is blocked directly.
+- Removed `AI/AIAssistantPanel.tsx` from the raw-Tailwind debt list by moving its sheet body layout into an owned `Sheet` layout variant, its gradient header into an owned `Card` recipe, and its tab fill/stretch behavior into owned `Tabs` variants.
+- Removed `AI/AIAssistantPanel.tsx` from the interactive-state debt list.
+- Added `AI/AIAssistantPanel.tsx` to design-system ownership targeting so future assistant-panel shell drift is blocked directly.
 
 ### Next batch
 
 - Continue shrinking the explicit `AI` debt now that the broad directory escapes are gone.
-- Prioritize `AI/AIAssistantPanel.tsx` next: its gradient sheet header and tab-shell composition are still the largest remaining AI-owned surface contract.
-- After that, burn down `AI/AIChat.tsx` and `AI/AIErrorFallback.tsx`, then keep working through smaller helper controls rather than decorative backdrops.
+- Prioritize `AI/AIChat.tsx` next: its composer and assistant-thinking state still carry the most remaining AI-owned shell/form drift.
+- After that, burn down `AI/AIErrorFallback.tsx`, then keep working through smaller helper controls rather than decorative backdrops.
 
 ## Problem
 

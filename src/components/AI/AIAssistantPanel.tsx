@@ -11,10 +11,12 @@ import { Bot, Lightbulb, MessageSquare } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { ErrorBoundary } from "../ErrorBoundary";
 import { Badge } from "../ui/Badge";
+import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Sheet } from "../ui/Sheet";
 import { Tabs, TabsList, TabsTrigger } from "../ui/Tabs";
+import { Typography } from "../ui/Typography";
 import { AIChat } from "./AIChat";
 import { AIErrorFallback } from "./AIErrorFallback";
 import { AISuggestionsPanel } from "./AISuggestionsPanel";
@@ -56,57 +58,73 @@ export function AIAssistantPanel({ projectId, isOpen, onClose }: AIAssistantPane
       title="AI Assistant"
       description={projectId ? "Project-specific context" : "General chat"}
       side="right"
+      layout="panel"
       className={cn(
         AI_CONFIG.panel.width.mobile,
         AI_CONFIG.panel.width.tablet,
         AI_CONFIG.panel.width.desktop,
-        "p-0 flex flex-col bg-ui-bg",
+        "bg-ui-bg",
       )}
       showCloseButton={true}
       header={
         <>
           {/* Custom gradient header */}
-          <div className="p-4 border-b border-ui-border bg-linear-to-r from-brand to-accent">
+          <Card recipe="assistantPanelHeader" padding="md" radius="none">
             <Flex direction="column" gap="sm" className="text-left">
               <Flex align="center" gap="md">
                 <Icon icon={Bot} size="lg" />
                 <div>
-                  <SheetPrimitive.Title className="text-lg font-semibold text-brand-foreground">
-                    AI Assistant
+                  <SheetPrimitive.Title asChild>
+                    <Typography
+                      variant="large"
+                      as="h2"
+                      color="default"
+                      className="text-brand-foreground"
+                    >
+                      AI Assistant
+                    </Typography>
                   </SheetPrimitive.Title>
-                  <SheetPrimitive.Description className="text-xs text-brand-subtle">
-                    {projectId ? "Project-specific context" : "General chat"}
+                  <SheetPrimitive.Description asChild>
+                    <Typography variant="meta" as="p" className="text-brand-subtle">
+                      {projectId ? "Project-specific context" : "General chat"}
+                    </Typography>
                   </SheetPrimitive.Description>
                 </div>
               </Flex>
             </Flex>
-          </div>
+          </Card>
 
           {/* Tabs */}
-          <Tabs
-            value={activeTab}
-            onValueChange={(value) => handleTabChange(value as "chat" | "suggestions")}
-            className="border-b border-ui-border bg-ui-bg-secondary px-3 py-3"
+          <Card
+            variant="ghost"
+            padding="sm"
+            radius="none"
+            className="border-x-0 border-t-0 border-b border-ui-border bg-ui-bg-secondary"
           >
-            <TabsList className="flex w-full">
-              <TabsTrigger value="chat" className="flex-1">
-                <Icon icon={MessageSquare} size="sm" className="inline mr-1" /> Chat
-                {chats && chats.length > 0 && (
-                  <Badge variant="secondary" size="sm" className="ml-2">
-                    {chats.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="suggestions" className="flex-1">
-                <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> Suggestions
-                {unreadSuggestions > 0 && (
-                  <Badge variant="error" size="sm" className="ml-2">
-                    {unreadSuggestions}
-                  </Badge>
-                )}
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+            <Tabs
+              value={activeTab}
+              onValueChange={(value) => handleTabChange(value as "chat" | "suggestions")}
+            >
+              <TabsList className="w-full">
+                <TabsTrigger value="chat" width="fill">
+                  <Icon icon={MessageSquare} size="sm" className="inline mr-1" /> Chat
+                  {chats && chats.length > 0 && (
+                    <Badge variant="secondary" size="sm" className="ml-2">
+                      {chats.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="suggestions" width="fill">
+                  <Icon icon={Lightbulb} size="sm" className="inline mr-1" /> Suggestions
+                  {unreadSuggestions > 0 && (
+                    <Badge variant="error" size="sm" className="ml-2">
+                      {unreadSuggestions}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </Card>
         </>
       }
     >

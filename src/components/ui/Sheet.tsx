@@ -28,9 +28,14 @@ const sheetVariants = cva("fixed z-50 gap-4 bg-ui-bg shadow-elevated border-ui-b
       right:
         "inset-y-0 right-0 h-full w-3/4 border-l data-[state=open]:animate-enter-right data-[state=closed]:animate-exit-right sm:max-w-sm",
     },
+    layout: {
+      default: "",
+      panel: "flex flex-col p-0",
+    },
   },
   defaultVariants: {
     side: "right",
+    layout: "default",
   },
 });
 
@@ -85,6 +90,7 @@ function Sheet({
   children,
   className,
   side = "right",
+  layout = "default",
   footer,
   showCloseButton = true,
   header,
@@ -96,7 +102,7 @@ function Sheet({
         <SheetPrimitive.Overlay className="fixed inset-0 z-50 bg-ui-bg-overlay data-[state=open]:animate-fade-in data-[state=closed]:animate-fade-out" />
         <SheetPrimitive.Content
           data-testid={testId}
-          className={cn(sheetVariants({ side }), className)}
+          className={cn(sheetVariants({ side, layout }), className)}
         >
           {/* Custom header or default */}
           {header ?? (

@@ -22,7 +22,6 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
 export const RAW_TAILWIND_ALLOWED_FILES = [
   "/ActivityFeed.tsx",
   "/AdvancedSearchModal.tsx",
-  "/AI/AIAssistantPanel.tsx",
   "/AI/AIChat.tsx",
   "/AI/AIErrorFallback.tsx",
   "/AppSidebar.tsx",
@@ -97,6 +96,7 @@ export const RAW_TAILWIND_PATTERNS = [
 export const DESIGN_SYSTEM_TARGET_FILES = [
   "/AI/AIAssistantButton.tsx",
   "/AI/AIChat.tsx",
+  "/AI/AIAssistantPanel.tsx",
   "/AI/AISuggestionsPanel.tsx",
   "/Analytics/RecentActivity.tsx",
   "/AppHeader.tsx",

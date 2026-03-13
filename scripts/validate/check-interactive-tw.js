@@ -65,7 +65,6 @@ const ALLOWED_FILES = [
   "IssuesCalendarView.tsx",
   "RoadmapView.tsx",
   // AI components
-  "AI/AIAssistantPanel.tsx",
   "AI/AIChat.tsx",
   // Sprint components
   "Sprint",
