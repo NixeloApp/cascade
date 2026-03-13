@@ -22,7 +22,6 @@ const ALLOWED_FILES = [
   // Search/filter components
   "AdvancedSearchModal/",
   "FilterBar.tsx",
-  "GlobalSearch.tsx",
   "FuzzySearch/AssigneeSearchDropdown.example.tsx",
   // Issue components
   "IssueCard.tsx",

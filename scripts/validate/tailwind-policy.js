@@ -35,7 +35,6 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   "/DocumentSidebar.tsx",
   "/DocumentTemplatesManager.tsx",
   "/FilterBar.tsx",
-  "/GlobalSearch.tsx",
   "/ImportExportModal.tsx",
   "/InvoiceEditor.tsx",
   "/InvoicePdfTemplate.tsx",

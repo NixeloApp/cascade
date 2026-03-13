@@ -30,6 +30,7 @@ import {
   Command as CommandMenu,
 } from "./ui/Command";
 import { KeyboardShortcut, ShortcutHint } from "./ui/KeyboardShortcut";
+import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Tabs, TabsList, TabsTrigger } from "./ui/Tabs";
 import { Typography } from "./ui/Typography";
 
@@ -272,7 +273,7 @@ function SearchListContent({
   if (query.length === 0) {
     return (
       <>
-        <div className="px-2 pb-3">
+        <Card variant="ghost" padding="xs" className="pb-1">
           <Card recipe="commandIntro" padding="md">
             <Flex direction="column" gap="md">
               <div>
@@ -300,7 +301,7 @@ function SearchListContent({
               </Flex>
             </Flex>
           </Card>
-        </div>
+        </Card>
 
         {commandGroupEntries.map(([group, commands]) => (
           <CommandGroup key={group} heading={group}>
@@ -310,15 +311,18 @@ function SearchListContent({
           </CommandGroup>
         ))}
 
-        <Flex
-          direction="column"
-          align="center"
-          className="border-t border-ui-border px-4 py-5 text-center text-ui-text-secondary"
+        <Card
+          variant="ghost"
+          padding="md"
+          radius="none"
+          className="border-t border-ui-border text-center text-ui-text-secondary"
         >
-          <Typography variant="small">
-            Search across issues and docs, or jump straight into common actions.
-          </Typography>
-        </Flex>
+          <Flex direction="column" align="center">
+            <Typography variant="small">
+              Search across issues and docs, or jump straight into common actions.
+            </Typography>
+          </Flex>
+        </Card>
       </>
     );
   }
@@ -352,11 +356,12 @@ function SearchListContent({
       <Flex
         direction="column"
         align="center"
-        className="py-8 text-ui-text-secondary"
+        className="text-ui-text-secondary"
         data-testid={TEST_IDS.SEARCH.LOADING_STATE}
       >
-        <div className="mb-2 inline-block h-6 w-6 animate-spin rounded-full border-2 border-brand-ring border-t-transparent" />
-        <Typography variant="small">Searching...</Typography>
+        <Card variant="ghost" padding="lg">
+          <LoadingSpinner size="md" variant="brand" message="Searching..." />
+        </Card>
       </Flex>
     );
   }
@@ -379,17 +384,21 @@ function SearchListContent({
           direction="column"
           align="center"
           data-testid={TEST_IDS.GLOBAL_SEARCH.NO_RESULTS}
-          className="px-4 py-10 text-ui-text-secondary"
+          className="text-ui-text-secondary"
         >
-          <Card recipe="controlStrip" padding="sm" className="mb-4">
-            <Icon icon={Search} size="xl" />
+          <Card variant="ghost" padding="lg">
+            <Flex direction="column" align="center">
+              <Card recipe="controlStrip" padding="sm" className="mb-4">
+                <Icon icon={Search} size="xl" />
+              </Card>
+              <Typography variant="label">
+                {hasCommandMatches ? "No issue or document results" : "No results found"}
+              </Typography>
+              <Button variant="ghost" size="sm" onClick={onOpenAdvancedSearch} className="mt-3">
+                Open advanced search
+              </Button>
+            </Flex>
           </Card>
-          <Typography variant="label">
-            {hasCommandMatches ? "No issue or document results" : "No results found"}
-          </Typography>
-          <Button variant="ghost" size="sm" onClick={onOpenAdvancedSearch} className="mt-3">
-            Open advanced search
-          </Button>
         </Flex>
       ) : (
         <CommandGroup data-testid={TEST_IDS.SEARCH.RESULTS_GROUP} heading="Results">
@@ -400,16 +409,11 @@ function SearchListContent({
       )}
 
       {hasMore ? (
-        <Flex className="border-t border-ui-border">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onLoadMore}
-            className="w-full bg-brand-subtle text-brand hover:bg-brand-subtle/70"
-          >
+        <Card variant="ghost" padding="none" radius="none" className="border-t border-ui-border">
+          <Button variant="brandSubtle" size="sm" onClick={onLoadMore} className="w-full">
             Load More ({totalCount - filteredResults.length} remaining)
           </Button>
-        </Flex>
+        </Card>
       ) : null}
     </>
   );
@@ -515,7 +519,9 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
             Search, jump, or create...
           </Typography>
         </Flex>
-        <KeyboardShortcut shortcut="⌘+K" className="hidden shrink-0 sm:inline-flex" />
+        <FlexItem shrink={false} className="hidden sm:block">
+          <KeyboardShortcut shortcut="⌘+K" />
+        </FlexItem>
       </Button>
 
       <CommandDialog
@@ -525,11 +531,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
         title="Search and commands"
         description="Find issues and documents, navigate the app, or run quick actions."
       >
-        <CommandMenu
-          data-testid={TEST_IDS.SEARCH.MODAL}
-          className="flex min-h-0 flex-1 flex-col bg-transparent"
-          shouldFilter={false}
-        >
+        <CommandMenu data-testid={TEST_IDS.SEARCH.MODAL} shouldFilter={false}>
           {/* Fixed header: search input */}
           <CommandInput
             placeholder="Search issues, docs, and commands..."
@@ -545,39 +547,46 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
             <Tabs
               value={activeTab}
               onValueChange={(value) => setActiveTab(value as "all" | "issues" | "documents")}
-              className="shrink-0 overflow-x-auto border-b border-ui-border/50 bg-ui-bg-soft/30"
+              className="shrink-0 overflow-x-auto"
             >
-              <TabsList variant="underline" className="gap-5 px-3">
-                <TabsTrigger
-                  value="all"
-                  variant="underline"
-                  className="px-1 pb-3 text-xs uppercase tracking-widest sm:text-sm"
-                  data-testid={TEST_IDS.SEARCH.TAB_ALL}
-                >
-                  All ({issueTotal + documentTotal})
-                </TabsTrigger>
-                <TabsTrigger
-                  value="issues"
-                  variant="underline"
-                  className="px-1 pb-3 text-xs uppercase tracking-widest sm:text-sm"
-                  data-testid={TEST_IDS.SEARCH.TAB_ISSUES}
-                >
-                  Issues ({issueTotal})
-                </TabsTrigger>
-                <TabsTrigger
-                  value="documents"
-                  variant="underline"
-                  className="px-1 pb-3 text-xs uppercase tracking-widest sm:text-sm"
-                  data-testid={TEST_IDS.SEARCH.TAB_DOCUMENTS}
-                >
-                  Documents ({documentTotal})
-                </TabsTrigger>
-              </TabsList>
+              <Card
+                variant="ghost"
+                padding="none"
+                radius="none"
+                className="border-b border-ui-border/50 bg-ui-bg-soft/30"
+              >
+                <TabsList variant="underline" className="gap-5 px-3">
+                  <TabsTrigger
+                    value="all"
+                    variant="underline"
+                    className="px-1 pb-3 text-xs uppercase tracking-widest sm:text-sm"
+                    data-testid={TEST_IDS.SEARCH.TAB_ALL}
+                  >
+                    All ({issueTotal + documentTotal})
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="issues"
+                    variant="underline"
+                    className="px-1 pb-3 text-xs uppercase tracking-widest sm:text-sm"
+                    data-testid={TEST_IDS.SEARCH.TAB_ISSUES}
+                  >
+                    Issues ({issueTotal})
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="documents"
+                    variant="underline"
+                    className="px-1 pb-3 text-xs uppercase tracking-widest sm:text-sm"
+                    data-testid={TEST_IDS.SEARCH.TAB_DOCUMENTS}
+                  >
+                    Documents ({documentTotal})
+                  </TabsTrigger>
+                </TabsList>
+              </Card>
             </Tabs>
           ) : null}
 
           {/* Scrollable body: search results and commands */}
-          <CommandList className="min-h-0 flex-1 overflow-y-auto">
+          <CommandList>
             <SearchListContent
               query={effectiveQuery}
               hasShortcuts={parsedSearch.hasShortcuts}
@@ -593,48 +602,59 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
           </CommandList>
 
           {/* Fixed footer: search hints */}
-          <FlexItem
-            shrink={false}
-            className="border-t border-ui-border/50 bg-ui-bg-soft/20 px-4 py-2.5 text-ui-text-tertiary"
-          >
-            <Typography variant="meta" className="hidden sm:block">
-              Search filters: <code>type:bug</code> <code>status:done</code>{" "}
-              <code>priority:high</code> <code>label:frontend</code> <code>@me</code>
-            </Typography>
-            <Typography variant="meta" className="sm:hidden">
-              Try <code>@me</code>, <code>type:bug</code>, or <code>status:done</code>
-            </Typography>
+          <FlexItem shrink={false} className="text-ui-text-tertiary">
+            <Card
+              variant="ghost"
+              padding="md"
+              radius="none"
+              className="border-t border-ui-border/50 bg-ui-bg-soft/20"
+            >
+              <Typography variant="meta" className="hidden sm:block">
+                Search filters: <code>type:bug</code> <code>status:done</code>{" "}
+                <code>priority:high</code> <code>label:frontend</code> <code>@me</code>
+              </Typography>
+              <Typography variant="meta" className="sm:hidden">
+                Try <code>@me</code>, <code>type:bug</code>, or <code>status:done</code>
+              </Typography>
+            </Card>
           </FlexItem>
 
           {/* Fixed footer: action buttons and shortcuts */}
-          <Flex
-            align="center"
-            justify="between"
-            className="shrink-0 border-t border-ui-border/50 bg-ui-bg-soft/10 px-4 py-3"
-          >
-            <Flex align="center" gap="sm" wrap>
-              <Button
-                chrome="framed"
-                chromeSize="compactPill"
-                onClick={handleOpenAdvancedSearch}
-                leftIcon={<Filter className="h-4 w-4" />}
-              >
-                Advanced Search
-              </Button>
-              <Button
-                chrome="framed"
-                chromeSize="compactPill"
-                onClick={() => setQuery("@")}
-                leftIcon={<Plus className="h-4 w-4" />}
-              >
-                Search with filters
-              </Button>
-            </Flex>
-            <Flex align="center" gap="lg" className="hidden sm:flex">
-              <ShortcutHint keys="up+down">Navigate</ShortcutHint>
-              <ShortcutHint keys="Enter">Open</ShortcutHint>
-              <ShortcutHint keys="Esc">Close</ShortcutHint>
-            </Flex>
+          <Flex align="center" justify="between" className="shrink-0">
+            <Card
+              variant="ghost"
+              padding="md"
+              radius="none"
+              className="w-full border-t border-ui-border/50 bg-ui-bg-soft/10"
+            >
+              <Flex align="center" justify="between">
+                <Flex align="center" gap="sm" wrap>
+                  <Button
+                    chrome="framed"
+                    chromeSize="compactPill"
+                    onClick={handleOpenAdvancedSearch}
+                    leftIcon={<Filter className="h-4 w-4" />}
+                  >
+                    Advanced Search
+                  </Button>
+                  <Button
+                    chrome="framed"
+                    chromeSize="compactPill"
+                    onClick={() => setQuery("@")}
+                    leftIcon={<Plus className="h-4 w-4" />}
+                  >
+                    Search with filters
+                  </Button>
+                </Flex>
+                <div className="hidden sm:block">
+                  <Flex align="center" gap="lg">
+                    <ShortcutHint keys="up+down">Navigate</ShortcutHint>
+                    <ShortcutHint keys="Enter">Open</ShortcutHint>
+                    <ShortcutHint keys="Esc">Close</ShortcutHint>
+                  </Flex>
+                </div>
+              </Flex>
+            </Card>
           </Flex>
         </CommandMenu>
       </CommandDialog>
