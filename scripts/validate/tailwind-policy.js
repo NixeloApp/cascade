@@ -114,6 +114,7 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/Landing/ProductShowcase.tsx",
   "/NotificationCenter.tsx",
   "/Notifications/NotificationCenter.tsx",
+  "/RoadmapView.tsx",
   "/Settings/ApiKeysManager.tsx",
   "/Settings/AvatarUploadModal.tsx",
   "/Settings/CoverImageUploadModal.tsx",

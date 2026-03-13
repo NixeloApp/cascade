@@ -69,18 +69,20 @@
 - Removed `Dashboard.tsx` from the `check-recipe-drift.js` migration allowlist by moving its outer shell and main content panels onto owned `Card` recipes instead of local border/background/shadow stacks.
 - Removed `IssueDetailModal.tsx` from the `check-recipe-drift.js` migration allowlist now that it no longer carries any repeated surface recipe drift.
 - Removed `BulkOperationsBar.tsx` from the `check-recipe-drift.js` migration allowlist by moving its floating action-bar shell onto an owned `Card` recipe instead of leaving the border/background/shadow contract inline in feature code.
+- Removed `RoadmapView.tsx` from the `check-recipe-drift.js` migration allowlist by moving its roadmap header controls and empty state back onto owned `Card`, `Select`, and `EmptyState` primitives instead of keeping surface recipes inline in feature code.
 - Added `TimeTracking/TimeEntryModal.tsx` and `TimeTracking/UserRatesManagement.tsx` to design-system ownership targeting so future time-entry shell drift is validated directly.
 - Added `TimeTracking/ManualTimeEntryModal.tsx` to design-system ownership targeting so future manual-entry shell drift is validated directly.
 - Added `TimeTracking/TimeEntriesList.tsx` to design-system ownership targeting so future list-row shell drift is validated directly.
 - Added `TimeTracking/BurnRateDashboard.tsx` to design-system ownership targeting so future reporting-shell drift is validated directly.
 - Added `Dashboard.tsx` and `IssueDetailModal.tsx` to design-system ownership targeting so future dashboard and issue-modal shell drift is validated directly.
 - Added `BulkOperationsBar.tsx` to design-system ownership targeting so future action-bar shell drift is blocked directly.
+- Added `RoadmapView.tsx` to design-system ownership targeting so future roadmap shell drift is blocked directly.
 - Burned down the final explicit `TimeTracking` interactive-state allowlist entry.
 
 ### Next batch
 
 - Keep shrinking the remaining `check-recipe-drift.js` migration allowlist.
-- `RoadmapView.tsx` should go next because it is now the main central high-drift surface still sitting behind a recipe-drift exemption.
+- `CreateProjectFromTemplate.tsx` and `ImportExport/ImportPanel.tsx` should go next because they are the most prominent remaining import/creation surfaces still sitting behind recipe-drift exemptions.
 
 ## Problem
 

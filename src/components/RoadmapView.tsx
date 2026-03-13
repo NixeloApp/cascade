@@ -18,11 +18,12 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useListNavigation } from "@/hooks/useListNavigation";
 import { formatDate } from "@/lib/dates";
-import { LinkIcon } from "@/lib/icons";
+import { CalendarDays, LinkIcon } from "@/lib/icons";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
 import { IssueDetailViewer } from "./IssueDetailViewer";
 import { Card } from "./ui/Card";
+import { EmptyState } from "./ui/EmptyState";
 import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
 import { SegmentedControl, SegmentedControlItem } from "./ui/SegmentedControl";
@@ -538,64 +539,66 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
             </Typography>
           </Stack>
 
-          <Flex gap="md">
-            {/* Epic Filter */}
-            <Select
-              value={filterEpic === "all" ? "all" : filterEpic}
-              onValueChange={(value) =>
-                setFilterEpic(value === "all" ? "all" : (value as Id<"issues">))
-              }
-            >
-              <SelectTrigger className="px-3 py-2 border border-ui-border rounded-lg bg-ui-bg text-ui-text">
-                <SelectValue placeholder="All Epics" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Epics</SelectItem>
-                {epics?.map((epic: Epic) => (
-                  <SelectItem key={epic._id} value={epic._id}>
-                    {epic.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <Card recipe="controlRail" padding="xs" radius="full">
+            <Flex align="center" gap="sm" wrap>
+              {/* Epic Filter */}
+              <Select
+                value={filterEpic === "all" ? "all" : filterEpic}
+                onValueChange={(value) =>
+                  setFilterEpic(value === "all" ? "all" : (value as Id<"issues">))
+                }
+              >
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="All Epics" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Epics</SelectItem>
+                  {epics?.map((epic: Epic) => (
+                    <SelectItem key={epic._id} value={epic._id}>
+                      {epic.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            {/* Timeline Span Selector */}
-            <Select
-              value={String(timelineSpan)}
-              onValueChange={(value) => setTimelineSpan(Number(value) as TimelineSpan)}
-            >
-              <SelectTrigger className="w-28 px-3 py-2 border border-ui-border rounded-lg bg-ui-bg text-ui-text">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TIMELINE_SPANS.map((span) => (
-                  <SelectItem key={span.value} value={String(span.value)}>
-                    {span.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              {/* Timeline Span Selector */}
+              <Select
+                value={String(timelineSpan)}
+                onValueChange={(value) => setTimelineSpan(Number(value) as TimelineSpan)}
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIMELINE_SPANS.map((span) => (
+                    <SelectItem key={span.value} value={String(span.value)}>
+                      {span.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            {/* View Mode Toggle */}
-            <SegmentedControl
-              value={viewMode}
-              onValueChange={(value: string) => value && setViewMode(value as "months" | "weeks")}
-              size="sm"
-            >
-              <SegmentedControlItem value="months">Months</SegmentedControlItem>
-              <SegmentedControlItem value="weeks">Weeks</SegmentedControlItem>
-            </SegmentedControl>
+              {/* View Mode Toggle */}
+              <SegmentedControl
+                value={viewMode}
+                onValueChange={(value: string) => value && setViewMode(value as "months" | "weeks")}
+                size="sm"
+              >
+                <SegmentedControlItem value="months">Months</SegmentedControlItem>
+                <SegmentedControlItem value="weeks">Weeks</SegmentedControlItem>
+              </SegmentedControl>
 
-            {/* Dependency Lines Toggle */}
-            <Button
-              variant={showDependencies ? "primary" : "ghost"}
-              size="sm"
-              onClick={() => setShowDependencies(!showDependencies)}
-              title={showDependencies ? "Hide dependency lines" : "Show dependency lines"}
-            >
-              <Icon icon={LinkIcon} size="sm" />
-            </Button>
-          </Flex>
+              {/* Dependency Lines Toggle */}
+              <Button
+                variant={showDependencies ? "primary" : "ghost"}
+                size="sm"
+                onClick={() => setShowDependencies(!showDependencies)}
+                title={showDependencies ? "Hide dependency lines" : "Show dependency lines"}
+              >
+                <Icon icon={LinkIcon} size="sm" />
+              </Button>
+            </Flex>
+          </Card>
         </Flex>
 
         {/* Timeline Container */}
@@ -632,25 +635,12 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
           {/* Timeline Body (Virtualized) */}
           <FlexItem flex="1">
             {filteredIssues.length === 0 ? (
-              <Card
-                variant="soft"
-                padding="xl"
-                className="m-6 min-h-96 border border-dashed border-ui-border-secondary text-center"
-              >
-                <Flex
-                  direction="column"
-                  gap="sm"
-                  align="center"
-                  justify="center"
-                  className="min-h-80"
-                >
-                  <Typography variant="h4">Roadmap is ready for planning</Typography>
-                  <Typography color="secondary">No issues with due dates to display</Typography>
-                  <Typography variant="small" color="secondary">
-                    Add due dates in your board or backlog to populate this timeline view.
-                  </Typography>
-                </Flex>
-              </Card>
+              <EmptyState
+                icon={CalendarDays}
+                title="Roadmap is ready for planning"
+                description="No issues with due dates to display yet. Add due dates in your board or backlog to populate this timeline view."
+                className="m-6 min-h-96 max-w-none border-dashed"
+              />
             ) : (
               <div className="relative">
                 <List<RowData>

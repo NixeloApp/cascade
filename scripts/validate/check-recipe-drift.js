@@ -41,8 +41,6 @@ const ALLOWED_FILES = [
   // Dashboard surfaces
   "Dashboard/RecentActivity.tsx",
   "Dashboard/WorkspacesList.tsx",
-  // Roadmap
-  "RoadmapView.tsx",
   // Import/Export
   "CreateProjectFromTemplate.tsx",
   "ImportExport/ImportPanel.tsx",
