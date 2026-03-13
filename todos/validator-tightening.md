@@ -216,7 +216,9 @@
 - Removed `Plate/FloatingToolbar.tsx`, `Plate/ColorPickerButton.tsx`, `Plate/MentionInputElement.tsx`, and `Plate/MentionElement.tsx` from live interactive debt by moving toolbar, mention-row, and color-swatch hover/focus behavior onto owned `Button` chrome variants instead of feature-level classes.
 - Added `Plate/ColorPickerButton.tsx`, `Plate/MentionElement.tsx`, `Plate/MentionInputElement.tsx`, and `Plate/FloatingToolbar.tsx` to design-system ownership targeting so future editor-surface drift is blocked directly.
 - Tightened `check-interactive-tw.js` so it scans real JSX `className=` spans instead of arbitrary lines, avoiding false positives from editor type annotations like `focus` fields while keeping the rule blocking on actual Tailwind variants.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on the remaining broader interactive escape hatches in `ImportExport/` and the single explicit `Plate/DragHandle.tsx` debt entry, which are now larger validator gaps than the migrated Plate toolbar surfaces.
+- Removed the broad `ImportExport/` interactive allowlist entry from `check-interactive-tw.js` by moving `ExportPanel.tsx` format selection onto owned `Card` option-tile recipes instead of feature-level hover and selected-state classes.
+- Added `ImportExport/ExportPanel.tsx` to design-system ownership targeting so future export-surface drift is blocked directly.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on the single explicit `Plate/DragHandle.tsx` debt entry and the remaining broad raw-Tailwind escape hatches like `src/components/ImportExport/`, which are now larger validator gaps than the migrated interactive surfaces.
 
 ## Problem
 

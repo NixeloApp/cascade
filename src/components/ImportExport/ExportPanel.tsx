@@ -12,7 +12,6 @@ import { useEffect, useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { FileCode, FileSpreadsheet, Info } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
@@ -122,12 +121,11 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
         </Typography>
         <Grid cols={2} gap="md">
           <Card
+            recipe={exportFormat === "csv" ? "optionTileSelected" : "optionTile"}
             padding="md"
             onClick={() => setExportFormat("csv")}
-            className={cn(
-              "cursor-pointer transition-all",
-              exportFormat === "csv" ? "ring-2 ring-brand bg-brand/5" : "hover:bg-ui-bg-secondary",
-            )}
+            className="cursor-pointer"
+            aria-pressed={exportFormat === "csv"}
           >
             <Flex gap="md" align="center">
               <Icon icon={FileSpreadsheet} size="lg" />
@@ -143,12 +141,11 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
           </Card>
 
           <Card
+            recipe={exportFormat === "json" ? "optionTileSelected" : "optionTile"}
             padding="md"
             onClick={() => setExportFormat("json")}
-            className={cn(
-              "cursor-pointer transition-all",
-              exportFormat === "json" ? "ring-2 ring-brand bg-brand/5" : "hover:bg-ui-bg-secondary",
-            )}
+            className="cursor-pointer"
+            aria-pressed={exportFormat === "json"}
           >
             <Flex gap="md" align="center">
               <Icon icon={FileCode} size="lg" />

@@ -92,6 +92,7 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/Notifications/NotificationItem.tsx",
   "/InboxList.tsx",
   "/ImportExport/ImportPanel.tsx",
+  "/ImportExport/ExportPanel.tsx",
   "/ImportExportModal.tsx",
   "/Invoices/InvoiceEditor.tsx",
   "/Invoices/InvoicePdfTemplate.tsx",

@@ -31,7 +31,6 @@ const ALLOWED_FILES = [
   // Modals
   "CreateProjectFromTemplate.tsx",
   "BulkOperationsBar.tsx",
-  "ImportExport/",
   // Forms/fields
   "CustomFieldValues.tsx",
   // Calendar
