@@ -292,6 +292,9 @@
 - Removed the stale `calendar-body.tsx` and `calendar-body-day-calendar.tsx` raw-debt entries now that both files carry no feature-level Tailwind and can sit under direct ownership targeting without an escape hatch.
 - Removed `calendar-body-margin-day-margin.tsx` from embedded calendar raw debt by moving the sticky hour rail and spacer onto owned `Card` recipes and the time labels onto an owned `Typography` variant instead of inline background, border, and text chrome.
 - Added those three embedded calendar day-body files to design-system ownership targeting so future day-view wrapper drift is blocked directly.
+- Removed the stale `calendar-provider.tsx`, `calendar-context.tsx`, and `calendar-mode-icon-map.tsx` raw-debt entries now that they contain no feature-level Tailwind and never needed an embedded-calendar escape hatch.
+- Removed the stale `calendar-provider.tsx` test-coverage baseline entry after clearing the last false-positive debt marker around that implementation file.
+- Embedded calendar raw-debt is now zero. Any future drift in that implementation will have to justify itself directly instead of inheriting a blanket exception.
 - The embedded calendar island is now narrowed from directory-wide escape hatches to explicit file debt. Burn that list down surface by surface instead of allowing new embedded drift by default.
 
 ## Problem

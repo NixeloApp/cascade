@@ -49,7 +49,6 @@ export const TEST_COVERAGE_BASELINE = [
   "src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx",
   "src/components/Calendar/shadcn-calendar/body/week/calendar-body-week.tsx",
   "src/components/Calendar/shadcn-calendar/calendar-event.tsx",
-  "src/components/Calendar/shadcn-calendar/calendar-provider.tsx",
   "src/components/Calendar/shadcn-calendar/calendar.tsx",
   "src/components/Calendar/shadcn-calendar/header/actions/calendar-header-actions-mode.tsx",
   "src/components/Calendar/shadcn-calendar/header/date/calendar-header-date-chevrons.tsx",
