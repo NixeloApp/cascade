@@ -12,7 +12,9 @@ import { ChevronDown, Play, Plus, Square } from "lucide-react";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { MetadataTimestamp } from "@/components/ui/Metadata";
+import { Progress } from "@/components/ui/Progress";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatCurrency, formatHours } from "@/lib/formatting";
@@ -61,17 +63,10 @@ function TimeProgress({
             </Typography>
           )}
         </Flex>
-        <div className="w-full bg-ui-bg-tertiary rounded-full h-2">
-          <div
-            className={cn(
-              "h-2 rounded-full transition-all duration-medium",
-              isOverEstimate ? "bg-status-error" : "bg-brand",
-            )}
-            style={{
-              width: `${Math.min((totalLoggedHours / estimatedHours) * 100, 100)}%`,
-            }}
-          />
-        </div>
+        <Progress
+          value={Math.min((totalLoggedHours / estimatedHours) * 100, 100)}
+          variant={isOverEstimate ? "error" : "default"}
+        />
       </Stack>
     );
   }
@@ -99,12 +94,7 @@ function TimeEntriesList({
   entries: (Doc<"timeEntries"> & { totalCost?: number })[];
 }) {
   return (
-    <Card
-      padding="md"
-      radius="none"
-      variant="ghost"
-      className="border-t border-ui-border bg-ui-bg-secondary"
-    >
+    <Card recipe="timeTrackerEntries" padding="md" radius="none" variant="ghost">
       <Stack gap="sm">
         {entries.map((entry) => {
           const hours = formatHours(entry.duration);
@@ -191,14 +181,9 @@ export function TimeTracker({
   };
 
   return (
-    <Card padding="none" className="border border-ui-border">
+    <Card recipe="timeTrackerShell" padding="none">
       {/* Header */}
-      <Card
-        padding="md"
-        radius="none"
-        variant="ghost"
-        className="border-b border-ui-border border-x-0 border-t-0"
-      >
+      <Card recipe="timeTrackerHeader" padding="md" radius="none" variant="ghost">
         <Stack gap="sm">
           <Flex align="center" justify="between">
             <Typography variant="label">Time Tracking</Typography>
@@ -209,7 +194,7 @@ export function TimeTracker({
                   variant="danger"
                   size="sm"
                   onClick={handleStopTimer}
-                  leftIcon={<Square className="w-4 h-4" fill="currentColor" />}
+                  leftIcon={<Icon icon={Square} size="sm" fill="currentColor" />}
                 >
                   Stop Timer
                 </Button>
@@ -222,7 +207,7 @@ export function TimeTracker({
                   title={
                     runningTimer ? "Stop the current timer first" : "Start timer for this issue"
                   }
-                  leftIcon={<Play className="w-4 h-4" fill="currentColor" />}
+                  leftIcon={<Icon icon={Play} size="sm" fill="currentColor" />}
                 >
                   Start Timer
                 </Button>
@@ -233,7 +218,7 @@ export function TimeTracker({
                 variant="secondary"
                 size="sm"
                 onClick={() => setShowLogModal(true)}
-                leftIcon={<Plus className="w-4 h-4" />}
+                leftIcon={<Icon icon={Plus} size="sm" />}
               >
                 Log Time
               </Button>
@@ -253,8 +238,10 @@ export function TimeTracker({
           onClick={() => setShowEntries(!showEntries)}
           className="w-full justify-between min-h-0 rounded-none"
           rightIcon={
-            <ChevronDown
-              className={cn("w-4 h-4 transition-transform", showEntries ? "rotate-180" : "")}
+            <Icon
+              icon={ChevronDown}
+              size="sm"
+              className={cn("transition-transform", showEntries ? "rotate-180" : "")}
             />
           }
         >

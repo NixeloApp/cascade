@@ -71,6 +71,9 @@ const cardRecipeVariants = cva("", {
         "rounded-2xl border-ui-border-secondary/82 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/96 to-ui-bg-soft/82 shadow-card sm:rounded-3xl",
       documentHeaderShell:
         "border-x-0 border-t-0 rounded-none border-ui-border-secondary/85 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/96 to-ui-bg-soft/84 shadow-soft",
+      templateBuiltInTile:
+        "h-full border-2 border-transparent bg-linear-to-br from-brand-subtle to-brand-subtle text-left shadow-none hover:border-brand-muted hover:shadow-card-hover",
+      templateCustomTile: "bg-ui-bg-secondary shadow-none hover:bg-ui-bg-tertiary",
       dashboardShell:
         "relative overflow-hidden rounded-container border-ui-border/40 bg-linear-to-b from-ui-bg to-ui-bg-secondary/50 shadow-soft",
       dashboardPanel: "border-ui-border-secondary/70 bg-ui-bg/75 shadow-soft",
@@ -190,6 +193,11 @@ const cardRecipeVariants = cva("", {
       labelGroupRow:
         "rounded-none border-x-0 border-t-0 border-b border-ui-border-secondary bg-transparent shadow-none hover:bg-ui-bg-secondary",
       dependencyRow: "rounded-xl border-ui-border-secondary/70 bg-ui-bg-secondary shadow-none",
+      timeTrackerShell: "border-ui-border bg-ui-bg shadow-none",
+      timeTrackerHeader:
+        "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-transparent shadow-none",
+      timeTrackerEntries:
+        "rounded-none border-x-0 border-b-0 border-t border-ui-border bg-ui-bg-secondary shadow-none",
       issueAssigneeFallback:
         "rounded-full border-transparent bg-ui-bg-tertiary text-ui-text-secondary shadow-none",
       issueCard:

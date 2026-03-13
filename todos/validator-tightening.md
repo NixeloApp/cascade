@@ -167,7 +167,10 @@
 - Removed `Documents/DocumentHeader.tsx` from the raw-Tailwind and interactive-state debt lists by moving its title, title-input, shell, and action-button contracts onto owned `Typography`, `Input`, `Card`, `Button`, and `Flex` APIs.
 - Removed `IssueDescriptionEditor.tsx` from the raw-Tailwind and interactive-state debt lists by moving the editor/read-only prose contract into `ui/MarkdownContent` variants instead of keeping Plate content styling inline in feature code.
 - Added `IssueDescriptionEditor.tsx` to design-system ownership targeting so future editor-surface drift is blocked directly.
-- Keep working through shared workflow/editor surfaces rather than decorative backdrops, with the next pass focused on `DocumentTemplatesManager.tsx` and `TimeTracker.tsx`, which are now among the next higher-impact surfaces still sitting behind explicit validator debt.
+- Removed `Documents/DocumentTemplatesManager.tsx` from the raw-Tailwind and interactive-state debt lists by moving template-card shells onto owned `Card` recipes, replacing inline edit/delete controls with owned `IconButton`, and replacing the raw public checkbox row with the shared `Checkbox` primitive.
+- Removed `TimeTracker.tsx` from the raw-Tailwind debt list by moving its rails onto owned `Card` recipes and replacing the custom progress bar chrome with the shared `Progress` primitive.
+- Added `Documents/DocumentTemplatesManager.tsx` and `TimeTracker.tsx` to design-system ownership targeting so future shell drift is blocked directly.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `IssueDetailSheet.tsx` and `VersionHistory.tsx`, which are now among the next higher-impact surfaces still sitting behind explicit validator debt.
 
 ## Problem
 

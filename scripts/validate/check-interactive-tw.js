@@ -28,7 +28,6 @@ const ALLOWED_FILES = [
   "DocumentComments.tsx",
   // Document components
   "DocumentTree.tsx",
-  "DocumentTemplatesManager.tsx",
   // Editor components
   "Plate/",
   "PlateEditor.tsx",
