@@ -11,16 +11,13 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   "/Calendar/shadcn-calendar/body/day/calendar-body-day-calendar.tsx",
   "/Calendar/shadcn-calendar/body/day/calendar-body-margin-day-margin.tsx",
   "/Calendar/shadcn-calendar/calendar-context.tsx",
-  "/Calendar/shadcn-calendar/calendar-event.tsx",
   "/Calendar/shadcn-calendar/calendar-mode-icon-map.tsx",
   "/Calendar/shadcn-calendar/calendar-provider.tsx",
   "/Calendar/shadcn-calendar/calendar.tsx",
   "/Calendar/shadcn-calendar/header/actions/calendar-header-actions-add.tsx",
-  "/Calendar/shadcn-calendar/header/actions/calendar-header-actions.tsx",
   "/Calendar/shadcn-calendar/header/calendar-header.tsx",
   "/Calendar/shadcn-calendar/header/date/calendar-header-date-badge.tsx",
   "/Calendar/shadcn-calendar/header/date/calendar-header-date-icon.tsx",
-  "/Calendar/shadcn-calendar/header/date/calendar-header-date.tsx",
 ];
 
 export const RAW_TAILWIND_ALLOWED_EXTENSIONS = [".stories.tsx", ".test.tsx", ".example.tsx"];
@@ -85,6 +82,9 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/Calendar/shadcn-calendar/body/day/calendar-body-day-content.tsx",
   "/Calendar/shadcn-calendar/body/day/calendar-body-day-events.tsx",
   "/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx",
+  "/Calendar/shadcn-calendar/calendar-event.tsx",
+  "/Calendar/shadcn-calendar/header/actions/calendar-header-actions.tsx",
+  "/Calendar/shadcn-calendar/header/date/calendar-header-date.tsx",
   "/Calendar/shadcn-calendar/header/actions/calendar-header-actions-mode.tsx",
   "/Calendar/shadcn-calendar/header/date/calendar-header-date-chevrons.tsx",
   "/CommentReactions.tsx",
