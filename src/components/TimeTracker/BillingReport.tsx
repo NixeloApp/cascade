@@ -109,7 +109,7 @@ export function BillingReport({ projectId }: BillingReportProps) {
               }
             }}
           >
-            <SelectTrigger className="px-3 py-2 border border-ui-border rounded-md bg-ui-bg text-ui-text">
+            <SelectTrigger>
               <SelectValue placeholder="Select date range" />
             </SelectTrigger>
             <SelectContent>

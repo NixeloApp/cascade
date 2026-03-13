@@ -49,13 +49,16 @@
 - Removed `src/components/Analytics/` from `RAW_TAILWIND_ALLOWED_DIRS` and removed `Analytics/` from the interactive-state migration allowlist.
 - Migrated `Analytics/RecentActivity.tsx` off its local hover/surface shell by moving the timeline row styling behind an owned `Card` recipe, and cleaned `Analytics/BarChart.tsx` so its fill track no longer depends on raw flex utility stacks.
 - Added `Analytics/RecentActivity.tsx` to design-system ownership targeting so future analytics shell drift is blocked directly.
+- Removed `src/components/TimeTracker/` from `RAW_TAILWIND_ALLOWED_DIRS`.
+- Removed the last surfaced `TimeTracker` shell override in `TimeTracker/BillingReport.tsx` by dropping the locally-styled `SelectTrigger` chrome and relying on the owned select primitive.
+- Added `TimeTracker/BillingReport.tsx` and `TimeTracker/Timesheet.tsx` to design-system ownership targeting so future time-tracker shell drift is validated directly.
 
 ### Next batch
 
 - Burn down the explicit file-level debt entries added for:
   - settings surfaces
   - admin surfaces
-- Shrink the remaining broad raw-Tailwind escape hatches, with `src/components/TimeTracking/` and `src/components/TimeTracker/` next now that `src/components/Analytics/` is no longer broadly exempt.
+- Shrink the remaining broad raw-Tailwind escape hatches, with `src/components/TimeTracking/` next now that `src/components/Analytics/` and `src/components/TimeTracker/` are no longer broadly exempt.
 
 ## Problem
 
