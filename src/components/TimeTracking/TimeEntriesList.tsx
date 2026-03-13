@@ -13,6 +13,8 @@ import { Clock, FileText, Folder, Lock, Plus, Trash } from "lucide-react";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Icon } from "@/components/ui/Icon";
+import { ListItem, ListItemActions, ListItemContent, ListItemMeta } from "@/components/ui/ListItem";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -21,7 +23,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
-import { Flex, FlexItem } from "../ui/Flex";
+import { Flex } from "../ui/Flex";
 import { IconButton } from "../ui/IconButton";
 import { Typography } from "../ui/Typography";
 import { TimeEntryModal } from "./TimeEntryModal";
@@ -125,8 +127,8 @@ export function TimeEntriesList({
   }
 
   const headerCard = (
-    <Card variant="flat" padding="md" className="border-ui-border-secondary/70 bg-ui-bg-soft/90">
-      <Flex justify="between" align="center" gap="md" className="flex-wrap">
+    <Card variant="flat" padding="md">
+      <Flex justify="between" align="center" gap="md" wrap>
         <Stack gap="xs">
           <Typography variant="label">Recent entries</Typography>
           <Typography variant="caption" color="secondary">
@@ -171,7 +173,7 @@ export function TimeEntriesList({
       {groupedEntries.map(({ date: isoDate, entries: dateEntries, duration }) => (
         <Stack key={isoDate} gap="sm">
           {/* Date header */}
-          <Flex justify="between" align="end" className="px-1">
+          <Flex justify="between" align="end">
             <Typography variant="label" color="secondary" as="span">
               {formatDate(new Date(`${isoDate}T00:00:00`).getTime())}
             </Typography>
@@ -180,82 +182,85 @@ export function TimeEntriesList({
             </Typography>
           </Flex>
 
-          <Card padding="none" className="divide-y divide-ui-border">
+          <Stack gap="xs">
             {dateEntries.map((entry) => (
-              <Flex
-                align="start"
-                gap="md"
-                className="p-3 hover:bg-ui-bg-tertiary transition-colors group"
+              <Card
                 key={entry._id}
+                variant="outline"
+                padding="none"
+                hoverable={!(entry.isLocked || entry.billed)}
               >
-                {/* Details */}
-                <FlexItem flex="1" className="min-w-0">
-                  <Stack gap="xs">
-                    {entry.description && (
-                      <Typography variant="label">{entry.description}</Typography>
-                    )}
-
-                    <Flex align="center" gap="md">
-                      {entry.activity && <Badge variant="neutral">{entry.activity}</Badge>}
-
-                      {entry.project && (
-                        <Flex align="center" gap="xs">
-                          <Folder className="w-3 h-3" />
-                          <Typography variant="meta" color="secondary">
-                            {entry.project.name}
-                          </Typography>
-                        </Flex>
+                <ListItem size="md">
+                  <ListItemContent>
+                    <Stack gap="xs">
+                      {entry.description && (
+                        <Typography variant="label">{entry.description}</Typography>
                       )}
 
-                      {entry.issue && (
-                        <Flex align="center" gap="xs">
-                          <FileText className="w-3 h-3" />
-                          <Typography variant="meta" color="secondary">
-                            {entry.issue.key}
-                          </Typography>
-                        </Flex>
+                      <Flex align="center" gap="md" wrap>
+                        {entry.activity && <Badge variant="neutral">{entry.activity}</Badge>}
+
+                        {entry.project && (
+                          <Flex align="center" gap="xs">
+                            <Icon icon={Folder} size="xs" />
+                            <Typography variant="meta" color="secondary">
+                              {entry.project.name}
+                            </Typography>
+                          </Flex>
+                        )}
+
+                        {entry.issue && (
+                          <Flex align="center" gap="xs">
+                            <Icon icon={FileText} size="xs" />
+                            <Typography variant="meta" color="secondary">
+                              {entry.issue.key}
+                            </Typography>
+                          </Flex>
+                        )}
+
+                        {entry.billable && <Badge variant="success">Billable</Badge>}
+
+                        {entry.isLocked && (
+                          <Badge variant="warning">
+                            <Flex as="span" inline align="center" gap="xs">
+                              <Icon icon={Lock} size="xs" />
+                              <span>Locked</span>
+                            </Flex>
+                          </Badge>
+                        )}
+                      </Flex>
+                    </Stack>
+                  </ListItemContent>
+
+                  <ListItemMeta>
+                    <Stack gap="xs" align="end">
+                      <Typography variant="label">
+                        {formatDurationDisplay(entry.duration)}
+                      </Typography>
+                      {entry.totalCost !== undefined && entry.totalCost > 0 && (
+                        <Typography variant="caption" color="secondary">
+                          {formatCurrency(entry.totalCost, entry.currency)}
+                        </Typography>
                       )}
+                    </Stack>
+                  </ListItemMeta>
 
-                      {entry.billable && <Badge variant="success">Billable</Badge>}
-
-                      {entry.isLocked && (
-                        <Flex align="center" gap="xs" className="text-status-warning">
-                          <Lock className="w-3 h-3" />
-                          <Typography variant="meta" color="warning">
-                            Locked
-                          </Typography>
-                        </Flex>
-                      )}
-                    </Flex>
-                  </Stack>
-                </FlexItem>
-
-                {/* Duration and cost */}
-                <FlexItem shrink={false} className="text-right">
-                  <Typography variant="label">{formatDurationDisplay(entry.duration)}</Typography>
-                  {entry.totalCost !== undefined && entry.totalCost > 0 && (
-                    <Typography variant="caption" color="secondary">
-                      {formatCurrency(entry.totalCost, entry.currency)}
-                    </Typography>
+                  {!(entry.isLocked || entry.billed) && (
+                    <ListItemActions>
+                      <IconButton
+                        onClick={() => handleDeleteClick(entry._id)}
+                        variant="danger"
+                        size="sm"
+                        aria-label="Delete entry"
+                      >
+                        <Trash className="w-4 h-4" />
+                      </IconButton>
+                    </ListItemActions>
                   )}
-                </FlexItem>
-
-                {/* Actions */}
-                {!(entry.isLocked || entry.billed) && (
-                  <FlexItem shrink={false}>
-                    <IconButton
-                      onClick={() => handleDeleteClick(entry._id)}
-                      variant="danger"
-                      size="sm"
-                      aria-label="Delete entry"
-                    >
-                      <Trash className="w-4 h-4" />
-                    </IconButton>
-                  </FlexItem>
-                )}
-              </Flex>
+                </ListItem>
+              </Card>
             ))}
-          </Card>
+          </Stack>
         </Stack>
       ))}
 
