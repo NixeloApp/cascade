@@ -75,44 +75,46 @@ export function CustomFieldCard({ field, onEdit, onDelete }: CustomFieldCardProp
   return (
     <Card padding="md">
       <Flex justify="between" align="start">
-        <Flex gap="md" align="start" className="flex-1">
-          <Icon icon={getFieldTypeIcon(field.fieldType)} size="lg" />
-          <FlexItem flex="1">
-            <Stack gap="sm">
-              <Flex gap="sm" align="center">
-                <Typography variant="label">{field.name}</Typography>
-                {field.isRequired && <Badge variant="error">Required</Badge>}
-              </Flex>
-              <Metadata size="sm">
-                <MetadataItem>
-                  <code className="px-2 py-0.5 bg-ui-bg-secondary rounded font-mono text-xs">
-                    {field.fieldKey}
-                  </code>
-                </MetadataItem>
-                <MetadataItem className="capitalize">{field.fieldType}</MetadataItem>
-              </Metadata>
-              {field.description && (
-                <Typography variant="small" color="secondary">
-                  {field.description}
-                </Typography>
-              )}
-              {field.options && field.options.length > 0 && (
-                <Flex wrap gap="xs">
-                  {field.options.map((option) => (
-                    <Badge key={option} variant="secondary" size="md">
-                      {option}
-                    </Badge>
-                  ))}
+        <FlexItem flex="1">
+          <Flex gap="md" align="start">
+            <Icon icon={getFieldTypeIcon(field.fieldType)} size="lg" />
+            <FlexItem flex="1">
+              <Stack gap="sm">
+                <Flex gap="sm" align="center">
+                  <Typography variant="label">{field.name}</Typography>
+                  {field.isRequired && <Badge variant="error">Required</Badge>}
                 </Flex>
-              )}
-            </Stack>
-          </FlexItem>
-        </Flex>
+                <Metadata size="sm">
+                  <MetadataItem>
+                    <Typography as="code" variant="inlineCode">
+                      {field.fieldKey}
+                    </Typography>
+                  </MetadataItem>
+                  <MetadataItem className="capitalize">{field.fieldType}</MetadataItem>
+                </Metadata>
+                {field.description && (
+                  <Typography variant="small" color="secondary">
+                    {field.description}
+                  </Typography>
+                )}
+                {field.options && field.options.length > 0 && (
+                  <Flex wrap gap="xs">
+                    {field.options.map((option) => (
+                      <Badge key={option} variant="secondary" size="md">
+                        {option}
+                      </Badge>
+                    ))}
+                  </Flex>
+                )}
+              </Stack>
+            </FlexItem>
+          </Flex>
+        </FlexItem>
         <Flex gap="sm">
           <Button onClick={onEdit} variant="secondary" size="sm">
             Edit
           </Button>
-          <Button onClick={onDelete} variant="secondary" size="sm" className="text-status-error">
+          <Button onClick={onDelete} variant="ghostDanger" size="sm">
             Delete
           </Button>
         </Flex>

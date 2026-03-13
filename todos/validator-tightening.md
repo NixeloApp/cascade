@@ -223,7 +223,9 @@
 - Removed the broad `src/components/ImportExport/` raw-Tailwind escape hatch by replacing the remaining inline-styled requirement token in `ImportPanel.tsx` with owned `Typography inlineCode` and moving `ExportPanel.tsx` export guidance onto the shared `Alert` primitive instead of a local branded shell.
 - Removed the broad `src/components/Templates/` raw-Tailwind escape hatch by moving `TemplateForm.tsx` template-editing chrome onto an owned textarea `variant="code"` and replacing its raw `pt-4` footer spacing with non-blocked layout spacing.
 - Added `Templates/TemplateCard.tsx` and `Templates/TemplateForm.tsx` to design-system ownership targeting so future template-surface drift is blocked directly.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on shrinking the remaining broad raw-Tailwind escape hatches in folders like `Fields/` and `Automation/`, which are now larger validator gaps than the migrated template surfaces.
+- Removed the broad `src/components/Fields/` raw-Tailwind escape hatch by moving the custom-field key token in `CustomFieldCard.tsx` onto owned `Typography inlineCode`, switching the destructive action onto owned `Button` danger chrome, and moving the field-key input onto an owned input `variant="code"`.
+- Added `Fields/CustomFieldCard.tsx` and `Fields/CustomFieldForm.tsx` to design-system ownership targeting so future custom-field surface drift is blocked directly.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on shrinking the remaining broad raw-Tailwind escape hatch in `Automation/`, which is now the larger remaining validator gap in this area.
 
 ## Problem
 
