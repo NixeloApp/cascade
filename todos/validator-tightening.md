@@ -150,12 +150,14 @@
 - Added `CommentReactions.tsx` to design-system ownership targeting so future comment-reaction shell drift is blocked directly.
 - Removed `IssueComments.tsx` from the raw-Tailwind and interactive-state debt lists by moving the comment card and pending attachment row chrome onto owned `Card` recipes, collapsing the empty state onto the shared `EmptyState` primitive, and replacing the attachment link hover styling with owned button composition.
 - Added `IssueComments.tsx` to design-system ownership targeting so future comment-thread shell drift is blocked directly.
+- Removed `AttachmentList.tsx` and `FileAttachments.tsx` from the interactive-state debt list by extracting shared `AttachmentRow` and `FileUploadDropzone` primitives and moving file-link, action-reveal, and dropzone interaction chrome into owned UI components.
+- Added `AttachmentList.tsx` and `FileAttachments.tsx` to design-system ownership targeting so future attachment-shell drift is blocked directly.
 
 ### Next batch
 
 - Continue shrinking the explicit `AI` debt now that the broad directory escapes are gone.
 - The explicit `AI` raw-Tailwind debt list is now empty.
-- Keep working through smaller helper controls and shared workflow surfaces rather than decorative backdrops, with the next pass focused on `AttachmentList.tsx` and `FileAttachments.tsx`, which are now among the next high-impact attachment-heavy interaction surfaces still sitting behind explicit validator debt.
+- Keep working through smaller helper controls and shared workflow surfaces rather than decorative backdrops, with the next pass focused on `LabelsManager.tsx` and `IssueDependencies.tsx`, which are now among the next higher-impact workflow surfaces still sitting behind explicit validator debt.
 
 ## Problem
 

@@ -182,6 +182,7 @@ const cardRecipeVariants = cva("", {
       commentThreadItem:
         "rounded-container border-ui-border-secondary/75 bg-linear-to-b from-ui-bg-soft/96 via-ui-bg-soft/92 to-ui-bg-elevated/94 shadow-none hover:border-ui-border-secondary hover:bg-ui-bg-hover",
       pendingAttachmentRow: "rounded-xl border-ui-border bg-ui-bg-soft shadow-none",
+      attachmentRow: "rounded-xl border-ui-border bg-ui-bg-soft shadow-none",
       mentionMenu:
         "overflow-hidden rounded-container border-ui-border-secondary bg-linear-to-br from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/70 shadow-lg",
       floatingWidget: "overflow-hidden rounded-container border-ui-border bg-ui-bg shadow-elevated",

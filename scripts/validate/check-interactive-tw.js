@@ -46,8 +46,6 @@ const ALLOWED_FILES = [
   "VersionHistory.tsx",
   // Forms/fields
   "CustomFieldValues.tsx",
-  "FileAttachments.tsx",
-  "AttachmentList.tsx",
   "LabelsManager.tsx",
   // Calendar
   "Calendar/",
