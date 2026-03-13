@@ -180,10 +180,10 @@ export function NotificationCenter() {
             {/* Unread Badge */}
             {unreadCount != null && unreadCount > 0 && (
               <Badge
-                variant="error"
+                variant="alertCount"
                 size="sm"
                 shape="pill"
-                className="absolute top-0 right-0 font-bold leading-none transform translate-x-1/2 -translate-y-1/2 border-0"
+                className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2"
               >
                 {unreadCount > 99 ? "99+" : unreadCount}
               </Badge>
@@ -200,22 +200,16 @@ export function NotificationCenter() {
       >
         <Stack gap="none" className="h-full">
           {/* Header */}
-          <Card
-            padding="md"
-            radius="none"
-            variant="ghost"
-            className="border-x-0 border-t-0 sticky top-0 bg-ui-bg rounded-t-lg"
-          >
+          <Card recipe="notificationPanelHeader" padding="md" radius="none">
             <Stack gap="sm">
               <Flex align="center" justify="between">
                 <Typography variant="h3">Notifications</Typography>
                 {unreadCount != null && unreadCount > 0 && (
                   <Button
-                    variant="ghost"
-                    size="sm"
+                    variant="link"
+                    size="none"
                     onClick={handleMarkAllAsRead}
                     isLoading={isLoading}
-                    className="text-brand hover:text-brand-hover"
                   >
                     Mark all read
                   </Button>
@@ -260,7 +254,7 @@ export function NotificationCenter() {
                   return (
                     <div key={group}>
                       {/* Group Header */}
-                      <div className="px-4 py-2 bg-ui-bg-secondary border-b border-ui-border sticky top-0">
+                      <Card recipe="notificationPanelSectionHeader" padding="sm" radius="none">
                         <Typography
                           variant="caption"
                           color="secondary"
@@ -268,7 +262,7 @@ export function NotificationCenter() {
                         >
                           {DATE_GROUP_LABELS[group]}
                         </Typography>
-                      </div>
+                      </Card>
                       {/* Group Items */}
                       <div className="divide-y divide-ui-border">
                         {groupNotifs.map((notification) => (
@@ -292,21 +286,17 @@ export function NotificationCenter() {
 
           {/* Footer - View All Link */}
           {orgContext?.orgSlug && (
-            <Card
-              padding="sm"
-              radius="none"
-              variant="ghost"
-              className="border-x-0 border-b-0 bg-ui-bg-secondary rounded-b-lg"
-            >
-              <Link
-                to={ROUTES.notifications.path}
-                params={{ orgSlug: orgContext.orgSlug }}
-                onClick={() => setIsOpen(false)}
-                className="flex items-center justify-center gap-2 text-sm text-brand hover:text-brand-hover transition-colors"
-              >
-                View all notifications
-                <ExternalLink className="h-3.5 w-3.5" />
-              </Link>
+            <Card recipe="notificationPanelFooter" padding="sm" radius="none">
+              <Button asChild variant="link" size="none" className="w-full justify-center gap-2">
+                <Link
+                  to={ROUTES.notifications.path}
+                  params={{ orgSlug: orgContext.orgSlug }}
+                  onClick={() => setIsOpen(false)}
+                >
+                  View all notifications
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </Link>
+              </Button>
             </Card>
           )}
         </Stack>

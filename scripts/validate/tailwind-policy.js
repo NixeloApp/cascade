@@ -56,7 +56,6 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   "/layout/PageHeader.tsx",
   "/layout/PageLayout.tsx",
   "/MentionInput.tsx",
-  "/NotificationCenter.tsx",
   "/NotificationItem.tsx",
   "/PlateEditor.tsx",
   "/ProjectsList.tsx",

@@ -129,12 +129,13 @@
 - Removed `AI/AIErrorFallback.tsx` from the raw-Tailwind debt list by collapsing it onto the shared `SectionErrorFallback` and owned `Alert` primitives instead of keeping an AI-specific centered shell and debug-details surface inline.
 - Added `AI/AIErrorFallback.tsx` to design-system ownership targeting so future assistant fallback shell drift is blocked directly.
 - Removed `UserMenu.tsx` from the raw-Tailwind and interactive-state debt lists by moving destructive item styling into owned `DropdownMenuItem` variants and replacing the leftover feature-level menu-label weight override with an owned `DropdownMenuLabel` prop.
+- Removed `Notifications/NotificationCenter.tsx` from the raw-Tailwind and interactive-state debt lists by moving its sticky header/group/footer shells onto owned `Card` recipes, switching the unread count to the shared `Badge` `alertCount` variant, and replacing feature-level hover text links with owned `Button` link composition.
 
 ### Next batch
 
 - Continue shrinking the explicit `AI` debt now that the broad directory escapes are gone.
 - The explicit `AI` raw-Tailwind debt list is now empty.
-- Keep working through smaller helper controls and shared reveal surfaces rather than decorative backdrops, with the next pass focused on the shared notifications surfaces (`Notifications/NotificationCenter.tsx` and `Notifications/NotificationItem.tsx`) that still mix floating-panel and helper-badge chrome into feature code.
+- Keep working through smaller helper controls and shared reveal surfaces rather than decorative backdrops, with the next pass focused on `Notifications/NotificationItem.tsx`, which still owns the unread-row shell, reveal actions, and snooze menu composition in feature code.
 
 ## Problem
 
