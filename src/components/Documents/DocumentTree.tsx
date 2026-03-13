@@ -133,7 +133,7 @@ export function DocumentTree({
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start px-2 py-1.5 text-ui-text-secondary hover:text-ui-text"
+            className="w-full justify-start px-2 py-1.5 text-ui-text-secondary"
             onClick={() => setFavoritesExpanded((prev) => !prev)}
             aria-expanded={favoritesExpanded}
             aria-controls="favorites-documents-list"
@@ -161,25 +161,23 @@ export function DocumentTree({
                   params={{ orgSlug, id: doc._id }}
                   className="block"
                 >
-                  <Flex
-                    align="center"
-                    gap="xs"
-                    className={cn(
-                      "px-2 py-1.5 rounded-md cursor-pointer transition-colors ml-6",
-                      selectedId === doc._id
-                        ? "bg-brand/10 text-brand"
-                        : "hover:bg-ui-bg-hover text-ui-text-secondary hover:text-ui-text",
-                    )}
+                  <Card
+                    recipe={selectedId === doc._id ? "documentTreeRowSelected" : "documentTreeRow"}
+                    padding="xs"
+                    hoverable={selectedId !== doc._id}
+                    className={cn("ml-6", selectedId !== doc._id && "text-ui-text-secondary")}
                   >
-                    <File className="w-4 h-4 shrink-0 text-ui-text-tertiary" />
-                    <Typography
-                      variant={selectedId === doc._id ? "label" : "small"}
-                      className="truncate"
-                      title={doc.title || "Untitled"}
-                    >
-                      {doc.title || "Untitled"}
-                    </Typography>
-                  </Flex>
+                    <Flex align="center" gap="xs">
+                      <Icon icon={File} size="sm" className="shrink-0 text-ui-text-tertiary" />
+                      <Typography
+                        variant={selectedId === doc._id ? "label" : "small"}
+                        className="truncate"
+                        title={doc.title || "Untitled"}
+                      >
+                        {doc.title || "Untitled"}
+                      </Typography>
+                    </Flex>
+                  </Card>
                 </Link>
               ))}
             </Stack>
@@ -201,11 +199,11 @@ export function DocumentTree({
 
       {/* Archived Section */}
       {archived && archived.length > 0 && (
-        <div className="mt-4 pt-2 border-t border-ui-border">
+        <div className="mt-4 border-t border-ui-border">
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start px-2 py-1.5 text-ui-text-tertiary hover:text-ui-text"
+            className="w-full justify-start px-2 py-1.5 text-ui-text-tertiary"
             onClick={() => setArchivedExpanded((prev) => !prev)}
             aria-expanded={archivedExpanded}
             aria-controls="archived-documents-list"
@@ -236,25 +234,23 @@ export function DocumentTree({
                   params={{ orgSlug, id: doc._id }}
                   className="block"
                 >
-                  <Flex
-                    align="center"
-                    gap="xs"
-                    className={cn(
-                      "px-2 py-1.5 rounded-md cursor-pointer transition-colors ml-6",
-                      selectedId === doc._id
-                        ? "bg-brand/10 text-brand"
-                        : "hover:bg-ui-bg-hover text-ui-text-tertiary hover:text-ui-text",
-                    )}
+                  <Card
+                    recipe={selectedId === doc._id ? "documentTreeRowSelected" : "documentTreeRow"}
+                    padding="xs"
+                    hoverable={selectedId !== doc._id}
+                    className={cn("ml-6", selectedId !== doc._id && "text-ui-text-tertiary")}
                   >
-                    <File className="w-4 h-4 shrink-0 text-ui-text-tertiary" />
-                    <Typography
-                      variant={selectedId === doc._id ? "label" : "small"}
-                      className="truncate"
-                      title={doc.title || "Untitled"}
-                    >
-                      {doc.title || "Untitled"}
-                    </Typography>
-                  </Flex>
+                    <Flex align="center" gap="xs">
+                      <Icon icon={File} size="sm" className="shrink-0 text-ui-text-tertiary" />
+                      <Typography
+                        variant={selectedId === doc._id ? "label" : "small"}
+                        className="truncate"
+                        title={doc.title || "Untitled"}
+                      >
+                        {doc.title || "Untitled"}
+                      </Typography>
+                    </Flex>
+                  </Card>
                 </Link>
               ))}
             </Stack>
@@ -346,79 +342,77 @@ function TreeNodeItem({
   return (
     <div>
       <Link to={ROUTES.documents.detail.path} params={{ orgSlug, id: node._id }} className="block">
-        <Flex
-          align="center"
-          gap="xs"
-          className={cn(
-            "group px-2 py-1.5 rounded-md cursor-pointer transition-colors",
-            isSelected
-              ? "bg-brand/10 text-brand"
-              : "hover:bg-ui-bg-hover text-ui-text-secondary hover:text-ui-text",
-          )}
+        <Card
+          recipe={isSelected ? "documentTreeRowSelected" : "documentTreeRow"}
+          padding="xs"
+          hoverable={!isSelected}
+          className={cn("group", !isSelected && "text-ui-text-secondary")}
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
         >
-          <ExpandToggle
-            hasChildren={node.hasChildren}
-            isExpanded={isExpanded}
-            title={node.title || "Untitled"}
-            onToggle={handleToggle}
-          />
-          <DocumentIcon hasChildren={node.hasChildren} isExpanded={isExpanded} />
-
-          {/* Title */}
-          <FlexItem flex="1" className="min-w-0">
-            <Typography
-              variant={isSelected ? "label" : "small"}
-              className="truncate"
+          <Flex align="center" gap="xs">
+            <ExpandToggle
+              hasChildren={node.hasChildren}
+              isExpanded={isExpanded}
               title={node.title || "Untitled"}
-            >
-              {node.title || "Untitled"}
-            </Typography>
-          </FlexItem>
+              onToggle={handleToggle}
+            />
+            <DocumentIcon hasChildren={node.hasChildren} isExpanded={isExpanded} />
 
-          {/* Actions menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                reveal
-                onClick={(e) => e.preventDefault()}
-                aria-label={`Open actions for ${node.title || "Untitled"}`}
+            {/* Title */}
+            <FlexItem flex="1" className="min-w-0">
+              <Typography
+                variant={isSelected ? "label" : "small"}
+                className="truncate"
+                title={node.title || "Untitled"}
               >
-                <Icon icon={MoreHorizontal} size="sm" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              {onCreateDocument && (
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onCreateDocument(node._id);
-                  }}
+                {node.title || "Untitled"}
+              </Typography>
+            </FlexItem>
+
+            {/* Actions menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  reveal
+                  onClick={(e) => e.preventDefault()}
+                  aria-label={`Open actions for ${node.title || "Untitled"}`}
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add subpage
-                </DropdownMenuItem>
-              )}
-              {node.parentId && node.isOwner && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleMoveToRoot}>Move to root</DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </Flex>
+                  <Icon icon={MoreHorizontal} size="sm" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {onCreateDocument && (
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onCreateDocument(node._id);
+                    }}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add subpage
+                  </DropdownMenuItem>
+                )}
+                {node.parentId && node.isOwner && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleMoveToRoot}>Move to root</DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </Flex>
+        </Card>
       </Link>
 
       {/* Children */}
       {isExpanded && (
         <div>
           {children === undefined ? (
-            <div className="pl-6 py-2">
+            <Card variant="ghost" padding="sm" className="ml-6">
               <Skeleton className="h-6 w-3/4" />
-            </div>
+            </Card>
           ) : (
             children.map((child) => (
               <TreeNodeItem

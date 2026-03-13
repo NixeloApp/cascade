@@ -187,7 +187,9 @@
 - Added `Documents/DocumentSidebar.tsx` to design-system ownership targeting so future document-sidebar shell drift is blocked directly.
 - Removed `Documents/DocumentComments.tsx` from the interactive-state debt list by moving its comment card and composer shells onto owned `Card` recipes and replacing the ad hoc author/timestamp row with shared `Metadata` primitives instead of feature-level layout/text treatment.
 - Added `Documents/DocumentComments.tsx` to design-system ownership targeting so future document-comment shell drift is blocked directly.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `DocumentTree.tsx`, which is now the next higher-impact shared surface still sitting behind explicit validator debt.
+- Removed `Documents/DocumentTree.tsx` from the raw-Tailwind and interactive-state debt lists by moving document row states onto owned `Card` recipes, dropping inline row hover/selection shell styling, and replacing the child-loading shell with owned `Card` composition instead of feature-level spacing and hover stacks.
+- Added `Documents/DocumentTree.tsx` to design-system ownership targeting so future document-tree shell drift is blocked directly.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `PortalProjectView.tsx`, which is now the next higher-impact shared surface still sitting behind explicit validator debt.
 
 ## Problem
 

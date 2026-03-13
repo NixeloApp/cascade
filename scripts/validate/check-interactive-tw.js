@@ -26,7 +26,6 @@ const ALLOWED_FILES = [
   // Comment/reaction components
   "CommentRenderer.tsx",
   // Document components
-  "DocumentTree.tsx",
   // Editor components
   "Plate/",
   "PlateEditor.tsx",
