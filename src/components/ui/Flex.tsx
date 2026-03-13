@@ -79,6 +79,8 @@ export interface FlexProps extends React.HTMLAttributes<HTMLDivElement> {
   align?: Align;
   /** Align items from the sm breakpoint upward */
   alignSm?: Align;
+  /** Align items from the md breakpoint upward */
+  alignMd?: Align;
   /** Justify content on main axis */
   justify?: Justify;
   /** Justify content from the sm breakpoint upward */
@@ -128,6 +130,7 @@ export const Flex = React.forwardRef<HTMLDivElement, FlexProps>(
       gapSm,
       align,
       alignSm,
+      alignMd,
       justify,
       justifySm,
       wrap = false,
@@ -152,6 +155,7 @@ export const Flex = React.forwardRef<HTMLDivElement, FlexProps>(
           gapSm && `sm:${gapClasses[gapSm]}`,
           align && alignClasses[align],
           alignSm && `sm:${alignClasses[alignSm]}`,
+          alignMd && `md:${alignClasses[alignMd]}`,
           justify && justifyClasses[justify],
           justifySm && `sm:${justifyClasses[justifySm]}`,
           flex && flexClasses[flex],

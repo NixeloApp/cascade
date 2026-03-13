@@ -354,6 +354,8 @@ const cardRecipeVariants = cva("", {
       calendarEventDayLayout: "w-full items-center justify-between gap-2",
       calendarViewSwitcherBar:
         "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",
+      calendarHeaderShell:
+        "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg px-1 py-1 shadow-none sm:px-4 sm:py-4",
       calendarRoadmapShell: "h-full rounded-none border-transparent bg-ui-bg shadow-none",
       calendarRoadmapHeader:
         "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",

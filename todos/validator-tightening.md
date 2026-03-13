@@ -282,6 +282,9 @@
 - Removed `calendar-header-actions.tsx` from embedded calendar raw debt by moving the action-row layout onto owned `Flex` props instead of inline flex/gap/justify classes.
 - Removed `calendar-header-date.tsx` from embedded calendar raw debt by moving the heading typography and responsive gap behavior onto owned `Typography` and `Flex` APIs instead of inline text and gap drift.
 - Added those three shared embedded calendar primitives to design-system ownership targeting so future event/header drift is blocked directly.
+- Removed `calendar-header.tsx` from embedded calendar raw debt by moving the outer header shell onto an owned `Card` recipe and responsive `Flex` props instead of inline border, padding, and breakpoint layout classes.
+- Removed the stale `calendar.tsx` raw-debt entry now that it carries no feature-level Tailwind and can sit under direct ownership targeting without an escape hatch.
+- Added `calendar-header.tsx` and `calendar.tsx` to design-system ownership targeting so future embedded-calendar container drift is blocked directly.
 - The embedded calendar island is now narrowed from directory-wide escape hatches to explicit file debt. Burn that list down surface by surface instead of allowing new embedded drift by default.
 
 ## Problem
