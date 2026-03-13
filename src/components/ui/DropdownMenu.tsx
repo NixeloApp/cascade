@@ -98,14 +98,30 @@ const DropdownMenuItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
     inset?: boolean;
+    icon?: React.ReactNode;
   } & VariantProps<typeof dropdownMenuItemVariants>
->(({ className, inset, variant, ...props }, ref) => (
-  <DropdownMenuPrimitive.Item
-    ref={ref}
-    className={cn(dropdownMenuItemVariants({ variant }), inset && "pl-8", className)}
-    {...props}
-  />
-));
+>(({ className, inset, variant, icon, children, asChild, ...props }, ref) => {
+  const itemChildren =
+    icon && !asChild ? (
+      <>
+        <span className="mr-2 inline-flex shrink-0 items-center text-current">{icon}</span>
+        {children}
+      </>
+    ) : (
+      children
+    );
+
+  return (
+    <DropdownMenuPrimitive.Item
+      ref={ref}
+      asChild={asChild}
+      className={cn(dropdownMenuItemVariants({ variant }), inset && "pl-8", className)}
+      {...props}
+    >
+      {itemChildren}
+    </DropdownMenuPrimitive.Item>
+  );
+});
 DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName;
 
 const DropdownMenuCheckboxItem = React.forwardRef<

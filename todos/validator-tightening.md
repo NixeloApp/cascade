@@ -309,6 +309,8 @@
 - Added `Plate/ColorPickerButton.tsx` to design-system ownership targeting so future color-picker chrome drift is blocked directly.
 - Removed `Plate/MentionElement.tsx` from explicit raw debt by moving its mention-chip layout contract onto the owned `Badge` mention variant instead of keeping gap, baseline, and cursor chrome in feature code.
 - Added `Plate/MentionElement.tsx` to design-system ownership targeting so future mention-chip chrome drift is blocked directly.
+- Removed `Plate/DragHandle.tsx` from explicit raw debt by moving its menu-item icon spacing onto owned `DropdownMenuItem` APIs and replacing the remaining handle-rail positioning and visibility classes with owned `Flex`, `Icon`, and state-driven composition instead of feature-level Tailwind.
+- Plate explicit raw-debt is now zero. Any further editor surface drift has to justify itself directly instead of inheriting a leftover Plate exemption.
 - The embedded calendar island is now narrowed from directory-wide escape hatches to explicit file debt. Burn that list down surface by surface instead of allowing new embedded drift by default.
 
 ## Problem
