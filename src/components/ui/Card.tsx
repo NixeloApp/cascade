@@ -69,6 +69,11 @@ const cardRecipeVariants = cva("", {
       // Page layout surfaces
       pageHeader:
         "rounded-2xl border-ui-border-secondary/82 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/96 to-ui-bg-soft/82 shadow-card sm:rounded-3xl",
+      dashboardShell:
+        "relative overflow-hidden rounded-container border-ui-border/40 bg-linear-to-b from-ui-bg to-ui-bg-secondary/50 shadow-soft",
+      dashboardPanel: "border-ui-border-secondary/70 bg-ui-bg/75 shadow-soft",
+      dashboardPanelInset:
+        "overflow-hidden border-ui-border/50 bg-ui-bg/70 shadow-soft backdrop-blur-sm",
       filterBar:
         "rounded-md border-ui-border-secondary/75 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/94 to-ui-bg-soft/92 shadow-card sm:rounded-2xl",
       timelineItem:

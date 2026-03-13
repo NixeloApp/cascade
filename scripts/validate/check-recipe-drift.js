@@ -33,7 +33,6 @@ const ALLOWED_FILES = [
   "ProjectSettings/WorkflowSettings.tsx",
   // Modal/overlay surfaces - need recipe extraction
   "BulkOperationsBar.tsx",
-  "IssueDetailModal.tsx",
   "Plate/SlashMenu.tsx",
   // Settings panels
   "Calendar/CreateEventModal.tsx",
@@ -43,7 +42,6 @@ const ALLOWED_FILES = [
   // Dashboard surfaces
   "Dashboard/RecentActivity.tsx",
   "Dashboard/WorkspacesList.tsx",
-  "Dashboard.tsx",
   // Roadmap
   "RoadmapView.tsx",
   // Import/Export

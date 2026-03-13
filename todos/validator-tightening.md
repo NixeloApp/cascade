@@ -66,16 +66,19 @@
 - Removed `TimeTracking/TimeEntriesList.tsx` from the raw-Tailwind and interactive-state debt lists by moving its header shell and entry rows onto owned `Card`, `ListItem`, `Icon`, `Badge`, and `IconButton` primitives instead of local hover strips, separators, and spacing stacks.
 - Removed `TimeTracking/BurnRateDashboard.tsx` from the raw-Tailwind debt list by moving its metric tiles, empty state, and member identity shell onto owned `Card` recipe, `Badge`, `EmptyState`, and `Avatar` APIs instead of local reporting-surface classes.
 - Removed `TimeTracking/TimerWidget.tsx` from the interactive-state debt list by moving its running-timer strip and stop control onto owned `Card` and `Button` recipes instead of local hover and focus-visible class stacks.
+- Removed `Dashboard.tsx` from the `check-recipe-drift.js` migration allowlist by moving its outer shell and main content panels onto owned `Card` recipes instead of local border/background/shadow stacks.
+- Removed `IssueDetailModal.tsx` from the `check-recipe-drift.js` migration allowlist now that it no longer carries any repeated surface recipe drift.
 - Added `TimeTracking/TimeEntryModal.tsx` and `TimeTracking/UserRatesManagement.tsx` to design-system ownership targeting so future time-entry shell drift is validated directly.
 - Added `TimeTracking/ManualTimeEntryModal.tsx` to design-system ownership targeting so future manual-entry shell drift is validated directly.
 - Added `TimeTracking/TimeEntriesList.tsx` to design-system ownership targeting so future list-row shell drift is validated directly.
 - Added `TimeTracking/BurnRateDashboard.tsx` to design-system ownership targeting so future reporting-shell drift is validated directly.
+- Added `Dashboard.tsx` and `IssueDetailModal.tsx` to design-system ownership targeting so future dashboard and issue-modal shell drift is validated directly.
 - Burned down the final explicit `TimeTracking` interactive-state allowlist entry.
 
 ### Next batch
 
-- Shrink the remaining `check-recipe-drift.js` migration allowlist now that the explicit `TimeTracking` debt is gone.
-- `Dashboard.tsx` and `IssueDetailModal.tsx` should go next because they are still central high-drift surfaces sitting behind recipe-drift exemptions.
+- Keep shrinking the remaining `check-recipe-drift.js` migration allowlist.
+- `BulkOperationsBar.tsx` and `RoadmapView.tsx` should go next because they are still central high-drift surfaces sitting behind recipe-drift exemptions.
 
 ## Problem
 
