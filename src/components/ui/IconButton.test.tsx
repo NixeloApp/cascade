@@ -47,4 +47,14 @@ describe("IconButton", () => {
     expect(button).toHaveClass("group-focus-within:opacity-100");
     expect(button).toHaveClass("focus:opacity-100");
   });
+
+  it("applies responsive reveal classes correctly", () => {
+    render(<IconButton reveal="responsive">Icon</IconButton>);
+    const button = screen.getByRole("button");
+    expect(button).toHaveClass("opacity-100");
+    expect(button).toHaveClass("sm:opacity-0");
+    expect(button).toHaveClass("sm:group-hover:opacity-100");
+    expect(button).toHaveClass("sm:group-focus-within:opacity-100");
+    expect(button).toHaveClass("sm:focus:opacity-100");
+  });
 });

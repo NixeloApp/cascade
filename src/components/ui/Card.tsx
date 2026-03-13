@@ -114,6 +114,10 @@ const cardRecipeVariants = cva("", {
       notificationPanelSectionHeader:
         "sticky top-0 rounded-none border-x-0 border-t-0 bg-ui-bg-secondary shadow-none",
       notificationPanelFooter: "rounded-b-lg border-x-0 border-b-0 bg-ui-bg-secondary shadow-none",
+      notificationRow:
+        "rounded-none border-x-0 border-t-0 bg-ui-bg shadow-none hover:bg-ui-bg-secondary focus-within:bg-ui-bg-secondary",
+      notificationRowUnread:
+        "rounded-none border-x-0 border-t-0 bg-brand-subtle/10 shadow-none hover:bg-ui-bg-secondary focus-within:bg-ui-bg-secondary",
       assistantPanelHeader:
         "border-x-0 border-t-0 border-b border-ui-border bg-linear-to-r from-brand to-accent shadow-none",
       assistantComposer:

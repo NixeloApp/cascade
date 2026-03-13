@@ -46,6 +46,8 @@ const buttonVariants = cva(
       /** Show only on parent hover/focus-within (use inside group containers) */
       reveal: {
         true: "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100",
+        responsive:
+          "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:focus:opacity-100",
         false: "",
       },
     },

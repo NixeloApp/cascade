@@ -28,6 +28,8 @@ const popoverContentVariants = cva(
           "rounded-2xl border-ui-border-secondary/70 bg-linear-to-b from-ui-bg-soft/80 via-ui-bg-elevated/96 to-ui-bg-secondary/84 shadow-soft",
         floatingToolbar:
           "w-auto rounded-container border-ui-border bg-ui-bg-elevated p-1.5 shadow-elevated",
+        notificationMenu:
+          "w-auto rounded-lg border-ui-border bg-ui-bg-elevated p-4 shadow-elevated",
         slashMenu:
           "rounded-container border-ui-border bg-ui-bg-elevated p-0 shadow-elevated data-[state=open]:animate-scale-in",
       },

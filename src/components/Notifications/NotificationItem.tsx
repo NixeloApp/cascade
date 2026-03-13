@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { IconButton } from "@/components/ui/IconButton";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
@@ -35,7 +36,6 @@ import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { HOUR, WEEK } from "@/lib/time";
-import { cn } from "@/lib/utils";
 export interface NotificationWithActor extends Doc<"notifications"> {
   actorName?: string;
 }
@@ -125,148 +125,155 @@ export function NotificationItem({
     }
   }
 
-  const ContentWrapper = ({ children }: { children: React.ReactNode }) => {
+  const content = (
+    <>
+      <Typography variant="label" as="p">
+        {notification.title}
+      </Typography>
+      <Typography variant="small" color="secondary" className="mt-0.5 line-clamp-2">
+        {notification.message}
+      </Typography>
+
+      <Metadata className="mt-1.5">
+        <MetadataTimestamp date={notification._creationTime} />
+        {notification.actorName && <MetadataItem>{notification.actorName}</MetadataItem>}
+      </Metadata>
+    </>
+  );
+
+  const ContentWrapper = () => {
     if (linkTo && linkParams) {
       return (
-        <Link
-          to={linkTo}
-          params={linkParams}
-          className="flex-1 min-w-0 group-hover:text-brand transition-colors"
-          onClick={() => {
-            if (!notification.isRead) {
-              onMarkAsRead(notification._id);
-            }
-          }}
-        >
-          {children}
-        </Link>
+        <FlexItem flex="1" className="min-w-0 text-left">
+          <Link
+            to={linkTo}
+            params={linkParams}
+            className="block"
+            onClick={() => {
+              if (!notification.isRead) {
+                onMarkAsRead(notification._id);
+              }
+            }}
+          >
+            {content}
+          </Link>
+        </FlexItem>
       );
     }
+
     return (
       <FlexItem flex="1" className="min-w-0 text-left">
-        {children}
+        {content}
       </FlexItem>
     );
   };
 
   return (
-    <div
-      className={cn(
-        "group relative flex items-start gap-3 p-4 border-b border-ui-border last:border-0 hover:bg-ui-bg-secondary focus-within:bg-ui-bg-secondary transition-colors",
-        !notification.isRead && "bg-brand-subtle/10",
-      )}
+    <Card
+      recipe={notification.isRead ? "notificationRow" : "notificationRowUnread"}
+      padding="md"
+      radius="none"
+      className="group relative last:border-0"
     >
-      {/* Icon */}
-      <FlexItem shrink={false} className="mt-0.5">
-        {getNotificationIcon(notification.type)}
-      </FlexItem>
+      <Flex align="start" gap="md">
+        <FlexItem shrink={false} className="mt-0.5">
+          {getNotificationIcon(notification.type)}
+        </FlexItem>
 
-      {/* Main Content (Clickable if linked) */}
-      <ContentWrapper>
-        <Typography variant="label" as="p" className="group-hover:text-ui-text-primary">
-          {notification.title}
-        </Typography>
-        <Typography variant="small" color="secondary" className="mt-0.5 line-clamp-2">
-          {notification.message}
-        </Typography>
+        <ContentWrapper />
 
-        <Metadata className="mt-1.5">
-          <MetadataTimestamp date={notification._creationTime} />
-          {notification.actorName && <MetadataItem>{notification.actorName}</MetadataItem>}
-        </Metadata>
-      </ContentWrapper>
-
-      {/* Actions (Separate from link) */}
-      <Flex
-        direction="column"
-        gap="xs"
-        className="shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity"
-      >
-        {!notification.isRead && (
-          <Tooltip content="Mark as read">
+        <Flex direction="column" gap="xs" className="shrink-0">
+          {!notification.isRead && (
+            <Tooltip content="Mark as read">
+              <IconButton
+                variant="brand"
+                size="xs"
+                reveal="responsive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMarkAsRead(notification._id);
+                }}
+                aria-label="Mark as read"
+              >
+                <Check className="h-3.5 w-3.5" />
+              </IconButton>
+            </Tooltip>
+          )}
+          {onSnooze && (
+            <Popover open={snoozePopoverOpen} onOpenChange={setSnoozePopoverOpen}>
+              <Tooltip content="Snooze">
+                <PopoverTrigger asChild>
+                  <IconButton
+                    variant="ghost"
+                    size="xs"
+                    reveal="responsive"
+                    onClick={(e) => e.stopPropagation()}
+                    aria-label="Snooze notification"
+                  >
+                    <Clock className="h-3.5 w-3.5" />
+                  </IconButton>
+                </PopoverTrigger>
+              </Tooltip>
+              <PopoverContent align="end" recipe="notificationMenu" className="w-48">
+                <Stack gap="xs">
+                  <Typography variant="label">Snooze until</Typography>
+                  {SNOOZE_OPTIONS.map((option) => (
+                    <Button
+                      key={option.label}
+                      variant="ghost"
+                      size="sm"
+                      className="justify-start"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const snoozedUntil =
+                          option.duration === null
+                            ? getTomorrow9am()
+                            : Date.now() + option.duration;
+                        onSnooze(notification._id, snoozedUntil);
+                        setSnoozePopoverOpen(false);
+                      }}
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
+                </Stack>
+              </PopoverContent>
+            </Popover>
+          )}
+          <Tooltip content="Archive">
             <IconButton
-              variant="brand"
+              variant="ghost"
               size="xs"
+              reveal="responsive"
               onClick={(e) => {
                 e.stopPropagation();
-                onMarkAsRead(notification._id);
+                onArchive(notification._id);
               }}
-              aria-label="Mark as read"
+              aria-label="Archive notification"
             >
-              <Check className="h-3.5 w-3.5" />
+              <Archive className="h-3.5 w-3.5" />
             </IconButton>
           </Tooltip>
-        )}
-        {onSnooze && (
-          <Popover open={snoozePopoverOpen} onOpenChange={setSnoozePopoverOpen}>
-            <Tooltip content="Snooze">
-              <PopoverTrigger asChild>
-                <IconButton
-                  variant="ghost"
-                  size="xs"
-                  onClick={(e) => e.stopPropagation()}
-                  aria-label="Snooze notification"
-                >
-                  <Clock className="h-3.5 w-3.5" />
-                </IconButton>
-              </PopoverTrigger>
-            </Tooltip>
-            <PopoverContent align="end" className="w-48">
-              <Stack gap="xs">
-                <Typography variant="label">Snooze until</Typography>
-                {SNOOZE_OPTIONS.map((option) => (
-                  <Button
-                    key={option.label}
-                    variant="ghost"
-                    size="sm"
-                    className="justify-start"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const snoozedUntil =
-                        option.duration === null ? getTomorrow9am() : Date.now() + option.duration;
-                      onSnooze(notification._id, snoozedUntil);
-                      setSnoozePopoverOpen(false);
-                    }}
-                  >
-                    {option.label}
-                  </Button>
-                ))}
-              </Stack>
-            </PopoverContent>
-          </Popover>
-        )}
-        <Tooltip content="Archive">
-          <IconButton
-            variant="ghost"
-            size="xs"
-            onClick={(e) => {
-              e.stopPropagation();
-              onArchive(notification._id);
-            }}
-            aria-label="Archive notification"
-          >
-            <Archive className="h-3.5 w-3.5" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip content="Delete">
-          <IconButton
-            variant="danger"
-            size="xs"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(notification._id);
-            }}
-            aria-label="Delete notification"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </IconButton>
-        </Tooltip>
+          <Tooltip content="Delete">
+            <IconButton
+              variant="danger"
+              size="xs"
+              reveal="responsive"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(notification._id);
+              }}
+              aria-label="Delete notification"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </IconButton>
+          </Tooltip>
+        </Flex>
       </Flex>
 
-      {/* Unread Indicator (Visual only) */}
       {!notification.isRead && (
-        <div className="absolute top-4 right-4 h-2 w-2 rounded-full bg-brand group-hover:hidden" />
+        <div className="absolute top-4 right-4 h-2 w-2 rounded-full bg-brand" />
       )}
-    </div>
+    </Card>
   );
 }
