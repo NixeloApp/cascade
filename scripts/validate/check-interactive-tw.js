@@ -22,21 +22,19 @@ import { c, ROOT, relPath, walkDir } from "./utils.js";
 const ALLOWED_FILES = [
   // Search/filter components
   "FuzzySearch/AssigneeSearchDropdown.example.tsx",
-  // Document components
-  // Editor components
-  "PlateEditor.tsx",
-  // Modals
-  "CreateProjectFromTemplate.tsx",
-  "BulkOperationsBar.tsx",
   // Forms/fields
-  "CustomFieldValues.tsx",
   // Calendar
-  "Calendar/EventDetailsModal.tsx",
   // Landing pages
-  "Landing/",
+  "Landing/FeaturesSection.tsx",
+  "Landing/FinalCTASection.tsx",
+  "Landing/Footer.tsx",
+  "Landing/HeroSection.tsx",
+  "Landing/LogoBar.tsx",
+  "Landing/NavHeader.tsx",
+  "Landing/PricingSection.tsx",
+  "Landing/WhyChooseSection.tsx",
   // Activity/inbox
   // Error handling
-  "ErrorBoundary.tsx",
 ];
 
 // Interactive variant patterns to detect

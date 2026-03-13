@@ -313,6 +313,9 @@
 - Plate explicit raw-debt is now zero. Any further editor surface drift has to justify itself directly instead of inheriting a leftover Plate exemption.
 - Removed `BulkOperationsBar.tsx` from the last explicit raw-Tailwind allowlist entry by moving the bulk-action content shell and divider/padding rail onto owned `Card` recipes, replacing date field fill behavior with `FlexItem`, and dropping redundant select-width and text-action overrides in favor of owned `Select` and `Button` APIs.
 - Explicit product-surface raw debt is now zero. The only remaining raw-Tailwind directory allowance is `src/components/ui/`, which is intentional.
+- Removed stale interactive-state allowlist entries for `PlateEditor.tsx`, `CreateProjectFromTemplate.tsx`, `BulkOperationsBar.tsx`, and `Calendar/EventDetailsModal.tsx`; those files no longer carry feature-level hover/focus Tailwind.
+- Removed `CustomFieldValues.tsx` and `ErrorBoundary.tsx` from the interactive-state allowlist by moving their remaining link/detail affordances onto owned `Button`/`Typography` composition instead of raw `hover:` classes.
+- Replaced the broad `Landing/` interactive escape hatch with explicit file-level debt for the actual remaining landing surfaces: `FeaturesSection.tsx`, `FinalCTASection.tsx`, `Footer.tsx`, `HeroSection.tsx`, `LogoBar.tsx`, `NavHeader.tsx`, `PricingSection.tsx`, and `WhyChooseSection.tsx`.
 - The embedded calendar island is now narrowed from directory-wide escape hatches to explicit file debt. Burn that list down surface by surface instead of allowing new embedded drift by default.
 
 ## Problem

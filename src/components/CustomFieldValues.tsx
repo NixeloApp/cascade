@@ -207,14 +207,11 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
 
       case "url":
         return (
-          <a
-            href={value}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-brand hover:underline"
-          >
-            {value}
-          </a>
+          <Button asChild variant="link" size="none">
+            <a href={value} target="_blank" rel="noopener noreferrer">
+              {value}
+            </a>
+          </Button>
         );
 
       case "date":

@@ -86,7 +86,7 @@ export class ErrorBoundary extends Component<Props, State> {
                     as="summary"
                     variant="small"
                     color="secondary"
-                    className="cursor-pointer hover:text-ui-text transition-default"
+                    className="cursor-pointer"
                   >
                     View error details
                   </Typography>
