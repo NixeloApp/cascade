@@ -138,11 +138,8 @@ export function FloatingToolbar() {
         }}
       />
       <PopoverContent
-        className={cn(
-          "w-auto p-1.5 flex items-center gap-0.5",
-          "bg-ui-bg-elevated border border-ui-border shadow-elevated rounded-container",
-          "animate-scale-in",
-        )}
+        recipe="floatingToolbar"
+        className="flex items-center gap-0.5"
         side="top"
         align="center"
         sideOffset={8}

@@ -12,6 +12,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { collectClassNameSpan, findOpeningTag } from "./tailwind-policy.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 // Patterns that indicate visual surface styling (when combined)
@@ -67,8 +68,8 @@ function extractSurfacePatterns(classNameValue) {
   return patterns;
 }
 
-function extractOverlayShellPattern(line, classNameValue) {
-  if (!OVERLAY_COMPONENT_PATTERN.test(line)) return null;
+function extractOverlayShellPattern(tagText, classNameValue) {
+  if (!OVERLAY_COMPONENT_PATTERN.test(tagText)) return null;
 
   const hasPosition = OVERLAY_POSITION_PATTERN.test(classNameValue);
   const hasLayer = OVERLAY_LAYER_PATTERN.test(classNameValue);
@@ -79,40 +80,14 @@ function extractOverlayShellPattern(line, classNameValue) {
 
   if (!hasPosition || !hasLayer || shellCount < 2) return null;
 
-  const componentMatch = line.match(OVERLAY_COMPONENT_PATTERN)?.[0]?.replace("<", "") || "overlay";
+  const componentMatch =
+    tagText.match(OVERLAY_COMPONENT_PATTERN)?.[0]?.replace("<", "") || "overlay";
   const signature = [componentMatch, ...matchingShellParts.filter(Boolean)].join(" ");
 
   return {
     component: componentMatch,
     signature,
   };
-}
-
-/**
- * Extract className values from a line of code.
- */
-function extractClassNames(line) {
-  const classNames = [];
-
-  // Match className="..." or className='...'
-  const doubleQuoteMatch = line.match(/className\s*=\s*"([^"]+)"/g);
-  const singleQuoteMatch = line.match(/className\s*=\s*'([^']+)'/g);
-
-  if (doubleQuoteMatch) {
-    for (const match of doubleQuoteMatch) {
-      const value = match.match(/className\s*=\s*"([^"]+)"/)?.[1];
-      if (value) classNames.push(value);
-    }
-  }
-
-  if (singleQuoteMatch) {
-    for (const match of singleQuoteMatch) {
-      const value = match.match(/className\s*=\s*'([^']+)'/)?.[1];
-      if (value) classNames.push(value);
-    }
-  }
-
-  return classNames;
 }
 
 export function run() {
@@ -136,28 +111,41 @@ export function run() {
       const line = lines[i];
       if (!line.includes("className")) continue;
 
+      const { span, endIndex } = collectClassNameSpan(lines, i);
+      const tagText = findOpeningTag(lines, i);
+
       // Skip if using recipe/chrome props (already using design system)
-      if (line.includes('recipe="') || line.includes("recipe='")) continue;
-      if (line.includes('chrome="') || line.includes("chrome='")) continue;
-
-      const classNames = extractClassNames(line);
-      for (const className of classNames) {
-        const overlayShellPattern = extractOverlayShellPattern(line, className);
-        if (overlayShellPattern) {
-          overlayShellViolations.push({
-            ...overlayShellPattern,
-            file: rel,
-            line: i + 1,
-          });
-        }
-
-        const patterns = extractSurfacePatterns(className);
-        for (const pattern of patterns) {
-          const occurrences = patternOccurrences.get(pattern) || [];
-          occurrences.push({ file: rel, line: i + 1 });
-          patternOccurrences.set(pattern, occurrences);
-        }
+      if (
+        span.includes('recipe="') ||
+        span.includes("recipe='") ||
+        tagText.includes('recipe="') ||
+        tagText.includes("recipe='") ||
+        span.includes('chrome="') ||
+        span.includes("chrome='") ||
+        tagText.includes('chrome="') ||
+        tagText.includes("chrome='")
+      ) {
+        i = endIndex;
+        continue;
       }
+
+      const overlayShellPattern = extractOverlayShellPattern(tagText, span);
+      if (overlayShellPattern) {
+        overlayShellViolations.push({
+          ...overlayShellPattern,
+          file: rel,
+          line: i + 1,
+        });
+      }
+
+      const patterns = extractSurfacePatterns(span);
+      for (const pattern of patterns) {
+        const occurrences = patternOccurrences.get(pattern) || [];
+        occurrences.push({ file: rel, line: i + 1 });
+        patternOccurrences.set(pattern, occurrences);
+      }
+
+      i = endIndex;
     }
   }
 

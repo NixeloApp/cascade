@@ -98,8 +98,15 @@
 
 ### Next batch
 
-- Inspect the remaining fixed/absolute surfaces surfaced by the shell scan and separate true floating-surface chrome from plain backdrops so only real floating contracts stay behind owned recipes.
-- If any remaining positioned surfaces still own real shell chrome, migrate them behind `Card`, `Popover`, `Sheet`, or overlay-specific recipes rather than leaving feature-level shell stacks in place.
+- Hardened `check-recipe-drift.js` so overlay/menu shell detection now reads full multiline `className` spans instead of only simple quoted one-line values. That closes the gap where `className={cn(...)}`
+  overlay shells could avoid detection.
+- Added an owned `floatingToolbar` recipe to `PopoverContent` and moved `Plate/FloatingToolbar.tsx` onto it so the selected-text toolbar no longer defines its shell chrome inline.
+- Added `Plate/FloatingToolbar.tsx` to design-system ownership targeting so future shell drift there is blocked directly.
+
+### Next batch
+
+- Continue the floating-surface pass with remaining positioned overlays surfaced by the stronger scan, especially files that still define chrome on `fixed` or `absolute` panels instead of plain backdrops.
+- Prioritize shared editor and navigation overlays next so any remaining real floating shell contracts move behind owned `Popover`, `Dialog`, `Sheet`, or `Card` recipes rather than staying in feature code.
 
 ## Problem
 
