@@ -66,6 +66,10 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
     chrome: {
       quiet:
         "border-transparent bg-transparent text-ui-text-secondary hover:border-ui-border/70 hover:bg-ui-bg-soft/80 hover:text-ui-text",
+      reaction:
+        "border-ui-border bg-ui-bg-soft text-ui-text-secondary shadow-none hover:border-ui-border-secondary hover:bg-ui-bg-hover",
+      reactionActive:
+        "border-brand-border bg-brand-subtle text-brand-subtle-foreground shadow-none hover:bg-brand-subtle/90",
       timerStrip:
         "border-transparent bg-transparent text-brand-indigo-text hover:bg-brand-indigo-bg/10 hover:text-brand-indigo-text",
       framed:
@@ -81,6 +85,7 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
       icon: "h-9 w-9 rounded-full",
       pill: "h-10 rounded-full px-4 text-sm",
       compactPill: "h-8 rounded-full px-3 text-sm",
+      reactionPill: "h-auto rounded-full px-2 py-0.5 text-xs font-medium",
       filterPill:
         "h-6 rounded-full px-2 text-xs sm:h-9 sm:rounded-xl sm:border-transparent sm:bg-transparent sm:px-3 sm:text-sm",
     },

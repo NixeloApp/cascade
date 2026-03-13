@@ -9,10 +9,12 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { usePaginatedQuery } from "convex/react";
-import { Loader2, Paperclip, X } from "lucide-react";
+import { Loader2, MessageCircle, Paperclip, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatRelativeTime } from "@/lib/formatting";
@@ -197,29 +199,18 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
       <Stack gap="md">
         {comments?.length === 0 ? (
           <Card variant="flat" padding="lg">
-            <Stack align="center" gap="sm">
-              <svg
-                aria-hidden="true"
-                className="w-12 h-12 mx-auto mb-3 text-ui-text-tertiary"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
-              </svg>
-              <Typography variant="p">No comments yet</Typography>
-              <Typography variant="muted">Be the first to comment!</Typography>
-            </Stack>
+            <EmptyState
+              icon={MessageCircle}
+              title="No comments yet"
+              description="Be the first to comment."
+              size="compact"
+              surface="bare"
+            />
           </Card>
         ) : (
           <>
             {comments?.map((comment) => (
-              <Card padding="md" key={comment._id} hoverable className="bg-ui-bg-soft">
+              <Card recipe="commentThreadItem" padding="md" key={comment._id} hoverable>
                 <Flex gap="md">
                   {/* Avatar */}
                   <FlexItem shrink={false}>
@@ -311,14 +302,10 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
         {commentAttachments.length > 0 && (
           <Stack gap="xs">
             {commentAttachments.map((attachment) => (
-              <Card
-                key={attachment.storageId}
-                padding="sm"
-                className="bg-ui-bg-soft border border-ui-border"
-              >
+              <Card key={attachment.storageId} recipe="pendingAttachmentRow" padding="sm">
                 <Flex align="center" justify="between" gap="sm">
                   <Flex align="center" gap="sm" className="min-w-0">
-                    <Paperclip className="w-4 h-4 text-ui-text-secondary shrink-0" />
+                    <Icon icon={Paperclip} size="sm" className="text-ui-text-secondary shrink-0" />
                     <Typography variant="small" className="truncate">
                       {attachment.filename}
                     </Typography>
@@ -382,14 +369,14 @@ function CommentAttachmentLink({
   }
 
   return (
-    <Button variant="link" size="sm" className="h-auto p-0" asChild>
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 text-ui-text-secondary hover:text-brand"
-      >
-        <Paperclip className="w-3.5 h-3.5" />
+    <Button
+      variant="link"
+      size="none"
+      className="text-ui-text-secondary"
+      leftIcon={<Icon icon={Paperclip} size="sm" />}
+      asChild
+    >
+      <a href={url} target="_blank" rel="noopener noreferrer">
         {getFilenameFromUrl(url)}
       </a>
     </Button>

@@ -146,12 +146,16 @@
 - Migrated the advanced-search filter groups and results list onto owned `Card`, `Checkbox`, and `EmptyState` primitives instead of local checkbox-row, result-row, and empty-state shell styling.
 - Removed `IssueDetail/CreateIssueModal.tsx` from the raw-Tailwind and interactive-state debt lists by moving its AI CTA onto an owned button variant, replacing its interactive label-pill shell with an owned `IssueLabelChip` primitive, and collapsing the unassigned assignee token onto owned avatar composition.
 - Added `IssueDetail/CreateIssueModal.tsx` to design-system ownership targeting so future issue-creation shell drift is blocked directly.
+- Removed `CommentReactions.tsx` from the raw-Tailwind and interactive-state debt lists by moving the reaction pill chrome onto owned `Button` chrome variants and moving the emoji picker shell onto an owned `Popover` recipe.
+- Added `CommentReactions.tsx` to design-system ownership targeting so future comment-reaction shell drift is blocked directly.
+- Removed `IssueComments.tsx` from the raw-Tailwind and interactive-state debt lists by moving the comment card and pending attachment row chrome onto owned `Card` recipes, collapsing the empty state onto the shared `EmptyState` primitive, and replacing the attachment link hover styling with owned button composition.
+- Added `IssueComments.tsx` to design-system ownership targeting so future comment-thread shell drift is blocked directly.
 
 ### Next batch
 
 - Continue shrinking the explicit `AI` debt now that the broad directory escapes are gone.
 - The explicit `AI` raw-Tailwind debt list is now empty.
-- Keep working through smaller helper controls and shared workflow surfaces rather than decorative backdrops, with the next pass focused on `CommentReactions.tsx` and `IssueComments.tsx`, which are now among the next high-impact interaction surfaces still sitting behind explicit validator debt.
+- Keep working through smaller helper controls and shared workflow surfaces rather than decorative backdrops, with the next pass focused on `AttachmentList.tsx` and `FileAttachments.tsx`, which are now among the next high-impact attachment-heavy interaction surfaces still sitting behind explicit validator debt.
 
 ## Problem
 
