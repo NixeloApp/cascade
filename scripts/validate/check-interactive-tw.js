@@ -68,8 +68,6 @@ const ALLOWED_FILES = [
   "AI/",
   // Sprint components
   "Sprint",
-  // Time tracking
-  "TimeTracking/TimerWidget.tsx",
   // Onboarding
   "Onboarding/",
   // Landing pages

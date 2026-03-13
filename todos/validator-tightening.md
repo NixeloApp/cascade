@@ -65,17 +65,17 @@
 - Removed `TimeTracking/ManualTimeEntryModal.tsx` from the raw-Tailwind and interactive-state debt lists by replacing its custom mode toggle, raw form fields, tag pills, billable control, and duration shells with owned `SegmentedControl`, `Input`, `Checkbox`, `Badge`, `IconButton`, and `Card` recipe APIs.
 - Removed `TimeTracking/TimeEntriesList.tsx` from the raw-Tailwind and interactive-state debt lists by moving its header shell and entry rows onto owned `Card`, `ListItem`, `Icon`, `Badge`, and `IconButton` primitives instead of local hover strips, separators, and spacing stacks.
 - Removed `TimeTracking/BurnRateDashboard.tsx` from the raw-Tailwind debt list by moving its metric tiles, empty state, and member identity shell onto owned `Card` recipe, `Badge`, `EmptyState`, and `Avatar` APIs instead of local reporting-surface classes.
+- Removed `TimeTracking/TimerWidget.tsx` from the interactive-state debt list by moving its running-timer strip and stop control onto owned `Card` and `Button` recipes instead of local hover and focus-visible class stacks.
 - Added `TimeTracking/TimeEntryModal.tsx` and `TimeTracking/UserRatesManagement.tsx` to design-system ownership targeting so future time-entry shell drift is validated directly.
 - Added `TimeTracking/ManualTimeEntryModal.tsx` to design-system ownership targeting so future manual-entry shell drift is validated directly.
 - Added `TimeTracking/TimeEntriesList.tsx` to design-system ownership targeting so future list-row shell drift is validated directly.
 - Added `TimeTracking/BurnRateDashboard.tsx` to design-system ownership targeting so future reporting-shell drift is validated directly.
-- Replaced the broad `TimeTracking/` interactive-state allowlist entry with explicit remaining debt entries for:
-  - `TimeTracking/TimerWidget.tsx`
+- Burned down the final explicit `TimeTracking` interactive-state allowlist entry.
 
 ### Next batch
 
-- Burn down the remaining explicit `TimeTracking` file-level debt in `TimerWidget.tsx`.
-- `TimerWidget.tsx` should go next because it is now the only remaining explicit `TimeTracking` interactive-state escape hatch.
+- Shrink the remaining `check-recipe-drift.js` migration allowlist now that the explicit `TimeTracking` debt is gone.
+- `Dashboard.tsx` and `IssueDetailModal.tsx` should go next because they are still central high-drift surfaces sitting behind recipe-drift exemptions.
 
 ## Problem
 

@@ -58,6 +58,8 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
     chrome: {
       quiet:
         "border-transparent bg-transparent text-ui-text-secondary hover:border-ui-border/70 hover:bg-ui-bg-soft/80 hover:text-ui-text",
+      timerStrip:
+        "border-transparent bg-transparent text-brand-indigo-text hover:bg-brand-indigo-bg/10 hover:text-brand-indigo-text",
       framed:
         "border-ui-border-secondary/70 bg-ui-bg-elevated/94 text-ui-text-secondary shadow-soft hover:border-ui-border-secondary hover:bg-ui-bg-hover hover:text-ui-text",
       active:
