@@ -16,7 +16,6 @@ export function run() {
   const ALLOWLIST_RAW_TAILWIND = ["*.test.ts", "*.test.tsx", "src/index.css"];
 
   const ALLOWLIST_HARDCODED_HEX = [
-    "src/components/Auth/GoogleAuthButton.tsx",
     "src/components/ui/ColorPicker.tsx",
     "src/components/ui/ColorPicker.test.tsx",
     "src/components/Plate/ColorPickerButton.tsx", // Text color picker for Plate editor

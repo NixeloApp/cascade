@@ -324,6 +324,7 @@
 - Hardened the raw-Tailwind policy after explicit raw debt hit zero: replaced the old `RAW_TAILWIND_ALLOWED_*` migration framing with an explicit owned-boundary policy (`src/components/ui/`) plus non-product extensions, and wired both `check-raw-tailwind.js` and `check-surface-shells.js` to that direct boundary check.
 - Tightened `check-colors.js` after the raw/interactivity burn-down: removed the stale broad `Landing/` raw-color escape hatch and the stale `AIChat.tsx` / `PumbleIntegration.tsx` raw-color exemptions, moved `AppSplashScreen.tsx` off `bg-white/5` onto a semantic token, and narrowed landing hardcoded-color debt down to the single remaining logo file that still owns a branded drop-shadow treatment.
 - Tightened `check-colors.js` again by removing stale hardcoded-color exemptions for `Landing/Icons.tsx`, `LabelsManager.tsx`, `Settings/DevToolsTab.tsx`, and `AI/config.ts`, and moved `LabelsManager.tsx` onto the shared `COLORS.DEFAULT_LABEL` runtime constant so that product-surface color debt keeps shrinking instead of hiding in per-file exceptions.
+- Removed `Auth/GoogleAuthButton.tsx` from the hardcoded-color allowlist by moving the Google mark off inline hex fills and onto explicit provider color tokens in `src/index.css`, so product-surface color debt is no longer hiding in auth components either.
 - The embedded calendar island is now narrowed from directory-wide escape hatches to explicit file debt. Burn that list down surface by surface instead of allowing new embedded drift by default.
 
 ## Problem
