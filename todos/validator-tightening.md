@@ -311,6 +311,8 @@
 - Added `Plate/MentionElement.tsx` to design-system ownership targeting so future mention-chip chrome drift is blocked directly.
 - Removed `Plate/DragHandle.tsx` from explicit raw debt by moving its menu-item icon spacing onto owned `DropdownMenuItem` APIs and replacing the remaining handle-rail positioning and visibility classes with owned `Flex`, `Icon`, and state-driven composition instead of feature-level Tailwind.
 - Plate explicit raw-debt is now zero. Any further editor surface drift has to justify itself directly instead of inheriting a leftover Plate exemption.
+- Removed `BulkOperationsBar.tsx` from the last explicit raw-Tailwind allowlist entry by moving the bulk-action content shell and divider/padding rail onto owned `Card` recipes, replacing date field fill behavior with `FlexItem`, and dropping redundant select-width and text-action overrides in favor of owned `Select` and `Button` APIs.
+- Explicit product-surface raw debt is now zero. The only remaining raw-Tailwind directory allowance is `src/components/ui/`, which is intentional.
 - The embedded calendar island is now narrowed from directory-wide escape hatches to explicit file debt. Burn that list down surface by surface instead of allowing new embedded drift by default.
 
 ## Problem

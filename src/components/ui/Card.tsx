@@ -251,6 +251,10 @@ const cardRecipeVariants = cva("", {
         "rounded border-transparent bg-status-error-bg text-status-error-text shadow-none",
       inboxStatusNeutral:
         "rounded border-transparent bg-ui-bg-soft text-ui-text-secondary shadow-none",
+      bulkActionContent:
+        "mx-auto max-w-7xl rounded-none border-transparent bg-transparent px-4 py-3 shadow-none",
+      bulkActionDetails:
+        "mt-3 rounded-none border-x-0 border-b-0 border-t border-ui-border bg-transparent pt-3 shadow-none",
       activityFeedEntry:
         "rounded-lg border-transparent bg-transparent p-4 shadow-none hover:bg-ui-bg-secondary/30",
       activityFeedEntryCompact:
