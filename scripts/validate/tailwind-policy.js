@@ -18,7 +18,6 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   "/Calendar/RoadmapView.tsx",
   "/Kanban/KanbanColumn.tsx",
   "/Kanban/SwimlanRow.tsx",
-  "/CreateProjectFromTemplate.tsx",
   "/UserProfile.tsx",
 ];
 

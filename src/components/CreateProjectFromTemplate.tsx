@@ -82,7 +82,7 @@ function CreateProjectFooter({
   onCreate,
 }: CreateProjectFooterProps) {
   return (
-    <Flex direction="column" gap="sm" className="sm:flex-row sm:justify-between w-full">
+    <Flex direction="column" directionSm="row" justifySm="between" gap="sm" className="w-full">
       <Button
         onClick={onBack}
         variant="secondary"
@@ -92,29 +92,24 @@ function CreateProjectFooter({
       >
         Back to Templates
       </Button>
-      <Flex gap="md" className="w-full sm:w-auto">
-        <Button
-          onClick={onCancel}
-          variant="secondary"
-          className="flex-1 sm:flex-none"
-          disabled={isSubmitting}
-        >
-          Cancel
-        </Button>
-        <Button
-          onClick={onCreate}
-          disabled={!canCreate || isSubmitting}
-          className="flex-1 sm:flex-none"
-        >
-          {isSubmitting ? (
-            <Flex align="center" gap="sm">
-              <LoadingSpinner size="sm" />
-              <span>Creating...</span>
-            </Flex>
-          ) : (
-            "Create Project"
-          )}
-        </Button>
+      <Flex direction="column" directionSm="row" gap="md" className="w-full sm:w-auto">
+        <FlexItem flex="1" flexSm="none">
+          <Button onClick={onCancel} variant="secondary" className="w-full" disabled={isSubmitting}>
+            Cancel
+          </Button>
+        </FlexItem>
+        <FlexItem flex="1" flexSm="none">
+          <Button onClick={onCreate} disabled={!canCreate || isSubmitting} className="w-full">
+            {isSubmitting ? (
+              <Flex align="center" gap="sm">
+                <LoadingSpinner size="sm" />
+                <span>Creating...</span>
+              </Flex>
+            ) : (
+              "Create Project"
+            )}
+          </Button>
+        </FlexItem>
       </Flex>
     </Flex>
   );
