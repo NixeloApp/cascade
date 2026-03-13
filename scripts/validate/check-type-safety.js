@@ -30,7 +30,6 @@ export function run() {
     /webhooksCrash\.test\.ts$/, // 3 violations - TODO: fix biome-ignore
     /convex\/lib\//, // Convex internal utilities with complex generics
     /convex\/softDeleteCleanup\.ts$/, // Convex internal cleanup utility
-    /convex\/issues\/queries\.ts$/, // Convex search index type mismatch requires casting
   ];
 
   let errorCount = 0;
