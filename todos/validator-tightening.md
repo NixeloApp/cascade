@@ -84,6 +84,8 @@
   - `Onboarding/OnboardingChecklist.tsx` now uses `Card` `floatingWidget` and `successCallout` recipes instead of defining its fixed widget shell and completion banner inline.
   - `Kanban/BoardToolbar.tsx` now uses a `Card` `floatingToolbar` recipe instead of defining its mobile floating toolbar shell inline.
 - Added `Onboarding/OnboardingChecklist.tsx` and `Kanban/BoardToolbar.tsx` to design-system ownership targeting so future floating-shell drift in those surfaces is blocked directly.
+- Added an owned `Card` `mentionMenu` recipe and migrated `Plate/MentionInputElement.tsx` to it so the Plate mention autocomplete no longer carries extra overflow/shadow shell styling inline on top of a `Card`.
+- Added `Plate/MentionInputElement.tsx` to design-system ownership targeting so future mention-menu shell drift is blocked directly.
 - Added `TimeTracking/TimeEntryModal.tsx` and `TimeTracking/UserRatesManagement.tsx` to design-system ownership targeting so future time-entry shell drift is validated directly.
 - Added `TimeTracking/ManualTimeEntryModal.tsx` to design-system ownership targeting so future manual-entry shell drift is validated directly.
 - Added `TimeTracking/TimeEntriesList.tsx` to design-system ownership targeting so future list-row shell drift is validated directly.
@@ -96,8 +98,8 @@
 
 ### Next batch
 
-- Keep burning down the remaining floating-shell drift, with `Plate/MentionInputElement.tsx` next since its autocomplete dropdown still carries extra positioned shell styling on top of an owned `Card`.
-- After that, inspect the remaining fixed/absolute surfaces surfaced by the shell scan and separate true overlay chrome from plain backdrops so only real floating-surface contracts stay behind owned recipes.
+- Inspect the remaining fixed/absolute surfaces surfaced by the shell scan and separate true floating-surface chrome from plain backdrops so only real floating contracts stay behind owned recipes.
+- If any remaining positioned surfaces still own real shell chrome, migrate them behind `Card`, `Popover`, `Sheet`, or overlay-specific recipes rather than leaving feature-level shell stacks in place.
 
 ## Problem
 

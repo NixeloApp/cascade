@@ -127,6 +127,7 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/IssueDetailModal.tsx",
   "/Kanban/BoardToolbar.tsx",
   "/Onboarding/OnboardingChecklist.tsx",
+  "/Plate/MentionInputElement.tsx",
   "/TimeTracking/BurnRateDashboard.tsx",
   "/TimeTracking/TimeEntriesList.tsx",
   "/TimeTracking/ManualTimeEntryModal.tsx",

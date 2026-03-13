@@ -149,9 +149,9 @@ export function MentionInputElement({
       @{children}
       {/* Combobox dropdown */}
       <Card
+        recipe="mentionMenu"
         padding="none"
-        variant="elevated"
-        className="absolute left-0 top-full z-50 mt-1 min-w-52 max-w-xs overflow-hidden shadow-lg"
+        className="absolute left-0 top-full z-50 mt-1 min-w-52 max-w-xs"
       >
         {items.length === 0 ? (
           <div className="px-3 py-2">
