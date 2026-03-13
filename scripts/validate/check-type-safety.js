@@ -28,7 +28,6 @@ export function run() {
     /usersPerfFastPath\.test\.ts$/, // 4 violations - TODO: fix biome-ignore
     /usersPerfShared\.test\.ts$/, // 2 violations - TODO: fix biome-ignore
     /webhooksCrash\.test\.ts$/, // 3 violations - TODO: fix biome-ignore
-    /useIssueModal\.ts$/, // TanStack Router generic hook requires type casting
     /convex\/lib\//, // Convex internal utilities with complex generics
     /convex\/softDeleteCleanup\.ts$/, // Convex internal cleanup utility
     /convex\/issues\/queries\.ts$/, // Convex search index type mismatch requires casting
