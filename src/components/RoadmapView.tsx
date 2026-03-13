@@ -59,6 +59,170 @@ interface DependencyLine {
   toIssueId: string;
 }
 
+interface RoadmapTimelineIssue {
+  _id: Id<"issues">;
+  startDate?: number;
+  dueDate?: number;
+}
+
+interface ResizeState {
+  issueId: Id<"issues">;
+  edge: "left" | "right";
+  startX: number;
+  originalStartDate?: number;
+  originalDueDate?: number;
+}
+
+interface ResizeComputationArgs {
+  resizing: ResizeState;
+  clientX: number;
+  containerWidth: number;
+  getPositionOnTimeline: (date: number) => number;
+  getDateFromPosition: (percent: number) => number;
+}
+
+interface TimelineGeometryArgs {
+  issue: RoadmapTimelineIssue;
+  getPositionOnTimeline: (date: number) => number;
+}
+
+interface DependencyLineBuildArgs {
+  issueIndexMap: Map<string, number>;
+  issues: RoadmapTimelineIssue[];
+  link: {
+    fromIssueId: string;
+    toIssueId: string;
+  };
+  rowHeight: number;
+  getPositionOnTimeline: (date: number) => number;
+}
+
+function getBarWidth(
+  startDate: number | undefined,
+  dueDate: number,
+  getPositionOnTimeline: (date: number) => number,
+) {
+  if (!startDate) {
+    return 5;
+  }
+  const start = getPositionOnTimeline(startDate);
+  const end = getPositionOnTimeline(dueDate);
+  return Math.max(2, end - start);
+}
+
+function getBarLeft(
+  startDate: number | undefined,
+  dueDate: number,
+  getPositionOnTimeline: (date: number) => number,
+) {
+  if (startDate) {
+    return getPositionOnTimeline(startDate);
+  }
+  return getPositionOnTimeline(dueDate) - 2.5;
+}
+
+function getTimelineGeometry({ issue, getPositionOnTimeline }: TimelineGeometryArgs) {
+  if (!issue.dueDate) {
+    return null;
+  }
+
+  const left = getBarLeft(issue.startDate, issue.dueDate, getPositionOnTimeline);
+  const width = getBarWidth(issue.startDate, issue.dueDate, getPositionOnTimeline);
+
+  return {
+    left,
+    width,
+    right: left + width,
+  };
+}
+
+function buildResizePatch({
+  resizing,
+  clientX,
+  containerWidth,
+  getPositionOnTimeline,
+  getDateFromPosition,
+}: ResizeComputationArgs) {
+  const deltaX = clientX - resizing.startX;
+  const deltaPercent = (deltaX / containerWidth) * 100;
+
+  if (resizing.edge === "left" && resizing.originalStartDate) {
+    const originalPercent = getPositionOnTimeline(resizing.originalStartDate);
+    const nextStartDate = getDateFromPosition(originalPercent + deltaPercent);
+    const dateObj = new Date(nextStartDate);
+    dateObj.setHours(0, 0, 0, 0);
+    const startDate = dateObj.getTime();
+
+    if (resizing.originalDueDate && startDate >= resizing.originalDueDate) {
+      return null;
+    }
+
+    return {
+      issueId: resizing.issueId,
+      patch: { startDate },
+    };
+  }
+
+  if (resizing.edge === "right" && resizing.originalDueDate) {
+    const originalPercent = getPositionOnTimeline(resizing.originalDueDate);
+    const dueDate = getDateFromPosition(originalPercent + deltaPercent);
+
+    if (resizing.originalStartDate && dueDate <= resizing.originalStartDate) {
+      return null;
+    }
+
+    return {
+      issueId: resizing.issueId,
+      patch: { dueDate },
+    };
+  }
+
+  return null;
+}
+
+function buildDependencyLine({
+  issueIndexMap,
+  issues,
+  link,
+  rowHeight,
+  getPositionOnTimeline,
+}: DependencyLineBuildArgs): DependencyLine | null {
+  const fromIndex = issueIndexMap.get(link.fromIssueId);
+  const toIndex = issueIndexMap.get(link.toIssueId);
+
+  if (fromIndex === undefined || toIndex === undefined) {
+    return null;
+  }
+
+  const fromIssue = issues[fromIndex];
+  const toIssue = issues[toIndex];
+  if (!fromIssue || !toIssue) {
+    return null;
+  }
+
+  const fromGeometry = getTimelineGeometry({ issue: fromIssue, getPositionOnTimeline });
+  const toGeometry = getTimelineGeometry({ issue: toIssue, getPositionOnTimeline });
+  if (!fromGeometry || !toGeometry) {
+    return null;
+  }
+
+  return {
+    fromX: fromGeometry.right,
+    fromY: fromIndex * rowHeight + rowHeight / 2,
+    toX: toGeometry.left,
+    toY: toIndex * rowHeight + rowHeight / 2,
+    fromIssueId: link.fromIssueId,
+    toIssueId: link.toIssueId,
+  };
+}
+
+function getDependencyPath(line: DependencyLine) {
+  return `M ${line.fromX}% ${line.fromY}
+      C ${line.fromX + 5}% ${line.fromY},
+        ${line.toX - 5}% ${line.toY},
+        ${line.toX}% ${line.toY}`;
+}
+
 /** Gantt-style roadmap view with issue timeline bars and dependency lines. */
 export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapViewProps) {
   const [selectedIssue, setSelectedIssue] = useState<Id<"issues"> | null>(null);
@@ -68,13 +232,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   const [showDependencies, setShowDependencies] = useState(true);
 
   // Resize state
-  const [resizing, setResizing] = useState<{
-    issueId: Id<"issues">;
-    edge: "left" | "right";
-    startX: number;
-    originalStartDate?: number;
-    originalDueDate?: number;
-  } | null>(null);
+  const [resizing, setResizing] = useState<ResizeState | null>(null);
 
   const { mutate: updateIssue } = useAuthenticatedMutation(api.issues.update);
 
@@ -136,25 +294,6 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     [totalDays, startOfMonth],
   );
 
-  // Get bar width as percentage from startDate to dueDate
-  function getBarWidth(startDate: number | undefined, dueDate: number) {
-    if (!startDate) {
-      return 5; // Default width when no start date
-    }
-    const start = getPositionOnTimeline(startDate);
-    const end = getPositionOnTimeline(dueDate);
-    return Math.max(2, end - start); // Minimum 2% width
-  }
-
-  // Get bar left position
-  function getBarLeft(startDate: number | undefined, dueDate: number) {
-    if (startDate) {
-      return getPositionOnTimeline(startDate);
-    }
-    // When no start date, position at dueDate minus half the default width
-    return getPositionOnTimeline(dueDate) - 2.5;
-  }
-
   // Reference to timeline container for calculating positions
   const timelineRef = useRef<HTMLDivElement>(null);
 
@@ -190,49 +329,23 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
       // Mouse position is tracked relative to container for date calculation
     };
 
-    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Date calculation and resize logic requires multiple conditions
     const handleMouseUp = async (e: MouseEvent) => {
       const container = timelineRef.current;
       if (!container) return;
 
       const rect = container.getBoundingClientRect();
-      const containerWidth = rect.width;
-      const deltaX = e.clientX - resizing.startX;
-      const deltaPercent = (deltaX / containerWidth) * 100;
+      const resizeUpdate = buildResizePatch({
+        resizing,
+        clientX: e.clientX,
+        containerWidth: rect.width,
+        getPositionOnTimeline,
+        getDateFromPosition,
+      });
 
-      // Calculate new date
-      let newDate: number;
-      if (resizing.edge === "left" && resizing.originalStartDate) {
-        const originalPercent = getPositionOnTimeline(resizing.originalStartDate);
-        newDate = getDateFromPosition(originalPercent + deltaPercent);
-        // Set to start of day for start dates
-        const dateObj = new Date(newDate);
-        dateObj.setHours(0, 0, 0, 0);
-        newDate = dateObj.getTime();
-
-        // Don't allow start date after due date
-        if (resizing.originalDueDate && newDate >= resizing.originalDueDate) {
-          setResizing(null);
-          return;
-        }
-
+      if (resizeUpdate) {
         await updateIssue({
-          issueId: resizing.issueId,
-          startDate: newDate,
-        });
-      } else if (resizing.edge === "right" && resizing.originalDueDate) {
-        const originalPercent = getPositionOnTimeline(resizing.originalDueDate);
-        newDate = getDateFromPosition(originalPercent + deltaPercent);
-
-        // Don't allow due date before start date
-        if (resizing.originalStartDate && newDate <= resizing.originalStartDate) {
-          setResizing(null);
-          return;
-        }
-
-        await updateIssue({
-          issueId: resizing.issueId,
-          dueDate: newDate,
+          issueId: resizeUpdate.issueId,
+          ...resizeUpdate.patch,
         });
       }
 
@@ -280,57 +393,19 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
 
     const rowHeight = 56;
 
-    // Inline position calculator using closure over totalDays and startOfMonth
-    const getPos = (date: number) => {
-      const issueDate = new Date(date);
-      const daysSinceStart = Math.floor((issueDate.getTime() - startOfMonth.getTime()) / DAY);
-      return (daysSinceStart / totalDays) * 100;
-    };
-
-    return (
-      issueLinks.links
-        .filter((link) => link.linkType === "blocks")
-        // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: SVG path generation requires multiple calculations
-        .map((link) => {
-          const fromIndex = issueIndexMap.get(link.fromIssueId);
-          const toIndex = issueIndexMap.get(link.toIssueId);
-
-          if (fromIndex === undefined || toIndex === undefined) return null;
-
-          const fromIssue = filteredIssues[fromIndex];
-          const toIssue = filteredIssues[toIndex];
-
-          if (!fromIssue?.dueDate || !toIssue?.dueDate) return null;
-
-          // Calculate Y positions based on row index
-          const fromY = fromIndex * rowHeight + rowHeight / 2;
-          const toY = toIndex * rowHeight + rowHeight / 2;
-
-          // Calculate X positions as percentages
-          // From: end of blocking issue bar
-          const fromStartX = fromIssue.startDate
-            ? getPos(fromIssue.startDate)
-            : getPos(fromIssue.dueDate) - 2.5;
-          const fromWidth = fromIssue.startDate
-            ? Math.max(2, getPos(fromIssue.dueDate) - getPos(fromIssue.startDate))
-            : 5;
-          const fromX = fromStartX + fromWidth;
-
-          // To: start of blocked issue bar
-          const toX = toIssue.startDate ? getPos(toIssue.startDate) : getPos(toIssue.dueDate) - 2.5;
-
-          return {
-            fromX,
-            fromY,
-            toX,
-            toY,
-            fromIssueId: link.fromIssueId,
-            toIssueId: link.toIssueId,
-          };
-        })
-        .filter((line): line is DependencyLine => line !== null)
-    );
-  }, [showDependencies, issueLinks, filteredIssues, issueIndexMap, totalDays, startOfMonth]);
+    return issueLinks.links
+      .filter((link) => link.linkType === "blocks")
+      .map((link) =>
+        buildDependencyLine({
+          issueIndexMap,
+          issues: filteredIssues,
+          link,
+          rowHeight,
+          getPositionOnTimeline,
+        }),
+      )
+      .filter((line): line is DependencyLine => line !== null);
+  }, [showDependencies, issueLinks, filteredIssues, issueIndexMap, getPositionOnTimeline]);
 
   // Row renderer for virtualization
   type RowData = {
@@ -387,8 +462,8 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                 }
                 className={cn("group absolute h-6", getPriorityColor(issue.priority, "bg"))}
                 style={{
-                  left: `${getBarLeft(issue.startDate, issue.dueDate)}%`,
-                  width: `${getBarWidth(issue.startDate, issue.dueDate)}%`,
+                  left: `${getBarLeft(issue.startDate, issue.dueDate, getPositionOnTimeline)}%`,
+                  width: `${getBarWidth(issue.startDate, issue.dueDate, getPositionOnTimeline)}%`,
                 }}
               >
                 <Flex align="center" className="h-full">
@@ -692,10 +767,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                       return (
                         <path
                           key={`${line.fromIssueId}-${line.toIssueId}`}
-                          d={`M ${line.fromX}% ${line.fromY}
-                              C ${line.fromX + 5}% ${line.fromY},
-                                ${line.toX - 5}% ${line.toY},
-                                ${line.toX}% ${line.toY}`}
+                          d={getDependencyPath(line)}
                           fill="none"
                           stroke="var(--color-status-warning)"
                           strokeWidth="2"

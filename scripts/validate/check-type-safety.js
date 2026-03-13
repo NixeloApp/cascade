@@ -34,7 +34,6 @@ export function run() {
     /convex\/calendarEvents\.ts$/, // Multikey index query requires explicit casting
     /src\/components\/IssueDetail\/CreateIssueModal\.tsx$/, // Complexity: form + validation + AI - TODO: extract form sections
     /src\/components\/PlateEditor\.tsx$/, // Complexity: editor operations - TODO: extract DocumentControls
-    /src\/components\/RoadmapView\.tsx$/, // Complexity: timeline + SVG - TODO: extract TimelineRenderer
   ];
 
   let errorCount = 0;
