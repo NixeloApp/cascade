@@ -21,7 +21,6 @@ import { c, ROOT, relPath, walkDir } from "./utils.js";
 // - Use Card with hoverable prop for cards
 const ALLOWED_FILES = [
   // Search/filter components
-  "FuzzySearch/AssigneeSearchDropdown.example.tsx",
   // Forms/fields
   // Calendar
   // Landing pages

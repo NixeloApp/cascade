@@ -319,6 +319,7 @@
 - Removed `Landing/NavHeader.tsx`, `Landing/FeaturesSection.tsx`, and `Landing/PricingSection.tsx` from the interactive-state allowlist by moving their nav pills, CTA buttons, feature cards, and pricing cards onto owned `Button` and `Card` variants instead of keeping hover and selection chrome in landing page code.
 - Removed `Landing/HeroSection.tsx`, `Landing/WhyChooseSection.tsx`, and `Landing/FinalCTASection.tsx` from the interactive-state allowlist by moving the hero badge, proof cards, and CTA links onto owned `Badge`, `Card`, and `Button` variants instead of leaving hover/link state in landing feature files.
 - Removed `Landing/Footer.tsx` and `Landing/LogoBar.tsx` from the interactive-state allowlist by moving footer text/social links onto owned `Button` chrome and replacing the decorative logo-chip hover stack with an owned `Card` recipe.
+- Removed `FuzzySearch/AssigneeSearchDropdown.example.tsx` from the interactive-state allowlist by moving its remaining clear action onto owned `IconButton` danger chrome instead of leaving a raw `hover:text-*` example behind.
 - The embedded calendar island is now narrowed from directory-wide escape hatches to explicit file debt. Burn that list down surface by surface instead of allowing new embedded drift by default.
 
 ## Problem
