@@ -25,8 +25,6 @@ const ALLOWED_FILES = [
   // Forms/fields
   // Calendar
   // Landing pages
-  "Landing/Footer.tsx",
-  "Landing/LogoBar.tsx",
   // Activity/inbox
   // Error handling
 ];

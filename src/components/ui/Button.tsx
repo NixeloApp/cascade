@@ -72,6 +72,10 @@ const buttonVariants = cva(
 const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-brand-ring", {
   variants: {
     chrome: {
+      footerLink:
+        "border-transparent bg-transparent text-ui-text-tertiary shadow-none hover:text-ui-text",
+      footerSocial:
+        "border-transparent bg-transparent text-ui-text-tertiary shadow-none hover:text-ui-text",
       landingBrandLink:
         "border-transparent bg-transparent text-ui-text shadow-none hover:opacity-80",
       landingNavLink:
@@ -128,6 +132,8 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
         "border-transparent bg-transparent text-ui-text-tertiary shadow-none hover:text-brand",
     },
     chromeSize: {
+      footerLink: "h-auto rounded-none px-0 py-0 text-sm",
+      footerSocial: "h-auto rounded-none p-0",
       landingBrandLink: "h-auto rounded-full px-0 py-0",
       landingNavPill: "h-auto rounded-full px-4 py-2 text-sm",
       landingThemeToggle: "h-9 w-9 rounded-full p-0 sm:h-10 sm:w-10",

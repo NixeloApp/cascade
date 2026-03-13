@@ -226,6 +226,8 @@ const cardRecipeVariants = cva("", {
       landingStoryCard:
         "rounded-3xl border-ui-border/50 bg-ui-bg-secondary/80 p-6 shadow-soft transition-all duration-medium hover:-translate-y-1 hover:border-ui-border-secondary",
       landingFinalFeatureCard: "rounded-2xl border-ui-border/50 bg-ui-bg-soft/80 p-5 shadow-soft",
+      landingLogoChip:
+        "rounded-full border border-ui-border/40 bg-ui-bg-soft px-4 py-2 text-ui-text-tertiary shadow-none",
 
       // Header control surfaces
       controlRail:

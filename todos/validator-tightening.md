@@ -318,6 +318,7 @@
 - Replaced the broad `Landing/` interactive escape hatch with explicit file-level debt for the actual remaining landing surfaces: `FeaturesSection.tsx`, `FinalCTASection.tsx`, `Footer.tsx`, `HeroSection.tsx`, `LogoBar.tsx`, `NavHeader.tsx`, `PricingSection.tsx`, and `WhyChooseSection.tsx`.
 - Removed `Landing/NavHeader.tsx`, `Landing/FeaturesSection.tsx`, and `Landing/PricingSection.tsx` from the interactive-state allowlist by moving their nav pills, CTA buttons, feature cards, and pricing cards onto owned `Button` and `Card` variants instead of keeping hover and selection chrome in landing page code.
 - Removed `Landing/HeroSection.tsx`, `Landing/WhyChooseSection.tsx`, and `Landing/FinalCTASection.tsx` from the interactive-state allowlist by moving the hero badge, proof cards, and CTA links onto owned `Badge`, `Card`, and `Button` variants instead of leaving hover/link state in landing feature files.
+- Removed `Landing/Footer.tsx` and `Landing/LogoBar.tsx` from the interactive-state allowlist by moving footer text/social links onto owned `Button` chrome and replacing the decorative logo-chip hover stack with an owned `Card` recipe.
 - The embedded calendar island is now narrowed from directory-wide escape hatches to explicit file debt. Burn that list down surface by surface instead of allowing new embedded drift by default.
 
 ## Problem
