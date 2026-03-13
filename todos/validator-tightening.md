@@ -71,6 +71,7 @@
 - Removed `BulkOperationsBar.tsx` from the `check-recipe-drift.js` migration allowlist by moving its floating action-bar shell onto an owned `Card` recipe instead of leaving the border/background/shadow contract inline in feature code.
 - Removed `RoadmapView.tsx` from the `check-recipe-drift.js` migration allowlist by moving its roadmap header controls and empty state back onto owned `Card`, `Select`, and `EmptyState` primitives instead of keeping surface recipes inline in feature code.
 - Removed `CreateProjectFromTemplate.tsx` and `ImportExport/ImportPanel.tsx` from the `check-recipe-drift.js` migration allowlist by moving their option-selector tiles, callouts, and import input shell back onto owned `Card`, `Alert`, and form primitives instead of leaving those surfaces inline in feature code.
+- Removed `Settings/AvatarUploadModal.tsx` and `Settings/ProfileContent.tsx` from the `check-recipe-drift.js` migration allowlist after confirming their remaining classes are layout/adornment-only and no longer define reusable surface recipes outside owned primitives.
 - Added `TimeTracking/TimeEntryModal.tsx` and `TimeTracking/UserRatesManagement.tsx` to design-system ownership targeting so future time-entry shell drift is validated directly.
 - Added `TimeTracking/ManualTimeEntryModal.tsx` to design-system ownership targeting so future manual-entry shell drift is validated directly.
 - Added `TimeTracking/TimeEntriesList.tsx` to design-system ownership targeting so future list-row shell drift is validated directly.
@@ -84,7 +85,7 @@
 ### Next batch
 
 - Keep shrinking the remaining `check-recipe-drift.js` migration allowlist.
-- `Settings/AvatarUploadModal.tsx` and `Settings/ProfileContent.tsx` are the next remaining explicit recipe-drift exemptions and should be burned down so the allowlist keeps shrinking.
+- `Dashboard/RecentActivity.tsx` and `Dashboard/WorkspacesList.tsx` are the next remaining explicit recipe-drift exemptions and should be burned down so the allowlist keeps shrinking.
 
 ## Problem
 

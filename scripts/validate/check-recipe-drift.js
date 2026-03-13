@@ -41,9 +41,6 @@ const ALLOWED_FILES = [
   // Dashboard surfaces
   "Dashboard/RecentActivity.tsx",
   "Dashboard/WorkspacesList.tsx",
-  // Settings - avatar patterns
-  "Settings/AvatarUploadModal.tsx",
-  "Settings/ProfileContent.tsx",
 ];
 
 /**
