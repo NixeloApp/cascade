@@ -82,6 +82,7 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/Admin/UserTypeManager.tsx",
   "/Admin/UserManagement.tsx",
   "/Dashboard.tsx",
+  "/Documents/DocumentComments.tsx",
   "/Documents/DocumentHeader.tsx",
   "/Documents/DocumentSidebar.tsx",
   "/Documents/DocumentTemplatesManager.tsx",

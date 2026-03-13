@@ -185,7 +185,9 @@
 - Added `layout/PageLayout.tsx` to design-system ownership targeting so future top-level page shell drift is blocked directly.
 - Removed `Documents/DocumentSidebar.tsx` from the raw-Tailwind debt list by moving its sidebar shell and metadata row chrome onto owned `Card` recipes, replacing the raw close button shell with `IconButton`, and dropping the remaining feature-level tracking/padding utility stacks from the document navigation surface.
 - Added `Documents/DocumentSidebar.tsx` to design-system ownership targeting so future document-sidebar shell drift is blocked directly.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `DocumentComments.tsx`, which is now the next higher-impact shared surface still sitting behind explicit validator debt.
+- Removed `Documents/DocumentComments.tsx` from the interactive-state debt list by moving its comment card and composer shells onto owned `Card` recipes and replacing the ad hoc author/timestamp row with shared `Metadata` primitives instead of feature-level layout/text treatment.
+- Added `Documents/DocumentComments.tsx` to design-system ownership targeting so future document-comment shell drift is blocked directly.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `DocumentTree.tsx`, which is now the next higher-impact shared surface still sitting behind explicit validator debt.
 
 ## Problem
 
