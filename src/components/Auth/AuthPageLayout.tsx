@@ -21,10 +21,14 @@ interface AuthPageLayoutProps {
  */
 export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProps) {
   return (
-    <div className="bg-auth-gradient relative isolate min-h-screen w-full overflow-hidden bg-ui-bg px-4 py-6 sm:px-6">
+    <div className="bg-auth-gradient relative isolate min-h-screen w-full overflow-hidden bg-ui-bg">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-linear-to-b from-ui-bg-elevated/56 to-transparent" />
-      <Flex align="center" className="mx-auto min-h-auth-shell w-full max-w-5xl animate-fade-in">
-        <Grid cols={1} colsLg={5} gap="xl" className="w-full items-center lg:gap-10">
+      <Card
+        variant="ghost"
+        padding="lg"
+        className="mx-auto min-h-auth-shell w-full max-w-5xl animate-fade-in"
+      >
+        <Grid cols={1} colsLg={5} gap="2xl" className="w-full items-center">
           <GridItem colSpanLg={3} className="hidden lg:block">
             <Card recipe="authShowcasePanel" padding="lg" className="xl:px-6 xl:py-7">
               <Badge variant="outline" shape="pill" className="mb-4 w-fit">
@@ -138,7 +142,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
             </Flex>
           </GridItem>
         </Grid>
-      </Flex>
+      </Card>
     </div>
   );
 }

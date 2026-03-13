@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 type Cols = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 type ColSpan = Cols | "full";
-type GapSize = "none" | "xs" | "sm" | "md" | "lg" | "xl";
+type GapSize = "none" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
 
 const colsClasses: Record<Cols, string> = {
   1: "grid-cols-1",
@@ -95,6 +95,7 @@ const gapClasses: Record<GapSize, string> = {
   md: "gap-3",
   lg: "gap-4",
   xl: "gap-6",
+  "2xl": "gap-8",
 };
 
 const colSpanClasses: Record<ColSpan, string> = {

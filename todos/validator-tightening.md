@@ -263,8 +263,8 @@
 - Explicit onboarding validator debt is now cleared. Tighten the next intentional raw/interactivity island instead of leaving any new onboarding exceptions.
 - Removed the broad `src/components/Auth/` raw-Tailwind escape hatch and the broad `Auth/` interactive-state allowlist entry.
 - Migrated the surfaced auth debt onto owned primitives: `AuthLink.tsx` now uses owned `Button` variants, `GoogleAuthButton.tsx` dropped local size/spacing chrome, `PasswordStrengthIndicator.tsx` now uses owned `Card` segment recipes, verification/reset forms now use owned `Flex`, `Stack`, and `Input` `otpCode` variants, and `AuthPageLayout.tsx` now owns its major hero/form surfaces through shared `Card` recipes instead of feature-local shell stacks.
-- Narrowed the remaining auth raw migration debt to a single explicit file, `Auth/AuthPageLayout.tsx`, for its last responsive outer-shell spacing helpers, and added it to design-system ownership targeting so any further auth shell drift is blocked directly.
-- The broad auth validator island is gone. Clear the last explicit `AuthPageLayout.tsx` raw debt before moving to the intentionally isolated `Calendar/shadcn-calendar/` island.
+- Removed `Auth/AuthPageLayout.tsx` from the last explicit raw-Tailwind debt entry by moving its outer spacing onto owned `Card` padding and replacing its last responsive gap drift with owned `Grid` gap props.
+- Explicit auth raw-debt is now cleared. The next intentional validator island is the embedded `Calendar/shadcn-calendar/` implementation.
 
 ## Problem
 
