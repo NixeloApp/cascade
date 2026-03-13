@@ -1,7 +1,25 @@
+import { cva, type VariantProps } from "class-variance-authority";
 import { forwardRef, type TextareaHTMLAttributes, useId } from "react";
 import { cn } from "@/lib/utils";
 
-export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+const textareaVariants = cva(
+  "w-full border rounded-md px-3 py-2 text-sm resize-none bg-ui-bg text-ui-text placeholder-ui-text-tertiary transition-default focus:outline-none focus:ring-2 focus:ring-ui-border-focus focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed",
+  {
+    variants: {
+      variant: {
+        default: "",
+        code: "font-mono",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+);
+
+export interface TextareaProps
+  extends TextareaHTMLAttributes<HTMLTextAreaElement>,
+    VariantProps<typeof textareaVariants> {
   label?: string;
   error?: string;
   helperText?: string;
@@ -22,7 +40,16 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
  */
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   (
-    { className, label, error, helperText, id, "aria-describedby": ariaDescribedBy, ...props },
+    {
+      className,
+      label,
+      error,
+      helperText,
+      id,
+      variant,
+      "aria-describedby": ariaDescribedBy,
+      ...props
+    },
     ref,
   ) => {
     const generatedId = useId();
@@ -46,12 +73,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           ref={ref}
           id={textareaId}
           className={cn(
-            "w-full px-3 py-2 border rounded-md text-sm resize-none",
-            "bg-ui-bg",
-            "text-ui-text",
-            "placeholder-ui-text-tertiary",
-            "focus:outline-none focus:ring-2 focus:ring-ui-border-focus focus:border-transparent",
-            "disabled:opacity-50 disabled:cursor-not-allowed",
+            textareaVariants({ variant }),
             error ? "border-ui-border-error" : "border-ui-border",
             className,
           )}

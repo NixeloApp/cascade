@@ -13,7 +13,6 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
   "src/components/Onboarding/",
   "src/components/IssueDetail/",
   "src/components/Fields/",
-  "src/components/Templates/",
   "src/components/Automation/",
 ];
 
@@ -137,6 +136,8 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/TimeTracker/BillingReport.tsx",
   "/TimeTracker/Timesheet.tsx",
   "/TimeTracker.tsx",
+  "/Templates/TemplateCard.tsx",
+  "/Templates/TemplateForm.tsx",
   "/Sprints/SprintManager.tsx",
   "/ProjectSettings/index.tsx",
   "/TimerWidget.tsx",
