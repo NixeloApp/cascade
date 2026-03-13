@@ -18,7 +18,6 @@ export function run() {
     /convex\/lib\/constrainedValidators\.test\.ts$/, // Legacy test assertions
     /convex\/lib\/fileValidators\.test\.ts$/, // Legacy MutationCtx casts
     /convex\/lib\/issueCalculation\.test\.ts$/, // Legacy Doc fixture casts
-    /convex\/lib\/userUtils\.test\.ts$/, // Legacy runtime property assertions
   ];
 
   let errorCount = 0;
