@@ -133,12 +133,14 @@
 - Removed `Notifications/NotificationItem.tsx` from the raw-Tailwind and interactive-state debt lists by moving its row shell onto owned `Card` recipes, moving its snooze menu chrome onto an owned `Popover` recipe, and replacing feature-level reveal classes with primitive-owned responsive `IconButton` reveal behavior.
 - Removed `InboxList.tsx` from the raw-Tailwind and interactive-state debt lists by moving inbox status shells onto owned `Card` recipes, replacing the leftover destructive menu class with the owned `DropdownMenuItem` danger variant, and tightening its action/button chrome onto shared primitives.
 - Removed `ActivityFeed.tsx` from the raw-Tailwind and interactive-state debt lists by moving its repeated hover-entry and timeline-icon shells onto owned `Card` recipes instead of inline rounded/background/hover stacks.
+- Removed `UserActivityFeed.tsx` from the raw-Tailwind and interactive-state debt lists by moving its repeated activity-row and icon shells onto owned `Card` recipes, replacing its custom empty state with the shared `EmptyState` primitive, and moving its issue-key styling behind owned `Typography`.
+- Removed `ProjectsList.tsx` from the raw-Tailwind debt list by moving the single-project highlight strip and project-key tile onto owned `Card` recipes instead of inline shell styling.
 
 ### Next batch
 
 - Continue shrinking the explicit `AI` debt now that the broad directory escapes are gone.
 - The explicit `AI` raw-Tailwind debt list is now empty.
-- Keep working through smaller helper controls and shared reveal surfaces rather than decorative backdrops, with the next pass focused on `UserActivityFeed.tsx` and `ProjectsList.tsx`, which are the next shared list/activity surfaces still sitting behind explicit raw-Tailwind debt.
+- Keep working through smaller helper controls and shared reveal surfaces rather than decorative backdrops, with the next pass focused on `AppHeader.tsx` and `AppSidebar.tsx`, which are the next high-impact shared navigation surfaces still sitting behind explicit raw-Tailwind debt.
 
 ## Problem
 

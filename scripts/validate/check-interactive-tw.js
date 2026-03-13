@@ -70,7 +70,6 @@ const ALLOWED_FILES = [
   // Auth
   "Auth/",
   // Activity/inbox
-  "UserActivityFeed.tsx",
   // Error handling
   "ErrorBoundary.tsx",
 ];

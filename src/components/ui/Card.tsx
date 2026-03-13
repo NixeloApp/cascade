@@ -132,6 +132,8 @@ const cardRecipeVariants = cva("", {
         "rounded-md border-transparent bg-transparent px-2 py-2 shadow-none hover:bg-ui-bg-secondary/50",
       activityTimelineIcon:
         "rounded-full border-transparent bg-ui-bg text-ui-text-secondary shadow-none",
+      projectFeatureStrip: "rounded-2xl border-ui-border/60 bg-ui-bg-soft/80 shadow-none",
+      projectKeyTile: "rounded-lg border-brand/20 bg-brand-subtle text-brand shadow-none",
       assistantPanelHeader:
         "border-x-0 border-t-0 border-b border-ui-border bg-linear-to-r from-brand to-accent shadow-none",
       assistantComposer:

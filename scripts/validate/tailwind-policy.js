@@ -55,13 +55,11 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   "/layout/PageLayout.tsx",
   "/MentionInput.tsx",
   "/PlateEditor.tsx",
-  "/ProjectsList.tsx",
   "/RoadmapView.tsx",
   "/SprintManager.tsx",
   "/SprintProgressBar.tsx",
   "/SprintWorkload.tsx",
   "/TimeTracker.tsx",
-  "/UserActivityFeed.tsx",
   "/UserProfile.tsx",
   "/VersionHistory.tsx",
 ];
@@ -117,6 +115,7 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/Notifications/NotificationItem.tsx",
   "/InboxList.tsx",
   "/ImportExport/ImportPanel.tsx",
+  "/ProjectsList.tsx",
   "/RoadmapView.tsx",
   "/Settings/ApiKeysManager.tsx",
   "/Settings/AvatarUploadModal.tsx",
@@ -139,6 +138,7 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/TimeTracker/Timesheet.tsx",
   "/ProjectSettings/index.tsx",
   "/TimerWidget.tsx",
+  "/UserActivityFeed.tsx",
   "/UserMenu.tsx",
 ];
 
