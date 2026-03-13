@@ -16,7 +16,6 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   "/BulkOperationsBar.tsx",
   "/Calendar/EventDetailsModal.tsx",
   "/Calendar/RoadmapView.tsx",
-  "/Kanban/SwimlanRow.tsx",
 ];
 
 export const RAW_TAILWIND_ALLOWED_EXTENSIONS = [".stories.tsx", ".test.tsx", ".example.tsx"];
@@ -123,6 +122,7 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/IssueDetail/CreateIssueModal.tsx",
   "/Kanban/BoardToolbar.tsx",
   "/Kanban/KanbanColumn.tsx",
+  "/Kanban/SwimlanRow.tsx",
   "/Onboarding/OnboardingChecklist.tsx",
   "/Plate/ColorPickerButton.tsx",
   "/Plate/DragHandle.tsx",

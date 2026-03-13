@@ -104,6 +104,8 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
       sprintPresetSelected: "border-brand bg-ui-bg-secondary text-ui-text shadow-none",
       roadmapResizeHandle:
         "border-transparent bg-ui-bg-elevated/50 text-ui-text-tertiary shadow-none hover:bg-ui-bg-elevated/60",
+      swimlaneHeader:
+        "border-transparent bg-transparent text-ui-text-secondary shadow-none hover:bg-ui-bg-hover",
     },
     chromeSize: {
       icon: "h-9 w-9 rounded-full",
@@ -120,6 +122,7 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
         "h-6 rounded-full px-2 text-xs sm:h-9 sm:rounded-xl sm:border-transparent sm:bg-transparent sm:px-3 sm:text-sm",
       calendarIssue: "h-auto rounded-md px-1.5 py-1.5 text-xs",
       sprintPreset: "h-auto rounded-lg px-3 py-3 text-sm",
+      swimlaneHeader: "h-auto w-full justify-start rounded-xl px-4 py-2 text-left text-sm",
     },
   },
 });
