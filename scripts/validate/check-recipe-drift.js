@@ -34,8 +34,6 @@ const ALLOWED_FILES = [
   // Modal/overlay surfaces - need recipe extraction
   "Plate/SlashMenu.tsx",
   // Settings panels
-  "Calendar/CreateEventModal.tsx",
-  "Settings/LinkedRepositories.tsx",
   "Settings/PumbleIntegration.tsx",
   "TimeTracker/BillingReport.tsx",
 ];

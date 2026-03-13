@@ -355,7 +355,7 @@ export function CreateEventModal({
                     setSelectedWorkspaceId(value === "none" ? undefined : (value as Id<"projects">))
                   }
                 >
-                  <SelectTrigger className="w-full px-3 py-2 border border-ui-border rounded-md bg-ui-bg text-ui-text">
+                  <SelectTrigger>
                     <SelectValue placeholder="No project" />
                   </SelectTrigger>
                   <SelectContent>
