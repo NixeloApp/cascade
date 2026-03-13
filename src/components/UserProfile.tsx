@@ -20,13 +20,7 @@ interface UserProfileProps {
 /** Dialog for viewing and editing a user's profile. */
 export function UserProfile({ userId, open, onOpenChange }: UserProfileProps) {
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title="User Profile"
-      size="xl"
-      className="p-0 gap-0 overflow-hidden"
-    >
+    <Dialog open={open} onOpenChange={onOpenChange} title="User Profile" size="xl">
       <Card padding="lg" variant="ghost" radius="none" className="overflow-y-auto pt-0">
         <ProfileContent userId={userId} />
       </Card>

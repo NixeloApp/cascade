@@ -18,7 +18,6 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   "/Calendar/RoadmapView.tsx",
   "/Kanban/KanbanColumn.tsx",
   "/Kanban/SwimlanRow.tsx",
-  "/UserProfile.tsx",
 ];
 
 export const RAW_TAILWIND_ALLOWED_EXTENSIONS = [".stories.tsx", ".test.tsx", ".example.tsx"];

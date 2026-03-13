@@ -237,7 +237,8 @@
 - Removed `Dashboard.tsx` from the explicit raw-Tailwind debt list by moving responsive column spans onto an owned `GridItem` primitive and replacing the remaining dashboard overview label/layout drift with owned `Grid`, `Stack`, `Flex`, and `Typography` APIs.
 - Removed `PlateEditor.tsx` from the explicit raw-Tailwind debt list by moving the editor canvas shell onto owned `PlateRichTextContent` variants and replacing the remaining raw `flex-1` layout drift with an owned `Flex flex="1"` API.
 - Removed `CreateProjectFromTemplate.tsx` from the explicit raw-Tailwind debt list by moving its responsive footer layout onto owned `Flex`, `FlexItem`, and `Button` APIs instead of inline `sm:flex-*` utility drift.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on the remaining explicit raw-debt files: `UserProfile.tsx` and the narrow calendar/kanban debt. `Calendar/shadcn-calendar/` remains intentionally isolated unless we decide to absorb that embedded implementation.
+- Removed `UserProfile.tsx` from the explicit raw-Tailwind debt list by dropping the unnecessary dialog-level utility stack and relying on the existing `Dialog` and `Card` composition directly.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on the remaining narrow explicit raw-debt files in calendar and kanban. `Calendar/shadcn-calendar/` remains intentionally isolated unless we decide to absorb that embedded implementation.
 
 ## Problem
 
