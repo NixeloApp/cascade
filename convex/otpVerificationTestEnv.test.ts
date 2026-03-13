@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { internal } from "./_generated/api";
 import { sendEmail } from "./email";
+import type { ConvexAuthContext } from "./lib/authTypes";
 import { otpVerification } from "./otpVerification";
 
 // Mock dependencies
@@ -16,11 +17,41 @@ vi.mock("../emails/VerifyEmail", () => ({
   VerifyEmail: vi.fn(() => null),
 }));
 
-// Access the internal function hidden in the provider options
-// Using 'any' cast to bypass TypeScript type limitations for testing internal functions
-const sendVerificationRequest = (otpVerification as any).options
-  ? (otpVerification as any).options.sendVerificationRequest
-  : (otpVerification as any).sendVerificationRequest;
+type VerificationRequestParams = { identifier: string; token: string };
+type VerificationProvider = {
+  options?: {
+    sendVerificationRequest?: (
+      params: VerificationRequestParams,
+      ctx: ConvexAuthContext,
+    ) => Promise<void>;
+  };
+  sendVerificationRequest?: (
+    params: VerificationRequestParams,
+    ctx: ConvexAuthContext,
+  ) => Promise<void>;
+};
+
+function getSendVerificationRequest(
+  provider: VerificationProvider,
+): (params: VerificationRequestParams, ctx: ConvexAuthContext) => Promise<void> {
+  const sendVerificationRequest =
+    provider.options?.sendVerificationRequest ?? provider.sendVerificationRequest;
+
+  if (!sendVerificationRequest) {
+    throw new Error("Expected otpVerification provider to expose sendVerificationRequest");
+  }
+
+  return sendVerificationRequest;
+}
+
+function createMockAuthContext(): ConvexAuthContext {
+  return {
+    runMutation: vi.fn().mockResolvedValue(undefined),
+    runQuery: vi.fn(),
+  } as ConvexAuthContext;
+}
+
+const sendVerificationRequest = getSendVerificationRequest(otpVerification as VerificationProvider);
 
 describe("OTP Verification Environment Safety", () => {
   const originalEnv = process.env;
@@ -40,11 +71,7 @@ describe("OTP Verification Environment Safety", () => {
     process.env.NODE_ENV = "test";
     process.env.E2E_API_KEY = "test-key";
 
-    const mockCtx = {
-      runMutation: vi.fn().mockResolvedValue(undefined),
-      runQuery: vi.fn(),
-      runAction: vi.fn(),
-    };
+    const mockCtx = createMockAuthContext();
 
     // Mock successful email send
     vi.mocked(sendEmail).mockResolvedValue({ success: true, id: "test-id" });
@@ -52,12 +79,6 @@ describe("OTP Verification Environment Safety", () => {
     const email = "user@inbox.mailtrap.io";
     const token = "123456";
 
-    // biome-ignore lint/suspicious/noTsIgnore: accessing private internal function for testing
-    // @ts-ignore
-    // biome-ignore lint/suspicious/noTsIgnore: accessing private internal function for testing
-    // @ts-ignore
-    // biome-ignore lint/suspicious/noTsIgnore: accessing private internal function for testing
-    // @ts-ignore
     await sendVerificationRequest({ identifier: email, token }, mockCtx);
 
     // Verify calls
@@ -81,11 +102,7 @@ describe("OTP Verification Environment Safety", () => {
     delete process.env.CI;
     delete process.env.E2E_API_KEY;
 
-    const mockCtx = {
-      runMutation: vi.fn().mockResolvedValue(undefined),
-      runQuery: vi.fn(),
-      runAction: vi.fn(),
-    };
+    const mockCtx = createMockAuthContext();
 
     vi.mocked(sendEmail).mockResolvedValue({ success: true, id: "test-id" });
 
@@ -107,11 +124,7 @@ describe("OTP Verification Environment Safety", () => {
     process.env.NODE_ENV = "test";
     process.env.E2E_API_KEY = "test-key";
 
-    const mockCtx = {
-      runMutation: vi.fn().mockResolvedValue(undefined),
-      runQuery: vi.fn(),
-      runAction: vi.fn(),
-    };
+    const mockCtx = createMockAuthContext();
 
     vi.mocked(sendEmail).mockResolvedValue({ success: true, id: "test-id" });
 
@@ -130,11 +143,7 @@ describe("OTP Verification Environment Safety", () => {
     // Setup safe environment
     process.env.NODE_ENV = "test";
 
-    const mockCtx = {
-      runMutation: vi.fn().mockResolvedValue(undefined),
-      runQuery: vi.fn(),
-      runAction: vi.fn(),
-    };
+    const mockCtx = createMockAuthContext();
 
     // Mock email FAILURE
     vi.mocked(sendEmail).mockResolvedValue({
@@ -159,11 +168,7 @@ describe("OTP Verification Environment Safety", () => {
     // Setup safe environment
     process.env.NODE_ENV = "test";
 
-    const mockCtx = {
-      runMutation: vi.fn().mockResolvedValue(undefined),
-      runQuery: vi.fn(),
-      runAction: vi.fn(),
-    };
+    const mockCtx = createMockAuthContext();
 
     // Mock email FAILURE
     vi.mocked(sendEmail).mockResolvedValue({

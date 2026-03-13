@@ -15,7 +15,6 @@ export function run() {
     /\.stories\.tsx?$/, // Storybook files
     /check-type-safety\.js$/, // This file (contains pattern strings)
     // Legacy test files with violations - fix incrementally, do NOT add new files
-    /otpVerificationTestEnv\.test\.ts$/, // 6 violations - TODO: fix suppressions
     /convex\/lib\/constrainedValidators\.test\.ts$/, // Legacy test assertions
     /convex\/lib\/dns\.test\.ts$/, // Legacy fetch mocks
     /convex\/lib\/fileValidators\.test\.ts$/, // Legacy MutationCtx casts
