@@ -21,6 +21,34 @@ export const RUNTIME_COLORS = {
   ACCENT: "#8B5CF6",
   /** Shared runtime muted text gray for outbound HTML payloads */
   MUTED_TEXT: "#666666",
+  /** Neutral error panel background for OAuth popups */
+  OAUTH_ERROR_BACKGROUND: "#FFEEEE",
+  /** Neutral error panel border for OAuth popups */
+  OAUTH_ERROR_BORDER: "#FFCCCC",
+  /** Neutral button background for OAuth popups */
+  OAUTH_BUTTON_NEUTRAL: "#6B7280",
+  /** Neutral button hover background for OAuth popups */
+  OAUTH_BUTTON_NEUTRAL_HOVER: "#4B5563",
+  /** Light success panel background for OAuth popups */
+  OAUTH_SUCCESS_BACKGROUND: "#EEFFEE",
+  /** Light success panel border for OAuth popups */
+  OAUTH_SUCCESS_BORDER: "#CCFFCC",
+  /** Primary button hover background for OAuth popups */
+  OAUTH_BUTTON_PRIMARY_HOVER: "#2563EB",
+  /** GitHub popup page background */
+  GITHUB_POPUP_BACKGROUND: "#0D1117",
+  /** GitHub popup surface background */
+  GITHUB_POPUP_SURFACE: "#161B22",
+  /** GitHub popup border */
+  GITHUB_POPUP_BORDER: "#30363D",
+  /** GitHub popup foreground text */
+  GITHUB_POPUP_TEXT: "#C9D1D9",
+  /** GitHub success button background */
+  GITHUB_SUCCESS_BUTTON: "#238636",
+  /** GitHub success button hover background */
+  GITHUB_SUCCESS_BUTTON_HOVER: "#2EA043",
+  /** GitHub accent text */
+  GITHUB_ACCENT_TEXT: "#58A6FF",
 } as const;
 
 /** Theme-aligned preset swatches used by the generic color picker. */

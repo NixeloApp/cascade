@@ -58,6 +58,7 @@ import type * as hourCompliance from "../hourCompliance.js";
 import type * as http from "../http.js";
 import type * as http_githubOAuth from "../http/githubOAuth.js";
 import type * as http_googleOAuth from "../http/googleOAuth.js";
+import type * as http_oauthHtml from "../http/oauthHtml.js";
 import type * as http_slackCommands from "../http/slackCommands.js";
 import type * as http_slackOAuth from "../http/slackOAuth.js";
 import type * as http_slackUnfurl from "../http/slackUnfurl.js";
@@ -228,6 +229,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   "http/githubOAuth": typeof http_githubOAuth;
   "http/googleOAuth": typeof http_googleOAuth;
+  "http/oauthHtml": typeof http_oauthHtml;
   "http/slackCommands": typeof http_slackCommands;
   "http/slackOAuth": typeof http_slackOAuth;
   "http/slackUnfurl": typeof http_slackUnfurl;

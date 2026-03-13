@@ -18,8 +18,6 @@ export function run() {
   const ALLOWLIST_HARDCODED_HEX = [
     "src/components/ui/ColorPicker.test.tsx",
     "src/index.css",
-    "convex/http/githubOAuth.ts",
-    "convex/http/googleOAuth.ts",
     "convex/shared/colors.ts", // Shared runtime color constants for DB/payload usage
     "*.test.ts",
     "*.test.tsx",

@@ -22,6 +22,7 @@ import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { escapeHtml, escapeScriptJson } from "../lib/html";
 import { logger } from "../lib/logger";
 import { HOUR, SECOND } from "../lib/timeUtils";
+import { renderGoogleSuccessPageHtml, renderOAuthErrorPageHtml } from "./oauthHtml";
 
 /** Error thrown when an HTTP request returns a non-OK status */
 class HttpError extends Error {
@@ -63,34 +64,6 @@ const googleOAuthErrorMessages: Record<string, string> = {
   server_error: "Google encountered an error. Please try again later.",
   temporarily_unavailable: "Google is temporarily unavailable. Please try again later.",
 };
-
-/** Generic error page HTML generator */
-function getErrorPageHtml(
-  message = "An error occurred while connecting to Google Calendar.",
-): string {
-  return `
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Google Calendar - Error</title>
-    <style>
-      body { font-family: system-ui; max-width: 600px; margin: 100px auto; padding: 20px; text-align: center; }
-      .error { background: #fee; border: 1px solid #fcc; padding: 20px; border-radius: 8px; }
-      button { background: #6b7280; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 20px; }
-      button:hover { background: #4b5563; }
-    </style>
-  </head>
-  <body>
-    <div class="error">
-      <h1>Connection Failed</h1>
-      <p>${escapeHtml(message)}</p>
-      <p>Please try again or contact support if the problem persists.</p>
-      <button onclick="window.close()">Close Window</button>
-    </div>
-  </body>
-</html>
-`;
-}
 
 /**
  * Validate E2E API key for TEST_* codes
@@ -372,13 +345,16 @@ function validateCallbackParams(
     const userMessage = googleOAuthErrorMessages[error] ?? `Google returned an error: ${error}`;
     return {
       success: false,
-      response: new Response(getErrorPageHtml(userMessage), {
-        status: 400,
-        headers: {
-          "Content-Type": "text/html",
-          "Set-Cookie": `google-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+      response: new Response(
+        renderOAuthErrorPageHtml("Google Calendar - Error", escapeHtml(userMessage)),
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "text/html",
+            "Set-Cookie": `google-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+          },
         },
-      }),
+      ),
     };
   }
 
@@ -392,13 +368,19 @@ function validateCallbackParams(
   if (!code || !state || !storedState || !constantTimeEqual(state, storedState)) {
     return {
       success: false,
-      response: new Response(getErrorPageHtml("Invalid state or missing authorization code"), {
-        status: 400,
-        headers: {
-          "Content-Type": "text/html",
-          "Set-Cookie": `google-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+      response: new Response(
+        renderOAuthErrorPageHtml(
+          "Google Calendar - Error",
+          "Invalid state or missing authorization code",
+        ),
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "text/html",
+            "Set-Cookie": `google-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+          },
         },
-      }),
+      ),
     };
   }
 
@@ -422,44 +404,7 @@ function generateSuccessResponse(result: {
   };
 
   return new Response(
-    `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Google Calendar - Connected</title>
-        <style>
-          body { font-family: system-ui; max-width: 600px; margin: 100px auto; padding: 20px; text-align: center; }
-          .success { background: #efe; border: 1px solid #cfc; padding: 20px; border-radius: 8px; }
-          button { background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 20px; }
-          button:hover { background: #2563eb; }
-        </style>
-      </head>
-      <body>
-        <div class="success">
-          <h1>Connected Successfully</h1>
-          <p>Your Google Calendar has been connected to Nixelo.</p>
-          <p><strong>${escapeHtml(result.email)}</strong></p>
-          <button onclick="window.close()">Close Window</button>
-          <script>
-            // Pass tokens to opener window for saving via authenticated mutation
-            if (window.opener) {
-              // Use opener's origin for security instead of wildcard
-              const targetOrigin = window.opener.location.origin;
-              window.opener.postMessage({
-                type: 'google-calendar-connected',
-                data: ${escapeScriptJson(connectionData)}
-              }, targetOrigin);
-            }
-            // Auto-close after 3 seconds
-            setTimeout(() => {
-              window.opener?.location.reload();
-              window.close();
-            }, 3000);
-          </script>
-        </div>
-      </body>
-    </html>
-    `,
+    renderGoogleSuccessPageHtml(escapeHtml(result.email), escapeScriptJson(connectionData)),
     {
       status: 200,
       headers: {
@@ -498,7 +443,10 @@ export const handleCallbackHandler = async (
     if (!testResult) {
       // Auth failed - show generic error (details logged server-side)
       return new Response(
-        getErrorPageHtml("Test authentication failed. Please check server logs."),
+        renderOAuthErrorPageHtml(
+          "Google Calendar - Error",
+          "Test authentication failed. Please check server logs.",
+        ),
         {
           status: 403,
           headers: {
@@ -515,13 +463,19 @@ export const handleCallbackHandler = async (
       result = await exchangeCodeForTokens(code);
     } catch (error) {
       logger.error("Failed to exchange code for tokens", { error });
-      return new Response(getErrorPageHtml(), {
-        status: 500,
-        headers: {
-          "Content-Type": "text/html",
-          "Set-Cookie": `google-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+      return new Response(
+        renderOAuthErrorPageHtml(
+          "Google Calendar - Error",
+          "An error occurred while connecting to Google Calendar.",
+        ),
+        {
+          status: 500,
+          headers: {
+            "Content-Type": "text/html",
+            "Set-Cookie": `google-oauth-state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+          },
         },
-      });
+      );
     }
   }
 
