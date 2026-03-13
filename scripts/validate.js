@@ -3,7 +3,7 @@
  *
  * Checks:
  *   1. Standards (AST)      — typography, className concat, dark mode, raw TW colors, shorthands
- *   2. Color audit          — raw TW colors, hardcoded hex, rgb/hsl, style props + allowlists
+ *   2. Color audit          — raw TW colors, hardcoded hex, rgb/hsl, style props outside owned color boundaries
  *   3. API calls            — validates api.X.Y calls match Convex exports
  *   4. Query issues         — N+1 queries, unbounded .collect(), missing indexes
  *   5. Arbitrary Tailwind      — arbitrary values like h-[50px]

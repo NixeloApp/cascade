@@ -1,6 +1,6 @@
 /**
  * CHECK 2: Color audit
- * Raw TW colors, hardcoded hex, rgb/hsl, style props + allowlists
+ * Raw TW colors, hardcoded hex, rgb/hsl, and style props outside owned color boundaries
  *
  */
 
@@ -12,10 +12,9 @@ export function run() {
   const SRC = path.join(ROOT, "src");
   const CONVEX = path.join(ROOT, "convex");
 
-  // Allowlists
-  const ALLOWLIST_RAW_TAILWIND = ["*.test.ts", "*.test.tsx", "src/index.css"];
+  const RAW_TAILWIND_COLOR_BOUNDARY = ["*.test.ts", "*.test.tsx", "src/index.css"];
 
-  const ALLOWLIST_HARDCODED_HEX = [
+  const HARDCODED_COLOR_BOUNDARY = [
     "src/components/ui/ColorPicker.test.tsx",
     "src/index.css",
     "convex/shared/colors.ts", // Shared runtime color constants for DB/payload usage
@@ -102,9 +101,9 @@ export function run() {
 
   const EXTS = new Set([".ts", ".tsx", ".js", ".jsx", ".css", ".scss"]);
 
-  function isAllowed(filePath, allowlist) {
+  function isWithinBoundary(filePath, boundaryPatterns) {
     const normalized = filePath.replace(/\\/g, "/");
-    return allowlist.some((pattern) => {
+    return boundaryPatterns.some((pattern) => {
       if (pattern.startsWith("*")) return normalized.endsWith(pattern.slice(1));
       return normalized.includes(pattern);
     });
@@ -176,7 +175,7 @@ export function run() {
           if (category === "SEMANTIC") semanticCount++;
           continue;
         }
-        if (category === "RAW" && isAllowed(rel, ALLOWLIST_RAW_TAILWIND)) continue;
+        if (category === "RAW" && isWithinBoundary(rel, RAW_TAILWIND_COLOR_BOUNDARY)) continue;
         findings.push({ file: rel, line: lineNum, category, type: "tw-class", value: twMatch[0] });
       }
 
@@ -185,13 +184,13 @@ export function run() {
         if (trimmed.startsWith("import ")) continue;
         const hex = hexMatch[0].toLowerCase();
         if (hex.length < 4) continue;
-        if (isAllowed(rel, ALLOWLIST_HARDCODED_HEX)) continue;
+        if (isWithinBoundary(rel, HARDCODED_COLOR_BOUNDARY)) continue;
         findings.push({ file: rel, line: lineNum, category: "HARDCODED", type: "hex", value: hex });
       }
 
       // rgb/rgba/hsl/hsla
       for (const funcMatch of line.matchAll(FUNC_COLOR_RE)) {
-        if (isAllowed(rel, ALLOWLIST_HARDCODED_HEX)) continue;
+        if (isWithinBoundary(rel, HARDCODED_COLOR_BOUNDARY)) continue;
         findings.push({
           file: rel,
           line: lineNum,
@@ -203,7 +202,7 @@ export function run() {
 
       // Style object color properties
       for (const styleMatch of line.matchAll(STYLE_PROP_RE)) {
-        if (isAllowed(rel, ALLOWLIST_HARDCODED_HEX)) continue;
+        if (isWithinBoundary(rel, HARDCODED_COLOR_BOUNDARY)) continue;
         const styleValue = styleMatch[0].replace(/.*:\s*["']/, "").replace(/["']$/, "");
         if (!/^(#|rgb|hsl|transparent|currentColor|inherit|white|black)/.test(styleValue)) continue;
         findings.push({
@@ -257,7 +256,7 @@ export function run() {
     detail:
       violations.length > 0
         ? `${violations.length} violation(s)`
-        : `${semanticCount} semantic, 0 violations`,
+        : `${semanticCount} semantic, 0 violations (owned boundaries only)`,
     messages,
   };
 }
