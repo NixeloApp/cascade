@@ -243,7 +243,18 @@
 - Removed `Calendar/EventDetailsModal.tsx` from the explicit raw-Tailwind debt list by moving section wrappers and attendance rows onto owned `Card` recipes, replacing the organizer shell with `Avatar`, dropping the custom select-trigger override, and relying on owned `Dialog`, `Button`, and `Icon` composition instead of modal-local chrome.
 - Removed `Calendar/RoadmapView.tsx` from the explicit raw-Tailwind debt list by moving the roadmap header, grid header cells, row shells, and timeline bars onto owned `Card`, `SegmentedControl`, `IconButton`, and `EmptyState` primitives instead of feature-level border, padding, and control chrome.
 - Explicit raw-debt in product surfaces is now cleared. The remaining intentional raw-Tailwind island is `Calendar/shadcn-calendar/`, which stays isolated unless we choose to absorb that embedded implementation into owned primitives.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on tightening policy around the remaining intentional islands and any still-broad directory escape hatches rather than adding new ad hoc exemptions.
+- Removed the dead `src/components/Editor/` raw-Tailwind allowlist entry.
+- Removed the broad `src/components/Onboarding/` raw-Tailwind escape hatch and the broad `Onboarding/` interactive-state allowlist entry.
+- Replaced those onboarding-wide escapes with explicit file-level migration debt for:
+  - `Onboarding/FeatureHighlights.tsx`
+  - `Onboarding/InvitedWelcome.tsx`
+  - `Onboarding/LeadOnboarding.tsx`
+  - `Onboarding/MemberOnboarding.tsx`
+  - `Onboarding/OnboardingChecklist.tsx`
+  - `Onboarding/ProjectWizard.tsx`
+  - `Onboarding/RoleSelector.tsx`
+  - `Onboarding/SampleProjectModal.tsx`
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on burning down the new explicit onboarding debt first, then tightening the remaining intentional islands and broad directory escape hatches rather than adding new ad hoc exemptions.
 
 ## Problem
 

@@ -6,14 +6,20 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
   "src/components/ui/",
   "src/components/Calendar/shadcn-calendar/",
   "src/components/Auth/",
-  "src/components/Editor/",
   "src/components/Plate/",
-  "src/components/Onboarding/",
 ];
 
 export const RAW_TAILWIND_ALLOWED_FILES = [
   // Explicit migration-debt exemptions replacing broad Settings/Admin/ProjectSettings directory escapes.
   "/BulkOperationsBar.tsx",
+  "/Onboarding/FeatureHighlights.tsx",
+  "/Onboarding/InvitedWelcome.tsx",
+  "/Onboarding/LeadOnboarding.tsx",
+  "/Onboarding/MemberOnboarding.tsx",
+  "/Onboarding/OnboardingChecklist.tsx",
+  "/Onboarding/ProjectWizard.tsx",
+  "/Onboarding/RoleSelector.tsx",
+  "/Onboarding/SampleProjectModal.tsx",
 ];
 
 export const RAW_TAILWIND_ALLOWED_EXTENSIONS = [".stories.tsx", ".test.tsx", ".example.tsx"];
