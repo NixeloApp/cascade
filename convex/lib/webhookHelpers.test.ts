@@ -12,13 +12,16 @@ describe("deliverWebhook", () => {
   const payload = JSON.stringify({ event: "test" });
   const event = "test.event";
   const secret = "my-secret";
+  const originalFetch = global.fetch;
+  const fetchMock = vi.fn<typeof fetch>();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    global.fetch = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
   });
 
   afterEach(() => {
+    global.fetch = originalFetch;
     vi.resetAllMocks();
   });
 
@@ -27,11 +30,11 @@ describe("deliverWebhook", () => {
     vi.mocked(ssrfModule.validateDestinationResolved).mockResolvedValue("1.2.3.4");
 
     // Mock successful fetch response
-    (global.fetch as any).mockResolvedValue({
+    fetchMock.mockResolvedValue({
       ok: true,
       status: 200,
       text: async () => "Success",
-    });
+    } as Response);
 
     const result = await deliverWebhook(url, payload, event, secret);
 
@@ -41,7 +44,7 @@ describe("deliverWebhook", () => {
 
     // Check fetch call
     expect(global.fetch).toHaveBeenCalledTimes(1);
-    const callArgs = (global.fetch as any).mock.calls[0];
+    const callArgs = fetchMock.mock.calls[0];
     const targetUrl = callArgs[0];
     const options = callArgs[1];
 
@@ -70,7 +73,7 @@ describe("deliverWebhook", () => {
 
   it("should handle network errors gracefully", async () => {
     vi.mocked(ssrfModule.validateDestinationResolved).mockResolvedValue("1.2.3.4");
-    (global.fetch as any).mockRejectedValue(new Error("Network Error"));
+    fetchMock.mockRejectedValue(new Error("Network Error"));
 
     const result = await deliverWebhook(url, payload, event);
 
@@ -80,12 +83,12 @@ describe("deliverWebhook", () => {
 
   it("should return failure status for HTTP errors", async () => {
     vi.mocked(ssrfModule.validateDestinationResolved).mockResolvedValue("1.2.3.4");
-    (global.fetch as any).mockResolvedValue({
+    fetchMock.mockResolvedValue({
       ok: false,
       status: 500,
       statusText: "Internal Server Error",
       text: async () => "Server Error",
-    });
+    } as Response);
 
     const result = await deliverWebhook(url, payload, event);
 
@@ -98,17 +101,17 @@ describe("deliverWebhook", () => {
     const httpsUrl = "https://example.com/webhook";
     vi.mocked(ssrfModule.validateDestinationResolved).mockResolvedValue("1.2.3.4");
 
-    (global.fetch as any).mockResolvedValue({
+    fetchMock.mockResolvedValue({
       ok: true,
       status: 200,
       text: async () => "Success",
-    });
+    } as Response);
 
     await deliverWebhook(httpsUrl, payload, event);
 
     expect(ssrfModule.validateDestinationResolved).toHaveBeenCalledWith(httpsUrl);
 
-    const callArgs = (global.fetch as any).mock.calls[0];
+    const callArgs = fetchMock.mock.calls[0];
     // HTTPS URLs should be used as-is for certificate validation
     expect(callArgs[0]).toBe(httpsUrl);
     // Host header should not be manually set for HTTPS fetch (browser/fetch handles it)
@@ -118,11 +121,11 @@ describe("deliverWebhook", () => {
 
   it("should generate correct HMAC signature", async () => {
     vi.mocked(ssrfModule.validateDestinationResolved).mockResolvedValue("1.2.3.4");
-    (global.fetch as any).mockResolvedValue({ ok: true, text: async () => "" });
+    fetchMock.mockResolvedValue({ ok: true, text: async () => "" } as Response);
 
     await deliverWebhook(url, payload, event, secret);
 
-    const callArgs = (global.fetch as any).mock.calls[0];
+    const callArgs = fetchMock.mock.calls[0];
     const headers = callArgs[1].headers as Headers;
     const signature = headers.get("X-Webhook-Signature");
 
