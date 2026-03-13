@@ -88,6 +88,15 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
         "border-ui-border/45 bg-transparent text-ui-text-secondary shadow-none hover:border-ui-border/60 hover:bg-ui-bg-hover/72 sm:border-ui-border/55 sm:bg-ui-bg-elevated/86 sm:hover:bg-ui-bg-hover/80",
       filterActive:
         "border-brand/15 bg-brand-subtle/78 text-brand shadow-none hover:bg-brand-subtle sm:border-brand/10 sm:bg-brand-subtle",
+      toolbar:
+        "border-transparent bg-transparent text-ui-text-secondary shadow-none hover:text-ui-text hover:bg-ui-bg-hover",
+      toolbarActive:
+        "border-transparent bg-brand-subtle text-brand shadow-none hover:bg-brand-subtle/90",
+      listRow:
+        "border-transparent bg-transparent text-ui-text shadow-none hover:bg-ui-bg-hover focus:bg-ui-bg-hover",
+      listRowActive: "border-transparent bg-ui-bg-hover text-ui-text shadow-none",
+      colorSwatch:
+        "border-ui-border-secondary bg-transparent text-ui-text shadow-none hover:scale-110 hover:shadow-sm",
       calendarIssue:
         "border-transparent bg-transparent text-ui-text shadow-none hover:bg-ui-bg-hover focus-visible:ring-brand-ring",
       sprintPreset:
@@ -101,6 +110,10 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
       pill: "h-10 rounded-full px-4 text-sm",
       compactPill: "h-8 rounded-full px-3 text-sm",
       reactionPill: "h-auto rounded-full px-2 py-0.5 text-xs font-medium",
+      toolbarIcon: "h-7 w-7 rounded-md p-0",
+      toolbarControl: "h-7 rounded-md px-1.5 text-sm",
+      listRow: "h-auto w-full justify-start rounded-none px-3 py-2 text-left text-sm",
+      colorSwatch: "h-6 w-6 min-w-0 rounded p-0",
       documentHeaderAction: "min-h-0 rounded-lg px-2 py-1.5 sm:px-3",
       documentHeaderToggle: "min-h-0 rounded-lg px-2.5 py-1.5",
       filterPill:

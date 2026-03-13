@@ -11,6 +11,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { collectClassNameSpan } from "./tailwind-policy.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 // Files allowed to have interactive variants (for gradual migration)
@@ -23,7 +24,7 @@ const ALLOWED_FILES = [
   "FuzzySearch/AssigneeSearchDropdown.example.tsx",
   // Document components
   // Editor components
-  "Plate/",
+  "Plate/DragHandle.tsx",
   "PlateEditor.tsx",
   // Navigation/layout
   "Sidebar/",
@@ -85,13 +86,12 @@ export function run() {
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
+      if (!/\bclassName\s*=/.test(line)) continue;
 
-      // Skip comments
-      if (line.trim().startsWith("//") || line.trim().startsWith("*")) continue;
+      const { span, endIndex } = collectClassNameSpan(lines, i);
 
-      // Check for interactive patterns
       for (const pattern of INTERACTIVE_PATTERNS) {
-        if (pattern.test(line)) {
+        if (pattern.test(span)) {
           if (isAllowed) {
             allowedCount++;
           } else {
@@ -103,6 +103,8 @@ export function run() {
           break; // Only report once per line
         }
       }
+
+      i = endIndex;
     }
   }
 

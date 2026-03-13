@@ -14,6 +14,7 @@ const badgeVariants = cva("inline-flex items-center font-medium transition-color
   variants: {
     variant: {
       primary: "bg-brand-subtle text-brand-active border border-brand-border",
+      mention: "bg-brand-subtle text-brand border border-transparent",
       secondary: "bg-ui-bg-soft text-ui-text-secondary border border-ui-border",
       alertCount: "bg-status-error text-brand-foreground border border-status-error/20 shadow-md",
       success: "bg-status-success-bg text-status-success-text border border-status-success/20",

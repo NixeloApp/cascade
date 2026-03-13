@@ -165,11 +165,8 @@ export function MentionInputElement({
               <Button
                 key={item.id}
                 variant="unstyled"
-                className={cn(
-                  "w-full h-auto px-3 py-2 text-left transition-colors justify-start rounded-none",
-                  "hover:bg-ui-bg-hover focus:bg-ui-bg-hover",
-                  index === selectedIndex && "bg-ui-bg-hover",
-                )}
+                chrome={index === selectedIndex ? "listRowActive" : "listRow"}
+                chromeSize="listRow"
                 onClick={() => onSelectItem(item)}
                 onMouseEnter={() => setSelectedIndex(index)}
               >

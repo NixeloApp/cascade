@@ -75,13 +75,9 @@ export function ColorPickerButton({ type }: ColorPickerButtonProps) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "h-7 px-1.5 gap-0.5 text-ui-text-secondary transition-default",
-            "hover:text-ui-text hover:bg-ui-bg-hover",
-            currentColor && "text-ui-text",
-          )}
+          variant="unstyled"
+          chrome={currentColor ? "toolbarActive" : "toolbar"}
+          chromeSize="toolbarControl"
           aria-label={tooltip}
           title={tooltip}
         >
@@ -111,11 +107,10 @@ export function ColorPickerButton({ type }: ColorPickerButtonProps) {
             <Button
               key={color.name}
               type="button"
-              variant="ghost"
-              size="icon"
+              variant="unstyled"
+              chrome="colorSwatch"
+              chromeSize="colorSwatch"
               className={cn(
-                "w-6 h-6 min-w-0 p-0 rounded border transition-default",
-                "hover:scale-110 hover:shadow-sm",
                 color.value === currentColor && "ring-2 ring-brand ring-offset-1",
                 !color.value && "border-dashed border-ui-border-secondary",
               )}

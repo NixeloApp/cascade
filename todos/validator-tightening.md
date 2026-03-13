@@ -212,7 +212,11 @@
 - Tightened `check-raw-tailwind.js` so it only scans real JSX `className=` attributes, avoiding false positives on `className?:` prop declarations while keeping the rule fully blocking.
 - Removed the broad `IssueDetail/` interactive allowlist entry from `check-interactive-tw.js` by moving inline property editing onto owned `SelectTrigger` and `Input` variants instead of feature-level hover/focus shell classes.
 - Added `IssueDetail/InlinePropertyEdit.tsx` and `IssueDetail/IssueMetadataSection.tsx` to design-system ownership targeting so future issue-detail property drift is blocked directly.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on the remaining broader interactive escape hatches in shared folders like `Plate/` and `ImportExport/`, which are now materially larger sources of validator debt than the issue-detail surfaces.
+- Removed the broad `Plate/` interactive allowlist entry from `check-interactive-tw.js` and replaced it with explicit debt for `Plate/DragHandle.tsx`, which is now the only remaining unresolved Plate interactive surface.
+- Removed `Plate/FloatingToolbar.tsx`, `Plate/ColorPickerButton.tsx`, `Plate/MentionInputElement.tsx`, and `Plate/MentionElement.tsx` from live interactive debt by moving toolbar, mention-row, and color-swatch hover/focus behavior onto owned `Button` chrome variants instead of feature-level classes.
+- Added `Plate/ColorPickerButton.tsx`, `Plate/MentionElement.tsx`, `Plate/MentionInputElement.tsx`, and `Plate/FloatingToolbar.tsx` to design-system ownership targeting so future editor-surface drift is blocked directly.
+- Tightened `check-interactive-tw.js` so it scans real JSX `className=` spans instead of arbitrary lines, avoiding false positives from editor type annotations like `focus` fields while keeping the rule blocking on actual Tailwind variants.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on the remaining broader interactive escape hatches in `ImportExport/` and the single explicit `Plate/DragHandle.tsx` debt entry, which are now larger validator gaps than the migrated Plate toolbar surfaces.
 
 ## Problem
 

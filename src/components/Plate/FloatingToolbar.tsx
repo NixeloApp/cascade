@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/Button";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/Popover";
 import { Separator } from "@/components/ui/Separator";
 import { NODE_TYPES } from "@/lib/plate/plugins";
-import { cn } from "@/lib/utils";
 import { ColorPickerButton } from "./ColorPickerButton";
 
 interface MarkButtonProps {
@@ -33,13 +32,9 @@ function MarkButton({ nodeType, icon: Icon, tooltip }: MarkButtonProps) {
 
   return (
     <Button
-      variant="ghost"
-      size="sm"
-      className={cn(
-        "h-7 w-7 p-0 text-ui-text-secondary transition-default",
-        "hover:text-ui-text hover:bg-ui-bg-hover",
-        state.pressed && "bg-brand-subtle text-brand",
-      )}
+      variant="unstyled"
+      chrome={state.pressed ? "toolbarActive" : "toolbar"}
+      chromeSize="toolbarIcon"
       onMouseDown={props.onMouseDown}
       aria-label={tooltip}
       title={tooltip}
@@ -167,9 +162,9 @@ export function FloatingToolbar() {
         <Separator orientation="vertical" className="h-5 mx-1.5 bg-ui-border" />
 
         <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 w-7 p-0 text-ui-text-secondary transition-default hover:text-ui-text hover:bg-ui-bg-hover"
+          variant="unstyled"
+          chrome="toolbar"
+          chromeSize="toolbarIcon"
           onClick={handleLink}
           aria-label="Insert Link"
           title="Insert Link (Ctrl+K)"
