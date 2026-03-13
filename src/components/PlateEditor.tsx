@@ -46,6 +46,16 @@ interface PlateEditorProps {
   documentId: Id<"documents">;
 }
 
+type PlateEditorDocument = NonNullable<
+  ReturnType<typeof useAuthenticatedQuery<typeof api.documents.getDocument>>
+>;
+type PlateEditorLockStatus = NonNullable<
+  ReturnType<typeof useAuthenticatedQuery<typeof api.documents.getLockStatus>>
+>;
+type PlateEditorVersions = NonNullable<
+  ReturnType<typeof useAuthenticatedQuery<typeof api.documentVersions.listVersions>>
+>;
+
 interface EditorCanvasProps {
   initialEditorValue: Value;
   isEmptyEditor: boolean;
@@ -69,14 +79,9 @@ interface PlateEditorEmptyStateProps {
 
 interface PlateEditorActionsArgs {
   documentId: Id<"documents">;
-  document:
-    | NonNullable<ReturnType<typeof useAuthenticatedQuery<typeof api.documents.getDocument>>>
-    | null
-    | undefined;
+  document: PlateEditorDocument | null | undefined;
   isArchived: boolean;
-  lockStatus:
-    | NonNullable<ReturnType<typeof useAuthenticatedQuery<typeof api.documents.getLockStatus>>>
-    | undefined;
+  lockStatus: PlateEditorLockStatus | undefined;
   updateTitle: (args: { id: Id<"documents">; title: string }) => Promise<unknown>;
   togglePublic: (args: { id: Id<"documents"> }) => Promise<unknown>;
   toggleFavorite: (args: { documentId: Id<"documents"> }) => Promise<{ isFavorite: boolean }>;
@@ -88,16 +93,51 @@ interface PlateEditorActionsArgs {
 
 interface UsePlateEditorUiStateArgs {
   documentId: Id<"documents">;
-  document:
-    | NonNullable<ReturnType<typeof useAuthenticatedQuery<typeof api.documents.getDocument>>>
-    | null
-    | undefined;
-  versions:
-    | NonNullable<
-        ReturnType<typeof useAuthenticatedQuery<typeof api.documentVersions.listVersions>>
-      >
-    | undefined;
+  document: PlateEditorDocument | null | undefined;
+  versions: PlateEditorVersions | undefined;
   updateTitle: (args: { id: Id<"documents">; title: string }) => Promise<unknown>;
+}
+
+interface PlateEditorData {
+  document: ReturnType<typeof useAuthenticatedQuery<typeof api.documents.getDocument>>;
+  updateTitle: ReturnType<
+    typeof useAuthenticatedMutation<typeof api.documents.updateTitle>
+  >["mutate"];
+  togglePublic: ReturnType<
+    typeof useAuthenticatedMutation<typeof api.documents.togglePublic>
+  >["mutate"];
+  toggleFavorite: ReturnType<
+    typeof useAuthenticatedMutation<typeof api.documents.toggleFavorite>
+  >["mutate"];
+  archiveDocument: ReturnType<
+    typeof useAuthenticatedMutation<typeof api.documents.archiveDocument>
+  >["mutate"];
+  unarchiveDocument: ReturnType<
+    typeof useAuthenticatedMutation<typeof api.documents.unarchiveDocument>
+  >["mutate"];
+  lockDocument: ReturnType<
+    typeof useAuthenticatedMutation<typeof api.documents.lockDocument>
+  >["mutate"];
+  unlockDocument: ReturnType<
+    typeof useAuthenticatedMutation<typeof api.documents.unlockDocument>
+  >["mutate"];
+  isFavorite: ReturnType<typeof useAuthenticatedQuery<typeof api.documents.isFavorite>>;
+  isArchived: ReturnType<typeof useAuthenticatedQuery<typeof api.documents.isArchived>>;
+  lockStatus: ReturnType<typeof useAuthenticatedQuery<typeof api.documents.getLockStatus>>;
+  userId: ReturnType<typeof useAuthenticatedQuery<typeof api.presence.getUserId>>;
+  versionCount: ReturnType<
+    typeof useAuthenticatedQuery<typeof api.documentVersions.getVersionCount>
+  >;
+  versions: ReturnType<typeof useAuthenticatedQuery<typeof api.documentVersions.listVersions>>;
+}
+
+interface LoadedPlateEditorProps {
+  documentId: Id<"documents">;
+  data: PlateEditorData & {
+    document: PlateEditorDocument;
+    userId: NonNullable<PlateEditorData["userId"]>;
+    versions: PlateEditorVersions;
+  };
 }
 
 function PlateEditorLoadingState({ versionsLoaded }: PlateEditorLoadingStateProps) {
@@ -408,10 +448,7 @@ function EditorCanvas({
   );
 }
 
-/**
- * Main editor component - renders the Plate editor with document sync
- */
-export function PlateEditor({ documentId }: PlateEditorProps) {
+function usePlateEditorData(documentId: Id<"documents">): PlateEditorData {
   const document = useAuthenticatedQuery(api.documents.getDocument, { id: documentId });
   const { mutate: updateTitle } = useAuthenticatedMutation(api.documents.updateTitle);
   const { mutate: togglePublic } = useAuthenticatedMutation(api.documents.togglePublic);
@@ -426,6 +463,54 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
   const userId = useAuthenticatedQuery(api.presence.getUserId, {});
   const versionCount = useAuthenticatedQuery(api.documentVersions.getVersionCount, { documentId });
   const versions = useAuthenticatedQuery(api.documentVersions.listVersions, { documentId });
+
+  return {
+    document,
+    updateTitle,
+    togglePublic,
+    toggleFavorite,
+    archiveDocument,
+    unarchiveDocument,
+    lockDocument,
+    unlockDocument,
+    isFavorite,
+    isArchived,
+    lockStatus,
+    userId,
+    versionCount,
+    versions,
+  };
+}
+
+function getDocumentHeaderLockStatus(lockStatus: PlateEditorLockStatus | undefined) {
+  if (!lockStatus) {
+    return undefined;
+  }
+
+  return {
+    isLocked: lockStatus.isLocked,
+    lockedByName: lockStatus.isLocked ? lockStatus.lockedByName : undefined,
+    canUnlock: lockStatus.isLocked ? lockStatus.canUnlock : undefined,
+  };
+}
+
+function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
+  const {
+    document,
+    updateTitle,
+    togglePublic,
+    toggleFavorite,
+    archiveDocument,
+    unarchiveDocument,
+    lockDocument,
+    unlockDocument,
+    isFavorite,
+    isArchived,
+    lockStatus,
+    userId,
+    versionCount,
+    versions,
+  } = data;
 
   const {
     showVersionHistory,
@@ -443,12 +528,10 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
     versions,
     updateTitle,
   });
-  const initialEditorValue = versions?.[0]
+  const initialEditorValue = versions[0]
     ? proseMirrorSnapshotToValue(versions[0].snapshot)
     : getInitialValue();
-  // Derive empty state from initialEditorValue when versions are loaded to avoid flash
-  const isEmptyEditor =
-    versions !== undefined ? isEmptyValue(initialEditorValue) : isEmptyValue(editorValue);
+  const isEmptyEditor = isEmptyValue(initialEditorValue);
 
   const {
     handleTitleEdit,
@@ -470,53 +553,15 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
     unlockDocument,
   });
 
-  // Loading state - while data is loading
-  if (document === undefined || userId === undefined || versions === undefined) {
-    return <PlateEditorLoadingState versionsLoaded={versions !== undefined} />;
-  }
-
-  // No user ID - shouldn't happen in authenticated routes but handle gracefully
-  if (!userId) {
-    return (
-      <PlateEditorEmptyState
-        title="Unable to load user data"
-        description="There was a problem loading your editor session."
-      />
-    );
-  }
-
-  // Document not found (or still loading after auth check - shouldn't happen but satisfies TypeScript)
-  if (!document) {
-    return (
-      <PlateEditorEmptyState
-        title="Document Not Found"
-        description="This document doesn't exist or you don't have access to it."
-        action={{
-          label: "Go back",
-          onClick: () => window.history.back(),
-        }}
-      />
-    );
-  }
-
   return (
     <Flex direction="column" className="h-full bg-ui-bg">
-      {/* Document Header */}
       <DocumentHeader
         document={document}
         userId={userId}
         versionCount={versionCount}
         isFavorite={isFavorite ?? false}
         isArchived={isArchived ?? false}
-        lockStatus={
-          lockStatus
-            ? {
-                isLocked: lockStatus.isLocked,
-                lockedByName: lockStatus.isLocked ? lockStatus.lockedByName : undefined,
-                canUnlock: lockStatus.isLocked ? lockStatus.canUnlock : undefined,
-              }
-            : undefined
-        }
+        lockStatus={getDocumentHeaderLockStatus(lockStatus)}
         onTitleEdit={handleTitleEdit}
         onTogglePublic={handleTogglePublic}
         onToggleFavorite={handleToggleFavorite}
@@ -524,23 +569,18 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
         onToggleLock={handleToggleLock}
         onMoveToProject={() => setShowMoveDialog(true)}
         onImportMarkdown={async () => {
-          // TODO: Implement markdown import
           showError("Markdown import not yet implemented for Plate editor");
         }}
         onExportMarkdown={async () => {
-          // TODO: Implement markdown export
           showError("Markdown export not yet implemented for Plate editor");
         }}
         onShowVersionHistory={() => setShowVersionHistory(true)}
         editorReady={true}
       />
 
-      {/* Locked Banner */}
       {lockStatus?.isLocked && <LockedDocumentBanner lockStatus={lockStatus} />}
 
-      {/* Editor and Sidebar - Two column layout */}
       <Flex flex="1" className="overflow-hidden">
-        {/* Editor - Clean Mintlify-inspired layout */}
         <FlexItem flex="1" className="overflow-auto bg-ui-bg scrollbar-subtle">
           <Card padding="md" variant="ghost" className="mx-auto w-full max-w-5xl">
             <ErrorBoundary
@@ -569,7 +609,6 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
           </Card>
         </FlexItem>
 
-        {/* Document Sidebar */}
         <DocumentSidebar
           editorValue={editorValue}
           documentInfo={{
@@ -584,7 +623,6 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
         />
       </Flex>
 
-      {/* Version History Modal */}
       <VersionHistory
         documentId={documentId}
         open={showVersionHistory}
@@ -592,16 +630,51 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
         onRestoreVersion={handleRestoreVersion}
       />
 
-      {/* Move Document Dialog */}
-      {document && (
-        <MoveDocumentDialog
-          open={showMoveDialog}
-          onOpenChange={setShowMoveDialog}
-          documentId={documentId}
-          currentProjectId={document.projectId}
-          organizationId={document.organizationId}
-        />
-      )}
+      <MoveDocumentDialog
+        open={showMoveDialog}
+        onOpenChange={setShowMoveDialog}
+        documentId={documentId}
+        currentProjectId={document.projectId}
+        organizationId={document.organizationId}
+      />
     </Flex>
+  );
+}
+
+/**
+ * Main editor component - renders the Plate editor with document sync
+ */
+export function PlateEditor({ documentId }: PlateEditorProps) {
+  const data = usePlateEditorData(documentId);
+  const { document, userId, versions } = data;
+
+  if (document === undefined || userId === undefined || versions === undefined) {
+    return <PlateEditorLoadingState versionsLoaded={versions !== undefined} />;
+  }
+
+  if (!userId) {
+    return (
+      <PlateEditorEmptyState
+        title="Unable to load user data"
+        description="There was a problem loading your editor session."
+      />
+    );
+  }
+
+  if (!document) {
+    return (
+      <PlateEditorEmptyState
+        title="Document Not Found"
+        description="This document doesn't exist or you don't have access to it."
+        action={{
+          label: "Go back",
+          onClick: () => window.history.back(),
+        }}
+      />
+    );
+  }
+
+  return (
+    <LoadedPlateEditor documentId={documentId} data={{ ...data, document, userId, versions }} />
   );
 }
