@@ -179,7 +179,9 @@
 - Removed `ImportExportModal.tsx` from the raw-Tailwind debt list by replacing its hand-built import/export mode rail with owned `SegmentedControl` fill-width variants instead of local card and flex shells.
 - Added `ImportExportModal.tsx` to design-system ownership targeting so future import/export shell drift is blocked directly.
 - Removed `RoadmapView.tsx` from the raw-Tailwind and interactive-state debt lists by moving its roadmap rows, timeline bars, resize handles, and month-header shells behind owned `Card` and `Button` recipe/chrome variants instead of local hover and shell classes.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `layout/PageHeader.tsx`, which is now the next higher-impact shared layout surface still sitting behind explicit validator debt.
+- Removed `layout/PageHeader.tsx` from the raw-Tailwind debt list by moving its responsive layout, indicator chrome, and heading/description typography into owned `Flex`, `Card`, and `Typography` variants instead of local utility stacks.
+- Added `layout/PageHeader.tsx` to design-system ownership targeting so future shared header drift is blocked directly.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `layout/PageLayout.tsx`, which is now the next higher-impact shared layout surface still sitting behind explicit validator debt.
 
 ## Problem
 
