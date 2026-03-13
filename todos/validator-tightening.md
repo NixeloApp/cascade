@@ -131,12 +131,14 @@
 - Removed `UserMenu.tsx` from the raw-Tailwind and interactive-state debt lists by moving destructive item styling into owned `DropdownMenuItem` variants and replacing the leftover feature-level menu-label weight override with an owned `DropdownMenuLabel` prop.
 - Removed `Notifications/NotificationCenter.tsx` from the raw-Tailwind and interactive-state debt lists by moving its sticky header/group/footer shells onto owned `Card` recipes, switching the unread count to the shared `Badge` `alertCount` variant, and replacing feature-level hover text links with owned `Button` link composition.
 - Removed `Notifications/NotificationItem.tsx` from the raw-Tailwind and interactive-state debt lists by moving its row shell onto owned `Card` recipes, moving its snooze menu chrome onto an owned `Popover` recipe, and replacing feature-level reveal classes with primitive-owned responsive `IconButton` reveal behavior.
+- Removed `InboxList.tsx` from the raw-Tailwind and interactive-state debt lists by moving inbox status shells onto owned `Card` recipes, replacing the leftover destructive menu class with the owned `DropdownMenuItem` danger variant, and tightening its action/button chrome onto shared primitives.
+- Removed `ActivityFeed.tsx` from the raw-Tailwind and interactive-state debt lists by moving its repeated hover-entry and timeline-icon shells onto owned `Card` recipes instead of inline rounded/background/hover stacks.
 
 ### Next batch
 
 - Continue shrinking the explicit `AI` debt now that the broad directory escapes are gone.
 - The explicit `AI` raw-Tailwind debt list is now empty.
-- Keep working through smaller helper controls and shared reveal surfaces rather than decorative backdrops, with the next pass focused on `InboxList.tsx` and `ActivityFeed.tsx`, which are the next shared activity surfaces still sitting behind explicit raw-Tailwind and interactive-state debt.
+- Keep working through smaller helper controls and shared reveal surfaces rather than decorative backdrops, with the next pass focused on `UserActivityFeed.tsx` and `ProjectsList.tsx`, which are the next shared list/activity surfaces still sitting behind explicit raw-Tailwind debt.
 
 ## Problem
 

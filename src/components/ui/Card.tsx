@@ -118,6 +118,20 @@ const cardRecipeVariants = cva("", {
         "rounded-none border-x-0 border-t-0 bg-ui-bg shadow-none hover:bg-ui-bg-secondary focus-within:bg-ui-bg-secondary",
       notificationRowUnread:
         "rounded-none border-x-0 border-t-0 bg-brand-subtle/10 shadow-none hover:bg-ui-bg-secondary focus-within:bg-ui-bg-secondary",
+      inboxStatusWarning:
+        "rounded border-transparent bg-status-warning-bg text-status-warning-text shadow-none",
+      inboxStatusSuccess:
+        "rounded border-transparent bg-status-success-bg text-status-success-text shadow-none",
+      inboxStatusError:
+        "rounded border-transparent bg-status-error-bg text-status-error-text shadow-none",
+      inboxStatusNeutral:
+        "rounded border-transparent bg-ui-bg-soft text-ui-text-secondary shadow-none",
+      activityFeedEntry:
+        "rounded-lg border-transparent bg-transparent p-4 shadow-none hover:bg-ui-bg-secondary/30",
+      activityFeedEntryCompact:
+        "rounded-md border-transparent bg-transparent px-2 py-2 shadow-none hover:bg-ui-bg-secondary/50",
+      activityTimelineIcon:
+        "rounded-full border-transparent bg-ui-bg text-ui-text-secondary shadow-none",
       assistantPanelHeader:
         "border-x-0 border-t-0 border-b border-ui-border bg-linear-to-r from-brand to-accent shadow-none",
       assistantComposer:

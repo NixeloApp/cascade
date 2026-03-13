@@ -21,7 +21,6 @@ import {
 import { useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
@@ -76,27 +75,27 @@ const STATUS_CONFIG = {
   pending: {
     label: "Pending",
     icon: AlertTriangle,
-    color: "bg-status-warning/10 text-status-warning",
+    recipe: "inboxStatusWarning",
   },
   accepted: {
     label: "Accepted",
     icon: CheckCircle2,
-    color: "bg-status-success/10 text-status-success",
+    recipe: "inboxStatusSuccess",
   },
   declined: {
     label: "Declined",
     icon: XCircle,
-    color: "bg-status-error/10 text-status-error",
+    recipe: "inboxStatusError",
   },
   snoozed: {
     label: "Snoozed",
     icon: Clock,
-    color: "bg-ui-bg-tertiary text-ui-text-secondary",
+    recipe: "inboxStatusNeutral",
   },
   duplicate: {
     label: "Duplicate",
     icon: Copy,
-    color: "bg-ui-bg-tertiary text-ui-text-secondary",
+    recipe: "inboxStatusNeutral",
   },
 } as const;
 
@@ -272,7 +271,7 @@ export function InboxList({ projectId }: InboxListProps) {
             </Card>
           )}
 
-          <TabsContent value="open" className="flex-1 overflow-auto">
+          <TabsContent value="open" className="overflow-auto">
             {inboxIssues.length === 0 ? (
               <EmptyState
                 icon={Inbox}
@@ -289,7 +288,7 @@ export function InboxList({ projectId }: InboxListProps) {
             )}
           </TabsContent>
 
-          <TabsContent value="closed" className="flex-1 overflow-auto">
+          <TabsContent value="closed" className="overflow-auto">
             {inboxIssues.length === 0 ? (
               <EmptyState
                 icon={CheckCircle2}
@@ -425,7 +424,7 @@ function InboxIssueRow({
   const isOpen = item.status === "pending" || item.status === "snoozed";
 
   return (
-    <Card padding="sm" hoverable className={cn(item.status === "snoozed" && "opacity-75")}>
+    <Card padding="sm" hoverable className={item.status === "snoozed" ? "opacity-75" : undefined}>
       <Flex align="center" gap="md">
         {/* Selection Checkbox (only for triageable items) */}
         {isOpen && (
@@ -437,9 +436,11 @@ function InboxIssueRow({
         )}
 
         {/* Status Badge */}
-        <Flex align="center" justify="center" className={cn("size-7 rounded", config.color)}>
-          <Icon icon={StatusIcon} size="sm" />
-        </Flex>
+        <Card recipe={config.recipe} padding="none" className="size-7">
+          <Flex align="center" justify="center" className="h-full">
+            <Icon icon={StatusIcon} size="sm" />
+          </Flex>
+        </Card>
 
         {/* Issue Info */}
         <FlexItem flex="1" className="min-w-0">
@@ -481,12 +482,20 @@ function InboxIssueRow({
         {/* Quick Actions */}
         {isOpen && (
           <Flex gap="xs">
-            <Button size="sm" variant="ghost" onClick={handleAccept}>
-              <CheckCircle2 className="w-4 h-4 mr-1" />
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleAccept}
+              leftIcon={<Icon icon={CheckCircle2} size="sm" />}
+            >
               Accept
             </Button>
-            <Button size="sm" variant="ghost" onClick={handleDecline}>
-              <XCircle className="w-4 h-4 mr-1" />
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleDecline}
+              leftIcon={<Icon icon={XCircle} size="sm" />}
+            >
               Decline
             </Button>
           </Flex>
@@ -495,21 +504,24 @@ function InboxIssueRow({
         {/* More Actions */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="sm" variant="ghost" aria-label="More actions">
-              <MoreHorizontal className="w-4 h-4" />
-            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label="More actions"
+              leftIcon={<Icon icon={MoreHorizontal} size="sm" />}
+            />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {isOpen && (
               <>
                 {item.status === "snoozed" ? (
                   <DropdownMenuItem onClick={handleUnsnooze}>
-                    <Clock className="w-4 h-4 mr-2" />
+                    <Icon icon={Clock} size="sm" className="mr-2" />
                     Unsnooze
                   </DropdownMenuItem>
                 ) : (
                   <DropdownMenuItem onClick={handleSnooze}>
-                    <Clock className="w-4 h-4 mr-2" />
+                    <Icon icon={Clock} size="sm" className="mr-2" />
                     Snooze 1 day
                   </DropdownMenuItem>
                 )}
@@ -520,14 +532,14 @@ function InboxIssueRow({
             {!isOpen && (
               <>
                 <DropdownMenuItem onClick={handleReopen}>
-                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  <Icon icon={AlertTriangle} size="sm" className="mr-2" />
                   Reopen
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
               </>
             )}
 
-            <DropdownMenuItem onClick={handleDelete} className="text-status-error">
+            <DropdownMenuItem onClick={handleDelete} variant="danger">
               Remove from inbox
             </DropdownMenuItem>
           </DropdownMenuContent>

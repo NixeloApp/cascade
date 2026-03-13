@@ -23,7 +23,7 @@ import {
   User,
 } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
-import { cn } from "@/lib/utils";
+import { Card } from "./ui/Card";
 import { EmptyState } from "./ui/EmptyState";
 import { Flex, FlexItem } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
@@ -182,56 +182,56 @@ export function ActivityFeed({ projectId, limit = 50, compact = false }: Activit
       )}
 
       {activities.map((activity: Activity) => (
-        <Flex
+        <Card
           key={activity._id}
-          gap="lg"
-          className={cn(
-            "relative transition-colors duration-fast",
-            compact
-              ? "py-2 hover:bg-ui-bg-secondary/50 rounded-md px-2"
-              : "p-4 hover:bg-ui-bg-secondary/30 rounded-lg",
-          )}
+          recipe={compact ? "activityFeedEntryCompact" : "activityFeedEntry"}
+          className="relative"
           data-testid={TEST_IDS.ACTIVITY.ENTRY}
         >
-          {/* Timeline icon */}
-          <Flex
-            align="center"
-            justify="center"
-            className={cn(
-              "shrink-0 relative z-10 bg-ui-bg rounded-full",
-              compact ? "w-5 h-5" : "w-6 h-6",
-              "text-ui-text-secondary",
-            )}
-          >
-            <Icon icon={getActionIcon(activity.action)} size={compact ? "xs" : "sm"} />
-          </Flex>
+          <Flex gap="lg">
+            {/* Timeline icon */}
+            <Card
+              recipe="activityTimelineIcon"
+              padding="none"
+              radius="full"
+              className={
+                compact ? "size-5 shrink-0 relative z-10" : "size-6 shrink-0 relative z-10"
+              }
+            >
+              <Flex align="center" justify="center" className="h-full">
+                <Icon icon={getActionIcon(activity.action)} size={compact ? "xs" : "sm"} />
+              </Flex>
+            </Card>
 
-          {/* Activity content */}
-          <FlexItem flex="1" className="min-w-0">
-            <Flex align="start" justify="between" gap="sm">
-              <FlexItem flex="1" className="min-w-0">
-                <Typography variant={compact ? "small" : "p"} className="m-0">
-                  <strong>{activity.userName}</strong>{" "}
-                  <span className={getActionColorClass(activity.action)}>
-                    {formatActivityMessage(activity)}
-                  </span>
-                  {activity.issueKey && <code className="ml-1 font-mono">{activity.issueKey}</code>}
-                </Typography>
-                {!compact && activity.field && activity.newValue && (
-                  <Typography variant="muted" className="mt-1 truncate text-ui-text-secondary">
-                    {activity.field}: {activity.newValue}
+            {/* Activity content */}
+            <FlexItem flex="1" className="min-w-0">
+              <Flex align="start" justify="between" gap="sm">
+                <FlexItem flex="1" className="min-w-0">
+                  <Typography variant={compact ? "small" : "p"} className="m-0">
+                    <strong>{activity.userName}</strong>{" "}
+                    <span className={getActionColorClass(activity.action)}>
+                      {formatActivityMessage(activity)}
+                    </span>
+                    {activity.issueKey && (
+                      <code className="ml-1 font-mono">{activity.issueKey}</code>
+                    )}
                   </Typography>
-                )}
-              </FlexItem>
-              <Typography
-                variant={compact ? "meta" : "small"}
-                className="shrink-0 text-ui-text-tertiary"
-              >
-                {formatRelativeTime(activity._creationTime)}
-              </Typography>
-            </Flex>
-          </FlexItem>
-        </Flex>
+                  {!compact && activity.field && activity.newValue && (
+                    <Typography variant="muted" className="mt-1 truncate text-ui-text-secondary">
+                      {activity.field}: {activity.newValue}
+                    </Typography>
+                  )}
+                </FlexItem>
+                <Typography
+                  variant={compact ? "meta" : "small"}
+                  className="shrink-0 text-ui-text-tertiary"
+                >
+                  {formatRelativeTime(activity._creationTime)}
+                </Typography>
+              </Flex>
+            </FlexItem>
+          </Flex>
+        </Card>
       ))}
     </Flex>
   );

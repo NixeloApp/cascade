@@ -20,7 +20,6 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
 ];
 
 export const RAW_TAILWIND_ALLOWED_FILES = [
-  "/ActivityFeed.tsx",
   "/AdvancedSearchModal.tsx",
   "/AppSidebar.tsx",
   "/AppHeader.tsx",
@@ -40,7 +39,6 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   "/FilterBar.tsx",
   "/GlobalSearch.tsx",
   "/ImportExportModal.tsx",
-  "/InboxList.tsx",
   "/InvoiceEditor.tsx",
   "/InvoicePdfTemplate.tsx",
   "/IssueCard.tsx",
@@ -109,6 +107,7 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/Admin/UserManagement.tsx",
   "/Dashboard.tsx",
   "/Documents/DocumentHeader.tsx",
+  "/ActivityFeed.tsx",
   "/FuzzySearch/FuzzySearchInput.tsx",
   "/Landing/HeroSection.tsx",
   "/Landing/NavHeader.tsx",
@@ -116,6 +115,7 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/NotificationCenter.tsx",
   "/Notifications/NotificationCenter.tsx",
   "/Notifications/NotificationItem.tsx",
+  "/InboxList.tsx",
   "/ImportExport/ImportPanel.tsx",
   "/RoadmapView.tsx",
   "/Settings/ApiKeysManager.tsx",
