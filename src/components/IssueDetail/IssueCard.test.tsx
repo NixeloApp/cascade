@@ -53,6 +53,12 @@ vi.mock("@/lib/issue-utils", async (importOriginal) => {
 });
 
 describe("IssueCard", () => {
+  const mockAssignee = {
+    _id: "user-1" as Id<"users">,
+    name: "Alice Johnson",
+    image: "https://example.com/avatar.jpg",
+  };
+
   const mockIssue = {
     _id: "issue-1" as Id<"issues">,
     key: "TEST-123",
@@ -60,11 +66,7 @@ describe("IssueCard", () => {
     type: "bug" as const,
     priority: "high" as const,
     order: 0,
-    assignee: {
-      _id: "user-1" as Id<"users">,
-      name: "Alice Johnson",
-      image: "https://example.com/avatar.jpg",
-    },
+    assignee: mockAssignee,
     labels: [
       { name: "backend", color: "#3B82F6" },
       { name: "urgent", color: "#EF4444" },
@@ -176,8 +178,7 @@ describe("IssueCard", () => {
   it("should render fallback assignee avatar hidden from accessibility", () => {
     const issueWithoutAvatar = {
       ...mockIssue,
-      // biome-ignore lint/style/noNonNullAssertion: testing mock data
-      assignee: { ...mockIssue.assignee!, image: undefined },
+      assignee: { ...mockAssignee, image: undefined },
     };
     render(<IssueCard issue={issueWithoutAvatar} status="todo" />);
 
