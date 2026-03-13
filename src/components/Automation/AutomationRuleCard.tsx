@@ -18,10 +18,10 @@ import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { ArrowRight, Pause, Pencil, Play, Trash2 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
-import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
+import { IconButton } from "../ui/IconButton";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
@@ -129,36 +129,33 @@ export function AutomationRuleCard({ rule, onEdit, onDelete }: AutomationRuleCar
         </FlexItem>
 
         <Flex gap="sm" align="center" className="shrink-0">
-          <Button
+          <IconButton
             variant="ghost"
-            size="icon"
+            size="sm"
             onClick={handleToggle}
-            className="h-8 w-8"
             title={rule.isActive ? "Disable rule" : "Enable rule"}
             aria-label={rule.isActive ? `Disable rule: ${rule.name}` : `Enable rule: ${rule.name}`}
           >
             <Icon icon={rule.isActive ? Pause : Play} size="sm" />
-          </Button>
-          <Button
+          </IconButton>
+          <IconButton
             variant="ghost"
-            size="icon"
+            size="sm"
             onClick={onEdit}
-            className="h-8 w-8"
             title="Edit rule"
             aria-label={`Edit rule: ${rule.name}`}
           >
             <Icon icon={Pencil} size="sm" />
-          </Button>
-          <Button
+          </IconButton>
+          <IconButton
             variant="ghost"
-            size="icon"
+            size="sm"
             onClick={onDelete}
-            className="h-8 w-8"
             title="Delete rule"
             aria-label={`Delete rule: ${rule.name}`}
           >
             <Icon icon={Trash2} size="sm" />
-          </Button>
+          </IconButton>
         </Flex>
       </Flex>
     </Card>

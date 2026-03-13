@@ -12,7 +12,6 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
   "src/components/Plate/",
   "src/components/Onboarding/",
   "src/components/IssueDetail/",
-  "src/components/Automation/",
 ];
 
 export const RAW_TAILWIND_ALLOWED_FILES = [
@@ -74,6 +73,8 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/Documents/DocumentTree.tsx",
   "/Documents/DocumentTemplatesManager.tsx",
   "/ActivityFeed.tsx",
+  "/Automation/AutomationRuleCard.tsx",
+  "/Automation/AutomationRuleForm.tsx",
   "/AttachmentList.tsx",
   "/CommentReactions.tsx",
   "/CommentRenderer.tsx",

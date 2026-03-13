@@ -225,7 +225,9 @@
 - Added `Templates/TemplateCard.tsx` and `Templates/TemplateForm.tsx` to design-system ownership targeting so future template-surface drift is blocked directly.
 - Removed the broad `src/components/Fields/` raw-Tailwind escape hatch by moving the custom-field key token in `CustomFieldCard.tsx` onto owned `Typography inlineCode`, switching the destructive action onto owned `Button` danger chrome, and moving the field-key input onto an owned input `variant="code"`.
 - Added `Fields/CustomFieldCard.tsx` and `Fields/CustomFieldForm.tsx` to design-system ownership targeting so future custom-field surface drift is blocked directly.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on shrinking the remaining broad raw-Tailwind escape hatch in `Automation/`, which is now the larger remaining validator gap in this area.
+- Removed the broad `src/components/Automation/` raw-Tailwind escape hatch by moving `AutomationRuleCard.tsx` action controls onto owned `IconButton` sizing/chrome instead of raw size classes and validating the remaining automation form/card surface code directly.
+- Added `Automation/AutomationRuleCard.tsx` and `Automation/AutomationRuleForm.tsx` to design-system ownership targeting so future automation-surface drift is blocked directly.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on whichever broad raw-Tailwind escape hatch remains most justified after `Automation/` is cleared, rather than keeping any directory-wide exemption by habit.
 
 ## Problem
 
