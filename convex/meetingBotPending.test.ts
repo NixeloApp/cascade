@@ -51,13 +51,15 @@ describe("MeetingBot Pending Jobs", () => {
     // Create 1 "urgent" pending job (scheduled for now)
     const now = Date.now();
     const urgentJobId = await t.run(async (ctx) => {
-      // biome-ignore lint/style/noNonNullAssertion: testing convenience
-      const userId = (await ctx.db.query("users").first())!._id;
+      const user = await ctx.db.query("users").first();
+      if (!user) {
+        throw new Error("Expected seeded test user");
+      }
       const recordingId = await ctx.db.insert("meetingRecordings", {
         title: "Urgent Meeting",
         status: "scheduled",
         botName: "Bot",
-        createdBy: userId,
+        createdBy: user._id,
         updatedAt: now,
         isPublic: false,
         meetingPlatform: "zoom", // Required field
