@@ -211,6 +211,18 @@ const cardRecipeVariants = cva("", {
         "h-1 rounded-full border-transparent bg-status-warning shadow-none transition-colors",
       authStrengthSegmentSuccess:
         "h-1 rounded-full border-transparent bg-status-success shadow-none transition-colors",
+      landingNavFrame:
+        "rounded-none border-transparent bg-transparent px-4 py-4 text-ui-text shadow-none sm:px-6",
+      landingFeatureCardCyan:
+        "group relative rounded-2xl border border-ui-border/40 bg-linear-to-b from-ui-bg-soft/80 to-ui-bg-secondary/50 p-6 shadow-soft backdrop-blur-md transition-all duration-medium hover:-translate-y-1 hover:border-brand-cyan-text/40 hover:shadow-xl hover:shadow-brand-cyan-text/20",
+      landingFeatureCardTeal:
+        "group relative rounded-2xl border border-ui-border/40 bg-linear-to-b from-ui-bg-soft/80 to-ui-bg-secondary/50 p-6 shadow-soft backdrop-blur-md transition-all duration-medium hover:-translate-y-1 hover:border-brand-teal-text/40 hover:shadow-xl hover:shadow-brand-teal-text/20",
+      landingFeatureCardAmber:
+        "group relative rounded-2xl border border-ui-border/40 bg-linear-to-b from-ui-bg-soft/80 to-ui-bg-secondary/50 p-6 shadow-soft backdrop-blur-md transition-all duration-medium hover:-translate-y-1 hover:border-status-warning/40 hover:shadow-xl hover:shadow-status-warning/20",
+      landingPricingCard:
+        "rounded-2xl border border-ui-border/40 bg-linear-to-b from-ui-bg-soft/80 to-ui-bg-secondary/40 p-6 shadow-soft transition-all duration-medium hover:-translate-y-1 hover:shadow-xl",
+      landingPricingCardFeatured:
+        "rounded-2xl border border-brand-ring bg-linear-to-b from-ui-bg-soft/80 to-ui-bg-secondary/40 p-6 shadow-lg shadow-brand-ring/20 transition-all duration-medium hover:-translate-y-1 hover:shadow-xl",
 
       // Header control surfaces
       controlRail:
@@ -301,9 +313,9 @@ const cardRecipeVariants = cva("", {
       chatBubbleUser:
         "relative max-w-chat-bubble rounded-lg border-transparent bg-brand text-brand-foreground shadow-none md:max-w-chat-bubble-md",
       landingNavShell:
-        "rounded-full border-ui-border-secondary/70 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/96 to-ui-bg-soft/90 shadow-card backdrop-blur-xl",
+        "rounded-full border-ui-border-secondary/70 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/96 to-ui-bg-soft/90 px-3 py-2.5 shadow-card backdrop-blur-xl sm:px-5 sm:py-3",
       landingNavRail:
-        "rounded-full border-ui-border/60 bg-linear-to-r from-ui-bg-soft/94 via-ui-bg-elevated/92 to-ui-bg-soft/90 shadow-soft",
+        "rounded-full border-ui-border/60 bg-linear-to-r from-ui-bg-soft/94 via-ui-bg-elevated/92 to-ui-bg-soft/90 px-2 py-1 shadow-soft",
       searchDropdown:
         "overflow-hidden rounded-md border-ui-border bg-ui-bg-elevated shadow-elevated",
       searchResultRow:

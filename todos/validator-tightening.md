@@ -316,6 +316,7 @@
 - Removed stale interactive-state allowlist entries for `PlateEditor.tsx`, `CreateProjectFromTemplate.tsx`, `BulkOperationsBar.tsx`, and `Calendar/EventDetailsModal.tsx`; those files no longer carry feature-level hover/focus Tailwind.
 - Removed `CustomFieldValues.tsx` and `ErrorBoundary.tsx` from the interactive-state allowlist by moving their remaining link/detail affordances onto owned `Button`/`Typography` composition instead of raw `hover:` classes.
 - Replaced the broad `Landing/` interactive escape hatch with explicit file-level debt for the actual remaining landing surfaces: `FeaturesSection.tsx`, `FinalCTASection.tsx`, `Footer.tsx`, `HeroSection.tsx`, `LogoBar.tsx`, `NavHeader.tsx`, `PricingSection.tsx`, and `WhyChooseSection.tsx`.
+- Removed `Landing/NavHeader.tsx`, `Landing/FeaturesSection.tsx`, and `Landing/PricingSection.tsx` from the interactive-state allowlist by moving their nav pills, CTA buttons, feature cards, and pricing cards onto owned `Button` and `Card` variants instead of keeping hover and selection chrome in landing page code.
 - The embedded calendar island is now narrowed from directory-wide escape hatches to explicit file debt. Burn that list down surface by surface instead of allowing new embedded drift by default.
 
 ## Problem

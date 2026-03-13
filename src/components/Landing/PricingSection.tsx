@@ -2,6 +2,7 @@ import { cva } from "class-variance-authority";
 import { Check } from "lucide-react";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
@@ -45,19 +46,12 @@ const pricingVariants = {
   intro: cva("text-center mb-14"),
   heading: cva("text-3xl md:text-4xl font-bold mb-4 text-ui-text"),
   lead: cva("text-ui-text-secondary max-w-2xl mx-auto"),
-  card: cva(
-    "rounded-2xl border p-6 bg-linear-to-b from-ui-bg-soft/80 to-ui-bg-secondary/40 transition-all duration-medium hover:-translate-y-1 hover:shadow-xl",
-    {
-      variants: {
-        featured: {
-          true: "border-brand-ring shadow-brand-ring/20 shadow-lg",
-          false: "border-ui-border/40",
-        },
-      },
-    },
-  ),
   featureList: cva("space-y-2 mb-6"),
 };
+
+function getPricingCardRecipe(featured: boolean) {
+  return featured ? ("landingPricingCardFeatured" as const) : ("landingPricingCard" as const);
+}
 
 /** Landing pricing section with plan tiers and enterprise-oriented feature matrix. */
 export function PricingSection() {
@@ -75,10 +69,7 @@ export function PricingSection() {
 
         <Grid cols={1} colsMd={3} gap="lg">
           {plans.map((plan) => (
-            <article
-              key={plan.name}
-              className={pricingVariants.card({ featured: !!plan.featured })}
-            >
+            <Card key={plan.name} recipe={getPricingCardRecipe(!!plan.featured)} padding="none">
               <div className="mb-4">
                 <Typography variant="h3" className="text-xl text-ui-text">
                   {plan.name}
@@ -111,7 +102,7 @@ export function PricingSection() {
               <Button variant={plan.featured ? "primary" : "secondary"} className="w-full">
                 {plan.cta}
               </Button>
-            </article>
+            </Card>
           ))}
         </Grid>
       </div>

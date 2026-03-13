@@ -19,6 +19,8 @@ const buttonVariants = cva(
       variant: {
         primary:
           "bg-linear-to-r from-landing-accent to-landing-accent-teal text-brand-foreground shadow-sm hover:shadow-md hover:brightness-105 focus-visible:ring-brand-ring",
+        landingPrimary:
+          "rounded-full bg-linear-to-r from-brand to-landing-accent px-4 py-2 text-sm font-medium whitespace-nowrap text-brand-foreground shadow-soft hover:-translate-y-px hover:bg-brand-hover hover:shadow-card sm:px-5 sm:py-2.5 focus-visible:ring-brand-ring",
         authLink:
           "text-sm font-medium text-brand-ring hover:text-brand-muted hover:underline active:scale-100 focus-visible:ring-brand-ring",
         authLinkMuted:
@@ -70,6 +72,12 @@ const buttonVariants = cva(
 const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-brand-ring", {
   variants: {
     chrome: {
+      landingBrandLink:
+        "border-transparent bg-transparent text-ui-text shadow-none hover:opacity-80",
+      landingNavLink:
+        "border-transparent bg-transparent text-ui-text-secondary shadow-none hover:bg-ui-bg-hover hover:text-ui-text",
+      landingThemeToggle:
+        "border-ui-border/60 bg-ui-bg-elevated/92 text-ui-text-secondary shadow-none hover:bg-ui-bg-hover hover:text-ui-text",
       quiet:
         "border-transparent bg-transparent text-ui-text-secondary hover:border-ui-border/70 hover:bg-ui-bg-soft/80 hover:text-ui-text",
       reaction:
@@ -120,6 +128,9 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
         "border-transparent bg-transparent text-ui-text-tertiary shadow-none hover:text-brand",
     },
     chromeSize: {
+      landingBrandLink: "h-auto rounded-full px-0 py-0",
+      landingNavPill: "h-auto rounded-full px-4 py-2 text-sm",
+      landingThemeToggle: "h-9 w-9 rounded-full p-0 sm:h-10 sm:w-10",
       icon: "h-9 w-9 rounded-full",
       pill: "h-10 rounded-full px-4 text-sm",
       compactPill: "h-8 rounded-full px-3 text-sm",

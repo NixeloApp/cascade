@@ -25,13 +25,10 @@ const ALLOWED_FILES = [
   // Forms/fields
   // Calendar
   // Landing pages
-  "Landing/FeaturesSection.tsx",
   "Landing/FinalCTASection.tsx",
   "Landing/Footer.tsx",
   "Landing/HeroSection.tsx",
   "Landing/LogoBar.tsx",
-  "Landing/NavHeader.tsx",
-  "Landing/PricingSection.tsx",
   "Landing/WhyChooseSection.tsx",
   // Activity/inbox
   // Error handling
