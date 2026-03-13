@@ -38,9 +38,6 @@ const ALLOWED_FILES = [
   "Settings/LinkedRepositories.tsx",
   "Settings/PumbleIntegration.tsx",
   "TimeTracker/BillingReport.tsx",
-  // Dashboard surfaces
-  "Dashboard/RecentActivity.tsx",
-  "Dashboard/WorkspacesList.tsx",
 ];
 
 /**
