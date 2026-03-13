@@ -7,7 +7,6 @@
 import type { PlateElementProps } from "platejs/react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
-import { cn } from "@/lib/utils";
 
 interface MentionValue {
   id: string;
@@ -39,7 +38,7 @@ export function MentionElement({
       {...attributes}
       variant="mention"
       size="sm"
-      className={cn("gap-1 align-baseline cursor-pointer", className)}
+      className={className}
       contentEditable={false}
     >
       {value?.image && <Avatar name={value.text} src={value.image} size="xs" />}@

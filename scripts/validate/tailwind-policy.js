@@ -8,7 +8,6 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   // Explicit migration-debt exemptions replacing broad Settings/Admin/ProjectSettings directory escapes.
   "/BulkOperationsBar.tsx",
   "/Plate/DragHandle.tsx",
-  "/Plate/MentionElement.tsx",
 ];
 
 export const RAW_TAILWIND_ALLOWED_EXTENSIONS = [".stories.tsx", ".test.tsx", ".example.tsx"];
