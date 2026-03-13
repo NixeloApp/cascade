@@ -13,7 +13,6 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   "/Plate/FloatingToolbar.tsx",
   "/Plate/MentionElement.tsx",
   "/Plate/MentionInputElement.tsx",
-  "/Plate/SlashMenu.tsx",
 ];
 
 export const RAW_TAILWIND_ALLOWED_EXTENSIONS = [".stories.tsx", ".test.tsx", ".example.tsx"];
@@ -152,10 +151,12 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/Kanban/SwimlanRow.tsx",
   "/Onboarding/OnboardingChecklist.tsx",
   "/Plate/ColorPickerButton.tsx",
+  "/Plate/Collaborators.tsx",
   "/Plate/DragHandle.tsx",
   "/Plate/MentionInputElement.tsx",
   "/Plate/MentionElement.tsx",
   "/Plate/FloatingToolbar.tsx",
+  "/Plate/SlashMenu.tsx",
   "/PlateEditor.tsx",
   "/ClientPortal/PortalProjectView.tsx",
   "/ClientPortal/PortalTimeline.tsx",

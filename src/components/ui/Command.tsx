@@ -42,6 +42,7 @@ const commandListVariants = cva("min-h-0 flex-1 overflow-y-auto overflow-x-hidde
     viewport: {
       default: "",
       palette: "max-h-[50vh] sm:max-h-[60vh]",
+      slashMenu: "max-h-80 scrollbar-subtle",
     },
   },
   defaultVariants: {
@@ -66,6 +67,8 @@ const commandGroupVariants = cva("overflow-hidden p-1 text-ui-text", {
     recipe: {
       default: "",
       palette: "[&_[cmdk-group-heading]]:text-ui-text-tertiary",
+      slashMenu:
+        "px-1 py-1.5 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-ui-text-tertiary",
     },
   },
   defaultVariants: {
@@ -80,6 +83,8 @@ const commandItemVariants = cva(
       recipe: {
         default: "",
         palette: "cursor-pointer data-[selected=true]:bg-brand-subtle",
+        slashMenu:
+          "mx-1 rounded border-transparent px-2 py-2 cursor-pointer data-[selected=true]:border-transparent data-[selected=true]:bg-ui-bg-hover data-[selected=true]:shadow-none [&_svg]:text-ui-text-secondary",
       },
     },
     defaultVariants: {
