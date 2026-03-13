@@ -2,11 +2,18 @@
  * Shared policy and helpers for Tailwind/design-system validation checks.
  */
 
-export const RAW_TAILWIND_ALLOWED_DIRS = ["src/components/ui/", "src/components/Plate/"];
+export const RAW_TAILWIND_ALLOWED_DIRS = ["src/components/ui/"];
 
 export const RAW_TAILWIND_ALLOWED_FILES = [
   // Explicit migration-debt exemptions replacing broad Settings/Admin/ProjectSettings directory escapes.
   "/BulkOperationsBar.tsx",
+  "/Plate/Collaborators.tsx",
+  "/Plate/ColorPickerButton.tsx",
+  "/Plate/DragHandle.tsx",
+  "/Plate/FloatingToolbar.tsx",
+  "/Plate/MentionElement.tsx",
+  "/Plate/MentionInputElement.tsx",
+  "/Plate/SlashMenu.tsx",
 ];
 
 export const RAW_TAILWIND_ALLOWED_EXTENSIONS = [".stories.tsx", ".test.tsx", ".example.tsx"];

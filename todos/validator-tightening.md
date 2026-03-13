@@ -295,6 +295,8 @@
 - Removed the stale `calendar-provider.tsx`, `calendar-context.tsx`, and `calendar-mode-icon-map.tsx` raw-debt entries now that they contain no feature-level Tailwind and never needed an embedded-calendar escape hatch.
 - Removed the stale `calendar-provider.tsx` test-coverage baseline entry after clearing the last false-positive debt marker around that implementation file.
 - Embedded calendar raw-debt is now zero. Any future drift in that implementation will have to justify itself directly instead of inheriting a blanket exception.
+- Removed the broad `src/components/Plate/` raw-Tailwind escape hatch and replaced it with explicit file-level debt for the remaining editor surfaces that still carry real raw classes: `Collaborators.tsx`, `ColorPickerButton.tsx`, `DragHandle.tsx`, `FloatingToolbar.tsx`, `MentionElement.tsx`, `MentionInputElement.tsx`, and `SlashMenu.tsx`.
+- New Plate files no longer inherit a blanket raw-Tailwind pass; only the current known editor debt remains exempt while it is burned down intentionally.
 - The embedded calendar island is now narrowed from directory-wide escape hatches to explicit file debt. Burn that list down surface by surface instead of allowing new embedded drift by default.
 
 ## Problem
