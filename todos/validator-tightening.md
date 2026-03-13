@@ -305,6 +305,8 @@
 - Added `Plate/FloatingToolbar.tsx` to design-system ownership targeting so future floating-toolbar chrome drift is blocked directly.
 - Removed `Plate/MentionInputElement.tsx` from explicit raw debt by moving the inline mention-input token chrome and dropdown positioning contract onto owned `Badge` and `Card` recipes instead of feature-level inline background, offset, and width classes.
 - Added `Plate/MentionInputElement.tsx` to design-system ownership targeting so future mention-input chrome drift is blocked directly.
+- Removed `Plate/ColorPickerButton.tsx` from explicit raw debt by moving the color-picker popover shell behind an owned `Popover` recipe and extracting swatch selection/empty-state chrome into an owned `ColorSwatchButton` primitive instead of feature-level spacing, ring, dashed-border, and icon-size classes.
+- Added `Plate/ColorPickerButton.tsx` to design-system ownership targeting so future color-picker chrome drift is blocked directly.
 - The embedded calendar island is now narrowed from directory-wide escape hatches to explicit file debt. Burn that list down surface by surface instead of allowing new embedded drift by default.
 
 ## Problem

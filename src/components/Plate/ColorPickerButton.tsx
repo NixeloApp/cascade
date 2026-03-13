@@ -4,15 +4,15 @@
  * Provides a dropdown color picker for font color and background color.
  */
 
-import { Check, ChevronDown, Highlighter, Type } from "lucide-react";
+import { ChevronDown, Highlighter, type LucideIcon, Type } from "lucide-react";
 import { useEditorRef } from "platejs/react";
 import { useCallback, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { ColorSwatchButton } from "@/components/ui/ColorSwatchButton";
 import { Grid } from "@/components/ui/Grid";
+import { Icon } from "@/components/ui/Icon";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
-import { Typography } from "@/components/ui/Typography";
-import { cn } from "@/lib/utils";
 
 // Preset color palette - semantic colors matching the design system
 const TEXT_COLORS = [
@@ -51,7 +51,7 @@ export function ColorPickerButton({ type }: ColorPickerButtonProps) {
   const [currentColor, setCurrentColor] = useState("");
 
   const colors = type === "fontColor" ? TEXT_COLORS : HIGHLIGHT_COLORS;
-  const Icon = type === "fontColor" ? Type : Highlighter;
+  const TriggerIcon: LucideIcon = type === "fontColor" ? Type : Highlighter;
   const tooltip = type === "fontColor" ? "Text Color" : "Highlight";
 
   const applyColor = useCallback(
@@ -81,22 +81,27 @@ export function ColorPickerButton({ type }: ColorPickerButtonProps) {
           aria-label={tooltip}
           title={tooltip}
         >
-          <div className="relative">
-            <Icon className="h-4 w-4" />
-            {/* Color indicator bar */}
-            <div
-              className="absolute -bottom-0.5 left-0 right-0 h-0.5 rounded-full"
+          <span style={{ position: "relative", display: "inline-flex" }}>
+            <Icon icon={TriggerIcon} size="sm" />
+            <span
+              aria-hidden="true"
               style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                bottom: -2,
+                height: 2,
+                borderRadius: 9999,
                 backgroundColor:
                   currentColor || (type === "fontColor" ? "currentColor" : "transparent"),
               }}
             />
-          </div>
-          <ChevronDown className="h-3 w-3 opacity-50" />
+          </span>
+          <Icon icon={ChevronDown} size="xs" opacity={0.5} />
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-auto p-2"
+        recipe="colorPicker"
         side="top"
         align="start"
         sideOffset={8}
@@ -104,37 +109,15 @@ export function ColorPickerButton({ type }: ColorPickerButtonProps) {
       >
         <Grid cols={6} gap="xs">
           {colors.map((color) => (
-            <Button
+            <ColorSwatchButton
               key={color.name}
-              type="button"
-              variant="unstyled"
-              chrome="colorSwatch"
-              chromeSize="colorSwatch"
-              className={cn(
-                color.value === currentColor && "ring-2 ring-brand ring-offset-1",
-                !color.value && "border-dashed border-ui-border-secondary",
-              )}
-              style={{
-                backgroundColor: color.value || "transparent",
-                borderColor: color.value ? color.value : undefined,
-              }}
+              color={color.value}
+              selected={color.value === currentColor}
+              empty={!color.value}
+              checkColor={type === "fontColor" && color.value ? "white" : "var(--color-ui-text)"}
               onClick={() => applyColor(color.value)}
               title={color.name}
-            >
-              {color.value === currentColor && (
-                <Check
-                  className="h-3 w-3"
-                  style={{
-                    color: type === "fontColor" && color.value ? "white" : "var(--color-ui-text)",
-                  }}
-                />
-              )}
-              {!color.value && (
-                <Typography variant="caption" color="tertiary">
-                  ×
-                </Typography>
-              )}
-            </Button>
+            />
           ))}
         </Grid>
       </PopoverContent>

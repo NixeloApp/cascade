@@ -28,6 +28,7 @@ const popoverContentVariants = cva(
           "rounded-2xl border-ui-border-secondary/70 bg-linear-to-b from-ui-bg-soft/80 via-ui-bg-elevated/96 to-ui-bg-secondary/84 shadow-soft",
         reactionPicker:
           "w-auto rounded-lg border-ui-border bg-ui-bg-elevated p-1.5 shadow-elevated",
+        colorPicker: "w-auto rounded-lg border-ui-border bg-ui-bg-elevated p-2 shadow-elevated",
         floatingToolbar:
           "flex w-auto items-center gap-0.5 rounded-container border-ui-border bg-ui-bg-elevated p-1.5 shadow-elevated",
         notificationMenu:
