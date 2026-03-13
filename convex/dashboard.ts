@@ -67,7 +67,7 @@ export const getMyIssues = authenticatedQuery({
     // Paginate using the by_assignee index
     const results = await fetchPaginatedQuery<Doc<"issues">>(ctx, {
       paginationOpts,
-      query: (db) =>
+      buildQuery: (db) =>
         db
           .query("issues")
           .withIndex("by_assignee", (q) => q.eq("assigneeId", ctx.userId).lt("isDeleted", true))

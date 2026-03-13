@@ -28,7 +28,14 @@ export function run() {
     /usersPerfFastPath\.test\.ts$/, // 4 violations - TODO: fix biome-ignore
     /usersPerfShared\.test\.ts$/, // 2 violations - TODO: fix biome-ignore
     /webhooksCrash\.test\.ts$/, // 3 violations - TODO: fix biome-ignore
-    /convex\/lib\//, // Convex internal utilities with complex generics
+    /convex\/lib\/constrainedValidators\.test\.ts$/, // Legacy test assertions
+    /convex\/lib\/dns\.test\.ts$/, // Legacy fetch mocks
+    /convex\/lib\/fileValidators\.test\.ts$/, // Legacy MutationCtx casts
+    /convex\/lib\/issueCalculation\.test\.ts$/, // Legacy Doc fixture casts
+    /convex\/lib\/rateLimiter\.test\.ts$/, // Legacy context fixture casts
+    /convex\/lib\/safeFetch\.test\.ts$/, // Legacy module mock casts
+    /convex\/lib\/userUtils\.test\.ts$/, // Legacy runtime property assertions
+    /convex\/lib\/webhookHelpers\.test\.ts$/, // Legacy fetch mocks
     /convex\/softDeleteCleanup\.ts$/, // Convex internal cleanup utility
   ];
 

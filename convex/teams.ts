@@ -488,7 +488,7 @@ export const getTeams = authenticatedQuery({
       // Admins see all teams in the organization
       results = await fetchPaginatedQuery<Doc<"teams">>(ctx, {
         paginationOpts: args.paginationOpts,
-        query: (db) =>
+        buildQuery: (db) =>
           db
             .query("teams")
             .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId)),
@@ -497,7 +497,7 @@ export const getTeams = authenticatedQuery({
       // Non-admins see only teams they are a member of
       const membershipResults = await fetchPaginatedQuery<Doc<"teamMembers">>(ctx, {
         paginationOpts: args.paginationOpts,
-        query: (db) =>
+        buildQuery: (db) =>
           db.query("teamMembers").withIndex("by_user", (q) => q.eq("userId", ctx.userId)),
       });
 

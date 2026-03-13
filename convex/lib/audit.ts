@@ -1,4 +1,3 @@
-import type { FunctionReference } from "convex/server";
 import type { Infer } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
@@ -19,11 +18,9 @@ interface ContextWithScheduler {
   scheduler: {
     runAfter: (
       delayMs: number,
-      functionReference: FunctionReference<"mutation" | "action">,
-      // biome-ignore lint/suspicious/noExplicitAny: generic args for runAfter
-      args: any,
-      // biome-ignore lint/suspicious/noExplicitAny: generic return type
-    ) => Promise<any>;
+      functionReference: typeof internal.auditLogs.log,
+      args: AuditLogArgs,
+    ) => Promise<unknown>;
   };
 }
 
@@ -33,9 +30,6 @@ interface ContextWithScheduler {
  */
 export async function logAudit(ctx: ContextWithScheduler, args: AuditLogArgs) {
   if (!isTest) {
-    // internal.auditLogs.log is an internal mutation, but FunctionReference<"mutation"> implies public by default or generic.
-    // We cast to any first to avoid "neither type sufficiently overlaps" error when casting to FunctionReference<"mutation">.
-    // biome-ignore lint/suspicious/noExplicitAny: casting for generic compatibility
-    await ctx.scheduler.runAfter(0, internal.auditLogs.log as any, args);
+    await ctx.scheduler.runAfter(0, internal.auditLogs.log, args);
   }
 }

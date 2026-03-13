@@ -421,14 +421,13 @@ export async function fetchPaginatedIssues(
   ctx: QueryCtx,
   opts: {
     paginationOpts: PaginationOptions;
-
-    query: (db: QueryCtx["db"]) => unknown; // Query builder keeps specific type implicitly
+    buildQuery: (db: QueryCtx["db"]) => unknown; // Query builder keeps specific type implicitly
     enrich?: boolean;
   },
 ): Promise<PaginationResult<EnrichedIssue | Doc<"issues">>> {
   const issuesResult = await fetchPaginatedQuery<Doc<"issues">>(ctx, {
     paginationOpts: opts.paginationOpts,
-    query: opts.query,
+    buildQuery: opts.buildQuery,
   });
 
   if (opts.enrich === false) {
