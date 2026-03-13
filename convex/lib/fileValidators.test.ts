@@ -13,12 +13,12 @@ describe("validateAttachment", () => {
       sha256: "somehash",
     };
 
-    const mockCtx = {
+    const mockCtx: Pick<MutationCtx, "storage"> = {
       storage: {
         getMetadata: vi.fn().mockResolvedValue(mockMetadata),
         delete: vi.fn(),
       },
-    } as unknown as MutationCtx;
+    };
 
     const result = await validateAttachment(mockCtx, mockStorageId);
 
@@ -28,12 +28,12 @@ describe("validateAttachment", () => {
   });
 
   it("should return error if file not found in storage", async () => {
-    const mockCtx = {
+    const mockCtx: Pick<MutationCtx, "storage"> = {
       storage: {
         getMetadata: vi.fn().mockResolvedValue(null),
         delete: vi.fn(),
       },
-    } as unknown as MutationCtx;
+    };
 
     const result = await validateAttachment(mockCtx, mockStorageId);
 
@@ -48,12 +48,12 @@ describe("validateAttachment", () => {
       size: 1024,
     };
 
-    const mockCtx = {
+    const mockCtx: Pick<MutationCtx, "storage"> = {
       storage: {
         getMetadata: vi.fn().mockResolvedValue(mockMetadata),
         delete: vi.fn().mockResolvedValue(undefined),
       },
-    } as unknown as MutationCtx;
+    };
 
     const result = await validateAttachment(mockCtx, mockStorageId);
 
@@ -71,12 +71,12 @@ describe("validateAttachment", () => {
       size: 1024,
     };
 
-    const mockCtx = {
+    const mockCtx: Pick<MutationCtx, "storage"> = {
       storage: {
         getMetadata: vi.fn().mockResolvedValue(mockMetadata),
         delete: vi.fn().mockResolvedValue(undefined),
       },
-    } as unknown as MutationCtx;
+    };
 
     const result = await validateAttachment(mockCtx, mockStorageId);
 
@@ -94,12 +94,12 @@ describe("validateAttachment", () => {
       size: 1024,
     };
 
-    const mockCtx = {
+    const mockCtx: Pick<MutationCtx, "storage"> = {
       storage: {
         getMetadata: vi.fn().mockResolvedValue(mockMetadata),
         delete: vi.fn().mockResolvedValue(undefined),
       },
-    } as unknown as MutationCtx;
+    };
 
     const result = await validateAttachment(mockCtx, mockStorageId);
 
