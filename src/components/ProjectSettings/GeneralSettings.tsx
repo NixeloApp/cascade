@@ -42,6 +42,14 @@ function ReadonlyField({ label, children }: ReadonlyFieldProps) {
   );
 }
 
+function ReadonlyValue({ children }: { children: ReactNode }) {
+  return (
+    <Card variant="flat" padding="sm" radius="md">
+      {children}
+    </Card>
+  );
+}
+
 /** Project name and description editor with save/cancel controls. */
 export function GeneralSettings({
   projectId,
@@ -114,12 +122,9 @@ export function GeneralSettings({
           />
           <Stack gap="xs">
             <Label>Project Key</Label>
-            <Typography
-              variant="mono"
-              className="bg-ui-bg-tertiary px-3 py-2.5 rounded-md block border border-ui-border"
-            >
-              {projectKey}
-            </Typography>
+            <ReadonlyValue>
+              <Typography variant="mono">{projectKey}</Typography>
+            </ReadonlyValue>
             <Typography variant="caption" color="tertiary">
               Project key cannot be changed after creation
             </Typography>

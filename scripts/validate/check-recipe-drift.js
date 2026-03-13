@@ -27,10 +27,6 @@ const SKIP_PATTERNS = ["node_modules", ".test.", ".spec.", ".stories.", "src/com
 // Files allowed to have surface patterns (gradual migration to Card recipes)
 // Remove files as they get migrated to use Card component with recipe prop
 const ALLOWED_FILES = [
-  // Project settings - uses consistent rounded-xl bg-ui-bg pattern
-  "ProjectSettings/GeneralSettings.tsx",
-  "ProjectSettings/MemberManagement.tsx",
-  "ProjectSettings/WorkflowSettings.tsx",
   // Modal/overlay surfaces - need recipe extraction
   "Plate/SlashMenu.tsx",
 ];
