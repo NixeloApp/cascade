@@ -26,6 +26,8 @@ const popoverContentVariants = cva(
         default: "",
         overlayInset:
           "rounded-2xl border-ui-border-secondary/70 bg-linear-to-b from-ui-bg-soft/80 via-ui-bg-elevated/96 to-ui-bg-secondary/84 shadow-soft",
+        slashMenu:
+          "rounded-container border-ui-border bg-ui-bg-elevated p-0 shadow-elevated data-[state=open]:animate-scale-in",
       },
     },
     defaultVariants: {

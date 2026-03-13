@@ -76,6 +76,7 @@
 - Removed `Calendar/CreateEventModal.tsx` and `Settings/LinkedRepositories.tsx` from the `check-recipe-drift.js` migration allowlist by dropping the last local select-trigger surface override in `CreateEventModal` and confirming `LinkedRepositories` no longer defines reusable inline surface recipes outside owned primitives.
 - Removed `Settings/PumbleIntegration.tsx` and `TimeTracker/BillingReport.tsx` from the `check-recipe-drift.js` migration allowlist after confirming their remaining classes are owned-primitives composition, spacing, and typography only rather than inline reusable surface recipes.
 - Removed `ProjectSettings/GeneralSettings.tsx`, `ProjectSettings/MemberManagement.tsx`, and `ProjectSettings/WorkflowSettings.tsx` from the `check-recipe-drift.js` migration allowlist by replacing the last inline project-key surface in `GeneralSettings` with owned `Card` composition and confirming the other two files no longer define reusable inline surface recipes.
+- Removed `Plate/SlashMenu.tsx` from the `check-recipe-drift.js` migration allowlist by moving its popover shell behind an owned `Popover` recipe, reducing the recipe-drift allowlist to zero.
 - Added `TimeTracking/TimeEntryModal.tsx` and `TimeTracking/UserRatesManagement.tsx` to design-system ownership targeting so future time-entry shell drift is validated directly.
 - Added `TimeTracking/ManualTimeEntryModal.tsx` to design-system ownership targeting so future manual-entry shell drift is validated directly.
 - Added `TimeTracking/TimeEntriesList.tsx` to design-system ownership targeting so future list-row shell drift is validated directly.
@@ -88,8 +89,8 @@
 
 ### Next batch
 
-- Keep shrinking the remaining `check-recipe-drift.js` migration allowlist.
-- `Plate/SlashMenu.tsx` is now the final explicit `check-recipe-drift.js` migration allowlist entry and should be burned down or isolated behind a more intentional overlay/menu primitive.
+- Keep tightening the validator now that the `check-recipe-drift.js` migration allowlist is at zero.
+- Remove the now-dead migration framing from `check-recipe-drift.js` and consider tightening the detector so owned overlay/menu primitives are the only valid place for these remaining command-surface patterns.
 
 ## Problem
 

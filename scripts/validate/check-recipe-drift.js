@@ -25,11 +25,8 @@ const SURFACE_CLASS_PATTERNS = [
 const SKIP_PATTERNS = ["node_modules", ".test.", ".spec.", ".stories.", "src/components/ui/"];
 
 // Files allowed to have surface patterns (gradual migration to Card recipes)
-// Remove files as they get migrated to use Card component with recipe prop
-const ALLOWED_FILES = [
-  // Modal/overlay surfaces - need recipe extraction
-  "Plate/SlashMenu.tsx",
-];
+// Keep empty once remaining debt is migrated behind owned primitives.
+const ALLOWED_FILES = [];
 
 /**
  * Extract visual surface class combinations from a className value.

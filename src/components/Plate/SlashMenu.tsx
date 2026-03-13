@@ -353,7 +353,8 @@ export function SlashMenu() {
         }}
       />
       <PopoverContent
-        className="w-72 p-0 bg-ui-bg-elevated border border-ui-border shadow-elevated rounded-container animate-scale-in"
+        recipe="slashMenu"
+        className="w-72"
         align="start"
         side="bottom"
         sideOffset={4}
