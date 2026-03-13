@@ -188,6 +188,14 @@ const cardRecipeVariants = cva("", {
       labelGroupRow:
         "rounded-none border-x-0 border-t-0 border-b border-ui-border-secondary bg-transparent shadow-none hover:bg-ui-bg-secondary",
       dependencyRow: "rounded-xl border-ui-border-secondary/70 bg-ui-bg-secondary shadow-none",
+      issueAssigneeFallback:
+        "rounded-full border-transparent bg-ui-bg-tertiary text-ui-text-secondary shadow-none",
+      issueCard:
+        "rounded-container border-ui-border bg-ui-bg-soft p-1.25 shadow-none hover:border-ui-border-secondary hover:bg-ui-bg-hover focus-within:outline-none focus-within:ring-2 focus-within:ring-brand-ring focus-within:ring-offset-2 sm:p-3",
+      issueCardSelected:
+        "rounded-container border-brand-indigo-border/60 bg-brand-indigo-track p-1.25 shadow-soft focus-within:outline-none focus-within:ring-2 focus-within:ring-brand-ring focus-within:ring-offset-2 sm:p-3",
+      issueCardFocused:
+        "rounded-container border-ui-border-focus/50 bg-ui-bg-hover p-1.25 shadow-none ring-1 ring-ui-border-focus/20 focus-within:outline-none focus-within:ring-2 focus-within:ring-brand-ring focus-within:ring-offset-2 sm:p-3",
       mentionMenu:
         "overflow-hidden rounded-container border-ui-border-secondary bg-linear-to-br from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/70 shadow-lg",
       floatingWidget: "overflow-hidden rounded-container border-ui-border bg-ui-bg shadow-elevated",

@@ -103,10 +103,10 @@ describe("IssueCard", () => {
     const user = userEvent.setup();
     render(<IssueCard issue={mockIssue} status="todo" />);
 
-    const avatar = screen.getByAltText("Alice Johnson");
-    expect(avatar).toBeInTheDocument();
+    const assignee = screen.getByTestId(TEST_IDS.ISSUE.ASSIGNEE);
+    expect(assignee).toBeInTheDocument();
 
-    await user.hover(avatar);
+    await user.hover(assignee);
 
     const tooltipText = await screen.findByRole("tooltip", { name: "Assigned to: Alice Johnson" });
     expect(tooltipText).toBeInTheDocument();
@@ -167,11 +167,10 @@ describe("IssueCard", () => {
     expect(priorityIcon.closest('[aria-hidden="true"]')).toBeInTheDocument();
 
     // Assignee (find via alt text with hidden: true)
-    // @ts-expect-error - hidden option is supported by testing-library but types might be strict
-    const assigneeImg = screen.getByAltText("Alice Johnson", { hidden: true });
-    expect(assigneeImg).toBeInTheDocument();
-    expect(assigneeImg.closest("button")).not.toBeInTheDocument();
-    expect(assigneeImg.closest('[aria-hidden="true"]')).toBeInTheDocument();
+    const assignee = screen.getByTestId(TEST_IDS.ISSUE.ASSIGNEE);
+    expect(assignee).toBeInTheDocument();
+    expect(assignee.closest("button")).not.toBeInTheDocument();
+    expect(assignee.closest('[aria-hidden="true"]')).toBeInTheDocument();
   });
 
   it("should render fallback assignee avatar hidden from accessibility", () => {
@@ -184,8 +183,7 @@ describe("IssueCard", () => {
 
     // Fallback avatar should be hidden from accessibility
     expect(screen.queryByLabelText("Alice Johnson")).not.toBeInTheDocument();
-    // But verify it exists in DOM (using querySelector looking for initials)
-    const initials = screen.getByText("A", { selector: "div" });
+    const initials = screen.getByText("A");
     expect(initials).toBeInTheDocument();
     expect(initials.closest('[aria-hidden="true"]')).toBeInTheDocument();
   });
@@ -200,8 +198,7 @@ describe("IssueCard", () => {
     expect(handleClick).toHaveBeenCalledTimes(1);
 
     // Click Assignee (using alt text with hidden: true)
-    // @ts-expect-error - hidden option is supported by testing-library but types might be strict
-    await user.click(screen.getByAltText("Alice Johnson", { hidden: true }));
+    await user.click(screen.getByTestId(TEST_IDS.ISSUE.ASSIGNEE));
     expect(handleClick).toHaveBeenCalledTimes(2);
   });
 

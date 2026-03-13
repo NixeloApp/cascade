@@ -21,6 +21,8 @@ import { GripVertical } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Tooltip } from "@/components/ui/Tooltip";
@@ -37,6 +39,7 @@ import {
 import { createIssueCardData, isIssueCardData } from "@/lib/kanban-dnd";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
+import { Avatar } from "../ui/Avatar";
 
 interface Issue {
   _id: Id<"issues">;
@@ -260,26 +263,26 @@ export const IssueCard = memo(function IssueCard({
 
   const handleCheckboxClick = (e: React.SyntheticEvent) => {
     e.stopPropagation();
-    if (onToggleSelect) {
-      onToggleSelect(issue._id);
-    }
   };
 
+  const handleCheckboxCheckedChange = () => {
+    onToggleSelect?.(issue._id);
+  };
+
+  const issueCardRecipe = isSelected
+    ? "issueCardSelected"
+    : isFocused
+      ? "issueCardFocused"
+      : "issueCard";
+
   return (
-    <article
+    <Card
       ref={cardRef}
       data-testid={TEST_IDS.ISSUE.CARD}
+      recipe={issueCardRecipe}
       className={cn(
-        "group relative w-full rounded-container bg-ui-bg-soft p-1.25 text-left sm:p-3",
-        "border transition-default",
-        // Apply focus ring to container when inner elements (like the overlay button) are focused
-        "focus-within:ring-2 focus-within:ring-brand-ring focus-within:ring-offset-2 focus-within:outline-none",
+        "group relative w-full text-left",
         isDragging && "opacity-50 scale-95",
-        isSelected
-          ? "border-brand-indigo-border/60 bg-brand-indigo-track shadow-soft"
-          : isFocused
-            ? "border-ui-border-focus/50 ring-1 ring-ui-border-focus/20 bg-ui-bg-hover"
-            : "border-ui-border hover:border-ui-border-secondary hover:bg-ui-bg-hover",
         // Drop indicator edges
         closestEdge === "top" &&
           "before:absolute before:left-0 before:right-0 before:-top-1 before:h-0.5 before:bg-brand before:rounded-full",
@@ -288,12 +291,7 @@ export const IssueCard = memo(function IssueCard({
       )}
     >
       {/* Primary Action Overlay Button */}
-      <Button
-        variant="unstyled"
-        onClick={handleClick}
-        className="absolute inset-0 w-full h-full z-0 opacity-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
-        aria-label={getIssueAccessibleLabel(issue)}
-      />
+      <Button variant="overlay" onClick={handleClick} aria-label={getIssueAccessibleLabel(issue)} />
 
       {/* Content Wrapper - pointer-events-none allows clicks to pass through to overlay */}
       <div className="relative z-10 pointer-events-none">
@@ -305,23 +303,22 @@ export const IssueCard = memo(function IssueCard({
               <div
                 ref={dragHandleRef}
                 data-testid={TEST_IDS.ISSUE.DRAG_HANDLE}
-                className="cursor-grab active:cursor-grabbing pointer-events-auto"
+                className="cursor-grab pointer-events-auto"
               >
                 <GripVertical
-                  className="h-3 w-3 shrink-0 -ml-0.5 text-ui-text-tertiary opacity-0 transition-fast group-hover:opacity-40"
+                  className="h-3 w-3 shrink-0 -ml-0.5 text-ui-text-tertiary opacity-40"
                   aria-hidden="true"
                 />
               </div>
             )}
             {/* Checkbox */}
             {selectionMode && (
-              <input
-                type="checkbox"
+              <Checkbox
                 aria-label={`Select issue ${issue.key}`}
                 checked={isSelected}
-                onChange={handleCheckboxClick}
                 onClick={handleCheckboxClick}
-                className="w-4 h-4 text-brand border-ui-border rounded focus:ring-brand-ring cursor-pointer pointer-events-auto"
+                onCheckedChange={handleCheckboxCheckedChange}
+                className="pointer-events-auto"
               />
             )}
             {display.issueType && (
@@ -333,7 +330,7 @@ export const IssueCard = memo(function IssueCard({
                   align="center"
                   justify="center"
                   onClick={handleClick}
-                  className="pointer-events-auto rounded-sm cursor-default"
+                  className="pointer-events-auto cursor-default"
                   aria-hidden="true"
                 >
                   <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" className="cursor-help" />
@@ -354,7 +351,7 @@ export const IssueCard = memo(function IssueCard({
                 align="center"
                 justify="center"
                 onClick={handleClick}
-                className="pointer-events-auto rounded-sm cursor-default"
+                className="pointer-events-auto cursor-default"
                 aria-hidden="true"
               >
                 <Icon
@@ -373,7 +370,7 @@ export const IssueCard = memo(function IssueCard({
           <Typography
             variant="label"
             as="p"
-            className="mb-1 line-clamp-2 pointer-events-auto text-sm leading-snug sm:mb-2"
+            className="mb-1 line-clamp-2 pointer-events-auto leading-snug sm:mb-2"
             data-testid={TEST_IDS.ISSUE.TITLE}
             onClick={handleClick}
           >
@@ -392,7 +389,7 @@ export const IssueCard = memo(function IssueCard({
                   align="center"
                   justify="center"
                   onClick={handleClick}
-                  className="pointer-events-auto rounded-sm cursor-default"
+                  className="pointer-events-auto cursor-default"
                   aria-hidden="true"
                 >
                   <Badge
@@ -418,7 +415,7 @@ export const IssueCard = memo(function IssueCard({
                   align="center"
                   justify="center"
                   onClick={handleClick}
-                  className="pointer-events-auto rounded-sm cursor-default"
+                  className="pointer-events-auto cursor-default"
                   aria-hidden="true"
                 >
                   <Badge variant="neutral" size="sm" className="cursor-help">
@@ -450,23 +447,25 @@ export const IssueCard = memo(function IssueCard({
                     justify="center"
                     gap="xs"
                     onClick={handleClick}
-                    className="pointer-events-auto rounded-sm cursor-default"
+                    className="pointer-events-auto cursor-default"
+                    data-testid={TEST_IDS.ISSUE.ASSIGNEE}
                     aria-hidden="true"
                   >
                     {issue.assignee.image ? (
-                      <img
+                      <Avatar
+                        name={issue.assignee.name}
                         src={issue.assignee.image}
                         alt={issue.assignee.name}
-                        className="w-5 h-5 rounded-full"
+                        size="xs"
+                        variant="neutral"
                       />
                     ) : (
-                      <Flex
-                        align="center"
-                        justify="center"
-                        className="size-5 rounded-full bg-ui-bg-tertiary text-ui-text-secondary"
+                      <Card
+                        recipe="issueAssigneeFallback"
+                        className="inline-flex size-5 items-center justify-center text-xs font-medium"
                       >
                         {issue.assignee.name.charAt(0).toUpperCase()}
-                      </Flex>
+                      </Card>
                     )}
                   </Flex>
                 </Tooltip>
@@ -480,6 +479,6 @@ export const IssueCard = memo(function IssueCard({
           </Flex>
         )}
       </div>
-    </article>
+    </Card>
   );
 }, areIssuePropsEqual);

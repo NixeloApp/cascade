@@ -29,6 +29,8 @@ export const TEST_IDS = {
     KEY: "issue-key",
     /** @see src/components/IssueCard.tsx */
     PRIORITY: "issue-priority",
+    /** @see src/components/IssueCard.tsx */
+    ASSIGNEE: "issue-assignee",
     /** @see src/components/IssueDetailModal.tsx */
     DETAIL_MODAL: "issue-detail-modal",
     /** @see src/components/IssueDetail/IssueDetailContent.tsx */

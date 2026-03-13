@@ -21,6 +21,8 @@ const buttonVariants = cva(
           "bg-linear-to-r from-landing-accent to-landing-accent-teal text-brand-foreground shadow-sm hover:shadow-md hover:brightness-105 focus-visible:ring-brand-ring",
         accentGradient:
           "bg-linear-to-r from-brand to-accent text-brand-foreground shadow-sm hover:from-brand-hover hover:to-accent-hover hover:shadow-md focus-visible:ring-brand-ring",
+        overlay:
+          "absolute inset-0 z-0 h-full w-full cursor-pointer opacity-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring",
         assistantFab:
           "rounded-full bg-linear-to-r from-brand to-accent text-brand-foreground shadow-lg hover:scale-110 hover:shadow-xl focus-visible:ring-brand-ring",
         brandSubtle:

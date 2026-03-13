@@ -22,7 +22,6 @@ const ALLOWED_FILES = [
   // Search/filter components
   "FuzzySearch/AssigneeSearchDropdown.example.tsx",
   // Issue components
-  "IssueCard.tsx",
   "IssueDetail/",
   // Comment/reaction components
   "CommentRenderer.tsx",
@@ -35,7 +34,6 @@ const ALLOWED_FILES = [
   "Plate/",
   "PlateEditor.tsx",
   "IssueDescriptionEditor.tsx",
-  "MentionInput.tsx",
   // Navigation/layout
   "Sidebar/",
   // Modals

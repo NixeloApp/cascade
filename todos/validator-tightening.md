@@ -161,7 +161,10 @@
 
 - Continue shrinking the explicit `AI` debt now that the broad directory escapes are gone.
 - The explicit `AI` raw-Tailwind debt list is now empty.
-- Keep working through smaller helper controls and shared workflow surfaces rather than decorative backdrops, with the next pass focused on `IssueCard.tsx` and `MentionInput.tsx`, which are now among the next higher-impact workflow/editor surfaces still sitting behind explicit validator debt.
+- Removed `IssueDetail/IssueCard.tsx` from the raw-Tailwind and interactive-state debt lists by moving its shell/focus states onto owned `Card` and `Button` variants and replacing the inline selection/avatar styling with owned primitives.
+- Removed `MentionInput.tsx` from the raw-Tailwind and interactive-state debt lists by moving its preview/editor/emoji surfaces onto owned `Card`, `Textarea`, and `Popover` primitives.
+- Added `IssueDetail/IssueCard.tsx` and `MentionInput.tsx` to design-system ownership targeting so future shell drift is blocked directly.
+- Keep working through shared workflow surfaces rather than decorative backdrops, with the next pass focused on `DocumentHeader.tsx` and `IssueDescriptionEditor.tsx`, which are now among the next higher-impact workflow/editor surfaces still sitting behind explicit validator debt.
 
 ## Problem
 
