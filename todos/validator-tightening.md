@@ -80,6 +80,10 @@
 - Removed the dead migration framing from `check-recipe-drift.js` now that the recipe-drift allowlist is at zero, so the validator reads and reports as direct ownership enforcement instead of temporary migration logic.
 - Expanded `check-recipe-drift.js` to block positioned command/menu shell chrome on feature-level `Command`, `PopoverContent`, and `DropdownMenuContent` usage when border/background/shadow/rounded shell styling is still defined inline instead of behind owned overlay primitives.
 - Added a `suggestionMenu` recipe to `ui/Command.tsx` and migrated `MentionInput.tsx` autocomplete to that owned recipe so command-surface chrome no longer lives inline in feature code.
+- Added owned `Card` recipes for floating product shells and migrated the highest-drift remaining widget/toolbar surfaces onto them:
+  - `Onboarding/OnboardingChecklist.tsx` now uses `Card` `floatingWidget` and `successCallout` recipes instead of defining its fixed widget shell and completion banner inline.
+  - `Kanban/BoardToolbar.tsx` now uses a `Card` `floatingToolbar` recipe instead of defining its mobile floating toolbar shell inline.
+- Added `Onboarding/OnboardingChecklist.tsx` and `Kanban/BoardToolbar.tsx` to design-system ownership targeting so future floating-shell drift in those surfaces is blocked directly.
 - Added `TimeTracking/TimeEntryModal.tsx` and `TimeTracking/UserRatesManagement.tsx` to design-system ownership targeting so future time-entry shell drift is validated directly.
 - Added `TimeTracking/ManualTimeEntryModal.tsx` to design-system ownership targeting so future manual-entry shell drift is validated directly.
 - Added `TimeTracking/TimeEntriesList.tsx` to design-system ownership targeting so future list-row shell drift is validated directly.
@@ -92,8 +96,8 @@
 
 ### Next batch
 
-- Extend the same ownership tightening from command/menu shells to remaining floating product shells that still define their chrome inline, especially fixed or absolute panels such as onboarding widgets and toolbar overlays.
-- Prefer moving those shells behind owned `Card`, `Popover`, `Sheet`, or other overlay recipes instead of leaving one-off floating-surface contracts in feature code.
+- Keep burning down the remaining floating-shell drift, with `Plate/MentionInputElement.tsx` next since its autocomplete dropdown still carries extra positioned shell styling on top of an owned `Card`.
+- After that, inspect the remaining fixed/absolute surfaces surfaced by the shell scan and separate true overlay chrome from plain backdrops so only real floating-surface contracts stay behind owned recipes.
 
 ## Problem
 

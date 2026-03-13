@@ -12,6 +12,7 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { Check, ChevronDown, ChevronUp, Rocket, X } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Progress } from "../ui/Progress";
@@ -85,7 +86,7 @@ export function OnboardingChecklist() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 w-80 bg-ui-bg rounded-container shadow-elevated border border-ui-border z-40 overflow-hidden">
+    <Card recipe="floatingWidget" padding="none" className="fixed bottom-6 right-6 z-40 w-80">
       {/* Header - Mintlify-inspired with subtle gradient */}
       <Flex
         justify="between"
@@ -196,7 +197,7 @@ export function OnboardingChecklist() {
 
           {/* Completion Message - Mintlify-inspired success state */}
           {allComplete && (
-            <div className="mt-2 p-4 bg-status-success-bg rounded-lg border border-status-success/20">
+            <Card recipe="successCallout" padding="md" className="mt-2">
               <Flex gap="md" align="start">
                 <Flex
                   align="center"
@@ -214,10 +215,10 @@ export function OnboardingChecklist() {
                   </Typography>
                 </div>
               </Flex>
-            </div>
+            </Card>
           )}
         </Flex>
       )}
-    </div>
+    </Card>
   );
 }

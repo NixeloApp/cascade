@@ -102,12 +102,16 @@ const cardRecipeVariants = cva("", {
         "rounded-2xl border-accent-border bg-linear-to-b from-accent-subtle via-ui-bg-elevated/96 to-ui-bg-soft/82 shadow-card",
       metricTileWarning:
         "rounded-2xl border-status-warning/30 bg-linear-to-b from-status-warning-bg via-ui-bg-elevated/96 to-ui-bg-soft/82 shadow-card",
+      successCallout: "rounded-lg border-status-success/20 bg-status-success-bg shadow-none",
 
       // Header control surfaces
       controlRail:
         "rounded-full border-ui-border-secondary/70 bg-linear-to-r from-ui-bg-elevated/96 via-ui-bg-elevated/94 to-ui-bg-soft/90 shadow-card backdrop-blur-xl",
       controlStrip:
         "rounded-full border-ui-border-secondary/70 bg-ui-bg-elevated/94 shadow-soft backdrop-blur-sm",
+      floatingWidget: "overflow-hidden rounded-container border-ui-border bg-ui-bg shadow-elevated",
+      floatingToolbar:
+        "rounded-full border-ui-border/75 bg-ui-bg-elevated/96 shadow-soft backdrop-blur-sm sm:rounded-2xl sm:border-ui-border/70 sm:bg-ui-bg-elevated sm:backdrop-blur-0",
       timerStripActive:
         "rounded-full border-brand-indigo-border/70 bg-linear-to-r from-brand-indigo-track via-brand-indigo-track to-brand-indigo-bg/70 shadow-soft backdrop-blur-sm",
       bulkActionBar:
