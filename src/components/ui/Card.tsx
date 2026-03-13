@@ -188,6 +188,8 @@ const cardRecipeVariants = cva("", {
         "rounded-container border-ui-border-secondary/75 bg-linear-to-b from-ui-bg-soft/96 via-ui-bg-soft/92 to-ui-bg-elevated/94 shadow-none hover:border-ui-border-secondary hover:bg-ui-bg-hover",
       pendingAttachmentRow: "rounded-xl border-ui-border bg-ui-bg-soft shadow-none",
       attachmentRow: "rounded-xl border-ui-border bg-ui-bg-soft shadow-none",
+      issueDetailSheetHeader:
+        "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",
       labelGroupHeader:
         "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg-secondary shadow-none hover:bg-ui-bg-tertiary",
       labelGroupRow:
@@ -206,6 +208,12 @@ const cardRecipeVariants = cva("", {
         "rounded-container border-brand-indigo-border/60 bg-brand-indigo-track p-1.25 shadow-soft focus-within:outline-none focus-within:ring-2 focus-within:ring-brand-ring focus-within:ring-offset-2 sm:p-3",
       issueCardFocused:
         "rounded-container border-ui-border-focus/50 bg-ui-bg-hover p-1.25 shadow-none ring-1 ring-ui-border-focus/20 focus-within:outline-none focus-within:ring-2 focus-within:ring-brand-ring focus-within:ring-offset-2 sm:p-3",
+      versionHistoryComparePanel: "rounded-2xl border-brand-ring/40 bg-brand-subtle/20 shadow-none",
+      versionHistoryEntry:
+        "rounded-container border-ui-border-secondary/70 bg-linear-to-b from-ui-bg-elevated/98 via-ui-bg-elevated/96 to-ui-bg-soft/82 shadow-soft",
+      versionHistoryEntrySelected:
+        "rounded-container border-brand-ring bg-brand-subtle shadow-soft",
+      versionHistoryDiffPane: "rounded-xl border-ui-border-secondary/70 bg-ui-bg shadow-none",
       mentionMenu:
         "overflow-hidden rounded-container border-ui-border-secondary bg-linear-to-br from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/70 shadow-lg",
       floatingWidget: "overflow-hidden rounded-container border-ui-border bg-ui-bg shadow-elevated",

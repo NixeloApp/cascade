@@ -31,7 +31,6 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   "/ImportExportModal.tsx",
   "/InvoiceEditor.tsx",
   "/InvoicePdfTemplate.tsx",
-  "/IssueDetailSheet.tsx",
   "/IssuesCalendarView.tsx",
   "/KanbanBoard.tsx",
   "/KeyboardShortcutsHelp.tsx",
@@ -44,7 +43,6 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   "/SprintProgressBar.tsx",
   "/SprintWorkload.tsx",
   "/UserProfile.tsx",
-  "/VersionHistory.tsx",
 ];
 
 export const RAW_TAILWIND_ALLOWED_EXTENSIONS = [".stories.tsx", ".test.tsx", ".example.tsx"];
@@ -109,6 +107,7 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/IssueDescriptionEditor.tsx",
   "/IssueComments.tsx",
   "/IssueDependencies.tsx",
+  "/IssueDetailSheet.tsx",
   "/IssueDetail/IssueCard.tsx",
   "/LabelsManager.tsx",
   "/MentionInput.tsx",
@@ -139,6 +138,7 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/TimerWidget.tsx",
   "/UserActivityFeed.tsx",
   "/UserMenu.tsx",
+  "/VersionHistory.tsx",
 ];
 
 export const DESIGN_SYSTEM_ESCAPE_HATCHES = [

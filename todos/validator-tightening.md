@@ -170,7 +170,10 @@
 - Removed `Documents/DocumentTemplatesManager.tsx` from the raw-Tailwind and interactive-state debt lists by moving template-card shells onto owned `Card` recipes, replacing inline edit/delete controls with owned `IconButton`, and replacing the raw public checkbox row with the shared `Checkbox` primitive.
 - Removed `TimeTracker.tsx` from the raw-Tailwind debt list by moving its rails onto owned `Card` recipes and replacing the custom progress bar chrome with the shared `Progress` primitive.
 - Added `Documents/DocumentTemplatesManager.tsx` and `TimeTracker.tsx` to design-system ownership targeting so future shell drift is blocked directly.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `IssueDetailSheet.tsx` and `VersionHistory.tsx`, which are now among the next higher-impact surfaces still sitting behind explicit validator debt.
+- Removed `IssueDetailSheet.tsx` from the raw-Tailwind debt list by moving its loading, header, and body shells onto owned `Card` recipes and `Sheet layout="panel"` composition instead of local padding and border classes.
+- Removed `VersionHistory.tsx` from the raw-Tailwind and interactive-state debt lists by moving the compare panel, selected version rows, and diff panes onto owned `Card` recipes and replacing the restore-button chrome with owned `Button` variants.
+- Added `IssueDetailSheet.tsx` and `VersionHistory.tsx` to design-system ownership targeting so future detail/history shell drift is blocked directly.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `CommandPalette.tsx` and `KeyboardShortcutsHelp.tsx`, which are now among the next higher-impact surfaces still sitting behind explicit validator debt.
 
 ## Problem
 

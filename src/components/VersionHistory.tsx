@@ -14,7 +14,6 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { Clock, RotateCcw } from "@/lib/icons";
 import { DAY, HOUR, MINUTE } from "@/lib/time";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
@@ -161,7 +160,6 @@ export function VersionHistory({
       title="Version History"
       description="View and restore previous versions of this document"
       size="lg"
-      className="flex flex-col bg-ui-bg-soft border-ui-border"
       footer={
         <Typography variant="meta">
           Tip: Versions are saved automatically every minute when you edit. Up to 50 recent versions
@@ -191,37 +189,51 @@ export function VersionHistory({
           <Card padding="xs" variant="ghost" radius="none">
             <Stack gap="sm">
               {isComparing && (
-                <Card padding="md" className="border border-brand-ring/40 bg-brand-subtle/20">
-                  <Flex align="center" justify="between" className="mb-3">
-                    <Typography variant="label">Diff View</Typography>
-                    <Button variant="ghost" size="sm" onClick={() => setCompareVersionIds([])}>
-                      Clear Compare
-                    </Button>
-                  </Flex>
-                  {leftVersion === undefined || rightVersion === undefined ? (
-                    <Typography variant="small" color="secondary">
-                      Loading versions for comparison...
-                    </Typography>
-                  ) : (
-                    <Flex direction="column" gap="md" className="lg:flex-row">
-                      <FlexItem flex="1">
-                        <Typography variant="caption" className="mb-2 block">
-                          Older: v{leftVersion?.version} {leftVersion?.title}
-                        </Typography>
-                        <pre className="max-h-64 overflow-auto rounded bg-ui-bg p-3 text-xs">
-                          {diffLeft}
-                        </pre>
-                      </FlexItem>
-                      <FlexItem flex="1">
-                        <Typography variant="caption" className="mb-2 block">
-                          Newer: v{rightVersion?.version} {rightVersion?.title}
-                        </Typography>
-                        <pre className="max-h-64 overflow-auto rounded bg-ui-bg p-3 text-xs">
-                          {diffRight}
-                        </pre>
-                      </FlexItem>
+                <Card recipe="versionHistoryComparePanel" padding="md">
+                  <Stack gap="md">
+                    <Flex align="center" justify="between">
+                      <Typography variant="label">Diff View</Typography>
+                      <Button variant="ghost" size="sm" onClick={() => setCompareVersionIds([])}>
+                        Clear Compare
+                      </Button>
                     </Flex>
-                  )}
+                    {leftVersion === undefined || rightVersion === undefined ? (
+                      <Typography variant="small" color="secondary">
+                        Loading versions for comparison...
+                      </Typography>
+                    ) : (
+                      <Flex direction="column" directionSm="row" gap="md">
+                        <FlexItem flex="1">
+                          <Typography as="p" variant="caption">
+                            Older: v{leftVersion?.version} {leftVersion?.title}
+                          </Typography>
+                          <Card
+                            recipe="versionHistoryDiffPane"
+                            padding="sm"
+                            className="max-h-64 overflow-auto"
+                          >
+                            <Typography as="pre" variant="caption">
+                              {diffLeft}
+                            </Typography>
+                          </Card>
+                        </FlexItem>
+                        <FlexItem flex="1">
+                          <Typography as="p" variant="caption">
+                            Newer: v{rightVersion?.version} {rightVersion?.title}
+                          </Typography>
+                          <Card
+                            recipe="versionHistoryDiffPane"
+                            padding="sm"
+                            className="max-h-64 overflow-auto"
+                          >
+                            <Typography as="pre" variant="caption">
+                              {diffRight}
+                            </Typography>
+                          </Card>
+                        </FlexItem>
+                      </Flex>
+                    )}
+                  </Stack>
                 </Card>
               )}
 
@@ -232,13 +244,13 @@ export function VersionHistory({
                 return (
                   <Card
                     key={version._id}
+                    recipe={isSelected ? "versionHistoryEntrySelected" : "versionHistoryEntry"}
                     padding="md"
                     hoverable={!isSelected}
-                    className={cn(isSelected && "border-brand-ring bg-brand-subtle")}
                   >
                     <Flex align="start" justify="between">
                       <FlexItem flex="1">
-                        <Flex align="center" gap="sm" className="mb-1.5">
+                        <Flex align="center" gap="sm">
                           {isLatest && (
                             <Badge variant="success" size="sm">
                               Current
@@ -253,14 +265,12 @@ export function VersionHistory({
                           <MetadataItem>by {version.createdByName}</MetadataItem>
                         </Metadata>
                         {version.changeDescription && (
-                          <Typography variant="caption" className="mt-2">
-                            {version.changeDescription}
-                          </Typography>
+                          <Typography variant="caption">{version.changeDescription}</Typography>
                         )}
                       </FlexItem>
 
                       {!isLatest && (
-                        <Flex align="center" gap="sm" className="ml-4">
+                        <Flex align="center" gap="sm">
                           <Button
                             onClick={() => handleToggleCompare(version._id)}
                             size="sm"
@@ -271,10 +281,9 @@ export function VersionHistory({
                           <Button
                             onClick={() => handleRestore(version._id)}
                             size="sm"
-                            variant="outline"
-                            className="border-ui-border text-ui-text-secondary hover:text-ui-text hover:border-ui-border-secondary transition-default"
+                            variant="secondary"
+                            leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
                           >
-                            <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
                             Restore
                           </Button>
                         </Flex>
