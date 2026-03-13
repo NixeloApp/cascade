@@ -48,7 +48,6 @@ const ALLOWED_FILES = [
   "Sidebar/",
   "NotificationCenter.tsx",
   "NotificationItem.tsx",
-  "UserMenu.tsx",
   // Modals
   "CreateIssueModal.tsx",
   "CreateProjectFromTemplate.tsx",

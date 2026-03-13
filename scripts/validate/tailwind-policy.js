@@ -66,7 +66,6 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   "/SprintWorkload.tsx",
   "/TimeTracker.tsx",
   "/UserActivityFeed.tsx",
-  "/UserMenu.tsx",
   "/UserProfile.tsx",
   "/VersionHistory.tsx",
 ];

@@ -47,7 +47,7 @@ export function UserMenu() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end">
-        <DropdownMenuLabel className="font-normal">
+        <DropdownMenuLabel weight="normal">
           <Stack gap="xs">
             <Typography variant="label">{user.name || "User"}</Typography>
             <Typography variant="meta" color="secondary" className="truncate">
@@ -59,11 +59,7 @@ export function UserMenu() {
         {orgSlug && (
           <DropdownMenuGroup>
             <DropdownMenuItem asChild>
-              <Link
-                to={ROUTES.settings.profile.path}
-                params={{ orgSlug }}
-                className="cursor-pointer w-full"
-              >
+              <Link to={ROUTES.settings.profile.path} params={{ orgSlug }} className="w-full">
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </Link>
@@ -71,10 +67,7 @@ export function UserMenu() {
           </DropdownMenuGroup>
         )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => void signOut()}
-          className="cursor-pointer text-status-error focus:text-status-error"
-        >
+        <DropdownMenuItem onClick={() => void signOut()} variant="danger">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Sign out</span>
         </DropdownMenuItem>
