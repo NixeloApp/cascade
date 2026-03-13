@@ -21,7 +21,6 @@ export function run() {
     "src/components/ui/ColorPicker.test.tsx",
     "src/components/Plate/ColorPickerButton.tsx", // Text color picker for Plate editor
     "src/index.css",
-    "src/components/Landing/Icons.tsx",
     "convex/http/",
     "convex/pumble.ts",
     "convex/invites.ts",
@@ -30,10 +29,7 @@ export function run() {
     "convex/onboarding.ts",
     "convex/schema.ts",
     "convex/lib/issueHelpers.ts",
-    "src/components/LabelsManager.tsx",
     "src/lib/constants.ts", // Runtime color constants (hex strings for database storage)
-    "src/components/Settings/DevToolsTab.tsx",
-    "src/components/AI/config.ts",
     "src/lib/yjs/", // Y.js collaboration cursor colors (dynamic per-user)
     "*.test.ts",
     "*.test.tsx",

@@ -15,6 +15,7 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import { useEntityForm } from "@/hooks/useEntityForm";
 import { useModal } from "@/hooks/useModal";
+import { COLORS } from "@/lib/constants";
 import { Tag } from "@/lib/icons";
 import { showSuccess } from "@/lib/toast";
 import { Badge } from "./ui/Badge";
@@ -47,13 +48,10 @@ interface GroupFormData {
   [key: string]: unknown;
 }
 
-// Default to brand-ring equivalent color
-const DEFAULT_LABEL_COLOR = "#6366F1"; // matches --color-brand-ring
-
 const DEFAULT_LABEL_FORM: LabelFormData = {
   name: "",
   description: "",
-  color: DEFAULT_LABEL_COLOR,
+  color: COLORS.DEFAULT_LABEL,
   groupId: null,
 };
 
