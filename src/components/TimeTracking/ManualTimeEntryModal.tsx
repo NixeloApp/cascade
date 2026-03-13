@@ -10,7 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useForm, useStore } from "@tanstack/react-form";
 import type { FunctionReturnType } from "convex/server";
-import { Clock, Hourglass } from "lucide-react";
+import { Clock, Hourglass, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -18,13 +18,16 @@ import { ACTIVITY_TYPES } from "@/lib/constants";
 import { FormTextarea } from "@/lib/form";
 import { formatDateForInput, formatDurationHuman, parseDuration } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
+import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Dialog } from "../ui/Dialog";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
+import { Checkbox, Input } from "../ui/form";
 import { Grid } from "../ui/Grid";
+import { IconButton } from "../ui/IconButton";
 import { Label } from "../ui/Label";
+import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
@@ -78,33 +81,13 @@ function addTagToList(tags: string[], newTag: string): string[] {
   return tags;
 }
 
-// =============================================================================
-// Sub-components
-// =============================================================================
-
-function ModeToggleButton({
-  mode,
-  currentMode,
-  icon: Icon,
-  label,
-  onClick,
-}: {
-  mode: EntryMode;
-  currentMode: EntryMode;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  onClick: () => void;
-}) {
-  const isActive = currentMode === mode;
+function DurationSummary({ durationSeconds }: { durationSeconds: number }) {
   return (
-    <Button
-      variant={isActive ? "secondary" : "ghost"}
-      onClick={onClick}
-      className={cn("flex-1 gap-2", isActive && "shadow-sm")}
-    >
-      <Icon className="w-4 h-4" />
-      {label}
-    </Button>
+    <Card recipe="timeSummary" padding="sm">
+      <Typography variant="mono" className="text-brand-active">
+        Duration: {formatDurationHuman(durationSeconds)}
+      </Typography>
+    </Card>
   );
 }
 
@@ -249,38 +232,46 @@ export function ManualTimeEntryModal({
         }}
       >
         {/* Mode Toggle */}
-        <Flex gap="xs" className="p-1 bg-ui-bg-secondary rounded-lg">
-          <ModeToggleButton
-            mode="duration"
-            currentMode={entryMode}
-            icon={Hourglass}
-            label="Duration"
-            onClick={() => setEntryMode("duration")}
-          />
-          <ModeToggleButton
-            mode="timeRange"
-            currentMode={entryMode}
-            icon={Clock}
-            label="Start/End Time"
-            onClick={() => setEntryMode("timeRange")}
-          />
-        </Flex>
+        <SegmentedControl
+          value={entryMode}
+          variant="default"
+          onValueChange={(value: string) => {
+            if (value === "duration" || value === "timeRange") {
+              setEntryMode(value);
+            }
+          }}
+          className="flex w-full flex-col sm:flex-row"
+        >
+          <SegmentedControlItem
+            value="duration"
+            variant="default"
+            className="w-full flex-1 justify-center gap-2"
+          >
+            <Hourglass className="w-4 h-4" />
+            Duration
+          </SegmentedControlItem>
+          <SegmentedControlItem
+            value="timeRange"
+            variant="default"
+            className="w-full flex-1 justify-center gap-2"
+          >
+            <Clock className="w-4 h-4" />
+            Start/End Time
+          </SegmentedControlItem>
+        </SegmentedControl>
 
         {/* Date */}
         <form.Field name="date">
           {(field) => (
-            <Stack gap="xs">
-              <Label htmlFor="time-entry-date">Date *</Label>
-              <input
-                id="time-entry-date"
-                type="date"
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
-                max={formatDateForInput(Date.now())}
-                className="w-full px-3 py-2 border border-ui-border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring"
-                required
-              />
-            </Stack>
+            <Input
+              id="time-entry-date"
+              type="date"
+              label="Date *"
+              value={field.state.value}
+              onChange={(e) => field.handleChange(e.target.value)}
+              max={formatDateForInput(Date.now())}
+              required
+            />
           )}
         </form.Field>
 
@@ -289,27 +280,20 @@ export function ManualTimeEntryModal({
           <form.Field name="durationInput">
             {(field) => (
               <Stack gap="sm">
-                <Stack gap="xs">
-                  <Label htmlFor="time-entry-duration">Duration *</Label>
-                  <input
-                    id="time-entry-duration"
-                    type="text"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="e.g., 1:30, 1.5, 1h 30m, 90m"
-                    className={cn(
-                      "w-full px-3 py-2 border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring",
-                      isDurationInputValid ? "border-ui-border" : "border-status-error",
-                    )}
-                  />
-                  {!isDurationInputValid ? (
-                    <Typography variant="caption" className="text-status-error">
-                      Invalid format. Try: 1:30, 1.5, 1h 30m, or 90m
-                    </Typography>
-                  ) : (
-                    <Typography variant="caption">Accepts: 1:30, 1.5, 1h 30m, 90m</Typography>
-                  )}
-                </Stack>
+                <Input
+                  id="time-entry-duration"
+                  type="text"
+                  label="Duration *"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder="e.g., 1:30, 1.5, 1h 30m, 90m"
+                  helperText="Accepts: 1:30, 1.5, 1h 30m, 90m"
+                  error={
+                    isDurationInputValid
+                      ? undefined
+                      : "Invalid format. Try: 1:30, 1.5, 1h 30m, or 90m"
+                  }
+                />
 
                 {/* Quick Increment Buttons */}
                 <Flex gap="sm">
@@ -353,13 +337,7 @@ export function ManualTimeEntryModal({
                 </Flex>
 
                 {/* Duration Display */}
-                {durationSeconds > 0 && (
-                  <Card padding="sm" className="bg-brand-subtle border-brand-border">
-                    <Typography variant="mono" className="text-brand-active">
-                      Duration: {formatDurationHuman(durationSeconds)}
-                    </Typography>
-                  </Card>
-                )}
+                {durationSeconds > 0 && <DurationSummary durationSeconds={durationSeconds} />}
               </Stack>
             )}
           </form.Field>
@@ -371,44 +349,32 @@ export function ManualTimeEntryModal({
             <Grid cols={2} gap="lg">
               <form.Field name="startTime">
                 {(field) => (
-                  <Stack gap="xs">
-                    <Label htmlFor="time-entry-start">Start Time *</Label>
-                    <input
-                      id="time-entry-start"
-                      type="time"
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      className="w-full px-3 py-2 border border-ui-border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring"
-                      required
-                    />
-                  </Stack>
+                  <Input
+                    id="time-entry-start"
+                    type="time"
+                    label="Start Time *"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    required
+                  />
                 )}
               </form.Field>
               <form.Field name="endTime">
                 {(field) => (
-                  <Stack gap="xs">
-                    <Label htmlFor="time-entry-end">End Time *</Label>
-                    <input
-                      id="time-entry-end"
-                      type="time"
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      className="w-full px-3 py-2 border border-ui-border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring"
-                      required
-                    />
-                  </Stack>
+                  <Input
+                    id="time-entry-end"
+                    type="time"
+                    label="End Time *"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    required
+                  />
                 )}
               </form.Field>
             </Grid>
 
             {/* Duration Display */}
-            {timeRangeDuration > 0 && (
-              <Card padding="sm" className="bg-brand-subtle border-brand-border">
-                <Typography variant="mono" className="text-brand-active">
-                  Duration: {formatDurationHuman(timeRangeDuration)}
-                </Typography>
-              </Card>
-            )}
+            {timeRangeDuration > 0 && <DurationSummary durationSeconds={timeRangeDuration} />}
           </Stack>
         )}
 
@@ -502,20 +468,21 @@ export function ManualTimeEntryModal({
         <Stack gap="sm">
           <Label htmlFor="time-entry-tags">Tags</Label>
           <Flex gap="sm">
-            <input
-              id="time-entry-tags"
-              type="text"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleAddTag();
-                }
-              }}
-              placeholder="Add tag..."
-              className="flex-1 px-3 py-2 border border-ui-border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring"
-            />
+            <FlexItem flex="1">
+              <Input
+                id="time-entry-tags"
+                type="text"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddTag();
+                  }
+                }}
+                placeholder="Add tag..."
+              />
+            </FlexItem>
             <Button onClick={handleAddTag} variant="secondary" size="sm" type="button">
               Add
             </Button>
@@ -523,26 +490,20 @@ export function ManualTimeEntryModal({
           {tags.length > 0 && (
             <Flex gap="sm" wrap>
               {tags.map((tag) => (
-                <Flex
-                  key={tag}
-                  as="span"
-                  inline
-                  align="center"
-                  gap="xs"
-                  className="px-2 py-1 bg-brand-subtle text-brand-hover text-xs rounded"
-                >
-                  {tag}
-                  <Button
-                    onClick={() => setTags(tags.filter((t) => t !== tag))}
-                    variant="ghost"
-                    size="sm"
-                    type="button"
-                    className="p-0 min-w-0 h-auto hover:text-brand-active"
-                    aria-label={`Remove tag ${tag}`}
-                  >
-                    ×
-                  </Button>
-                </Flex>
+                <Badge key={tag} variant="brand" shape="pill">
+                  <Flex as="span" inline align="center" gap="xs">
+                    <span>{tag}</span>
+                    <IconButton
+                      variant="brand"
+                      size="xs"
+                      onClick={() => setTags(tags.filter((t) => t !== tag))}
+                      type="button"
+                      aria-label={`Remove tag ${tag}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </IconButton>
+                  </Flex>
+                </Badge>
               ))}
             </Flex>
           )}
@@ -551,45 +512,33 @@ export function ManualTimeEntryModal({
         {/* Billable */}
         <form.Field name="billable">
           {(field) => (
-            <Stack gap="xs">
-              <label className="cursor-pointer">
-                <Flex align="center" gap="sm">
-                  <input
-                    type="checkbox"
-                    checked={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.checked)}
-                    className="w-4 h-4 text-brand rounded focus-visible:ring-2 focus-visible:ring-brand-ring"
-                  />
-                  <Typography variant="label">Billable time</Typography>
-                </Flex>
-              </label>
-              <Typography variant="caption" className="ml-6">
-                Mark this time as billable to clients
-              </Typography>
-            </Stack>
+            <Checkbox
+              checked={field.state.value}
+              onChange={(e) => field.handleChange(e.target.checked)}
+              label="Billable time"
+              helperText="Mark this time as billable to clients"
+            />
           )}
         </form.Field>
 
         {/* Footer with form state - kept inside children */}
-        <Flex justify="end" gap="sm" className="pt-4 border-t border-ui-border">
-          <form.Subscribe selector={(state) => state.isSubmitting}>
-            {(isSubmitting) => (
-              <>
-                <Button onClick={() => onOpenChange(false)} variant="secondary" type="button">
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={effectiveDuration <= 0}
-                  isLoading={isSubmitting}
-                >
-                  Create Entry
-                </Button>
-              </>
-            )}
-          </form.Subscribe>
-        </Flex>
+        <form.Subscribe selector={(state) => state.isSubmitting}>
+          {(isSubmitting) => (
+            <Flex justify="end" gap="sm">
+              <Button onClick={() => onOpenChange(false)} variant="secondary" type="button">
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={effectiveDuration <= 0}
+                isLoading={isSubmitting}
+              >
+                Create Entry
+              </Button>
+            </Flex>
+          )}
+        </form.Subscribe>
       </form>
     </Dialog>
   );
