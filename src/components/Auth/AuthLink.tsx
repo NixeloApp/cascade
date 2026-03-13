@@ -3,12 +3,6 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 
-const linkStyles =
-  "text-sm text-brand-ring hover:text-brand-muted hover:underline font-medium cursor-pointer transition-colors";
-
-const mutedLinkStyles =
-  "text-sm text-ui-text-tertiary hover:text-ui-text-secondary hover:underline cursor-pointer transition-colors";
-
 interface AuthLinkProps {
   to: string;
   children: ReactNode;
@@ -21,9 +15,9 @@ interface AuthLinkProps {
  */
 export function AuthLink({ to, children, className = "" }: AuthLinkProps) {
   return (
-    <Link to={to} className={cn(linkStyles, className)}>
-      {children}
-    </Link>
+    <Button asChild variant="authLink" size="none" className={cn("cursor-pointer", className)}>
+      <Link to={to}>{children}</Link>
+    </Button>
   );
 }
 
@@ -46,14 +40,13 @@ export function AuthLinkButton({
   disabled = false,
   variant = "default",
 }: AuthLinkButtonProps) {
-  const baseStyles = variant === "muted" ? mutedLinkStyles : linkStyles;
-
   return (
     <Button
-      variant="unstyled"
+      variant={variant === "muted" ? "authLinkMuted" : "authLink"}
+      size="none"
       onClick={onClick}
       disabled={disabled}
-      className={cn(baseStyles, className)}
+      className={cn("cursor-pointer", className)}
     >
       {children}
     </Button>

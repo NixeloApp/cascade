@@ -19,6 +19,10 @@ const buttonVariants = cva(
       variant: {
         primary:
           "bg-linear-to-r from-landing-accent to-landing-accent-teal text-brand-foreground shadow-sm hover:shadow-md hover:brightness-105 focus-visible:ring-brand-ring",
+        authLink:
+          "text-sm font-medium text-brand-ring hover:text-brand-muted hover:underline active:scale-100 focus-visible:ring-brand-ring",
+        authLinkMuted:
+          "text-sm text-ui-text-tertiary hover:text-ui-text-secondary hover:underline active:scale-100 focus-visible:ring-brand-ring",
         accentGradient:
           "bg-linear-to-r from-brand to-accent text-brand-foreground shadow-sm hover:from-brand-hover hover:to-accent-hover hover:shadow-md focus-visible:ring-brand-ring",
         overlay:

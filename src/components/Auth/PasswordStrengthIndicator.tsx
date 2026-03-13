@@ -7,7 +7,9 @@
  */
 
 import { useEffect, useState } from "react";
+import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
 import { Typography } from "@/components/ui/Typography";
 import { cn } from "@/lib/utils";
 
@@ -26,20 +28,20 @@ interface ZxcvbnResult {
 
 const STRENGTH_LABELS = ["Very weak", "Weak", "Fair", "Good", "Strong"] as const;
 
-const STRENGTH_COLORS = [
-  "bg-status-error", // 0 - Very weak
-  "bg-status-error", // 1 - Weak
-  "bg-status-warning", // 2 - Fair
-  "bg-status-success", // 3 - Good
-  "bg-status-success", // 4 - Strong
-] as const;
-
 const STRENGTH_TEXT_COLORS = [
   "text-status-error",
   "text-status-error",
   "text-status-warning",
   "text-status-success",
   "text-status-success",
+] as const;
+
+const STRENGTH_SEGMENT_RECIPES = [
+  "authStrengthSegmentError",
+  "authStrengthSegmentError",
+  "authStrengthSegmentWarning",
+  "authStrengthSegmentSuccess",
+  "authStrengthSegmentSuccess",
 ] as const;
 
 /**
@@ -74,25 +76,17 @@ export function PasswordStrengthIndicator({ password, className }: PasswordStren
 
   const { score } = result;
   const label = STRENGTH_LABELS[score];
-  const barColor = STRENGTH_COLORS[score];
   const textColor = STRENGTH_TEXT_COLORS[score];
+  const segmentRecipe = STRENGTH_SEGMENT_RECIPES[score];
 
   return (
     <Flex direction="column" gap="xs" className={className}>
-      {/* Strength bar */}
-      <Flex gap="xs" className="w-full">
+      <Grid cols={4} gap="xs" className="w-full">
         {[0, 1, 2, 3].map((segment) => (
-          <div
-            key={segment}
-            className={cn(
-              "h-1 flex-1 rounded-full transition-colors",
-              segment <= score ? barColor : "bg-ui-border",
-            )}
-          />
+          <Card key={segment} recipe={segment <= score ? segmentRecipe : "authStrengthSegment"} />
         ))}
-      </Flex>
+      </Grid>
 
-      {/* Label and feedback */}
       <Flex justify="between" align="center">
         <Typography variant="caption" className={cn(textColor)}>
           {label}

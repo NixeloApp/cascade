@@ -191,6 +191,26 @@ const cardRecipeVariants = cva("", {
         "rounded-full border-transparent bg-status-success text-brand-foreground shadow-none",
       onboardingChecklistSuccessIcon:
         "rounded-full border-transparent bg-status-success/20 text-status-success shadow-none",
+      authShowcasePanel:
+        "rounded-3xl border-ui-border-secondary/60 bg-linear-to-b from-ui-bg-elevated/74 via-ui-bg-elevated/58 to-ui-bg-soft/56 shadow-soft backdrop-blur-sm",
+      authFeatureTile: "rounded-2xl border-ui-border-secondary/55 bg-ui-bg-elevated/72 shadow-soft",
+      authMobileBrandChip:
+        "rounded-full border-ui-border/70 bg-linear-to-r from-ui-bg-elevated/96 via-ui-bg-elevated/94 to-ui-bg-soft/88 shadow-soft",
+      authFormShell:
+        "relative rounded-3xl border-ui-border-secondary/75 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/76 shadow-card",
+      authStepIndicator:
+        "h-1.5 w-4 rounded-full border-transparent bg-ui-border shadow-none transition-all duration-medium",
+      authStepIndicatorActive:
+        "h-1.5 w-8 rounded-full border-transparent bg-brand shadow-none transition-all duration-medium",
+      authVerificationIcon: "rounded-2xl border-transparent bg-brand-subtle text-brand shadow-none",
+      authStrengthSegment:
+        "h-1 rounded-full border-transparent bg-ui-border shadow-none transition-colors",
+      authStrengthSegmentError:
+        "h-1 rounded-full border-transparent bg-status-error shadow-none transition-colors",
+      authStrengthSegmentWarning:
+        "h-1 rounded-full border-transparent bg-status-warning shadow-none transition-colors",
+      authStrengthSegmentSuccess:
+        "h-1 rounded-full border-transparent bg-status-success shadow-none transition-colors",
 
       // Header control surfaces
       controlRail:

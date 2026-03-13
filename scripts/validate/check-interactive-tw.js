@@ -35,8 +35,6 @@ const ALLOWED_FILES = [
   "Calendar/EventDetailsModal.tsx",
   // Landing pages
   "Landing/",
-  // Auth
-  "Auth/",
   // Activity/inbox
   // Error handling
   "ErrorBoundary.tsx",

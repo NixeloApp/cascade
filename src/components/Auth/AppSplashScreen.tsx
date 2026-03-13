@@ -44,7 +44,7 @@ export function AppSplashScreen({ message }: { message?: string }) {
 
           {/* Optional Message */}
           {message && (
-            <Typography className="text-ui-text-tertiary font-medium tracking-wide">
+            <Typography variant="small" color="tertiary">
               {message}
             </Typography>
           )}

@@ -12,6 +12,7 @@ import { usePublicQuery } from "@/hooks/useConvexHelpers";
 
 import { TEST_IDS } from "@/lib/test-ids";
 import { Button } from "../ui/Button";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface GoogleAuthButtonProps {
@@ -30,26 +31,28 @@ export function GoogleAuthButton({ redirectTo, text }: GoogleAuthButtonProps) {
 
   if (isDisabled) {
     return (
-      <div className="w-full">
+      <Stack gap="sm" className="w-full">
         <Button
           variant="secondary"
-          className="w-full px-4 py-3 gap-3"
+          size="lg"
+          className="w-full"
           disabled
           data-testid={TEST_IDS.AUTH.GOOGLE_BUTTON}
         >
           Google sign-in temporarily unavailable
         </Button>
-        <Typography variant="caption" color="secondary" className="mt-2 block text-center">
+        <Typography variant="caption" color="secondary" className="text-center">
           Use email sign-in while OAuth recovery is in progress.
         </Typography>
-      </div>
+      </Stack>
     );
   }
 
   return (
     <Button
       variant="secondary"
-      className="w-full px-4 py-3 gap-3"
+      size="lg"
+      className="w-full"
       onClick={() => void signIn("google", redirectTo ? { redirectTo } : undefined)}
       data-testid={TEST_IDS.AUTH.GOOGLE_BUTTON}
     >
