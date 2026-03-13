@@ -203,9 +203,14 @@
 - Removed `KanbanBoard.tsx` from the raw-Tailwind debt list by moving its loading rail, loading column shells, and swimlane wrapper chrome onto owned `Card` recipes instead of feature-level border/padding/snap shells.
 - Removed `Sprints/SprintManager.tsx` from live raw-Tailwind debt by replacing its hand-built progress bar with the shared `Progress` primitive, moving preset-tile button chrome onto owned `Button` variants, and replacing responsive flex utility fallbacks with `Flex` props.
 - Removed the stale `SprintManager.tsx` raw-Tailwind allowlist entry; the old root-level path was no longer the real source of sprint-surface debt.
+- Removed `Sprints/SprintProgressBar.tsx` from the raw-Tailwind debt list by replacing its hand-built completion bar with the shared `Progress` primitive.
+- Removed `Sprints/SprintWorkload.tsx` from the raw-Tailwind and interactive-state debt lists by moving its popover shell and workload rows behind owned `Popover`, `Card`, `Progress`, and `Avatar` primitives instead of local padding, hover, and progress-bar classes.
 - Added `KanbanBoard.tsx` to design-system ownership targeting so future board-surface drift is blocked directly.
 - Added `Sprints/SprintManager.tsx` to design-system ownership targeting so future sprint-manager shell drift is blocked directly.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `SprintProgressBar.tsx`, `SprintWorkload.tsx`, and the remaining broad `Sprint` interactive allowlist, which are now the real next sprint-surface validator debt.
+- Added `Sprints/SprintProgressBar.tsx` and `Sprints/SprintWorkload.tsx` to design-system ownership targeting so future sprint-support shell drift is blocked directly.
+- Removed the broad `Sprint` interactive allowlist entry from `check-interactive-tw.js`; sprint interactive debt is now explicit instead of directory-wide.
+- Tightened `check-raw-tailwind.js` so it only scans real JSX `className=` attributes, avoiding false positives on `className?:` prop declarations while keeping the rule fully blocking.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on the remaining broader interactive escape hatches in shared folders like `IssueDetail/`, `Plate/`, and `ImportExport/`, which are now materially larger sources of validator debt than the sprint surfaces.
 
 ## Problem
 

@@ -24,8 +24,6 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   "/CreateProjectFromTemplate.tsx",
   "/Dashboard.tsx",
   "/PlateEditor.tsx",
-  "/SprintProgressBar.tsx",
-  "/SprintWorkload.tsx",
   "/UserProfile.tsx",
 ];
 
@@ -109,6 +107,8 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/MentionInput.tsx",
   "/ProjectsList.tsx",
   "/RoadmapView.tsx",
+  "/Sprints/SprintProgressBar.tsx",
+  "/Sprints/SprintWorkload.tsx",
   "/Settings/ApiKeysManager.tsx",
   "/Settings/AvatarUploadModal.tsx",
   "/Settings/CoverImageUploadModal.tsx",

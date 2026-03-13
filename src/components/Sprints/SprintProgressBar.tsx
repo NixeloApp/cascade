@@ -8,6 +8,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Progress } from "@/components/ui/Progress";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { cn } from "@/lib/utils";
@@ -54,22 +55,21 @@ export function SprintProgressBar({ projectId, sprintId, className }: SprintProg
   }
 
   return (
-    <Flex align="center" gap="sm" className={cn("min-w-48", className)}>
-      {/* Progress bar */}
-      <FlexItem flex="1" className="h-2 bg-ui-bg-secondary rounded-full overflow-hidden">
-        <div
-          className={cn(
-            "h-full transition-default rounded-full",
-            progress.percent === 100 ? "bg-status-success" : "bg-brand",
-          )}
-          style={{ width: `${progress.percent}%` }}
-        />
-      </FlexItem>
+    <div className={cn("min-w-48", className)}>
+      <Flex align="center" gap="sm">
+        <FlexItem flex="1">
+          <Progress
+            value={progress.percent}
+            variant={progress.percent === 100 ? "success" : "default"}
+            className="h-2"
+            aria-label="Sprint progress"
+          />
+        </FlexItem>
 
-      {/* Stats */}
-      <Typography variant="small" color="secondary" className="whitespace-nowrap">
-        {progress.done}/{progress.total} ({progress.percent}%)
-      </Typography>
-    </Flex>
+        <Typography variant="small" color="secondary" className="whitespace-nowrap">
+          {progress.done}/{progress.total} ({progress.percent}%)
+        </Typography>
+      </Flex>
+    </div>
   );
 }

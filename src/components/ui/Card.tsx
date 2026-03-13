@@ -231,6 +231,12 @@ const cardRecipeVariants = cva("", {
       kanbanLoadingColumn: "w-72 border-ui-border bg-ui-bg-soft lg:w-80",
       kanbanLoadingColumnHeader:
         "rounded-none border-x-0 border-t-0 border-b border-ui-border/50 bg-transparent shadow-none",
+      sprintWorkloadHeader:
+        "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-transparent shadow-none",
+      sprintWorkloadRow:
+        "rounded-none border-x-0 border-t-0 border-b border-ui-border-secondary bg-transparent shadow-none hover:bg-ui-bg-secondary",
+      sprintWorkloadRowBordered:
+        "rounded-none border-x-0 border-b-0 border-t border-ui-border bg-transparent shadow-none hover:bg-ui-bg-secondary",
       issueDetailSheetHeader:
         "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",
       labelGroupHeader:

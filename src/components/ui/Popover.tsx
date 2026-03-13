@@ -32,6 +32,8 @@ const popoverContentVariants = cva(
           "w-auto rounded-container border-ui-border bg-ui-bg-elevated p-1.5 shadow-elevated",
         notificationMenu:
           "w-auto rounded-lg border-ui-border bg-ui-bg-elevated p-4 shadow-elevated",
+        sprintWorkload:
+          "w-72 overflow-hidden rounded-lg border-ui-border bg-ui-bg-elevated p-0 shadow-elevated",
         slashMenu:
           "rounded-container border-ui-border bg-ui-bg-elevated p-0 shadow-elevated data-[state=open]:animate-scale-in",
       },

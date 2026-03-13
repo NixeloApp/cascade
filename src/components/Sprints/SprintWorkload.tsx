@@ -9,14 +9,15 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
+import { Progress } from "@/components/ui/Progress";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Users } from "@/lib/icons";
-import { cn } from "@/lib/utils";
 
 interface SprintWorkloadProps {
   sprintId: Id<"sprints">;
@@ -34,76 +35,58 @@ export function SprintWorkload({ sprintId }: SprintWorkloadProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-1.5">
+        <Button variant="ghost" size="sm">
           <Icon icon={Users} size="sm" />
           <Typography variant="small">{breakdown.assignees.length} assignees</Typography>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-72 p-0" align="end">
-        <div className="p-3 border-b border-ui-border">
+      <PopoverContent recipe="sprintWorkload" align="end">
+        <Card recipe="sprintWorkloadHeader" padding="sm">
           <Typography variant="label">Workload Distribution</Typography>
           <Typography variant="caption" color="secondary">
             {breakdown.totalIssues} issues in sprint
           </Typography>
-        </div>
+        </Card>
         <Stack gap="none" className="max-h-64 overflow-y-auto">
           {breakdown.assignees.map((assignee) => (
-            <Flex
-              key={assignee.id}
-              align="center"
-              gap="sm"
-              className="px-3 py-2 hover:bg-ui-bg-secondary"
-            >
-              <Avatar name={assignee.name} size="sm" />
-              <FlexItem flex="1" className="min-w-0">
-                <Typography variant="small" className="truncate">
-                  {assignee.name}
-                </Typography>
-                <Flex align="center" gap="xs">
-                  {/* Mini progress bar */}
-                  <FlexItem
-                    flex="1"
-                    className="h-1.5 bg-ui-bg-secondary rounded-full overflow-hidden"
-                  >
-                    <div
-                      className={cn(
-                        "h-full rounded-full",
-                        assignee.percent === 100 ? "bg-status-success" : "bg-brand",
-                      )}
-                      style={{ width: `${assignee.percent}%` }}
-                    />
-                  </FlexItem>
-                  <Typography variant="caption" color="secondary" className="whitespace-nowrap">
-                    {assignee.done}/{assignee.total}
+            <Card key={assignee.id} recipe="sprintWorkloadRow" padding="sm">
+              <Flex align="center" gap="sm">
+                <Avatar name={assignee.name} size="sm" />
+                <FlexItem flex="1" className="min-w-0">
+                  <Typography variant="small" className="truncate">
+                    {assignee.name}
                   </Typography>
-                </Flex>
-              </FlexItem>
-            </Flex>
+                  <Flex align="center" gap="xs">
+                    <FlexItem flex="1">
+                      <Progress
+                        value={assignee.percent}
+                        variant={assignee.percent === 100 ? "success" : "default"}
+                        className="h-1.5"
+                        aria-label={`${assignee.name} workload completion`}
+                      />
+                    </FlexItem>
+                    <Typography variant="caption" color="secondary" className="whitespace-nowrap">
+                      {assignee.done}/{assignee.total}
+                    </Typography>
+                  </Flex>
+                </FlexItem>
+              </Flex>
+            </Card>
           ))}
           {breakdown.unassigned && (
-            <Flex
-              align="center"
-              gap="sm"
-              className="px-3 py-2 hover:bg-ui-bg-secondary border-t border-ui-border"
-            >
-              <Flex
-                align="center"
-                justify="center"
-                className="w-6 h-6 rounded-full bg-ui-bg-tertiary"
-              >
-                <Typography variant="caption" color="secondary">
-                  ?
-                </Typography>
+            <Card recipe="sprintWorkloadRowBordered" padding="sm">
+              <Flex align="center" gap="sm">
+                <Avatar name="?" size="sm" variant="neutral" />
+                <FlexItem flex="1" className="min-w-0">
+                  <Typography variant="small" color="secondary">
+                    Unassigned
+                  </Typography>
+                  <Typography variant="caption" color="secondary">
+                    {breakdown.unassigned.done}/{breakdown.unassigned.total} done
+                  </Typography>
+                </FlexItem>
               </Flex>
-              <FlexItem flex="1" className="min-w-0">
-                <Typography variant="small" color="secondary">
-                  Unassigned
-                </Typography>
-                <Typography variant="caption" color="secondary">
-                  {breakdown.unassigned.done}/{breakdown.unassigned.total} done
-                </Typography>
-              </FlexItem>
-            </Flex>
+            </Card>
           )}
         </Stack>
       </PopoverContent>

@@ -64,7 +64,7 @@ export function run() {
     const lines = fs.readFileSync(filePath, "utf-8").split("\n");
     for (let index = 0; index < lines.length; index++) {
       const line = lines[index];
-      if (!line.includes("className")) continue;
+      if (!/\bclassName\s*=/.test(line)) continue;
 
       // Collect full className span for multiline attributes
       const { span, endIndex } = collectClassNameSpan(lines, index);
