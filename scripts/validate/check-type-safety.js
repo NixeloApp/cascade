@@ -17,7 +17,6 @@ export function run() {
     // Legacy test files with violations - fix incrementally, do NOT add new files
     /otpErrorHandling\.test\.ts$/, // 4 violations - TODO: fix ts-expect-error
     /otpVerificationTestEnv\.test\.ts$/, // 6 violations - TODO: fix suppressions
-    /purge\.test\.ts$/, // 2 violations - TODO: fix suppressions
     /convex\/lib\/constrainedValidators\.test\.ts$/, // Legacy test assertions
     /convex\/lib\/dns\.test\.ts$/, // Legacy fetch mocks
     /convex\/lib\/fileValidators\.test\.ts$/, // Legacy MutationCtx casts

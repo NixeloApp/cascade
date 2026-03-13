@@ -1853,7 +1853,7 @@ const applicationTables = {
 // SCHEMA EXPORT
 // =============================================================================
 
-export default defineSchema({
+export const schemaDefinition = {
   ...authTables,
   ...applicationTables,
 
@@ -1902,4 +1902,8 @@ export default defineSchema({
     .index("phone", ["phone"])
     .index("phoneVerificationTime", ["phoneVerificationTime"])
     .index("defaultOrganization", ["defaultOrganizationId"]),
-});
+};
+
+export const SCHEMA_TABLE_NAMES = Object.freeze(Object.keys(schemaDefinition));
+
+export default defineSchema(schemaDefinition);
