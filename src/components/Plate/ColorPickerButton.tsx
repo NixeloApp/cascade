@@ -4,6 +4,7 @@
  * Provides a dropdown color picker for font color and background color.
  */
 
+import { EDITOR_HIGHLIGHT_COLOR_OPTIONS, EDITOR_TEXT_COLOR_OPTIONS } from "@convex/shared/colors";
 import { ChevronDown, Highlighter, type LucideIcon, Type } from "lucide-react";
 import { useEditorRef } from "platejs/react";
 import { useCallback, useState } from "react";
@@ -14,33 +15,6 @@ import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
 
-// Preset color palette - semantic colors matching the design system
-const TEXT_COLORS = [
-  { name: "Default", value: "" },
-  { name: "Gray", value: "#6b7280" },
-  { name: "Red", value: "#dc2626" },
-  { name: "Orange", value: "#ea580c" },
-  { name: "Amber", value: "#d97706" },
-  { name: "Green", value: "#16a34a" },
-  { name: "Teal", value: "#0d9488" },
-  { name: "Blue", value: "#2563eb" },
-  { name: "Indigo", value: "#4f46e5" },
-  { name: "Purple", value: "#9333ea" },
-  { name: "Pink", value: "#db2777" },
-];
-
-const HIGHLIGHT_COLORS = [
-  { name: "None", value: "" },
-  { name: "Yellow", value: "#fef08a" },
-  { name: "Green", value: "#bbf7d0" },
-  { name: "Blue", value: "#bfdbfe" },
-  { name: "Purple", value: "#e9d5ff" },
-  { name: "Pink", value: "#fbcfe8" },
-  { name: "Orange", value: "#fed7aa" },
-  { name: "Red", value: "#fecaca" },
-  { name: "Gray", value: "#e5e7eb" },
-];
-
 interface ColorPickerButtonProps {
   type: "fontColor" | "backgroundColor";
 }
@@ -50,7 +24,7 @@ export function ColorPickerButton({ type }: ColorPickerButtonProps) {
   const [open, setOpen] = useState(false);
   const [currentColor, setCurrentColor] = useState("");
 
-  const colors = type === "fontColor" ? TEXT_COLORS : HIGHLIGHT_COLORS;
+  const colors = type === "fontColor" ? EDITOR_TEXT_COLOR_OPTIONS : EDITOR_HIGHLIGHT_COLOR_OPTIONS;
   const TriggerIcon: LucideIcon = type === "fontColor" ? Type : Highlighter;
   const tooltip = type === "fontColor" ? "Text Color" : "Highlight";
 

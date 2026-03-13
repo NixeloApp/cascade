@@ -10,6 +10,7 @@
  */
 
 import type { Id } from "@convex/_generated/dataModel";
+import { YJS_CURSOR_COLORS } from "@convex/shared/colors";
 
 // Types for cursor/selection state
 export interface CursorPosition {
@@ -37,20 +38,6 @@ export interface AwarenessUser {
   isCurrentUser: boolean;
 }
 
-// User colors for collaboration cursors
-const CURSOR_COLORS = [
-  { main: "#F44336", light: "rgba(244, 67, 54, 0.2)" }, // Red
-  { main: "#E91E63", light: "rgba(233, 30, 99, 0.2)" }, // Pink
-  { main: "#9C27B0", light: "rgba(156, 39, 176, 0.2)" }, // Purple
-  { main: "#673AB7", light: "rgba(103, 58, 183, 0.2)" }, // Deep Purple
-  { main: "#3F51B5", light: "rgba(63, 81, 181, 0.2)" }, // Indigo
-  { main: "#2196F3", light: "rgba(33, 150, 243, 0.2)" }, // Blue
-  { main: "#00BCD4", light: "rgba(0, 188, 212, 0.2)" }, // Cyan
-  { main: "#009688", light: "rgba(0, 150, 136, 0.2)" }, // Teal
-  { main: "#4CAF50", light: "rgba(76, 175, 80, 0.2)" }, // Green
-  { main: "#FF9800", light: "rgba(255, 152, 0, 0.2)" }, // Orange
-];
-
 /**
  * Get a deterministic color for a user based on their ID
  */
@@ -60,7 +47,7 @@ export function getUserColor(userId: string): { main: string; light: string } {
     hash = (hash << 5) - hash + userId.charCodeAt(i);
     hash |= 0;
   }
-  return CURSOR_COLORS[Math.abs(hash) % CURSOR_COLORS.length];
+  return YJS_CURSOR_COLORS[Math.abs(hash) % YJS_CURSOR_COLORS.length];
 }
 
 /**

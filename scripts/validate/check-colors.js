@@ -16,9 +16,7 @@ export function run() {
   const ALLOWLIST_RAW_TAILWIND = ["*.test.ts", "*.test.tsx", "src/index.css"];
 
   const ALLOWLIST_HARDCODED_HEX = [
-    "src/components/ui/ColorPicker.tsx",
     "src/components/ui/ColorPicker.test.tsx",
-    "src/components/Plate/ColorPickerButton.tsx", // Text color picker for Plate editor
     "src/index.css",
     "convex/http/githubOAuth.ts",
     "convex/http/googleOAuth.ts",
@@ -28,8 +26,6 @@ export function run() {
     "convex/projectTemplates.ts",
     "convex/onboarding.ts",
     "convex/shared/colors.ts", // Shared runtime color constants for DB/payload usage
-    "src/lib/yjs/awareness.ts", // Y.js collaboration cursor colors (dynamic per-user)
-    "src/lib/yjs/ConvexYjsProvider.ts", // Y.js collaboration cursor colors (dynamic per-user)
     "*.test.ts",
     "*.test.tsx",
   ];
