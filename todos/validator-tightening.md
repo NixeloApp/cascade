@@ -232,7 +232,8 @@
 - Removed the broad `src/components/Calendar/` raw-Tailwind escape hatch by moving `CreateEventModal.tsx` form layout drift onto owned `Card`, `Stack`, `SegmentedControl`, and `Button` APIs, moving `UnifiedCalendarView.tsx` onto an owned calendar switcher bar recipe, and narrowing the remaining raw exemption to the embedded `Calendar/shadcn-calendar/` implementation plus explicit debt in `EventDetailsModal.tsx` and `RoadmapView.tsx`.
 - Removed the broad `Calendar/` interactive-state allowlist entry from `check-interactive-tw.js`, narrowing it to `Calendar/shadcn-calendar/` plus the remaining explicit `EventDetailsModal.tsx` debt.
 - Added `Calendar/CreateEventModal.tsx` and `Calendar/UnifiedCalendarView.tsx` to design-system ownership targeting so future top-level calendar surface drift is blocked directly.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on shrinking the broad `Kanban/` escape hatch, which is now the largest remaining high-impact validator gap outside intentionally embedded implementations.
+- Removed the broad `src/components/Kanban/` raw-Tailwind escape hatch by moving `BoardToolbar.tsx` spacing and responsive layout drift onto owned `Card`, `Flex`, and `Button` APIs and narrowing the remaining raw debt to explicit files in `KanbanColumn.tsx` and `SwimlanRow.tsx`.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on shrinking the broad `Sidebar/` escape hatch, which is now a small but high-leverage remaining validator gap in shared navigation chrome.
 
 ## Problem
 

@@ -4,7 +4,6 @@
 
 export const RAW_TAILWIND_ALLOWED_DIRS = [
   "src/components/ui/",
-  "src/components/Kanban/",
   "src/components/Calendar/shadcn-calendar/",
   "src/components/Auth/",
   "src/components/Editor/",
@@ -18,6 +17,8 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   "/BulkOperationsBar.tsx",
   "/Calendar/EventDetailsModal.tsx",
   "/Calendar/RoadmapView.tsx",
+  "/Kanban/KanbanColumn.tsx",
+  "/Kanban/SwimlanRow.tsx",
   "/CreateProjectFromTemplate.tsx",
   "/Dashboard.tsx",
   "/PlateEditor.tsx",
