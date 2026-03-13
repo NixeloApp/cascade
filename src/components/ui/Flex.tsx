@@ -85,6 +85,8 @@ export interface FlexProps extends React.HTMLAttributes<HTMLDivElement> {
   wrap?: boolean;
   /** Use inline-flex instead of flex */
   inline?: boolean;
+  /** Flex shorthand for the container itself */
+  flex?: FlexValue;
   /** Render as a different element */
   as?: React.ElementType;
 }
@@ -127,6 +129,7 @@ export const Flex = React.forwardRef<HTMLDivElement, FlexProps>(
       justify,
       wrap = false,
       inline = false,
+      flex,
       as: Component = "div",
       className,
       children,
@@ -147,6 +150,7 @@ export const Flex = React.forwardRef<HTMLDivElement, FlexProps>(
           align && alignClasses[align],
           alignSm && `sm:${alignClasses[alignSm]}`,
           justify && justifyClasses[justify],
+          flex && flexClasses[flex],
           wrap && "flex-wrap",
           className,
         )}

@@ -13,7 +13,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 
 import type { Value } from "platejs";
-import { Plate, PlateContent, usePlateEditor } from "platejs/react";
+import { Plate, usePlateEditor } from "platejs/react";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { PlateRichTextContent } from "@/components/ui/PlateRichTextContent";
 import { Skeleton, SkeletonText } from "@/components/ui/Skeleton";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
@@ -34,7 +35,6 @@ import {
 } from "@/lib/plate/editor";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { DocumentHeader, DocumentSidebar } from "./Documents";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { MoveDocumentDialog } from "./MoveDocumentDialog";
@@ -144,13 +144,8 @@ function EditorCanvas({
           </Grid>
         </Card>
       )}
-      <PlateContent
-        className={cn(
-          "prose prose-sm max-w-none text-ui-text leading-relaxed focus-visible:outline-none",
-          isEmptyEditor
-            ? "min-h-56 rounded-2xl border border-dashed border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-soft/58 via-ui-bg-soft/38 to-ui-bg px-5 py-5"
-            : "min-h-80 rounded-3xl border border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/76 px-6 py-6 shadow-soft",
-        )}
+      <PlateRichTextContent
+        variant={isEmptyEditor ? "documentEditorEmpty" : "documentEditor"}
         data-testid={TEST_IDS.EDITOR.PLATE}
         placeholder="Start with a summary or press / for blocks"
         readOnly={isLocked}
@@ -408,7 +403,7 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
       )}
 
       {/* Editor and Sidebar - Two column layout */}
-      <Flex className="flex-1 overflow-hidden">
+      <Flex flex="1" className="overflow-hidden">
         {/* Editor - Clean Mintlify-inspired layout */}
         <FlexItem flex="1" className="overflow-auto bg-ui-bg scrollbar-subtle">
           <Card padding="md" variant="ghost" className="mx-auto w-full max-w-5xl">

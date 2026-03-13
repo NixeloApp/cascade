@@ -19,7 +19,6 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   "/Kanban/KanbanColumn.tsx",
   "/Kanban/SwimlanRow.tsx",
   "/CreateProjectFromTemplate.tsx",
-  "/PlateEditor.tsx",
   "/UserProfile.tsx",
 ];
 
@@ -132,6 +131,7 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/Plate/MentionInputElement.tsx",
   "/Plate/MentionElement.tsx",
   "/Plate/FloatingToolbar.tsx",
+  "/PlateEditor.tsx",
   "/ClientPortal/PortalProjectView.tsx",
   "/ClientPortal/PortalTimeline.tsx",
   "/TimeTracking/BurnRateDashboard.tsx",
