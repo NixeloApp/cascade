@@ -4,8 +4,8 @@
 
 import { Bot } from "@/lib/icons";
 import { cn } from "@/lib/utils";
+import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { AI_CONFIG } from "./config";
 
@@ -61,27 +61,22 @@ export function AIAssistantButton({
 
   return (
     <Button
-      variant="unstyled"
+      variant="assistantFab"
+      size="none"
       onClick={onClick}
-      className={cn(
-        "fixed",
-        positionClasses,
-        SIZE_CLASSES[size],
-        "bg-linear-to-r from-brand to-accent text-brand-foreground rounded-full shadow-lg hover:shadow-xl hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 transition-all duration-default flex items-center justify-center z-30 group",
-        className,
-      )}
+      className={cn("fixed", positionClasses, SIZE_CLASSES[size], "z-30 group", className)}
       title={tooltipText}
       aria-label={ariaLabel}
     >
       <Icon icon={Bot} size="lg" />
       {unreadCount > 0 && (
-        <Flex
-          align="center"
-          justify="center"
-          className="absolute -top-1 -right-1 w-6 h-6 bg-status-error text-brand-foreground text-xs font-bold rounded-full shadow-md animate-pulse"
+        <Badge
+          variant="alertCount"
+          shape="pill"
+          className="absolute -top-1 -right-1 flex h-6 min-w-6 items-center justify-center px-1.5 animate-pulse"
         >
           {displayCount}
-        </Flex>
+        </Badge>
       )}
     </Button>
   );

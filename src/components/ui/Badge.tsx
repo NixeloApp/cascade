@@ -15,6 +15,7 @@ const badgeVariants = cva("inline-flex items-center font-medium transition-color
     variant: {
       primary: "bg-brand-subtle text-brand-active border border-brand-border",
       secondary: "bg-ui-bg-soft text-ui-text-secondary border border-ui-border",
+      alertCount: "bg-status-error text-brand-foreground border border-status-error/20 shadow-md",
       success: "bg-status-success-bg text-status-success-text border border-status-success/20",
       error: "bg-status-error-bg text-status-error-text border border-status-error/20",
       warning: "bg-status-warning-bg text-status-warning-text border border-status-warning/20",

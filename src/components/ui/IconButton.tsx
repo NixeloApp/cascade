@@ -47,6 +47,9 @@ const iconButtonVariants = cva(
       variant: {
         /** Default: subtle background on hover */
         ghost: "text-ui-text-tertiary hover:text-ui-text hover:bg-ui-bg-hover",
+        /** Floating inline action on top of existing content */
+        floating:
+          "border border-ui-border bg-ui-bg text-ui-text-secondary shadow-sm hover:text-ui-text hover:shadow-md",
         /** Slightly more visible: secondary text */
         subtle: "text-ui-text-secondary hover:text-ui-text hover:bg-ui-bg-hover",
         /** For actions on existing backgrounds */

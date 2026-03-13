@@ -19,6 +19,8 @@ const buttonVariants = cva(
       variant: {
         primary:
           "bg-linear-to-r from-landing-accent to-landing-accent-teal text-brand-foreground shadow-sm hover:shadow-md hover:brightness-105 focus-visible:ring-brand-ring",
+        assistantFab:
+          "rounded-full bg-linear-to-r from-brand to-accent text-brand-foreground shadow-lg hover:scale-110 hover:shadow-xl focus-visible:ring-brand-ring",
         secondary:
           "bg-ui-bg text-ui-text border border-ui-border shadow-soft hover:bg-ui-bg-secondary hover:border-ui-border-secondary focus-visible:ring-brand-ring",
         success:

@@ -93,6 +93,7 @@ export const RAW_TAILWIND_PATTERNS = [
 ];
 
 export const DESIGN_SYSTEM_TARGET_FILES = [
+  "/AI/AIAssistantButton.tsx",
   "/AI/AIChat.tsx",
   "/Analytics/RecentActivity.tsx",
   "/AppHeader.tsx",

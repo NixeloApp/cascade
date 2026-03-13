@@ -6,15 +6,15 @@ import type { Id } from "@convex/_generated/dataModel";
 import { cva } from "class-variance-authority";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Bot, Lightbulb } from "@/lib/icons";
+import { Bot, Check, Copy, Lightbulb } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
+import { IconButton } from "../ui/IconButton";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Skeleton } from "../ui/Skeleton";
 import { Textarea } from "../ui/Textarea";
-import { Tooltip } from "../ui/Tooltip";
 import { Typography } from "../ui/Typography";
 import { AI_CONFIG } from "./config";
 import { useAIChat } from "./hooks";
@@ -67,47 +67,21 @@ function MessageItem({
       >
         {/* Copy button for assistant messages */}
         {message.role === "assistant" && (
-          <Tooltip content="Copy message">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onCopy(message.content, messageId)}
-              className="absolute -right-2 -top-2 h-8 w-8 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity shadow-sm hover:shadow-md border border-ui-border bg-ui-bg"
-              aria-label="Copy message"
-            >
-              {isCopied ? (
-                <svg
-                  className="w-4 h-4 text-status-success"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <title>Copied</title>
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="w-4 h-4 text-ui-text-secondary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <title>Copy</title>
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                  />
-                </svg>
-              )}
-            </Button>
-          </Tooltip>
+          <IconButton
+            variant="floating"
+            size="sm"
+            reveal
+            tooltip={isCopied ? "Copied!" : "Copy message"}
+            onClick={() => onCopy(message.content, messageId)}
+            className="absolute -right-2 -top-2"
+            aria-label="Copy message"
+          >
+            <Icon
+              icon={isCopied ? Check : Copy}
+              size="sm"
+              className={isCopied ? "text-status-success" : undefined}
+            />
+          </IconButton>
         )}
 
         {/* Message content with markdown for assistant */}
