@@ -198,7 +198,9 @@
 - Removed `Invoices/InvoiceEditor.tsx` from the raw-Tailwind debt list by moving its line-item row shell onto an owned `Card` recipe and replacing the feature-level spacing/border grid shell with `Stack`, responsive `Grid`, and `Flex` composition.
 - Removed `Invoices/InvoicePdfTemplate.tsx` from the raw-Tailwind debt list by moving the preview and totals shells onto owned `Card` recipes and replacing its feature-level invoice line-item grid with the shared `Table` primitive.
 - Added `Invoices/InvoiceEditor.tsx` and `Invoices/InvoicePdfTemplate.tsx` to design-system ownership targeting so future invoice-surface drift is blocked directly.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `KanbanBoard.tsx` and `IssuesCalendarView.tsx`, which are now the next higher-impact shared surfaces still sitting behind explicit validator debt.
+- Removed `IssuesCalendarView.tsx` from the raw-Tailwind and interactive-state debt lists by moving its calendar day shells onto owned `Card` recipes, replacing the quick-add reveal behavior with owned `IconButton` APIs, and pushing issue row chrome into owned `Button` chrome variants.
+- Added `IssuesCalendarView.tsx` to design-system ownership targeting so future calendar-surface drift is blocked directly.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `KanbanBoard.tsx` and `SprintManager.tsx`, which are now the next higher-impact shared surfaces still sitting behind explicit validator debt.
 
 ## Problem
 

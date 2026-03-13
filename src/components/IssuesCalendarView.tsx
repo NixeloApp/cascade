@@ -14,7 +14,7 @@ import { Grid } from "@/components/ui/Grid";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { Plus } from "@/lib/icons";
+import { ChevronLeft, ChevronRight, Plus } from "@/lib/icons";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { showError } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -76,6 +76,12 @@ function groupIssuesByDate(issues: Doc<"issues">[] | undefined): Record<string, 
 
 function isSameCalendarDay(date: Date, year: number, month: number, day: number): boolean {
   return date.getFullYear() === year && date.getMonth() === month && date.getDate() === day;
+}
+
+function getDayCellRecipe(isTodayDate: boolean, isDropTarget: boolean) {
+  if (isDropTarget) return "calendarDayCellDropTarget";
+  if (isTodayDate) return "calendarDayCellToday";
+  return "calendarDayCell";
 }
 
 /**
@@ -179,7 +185,11 @@ export function IssuesCalendarView({
   // Add empty cells for days before first day of month
   for (let i = 0; i < firstDayOfMonth; i++) {
     calendarDays.push(
-      <div key={`empty-${i}`} className={cn(DAY_CELL_HEIGHT_CLASS, "bg-ui-bg-secondary")} />,
+      <Card
+        key={`empty-${i}`}
+        variant="ghost"
+        className={cn(DAY_CELL_HEIGHT_CLASS, "rounded-none bg-ui-bg-secondary")}
+      />,
     );
   }
   // Add cells for each day of the month
@@ -189,43 +199,35 @@ export function IssuesCalendarView({
     const isTodayDate = isToday(day);
 
     calendarDays.push(
-      // biome-ignore lint/a11y/noStaticElementInteractions: Calendar cells are drag-drop targets; interaction is via child buttons
-      <div
+      <Card
         key={day}
+        recipe={getDayCellRecipe(isTodayDate, dragOverDay === day)}
         data-testid={`calendar-day-${day}`}
-        className={cn(
-          "group border border-ui-border p-2 transition-colors",
-          DAY_CELL_HEIGHT_CLASS,
-          isTodayDate ? "bg-brand-indigo-track" : "bg-ui-bg",
-          dragOverDay === day && "bg-brand-subtle ring-2 ring-inset ring-brand-ring",
-        )}
+        padding="sm"
+        className={cn("group transition-colors", DAY_CELL_HEIGHT_CLASS)}
         onDragOver={(e) => handleDragOver(e, day)}
         onDragLeave={handleDragLeave}
         onDrop={(e) => handleDrop(e, day)}
       >
         <Flex align="center" justify="between" className="mb-1">
           <Flex align="center" gap="xs">
-            <Typography
-              variant="label"
-              className={cn(
-                "text-sm font-medium",
-                isTodayDate
-                  ? "bg-brand text-brand-foreground w-6 h-6 rounded-full flex items-center justify-center"
-                  : "text-ui-text",
-              )}
-            >
-              {day}
-            </Typography>
+            {isTodayDate ? (
+              <Badge variant="brand" shape="pill">
+                {day}
+              </Badge>
+            ) : (
+              <Typography variant="label">{day}</Typography>
+            )}
             {canEdit && (
               <Tooltip content="Create issue">
                 <IconButton
                   variant="ghost"
                   size="xs"
+                  reveal="responsive"
                   onClick={() => setCreateForDate(dayDueTimestamp)}
                   aria-label={`Create issue for ${day}`}
-                  className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:focus:opacity-100 transition-opacity"
                 >
-                  <Plus className="w-3 h-3" />
+                  <Icon icon={Plus} size="xs" />
                 </IconButton>
               </Tooltip>
             )}
@@ -244,11 +246,13 @@ export function IssuesCalendarView({
               content={canEdit ? `${issue.title} - Drag to reschedule` : issue.title}
             >
               <Button
-                variant="ghost"
+                variant="unstyled"
+                chrome="calendarIssue"
+                chromeSize="calendarIssue"
                 onClick={() => setSelectedIssue(issue._id)}
                 className={cn(
-                  "w-full justify-start text-left p-1.5 h-auto",
-                  canEdit && "cursor-grab active:cursor-grabbing",
+                  "w-full",
+                  canEdit && "cursor-grab",
                   draggedIssue === issue._id && "opacity-50",
                 )}
                 draggable={canEdit}
@@ -275,156 +279,136 @@ export function IssuesCalendarView({
             </Tooltip>
           ))}
           {dayIssues.length > MAX_VISIBLE_ISSUES_PER_DAY && (
-            <Typography variant="caption" color="secondary" className="pl-1.5">
+            <Typography variant="caption" color="secondary">
               +{dayIssues.length - MAX_VISIBLE_ISSUES_PER_DAY} more
             </Typography>
           )}
         </Stack>
-      </div>,
+      </Card>,
     );
   }
 
   return (
-    <FlexItem flex="1" className="p-3 sm:p-6 overflow-auto">
-      {/* Header */}
-      <Flex
-        direction="column"
-        align="start"
-        justify="between"
-        gap="lg"
-        className="mb-6 sm:flex-row sm:items-center"
-      >
-        <Typography variant="h2">Issues Calendar</Typography>
-
-        {/* Month Navigation */}
+    <FlexItem flex="1" className="overflow-auto">
+      <Stack gap="xl" className="m-3 sm:m-6">
+        {/* Header */}
         <Flex
-          align="center"
-          gap="sm"
+          direction="column"
+          align="start"
+          directionSm="row"
+          alignSm="center"
           justify="between"
-          className="sm:gap-4 w-full sm:w-auto sm:justify-start"
+          gap="lg"
+          className="mb-6"
         >
-          <Tooltip content="Previous month">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigateMonth(-1)}
-              className="min-w-11 min-h-11 sm:min-w-0 sm:min-h-0"
-              aria-label="Previous month"
-            >
-              <svg
-                aria-hidden="true"
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </Button>
-          </Tooltip>
+          <Typography variant="h2">Issues Calendar</Typography>
 
-          <Typography variant="h3" className="w-full sm:min-w-48 text-center">
-            {currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-          </Typography>
-
-          <Tooltip content="Next month">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigateMonth(1)}
-              className="min-w-11 min-h-11 sm:min-w-0 sm:min-h-0"
-              aria-label="Next month"
-            >
-              <svg
-                aria-hidden="true"
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </Button>
-          </Tooltip>
-
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setCurrentDate(new Date())}
-            className="min-w-11 min-h-11 sm:min-w-0 sm:min-h-0"
+          {/* Month Navigation */}
+          <Flex
+            align="center"
+            gap="md"
+            justify="between"
+            className="w-full sm:w-auto sm:justify-start"
           >
-            Today
-          </Button>
-        </Flex>
-      </Flex>
+            <Tooltip content="Previous month">
+              <IconButton
+                variant="ghost"
+                size="sm"
+                onClick={() => navigateMonth(-1)}
+                className="min-h-11 min-w-11 sm:min-h-0 sm:min-w-0"
+                aria-label="Previous month"
+              >
+                <Icon icon={ChevronLeft} size="md" />
+              </IconButton>
+            </Tooltip>
 
-      {/* Calendar Grid */}
-      <div className="overflow-x-auto">
-        <Card padding="none" className="overflow-hidden min-w-160">
-          {/* Weekday Headers */}
-          <Grid cols={7} className="bg-ui-bg-secondary border-b border-ui-border">
-            {WEEKDAY_LABELS.map((day) => (
-              <Typography key={day} variant="label" className="p-2 text-center text-ui-text">
-                {day}
-              </Typography>
-            ))}
-          </Grid>
-
-          {/* Calendar Days */}
-          <Grid cols={7}>{calendarDays}</Grid>
-        </Card>
-      </div>
-
-      {/* Legend */}
-      <Flex align="center" gap="xl" className="mt-4">
-        {PRIORITY_LEGEND_ITEMS.map((item) => (
-          <Flex key={item.label} align="center" gap="sm">
-            <div className={cn("w-3 h-3 rounded-full", item.className)} />
-            <Typography variant="small" color="secondary">
-              {item.label}
+            <Typography variant="h3" className="w-full text-center sm:min-w-48">
+              {currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
             </Typography>
+
+            <Tooltip content="Next month">
+              <IconButton
+                variant="ghost"
+                size="sm"
+                onClick={() => navigateMonth(1)}
+                className="min-h-11 min-w-11 sm:min-h-0 sm:min-w-0"
+                aria-label="Next month"
+              >
+                <Icon icon={ChevronRight} size="md" />
+              </IconButton>
+            </Tooltip>
+
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setCurrentDate(new Date())}
+              className="min-h-11 min-w-11 sm:min-h-0 sm:min-w-0"
+            >
+              Today
+            </Button>
           </Flex>
-        ))}
-      </Flex>
+        </Flex>
 
-      {/* Issue Detail */}
-      {selectedIssue && (
-        <IssueDetailViewer
-          issueId={selectedIssue}
-          open={true}
-          onOpenChange={(open) => {
-            if (!open) {
-              setSelectedIssue(null);
-            }
-          }}
-          canEdit={canEdit}
-        />
-      )}
+        {/* Calendar Grid */}
+        <div className="overflow-x-auto">
+          <Card padding="none" className="min-w-160 overflow-hidden">
+            {/* Weekday Headers */}
+            <Grid cols={7} className="border-b border-ui-border bg-ui-bg-secondary">
+              {WEEKDAY_LABELS.map((day) => (
+                <Card key={day} recipe="calendarWeekdayHeaderCell">
+                  <Typography variant="label" className="text-center">
+                    {day}
+                  </Typography>
+                </Card>
+              ))}
+            </Grid>
 
-      {/* Create Issue Modal (from calendar quick add) */}
-      {createForDate !== null && (
-        <CreateIssueModal
-          projectId={projectId}
-          sprintId={sprintId}
-          open={true}
-          onOpenChange={(open) => {
-            if (!open) {
-              setCreateForDate(null);
-            }
-          }}
-          defaultDueDate={createForDate}
-        />
-      )}
+            {/* Calendar Days */}
+            <Grid cols={7}>{calendarDays}</Grid>
+          </Card>
+        </div>
+
+        {/* Legend */}
+        <Flex align="center" gap="xl" className="mt-4">
+          {PRIORITY_LEGEND_ITEMS.map((item) => (
+            <Flex key={item.label} align="center" gap="sm">
+              <div className={cn("h-3 w-3 rounded-full", item.className)} />
+              <Typography variant="small" color="secondary">
+                {item.label}
+              </Typography>
+            </Flex>
+          ))}
+        </Flex>
+
+        {/* Issue Detail */}
+        {selectedIssue && (
+          <IssueDetailViewer
+            issueId={selectedIssue}
+            open={true}
+            onOpenChange={(open) => {
+              if (!open) {
+                setSelectedIssue(null);
+              }
+            }}
+            canEdit={canEdit}
+          />
+        )}
+
+        {/* Create Issue Modal (from calendar quick add) */}
+        {createForDate !== null && (
+          <CreateIssueModal
+            projectId={projectId}
+            sprintId={sprintId}
+            open={true}
+            onOpenChange={(open) => {
+              if (!open) {
+                setCreateForDate(null);
+              }
+            }}
+            defaultDueDate={createForDate}
+          />
+        )}
+      </Stack>
     </FlexItem>
   );
 }

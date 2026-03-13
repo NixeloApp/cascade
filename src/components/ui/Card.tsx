@@ -219,6 +219,12 @@ const cardRecipeVariants = cva("", {
         "overflow-hidden rounded-xl border-ui-border-secondary/70 bg-ui-bg-soft shadow-none",
       invoiceTotalsPanel:
         "rounded-xl border-brand-border bg-linear-to-r from-brand-subtle/70 via-ui-bg-elevated/96 to-ui-bg-soft/88 shadow-none",
+      calendarDayCell: "rounded-none border-ui-border bg-ui-bg shadow-none",
+      calendarDayCellToday: "rounded-none border-ui-border bg-brand-indigo-track shadow-none",
+      calendarDayCellDropTarget:
+        "rounded-none border-ui-border bg-brand-subtle shadow-none ring-2 ring-inset ring-brand-ring",
+      calendarWeekdayHeaderCell:
+        "rounded-none border-transparent bg-transparent px-2 py-2 shadow-none",
       issueDetailSheetHeader:
         "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",
       labelGroupHeader:

@@ -37,7 +37,6 @@ const ALLOWED_FILES = [
   "CustomFieldValues.tsx",
   // Calendar
   "Calendar/",
-  "IssuesCalendarView.tsx",
   // Sprint components
   "Sprint",
   // Onboarding
