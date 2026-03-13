@@ -22,11 +22,16 @@ const segmentedControlVariants = cva(
         true: "flex-wrap",
         false: "",
       },
+      width: {
+        auto: "",
+        fill: "w-full",
+      },
     },
     defaultVariants: {
       variant: "default",
       size: "md",
       wrap: false,
+      width: "auto",
     },
   },
 );
@@ -46,10 +51,15 @@ const segmentedControlItemVariants = cva(
         md: "min-h-8 px-3 py-1.5 text-sm",
         lg: "min-h-10 px-4 py-2 text-sm",
       },
+      width: {
+        auto: "",
+        fill: "flex-1",
+      },
     },
     defaultVariants: {
       variant: "default",
       size: "md",
+      width: "auto",
     },
   },
 );
@@ -76,14 +86,14 @@ type SegmentedControlProps = Omit<
 const SegmentedControl = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Root>,
   SegmentedControlProps
->(({ className, children, size, variant, wrap, ...props }, ref) => (
+>(({ className, children, size, variant, wrap, width, ...props }, ref) => (
   <ToggleGroupPrimitive.Root
     ref={ref}
     type="single"
-    className={cn(segmentedControlVariants({ size, variant, wrap }), className)}
+    className={cn(segmentedControlVariants({ size, variant, wrap, width }), className)}
     {...props}
   >
-    <SegmentedControlContext.Provider value={{ size, variant }}>
+    <SegmentedControlContext.Provider value={{ size, variant, width }}>
       {children}
     </SegmentedControlContext.Provider>
   </ToggleGroupPrimitive.Root>
@@ -97,7 +107,7 @@ interface SegmentedControlItemProps
 const SegmentedControlItem = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Item>,
   SegmentedControlItemProps
->(({ className, size, variant, ...props }, ref) => {
+>(({ className, size, variant, width, ...props }, ref) => {
   const context = React.useContext(SegmentedControlContext);
 
   return (
@@ -107,6 +117,7 @@ const SegmentedControlItem = React.forwardRef<
         segmentedControlItemVariants({
           size: size ?? context.size,
           variant: variant ?? context.variant,
+          width: width ?? context.width,
         }),
         className,
       )}

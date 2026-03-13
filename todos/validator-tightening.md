@@ -176,7 +176,9 @@
 - Removed `CommandPalette.tsx` from the raw-Tailwind debt list by moving command item/group/empty/list viewport styling into owned `ui/Command` variants and replacing the footer shell with owned `Card` composition.
 - Removed `KeyboardShortcutsHelp.tsx` from the raw-Tailwind debt list by replacing feature-local CVAs with owned `KeyBadge`, `SearchField`, `Card` recipes, and `Typography` variants for the shortcuts search and list shells.
 - Added `CommandPalette.tsx` and kept `KeyboardShortcutsHelp.tsx` under design-system ownership targeting so future command/help surface drift is blocked directly.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `ImportExportModal.tsx` and `RoadmapView.tsx`, which are now among the next higher-impact surfaces still sitting behind explicit validator debt.
+- Removed `ImportExportModal.tsx` from the raw-Tailwind debt list by replacing its hand-built import/export mode rail with owned `SegmentedControl` fill-width variants instead of local card and flex shells.
+- Added `ImportExportModal.tsx` to design-system ownership targeting so future import/export shell drift is blocked directly.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `RoadmapView.tsx`, which is now the next higher-impact surface still sitting behind explicit validator debt.
 
 ## Problem
 

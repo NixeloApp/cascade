@@ -55,6 +55,14 @@ async function waitForFileInput(_container: HTMLElement): Promise<HTMLInputEleme
   return fileInput;
 }
 
+function getExportModeControl() {
+  return screen.getByRole("radio", { name: /export issues/i });
+}
+
+function getImportModeControl() {
+  return screen.getByRole("radio", { name: /import issues/i });
+}
+
 describe("ImportExportModal - Component Behavior", () => {
   const mockProjectId = "project123" as Id<"projects">;
   const mockOnOpenChange = vi.fn();
@@ -105,7 +113,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
-      await user.click(screen.getByRole("button", { name: /Import/i }));
+      await user.click(getImportModeControl());
 
       expect(screen.getByText("Select Import Format")).toBeInTheDocument();
       expect(screen.queryByText("Select Export Format")).not.toBeInTheDocument();
@@ -118,8 +126,8 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
-      await user.click(screen.getByRole("button", { name: /Import/i }));
-      await user.click(screen.getByRole("button", { name: /Export/i }));
+      await user.click(getImportModeControl());
+      await user.click(getExportModeControl());
 
       expect(screen.getByText("Select Export Format")).toBeInTheDocument();
       expect(screen.queryByText("Select Import Format")).not.toBeInTheDocument();
@@ -137,11 +145,11 @@ describe("ImportExportModal - Component Behavior", () => {
       expect(screen.getByRole("button", { name: /Export as JSON/i })).toBeInTheDocument();
 
       // Switch to import (should default to CSV)
-      await user.click(screen.getByRole("button", { name: /Import/i }));
+      await user.click(getImportModeControl());
       expect(screen.getByRole("button", { name: /Import from CSV/i })).toBeInTheDocument();
 
       // Switch back to export (format resets to CSV with refactored component)
-      await user.click(screen.getByRole("button", { name: /Export/i }));
+      await user.click(getExportModeControl());
       expect(screen.getByRole("button", { name: /Export as CSV/i })).toBeInTheDocument();
     });
   });
@@ -281,7 +289,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
-      await user.click(screen.getByRole("button", { name: /Import/i }));
+      await user.click(getImportModeControl());
 
       // Button should be disabled when no file is selected, so we can't click it
       // The test name is misleading - the component prevents the action by disabling the button
@@ -296,7 +304,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
-      await user.click(screen.getByRole("button", { name: /Import/i }));
+      await user.click(getImportModeControl());
 
       const importButton = screen.getByRole("button", { name: /Import from CSV/i });
       expect(importButton).toBeDisabled();
@@ -311,7 +319,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
-      await user.click(screen.getByRole("button", { name: /Import/i }));
+      await user.click(getImportModeControl());
 
       const fileInput = await waitForFileInput(container);
       const file = new File(["title\nTest"], "test.csv", { type: "text/csv" });
@@ -335,7 +343,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
-      await user.click(screen.getByRole("button", { name: /Import/i }));
+      await user.click(getImportModeControl());
 
       const fileInput = await waitForFileInput(container);
       const file = new File(["a".repeat(2048)], "issues.csv", { type: "text/csv" });
@@ -357,7 +365,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
-      await user.click(screen.getByRole("button", { name: /Import/i }));
+      await user.click(getImportModeControl());
 
       const fileInput = await waitForFileInput(container);
       // Create 5KB file
@@ -383,7 +391,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
-      await user.click(screen.getByRole("button", { name: /Import/i }));
+      await user.click(getImportModeControl());
 
       const fileInput = await waitForFileInput(container);
       const file = new File(["title\nIssue"], "test.csv", { type: "text/csv" });
@@ -416,7 +424,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
-      await user.click(screen.getByRole("button", { name: /Import/i }));
+      await user.click(getImportModeControl());
 
       const fileInput = await waitForFileInput(container);
       const file = new File(["data"], "test.csv", { type: "text/csv" });
@@ -451,7 +459,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
-      await user.click(screen.getByRole("button", { name: /Import/i }));
+      await user.click(getImportModeControl());
 
       const fileInput = await waitForFileInput(container);
       const file = new File(["data"], "test.csv", { type: "text/csv" });
@@ -482,7 +490,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
-      await user.click(screen.getByRole("button", { name: /Import/i }));
+      await user.click(getImportModeControl());
 
       const fileInput = await waitForFileInput(container);
       const file = new File(["data"], "test.csv", { type: "text/csv" });
@@ -517,7 +525,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
-      await user.click(screen.getByRole("button", { name: /Import/i }));
+      await user.click(getImportModeControl());
 
       const fileInput = await waitForFileInput(container);
       const file = new File(["data"], "test.csv", { type: "text/csv" });
@@ -548,7 +556,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
-      await user.click(screen.getByRole("button", { name: /Import/i }));
+      await user.click(getImportModeControl());
 
       const fileInput = await waitForFileInput(container);
       const file = new File(["data"], "test.csv", { type: "text/csv" });
@@ -580,7 +588,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
-      await user.click(screen.getByRole("button", { name: /Import/i }));
+      await user.click(getImportModeControl());
 
       const fileInput = await waitForFileInput(container);
       const file = new File(["data"], "test.csv", { type: "text/csv" });
@@ -615,7 +623,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
-      await user.click(screen.getByRole("button", { name: /Import/i }));
+      await user.click(getImportModeControl());
 
       const fileInput = await waitForFileInput(container);
       const file = new File(["data"], "test.csv", { type: "text/csv" });
@@ -646,7 +654,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
-      await user.click(screen.getByRole("button", { name: /Import/i }));
+      await user.click(getImportModeControl());
 
       const fileInput = await waitForFileInput(container);
       const file = new File(["data"], "test.csv", { type: "text/csv" });
@@ -678,7 +686,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
-      await user.click(screen.getByRole("button", { name: /Import/i }));
+      await user.click(getImportModeControl());
 
       const fileInput = await waitForFileInput(container);
       const file = new File(["data"], "test.csv", { type: "text/csv" });
@@ -709,7 +717,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
-      await user.click(screen.getByRole("button", { name: /Import/i }));
+      await user.click(getImportModeControl());
 
       const fileInput = await waitForFileInput(container);
       const file = new File(["data"], "test.csv", { type: "text/csv" });
@@ -739,7 +747,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
-      await user.click(screen.getByRole("button", { name: /Import/i }));
+      await user.click(getImportModeControl());
 
       const fileInput = await waitForFileInput(container);
       expect(fileInput).toHaveAttribute("accept", ".csv");
@@ -752,7 +760,7 @@ describe("ImportExportModal - Component Behavior", () => {
         <ImportExportModal open={true} onOpenChange={mockOnOpenChange} projectId={mockProjectId} />,
       );
 
-      await user.click(screen.getByRole("button", { name: /Import/i }));
+      await user.click(getImportModeControl());
       await user.click(screen.getByText("JSON"));
 
       const fileInput = await waitForFileInput(container);

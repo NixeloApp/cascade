@@ -8,10 +8,8 @@
 
 import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/SegmentedControl";
 import { Stack } from "@/components/ui/Stack";
 import { Download, Upload } from "@/lib/icons";
 import { ExportPanel } from "./ImportExport/ExportPanel";
@@ -61,26 +59,21 @@ export function ImportExportModal({
     >
       <Stack gap="lg">
         {/* Mode Selection */}
-        <Card padding="xs" variant="ghost" className="bg-ui-bg-tertiary">
-          <Flex gap="sm">
-            <Button
-              variant={mode === "export" ? "secondary" : "ghost"}
-              onClick={() => setMode("export")}
-              leftIcon={<Icon icon={Download} size="sm" />}
-              className="flex-1"
-            >
-              Export
-            </Button>
-            <Button
-              variant={mode === "import" ? "secondary" : "ghost"}
-              onClick={() => setMode("import")}
-              leftIcon={<Icon icon={Upload} size="sm" />}
-              className="flex-1"
-            >
-              Import
-            </Button>
-          </Flex>
-        </Card>
+        <SegmentedControl
+          value={mode}
+          onValueChange={(value) => value && setMode(value as Mode)}
+          width="fill"
+          aria-label="Import export mode"
+        >
+          <SegmentedControlItem value="export" aria-label="Export issues">
+            <Icon icon={Download} size="sm" />
+            Export
+          </SegmentedControlItem>
+          <SegmentedControlItem value="import" aria-label="Import issues">
+            <Icon icon={Upload} size="sm" />
+            Import
+          </SegmentedControlItem>
+        </SegmentedControl>
 
         {/* Panel Content */}
         {mode === "export" ? (
