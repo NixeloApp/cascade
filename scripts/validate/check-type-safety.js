@@ -15,7 +15,6 @@ export function run() {
     /\.stories\.tsx?$/, // Storybook files
     /check-type-safety\.js$/, // This file (contains pattern strings)
     // Legacy test files with violations - fix incrementally, do NOT add new files
-    /meetingBotTimeout\.test\.ts$/, // 1 violation - TODO: fix as any
     /otpErrorHandling\.test\.ts$/, // 4 violations - TODO: fix ts-expect-error
     /otpVerificationTestEnv\.test\.ts$/, // 6 violations - TODO: fix suppressions
     /purge\.test\.ts$/, // 2 violations - TODO: fix suppressions
