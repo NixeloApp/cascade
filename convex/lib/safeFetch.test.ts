@@ -13,12 +13,8 @@ vi.mock("./fetchWithTimeout", () => ({
 }));
 
 describe("safeFetch", () => {
-  const mockValidateDestinationResolved = ssrf.validateDestinationResolved as unknown as ReturnType<
-    typeof vi.fn
-  >;
-  const mockFetchWithTimeout = fetchWithTimeoutModule.fetchWithTimeout as unknown as ReturnType<
-    typeof vi.fn
-  >;
+  const mockValidateDestinationResolved = vi.mocked(ssrf.validateDestinationResolved);
+  const mockFetchWithTimeout = vi.mocked(fetchWithTimeoutModule.fetchWithTimeout);
 
   beforeEach(() => {
     vi.resetAllMocks();
