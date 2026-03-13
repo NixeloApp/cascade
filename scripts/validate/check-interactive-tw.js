@@ -20,7 +20,6 @@ import { c, ROOT, relPath, walkDir } from "./utils.js";
 // - Use Card with hoverable prop for cards
 const ALLOWED_FILES = [
   // Search/filter components
-  "AdvancedSearchModal/",
   "FuzzySearch/AssigneeSearchDropdown.example.tsx",
   // Issue components
   "IssueCard.tsx",

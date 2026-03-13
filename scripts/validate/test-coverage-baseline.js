@@ -21,7 +21,6 @@ export const TEST_COVERAGE_BASELINE = [
   "src/components/Admin/UserTypeManager.tsx",
   "src/components/AdvancedSearchModal.tsx",
   "src/components/AdvancedSearchModal/FilterCheckboxGroup.tsx",
-  "src/components/AdvancedSearchModal/SearchResultsList.tsx",
   "src/components/Analytics/BarChart.tsx",
   "src/components/Analytics/LineChart.tsx",
   "src/components/Analytics/SprintBurnChart.tsx",

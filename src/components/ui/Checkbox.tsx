@@ -15,8 +15,8 @@ import { Typography } from "./Typography";
 
 export interface CheckboxProps
   extends React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root> {
-  /** Label text for the checkbox */
-  label?: string;
+  /** Label content for the checkbox */
+  label?: React.ReactNode;
   /** Description text below the label */
   description?: string;
 }

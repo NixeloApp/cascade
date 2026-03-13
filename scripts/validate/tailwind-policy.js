@@ -15,12 +15,10 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
   "src/components/ImportExport/",
   "src/components/Fields/",
   "src/components/Templates/",
-  "src/components/AdvancedSearchModal/",
   "src/components/Automation/",
 ];
 
 export const RAW_TAILWIND_ALLOWED_FILES = [
-  "/AdvancedSearchModal.tsx",
   // Explicit migration-debt exemptions replacing broad Settings/Admin/ProjectSettings directory escapes.
   "/PortalProjectView.tsx",
   "/PortalTimeline.tsx",
@@ -96,6 +94,8 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/GlobalSearch.tsx",
   "/KeyboardShortcutsHelp.tsx",
   "/AdvancedSearchModal.tsx",
+  "/AdvancedSearchModal/FilterCheckboxGroup.tsx",
+  "/AdvancedSearchModal/SearchResultsList.tsx",
   "/Admin/HourComplianceDashboard.tsx",
   "/Admin/OAuthHealthDashboard.tsx",
   "/Admin/UserTypeManager.tsx",

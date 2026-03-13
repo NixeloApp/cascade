@@ -84,6 +84,10 @@ const cardRecipeVariants = cva("", {
         "rounded-2xl border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/96 to-ui-bg-soft/84 shadow-soft",
       optionTileSelected:
         "rounded-2xl border-brand-border bg-linear-to-b from-brand-subtle/85 via-ui-bg-elevated/98 to-ui-bg-soft/86 shadow-card",
+      selectionRow:
+        "rounded-xl border-transparent bg-transparent shadow-none hover:border-ui-border hover:bg-ui-bg-elevated/80",
+      selectionRowSelected:
+        "rounded-xl border-brand/20 bg-brand-subtle/60 shadow-none hover:border-brand/25 hover:bg-brand-subtle/70",
 
       // Landing/showcase surfaces
       showcaseShell:
@@ -171,6 +175,10 @@ const cardRecipeVariants = cva("", {
         "rounded-full border-ui-border/60 bg-linear-to-r from-ui-bg-soft/94 via-ui-bg-elevated/92 to-ui-bg-soft/90 shadow-soft",
       searchDropdown:
         "overflow-hidden rounded-md border-ui-border bg-ui-bg-elevated shadow-elevated",
+      searchResultRow:
+        "rounded-none border-x-0 border-t-0 border-b border-ui-border-secondary bg-transparent shadow-none hover:bg-ui-bg-secondary focus-within:bg-ui-bg-secondary",
+      listFooterBar:
+        "rounded-none border-x-0 border-b-0 border-t border-ui-border bg-ui-bg-secondary shadow-none",
       mentionMenu:
         "overflow-hidden rounded-container border-ui-border-secondary bg-linear-to-br from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/70 shadow-lg",
       floatingWidget: "overflow-hidden rounded-container border-ui-border bg-ui-bg shadow-elevated",

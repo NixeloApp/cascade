@@ -141,12 +141,15 @@
 - Removed `GlobalSearch.tsx` from the raw-Tailwind and interactive-state debt lists by moving its loading, empty, intro, pagination, and footer shells onto owned `Card`, `LoadingSpinner`, `KeyboardShortcut`, and `Button` composition instead of raw search-surface padding, flex, and hover classes.
 - Removed `FilterBar.tsx` from the raw-Tailwind and interactive-state debt lists by moving its filter bar shell onto an owned `Card` recipe, collapsing the saved-filter row interaction onto owned `DropdownMenuItem` and `IconButton` primitives, and replacing the date-menu padding shell with owned `Card` composition.
 - Added `FilterBar.tsx` to design-system ownership targeting so future search/filter shell drift is blocked directly.
+- Removed the broad `src/components/AdvancedSearchModal/` raw-Tailwind escape hatch and removed `AdvancedSearchModal/` from the interactive-state allowlist.
+- Removed `AdvancedSearchModal.tsx` from the raw-Tailwind debt list and added `AdvancedSearchModal.tsx`, `AdvancedSearchModal/FilterCheckboxGroup.tsx`, and `AdvancedSearchModal/SearchResultsList.tsx` to design-system ownership targeting so future advanced-search shell drift is blocked directly.
+- Migrated the advanced-search filter groups and results list onto owned `Card`, `Checkbox`, and `EmptyState` primitives instead of local checkbox-row, result-row, and empty-state shell styling.
 
 ### Next batch
 
 - Continue shrinking the explicit `AI` debt now that the broad directory escapes are gone.
 - The explicit `AI` raw-Tailwind debt list is now empty.
-- Keep working through smaller helper controls and shared search surfaces rather than decorative backdrops, with the next pass focused on `AdvancedSearchModal.tsx`, which is now the next high-impact shared search/filter surface still sitting behind explicit raw-Tailwind and interactive-state debt.
+- Keep working through smaller helper controls and shared search surfaces rather than decorative backdrops, with the next pass focused on `CreateIssueModal.tsx`, which is now one of the next high-impact shared workflow surfaces still sitting behind explicit raw-Tailwind and interactive-state debt.
 
 ## Problem
 
