@@ -211,6 +211,8 @@ const cardRecipeVariants = cva("", {
         "h-1 rounded-full border-transparent bg-status-warning shadow-none transition-colors",
       authStrengthSegmentSuccess:
         "h-1 rounded-full border-transparent bg-status-success shadow-none transition-colors",
+      authSplashLoaderRail:
+        "h-0.5 w-32 overflow-hidden rounded-full border-transparent bg-ui-border/20 shadow-none",
       landingNavFrame:
         "rounded-none border-transparent bg-transparent px-4 py-4 text-ui-text shadow-none sm:px-6",
       landingFeatureCardCyan:

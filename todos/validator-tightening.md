@@ -322,6 +322,7 @@
 - Removed `FuzzySearch/AssigneeSearchDropdown.example.tsx` from the interactive-state allowlist by moving its remaining clear action onto owned `IconButton` danger chrome instead of leaving a raw `hover:text-*` example behind.
 - Hardened `check-interactive-tw.js` after the allowlist hit zero: removed the dead migration list and zero-allowed reporting so interactive Tailwind now behaves as direct enforcement instead of a migration-mode validator.
 - Hardened the raw-Tailwind policy after explicit raw debt hit zero: replaced the old `RAW_TAILWIND_ALLOWED_*` migration framing with an explicit owned-boundary policy (`src/components/ui/`) plus non-product extensions, and wired both `check-raw-tailwind.js` and `check-surface-shells.js` to that direct boundary check.
+- Tightened `check-colors.js` after the raw/interactivity burn-down: removed the stale broad `Landing/` raw-color escape hatch and the stale `AIChat.tsx` / `PumbleIntegration.tsx` raw-color exemptions, moved `AppSplashScreen.tsx` off `bg-white/5` onto a semantic token, and narrowed landing hardcoded-color debt down to the single remaining logo file that still owns a branded drop-shadow treatment.
 - The embedded calendar island is now narrowed from directory-wide escape hatches to explicit file debt. Burn that list down surface by surface instead of allowing new embedded drift by default.
 
 ## Problem

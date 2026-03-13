@@ -13,15 +13,7 @@ export function run() {
   const CONVEX = path.join(ROOT, "convex");
 
   // Allowlists
-  const ALLOWLIST_RAW_TAILWIND = [
-    "src/components/Landing/",
-    "src/components/Auth/AppSplashScreen.tsx",
-    "src/components/AI/AIChat.tsx",
-    "src/components/Settings/PumbleIntegration.tsx",
-    "*.test.ts",
-    "*.test.tsx",
-    "src/index.css",
-  ];
+  const ALLOWLIST_RAW_TAILWIND = ["*.test.ts", "*.test.tsx", "src/index.css"];
 
   const ALLOWLIST_HARDCODED_HEX = [
     "src/components/Auth/GoogleAuthButton.tsx",
@@ -29,7 +21,7 @@ export function run() {
     "src/components/ui/ColorPicker.test.tsx",
     "src/components/Plate/ColorPickerButton.tsx", // Text color picker for Plate editor
     "src/index.css",
-    "src/components/Landing/",
+    "src/components/Landing/Icons.tsx",
     "convex/http/",
     "convex/pumble.ts",
     "convex/invites.ts",

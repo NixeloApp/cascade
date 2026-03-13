@@ -28,7 +28,8 @@ export function NixeloLogo({ size = 28, className }: { size?: number; className?
         strokeLinejoin="round"
         className="transition-all duration-medium ease-in-out"
         style={{
-          filter: "drop-shadow(0 0 6px rgba(96, 165, 250, 0.24))",
+          filter:
+            "drop-shadow(0 0 6px color-mix(in oklab, var(--color-landing-accent) 24%, transparent))",
         }}
       />
     </svg>
