@@ -39,6 +39,24 @@ function mockErrorResponse(status: number, body: string): Response {
   } as Response;
 }
 
+function createMockActionCtx() {
+  const ctx = {
+    runQuery: vi.fn(),
+    runMutation: vi.fn(),
+    runAction: vi.fn(),
+    scheduler: {},
+    auth: {},
+    storage: {},
+  } as ActionCtx;
+
+  return {
+    ctx,
+    runQuery: vi.mocked(ctx.runQuery),
+    runMutation: vi.mocked(ctx.runMutation),
+    runAction: vi.mocked(ctx.runAction),
+  };
+}
+
 // Mock api/internal
 vi.mock("../_generated/api", () => ({
   api: {
@@ -55,11 +73,6 @@ vi.mock("../_generated/api", () => ({
 }));
 
 describe("Google OAuth HTTP Handler", () => {
-  const mockCtx = {
-    runQuery: vi.fn(),
-    runMutation: vi.fn(),
-  } as unknown as ActionCtx;
-
   beforeEach(() => {
     vi.resetAllMocks();
     // Default config
@@ -121,8 +134,9 @@ describe("Google OAuth HTTP Handler", () => {
 
   describe("handleCallbackHandler", () => {
     it("should return HTML error if error param exists", async () => {
+      const { ctx } = createMockActionCtx();
       const request = new Request(`${GOOGLE_CALLBACK_URL}?error=access_denied`);
-      const response = await handleCallbackHandler(mockCtx, request);
+      const response = await handleCallbackHandler(ctx, request);
 
       expect(response.status).toBe(400);
       const text = await response.text();
@@ -132,6 +146,7 @@ describe("Google OAuth HTTP Handler", () => {
     });
 
     it("should return HTML error if config is missing (throws)", async () => {
+      const { ctx } = createMockActionCtx();
       vi.mocked(envLib.getGoogleClientId).mockImplementation(() => {
         throw new Error("Missing required environment variable: AUTH_GOOGLE_ID");
       });
@@ -139,7 +154,7 @@ describe("Google OAuth HTTP Handler", () => {
       const request = new Request(`${GOOGLE_CALLBACK_URL}?code=some_code&state=valid_state`, {
         headers: { Cookie: "google-oauth-state=valid_state" },
       });
-      const response = await handleCallbackHandler(mockCtx, request);
+      const response = await handleCallbackHandler(ctx, request);
 
       expect(response.status).toBe(500);
       const text = await response.text();
@@ -148,23 +163,25 @@ describe("Google OAuth HTTP Handler", () => {
     });
 
     it("should return 400 if state is missing or invalid", async () => {
+      const { ctx } = createMockActionCtx();
       let request = new Request(`${GOOGLE_CALLBACK_URL}?code=some_code`);
-      let response = await handleCallbackHandler(mockCtx, request);
+      let response = await handleCallbackHandler(ctx, request);
       expect(response.status).toBe(400);
       expect(await response.text()).toContain("Invalid state");
 
       request = new Request(`${GOOGLE_CALLBACK_URL}?code=some_code&state=val`);
-      response = await handleCallbackHandler(mockCtx, request);
+      response = await handleCallbackHandler(ctx, request);
       expect(response.status).toBe(400);
 
       request = new Request(`${GOOGLE_CALLBACK_URL}?code=some_code&state=val1`, {
         headers: { Cookie: "google-oauth-state=val2" },
       });
-      response = await handleCallbackHandler(mockCtx, request);
+      response = await handleCallbackHandler(ctx, request);
       expect(response.status).toBe(400);
     });
 
     it("should exchange code for token and return success HTML", async () => {
+      const { ctx } = createMockActionCtx();
       // Mock token exchange response
       vi.mocked(fetchWithTimeout).mockResolvedValueOnce(
         mockOkResponse({
@@ -182,7 +199,7 @@ describe("Google OAuth HTTP Handler", () => {
       const request = new Request(`${GOOGLE_CALLBACK_URL}?code=auth_code&state=valid_state`, {
         headers: { Cookie: "google-oauth-state=valid_state" },
       });
-      const response = await handleCallbackHandler(mockCtx, request);
+      const response = await handleCallbackHandler(ctx, request);
 
       expect(response.status).toBe(200);
       const text = await response.text();
@@ -205,12 +222,13 @@ describe("Google OAuth HTTP Handler", () => {
     });
 
     it("should handle token exchange failure", async () => {
+      const { ctx } = createMockActionCtx();
       vi.mocked(fetchWithTimeout).mockResolvedValueOnce(mockErrorResponse(400, "invalid_grant"));
 
       const request = new Request(`${GOOGLE_CALLBACK_URL}?code=auth_code&state=valid_state`, {
         headers: { Cookie: "google-oauth-state=valid_state" },
       });
-      const response = await handleCallbackHandler(mockCtx, request);
+      const response = await handleCallbackHandler(ctx, request);
 
       expect(response.status).toBe(500);
       const text = await response.text();
@@ -218,6 +236,7 @@ describe("Google OAuth HTTP Handler", () => {
     });
 
     it("should handle user info fetch failure", async () => {
+      const { ctx } = createMockActionCtx();
       // Token exchange succeeds and returns refresh_token
       vi.mocked(fetchWithTimeout).mockResolvedValueOnce(
         mockOkResponse({
@@ -233,7 +252,7 @@ describe("Google OAuth HTTP Handler", () => {
       const request = new Request(`${GOOGLE_CALLBACK_URL}?code=auth_code&state=valid_state`, {
         headers: { Cookie: "google-oauth-state=valid_state" },
       });
-      const response = await handleCallbackHandler(mockCtx, request);
+      const response = await handleCallbackHandler(ctx, request);
 
       expect(response.status).toBe(500);
       const text = await response.text();
@@ -243,9 +262,10 @@ describe("Google OAuth HTTP Handler", () => {
 
   describe("triggerSyncHandler", () => {
     it("should return error if not connected", async () => {
-      vi.mocked(mockCtx.runQuery).mockResolvedValue(null);
+      const { ctx, runQuery } = createMockActionCtx();
+      runQuery.mockResolvedValue(null);
 
-      const response = await triggerSyncHandler(mockCtx);
+      const response = await triggerSyncHandler(ctx);
 
       expect(response.status).toBe(400);
       const body = await response.json();
@@ -253,9 +273,10 @@ describe("Google OAuth HTTP Handler", () => {
     });
 
     it("should return error if sync is disabled", async () => {
-      vi.mocked(mockCtx.runQuery).mockResolvedValue({ _id: "conn1", syncEnabled: false });
+      const { ctx, runQuery } = createMockActionCtx();
+      runQuery.mockResolvedValue({ _id: "conn1", syncEnabled: false });
 
-      const response = await triggerSyncHandler(mockCtx);
+      const response = await triggerSyncHandler(ctx);
 
       expect(response.status).toBe(400);
       const body = await response.json();
@@ -263,10 +284,11 @@ describe("Google OAuth HTTP Handler", () => {
     });
 
     it("should return error if tokens missing", async () => {
-      vi.mocked(mockCtx.runQuery).mockResolvedValue({ _id: "conn1", syncEnabled: true });
-      vi.mocked(mockCtx.runMutation).mockResolvedValue(null);
+      const { ctx, runMutation, runQuery } = createMockActionCtx();
+      runQuery.mockResolvedValue({ _id: "conn1", syncEnabled: true });
+      runMutation.mockResolvedValue(null);
 
-      const response = await triggerSyncHandler(mockCtx);
+      const response = await triggerSyncHandler(ctx);
 
       expect(response.status).toBe(500);
       const body = await response.json();
@@ -274,9 +296,10 @@ describe("Google OAuth HTTP Handler", () => {
     });
 
     it("should sync events successfully", async () => {
-      vi.mocked(mockCtx.runQuery).mockResolvedValue({ _id: "conn1", syncEnabled: true });
-      vi.mocked(mockCtx.runMutation).mockResolvedValueOnce({ accessToken: "access_token" });
-      vi.mocked(mockCtx.runMutation).mockResolvedValueOnce({ imported: 5 });
+      const { ctx, runMutation, runQuery } = createMockActionCtx();
+      runQuery.mockResolvedValue({ _id: "conn1", syncEnabled: true });
+      runMutation.mockResolvedValueOnce({ accessToken: "access_token" });
+      runMutation.mockResolvedValueOnce({ imported: 5 });
 
       // Mock events fetch
       vi.mocked(fetchWithTimeout).mockResolvedValueOnce(
@@ -292,15 +315,15 @@ describe("Google OAuth HTTP Handler", () => {
         }),
       );
 
-      const response = await triggerSyncHandler(mockCtx);
+      const response = await triggerSyncHandler(ctx);
 
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.success).toBe(true);
       expect(body.imported).toBe(5);
 
-      expect(mockCtx.runMutation).toHaveBeenCalledTimes(2);
-      expect(vi.mocked(mockCtx.runMutation).mock.calls[1][1]).toMatchObject({
+      expect(runMutation).toHaveBeenCalledTimes(2);
+      expect(runMutation.mock.calls[1][1]).toMatchObject({
         connectionId: "conn1",
         events: expect.arrayContaining([
           expect.objectContaining({
@@ -312,14 +335,15 @@ describe("Google OAuth HTTP Handler", () => {
     });
 
     it("should handle fetch error", async () => {
-      vi.mocked(mockCtx.runQuery).mockResolvedValue({ _id: "conn1", syncEnabled: true });
-      vi.mocked(mockCtx.runMutation).mockResolvedValueOnce({ accessToken: "access_token" });
+      const { ctx, runMutation, runQuery } = createMockActionCtx();
+      runQuery.mockResolvedValue({ _id: "conn1", syncEnabled: true });
+      runMutation.mockResolvedValueOnce({ accessToken: "access_token" });
 
       vi.mocked(fetchWithTimeout).mockResolvedValueOnce(
         mockErrorResponse(500, "Internal Server Error"),
       );
 
-      const response = await triggerSyncHandler(mockCtx);
+      const response = await triggerSyncHandler(ctx);
 
       expect(response.status).toBe(500);
       const body = await response.json();
@@ -328,8 +352,9 @@ describe("Google OAuth HTTP Handler", () => {
     });
 
     it("should extract error message from Google JSON response", async () => {
-      vi.mocked(mockCtx.runQuery).mockResolvedValue({ _id: "conn1", syncEnabled: true });
-      vi.mocked(mockCtx.runMutation).mockResolvedValueOnce({ accessToken: "access_token" });
+      const { ctx, runMutation, runQuery } = createMockActionCtx();
+      runQuery.mockResolvedValue({ _id: "conn1", syncEnabled: true });
+      runMutation.mockResolvedValueOnce({ accessToken: "access_token" });
 
       const googleError = {
         error: {
@@ -342,7 +367,7 @@ describe("Google OAuth HTTP Handler", () => {
         mockErrorResponse(403, JSON.stringify(googleError)),
       );
 
-      const response = await triggerSyncHandler(mockCtx);
+      const response = await triggerSyncHandler(ctx);
 
       expect(response.status).toBe(403);
       const body = await response.json();
