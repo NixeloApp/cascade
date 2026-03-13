@@ -33,20 +33,13 @@ export function run() {
     /convex\/softDeleteCleanup\.ts$/, // Convex internal cleanup utility
     /convex\/issues\/queries\.ts$/, // Convex search index type mismatch requires casting
     /convex\/calendarEvents\.ts$/, // Multikey index query requires explicit casting
-    /src\/components\/KeyboardShortcutsHelp\.tsx$/, // Contains explicit suppressions
-    /convex\/automationRules\.ts$/, // Complexity threshold update
-    /convex\/otpPasswordReset\.ts$/, // Complexity threshold update
     /convex\/otpVerification\.ts$/, // Complexity threshold update
     /convex\/rateLimits\.ts$/, // Type assertion required
-    /src\/components\/App\/AppSidebar\.tsx$/, // Complexity: multiple nav sections - TODO: split into NavSection components
     /src\/components\/IssueDetail\/CreateIssueModal\.tsx$/, // Complexity: form + validation + AI - TODO: extract form sections
     /src\/components\/Documents\/DocumentHeader\.tsx$/, // Complexity: conditional actions - TODO: extract DocumentActions
     /src\/components\/IssueDetail\/IssueCard\.tsx$/, // Complexity: drag-drop + selection - TODO: split DraggableIssueCard
-    /src\/components\/IssuesCalendarView\.tsx$/, // a11y: calendar cells are drop targets (clickable divs)
     /src\/components\/PlateEditor\.tsx$/, // Complexity: editor operations - TODO: extract DocumentControls
     /src\/components\/RoadmapView\.tsx$/, // Complexity: timeline + SVG - TODO: extract TimelineRenderer
-    /src\/components\/Settings\/AvatarUploadModal\.tsx$/, // a11y: drop zone requires div for keyboard handling
-    /src\/components\/Settings\/CoverImageUploadModal\.tsx$/, // a11y: drop zone requires div for keyboard handling
     /convex\/users\.ts$/, // Complexity: search with filters - TODO: extract searchUsersHelper
     /src\/components\/Plate\/MentionInputElement\.tsx$/, // Intentional useEffect deps pattern for combobox reset
     /src\/components\/IssueDetail\/IssueMetadataSection\.tsx$/, // Complexity: conditional inline editing for each field
