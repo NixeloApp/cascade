@@ -195,7 +195,10 @@
 - Added `ClientPortal/PortalTimeline.tsx` to design-system ownership targeting so future client-portal timeline drift is blocked directly.
 - Removed `CommentRenderer.tsx` from the raw-Tailwind and interactive-state debt lists by moving inline code, markdown link, and mention chrome onto owned `Typography`, `Button`, and `Badge` primitives instead of keeping those presentation contracts in feature code.
 - Added `CommentRenderer.tsx` to design-system ownership targeting so future comment-renderer shell drift is blocked directly.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `InvoiceEditor.tsx` and `InvoicePdfTemplate.tsx`, which are now the next higher-impact shared surfaces still sitting behind explicit validator debt.
+- Removed `Invoices/InvoiceEditor.tsx` from the raw-Tailwind debt list by moving its line-item row shell onto an owned `Card` recipe and replacing the feature-level spacing/border grid shell with `Stack`, responsive `Grid`, and `Flex` composition.
+- Removed `Invoices/InvoicePdfTemplate.tsx` from the raw-Tailwind debt list by moving the preview and totals shells onto owned `Card` recipes and replacing its feature-level invoice line-item grid with the shared `Table` primitive.
+- Added `Invoices/InvoiceEditor.tsx` and `Invoices/InvoicePdfTemplate.tsx` to design-system ownership targeting so future invoice-surface drift is blocked directly.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `KanbanBoard.tsx` and `IssuesCalendarView.tsx`, which are now the next higher-impact shared surfaces still sitting behind explicit validator debt.
 
 ## Problem
 

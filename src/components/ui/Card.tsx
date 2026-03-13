@@ -214,6 +214,11 @@ const cardRecipeVariants = cva("", {
         "rounded-container border-ui-border-secondary/75 bg-linear-to-b from-ui-bg-soft/96 via-ui-bg-soft/92 to-ui-bg-elevated/94 shadow-none hover:border-ui-border-secondary hover:bg-ui-bg-hover",
       pendingAttachmentRow: "rounded-xl border-ui-border bg-ui-bg-soft shadow-none",
       attachmentRow: "rounded-xl border-ui-border bg-ui-bg-soft shadow-none",
+      invoiceEditorLine: "rounded-xl border-ui-border bg-ui-bg-soft shadow-none",
+      invoicePreviewSection:
+        "overflow-hidden rounded-xl border-ui-border-secondary/70 bg-ui-bg-soft shadow-none",
+      invoiceTotalsPanel:
+        "rounded-xl border-brand-border bg-linear-to-r from-brand-subtle/70 via-ui-bg-elevated/96 to-ui-bg-soft/88 shadow-none",
       issueDetailSheetHeader:
         "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",
       labelGroupHeader:

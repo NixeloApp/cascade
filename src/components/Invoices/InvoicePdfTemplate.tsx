@@ -1,6 +1,15 @@
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Grid } from "@/components/ui/Grid";
+import { Stack } from "@/components/ui/Stack";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/Table";
 import { Typography } from "@/components/ui/Typography";
 
 type InvoiceLineItem = {
@@ -49,50 +58,60 @@ export function InvoicePdfTemplate({
       <CardHeader>
         <CardTitle>PDF Preview</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 pt-4">
-        <Grid cols={1} gap="sm" className="md:grid-cols-3">
-          <Typography variant="small">Invoice: {invoiceNumber}</Typography>
-          <Typography variant="small">Issued: {formatDate(issueDate)}</Typography>
-          <Typography variant="small">Due: {formatDate(dueDate)}</Typography>
-        </Grid>
+      <CardContent>
+        <Stack gap="lg">
+          <Grid cols={1} colsMd={3} gap="sm">
+            <Typography variant="small">Invoice: {invoiceNumber}</Typography>
+            <Typography variant="small">Issued: {formatDate(issueDate)}</Typography>
+            <Typography variant="small">Due: {formatDate(dueDate)}</Typography>
+          </Grid>
 
-        <div className="space-y-2 rounded-lg border border-ui-border p-3">
-          {lineItems.map((line) => (
-            <Grid
-              key={`${line.description}-${line.quantity}-${line.rate}-${line.amount}`}
-              gap="sm"
-              className="grid-cols-[2fr_1fr_1fr_1fr]"
-            >
-              <Typography variant="small">{line.description}</Typography>
-              <Typography variant="small" color="secondary">
-                {line.quantity.toFixed(2)}h
-              </Typography>
-              <Typography variant="small" color="secondary">
-                {formatCurrency(line.rate)}
-              </Typography>
-              <Typography variant="small">{formatCurrency(line.amount)}</Typography>
-            </Grid>
-          ))}
-        </div>
+          <Card recipe="invoicePreviewSection">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Hours</TableHead>
+                  <TableHead>Rate</TableHead>
+                  <TableHead>Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {lineItems.map((line) => (
+                  <TableRow
+                    key={`${line.description}-${line.quantity}-${line.rate}-${line.amount}`}
+                  >
+                    <TableCell>{line.description}</TableCell>
+                    <TableCell>{line.quantity.toFixed(2)}h</TableCell>
+                    <TableCell>{formatCurrency(line.rate)}</TableCell>
+                    <TableCell>{formatCurrency(line.amount)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
 
-        <div className="space-y-1">
-          <Typography variant="small">Subtotal: {formatCurrency(subtotal)}</Typography>
-          <Typography variant="small">Tax: {formatCurrency(tax ?? 0)}</Typography>
-          <Typography variant="h4">Total: {formatCurrency(total)}</Typography>
-        </div>
+          <Card recipe="invoiceTotalsPanel" padding="sm">
+            <Stack gap="xs" align="end">
+              <Typography variant="small">Subtotal: {formatCurrency(subtotal)}</Typography>
+              <Typography variant="small">Tax: {formatCurrency(tax ?? 0)}</Typography>
+              <Typography variant="h4">Total: {formatCurrency(total)}</Typography>
+            </Stack>
+          </Card>
 
-        {notes ? <Typography variant="small">Notes: {notes}</Typography> : null}
-        {pdfUrl ? (
-          <Button variant="link" size="sm" asChild>
-            <a href={pdfUrl} target="_blank" rel="noreferrer">
-              Open generated PDF
-            </a>
-          </Button>
-        ) : (
-          <Typography variant="small" color="secondary">
-            No PDF generated yet.
-          </Typography>
-        )}
+          {notes ? <Typography variant="small">Notes: {notes}</Typography> : null}
+          {pdfUrl ? (
+            <Button variant="link" size="sm" asChild>
+              <a href={pdfUrl} target="_blank" rel="noreferrer">
+                Open generated PDF
+              </a>
+            </Button>
+          ) : (
+            <Typography variant="small" color="secondary">
+              No PDF generated yet.
+            </Typography>
+          )}
+        </Stack>
       </CardContent>
     </Card>
   );
