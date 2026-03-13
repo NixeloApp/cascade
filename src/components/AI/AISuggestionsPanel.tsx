@@ -6,8 +6,11 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import { AlertTriangle, Calendar, Check, Lightbulb, Sparkles, Target, X } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
+import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
+import { InlineSpinner } from "../ui/LoadingSpinner";
 import { MetadataTimestamp } from "../ui/Metadata";
 import { Progress } from "../ui/Progress";
 import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
@@ -34,9 +37,13 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
   if (!projectId) {
     return (
       <Flex align="center" justify="center" className="h-full">
-        <div className="text-center">
-          <Typography variant="muted">Select a project to view AI suggestions</Typography>
-        </div>
+        <EmptyState
+          icon={Target}
+          title="No Project Selected"
+          description="Select a project to view AI suggestions."
+          size="compact"
+          surface="bare"
+        />
       </Flex>
     );
   }
@@ -44,17 +51,23 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
   return (
     <Flex direction="column" className="h-full bg-ui-bg">
       {/* Action Bar */}
-      <div className="p-3 sm:p-4 border-b border-ui-border bg-ui-bg-secondary">
+      <Card
+        variant="ghost"
+        padding="sm"
+        radius="none"
+        className="border-x-0 border-t-0 border-b border-ui-border bg-ui-bg-secondary sm:p-4"
+      >
         <Button
-          variant="unstyled"
+          variant="accentGradient"
+          size="md"
           onClick={handleGenerateInsights}
           disabled={isGenerating}
-          className="w-full px-4 py-2.5 sm:py-3 bg-linear-to-r from-brand to-accent text-brand-foreground rounded-lg text-sm sm:text-base font-medium hover:from-brand-hover hover:to-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring disabled:opacity-50 disabled:pointer-events-none transition-all touch-manipulation"
+          className="w-full sm:h-11 touch-manipulation"
         >
           <Flex align="center" justify="center" gap="sm">
             {isGenerating ? (
               <>
-                <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <InlineSpinner size="sm" variant="inherit" className="sm:h-5 sm:w-5" />
                 <span className="hidden sm:inline">Analyzing Project...</span>
                 <span className="sm:hidden">Analyzing...</span>
               </>
@@ -74,7 +87,8 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
           onValueChange={(value: string) =>
             setSelectedType(value === "all" ? undefined : (value as SuggestionType))
           }
-          className="mt-3 flex w-full flex-wrap justify-start"
+          wrap
+          className="mt-3 w-full"
           size="sm"
         >
           <SegmentedControlItem value="all">All</SegmentedControlItem>
@@ -88,41 +102,39 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
             <Icon icon={Calendar} size="sm" className="inline mr-1" /> Planning
           </SegmentedControlItem>
         </SegmentedControl>
-      </div>
+      </Card>
 
       {/* Suggestions List */}
-      <FlexItem flex="1" className="overflow-y-auto p-3 sm:p-4">
-        {!suggestions ? (
-          <Flex direction="column" gap="md">
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
-          </Flex>
-        ) : suggestions.length === 0 ? (
-          <Flex align="center" justify="center" className="h-full text-center px-4">
-            <div>
-              <Icon icon={Target} size="xl" className="mx-auto mb-4 text-ui-text-tertiary" />
-              <Typography variant="h5" className="mb-2">
-                No Suggestions Yet
-              </Typography>
-              <Typography variant="muted" className="mb-4">
-                Click "Generate AI Insights" to analyze your project and get AI-powered
-                recommendations.
-              </Typography>
-            </div>
-          </Flex>
-        ) : (
-          <Flex direction="column" gap="md">
-            {suggestions.map((suggestion) => (
-              <SuggestionCard
-                key={suggestion._id}
-                suggestion={suggestion}
-                onAccept={handleAcceptSuggestion}
-                onDismiss={handleDismissSuggestion}
+      <FlexItem flex="1" className="overflow-y-auto">
+        <Card variant="ghost" padding="sm" className="sm:p-4">
+          {!suggestions ? (
+            <Flex direction="column" gap="md">
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-24 w-full" />
+            </Flex>
+          ) : suggestions.length === 0 ? (
+            <Flex align="center" justify="center" className="h-full text-center">
+              <EmptyState
+                icon={Target}
+                title="No Suggestions Yet"
+                description='Click "Generate AI Insights" to analyze your project and get AI-powered recommendations.'
+                surface="bare"
               />
-            ))}
-          </Flex>
-        )}
+            </Flex>
+          ) : (
+            <Flex direction="column" gap="md">
+              {suggestions.map((suggestion) => (
+                <SuggestionCard
+                  key={suggestion._id}
+                  suggestion={suggestion}
+                  onAccept={handleAcceptSuggestion}
+                  onDismiss={handleDismissSuggestion}
+                />
+              ))}
+            </Flex>
+          )}
+        </Card>
       </FlexItem>
     </Flex>
   );
@@ -140,7 +152,7 @@ function SuggestionCard({ suggestion, onAccept, onDismiss }: SuggestionCardProps
   const metadata = SUGGESTION_METADATA[suggestion.suggestionType as SuggestionType];
 
   return (
-    <div className="bg-ui-bg border border-ui-border rounded-lg p-3 sm:p-4 shadow-card hover:shadow-card-hover transition-shadow">
+    <Card variant="interactive" padding="md" radius="md">
       <Flex align="start" gap="md">
         <Icon icon={metadata?.icon || Lightbulb} size="lg" className="shrink-0" />
         <FlexItem flex="1" className="min-w-0">
@@ -167,7 +179,9 @@ function SuggestionCard({ suggestion, onAccept, onDismiss }: SuggestionCardProps
                 <Typography variant="caption" color="tertiary">
                   Confidence:
                 </Typography>
-                <Progress value={suggestion.confidence * 100} className="flex-1 max-w-25" />
+                <FlexItem flex="1">
+                  <Progress value={suggestion.confidence * 100} className="max-w-25" />
+                </FlexItem>
                 <Typography variant="caption" color="tertiary">
                   {Math.round(suggestion.confidence * 100)}%
                 </Typography>
@@ -212,6 +226,6 @@ function SuggestionCard({ suggestion, onAccept, onDismiss }: SuggestionCardProps
           )}
         </FlexItem>
       </Flex>
-    </div>
+    </Card>
   );
 }

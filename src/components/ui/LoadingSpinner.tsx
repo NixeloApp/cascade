@@ -41,6 +41,19 @@ interface LoadingSpinnerProps extends VariantProps<typeof spinnerVariants> {
   message?: string;
 }
 
+interface InlineSpinnerProps extends VariantProps<typeof spinnerVariants> {
+  className?: string;
+}
+
+export function InlineSpinner({ size, variant, animation, className }: InlineSpinnerProps) {
+  return (
+    <div
+      className={cn(spinnerVariants({ size, variant, animation }), className)}
+      aria-hidden="true"
+    />
+  );
+}
+
 /**
  * Loading spinner with multiple size, color, and animation variants.
  *
@@ -63,10 +76,7 @@ export function LoadingSpinner({
 }: LoadingSpinnerProps) {
   return (
     <Flex direction="column" align="center" justify="center" gap="md" role="status">
-      <div
-        className={cn(spinnerVariants({ size, variant, animation }), className)}
-        aria-hidden="true"
-      />
+      <InlineSpinner size={size} variant={variant} animation={animation} className={className} />
       {!message && <span className="sr-only">Loading...</span>}
       {message && (
         <Typography variant="small" className="text-ui-text-secondary">

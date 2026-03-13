@@ -18,10 +18,15 @@ const segmentedControlVariants = cva(
         md: "",
         lg: "",
       },
+      wrap: {
+        true: "flex-wrap",
+        false: "",
+      },
     },
     defaultVariants: {
       variant: "default",
       size: "md",
+      wrap: false,
     },
   },
 );
@@ -71,11 +76,11 @@ type SegmentedControlProps = Omit<
 const SegmentedControl = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Root>,
   SegmentedControlProps
->(({ className, children, size, variant, ...props }, ref) => (
+>(({ className, children, size, variant, wrap, ...props }, ref) => (
   <ToggleGroupPrimitive.Root
     ref={ref}
     type="single"
-    className={cn(segmentedControlVariants({ size, variant }), className)}
+    className={cn(segmentedControlVariants({ size, variant, wrap }), className)}
     {...props}
   >
     <SegmentedControlContext.Provider value={{ size, variant }}>

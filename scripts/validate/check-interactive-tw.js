@@ -23,7 +23,7 @@ const ALLOWED_FILES = [
   "AdvancedSearchModal/",
   "FilterBar.tsx",
   "GlobalSearch.tsx",
-  "FuzzySearch/",
+  "FuzzySearch/AssigneeSearchDropdown.example.tsx",
   // Issue components
   "IssueCard.tsx",
   "IssueDetail/",
@@ -65,7 +65,8 @@ const ALLOWED_FILES = [
   "IssuesCalendarView.tsx",
   "RoadmapView.tsx",
   // AI components
-  "AI/",
+  "AI/AIAssistantPanel.tsx",
+  "AI/AIChat.tsx",
   // Sprint components
   "Sprint",
   // Onboarding

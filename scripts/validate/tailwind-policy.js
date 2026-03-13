@@ -8,7 +8,6 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
   "src/components/Calendar/",
   "src/components/Auth/",
   "src/components/Editor/",
-  "src/components/AI/",
   "src/components/Sidebar/",
   "src/components/Plate/",
   "src/components/Onboarding/",
@@ -23,6 +22,9 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
 export const RAW_TAILWIND_ALLOWED_FILES = [
   "/ActivityFeed.tsx",
   "/AdvancedSearchModal.tsx",
+  "/AI/AIAssistantPanel.tsx",
+  "/AI/AIChat.tsx",
+  "/AI/AIErrorFallback.tsx",
   "/AppSidebar.tsx",
   "/AppHeader.tsx",
   // Explicit migration-debt exemptions replacing broad Settings/Admin/ProjectSettings directory escapes.
@@ -95,6 +97,7 @@ export const RAW_TAILWIND_PATTERNS = [
 export const DESIGN_SYSTEM_TARGET_FILES = [
   "/AI/AIAssistantButton.tsx",
   "/AI/AIChat.tsx",
+  "/AI/AISuggestionsPanel.tsx",
   "/Analytics/RecentActivity.tsx",
   "/AppHeader.tsx",
   "/BulkOperationsBar.tsx",

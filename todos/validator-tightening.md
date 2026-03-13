@@ -116,6 +116,18 @@
 
 - Continue the floating-surface pass with remaining positioned overlays surfaced by the stronger scan, especially files that still define chrome on `fixed` or `absolute` panels instead of plain backdrops.
 - Prioritize the next shared floating shells that still combine positioned chrome with border/background/shadow outside owned primitives, especially smaller overlay controls in `AI/` and remaining interactive helper badges rather than decorative backdrops.
+- Removed the broad `src/components/AI/` raw-Tailwind escape hatch and replaced it with explicit file-level debt for the remaining AI-heavy surfaces: `AI/AIAssistantPanel.tsx`, `AI/AIChat.tsx`, and `AI/AIErrorFallback.tsx`.
+- Replaced the broad `AI/` interactive-state allowlist entry with explicit debt for `AI/AIAssistantPanel.tsx` and `AI/AIChat.tsx`.
+- Removed the broad `FuzzySearch/` interactive-state allowlist entry; only `FuzzySearch/AssigneeSearchDropdown.example.tsx` remains exempt there.
+- Moved `FuzzySearch/FuzzySearchInput.tsx` off its inline clear-button and loading-spinner chrome by using owned `IconButton` and the shared `InlineSpinner` primitive.
+- Migrated `AI/AISuggestionsPanel.tsx` off its inline CTA and suggestion-card shells by using an owned `Button` gradient variant, `Card` interactive surface, `EmptyState`, `InlineSpinner`, and `SegmentedControl` wrap props.
+- Added `AI/AISuggestionsPanel.tsx` to design-system ownership targeting so future suggestion-shell drift is blocked directly.
+
+### Next batch
+
+- Continue shrinking the explicit `AI` debt now that the broad directory escapes are gone.
+- Prioritize `AI/AIAssistantPanel.tsx` next: its gradient sheet header and tab-shell composition are still the largest remaining AI-owned surface contract.
+- After that, burn down `AI/AIChat.tsx` and `AI/AIErrorFallback.tsx`, then keep working through smaller helper controls rather than decorative backdrops.
 
 ## Problem
 
