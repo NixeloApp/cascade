@@ -33,7 +33,6 @@ export function run() {
     /convex\/issues\/queries\.ts$/, // Convex search index type mismatch requires casting
     /convex\/calendarEvents\.ts$/, // Multikey index query requires explicit casting
     /src\/components\/IssueDetail\/CreateIssueModal\.tsx$/, // Complexity: form + validation + AI - TODO: extract form sections
-    /src\/components\/Documents\/DocumentHeader\.tsx$/, // Complexity: conditional actions - TODO: extract DocumentActions
     /src\/components\/IssueDetail\/IssueCard\.tsx$/, // Complexity: drag-drop + selection - TODO: split DraggableIssueCard
     /src\/components\/PlateEditor\.tsx$/, // Complexity: editor operations - TODO: extract DocumentControls
     /src\/components\/RoadmapView\.tsx$/, // Complexity: timeline + SVG - TODO: extract TimelineRenderer
