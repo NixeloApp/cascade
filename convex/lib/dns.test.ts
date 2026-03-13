@@ -3,9 +3,10 @@ import { resolveDNS } from "./dns";
 
 describe("resolveDNS", () => {
   const originalFetch = global.fetch;
+  const fetchMock = vi.fn<typeof fetch>();
 
   beforeEach(() => {
-    global.fetch = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
   });
 
   afterEach(() => {
@@ -15,7 +16,7 @@ describe("resolveDNS", () => {
 
   it("should resolve A records", async () => {
     // Mock A record response
-    (global.fetch as any).mockImplementationOnce(() =>
+    fetchMock.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
         json: async () => ({
@@ -25,7 +26,7 @@ describe("resolveDNS", () => {
       }),
     );
     // Mock AAAA record response (empty)
-    (global.fetch as any).mockImplementationOnce(() =>
+    fetchMock.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
         json: async () => ({
@@ -42,7 +43,7 @@ describe("resolveDNS", () => {
 
   it("should resolve AAAA records", async () => {
     // Mock A record response (empty)
-    (global.fetch as any).mockImplementationOnce(() =>
+    fetchMock.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
         json: async () => ({
@@ -52,7 +53,7 @@ describe("resolveDNS", () => {
       }),
     );
     // Mock AAAA record response
-    (global.fetch as any).mockImplementationOnce(() =>
+    fetchMock.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
         json: async () => ({
@@ -69,7 +70,7 @@ describe("resolveDNS", () => {
 
   it("should resolve both A and AAAA records", async () => {
     // Mock A record response
-    (global.fetch as any).mockImplementationOnce(() =>
+    fetchMock.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
         json: async () => ({
@@ -79,7 +80,7 @@ describe("resolveDNS", () => {
       }),
     );
     // Mock AAAA record response
-    (global.fetch as any).mockImplementationOnce(() =>
+    fetchMock.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
         json: async () => ({
@@ -97,7 +98,7 @@ describe("resolveDNS", () => {
 
   it("should throw if no records found", async () => {
     // Mock A record response (empty)
-    (global.fetch as any).mockImplementationOnce(() =>
+    fetchMock.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
         json: async () => ({
@@ -107,7 +108,7 @@ describe("resolveDNS", () => {
       }),
     );
     // Mock AAAA record response (empty)
-    (global.fetch as any).mockImplementationOnce(() =>
+    fetchMock.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
         json: async () => ({
@@ -122,9 +123,9 @@ describe("resolveDNS", () => {
 
   it("should fail if one lookup fails (Fail Closed)", async () => {
     // Mock A record failure
-    (global.fetch as any).mockImplementationOnce(() => Promise.reject(new Error("Network error")));
+    fetchMock.mockImplementationOnce(() => Promise.reject(new Error("Network error")));
     // Mock AAAA record success (should not be returned)
-    (global.fetch as any).mockImplementationOnce(() =>
+    fetchMock.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
         json: async () => ({
@@ -139,16 +140,16 @@ describe("resolveDNS", () => {
 
   it("should throw if all lookups fail", async () => {
     // Mock A record failure
-    (global.fetch as any).mockImplementationOnce(() => Promise.reject(new Error("Network error")));
+    fetchMock.mockImplementationOnce(() => Promise.reject(new Error("Network error")));
     // Mock AAAA record failure
-    (global.fetch as any).mockImplementationOnce(() => Promise.reject(new Error("Network error")));
+    fetchMock.mockImplementationOnce(() => Promise.reject(new Error("Network error")));
 
     await expect(resolveDNS("example.com")).rejects.toThrow("Network error");
   });
 
   it("should throw on SERVFAIL (Fail Closed)", async () => {
     // Mock A record success
-    (global.fetch as any).mockImplementationOnce(() =>
+    fetchMock.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
         json: async () => ({
@@ -158,7 +159,7 @@ describe("resolveDNS", () => {
       }),
     );
     // Mock AAAA record SERVFAIL (Status 2)
-    (global.fetch as any).mockImplementationOnce(() =>
+    fetchMock.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
         json: async () => ({
@@ -173,7 +174,7 @@ describe("resolveDNS", () => {
 
   it("should handle NXDOMAIN (Status 3) as empty result", async () => {
     // Mock A record success
-    (global.fetch as any).mockImplementationOnce(() =>
+    fetchMock.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
         json: async () => ({
@@ -183,7 +184,7 @@ describe("resolveDNS", () => {
       }),
     );
     // Mock AAAA record NXDOMAIN (Status 3)
-    (global.fetch as any).mockImplementationOnce(() =>
+    fetchMock.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
         json: async () => ({
