@@ -321,6 +321,20 @@ const cardRecipeVariants = cva("", {
         "rounded-none border-ui-border bg-brand-subtle shadow-none ring-2 ring-inset ring-brand-ring",
       calendarWeekdayHeaderCell:
         "rounded-none border-transparent bg-transparent px-2 py-2 shadow-none",
+      calendarMonthWeekdayHeaderCell:
+        "rounded-none border-x-0 border-t-0 border-b border-r border-ui-border bg-transparent px-2 py-1.5 shadow-none last:border-r-0 md:py-2.5",
+      calendarMonthDayCell:
+        "relative min-h-16 overflow-hidden rounded-none border-x-0 border-t-0 border-b border-r border-ui-border bg-ui-bg shadow-none hover:bg-ui-bg-hover sm:min-h-24 lg:min-h-28 xl:min-h-32",
+      calendarMonthDayCellAdjacent:
+        "relative min-h-16 overflow-hidden rounded-none border-x-0 border-t-0 border-b border-r border-ui-border bg-ui-bg-secondary/30 shadow-none hover:bg-ui-bg-secondary/50 sm:min-h-24 lg:min-h-28 xl:min-h-32",
+      calendarMonthDayCellToday:
+        "relative min-h-16 overflow-hidden rounded-none border-x-0 border-t-0 border-b border-r border-ui-border bg-brand-indigo-track shadow-none hover:bg-ui-bg-hover sm:min-h-24 lg:min-h-28 xl:min-h-32",
+      calendarDayHourRow:
+        "h-24 rounded-none border-x-0 border-t-0 border-b border-ui-border bg-transparent shadow-none hover:bg-ui-bg-hover/30 sm:h-32",
+      calendarDayEventsPanel: "rounded-none border-transparent bg-transparent shadow-none",
+      calendarDayEventsHeader: "rounded-none border-transparent bg-transparent shadow-none",
+      calendarDayEmptyStateIcon:
+        "flex items-center justify-center rounded-full border border-ui-border bg-ui-bg-tertiary shadow-none",
       calendarViewSwitcherBar:
         "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",
       calendarRoadmapShell: "h-full rounded-none border-transparent bg-ui-bg shadow-none",

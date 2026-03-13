@@ -112,6 +112,10 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
         "border-transparent bg-transparent text-ui-text-secondary shadow-none hover:bg-ui-bg-hover",
       calendarHeaderControl:
         "border-ui-border bg-transparent text-ui-text shadow-none hover:border-ui-border-secondary hover:bg-ui-bg-hover",
+      calendarSidebarEvent:
+        "border-transparent bg-transparent text-ui-text-secondary shadow-none hover:bg-ui-bg-hover hover:text-ui-text",
+      calendarMonthOverflow:
+        "border-transparent bg-transparent text-ui-text-tertiary shadow-none hover:text-brand",
     },
     chromeSize: {
       icon: "h-9 w-9 rounded-full",
@@ -129,6 +133,8 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
       calendarIssue: "h-auto rounded-md px-1.5 py-1.5 text-xs",
       calendarHeaderPill: "h-6 rounded-full px-2 text-xs sm:h-7 sm:px-3",
       calendarHeaderIcon: "h-6 w-6 rounded-full p-0.5 sm:h-7 sm:w-7 sm:p-1",
+      calendarSidebarEvent: "h-auto w-full justify-start rounded-lg px-2 py-1.5 text-left text-sm",
+      calendarMonthOverflow: "h-auto rounded-none p-0 text-xs font-medium",
       sprintPreset: "h-auto rounded-lg px-3 py-3 text-sm",
       swimlaneHeader: "h-auto w-full justify-start rounded-xl px-4 py-2 text-left text-sm",
     },

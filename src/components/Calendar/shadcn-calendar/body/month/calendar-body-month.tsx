@@ -19,9 +19,25 @@ import {
 } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
 import { getDotColorClass } from "@/components/Calendar/calendar-colors";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Flex } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
+import { Typography } from "@/components/ui/Typography";
 import { cn } from "@/lib/utils";
 import { useCalendarContext } from "../../calendar-context";
 import { CalendarEvent } from "../../calendar-event";
+
+const WEEKDAY_NAMES = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 
 /** Month view grid showing all days with event indicators. */
 export function CalendarBodyMonth(): React.ReactElement {
@@ -47,134 +63,118 @@ export function CalendarBodyMonth(): React.ReactElement {
       }) || isWithinInterval(event.end, { start: calendarStart, end: calendarEnd }),
   );
 
+  function openDay(day: Date): void {
+    setDate(day);
+    setMode("day");
+  }
+
   return (
-    <div className="flex flex-col flex-grow overflow-hidden bg-ui-bg">
-      <div className="grid grid-cols-7 bg-ui-bg-secondary/50">
-        {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(
-          (day) => (
-            <div
-              key={day}
-              className="border-b border-r border-ui-border py-1.5 text-center text-xs font-medium uppercase tracking-wide text-ui-text-tertiary last:border-r-0 md:py-2.5"
-            >
+    <Flex direction="column" flex="1" className="overflow-hidden bg-ui-bg">
+      <Grid cols={7} className="bg-ui-bg-secondary/50">
+        {WEEKDAY_NAMES.map((day) => (
+          <Card key={day} recipe="calendarMonthWeekdayHeaderCell" className="text-center">
+            <Typography as="span" variant="eyebrow" color="tertiary">
               <span className="md:hidden" aria-hidden="true">
                 {day.charAt(0)}
               </span>
               <span className="sr-only md:not-sr-only">{day.slice(0, 3)}</span>
-            </div>
-          ),
-        )}
-      </div>
+            </Typography>
+          </Card>
+        ))}
+      </Grid>
 
       <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={monthStart.toISOString()}
-          className="grid grid-cols-7 flex-grow overflow-y-auto relative"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{
-            duration: 0.2,
-            ease: "easeInOut",
-          }}
-        >
-          {calendarDays.map((day) => {
-            const dayEvents = visibleEvents.filter((event) => isSameDay(event.start, day));
-            const isToday = isSameDay(day, today);
-            const isCurrentMonth = isSameMonth(day, date);
+        <Flex flex="1" className="overflow-y-auto">
+          <motion.div
+            key={monthStart.toISOString()}
+            className="relative h-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: 0.2,
+              ease: "easeInOut",
+            }}
+          >
+            <Grid cols={7} className="h-full">
+              {calendarDays.map((day) => {
+                const dayEvents = visibleEvents.filter((event) => isSameDay(event.start, day));
+                const isToday = isSameDay(day, today);
+                const isCurrentMonth = isSameMonth(day, date);
+                const dayCellRecipe = isToday
+                  ? "calendarMonthDayCellToday"
+                  : isCurrentMonth
+                    ? "calendarMonthDayCell"
+                    : "calendarMonthDayCellAdjacent";
+                const dayBadgeVariant = isToday
+                  ? "calendarDayToday"
+                  : isCurrentMonth
+                    ? "calendarDayCurrent"
+                    : "calendarDayMuted";
 
-            return (
-              <div
-                key={day.toISOString()}
-                role="button"
-                tabIndex={0}
-                className={cn(
-                  "relative flex min-h-16 flex-col overflow-hidden border-b border-r border-ui-border p-1.5 transition-colors duration-default sm:min-h-24 sm:p-2 lg:min-h-28 xl:min-h-32",
-                  isCurrentMonth
-                    ? "cursor-pointer bg-ui-bg hover:bg-ui-bg-hover"
-                    : "cursor-pointer bg-ui-bg-secondary/30 hover:bg-ui-bg-secondary/50",
-                )}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDate(day);
-                  setMode("day");
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setDate(day);
-                    setMode("day");
-                  }
-                }}
-              >
-                <div
-                  className={cn(
-                    "flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium transition-colors duration-default sm:h-7 sm:w-7 sm:text-sm",
-                    isToday
-                      ? "bg-brand text-brand-foreground shadow-sm"
-                      : isCurrentMonth
-                        ? "text-ui-text hover:bg-ui-bg-tertiary"
-                        : "text-ui-text-tertiary",
-                  )}
-                >
-                  {format(day, "d")}
-                </div>
-                <div className="mt-1 flex flex-wrap gap-1 md:hidden">
-                  {dayEvents.slice(0, 3).map((event) => (
-                    <span
-                      key={`dot-${event.id}`}
-                      aria-hidden="true"
-                      title={event.title}
-                      className={cn("h-1.5 w-1.5 rounded-full", getDotColorClass(event.color))}
-                    />
-                  ))}
-                  {dayEvents.length > 3 && (
-                    <span className="text-xs font-semibold leading-none text-ui-text-secondary">
-                      +{dayEvents.length - 3}
-                    </span>
-                  )}
-                </div>
-                <AnimatePresence mode="wait">
-                  <div className="mt-1 hidden flex-col gap-1 md:flex">
-                    {dayEvents.slice(0, 3).map((event) => (
-                      <CalendarEvent
-                        key={event.id}
-                        event={event}
-                        className="relative h-auto"
-                        month
-                      />
-                    ))}
-                    {dayEvents.length > 3 && (
-                      <motion.div
-                        key={`more-${day.toISOString()}`}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="text-xs font-medium text-ui-text-tertiary hover:text-brand cursor-pointer transition-colors duration-default mt-0.5"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDate(day);
-                          setMode("day");
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setDate(day);
-                            setMode("day");
-                          }
-                        }}
-                      >
-                        +{dayEvents.length - 3} more
-                      </motion.div>
-                    )}
-                  </div>
-                </AnimatePresence>
-              </div>
-            );
-          })}
-        </motion.div>
+                return (
+                  <Card
+                    key={day.toISOString()}
+                    recipe={dayCellRecipe}
+                    padding="xs"
+                    onClick={() => openDay(day)}
+                  >
+                    <Badge variant={dayBadgeVariant} size="calendarDay" shape="pill">
+                      {format(day, "d")}
+                    </Badge>
+                    <Flex wrap gap="xs" className="mt-1 md:hidden">
+                      {dayEvents.slice(0, 3).map((event) => (
+                        <span
+                          key={`dot-${event.id}`}
+                          aria-hidden="true"
+                          title={event.title}
+                          className={cn("h-1.5 w-1.5 rounded-full", getDotColorClass(event.color))}
+                        />
+                      ))}
+                      {dayEvents.length > 3 && (
+                        <Typography as="span" variant="meta" className="leading-none">
+                          +{dayEvents.length - 3}
+                        </Typography>
+                      )}
+                    </Flex>
+                    <AnimatePresence mode="wait">
+                      <div className="mt-1 hidden md:block">
+                        {dayEvents.slice(0, 3).map((event) => (
+                          <div key={event.id} className="mb-1 last:mb-0">
+                            <CalendarEvent event={event} className="relative h-auto" month />
+                          </div>
+                        ))}
+                        {dayEvents.length > 3 && (
+                          <Button
+                            asChild
+                            chrome="calendarMonthOverflow"
+                            chromeSize="calendarMonthOverflow"
+                            key={`more-${day.toISOString()}`}
+                          >
+                            <motion.button
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="mt-0.5"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openDay(day);
+                              }}
+                            >
+                              +{dayEvents.length - 3} more
+                            </motion.button>
+                          </Button>
+                        )}
+                      </div>
+                    </AnimatePresence>
+                  </Card>
+                );
+              })}
+            </Grid>
+          </motion.div>
+        </Flex>
       </AnimatePresence>
-    </div>
+    </Flex>
   );
 }

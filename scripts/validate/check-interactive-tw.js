@@ -32,9 +32,6 @@ const ALLOWED_FILES = [
   "CustomFieldValues.tsx",
   // Calendar
   "Calendar/EventDetailsModal.tsx",
-  "Calendar/shadcn-calendar/body/day/calendar-body-day-content.tsx",
-  "Calendar/shadcn-calendar/body/day/calendar-body-day-events.tsx",
-  "Calendar/shadcn-calendar/body/month/calendar-body-month.tsx",
   // Landing pages
   "Landing/",
   // Activity/inbox

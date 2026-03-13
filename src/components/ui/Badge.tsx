@@ -24,12 +24,16 @@ const badgeVariants = cva("inline-flex items-center font-medium transition-color
       neutral: "bg-ui-bg-soft text-ui-text-secondary border border-ui-border",
       brand: "bg-brand-subtle text-brand-active border border-brand-border",
       accent: "bg-accent-subtle text-accent-active border border-accent-border",
+      calendarDayCurrent: "bg-transparent text-ui-text border border-transparent",
+      calendarDayMuted: "bg-transparent text-ui-text-tertiary border border-transparent",
+      calendarDayToday: "bg-brand text-brand-foreground border border-transparent shadow-sm",
       outline:
         "bg-transparent text-ui-text-secondary border border-ui-border hover:border-ui-border-secondary hover:bg-ui-bg-soft",
     },
     size: {
       sm: "text-xs px-2 py-0.5",
       md: "text-xs px-2 py-1",
+      calendarDay: "h-6 w-6 justify-center px-0 text-xs sm:h-7 sm:w-7 sm:text-sm",
     },
     shape: {
       rounded: "rounded",
