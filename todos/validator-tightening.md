@@ -274,6 +274,10 @@
 - Removed `calendar-body-day-events.tsx` from embedded calendar raw/interactivity debt by moving the empty state and event rows onto owned `EmptyState`, `Card`, `Button`, and layout primitives.
 - Removed `calendar-body-day-content.tsx` from embedded calendar raw/interactivity debt by moving hour-row chrome onto an owned `Card` recipe instead of local hover/border shell classes.
 - Added those three embedded calendar body entry points to design-system ownership targeting so future body-surface drift is blocked directly.
+- Removed `calendar-body-header.tsx` from embedded calendar raw debt by moving the sticky day header onto owned `Card`, `Badge`, `Typography`, and `Flex` primitives instead of inline date-chip chrome.
+- Removed `calendar-body-day.tsx` from embedded calendar raw debt by moving the day-view shell, content rail, and sidebar shell onto owned `Card` recipes and layout primitives instead of inline split-pane chrome.
+- Removed `calendar-body-week.tsx` from embedded calendar raw debt by moving the week-view shell and day-column wrappers onto owned `Card` recipes and `FlexItem` responsive flex props instead of inline width/flex/border shells.
+- Added those three embedded calendar layout entry points to design-system ownership targeting so future day/week shell drift is blocked directly.
 - The embedded calendar island is now narrowed from directory-wide escape hatches to explicit file debt. Burn that list down surface by surface instead of allowing new embedded drift by default.
 
 ## Problem

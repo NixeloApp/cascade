@@ -176,6 +176,8 @@ export interface FlexItemProps extends React.HTMLAttributes<HTMLDivElement> {
   flex?: FlexValue;
   /** Flex shorthand from the sm breakpoint upward */
   flexSm?: FlexValue;
+  /** Flex shorthand from the md breakpoint upward */
+  flexMd?: FlexValue;
   /** Allow item to grow */
   grow?: boolean;
   /** Allow item to shrink */
@@ -203,7 +205,18 @@ export interface FlexItemProps extends React.HTMLAttributes<HTMLDivElement> {
  */
 export const FlexItem = React.forwardRef<HTMLDivElement, FlexItemProps>(
   (
-    { flex, flexSm, grow, shrink, align, as: Component = "div", className, children, ...props },
+    {
+      flex,
+      flexSm,
+      flexMd,
+      grow,
+      shrink,
+      align,
+      as: Component = "div",
+      className,
+      children,
+      ...props
+    },
     ref,
   ) => {
     return (
@@ -212,6 +225,7 @@ export const FlexItem = React.forwardRef<HTMLDivElement, FlexItemProps>(
         className={cn(
           flex && flexClasses[flex],
           flexSm && `sm:${flexClasses[flexSm]}`,
+          flexMd && `md:${flexClasses[flexMd]}`,
           grow === true && "grow",
           grow === false && "grow-0",
           shrink === true && "shrink",

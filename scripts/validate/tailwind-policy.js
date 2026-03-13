@@ -7,12 +7,9 @@ export const RAW_TAILWIND_ALLOWED_DIRS = ["src/components/ui/", "src/components/
 export const RAW_TAILWIND_ALLOWED_FILES = [
   // Explicit migration-debt exemptions replacing broad Settings/Admin/ProjectSettings directory escapes.
   "/BulkOperationsBar.tsx",
-  "/Calendar/shadcn-calendar/body/calendar-body-header.tsx",
   "/Calendar/shadcn-calendar/body/calendar-body.tsx",
   "/Calendar/shadcn-calendar/body/day/calendar-body-day-calendar.tsx",
-  "/Calendar/shadcn-calendar/body/day/calendar-body-day.tsx",
   "/Calendar/shadcn-calendar/body/day/calendar-body-margin-day-margin.tsx",
-  "/Calendar/shadcn-calendar/body/week/calendar-body-week.tsx",
   "/Calendar/shadcn-calendar/calendar-context.tsx",
   "/Calendar/shadcn-calendar/calendar-event.tsx",
   "/Calendar/shadcn-calendar/calendar-mode-icon-map.tsx",
@@ -82,6 +79,9 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/AttachmentList.tsx",
   "/Calendar/CreateEventModal.tsx",
   "/Calendar/UnifiedCalendarView.tsx",
+  "/Calendar/shadcn-calendar/body/calendar-body-header.tsx",
+  "/Calendar/shadcn-calendar/body/day/calendar-body-day.tsx",
+  "/Calendar/shadcn-calendar/body/week/calendar-body-week.tsx",
   "/Calendar/shadcn-calendar/body/day/calendar-body-day-content.tsx",
   "/Calendar/shadcn-calendar/body/day/calendar-body-day-events.tsx",
   "/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx",

@@ -335,6 +335,19 @@ const cardRecipeVariants = cva("", {
       calendarDayEventsHeader: "rounded-none border-transparent bg-transparent shadow-none",
       calendarDayEmptyStateIcon:
         "flex items-center justify-center rounded-full border border-ui-border bg-ui-bg-tertiary shadow-none",
+      calendarBodyHeaderBar:
+        "sticky top-0 z-10 rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",
+      calendarDayLayoutShell: "rounded-none border-transparent bg-ui-bg shadow-none",
+      calendarDayMainPanel: "rounded-none border-transparent bg-transparent shadow-none",
+      calendarDayScrollRail: "rounded-none border-transparent bg-transparent shadow-none",
+      calendarDayContentRail:
+        "rounded-none border-x-0 border-r-0 border-t-0 border-b-0 border-l border-ui-border bg-transparent shadow-none",
+      calendarDaySidebarShell:
+        "rounded-none border-x-0 border-r-0 border-t-0 border-b-0 border-l border-ui-border bg-ui-bg-secondary/30 shadow-none",
+      calendarWeekDayShell:
+        "rounded-none border-x-0 border-t-0 border-b-0 border-r border-ui-border bg-transparent shadow-none last:border-r-0",
+      calendarWeekActiveDayShell:
+        "rounded-none border-x-0 border-t-0 border-b-0 border-r border-ui-border bg-brand-indigo-track shadow-none last:border-r-0",
       calendarViewSwitcherBar:
         "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",
       calendarRoadmapShell: "h-full rounded-none border-transparent bg-ui-bg shadow-none",
