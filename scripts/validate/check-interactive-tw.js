@@ -33,7 +33,8 @@ const ALLOWED_FILES = [
   // Forms/fields
   "CustomFieldValues.tsx",
   // Calendar
-  "Calendar/",
+  "Calendar/shadcn-calendar/",
+  "Calendar/EventDetailsModal.tsx",
   // Onboarding
   "Onboarding/",
   // Landing pages

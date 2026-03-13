@@ -5,7 +5,7 @@
 export const RAW_TAILWIND_ALLOWED_DIRS = [
   "src/components/ui/",
   "src/components/Kanban/",
-  "src/components/Calendar/",
+  "src/components/Calendar/shadcn-calendar/",
   "src/components/Auth/",
   "src/components/Editor/",
   "src/components/Sidebar/",
@@ -16,6 +16,8 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
 export const RAW_TAILWIND_ALLOWED_FILES = [
   // Explicit migration-debt exemptions replacing broad Settings/Admin/ProjectSettings directory escapes.
   "/BulkOperationsBar.tsx",
+  "/Calendar/EventDetailsModal.tsx",
+  "/Calendar/RoadmapView.tsx",
   "/CreateProjectFromTemplate.tsx",
   "/Dashboard.tsx",
   "/PlateEditor.tsx",
@@ -75,6 +77,8 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/Automation/AutomationRuleCard.tsx",
   "/Automation/AutomationRuleForm.tsx",
   "/AttachmentList.tsx",
+  "/Calendar/CreateEventModal.tsx",
+  "/Calendar/UnifiedCalendarView.tsx",
   "/CommentReactions.tsx",
   "/CommentRenderer.tsx",
   "/FuzzySearch/FuzzySearchInput.tsx",

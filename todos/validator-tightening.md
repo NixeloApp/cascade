@@ -229,7 +229,10 @@
 - Added `Automation/AutomationRuleCard.tsx` and `Automation/AutomationRuleForm.tsx` to design-system ownership targeting so future automation-surface drift is blocked directly.
 - Removed the broad `src/components/IssueDetail/` raw-Tailwind escape hatch by moving the issue-detail layout shell onto an owned `Card` recipe, moving the editable title onto an owned `Input` variant, replacing the inline metadata row padding with an owned `Card` recipe, and moving the last responsive footer layout drift onto owned `Flex` breakpoint props.
 - Added `IssueDetail/IssueDetailContent.tsx`, `IssueDetail/IssueDetailHeader.tsx`, `IssueDetail/IssueDetailLayout.tsx`, and `IssueDetail/IssueDetailSidebar.tsx` to design-system ownership targeting so future issue-detail surface drift is blocked directly.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on shrinking the broad `Calendar/` escape hatches, which are now the largest remaining validator gap by surface area.
+- Removed the broad `src/components/Calendar/` raw-Tailwind escape hatch by moving `CreateEventModal.tsx` form layout drift onto owned `Card`, `Stack`, `SegmentedControl`, and `Button` APIs, moving `UnifiedCalendarView.tsx` onto an owned calendar switcher bar recipe, and narrowing the remaining raw exemption to the embedded `Calendar/shadcn-calendar/` implementation plus explicit debt in `EventDetailsModal.tsx` and `RoadmapView.tsx`.
+- Removed the broad `Calendar/` interactive-state allowlist entry from `check-interactive-tw.js`, narrowing it to `Calendar/shadcn-calendar/` plus the remaining explicit `EventDetailsModal.tsx` debt.
+- Added `Calendar/CreateEventModal.tsx` and `Calendar/UnifiedCalendarView.tsx` to design-system ownership targeting so future top-level calendar surface drift is blocked directly.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on shrinking the broad `Kanban/` escape hatch, which is now the largest remaining high-impact validator gap outside intentionally embedded implementations.
 
 ## Problem
 

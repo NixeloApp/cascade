@@ -16,6 +16,7 @@ import { FormInput, FormTextarea } from "@/lib/form";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Checkbox } from "../ui/Checkbox";
 import { Dialog } from "../ui/Dialog";
 import { Flex } from "../ui/Flex";
@@ -24,6 +25,7 @@ import { Grid } from "../ui/Grid";
 import { Label } from "../ui/Label";
 import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Stack } from "../ui/Stack";
 import {
   COLOR_PICKER_CLASSES,
   EVENT_TYPE_DEFAULT_COLOR,
@@ -149,242 +151,247 @@ export function CreateEventModal({
       >
         <form.Subscribe selector={(state) => state.values}>
           {({ eventType, allDay, isRequired }) => (
-            <Flex direction="column" gap="lg" className="p-6">
-              {/* Title */}
-              <form.Field name="title">
-                {(field) => (
-                  <FormInput
-                    field={field}
-                    label="Event Title *"
-                    placeholder="Team standup, Client call, etc."
-                    required
-                  />
-                )}
-              </form.Field>
+            <Card variant="ghost" padding="lg" radius="none">
+              <Stack gap="lg">
+                {/* Title */}
+                <form.Field name="title">
+                  {(field) => (
+                    <FormInput
+                      field={field}
+                      label="Event Title *"
+                      placeholder="Team standup, Client call, etc."
+                      required
+                    />
+                  )}
+                </form.Field>
 
-              {/* Event Type */}
-              <div>
-                <Label className="mb-1">Event Type</Label>
-                <SegmentedControl
-                  value={eventType}
-                  onValueChange={(value: string) => {
-                    if (!eventTypes.includes(value as (typeof eventTypes)[number])) {
-                      return;
-                    }
-
-                    const nextType = value as CreateEventForm["eventType"];
-                    form.setFieldValue("eventType", nextType);
-                    if (!selectedColor) {
-                      setSelectedColor(EVENT_TYPE_DEFAULT_COLOR[nextType]);
-                    }
-                  }}
-                  className="flex w-full flex-wrap"
-                >
-                  {eventTypes.map((type) => (
-                    <SegmentedControlItem
-                      key={type}
-                      value={type}
-                      className="flex-1 capitalize sm:flex-none"
-                    >
-                      {type}
-                    </SegmentedControlItem>
-                  ))}
-                </SegmentedControl>
-              </div>
-
-              {/* Color */}
-              <div>
-                <Label className="mb-1">Color</Label>
-                <Flex gap="sm" className="flex-wrap">
-                  {PALETTE_COLORS.map((color) => {
-                    const isActive =
-                      (selectedColor ?? EVENT_TYPE_DEFAULT_COLOR[eventType as string]) === color;
-                    return (
-                      <Button
-                        key={color}
-                        variant="unstyled"
-                        size="icon"
-                        onClick={() => setSelectedColor(color)}
-                        className={cn(
-                          "size-7 rounded-full transition-all",
-                          COLOR_PICKER_CLASSES[color].bg,
-                          isActive
-                            ? cn("ring-2 ring-offset-2", COLOR_PICKER_CLASSES[color].ring)
-                            : "hover:scale-110",
-                        )}
-                        title={color}
-                        aria-label={`Select ${color} color`}
-                      />
-                    );
-                  })}
-                </Flex>
-              </div>
-
-              {/* Date and Time */}
-              <Grid cols={3} gap="lg">
-                <div className="col-span-3 sm:col-span-1">
-                  <form.Field name="startDate">
-                    {(field) => (
-                      <Input
-                        id="event-date"
-                        label="Date"
-                        type="date"
-                        value={field.state.value as string}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        onBlur={field.handleBlur}
-                        required
-                      />
-                    )}
-                  </form.Field>
-                </div>
+                {/* Event Type */}
                 <div>
-                  <form.Field name="startTime">
-                    {(field) => (
-                      <Input
-                        id="event-start-time"
-                        label="Start Time"
-                        type="time"
-                        value={field.state.value as string}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        onBlur={field.handleBlur}
-                        disabled={allDay as boolean}
-                      />
-                    )}
-                  </form.Field>
+                  <Label className="mb-1">Event Type</Label>
+                  <SegmentedControl
+                    value={eventType}
+                    onValueChange={(value: string) => {
+                      if (!eventTypes.includes(value as (typeof eventTypes)[number])) {
+                        return;
+                      }
+
+                      const nextType = value as CreateEventForm["eventType"];
+                      form.setFieldValue("eventType", nextType);
+                      if (!selectedColor) {
+                        setSelectedColor(EVENT_TYPE_DEFAULT_COLOR[nextType]);
+                      }
+                    }}
+                    width="fill"
+                    wrap
+                  >
+                    {eventTypes.map((type) => (
+                      <SegmentedControlItem
+                        key={type}
+                        value={type}
+                        width="fill"
+                        className="capitalize"
+                      >
+                        {type}
+                      </SegmentedControlItem>
+                    ))}
+                  </SegmentedControl>
                 </div>
+
+                {/* Color */}
                 <div>
-                  <form.Field name="endTime">
-                    {(field) => (
-                      <Input
-                        id="event-end-time"
-                        label="End Time"
-                        type="time"
-                        value={field.state.value as string}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        onBlur={field.handleBlur}
-                        disabled={allDay as boolean}
-                      />
-                    )}
-                  </form.Field>
+                  <Label className="mb-1">Color</Label>
+                  <Flex gap="sm" wrap>
+                    {PALETTE_COLORS.map((color) => {
+                      const isActive =
+                        (selectedColor ?? EVENT_TYPE_DEFAULT_COLOR[eventType as string]) === color;
+                      return (
+                        <Button
+                          key={color}
+                          chrome="colorSwatch"
+                          chromeSize="colorSwatch"
+                          onClick={() => setSelectedColor(color)}
+                          className={cn(
+                            COLOR_PICKER_CLASSES[color].bg,
+                            isActive
+                              ? cn("ring-2 ring-offset-2", COLOR_PICKER_CLASSES[color].ring)
+                              : undefined,
+                          )}
+                          title={color}
+                          aria-label={`Select ${color} color`}
+                        />
+                      );
+                    })}
+                  </Flex>
                 </div>
-              </Grid>
 
-              {/* All Day Toggle */}
-              <form.Field name="allDay">
-                {(field) => (
-                  <Checkbox
-                    id="event-all-day"
-                    label="All day event"
-                    checked={field.state.value as boolean}
-                    onCheckedChange={(checked) => field.handleChange(checked === true)}
-                  />
-                )}
-              </form.Field>
+                {/* Date and Time */}
+                <Grid cols={3} gap="lg">
+                  <div className="col-span-3 sm:col-span-1">
+                    <form.Field name="startDate">
+                      {(field) => (
+                        <Input
+                          id="event-date"
+                          label="Date"
+                          type="date"
+                          value={field.state.value as string}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          onBlur={field.handleBlur}
+                          required
+                        />
+                      )}
+                    </form.Field>
+                  </div>
+                  <div>
+                    <form.Field name="startTime">
+                      {(field) => (
+                        <Input
+                          id="event-start-time"
+                          label="Start Time"
+                          type="time"
+                          value={field.state.value as string}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          onBlur={field.handleBlur}
+                          disabled={allDay as boolean}
+                        />
+                      )}
+                    </form.Field>
+                  </div>
+                  <div>
+                    <form.Field name="endTime">
+                      {(field) => (
+                        <Input
+                          id="event-end-time"
+                          label="End Time"
+                          type="time"
+                          value={field.state.value as string}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          onBlur={field.handleBlur}
+                          disabled={allDay as boolean}
+                        />
+                      )}
+                    </form.Field>
+                  </div>
+                </Grid>
 
-              {/* Required Attendance (only for meetings) */}
-              {eventType === "meeting" && (
-                <form.Field name="isRequired">
+                {/* All Day Toggle */}
+                <form.Field name="allDay">
                   {(field) => (
                     <Checkbox
-                      id="event-is-required"
-                      label="Required attendance"
-                      description={
-                        isRequired
-                          ? "Admins can mark who attended, was tardy, or missed"
-                          : undefined
-                      }
+                      id="event-all-day"
+                      label="All day event"
                       checked={field.state.value as boolean}
                       onCheckedChange={(checked) => field.handleChange(checked === true)}
                     />
                   )}
                 </form.Field>
-              )}
 
-              {/* Description */}
-              <form.Field name="description">
-                {(field) => (
-                  <FormTextarea
-                    field={field}
-                    label="Description"
-                    rows={3}
-                    placeholder="Add notes, agenda, or details..."
-                  />
+                {/* Required Attendance (only for meetings) */}
+                {eventType === "meeting" && (
+                  <form.Field name="isRequired">
+                    {(field) => (
+                      <Checkbox
+                        id="event-is-required"
+                        label="Required attendance"
+                        description={
+                          isRequired
+                            ? "Admins can mark who attended, was tardy, or missed"
+                            : undefined
+                        }
+                        checked={field.state.value as boolean}
+                        onCheckedChange={(checked) => field.handleChange(checked === true)}
+                      />
+                    )}
+                  </form.Field>
                 )}
-              </form.Field>
 
-              {/* Location */}
-              <form.Field name="location">
-                {(field) => (
-                  <Input
-                    id="event-location"
-                    label="Location"
-                    type="text"
-                    value={(field.state.value as string) ?? ""}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                    placeholder="Office, Zoom, Google Meet, etc."
-                  />
-                )}
-              </form.Field>
-
-              {/* Meeting URL */}
-              {eventType === "meeting" && (
-                <form.Field name="meetingUrl">
+                {/* Description */}
+                <form.Field name="description">
                   {(field) => (
-                    <Input
-                      id="event-meeting-url"
-                      label="Meeting Link"
-                      type="url"
-                      value={(field.state.value as string) ?? ""}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                      placeholder="https://zoom.us/j/..."
+                    <FormTextarea
+                      field={field}
+                      label="Description"
+                      rows={3}
+                      placeholder="Add notes, agenda, or details..."
                     />
                   )}
                 </form.Field>
-              )}
 
-              {/* Link to Project */}
-              <div>
-                <Label htmlFor="event-project" className="mb-1">
-                  Link to Project
-                </Label>
-                <Select
-                  value={selectedWorkspaceId || "none"}
-                  onValueChange={(value) =>
-                    setSelectedWorkspaceId(value === "none" ? undefined : (value as Id<"projects">))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="No project" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No project</SelectItem>
-                    {projects?.page?.map((project: Doc<"projects">) => (
-                      <SelectItem key={project._id} value={project._id}>
-                        {project.name} ({project.key})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Actions - Keep inside form.Subscribe to access isSubmitting */}
-              <Flex justify="end" gap="sm" className="pt-4 border-t border-ui-border">
-                <form.Subscribe selector={(state) => state.isSubmitting}>
-                  {(isSubmitting) => (
-                    <>
-                      <Button onClick={() => onOpenChange(false)} variant="secondary">
-                        Cancel
-                      </Button>
-                      <Button type="submit" variant="primary" isLoading={isSubmitting}>
-                        {isSubmitting ? "Creating..." : "Create Event"}
-                      </Button>
-                    </>
+                {/* Location */}
+                <form.Field name="location">
+                  {(field) => (
+                    <Input
+                      id="event-location"
+                      label="Location"
+                      type="text"
+                      value={(field.state.value as string) ?? ""}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
+                      placeholder="Office, Zoom, Google Meet, etc."
+                    />
                   )}
-                </form.Subscribe>
-              </Flex>
-            </Flex>
+                </form.Field>
+
+                {/* Meeting URL */}
+                {eventType === "meeting" && (
+                  <form.Field name="meetingUrl">
+                    {(field) => (
+                      <Input
+                        id="event-meeting-url"
+                        label="Meeting Link"
+                        type="url"
+                        value={(field.state.value as string) ?? ""}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        onBlur={field.handleBlur}
+                        placeholder="https://zoom.us/j/..."
+                      />
+                    )}
+                  </form.Field>
+                )}
+
+                {/* Link to Project */}
+                <div>
+                  <Label htmlFor="event-project" className="mb-1">
+                    Link to Project
+                  </Label>
+                  <Select
+                    value={selectedWorkspaceId || "none"}
+                    onValueChange={(value) =>
+                      setSelectedWorkspaceId(
+                        value === "none" ? undefined : (value as Id<"projects">),
+                      )
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="No project" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No project</SelectItem>
+                      {projects?.page?.map((project: Doc<"projects">) => (
+                        <SelectItem key={project._id} value={project._id}>
+                          {project.name} ({project.key})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Actions - Keep inside form.Subscribe to access isSubmitting */}
+                <Flex justify="end" gap="sm" className="pt-4 border-t border-ui-border">
+                  <form.Subscribe selector={(state) => state.isSubmitting}>
+                    {(isSubmitting) => (
+                      <>
+                        <Button onClick={() => onOpenChange(false)} variant="secondary">
+                          Cancel
+                        </Button>
+                        <Button type="submit" variant="primary" isLoading={isSubmitting}>
+                          {isSubmitting ? "Creating..." : "Create Event"}
+                        </Button>
+                      </>
+                    )}
+                  </form.Subscribe>
+                </Flex>
+              </Stack>
+            </Card>
           )}
         </form.Subscribe>
       </form>

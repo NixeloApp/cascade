@@ -1,6 +1,7 @@
 import type { Id } from "@convex/_generated/dataModel";
 import { Calendar, Map as MapIcon } from "lucide-react";
 import { useState } from "react";
+import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
@@ -23,7 +24,7 @@ export function UnifiedCalendarView({ projectId }: UnifiedCalendarViewProps) {
   return (
     <Flex direction="column" className="h-full">
       {/* View Switcher */}
-      <div className="border-b border-ui-border px-3 sm:px-6 py-3 bg-ui-bg">
+      <Card recipe="calendarViewSwitcherBar" className="px-3 py-3 sm:px-6">
         <SegmentedControl
           value={viewType}
           onValueChange={(value: string) => value && setViewType(value as ViewType)}
@@ -44,11 +45,11 @@ export function UnifiedCalendarView({ projectId }: UnifiedCalendarViewProps) {
           </SegmentedControlItem>
         </SegmentedControl>
         {!projectId && viewType === "roadmap" && (
-          <Typography variant="muted" className="text-xs sm:text-sm mt-2">
+          <Typography variant="muted" className="mt-2">
             Select a project from the sidebar to view the roadmap
           </Typography>
         )}
-      </div>
+      </Card>
 
       {/* View Content */}
       <FlexItem flex="1" className="overflow-hidden">
