@@ -39,10 +39,6 @@ const ALLOWLIST = new Set([
   // The color prop is destructured to prevent it from being spread to DOM
   "src/components/ui/Card.tsx",
   "src/components/ui/Alert.tsx",
-  // Documented TODO: projectId filter planned for future CalendarView integration
-  "src/components/Calendar/ProjectCalendar.tsx",
-  // Interface defines onIssueReorder for future fine-grained reordering within columns
-  "src/components/Kanban/KanbanColumn.tsx",
 ]);
 
 function isUnderscorePrefixed(name) {
