@@ -10,12 +10,12 @@ import { api } from "@convex/_generated/api";
 import { useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Check, ChevronDown, ChevronUp, Rocket, X } from "@/lib/icons";
-import { cn } from "@/lib/utils";
-import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
+import { IconButton } from "../ui/IconButton";
 import { Progress } from "../ui/Progress";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface ChecklistItem {
@@ -87,137 +87,118 @@ export function OnboardingChecklist() {
 
   return (
     <Card recipe="floatingWidget" padding="none" className="fixed bottom-6 right-6 z-40 w-80">
-      {/* Header - Mintlify-inspired with subtle gradient */}
-      <Flex
-        justify="between"
-        align="center"
-        className="p-4 bg-ui-bg-soft border-b border-ui-border"
-      >
-        <Flex gap="md" align="center">
-          <Flex align="center" justify="center" className="w-9 h-9 rounded-lg bg-brand-subtle">
-            <Icon icon={Rocket} size="md" />
-          </Flex>
-          <div>
-            <Typography variant="h3" className="font-semibold text-ui-text tracking-tight">
-              Getting Started
-            </Typography>
-            <Typography className="text-xs text-ui-text-tertiary">
-              {completedCount} of {totalCount} complete
-            </Typography>
-          </div>
-        </Flex>
-        <Flex gap="xs" align="center">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="h-7 w-7"
-            aria-label={isExpanded ? "Collapse checklist" : "Expand checklist"}
-            aria-expanded={isExpanded}
-            aria-controls="onboarding-checklist-items"
-          >
-            {isExpanded ? (
-              <ChevronDown className="w-4 h-4 text-ui-text-tertiary" />
-            ) : (
-              <ChevronUp className="w-4 h-4 text-ui-text-tertiary" />
-            )}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleDismiss}
-            className="h-7 w-7"
-            aria-label="Dismiss checklist"
-          >
-            <X className="w-4 h-4 text-ui-text-tertiary" />
-          </Button>
-        </Flex>
-      </Flex>
-
-      {/* Progress Bar - Mintlify-inspired with brand color */}
-      <div className="px-4 pt-4">
-        <Flex align="center" gap="md">
-          <Progress
-            value={progress}
-            indicatorClassName="bg-brand duration-slow"
-            className="flex-1"
-          />
-          <Typography className="text-xs font-medium text-ui-text-secondary tabular-nums">
-            {progress}%
-          </Typography>
-        </Flex>
-      </div>
-
-      {/* Checklist Items - Mintlify-inspired with cleaner spacing */}
-      {isExpanded && (
-        <Flex id="onboarding-checklist-items" direction="column" gap="sm" className="p-4">
-          {items.map((item, index) => (
-            <Flex
-              key={item.id}
-              gap="md"
-              align="start"
-              className={cn(
-                "p-3 rounded-lg transition-colors duration-fast",
-                item.completed ? "bg-transparent" : "bg-ui-bg-soft hover:bg-ui-bg-hover",
-              )}
-            >
-              <Flex
-                align="center"
-                justify="center"
-                className={cn(
-                  "flex-shrink-0 w-6 h-6 rounded-full transition-all duration-default",
-                  item.completed
-                    ? "bg-status-success text-brand-foreground"
-                    : "border-2 border-ui-border-secondary text-ui-text-tertiary",
-                )}
-              >
-                {item.completed ? (
-                  <Check className="w-3.5 h-3.5" />
-                ) : (
-                  <Typography variant="caption" as="span">
-                    {index + 1}
-                  </Typography>
-                )}
-              </Flex>
-              <FlexItem flex="1" className="min-w-0">
-                <Typography
-                  className={cn(
-                    "font-medium text-sm leading-tight",
-                    item.completed ? "text-ui-text-tertiary line-through" : "text-ui-text",
-                  )}
-                >
-                  {item.title}
-                </Typography>
-                <Typography className="text-xs text-ui-text-tertiary mt-0.5">
-                  {item.description}
-                </Typography>
-              </FlexItem>
-            </Flex>
-          ))}
-
-          {/* Completion Message - Mintlify-inspired success state */}
-          {allComplete && (
-            <Card recipe="successCallout" padding="md" className="mt-2">
-              <Flex gap="md" align="start">
-                <Flex
-                  align="center"
-                  justify="center"
-                  className="w-8 h-8 rounded-full bg-status-success/20 shrink-0"
-                >
-                  <Check className="w-4 h-4 text-status-success" />
-                </Flex>
-                <div>
-                  <Typography className="text-sm font-semibold text-status-success-text">
-                    All done!
-                  </Typography>
-                  <Typography className="text-xs text-status-success-text/80 mt-1">
-                    You're ready to use Nixelo. Feel free to dismiss this checklist.
-                  </Typography>
-                </div>
+      <Card recipe="onboardingChecklistHeader" padding="md">
+        <Flex justify="between" align="center">
+          <Flex gap="md" align="center">
+            <Card recipe="onboardingChecklistHero" className="h-9 w-9">
+              <Flex align="center" justify="center" className="h-full w-full">
+                <Icon icon={Rocket} size="md" />
               </Flex>
             </Card>
-          )}
+            <Stack gap="none">
+              <Typography variant="h4">Getting Started</Typography>
+              <Typography variant="meta">
+                {completedCount} of {totalCount} complete
+              </Typography>
+            </Stack>
+          </Flex>
+          <Flex gap="xs" align="center">
+            <IconButton
+              variant="ghost"
+              size="compact"
+              onClick={() => setIsExpanded(!isExpanded)}
+              aria-label={isExpanded ? "Collapse checklist" : "Expand checklist"}
+              aria-expanded={isExpanded}
+              aria-controls="onboarding-checklist-items"
+            >
+              {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+            </IconButton>
+            <IconButton
+              variant="ghost"
+              size="compact"
+              onClick={handleDismiss}
+              aria-label="Dismiss checklist"
+            >
+              <X className="h-4 w-4" />
+            </IconButton>
+          </Flex>
         </Flex>
+      </Card>
+
+      <Card padding="md" className="border-0 shadow-none">
+        <Flex align="center" gap="md">
+          <FlexItem flex="1">
+            <Progress value={progress} indicatorClassName="bg-brand duration-slow" />
+          </FlexItem>
+          <Typography variant="meta">{progress}%</Typography>
+        </Flex>
+      </Card>
+
+      {isExpanded && (
+        <Card padding="md" className="border-0 shadow-none">
+          <Stack id="onboarding-checklist-items" gap="sm">
+            {items.map((item, index) => (
+              <Card
+                key={item.id}
+                recipe={
+                  item.completed ? "onboardingChecklistItemComplete" : "onboardingChecklistItem"
+                }
+                padding="sm"
+              >
+                <Flex gap="md" align="start">
+                  <Card
+                    recipe={
+                      item.completed ? "onboardingChecklistStepComplete" : "onboardingChecklistStep"
+                    }
+                    className="h-6 w-6 shrink-0"
+                  >
+                    <Flex align="center" justify="center" className="h-full w-full">
+                      {item.completed ? (
+                        <Check className="h-3.5 w-3.5" />
+                      ) : (
+                        <Typography as="span" variant="caption">
+                          {index + 1}
+                        </Typography>
+                      )}
+                    </Flex>
+                  </Card>
+                  <FlexItem flex="1" className="min-w-0">
+                    <Stack gap="xs">
+                      <Typography
+                        variant="small"
+                        color={item.completed ? "tertiary" : "default"}
+                        className={item.completed ? "line-through" : undefined}
+                      >
+                        {item.title}
+                      </Typography>
+                      <Typography variant="meta">{item.description}</Typography>
+                    </Stack>
+                  </FlexItem>
+                </Flex>
+              </Card>
+            ))}
+
+            {allComplete && (
+              <Card recipe="successCallout" padding="md" className="mt-2">
+                <Flex gap="md" align="start">
+                  <Card recipe="onboardingChecklistSuccessIcon" className="h-8 w-8 shrink-0">
+                    <Flex align="center" justify="center" className="h-full w-full">
+                      <Check className="h-4 w-4 text-status-success" />
+                    </Flex>
+                  </Card>
+                  <Stack gap="xs">
+                    <Typography variant="small" className="text-status-success-text">
+                      All done!
+                    </Typography>
+                    <Typography variant="meta" className="text-status-success-text/80">
+                      You're ready to use Nixelo. Feel free to dismiss this checklist.
+                    </Typography>
+                  </Stack>
+                </Flex>
+              </Card>
+            )}
+          </Stack>
+        </Card>
       )}
     </Card>
   );

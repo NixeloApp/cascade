@@ -178,6 +178,19 @@ const cardRecipeVariants = cva("", {
         "rounded-lg border-transparent bg-palette-purple-bg text-palette-purple shadow-none",
       onboardingWizardFooter:
         "rounded-none border-x-0 border-b-0 border-t border-ui-border bg-transparent shadow-none",
+      onboardingChecklistHeader:
+        "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg-soft shadow-none",
+      onboardingChecklistHero:
+        "rounded-lg border-transparent bg-brand-subtle text-brand shadow-none",
+      onboardingChecklistItem:
+        "rounded-lg border-transparent bg-ui-bg-soft shadow-none hover:bg-ui-bg-hover",
+      onboardingChecklistItemComplete: "rounded-lg border-transparent bg-transparent shadow-none",
+      onboardingChecklistStep:
+        "rounded-full border-2 border-ui-border-secondary bg-transparent text-ui-text-tertiary shadow-none",
+      onboardingChecklistStepComplete:
+        "rounded-full border-transparent bg-status-success text-brand-foreground shadow-none",
+      onboardingChecklistSuccessIcon:
+        "rounded-full border-transparent bg-status-success/20 text-status-success shadow-none",
 
       // Header control surfaces
       controlRail:

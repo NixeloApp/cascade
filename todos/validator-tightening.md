@@ -258,7 +258,9 @@
 - Added `Onboarding/FeatureHighlights.tsx`, `Onboarding/InvitedWelcome.tsx`, and `Onboarding/RoleSelector.tsx` to design-system ownership targeting so future onboarding surface drift in those entry points is blocked directly.
 - Removed `Onboarding/LeadOnboarding.tsx`, `Onboarding/ProjectWizard.tsx`, and `Onboarding/MemberOnboarding.tsx` from the raw-Tailwind and interactive-state migration debt lists by moving their hero shells, action tiles, step progress, board selection, and onboarding feature cards onto owned `Card`, `Progress`, `Button`, `Badge`, and `Typography` primitives instead of local shell and state stacks.
 - Added `Onboarding/LeadOnboarding.tsx`, `Onboarding/ProjectWizard.tsx`, and `Onboarding/MemberOnboarding.tsx` to design-system ownership targeting so future onboarding flow drift in those main entry flows is blocked directly.
-- Keep burning down the remaining explicit onboarding debt next, with `OnboardingChecklist.tsx` and `SampleProjectModal.tsx`, then tighten the next intentional raw/interactivity island after onboarding is cleared.
+- Removed `Onboarding/OnboardingChecklist.tsx` and `Onboarding/SampleProjectModal.tsx` from the raw-Tailwind and interactive-state migration debt lists by moving the checklist header, item, and completion shells onto owned `Card` recipes plus `IconButton` and `Progress`, and by replacing the sample-project modal’s last raw spacing/flex drift with owned `Stack` and `FlexItem` composition.
+- Added `Onboarding/SampleProjectModal.tsx` to design-system ownership targeting so the remaining onboarding modal surface is validated directly alongside the rest of the flow.
+- Explicit onboarding validator debt is now cleared. Tighten the next intentional raw/interactivity island instead of leaving any new onboarding exceptions.
 
 ## Problem
 
