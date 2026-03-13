@@ -166,7 +166,10 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
           <Stack gap="sm">
             <Typography variant="small">CSV must have a header row with column names.</Typography>
             <Typography variant="small">
-              Required column: <code className="bg-status-warning/20 px-1 rounded">title</code>
+              Required column:{" "}
+              <Typography as="code" variant="inlineCode">
+                title
+              </Typography>
             </Typography>
             <Typography variant="small">
               Optional fields include type, priority, description, labels, estimated hours, and due

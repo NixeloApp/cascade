@@ -12,7 +12,6 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
   "src/components/Plate/",
   "src/components/Onboarding/",
   "src/components/IssueDetail/",
-  "src/components/ImportExport/",
   "src/components/Fields/",
   "src/components/Templates/",
   "src/components/Automation/",

@@ -220,7 +220,8 @@
 - Added `ImportExport/ExportPanel.tsx` to design-system ownership targeting so future export-surface drift is blocked directly.
 - Removed the last explicit `Plate/DragHandle.tsx` interactive debt entry from `check-interactive-tw.js` by moving the drag trigger onto an owned `IconButton` variant and using `DropdownMenuItem variant="danger"` instead of feature-level active/focus classes.
 - Added `Plate/DragHandle.tsx` to design-system ownership targeting so future editor drag-handle drift is blocked directly.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on shrinking the remaining broad raw-Tailwind escape hatches like `src/components/ImportExport/`, which are now larger validator gaps than the migrated interactive surfaces.
+- Removed the broad `src/components/ImportExport/` raw-Tailwind escape hatch by replacing the remaining inline-styled requirement token in `ImportPanel.tsx` with owned `Typography inlineCode` and moving `ExportPanel.tsx` export guidance onto the shared `Alert` primitive instead of a local branded shell.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on shrinking the remaining broad raw-Tailwind escape hatches in folders like `Fields/`, `Templates/`, or `Automation/`, which are now larger validator gaps than the migrated import/export surfaces.
 
 ## Problem
 
