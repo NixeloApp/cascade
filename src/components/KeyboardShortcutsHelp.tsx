@@ -9,16 +9,15 @@
  * - Empty search state
  */
 
-import { cva, type VariantProps } from "class-variance-authority";
 import { Search } from "lucide-react";
-import { type ElementType, type HTMLAttributes, type ReactNode, useState } from "react";
-import { cn } from "@/lib/utils";
+import { useState } from "react";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
+import { EmptyState } from "./ui/EmptyState";
 import { Flex } from "./ui/Flex";
-import { Input } from "./ui/Input";
-import { ShortcutHint } from "./ui/KeyboardShortcut";
+import { KeyBadge, ShortcutHint } from "./ui/KeyboardShortcut";
+import { SearchField } from "./ui/SearchField";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
@@ -178,82 +177,14 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
 // Components
 // =============================================================================
 
-const shortcutHelpFrameVariants = cva("", {
-  variants: {
-    surface: {
-      footer: "block text-center sm:text-left",
-      searchShell: "relative",
-      searchIcon:
-        "pointer-events-none absolute left-6 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ui-text-tertiary",
-      categoryHeader: "border-b border-ui-border-secondary/50 px-4 py-3",
-      categoryBody: "p-3",
-      itemRow: "px-4 py-3",
-      emptyState: "px-6 py-8 text-center",
-    },
-  },
-});
-
-interface ShortcutHelpFrameProps
-  extends HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof shortcutHelpFrameVariants> {
-  as?: ElementType;
-}
-
-function ShortcutHelpFrame({
-  as: Component = "div",
-  className,
-  surface,
-  ...props
-}: ShortcutHelpFrameProps) {
-  return <Component className={cn(shortcutHelpFrameVariants({ surface }), className)} {...props} />;
-}
-
-const keyBadgeVariants = cva(
-  "inline-flex min-w-6 items-center justify-center rounded-lg border border-ui-border-secondary/70 bg-ui-bg-elevated font-mono shadow-soft",
-  {
-    variants: {
-      size: {
-        sm: "h-6 px-2 text-xs font-medium",
-        md: "h-7 px-2.5 text-sm font-semibold",
-      },
-      tone: {
-        subtle: "text-ui-text-secondary",
-        strong: "text-ui-text",
-      },
-    },
-    defaultVariants: {
-      size: "sm",
-      tone: "subtle",
-    },
-  },
-);
-
-interface KeyBadgeProps extends HTMLAttributes<HTMLElement>, VariantProps<typeof keyBadgeVariants> {
-  as?: ElementType;
-  children: ReactNode;
-}
-
-function KeyBadge({
-  as: Component = "kbd",
-  children,
-  className,
-  size,
-  tone,
-  ...props
-}: KeyBadgeProps) {
-  return (
-    <Component className={cn(keyBadgeVariants({ size, tone }), className)} {...props}>
-      {children}
-    </Component>
-  );
-}
-
 function ModifierShortcutBadge({ shortcut }: { shortcut: string }) {
   const parts = formatModifierShortcut(shortcut);
   return (
     <Flex gap="xs" align="center">
       {parts.map((part) => (
-        <KeyBadge key={part}>{part}</KeyBadge>
+        <KeyBadge key={part} variant="default">
+          {part}
+        </KeyBadge>
       ))}
     </Flex>
   );
@@ -271,7 +202,7 @@ function KeySequenceBadge({ sequence }: { sequence: string }) {
     <Flex gap="xs" align="center">
       {chars.map(({ char, key }, charIndex) => (
         <Flex key={`${sequence}-${key}`} gap="xs" align="center">
-          <KeyBadge>{char.toUpperCase()}</KeyBadge>
+          <KeyBadge variant="default">{char.toUpperCase()}</KeyBadge>
           {charIndex < chars.length - 1 && (
             <Typography variant="caption" color="tertiary">
               then
@@ -291,7 +222,7 @@ function ShortcutBadge({ item }: { item: ShortcutItem }) {
     return <KeySequenceBadge sequence={item.keySequence} />;
   }
   if (item.singleKey) {
-    return <KeyBadge>{item.singleKey}</KeyBadge>;
+    return <KeyBadge variant="default">{item.singleKey}</KeyBadge>;
   }
   return null;
 }
@@ -340,50 +271,36 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
           <Button onClick={() => handleOpenChange(false)} chrome="framed" chromeSize="compactPill">
             Close
           </Button>
-          <Flex align="center" gap="lg" className="hidden sm:inline-flex">
-            <ShortcutHint keys="up+down">Navigate</ShortcutHint>
-            <ShortcutHint keys="Esc">Close</ShortcutHint>
-          </Flex>
+          <div className="hidden sm:block">
+            <Flex align="center" gap="lg">
+              <ShortcutHint keys="up+down">Navigate</ShortcutHint>
+              <ShortcutHint keys="Esc">Close</ShortcutHint>
+            </Flex>
+          </div>
         </>
       }
     >
       <Stack gap="md">
         <Card recipe="overlayInset" padding="md">
-          <ShortcutHelpFrame surface="searchShell">
-            <Search className={shortcutHelpFrameVariants({ surface: "searchIcon" })} />
-            <Input
-              type="text"
-              placeholder="Search shortcuts..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-10 pl-9 text-sm"
-              autoFocus
-            />
-          </ShortcutHelpFrame>
+          <SearchField
+            placeholder="Search shortcuts..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            autoFocus
+          />
         </Card>
 
         {hasResults ? (
           <Flex direction="column" gap="md">
             {filteredCategories.map((category) => (
               <Card key={category.id} recipe="commandSection">
-                <ShortcutHelpFrame surface="categoryHeader">
-                  <Typography
-                    variant="label"
-                    color="secondary"
-                    className="uppercase tracking-wider"
-                  >
-                    {category.title}
-                  </Typography>
-                </ShortcutHelpFrame>
-                <Stack gap="xs" className={shortcutHelpFrameVariants({ surface: "categoryBody" })}>
+                <Card recipe="shortcutCategoryHeader" padding="md" radius="none">
+                  <Typography variant="eyebrow">{category.title}</Typography>
+                </Card>
+                <Stack gap="xs">
                   {category.items.map((item) => (
-                    <Card key={item.id} recipe="overlayInset">
-                      <Flex
-                        align="center"
-                        justify="between"
-                        gap="md"
-                        className={shortcutHelpFrameVariants({ surface: "itemRow" })}
-                      >
+                    <Card key={item.id} recipe="shortcutItemRow" padding="md">
+                      <Flex align="center" justify="between" gap="md">
                         <Typography variant="small" color="secondary">
                           {item.description}
                         </Typography>
@@ -396,21 +313,12 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
             ))}
           </Flex>
         ) : (
-          <Card recipe="overlayInset">
-            <Flex
-              direction="column"
-              align="center"
-              justify="center"
-              className={shortcutHelpFrameVariants({ surface: "emptyState" })}
-            >
-              <Typography variant="small" color="secondary">
-                No shortcuts found for{" "}
-                <Typography as="span" variant="label" className="italic">
-                  "{searchQuery}"
-                </Typography>
-              </Typography>
-            </Flex>
-          </Card>
+          <EmptyState
+            icon={Search}
+            title="No shortcuts found"
+            description={`Try a different search than "${searchQuery}".`}
+            size="compact"
+          />
         )}
       </Stack>
     </Dialog>

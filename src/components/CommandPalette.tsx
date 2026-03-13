@@ -84,8 +84,8 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
       description="Search for commands, navigation, and items"
     >
       <Command
+        recipe="palette"
         data-testid={TEST_IDS.EDITOR.COMMAND_PALETTE}
-        className="bg-ui-bg"
         filter={(value, search) => {
           const cmd = commands.find((c) => c.id === value);
           if (!cmd) return 0;
@@ -102,25 +102,20 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
           placeholder="Type a command or search..."
           value={search}
           onValueChange={setSearch}
-          className="text-ui-text"
           aria-label="Command menu"
         />
-        <CommandList className="max-h-[50vh] sm:max-h-[60vh]">
-          <CommandEmpty className="text-ui-text-secondary">No commands found</CommandEmpty>
+        <CommandList viewport="palette">
+          <CommandEmpty tone="muted">No commands found</CommandEmpty>
           {Object.entries(groupedCommands).map(([group, cmds]) => (
-            <CommandGroup
-              key={group}
-              heading={group}
-              className="text-ui-text-secondary [&_[cmdk-group-heading]]:text-ui-text-tertiary"
-            >
+            <CommandGroup key={group} heading={group} recipe="palette">
               {cmds.map((cmd) => (
                 <CommandItem
                   key={cmd.id}
                   value={cmd.id}
                   onSelect={() => handleSelect(cmd)}
-                  className="cursor-pointer data-[selected=true]:bg-brand-subtle"
+                  recipe="palette"
                 >
-                  {cmd.icon && <Icon icon={cmd.icon} size="md" className="mr-2" />}
+                  {cmd.icon && <Icon icon={cmd.icon} size="md" />}
                   <FlexItem flex="1">
                     <Typography variant="label" as="p">
                       {cmd.label}
@@ -134,17 +129,14 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
             </CommandGroup>
           ))}
         </CommandList>
-        <Card
-          padding="sm"
-          radius="none"
-          variant="ghost"
-          className="border-t border-ui-border bg-ui-bg-secondary"
-        >
-          <Flex wrap gap="md" className="text-ui-text-tertiary text-xs">
-            <ShortcutHint keys="up+down">Navigate</ShortcutHint>
-            <ShortcutHint keys="Enter">Select</ShortcutHint>
-            <ShortcutHint keys="Esc">Close</ShortcutHint>
-          </Flex>
+        <Card recipe="listFooterBar" padding="sm" radius="none">
+          <Typography as="div" variant="meta" color="tertiary">
+            <Flex wrap gap="md">
+              <ShortcutHint keys="up+down">Navigate</ShortcutHint>
+              <ShortcutHint keys="Enter">Select</ShortcutHint>
+              <ShortcutHint keys="Esc">Close</ShortcutHint>
+            </Flex>
+          </Typography>
         </Card>
       </Command>
     </CommandDialog>

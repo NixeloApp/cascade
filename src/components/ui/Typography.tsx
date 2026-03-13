@@ -49,6 +49,7 @@ const typographyVariants = cva("", {
       meta: "text-xs text-ui-text-tertiary", // timestamps, counts, metadata
       caption: "text-xs text-ui-text-secondary", // descriptions, helper text
       label: "text-sm font-medium text-ui-text", // form labels
+      eyebrow: "text-xs font-semibold uppercase tracking-wider text-ui-text-secondary", // section labels, overlines
       mono: "text-xs font-mono text-ui-text-secondary tracking-tight", // issue keys, codes
       documentTitle: "-ml-2 px-2 py-1 text-2xl leading-tight sm:text-3xl lg:text-4xl",
       documentTitleInteractive:
@@ -123,6 +124,7 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
     case "meta":
     case "caption":
     case "label":
+    case "eyebrow":
       return "p";
     case "mono":
       return "span";

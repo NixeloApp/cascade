@@ -65,6 +65,9 @@ const cardRecipeVariants = cva("", {
         "rounded-2xl border-ui-border-secondary/60 bg-linear-to-b from-ui-bg-soft/70 to-ui-bg-elevated/94 shadow-soft",
       commandIntro:
         "rounded-2xl border-ui-border/70 bg-linear-to-br from-brand-subtle/70 via-ui-bg-soft to-ui-bg-secondary/85 shadow-soft",
+      shortcutCategoryHeader:
+        "rounded-none border-x-0 border-t-0 border-b border-ui-border-secondary/50 bg-transparent shadow-none",
+      shortcutItemRow: "rounded-xl border-ui-border-secondary/60 bg-ui-bg-elevated/70 shadow-none",
 
       // Page layout surfaces
       pageHeader:

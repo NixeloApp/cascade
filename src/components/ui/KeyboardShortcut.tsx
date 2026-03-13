@@ -50,6 +50,28 @@ interface KeyboardShortcutProps extends VariantProps<typeof keyVariants> {
   className?: string;
 }
 
+interface KeyBadgeProps
+  extends React.HTMLAttributes<HTMLElement>,
+    VariantProps<typeof keyVariants> {
+  as?: React.ElementType;
+  children: React.ReactNode;
+}
+
+export function KeyBadge({
+  as: Component = "kbd",
+  children,
+  className,
+  size = "sm",
+  variant = "default",
+  ...props
+}: KeyBadgeProps) {
+  return (
+    <Component className={cn(keyVariants({ size, variant }), className)} {...props}>
+      {children}
+    </Component>
+  );
+}
+
 /**
  * KeyboardShortcut component for displaying keyboard shortcuts
  *
@@ -83,9 +105,9 @@ export function KeyboardShortcut({
         const { content, label } = getKeyData(key, size ?? "sm");
         return (
           <span key={id} className="contents">
-            <kbd className={cn(keyVariants({ size, variant }))} aria-label={label} title={label}>
+            <KeyBadge aria-label={label} title={label} size={size} variant={variant}>
               {content}
-            </kbd>
+            </KeyBadge>
             {index < keysWithIds.length - 1 && (
               <span aria-hidden="true" className="text-ui-text-tertiary mx-0.5">
                 +

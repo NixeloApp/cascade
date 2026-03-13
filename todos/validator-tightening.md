@@ -173,7 +173,10 @@
 - Removed `IssueDetailSheet.tsx` from the raw-Tailwind debt list by moving its loading, header, and body shells onto owned `Card` recipes and `Sheet layout="panel"` composition instead of local padding and border classes.
 - Removed `VersionHistory.tsx` from the raw-Tailwind and interactive-state debt lists by moving the compare panel, selected version rows, and diff panes onto owned `Card` recipes and replacing the restore-button chrome with owned `Button` variants.
 - Added `IssueDetailSheet.tsx` and `VersionHistory.tsx` to design-system ownership targeting so future detail/history shell drift is blocked directly.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `CommandPalette.tsx` and `KeyboardShortcutsHelp.tsx`, which are now among the next higher-impact surfaces still sitting behind explicit validator debt.
+- Removed `CommandPalette.tsx` from the raw-Tailwind debt list by moving command item/group/empty/list viewport styling into owned `ui/Command` variants and replacing the footer shell with owned `Card` composition.
+- Removed `KeyboardShortcutsHelp.tsx` from the raw-Tailwind debt list by replacing feature-local CVAs with owned `KeyBadge`, `SearchField`, `Card` recipes, and `Typography` variants for the shortcuts search and list shells.
+- Added `CommandPalette.tsx` and kept `KeyboardShortcutsHelp.tsx` under design-system ownership targeting so future command/help surface drift is blocked directly.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `ImportExportModal.tsx` and `RoadmapView.tsx`, which are now among the next higher-impact surfaces still sitting behind explicit validator debt.
 
 ## Problem
 
