@@ -89,6 +89,14 @@ const cardRecipeVariants = cva("", {
         "rounded-2xl border-ui-border-secondary/65 bg-linear-to-b from-ui-bg-elevated/94 via-ui-bg-soft/90 to-ui-bg-secondary/76 shadow-soft",
       metricTile:
         "rounded-2xl border-ui-border-secondary/75 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/94 to-ui-bg-soft/78 shadow-card",
+      metricTileInfo:
+        "rounded-2xl border-status-info/30 bg-linear-to-b from-status-info-bg via-ui-bg-elevated/96 to-ui-bg-soft/82 shadow-card",
+      metricTileSuccess:
+        "rounded-2xl border-status-success/30 bg-linear-to-b from-status-success-bg via-ui-bg-elevated/96 to-ui-bg-soft/82 shadow-card",
+      metricTileAccent:
+        "rounded-2xl border-accent-border bg-linear-to-b from-accent-subtle via-ui-bg-elevated/96 to-ui-bg-soft/82 shadow-card",
+      metricTileWarning:
+        "rounded-2xl border-status-warning/30 bg-linear-to-b from-status-warning-bg via-ui-bg-elevated/96 to-ui-bg-soft/82 shadow-card",
 
       // Header control surfaces
       controlRail:

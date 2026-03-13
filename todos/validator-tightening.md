@@ -64,16 +64,18 @@
 - Removed `TimeTracking/UserRatesManagement.tsx` from raw-Tailwind debt by migrating the empty state, rate-type options, and hourly-rate form onto owned `EmptyState`, `RadioGroup`, `Input`, `Label`, and `Card` recipe APIs.
 - Removed `TimeTracking/ManualTimeEntryModal.tsx` from the raw-Tailwind and interactive-state debt lists by replacing its custom mode toggle, raw form fields, tag pills, billable control, and duration shells with owned `SegmentedControl`, `Input`, `Checkbox`, `Badge`, `IconButton`, and `Card` recipe APIs.
 - Removed `TimeTracking/TimeEntriesList.tsx` from the raw-Tailwind and interactive-state debt lists by moving its header shell and entry rows onto owned `Card`, `ListItem`, `Icon`, `Badge`, and `IconButton` primitives instead of local hover strips, separators, and spacing stacks.
+- Removed `TimeTracking/BurnRateDashboard.tsx` from the raw-Tailwind debt list by moving its metric tiles, empty state, and member identity shell onto owned `Card` recipe, `Badge`, `EmptyState`, and `Avatar` APIs instead of local reporting-surface classes.
 - Added `TimeTracking/TimeEntryModal.tsx` and `TimeTracking/UserRatesManagement.tsx` to design-system ownership targeting so future time-entry shell drift is validated directly.
 - Added `TimeTracking/ManualTimeEntryModal.tsx` to design-system ownership targeting so future manual-entry shell drift is validated directly.
 - Added `TimeTracking/TimeEntriesList.tsx` to design-system ownership targeting so future list-row shell drift is validated directly.
+- Added `TimeTracking/BurnRateDashboard.tsx` to design-system ownership targeting so future reporting-shell drift is validated directly.
 - Replaced the broad `TimeTracking/` interactive-state allowlist entry with explicit remaining debt entries for:
   - `TimeTracking/TimerWidget.tsx`
 
 ### Next batch
 
-- Burn down the remaining explicit `TimeTracking` file-level debt in `BurnRateDashboard.tsx` and `TimerWidget.tsx`.
-- `BurnRateDashboard.tsx` should go next because it is now the last remaining raw-Tailwind-heavy reporting surface in `TimeTracking`.
+- Burn down the remaining explicit `TimeTracking` file-level debt in `TimerWidget.tsx`.
+- `TimerWidget.tsx` should go next because it is now the only remaining explicit `TimeTracking` interactive-state escape hatch.
 
 ## Problem
 
