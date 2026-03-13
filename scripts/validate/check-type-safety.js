@@ -33,7 +33,6 @@ export function run() {
     /convex\/issues\/queries\.ts$/, // Convex search index type mismatch requires casting
     /convex\/calendarEvents\.ts$/, // Multikey index query requires explicit casting
     /src\/components\/IssueDetail\/CreateIssueModal\.tsx$/, // Complexity: form + validation + AI - TODO: extract form sections
-    /src\/components\/PlateEditor\.tsx$/, // Complexity: editor operations - TODO: extract DocumentControls
   ];
 
   let errorCount = 0;

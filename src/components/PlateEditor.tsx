@@ -53,6 +53,260 @@ interface EditorCanvasProps {
   onChange: (value: Value) => void;
 }
 
+interface PlateEditorLoadingStateProps {
+  versionsLoaded: boolean;
+}
+
+interface PlateEditorEmptyStateProps {
+  title: string;
+  description: string;
+  action?: {
+    label: string;
+    onClick: () => void;
+    variant?: React.ComponentProps<typeof Button>["variant"];
+  };
+}
+
+interface PlateEditorActionsArgs {
+  documentId: Id<"documents">;
+  document:
+    | NonNullable<ReturnType<typeof useAuthenticatedQuery<typeof api.documents.getDocument>>>
+    | null
+    | undefined;
+  isArchived: boolean;
+  lockStatus:
+    | NonNullable<ReturnType<typeof useAuthenticatedQuery<typeof api.documents.getLockStatus>>>
+    | undefined;
+  updateTitle: (args: { id: Id<"documents">; title: string }) => Promise<unknown>;
+  togglePublic: (args: { id: Id<"documents"> }) => Promise<unknown>;
+  toggleFavorite: (args: { documentId: Id<"documents"> }) => Promise<{ isFavorite: boolean }>;
+  archiveDocument: (args: { id: Id<"documents"> }) => Promise<unknown>;
+  unarchiveDocument: (args: { id: Id<"documents"> }) => Promise<unknown>;
+  lockDocument: (args: { id: Id<"documents"> }) => Promise<unknown>;
+  unlockDocument: (args: { id: Id<"documents"> }) => Promise<unknown>;
+}
+
+interface UsePlateEditorUiStateArgs {
+  documentId: Id<"documents">;
+  document:
+    | NonNullable<ReturnType<typeof useAuthenticatedQuery<typeof api.documents.getDocument>>>
+    | null
+    | undefined;
+  versions:
+    | NonNullable<
+        ReturnType<typeof useAuthenticatedQuery<typeof api.documentVersions.listVersions>>
+      >
+    | undefined;
+  updateTitle: (args: { id: Id<"documents">; title: string }) => Promise<unknown>;
+}
+
+function PlateEditorLoadingState({ versionsLoaded }: PlateEditorLoadingStateProps) {
+  return (
+    <Flex direction="column" className="h-full bg-ui-bg">
+      <Card padding="lg" radius="none" className="border-x-0 border-t-0">
+        <Stack gap="md">
+          <Flex align="center" justify="between">
+            <Skeleton className="h-8 w-1/2" />
+            <Flex align="center" gap="md">
+              <Skeleton className="h-8 w-24" />
+              <Skeleton className="h-8 w-20" />
+            </Flex>
+          </Flex>
+          <Flex align="center" gap="md">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-4 w-40" />
+          </Flex>
+        </Stack>
+      </Card>
+      <FlexItem flex="1" className="overflow-auto bg-ui-bg">
+        <Card padding="lg" variant="ghost" className="mx-auto w-full max-w-3xl">
+          {versionsLoaded ? <SkeletonText lines={8} /> : <SkeletonText lines={8} />}
+        </Card>
+      </FlexItem>
+    </Flex>
+  );
+}
+
+function PlateEditorEmptyState({ title, description, action }: PlateEditorEmptyStateProps) {
+  return (
+    <Flex align="center" justify="center" className="h-full">
+      <Stack gap="md" align="center" className="text-center">
+        <Typography variant="h3">{title}</Typography>
+        <Typography color="secondary">{description}</Typography>
+        {action && (
+          <Button variant={action.variant ?? "outline"} onClick={action.onClick}>
+            {action.label}
+          </Button>
+        )}
+      </Stack>
+    </Flex>
+  );
+}
+
+function LockedDocumentBanner({
+  lockStatus,
+}: {
+  lockStatus: NonNullable<
+    ReturnType<typeof useAuthenticatedQuery<typeof api.documents.getLockStatus>>
+  >;
+}) {
+  return (
+    <Alert variant="warning" className="rounded-none border-x-0">
+      <Lock className="h-4 w-4" />
+      <AlertTitle>Document Locked</AlertTitle>
+      <AlertDescription>
+        This document is locked by {lockStatus.lockedByName || "another user"}.
+        {lockStatus.canUnlock
+          ? " You can unlock it to make changes."
+          : " Only the person who locked it or an admin can unlock it."}
+      </AlertDescription>
+    </Alert>
+  );
+}
+
+function usePlateEditorActions({
+  documentId,
+  document,
+  isArchived,
+  lockStatus,
+  updateTitle,
+  togglePublic,
+  toggleFavorite,
+  archiveDocument,
+  unarchiveDocument,
+  lockDocument,
+  unlockDocument,
+}: PlateEditorActionsArgs) {
+  const handleTitleEdit = async (title: string) => {
+    try {
+      await updateTitle({ id: documentId, title });
+      showSuccess("Title updated");
+    } catch (error) {
+      showError(error, "Failed to update title");
+    }
+  };
+
+  const handleTogglePublic = async () => {
+    if (!document) return;
+    try {
+      await togglePublic({ id: documentId });
+      showSuccess(document.isPublic ? "Document is now private" : "Document is now public");
+    } catch (error) {
+      showError(error, "Failed to update document visibility");
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    try {
+      const result = await toggleFavorite({ documentId });
+      showSuccess(result.isFavorite ? "Added to favorites" : "Removed from favorites");
+    } catch (error) {
+      showError(error, "Failed to update favorite");
+    }
+  };
+
+  const handleToggleArchive = async () => {
+    try {
+      if (isArchived) {
+        await unarchiveDocument({ id: documentId });
+        showSuccess("Document unarchived");
+      } else {
+        await archiveDocument({ id: documentId });
+        showSuccess("Document archived");
+      }
+    } catch (error) {
+      showError(error, "Failed to update archive status");
+    }
+  };
+
+  const handleToggleLock = async () => {
+    try {
+      if (lockStatus?.isLocked) {
+        await unlockDocument({ id: documentId });
+        showSuccess("Document unlocked");
+      } else {
+        await lockDocument({ id: documentId });
+        showSuccess("Document locked");
+      }
+    } catch (error) {
+      showError(error, "Failed to update lock status");
+    }
+  };
+
+  return {
+    handleTitleEdit,
+    handleTogglePublic,
+    handleToggleFavorite,
+    handleToggleArchive,
+    handleToggleLock,
+  };
+}
+
+function usePlateEditorUiState({
+  documentId,
+  document,
+  versions,
+  updateTitle,
+}: UsePlateEditorUiStateArgs) {
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [editorValue, setEditorValue] = useState<Value>(getInitialValue());
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (window.matchMedia("(min-width: 1280px)").matches) {
+      setShowSidebar(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (versions === undefined) {
+      return;
+    }
+
+    const latestVersion = versions[0];
+    setEditorValue(
+      latestVersion ? proseMirrorSnapshotToValue(latestVersion.snapshot) : getInitialValue(),
+    );
+  }, [versions]);
+
+  const handleChange = (value: Value) => {
+    setEditorValue(value);
+    console.debug("Editor content changed", value.length, "nodes");
+  };
+
+  const handleRestoreVersion = async (snapshot: unknown, version: number, title: string) => {
+    void version;
+    try {
+      if (snapshot && document) {
+        if (title !== document.title) {
+          await updateTitle({ id: documentId, title });
+        }
+        showSuccess("Version restored successfully. Refreshing...");
+        window.location.reload();
+      }
+    } catch (error) {
+      showError(error, "Failed to restore version");
+    }
+  };
+
+  return {
+    showVersionHistory,
+    setShowVersionHistory,
+    showMoveDialog,
+    setShowMoveDialog,
+    showSidebar,
+    editorValue,
+    handleChange,
+    toggleSidebar: () => setShowSidebar((prev) => !prev),
+    handleRestoreVersion,
+  };
+}
+
 function EditorCanvas({
   initialEditorValue,
   isEmptyEditor,
@@ -157,7 +411,6 @@ function EditorCanvas({
 /**
  * Main editor component - renders the Plate editor with document sync
  */
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Editor component with multiple document operations and state management
 export function PlateEditor({ documentId }: PlateEditorProps) {
   const document = useAuthenticatedQuery(api.documents.getDocument, { id: documentId });
   const { mutate: updateTitle } = useAuthenticatedMutation(api.documents.updateTitle);
@@ -174,10 +427,22 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
   const versionCount = useAuthenticatedQuery(api.documentVersions.getVersionCount, { documentId });
   const versions = useAuthenticatedQuery(api.documentVersions.listVersions, { documentId });
 
-  const [showVersionHistory, setShowVersionHistory] = useState(false);
-  const [showMoveDialog, setShowMoveDialog] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(false);
-  const [editorValue, setEditorValue] = useState<Value>(getInitialValue());
+  const {
+    showVersionHistory,
+    setShowVersionHistory,
+    showMoveDialog,
+    setShowMoveDialog,
+    showSidebar,
+    editorValue,
+    handleChange,
+    toggleSidebar,
+    handleRestoreVersion,
+  } = usePlateEditorUiState({
+    documentId,
+    document,
+    versions,
+    updateTitle,
+  });
   const initialEditorValue = versions?.[0]
     ? proseMirrorSnapshotToValue(versions[0].snapshot)
     : getInitialValue();
@@ -185,170 +450,52 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
   const isEmptyEditor =
     versions !== undefined ? isEmptyValue(initialEditorValue) : isEmptyValue(editorValue);
 
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    if (window.matchMedia("(min-width: 1280px)").matches) {
-      setShowSidebar(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (versions === undefined) {
-      return;
-    }
-
-    const latestVersion = versions[0];
-    setEditorValue(
-      latestVersion ? proseMirrorSnapshotToValue(latestVersion.snapshot) : getInitialValue(),
-    );
-  }, [versions]);
-
-  // Handle title edit
-  const handleTitleEdit = async (title: string) => {
-    try {
-      await updateTitle({ id: documentId, title });
-      showSuccess("Title updated");
-    } catch (error) {
-      showError(error, "Failed to update title");
-    }
-  };
-
-  // Handle toggle public
-  const handleTogglePublic = async () => {
-    if (!document) return;
-    try {
-      await togglePublic({ id: documentId });
-      showSuccess(document.isPublic ? "Document is now private" : "Document is now public");
-    } catch (error) {
-      showError(error, "Failed to update document visibility");
-    }
-  };
-
-  // Handle toggle favorite
-  const handleToggleFavorite = async () => {
-    try {
-      const result = await toggleFavorite({ documentId });
-      showSuccess(result.isFavorite ? "Added to favorites" : "Removed from favorites");
-    } catch (error) {
-      showError(error, "Failed to update favorite");
-    }
-  };
-
-  // Handle toggle archive
-  const handleToggleArchive = async () => {
-    try {
-      if (isArchived) {
-        await unarchiveDocument({ id: documentId });
-        showSuccess("Document unarchived");
-      } else {
-        await archiveDocument({ id: documentId });
-        showSuccess("Document archived");
-      }
-    } catch (error) {
-      showError(error, "Failed to update archive status");
-    }
-  };
-
-  // Handle toggle lock
-  const handleToggleLock = async () => {
-    try {
-      if (lockStatus?.isLocked) {
-        await unlockDocument({ id: documentId });
-        showSuccess("Document unlocked");
-      } else {
-        await lockDocument({ id: documentId });
-        showSuccess("Document locked");
-      }
-    } catch (error) {
-      showError(error, "Failed to update lock status");
-    }
-  };
-
-  // Handle content change (debounced save would go here)
-  const handleChange = (value: Value) => {
-    // Track editor value for sidebar TOC
-    setEditorValue(value);
-    // TODO: Implement Y.js sync or direct Convex save
-    console.debug("Editor content changed", value.length, "nodes");
-  };
-
-  // Toggle sidebar visibility
-  const toggleSidebar = () => {
-    setShowSidebar((prev) => !prev);
-  };
-
-  // Handle version restore
-  const handleRestoreVersion = async (snapshot: unknown, version: number, title: string) => {
-    void version;
-    try {
-      if (snapshot && document) {
-        // Update document title if it changed
-        if (title !== document.title) {
-          await updateTitle({ id: documentId, title });
-        }
-        showSuccess("Version restored successfully. Refreshing...");
-        // Reload the page to apply the restored version
-        window.location.reload();
-      }
-    } catch (error) {
-      showError(error, "Failed to restore version");
-    }
-  };
+  const {
+    handleTitleEdit,
+    handleTogglePublic,
+    handleToggleFavorite,
+    handleToggleArchive,
+    handleToggleLock,
+  } = usePlateEditorActions({
+    documentId,
+    document,
+    isArchived: isArchived ?? false,
+    lockStatus,
+    updateTitle,
+    togglePublic,
+    toggleFavorite,
+    archiveDocument,
+    unarchiveDocument,
+    lockDocument,
+    unlockDocument,
+  });
 
   // Loading state - while data is loading
   if (document === undefined || userId === undefined || versions === undefined) {
-    return (
-      <Flex direction="column" className="h-full bg-ui-bg">
-        <Card padding="lg" radius="none" className="border-x-0 border-t-0">
-          <Stack gap="md">
-            <Flex align="center" justify="between">
-              <Skeleton className="h-8 w-1/2" />
-              <Flex align="center" gap="md">
-                <Skeleton className="h-8 w-24" />
-                <Skeleton className="h-8 w-20" />
-              </Flex>
-            </Flex>
-            <Flex align="center" gap="md">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-4 w-40" />
-            </Flex>
-          </Stack>
-        </Card>
-        <FlexItem flex="1" className="overflow-auto bg-ui-bg">
-          <Card padding="lg" variant="ghost" className="max-w-3xl mx-auto">
-            <SkeletonText lines={8} />
-          </Card>
-        </FlexItem>
-      </Flex>
-    );
+    return <PlateEditorLoadingState versionsLoaded={versions !== undefined} />;
   }
 
   // No user ID - shouldn't happen in authenticated routes but handle gracefully
   if (!userId) {
     return (
-      <Flex align="center" justify="center" className="h-full">
-        <Typography className="text-ui-text-secondary">Unable to load user data.</Typography>
-      </Flex>
+      <PlateEditorEmptyState
+        title="Unable to load user data"
+        description="There was a problem loading your editor session."
+      />
     );
   }
 
   // Document not found (or still loading after auth check - shouldn't happen but satisfies TypeScript)
   if (!document) {
     return (
-      <Flex align="center" justify="center" className="h-full">
-        <Stack gap="md" align="center" className="text-center">
-          <Typography variant="h3">Document Not Found</Typography>
-          <Typography color="secondary">
-            This document doesn't exist or you don't have access to it.
-          </Typography>
-          <Button variant="outline" onClick={() => window.history.back()}>
-            Go back
-          </Button>
-        </Stack>
-      </Flex>
+      <PlateEditorEmptyState
+        title="Document Not Found"
+        description="This document doesn't exist or you don't have access to it."
+        action={{
+          label: "Go back",
+          onClick: () => window.history.back(),
+        }}
+      />
     );
   }
 
@@ -389,18 +536,7 @@ export function PlateEditor({ documentId }: PlateEditorProps) {
       />
 
       {/* Locked Banner */}
-      {lockStatus?.isLocked && (
-        <Alert variant="warning" className="rounded-none border-x-0">
-          <Lock className="h-4 w-4" />
-          <AlertTitle>Document Locked</AlertTitle>
-          <AlertDescription>
-            This document is locked by {lockStatus.lockedByName || "another user"}.
-            {lockStatus.canUnlock
-              ? " You can unlock it to make changes."
-              : " Only the person who locked it or an admin can unlock it."}
-          </AlertDescription>
-        </Alert>
-      )}
+      {lockStatus?.isLocked && <LockedDocumentBanner lockStatus={lockStatus} />}
 
       {/* Editor and Sidebar - Two column layout */}
       <Flex flex="1" className="overflow-hidden">
