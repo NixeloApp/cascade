@@ -17,6 +17,10 @@ const separatorVariants = cva("shrink-0 bg-ui-border", {
       horizontal: "h-px w-full",
       vertical: "h-full w-px",
     },
+    recipe: {
+      default: "",
+      floatingToolbar: "",
+    },
     spacing: {
       none: "",
       sm: "",
@@ -31,9 +35,11 @@ const separatorVariants = cva("shrink-0 bg-ui-border", {
     { orientation: "vertical", spacing: "sm", class: "mx-2" },
     { orientation: "vertical", spacing: "md", class: "mx-4" },
     { orientation: "vertical", spacing: "lg", class: "mx-6" },
+    { orientation: "vertical", recipe: "floatingToolbar", class: "h-5 mx-1.5" },
   ],
   defaultVariants: {
     orientation: "horizontal",
+    recipe: "default",
     spacing: "none",
   },
 });

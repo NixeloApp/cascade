@@ -301,6 +301,8 @@
 - Added `Plate/SlashMenu.tsx` to design-system ownership targeting so future slash-menu chrome drift is blocked directly.
 - Removed `Plate/Collaborators.tsx` from explicit raw debt by moving collaborator stack overlap, overflow count chrome, avatar presence treatment, and online indicators onto owned `Avatar` and `AvatarGroup` APIs instead of feature-level overlap, border, and badge classes.
 - Added `Plate/Collaborators.tsx` to design-system ownership targeting so future collaborator-stack chrome drift is blocked directly.
+- Removed `Plate/FloatingToolbar.tsx` from explicit raw debt by moving its toolbar rail layout, separator sizing, and icon sizing onto owned `Popover`, `Separator`, and `Icon` APIs instead of feature-level flex, spacing, and SVG classes.
+- Added `Plate/FloatingToolbar.tsx` to design-system ownership targeting so future floating-toolbar chrome drift is blocked directly.
 - The embedded calendar island is now narrowed from directory-wide escape hatches to explicit file debt. Burn that list down surface by surface instead of allowing new embedded drift by default.
 
 ## Problem

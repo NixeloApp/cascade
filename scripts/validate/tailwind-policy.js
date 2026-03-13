@@ -9,7 +9,6 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   "/BulkOperationsBar.tsx",
   "/Plate/ColorPickerButton.tsx",
   "/Plate/DragHandle.tsx",
-  "/Plate/FloatingToolbar.tsx",
   "/Plate/MentionElement.tsx",
   "/Plate/MentionInputElement.tsx",
 ];

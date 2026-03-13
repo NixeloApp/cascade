@@ -5,7 +5,16 @@
  * Provides quick access to formatting options.
  */
 
-import { Bold, Code, Highlighter, Italic, Link, Strikethrough, Underline } from "lucide-react";
+import {
+  Bold,
+  Code,
+  Highlighter,
+  Italic,
+  Link,
+  type LucideIcon,
+  Strikethrough,
+  Underline,
+} from "lucide-react";
 import {
   useEditorRef,
   useEditorSelection,
@@ -15,6 +24,7 @@ import {
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/components/ui/Icon";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/Popover";
 import { Separator } from "@/components/ui/Separator";
 import { NODE_TYPES } from "@/lib/plate/plugins";
@@ -22,11 +32,11 @@ import { ColorPickerButton } from "./ColorPickerButton";
 
 interface MarkButtonProps {
   nodeType: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   tooltip: string;
 }
 
-function MarkButton({ nodeType, icon: Icon, tooltip }: MarkButtonProps) {
+function MarkButton({ nodeType, icon, tooltip }: MarkButtonProps) {
   const state = useMarkToolbarButtonState({ nodeType });
   const { props } = useMarkToolbarButton(state);
 
@@ -39,7 +49,7 @@ function MarkButton({ nodeType, icon: Icon, tooltip }: MarkButtonProps) {
       aria-label={tooltip}
       title={tooltip}
     >
-      <Icon className="h-4 w-4" />
+      <Icon icon={icon} size="sm" />
     </Button>
   );
 }
@@ -134,7 +144,6 @@ export function FloatingToolbar() {
       />
       <PopoverContent
         recipe="floatingToolbar"
-        className="flex items-center gap-0.5"
         side="top"
         align="center"
         sideOffset={8}
@@ -149,17 +158,17 @@ export function FloatingToolbar() {
           tooltip="Strikethrough"
         />
 
-        <Separator orientation="vertical" className="h-5 mx-1.5 bg-ui-border" />
+        <Separator orientation="vertical" recipe="floatingToolbar" />
 
         <MarkButton nodeType={NODE_TYPES.code} icon={Code} tooltip="Inline Code (Ctrl+`)" />
 
-        <Separator orientation="vertical" className="h-5 mx-1.5 bg-ui-border" />
+        <Separator orientation="vertical" recipe="floatingToolbar" />
 
         <MarkButton nodeType={NODE_TYPES.highlight} icon={Highlighter} tooltip="Highlight" />
         <ColorPickerButton type="fontColor" />
         <ColorPickerButton type="backgroundColor" />
 
-        <Separator orientation="vertical" className="h-5 mx-1.5 bg-ui-border" />
+        <Separator orientation="vertical" recipe="floatingToolbar" />
 
         <Button
           variant="unstyled"
@@ -169,7 +178,7 @@ export function FloatingToolbar() {
           aria-label="Insert Link"
           title="Insert Link (Ctrl+K)"
         >
-          <Link className="h-4 w-4" />
+          <Icon icon={Link} size="sm" />
         </Button>
       </PopoverContent>
     </Popover>
