@@ -16,6 +16,7 @@ import { getOrganizationRole } from "./lib/organizationAccess";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { getTeamRole } from "./lib/teamAccess";
 import { getWorkspaceRole } from "./lib/workspaceAccess";
+import { RUNTIME_COLORS } from "./shared/colors";
 
 /** List all built-in project templates available for new project creation. */
 export const list = query({
@@ -149,11 +150,11 @@ export const initializeBuiltInTemplates = mutation({
         { id: "done", name: "Done", category: "done", order: 5 },
       ],
       defaultLabels: [
-        { name: "bug", color: "#EF4444" },
-        { name: "feature", color: "#3B82F6" },
-        { name: "enhancement", color: "#10B981" },
-        { name: "documentation", color: "#8B5CF6" },
-        { name: "urgent", color: "#F59E0B" },
+        { name: "bug", color: RUNTIME_COLORS.DANGER },
+        { name: "feature", color: RUNTIME_COLORS.INFO },
+        { name: "enhancement", color: RUNTIME_COLORS.SUCCESS },
+        { name: "documentation", color: RUNTIME_COLORS.ACCENT },
+        { name: "urgent", color: RUNTIME_COLORS.WARNING },
       ],
       isBuiltIn: true,
     });
@@ -171,9 +172,9 @@ export const initializeBuiltInTemplates = mutation({
         { id: "done", name: "Done", category: "done", order: 2 },
       ],
       defaultLabels: [
-        { name: "priority", color: "#EF4444" },
-        { name: "research", color: "#3B82F6" },
-        { name: "design", color: "#8B5CF6" },
+        { name: "priority", color: RUNTIME_COLORS.DANGER },
+        { name: "research", color: RUNTIME_COLORS.INFO },
+        { name: "design", color: RUNTIME_COLORS.ACCENT },
       ],
       isBuiltIn: true,
     });
@@ -193,10 +194,10 @@ export const initializeBuiltInTemplates = mutation({
         { id: "published", name: "Published", category: "done", order: 4 },
       ],
       defaultLabels: [
-        { name: "social-media", color: "#3B82F6" },
-        { name: "email", color: "#10B981" },
-        { name: "content", color: "#8B5CF6" },
-        { name: "urgent", color: "#EF4444" },
+        { name: "social-media", color: RUNTIME_COLORS.INFO },
+        { name: "email", color: RUNTIME_COLORS.SUCCESS },
+        { name: "content", color: RUNTIME_COLORS.ACCENT },
+        { name: "urgent", color: RUNTIME_COLORS.DANGER },
       ],
       isBuiltIn: true,
     });
@@ -217,10 +218,10 @@ export const initializeBuiltInTemplates = mutation({
         { id: "delivered", name: "Delivered", category: "done", order: 5 },
       ],
       defaultLabels: [
-        { name: "ui", color: "#3B82F6" },
-        { name: "ux", color: "#10B981" },
-        { name: "branding", color: "#F59E0B" },
-        { name: "illustration", color: "#8B5CF6" },
+        { name: "ui", color: RUNTIME_COLORS.INFO },
+        { name: "ux", color: RUNTIME_COLORS.SUCCESS },
+        { name: "branding", color: RUNTIME_COLORS.WARNING },
+        { name: "illustration", color: RUNTIME_COLORS.ACCENT },
       ],
       isBuiltIn: true,
     });

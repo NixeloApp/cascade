@@ -9,6 +9,18 @@ export const RUNTIME_COLORS = {
   DEFAULT_LABEL: "#6366F1",
   /** Neutral fallback label color when metadata is missing */
   FALLBACK_LABEL: "#6B7280",
+  /** Shared runtime info/primary blue for seeded data and outbound payloads */
+  INFO: "#3B82F6",
+  /** Shared runtime success green for seeded data and outbound payloads */
+  SUCCESS: "#10B981",
+  /** Shared runtime warning amber for seeded data and outbound payloads */
+  WARNING: "#F59E0B",
+  /** Shared runtime danger red for seeded data and outbound payloads */
+  DANGER: "#EF4444",
+  /** Shared runtime accent purple for seeded data and outbound payloads */
+  ACCENT: "#8B5CF6",
+  /** Shared runtime muted text gray for outbound HTML payloads */
+  MUTED_TEXT: "#666666",
 } as const;
 
 /** Theme-aligned preset swatches used by the generic color picker. */

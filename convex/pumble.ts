@@ -17,6 +17,7 @@ import { logger } from "./lib/logger";
 import { getPlainTextFromDescription } from "./lib/richText";
 import { safeFetch } from "./lib/safeFetch";
 import { notDeleted } from "./lib/softDeleteHelpers";
+import { RUNTIME_COLORS } from "./shared/colors";
 
 /**
  * Pumble Integration
@@ -311,7 +312,7 @@ export const testWebhook = action({
       webhookId: args.webhookId,
       text: "🎉 Nixelo integration is working!",
       title: "Test Message",
-      color: "#3b82f6",
+      color: RUNTIME_COLORS.INFO,
       fields: [
         {
           title: "Status",
@@ -408,17 +409,17 @@ export const sendIssueNotification = action({
 function getColorForEvent(event: string): string {
   switch (event) {
     case "issue.created":
-      return "#10b981"; // green
+      return RUNTIME_COLORS.SUCCESS;
     case "issue.updated":
-      return "#3b82f6"; // blue
+      return RUNTIME_COLORS.INFO;
     case "issue.assigned":
-      return "#f59e0b"; // amber
+      return RUNTIME_COLORS.WARNING;
     case "issue.completed":
-      return "#8b5cf6"; // purple
+      return RUNTIME_COLORS.ACCENT;
     case "issue.deleted":
-      return "#ef4444"; // red
+      return RUNTIME_COLORS.DANGER;
     default:
-      return "#6b7280"; // gray
+      return RUNTIME_COLORS.FALLBACK_LABEL;
   }
 }
 

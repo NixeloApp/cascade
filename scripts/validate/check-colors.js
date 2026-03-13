@@ -20,11 +20,6 @@ export function run() {
     "src/index.css",
     "convex/http/githubOAuth.ts",
     "convex/http/googleOAuth.ts",
-    "convex/pumble.ts",
-    "convex/invites.ts",
-    "convex/bookingPages.ts",
-    "convex/projectTemplates.ts",
-    "convex/onboarding.ts",
     "convex/shared/colors.ts", // Shared runtime color constants for DB/payload usage
     "*.test.ts",
     "*.test.tsx",
