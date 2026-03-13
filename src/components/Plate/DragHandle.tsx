@@ -8,8 +8,7 @@
 import { GripVertical, Plus, Trash2 } from "lucide-react";
 import { useEditorRef, useElement, useNodePath } from "platejs/react";
 import { useState } from "react";
-
-import { Button } from "@/components/ui/Button";
+import { getCardRecipeClassName } from "@/components/ui/Card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
+import { IconButton } from "@/components/ui/IconButton";
 import { NODE_TYPES } from "@/lib/plate/plugins";
 import { cn } from "@/lib/utils";
 
@@ -81,7 +81,7 @@ export function DragHandle({ className }: DragHandleProps) {
 
     // Create a drag preview
     const dragImage = document.createElement("div");
-    dragImage.className = "bg-brand-subtle border border-brand rounded p-2 text-sm";
+    dragImage.className = getCardRecipeClassName("dragPreview");
     dragImage.textContent = "Moving block...";
     document.body.appendChild(dragImage);
     e.dataTransfer.setDragImage(dragImage, 0, 0);
@@ -103,25 +103,23 @@ export function DragHandle({ className }: DragHandleProps) {
 
   return (
     <div
-      className={cn(
-        "absolute -left-10 top-0 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity",
-        isDragging && "opacity-50",
-        className,
-      )}
+      className={cn("absolute -left-10 top-0 flex items-center gap-0.5", className)}
       contentEditable={false}
     >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 w-6 p-0 cursor-grab active:cursor-grabbing"
+          <IconButton
+            variant="dragHandle"
+            size="xs"
+            reveal={!isDragging}
+            className={isDragging ? "opacity-50" : undefined}
+            aria-label="Block actions"
             draggable
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
             <GripVertical className="h-4 w-4 text-ui-text-tertiary" />
-          </Button>
+          </IconButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" side="left">
           <DropdownMenuItem onSelect={handleAddAbove}>
@@ -133,10 +131,7 @@ export function DragHandle({ className }: DragHandleProps) {
             Add block below
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onSelect={handleDelete}
-            className="text-status-error focus:text-status-error"
-          >
+          <DropdownMenuItem onSelect={handleDelete} variant="danger">
             <Trash2 className="mr-2 h-4 w-4" />
             Delete block
           </DropdownMenuItem>

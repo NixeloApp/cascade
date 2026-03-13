@@ -47,6 +47,9 @@ const iconButtonVariants = cva(
       variant: {
         /** Default: subtle background on hover */
         ghost: "text-ui-text-tertiary hover:text-ui-text hover:bg-ui-bg-hover",
+        /** Drag handle trigger for block reordering */
+        dragHandle:
+          "cursor-grab text-ui-text-tertiary hover:bg-ui-bg-hover hover:text-ui-text active:cursor-grabbing",
         /** Floating inline action on top of existing content */
         floating:
           "border border-ui-border bg-ui-bg text-ui-text-secondary shadow-sm hover:text-ui-text hover:shadow-md",

@@ -24,7 +24,6 @@ const ALLOWED_FILES = [
   "FuzzySearch/AssigneeSearchDropdown.example.tsx",
   // Document components
   // Editor components
-  "Plate/DragHandle.tsx",
   "PlateEditor.tsx",
   // Navigation/layout
   "Sidebar/",

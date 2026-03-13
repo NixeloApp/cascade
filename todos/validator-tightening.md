@@ -218,7 +218,9 @@
 - Tightened `check-interactive-tw.js` so it scans real JSX `className=` spans instead of arbitrary lines, avoiding false positives from editor type annotations like `focus` fields while keeping the rule blocking on actual Tailwind variants.
 - Removed the broad `ImportExport/` interactive allowlist entry from `check-interactive-tw.js` by moving `ExportPanel.tsx` format selection onto owned `Card` option-tile recipes instead of feature-level hover and selected-state classes.
 - Added `ImportExport/ExportPanel.tsx` to design-system ownership targeting so future export-surface drift is blocked directly.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on the single explicit `Plate/DragHandle.tsx` debt entry and the remaining broad raw-Tailwind escape hatches like `src/components/ImportExport/`, which are now larger validator gaps than the migrated interactive surfaces.
+- Removed the last explicit `Plate/DragHandle.tsx` interactive debt entry from `check-interactive-tw.js` by moving the drag trigger onto an owned `IconButton` variant and using `DropdownMenuItem variant="danger"` instead of feature-level active/focus classes.
+- Added `Plate/DragHandle.tsx` to design-system ownership targeting so future editor drag-handle drift is blocked directly.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on shrinking the remaining broad raw-Tailwind escape hatches like `src/components/ImportExport/`, which are now larger validator gaps than the migrated interactive surfaces.
 
 ## Problem
 

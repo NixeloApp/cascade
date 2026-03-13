@@ -124,6 +124,7 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/Kanban/BoardToolbar.tsx",
   "/Onboarding/OnboardingChecklist.tsx",
   "/Plate/ColorPickerButton.tsx",
+  "/Plate/DragHandle.tsx",
   "/Plate/MentionInputElement.tsx",
   "/Plate/MentionElement.tsx",
   "/Plate/FloatingToolbar.tsx",

@@ -106,6 +106,8 @@ const cardRecipeVariants = cva("", {
         "rounded-2xl border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/96 to-ui-bg-soft/84 shadow-soft",
       optionTileSelected:
         "rounded-2xl border-brand-border bg-linear-to-b from-brand-subtle/85 via-ui-bg-elevated/98 to-ui-bg-soft/86 shadow-card",
+      dragPreview:
+        "rounded-lg border-brand bg-brand-subtle px-2 py-2 text-sm text-brand shadow-soft",
       selectionRow:
         "rounded-xl border-transparent bg-transparent shadow-none hover:border-ui-border hover:bg-ui-bg-elevated/80",
       selectionRowSelected:
@@ -276,6 +278,12 @@ const cardRecipeVariants = cva("", {
   },
 });
 
+type CardRecipe = NonNullable<VariantProps<typeof cardRecipeVariants>["recipe"]>;
+
+function getCardRecipeClassName(recipe: CardRecipe) {
+  return cardRecipeVariants({ recipe });
+}
+
 export interface CardProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof cardVariants>,
@@ -439,4 +447,5 @@ export {
   CardFooter,
   cardVariants,
   cardRecipeVariants,
+  getCardRecipeClassName,
 };
