@@ -18,7 +18,6 @@ export function run() {
     /otpErrorHandling\.test\.ts$/, // 4 violations - TODO: fix ts-expect-error
     /otpVerificationTestEnv\.test\.ts$/, // 6 violations - TODO: fix suppressions
     /purge\.test\.ts$/, // 2 violations - TODO: fix suppressions
-    /webhooksCrash\.test\.ts$/, // 3 violations - TODO: fix biome-ignore
     /convex\/lib\/constrainedValidators\.test\.ts$/, // Legacy test assertions
     /convex\/lib\/dns\.test\.ts$/, // Legacy fetch mocks
     /convex\/lib\/fileValidators\.test\.ts$/, // Legacy MutationCtx casts
