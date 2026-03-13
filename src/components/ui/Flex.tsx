@@ -67,10 +67,14 @@ const selfAlignClasses: Record<SelfAlign, string> = {
 export interface FlexProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Direction of flex layout */
   direction?: Direction;
+  /** Direction from the sm breakpoint upward */
+  directionSm?: Direction;
   /** Gap between items */
   gap?: GapSize;
   /** Align items on cross axis */
   align?: Align;
+  /** Align items from the sm breakpoint upward */
+  alignSm?: Align;
   /** Justify content on main axis */
   justify?: Justify;
   /** Wrap items */
@@ -110,8 +114,10 @@ export const Flex = React.forwardRef<HTMLDivElement, FlexProps>(
   (
     {
       direction = "row",
+      directionSm,
       gap = "none",
       align,
+      alignSm,
       justify,
       wrap = false,
       inline = false,
@@ -128,8 +134,10 @@ export const Flex = React.forwardRef<HTMLDivElement, FlexProps>(
         className={cn(
           inline ? "inline-flex" : "flex",
           directionClasses[direction],
+          directionSm && `sm:${directionClasses[directionSm]}`,
           gapClasses[gap],
           align && alignClasses[align],
+          alignSm && `sm:${alignClasses[alignSm]}`,
           justify && justifyClasses[justify],
           wrap && "flex-wrap",
           className,

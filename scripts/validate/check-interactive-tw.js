@@ -27,13 +27,11 @@ const ALLOWED_FILES = [
   "CommentRenderer.tsx",
   "DocumentComments.tsx",
   // Document components
-  "DocumentHeader.tsx",
   "DocumentTree.tsx",
   "DocumentTemplatesManager.tsx",
   // Editor components
   "Plate/",
   "PlateEditor.tsx",
-  "IssueDescriptionEditor.tsx",
   // Navigation/layout
   "Sidebar/",
   // Modals

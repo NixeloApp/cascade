@@ -7,7 +7,6 @@
  */
 
 import type { Doc } from "@convex/_generated/dataModel";
-import { cva } from "class-variance-authority";
 import { useState } from "react";
 import { PresenceIndicator } from "@/components/PresenceIndicator";
 import { Badge } from "@/components/ui/Badge";
@@ -23,33 +22,6 @@ import { Typography } from "@/components/ui/Typography";
 import { Archive, Download, FolderInput, History, Lock, LockOpen, Star, Upload } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
-
-const documentHeaderTitleVariants = cva("", {
-  variants: {
-    surface: {
-      static: "text-2xl leading-tight sm:text-3xl lg:text-4xl -ml-2 rounded transition-default",
-      interactive:
-        "text-2xl leading-tight sm:text-3xl lg:text-4xl -ml-2 rounded transition-default cursor-pointer hover:bg-ui-bg-hover",
-      input:
-        "rounded bg-transparent px-2 py-1 -ml-2 text-2xl font-semibold tracking-tight text-ui-text focus-visible:ring-2 focus-visible:ring-brand-ring sm:text-3xl",
-    },
-  },
-});
-
-const documentHeaderActionButtonVariants = cva("px-2 sm:px-3 py-1.5 min-h-0", {
-  variants: {
-    surface: {
-      neutral:
-        "border border-ui-border text-ui-text-secondary hover:text-ui-text hover:border-ui-border-secondary transition-default",
-      accent:
-        "border border-ui-border text-ui-text-secondary hover:text-brand hover:bg-brand-subtle hover:border-brand-border transition-default disabled:opacity-50",
-      publicActive:
-        "border border-status-success/30 bg-status-success-bg text-status-success-text hover:bg-status-success-bg/80",
-      publicInactive:
-        "border border-ui-border text-ui-text-secondary hover:text-ui-text hover:border-ui-border-secondary transition-default",
-    },
-  },
-});
 
 interface LockStatus {
   isLocked: boolean;
@@ -124,13 +96,11 @@ export function DocumentHeader({
 
   const titleComponent = (
     <Typography
-      variant="h2"
+      as="h2"
       data-testid={TEST_IDS.DOCUMENT.TITLE}
       role={document.isOwner ? "button" : undefined}
       tabIndex={document.isOwner ? 0 : undefined}
-      className={documentHeaderTitleVariants({
-        surface: document.isOwner ? "interactive" : "static",
-      })}
+      variant={document.isOwner ? "documentTitleInteractive" : "documentTitle"}
       onClick={document.isOwner ? handleTitleEdit : undefined}
       onKeyDown={
         document.isOwner
@@ -148,20 +118,16 @@ export function DocumentHeader({
   );
 
   return (
-    <Card
-      variant="default"
-      padding="md"
-      radius="none"
-      className="border-x-0 border-t-0 border-ui-border-secondary/85 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/96 to-ui-bg-soft/84 shadow-soft"
-    >
+    <Card recipe="documentHeaderShell" padding="md">
       <div className="mx-auto w-full max-w-5xl">
         <Stack gap="sm">
           <Flex
             direction="column"
+            directionSm="row"
             align="start"
+            alignSm="center"
             justify="between"
             gap="md"
-            className="sm:flex-row sm:items-center"
           >
             <FlexItem flex="1" className="w-full sm:w-auto">
               {isEditingTitle ? (
@@ -172,7 +138,7 @@ export function DocumentHeader({
                   onChange={(e) => setTitleValue(e.target.value)}
                   onBlur={() => void handleTitleSave()}
                   onKeyDown={handleTitleKeyDown}
-                  className={documentHeaderTitleVariants({ surface: "input" })}
+                  variant="documentTitle"
                 />
               ) : document.isOwner ? (
                 <Tooltip content="Click to edit title">{titleComponent}</Tooltip>
@@ -263,11 +229,11 @@ export function DocumentHeader({
               {/* Version History */}
               <Tooltip content="View version history">
                 <Button
-                  variant="ghost"
-                  size="sm"
+                  variant="unstyled"
+                  chrome="documentHeaderNeutral"
+                  chromeSize="documentHeaderAction"
                   onClick={onShowVersionHistory}
                   leftIcon={<History className="w-4 h-4" aria-hidden="true" />}
-                  className={documentHeaderActionButtonVariants({ surface: "neutral" })}
                   aria-label="Version history"
                 >
                   <Typography variant="small" as="span" className="hidden sm:inline">
@@ -284,12 +250,12 @@ export function DocumentHeader({
               {/* Import Markdown */}
               <Tooltip content="Import from Markdown file">
                 <Button
-                  variant="ghost"
-                  size="sm"
+                  variant="unstyled"
+                  chrome="documentHeaderAccent"
+                  chromeSize="documentHeaderAction"
                   onClick={() => void onImportMarkdown()}
                   disabled={!editorReady}
                   leftIcon={<Upload className="w-4 h-4" aria-hidden="true" />}
-                  className={documentHeaderActionButtonVariants({ surface: "accent" })}
                   aria-label="Import from Markdown"
                 >
                   <Typography variant="small" as="span" className="hidden sm:inline">
@@ -301,12 +267,12 @@ export function DocumentHeader({
               {/* Export Markdown */}
               <Tooltip content="Export as Markdown file">
                 <Button
-                  variant="ghost"
-                  size="sm"
+                  variant="unstyled"
+                  chrome="documentHeaderAccent"
+                  chromeSize="documentHeaderAction"
                   onClick={() => void onExportMarkdown()}
                   disabled={!editorReady}
                   leftIcon={<Download className="w-4 h-4" aria-hidden="true" />}
-                  className={documentHeaderActionButtonVariants({ surface: "accent" })}
                   aria-label="Export as Markdown"
                 >
                   <Typography variant="small" as="span" className="hidden sm:inline">
@@ -317,15 +283,12 @@ export function DocumentHeader({
 
               {document.isOwner && (
                 <Button
-                  variant="ghost"
-                  size="sm"
+                  variant="unstyled"
+                  chrome={
+                    document.isPublic ? "documentHeaderPublicActive" : "documentHeaderNeutral"
+                  }
+                  chromeSize="documentHeaderToggle"
                   onClick={() => void onTogglePublic()}
-                  className={cn(
-                    "px-2.5",
-                    documentHeaderActionButtonVariants({
-                      surface: document.isPublic ? "publicActive" : "publicInactive",
-                    }),
-                  )}
                 >
                   {document.isPublic ? "Public" : "Private"}
                 </Button>

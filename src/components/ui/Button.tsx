@@ -72,6 +72,12 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
         "border-ui-border bg-ui-bg-soft text-ui-text-secondary shadow-none hover:border-ui-border-secondary hover:bg-ui-bg-hover",
       reactionActive:
         "border-brand-border bg-brand-subtle text-brand-subtle-foreground shadow-none hover:bg-brand-subtle/90",
+      documentHeaderNeutral:
+        "border-ui-border bg-transparent text-ui-text-secondary shadow-none hover:border-ui-border-secondary hover:text-ui-text",
+      documentHeaderAccent:
+        "border-ui-border bg-transparent text-ui-text-secondary shadow-none hover:border-brand-border hover:bg-brand-subtle hover:text-brand disabled:opacity-50",
+      documentHeaderPublicActive:
+        "border-status-success/30 bg-status-success-bg text-status-success-text shadow-none hover:bg-status-success-bg/80",
       timerStrip:
         "border-transparent bg-transparent text-brand-indigo-text hover:bg-brand-indigo-bg/10 hover:text-brand-indigo-text",
       framed:
@@ -88,6 +94,8 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
       pill: "h-10 rounded-full px-4 text-sm",
       compactPill: "h-8 rounded-full px-3 text-sm",
       reactionPill: "h-auto rounded-full px-2 py-0.5 text-xs font-medium",
+      documentHeaderAction: "min-h-0 rounded-lg px-2 py-1.5 sm:px-3",
+      documentHeaderToggle: "min-h-0 rounded-lg px-2.5 py-1.5",
       filterPill:
         "h-6 rounded-full px-2 text-xs sm:h-9 sm:rounded-xl sm:border-transparent sm:bg-transparent sm:px-3 sm:text-sm",
     },

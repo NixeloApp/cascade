@@ -50,6 +50,9 @@ const typographyVariants = cva("", {
       caption: "text-xs text-ui-text-secondary", // descriptions, helper text
       label: "text-sm font-medium text-ui-text", // form labels
       mono: "text-xs font-mono text-ui-text-secondary tracking-tight", // issue keys, codes
+      documentTitle: "-ml-2 px-2 py-1 text-2xl leading-tight sm:text-3xl lg:text-4xl",
+      documentTitleInteractive:
+        "-ml-2 cursor-pointer rounded px-2 py-1 text-2xl leading-tight transition-default hover:bg-ui-bg-hover sm:text-3xl lg:text-4xl",
 
       // Special
       blockquote: "mt-6 border-l-2 border-ui-border-secondary pl-6 italic text-ui-text",

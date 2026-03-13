@@ -164,7 +164,10 @@
 - Removed `IssueDetail/IssueCard.tsx` from the raw-Tailwind and interactive-state debt lists by moving its shell/focus states onto owned `Card` and `Button` variants and replacing the inline selection/avatar styling with owned primitives.
 - Removed `MentionInput.tsx` from the raw-Tailwind and interactive-state debt lists by moving its preview/editor/emoji surfaces onto owned `Card`, `Textarea`, and `Popover` primitives.
 - Added `IssueDetail/IssueCard.tsx` and `MentionInput.tsx` to design-system ownership targeting so future shell drift is blocked directly.
-- Keep working through shared workflow surfaces rather than decorative backdrops, with the next pass focused on `DocumentHeader.tsx` and `IssueDescriptionEditor.tsx`, which are now among the next higher-impact workflow/editor surfaces still sitting behind explicit validator debt.
+- Removed `Documents/DocumentHeader.tsx` from the raw-Tailwind and interactive-state debt lists by moving its title, title-input, shell, and action-button contracts onto owned `Typography`, `Input`, `Card`, `Button`, and `Flex` APIs.
+- Removed `IssueDescriptionEditor.tsx` from the raw-Tailwind and interactive-state debt lists by moving the editor/read-only prose contract into `ui/MarkdownContent` variants instead of keeping Plate content styling inline in feature code.
+- Added `IssueDescriptionEditor.tsx` to design-system ownership targeting so future editor-surface drift is blocked directly.
+- Keep working through shared workflow/editor surfaces rather than decorative backdrops, with the next pass focused on `DocumentTemplatesManager.tsx` and `TimeTracker.tsx`, which are now among the next higher-impact surfaces still sitting behind explicit validator debt.
 
 ## Problem
 

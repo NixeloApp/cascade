@@ -7,8 +7,9 @@
  */
 
 import type { Value } from "platejs";
-import { Plate, PlateContent, usePlateEditor } from "platejs/react";
+import { Plate, usePlateEditor } from "platejs/react";
 import { Card } from "@/components/ui/Card";
+import { PlateRichTextContent } from "@/components/ui/PlateRichTextContent";
 import {
   getInitialValue,
   getIssueDescriptionPlugins,
@@ -119,15 +120,8 @@ export function IssueDescriptionEditor({
     >
       <Plate editor={editor} onChange={handleChange} readOnly={readOnly}>
         {!readOnly && <FloatingToolbar />}
-        <PlateContent
-          className={cn(
-            "p-3 prose prose-sm max-w-none focus-visible:outline-none",
-            "text-ui-text leading-relaxed",
-            "[&_p]:my-1 [&_ul]:my-2 [&_ol]:my-2 [&_pre]:my-2",
-            "[&_blockquote]:border-l-2 [&_blockquote]:border-ui-border [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-ui-text-secondary",
-            "[&_code]:bg-ui-bg-secondary [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm",
-            "[&_pre]:bg-ui-bg-secondary [&_pre]:p-3 [&_pre]:rounded [&_pre]:overflow-x-auto",
-          )}
+        <PlateRichTextContent
+          variant="issueEditor"
           style={{ minHeight }}
           placeholder={placeholder}
           readOnly={readOnly}
@@ -170,16 +164,9 @@ export function IssueDescriptionReadOnly({
 
   return (
     <Plate editor={editor} readOnly>
-      <PlateContent
-        className={cn(
-          "prose prose-sm max-w-none",
-          "text-ui-text leading-relaxed",
-          "[&_p]:my-1 [&_ul]:my-2 [&_ol]:my-2 [&_pre]:my-2",
-          "[&_blockquote]:border-l-2 [&_blockquote]:border-ui-border [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-ui-text-secondary",
-          "[&_code]:bg-ui-bg-secondary [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm",
-          "[&_pre]:bg-ui-bg-secondary [&_pre]:p-3 [&_pre]:rounded [&_pre]:overflow-x-auto",
-          className,
-        )}
+      <PlateRichTextContent
+        variant="issueReadOnly"
+        className={className}
         readOnly
         data-testid={testId}
       />
