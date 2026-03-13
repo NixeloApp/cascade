@@ -234,7 +234,8 @@
 - Added `Calendar/CreateEventModal.tsx` and `Calendar/UnifiedCalendarView.tsx` to design-system ownership targeting so future top-level calendar surface drift is blocked directly.
 - Removed the broad `src/components/Kanban/` raw-Tailwind escape hatch by moving `BoardToolbar.tsx` spacing and responsive layout drift onto owned `Card`, `Flex`, and `Button` APIs and narrowing the remaining raw debt to explicit files in `KanbanColumn.tsx` and `SwimlanRow.tsx`.
 - Removed the broad `src/components/Sidebar/` raw and interactive escape hatches. `SidebarTeamItem.tsx` now uses owned `Card`, `FlexItem`, `IconButton`, and `Icon` composition, and the remaining sidebar navigation surface is under direct ownership targeting instead of folder-wide validator exemptions.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on shrinking the next broad folder-level escape hatch in shared navigation/workflow chrome, starting with `Calendar/shadcn-calendar/` only if we want to absorb that embedded implementation, otherwise `PlateEditor.tsx` and the remaining explicit raw-debt files.
+- Removed `Dashboard.tsx` from the explicit raw-Tailwind debt list by moving responsive column spans onto an owned `GridItem` primitive and replacing the remaining dashboard overview label/layout drift with owned `Grid`, `Stack`, `Flex`, and `Typography` APIs.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `PlateEditor.tsx` and the remaining explicit raw-debt files. `Calendar/shadcn-calendar/` remains intentionally isolated unless we decide to absorb that embedded implementation.
 
 ## Problem
 

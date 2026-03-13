@@ -19,7 +19,6 @@ export const RAW_TAILWIND_ALLOWED_FILES = [
   "/Kanban/KanbanColumn.tsx",
   "/Kanban/SwimlanRow.tsx",
   "/CreateProjectFromTemplate.tsx",
-  "/Dashboard.tsx",
   "/PlateEditor.tsx",
   "/UserProfile.tsx",
 ];
