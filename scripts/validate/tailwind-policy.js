@@ -7,7 +7,6 @@ export const RAW_TAILWIND_ALLOWED_DIRS = ["src/components/ui/"];
 export const RAW_TAILWIND_ALLOWED_FILES = [
   // Explicit migration-debt exemptions replacing broad Settings/Admin/ProjectSettings directory escapes.
   "/BulkOperationsBar.tsx",
-  "/Plate/Collaborators.tsx",
   "/Plate/ColorPickerButton.tsx",
   "/Plate/DragHandle.tsx",
   "/Plate/FloatingToolbar.tsx",

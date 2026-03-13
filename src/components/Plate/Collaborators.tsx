@@ -8,12 +8,11 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useEffect, useState } from "react";
-import { Avatar } from "@/components/ui/Avatar";
+import { Avatar, AvatarGroup } from "@/components/ui/Avatar";
 import { Flex } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { cn } from "@/lib/utils";
 import { type AwarenessUser, createAwarenessManager, getUserColor } from "@/lib/yjs/awareness";
 
 interface CollaboratorsProps {
@@ -59,26 +58,21 @@ export function Collaborators({ documentId, maxVisible = 5, className }: Collabo
     return null;
   }
 
-  const visible = collaborators.slice(0, maxVisible);
-  const overflow = collaborators.length - maxVisible;
+  const overflow = Math.max(0, collaborators.length - maxVisible);
 
   return (
-    <Flex align="center" className={cn("-space-x-2", className)}>
-      {visible.map((user) => (
+    <AvatarGroup
+      max={maxVisible}
+      size="stackedSm"
+      stackStyle="clean"
+      overflowVariant="collaborator"
+      overflowTooltipContent={`${overflow} more ${overflow === 1 ? "collaborator" : "collaborators"}`}
+      className={className}
+    >
+      {collaborators.map((user) => (
         <CollaboratorAvatar key={user.userId} user={user} />
       ))}
-      {overflow > 0 && (
-        <Tooltip content={`${overflow} more ${overflow === 1 ? "collaborator" : "collaborators"}`}>
-          <Flex
-            align="center"
-            justify="center"
-            className="relative z-10 h-8 w-8 rounded-full border-2 border-ui-bg bg-ui-bg-subtle text-caption text-ui-text-secondary"
-          >
-            +{overflow}
-          </Flex>
-        </Tooltip>
-      )}
-    </Flex>
+    </AvatarGroup>
   );
 }
 
@@ -93,24 +87,21 @@ function CollaboratorAvatar({ user }: CollaboratorAvatarProps) {
   return (
     <Tooltip
       content={
-        <div>
-          <Typography variant="p" className="font-medium">
-            {name}
-          </Typography>
-          <Typography variant="muted" className="text-xs">
-            Currently editing
-          </Typography>
-        </div>
+        <Flex direction="column" gap="xs">
+          <Typography variant="label">{name}</Typography>
+          <Typography variant="muted">Currently editing</Typography>
+        </Flex>
       }
     >
-      <div className="relative z-10 rounded-full border-2" style={{ borderColor: color }}>
-        <Avatar name={name} src={user.user?.image} size="sm" className="h-7 w-7" />
-        {/* Online indicator */}
-        <span
-          className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-ui-bg"
-          style={{ backgroundColor: color }}
-        />
-      </div>
+      <Avatar
+        name={name}
+        src={user.user?.image}
+        size="stackedSm"
+        treatment="collaborator"
+        style={{ borderColor: color }}
+        indicator
+        indicatorColor={color}
+      />
     </Tooltip>
   );
 }
