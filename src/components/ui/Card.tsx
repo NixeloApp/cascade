@@ -241,6 +241,8 @@ const cardRecipeVariants = cva("", {
         "rounded-none border-x-0 border-b-0 border-t border-ui-border bg-transparent shadow-none hover:bg-ui-bg-secondary",
       issueDetailSheetHeader:
         "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",
+      issueDetailLayoutShell: "rounded-lg border-ui-border bg-ui-bg-elevated shadow-card",
+      issueMetadataRow: "rounded-none border-transparent bg-transparent px-0 py-1 shadow-none",
       labelGroupHeader:
         "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg-secondary shadow-none hover:bg-ui-bg-tertiary",
       labelGroupRow:

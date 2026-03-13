@@ -9,6 +9,8 @@ const inputVariants = cva(
       variant: {
         default: "rounded-md px-3 py-2.5 text-sm",
         code: "rounded-md px-3 py-2.5 text-sm font-mono tracking-tight",
+        issueTitle:
+          "h-auto rounded-md border-transparent bg-transparent px-0 py-2 text-2xl font-bold leading-tight hover:border-ui-border-secondary focus-visible:ring-2 focus-visible:ring-brand-ring sm:text-3xl",
         documentTitle:
           "-ml-2 rounded bg-transparent px-2 py-1 text-2xl font-semibold tracking-tight focus-visible:ring-2 focus-visible:ring-brand-ring sm:text-3xl",
       },

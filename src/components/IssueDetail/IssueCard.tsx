@@ -432,10 +432,11 @@ export const IssueCard = memo(function IssueCard({
           (display.storyPoints && issue.storyPoints !== undefined)) && (
           <Flex
             direction="column"
+            directionSm="row"
             align="start"
+            alignSm="center"
             justify="between"
             gap="xs"
-            className="sm:flex-row sm:items-center"
           >
             <Flex align="center" gap="xs">
               {display.assignee && issue.assignee && (

@@ -69,6 +69,8 @@ export interface FlexProps extends React.HTMLAttributes<HTMLDivElement> {
   direction?: Direction;
   /** Direction from the sm breakpoint upward */
   directionSm?: Direction;
+  /** Direction from the md breakpoint upward */
+  directionMd?: Direction;
   /** Gap between items */
   gap?: GapSize;
   /** Align items on cross axis */
@@ -115,6 +117,7 @@ export const Flex = React.forwardRef<HTMLDivElement, FlexProps>(
     {
       direction = "row",
       directionSm,
+      directionMd,
       gap = "none",
       align,
       alignSm,
@@ -135,6 +138,7 @@ export const Flex = React.forwardRef<HTMLDivElement, FlexProps>(
           inline ? "inline-flex" : "flex",
           directionClasses[direction],
           directionSm && `sm:${directionClasses[directionSm]}`,
+          directionMd && `md:${directionClasses[directionMd]}`,
           gapClasses[gap],
           align && alignClasses[align],
           alignSm && `sm:${alignClasses[alignSm]}`,

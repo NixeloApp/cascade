@@ -12,6 +12,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
 import type { ReactNode } from "react";
 import { Avatar } from "@/components/ui/Avatar";
+import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
@@ -268,11 +269,13 @@ interface PropertyRowProps {
 
 export function PropertyRow({ label, children }: PropertyRowProps) {
   return (
-    <Flex align="center" justify="between" className="py-1">
-      <Typography variant="meta" color="secondary" className="min-w-24">
-        {label}
-      </Typography>
-      <FlexItem flex="1">{children}</FlexItem>
-    </Flex>
+    <Card recipe="issueMetadataRow">
+      <Flex align="center" justify="between">
+        <Typography variant="meta" color="secondary" className="min-w-24">
+          {label}
+        </Typography>
+        <FlexItem flex="1">{children}</FlexItem>
+      </Flex>
+    </Card>
   );
 }

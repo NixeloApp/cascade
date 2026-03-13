@@ -11,7 +11,6 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
   "src/components/Sidebar/",
   "src/components/Plate/",
   "src/components/Onboarding/",
-  "src/components/IssueDetail/",
 ];
 
 export const RAW_TAILWIND_ALLOWED_FILES = [
@@ -102,6 +101,10 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/IssueDependencies.tsx",
   "/IssueDetailSheet.tsx",
   "/IssueDetail/IssueCard.tsx",
+  "/IssueDetail/IssueDetailContent.tsx",
+  "/IssueDetail/IssueDetailHeader.tsx",
+  "/IssueDetail/IssueDetailLayout.tsx",
+  "/IssueDetail/IssueDetailSidebar.tsx",
   "/IssueDetail/InlinePropertyEdit.tsx",
   "/IssueDetail/IssueMetadataSection.tsx",
   "/LabelsManager.tsx",

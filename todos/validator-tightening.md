@@ -227,7 +227,9 @@
 - Added `Fields/CustomFieldCard.tsx` and `Fields/CustomFieldForm.tsx` to design-system ownership targeting so future custom-field surface drift is blocked directly.
 - Removed the broad `src/components/Automation/` raw-Tailwind escape hatch by moving `AutomationRuleCard.tsx` action controls onto owned `IconButton` sizing/chrome instead of raw size classes and validating the remaining automation form/card surface code directly.
 - Added `Automation/AutomationRuleCard.tsx` and `Automation/AutomationRuleForm.tsx` to design-system ownership targeting so future automation-surface drift is blocked directly.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on whichever broad raw-Tailwind escape hatch remains most justified after `Automation/` is cleared, rather than keeping any directory-wide exemption by habit.
+- Removed the broad `src/components/IssueDetail/` raw-Tailwind escape hatch by moving the issue-detail layout shell onto an owned `Card` recipe, moving the editable title onto an owned `Input` variant, replacing the inline metadata row padding with an owned `Card` recipe, and moving the last responsive footer layout drift onto owned `Flex` breakpoint props.
+- Added `IssueDetail/IssueDetailContent.tsx`, `IssueDetail/IssueDetailHeader.tsx`, `IssueDetail/IssueDetailLayout.tsx`, and `IssueDetail/IssueDetailSidebar.tsx` to design-system ownership targeting so future issue-detail surface drift is blocked directly.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on shrinking the broad `Calendar/` escape hatches, which are now the largest remaining validator gap by surface area.
 
 ## Problem
 

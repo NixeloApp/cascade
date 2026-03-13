@@ -57,7 +57,7 @@ export function IssueDetailContent({
                 <Input
                   value={editTitle}
                   onChange={(e) => onTitleChange(e.target.value)}
-                  className="text-2xl font-bold h-auto py-2"
+                  variant="issueTitle"
                   placeholder="Issue title"
                 />
                 <IssueDescriptionEditor
