@@ -356,6 +356,12 @@ const cardRecipeVariants = cva("", {
         "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",
       calendarHeaderShell:
         "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg px-1 py-1 shadow-none sm:px-4 sm:py-4",
+      calendarHeaderDateIcon:
+        "overflow-hidden rounded-lg border-ui-border bg-ui-bg shadow-none sm:h-14 sm:w-14",
+      calendarHeaderDateIconMonth:
+        "h-4 w-full rounded-none border-transparent bg-brand px-0 py-0 shadow-none sm:h-6",
+      calendarHeaderDateIconDay:
+        "w-full flex-1 rounded-none border-transparent bg-transparent px-0 py-0 shadow-none",
       calendarRoadmapShell: "h-full rounded-none border-transparent bg-ui-bg shadow-none",
       calendarRoadmapHeader:
         "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",

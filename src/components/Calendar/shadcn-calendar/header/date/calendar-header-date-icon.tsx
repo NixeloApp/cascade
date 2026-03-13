@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { useCalendarContext } from "../../calendar-context";
@@ -8,24 +9,19 @@ export function CalendarHeaderDateIcon(): React.ReactElement {
   const { calendarIconIsToday, date: calendarDate } = useCalendarContext();
   const date = calendarIconIsToday ? new Date() : calendarDate;
   return (
-    <Flex
-      direction="column"
-      align="start"
-      className="size-10 overflow-hidden rounded-lg border sm:size-14"
-    >
-      <Flex align="center" justify="center" className="h-4 w-full bg-brand sm:h-6">
-        <Typography
-          variant="small"
-          className="text-center text-xs font-semibold text-brand-foreground uppercase"
-        >
-          {format(date, "MMM")}
-        </Typography>
+    <Card recipe="calendarHeaderDateIcon" className="h-10 w-10 sm:w-14">
+      <Flex direction="column" align="start" className="h-full w-full">
+        <Card recipe="calendarHeaderDateIconMonth">
+          <Flex align="center" justify="center" className="h-full w-full">
+            <Typography variant="calendarHeaderMonth">{format(date, "MMM")}</Typography>
+          </Flex>
+        </Card>
+        <Card recipe="calendarHeaderDateIconDay">
+          <Flex align="center" justify="center" className="h-full w-full">
+            <Typography variant="calendarHeaderDay">{format(date, "dd")}</Typography>
+          </Flex>
+        </Card>
       </Flex>
-      <Flex align="center" justify="center" className="w-full flex-1">
-        <Typography variant="p" className="text-sm font-bold sm:text-lg">
-          {format(date, "dd")}
-        </Typography>
-      </Flex>
-    </Flex>
+    </Card>
   );
 }

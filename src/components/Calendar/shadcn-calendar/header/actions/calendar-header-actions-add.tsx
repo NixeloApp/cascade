@@ -7,12 +7,12 @@ export function CalendarHeaderActionsAdd(): React.ReactElement {
   const { onAddEvent } = useCalendarContext();
   return (
     <Button
-      size="sm"
-      className="h-6 w-6 rounded-full bg-brand px-0 text-brand-foreground sm:h-9 sm:w-auto sm:rounded-xl sm:px-3"
+      chrome="calendarHeaderAdd"
+      chromeSize="calendarHeaderAdd"
       onClick={() => onAddEvent()}
       aria-label="Add event"
+      leftIcon={<Plus />}
     >
-      <Plus />
       <span className="hidden sm:inline">Add Event</span>
     </Button>
   );

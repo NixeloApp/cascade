@@ -55,6 +55,8 @@ const typographyVariants = cva("", {
       mono: "text-xs font-mono text-ui-text-secondary tracking-tight", // issue keys, codes
       calendarHeaderDate: "text-xs font-medium text-ui-text sm:text-base",
       calendarHeaderTitle: "text-sm font-semibold tracking-tight text-ui-text sm:text-lg",
+      calendarHeaderMonth: "text-center text-xs font-semibold text-brand-foreground uppercase",
+      calendarHeaderDay: "text-sm font-bold text-ui-text sm:text-lg",
       calendarEventTitle: "truncate font-bold",
       calendarEventTitleMonth: "w-full truncate text-xs leading-tight font-bold",
       calendarEventTime: "text-sm",
@@ -139,6 +141,8 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
     case "mono":
     case "calendarHeaderDate":
     case "calendarHeaderTitle":
+    case "calendarHeaderMonth":
+    case "calendarHeaderDay":
     case "calendarEventTitle":
     case "calendarEventTitleMonth":
     case "calendarEventTime":

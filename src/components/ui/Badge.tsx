@@ -27,12 +27,14 @@ const badgeVariants = cva("inline-flex items-center font-medium transition-color
       calendarDayCurrent: "bg-transparent text-ui-text border border-transparent",
       calendarDayMuted: "bg-transparent text-ui-text-tertiary border border-transparent",
       calendarDayToday: "bg-brand text-brand-foreground border border-transparent shadow-sm",
+      calendarHeaderCount: "bg-transparent text-ui-text border border-ui-border shadow-none",
       outline:
         "bg-transparent text-ui-text-secondary border border-ui-border hover:border-ui-border-secondary hover:bg-ui-bg-soft",
     },
     size: {
       sm: "text-xs px-2 py-0.5",
       md: "text-xs px-2 py-1",
+      calendarHeaderCount: "px-1.5 py-0.5 text-xs",
       calendarDay: "h-6 w-6 justify-center px-0 text-xs sm:h-7 sm:w-7 sm:text-sm",
     },
     shape: {
