@@ -70,6 +70,7 @@
 - Removed `IssueDetailModal.tsx` from the `check-recipe-drift.js` migration allowlist now that it no longer carries any repeated surface recipe drift.
 - Removed `BulkOperationsBar.tsx` from the `check-recipe-drift.js` migration allowlist by moving its floating action-bar shell onto an owned `Card` recipe instead of leaving the border/background/shadow contract inline in feature code.
 - Removed `RoadmapView.tsx` from the `check-recipe-drift.js` migration allowlist by moving its roadmap header controls and empty state back onto owned `Card`, `Select`, and `EmptyState` primitives instead of keeping surface recipes inline in feature code.
+- Removed `CreateProjectFromTemplate.tsx` and `ImportExport/ImportPanel.tsx` from the `check-recipe-drift.js` migration allowlist by moving their option-selector tiles, callouts, and import input shell back onto owned `Card`, `Alert`, and form primitives instead of leaving those surfaces inline in feature code.
 - Added `TimeTracking/TimeEntryModal.tsx` and `TimeTracking/UserRatesManagement.tsx` to design-system ownership targeting so future time-entry shell drift is validated directly.
 - Added `TimeTracking/ManualTimeEntryModal.tsx` to design-system ownership targeting so future manual-entry shell drift is validated directly.
 - Added `TimeTracking/TimeEntriesList.tsx` to design-system ownership targeting so future list-row shell drift is validated directly.
@@ -77,12 +78,13 @@
 - Added `Dashboard.tsx` and `IssueDetailModal.tsx` to design-system ownership targeting so future dashboard and issue-modal shell drift is validated directly.
 - Added `BulkOperationsBar.tsx` to design-system ownership targeting so future action-bar shell drift is blocked directly.
 - Added `RoadmapView.tsx` to design-system ownership targeting so future roadmap shell drift is blocked directly.
+- Added `CreateProjectFromTemplate.tsx` and `ImportExport/ImportPanel.tsx` to design-system ownership targeting so future import and template-creation shell drift is blocked directly.
 - Burned down the final explicit `TimeTracking` interactive-state allowlist entry.
 
 ### Next batch
 
 - Keep shrinking the remaining `check-recipe-drift.js` migration allowlist.
-- `CreateProjectFromTemplate.tsx` and `ImportExport/ImportPanel.tsx` should go next because they are the most prominent remaining import/creation surfaces still sitting behind recipe-drift exemptions.
+- `Settings/AvatarUploadModal.tsx` and `Settings/ProfileContent.tsx` are the next remaining explicit recipe-drift exemptions and should be burned down so the allowlist keeps shrinking.
 
 ## Problem
 

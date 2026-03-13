@@ -10,12 +10,13 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
-import { AlertTriangle, FileCode, FileSpreadsheet } from "@/lib/icons";
+import { FileCode, FileSpreadsheet } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
+import { Alert, AlertDescription, AlertTitle } from "../ui/Alert";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Input } from "../ui/form";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
@@ -103,12 +104,11 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
         </Typography>
         <Grid cols={2} gap="md">
           <Card
+            recipe={importFormat === "csv" ? "optionTileSelected" : "optionTile"}
             padding="md"
             onClick={() => setImportFormat("csv")}
-            className={cn(
-              "cursor-pointer transition-all",
-              importFormat === "csv" ? "ring-2 ring-brand bg-brand/5" : "hover:bg-ui-bg-secondary",
-            )}
+            className="cursor-pointer"
+            aria-pressed={importFormat === "csv"}
           >
             <Flex gap="md" align="center">
               <Icon icon={FileSpreadsheet} size="lg" />
@@ -124,12 +124,11 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
           </Card>
 
           <Card
+            recipe={importFormat === "json" ? "optionTileSelected" : "optionTile"}
             padding="md"
             onClick={() => setImportFormat("json")}
-            className={cn(
-              "cursor-pointer transition-all",
-              importFormat === "json" ? "ring-2 ring-brand bg-brand/5" : "hover:bg-ui-bg-secondary",
-            )}
+            className="cursor-pointer"
+            aria-pressed={importFormat === "json"}
           >
             <Flex gap="md" align="center">
               <Icon icon={FileCode} size="lg" />
@@ -147,14 +146,12 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
       </div>
 
       <div>
-        <Typography variant="label" className="block text-ui-text mb-2">
-          Select File
-        </Typography>
-        <input
+        <Input
+          label="Select File"
           type="file"
           accept={importFormat === "csv" ? ".csv" : ".json"}
           onChange={handleFileChange}
-          className="block w-full text-sm text-ui-text border border-ui-border rounded-lg cursor-pointer bg-ui-bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
+          className="cursor-pointer bg-ui-bg-secondary"
         />
         {importFile && (
           <Typography variant="muted" className="mt-2">
@@ -163,22 +160,24 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
         )}
       </div>
 
-      <Card padding="md" className="bg-status-warning/10 border border-status-warning/30">
-        <Flex gap="md" align="start">
-          <Icon icon={AlertTriangle} size="lg" className="text-status-warning" />
-          <Stack gap="sm" className="text-status-warning">
-            <Typography variant="label">Import Requirements</Typography>
-            <ul className="list-disc list-inside text-status-warning/90">
-              <li>CSV must have a header row with column names</li>
-              <li>
-                Required column: <code className="bg-status-warning/20 px-1 rounded">title</code>
-              </li>
-              <li>Optional: type, priority, description, labels, estimated hours, due date</li>
-              <li>All imported issues will be created in the first workflow state</li>
-            </ul>
+      <Alert variant="warning">
+        <AlertTitle>Import Requirements</AlertTitle>
+        <AlertDescription>
+          <Stack gap="sm">
+            <Typography variant="small">CSV must have a header row with column names.</Typography>
+            <Typography variant="small">
+              Required column: <code className="bg-status-warning/20 px-1 rounded">title</code>
+            </Typography>
+            <Typography variant="small">
+              Optional fields include type, priority, description, labels, estimated hours, and due
+              date.
+            </Typography>
+            <Typography variant="small">
+              All imported issues will be created in the first workflow state.
+            </Typography>
           </Stack>
-        </Flex>
-      </Card>
+        </AlertDescription>
+      </Alert>
 
       <Button onClick={handleImport} disabled={!importData || isImporting} className="w-full">
         {isImporting ? (
