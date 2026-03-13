@@ -22,7 +22,6 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
 export const RAW_TAILWIND_ALLOWED_FILES = [
   "/AdvancedSearchModal.tsx",
   "/AppSidebar.tsx",
-  "/AppHeader.tsx",
   // Explicit migration-debt exemptions replacing broad Settings/Admin/ProjectSettings directory escapes.
   "/PortalProjectView.tsx",
   "/PortalTimeline.tsx",
@@ -91,7 +90,7 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/AI/AIErrorFallback.tsx",
   "/AI/AISuggestionsPanel.tsx",
   "/Analytics/RecentActivity.tsx",
-  "/AppHeader.tsx",
+  "/App/AppHeader.tsx",
   "/BulkOperationsBar.tsx",
   "/CreateProjectFromTemplate.tsx",
   "/Dashboard/RecentActivity.tsx",

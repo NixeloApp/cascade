@@ -134,6 +134,16 @@ const cardRecipeVariants = cva("", {
         "rounded-full border-transparent bg-ui-bg text-ui-text-secondary shadow-none",
       projectFeatureStrip: "rounded-2xl border-ui-border/60 bg-ui-bg-soft/80 shadow-none",
       projectKeyTile: "rounded-lg border-brand/20 bg-brand-subtle text-brand shadow-none",
+      appHeaderShell:
+        "border-x-0 border-t-0 border-b border-ui-border/50 bg-linear-to-b from-ui-bg/95 via-ui-bg/90 to-ui-bg/80 px-3 py-2 shadow-none backdrop-blur-xl sm:px-6 sm:py-3",
+      workspaceCockpitChip:
+        "rounded-2xl border-ui-border-secondary/70 bg-ui-bg-elevated/95 px-3 py-1.5 shadow-soft",
+      sidebarOrgCard: "rounded-2xl border-ui-border-secondary/70 bg-ui-bg-elevated/95 shadow-soft",
+      sidebarOrgInitial: "rounded-xl border-brand/15 bg-brand-subtle text-brand shadow-none",
+      sidebarNavIcon:
+        "rounded-lg border-ui-border/60 bg-ui-bg-soft text-ui-text-tertiary shadow-none",
+      sidebarSectionChildren:
+        "rounded-2xl border-ui-border-secondary/60 bg-ui-bg-elevated/70 shadow-soft",
       assistantPanelHeader:
         "border-x-0 border-t-0 border-b border-ui-border bg-linear-to-r from-brand to-accent shadow-none",
       assistantComposer:

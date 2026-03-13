@@ -135,12 +135,14 @@
 - Removed `ActivityFeed.tsx` from the raw-Tailwind and interactive-state debt lists by moving its repeated hover-entry and timeline-icon shells onto owned `Card` recipes instead of inline rounded/background/hover stacks.
 - Removed `UserActivityFeed.tsx` from the raw-Tailwind and interactive-state debt lists by moving its repeated activity-row and icon shells onto owned `Card` recipes, replacing its custom empty state with the shared `EmptyState` primitive, and moving its issue-key styling behind owned `Typography`.
 - Removed `ProjectsList.tsx` from the raw-Tailwind debt list by moving the single-project highlight strip and project-key tile onto owned `Card` recipes instead of inline shell styling.
+- Removed `App/AppHeader.tsx` from the raw-Tailwind and interactive-state debt lists by moving the sticky header shell and workspace cockpit chip onto owned `Card` recipes instead of keeping the app-header chrome inline.
+- Tightened `App/AppSidebar.tsx` by moving its organization identity card, workspace initial tile, sub-nav icon shell, and expanded-section container chrome onto owned `Card` recipes, but it remains on the raw-Tailwind debt list because the broader sidebar shell and navigation wrappers still carry inline layout and state chrome.
 
 ### Next batch
 
 - Continue shrinking the explicit `AI` debt now that the broad directory escapes are gone.
 - The explicit `AI` raw-Tailwind debt list is now empty.
-- Keep working through smaller helper controls and shared reveal surfaces rather than decorative backdrops, with the next pass focused on `AppHeader.tsx` and `AppSidebar.tsx`, which are the next high-impact shared navigation surfaces still sitting behind explicit raw-Tailwind debt.
+- Keep working through smaller helper controls and shared reveal surfaces rather than decorative backdrops, with the next pass focused on `App/AppSidebar.tsx`, which is now the main remaining high-impact shared navigation surface still sitting behind explicit raw-Tailwind debt.
 
 ## Problem
 

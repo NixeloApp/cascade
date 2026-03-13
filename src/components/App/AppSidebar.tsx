@@ -15,6 +15,7 @@ import { CreateTeamModal } from "@/components/CreateTeamModal";
 import { SidebarTeamItem } from "@/components/Sidebar/SidebarTeamItem";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/Input";
 import { NavItem as NavItemBase } from "@/components/ui/NavItem";
@@ -118,13 +119,11 @@ function NavSubItem({
       <NavItemBase asChild active={isActive} size="sm" className="min-h-9">
         <Link to={to} params={params} onClick={onClick} {...props}>
           {Icon && (
-            <Flex
-              align="center"
-              justify="center"
-              className="h-6 w-6 shrink-0 rounded-lg bg-ui-bg-soft text-ui-text-tertiary ring-1 ring-ui-border/60"
-            >
-              <Icon className="h-3.5 w-3.5 shrink-0" />
-            </Flex>
+            <Card recipe="sidebarNavIcon" padding="none" className="h-6 w-6 shrink-0">
+              <Flex align="center" justify="center" className="h-full">
+                <Icon className="h-3.5 w-3.5 shrink-0" />
+              </Flex>
+            </Card>
           )}
           <span className="truncate">{label}</span>
         </Link>
@@ -509,33 +508,29 @@ export function AppSidebar() {
                   onClick={handleNavClick}
                   className="min-w-0 flex-1"
                 >
-                  <Flex
-                    align="center"
-                    gap="sm"
-                    className="rounded-2xl border border-ui-border-secondary/70 bg-ui-bg-elevated/95 px-3 py-2 shadow-soft"
-                  >
-                    <Flex
-                      align="center"
-                      justify="center"
-                      className="h-9 w-9 shrink-0 rounded-xl bg-brand-subtle text-brand ring-1 ring-brand/15"
-                    >
-                      <Typography variant="small" className="font-semibold text-current">
-                        {organizationName.charAt(0).toUpperCase()}
-                      </Typography>
+                  <Card recipe="sidebarOrgCard" padding="none" className="px-3 py-2">
+                    <Flex align="center" gap="sm">
+                      <Card recipe="sidebarOrgInitial" padding="none" className="h-9 w-9 shrink-0">
+                        <Flex align="center" justify="center" className="h-full">
+                          <Typography variant="small" className="font-semibold text-current">
+                            {organizationName.charAt(0).toUpperCase()}
+                          </Typography>
+                        </Flex>
+                      </Card>
+                      <div className="min-w-0">
+                        <Typography
+                          variant="caption"
+                          color="tertiary"
+                          className="uppercase tracking-wider"
+                        >
+                          Workspace
+                        </Typography>
+                        <Typography variant="large" className="max-w-36 truncate">
+                          {organizationName}
+                        </Typography>
+                      </div>
                     </Flex>
-                    <div className="min-w-0">
-                      <Typography
-                        variant="caption"
-                        color="tertiary"
-                        className="uppercase tracking-wider"
-                      >
-                        Workspace
-                      </Typography>
-                      <Typography variant="large" className="max-w-36 truncate">
-                        {organizationName}
-                      </Typography>
-                    </div>
-                  </Flex>
+                  </Card>
                 </Link>
               </Tooltip>
             )}
@@ -1007,9 +1002,9 @@ function CollapsibleSection({
 
       {/* Section children */}
       {isExpanded && (
-        <ul className="ml-5 mt-1.5 space-y-1 rounded-2xl border border-ui-border-secondary/60 bg-ui-bg-elevated/70 p-2 shadow-soft list-none">
-          {children}
-        </ul>
+        <Card recipe="sidebarSectionChildren" padding="none" className="ml-5 mt-1.5 p-2">
+          <ul className="space-y-1 list-none">{children}</ul>
+        </Card>
       )}
     </li>
   );
