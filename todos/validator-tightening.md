@@ -105,8 +105,13 @@
 
 ### Next batch
 
+- Moved `FuzzySearch/FuzzySearchInput.tsx` off its inline absolute dropdown shell by introducing an owned `Card` `searchDropdown` recipe for the results surface.
+- Removed the broad `src/components/FuzzySearch/` raw-Tailwind escape hatch. The only non-production file in that folder is the `.example.tsx`, which is already covered by the example-file extension escape hatch.
+
+### Next batch
+
 - Continue the floating-surface pass with remaining positioned overlays surfaced by the stronger scan, especially files that still define chrome on `fixed` or `absolute` panels instead of plain backdrops.
-- Prioritize shared editor and navigation overlays next so any remaining real floating shell contracts move behind owned `Popover`, `Dialog`, `Sheet`, or `Card` recipes rather than staying in feature code.
+- Prioritize the next shared navigation/search overlays next so any remaining real floating shell contracts move behind owned `Popover`, `Dialog`, `Sheet`, or `Card` recipes rather than staying in feature code.
 
 ## Problem
 

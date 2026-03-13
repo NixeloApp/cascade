@@ -8,6 +8,7 @@
 import { cva } from "class-variance-authority";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { FlexItem } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/Input";
 import { Typography } from "@/components/ui/Typography";
@@ -18,8 +19,6 @@ const fuzzySearchVariants = cva("", {
   variants: {
     surface: {
       input: "rounded-md hover:border-ui-border-secondary",
-      dropdown:
-        "absolute z-50 mt-1.5 w-full max-h-60 overflow-y-auto rounded-md border border-ui-border bg-ui-bg-elevated shadow-elevated scrollbar-subtle animate-scale-in",
       clearButton:
         "absolute right-3 top-1/2 h-auto -translate-y-1/2 rounded p-0.5 text-ui-text-tertiary transition-fast hover:bg-ui-bg-hover hover:text-ui-text",
     },
@@ -237,11 +236,13 @@ export function FuzzySearchInput<T>({
 
       {/* Results Dropdown */}
       {showDropdown && (
-        <div
+        <Card
           ref={dropdownRef}
+          recipe="searchDropdown"
+          padding="none"
           id="fuzzy-search-results"
           role="listbox"
-          className={fuzzySearchVariants({ surface: "dropdown" })}
+          className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto scrollbar-subtle animate-scale-in"
         >
           {results.length === 0 ? (
             <Typography variant="small" color="tertiary" className="px-4 py-3">
@@ -276,7 +277,7 @@ export function FuzzySearchInput<T>({
               </Button>
             ))
           )}
-        </div>
+        </Card>
       )}
     </div>
   );

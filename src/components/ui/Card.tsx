@@ -109,6 +109,8 @@ const cardRecipeVariants = cva("", {
         "rounded-full border-ui-border-secondary/70 bg-linear-to-r from-ui-bg-elevated/96 via-ui-bg-elevated/94 to-ui-bg-soft/90 shadow-card backdrop-blur-xl",
       controlStrip:
         "rounded-full border-ui-border-secondary/70 bg-ui-bg-elevated/94 shadow-soft backdrop-blur-sm",
+      searchDropdown:
+        "overflow-hidden rounded-md border-ui-border bg-ui-bg-elevated shadow-elevated",
       mentionMenu:
         "overflow-hidden rounded-container border-ui-border-secondary bg-linear-to-br from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/70 shadow-lg",
       floatingWidget: "overflow-hidden rounded-container border-ui-border bg-ui-bg shadow-elevated",
