@@ -1,15 +1,12 @@
 import { describe, expect, it } from "vitest";
-import type { Doc } from "../_generated/dataModel";
 import { calculateIssueCounts, INITIAL_COUNTS } from "./issueCalculation";
 
 describe("calculateIssueCounts", () => {
   // Helper to create minimal issue objects
-  const createIssue = (status: string, updatedAt: number): Doc<"issues"> =>
-    ({
-      status,
-      updatedAt,
-      // Casting as unknown then Doc<"issues"> avoids needing all fields since the function only uses status and updatedAt.
-    }) as unknown as Doc<"issues">;
+  const createIssue = (status: string, updatedAt: number) => ({
+    status,
+    updatedAt,
+  });
 
   const statusMap = {
     "todo-status": "todo",

@@ -16,7 +16,6 @@ export function run() {
     /check-type-safety\.js$/, // This file (contains pattern strings)
     // Legacy test files with violations - fix incrementally, do NOT add new files
     /convex\/lib\/constrainedValidators\.test\.ts$/, // Legacy test assertions
-    /convex\/lib\/issueCalculation\.test\.ts$/, // Legacy Doc fixture casts
   ];
 
   let errorCount = 0;
