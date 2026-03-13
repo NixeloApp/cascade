@@ -11,7 +11,6 @@
  */
 import Resend from "@auth/core/providers/resend";
 import { render } from "@react-email/render";
-import type { FunctionReference } from "convex/server";
 import { internal } from "./_generated/api";
 import { sendEmail } from "./email";
 import type { ConvexAuthContext } from "./lib/authTypes";
@@ -41,14 +40,7 @@ async function storeTestOtp(ctx: ConvexAuthContext, email: string, token: string
 async function checkVerificationRateLimit(ctx: ConvexAuthContext, email: string) {
   if (ctx.runMutation) {
     try {
-      // Type assertion needed because codegen hasn't run to update the type definition
-      const authWrapper = internal.authWrapper as unknown as {
-        checkEmailVerificationRateLimit: FunctionReference<"mutation">;
-      };
-
-      await ctx.runMutation(authWrapper.checkEmailVerificationRateLimit, {
-        email,
-      });
+      await ctx.runMutation(internal.authWrapper.checkEmailVerificationRateLimit, { email });
     } catch (error) {
       const isRateLimitError =
         (isAppError(error) && error.data.code === "RATE_LIMITED") ||

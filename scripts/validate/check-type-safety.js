@@ -32,7 +32,6 @@ export function run() {
     /convex\/softDeleteCleanup\.ts$/, // Convex internal cleanup utility
     /convex\/issues\/queries\.ts$/, // Convex search index type mismatch requires casting
     /convex\/calendarEvents\.ts$/, // Multikey index query requires explicit casting
-    /convex\/otpVerification\.ts$/, // Complexity threshold update
     /convex\/rateLimits\.ts$/, // Type assertion required
     /src\/components\/IssueDetail\/CreateIssueModal\.tsx$/, // Complexity: form + validation + AI - TODO: extract form sections
     /src\/components\/Documents\/DocumentHeader\.tsx$/, // Complexity: conditional actions - TODO: extract DocumentActions
