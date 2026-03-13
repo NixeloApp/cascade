@@ -87,6 +87,7 @@ const cardRecipeVariants = cva("", {
       documentTreeRow:
         "rounded-md border-transparent bg-transparent shadow-none hover:bg-ui-bg-hover",
       documentTreeRowSelected: "rounded-md border-transparent bg-brand/10 text-brand shadow-none",
+      portalTimelineEntry: "rounded-lg border-ui-border bg-ui-bg-soft shadow-none",
       templateBuiltInTile:
         "h-full border-2 border-transparent bg-linear-to-br from-brand-subtle to-brand-subtle text-left shadow-none hover:border-brand-muted hover:shadow-card-hover",
       templateCustomTile: "bg-ui-bg-secondary shadow-none hover:bg-ui-bg-tertiary",

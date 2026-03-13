@@ -191,7 +191,9 @@
 - Added `Documents/DocumentTree.tsx` to design-system ownership targeting so future document-tree shell drift is blocked directly.
 - Removed `ClientPortal/PortalProjectView.tsx` from the raw-Tailwind debt list by replacing its inline content spacing stack with owned `Stack` composition and moving the project link styling onto the shared `Button` link variant instead of feature-level text utilities.
 - Added `ClientPortal/PortalProjectView.tsx` to design-system ownership targeting so future client-portal card drift is blocked directly.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `PortalTimeline.tsx`, which is now the next higher-impact shared surface still sitting behind explicit validator debt.
+- Removed `ClientPortal/PortalTimeline.tsx` from the raw-Tailwind debt list by replacing its inline content spacing stack with owned `Stack` composition and moving timeline entry shells onto an owned `Card` recipe instead of feature-level border/padding classes.
+- Added `ClientPortal/PortalTimeline.tsx` to design-system ownership targeting so future client-portal timeline drift is blocked directly.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on `CommentRenderer.tsx`, which is now the next higher-impact shared surface still sitting behind explicit validator debt.
 
 ## Problem
 
