@@ -13,8 +13,12 @@ import { usePaginatedQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Flex } from "@/components/ui/Flex";
+import { Card } from "@/components/ui/Card";
+import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
+import { IconButton } from "@/components/ui/IconButton";
 import { NavItem } from "@/components/ui/NavItem";
+import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -47,37 +51,36 @@ export function SidebarTeamItem({
     location.pathname.startsWith(`/teams/${team.slug}/`);
 
   return (
-    <li className="ml-4 list-none">
-      {/* Team Header */}
+    <Card recipe="sidebarTeamBranch" variant="ghost" padding="none">
       <Flex align="center" gap="xs">
-        <Button
+        <IconButton
           variant="ghost"
-          size="icon"
+          size="xs"
           onClick={() => onToggle(team.slug)}
-          className="h-6 w-6 p-0.5"
           aria-expanded={isExpanded}
           aria-label={isExpanded ? `Collapse ${team.name}` : `Expand ${team.name}`}
         >
-          {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        </Button>
-        <Tooltip content={team.name}>
-          <NavItem asChild active={isActive} size="sm" className="flex-1">
-            <Link
-              to={ROUTES.workspaces.teams.detail.path}
-              params={{ orgSlug, workspaceSlug, teamSlug: team.slug }}
-              onClick={onNavClick}
-            >
-              {team.name}
-            </Link>
-          </NavItem>
-        </Tooltip>
+          <Icon icon={isExpanded ? ChevronDown : ChevronRight} size="sm" />
+        </IconButton>
+        <FlexItem flex="1">
+          <Tooltip content={team.name}>
+            <NavItem asChild active={isActive} size="sm">
+              <Link
+                to={ROUTES.workspaces.teams.detail.path}
+                params={{ orgSlug, workspaceSlug, teamSlug: team.slug }}
+                onClick={onNavClick}
+              >
+                {team.name}
+              </Link>
+            </NavItem>
+          </Tooltip>
+        </FlexItem>
       </Flex>
 
-      {/* Lazy Loaded Projects */}
       {isExpanded && (
         <SidebarTeamProjects teamId={team._id} orgSlug={orgSlug} onNavClick={onNavClick} />
       )}
-    </li>
+    </Card>
   );
 }
 
@@ -103,59 +106,62 @@ function SidebarTeamProjects({
 
   if (status === "LoadingFirstPage") {
     return (
-      <Typography variant="caption" color="tertiary" className="ml-6 px-3 py-1">
-        Loading...
-      </Typography>
+      <Card recipe="sidebarTeamStatus" variant="ghost" padding="none">
+        <Typography variant="caption" color="tertiary">
+          Loading...
+        </Typography>
+      </Card>
     );
   }
 
   if (projects.length === 0) {
     return (
-      <Typography variant="caption" color="tertiary" className="ml-6 px-3 py-1">
-        No projects
-      </Typography>
+      <Card recipe="sidebarTeamStatus" variant="ghost" padding="none">
+        <Typography variant="caption" color="tertiary">
+          No projects
+        </Typography>
+      </Card>
     );
   }
 
   return (
-    <ul className="ml-6 border-l border-ui-border pl-1 list-none">
-      {projects.map((project) => {
-        const isActive =
-          location.pathname === `/${orgSlug}/projects/${project.key}` ||
-          location.pathname.startsWith(`/${orgSlug}/projects/${project.key}/`);
+    <Card recipe="sidebarTeamProjectsRail" variant="ghost" padding="none">
+      <Stack gap="xs">
+        {projects.map((project) => {
+          const isActive =
+            location.pathname === `/${orgSlug}/projects/${project.key}` ||
+            location.pathname.startsWith(`/${orgSlug}/projects/${project.key}/`);
 
-        return (
-          <li key={project._id} className="list-none">
-            <Tooltip content={`${project.key} - ${project.name}`}>
-              <NavItem asChild active={isActive} size="sm">
-                <Link
-                  to={ROUTES.projects.board.path}
-                  params={{
-                    orgSlug,
-                    key: project.key,
-                  }}
-                  onClick={onNavClick}
-                >
-                  {project.key} - {project.name}
-                </Link>
-              </NavItem>
-            </Tooltip>
-          </li>
-        );
-      })}
+          return (
+            <div key={project._id}>
+              <Tooltip content={`${project.key} - ${project.name}`}>
+                <NavItem asChild active={isActive} size="sm">
+                  <Link
+                    to={ROUTES.projects.board.path}
+                    params={{
+                      orgSlug,
+                      key: project.key,
+                    }}
+                    onClick={onNavClick}
+                  >
+                    {project.key} - {project.name}
+                  </Link>
+                </NavItem>
+              </Tooltip>
+            </div>
+          );
+        })}
 
-      {status === "CanLoadMore" && (
-        <li className="list-none">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => loadMore(10)}
-            className="ml-2 text-xs h-6 px-2 text-brand"
-          >
-            Load more...
-          </Button>
-        </li>
-      )}
-    </ul>
+        {status === "CanLoadMore" && (
+          <Card recipe="sidebarTeamLoadMore" variant="ghost" padding="none">
+            <Button variant="link" size="none" onClick={() => loadMore(10)}>
+              <Typography variant="caption" color="brand">
+                Load more...
+              </Typography>
+            </Button>
+          </Card>
+        )}
+      </Stack>
+    </Card>
   );
 }

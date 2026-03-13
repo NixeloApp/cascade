@@ -7,7 +7,6 @@ export const RAW_TAILWIND_ALLOWED_DIRS = [
   "src/components/Calendar/shadcn-calendar/",
   "src/components/Auth/",
   "src/components/Editor/",
-  "src/components/Sidebar/",
   "src/components/Plate/",
   "src/components/Onboarding/",
 ];
@@ -149,6 +148,7 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
   "/Templates/TemplateCard.tsx",
   "/Templates/TemplateForm.tsx",
   "/Sprints/SprintManager.tsx",
+  "/Sidebar/SidebarTeamItem.tsx",
   "/ProjectSettings/index.tsx",
   "/TimerWidget.tsx",
   "/UserActivityFeed.tsx",

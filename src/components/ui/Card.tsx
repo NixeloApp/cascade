@@ -194,6 +194,12 @@ const cardRecipeVariants = cva("", {
       sidebarSectionIconActive: "rounded-xl border-brand/20 bg-brand-subtle text-brand shadow-soft",
       sidebarSectionChildren:
         "rounded-2xl border-ui-border-secondary/60 bg-ui-bg-elevated/70 shadow-soft",
+      sidebarTeamBranch: "ml-4 rounded-none border-transparent bg-transparent shadow-none",
+      sidebarTeamProjectsRail:
+        "ml-6 rounded-none border-x-0 border-y-0 border-l border-ui-border bg-transparent pl-1 shadow-none",
+      sidebarTeamStatus:
+        "ml-6 rounded-none border-transparent bg-transparent px-3 py-1 shadow-none",
+      sidebarTeamLoadMore: "rounded-none border-transparent bg-transparent pl-2 shadow-none",
       assistantPanelHeader:
         "border-x-0 border-t-0 border-b border-ui-border bg-linear-to-r from-brand to-accent shadow-none",
       assistantComposer:

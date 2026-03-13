@@ -25,8 +25,6 @@ const ALLOWED_FILES = [
   // Document components
   // Editor components
   "PlateEditor.tsx",
-  // Navigation/layout
-  "Sidebar/",
   // Modals
   "CreateProjectFromTemplate.tsx",
   "BulkOperationsBar.tsx",
