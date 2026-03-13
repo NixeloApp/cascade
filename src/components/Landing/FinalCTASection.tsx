@@ -14,10 +14,6 @@ const finalCtaVariants = {
   shell: cva(
     "rounded-3xl border-ui-border/50 bg-linear-to-br from-ui-bg-secondary via-ui-bg-elevated to-ui-bg-secondary p-8 shadow-elevated md:p-12",
   ),
-  featureCard: cva("rounded-2xl border-ui-border/50 bg-ui-bg-soft/80 p-5"),
-  featureLink: cva(
-    "mt-4 inline-flex items-center gap-2 text-sm font-medium text-brand transition-colors hover:text-brand-active",
-  ),
   iconBadge: cva("rounded-full p-2", {
     variants: {
       tone: {
@@ -57,7 +53,7 @@ export function FinalCTASection() {
           </div>
 
           <Grid cols={1} colsMd={2} gap="lg" className="mt-10">
-            <Card className={finalCtaVariants.featureCard()}>
+            <Card recipe="landingFinalFeatureCard" padding="none">
               <Flex align="center" gap="sm" className="mb-3">
                 <div className={finalCtaVariants.iconBadge({ tone: "brand" })}>
                   <Rocket className="h-4 w-4" />
@@ -68,13 +64,15 @@ export function FinalCTASection() {
                 Import the basics, keep your team moving, and expand into docs, client views, and
                 time tracking as needed.
               </Typography>
-              <a href="#features" className={finalCtaVariants.featureLink()}>
-                Explore the product
-                <ArrowRight className="h-4 w-4" />
-              </a>
+              <Button asChild variant="link" size="none" className="mt-4 text-brand">
+                <a href="#features">
+                  Explore the product
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+              </Button>
             </Card>
 
-            <Card className={finalCtaVariants.featureCard()}>
+            <Card recipe="landingFinalFeatureCard" padding="none">
               <Flex align="center" gap="sm" className="mb-3">
                 <div className={finalCtaVariants.iconBadge({ tone: "success" })}>
                   <ShieldCheck className="h-4 w-4" />
@@ -85,10 +83,12 @@ export function FinalCTASection() {
                 Flexible pricing, enterprise controls, and a product model that can handle internal
                 execution plus external-facing updates.
               </Typography>
-              <a href="#pricing" className={finalCtaVariants.featureLink()}>
-                Review pricing
-                <ArrowRight className="h-4 w-4" />
-              </a>
+              <Button asChild variant="link" size="none" className="mt-4 text-brand">
+                <a href="#pricing">
+                  Review pricing
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+              </Button>
             </Card>
           </Grid>
         </Card>

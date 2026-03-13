@@ -223,6 +223,9 @@ const cardRecipeVariants = cva("", {
         "rounded-2xl border border-ui-border/40 bg-linear-to-b from-ui-bg-soft/80 to-ui-bg-secondary/40 p-6 shadow-soft transition-all duration-medium hover:-translate-y-1 hover:shadow-xl",
       landingPricingCardFeatured:
         "rounded-2xl border border-brand-ring bg-linear-to-b from-ui-bg-soft/80 to-ui-bg-secondary/40 p-6 shadow-lg shadow-brand-ring/20 transition-all duration-medium hover:-translate-y-1 hover:shadow-xl",
+      landingStoryCard:
+        "rounded-3xl border-ui-border/50 bg-ui-bg-secondary/80 p-6 shadow-soft transition-all duration-medium hover:-translate-y-1 hover:border-ui-border-secondary",
+      landingFinalFeatureCard: "rounded-2xl border-ui-border/50 bg-ui-bg-soft/80 p-5 shadow-soft",
 
       // Header control surfaces
       controlRail:

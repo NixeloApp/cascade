@@ -1,6 +1,7 @@
 import { cva } from "class-variance-authority";
 import { ArrowRight, Building2, KanbanSquare, MessageSquare } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
+import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
@@ -29,12 +30,6 @@ const stories = [
 
 const whyChooseVariants = {
   section: cva("px-6 py-24"),
-  storyCard: cva(
-    "rounded-3xl border-ui-border/50 bg-ui-bg-secondary/80 p-6 transition-all duration-medium hover:-translate-y-1 hover:border-ui-border-secondary",
-  ),
-  storyLink: cva(
-    "mt-5 inline-flex items-center gap-2 text-sm font-medium text-brand transition-colors hover:text-brand-active",
-  ),
   iconBadge: cva("rounded-full bg-ui-bg-soft p-3 text-brand"),
 };
 
@@ -58,7 +53,7 @@ export function WhyChooseSection() {
 
         <Grid cols={1} colsLg={3} gap="xl">
           {stories.map((story) => (
-            <Card key={story.title} className={whyChooseVariants.storyCard()}>
+            <Card key={story.title} recipe="landingStoryCard" padding="none">
               <Flex align="center" justify="between" className="mb-5">
                 <div className={whyChooseVariants.iconBadge()}>
                   <story.icon className="h-5 w-5" />
@@ -75,10 +70,12 @@ export function WhyChooseSection() {
                 {story.body}
               </Typography>
 
-              <a href="#product-showcase" className={whyChooseVariants.storyLink()}>
-                See the product flow
-                <ArrowRight className="h-4 w-4" />
-              </a>
+              <Button asChild variant="link" size="none" className="mt-5 text-brand">
+                <a href="#product-showcase">
+                  See the product flow
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+              </Button>
             </Card>
           ))}
         </Grid>

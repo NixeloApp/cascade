@@ -15,9 +15,6 @@ const heroVariants = {
     "absolute left-1/2 top-0 h-px w-full max-w-4xl -translate-x-1/2 bg-linear-to-r from-transparent via-landing-accent/50 to-transparent",
   ),
   badgeRow: cva("mb-3 animate-fade-in sm:mb-4"),
-  badge: cva(
-    "bg-ui-bg-elevated/88 px-4 py-2 shadow-soft backdrop-blur-sm transition-default hover:border-ui-border-secondary",
-  ),
   title: cva(
     "mb-3 text-4xl font-bold leading-tight tracking-tighter text-ui-text animate-slide-up md:text-6xl lg:text-7xl",
   ),
@@ -44,7 +41,7 @@ export function HeroSection() {
 
       <div className="relative mx-auto max-w-5xl text-center">
         <Flex justify="center" className={heroVariants.badgeRow()}>
-          <Badge variant="outline" shape="pill" className={heroVariants.badge()}>
+          <Badge variant="landingHero" shape="pill">
             Docs, delivery, and time tracking in one operating system
           </Badge>
         </Flex>
