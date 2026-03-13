@@ -28,6 +28,59 @@ import { Grid } from "../ui/Grid";
 
 type ComplianceStatus = "compliant" | "under_hours" | "over_hours" | "equity_under";
 
+const STATUS_CONFIG: Record<
+  ComplianceStatus,
+  {
+    icon: LucideIcon;
+    color: React.ComponentProps<typeof Badge>["variant"];
+    label: string;
+  }
+> = {
+  compliant: {
+    icon: CheckCircle,
+    color: "success",
+    label: "Compliant",
+  },
+  under_hours: {
+    icon: AlertTriangle,
+    color: "warning",
+    label: "Under Hours",
+  },
+  over_hours: {
+    icon: XCircle,
+    color: "error",
+    label: "Over Hours",
+  },
+  equity_under: {
+    icon: Zap,
+    color: "brand",
+    label: "Equity Short",
+  },
+};
+
+function toDateRange(startDate: string, endDate: string) {
+  return {
+    startDate: startDate ? new Date(startDate).getTime() : undefined,
+    endDate: endDate ? new Date(endDate).getTime() : undefined,
+  };
+}
+
+function getCurrentWeekRange() {
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay());
+  weekStart.setHours(0, 0, 0, 0);
+
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 7);
+
+  return {
+    periodType: "week" as const,
+    periodStart: weekStart.getTime(),
+    periodEnd: weekEnd.getTime(),
+  };
+}
+
 /**
  * Admin dashboard for monitoring contractor hour compliance and equity requirements.
  */
@@ -39,22 +92,17 @@ export function HourComplianceDashboard() {
   const [reviewNotes, setReviewNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [checkAllConfirmOpen, setCheckAllConfirmOpen] = useState(false);
+  const dateRange = toDateRange(startDate, endDate);
 
   // Queries
   const summary = useAuthenticatedQuery(
     api.hourCompliance.getComplianceSummary,
-    startDate || endDate
-      ? {
-          startDate: startDate ? new Date(startDate).getTime() : undefined,
-          endDate: endDate ? new Date(endDate).getTime() : undefined,
-        }
-      : {},
+    startDate || endDate ? dateRange : {},
   );
 
   const records = useAuthenticatedQuery(api.hourCompliance.listComplianceRecords, {
     status: selectedStatus === "all" ? undefined : selectedStatus,
-    startDate: startDate ? new Date(startDate).getTime() : undefined,
-    endDate: endDate ? new Date(endDate).getTime() : undefined,
+    ...dateRange,
     limit: 100,
   });
 
@@ -87,60 +135,10 @@ export function HourComplianceDashboard() {
 
   const handleCheckAllComplianceConfirm = async () => {
     try {
-      const now = new Date();
-      const weekStart = new Date(now);
-      weekStart.setDate(now.getDate() - now.getDay()); // Sunday
-      weekStart.setHours(0, 0, 0, 0);
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 7);
-
-      await checkAllCompliance({
-        periodType: "week",
-        periodStart: weekStart.getTime(),
-        periodEnd: weekEnd.getTime(),
-      });
+      await checkAllCompliance(getCurrentWeekRange());
       showSuccess("Compliance check initiated for all users");
     } catch (error) {
       showError(error, "Failed to check compliance");
-    }
-  };
-
-  const getStatusIcon = (status: ComplianceStatus): LucideIcon => {
-    switch (status) {
-      case "compliant":
-        return CheckCircle;
-      case "under_hours":
-        return AlertTriangle;
-      case "over_hours":
-        return XCircle;
-      case "equity_under":
-        return Zap;
-    }
-  };
-
-  const getStatusColor = (status: ComplianceStatus) => {
-    switch (status) {
-      case "compliant":
-        return "success";
-      case "under_hours":
-        return "warning";
-      case "over_hours":
-        return "error";
-      case "equity_under":
-        return "brand";
-    }
-  };
-
-  const getStatusLabel = (status: ComplianceStatus) => {
-    switch (status) {
-      case "compliant":
-        return "Compliant";
-      case "under_hours":
-        return "Under Hours";
-      case "over_hours":
-        return "Over Hours";
-      case "equity_under":
-        return "Equity Short";
     }
   };
 
@@ -202,139 +200,21 @@ export function HourComplianceDashboard() {
 
         <CardBody>
           <Stack gap="lg">
-            <Grid cols={1} colsMd={3} gap="lg">
-              <Select
-                label="Status"
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value as ComplianceStatus | "all")}
-              >
-                <option value="all">All Statuses</option>
-                <option value="compliant">Compliant</option>
-                <option value="under_hours">Under Hours</option>
-                <option value="over_hours">Over Hours</option>
-                <option value="equity_under">Equity Short</option>
-              </Select>
+            <ComplianceFilters
+              selectedStatus={selectedStatus}
+              startDate={startDate}
+              endDate={endDate}
+              onStatusChange={setSelectedStatus}
+              onStartDateChange={setStartDate}
+              onEndDateChange={setEndDate}
+            />
 
-              <Input
-                label="Start Date"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-
-              <Input
-                label="End Date"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </Grid>
-
-            {!records ? (
-              <Flex justify="center" align="center" className="min-h-32">
-                <Typography variant="small" color="secondary">
-                  Loading...
-                </Typography>
-              </Flex>
-            ) : records.length === 0 ? (
-              <EmptyState
-                icon={TrendingUp}
-                title="No compliance records"
-                description="Check compliance to start tracking"
-                action={{
-                  label: "Check All Users",
-                  onClick: () => setCheckAllConfirmOpen(true),
-                }}
-              />
-            ) : (
-              <Stack gap="sm">
-                {records.map((record) => (
-                  <Card key={record._id} padding="md" hoverable>
-                    <Flex justify="between" align="start" gap="md">
-                      <FlexItem flex="1">
-                        <Stack gap="md">
-                          <Flex gap="md" align="center">
-                            <Icon icon={getStatusIcon(record.status)} size="md" />
-                            <Stack gap="xs">
-                              <Typography variant="label">
-                                {record.user?.name || record.user?.email || "Unknown User"}
-                              </Typography>
-                              <Flex gap="sm">
-                                <Badge size="sm" variant={getStatusColor(record.status)}>
-                                  {getStatusLabel(record.status)}
-                                </Badge>
-                                <Badge variant="neutral" className="capitalize">
-                                  {record.periodType}ly
-                                </Badge>
-                                {record.reviewedBy ? (
-                                  <Badge variant="accent">Reviewed</Badge>
-                                ) : null}
-                              </Flex>
-                            </Stack>
-                          </Flex>
-
-                          <Grid cols={2} colsMd={4} gap="md">
-                            <MetricField
-                              label="Period"
-                              value={`${formatDate(record.periodStart)} - ${formatDate(record.periodEnd)}`}
-                            />
-                            <MetricField
-                              label="Hours Worked"
-                              value={`${record.totalHoursWorked.toFixed(1)}h`}
-                            />
-                            {record.hoursDeficit ? (
-                              <MetricField
-                                label="Deficit"
-                                value={`-${record.hoursDeficit.toFixed(1)}h`}
-                                valueColor="warning"
-                              />
-                            ) : null}
-                            {record.hoursExcess ? (
-                              <MetricField
-                                label="Excess"
-                                value={`+${record.hoursExcess.toFixed(1)}h`}
-                                valueColor="error"
-                              />
-                            ) : null}
-                            {record.equityHoursDeficit ? (
-                              <MetricField
-                                label="Equity Short"
-                                value={`-${record.equityHoursDeficit.toFixed(1)}h`}
-                                valueColor="brand"
-                              />
-                            ) : null}
-                            {record.totalEquityHours ? (
-                              <MetricField
-                                label="Equity Hours"
-                                value={`${record.totalEquityHours.toFixed(1)}h`}
-                              />
-                            ) : null}
-                          </Grid>
-
-                          {record.reviewNotes ? (
-                            <Card variant="flat" padding="sm">
-                              <Typography variant="small">
-                                <strong>Review Notes:</strong> {record.reviewNotes}
-                              </Typography>
-                            </Card>
-                          ) : null}
-                        </Stack>
-                      </FlexItem>
-
-                      {!record.reviewedBy ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setReviewingRecord(record._id)}
-                        >
-                          Review
-                        </Button>
-                      ) : null}
-                    </Flex>
-                  </Card>
-                ))}
-              </Stack>
-            )}
+            <ComplianceRecordsList
+              records={records}
+              onReview={setReviewingRecord}
+              onCheckAll={() => setCheckAllConfirmOpen(true)}
+              formatDate={formatDate}
+            />
           </Stack>
         </CardBody>
       </Card>
@@ -391,6 +271,194 @@ export function HourComplianceDashboard() {
         confirmLabel="Check All"
       />
     </Flex>
+  );
+}
+
+function ComplianceFilters({
+  selectedStatus,
+  startDate,
+  endDate,
+  onStatusChange,
+  onStartDateChange,
+  onEndDateChange,
+}: {
+  selectedStatus: ComplianceStatus | "all";
+  startDate: string;
+  endDate: string;
+  onStatusChange: (status: ComplianceStatus | "all") => void;
+  onStartDateChange: (value: string) => void;
+  onEndDateChange: (value: string) => void;
+}) {
+  return (
+    <Grid cols={1} colsMd={3} gap="lg">
+      <Select
+        label="Status"
+        value={selectedStatus}
+        onChange={(e) => onStatusChange(e.target.value as ComplianceStatus | "all")}
+      >
+        <option value="all">All Statuses</option>
+        <option value="compliant">Compliant</option>
+        <option value="under_hours">Under Hours</option>
+        <option value="over_hours">Over Hours</option>
+        <option value="equity_under">Equity Short</option>
+      </Select>
+
+      <Input
+        label="Start Date"
+        type="date"
+        value={startDate}
+        onChange={(e) => onStartDateChange(e.target.value)}
+      />
+
+      <Input
+        label="End Date"
+        type="date"
+        value={endDate}
+        onChange={(e) => onEndDateChange(e.target.value)}
+      />
+    </Grid>
+  );
+}
+
+function ComplianceRecordsList({
+  records,
+  onReview,
+  onCheckAll,
+  formatDate,
+}: {
+  records:
+    | ReturnType<typeof useAuthenticatedQuery<typeof api.hourCompliance.listComplianceRecords>>
+    | undefined;
+  onReview: (recordId: Id<"hourComplianceRecords">) => void;
+  onCheckAll: () => void;
+  formatDate: (timestamp: number) => string;
+}) {
+  if (!records) {
+    return (
+      <Flex justify="center" align="center" className="min-h-32">
+        <Typography variant="small" color="secondary">
+          Loading...
+        </Typography>
+      </Flex>
+    );
+  }
+
+  if (records.length === 0) {
+    return (
+      <EmptyState
+        icon={TrendingUp}
+        title="No compliance records"
+        description="Check compliance to start tracking"
+        action={{
+          label: "Check All Users",
+          onClick: onCheckAll,
+        }}
+      />
+    );
+  }
+
+  return (
+    <Stack gap="sm">
+      {records.map((record) => (
+        <ComplianceRecordCard
+          key={record._id}
+          record={record}
+          onReview={onReview}
+          formatDate={formatDate}
+        />
+      ))}
+    </Stack>
+  );
+}
+
+function ComplianceRecordCard({
+  record,
+  onReview,
+  formatDate,
+}: {
+  record: NonNullable<
+    ReturnType<typeof useAuthenticatedQuery<typeof api.hourCompliance.listComplianceRecords>>
+  >[number];
+  onReview: (recordId: Id<"hourComplianceRecords">) => void;
+  formatDate: (timestamp: number) => string;
+}) {
+  const statusConfig = STATUS_CONFIG[record.status];
+
+  return (
+    <Card padding="md" hoverable>
+      <Flex justify="between" align="start" gap="md">
+        <FlexItem flex="1">
+          <Stack gap="md">
+            <Flex gap="md" align="center">
+              <Icon icon={statusConfig.icon} size="md" />
+              <Stack gap="xs">
+                <Typography variant="label">
+                  {record.user?.name || record.user?.email || "Unknown User"}
+                </Typography>
+                <Flex gap="sm">
+                  <Badge size="sm" variant={statusConfig.color}>
+                    {statusConfig.label}
+                  </Badge>
+                  <Badge variant="neutral" className="capitalize">
+                    {record.periodType}ly
+                  </Badge>
+                  {record.reviewedBy ? <Badge variant="accent">Reviewed</Badge> : null}
+                </Flex>
+              </Stack>
+            </Flex>
+
+            <Grid cols={2} colsMd={4} gap="md">
+              <MetricField
+                label="Period"
+                value={`${formatDate(record.periodStart)} - ${formatDate(record.periodEnd)}`}
+              />
+              <MetricField label="Hours Worked" value={`${record.totalHoursWorked.toFixed(1)}h`} />
+              {record.hoursDeficit ? (
+                <MetricField
+                  label="Deficit"
+                  value={`-${record.hoursDeficit.toFixed(1)}h`}
+                  valueColor="warning"
+                />
+              ) : null}
+              {record.hoursExcess ? (
+                <MetricField
+                  label="Excess"
+                  value={`+${record.hoursExcess.toFixed(1)}h`}
+                  valueColor="error"
+                />
+              ) : null}
+              {record.equityHoursDeficit ? (
+                <MetricField
+                  label="Equity Short"
+                  value={`-${record.equityHoursDeficit.toFixed(1)}h`}
+                  valueColor="brand"
+                />
+              ) : null}
+              {record.totalEquityHours ? (
+                <MetricField
+                  label="Equity Hours"
+                  value={`${record.totalEquityHours.toFixed(1)}h`}
+                />
+              ) : null}
+            </Grid>
+
+            {record.reviewNotes ? (
+              <Card variant="flat" padding="sm">
+                <Typography variant="small">
+                  <strong>Review Notes:</strong> {record.reviewNotes}
+                </Typography>
+              </Card>
+            ) : null}
+          </Stack>
+        </FlexItem>
+
+        {!record.reviewedBy ? (
+          <Button variant="ghost" size="sm" onClick={() => onReview(record._id)}>
+            Review
+          </Button>
+        ) : null}
+      </Flex>
+    </Card>
   );
 }
 

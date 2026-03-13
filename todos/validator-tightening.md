@@ -325,6 +325,7 @@
 - Tightened `check-colors.js` after the raw/interactivity burn-down: removed the stale broad `Landing/` raw-color escape hatch and the stale `AIChat.tsx` / `PumbleIntegration.tsx` raw-color exemptions, moved `AppSplashScreen.tsx` off `bg-white/5` onto a semantic token, and narrowed landing hardcoded-color debt down to the single remaining logo file that still owns a branded drop-shadow treatment.
 - Tightened `check-colors.js` again by removing stale hardcoded-color exemptions for `Landing/Icons.tsx`, `LabelsManager.tsx`, `Settings/DevToolsTab.tsx`, and `AI/config.ts`, and moved `LabelsManager.tsx` onto the shared `COLORS.DEFAULT_LABEL` runtime constant so that product-surface color debt keeps shrinking instead of hiding in per-file exceptions.
 - Removed `Auth/GoogleAuthButton.tsx` from the hardcoded-color allowlist by moving the Google mark off inline hex fills and onto explicit provider color tokens in `src/index.css`, so product-surface color debt is no longer hiding in auth components either.
+- Cleared the last two standing Biome complexity warnings that were still polluting the validator/check path by extracting the records/filter rendering out of `Admin/HourComplianceDashboard.tsx` and splitting `Onboarding/LeadOnboarding.tsx` into step components instead of keeping all onboarding branches in one function.
 - The embedded calendar island is now narrowed from directory-wide escape hatches to explicit file debt. Burn that list down surface by surface instead of allowing new embedded drift by default.
 
 ## Problem
