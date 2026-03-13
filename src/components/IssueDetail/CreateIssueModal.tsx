@@ -24,6 +24,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Input, Select } from "@/components/ui/form";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
+import { IssueLabelChip } from "@/components/ui/IssueLabelChip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
 import { SelectItem } from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
@@ -35,7 +36,7 @@ import { useOrganization } from "@/hooks/useOrgContext";
 import { toggleInArray } from "@/lib/array-utils";
 import { COLORS } from "@/lib/constants";
 import { FormInput, FormSelectRadix } from "@/lib/form";
-import { Check, Plus, Sparkles, User } from "@/lib/icons";
+import { Check, Plus, Sparkles } from "@/lib/icons";
 import {
   getPriorityColor,
   getTypeLabel,
@@ -45,7 +46,6 @@ import {
   PRIORITY_ICONS,
 } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 
 // =============================================================================
 // Schema
@@ -507,7 +507,7 @@ export function CreateIssueModal({
             type="button"
             onClick={handleGenerateAISuggestions}
             isLoading={isGeneratingAI}
-            className="bg-linear-to-r from-brand to-accent hover:from-brand-hover hover:to-accent-hover text-brand-foreground border-0"
+            variant="accentGradient"
             leftIcon={<Icon icon={Sparkles} size="sm" />}
           >
             Get AI Suggestions
@@ -581,13 +581,7 @@ export function CreateIssueModal({
             <FormSelectRadix field={field} label="Assignee" placeholder="Select assignee">
               <SelectItem value="unassigned">
                 <Flex align="center" gap="sm">
-                  <Flex
-                    align="center"
-                    justify="center"
-                    className="h-5 w-5 rounded-full bg-ui-bg-tertiary"
-                  >
-                    <User className="h-3 w-3 text-ui-text-secondary" />
-                  </Flex>
+                  <Avatar name="Unassigned" size="xs" variant="neutral" />
                   Unassigned
                 </Flex>
               </SelectItem>
@@ -625,24 +619,16 @@ export function CreateIssueModal({
             </Typography>
             <Flex wrap gap="sm" align="center">
               {labels?.map((label: Doc<"labels">) => (
-                <Button
+                <IssueLabelChip
                   key={label._id}
-                  variant="unstyled"
                   onClick={() => toggleLabel(label._id)}
                   aria-pressed={selectedLabels.includes(label._id)}
-                  className={cn(
-                    "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-brand-foreground transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-ring h-auto",
-                    selectedLabels.includes(label._id)
-                      ? "opacity-100 ring-2 ring-offset-2 ring-brand"
-                      : "opacity-60 hover:opacity-80",
-                  )}
-                  style={{ backgroundColor: label.color }}
+                  selected={selectedLabels.includes(label._id)}
+                  color={label.color}
+                  showCheck={selectedLabels.includes(label._id)}
                 >
-                  {selectedLabels.includes(label._id) && (
-                    <Icon icon={Check} size="sm" className="mr-1" />
-                  )}
                   {label.name}
-                </Button>
+                </IssueLabelChip>
               ))}
               {/* Inline label creation */}
               <Popover open={showCreateLabel} onOpenChange={setShowCreateLabel}>

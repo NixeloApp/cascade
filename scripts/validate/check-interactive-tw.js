@@ -42,7 +42,6 @@ const ALLOWED_FILES = [
   // Navigation/layout
   "Sidebar/",
   // Modals
-  "CreateIssueModal.tsx",
   "CreateProjectFromTemplate.tsx",
   "BulkOperationsBar.tsx",
   "ImportExport/",

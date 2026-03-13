@@ -144,12 +144,14 @@
 - Removed the broad `src/components/AdvancedSearchModal/` raw-Tailwind escape hatch and removed `AdvancedSearchModal/` from the interactive-state allowlist.
 - Removed `AdvancedSearchModal.tsx` from the raw-Tailwind debt list and added `AdvancedSearchModal.tsx`, `AdvancedSearchModal/FilterCheckboxGroup.tsx`, and `AdvancedSearchModal/SearchResultsList.tsx` to design-system ownership targeting so future advanced-search shell drift is blocked directly.
 - Migrated the advanced-search filter groups and results list onto owned `Card`, `Checkbox`, and `EmptyState` primitives instead of local checkbox-row, result-row, and empty-state shell styling.
+- Removed `IssueDetail/CreateIssueModal.tsx` from the raw-Tailwind and interactive-state debt lists by moving its AI CTA onto an owned button variant, replacing its interactive label-pill shell with an owned `IssueLabelChip` primitive, and collapsing the unassigned assignee token onto owned avatar composition.
+- Added `IssueDetail/CreateIssueModal.tsx` to design-system ownership targeting so future issue-creation shell drift is blocked directly.
 
 ### Next batch
 
 - Continue shrinking the explicit `AI` debt now that the broad directory escapes are gone.
 - The explicit `AI` raw-Tailwind debt list is now empty.
-- Keep working through smaller helper controls and shared search surfaces rather than decorative backdrops, with the next pass focused on `CreateIssueModal.tsx`, which is now one of the next high-impact shared workflow surfaces still sitting behind explicit raw-Tailwind and interactive-state debt.
+- Keep working through smaller helper controls and shared workflow surfaces rather than decorative backdrops, with the next pass focused on `CommentReactions.tsx` and `IssueComments.tsx`, which are now among the next high-impact interaction surfaces still sitting behind explicit validator debt.
 
 ## Problem
 
