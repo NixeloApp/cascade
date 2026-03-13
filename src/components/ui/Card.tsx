@@ -73,6 +73,12 @@ const cardRecipeVariants = cva("", {
         "rounded-md border-ui-border-secondary/75 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/94 to-ui-bg-soft/92 shadow-card sm:rounded-2xl",
       timelineItem:
         "rounded-lg border-transparent bg-transparent shadow-none hover:border-transparent hover:bg-ui-bg-secondary/30 hover:shadow-none",
+      timeSummary:
+        "rounded-xl border-brand-border bg-linear-to-r from-brand-subtle/85 via-brand-subtle/70 to-ui-bg-elevated/96 shadow-none",
+      optionTile:
+        "rounded-2xl border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/96 to-ui-bg-soft/84 shadow-soft",
+      optionTileSelected:
+        "rounded-2xl border-brand-border bg-linear-to-b from-brand-subtle/85 via-ui-bg-elevated/98 to-ui-bg-soft/86 shadow-card",
 
       // Landing/showcase surfaces
       showcaseShell:

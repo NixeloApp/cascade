@@ -60,13 +60,18 @@
   - `TimeTracking/TimeEntryModal.tsx`
   - `TimeTracking/UserRatesManagement.tsx`
 - Removed `TimeTracking/TimeTrackingPage.tsx` and `TimeTracking/TimerWidget.tsx` from raw-Tailwind debt immediately by switching `TimeTrackingPage` to owned `Flex` wrap/select trigger APIs and dropping redundant button chrome overrides from `TimerWidget`.
+- Removed `TimeTracking/TimeEntryModal.tsx` from raw-Tailwind debt by migrating its raw date/time/tag/billable controls onto owned `Input`, `Checkbox`, `Badge`, `IconButton`, and `Card` recipe APIs.
+- Removed `TimeTracking/UserRatesManagement.tsx` from raw-Tailwind debt by migrating the empty state, rate-type options, and hourly-rate form onto owned `EmptyState`, `RadioGroup`, `Input`, `Label`, and `Card` recipe APIs.
+- Added `TimeTracking/TimeEntryModal.tsx` and `TimeTracking/UserRatesManagement.tsx` to design-system ownership targeting so future time-entry shell drift is validated directly.
+- Replaced the broad `TimeTracking/` interactive-state allowlist entry with explicit remaining debt entries for:
+  - `TimeTracking/ManualTimeEntryModal.tsx`
+  - `TimeTracking/TimeEntriesList.tsx`
+  - `TimeTracking/TimerWidget.tsx`
 
 ### Next batch
 
-- Burn down the explicit file-level debt entries added for:
-  - settings surfaces
-  - admin surfaces
-- Burn down the remaining explicit `TimeTracking` file-level debt, with `TimeEntryModal.tsx`, `UserRatesManagement.tsx`, and `ManualTimeEntryModal.tsx` first because they still hold the heaviest raw shell and form drift.
+- Burn down the remaining explicit `TimeTracking` file-level debt, with `ManualTimeEntryModal.tsx` first because it still duplicates most of the form, summary, and tag-shell patterns now removed from `TimeEntryModal.tsx`.
+- After that, remove the remaining explicit `TimeTracking` debt in `TimeEntriesList.tsx`, `BurnRateDashboard.tsx`, and `TimerWidget.tsx`.
 
 ## Problem
 

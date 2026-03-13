@@ -8,16 +8,20 @@
 
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
+import { DollarSign } from "lucide-react";
 import { useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Dialog } from "../ui/Dialog";
+import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
-import { Textarea } from "../ui/form";
+import { Input, Textarea } from "../ui/form";
+import { Grid } from "../ui/Grid";
+import { Label } from "../ui/Label";
+import { RadioGroup, RadioGroupItem } from "../ui/RadioGroup";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
@@ -143,32 +147,12 @@ export function UserRatesManagement() {
           ))}
         </Flex>
       ) : (
-        <Card variant="soft" className="text-center border-2 border-dashed border-ui-border">
-          <svg
-            className="mx-auto h-12 w-12 text-ui-text-tertiary"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            role="img"
-            aria-label="Dollar sign icon"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <Typography variant="label" className="mt-2">
-            No hourly rates set
-          </Typography>
-          <Typography variant="small" color="tertiary" className="mt-1">
-            Set your hourly rate to enable cost tracking and burn rate calculations
-          </Typography>
-          <Button onClick={() => setShowAddRate(true)} variant="primary" className="mt-4">
-            Set My Rate
-          </Button>
-        </Card>
+        <EmptyState
+          icon={DollarSign}
+          title="No hourly rates set"
+          description="Set your hourly rate to enable cost tracking and burn rate calculations."
+          action={{ label: "Set My Rate", onClick: () => setShowAddRate(true) }}
+        />
       )}
 
       {/* Add/Edit Rate Modal */}
@@ -190,10 +174,8 @@ export function UserRatesManagement() {
       >
         <Stack gap="md">
           {/* Project Selection */}
-          <div>
-            <label htmlFor="rate-apply-to" className="block text-sm font-medium text-ui-text mb-1">
-              Apply To
-            </label>
+          <Stack gap="xs">
+            <Label htmlFor="rate-apply-to">Apply To</Label>
             <Select
               value={selectedProject}
               onValueChange={(value) =>
@@ -212,94 +194,71 @@ export function UserRatesManagement() {
                 ))}
               </SelectContent>
             </Select>
-            <Typography variant="caption" color="tertiary" className="mt-1">
+            <Typography variant="caption" color="tertiary">
               Project-specific rates override the default rate
             </Typography>
-          </div>
+          </Stack>
 
           {/* Rate Type */}
-          <div>
-            <Typography variant="label" className="block mb-1">
-              Rate Type
-            </Typography>
-            <Flex gap="md">
-              <label
-                className={cn(
-                  "cursor-pointer flex-1 p-3 border-2 rounded-lg transition-colors",
-                  rateType === "internal"
-                    ? "border-brand-indigo-border bg-brand-indigo-track"
-                    : "border-ui-border",
-                )}
-              >
-                <Flex align="center" gap="sm">
-                  <input
-                    type="radio"
-                    name="rateType"
-                    checked={rateType === "internal"}
-                    onChange={() => setRateType("internal")}
-                    className="w-4 h-4 text-brand"
-                  />
-                  <FlexItem flex="1">
-                    <Typography variant="label">Internal Cost</Typography>
-                    <Typography variant="caption" color="tertiary">
-                      What you pay
-                    </Typography>
-                  </FlexItem>
-                </Flex>
-              </label>
-              <label
-                className={cn(
-                  "cursor-pointer flex-1 p-3 border-2 rounded-lg transition-colors",
-                  rateType === "billable"
-                    ? "border-brand-indigo-border bg-brand-indigo-track"
-                    : "border-ui-border",
-                )}
-              >
-                <Flex align="center" gap="sm">
-                  <input
-                    type="radio"
-                    name="rateType"
-                    checked={rateType === "billable"}
-                    onChange={() => setRateType("billable")}
-                    className="w-4 h-4 text-brand"
-                  />
-                  <FlexItem flex="1">
-                    <Typography variant="label">Billable Rate</Typography>
-                    <Typography variant="caption" color="tertiary">
-                      Charge clients
-                    </Typography>
-                  </FlexItem>
-                </Flex>
-              </label>
-            </Flex>
-          </div>
+          <Stack gap="xs">
+            <Label>Rate Type</Label>
+            <RadioGroup
+              value={rateType}
+              onValueChange={(value) => setRateType(value as typeof rateType)}
+            >
+              <Grid cols={2} gap="md">
+                <Card
+                  recipe={rateType === "internal" ? "optionTileSelected" : "optionTile"}
+                  padding="md"
+                  onClick={() => setRateType("internal")}
+                >
+                  <Flex align="start" gap="sm">
+                    <RadioGroupItem value="internal" aria-label="Internal Cost" />
+                    <FlexItem flex="1">
+                      <Typography variant="label">Internal Cost</Typography>
+                      <Typography variant="caption" color="tertiary">
+                        What you pay
+                      </Typography>
+                    </FlexItem>
+                  </Flex>
+                </Card>
+                <Card
+                  recipe={rateType === "billable" ? "optionTileSelected" : "optionTile"}
+                  padding="md"
+                  onClick={() => setRateType("billable")}
+                >
+                  <Flex align="start" gap="sm">
+                    <RadioGroupItem value="billable" aria-label="Billable Rate" />
+                    <FlexItem flex="1">
+                      <Typography variant="label">Billable Rate</Typography>
+                      <Typography variant="caption" color="tertiary">
+                        Charge clients
+                      </Typography>
+                    </FlexItem>
+                  </Flex>
+                </Card>
+              </Grid>
+            </RadioGroup>
+          </Stack>
 
           {/* Hourly Rate */}
-          <div>
-            <label
-              htmlFor="rate-hourly-rate"
-              className="block text-sm font-medium text-ui-text mb-1"
-            >
-              Hourly Rate
-            </label>
-            <Flex gap="sm">
-              <FlexItem flex="1" className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ui-text-tertiary">
-                  $
-                </span>
-                <input
-                  id="rate-hourly-rate"
-                  type="number"
-                  value={hourlyRate}
-                  onChange={(e) => setHourlyRate(e.target.value)}
-                  placeholder="0.00"
-                  step="0.01"
-                  min="0"
-                  className="w-full pl-8 pr-3 py-2 border border-ui-border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring"
-                />
-              </FlexItem>
+          <Flex gap="sm" align="end">
+            <FlexItem flex="1">
+              <Input
+                id="rate-hourly-rate"
+                type="number"
+                label="Hourly Rate"
+                value={hourlyRate}
+                onChange={(e) => setHourlyRate(e.target.value)}
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+              />
+            </FlexItem>
+            <Stack gap="xs">
+              <Label htmlFor="rate-currency">Currency</Label>
               <Select value={currency} onValueChange={(value) => setCurrency(value)}>
-                <SelectTrigger className="w-24">
+                <SelectTrigger id="rate-currency" className="w-24">
                   <SelectValue placeholder="Currency" />
                 </SelectTrigger>
                 <SelectContent>
@@ -309,8 +268,8 @@ export function UserRatesManagement() {
                   <SelectItem value="CAD">CAD</SelectItem>
                 </SelectContent>
               </Select>
-            </Flex>
-          </div>
+            </Stack>
+          </Flex>
 
           {/* Notes */}
           <Textarea

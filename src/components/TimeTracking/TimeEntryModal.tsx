@@ -9,18 +9,19 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
-import { Clock, Hourglass, Play } from "lucide-react";
+import { Clock, Hourglass, Play, X } from "lucide-react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { ACTIVITY_TYPES } from "@/lib/constants";
 import { formatDateForInput, formatDurationHuman } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
+import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Dialog } from "../ui/Dialog";
-import { Flex } from "../ui/Flex";
-import { Textarea } from "../ui/form";
+import { Flex, FlexItem } from "../ui/Flex";
+import { Checkbox, Input, Textarea } from "../ui/form";
 import { Grid } from "../ui/Grid";
+import { IconButton } from "../ui/IconButton";
 import { Label } from "../ui/Label";
 import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
@@ -45,6 +46,16 @@ interface TimeEntryModalProps {
   billingEnabled?: boolean;
 }
 
+function DurationSummary({ durationSeconds }: { durationSeconds: number }) {
+  return (
+    <Card recipe="timeSummary" padding="sm">
+      <Typography variant="mono" className="text-brand-active">
+        Duration: {formatDurationHuman(durationSeconds)}
+      </Typography>
+    </Card>
+  );
+}
+
 // Tags input component
 function TagsInput({
   tags,
@@ -63,20 +74,21 @@ function TagsInput({
     <Stack gap="sm">
       <Label htmlFor="time-entry-tags">Tags</Label>
       <Flex gap="sm">
-        <input
-          id="time-entry-tags"
-          type="text"
-          value={tagInput}
-          onChange={(e) => onTagInputChange(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              onAddTag();
-            }
-          }}
-          placeholder="Add tag..."
-          className="flex-1 px-3 py-2 border border-ui-border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring"
-        />
+        <FlexItem flex="1">
+          <Input
+            id="time-entry-tags"
+            type="text"
+            value={tagInput}
+            onChange={(e) => onTagInputChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                onAddTag();
+              }
+            }}
+            placeholder="Add tag..."
+          />
+        </FlexItem>
         <Button type="button" onClick={onAddTag} variant="secondary" size="sm">
           Add
         </Button>
@@ -84,25 +96,19 @@ function TagsInput({
       {tags.length > 0 && (
         <Flex gap="sm" wrap>
           {tags.map((tag) => (
-            <Flex
-              key={tag}
-              as="span"
-              inline
-              align="center"
-              gap="xs"
-              className="px-2 py-1 bg-brand-indigo-track text-brand-indigo-text text-xs rounded"
-            >
-              {tag}
-              <Button
-                variant="unstyled"
-                size="icon"
-                onClick={() => onRemoveTag(tag)}
-                className="hover:text-brand-active h-4 w-4 p-0"
-                aria-label={`Remove tag ${tag}`}
-              >
-                ×
-              </Button>
-            </Flex>
+            <Badge key={tag} variant="brand" shape="pill">
+              <Flex as="span" inline align="center" gap="xs">
+                <span>{tag}</span>
+                <IconButton
+                  variant="brand"
+                  size="xs"
+                  onClick={() => onRemoveTag(tag)}
+                  aria-label={`Remove tag ${tag}`}
+                >
+                  <X className="h-3 w-3" />
+                </IconButton>
+              </Flex>
+            </Badge>
           ))}
         </Flex>
       )}
@@ -132,34 +138,26 @@ function DurationModeFields({
 }) {
   return (
     <Stack gap="md">
-      <Stack gap="xs">
-        <Label htmlFor="time-entry-date">Date *</Label>
-        <input
-          id="time-entry-date"
-          type="date"
-          value={date}
-          onChange={(e) => onDateChange(e.target.value)}
-          max={formatDateForInput(Date.now())}
-          className="w-full px-3 py-2 border border-ui-border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring"
-          required
-        />
-      </Stack>
+      <Input
+        id="time-entry-date"
+        type="date"
+        label="Date *"
+        value={date}
+        onChange={(e) => onDateChange(e.target.value)}
+        max={formatDateForInput(Date.now())}
+        required
+      />
       <Stack gap="sm">
-        <Stack gap="xs">
-          <Label htmlFor="time-entry-duration">Duration *</Label>
-          <input
-            id="time-entry-duration"
-            type="text"
-            value={durationInput}
-            onChange={(e) => onDurationChange(e.target.value)}
-            placeholder="e.g., 1:30, 1.5, 1h 30m, 90m"
-            className={cn(
-              "w-full px-3 py-2 border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring bg-ui-bg text-ui-text",
-              isDurationInputValid ? "border-ui-border" : "border-status-error",
-            )}
-          />
-          <Typography variant="caption">Accepts: 1:30, 1.5, 1h 30m, 90m</Typography>
-        </Stack>
+        <Input
+          id="time-entry-duration"
+          type="text"
+          label="Duration *"
+          value={durationInput}
+          onChange={(e) => onDurationChange(e.target.value)}
+          placeholder="e.g., 1:30, 1.5, 1h 30m, 90m"
+          helperText="Accepts: 1:30, 1.5, 1h 30m, 90m"
+          error={isDurationInputValid ? undefined : "Enter a valid duration"}
+        />
         <Flex gap="sm">
           <Button type="button" variant="secondary" size="sm" onClick={() => onQuickIncrement(15)}>
             +15m
@@ -176,13 +174,7 @@ function DurationModeFields({
             </Button>
           )}
         </Flex>
-        {durationSeconds > 0 && (
-          <Card padding="sm" className="bg-brand-indigo-track border-brand-indigo-border">
-            <Typography variant="mono" className="text-brand-indigo-text">
-              Duration: {formatDurationHuman(durationSeconds)}
-            </Typography>
-          </Card>
-        )}
+        {durationSeconds > 0 && <DurationSummary durationSeconds={durationSeconds} />}
       </Stack>
     </Stack>
   );
@@ -208,49 +200,34 @@ function TimeRangeModeFields({
 }) {
   return (
     <Stack gap="md">
-      <Stack gap="xs">
-        <Label htmlFor="time-entry-date-range">Date *</Label>
-        <input
-          id="time-entry-date-range"
-          type="date"
-          value={date}
-          onChange={(e) => onDateChange(e.target.value)}
-          max={formatDateForInput(Date.now())}
-          className="w-full px-3 py-2 border border-ui-border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring"
+      <Input
+        id="time-entry-date-range"
+        type="date"
+        label="Date *"
+        value={date}
+        onChange={(e) => onDateChange(e.target.value)}
+        max={formatDateForInput(Date.now())}
+        required
+      />
+      <Grid cols={2} gap="lg">
+        <Input
+          id="time-entry-start"
+          type="time"
+          label="Start Time *"
+          value={startTime}
+          onChange={(e) => onStartTimeChange(e.target.value)}
           required
         />
-      </Stack>
-      <Grid cols={2} gap="lg">
-        <Stack gap="xs">
-          <Label htmlFor="time-entry-start">Start Time *</Label>
-          <input
-            id="time-entry-start"
-            type="time"
-            value={startTime}
-            onChange={(e) => onStartTimeChange(e.target.value)}
-            className="w-full px-3 py-2 border border-ui-border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring"
-            required
-          />
-        </Stack>
-        <Stack gap="xs">
-          <Label htmlFor="time-entry-end">End Time *</Label>
-          <input
-            id="time-entry-end"
-            type="time"
-            value={endTime}
-            onChange={(e) => onEndTimeChange(e.target.value)}
-            className="w-full px-3 py-2 border border-ui-border rounded-lg focus-visible:ring-2 focus-visible:ring-brand-ring"
-            required
-          />
-        </Stack>
+        <Input
+          id="time-entry-end"
+          type="time"
+          label="End Time *"
+          value={endTime}
+          onChange={(e) => onEndTimeChange(e.target.value)}
+          required
+        />
       </Grid>
-      {timeRangeDuration > 0 && (
-        <Card padding="sm" className="bg-brand-indigo-track border-brand-indigo-border">
-          <Typography variant="mono" className="text-brand-indigo-text">
-            Duration: {formatDurationHuman(timeRangeDuration)}
-          </Typography>
-        </Card>
-      )}
+      {timeRangeDuration > 0 && <DurationSummary durationSeconds={timeRangeDuration} />}
     </Stack>
   );
 }
@@ -372,7 +349,7 @@ export function TimeEntryModal({
             form="time-entry-form"
             variant="primary"
             disabled={!shouldLoadData || (!computed.isTimerMode && computed.effectiveDuration <= 0)}
-            leftIcon={computed.isTimerMode ? <Play className="w-4 h-4" /> : undefined}
+            leftIcon={computed.isTimerMode ? <Play className="h-4 w-4" /> : undefined}
           >
             {computed.isTimerMode ? "Start Timer" : "Log Time"}
           </Button>
@@ -391,6 +368,7 @@ export function TimeEntryModal({
         {/* Mode Toggle */}
         <SegmentedControl
           value={state.entryMode}
+          variant="default"
           onValueChange={(value: string) => {
             if (value === "timer" || value === "duration" || value === "timeRange") {
               actions.setEntryMode(value);
@@ -398,15 +376,27 @@ export function TimeEntryModal({
           }}
           className="flex w-full flex-col sm:flex-row"
         >
-          <SegmentedControlItem value="timer" className="w-full flex-1 justify-center gap-2">
+          <SegmentedControlItem
+            value="timer"
+            variant="default"
+            className="w-full flex-1 justify-center gap-2"
+          >
             <Play className="w-4 h-4" />
             Start Timer
           </SegmentedControlItem>
-          <SegmentedControlItem value="duration" className="w-full flex-1 justify-center gap-2">
+          <SegmentedControlItem
+            value="duration"
+            variant="default"
+            className="w-full flex-1 justify-center gap-2"
+          >
             <Hourglass className="w-4 h-4" />
             Duration
           </SegmentedControlItem>
-          <SegmentedControlItem value="timeRange" className="w-full flex-1 justify-center gap-2">
+          <SegmentedControlItem
+            value="timeRange"
+            variant="default"
+            className="w-full flex-1 justify-center gap-2"
+          >
             <Clock className="w-4 h-4" />
             Time Range
           </SegmentedControlItem>
@@ -495,17 +485,11 @@ export function TimeEntryModal({
 
         {/* Billable */}
         {billingEnabled && (
-          <label className="cursor-pointer">
-            <Flex align="center" gap="sm">
-              <input
-                type="checkbox"
-                checked={state.billable}
-                onChange={(e) => actions.setBillable(e.target.checked)}
-                className="w-4 h-4 text-brand rounded focus-visible:ring-2 focus-visible:ring-brand-ring"
-              />
-              <Typography variant="label">Billable time</Typography>
-            </Flex>
-          </label>
+          <Checkbox
+            checked={state.billable}
+            onChange={(e) => actions.setBillable(e.target.checked)}
+            label="Billable time"
+          />
         )}
 
         {/* Tags */}
