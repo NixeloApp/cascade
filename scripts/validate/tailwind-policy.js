@@ -2,13 +2,9 @@
  * Shared policy and helpers for Tailwind/design-system validation checks.
  */
 
-export const RAW_TAILWIND_ALLOWED_DIRS = ["src/components/ui/"];
+export const RAW_TAILWIND_OWNED_DIRS = ["src/components/ui/"];
 
-export const RAW_TAILWIND_ALLOWED_FILES = [
-  // Explicit migration-debt exemptions replacing broad Settings/Admin/ProjectSettings directory escapes.
-];
-
-export const RAW_TAILWIND_ALLOWED_EXTENSIONS = [".stories.tsx", ".test.tsx", ".example.tsx"];
+export const RAW_TAILWIND_NON_PRODUCT_EXTENSIONS = [".stories.tsx", ".test.tsx", ".example.tsx"];
 
 export const RAW_TAILWIND_PATTERNS = [
   { pattern: /className=.*\bflex\b/, replacement: "<Flex>" },
@@ -292,10 +288,9 @@ export const LAYOUT_PROP_PATTERNS = [
   },
 ];
 
-export function isAllowedByPolicy(rel, dirs, files, extensions) {
-  if (dirs.some((dir) => rel.includes(dir))) return true;
-  if (files.some((file) => rel.endsWith(file))) return true;
-  if (extensions.some((extension) => rel.endsWith(extension))) return true;
+export function isRawTailwindBoundary(rel) {
+  if (RAW_TAILWIND_OWNED_DIRS.some((dir) => rel.includes(dir))) return true;
+  if (RAW_TAILWIND_NON_PRODUCT_EXTENSIONS.some((extension) => rel.endsWith(extension))) return true;
   return false;
 }
 

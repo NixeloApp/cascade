@@ -1,6 +1,6 @@
 /**
  * CHECK: Raw Tailwind
- * Flags generic raw Tailwind usage outside the approved component areas.
+ * Flags generic raw Tailwind usage outside the owned primitive boundary.
  *
  * This check is intentionally narrow:
  * - generic raw utility policing lives here
@@ -13,10 +13,7 @@ import path from "node:path";
 import {
   collectClassNameSpan,
   findOpeningTag,
-  isAllowedByPolicy,
-  RAW_TAILWIND_ALLOWED_DIRS,
-  RAW_TAILWIND_ALLOWED_EXTENSIONS,
-  RAW_TAILWIND_ALLOWED_FILES,
+  isRawTailwindBoundary,
   RAW_TAILWIND_PATTERNS,
 } from "./tailwind-policy.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
@@ -50,14 +47,7 @@ export function run() {
 
   for (const filePath of files) {
     const rel = relPath(filePath);
-    if (
-      isAllowedByPolicy(
-        rel,
-        RAW_TAILWIND_ALLOWED_DIRS,
-        RAW_TAILWIND_ALLOWED_FILES,
-        RAW_TAILWIND_ALLOWED_EXTENSIONS,
-      )
-    ) {
+    if (isRawTailwindBoundary(rel)) {
       continue;
     }
 
@@ -118,7 +108,8 @@ export function run() {
   return {
     passed: violations.length === 0,
     errors: violations.length,
-    detail: violations.length > 0 ? `${violations.length} raw Tailwind violations` : null,
+    detail:
+      violations.length > 0 ? `${violations.length} raw Tailwind violations` : "owned boundary",
     messages,
   };
 }

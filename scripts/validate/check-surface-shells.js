@@ -1,7 +1,7 @@
 /**
  * CHECK: Surface Shells
  *
- * Blocks raw reusable surface recipes outside temporary Tailwind escape hatches.
+ * Blocks raw reusable surface recipes outside the owned primitive boundary.
  * This is stricter than generic raw Tailwind policing: it specifically targets
  * class stacks that define a component shell's visual identity.
  */
@@ -13,10 +13,7 @@ import {
   DESIGN_SYSTEM_ESCAPE_HATCHES,
   findOpeningTag,
   groupByFile,
-  isAllowedByPolicy,
-  RAW_TAILWIND_ALLOWED_DIRS,
-  RAW_TAILWIND_ALLOWED_EXTENSIONS,
-  RAW_TAILWIND_ALLOWED_FILES,
+  isRawTailwindBoundary,
 } from "./tailwind-policy.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
@@ -42,14 +39,7 @@ export function run() {
   for (const filePath of files) {
     const rel = relPath(filePath);
 
-    if (
-      isAllowedByPolicy(
-        rel,
-        RAW_TAILWIND_ALLOWED_DIRS,
-        RAW_TAILWIND_ALLOWED_FILES,
-        RAW_TAILWIND_ALLOWED_EXTENSIONS,
-      )
-    ) {
+    if (isRawTailwindBoundary(rel)) {
       continue;
     }
 
@@ -105,7 +95,8 @@ export function run() {
   return {
     passed: violations.length === 0,
     errors: violations.length,
-    detail: violations.length > 0 ? `${violations.length} surface-shell violations` : null,
+    detail:
+      violations.length > 0 ? `${violations.length} surface-shell violations` : "owned boundary",
     messages,
   };
 }
