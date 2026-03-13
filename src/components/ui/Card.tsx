@@ -259,6 +259,9 @@ const cardRecipeVariants = cva("", {
         "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",
       issueDetailLayoutShell: "rounded-lg border-ui-border bg-ui-bg-elevated shadow-card",
       issueMetadataRow: "rounded-none border-transparent bg-transparent px-0 py-1 shadow-none",
+      eventDetailSection:
+        "rounded-none border-x-0 border-b-0 border-t border-ui-border bg-transparent pt-4 shadow-none",
+      eventAttendanceRow: "rounded-md border-transparent bg-ui-bg-secondary p-2 shadow-none",
       labelGroupHeader:
         "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg-secondary shadow-none hover:bg-ui-bg-tertiary",
       labelGroupRow:

@@ -240,8 +240,9 @@
 - Removed `UserProfile.tsx` from the explicit raw-Tailwind debt list by dropping the unnecessary dialog-level utility stack and relying on the existing `Dialog` and `Card` composition directly.
 - Removed `Kanban/KanbanColumn.tsx` from the explicit raw-Tailwind debt list by moving the column shell, header, and body onto owned `Card` recipes and replacing the custom empty-column shell with the shared `EmptyState` primitive.
 - Removed `Kanban/SwimlanRow.tsx` from the explicit raw-Tailwind debt list by moving the swimlane header onto owned `Button` chrome and the lane-content wrapper onto an owned `Card` recipe instead of inline spacing/layout drift.
-- The remaining explicit raw-debt files are now `Calendar/EventDetailsModal.tsx` and `Calendar/RoadmapView.tsx`.
-- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on the remaining narrow calendar debt. `Calendar/shadcn-calendar/` remains intentionally isolated unless we decide to absorb that embedded implementation.
+- Removed `Calendar/EventDetailsModal.tsx` from the explicit raw-Tailwind debt list by moving section wrappers and attendance rows onto owned `Card` recipes, replacing the organizer shell with `Avatar`, dropping the custom select-trigger override, and relying on owned `Dialog`, `Button`, and `Icon` composition instead of modal-local chrome.
+- The remaining explicit raw-debt file is now `Calendar/RoadmapView.tsx`.
+- Keep working through shared workflow/product surfaces rather than decorative backdrops, with the next pass focused on the last remaining calendar debt in `Calendar/RoadmapView.tsx`. `Calendar/shadcn-calendar/` remains intentionally isolated unless we decide to absorb that embedded implementation.
 
 ## Problem
 
