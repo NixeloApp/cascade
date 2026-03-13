@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { QueryCtx } from "../_generated/server";
 import { checkApiKeyRateLimit } from "./rateLimiter";
 
 // Mock the components object from the generated API
@@ -23,9 +24,9 @@ import { MINUTE } from "@convex-dev/rate-limiter";
 describe("checkApiKeyRateLimit", () => {
   it("should call the rate limiter component with correct arguments", async () => {
     const mockRunQuery = vi.fn().mockResolvedValue({ ok: true });
-    const ctx = {
+    const ctx: Pick<QueryCtx, "runQuery"> = {
       runQuery: mockRunQuery,
-    } as any;
+    };
 
     const keyId = "test-key";
     const limit = 100;
@@ -48,9 +49,9 @@ describe("checkApiKeyRateLimit", () => {
   it("should return the result from the rate limiter when limited", async () => {
     const retryAfter = 12345;
     const mockRunQuery = vi.fn().mockResolvedValue({ ok: false, retryAfter });
-    const ctx = {
+    const ctx: Pick<QueryCtx, "runQuery"> = {
       runQuery: mockRunQuery,
-    } as any;
+    };
 
     const result = await checkApiKeyRateLimit(ctx, "key", 10);
 

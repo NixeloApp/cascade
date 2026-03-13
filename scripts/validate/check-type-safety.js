@@ -19,7 +19,6 @@ export function run() {
     /convex\/lib\/dns\.test\.ts$/, // Legacy fetch mocks
     /convex\/lib\/fileValidators\.test\.ts$/, // Legacy MutationCtx casts
     /convex\/lib\/issueCalculation\.test\.ts$/, // Legacy Doc fixture casts
-    /convex\/lib\/rateLimiter\.test\.ts$/, // Legacy context fixture casts
     /convex\/lib\/safeFetch\.test\.ts$/, // Legacy module mock casts
     /convex\/lib\/userUtils\.test\.ts$/, // Legacy runtime property assertions
     /convex\/lib\/webhookHelpers\.test\.ts$/, // Legacy fetch mocks
