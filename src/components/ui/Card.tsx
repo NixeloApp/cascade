@@ -140,8 +140,21 @@ const cardRecipeVariants = cva("", {
         "rounded-2xl border-ui-border-secondary/70 bg-ui-bg-elevated/95 px-3 py-1.5 shadow-soft",
       sidebarOrgCard: "rounded-2xl border-ui-border-secondary/70 bg-ui-bg-elevated/95 shadow-soft",
       sidebarOrgInitial: "rounded-xl border-brand/15 bg-brand-subtle text-brand shadow-none",
+      sidebarShell:
+        "h-full border-x-0 border-y-0 border-r border-ui-border-secondary/70 bg-linear-to-b from-ui-bg-sidebar via-ui-bg-sidebar to-ui-bg/96 shadow-card backdrop-blur-xl",
+      sidebarHeaderBar:
+        "border-x-0 border-t-0 border-b border-ui-border-secondary/70 bg-transparent shadow-none",
+      sidebarFooterBar:
+        "border-x-0 border-b-0 border-t border-ui-border-secondary/70 bg-transparent shadow-none",
       sidebarNavIcon:
         "rounded-lg border-ui-border/60 bg-ui-bg-soft text-ui-text-tertiary shadow-none",
+      sidebarPrimaryNavIcon:
+        "rounded-xl border-ui-border/60 bg-ui-bg-soft text-ui-text-tertiary shadow-none",
+      sidebarPrimaryNavIconActive:
+        "rounded-xl border-brand/20 bg-brand-subtle text-brand shadow-none",
+      sidebarSectionIcon:
+        "rounded-xl border-ui-border-secondary/70 bg-ui-bg-elevated text-ui-text-tertiary shadow-soft",
+      sidebarSectionIconActive: "rounded-xl border-brand/20 bg-brand-subtle text-brand shadow-soft",
       sidebarSectionChildren:
         "rounded-2xl border-ui-border-secondary/60 bg-ui-bg-elevated/70 shadow-soft",
       assistantPanelHeader:

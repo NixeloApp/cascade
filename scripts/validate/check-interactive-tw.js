@@ -43,7 +43,6 @@ const ALLOWED_FILES = [
   "IssueDescriptionEditor.tsx",
   "MentionInput.tsx",
   // Navigation/layout
-  "AppSidebar.tsx",
   "Sidebar/",
   // Modals
   "CreateIssueModal.tsx",

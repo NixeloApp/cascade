@@ -64,6 +64,7 @@ const iconButtonVariants = cva(
       },
       size: {
         xs: "h-6 w-6 p-1",
+        compact: "h-7 w-7 p-0.5",
         sm: "h-8 w-8 p-1.5",
         md: "h-9 w-9 p-2",
         lg: "h-10 w-10 p-2.5",
