@@ -35,8 +35,6 @@ const ALLOWED_FILES = [
   "Calendar/shadcn-calendar/body/day/calendar-body-day-content.tsx",
   "Calendar/shadcn-calendar/body/day/calendar-body-day-events.tsx",
   "Calendar/shadcn-calendar/body/month/calendar-body-month.tsx",
-  "Calendar/shadcn-calendar/header/actions/calendar-header-actions-mode.tsx",
-  "Calendar/shadcn-calendar/header/date/calendar-header-date-chevrons.tsx",
   // Landing pages
   "Landing/",
   // Activity/inbox

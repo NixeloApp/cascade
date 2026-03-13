@@ -53,6 +53,7 @@ const typographyVariants = cva("", {
       pageHeaderEyebrow:
         "text-xs font-semibold uppercase tracking-[0.18em] text-ui-text-tertiary sm:tracking-[0.22em]",
       mono: "text-xs font-mono text-ui-text-secondary tracking-tight", // issue keys, codes
+      calendarHeaderDate: "text-xs font-medium text-ui-text sm:text-base",
       documentTitle: "-ml-2 px-2 py-1 text-2xl leading-tight sm:text-3xl lg:text-4xl",
       documentTitleInteractive:
         "-ml-2 cursor-pointer rounded px-2 py-1 text-2xl leading-tight transition-default hover:bg-ui-bg-hover sm:text-3xl lg:text-4xl",
@@ -132,6 +133,7 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
     case "pageHeaderEyebrow":
       return "p";
     case "mono":
+    case "calendarHeaderDate":
       return "span";
     case "blockquote":
       return "blockquote";

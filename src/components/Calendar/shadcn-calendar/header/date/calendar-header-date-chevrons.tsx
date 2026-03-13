@@ -1,6 +1,7 @@
 import { addDays, addMonths, addWeeks, format, subDays, subMonths, subWeeks } from "date-fns";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
+import { Typography } from "@/components/ui/Typography";
 import { ChevronLeft, ChevronRight } from "@/lib/icons";
 import { useCalendarContext } from "../../calendar-context";
 
@@ -37,32 +38,31 @@ export function CalendarHeaderDateChevrons(): React.ReactElement {
   }
 
   return (
-    <Flex align="center" gap="xs" className="flex-wrap gap-1 sm:flex-nowrap sm:gap-sm">
+    <Flex align="center" gap="xs" gapSm="sm" wrap>
       <Button
-        variant="outline"
-        className="h-6 rounded-full border-ui-border px-2 text-xs font-medium transition-colors duration-default hover:border-ui-border-secondary hover:bg-ui-bg-hover sm:h-7 sm:px-3"
+        chrome="calendarHeaderControl"
+        chromeSize="calendarHeaderPill"
         onClick={() => setDate(new Date())}
       >
         Today
       </Button>
       <Button
-        variant="outline"
-        className="h-6 w-6 rounded-full border-ui-border p-0.5 transition-colors duration-default hover:border-ui-border-secondary hover:bg-ui-bg-hover sm:h-7 sm:w-7 sm:p-1"
+        chrome="calendarHeaderControl"
+        chromeSize="calendarHeaderIcon"
         onClick={handleDateBackward}
         aria-label="Previous month"
       >
         <ChevronLeft className="min-w-5 min-h-5" />
       </Button>
-      <time
-        dateTime={format(date, "yyyy-MM-dd")}
-        className="min-w-16 text-center text-xs font-medium text-ui-text sm:min-w-35 sm:text-base"
-      >
-        <span className="sm:hidden">{format(date, "MMM d")}</span>
-        <span className="hidden sm:inline">{format(date, "MMMM d, yyyy")}</span>
+      <time dateTime={format(date, "yyyy-MM-dd")} className="min-w-16 text-center sm:min-w-35">
+        <Typography as="span" variant="calendarHeaderDate">
+          <span className="sm:hidden">{format(date, "MMM d")}</span>
+          <span className="hidden sm:inline">{format(date, "MMMM d, yyyy")}</span>
+        </Typography>
       </time>
       <Button
-        variant="outline"
-        className="h-6 w-6 rounded-full border-ui-border p-0.5 transition-colors duration-default hover:border-ui-border-secondary hover:bg-ui-bg-hover sm:h-7 sm:w-7 sm:p-1"
+        chrome="calendarHeaderControl"
+        chromeSize="calendarHeaderIcon"
         onClick={handleDateForward}
         aria-label="Next month"
       >

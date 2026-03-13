@@ -12,11 +12,14 @@ const segmentedControlVariants = cva(
           "gap-1 rounded-2xl border border-ui-border-secondary/70 bg-ui-bg-secondary/90 p-1 shadow-soft",
         outline:
           "gap-0 overflow-hidden rounded-xl border border-ui-border-secondary/80 bg-ui-bg/95 shadow-soft",
+        calendarMode:
+          "gap-0 overflow-hidden rounded-md border border-ui-border shadow-soft rtl:space-x-reverse sm:rounded-container",
       },
       size: {
         sm: "",
         md: "",
         lg: "",
+        calendarMode: "",
       },
       wrap: {
         true: "flex-wrap",
@@ -45,11 +48,14 @@ const segmentedControlItemVariants = cva(
           "rounded-xl bg-transparent text-ui-text-secondary hover:bg-ui-bg-hover hover:text-ui-text data-[state=on]:bg-ui-bg data-[state=on]:text-ui-text data-[state=on]:shadow-soft data-[state=on]:ring-1 data-[state=on]:ring-ui-border-secondary/70",
         outline:
           "rounded-none border-none bg-transparent text-ui-text-secondary shadow-none hover:bg-ui-bg-hover hover:text-ui-text data-[state=on]:bg-ui-bg data-[state=on]:text-ui-text data-[state=on]:shadow-none",
+        calendarMode:
+          "rounded-none border-none bg-ui-bg text-ui-text-secondary shadow-none hover:bg-ui-bg-hover hover:text-ui-text data-[state=on]:z-10 data-[state=on]:bg-ui-bg-tertiary data-[state=on]:text-ui-text data-[state=on]:shadow-none",
       },
       size: {
         sm: "min-h-7 px-2.5 py-1 text-xs",
         md: "min-h-8 px-3 py-1.5 text-sm",
         lg: "min-h-10 px-4 py-2 text-sm",
+        calendarMode: "min-h-6 px-1 text-xs sm:min-h-8 sm:px-3 sm:py-2 sm:text-sm",
       },
       width: {
         auto: "",

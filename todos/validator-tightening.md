@@ -267,6 +267,9 @@
 - Explicit auth raw-debt is now cleared. The next intentional validator island is the embedded `Calendar/shadcn-calendar/` implementation.
 - Removed the broad `src/components/Calendar/shadcn-calendar/` raw-Tailwind escape hatch and replaced it with explicit file-level migration debt for the currently embedded calendar `.tsx` surfaces, so new files in that implementation no longer inherit a free raw-Tailwind bypass.
 - Removed the broad `Calendar/shadcn-calendar/` interactive-state allowlist entry and replaced it with the five current interactive-debt files: `calendar-body-day-content.tsx`, `calendar-body-day-events.tsx`, `calendar-body-month.tsx`, `calendar-header-actions-mode.tsx`, and `calendar-header-date-chevrons.tsx`.
+- Removed `calendar-header-actions-mode.tsx` from embedded calendar raw/interactivity debt by moving the view-mode rail onto owned `SegmentedControl` variants instead of inline toggle-group chrome.
+- Removed `calendar-header-date-chevrons.tsx` from embedded calendar raw/interactivity debt by moving the Today/prev/next controls and date label onto owned `Button` chrome and `Typography` variants.
+- Added both embedded calendar header entry points to design-system ownership targeting so future header-control drift is blocked directly.
 - The embedded calendar island is now narrowed from directory-wide escape hatches to explicit file debt. Burn that list down surface by surface instead of allowing new embedded drift by default.
 
 ## Problem
