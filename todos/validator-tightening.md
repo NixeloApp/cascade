@@ -327,6 +327,7 @@
 - Removed `Auth/GoogleAuthButton.tsx` from the hardcoded-color allowlist by moving the Google mark off inline hex fills and onto explicit provider color tokens in `src/index.css`, so product-surface color debt is no longer hiding in auth components either.
 - Cleared the last two standing Biome complexity warnings that were still polluting the validator/check path by extracting the records/filter rendering out of `Admin/HourComplianceDashboard.tsx` and splitting `Onboarding/LeadOnboarding.tsx` into step components instead of keeping all onboarding branches in one function.
 - Tightened `check-colors.js` further by replacing the broad `convex/http/` hardcoded-color escape hatch with explicit OAuth HTML handler files only, dropping the redundant `convex/labels.test.ts` entry, and removing `convex/schema.ts` from the allowlist after cleaning its inline hex example comment.
+- Tightened `check-colors.js` again by replacing the `src/lib/yjs/` directory escape hatch with explicit runtime files only, and by moving shared label runtime colors out of `src/lib/constants.ts` / `convex/lib/issueHelpers.ts` into `convex/shared/colors.ts` so both frontend and Convex use one shared source of truth without extra product-surface allowlist debt.
 - The embedded calendar island is now narrowed from directory-wide escape hatches to explicit file debt. Burn that list down surface by surface instead of allowing new embedded drift by default.
 
 ## Problem

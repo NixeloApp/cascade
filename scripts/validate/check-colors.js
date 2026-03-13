@@ -27,9 +27,9 @@ export function run() {
     "convex/bookingPages.ts",
     "convex/projectTemplates.ts",
     "convex/onboarding.ts",
-    "convex/lib/issueHelpers.ts",
-    "src/lib/constants.ts", // Runtime color constants (hex strings for database storage)
-    "src/lib/yjs/", // Y.js collaboration cursor colors (dynamic per-user)
+    "convex/shared/colors.ts", // Shared runtime color constants for DB/payload usage
+    "src/lib/yjs/awareness.ts", // Y.js collaboration cursor colors (dynamic per-user)
+    "src/lib/yjs/ConvexYjsProvider.ts", // Y.js collaboration cursor colors (dynamic per-user)
     "*.test.ts",
     "*.test.tsx",
   ];
