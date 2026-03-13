@@ -11,6 +11,7 @@ import type { Id } from "./_generated/dataModel";
 import { internalQuery, type QueryCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchUsers } from "./lib/batchHelpers";
+import { queryCalendarEventsByAttendeeInRange } from "./lib/calendarEventQueries";
 import { forbidden, notFound, validation } from "./lib/errors";
 import { isOrganizationAdmin, isOrganizationMember } from "./lib/organizationAccess";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
@@ -165,16 +166,7 @@ async function getUserEventsInRange(
       .take(MAX_PAGE_SIZE),
 
     // User is attendee
-    ctx.db
-      .query("calendarEvents")
-      .withIndex("by_attendee_start", (q) =>
-        q
-          // biome-ignore lint/suspicious/noExplicitAny: userId cast needed for strict types vs index query
-          .eq("attendeeIds", userId as any)
-          .gte("startTime", startDate)
-          .lte("startTime", endDate),
-      )
-      .take(MAX_PAGE_SIZE),
+    queryCalendarEventsByAttendeeInRange(ctx, userId, startDate, endDate),
   ]);
 
   let attendingEvents = attendingEventsResult;
