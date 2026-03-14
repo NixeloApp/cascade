@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { Plus, Search, SearchX } from "@/lib/icons";
+import { Plus, SearchX } from "@/lib/icons";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/issues/")({
   component: AllIssuesPage,
@@ -74,10 +74,8 @@ function AllIssuesPage() {
 
       {/* Filters & Search */}
       <Flex gap="md" className="mb-6 bg-ui-bg p-4 rounded-lg border border-ui-border">
-        <FlexItem flex="1" className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ui-text-tertiary pointer-events-none" />
+        <FlexItem flex="1">
           <Input
-            type="text"
             placeholder="Search issues..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

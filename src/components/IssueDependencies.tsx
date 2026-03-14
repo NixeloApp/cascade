@@ -283,7 +283,6 @@ export function IssueDependencies({ issueId }: IssueDependenciesProps) {
             {/* Search Issues */}
             <Input
               label="Search Issue"
-              type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Type to search..."

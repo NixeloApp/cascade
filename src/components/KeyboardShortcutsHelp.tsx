@@ -16,8 +16,8 @@ import { Card } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import { EmptyState } from "./ui/EmptyState";
 import { Flex } from "./ui/Flex";
+import { Input } from "./ui/Input";
 import { KeyBadge, ShortcutHint } from "./ui/KeyboardShortcut";
-import { SearchField } from "./ui/SearchField";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
@@ -285,7 +285,8 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
     >
       <Stack gap="md">
         <Card recipe="overlayInset" padding="md">
-          <SearchField
+          <Input
+            variant="search"
             placeholder="Search shortcuts..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

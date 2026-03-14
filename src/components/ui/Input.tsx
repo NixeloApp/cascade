@@ -3,10 +3,11 @@
  *
  * Text input with variant styling and optional addons.
  * Supports error states, search styling, and ghost variants.
- * Includes InputWithLabel helper for form fields.
+ * variant="search" and variant="filter" automatically include the search icon.
  */
 
 import { cva, type VariantProps } from "class-variance-authority";
+import { Search } from "lucide-react";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Typography } from "./Typography";
@@ -19,7 +20,7 @@ const inputVariants = cva(
         default: "bg-transparent text-ui-text border-ui-border",
         search: "bg-ui-bg-soft text-ui-text pl-9 border-ui-border",
         filter:
-          "border-ui-border/45 bg-transparent text-ui-text-secondary placeholder:text-ui-text-tertiary hover:border-ui-border/60 focus-visible:border-ui-border-secondary focus-visible:bg-ui-bg-elevated/80 sm:border-ui-border/60 sm:bg-ui-bg-soft sm:text-ui-text",
+          "pl-7 border-ui-border/45 bg-transparent text-ui-text-secondary placeholder:text-ui-text-tertiary hover:border-ui-border/60 focus-visible:border-ui-border-secondary focus-visible:bg-ui-bg-elevated/80 sm:pl-8 sm:border-ui-border/60 sm:bg-ui-bg-soft sm:text-ui-text",
         ghost: "border-transparent bg-transparent text-ui-text hover:bg-ui-bg-secondary",
         inlineEdit:
           "border-transparent bg-transparent text-ui-text hover:bg-ui-bg-hover hover:border-ui-border focus-visible:border-ui-border focus-visible:bg-ui-bg",
@@ -38,6 +39,9 @@ const inputVariants = cva(
     },
   },
 );
+
+/** Variants that automatically include a search icon */
+const ICON_VARIANTS = new Set(["search", "filter"]);
 
 export interface InputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size">,
@@ -83,10 +87,22 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       .filter(Boolean)
       .join(" ");
 
+    const hasIcon = ICON_VARIANTS.has(variant ?? "");
+    const isFilter = variant === "filter";
+
     return (
-      <div className="w-full">
+      <div className={cn("w-full", hasIcon && "relative")}>
+        {hasIcon && (
+          <Search
+            className={cn(
+              "pointer-events-none absolute top-1/2 -translate-y-1/2 text-ui-text-tertiary",
+              isFilter ? "left-2 h-3.5 w-3.5 sm:h-4 sm:w-4" : "left-3 h-4 w-4",
+            )}
+            aria-hidden="true"
+          />
+        )}
         <input
-          type={type}
+          type={hasIcon ? "search" : type}
           id={inputId}
           className={cn(
             inputVariants({ variant: error ? "error" : variant, inputSize }),

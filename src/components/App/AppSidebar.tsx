@@ -175,6 +175,7 @@ function WorkspacesSectionContent({
         <li className="list-none">
           <Card variant="ghost" padding="xs">
             <Input
+              variant="search"
               value={searchValue}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder="Search workspaces"
@@ -271,6 +272,7 @@ function DocumentsSectionContent({
         <li className="list-none">
           <Card variant="ghost" padding="xs">
             <Input
+              variant="search"
               value={searchValue}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder="Search documents"
