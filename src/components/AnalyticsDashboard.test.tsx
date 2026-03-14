@@ -1,5 +1,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import { MINUTE } from "@convex/lib/timeUtils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@/test/custom-render";
 import { AnalyticsDashboard } from "./AnalyticsDashboard";
@@ -49,7 +50,7 @@ const mockActivity = [
     issueId: "issue1" as Id<"issues">,
     userId: "user1" as Id<"users">,
     action: "created",
-    _creationTime: Date.now() - 1000 * 60 * 5, // 5 mins ago
+    _creationTime: Date.now() - 5 * MINUTE,
     userName: "Alice",
     userImage: undefined,
     issueKey: "PROJ-1",
@@ -61,7 +62,7 @@ const mockActivity = [
     userId: "user2" as Id<"users">,
     action: "updated",
     field: "status",
-    _creationTime: Date.now() - 1000 * 60 * 10, // 10 mins ago
+    _creationTime: Date.now() - 10 * MINUTE,
     userName: "Bob",
     userImage: undefined,
     issueKey: "PROJ-2",
