@@ -53,25 +53,19 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
 
               <Grid cols={1} colsSm={3} gap="md" className="mt-6 max-w-3xl">
                 <Card recipe="authFeatureTile" padding="md">
-                  <Typography variant="eyebrow" color="tertiary" className="tracking-[0.18em]">
-                    Search
-                  </Typography>
+                  <Typography variant="pageHeaderEyebrow">Search</Typography>
                   <Typography variant="h4" className="mt-2">
                     Omnibox
                   </Typography>
                 </Card>
                 <Card recipe="authFeatureTile" padding="md">
-                  <Typography variant="eyebrow" color="tertiary" className="tracking-[0.18em]">
-                    Plan
-                  </Typography>
+                  <Typography variant="pageHeaderEyebrow">Plan</Typography>
                   <Typography variant="h4" className="mt-2">
                     Boards
                   </Typography>
                 </Card>
                 <Card recipe="authFeatureTile" padding="md">
-                  <Typography variant="eyebrow" color="tertiary" className="tracking-[0.18em]">
-                    Deliver
-                  </Typography>
+                  <Typography variant="pageHeaderEyebrow">Deliver</Typography>
                   <Typography variant="h4" className="mt-2">
                     Clients
                   </Typography>

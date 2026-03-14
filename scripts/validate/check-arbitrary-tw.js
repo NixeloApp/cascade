@@ -8,26 +8,26 @@ import fs from "node:fs";
 import path from "node:path";
 import { ROOT, walkDir } from "./utils.js";
 
-// Skip these files entirely (demo/test files)
-const SKIP_FILES = [/\.stories\.tsx$/, /\.test\.tsx$/, /\.spec\.tsx$/];
+// Skip these files entirely (demo/test files and ui primitives)
+const SKIP_FILES = [
+  /\.stories\.tsx$/,
+  /\.test\.tsx$/,
+  /\.spec\.tsx$/,
+  /src\/components\/ui\//, // UI primitives are the owned boundary for tokens
+];
 
-// Allow these specific patterns (Radix runtime vars, CSS selectors, one-offs)
+// Allow these specific patterns (Radix runtime vars, CSS selectors, dynamic values)
+// NOTE: Keep this list minimal. If you need to add a pattern, consider defining a token instead.
 const ALLOWED_PATTERNS = [
-  /var\(--radix-/, // Radix UI dynamic vars
+  /var\(--radix-/, // Radix UI dynamic vars (runtime-computed)
   /var\(--scale-/, // Scale CSS vars from theme
   /\[&>.*?\]:/, // Tailwind child selectors [&>svg]:
   /\[&~.*?\]:/, // Tailwind sibling selectors [&~*]:
   /\[perspective:/, // 3D perspective (valid CSS-in-TW)
-  /rounded-\[inherit\]/, // Inherit border-radius
-  /top-\[60%\]/, // NavigationMenu indicator position
-  /scale-\[0\.9[0-9]\]/, // Active/press scale states (0.95-0.99)
-  /max-h-\[\d+vh\]/, // Panel/modal heights (industry standard - no tokens needed)
-  /max-w-\[calc\(100vw/, // Mobile-friendly width with gutters
-  /min-h-\[calc\(100vh/, // Viewport-based min-heights (auth/landing pages)
+  /rounded-\[inherit\]/, // Inherit border-radius (dynamic)
   /grid-cols-\[/, // Custom grid column layouts (design-specific)
-  /shadow-\[\d+_\d+px_\d+px_rgba/, // Complex drop shadows with rgba (landing page)
-  /shadow-\[inset_/, // Inset shadows (subtle highlights)
-  /tracking-\[0\.\d+em\]/, // Precise letter-spacing for design details
+  /shadow-\[inset_/, // Inset shadows (CSS limitation - no token equivalent)
+  /max-w-\[calc\(100vw/, // Mobile-friendly width with viewport gutters (responsive pattern)
 ];
 
 export function run() {
