@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { Filter, Plus, Search, SearchX } from "@/lib/icons";
+import { Plus, Search, SearchX } from "@/lib/icons";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/issues/")({
   component: AllIssuesPage,

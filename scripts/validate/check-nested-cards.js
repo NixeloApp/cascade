@@ -1,10 +1,9 @@
 /**
- * CHECK: Nested Card consistency
- * Detects Cards nested inside other Cards that don't use appropriate visual treatment.
- * Nested cards should use:
- * - A recipe (for semantic nesting)
- * - variant="flat" or variant="ghost" (for softer appearance)
- * - radius="md" or smaller (to differentiate from parent)
+ * CHECK: Nested Cards (banned)
+ * Cards inside Cards is an anti-pattern. Use proper semantic components instead:
+ * - Headers/dividers: use a div with border-b or a Separator
+ * - List items: use a div with bg styling or a dedicated ListItem
+ * - Sections: restructure to avoid nesting, or use a recipe on a div
  */
 
 import fs from "node:fs";
@@ -12,40 +11,92 @@ import path from "node:path";
 import ts from "typescript";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
-// Directories to skip entirely
+// ============================================================================
+// Configuration
+// ============================================================================
+
 const IGNORE_DIRS = ["src/lib", "src/components/ui"];
 
 // Files with known nested Card issues - baseline to track and fix over time
 // These are pre-existing violations; new violations will fail CI
 const BASELINE_FILES = new Set([
+  "src/components/ActivityFeed.tsx",
+  "src/components/Admin/HourComplianceDashboard.tsx",
   "src/components/Admin/IpRestrictionsSettings.tsx",
   "src/components/Admin/UserTypeManager.tsx",
+  "src/components/AdvancedSearchModal/FilterCheckboxGroup.tsx",
+  "src/components/AI/AIChat.tsx",
+  "src/components/Analytics/RecentActivity.tsx",
+  "src/components/App/AppHeader.tsx",
+  "src/components/App/AppSidebar.tsx",
+  "src/components/Auth/AuthPageLayout.tsx",
+  "src/components/BulkOperationsBar.tsx",
+  "src/components/Calendar/EventDetailsModal.tsx",
+  "src/components/Calendar/RoadmapView.tsx",
+  "src/components/Calendar/shadcn-calendar/body/day/calendar-body-day-events.tsx",
+  "src/components/Calendar/shadcn-calendar/body/day/calendar-body-day.tsx",
+  "src/components/Calendar/shadcn-calendar/body/day/calendar-body-margin-day-margin.tsx",
+  "src/components/Calendar/shadcn-calendar/body/week/calendar-body-week.tsx",
+  "src/components/Calendar/shadcn-calendar/header/date/calendar-header-date-icon.tsx",
+  "src/components/ClientPortal/PortalTimeline.tsx",
+  "src/components/Dashboard/FocusZone.tsx",
   "src/components/Dashboard/MyIssuesList.tsx",
+  "src/components/Dashboard/RecentActivity.tsx",
+  "src/components/Dashboard/WorkspacesList.tsx",
+  "src/components/Dashboard.tsx",
+  "src/components/Documents/DocumentSidebar.tsx",
+  "src/components/ErrorBoundary.tsx",
+  "src/components/GlobalSearch.tsx",
+  "src/components/InboxList.tsx",
+  "src/components/Invoices/InvoiceEditor.tsx",
+  "src/components/Invoices/InvoicePdfTemplate.tsx",
   "src/components/IssueDependencies.tsx",
+  "src/components/IssuesCalendarView.tsx",
+  "src/components/Kanban/KanbanColumn.tsx",
+  "src/components/KanbanBoard.tsx",
+  "src/components/KeyboardShortcutsHelp.tsx",
   "src/components/LabelsManager.tsx",
+  "src/components/Landing/AIFeatureDemo.tsx",
+  "src/components/Landing/FinalCTASection.tsx",
+  "src/components/Landing/NavHeader.tsx",
+  "src/components/Landing/ProductShowcase.tsx",
+  "src/components/layout/PageHeader.tsx",
+  "src/components/Onboarding/FeatureHighlights.tsx",
+  "src/components/Onboarding/InvitedWelcome.tsx",
+  "src/components/Onboarding/LeadOnboarding.tsx",
+  "src/components/Onboarding/MemberOnboarding.tsx",
   "src/components/Onboarding/OnboardingChecklist.tsx",
+  "src/components/Onboarding/RoleSelector.tsx",
+  "src/components/Plate/MentionInputElement.tsx",
   "src/components/PlateEditor.tsx",
   "src/components/ProjectSettings/DangerZone.tsx",
   "src/components/ProjectSettings/LabelSettings.tsx",
   "src/components/ProjectSettings/MemberManagement.tsx",
   "src/components/ProjectSettings/WorkflowSettings.tsx",
+  "src/components/ProjectsList.tsx",
+  "src/components/RoadmapView.tsx",
   "src/components/Settings/GitHubIntegration.tsx",
   "src/components/Settings/GoogleCalendarIntegration.tsx",
+  "src/components/Settings/NotificationsTab.tsx",
   "src/components/Settings/OfflineTab.tsx",
   "src/components/Settings/ProfileContent.tsx",
+  "src/components/Settings/PumbleIntegration.tsx",
   "src/components/Settings/SlackIntegration.tsx",
   "src/components/Settings/TwoFactorSettings.tsx",
+  "src/components/Sidebar/SidebarTeamItem.tsx",
+  "src/components/TimeTracker/BillingReport.tsx",
   "src/components/TimeTracker/Timesheet.tsx",
   "src/components/TimeTracker.tsx",
+  "src/components/UserActivityFeed.tsx",
+  "src/components/VersionHistory.tsx",
   "src/components/Webhooks/WebhookLogs.tsx",
   "src/routes/_auth/_app/$orgSlug/clients/index.tsx",
+  "src/routes/_auth/_app/$orgSlug/workspaces/index.tsx",
 ]);
 
-// Variants that are appropriate for nested cards (softer appearance)
-const NESTED_CARD_VARIANTS = new Set(["flat", "ghost", "soft"]);
-
-// Radius values appropriate for nested cards (smaller than default lg)
-const NESTED_CARD_RADII = new Set(["none", "sm", "md"]);
+// ============================================================================
+// Main
+// ============================================================================
 
 export function run() {
   const SRC_DIR = path.join(ROOT, "src");
@@ -62,52 +113,10 @@ export function run() {
     errorCount++;
   }
 
-  /** Extract string value from a JSX attribute */
-  function getAttributeValue(node, attrName) {
-    const attr = node.attributes.properties.find(
-      (p) => ts.isJsxAttribute(p) && p.name.getText() === attrName,
-    );
-    if (!attr?.initializer) return null;
-
-    if (ts.isStringLiteral(attr.initializer)) {
-      return attr.initializer.text;
-    }
-    if (
-      ts.isJsxExpression(attr.initializer) &&
-      attr.initializer.expression &&
-      ts.isStringLiteral(attr.initializer.expression)
-    ) {
-      return attr.initializer.expression.text;
-    }
-    return null;
-  }
-
-  /** Check if a JSX attribute exists (regardless of value) */
-  function hasAttribute(node, attrName) {
-    return node.attributes.properties.some(
-      (p) => ts.isJsxAttribute(p) && p.name.getText() === attrName,
-    );
-  }
-
-  /** Check if a nested Card has appropriate visual differentiation */
-  function hasNestedCardTreatment(jsxNode) {
-    const variant = getAttributeValue(jsxNode, "variant");
-    const radius = getAttributeValue(jsxNode, "radius");
-    const hasRecipe = hasAttribute(jsxNode, "recipe");
-
-    if (hasRecipe) return true;
-    if (variant && NESTED_CARD_VARIANTS.has(variant)) return true;
-    if (radius && NESTED_CARD_RADII.has(radius)) return true;
-    return false;
-  }
-
   function checkFile(filePath) {
     const rel = relPath(filePath);
 
-    // Skip ignored directories
     if (IGNORE_DIRS.some((d) => rel.startsWith(d))) return;
-
-    // Skip baselined files (existing violations tracked separately)
     if (BASELINE_FILES.has(rel)) return;
 
     const content = fs.readFileSync(filePath, "utf-8");
@@ -120,12 +129,11 @@ export function run() {
         const tagName = opening.tagName.getText();
 
         if (tagName === "Card") {
-          // Check if this Card is nested
-          if (cardDepth > 0 && !hasNestedCardTreatment(opening)) {
+          if (cardDepth > 0) {
             reportError(
               filePath,
               opening,
-              `Nested Card without visual differentiation. Use recipe, variant="flat|ghost|soft", or radius="md|sm|none".`,
+              `Card inside Card is banned. Use a div with appropriate styling instead.`,
             );
           }
 
@@ -141,11 +149,11 @@ export function run() {
       if (ts.isJsxSelfClosingElement(node)) {
         const tagName = node.tagName.getText();
 
-        if (tagName === "Card" && cardDepth > 0 && !hasNestedCardTreatment(node)) {
+        if (tagName === "Card" && cardDepth > 0) {
           reportError(
             filePath,
             node,
-            `Nested Card without visual differentiation. Use recipe, variant="flat|ghost|soft", or radius="md|sm|none".`,
+            `Card inside Card is banned. Use a div with appropriate styling instead.`,
           );
         }
       }
