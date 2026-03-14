@@ -42,7 +42,6 @@ const ALLOWLIST = [
   "src/lib/formatting.test.ts",
   "convex/issues/roadmap.test.ts",
   "convex/issues/roadmapPagination.test.ts",
-  "convex/notificationsPerf.test.ts",
 ];
 
 export function run() {
