@@ -41,6 +41,7 @@
  *  37. Convex hooks            — validates Convex hook usage patterns
  *  38. Console usage           — bans console.* in production code
  *  39. Tech debt               — tracks TODO/FIXME/HACK/XXX comments
+ *  40. Nested Cards            — Cards nested inside other Cards need visual differentiation
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -253,6 +254,10 @@ const checks = [
   {
     name: "Tech debt",
     modulePath: new URL("./validate/check-tech-debt.js", import.meta.url).href,
+  },
+  {
+    name: "Nested Cards",
+    modulePath: new URL("./validate/check-nested-cards.js", import.meta.url).href,
   },
 ];
 

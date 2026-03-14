@@ -7,6 +7,13 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -59,18 +66,21 @@ function InvoicesListPage() {
         description="Create, track, and deliver agency invoices."
         actions={
           <Flex align="center" gap="sm">
-            <select
+            <Select
               value={status}
-              onChange={(event) => setStatus(event.target.value as InvoiceStatusFilter)}
-              className="h-10 rounded-lg border border-ui-border bg-ui-bg px-3 text-sm"
-              aria-label="Invoice status filter"
+              onValueChange={(value) => setStatus(value as InvoiceStatusFilter)}
             >
-              <option value="all">All statuses</option>
-              <option value="draft">Draft</option>
-              <option value="sent">Sent</option>
-              <option value="paid">Paid</option>
-              <option value="overdue">Overdue</option>
-            </select>
+              <SelectTrigger className="w-36" aria-label="Invoice status filter">
+                <SelectValue placeholder="All statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="sent">Sent</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+                <SelectItem value="overdue">Overdue</SelectItem>
+              </SelectContent>
+            </Select>
             <Button onClick={handleCreateDraft}>New draft</Button>
           </Flex>
         }

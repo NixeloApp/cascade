@@ -9,6 +9,14 @@ import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Input } from "@/components/ui/Input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Filter, Plus, Search, SearchX } from "@/lib/icons";
 
@@ -67,27 +75,30 @@ function AllIssuesPage() {
       {/* Filters & Search */}
       <Flex gap="md" className="mb-6 bg-ui-bg p-4 rounded-lg border border-ui-border">
         <FlexItem flex="1" className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ui-text-tertiary" />
-          <input
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ui-text-tertiary pointer-events-none" />
+          <Input
             type="text"
             placeholder="Search issues..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-ui-bg-secondary border border-ui-border rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
+            variant="search"
           />
         </FlexItem>
         <Flex gap="sm" align="center">
-          <Filter className="w-4 h-4 text-ui-text-tertiary" />
-          <select
-            value={statusFilter || ""}
-            onChange={(e) => setStatusFilter(e.target.value || undefined)}
-            className="bg-ui-bg-secondary border border-ui-border rounded-md px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
+          <Select
+            value={statusFilter || "all"}
+            onValueChange={(value) => setStatusFilter(value === "all" ? undefined : value)}
           >
-            <option value="">All Statuses</option>
-            <option value="todo">To Do</option>
-            <option value="inprogress">In Progress</option>
-            <option value="done">Done</option>
-          </select>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="todo">To Do</SelectItem>
+              <SelectItem value="inprogress">In Progress</SelectItem>
+              <SelectItem value="done">Done</SelectItem>
+            </SelectContent>
+          </Select>
         </Flex>
       </Flex>
 
