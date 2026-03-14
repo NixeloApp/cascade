@@ -1,4 +1,4 @@
-import { DAY, HOUR, MINUTE, SECOND } from "@convex/lib/timeUtils";
+import { DAY, HOUR, MINUTE } from "@convex/lib/timeUtils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   formatCurrency,
