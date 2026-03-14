@@ -39,7 +39,6 @@ const TIME_MULTIPLICATIONS = [
 const ALLOWLIST = [
   // Test files with existing violations - to be fixed incrementally
   "src/components/Calendar/RoadmapView.test.tsx",
-  "src/components/TimeTracking/TimerWidget.test.tsx",
   "src/lib/formatting.test.ts",
   "convex/issuesLoadMore.test.ts",
   "convex/issues/roadmap.test.ts",

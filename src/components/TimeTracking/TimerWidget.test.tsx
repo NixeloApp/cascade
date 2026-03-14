@@ -1,3 +1,4 @@
+import { HOUR, MINUTE, SECOND } from "@convex/lib/timeUtils";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@/test/custom-render";
@@ -39,7 +40,7 @@ describe("TimerWidget", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockRunningTimer = null;
-    mockStopTimer.mockResolvedValue({ duration: 3600 });
+    mockStopTimer.mockResolvedValue({ duration: 60 * 60 });
   });
 
   describe("No Running Timer", () => {
@@ -61,7 +62,7 @@ describe("TimerWidget", () => {
     beforeEach(() => {
       mockRunningTimer = {
         _id: "timer-1",
-        startTime: Date.now() - 3661000, // 1 hour, 1 minute, 1 second ago
+        startTime: Date.now() - HOUR - MINUTE - SECOND,
         description: "Working on feature",
       };
     });
@@ -94,7 +95,7 @@ describe("TimerWidget", () => {
     it("should display issue key when available", () => {
       mockRunningTimer = {
         _id: "timer-1",
-        startTime: Date.now() - 60000,
+        startTime: Date.now() - MINUTE,
         issue: { key: "PROJ-123" },
       };
 
