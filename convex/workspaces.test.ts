@@ -400,6 +400,101 @@ describe("Workspaces", () => {
     });
   });
 
+  describe("getBacklogIssues", () => {
+    it("should return unsprinted backlog issues beyond the initial filtered batch", async () => {
+      const t = convexTest(schema, modules);
+      const ownerId = await createTestUser(t);
+      const asOwner = asAuthenticatedUser(t, ownerId);
+
+      const { organizationId } = await asOwner.mutation(api.organizations.createOrganization, {
+        name: "Backlog organization",
+        timezone: "America/New_York",
+      });
+      const { workspaceId } = await asOwner.mutation(api.workspaces.create, {
+        organizationId,
+        name: "Backlog Workspace",
+        slug: "backlog-workspace",
+      });
+
+      const { teamId } = await asOwner.mutation(api.teams.createTeam, {
+        organizationId,
+        workspaceId,
+        name: "Backlog Team",
+        isPrivate: false,
+      });
+
+      await t.run(async (ctx) => {
+        const now = Date.now();
+        const projectId = await ctx.db.insert("projects", {
+          name: "Backlog Project",
+          key: "BLG",
+          organizationId,
+          workspaceId,
+          teamId,
+          ownerId,
+          createdBy: ownerId,
+          updatedAt: now,
+          boardType: "scrum",
+          workflowStates: [
+            { id: "todo", name: "To Do", category: "todo", order: 0 },
+            { id: "inprogress", name: "In Progress", category: "inprogress", order: 1 },
+            { id: "done", name: "Done", category: "done", order: 2 },
+          ],
+        });
+
+        for (let index = 0; index <= 60; index += 1) {
+          await ctx.db.insert("issues", {
+            projectId,
+            organizationId,
+            workspaceId,
+            teamId,
+            key: `BLG-DONE-${index + 1}`,
+            title: `Done issue ${index + 1}`,
+            type: "task",
+            status: "done",
+            priority: "medium",
+            reporterId: ownerId,
+            updatedAt: now + index + 1,
+            labels: [],
+            linkedDocuments: [],
+            attachments: [],
+            loggedHours: 0,
+            order: index,
+          });
+        }
+
+        await ctx.db.insert("issues", {
+          projectId,
+          organizationId,
+          workspaceId,
+          teamId,
+          key: "BLG-1",
+          title: "Backlog survivor",
+          type: "task",
+          status: "todo",
+          priority: "high",
+          reporterId: ownerId,
+          updatedAt: now,
+          labels: [],
+          linkedDocuments: [],
+          attachments: [],
+          loggedHours: 0,
+          order: 999,
+        });
+      });
+
+      const backlogIssues = await asOwner.query(api.workspaces.getBacklogIssues, {
+        workspaceId,
+        limit: 20,
+      });
+
+      expect(backlogIssues).toHaveLength(1);
+      expect(backlogIssues[0]?.key).toBe("BLG-1");
+      expect(backlogIssues[0]?.status).toBe("todo");
+      expect(backlogIssues[0]?.sprintId).toBeUndefined();
+    });
+  });
+
   describe("get", () => {
     it("should get workspace by ID", async () => {
       const t = convexTest(schema, modules);

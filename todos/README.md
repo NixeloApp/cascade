@@ -14,7 +14,7 @@
 ## Current Focus
 
 1. [query-filter-ordering.md](./query-filter-ordering.md)
-   - Fix the remaining two filter-after-limit query paths and add over-limit coverage.
+   - Fix the remaining one filter-after-limit query path and add over-limit coverage.
 2. [validator-exceptions-burndown.md](./validator-exceptions-burndown.md)
    - Remove the remaining validator allowlists and test-coverage baseline entries.
 3. [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md)
@@ -28,7 +28,7 @@
 
 | Priority | File | State | Next Action |
 |---|---|---|---|
-| P0 | [query-filter-ordering.md](./query-filter-ordering.md) | Active | Fix 2 remaining query-shape bugs |
+| P0 | [query-filter-ordering.md](./query-filter-ordering.md) | Active | Fix 1 remaining query-shape bug |
 | P0 | [validator-exceptions-burndown.md](./validator-exceptions-burndown.md) | Active | Burn down validator allowlists and the test-coverage baseline |
 | P0 | [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md) | Active | Run a bigger screenshot-driven visual facelift pass |
 | P1 | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | Finish deterministic E2E hardening |
@@ -63,7 +63,7 @@
 
 ## Suggested Execution Order
 
-1. Fix the 2 remaining issues in [query-filter-ordering.md](./query-filter-ordering.md).
+1. Fix the last remaining issue in [query-filter-ordering.md](./query-filter-ordering.md).
 2. Burn down [validator-exceptions-burndown.md](./validator-exceptions-burndown.md).
 3. Run the first pass in [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md).
 4. Keep [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) green while those changes land.

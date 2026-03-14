@@ -299,22 +299,33 @@ export const getBacklogIssues = workspaceQuery({
   handler: async (ctx, args) => {
     const rawLimit = args.limit ?? 200;
     const limit = Math.min(Math.max(rawLimit, 1), BOUNDED_LIST_LIMIT * 5);
+    const backlogIssues = [];
+    const batchSize = Math.min(Math.max(limit, 50), BOUNDED_LIST_LIMIT);
+    let cursor: string | null = null;
+    let batchCount = 0;
+    const MAX_BATCHES = 20;
 
-    // Fetch more issues than the limit to account for filtering
-    // This ensures we return enough backlog items even after filtering
-    const FETCH_MULTIPLIER = 3;
-    const fetchLimit = Math.min(limit * FETCH_MULTIPLIER, BOUNDED_LIST_LIMIT * 10);
+    while (backlogIssues.length < limit && batchCount < MAX_BATCHES) {
+      const batch = await ctx.db
+        .query("issues")
+        .withIndex("by_workspace_sprint_updated", (q) =>
+          q.eq("workspaceId", ctx.workspaceId).eq("sprintId", undefined),
+        )
+        .order("desc")
+        .filter(notDeleted)
+        .paginate({ numItems: batchSize, cursor });
 
-    const issues = await ctx.db
-      .query("issues")
-      .withIndex("by_workspace", (q) => q.eq("workspaceId", ctx.workspaceId))
-      .filter(notDeleted)
-      .take(fetchLimit);
+      backlogIssues.push(...batch.page.filter((issue) => issue.status !== "done"));
+      batchCount += 1;
 
-    return issues
-      .filter((issue) => issue.sprintId === undefined && issue.status !== "done")
-      .sort((a, b) => b.updatedAt - a.updatedAt)
-      .slice(0, limit);
+      if (batch.isDone) {
+        break;
+      }
+
+      cursor = batch.continueCursor;
+    }
+
+    return backlogIssues.slice(0, limit);
   },
 });
 

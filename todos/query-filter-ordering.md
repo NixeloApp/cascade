@@ -3,14 +3,9 @@
 > **Priority:** P0
 > **Status:** Active
 > **Last Updated:** 2026-03-13
-> **Verification Summary:** `2` verified unresolved query-shape issues remain.
+> **Verification Summary:** `1` verified unresolved query-shape issue remains.
 
 ## Remaining Queries
-
-### workspaces.ts - Backlog filter
-
-- `getBacklogIssues` takes a limit, then filters `sprintId === undefined && status !== "done"`.
-- Fix: add an index such as `by_workspace_sprint` or move the filter into the query path.
 
 ### workspaces.ts - Cross-team dependencies
 
