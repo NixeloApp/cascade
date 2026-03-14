@@ -3,6 +3,14 @@
 > **Last Updated:** 2026-03-14
 > **Scope:** open work only
 
+## Quick Links
+
+- [Status After `62ffb8a`](#status-after-62ffb8a)
+- [Current Focus](#current-focus)
+- [Open Tracks](#open-tracks)
+- [External Blockers](#external-blockers)
+- [Open Jules Issue](#open-jules-issue)
+
 ## Status After `62ffb8a`
 
 - The validator-hardening and manual-memoization sweep is landed, and the validator-specific todo docs were pruned in that commit.
