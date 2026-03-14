@@ -3,8 +3,8 @@ import type { QueryCtx } from "../_generated/server";
 import { MAX_PAGE_SIZE } from "./queryLimits";
 
 /**
- * Convex currently types multikey index equality too narrowly for array-backed keys.
- * Keep that library-boundary cast isolated here instead of leaking it into product queries.
+ * Query calendar events where user is an attendee within a time range.
+ * Uses time-based index + in-memory filter for reliable array membership check.
  */
 export async function queryCalendarEventsByAttendeeInRange(
   ctx: QueryCtx,
@@ -12,10 +12,10 @@ export async function queryCalendarEventsByAttendeeInRange(
   startDate: number,
   endDate: number,
 ) {
-  return await ctx.db
+  const candidates = await ctx.db
     .query("calendarEvents")
-    .withIndex("by_attendee_start", (q) =>
-      q.eq("attendeeIds", [attendeeId]).gte("startTime", startDate).lte("startTime", endDate),
-    )
+    .withIndex("by_start_time", (q) => q.gte("startTime", startDate).lte("startTime", endDate))
     .take(MAX_PAGE_SIZE);
+
+  return candidates.filter((event) => event.attendeeIds.includes(attendeeId));
 }
