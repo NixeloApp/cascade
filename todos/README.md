@@ -6,7 +6,7 @@
 ## Status After `62ffb8a`
 
 - The validator-hardening and manual-memoization sweep is landed, and the validator-specific todo docs were pruned in that commit.
-- The validator suite now passes `37/37` checks, but explicit exception debt still remains in test-coverage and validator allowlists.
+- The validator suite now passes `37/37` checks, but explicit exception debt still remains in test-coverage and time-constant allowlists.
 - The top execution queue is now: validator exception burndown, screenshot-driven facelift, and E2E reliability.
 - Slack org scoping stays active behind those tracks.
 - Everything else still open is blocked on external setup, environment access, or product/infra decisions.

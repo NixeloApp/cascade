@@ -32,14 +32,7 @@ const SKIP_PATTERNS = [
   /node_modules/, // Dependencies
 ];
 
-// Known allowlist - these have legitimate reasons for unused params
-// Each entry should have a comment explaining why
-const ALLOWLIST = new Set([
-  // CVA/cva variants extract props for styling but don't use them in render
-  // The color prop is destructured to prevent it from being spread to DOM
-  "src/components/ui/Card.tsx",
-  "src/components/ui/Alert.tsx",
-]);
+const ALLOWLIST = new Set([]);
 
 function isUnderscorePrefixed(name) {
   return /^_[a-zA-Z]\w*$/.test(name);
