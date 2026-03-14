@@ -221,6 +221,31 @@ export function run() {
           });
         }
       }
+
+      // .take() before in-memory .filter() - silently drops results
+      // Pattern: .take(N) followed by JS .filter() on the result
+      if (/\.take\s*\(/.test(line)) {
+        // Look ahead for in-memory filter within 5 lines
+        const lookAhead = lines.slice(i, Math.min(lines.length, i + 6)).join("\n");
+        // Match JS array .filter() - has arrow function or callback, not Convex query filter
+        // Convex .filter(q => q.eq(...)) vs JS .filter(item => item.x === y)
+        const hasInMemoryFilter =
+          /\)\s*;\s*\n.*return\s+\w+\.filter\s*\(/.test(lookAhead) ||
+          /\.filter\s*\(\s*\(?\s*\w+\s*\)?\s*=>\s*\w+\./.test(lookAhead) ||
+          /\.filter\s*\(\s*\(?\s*\w+\s*\)?\s*=>\s*!\w+/.test(lookAhead);
+        // Exclude Convex query .filter() which uses (q) => q.eq/q.and/etc
+        const isConvexFilter = /\.filter\s*\(\s*\(?\s*q\s*\)?\s*=>/.test(lookAhead);
+
+        if (hasInMemoryFilter && !isConvexFilter) {
+          issues.push({
+            type: "TAKE_BEFORE_FILTER",
+            line: lineNum,
+            code: line.trim(),
+            message:
+              ".take() before in-memory .filter() silently drops matching results - filter first or use .collect()",
+          });
+        }
+      }
     }
 
     return issues;

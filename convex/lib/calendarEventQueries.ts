@@ -4,7 +4,10 @@ import { MAX_PAGE_SIZE } from "./queryLimits";
 
 /**
  * Query calendar events where user is an attendee within a time range.
- * Uses time-based index + in-memory filter for reliable array membership check.
+ *
+ * Uses multikey index on attendeeIds - Convex creates an index entry per array element,
+ * so we query with the scalar attendeeId. The cast is required because Convex types
+ * expect array type but runtime correctly matches scalar against indexed elements.
  */
 export async function queryCalendarEventsByAttendeeInRange(
   ctx: QueryCtx,
@@ -12,10 +15,14 @@ export async function queryCalendarEventsByAttendeeInRange(
   startDate: number,
   endDate: number,
 ) {
-  const candidates = await ctx.db
-    .query("calendarEvents")
-    .withIndex("by_start_time", (q) => q.gte("startTime", startDate).lte("startTime", endDate))
-    .take(MAX_PAGE_SIZE);
+  // Convex multikey index: query scalar value against array field
+  // Type system expects array but runtime matches individual elements
+  const attendeeIdForIndex = attendeeId as unknown as Id<"users">[];
 
-  return candidates.filter((event) => event.attendeeIds.includes(attendeeId));
+  return await ctx.db
+    .query("calendarEvents")
+    .withIndex("by_attendee_start", (q) =>
+      q.eq("attendeeIds", attendeeIdForIndex).gte("startTime", startDate).lte("startTime", endDate),
+    )
+    .take(MAX_PAGE_SIZE);
 }
