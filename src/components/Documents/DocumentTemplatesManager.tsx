@@ -14,11 +14,14 @@ import { z } from "zod";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Dialog } from "@/components/ui/Dialog";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Icon } from "@/components/ui/Icon";
+import { IconButton } from "@/components/ui/IconButton";
 import { IconPicker, TemplateIcon, toTemplateIconString } from "@/components/ui/IconPicker";
 import { Label } from "@/components/ui/Label";
 import { SegmentedControl, SegmentedControlItem } from "@/components/ui/SegmentedControl";
@@ -26,7 +29,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { FormInput, FormSelect, FormTextarea } from "@/lib/form";
-import { FileText } from "@/lib/icons";
+import { FileText, Pencil, Trash2 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 
 // =============================================================================
@@ -207,13 +210,14 @@ export function DocumentTemplatesManager({
     <>
       <div>
         {/* Category Filter */}
-        <div className="mb-6">
+        <Card variant="ghost" className="mb-6">
           <SegmentedControl
             value={selectedCategory}
             onValueChange={(value: string) => {
               if (value) setSelectedCategory(value);
             }}
-            className="flex w-full flex-wrap justify-start"
+            wrap
+            className="w-full"
           >
             {categoryFilters.map((cat) => (
               <SegmentedControlItem key={cat.value} value={cat.value} className="whitespace-nowrap">
@@ -221,7 +225,7 @@ export function DocumentTemplatesManager({
               </SegmentedControlItem>
             ))}
           </SegmentedControl>
-        </div>
+        </Card>
 
         {!templates || templates.length === 0 ? (
           <EmptyState
@@ -241,16 +245,14 @@ export function DocumentTemplatesManager({
                 <Typography variant="label">Built-in Templates</Typography>
                 <Grid cols={1} colsMd={2} colsLg={3} gap="lg">
                   {builtInTemplates.map((template: Doc<"documentTemplates">) => (
-                    <Button
+                    <Card
                       key={template._id}
-                      variant="unstyled"
+                      recipe="templateBuiltInTile"
+                      padding="md"
                       onClick={() => onSelectTemplate?.(template._id)}
-                      className="p-4 bg-linear-to-br from-brand-subtle to-brand-subtle rounded-lg hover:shadow-card-hover transition-all text-left border-2 border-transparent hover:border-brand-muted h-auto"
                     >
                       <Flex align="start" gap="md">
-                        <Typography variant="h2" as="span">
-                          <TemplateIcon value={template.icon} className="w-7 h-7" />
-                        </Typography>
+                        <TemplateIcon value={template.icon} className="w-7 h-7" />
                         <FlexItem flex="1">
                           <Stack gap="xs">
                             <Typography variant="label">{template.name}</Typography>
@@ -269,7 +271,7 @@ export function DocumentTemplatesManager({
                           </Stack>
                         </FlexItem>
                       </Flex>
-                    </Button>
+                    </Card>
                   ))}
                 </Grid>
               </Stack>
@@ -281,91 +283,60 @@ export function DocumentTemplatesManager({
                 <Typography variant="label">Custom Templates</Typography>
                 <Grid cols={1} colsMd={2} colsLg={3} gap="lg">
                   {customTemplates.map((template: Doc<"documentTemplates">) => (
-                    <Card
-                      key={template._id}
-                      padding="md"
-                      className="bg-ui-bg-secondary hover:bg-ui-bg-tertiary transition-colors"
-                    >
+                    <Card key={template._id} recipe="templateCustomTile" padding="md">
                       <Flex align="start" gap="md">
-                        <Button
-                          variant="unstyled"
-                          onClick={() => onSelectTemplate?.(template._id)}
-                          className="flex items-start gap-3 flex-1 text-left h-auto"
-                        >
-                          <Typography variant="h3" as="span">
-                            <TemplateIcon value={template.icon} className="w-6 h-6" />
-                          </Typography>
-                          <FlexItem flex="1">
-                            <Stack gap="xs">
-                              <Typography variant="label">{template.name}</Typography>
-                              {template.description && (
-                                <Typography
-                                  variant="small"
-                                  color="secondary"
-                                  className="line-clamp-2"
-                                >
-                                  {template.description}
-                                </Typography>
-                              )}
-                              <Flex gap="sm">
-                                <Badge variant="neutral" size="md" className="capitalize">
-                                  {template.category}
-                                </Badge>
-                                {template.isPublic && (
-                                  <Badge variant="success" size="md">
-                                    Public
-                                  </Badge>
-                                )}
-                              </Flex>
-                            </Stack>
-                          </FlexItem>
-                        </Button>
-
-                        <Flex gap="xs">
+                        <FlexItem flex="1">
                           <Button
-                            variant="ghost"
+                            variant="unstyled"
+                            onClick={() => onSelectTemplate?.(template._id)}
+                            className="h-auto text-left"
+                          >
+                            <Flex align="start" gap="md">
+                              <TemplateIcon value={template.icon} className="w-6 h-6" />
+                              <FlexItem flex="1">
+                                <Stack gap="xs">
+                                  <Typography variant="label">{template.name}</Typography>
+                                  {template.description && (
+                                    <Typography
+                                      variant="small"
+                                      color="secondary"
+                                      className="line-clamp-2"
+                                    >
+                                      {template.description}
+                                    </Typography>
+                                  )}
+                                  <Flex gap="sm">
+                                    <Badge variant="neutral" size="md" className="capitalize">
+                                      {template.category}
+                                    </Badge>
+                                    {template.isPublic && (
+                                      <Badge variant="success" size="md">
+                                        Public
+                                      </Badge>
+                                    )}
+                                  </Flex>
+                                </Stack>
+                              </FlexItem>
+                            </Flex>
+                          </Button>
+                        </FlexItem>
+                        <Flex gap="xs">
+                          <IconButton
+                            variant="subtle"
                             size="sm"
                             onClick={() => startEdit(template)}
                             aria-label={`Edit template ${template.name}`}
-                            leftIcon={
-                              <svg
-                                aria-hidden="true"
-                                className="w-3 h-3"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                />
-                              </svg>
-                            }
-                          />
-                          <Button
-                            variant="ghost"
+                          >
+                            <Icon icon={Pencil} size="xs" aria-hidden="true" />
+                          </IconButton>
+                          <IconButton
+                            variant="danger"
                             size="sm"
                             onClick={() => setDeleteConfirm(template._id)}
                             aria-label={`Delete template ${template.name}`}
-                            leftIcon={
-                              <svg
-                                aria-hidden="true"
-                                className="w-3 h-3"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                />
-                              </svg>
-                            }
-                          />
+                          >
+                            <Icon icon={Trash2} size="xs" aria-hidden="true" />
+                          </IconButton>
                         </Flex>
                       </Flex>
                     </Card>
@@ -450,40 +421,40 @@ export function DocumentTemplatesManager({
 
               <form.Field name="isPublic">
                 {(field) => (
-                  <Flex align="center" gap="sm" className="pt-7">
-                    <input
-                      type="checkbox"
+                  <Card variant="ghost" className="pt-7">
+                    <Checkbox
                       id="isPublic"
                       checked={field.state.value as boolean}
-                      onChange={(e) => field.handleChange(e.target.checked)}
+                      onCheckedChange={(checked) => field.handleChange(checked === true)}
                       onBlur={field.handleBlur}
-                      className="w-4 h-4 text-brand bg-ui-bg border-ui-border rounded focus-visible:ring-2 focus-visible:ring-brand-ring"
+                      label="Make public (visible to all users)"
                     />
-                    <Label htmlFor="isPublic">Make public (visible to all users)</Label>
-                  </Flex>
+                  </Card>
                 )}
               </form.Field>
             </Grid>
 
-            <Flex justify="end" gap="sm" className="pt-4">
-              <form.Subscribe selector={(state) => state.isSubmitting}>
-                {(isSubmitting) => (
-                  <>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={resetForm}
-                      disabled={isSubmitting}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit" isLoading={isSubmitting}>
-                      {editingId ? "Update" : "Create"} Template
-                    </Button>
-                  </>
-                )}
-              </form.Subscribe>
-            </Flex>
+            <Card variant="ghost" className="pt-4">
+              <Flex justify="end" gap="sm">
+                <form.Subscribe selector={(state) => state.isSubmitting}>
+                  {(isSubmitting) => (
+                    <>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={resetForm}
+                        disabled={isSubmitting}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit" isLoading={isSubmitting}>
+                        {editingId ? "Update" : "Create"} Template
+                      </Button>
+                    </>
+                  )}
+                </form.Subscribe>
+              </Flex>
+            </Card>
           </Stack>
         </form>
       </Dialog>

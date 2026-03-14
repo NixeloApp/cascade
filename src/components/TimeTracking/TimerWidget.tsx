@@ -1,14 +1,14 @@
 import { api } from "@convex/_generated/api";
-import { Play } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { formatDuration, formatHours } from "@/lib/formatting";
+import { Play } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { Tooltip } from "../ui/Tooltip";
 import { Typography } from "../ui/Typography";
 import { TimeEntryModal } from "./TimeEntryModal";
@@ -57,13 +57,7 @@ export function TimerWidget() {
 
   if (runningTimer) {
     return (
-      <Card
-        recipe="controlStrip"
-        padding="sm"
-        className={cn(
-          "rounded-full border-brand-indigo-border/70 bg-linear-to-r from-brand-indigo-track via-brand-indigo-track to-brand-indigo-bg/70",
-        )}
-      >
+      <Card recipe="timerStripActive" padding="sm">
         <Flex align="center" gap="sm">
           <Flex align="center" gap="sm">
             {/* Pulsing dot - using output for semantics, spans for phrasing content */}
@@ -87,14 +81,13 @@ export function TimerWidget() {
               <Tooltip
                 content={runningTimer.issue ? runningTimer.issue.key : runningTimer.description}
               >
-                <Typography
-                  as="span"
-                  variant="caption"
-                  className="text-brand-indigo-text max-w-(--max-width-timer-description) truncate cursor-help outline-none focus-visible:outline-2 focus-visible:outline-brand-indigo-text focus-visible:outline-offset-1"
-                  tabIndex={0}
+                <Button
+                  variant="unstyled"
+                  size="none"
+                  className="max-w-(--max-width-timer-description) truncate text-brand-indigo-text cursor-help"
                 >
                   {runningTimer.issue ? runningTimer.issue.key : runningTimer.description}
-                </Typography>
+                </Button>
               </Tooltip>
             )}
           </Flex>
@@ -102,11 +95,8 @@ export function TimerWidget() {
           {/* Stop button */}
           <Button
             onClick={handleStop}
-            chrome="quiet"
+            chrome="timerStrip"
             chromeSize="compactPill"
-            className={cn(
-              "border-transparent px-3 text-xs text-brand-indigo-text hover:bg-brand-indigo-bg/10 hover:text-brand-indigo-text",
-            )}
             aria-label="Stop timer"
           >
             Stop
@@ -122,9 +112,8 @@ export function TimerWidget() {
         onClick={() => setShowTimeEntryModal(true)}
         chrome="framed"
         chromeSize="pill"
-        leftIcon={<Play className="w-4 h-4" fill="currentColor" />}
+        leftIcon={<Icon icon={Play} size="sm" fill="currentColor" />}
         aria-label="Start timer"
-        className="px-4"
       >
         <span className="hidden sm:inline">Start Timer</span>
       </Button>

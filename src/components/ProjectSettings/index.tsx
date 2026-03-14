@@ -72,17 +72,13 @@ export function ProjectSettings({
   ];
 
   return (
-    <Card
-      variant="ghost"
-      padding="none"
-      className="mx-auto max-w-3xl overflow-hidden sm:border sm:border-ui-border-secondary/85 sm:bg-linear-to-b sm:from-ui-bg sm:via-ui-bg-elevated/98 sm:to-ui-bg-secondary/50 sm:shadow-card"
-    >
+    <Card variant="outline" padding="none" className="mx-auto max-w-3xl overflow-hidden">
       <CardHeader
         title="Project Settings"
         description="Manage your project configuration and team"
-        className="border-b-0 px-1 py-1 sm:border-b sm:border-ui-border sm:px-6 sm:py-5"
+        className="border-ui-border-secondary/85"
       />
-      <CardBody className="p-0 sm:p-6">
+      <CardBody>
         <Stack gap="lg">{sections}</Stack>
       </CardBody>
     </Card>

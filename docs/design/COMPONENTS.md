@@ -4,6 +4,14 @@
 
 ---
 
+## Design-System Intent
+
+These components are not convenience wrappers. They are the migration surface for the product.
+
+- Prefer adding a prop or variant to an owned component over repeating the same spacing or shell classes across pages.
+- Prefer CVA when a component has multiple visual or interactive states.
+- Feature code may still use Tailwind for one-off composition, but repeated layout, shell, and control patterns should be absorbed here.
+
 ## Layout Components
 
 ### Flex
@@ -29,6 +37,7 @@
 **Anti-patterns:**
 - `<div className="flex">` - use Flex component
 - `className="gap-4"` on Flex - use `gap="md"` prop
+- Copying the same layout shell into multiple feature files instead of extending the primitive
 
 ---
 
@@ -69,6 +78,7 @@
 **Anti-patterns:**
 - Wrapping everything in cards - let content breathe
 - Nested cards - flatten hierarchy
+- Rebuilding the same bordered, rounded, hoverable surface with raw classes in multiple files
 
 ---
 
@@ -141,6 +151,7 @@
 **Anti-patterns:**
 - Button without accessible label for icon-only buttons
 - Using `<a>` styled as button - use Button with `asChild`
+- Adding new hover, active, or disabled styling in feature files instead of extending the component variant surface
 
 ---
 

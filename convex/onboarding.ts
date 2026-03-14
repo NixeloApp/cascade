@@ -16,6 +16,7 @@ import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { getOrganizationRole } from "./lib/organizationAccess";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { WEEK } from "./lib/timeUtils";
+import { RUNTIME_COLORS } from "./shared/colors";
 import { inviteRoles, personas } from "./validators";
 
 /** Check if email is a test email (@inbox.mailtrap.io) */
@@ -279,14 +280,14 @@ export const createSampleProject = authenticatedMutation({
     await ctx.db.insert("labels", {
       projectId,
       name: "urgent",
-      color: "#EF4444", // Red
+      color: RUNTIME_COLORS.DANGER,
       createdBy: ctx.userId,
     });
 
     await ctx.db.insert("labels", {
       projectId,
       name: "needs-review",
-      color: "#F59E0B", // Orange
+      color: RUNTIME_COLORS.WARNING,
       createdBy: ctx.userId,
     });
 

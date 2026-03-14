@@ -83,9 +83,9 @@ describe("RoadmapView Accessibility", () => {
     const timeScaleGroup = screen.getByRole("group", { name: "Time scale" });
     expect(timeScaleGroup).toBeInTheDocument();
 
-    // check default pressed button (Month)
-    // We query by aria-pressed="true" to verify state
-    const pressedButton = screen.getByRole("button", { pressed: true });
+    // check default selected control (Month)
+    const pressedButton = screen.getByRole("radio", { name: "Month" });
+    expect(pressedButton).toHaveAttribute("aria-checked", "true");
     expect(pressedButton).toHaveTextContent(/Month/);
 
     // check navigation buttons labels
@@ -112,11 +112,10 @@ describe("RoadmapView Accessibility", () => {
     // Click Week button
     // Finding button by text might be tricky due to ResponsiveText.
     // Query by text content within button
-    const weekButton = screen.getByText("Week").closest("button");
-    if (!weekButton) throw new Error("Week button not found");
+    const weekButton = screen.getByRole("radio", { name: "Week" });
     fireEvent.click(weekButton);
 
-    expect(weekButton).toHaveAttribute("aria-pressed", "true");
+    expect(weekButton).toHaveAttribute("aria-checked", "true");
     expect(screen.getByLabelText("Previous week")).toBeInTheDocument();
     expect(screen.getByLabelText("Next week")).toBeInTheDocument();
   });

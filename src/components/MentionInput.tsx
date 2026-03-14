@@ -11,14 +11,15 @@ import type { Id } from "@convex/_generated/dataModel";
 import { Eye, Pencil } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { cn } from "@/lib/utils";
 import { CommentRenderer } from "./CommentRenderer";
 import { Avatar } from "./ui/Avatar";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { Command, CommandItem, CommandList } from "./ui/Command";
 import { Flex } from "./ui/Flex";
 import { IconButton } from "./ui/IconButton";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
+import { Textarea } from "./ui/Textarea";
 import { Tooltip } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
 
@@ -196,8 +197,8 @@ export function MentionInput({
               variant={isPreviewMode ? "ghost" : "secondary"}
               size="sm"
               onClick={() => setIsPreviewMode(false)}
+              leftIcon={<Pencil size={14} />}
             >
-              <Pencil className="w-3.5 h-3.5 mr-1" />
               Write
             </Button>
             <Button
@@ -205,8 +206,8 @@ export function MentionInput({
               size="sm"
               onClick={() => setIsPreviewMode(true)}
               disabled={!value.trim()}
+              leftIcon={<Eye size={14} />}
             >
-              <Eye className="w-3.5 h-3.5 mr-1" />
               Preview
             </Button>
           </Flex>
@@ -219,7 +220,7 @@ export function MentionInput({
                 </IconButton>
               </PopoverTrigger>
             </Tooltip>
-            <PopoverContent side="bottom" align="end" className="w-auto p-2">
+            <PopoverContent recipe="reactionPicker" side="bottom" align="end" className="w-auto">
               <Flex gap="xs" wrap>
                 {COMMENT_EMOJIS.map((emoji) => (
                   <Tooltip key={emoji} content={emoji}>
@@ -228,7 +229,6 @@ export function MentionInput({
                       size="icon"
                       onClick={() => insertEmoji(emoji)}
                       aria-label={`Insert ${emoji}`}
-                      className="h-8 w-8"
                     >
                       {emoji}
                     </Button>
@@ -242,45 +242,38 @@ export function MentionInput({
 
       {/* Preview Mode */}
       {isPreviewMode ? (
-        <div
-          className={cn(
-            "w-full min-h-20 px-3 py-2 border border-ui-border rounded-lg bg-ui-bg-soft",
-            className,
-          )}
-        >
+        <Card recipe="overlayInset" padding="sm" className={className}>
           {value.trim() ? (
             <CommentRenderer content={value} />
           ) : (
             <Typography color="tertiary">Nothing to preview</Typography>
           )}
-        </div>
+        </Card>
       ) : (
-        <textarea
+        <Textarea
           ref={textareaRef}
+          variant="chatComposer"
           value={value}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           onClick={(event) => setCursorPosition(event.currentTarget.selectionStart)}
           onKeyUp={(event) => setCursorPosition(event.currentTarget.selectionStart)}
           placeholder={placeholder}
-          className={cn(
-            "w-full px-3 py-2 border border-ui-border rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring bg-ui-bg text-ui-text resize-none overflow-hidden",
-            className,
-          )}
+          className={className}
           rows={3}
         />
       )}
 
       {/* Mention Suggestions Dropdown */}
       {showSuggestions && filteredMembers.length > 0 && !isPreviewMode && (
-        <Command className="absolute bottom-full left-0 mb-2 w-64 border border-ui-border rounded-lg shadow-lg z-50">
+        <Command recipe="suggestionMenu" className="absolute bottom-full left-0 z-50 mb-2 w-64">
           <CommandList className="max-h-48">
             {filteredMembers.map((member, index) => (
               <CommandItem
                 key={member._id}
                 value={member.userName || ""}
                 onSelect={() => insertMention(member.userName || "Unknown", member.userId)}
-                className={cn(index === selectedIndex && "bg-ui-bg-hover")}
+                data-selected={index === selectedIndex ? "true" : undefined}
               >
                 <Avatar name={member.userName} size="md" />
                 <div className="min-w-0">

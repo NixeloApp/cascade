@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { IconButton } from "@/components/ui/IconButton";
 import { Tooltip } from "@/components/ui/Tooltip";
@@ -57,125 +58,122 @@ export function BoardToolbar({
   }
 
   return (
-    <Flex
-      align="center"
-      justify="between"
-      gap="xs"
-      className="pointer-events-auto absolute right-2 top-2 z-20 mb-0 w-fit max-w-full rounded-full border border-ui-border/75 bg-ui-bg-elevated/96 px-1.5 py-1 shadow-soft backdrop-blur-sm sm:static sm:mx-6 sm:mt-4 sm:mb-0 sm:max-w-none sm:gap-sm sm:rounded-2xl sm:border sm:border-ui-border/70 sm:bg-ui-bg-elevated sm:px-5 sm:pb-3 sm:pt-4 sm:shadow-soft sm:backdrop-blur-0"
+    <Card
+      recipe="floatingToolbar"
+      padding="none"
+      className="pointer-events-auto absolute right-2 top-2 z-20 mb-0 w-fit max-w-full px-1.5 py-1 sm:static sm:mx-6 sm:mt-4 sm:mb-0 sm:max-w-none sm:px-5 sm:pb-3 sm:pt-4"
     >
-      <div className="hidden sm:block">
-        <Typography variant="h2" className="text-xs font-semibold tracking-tight sm:text-lg">
-          <span className="sm:hidden">{sprintId ? "Sprint" : "Board"}</span>
-          <span className="hidden sm:inline">{sprintId ? "Sprint Board" : "Kanban Board"}</span>
-        </Typography>
-        <Typography variant="caption" className="mt-1 hidden sm:block">
-          Move work between stages, keep limits visible, and start new items from the right column.
-        </Typography>
-      </div>
-      {showControls && (
-        <Flex
-          align="center"
-          justify="end"
-          gap="xs"
-          className="w-auto shrink-0 justify-end sm:w-auto sm:justify-start sm:gap-2"
-        >
-          <Flex align="center" gap="xs" className="min-w-0 sm:hidden">
-            {mobileActions}
-          </Flex>
+      <Flex align="center" justify="between" gap="xs" gapSm="sm">
+        <div className="hidden sm:block">
+          <Typography variant="h2" className="text-xs font-semibold tracking-tight sm:text-lg">
+            <span className="sm:hidden">{sprintId ? "Sprint" : "Board"}</span>
+            <span className="hidden sm:inline">{sprintId ? "Sprint Board" : "Kanban Board"}</span>
+          </Typography>
+          <Typography variant="caption" className="mt-1 hidden sm:block">
+            Move work between stages, keep limits visible, and start new items from the right
+            column.
+          </Typography>
+        </div>
+        {showControls && (
+          <Flex align="center" justify="end" gap="xs" gapSm="sm" className="shrink-0">
+            <Flex align="center" gap="xs" className="min-w-0 sm:hidden">
+              {mobileActions}
+            </Flex>
 
-          {/* Undo/Redo buttons */}
-          <Flex align="center" gap="xs" className="hidden sm:flex mr-2 sm:mr-4">
-            <Tooltip content="Undo (Ctrl+Z)">
-              <IconButton
-                onClick={onUndo}
-                disabled={historyStack.length === 0}
-                aria-label="Undo (Ctrl+Z)"
-              >
-                <svg
-                  aria-hidden="true"
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
-                  />
-                </svg>
-              </IconButton>
-            </Tooltip>
-            <Tooltip content="Redo (Ctrl+Shift+Z)">
-              <IconButton
-                onClick={onRedo}
-                disabled={redoStack.length === 0}
-                aria-label="Redo (Ctrl+Shift+Z)"
-              >
-                <svg
-                  aria-hidden="true"
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 10H11a8 8 0 00-8 8v2m18-10l-6 6m6-6l-6-6"
-                  />
-                </svg>
-              </IconButton>
-            </Tooltip>
-          </Flex>
-
-          {/* View mode toggle (modal/peek) */}
-          <div className="hidden sm:block">
-            <ViewModeToggle />
-          </div>
-
-          {/* Display properties selector */}
-          {displayOptions && onDisplayOptionsChange && (
-            <div className="hidden sm:block">
-              <DisplayPropertiesSelector value={displayOptions} onChange={onDisplayOptionsChange} />
+            {/* Undo/Redo buttons */}
+            <div className="mr-2 hidden sm:block sm:mr-4">
+              <Flex align="center" gap="xs">
+                <Tooltip content="Undo (Ctrl+Z)">
+                  <IconButton
+                    onClick={onUndo}
+                    disabled={historyStack.length === 0}
+                    aria-label="Undo (Ctrl+Z)"
+                  >
+                    <svg
+                      aria-hidden="true"
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                      />
+                    </svg>
+                  </IconButton>
+                </Tooltip>
+                <Tooltip content="Redo (Ctrl+Shift+Z)">
+                  <IconButton
+                    onClick={onRedo}
+                    disabled={redoStack.length === 0}
+                    aria-label="Redo (Ctrl+Shift+Z)"
+                  >
+                    <svg
+                      aria-hidden="true"
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 10H11a8 8 0 00-8 8v2m18-10l-6 6m6-6l-6-6"
+                      />
+                    </svg>
+                  </IconButton>
+                </Tooltip>
+              </Flex>
             </div>
-          )}
 
-          {/* Swimlane selector */}
-          {onSwimlanGroupByChange && (
+            {/* View mode toggle (modal/peek) */}
             <div className="hidden sm:block">
-              <SwimlanSelector value={swimlaneGroupBy} onChange={onSwimlanGroupByChange} />
+              <ViewModeToggle />
             </div>
-          )}
 
-          {/* Selection mode toggle */}
-          <IconButton
-            variant={selectionMode ? "brand" : "solid"}
-            size="xs"
-            onClick={onToggleSelectionMode}
-            aria-label={selectionMode ? "Exit selection mode" : "Enable selection mode"}
-            className="sm:hidden"
-          >
-            <CheckSquare className="h-3.5 w-3.5" />
-          </IconButton>
-          <Button
-            variant={selectionMode ? "primary" : "outline"}
-            size="sm"
-            onClick={onToggleSelectionMode}
-            aria-label={selectionMode ? "Exit selection mode" : "Enable selection mode"}
-            className={cn(
-              "hidden sm:inline-flex",
-              selectionMode
-                ? "shadow-soft"
-                : "border-ui-border sm:bg-ui-bg-elevated sm:text-ui-text",
+            {/* Display properties selector */}
+            {displayOptions && onDisplayOptionsChange && (
+              <div className="hidden sm:block">
+                <DisplayPropertiesSelector
+                  value={displayOptions}
+                  onChange={onDisplayOptionsChange}
+                />
+              </div>
             )}
-          >
-            <span>{selectionMode ? "Exit Selection" : "Select Multiple"}</span>
-          </Button>
-        </Flex>
-      )}
-    </Flex>
+
+            {/* Swimlane selector */}
+            {onSwimlanGroupByChange && (
+              <div className="hidden sm:block">
+                <SwimlanSelector value={swimlaneGroupBy} onChange={onSwimlanGroupByChange} />
+              </div>
+            )}
+
+            {/* Selection mode toggle */}
+            <IconButton
+              variant={selectionMode ? "brand" : "solid"}
+              size="xs"
+              onClick={onToggleSelectionMode}
+              aria-label={selectionMode ? "Exit selection mode" : "Enable selection mode"}
+              className="sm:hidden"
+            >
+              <CheckSquare className="h-3.5 w-3.5" />
+            </IconButton>
+            <Button
+              variant={selectionMode ? "primary" : "outline"}
+              size="sm"
+              onClick={onToggleSelectionMode}
+              aria-label={selectionMode ? "Exit selection mode" : "Enable selection mode"}
+              className={cn("hidden sm:inline-block", selectionMode && "shadow-soft")}
+            >
+              <span>{selectionMode ? "Exit Selection" : "Select Multiple"}</span>
+            </Button>
+          </Flex>
+        )}
+      </Flex>
+    </Card>
   );
 }

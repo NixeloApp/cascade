@@ -80,6 +80,8 @@ Use components from `src/components/ui/` instead of raw HTML:
 - Use `<Flex gap="sm">` instead of `className="gap-2"`. Available sizes: `none`, `xs`, `sm`, `md`, `lg`, `xl`, `2xl`.
 - Use `<Typography>` instead of raw `<p>`, `<h1>`–`<h6>` tags.
 - Use `cn()` from `@/lib/utils` for conditional class merging. Never use template literals or string concatenation for className.
+- Raw Tailwind in routes and feature composition is allowed, but discouraged as a long-term API. If spacing, shells, or states repeat, move them behind an owned component or CVA variant.
+- Prefer extending the owning primitive over importing another component's variant helper or rebuilding the same surface locally.
 
 ## UI Patterns
 

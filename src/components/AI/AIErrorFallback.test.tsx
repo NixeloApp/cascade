@@ -60,6 +60,19 @@ describe("AIErrorFallback", () => {
   });
 
   describe("Error Details", () => {
+    it("should show error details in development when error provided", () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = "development";
+
+      render(<AIErrorFallback error={new Error("Test error")} />);
+
+      expect(screen.getByText("Error Details")).toBeInTheDocument();
+      expect(screen.getByText("Development stack trace")).toBeInTheDocument();
+      expect(screen.getByText(/Test error/)).toBeInTheDocument();
+
+      process.env.NODE_ENV = originalEnv;
+    });
+
     it("should not show error details when no error provided", () => {
       render(<AIErrorFallback />);
 

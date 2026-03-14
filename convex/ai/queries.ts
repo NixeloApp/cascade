@@ -27,18 +27,18 @@ export const getUserChats = authenticatedQuery({
     projectId: v.optional(v.id("projects")),
   },
   handler: async (ctx, args) => {
-    const chats = await ctx.db
-      .query("aiChats")
-      .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
-      .take(MAX_CHATS);
+    let query = ctx.db.query("aiChats").withIndex("by_user", (q) => q.eq("userId", ctx.userId));
 
-    // Filter by project if specified
-    const filtered = args.projectId
-      ? chats.filter((chat) => chat.projectId === args.projectId)
-      : chats;
+    // Filter by project if specified (at query level)
+    if (args.projectId) {
+      const projectId = args.projectId;
+      query = query.filter((q) => q.eq(q.field("projectId"), projectId));
+    }
+
+    const chats = await query.take(MAX_CHATS);
 
     // Sort by most recent
-    return filtered.sort((a, b) => b.updatedAt - a.updatedAt);
+    return chats.sort((a, b) => b.updatedAt - a.updatedAt);
   },
 });
 
@@ -182,23 +182,28 @@ export const getProjectSuggestions = authenticatedQuery({
   handler: async (ctx, args) => {
     await assertCanAccessProject(ctx, args.projectId, ctx.userId);
 
-    const suggestions = await ctx.db
+    let query = ctx.db
       .query("aiSuggestions")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .take(MAX_SUGGESTIONS);
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId));
 
-    // Filter by type if specified
-    let filtered = args.suggestionType
-      ? suggestions.filter((s) => s.suggestionType === args.suggestionType)
-      : suggestions;
-
-    // Filter out responded suggestions unless requested
-    if (!args.includeResponded) {
-      filtered = filtered.filter((s) => !(s.accepted || s.dismissed));
+    // Filter by type if specified (at query level)
+    if (args.suggestionType) {
+      const suggestionType = args.suggestionType;
+      query = query.filter((q) => q.eq(q.field("suggestionType"), suggestionType));
     }
 
+    // Filter out responded suggestions unless requested (at query level)
+    // Use neq(true) instead of eq(false) because fields may be undefined for new suggestions
+    if (!args.includeResponded) {
+      query = query.filter((q) =>
+        q.and(q.neq(q.field("accepted"), true), q.neq(q.field("dismissed"), true)),
+      );
+    }
+
+    const suggestions = await query.take(MAX_SUGGESTIONS);
+
     // Sort by most recent
-    return filtered.sort((a, b) => b._creationTime - a._creationTime);
+    return suggestions.sort((a, b) => b._creationTime - a._creationTime);
   },
 });
 
@@ -212,25 +217,23 @@ export const getUsageStats = authenticatedQuery({
     endDate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    // Query usage records
-    const usage = await ctx.db
-      .query("aiUsage")
-      .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
-      .take(MAX_USAGE_RECORDS);
+    // Build query with all filters at query level
+    let query = ctx.db.query("aiUsage").withIndex("by_user", (q) => q.eq("userId", ctx.userId));
 
-    // Filter by project and date range
-    let filtered = usage;
     if (args.projectId) {
-      filtered = filtered.filter((u) => u.projectId === args.projectId);
+      const projectId = args.projectId;
+      query = query.filter((q) => q.eq(q.field("projectId"), projectId));
     }
     if (args.startDate !== undefined) {
       const startDate = args.startDate;
-      filtered = filtered.filter((u) => u._creationTime >= startDate);
+      query = query.filter((q) => q.gte(q.field("_creationTime"), startDate));
     }
     if (args.endDate !== undefined) {
       const endDate = args.endDate;
-      filtered = filtered.filter((u) => u._creationTime <= endDate);
+      query = query.filter((q) => q.lte(q.field("_creationTime"), endDate));
     }
+
+    const filtered = await query.take(MAX_USAGE_RECORDS);
 
     // Calculate aggregates
     const totalTokens = filtered.reduce((sum, u) => sum + u.totalTokens, 0);

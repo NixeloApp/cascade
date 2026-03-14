@@ -11,13 +11,14 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import type { WorkflowState } from "@convex/shared/types";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { memo } from "react";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import type { SwimlanConfig } from "@/lib/swimlane-utils";
 import { getSwimlanIssueCount } from "@/lib/swimlane-utils";
-import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { KanbanColumn } from "./KanbanColumn";
 
@@ -48,7 +49,7 @@ interface SwimlanRowProps {
   ) => void;
 }
 
-const SwimlanRowComponent = function SwimlanRow({
+export function SwimlanRow({
   config,
   issuesByStatus,
   workflowStates,
@@ -73,39 +74,40 @@ const SwimlanRowComponent = function SwimlanRow({
     onToggleCollapse(config.id);
   };
 
+  const swimlaneTitleStyle = config.color?.startsWith("#") ? { color: config.color } : undefined;
+  const swimlaneTitleClassName = !swimlaneTitleStyle && config.color ? config.color : undefined;
+
   return (
-    <div className="mb-4">
-      {/* Swimlane Header */}
+    <Stack gap="sm" className="mb-4">
       <Button
-        variant="ghost"
         onClick={handleToggle}
-        className="w-full justify-start gap-2 px-4 py-2 h-auto"
+        variant="unstyled"
+        chrome="swimlaneHeader"
+        chromeSize="swimlaneHeader"
         aria-expanded={!isCollapsed}
         aria-controls={`swimlane-${config.id}`}
       >
         {isCollapsed ? (
-          <ChevronRight className="w-4 h-4 text-ui-text-tertiary" />
+          <Icon icon={ChevronRight} size="sm" className="text-ui-text-tertiary" />
         ) : (
-          <ChevronDown className="w-4 h-4 text-ui-text-tertiary" />
+          <Icon icon={ChevronDown} size="sm" className="text-ui-text-tertiary" />
         )}
         <Typography
           variant="label"
-          className={cn("font-medium", config.color || "text-ui-text-secondary")}
+          color={!swimlaneTitleClassName && !swimlaneTitleStyle ? "secondary" : "auto"}
+          className={swimlaneTitleClassName}
+          style={swimlaneTitleStyle}
         >
           {config.name}
         </Typography>
-        <Badge variant="neutral" shape="pill" className="text-xs">
+        <Badge variant="neutral" shape="pill">
           {totalIssues}
         </Badge>
       </Button>
 
-      {/* Swimlane Content */}
       {!isCollapsed && (
-        <div id={`swimlane-${config.id}`} className="mt-2">
-          <Flex
-            direction="column"
-            className="lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6 px-4 lg:px-0 overflow-x-auto -webkit-overflow-scrolling-touch"
-          >
+        <Card id={`swimlane-${config.id}`} recipe="kanbanSwimlaneContent">
+          <Flex direction="column" directionMd="row" gap="xl">
             {workflowStates.map((state, columnIndex) => {
               const counts = statusCounts[state.id] || {
                 total: 0,
@@ -135,10 +137,8 @@ const SwimlanRowComponent = function SwimlanRow({
               );
             })}
           </Flex>
-        </div>
+        </Card>
       )}
-    </div>
+    </Stack>
   );
-};
-
-export const SwimlanRow = memo(SwimlanRowComponent);
+}

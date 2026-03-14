@@ -8,6 +8,7 @@
 
 import { format, isSameDay, isSameMonth } from "date-fns";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
+import { getCardRecipeClassName } from "@/components/ui/Card";
 import { Typography } from "@/components/ui/Typography";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
@@ -81,6 +82,8 @@ export function CalendarEvent({
 }): React.ReactElement {
   const { events, onEventClick, date } = useCalendarContext();
   const style = month ? {} : calculateEventPosition(event, events);
+  const eventRecipe = month ? "calendarEventMonth" : "calendarEventDay";
+  const eventLayoutRecipe = month ? "calendarEventMonthLayout" : "calendarEventDayLayout";
 
   const isEventInCurrentMonth = isSameMonth(event.start, date);
   const animationKey = `${event.id}-${isEventInCurrentMonth ? "current" : "adjacent"}`;
@@ -93,7 +96,7 @@ export function CalendarEvent({
           tabIndex={0}
           data-testid={TEST_IDS.CALENDAR.EVENT_ITEM}
           className={cn(
-            month ? "rounded-md px-1.5 py-1 shadow-sm" : "px-3 py-1.5 rounded-lg",
+            getCardRecipeClassName(eventRecipe),
             "truncate cursor-pointer transition-all duration-medium",
             colors.bg,
             colors.hover,
@@ -146,23 +149,14 @@ export function CalendarEvent({
           layoutId={`event-${animationKey}-${month ? "month" : "day"}`}
         >
           <motion.div
-            className={cn(
-              "w-full",
-              colors.text,
-              month
-                ? "flex flex-col items-start gap-0.5"
-                : "flex items-center justify-between gap-2",
-            )}
+            className={cn(getCardRecipeClassName(eventLayoutRecipe), colors.text)}
             layout="position"
           >
-            <Typography
-              variant="p"
-              className={cn("font-bold truncate", month && "w-full text-xs leading-tight")}
-            >
+            <Typography variant={month ? "calendarEventTitleMonth" : "calendarEventTitle"}>
               {event.title}
             </Typography>
             {!month && (
-              <Typography variant="small" className="text-sm">
+              <Typography variant="calendarEventTime">
                 <time dateTime={event.start.toISOString()}>{format(event.start, "h:mm a")}</time>
                 <span className="mx-1" aria-hidden="true">
                   -

@@ -13,8 +13,9 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { Archive } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
-import { Flex } from "./ui/Flex";
+import { Flex, FlexItem } from "./ui/Flex";
 import { Grid } from "./ui/Grid";
 import { Icon } from "./ui/Icon";
 import { Input } from "./ui/Input";
@@ -198,32 +199,33 @@ export function BulkOperationsBar({
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 bg-ui-bg-elevated border-t border-ui-border shadow-elevated z-30 animate-slide-up">
-        <div className="max-w-7xl mx-auto px-4 py-3">
+      <Card
+        recipe="bulkActionBar"
+        radius="none"
+        className="fixed right-0 bottom-0 left-0 z-30 animate-slide-up"
+      >
+        <Card recipe="bulkActionContent">
           <Flex align="center" justify="between" gap="lg">
-            {/* Selection Info */}
             <Flex align="center" gap="md">
               <Typography variant="label">
                 {count} issue{count !== 1 ? "s" : ""} selected
               </Typography>
-              <Button
-                variant="link"
-                size="sm"
-                onClick={onClearSelection}
-                className="text-ui-text-secondary hover:text-ui-text"
-              >
+              <Button chrome="quiet" chromeSize="compactPill" onClick={onClearSelection}>
                 Clear
               </Button>
             </Flex>
 
-            {/* Actions */}
             <Flex align="center" gap="sm" wrap>
               <Button variant="outline" size="sm" onClick={() => setShowActions(!showActions)}>
                 {showActions ? "Hide" : "Actions"}
               </Button>
 
-              <Button variant="secondary" size="sm" onClick={() => setArchiveConfirm(true)}>
-                <Icon icon={Archive} size="sm" className="mr-1" />
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setArchiveConfirm(true)}
+                leftIcon={<Icon icon={Archive} size="sm" />}
+              >
                 Archive
               </Button>
 
@@ -233,17 +235,15 @@ export function BulkOperationsBar({
             </Flex>
           </Flex>
 
-          {/* Expanded Actions */}
           {showActions && (
-            <Stack gap="md" className="mt-3 pt-3 border-t border-ui-border">
+            <Card recipe="bulkActionDetails">
               <Grid cols={1} colsSm={2} colsMd={3} colsLg={6} gap="md">
-                {/* Status */}
                 <Stack gap="xs">
                   <Typography as="label" htmlFor={statusId} variant="label" color="secondary">
                     Status
                   </Typography>
                   <Select onValueChange={handleUpdateStatus}>
-                    <SelectTrigger id={statusId} className="w-full">
+                    <SelectTrigger id={statusId}>
                       <SelectValue placeholder="Select status..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -256,13 +256,12 @@ export function BulkOperationsBar({
                   </Select>
                 </Stack>
 
-                {/* Priority */}
                 <Stack gap="xs">
                   <Typography as="label" htmlFor={priorityId} variant="label" color="secondary">
                     Priority
                   </Typography>
                   <Select onValueChange={handleUpdatePriority}>
-                    <SelectTrigger id={priorityId} className="w-full">
+                    <SelectTrigger id={priorityId}>
                       <SelectValue placeholder="Select priority..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -275,13 +274,12 @@ export function BulkOperationsBar({
                   </Select>
                 </Stack>
 
-                {/* Assignee */}
                 <Stack gap="xs">
                   <Typography as="label" htmlFor={assigneeId} variant="label" color="secondary">
                     Assignee
                   </Typography>
                   <Select onValueChange={handleAssign}>
-                    <SelectTrigger id={assigneeId} className="w-full">
+                    <SelectTrigger id={assigneeId}>
                       <SelectValue placeholder="Select assignee..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -295,13 +293,12 @@ export function BulkOperationsBar({
                   </Select>
                 </Stack>
 
-                {/* Sprint */}
                 <Stack gap="xs">
                   <Typography as="label" htmlFor={sprintId} variant="label" color="secondary">
                     Sprint
                   </Typography>
                   <Select onValueChange={handleMoveToSprint}>
-                    <SelectTrigger id={sprintId} className="w-full">
+                    <SelectTrigger id={sprintId}>
                       <SelectValue placeholder="Select sprint..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -315,56 +312,46 @@ export function BulkOperationsBar({
                   </Select>
                 </Stack>
 
-                {/* Start Date */}
                 <Stack gap="xs">
                   <Typography as="label" htmlFor={startDateId} variant="label" color="secondary">
                     Start Date
                   </Typography>
                   <Flex gap="sm">
-                    <Input
-                      id={startDateId}
-                      type="date"
-                      className="flex-1"
-                      onChange={(e) => handleUpdateStartDate(e.target.value)}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleClearStartDate}
-                      className="text-ui-text-secondary hover:text-ui-text"
-                    >
+                    <FlexItem flex="1">
+                      <Input
+                        id={startDateId}
+                        type="date"
+                        onChange={(e) => handleUpdateStartDate(e.target.value)}
+                      />
+                    </FlexItem>
+                    <Button chrome="quiet" chromeSize="compactPill" onClick={handleClearStartDate}>
                       Clear
                     </Button>
                   </Flex>
                 </Stack>
 
-                {/* Due Date */}
                 <Stack gap="xs">
                   <Typography as="label" htmlFor={dueDateId} variant="label" color="secondary">
                     Due Date
                   </Typography>
                   <Flex gap="sm">
-                    <Input
-                      id={dueDateId}
-                      type="date"
-                      className="flex-1"
-                      onChange={(e) => handleUpdateDueDate(e.target.value)}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleClearDueDate}
-                      className="text-ui-text-secondary hover:text-ui-text"
-                    >
+                    <FlexItem flex="1">
+                      <Input
+                        id={dueDateId}
+                        type="date"
+                        onChange={(e) => handleUpdateDueDate(e.target.value)}
+                      />
+                    </FlexItem>
+                    <Button chrome="quiet" chromeSize="compactPill" onClick={handleClearDueDate}>
                       Clear
                     </Button>
                   </Flex>
                 </Stack>
               </Grid>
-            </Stack>
+            </Card>
           )}
-        </div>
-      </div>
+        </Card>
+      </Card>
 
       {/* Archive Confirmation */}
       <ConfirmDialog

@@ -103,11 +103,13 @@ export function AdvancedSearchModal({
           <Button onClick={() => onOpenChange(false)} chrome="framed" chromeSize="compactPill">
             Close
           </Button>
-          <Flex align="center" gap="lg" className="hidden sm:inline-flex">
-            <ShortcutHint keys="up+down">Navigate</ShortcutHint>
-            <ShortcutHint keys="Enter">Select</ShortcutHint>
-            <ShortcutHint keys="Esc">Close</ShortcutHint>
-          </Flex>
+          <div className="hidden sm:block">
+            <Flex align="center" gap="lg" inline>
+              <ShortcutHint keys="up+down">Navigate</ShortcutHint>
+              <ShortcutHint keys="Enter">Select</ShortcutHint>
+              <ShortcutHint keys="Esc">Close</ShortcutHint>
+            </Flex>
+          </div>
         </>
       }
     >

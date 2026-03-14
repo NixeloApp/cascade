@@ -1,4 +1,6 @@
 import { useRef } from "react";
+import { Card } from "@/components/ui/Card";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useCalendarContext } from "../../calendar-context";
 import { useCalendarInitialScroll } from "../use-calendar-initial-scroll";
 import { CalendarBodyDayCalendar } from "./calendar-body-day-calendar";
@@ -14,21 +16,29 @@ export function CalendarBodyDay(): React.ReactElement {
   useCalendarInitialScroll(scrollRef, events, date, "day");
 
   return (
-    <div className="flex divide-x divide-ui-border flex-grow overflow-hidden bg-ui-bg">
-      <div className="flex flex-col flex-grow divide-y divide-ui-border overflow-hidden">
-        <div ref={scrollRef} className="flex flex-col flex-1 overflow-y-auto">
-          <div className="relative flex flex-1">
-            <CalendarBodyMarginDayMargin />
-            <div className="flex-1 border-l border-ui-border">
-              <CalendarBodyDayContent date={date} />
-            </div>
-          </div>
-        </div>
+    <Flex flex="1" className="overflow-hidden bg-ui-bg">
+      <Card recipe="calendarDayMainPanel" className="overflow-hidden">
+        <Flex direction="column" flex="1" className="overflow-hidden">
+          <Flex ref={scrollRef} direction="column" flex="1" className="overflow-y-auto">
+            <Flex flex="1" className="relative">
+              <CalendarBodyMarginDayMargin />
+              <Card recipe="calendarDayContentRail" className="overflow-hidden">
+                <CalendarBodyDayContent date={date} />
+              </Card>
+            </Flex>
+          </Flex>
+        </Flex>
+      </Card>
+      <div className="hidden lg:block">
+        <Card recipe="calendarDaySidebarShell" className="max-w-69 overflow-hidden">
+          <Flex direction="column" flex="1" className="overflow-hidden">
+            <CalendarBodyDayCalendar />
+            <FlexItem flex="1" className="overflow-y-auto">
+              <CalendarBodyDayEvents />
+            </FlexItem>
+          </Flex>
+        </Card>
       </div>
-      <div className="lg:flex hidden flex-col flex-grow divide-y divide-ui-border max-w-69 bg-ui-bg-secondary/30">
-        <CalendarBodyDayCalendar />
-        <CalendarBodyDayEvents />
-      </div>
-    </div>
+    </Flex>
   );
 }

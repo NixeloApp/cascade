@@ -18,6 +18,14 @@ import type { QueryCtx } from "../_generated/server";
 // Helper to wrap T into a TableInfo structure for FilterBuilder
 type TableInfoFor = GenericTableInfo;
 
+interface PaginatedSoftDeleteQuery<T extends GenericDocument> {
+  filter: (fn: (q: FilterBuilder<TableInfoFor>) => unknown) => PaginatedQueryResult<T>;
+}
+
+interface PaginatedQueryResult<T extends GenericDocument> {
+  paginate: (opts: PaginationOptions) => Promise<PaginationResult<T>>;
+}
+
 /**
  * Executes a paginated query with a mandatory soft-delete filter.
  *
@@ -37,29 +45,20 @@ type TableInfoFor = GenericTableInfo;
  * @example
  * const result = await fetchPaginatedQuery(ctx, {
  *   paginationOpts: { numItems: 10, cursor: args.cursor },
- *   query: (db) => db.query("issues").withIndex("by_project", q => q.eq("projectId", args.projectId))
+ *   buildQuery: (db) =>
+ *     db.query("issues").withIndex("by_project", q => q.eq("projectId", args.projectId))
  * });
  */
 export async function fetchPaginatedQuery<T extends GenericDocument>(
   ctx: QueryCtx,
   opts: {
     paginationOpts: PaginationOptions;
-
-    query: (db: QueryCtx["db"]) => unknown;
+    buildQuery: (db: QueryCtx["db"]) => unknown;
   },
 ): Promise<PaginationResult<T>> {
-  // Cast through unknown as the query builder types are complex and generic.
-  // We need to access the .filter() method which is present on Query but hard to type
-  // generically without losing the specific TableInfo.
-  const queryResult = opts.query(ctx.db) as unknown as {
-    filter: (fn: (q: FilterBuilder<TableInfoFor>) => unknown) => unknown;
-  };
-  return await (
-    queryResult
-      // Always filter out soft-deleted items.
-      // We check isDeleted != true to handle both explicit false and undefined (legacy data).
-      .filter((q: FilterBuilder<TableInfoFor>) => q.neq(q.field("isDeleted"), true)) as unknown as {
-      paginate: (opts: PaginationOptions) => Promise<PaginationResult<T>>;
-    }
-  ).paginate(opts.paginationOpts);
+  return await (opts.buildQuery(ctx.db) as PaginatedSoftDeleteQuery<T>)
+    // Always filter out soft-deleted items.
+    // We check isDeleted != true to handle both explicit false and undefined (legacy data).
+    .filter((q: FilterBuilder<TableInfoFor>) => q.neq(q.field("isDeleted"), true))
+    .paginate(opts.paginationOpts);
 }

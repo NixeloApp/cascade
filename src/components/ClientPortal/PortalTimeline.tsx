@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 
 interface PortalTimelineItem {
@@ -20,20 +21,24 @@ export function PortalTimeline({ items }: PortalTimelineProps) {
       <CardHeader>
         <CardTitle>Timeline</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2 pt-4">
+      <CardContent>
         {items.length === 0 ? (
           <Typography variant="small" color="secondary">
             No timeline events available.
           </Typography>
         ) : (
-          items.map((item) => (
-            <div key={item.id} className="rounded-lg border border-ui-border p-3">
-              <Typography variant="small">{item.label}</Typography>
-              <Typography variant="caption" color="tertiary">
-                {item.timestamp}
-              </Typography>
-            </div>
-          ))
+          <Stack gap="sm">
+            {items.map((item) => (
+              <Card key={item.id} recipe="portalTimelineEntry" padding="sm">
+                <Stack gap="xs">
+                  <Typography variant="small">{item.label}</Typography>
+                  <Typography variant="caption" color="tertiary">
+                    {item.timestamp}
+                  </Typography>
+                </Stack>
+              </Card>
+            ))}
+          </Stack>
         )}
       </CardContent>
     </Card>

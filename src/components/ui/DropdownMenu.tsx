@@ -7,6 +7,7 @@
  */
 
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
+import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { Check, ChevronRight, Circle } from "@/lib/icons";
 import { cn } from "@/lib/utils";
@@ -78,22 +79,49 @@ const DropdownMenuContent = React.forwardRef<
 ));
 DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName;
 
+const dropdownMenuItemVariants = cva(
+  "relative flex cursor-default select-none items-center rounded-md px-2 py-1.5 text-sm outline-none transition-default data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+  {
+    variants: {
+      variant: {
+        default: "text-ui-text focus:bg-ui-bg-hover",
+        danger: "text-status-error focus:bg-status-error-bg focus:text-status-error",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+);
+
 const DropdownMenuItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
     inset?: boolean;
-  }
->(({ className, inset, ...props }, ref) => (
-  <DropdownMenuPrimitive.Item
-    ref={ref}
-    className={cn(
-      "relative flex cursor-default select-none items-center rounded-md px-2 py-1.5 text-sm text-ui-text outline-none transition-default focus:bg-ui-bg-hover data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      inset && "pl-8",
-      className,
-    )}
-    {...props}
-  />
-));
+    icon?: React.ReactNode;
+  } & VariantProps<typeof dropdownMenuItemVariants>
+>(({ className, inset, variant, icon, children, asChild, ...props }, ref) => {
+  const itemChildren =
+    icon && !asChild ? (
+      <>
+        <span className="mr-2 inline-flex shrink-0 items-center text-current">{icon}</span>
+        {children}
+      </>
+    ) : (
+      children
+    );
+
+  return (
+    <DropdownMenuPrimitive.Item
+      ref={ref}
+      asChild={asChild}
+      className={cn(dropdownMenuItemVariants({ variant }), inset && "pl-8", className)}
+      {...props}
+    >
+      {itemChildren}
+    </DropdownMenuPrimitive.Item>
+  );
+});
 DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName;
 
 const DropdownMenuCheckboxItem = React.forwardRef<
@@ -145,11 +173,17 @@ const DropdownMenuLabel = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Label>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Label> & {
     inset?: boolean;
+    weight?: "default" | "normal";
   }
->(({ className, inset, ...props }, ref) => (
+>(({ className, inset, weight = "default", ...props }, ref) => (
   <DropdownMenuPrimitive.Label
     ref={ref}
-    className={cn("px-2 py-1.5 text-sm font-semibold text-ui-text", inset && "pl-8", className)}
+    className={cn(
+      "px-2 py-1.5 text-sm text-ui-text",
+      weight === "default" ? "font-semibold" : "font-normal",
+      inset && "pl-8",
+      className,
+    )}
     {...props}
   />
 ));
@@ -193,4 +227,5 @@ export {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuRadioGroup,
+  dropdownMenuItemVariants,
 };

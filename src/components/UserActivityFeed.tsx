@@ -23,8 +23,8 @@ import {
   Trash2,
   User,
 } from "@/lib/icons";
-import { cn } from "@/lib/utils";
 import { Card } from "./ui/Card";
+import { EmptyState } from "./ui/EmptyState";
 import { Flex, FlexItem } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
 import { SkeletonList } from "./ui/Skeleton";
@@ -197,29 +197,14 @@ export function UserActivityFeed({
 
   if (activities.length === 0) {
     return (
-      <Flex
-        align="center"
-        gap="sm"
-        direction="column"
-        className="rounded-2xl border border-dashed border-ui-border-secondary/80 bg-ui-bg-soft/45 px-4 py-4 text-left sm:flex-row sm:items-center"
-      >
-        <Flex
-          align="center"
-          justify="center"
-          className="h-9 w-9 shrink-0 rounded-full border border-ui-border bg-ui-bg text-status-info shadow-soft"
-        >
-          <Icon icon={Clock} size="sm" aria-hidden="true" />
-        </Flex>
-        <Stack gap="xs" className="min-w-0">
-          <Typography variant="caption" className="uppercase tracking-widest text-ui-text-tertiary">
-            Waiting for updates
-          </Typography>
-          <Typography variant="label">No recent activity</Typography>
-          <Typography variant="small" color="secondary">
-            Updates appear here as work moves.
-          </Typography>
-        </Stack>
-      </Flex>
+      <EmptyState
+        icon={Clock}
+        title="No recent activity"
+        description="Updates appear here as work moves."
+        align="start"
+        size="compact"
+        className="max-w-full"
+      />
     );
   }
 
@@ -235,49 +220,58 @@ export function UserActivityFeed({
           <Card padding="none" variant="flat">
             <Stack gap="none">
               {groupActivities.map((activity, index) => (
-                <Flex
+                <Card
                   key={activity._id}
-                  gap="md"
-                  align="start"
-                  className={cn(
-                    "p-3 transition-colors duration-fast hover:bg-ui-bg-secondary/30",
-                    index !== groupActivities.length - 1 && "border-b border-ui-border",
-                  )}
+                  recipe="activityFeedEntry"
+                  padding="none"
+                  radius="none"
+                  className={
+                    index !== groupActivities.length - 1
+                      ? "rounded-none border-x-0 border-t-0 border-b border-ui-border"
+                      : "rounded-none border-0"
+                  }
                 >
-                  {/* Action Icon */}
-                  <Flex
-                    align="center"
-                    justify="center"
-                    className="shrink-0 w-6 h-6 rounded-full bg-ui-bg text-ui-text-secondary"
-                  >
-                    <Icon icon={getActionIcon(activity.action)} size="xs" />
-                  </Flex>
+                  <Flex gap="md" align="start">
+                    {/* Action Icon */}
+                    <Card
+                      recipe="activityTimelineIcon"
+                      padding="none"
+                      radius="full"
+                      className="size-6 shrink-0"
+                    >
+                      <Flex align="center" justify="center" className="h-full">
+                        <Icon icon={getActionIcon(activity.action)} size="xs" />
+                      </Flex>
+                    </Card>
 
-                  {/* Activity Content */}
-                  <FlexItem flex="1" className="min-w-0">
-                    <Stack gap="xs">
-                      <Typography variant="small" className="m-0">
-                        <span className={getActionColorClass(activity.action)}>
-                          {formatActivityMessage(activity)}
-                        </span>{" "}
-                        <code className="font-mono text-brand">{activity.issueKey}</code>
-                      </Typography>
-                      <Typography variant="caption" className="truncate text-ui-text-secondary">
-                        {activity.issueTitle}
-                      </Typography>
-                      {showProjectInfo && (
-                        <Typography variant="meta" className="text-ui-text-tertiary">
-                          in {activity.projectName}
+                    {/* Activity Content */}
+                    <FlexItem flex="1" className="min-w-0">
+                      <Stack gap="xs">
+                        <Typography variant="small" className="m-0">
+                          <span className={getActionColorClass(activity.action)}>
+                            {formatActivityMessage(activity)}
+                          </span>{" "}
+                          <Typography as="code" variant="meta" className="text-brand">
+                            {activity.issueKey}
+                          </Typography>
                         </Typography>
-                      )}
-                    </Stack>
-                  </FlexItem>
+                        <Typography variant="caption" className="truncate text-ui-text-secondary">
+                          {activity.issueTitle}
+                        </Typography>
+                        {showProjectInfo && (
+                          <Typography variant="meta" className="text-ui-text-tertiary">
+                            in {activity.projectName}
+                          </Typography>
+                        )}
+                      </Stack>
+                    </FlexItem>
 
-                  {/* Timestamp */}
-                  <Typography variant="meta" className="shrink-0 text-ui-text-tertiary">
-                    {formatRelativeTime(activity._creationTime)}
-                  </Typography>
-                </Flex>
+                    {/* Timestamp */}
+                    <Typography variant="meta" className="shrink-0 text-ui-text-tertiary">
+                      {formatRelativeTime(activity._creationTime)}
+                    </Typography>
+                  </Flex>
+                </Card>
               ))}
             </Stack>
           </Card>

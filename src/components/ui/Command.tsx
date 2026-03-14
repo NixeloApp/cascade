@@ -8,6 +8,7 @@
 
 "use client";
 
+import { cva, type VariantProps } from "class-variance-authority";
 import { Command as CommandPrimitive } from "cmdk";
 import { Search } from "lucide-react";
 import * as React from "react";
@@ -15,16 +16,82 @@ import { cardRecipeVariants } from "@/components/ui/Card";
 import { Dialog } from "@/components/ui/Dialog";
 import { cn } from "@/lib/utils";
 
-const Command = ({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) => (
-  <CommandPrimitive
-    className={cn(
-      "flex h-full w-full flex-col overflow-hidden bg-transparent text-ui-text",
-      className,
-    )}
-    {...props}
-  />
+const commandVariants = cva("flex h-full w-full flex-col overflow-hidden text-ui-text", {
+  variants: {
+    recipe: {
+      default: "bg-transparent",
+      palette: "bg-ui-bg",
+      suggestionMenu: "rounded-lg border border-ui-border bg-ui-bg-elevated shadow-elevated",
+    },
+  },
+  defaultVariants: {
+    recipe: "default",
+  },
+});
+
+type CommandProps = React.ComponentProps<typeof CommandPrimitive> &
+  VariantProps<typeof commandVariants>;
+
+const Command = ({ className, recipe, ...props }: CommandProps) => (
+  <CommandPrimitive className={cn(commandVariants({ recipe }), className)} {...props} />
 );
 Command.displayName = CommandPrimitive.displayName;
+
+const commandListVariants = cva("min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3 pb-4 pt-3", {
+  variants: {
+    viewport: {
+      default: "",
+      palette: "max-h-[50vh] sm:max-h-[60vh]",
+      slashMenu: "max-h-80 scrollbar-subtle",
+    },
+  },
+  defaultVariants: {
+    viewport: "default",
+  },
+});
+
+const commandEmptyVariants = cva("py-6 text-center text-sm", {
+  variants: {
+    tone: {
+      default: "text-ui-text",
+      muted: "text-ui-text-secondary",
+    },
+  },
+  defaultVariants: {
+    tone: "default",
+  },
+});
+
+const commandGroupVariants = cva("overflow-hidden p-1 text-ui-text", {
+  variants: {
+    recipe: {
+      default: "",
+      palette: "[&_[cmdk-group-heading]]:text-ui-text-tertiary",
+      slashMenu:
+        "px-1 py-1.5 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-ui-text-tertiary",
+    },
+  },
+  defaultVariants: {
+    recipe: "default",
+  },
+});
+
+const commandItemVariants = cva(
+  "relative flex cursor-default gap-2 select-none items-center rounded-xl border border-transparent px-2 py-1.5 text-sm outline-none transition-all data-[disabled=true]:pointer-events-none data-[selected=true]:border-ui-border-secondary/70 data-[selected=true]:bg-ui-bg-elevated data-[selected=true]:text-ui-text data-[selected=true]:shadow-card data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  {
+    variants: {
+      recipe: {
+        default: "",
+        palette: "cursor-pointer data-[selected=true]:bg-brand-subtle",
+        slashMenu:
+          "mx-1 rounded border-transparent px-2 py-2 cursor-pointer data-[selected=true]:border-transparent data-[selected=true]:bg-ui-bg-hover data-[selected=true]:shadow-none [&_svg]:text-ui-text-secondary",
+      },
+    },
+    defaultVariants: {
+      recipe: "default",
+    },
+  },
+);
 
 interface CommandDialogProps {
   open: boolean;
@@ -90,11 +157,12 @@ CommandInput.displayName = CommandPrimitive.Input.displayName;
 
 const CommandList = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.List>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.List>
->(({ className, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.List> &
+    VariantProps<typeof commandListVariants>
+>(({ className, viewport, ...props }, ref) => (
   <CommandPrimitive.List
     ref={ref}
-    className={cn("min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3 pb-4 pt-3", className)}
+    className={cn(commandListVariants({ viewport }), className)}
     {...props}
   />
 ));
@@ -103,22 +171,28 @@ CommandList.displayName = CommandPrimitive.List.displayName;
 
 const CommandEmpty = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Empty>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Empty>
->((props, ref) => (
-  <CommandPrimitive.Empty ref={ref} className="py-6 text-center text-sm" {...props} />
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Empty> &
+    VariantProps<typeof commandEmptyVariants>
+>(({ className, tone, ...props }, ref) => (
+  <CommandPrimitive.Empty
+    ref={ref}
+    className={cn(commandEmptyVariants({ tone }), className)}
+    {...props}
+  />
 ));
 
 CommandEmpty.displayName = CommandPrimitive.Empty.displayName;
 
 const CommandGroup = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Group>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Group>
->(({ className, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Group> &
+    VariantProps<typeof commandGroupVariants>
+>(({ className, recipe, ...props }, ref) => (
   <CommandPrimitive.Group
     ref={ref}
     className={cn(
       cardRecipeVariants({ recipe: "commandSection" }),
-      "overflow-hidden p-1 text-ui-text",
+      commandGroupVariants({ recipe }),
       className,
     )}
     {...props}
@@ -141,14 +215,12 @@ CommandSeparator.displayName = CommandPrimitive.Separator.displayName;
 
 const CommandItem = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Item>
->(({ className, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Item> &
+    VariantProps<typeof commandItemVariants>
+>(({ className, recipe, ...props }, ref) => (
   <CommandPrimitive.Item
     ref={ref}
-    className={cn(
-      "relative flex cursor-default gap-2 select-none items-center rounded-xl border border-transparent px-2 py-1.5 text-sm outline-none transition-all data-[disabled=true]:pointer-events-none data-[selected=true]:border-ui-border-secondary/70 data-[selected=true]:bg-ui-bg-elevated data-[selected=true]:text-ui-text data-[selected=true]:shadow-card data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
-      className,
-    )}
+    className={cn(commandItemVariants({ recipe }), className)}
     {...props}
   />
 ));

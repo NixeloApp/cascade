@@ -26,15 +26,16 @@ describe("MeetingBot Timeout", () => {
     const userId = await createTestUser(t);
 
     // Mock fetch to simulate hanging and respecting AbortSignal
-    global.fetch = vi.fn((_url, options: any) => {
-      return new Promise((_resolve, reject) => {
-        if (options?.signal) {
-          if (options.signal.aborted) {
+    const hangingFetch: typeof fetch = async (_input, init) =>
+      new Promise<Response>((_resolve, reject) => {
+        const signal = init?.signal;
+        if (signal) {
+          if (signal.aborted) {
             const error = new Error("The operation was aborted");
             error.name = "AbortError";
             reject(error);
           } else {
-            options.signal.addEventListener("abort", () => {
+            signal.addEventListener("abort", () => {
               const error = new Error("The operation was aborted");
               error.name = "AbortError";
               reject(error);
@@ -48,7 +49,7 @@ describe("MeetingBot Timeout", () => {
         }
         // Never resolve to simulate hang
       });
-    }) as any;
+    global.fetch = vi.fn(hangingFetch);
 
     const recordingId = await t.run(async (ctx) => {
       return await ctx.db.insert("meetingRecordings", {

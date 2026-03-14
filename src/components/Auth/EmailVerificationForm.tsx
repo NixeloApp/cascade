@@ -11,8 +11,10 @@ import { useState } from "react";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Input } from "../ui/form/Input";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 import { AuthLinkButton } from "./AuthLink";
 
@@ -70,23 +72,24 @@ export function EmailVerificationForm({ email, onVerified, onResend }: EmailVeri
 
   return (
     <div className="w-full text-center">
-      {/* Email icon */}
       <Flex justify="center" className="mb-4">
-        <Flex align="center" justify="center" className="w-16 h-16 rounded-2xl bg-brand-subtle">
-          <svg
-            className="w-8 h-8 text-brand"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <rect width="20" height="16" x="2" y="4" rx="2" />
-            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-          </svg>
-        </Flex>
+        <Card recipe="authVerificationIcon" className="h-16 w-16">
+          <Flex align="center" justify="center" className="h-full w-full">
+            <svg
+              className="h-8 w-8"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <rect width="20" height="16" x="2" y="4" rx="2" />
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+            </svg>
+          </Flex>
+        </Card>
       </Flex>
       <Typography variant="h2" className="text-xl font-semibold mb-2 tracking-tight">
         Verify your email
@@ -97,49 +100,35 @@ export function EmailVerificationForm({ email, onVerified, onResend }: EmailVeri
           {email}
         </Typography>
       </Typography>
-      <form className="flex flex-col gap-form-field" onSubmit={handleSubmit}>
-        <Input
-          type="text"
-          name="code"
-          placeholder="Enter 8-digit code"
-          required
-          pattern="[0-9]{8}"
-          maxLength={8}
-          data-testid={TEST_IDS.AUTH.VERIFICATION_CODE_INPUT}
-          className="text-center tracking-widest text-lg transition-default"
-          autoComplete="one-time-code"
-        />
-        <Button
-          type="submit"
-          size="lg"
-          className="w-full shadow-card transition-all duration-medium"
-          disabled={submitting}
-          data-testid={TEST_IDS.AUTH.VERIFICATION_SUBMIT_BUTTON}
-        >
-          {submitting ? (
-            <Flex align="center" justify="center" gap="sm">
-              <svg
-                className="w-4 h-4 animate-spin"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                aria-hidden="true"
-              >
-                <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
-                <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
-              </svg>
-              <span>Verifying...</span>
-            </Flex>
-          ) : (
-            "Verify email"
-          )}
-        </Button>
-        <div className="text-center mt-2">
-          <AuthLinkButton onClick={handleResend} disabled={resending}>
-            {resending ? "Sending..." : "Didn't receive a code? Resend"}
-          </AuthLinkButton>
-        </div>
+      <form onSubmit={handleSubmit}>
+        <Stack gap="md">
+          <Input
+            type="text"
+            name="code"
+            placeholder="Enter 8-digit code"
+            required
+            pattern="[0-9]{8}"
+            maxLength={8}
+            data-testid={TEST_IDS.AUTH.VERIFICATION_CODE_INPUT}
+            variant="otpCode"
+            autoComplete="one-time-code"
+          />
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            disabled={submitting}
+            isLoading={submitting}
+            data-testid={TEST_IDS.AUTH.VERIFICATION_SUBMIT_BUTTON}
+          >
+            Verify email
+          </Button>
+          <div className="text-center mt-2">
+            <AuthLinkButton onClick={handleResend} disabled={resending}>
+              {resending ? "Sending..." : "Didn't receive a code? Resend"}
+            </AuthLinkButton>
+          </div>
+        </Stack>
       </form>
     </div>
   );

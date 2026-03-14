@@ -688,7 +688,7 @@ const applicationTables = {
     groupId: v.optional(v.id("labelGroups")),
     name: v.string(),
     description: v.optional(v.string()),
-    color: v.string(), // Hex: "#3B82F6"
+    color: v.string(), // Hex color string
     displayOrder: v.optional(v.number()),
     createdBy: v.id("users"),
   })
@@ -1853,7 +1853,7 @@ const applicationTables = {
 // SCHEMA EXPORT
 // =============================================================================
 
-export default defineSchema({
+export const schemaDefinition = {
   ...authTables,
   ...applicationTables,
 
@@ -1902,4 +1902,8 @@ export default defineSchema({
     .index("phone", ["phone"])
     .index("phoneVerificationTime", ["phoneVerificationTime"])
     .index("defaultOrganization", ["defaultOrganizationId"]),
-});
+};
+
+export const SCHEMA_TABLE_NAMES = Object.freeze(Object.keys(schemaDefinition));
+
+export default defineSchema(schemaDefinition);

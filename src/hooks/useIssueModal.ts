@@ -1,4 +1,4 @@
-import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useLocation, useRouter } from "@tanstack/react-router";
 
 interface IssueModalSearch {
   issue?: string;
@@ -20,27 +20,45 @@ export function useIssueModal(): {
   closeIssue: () => void;
   isOpen: boolean;
 } {
-  const search = useSearch({ strict: false }) as IssueModalSearch;
-  const navigate = useNavigate();
+  const router = useRouter();
+  const location = useLocation({
+    select: (current) => ({
+      hash: current.hash,
+      pathname: current.pathname,
+      search: current.search,
+      state: current.state,
+    }),
+  });
 
-  const issueKey = search.issue;
+  const issueKey = new URLSearchParams(location.search).get("issue") ?? undefined;
   const isOpen = !!issueKey;
 
+  const navigateWithIssue = (issue: string | undefined, replace: boolean) => {
+    const params = new URLSearchParams(location.search);
+
+    if (issue) {
+      params.set("issue", issue);
+    } else {
+      params.delete("issue");
+    }
+
+    const nextSearch = params.toString();
+    const nextHref = `${location.pathname}${nextSearch ? `?${nextSearch}` : ""}${location.hash}`;
+
+    if (replace) {
+      router.history.replace(nextHref, location.state);
+      return;
+    }
+
+    router.history.push(nextHref, location.state);
+  };
+
   const openIssue = (key: string) => {
-    navigate({
-      search: ((prev: Record<string, unknown>) => ({ ...prev, issue: key })) as any,
-      replace: false,
-    });
+    navigateWithIssue(key, false);
   };
 
   const closeIssue = () => {
-    navigate({
-      search: ((prev: Record<string, unknown>) => {
-        const { issue: _, ...rest } = prev;
-        return rest;
-      }) as any,
-      replace: true,
-    });
+    navigateWithIssue(undefined, true);
   };
 
   return { issueKey, openIssue, closeIssue, isOpen };

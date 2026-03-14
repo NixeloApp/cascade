@@ -1,7 +1,30 @@
+import { cva, type VariantProps } from "class-variance-authority";
 import { forwardRef, type InputHTMLAttributes, useId } from "react";
 import { cn } from "@/lib/utils";
 
-export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+const inputVariants = cva(
+  "w-full border bg-ui-bg-soft text-ui-text placeholder-ui-text-tertiary transition-default focus:outline-none focus:ring-2 focus:ring-ui-border-focus focus:border-ui-border-focus hover:border-ui-border-secondary disabled:cursor-not-allowed disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        default: "rounded-md px-3 py-2.5 text-sm",
+        code: "rounded-md px-3 py-2.5 text-sm font-mono tracking-tight",
+        otpCode: "rounded-md px-3 py-2.5 text-center text-lg tracking-widest transition-default",
+        issueTitle:
+          "h-auto rounded-md border-transparent bg-transparent px-0 py-2 text-2xl font-bold leading-tight hover:border-ui-border-secondary focus-visible:ring-2 focus-visible:ring-brand-ring sm:text-3xl",
+        documentTitle:
+          "-ml-2 rounded bg-transparent px-2 py-1 text-2xl font-semibold tracking-tight focus-visible:ring-2 focus-visible:ring-brand-ring sm:text-3xl",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+);
+
+export interface InputProps
+  extends InputHTMLAttributes<HTMLInputElement>,
+    VariantProps<typeof inputVariants> {
   label?: string;
   error?: string;
   helperText?: string;
@@ -22,7 +45,16 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
  */
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   (
-    { className, label, error, helperText, id, "aria-describedby": ariaDescribedBy, ...props },
+    {
+      className,
+      label,
+      error,
+      helperText,
+      id,
+      variant,
+      "aria-describedby": ariaDescribedBy,
+      ...props
+    },
     ref,
   ) => {
     const generatedId = useId();
@@ -46,13 +78,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           id={inputId}
           className={cn(
-            "w-full px-3 py-2.5 border rounded-md text-sm transition-default",
-            "bg-ui-bg-soft",
-            "text-ui-text",
-            "placeholder-ui-text-tertiary",
-            "focus:outline-none focus:ring-2 focus:ring-ui-border-focus focus:border-ui-border-focus",
-            "hover:border-ui-border-secondary",
-            "disabled:opacity-50 disabled:cursor-not-allowed",
+            inputVariants({ variant }),
             error ? "border-ui-border-error" : "border-ui-border",
             className,
           )}

@@ -16,8 +16,10 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { IssueDetailLayout, useIssueDetail } from "./IssueDetail";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { Icon } from "./ui/Icon";
 import { Sheet } from "./ui/Sheet";
+import { Skeleton, SkeletonText } from "./ui/Skeleton";
 import { Tooltip } from "./ui/Tooltip";
 import { Typography } from "./ui/Typography";
 
@@ -45,16 +47,16 @@ export function IssueDetailSheet({
         title="Loading issue details"
         description="Loading content..."
         side="right"
+        layout="panel"
         className="w-full sm:max-w-xl lg:max-w-2xl"
       >
-        <Stack as="output" aria-live="polite" aria-busy="true" gap="lg" className="p-6">
-          <span className="sr-only">Loading...</span>
-          <div className="animate-pulse bg-ui-bg-tertiary rounded h-8 w-3/4" />
-          <Stack gap="xs">
-            <div className="animate-pulse bg-ui-bg-tertiary rounded h-4 w-full" />
-            <div className="animate-pulse bg-ui-bg-tertiary rounded h-4 w-2/3" />
+        <Card padding="lg" variant="ghost" radius="none">
+          <Stack as="output" aria-live="polite" aria-busy="true" gap="lg">
+            <span className="sr-only">Loading...</span>
+            <Skeleton className="h-8 w-3/4" />
+            <SkeletonText lines={2} />
           </Stack>
-        </Stack>
+        </Card>
       </Sheet>
     );
   }
@@ -63,14 +65,12 @@ export function IssueDetailSheet({
 
   // Custom header with issue metadata
   const header = (
-    <Flex direction="column" gap="sm" className="p-6 border-b border-ui-border">
+    <Card recipe="issueDetailSheetHeader" padding="lg" radius="none">
       {/* Issue key and priority */}
       <Flex align="center" gap="sm">
         <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="lg" />
         <Flex align="center" gap="xs">
-          <Typography variant="small" className="font-mono tracking-tight text-ui-text-secondary">
-            {issue.key}
-          </Typography>
+          <Typography variant="mono">{issue.key}</Typography>
           <Tooltip content={detail.hasCopied ? "Copied!" : "Copy issue key"}>
             <Button
               variant="ghost"
@@ -91,7 +91,7 @@ export function IssueDetailSheet({
         </Flex>
       </Flex>
       {/* Issue title */}
-      <Typography variant="p" className="font-semibold text-ui-text">
+      <Typography as="h2" variant="h5">
         {issue.title}
       </Typography>
       {/* Edit button */}
@@ -102,7 +102,7 @@ export function IssueDetailSheet({
           </Button>
         </Flex>
       )}
-    </Flex>
+    </Card>
   );
 
   return (
@@ -112,12 +112,15 @@ export function IssueDetailSheet({
       title={issue.title}
       description={`${issue.key} - View and edit issue details`}
       side="right"
+      layout="panel"
       header={header}
       className="w-full sm:max-w-xl lg:max-w-2xl"
       data-testid={TEST_IDS.ISSUE.DETAIL_MODAL}
     >
-      <FlexItem flex="1" className="overflow-y-auto p-6">
-        <IssueDetailLayout detail={detail} billingEnabled={billingEnabled} canEdit={canEdit} />
+      <FlexItem flex="1" className="min-h-0 overflow-y-auto">
+        <Card padding="lg" variant="ghost" radius="none">
+          <IssueDetailLayout detail={detail} billingEnabled={billingEnabled} canEdit={canEdit} />
+        </Card>
       </FlexItem>
     </Sheet>
   );

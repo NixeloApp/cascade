@@ -57,11 +57,80 @@ interface IssueMetadataProps {
   onStoryPointsChange?: (storyPoints: number | null) => void;
 }
 
+function renderStatusContent(
+  status: string,
+  statusName: string,
+  workflowStates: WorkflowState[],
+  onStatusChange?: (status: string) => void,
+) {
+  if (!onStatusChange) {
+    return <Typography variant="label">{statusName}</Typography>;
+  }
+
+  return (
+    <InlineStatusSelect value={status} workflowStates={workflowStates} onChange={onStatusChange} />
+  );
+}
+
+function renderTypeContent(
+  type: IssueTypeWithSubtask,
+  onTypeChange?: (type: IssueTypeWithSubtask) => void,
+) {
+  if (!onTypeChange) {
+    return (
+      <Typography variant="label" className="capitalize">
+        {type}
+      </Typography>
+    );
+  }
+
+  return <InlineTypeSelect value={type} onChange={onTypeChange} />;
+}
+
+function renderPriorityContent(
+  priority: IssuePriority,
+  onPriorityChange?: (priority: IssuePriority) => void,
+) {
+  if (!onPriorityChange) {
+    return (
+      <Typography variant="label" className="capitalize">
+        {priority}
+      </Typography>
+    );
+  }
+
+  return <InlinePrioritySelect value={priority} onChange={onPriorityChange} />;
+}
+
+function renderAssigneeContent(
+  assignee: IssueMetadataProps["assignee"],
+  members: ProjectMember[],
+  onAssigneeChange?: (assigneeId: Id<"users"> | null) => void,
+) {
+  if (!onAssigneeChange) {
+    return <Typography variant="label">{assignee?.name || "Unassigned"}</Typography>;
+  }
+
+  return (
+    <InlineAssigneeSelect value={assignee?._id} members={members} onChange={onAssigneeChange} />
+  );
+}
+
+function renderStoryPointsContent(
+  storyPoints: number | null | undefined,
+  onStoryPointsChange?: (storyPoints: number | null) => void,
+) {
+  if (!onStoryPointsChange) {
+    return <Typography variant="label">{storyPoints ?? "Not set"}</Typography>;
+  }
+
+  return <InlineStoryPointsInput value={storyPoints} onChange={onStoryPointsChange} />;
+}
+
 /**
  * Displays issue metadata grid and labels with optional inline editing
  * Extracted from IssueDetailModal for better organization
  */
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Metadata display with conditional inline editing per field
 export function IssueMetadataSection({
   status,
   type,
@@ -93,71 +162,44 @@ export function IssueMetadataSection({
       {/* Metadata with inline editing */}
       <Card padding="md" variant="flat" className="border-ui-border/30">
         <Stack gap="xs">
-          {/* Status */}
           <PropertyRow label="Status">
-            {canEditStatus && onStatusChange ? (
-              <InlineStatusSelect
-                value={status}
-                workflowStates={workflowStates}
-                onChange={onStatusChange}
-              />
-            ) : (
-              <Typography variant="label">{statusName}</Typography>
+            {renderStatusContent(
+              status,
+              statusName,
+              workflowStates,
+              canEditStatus ? onStatusChange : undefined,
             )}
           </PropertyRow>
 
-          {/* Type */}
           <PropertyRow label="Type">
-            {canEditType && onTypeChange ? (
-              <InlineTypeSelect value={type} onChange={onTypeChange} />
-            ) : (
-              <Typography variant="label" className="capitalize">
-                {type}
-              </Typography>
-            )}
+            {renderTypeContent(type, canEditType ? onTypeChange : undefined)}
           </PropertyRow>
 
-          {/* Priority */}
           <PropertyRow label="Priority">
-            {canEditPriority && onPriorityChange ? (
-              <InlinePrioritySelect value={priority} onChange={onPriorityChange} />
-            ) : (
-              <Typography variant="label" className="capitalize">
-                {priority}
-              </Typography>
-            )}
+            {renderPriorityContent(priority, canEditPriority ? onPriorityChange : undefined)}
           </PropertyRow>
 
-          {/* Assignee */}
           <PropertyRow label="Assignee">
-            {canEditAssignee && onAssigneeChange ? (
-              <InlineAssigneeSelect
-                value={assignee?._id}
-                members={members}
-                onChange={onAssigneeChange}
-              />
-            ) : (
-              <Typography variant="label">{assignee?.name || "Unassigned"}</Typography>
+            {renderAssigneeContent(
+              assignee,
+              members,
+              canEditAssignee ? onAssigneeChange : undefined,
             )}
           </PropertyRow>
 
-          {/* Reporter (read-only) */}
           <PropertyRow label="Reporter">
             <Typography variant="label">{reporter?.name || "Unknown"}</Typography>
           </PropertyRow>
 
-          {/* Story Points */}
           <PropertyRow label="Story Points">
-            {canEditStoryPoints && onStoryPointsChange ? (
-              <InlineStoryPointsInput value={storyPoints} onChange={onStoryPointsChange} />
-            ) : (
-              <Typography variant="label">{storyPoints ?? "Not set"}</Typography>
+            {renderStoryPointsContent(
+              storyPoints,
+              canEditStoryPoints ? onStoryPointsChange : undefined,
             )}
           </PropertyRow>
         </Stack>
       </Card>
 
-      {/* Labels */}
       {labels.length > 0 && (
         <Stack gap="sm">
           <Typography variant="meta" color="secondary">
@@ -168,7 +210,7 @@ export function IssueMetadataSection({
               <Badge
                 key={label.name}
                 size="sm"
-                className="text-brand-foreground transition-transform duration-default hover:scale-105"
+                className="text-brand-foreground"
                 style={{ backgroundColor: label.color }}
               >
                 {label.name}

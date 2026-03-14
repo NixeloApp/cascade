@@ -11,6 +11,7 @@ import { query } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { conflict, requireOwned, validation } from "./lib/errors";
+import { RUNTIME_COLORS } from "./shared/colors";
 import { bookingFieldTypes } from "./validators";
 
 /**
@@ -125,7 +126,7 @@ export const create = authenticatedMutation({
       questions: args.questions,
       isActive: true,
       requiresConfirmation: args.requiresConfirmation ?? false,
-      color: args.color || "#3B82F6",
+      color: args.color ?? RUNTIME_COLORS.INFO,
       updatedAt: now,
     });
     return { pageId };

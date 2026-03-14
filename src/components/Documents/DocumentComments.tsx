@@ -16,10 +16,10 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Textarea } from "@/components/ui/form/Textarea";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { formatRelativeTime } from "@/lib/formatting";
 import { MessageCircle } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 
@@ -60,9 +60,7 @@ export function DocumentComments({ documentId }: DocumentCommentsProps) {
   if (comments === undefined) {
     return (
       <Card padding="xl" variant="ghost">
-        <Flex justify="center">
-          <LoadingSpinner size="md" />
-        </Flex>
+        <LoadingSpinner size="md" message="Loading comments..." />
       </Card>
     );
   }
@@ -81,7 +79,7 @@ export function DocumentComments({ documentId }: DocumentCommentsProps) {
           />
         ) : (
           comments.map((comment) => (
-            <Card key={comment._id} padding="md" hoverable className="bg-ui-bg-soft">
+            <Card key={comment._id} recipe="commentThreadItem" padding="md" hoverable>
               <Flex gap="md">
                 {/* Avatar */}
                 <FlexItem shrink={false}>
@@ -91,20 +89,17 @@ export function DocumentComments({ documentId }: DocumentCommentsProps) {
                 {/* Comment Content */}
                 <FlexItem flex="1" className="min-w-0">
                   {/* Author and Date */}
-                  <Flex align="center" gap="sm" className="mb-2">
-                    <Typography variant="label">{comment.authorName || "Unknown User"}</Typography>
-                    <time
-                      className="text-caption text-ui-text-tertiary"
-                      dateTime={new Date(comment._creationTime).toISOString()}
-                    >
-                      {formatRelativeTime(comment._creationTime)}
-                    </time>
+                  <Metadata size="sm" className="mb-2">
+                    <MetadataItem className="text-ui-text">
+                      {comment.authorName || "Unknown User"}
+                    </MetadataItem>
+                    <MetadataTimestamp date={comment._creationTime} />
                     {comment.updatedAt > comment._creationTime && (
-                      <Typography variant="caption" color="tertiary" className="italic">
+                      <Typography variant="caption" color="tertiary" as="span" className="italic">
                         (edited)
                       </Typography>
                     )}
-                  </Flex>
+                  </Metadata>
 
                   {/* Comment Text */}
                   <Typography variant="p" className="whitespace-pre-wrap">
@@ -118,20 +113,22 @@ export function DocumentComments({ documentId }: DocumentCommentsProps) {
       </Stack>
 
       {/* Add Comment */}
-      <Stack gap="sm" className="pt-4 border-t border-ui-border">
-        <Typography variant="label">Add Comment</Typography>
-        <Textarea
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          placeholder="Add a comment..."
-          rows={3}
-        />
-        <Flex justify="end">
-          <Button onClick={handleSubmit} isLoading={isSubmitting} disabled={!newComment.trim()}>
-            Add Comment
-          </Button>
-        </Flex>
-      </Stack>
+      <Card recipe="documentCommentComposer" padding="md">
+        <Stack gap="sm">
+          <Typography variant="label">Add Comment</Typography>
+          <Textarea
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="Add a comment..."
+            rows={3}
+          />
+          <Flex justify="end">
+            <Button onClick={handleSubmit} isLoading={isSubmitting} disabled={!newComment.trim()}>
+              Add Comment
+            </Button>
+          </Flex>
+        </Stack>
+      </Card>
     </Stack>
   );
 }

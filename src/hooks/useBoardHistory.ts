@@ -8,11 +8,12 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { DISPLAY_LIMITS } from "@/lib/constants";
 import { showError, showSuccess } from "@/lib/toast";
+
 export interface BoardAction {
   issueId: Id<"issues">;
   oldStatus: string;
@@ -27,96 +28,90 @@ export interface BoardAction {
 export function useBoardHistory() {
   const [historyStack, setHistoryStack] = useState<BoardAction[]>([]);
   const [redoStack, setRedoStack] = useState<BoardAction[]>([]);
-
   const { mutate: updateIssueStatus } = useAuthenticatedMutation(api.issues.updateStatus);
 
-  const pushAction = useCallback((action: BoardAction) => {
+  // Refs for stable keyboard handler access
+  const stateRef = useRef({ historyStack, redoStack, updateIssueStatus });
+  stateRef.current = { historyStack, redoStack, updateIssueStatus };
+
+  const pushAction = (action: BoardAction) => {
     setHistoryStack((prev) => [...prev, action].slice(-DISPLAY_LIMITS.MAX_HISTORY_SIZE));
     setRedoStack([]);
-  }, []);
+  };
 
-  const handleUndo = useCallback(async () => {
-    if (historyStack.length === 0) {
+  const handleUndo = async () => {
+    const { historyStack: stack, updateIssueStatus: update } = stateRef.current;
+    if (stack.length === 0) {
       toast.info("Nothing to undo");
       return;
     }
 
-    const lastAction = historyStack[historyStack.length - 1];
-    const newHistory = historyStack.slice(0, -1);
+    const action = stack[stack.length - 1];
+    if (action.isTeamMode) {
+      showError("team-mode", "Undo not supported in Team View yet");
+      return;
+    }
 
     try {
-      if (lastAction.isTeamMode) {
-        showError("team-mode", "Undo not supported in Team View yet");
-        return;
-      }
-
-      await updateIssueStatus({
-        issueId: lastAction.issueId,
-        newStatus: lastAction.oldStatus,
-        newOrder: lastAction.oldOrder,
+      await update({
+        issueId: action.issueId,
+        newStatus: action.oldStatus,
+        newOrder: action.oldOrder,
       });
-
-      setHistoryStack(newHistory);
-      setRedoStack((prev) => [...prev, lastAction].slice(-DISPLAY_LIMITS.MAX_HISTORY_SIZE));
-      showSuccess(`Undid move of "${lastAction.issueTitle}"`);
+      setHistoryStack(stack.slice(0, -1));
+      setRedoStack((prev) => [...prev, action].slice(-DISPLAY_LIMITS.MAX_HISTORY_SIZE));
+      showSuccess(`Undid move of "${action.issueTitle}"`);
     } catch (error) {
       showError(error, "Failed to undo");
     }
-  }, [historyStack, updateIssueStatus]);
+  };
 
-  const handleRedo = useCallback(async () => {
-    if (redoStack.length === 0) {
+  const handleRedo = async () => {
+    const { redoStack: stack, updateIssueStatus: update } = stateRef.current;
+    if (stack.length === 0) {
       toast.info("Nothing to redo");
       return;
     }
 
-    const lastRedo = redoStack[redoStack.length - 1];
-    const newRedoStack = redoStack.slice(0, -1);
+    const action = stack[stack.length - 1];
+    if (action.isTeamMode) {
+      showError("team-mode", "Redo not supported in Team View yet");
+      return;
+    }
 
     try {
-      if (lastRedo.isTeamMode) {
-        showError("team-mode", "Redo not supported in Team View yet");
-        return;
-      }
-
-      await updateIssueStatus({
-        issueId: lastRedo.issueId,
-        newStatus: lastRedo.newStatus,
-        newOrder: lastRedo.newOrder,
+      await update({
+        issueId: action.issueId,
+        newStatus: action.newStatus,
+        newOrder: action.newOrder,
       });
-
-      setRedoStack(newRedoStack);
-      setHistoryStack((prev) => [...prev, lastRedo].slice(-DISPLAY_LIMITS.MAX_HISTORY_SIZE));
-      showSuccess(`Redid move of "${lastRedo.issueTitle}"`);
+      setRedoStack(stack.slice(0, -1));
+      setHistoryStack((prev) => [...prev, action].slice(-DISPLAY_LIMITS.MAX_HISTORY_SIZE));
+      showSuccess(`Redid move of "${action.issueTitle}"`);
     } catch (error) {
       showError(error, "Failed to redo");
     }
-  }, [redoStack, updateIssueStatus]);
+  };
 
-  // Keyboard shortcuts
+  // Stable refs for keyboard handler
+  const handlersRef = useRef({ handleUndo, handleRedo });
+  handlersRef.current = { handleUndo, handleRedo };
+
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const isMod = e.metaKey || e.ctrlKey;
-
-      if (isMod && e.key === "z") {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "z") {
         e.preventDefault();
         if (e.shiftKey) {
-          handleRedo();
+          handlersRef.current.handleRedo();
         } else {
-          handleUndo();
+          handlersRef.current.handleUndo();
         }
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleRedo, handleUndo]);
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
-  return {
-    historyStack,
-    redoStack,
-    pushAction,
-    handleUndo,
-    handleRedo,
-  };
+  return { historyStack, redoStack, pushAction, handleUndo, handleRedo };
 }

@@ -7,15 +7,17 @@
  */
 
 import { api } from "@convex/_generated/api";
-import type { Doc, Id } from "@convex/_generated/dataModel";
+import type { Id } from "@convex/_generated/dataModel";
 import { MONTH, WEEK } from "@convex/lib/timeUtils";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Calendar, DollarSign, TrendingUp } from "@/lib/icons";
-import { cn } from "@/lib/utils";
+import { Avatar } from "../ui/Avatar";
+import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { EmptyState } from "../ui/EmptyState";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Icon } from "../ui/Icon";
@@ -30,10 +32,30 @@ interface BurnRateDashboardProps {
 
 interface UserWithBurnRate {
   cost: number;
-  user?: Doc<"users">;
   hours: number;
   billableHours: number;
+  billableCost: number;
+  user: {
+    _id: Id<"users">;
+    name: string;
+    email?: string;
+    image?: string;
+  } | null;
 }
+
+const METRIC_CARD_RECIPES = {
+  info: "metricTileInfo",
+  success: "metricTileSuccess",
+  accent: "metricTileAccent",
+  warning: "metricTileWarning",
+} as const;
+
+const METRIC_BADGE_VARIANTS = {
+  info: "info",
+  success: "success",
+  accent: "accent",
+  warning: "warning",
+} as const;
 
 /** Dashboard showing billable hours, burn rate, and utilization metrics. */
 export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
@@ -72,6 +94,7 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
     startDate,
     endDate,
   });
+  const teamCostEntries = (teamCosts ?? []) as UserWithBurnRate[];
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -171,15 +194,16 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
       <Stack gap="md">
         <Typography variant="h3">Team Costs Breakdown</Typography>
 
-        {teamCosts.length === 0 ? (
-          <Card padding="lg" className="bg-ui-bg-secondary text-center">
-            <Typography variant="small" color="tertiary">
-              No time entries for this period
-            </Typography>
-          </Card>
+        {teamCostEntries.length === 0 ? (
+          <EmptyState
+            icon={Calendar}
+            title="No time entries for this period"
+            description="Track work during this range to see burn rate and team cost breakdowns."
+            size="compact"
+          />
         ) : (
           <Stack gap="sm">
-            {(teamCosts as unknown as UserWithBurnRate[]).map((member) => {
+            {teamCostEntries.map((member) => {
               const percentOfTotal =
                 burnRate.totalCost > 0 ? (member.cost / burnRate.totalCost) * 100 : 0;
 
@@ -188,21 +212,13 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
                   <Stack gap="sm">
                     <Flex justify="between" align="center">
                       <Flex align="center" gap="md">
-                        {member.user?.image ? (
-                          <img
-                            src={member.user.image}
-                            alt={member.user.name}
-                            className="w-8 h-8 rounded-full"
-                          />
-                        ) : (
-                          <Flex
-                            align="center"
-                            justify="center"
-                            className="w-8 h-8 rounded-full bg-ui-bg-tertiary text-sm font-medium text-ui-text-secondary"
-                          >
-                            {member.user?.name?.[0] || "?"}
-                          </Flex>
-                        )}
+                        <Avatar
+                          src={member.user?.image}
+                          name={member.user?.name}
+                          email={member.user?.email}
+                          size="md"
+                          variant="neutral"
+                        />
                         <Stack gap="none">
                           <Typography variant="label">{member.user?.name || "Unknown"}</Typography>
                           <Typography variant="caption" color="tertiary">
@@ -213,11 +229,9 @@ export function BurnRateDashboard({ projectId }: BurnRateDashboardProps) {
                       </Flex>
 
                       <Stack gap="none" align="end">
-                        <Typography variant="label" className="py-2 text-right">
-                          {formatHours(member.hours)}
-                        </Typography>
-                        <Typography variant="label" className="py-2 text-right">
-                          {formatHours(member.billableHours)}
+                        <Typography variant="label">{formatHours(member.hours)}h</Typography>
+                        <Typography variant="label">
+                          {formatHours(member.billableHours)}h
                         </Typography>
                         <Typography variant="label">{formatCurrency(member.cost)}</Typography>
                         <Typography variant="caption" color="tertiary">
@@ -247,24 +261,17 @@ interface MetricCardProps {
 }
 
 function MetricCard({ label, value, icon, color }: MetricCardProps) {
-  const colorClasses = {
-    info: "bg-status-info-bg border-status-info/30",
-    success: "bg-status-success-bg border-status-success/30",
-    accent: "bg-accent-subtle border-accent-border",
-    warning: "bg-status-warning-bg border-status-warning/30",
-  };
-
   return (
-    <Card padding="md" className={cn("border", colorClasses[color])}>
-      <Flex align="center" gap="sm" className="mb-2">
-        <Icon icon={icon} size="lg" />
-        <Typography variant="caption" className="font-medium">
-          {label}
-        </Typography>
-      </Flex>
-      <Typography variant="h3" className="text-ui-text">
-        {value}
-      </Typography>
+    <Card recipe={METRIC_CARD_RECIPES[color]} padding="md">
+      <Stack gap="sm">
+        <Badge variant={METRIC_BADGE_VARIANTS[color]} shape="pill" size="md">
+          <Flex as="span" align="center" gap="xs">
+            <Icon icon={icon} size="sm" />
+            <span>{label}</span>
+          </Flex>
+        </Badge>
+        <Typography variant="h3">{value}</Typography>
+      </Stack>
     </Card>
   );
 }

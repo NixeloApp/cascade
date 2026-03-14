@@ -36,11 +36,7 @@ export function PageHeader({
   className,
 }: PageHeaderProps): ReactNode {
   return (
-    <Card
-      recipe="pageHeader"
-      padding="none"
-      className={cn("mb-4 px-3.5 py-3 sm:mb-5 sm:px-5 sm:py-4", className)}
-    >
+    <Card recipe="pageHeader" padding="md" className={cn("mb-4 sm:mb-5", className)}>
       {breadcrumbs && breadcrumbs.length > 0 && (
         <Breadcrumb className="mb-2">
           <BreadcrumbList>
@@ -64,28 +60,20 @@ export function PageHeader({
       <Flex
         justify="between"
         align="start"
+        alignSm="end"
         gap="md"
         direction="column"
-        className="sm:flex-row sm:items-end"
+        directionSm="row"
       >
         <Stack gap="xs" className="min-w-0">
           <Flex align="center" gap="xs" className="mb-0.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-brand shadow-brand-halo ring-2 ring-brand/8 sm:h-2 sm:w-2" />
-            <Typography
-              variant="caption"
-              className="uppercase tracking-[0.18em] text-ui-text-tertiary sm:tracking-[0.22em]"
-            >
-              Workspace view
-            </Typography>
+            <Card recipe="pageHeaderIndicator" padding="none" aria-hidden="true" />
+            <Typography variant="pageHeaderEyebrow">Workspace view</Typography>
           </Flex>
-          <Typography variant="h2" className="text-xl leading-tight sm:text-2xl lg:text-3xl">
+          <Typography variant="pageHeaderTitle" as="h2">
             {title}
           </Typography>
-          {description && (
-            <Typography variant="muted" className="max-w-3xl text-xs leading-5 sm:text-sm">
-              {description}
-            </Typography>
-          )}
+          {description && <Typography variant="pageHeaderDescription">{description}</Typography>}
         </Stack>
         {actions && (
           <Flex gap="sm" align="center" className="w-full shrink-0 sm:w-auto">

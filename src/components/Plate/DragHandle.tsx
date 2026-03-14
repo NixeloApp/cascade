@@ -8,8 +8,7 @@
 import { GripVertical, Plus, Trash2 } from "lucide-react";
 import { useEditorRef, useElement, useNodePath } from "platejs/react";
 import { useState } from "react";
-
-import { Button } from "@/components/ui/Button";
+import { getCardRecipeClassName } from "@/components/ui/Card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,18 +16,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
+import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
+import { IconButton } from "@/components/ui/IconButton";
 import { NODE_TYPES } from "@/lib/plate/plugins";
 import { cn } from "@/lib/utils";
 
 interface DragHandleProps {
   className?: string;
+  visible?: boolean;
 }
+
+const DRAG_HANDLE_OFFSET = "-2.5rem";
 
 /**
  * Drag handle component for block elements
  * Must be rendered inside an element context within Plate
  */
-export function DragHandle({ className }: DragHandleProps) {
+export function DragHandle({ className, visible = false }: DragHandleProps) {
   const editor = useEditorRef();
   const element = useElement();
   const path = useNodePath(element);
@@ -81,7 +86,7 @@ export function DragHandle({ className }: DragHandleProps) {
 
     // Create a drag preview
     const dragImage = document.createElement("div");
-    dragImage.className = "bg-brand-subtle border border-brand rounded p-2 text-sm";
+    dragImage.className = getCardRecipeClassName("dragPreview");
     dragImage.textContent = "Moving block...";
     document.body.appendChild(dragImage);
     e.dataTransfer.setDragImage(dragImage, 0, 0);
@@ -102,47 +107,45 @@ export function DragHandle({ className }: DragHandleProps) {
   }
 
   return (
-    <div
-      className={cn(
-        "absolute -left-10 top-0 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity",
-        isDragging && "opacity-50",
-        className,
-      )}
+    <Flex
+      className={cn(className)}
+      gap="xs"
+      align="center"
       contentEditable={false}
+      style={{ left: DRAG_HANDLE_OFFSET, position: "absolute", top: 0 }}
     >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 w-6 p-0 cursor-grab active:cursor-grabbing"
+          <IconButton
+            variant="dragHandle"
+            size="xs"
+            aria-label="Block actions"
             draggable
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
+            style={{ opacity: isDragging || visible ? 1 : 0 }}
           >
-            <GripVertical className="h-4 w-4 text-ui-text-tertiary" />
-          </Button>
+            <Icon icon={GripVertical} size="sm" className="text-ui-text-tertiary" />
+          </IconButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" side="left">
-          <DropdownMenuItem onSelect={handleAddAbove}>
-            <Plus className="mr-2 h-4 w-4" />
+          <DropdownMenuItem onSelect={handleAddAbove} icon={<Icon icon={Plus} size="sm" />}>
             Add block above
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={handleAddBelow}>
-            <Plus className="mr-2 h-4 w-4" />
+          <DropdownMenuItem onSelect={handleAddBelow} icon={<Icon icon={Plus} size="sm" />}>
             Add block below
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onSelect={handleDelete}
-            className="text-status-error focus:text-status-error"
+            variant="danger"
+            icon={<Icon icon={Trash2} size="sm" />}
           >
-            <Trash2 className="mr-2 h-4 w-4" />
             Delete block
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-    </div>
+    </Flex>
   );
 }
 
@@ -157,10 +160,28 @@ export function DragHandleWrapper({
   children: React.ReactNode;
   className?: string;
 }) {
+  const [isHandleVisible, setIsHandleVisible] = useState(false);
+
+  const handleBlurCapture = (event: React.FocusEvent<HTMLDivElement>) => {
+    if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) {
+      return;
+    }
+
+    setIsHandleVisible(false);
+  };
+
   return (
-    <div className={cn("relative group", className)}>
-      <DragHandle />
+    <Flex
+      direction="column"
+      className={cn(className)}
+      onMouseEnter={() => setIsHandleVisible(true)}
+      onMouseLeave={() => setIsHandleVisible(false)}
+      onFocusCapture={() => setIsHandleVisible(true)}
+      onBlurCapture={handleBlurCapture}
+      style={{ position: "relative" }}
+    >
+      <DragHandle visible={isHandleVisible} />
       {children}
-    </div>
+    </Flex>
   );
 }

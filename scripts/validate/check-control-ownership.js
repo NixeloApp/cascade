@@ -15,9 +15,6 @@ import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 const TOGGLE_GROUP_IMPORT_RE =
   /import\s*\{[\s\S]*\bToggleGroup\b[\s\S]*\}\s*from\s*["'][^"']*ToggleGroup["']/;
-const ALLOWED_TOGGLE_GROUP_FILES = new Set([
-  "src/components/Calendar/shadcn-calendar/header/actions/calendar-header-actions-mode.tsx",
-]);
 
 export function run() {
   const SRC_DIR = path.join(ROOT, "src");
@@ -31,7 +28,6 @@ export function run() {
 
     if (rel.includes(".test.") || rel.includes(".spec.") || rel.includes(".stories.")) continue;
     if (rel.startsWith("src/components/ui/")) continue;
-    if (ALLOWED_TOGGLE_GROUP_FILES.has(rel)) continue;
 
     const content = fs.readFileSync(filePath, "utf8");
     if (!TOGGLE_GROUP_IMPORT_RE.test(content)) continue;

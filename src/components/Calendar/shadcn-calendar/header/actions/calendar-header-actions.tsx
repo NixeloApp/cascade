@@ -1,3 +1,5 @@
+import { Flex } from "@/components/ui/Flex";
+
 /** Container for calendar header action buttons. */
 export function CalendarHeaderActions({
   children,
@@ -5,8 +7,8 @@ export function CalendarHeaderActions({
   children: React.ReactNode;
 }): React.ReactElement {
   return (
-    <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-start">
+    <Flex align="center" justify="between" justifySm="start" gap="sm" className="w-full sm:w-auto">
       {children}
-    </div>
+    </Flex>
   );
 }

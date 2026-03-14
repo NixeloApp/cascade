@@ -9,15 +9,15 @@ import { useComboboxInput } from "@platejs/combobox/react";
 import { getMentionOnSelectItem, type TMentionItemBase } from "@platejs/mention";
 import type { PlateElementProps } from "platejs/react";
 import { useEditorRef } from "platejs/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { cn } from "@/lib/utils";
 
 interface MentionUser extends TMentionItemBase {
   id: string;
@@ -84,11 +84,13 @@ export function MentionInputElement({
         image: user.image,
       }));
 
-  // Reset selection when search results change
-  // biome-ignore lint/correctness/useExhaustiveDependencies: We intentionally want to reset on searchResults change
+  const selectionResetKey = `${search}:${items.map((item) => item.id).join("|")}`;
+
   useEffect(() => {
-    setSelectedIndex(0);
-  }, [searchResults]);
+    if (selectionResetKey) {
+      setSelectedIndex(0);
+    }
+  }, [selectionResetKey]);
 
   // Combobox input handling
   const { props: inputProps, removeInput } = useComboboxInput({
@@ -99,86 +101,73 @@ export function MentionInputElement({
   });
 
   // Handle selection
-  const onSelectItem = useCallback(
-    (item: MentionUser) => {
-      getMentionOnSelectItem()(editor, item, search);
-      removeInput(true);
-    },
-    [editor, search, removeInput],
-  );
+  const onSelectItem = (item: MentionUser) => {
+    getMentionOnSelectItem()(editor, item, search);
+    removeInput(true);
+  };
 
   // Keyboard navigation
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLSpanElement>) => {
-      if (!items.length) {
-        inputProps.onKeyDown(e as React.KeyboardEvent<HTMLElement>);
-        return;
-      }
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLSpanElement>) => {
+    if (!items.length) {
+      inputProps.onKeyDown(e as React.KeyboardEvent<HTMLElement>);
+      return;
+    }
 
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev + 1) % items.length);
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev - 1 + items.length) % items.length);
-      } else if (e.key === "Enter" || e.key === "Tab") {
-        e.preventDefault();
-        if (items[selectedIndex]) {
-          onSelectItem(items[selectedIndex]);
-        }
-      } else {
-        // Forward to combobox input handler
-        inputProps.onKeyDown(e as React.KeyboardEvent<HTMLElement>);
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev + 1) % items.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev - 1 + items.length) % items.length);
+    } else if (e.key === "Enter" || e.key === "Tab") {
+      e.preventDefault();
+      if (items[selectedIndex]) {
+        onSelectItem(items[selectedIndex]);
       }
-    },
-    [items, selectedIndex, onSelectItem, inputProps],
-  );
+    } else {
+      // Forward to combobox input handler
+      inputProps.onKeyDown(e as React.KeyboardEvent<HTMLElement>);
+    }
+  };
 
   return (
-    <span
+    <Badge
       {...attributes}
       ref={inputRef}
+      variant="mentionInput"
+      size="mentionInput"
       role="combobox"
       tabIndex={0}
       aria-expanded="true"
       aria-haspopup="listbox"
-      className={cn("inline-block rounded-sm bg-ui-bg-secondary px-1 relative", className)}
+      className={className}
       onKeyDown={handleKeyDown}
       onBlur={inputProps.onBlur}
     >
       @{children}
       {/* Combobox dropdown */}
-      <Card
-        padding="none"
-        variant="elevated"
-        className="absolute left-0 top-full z-50 mt-1 min-w-52 max-w-xs overflow-hidden shadow-lg"
-      >
+      <Card recipe="mentionInputMenu" padding="none">
         {items.length === 0 ? (
-          <div className="px-3 py-2">
+          <Card variant="ghost" padding="sm" radius="none">
             <Typography variant="small" color="secondary">
               {search ? "No users found" : "Type to search users..."}
             </Typography>
-          </div>
+          </Card>
         ) : (
           <Stack gap="none">
             {items.map((item, index) => (
               <Button
                 key={item.id}
                 variant="unstyled"
-                className={cn(
-                  "w-full h-auto px-3 py-2 text-left transition-colors justify-start rounded-none",
-                  "hover:bg-ui-bg-hover focus:bg-ui-bg-hover",
-                  index === selectedIndex && "bg-ui-bg-hover",
-                )}
+                chrome={index === selectedIndex ? "listRowActive" : "listRow"}
+                chromeSize="listRow"
                 onClick={() => onSelectItem(item)}
                 onMouseEnter={() => setSelectedIndex(index)}
               >
                 <Flex align="center" gap="sm">
                   <Avatar name={item.text} src={item.image} size="sm" />
                   <Stack gap="none">
-                    <Typography variant="small" className="font-medium">
-                      {item.text}
-                    </Typography>
+                    <Typography variant="label">{item.text}</Typography>
                     {item.email && (
                       <Typography variant="caption" color="secondary">
                         {item.email}
@@ -191,6 +180,6 @@ export function MentionInputElement({
           </Stack>
         )}
       </Card>
-    </span>
+    </Badge>
   );
 }

@@ -19,6 +19,7 @@ import { isAppError, upstream, validation } from "../lib/errors";
 import { fetchWithTimeout } from "../lib/fetchWithTimeout";
 import { escapeHtml, escapeScriptJson } from "../lib/html";
 import { logger } from "../lib/logger";
+import { renderGitHubSuccessPageHtml, renderOAuthErrorPageHtml } from "./oauthHtml";
 
 const OAUTH_STATE_COOKIE_NAME = "github-oauth-state";
 const OAUTH_STATE_COOKIE_BASE_ATTRIBUTES = "Path=/; HttpOnly; Secure; SameSite=Lax";
@@ -249,27 +250,11 @@ export const handleCallbackHandler = async (...[, request]: [ActionCtx, Request]
   if (error) {
     // User denied access or error occurred
     return new Response(
-      `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>GitHub - Error</title>
-          <style>
-            body { font-family: system-ui; max-width: 600px; margin: 100px auto; padding: 20px; text-align: center; }
-            .error { background: #fee; border: 1px solid #fcc; padding: 20px; border-radius: 8px; }
-            button { background: #6b7280; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 20px; }
-            button:hover { background: #4b5563; }
-          </style>
-        </head>
-        <body>
-          <div class="error">
-            <h1>Connection Failed</h1>
-            <p>Failed to connect to GitHub: ${escapeHtml(errorDescription || error || "")}</p>
-            <button onclick="window.close()">Close Window</button>
-          </div>
-        </body>
-      </html>
-      `,
+      renderOAuthErrorPageHtml(
+        "GitHub - Error",
+        `Failed to connect to GitHub: ${escapeHtml(errorDescription || error || "")}`,
+        "",
+      ),
       {
         status: 400,
         headers: {
@@ -308,47 +293,7 @@ export const handleCallbackHandler = async (...[, request]: [ActionCtx, Request]
     // Return success page that passes tokens to opener window
     // The frontend will save these via the authenticated connectGitHub mutation
     return new Response(
-      `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>GitHub - Connected</title>
-          <style>
-            body { font-family: system-ui; max-width: 600px; margin: 100px auto; padding: 20px; text-align: center; background: #0d1117; color: #c9d1d9; }
-            .success { background: #161b22; border: 1px solid #30363d; padding: 20px; border-radius: 8px; }
-            .github-icon { font-size: 48px; margin-bottom: 16px; }
-            button { background: #238636; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 20px; }
-            button:hover { background: #2ea043; }
-            .username { color: #58a6ff; font-weight: 600; }
-          </style>
-        </head>
-        <body>
-          <div class="success">
-            <div class="github-icon">&#128025;</div>
-            <h1>Connected Successfully</h1>
-            <p>Your GitHub account has been connected to Nixelo.</p>
-            <p class="username">@${escapeHtml(githubUsername)}</p>
-            <button onclick="window.close()">Close Window</button>
-            <script>
-              // Pass tokens to opener window for saving via authenticated mutation
-              if (window.opener) {
-                // Use opener's origin for security instead of wildcard
-                const targetOrigin = window.opener.location.origin;
-                window.opener.postMessage({
-                  type: 'github-connected',
-                  data: ${escapeScriptJson(connectionData)}
-                }, targetOrigin);
-              }
-              // Auto-close after 3 seconds
-              setTimeout(() => {
-                window.opener?.location.reload();
-                window.close();
-              }, 3000);
-            </script>
-          </div>
-        </body>
-      </html>
-      `,
+      renderGitHubSuccessPageHtml(escapeHtml(githubUsername), escapeScriptJson(connectionData)),
       {
         status: 200,
         headers: {
@@ -373,37 +318,13 @@ const handleOAuthError = (error: unknown) => {
     errorMessage = error.message;
   }
 
-  return new Response(
-    `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>GitHub - Error</title>
-        <style>
-          body { font-family: system-ui; max-width: 600px; margin: 100px auto; padding: 20px; text-align: center; }
-          .error { background: #fee; border: 1px solid #fcc; padding: 20px; border-radius: 8px; }
-          button { background: #6b7280; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 20px; }
-          button:hover { background: #4b5563; }
-        </style>
-      </head>
-      <body>
-        <div class="error">
-          <h1>Connection Failed</h1>
-          <p>${escapeHtml(errorMessage)}</p>
-          <p>Please try again or contact support if the problem persists.</p>
-          <button onclick="window.close()">Close Window</button>
-        </div>
-      </body>
-    </html>
-    `,
-    {
-      status,
-      headers: {
-        "Content-Type": "text/html",
-        "Set-Cookie": clearOAuthStateCookie(),
-      },
+  return new Response(renderOAuthErrorPageHtml("GitHub - Error", escapeHtml(errorMessage)), {
+    status,
+    headers: {
+      "Content-Type": "text/html",
+      "Set-Cookie": clearOAuthStateCookie(),
     },
-  );
+  });
 };
 
 /**

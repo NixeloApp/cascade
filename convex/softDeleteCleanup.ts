@@ -45,7 +45,7 @@ function querySoftDeletedRecords(
       predicate: (q: { eq: (field: string, value: boolean) => unknown }) => unknown,
     ) => { take: (n: number) => Promise<SoftDeletableRecord[]> };
   };
-  const query = db.query(table) as unknown as QueryBuilder;
+  const query = db.query(table) as QueryBuilder;
   return query.withIndex("by_deleted", (q) => q.eq("isDeleted", true)).take(1000);
 }
 

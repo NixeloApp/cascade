@@ -1,4 +1,6 @@
 import { isSameDay, isToday } from "date-fns";
+import { Card } from "@/components/ui/Card";
+import { Flex } from "@/components/ui/Flex";
 import { cn } from "@/lib/utils";
 import { useCalendarContext } from "../../calendar-context";
 import { CalendarEvent } from "../../calendar-event";
@@ -13,21 +15,18 @@ export function CalendarBodyDayContent({ date }: { date: Date }): React.ReactEle
   const today = isToday(date);
 
   return (
-    <div className={cn("flex flex-col flex-grow", today && "bg-brand/[0.02]")}>
+    <Flex direction="column" flex="1" className={cn(today && "bg-brand/[0.02]")}>
       <CalendarBodyHeader date={date} />
 
-      <div className="flex-1 relative">
+      <Flex direction="column" flex="1" className="relative">
         {hours.map((hour) => (
-          <div
-            key={hour}
-            className="h-24 border-b border-ui-border transition-colors duration-default hover:bg-ui-bg-hover/30 sm:h-32"
-          />
+          <Card key={hour} recipe="calendarDayHourRow" />
         ))}
 
         {dayEvents.map((event) => (
           <CalendarEvent key={event.id} event={event} />
         ))}
-      </div>
-    </div>
+      </Flex>
+    </Flex>
   );
 }

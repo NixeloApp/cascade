@@ -15,6 +15,7 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import { useEntityForm } from "@/hooks/useEntityForm";
 import { useModal } from "@/hooks/useModal";
+import { COLORS } from "@/lib/constants";
 import { Tag } from "@/lib/icons";
 import { showSuccess } from "@/lib/toast";
 import { Badge } from "./ui/Badge";
@@ -47,13 +48,10 @@ interface GroupFormData {
   [key: string]: unknown;
 }
 
-// Default to brand-ring equivalent color
-const DEFAULT_LABEL_COLOR = "#6366F1"; // matches --color-brand-ring
-
 const DEFAULT_LABEL_FORM: LabelFormData = {
   name: "",
   description: "",
-  color: DEFAULT_LABEL_COLOR,
+  color: COLORS.DEFAULT_LABEL,
   groupId: null,
 };
 
@@ -286,19 +284,10 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                   <Card key={groupKey} padding="none" className="overflow-hidden">
                     {/* Group Header */}
                     <Card
+                      recipe="labelGroupHeader"
                       padding="sm"
                       radius="none"
-                      variant="ghost"
-                      className="bg-ui-bg-secondary cursor-pointer hover:bg-ui-bg-tertiary transition-colors"
                       onClick={() => toggleGroup(groupKey)}
-                      onKeyDown={(e: React.KeyboardEvent) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          toggleGroup(groupKey);
-                        }
-                      }}
-                      tabIndex={0}
-                      role="button"
                       aria-expanded={!isCollapsed}
                     >
                       <Flex justify="between" align="center">
@@ -323,15 +312,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                           )}
                         </Flex>
 
-                        <Flex
-                          gap="sm"
-                          onClick={(e) => e.stopPropagation()}
-                          onKeyDown={(e: React.KeyboardEvent) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.stopPropagation();
-                            }
-                          }}
-                        >
+                        <Flex gap="sm" onClick={(e) => e.stopPropagation()}>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -368,13 +349,7 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                     {!isCollapsed && group.labels.length > 0 && (
                       <Flex direction="column" className="divide-y divide-ui-border">
                         {group.labels.map((label) => (
-                          <Card
-                            key={label._id}
-                            padding="sm"
-                            radius="none"
-                            variant="ghost"
-                            className="hover:bg-ui-bg-secondary transition-colors"
-                          >
+                          <Card key={label._id} recipe="labelGroupRow" padding="sm" radius="none">
                             <Flex justify="between" align="center">
                               <Flex gap="md" align="center">
                                 <Badge
@@ -424,9 +399,8 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                           No labels in this group.{" "}
                           <Button
                             variant="link"
-                            size="sm"
+                            size="none"
                             onClick={() => handleCreateLabel(group._id)}
-                            className="p-0 h-auto text-brand hover:underline"
                           >
                             Add one
                           </Button>

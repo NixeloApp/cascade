@@ -298,7 +298,7 @@ export const listExecutions = authenticatedQuery({
 
     return await fetchPaginatedQuery(ctx, {
       paginationOpts: args.paginationOpts,
-      query: (db) =>
+      buildQuery: (db) =>
         db
           .query("webhookExecutions")
           .withIndex("by_webhook", (q) => q.eq("webhookId", args.webhookId))

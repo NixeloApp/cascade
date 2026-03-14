@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Input } from "@/components/ui/Input";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 
 type InvoiceLineItem = {
@@ -73,65 +74,72 @@ export function InvoiceEditor({ initialLineItems, onSave, isSaving = false }: In
       <CardHeader>
         <CardTitle>Invoice Editor</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 pt-4">
-        {lineItems.map((line, index) => (
-          <Grid
-            key={line.localId}
-            cols={1}
-            gap="sm"
-            className="rounded-lg border border-ui-border p-3 lg:grid-cols-[2fr_1fr_1fr_auto]"
-          >
-            <Input
-              value={line.description}
-              placeholder="Line item description"
-              onChange={(event) => updateLineItem(index, { description: event.target.value })}
-            />
-            <Input
-              type="number"
-              min={0.01}
-              step={0.25}
-              value={line.quantity}
-              onChange={(event) =>
-                updateLineItem(index, { quantity: Number.parseFloat(event.target.value || "0") })
-              }
-            />
-            <Input
-              type="number"
-              min={0}
-              step={0.01}
-              value={line.rate}
-              onChange={(event) =>
-                updateLineItem(index, { rate: Number.parseFloat(event.target.value || "0") })
-              }
-            />
-            <Button variant="ghost" onClick={() => removeLine(index)}>
-              Remove
+      <CardContent>
+        <Stack gap="lg">
+          <Stack gap="sm">
+            {lineItems.map((line, index) => (
+              <Card key={line.localId} recipe="invoiceEditorLine" padding="sm">
+                <Grid cols={1} colsMd={2} colsLg={4} gap="sm">
+                  <Input
+                    value={line.description}
+                    placeholder="Line item description"
+                    onChange={(event) => updateLineItem(index, { description: event.target.value })}
+                  />
+                  <Input
+                    type="number"
+                    min={0.01}
+                    step={0.25}
+                    value={line.quantity}
+                    onChange={(event) =>
+                      updateLineItem(index, {
+                        quantity: Number.parseFloat(event.target.value || "0"),
+                      })
+                    }
+                  />
+                  <Input
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={line.rate}
+                    onChange={(event) =>
+                      updateLineItem(index, {
+                        rate: Number.parseFloat(event.target.value || "0"),
+                      })
+                    }
+                  />
+                  <Flex justify="end">
+                    <Button variant="ghost" onClick={() => removeLine(index)}>
+                      Remove
+                    </Button>
+                  </Flex>
+                </Grid>
+              </Card>
+            ))}
+          </Stack>
+
+          <Flex align="center" justify="between" gap="md" wrap>
+            <Button variant="secondary" onClick={addLine}>
+              Add line
             </Button>
-          </Grid>
-        ))}
+            <Typography variant="h4">Subtotal: {formatCurrency(subtotal)}</Typography>
+          </Flex>
 
-        <Flex align="center" justify="between" gap="md">
-          <Button variant="secondary" onClick={addLine}>
-            Add line
+          <Button
+            onClick={() =>
+              onSave(
+                lineItems.map((line) => ({
+                  description: line.description,
+                  quantity: line.quantity,
+                  rate: line.rate,
+                })),
+              )
+            }
+            isLoading={isSaving}
+            disabled={lineItems.length === 0 || lineItems.some((line) => !line.description.trim())}
+          >
+            Save line items
           </Button>
-          <Typography variant="h4">Subtotal: {formatCurrency(subtotal)}</Typography>
-        </Flex>
-
-        <Button
-          onClick={() =>
-            onSave(
-              lineItems.map((line) => ({
-                description: line.description,
-                quantity: line.quantity,
-                rate: line.rate,
-              })),
-            )
-          }
-          isLoading={isSaving}
-          disabled={lineItems.length === 0 || lineItems.some((line) => !line.description.trim())}
-        >
-          Save line items
-        </Button>
+        </Stack>
       </CardContent>
     </Card>
   );

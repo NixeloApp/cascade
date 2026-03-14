@@ -38,6 +38,8 @@ interface EmptyStateProps {
   surface?: EmptyStateSurface;
   /** Optional className for the container */
   className?: string;
+  /** Optional additional content below the description */
+  children?: ReactNode;
 }
 
 const EMPTY_STATE_ICON_COLOR_CLASS: Record<EmptyStateVariant, string> = {
@@ -140,6 +142,7 @@ export function EmptyState({
   align = "center",
   surface = "default",
   className,
+  children,
 }: EmptyStateProps) {
   const iconColorClass = EMPTY_STATE_ICON_COLOR_CLASS[variant];
   const sizeClass = EMPTY_STATE_SIZE_CLASS[size];
@@ -179,6 +182,7 @@ export function EmptyState({
           {description}
         </Typography>
       )}
+      {children}
       {action && (
         <div className={size === "compact" ? "mt-4" : "mt-6"}>{renderEmptyStateAction(action)}</div>
       )}

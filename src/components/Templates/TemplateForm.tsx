@@ -199,7 +199,7 @@ export function TemplateForm({ projectId, template, open, onOpenChange }: Templa
               label="Description Template"
               placeholder="## Steps to Reproduce&#10;1. &#10;2. &#10;&#10;## Expected Result&#10;&#10;## Actual Result"
               rows={6}
-              className="font-mono text-sm"
+              variant="code"
             />
           )}
         </form.Field>
@@ -284,7 +284,7 @@ export function TemplateForm({ projectId, template, open, onOpenChange }: Templa
 
         <form.Subscribe selector={(state) => state.isSubmitting}>
           {(isSubmitting) => (
-            <Flex gap="sm" justify="end" className="pt-4">
+            <Flex gap="sm" justify="end" className="mt-4">
               <Button
                 type="button"
                 variant="secondary"

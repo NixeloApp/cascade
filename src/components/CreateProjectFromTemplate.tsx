@@ -18,7 +18,6 @@ import { useOrganization } from "@/hooks/useOrgContext";
 import { ArrowLeft, CheckCircle } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
@@ -66,12 +65,12 @@ interface ProjectConfigurationProps {
 function getCategoryColor(category: string): string {
   switch (category) {
     case "software":
-      return "bg-brand-subtle text-brand-active";
+      return "brand";
     case "marketing":
     case "design":
-      return "bg-accent-subtle text-accent-active";
+      return "accent";
     default:
-      return "bg-ui-bg-tertiary text-ui-text-secondary";
+      return "neutral";
   }
 }
 
@@ -83,7 +82,7 @@ function CreateProjectFooter({
   onCreate,
 }: CreateProjectFooterProps) {
   return (
-    <Flex direction="column" gap="sm" className="sm:flex-row sm:justify-between w-full">
+    <Flex direction="column" directionSm="row" justifySm="between" gap="sm" className="w-full">
       <Button
         onClick={onBack}
         variant="secondary"
@@ -93,29 +92,24 @@ function CreateProjectFooter({
       >
         Back to Templates
       </Button>
-      <Flex gap="md" className="w-full sm:w-auto">
-        <Button
-          onClick={onCancel}
-          variant="secondary"
-          className="flex-1 sm:flex-none"
-          disabled={isSubmitting}
-        >
-          Cancel
-        </Button>
-        <Button
-          onClick={onCreate}
-          disabled={!canCreate || isSubmitting}
-          className="flex-1 sm:flex-none"
-        >
-          {isSubmitting ? (
-            <Flex align="center" gap="sm">
-              <LoadingSpinner size="sm" />
-              <span>Creating...</span>
-            </Flex>
-          ) : (
-            "Create Project"
-          )}
-        </Button>
+      <Flex direction="column" directionSm="row" gap="md" className="w-full sm:w-auto">
+        <FlexItem flex="1" flexSm="none">
+          <Button onClick={onCancel} variant="secondary" className="w-full" disabled={isSubmitting}>
+            Cancel
+          </Button>
+        </FlexItem>
+        <FlexItem flex="1" flexSm="none">
+          <Button onClick={onCreate} disabled={!canCreate || isSubmitting} className="w-full">
+            {isSubmitting ? (
+              <Flex align="center" gap="sm">
+                <LoadingSpinner size="sm" />
+                <span>Creating...</span>
+              </Flex>
+            ) : (
+              "Create Project"
+            )}
+          </Button>
+        </FlexItem>
       </Flex>
     </Flex>
   );
@@ -138,10 +132,11 @@ function TemplateSelection({ templates, onSelectTemplate }: TemplateSelectionPro
         <Grid as="ul" cols={1} colsMd={2} gap="lg">
           {templates.map((template) => (
             <li key={template._id} className="list-none">
-              <Button
-                variant="unstyled"
+              <Card
+                recipe="optionTile"
+                padding="lg"
                 onClick={() => onSelectTemplate(template._id)}
-                className="text-left border-2 border-ui-border rounded-lg hover:border-brand-ring hover:bg-ui-bg-secondary transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-ring h-auto w-full"
+                className="h-full text-left"
               >
                 <Flex align="start" gap="lg">
                   <FlexItem shrink={false}>
@@ -158,7 +153,12 @@ function TemplateSelection({ templates, onSelectTemplate }: TemplateSelectionPro
                         {template.description}
                       </Typography>
                       <Flex align="center" gap="sm">
-                        <Badge size="sm" className={cn(getCategoryColor(template.category))}>
+                        <Badge
+                          size="sm"
+                          variant={
+                            getCategoryColor(template.category) as "brand" | "accent" | "neutral"
+                          }
+                        >
                           {template.category}
                         </Badge>
                         <Badge size="sm" variant="neutral" className="capitalize">
@@ -168,7 +168,7 @@ function TemplateSelection({ templates, onSelectTemplate }: TemplateSelectionPro
                     </Stack>
                   </FlexItem>
                 </Flex>
-              </Button>
+              </Card>
             </li>
           ))}
         </Grid>
@@ -192,7 +192,7 @@ function ProjectConfiguration({
   return (
     <Stack gap="lg">
       {selectedTemplate && (
-        <Card padding="md" className="bg-ui-bg-secondary">
+        <Card recipe="commandSection" padding="md">
           <Flex align="center" gap="md">
             <Typography variant="h3" as="span">
               {selectedTemplate.icon}

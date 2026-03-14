@@ -1,132 +1,43 @@
-import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
-import { cn } from "@/lib/utils";
+import { Flex } from "@/components/ui/Flex";
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/SegmentedControl";
 import { useCalendarContext } from "../../calendar-context";
 import { calendarModeIconMap } from "../../calendar-mode-icon-map";
 import type { Mode } from "../../calendar-types";
 import { calendarModes } from "../../calendar-types";
+
+function isMode(value: string): value is Mode {
+  return calendarModes.some((modeOption) => modeOption === value);
+}
 
 /** Toggle group for switching between day/week/month calendar views. */
 export function CalendarHeaderActionsMode(): React.ReactElement {
   const { mode, setMode } = useCalendarContext();
 
   return (
-    <LayoutGroup>
-      <ToggleGroup
-        className="flex gap-0 -space-x-px overflow-hidden rounded-md border border-ui-border shadow-soft rtl:space-x-reverse sm:rounded-secondary"
-        type="single"
-        variant="outline"
-        value={mode}
-        onValueChange={(value) => {
-          if (value) setMode(value as Mode);
-        }}
-      >
-        {calendarModes.map((modeValue) => {
-          const isSelected = mode === modeValue;
-          return (
-            <motion.div
-              key={modeValue}
-              layout
-              className="flex-1 flex divide-x divide-ui-border"
-              animate={{ flex: isSelected ? 1.6 : 1 }}
-              transition={{
-                flex: {
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 30,
-                },
-              }}
-            >
-              <ToggleGroupItem
-                value={modeValue}
-                data-testid={`calendar-mode-${modeValue}`}
-                className={cn(
-                  "relative flex h-6 w-full items-center justify-center gap-1 rounded-none border-none text-xs shadow-none transition-colors duration-default focus-visible:z-10 sm:h-auto sm:gap-2 sm:text-base",
-                  isSelected
-                    ? "bg-ui-bg-tertiary text-ui-text z-10"
-                    : "bg-ui-bg text-ui-text-secondary hover:bg-ui-bg-hover hover:text-ui-text",
-                )}
-              >
-                <motion.div
-                  layout
-                  className="flex items-center justify-center gap-1 px-1 py-0.5 sm:gap-2 sm:px-3 sm:py-2"
-                  initial={false}
-                  animate={{
-                    scale: isSelected ? 1 : 0.95,
-                  }}
-                  transition={{
-                    scale: {
-                      type: "spring",
-                      stiffness: 400,
-                      damping: 30,
-                    },
-                    layout: {
-                      type: "spring",
-                      stiffness: 400,
-                      damping: 30,
-                    },
-                  }}
-                >
-                  <motion.div
-                    layout="position"
-                    initial={false}
-                    animate={{
-                      scale: isSelected ? 0.9 : 1,
-                    }}
-                    transition={{
-                      scale: {
-                        type: "spring",
-                        stiffness: 400,
-                        damping: 30,
-                      },
-                    }}
-                  >
-                    {calendarModeIconMap[modeValue]}
-                  </motion.div>
-                  <AnimatePresence mode="popLayout">
-                    {isSelected && (
-                      <motion.p
-                        layout="position"
-                        key={`text-${modeValue}`}
-                        className="hidden origin-left whitespace-nowrap text-sm font-medium sm:block"
-                        initial={{
-                          opacity: 0,
-                          x: -2,
-                          scale: 0.95,
-                        }}
-                        animate={{
-                          opacity: 1,
-                          x: 0,
-                          scale: 1,
-                          transition: {
-                            type: "spring",
-                            stiffness: 400,
-                            damping: 30,
-                            opacity: { duration: 0.15 },
-                          },
-                        }}
-                        exit={{
-                          opacity: 0,
-                          x: -2,
-                          scale: 0.95,
-                          transition: {
-                            type: "spring",
-                            stiffness: 400,
-                            damping: 30,
-                            opacity: { duration: 0.1 },
-                          },
-                        }}
-                      >
-                        {modeValue.charAt(0).toUpperCase() + modeValue.slice(1)}
-                      </motion.p>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              </ToggleGroupItem>
-            </motion.div>
-          );
-        })}
-      </ToggleGroup>
-    </LayoutGroup>
+    <SegmentedControl
+      value={mode}
+      variant="calendarMode"
+      size="calendarMode"
+      width="fill"
+      onValueChange={(value) => {
+        if (isMode(value)) setMode(value);
+      }}
+    >
+      {calendarModes.map((modeValue) => (
+        <SegmentedControlItem
+          key={modeValue}
+          value={modeValue}
+          data-testid={`calendar-mode-${modeValue}`}
+          width="fill"
+        >
+          <Flex as="span" inline align="center" gap="xs">
+            {calendarModeIconMap[modeValue]}
+            <span className="hidden sm:inline">
+              {modeValue.charAt(0).toUpperCase() + modeValue.slice(1)}
+            </span>
+          </Flex>
+        </SegmentedControlItem>
+      ))}
+    </SegmentedControl>
   );
 }

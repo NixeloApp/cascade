@@ -7,7 +7,6 @@
  */
 
 import type { Doc } from "@convex/_generated/dataModel";
-import { cva } from "class-variance-authority";
 import { useState } from "react";
 import { PresenceIndicator } from "@/components/PresenceIndicator";
 import { Badge } from "@/components/ui/Badge";
@@ -23,33 +22,6 @@ import { Typography } from "@/components/ui/Typography";
 import { Archive, Download, FolderInput, History, Lock, LockOpen, Star, Upload } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
-
-const documentHeaderTitleVariants = cva("", {
-  variants: {
-    surface: {
-      static: "text-2xl leading-tight sm:text-3xl lg:text-4xl -ml-2 rounded transition-default",
-      interactive:
-        "text-2xl leading-tight sm:text-3xl lg:text-4xl -ml-2 rounded transition-default cursor-pointer hover:bg-ui-bg-hover",
-      input:
-        "rounded bg-transparent px-2 py-1 -ml-2 text-2xl font-semibold tracking-tight text-ui-text focus-visible:ring-2 focus-visible:ring-brand-ring sm:text-3xl",
-    },
-  },
-});
-
-const documentHeaderActionButtonVariants = cva("px-2 sm:px-3 py-1.5 min-h-0", {
-  variants: {
-    surface: {
-      neutral:
-        "border border-ui-border text-ui-text-secondary hover:text-ui-text hover:border-ui-border-secondary transition-default",
-      accent:
-        "border border-ui-border text-ui-text-secondary hover:text-brand hover:bg-brand-subtle hover:border-brand-border transition-default disabled:opacity-50",
-      publicActive:
-        "border border-status-success/30 bg-status-success-bg text-status-success-text hover:bg-status-success-bg/80",
-      publicInactive:
-        "border border-ui-border text-ui-text-secondary hover:text-ui-text hover:border-ui-border-secondary transition-default",
-    },
-  },
-});
 
 interface LockStatus {
   isLocked: boolean;
@@ -79,8 +51,222 @@ interface DocumentHeaderProps {
   editorReady: boolean;
 }
 
+interface DocumentHeaderActionsProps {
+  document: DocumentHeaderProps["document"];
+  userId: string;
+  versionCount: number | undefined;
+  isFavorite: boolean;
+  isArchived: boolean;
+  onToggleFavorite: () => Promise<void>;
+  onImportMarkdown: () => Promise<void>;
+  onExportMarkdown: () => Promise<void>;
+  onShowVersionHistory: () => void;
+  editorReady: boolean;
+  ownerActions: {
+    lockStatus?: LockStatus;
+    onTogglePublic: () => Promise<void>;
+    onToggleArchive: () => Promise<void>;
+    onToggleLock?: () => Promise<void>;
+    onMoveToProject?: () => void;
+  };
+}
+
+interface OwnerDocumentActionsProps {
+  document: DocumentHeaderProps["document"];
+  isArchived: boolean;
+  lockStatus?: LockStatus;
+  onTogglePublic: () => Promise<void>;
+  onToggleArchive: () => Promise<void>;
+  onToggleLock?: () => Promise<void>;
+  onMoveToProject?: () => void;
+}
+
+interface DocumentLockActionProps {
+  lockStatus?: LockStatus;
+  onToggleLock: () => Promise<void>;
+}
+
+function DocumentLockAction({ lockStatus, onToggleLock }: DocumentLockActionProps) {
+  return (
+    <Tooltip
+      content={
+        lockStatus?.isLocked
+          ? lockStatus.canUnlock
+            ? "Unlock document (currently locked)"
+            : `Locked by ${lockStatus.lockedByName || "another user"}`
+          : "Lock document to prevent editing"
+      }
+    >
+      <IconButton
+        variant={lockStatus?.isLocked ? "subtle" : "ghost"}
+        size="sm"
+        onClick={() => void onToggleLock()}
+        disabled={lockStatus?.isLocked && !lockStatus.canUnlock}
+        aria-label={lockStatus?.isLocked ? "Unlock document" : "Lock document"}
+        aria-pressed={lockStatus?.isLocked}
+        className={cn(lockStatus?.isLocked && "text-status-warning")}
+      >
+        {lockStatus?.isLocked ? (
+          <Lock className="w-4 h-4" aria-hidden="true" />
+        ) : (
+          <LockOpen className="w-4 h-4" aria-hidden="true" />
+        )}
+      </IconButton>
+    </Tooltip>
+  );
+}
+
+function OwnerDocumentActions({
+  document,
+  isArchived,
+  lockStatus,
+  onTogglePublic,
+  onToggleArchive,
+  onToggleLock,
+  onMoveToProject,
+}: OwnerDocumentActionsProps) {
+  if (!document.isOwner) {
+    return null;
+  }
+
+  return (
+    <>
+      <Tooltip content={isArchived ? "Unarchive document" : "Archive document"}>
+        <IconButton
+          variant={isArchived ? "subtle" : "ghost"}
+          size="sm"
+          onClick={() => void onToggleArchive()}
+          aria-label={isArchived ? "Unarchive document" : "Archive document"}
+          aria-pressed={isArchived}
+          className={cn(isArchived && "text-ui-text-secondary")}
+        >
+          <Archive className="w-4 h-4" aria-hidden="true" />
+        </IconButton>
+      </Tooltip>
+
+      {onToggleLock && <DocumentLockAction lockStatus={lockStatus} onToggleLock={onToggleLock} />}
+
+      {onMoveToProject && (
+        <Tooltip content="Move to another project">
+          <IconButton
+            variant="ghost"
+            size="sm"
+            onClick={onMoveToProject}
+            aria-label="Move to another project"
+          >
+            <FolderInput className="w-4 h-4" aria-hidden="true" />
+          </IconButton>
+        </Tooltip>
+      )}
+
+      <Button
+        variant="unstyled"
+        chrome={document.isPublic ? "documentHeaderPublicActive" : "documentHeaderNeutral"}
+        chromeSize="documentHeaderToggle"
+        onClick={() => void onTogglePublic()}
+      >
+        {document.isPublic ? "Public" : "Private"}
+      </Button>
+    </>
+  );
+}
+
+function DocumentHeaderActions({
+  document,
+  userId,
+  versionCount,
+  isFavorite,
+  isArchived,
+  onToggleFavorite,
+  onImportMarkdown,
+  onExportMarkdown,
+  onShowVersionHistory,
+  editorReady,
+  ownerActions,
+}: DocumentHeaderActionsProps) {
+  return (
+    <Flex wrap align="center" gap="xs" className="w-full sm:w-auto">
+      <PresenceIndicator roomId={document._id} userId={userId} />
+
+      <Tooltip content={isFavorite ? "Remove from favorites" : "Add to favorites"}>
+        <IconButton
+          variant={isFavorite ? "brand" : "ghost"}
+          size="sm"
+          onClick={() => void onToggleFavorite()}
+          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+          aria-pressed={isFavorite}
+          className={cn(isFavorite && "text-status-warning")}
+        >
+          <Star className={cn("w-4 h-4", isFavorite && "fill-current")} aria-hidden="true" />
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip content="View version history">
+        <Button
+          variant="unstyled"
+          chrome="documentHeaderNeutral"
+          chromeSize="documentHeaderAction"
+          onClick={onShowVersionHistory}
+          leftIcon={<History className="w-4 h-4" aria-hidden="true" />}
+          aria-label="Version history"
+        >
+          <Typography variant="small" as="span" className="hidden sm:inline">
+            History
+          </Typography>
+          {versionCount !== undefined && versionCount > 0 && (
+            <Badge variant="secondary" className="ml-1">
+              {versionCount}
+            </Badge>
+          )}
+        </Button>
+      </Tooltip>
+
+      <Tooltip content="Import from Markdown file">
+        <Button
+          variant="unstyled"
+          chrome="documentHeaderAccent"
+          chromeSize="documentHeaderAction"
+          onClick={() => void onImportMarkdown()}
+          disabled={!editorReady}
+          leftIcon={<Upload className="w-4 h-4" aria-hidden="true" />}
+          aria-label="Import from Markdown"
+        >
+          <Typography variant="small" as="span" className="hidden sm:inline">
+            Import
+          </Typography>
+        </Button>
+      </Tooltip>
+
+      <Tooltip content="Export as Markdown file">
+        <Button
+          variant="unstyled"
+          chrome="documentHeaderAccent"
+          chromeSize="documentHeaderAction"
+          onClick={() => void onExportMarkdown()}
+          disabled={!editorReady}
+          leftIcon={<Download className="w-4 h-4" aria-hidden="true" />}
+          aria-label="Export as Markdown"
+        >
+          <Typography variant="small" as="span" className="hidden sm:inline">
+            Export
+          </Typography>
+        </Button>
+      </Tooltip>
+
+      <OwnerDocumentActions
+        document={document}
+        isArchived={isArchived}
+        lockStatus={ownerActions.lockStatus}
+        onTogglePublic={ownerActions.onTogglePublic}
+        onToggleArchive={ownerActions.onToggleArchive}
+        onToggleLock={ownerActions.onToggleLock}
+        onMoveToProject={ownerActions.onMoveToProject}
+      />
+    </Flex>
+  );
+}
+
 /** Document header with title, metadata, and action buttons (favorite, archive, lock, export). */
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Header component with many conditional action buttons based on permissions
 export function DocumentHeader({
   document,
   userId,
@@ -124,13 +310,11 @@ export function DocumentHeader({
 
   const titleComponent = (
     <Typography
-      variant="h2"
+      as="h2"
       data-testid={TEST_IDS.DOCUMENT.TITLE}
       role={document.isOwner ? "button" : undefined}
       tabIndex={document.isOwner ? 0 : undefined}
-      className={documentHeaderTitleVariants({
-        surface: document.isOwner ? "interactive" : "static",
-      })}
+      variant={document.isOwner ? "documentTitleInteractive" : "documentTitle"}
       onClick={document.isOwner ? handleTitleEdit : undefined}
       onKeyDown={
         document.isOwner
@@ -148,20 +332,16 @@ export function DocumentHeader({
   );
 
   return (
-    <Card
-      variant="default"
-      padding="md"
-      radius="none"
-      className="border-x-0 border-t-0 border-ui-border-secondary/85 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/96 to-ui-bg-soft/84 shadow-soft"
-    >
+    <Card recipe="documentHeaderShell" padding="md">
       <div className="mx-auto w-full max-w-5xl">
         <Stack gap="sm">
           <Flex
             direction="column"
+            directionSm="row"
             align="start"
+            alignSm="center"
             justify="between"
             gap="md"
-            className="sm:flex-row sm:items-center"
           >
             <FlexItem flex="1" className="w-full sm:w-auto">
               {isEditingTitle ? (
@@ -172,7 +352,7 @@ export function DocumentHeader({
                   onChange={(e) => setTitleValue(e.target.value)}
                   onBlur={() => void handleTitleSave()}
                   onKeyDown={handleTitleKeyDown}
-                  className={documentHeaderTitleVariants({ surface: "input" })}
+                  variant="documentTitle"
                 />
               ) : document.isOwner ? (
                 <Tooltip content="Click to edit title">{titleComponent}</Tooltip>
@@ -180,157 +360,25 @@ export function DocumentHeader({
                 titleComponent
               )}
             </FlexItem>
-
-            <Flex wrap align="center" gap="xs" className="w-full sm:w-auto">
-              <PresenceIndicator roomId={document._id} userId={userId} />
-
-              {/* Favorite */}
-              <Tooltip content={isFavorite ? "Remove from favorites" : "Add to favorites"}>
-                <IconButton
-                  variant={isFavorite ? "brand" : "ghost"}
-                  size="sm"
-                  onClick={() => void onToggleFavorite()}
-                  aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-                  aria-pressed={isFavorite}
-                  className={cn(isFavorite && "text-status-warning")}
-                >
-                  <Star
-                    className={cn("w-4 h-4", isFavorite && "fill-current")}
-                    aria-hidden="true"
-                  />
-                </IconButton>
-              </Tooltip>
-
-              {/* Archive (owner only) */}
-              {document.isOwner && (
-                <Tooltip content={isArchived ? "Unarchive document" : "Archive document"}>
-                  <IconButton
-                    variant={isArchived ? "subtle" : "ghost"}
-                    size="sm"
-                    onClick={() => void onToggleArchive()}
-                    aria-label={isArchived ? "Unarchive document" : "Archive document"}
-                    aria-pressed={isArchived}
-                    className={cn(isArchived && "text-ui-text-secondary")}
-                  >
-                    <Archive className="w-4 h-4" aria-hidden="true" />
-                  </IconButton>
-                </Tooltip>
-              )}
-
-              {/* Lock (owner only) */}
-              {document.isOwner && onToggleLock && (
-                <Tooltip
-                  content={
-                    lockStatus?.isLocked
-                      ? lockStatus.canUnlock
-                        ? "Unlock document (currently locked)"
-                        : `Locked by ${lockStatus.lockedByName || "another user"}`
-                      : "Lock document to prevent editing"
-                  }
-                >
-                  <IconButton
-                    variant={lockStatus?.isLocked ? "subtle" : "ghost"}
-                    size="sm"
-                    onClick={() => void onToggleLock()}
-                    disabled={lockStatus?.isLocked && !lockStatus.canUnlock}
-                    aria-label={lockStatus?.isLocked ? "Unlock document" : "Lock document"}
-                    aria-pressed={lockStatus?.isLocked}
-                    className={cn(lockStatus?.isLocked && "text-status-warning")}
-                  >
-                    {lockStatus?.isLocked ? (
-                      <Lock className="w-4 h-4" aria-hidden="true" />
-                    ) : (
-                      <LockOpen className="w-4 h-4" aria-hidden="true" />
-                    )}
-                  </IconButton>
-                </Tooltip>
-              )}
-
-              {/* Move to Project (owner only) */}
-              {document.isOwner && onMoveToProject && (
-                <Tooltip content="Move to another project">
-                  <IconButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={onMoveToProject}
-                    aria-label="Move to another project"
-                  >
-                    <FolderInput className="w-4 h-4" aria-hidden="true" />
-                  </IconButton>
-                </Tooltip>
-              )}
-
-              {/* Version History */}
-              <Tooltip content="View version history">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onShowVersionHistory}
-                  leftIcon={<History className="w-4 h-4" aria-hidden="true" />}
-                  className={documentHeaderActionButtonVariants({ surface: "neutral" })}
-                  aria-label="Version history"
-                >
-                  <Typography variant="small" as="span" className="hidden sm:inline">
-                    History
-                  </Typography>
-                  {versionCount !== undefined && versionCount > 0 && (
-                    <Badge variant="secondary" className="ml-1">
-                      {versionCount}
-                    </Badge>
-                  )}
-                </Button>
-              </Tooltip>
-
-              {/* Import Markdown */}
-              <Tooltip content="Import from Markdown file">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => void onImportMarkdown()}
-                  disabled={!editorReady}
-                  leftIcon={<Upload className="w-4 h-4" aria-hidden="true" />}
-                  className={documentHeaderActionButtonVariants({ surface: "accent" })}
-                  aria-label="Import from Markdown"
-                >
-                  <Typography variant="small" as="span" className="hidden sm:inline">
-                    Import
-                  </Typography>
-                </Button>
-              </Tooltip>
-
-              {/* Export Markdown */}
-              <Tooltip content="Export as Markdown file">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => void onExportMarkdown()}
-                  disabled={!editorReady}
-                  leftIcon={<Download className="w-4 h-4" aria-hidden="true" />}
-                  className={documentHeaderActionButtonVariants({ surface: "accent" })}
-                  aria-label="Export as Markdown"
-                >
-                  <Typography variant="small" as="span" className="hidden sm:inline">
-                    Export
-                  </Typography>
-                </Button>
-              </Tooltip>
-
-              {document.isOwner && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => void onTogglePublic()}
-                  className={cn(
-                    "px-2.5",
-                    documentHeaderActionButtonVariants({
-                      surface: document.isPublic ? "publicActive" : "publicInactive",
-                    }),
-                  )}
-                >
-                  {document.isPublic ? "Public" : "Private"}
-                </Button>
-              )}
-            </Flex>
+            <DocumentHeaderActions
+              document={document}
+              userId={userId}
+              versionCount={versionCount}
+              isFavorite={isFavorite}
+              isArchived={isArchived}
+              onToggleFavorite={onToggleFavorite}
+              onImportMarkdown={onImportMarkdown}
+              onExportMarkdown={onExportMarkdown}
+              onShowVersionHistory={onShowVersionHistory}
+              editorReady={editorReady}
+              ownerActions={{
+                lockStatus,
+                onTogglePublic,
+                onToggleArchive,
+                onToggleLock,
+                onMoveToProject,
+              }}
+            />
           </Flex>
 
           <Metadata size="sm">

@@ -468,7 +468,7 @@ export const listProjectIssues = authenticatedQuery({
 
     return await fetchPaginatedIssues(ctx, {
       paginationOpts: args.paginationOpts,
-      query: (db) => {
+      buildQuery: (db) => {
         if (args.sprintId) {
           return db
             .query("issues")
@@ -505,7 +505,7 @@ export const listOrganizationIssues = organizationQuery({
     // organizationQuery handles auth and membership check
     return await fetchPaginatedIssues(ctx, {
       paginationOpts: args.paginationOpts,
-      query: (db) => {
+      buildQuery: (db) => {
         if (args.status) {
           return db
             .query("issues")
@@ -544,7 +544,7 @@ export const listTeamIssues = authenticatedQuery({
 
     return await fetchPaginatedIssues(ctx, {
       paginationOpts: args.paginationOpts,
-      query: (db) => {
+      buildQuery: (db) => {
         if (args.status) {
           return db
             .query("issues")

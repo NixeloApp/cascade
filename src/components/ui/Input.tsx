@@ -21,6 +21,8 @@ const inputVariants = cva(
         filter:
           "border-ui-border/45 bg-transparent text-ui-text-secondary placeholder:text-ui-text-tertiary hover:border-ui-border/60 focus-visible:border-ui-border-secondary focus-visible:bg-ui-bg-elevated/80 sm:border-ui-border/60 sm:bg-ui-bg-soft sm:text-ui-text",
         ghost: "border-transparent bg-transparent text-ui-text hover:bg-ui-bg-secondary",
+        inlineEdit:
+          "border-transparent bg-transparent text-ui-text hover:bg-ui-bg-hover hover:border-ui-border focus-visible:border-ui-border focus-visible:bg-ui-bg",
         error: "border-status-error focus-visible:border-status-error",
       },
       inputSize: {

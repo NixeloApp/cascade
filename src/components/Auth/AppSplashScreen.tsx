@@ -1,3 +1,4 @@
+import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { NixeloLogo } from "../Landing/Icons";
 import { Typography } from "../ui/Typography";
@@ -35,16 +36,16 @@ export function AppSplashScreen({ message }: { message?: string }) {
           className="animate-in fade-in slide-in-from-bottom-4 duration-enter-slow delay-300 fill-mode-both"
         >
           {/* Minimal high-end loader - Always show to indicate activity */}
-          <div className="w-32 h-0.5 bg-white/5 rounded-full overflow-hidden">
+          <Card recipe="authSplashLoaderRail" padding="none">
             <div
               className="h-full bg-linear-to-r from-landing-accent to-landing-accent-alt w-full -translate-x-full animate-shimmer"
               style={{ animation: "shimmer 1.5s infinite linear" }}
             />
-          </div>
+          </Card>
 
           {/* Optional Message */}
           {message && (
-            <Typography className="text-ui-text-tertiary font-medium tracking-wide">
+            <Typography variant="small" color="tertiary">
               {message}
             </Typography>
           )}

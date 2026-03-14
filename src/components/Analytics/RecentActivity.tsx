@@ -35,40 +35,37 @@ export function RecentActivity({ activities }: { activities: Activity[] | undefi
           )}
 
           {activities.map((activity) => (
-            <Flex
-              key={activity._id}
-              gap="md"
-              align="start"
-              className="relative rounded-lg transition-colors duration-fast hover:bg-ui-bg-secondary/30"
-            >
-              <Avatar
-                name={activity.userName}
-                size="md"
-                variant="neutral"
-                className="relative z-10"
-              />
-              <FlexItem flex="1" className="min-w-0">
-                <Typography variant="small">
-                  <strong>{activity.userName}</strong> {activity.action}{" "}
-                  {activity.field && (
-                    <>
-                      <strong>{activity.field}</strong> on{" "}
-                    </>
-                  )}
-                  {activity.issueKey && (
-                    <Badge
-                      variant="neutral"
-                      className="font-mono text-caption bg-ui-bg-tertiary/50 border-ui-border"
-                    >
-                      {activity.issueKey}
-                    </Badge>
-                  )}
-                </Typography>
-                <Metadata className="mt-1.5">
-                  <MetadataTimestamp date={activity._creationTime} format="absolute" />
-                </Metadata>
-              </FlexItem>
-            </Flex>
+            <Card key={activity._id} recipe="timelineItem" padding="sm">
+              <Flex gap="md" align="start">
+                <Avatar
+                  name={activity.userName}
+                  size="md"
+                  variant="neutral"
+                  className="relative z-10"
+                />
+                <FlexItem flex="1" className="min-w-0">
+                  <Typography variant="small">
+                    <strong>{activity.userName}</strong> {activity.action}{" "}
+                    {activity.field && (
+                      <>
+                        <strong>{activity.field}</strong> on{" "}
+                      </>
+                    )}
+                    {activity.issueKey && (
+                      <Badge
+                        variant="neutral"
+                        className="font-mono text-caption bg-ui-bg-tertiary/50 border-ui-border"
+                      >
+                        {activity.issueKey}
+                      </Badge>
+                    )}
+                  </Typography>
+                  <Metadata className="mt-1.5">
+                    <MetadataTimestamp date={activity._creationTime} format="absolute" />
+                  </Metadata>
+                </FlexItem>
+              </Flex>
+            </Card>
           ))}
         </Stack>
       </Stack>

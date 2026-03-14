@@ -221,6 +221,50 @@ export function run() {
           });
         }
       }
+
+      // .take() before in-memory .filter() - silently drops results
+      // Pattern: .take(N) followed by JS .filter() on the result variable
+      if (/\.take\s*\(/.test(line)) {
+        // Check for ignore comment
+        const hasIgnore =
+          /@convex-validation-ignore\s+TAKE_BEFORE_FILTER/.test(lines[i - 1] || "") ||
+          /@convex-validation-ignore\s+TAKE_BEFORE_FILTER/.test(lines[i - 2] || "");
+        if (hasIgnore) continue;
+
+        // Look ahead for in-memory filter within 5 lines
+        const lookAhead = lines.slice(i, Math.min(lines.length, i + 6)).join("\n");
+
+        // Skip if filter is inside Map/Set constructor (legitimate data transformation)
+        const isInsideMapSet = /new\s+(Map|Set)\s*\([^)]*\.filter\s*\(/.test(lookAhead);
+        if (isInsideMapSet) continue;
+
+        // Skip if filter uses .includes() (array membership - can't be done at query level)
+        const usesIncludes = /\.filter\s*\([^)]*\.includes\s*\(/.test(lookAhead);
+        if (usesIncludes) continue;
+
+        // Skip if filter uses .has() (Set membership - can't be done at query level)
+        const usesHas = /\.filter\s*\([^)]*\.has\s*\(/.test(lookAhead);
+        if (usesHas) continue;
+
+        // Match JS array .filter() - direct usage pattern
+        // Looking for: variable.filter(item => item.field === value)
+        const hasDirectFilter =
+          /\)\s*;\s*\n\s*(return|const|let)\s+\w+\.filter\s*\(/.test(lookAhead) ||
+          /\)\s*;\s*\n\s*\w+\s*=\s*\w+\.filter\s*\(/.test(lookAhead);
+
+        // Exclude Convex query .filter() which uses (q) => q.eq/q.and/etc
+        const isConvexFilter = /\.filter\s*\(\s*\(?\s*q\s*\)?\s*=>\s*q\./.test(lookAhead);
+
+        if (hasDirectFilter && !isConvexFilter) {
+          issues.push({
+            type: "TAKE_BEFORE_FILTER",
+            line: lineNum,
+            code: line.trim(),
+            message:
+              ".take() before in-memory .filter() silently drops matching results - filter first or use .collect()",
+          });
+        }
+      }
     }
 
     return issues;

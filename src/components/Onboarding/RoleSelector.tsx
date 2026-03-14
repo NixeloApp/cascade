@@ -9,10 +9,11 @@
 import { Check, User, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Stack } from "@/components/ui/Stack";
 import { TEST_IDS } from "@/lib/test-ids";
-import { cn } from "@/lib/utils";
 import { Typography } from "../ui/Typography";
 
 interface RoleSelectorProps {
@@ -45,53 +46,44 @@ function RoleCard({
       disabled={disabled}
       aria-pressed={selected}
       data-testid={testId}
-      className={cn(
-        "relative p-8 rounded-container border-2 text-left transition-all duration-default cursor-pointer overflow-hidden group w-full h-auto",
-        "hover:shadow-card-hover hover:-translate-y-1 active:scale-98",
-        selected
-          ? "border-brand bg-brand-subtle/50 ring-4 ring-brand/10"
-          : "border-ui-border bg-ui-bg hover:border-ui-border-secondary",
-        disabled && "opacity-50 cursor-wait",
-      )}
+      className="group relative h-auto w-full overflow-hidden text-left"
     >
-      {/* Selection indicator - Mintlify-inspired */}
-      <div
-        className={cn(
-          "absolute top-4 right-4 w-6 h-6 rounded-full transition-all duration-default flex items-center justify-center z-10",
-          selected
-            ? "bg-brand scale-100"
-            : "border-2 border-ui-border-secondary group-hover:border-brand-muted scale-100",
-        )}
+      <Card
+        recipe={selected ? "onboardingRoleCardSelected" : "onboardingRoleCard"}
+        padding="xl"
+        className="h-full w-full"
       >
-        <Check
-          className={cn(
-            "w-3.5 h-3.5 text-brand-foreground transition-all duration-default",
-            selected ? "opacity-100 scale-100" : "opacity-0 scale-50",
-          )}
-        />
-      </div>
-
-      <Flex direction="column" align="center" gap="xl" className="text-center relative z-10">
-        <div
-          className={cn(
-            "p-5 rounded-xl transition-all duration-default",
-            selected
-              ? "bg-brand text-brand-foreground scale-105"
-              : "bg-ui-bg-tertiary text-ui-text-secondary group-hover:scale-105 group-hover:bg-brand-subtle group-hover:text-brand",
-          )}
+        <Card
+          recipe={selected ? "onboardingRoleIndicatorSelected" : "onboardingRoleIndicator"}
+          className="absolute right-4 top-4 z-10 h-6 w-6"
         >
-          {icon}
-        </div>
+          <Flex align="center" justify="center" className="h-full w-full">
+            {selected ? <Check className="h-3.5 w-3.5" /> : null}
+          </Flex>
+        </Card>
 
-        <div className="space-y-3">
-          <Typography variant="h3" className="text-xl font-bold text-ui-text tracking-tight">
-            {title}
-          </Typography>
-          <Typography className="text-sm text-ui-text-secondary leading-relaxed max-w-56">
-            {description}
-          </Typography>
-        </div>
-      </Flex>
+        <Flex
+          direction="column"
+          align="center"
+          gap="xl"
+          className="relative z-10 h-full text-center"
+        >
+          <Card
+            recipe={selected ? "onboardingRoleIconShellSelected" : "onboardingRoleIconShell"}
+            padding="lg"
+            className="transition-default"
+          >
+            {icon}
+          </Card>
+
+          <Stack gap="md" align="center">
+            <Typography variant="h4">{title}</Typography>
+            <Typography variant="small" color="secondary" className="max-w-56 leading-relaxed">
+              {description}
+            </Typography>
+          </Stack>
+        </Flex>
+      </Card>
     </Button>
   );
 }

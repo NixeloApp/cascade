@@ -1,5 +1,7 @@
 import type { Doc } from "../_generated/dataModel";
 
+type IssueCountInput = Pick<Doc<"issues">, "status" | "updatedAt">;
+
 export type IssueCounts = {
   total: Record<string, number>;
   visible: Record<string, number>;
@@ -14,7 +16,7 @@ export const INITIAL_COUNTS: IssueCounts = {
 
 /** Calculates issue counts by status category (todo/inprogress/done) for visible and hidden issues. */
 export function calculateIssueCounts(
-  issues: Doc<"issues">[],
+  issues: IssueCountInput[],
   statusCategoryMap: Map<string, string> | Record<string, string>,
   doneThreshold: number,
 ): IssueCounts {

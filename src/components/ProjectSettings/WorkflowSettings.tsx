@@ -16,7 +16,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
 import { Input, Select } from "../ui/form";
 import { Icon } from "../ui/Icon";
 import { Stack } from "../ui/Stack";
@@ -170,10 +170,7 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
         <Stack gap="md">
           <Stack gap="sm">
             {states.map((state, index) => (
-              <div
-                key={state.id}
-                className="rounded-xl border border-ui-border-secondary/75 bg-ui-bg px-4 py-4"
-              >
+              <Card key={state.id} variant="outline" padding="md" className="bg-ui-bg">
                 <Flex align="center" gap="md">
                   <Flex gap="xs" direction="column">
                     <Button
@@ -195,12 +192,13 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
                       <Icon icon={ChevronDown} size="sm" />
                     </Button>
                   </Flex>
-                  <Input
-                    value={state.name}
-                    onChange={(e) => handleStateChange(index, "name", e.target.value)}
-                    className="flex-1"
-                    placeholder="State name"
-                  />
+                  <FlexItem flex="1">
+                    <Input
+                      value={state.name}
+                      onChange={(e) => handleStateChange(index, "name", e.target.value)}
+                      placeholder="State name"
+                    />
+                  </FlexItem>
                   <Select
                     value={state.category}
                     onChange={(e) => handleStateChange(index, "category", e.target.value)}
@@ -211,7 +209,7 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
                     Remove
                   </Button>
                 </Flex>
-              </div>
+              </Card>
             ))}
           </Stack>
 
@@ -231,21 +229,24 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
       ) : (
         <Stack gap="lg">
           {(["todo", "inprogress", "done"] as const).map((category) => (
-            <div
-              key={category}
-              className="rounded-xl border border-ui-border-secondary/75 bg-ui-bg px-4 py-4"
-            >
-              <Typography variant="label" color="secondary" className="mb-2.5">
-                {category === "inprogress" ? "In Progress" : category === "todo" ? "To Do" : "Done"}
-              </Typography>
-              <Flex gap="sm" wrap>
-                {groupedStates[category].map((state) => (
-                  <Badge key={state.id} className={CATEGORY_COLORS[state.category]}>
-                    {state.name}
-                  </Badge>
-                ))}
-              </Flex>
-            </div>
+            <Card key={category} variant="outline" padding="md" className="bg-ui-bg">
+              <Stack gap="sm">
+                <Typography variant="label" color="secondary">
+                  {category === "inprogress"
+                    ? "In Progress"
+                    : category === "todo"
+                      ? "To Do"
+                      : "Done"}
+                </Typography>
+                <Flex gap="sm" wrap>
+                  {groupedStates[category].map((state) => (
+                    <Badge key={state.id} className={CATEGORY_COLORS[state.category]}>
+                      {state.name}
+                    </Badge>
+                  ))}
+                </Flex>
+              </Stack>
+            </Card>
           ))}
         </Stack>
       )}

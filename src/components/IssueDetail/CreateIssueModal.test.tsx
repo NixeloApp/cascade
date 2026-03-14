@@ -168,6 +168,27 @@ describe("CreateIssueModal", () => {
     expect(featureLabel).toHaveAttribute("aria-pressed", "false");
   });
 
+  it("should toggle a label chip pressed state when selected", async () => {
+    const user = userEvent.setup();
+    let callCount = 0;
+    (useQuery as any).mockImplementation(() => {
+      callCount++;
+      const callIndex = (callCount - 1) % 4;
+      return [undefined, mockProject, mockTemplates, mockLabels][callIndex];
+    });
+
+    render(
+      <CreateIssueModal projectId={mockProjectId} open={true} onOpenChange={mockOnOpenChange} />,
+    );
+
+    const bugLabel = screen.getByRole("button", { name: /bug/i });
+    await user.click(bugLabel);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /bug/i })).toHaveAttribute("aria-pressed", "true");
+    });
+  });
+
   it("should group labels with semantic role and label", () => {
     // Reset mock calls for this test to ensure clean state
     (useQuery as any).mockReset();

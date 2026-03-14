@@ -159,7 +159,7 @@ export function CustomFieldForm({ projectId, field, open, onOpenChange }: Custom
             type="text"
             value={fieldKey}
             onChange={(e) => setFieldKey(e.target.value)}
-            className="font-mono"
+            variant="code"
             placeholder="e.g., sprint_points"
             helperText="Unique identifier (lowercase, underscores only)"
           />

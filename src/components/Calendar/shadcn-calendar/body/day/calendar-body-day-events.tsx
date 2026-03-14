@@ -1,5 +1,11 @@
 import { isSameDay } from "date-fns";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Flex } from "@/components/ui/Flex";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { CalendarDays } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { DOT_COLOR_CLASSES, type EventColor } from "../../../calendar-colors";
@@ -13,65 +19,46 @@ export function CalendarBodyDayEvents(): React.ReactElement {
 
   if (!dayEvents.length) {
     return (
-      <div className="flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-10 h-10 rounded-full bg-ui-bg-tertiary flex items-center justify-center mb-3">
-          <svg
-            className="w-5 h-5 text-ui-text-tertiary"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
-            />
-          </svg>
-        </div>
-        <Typography variant="p" className="text-sm font-medium text-ui-text-secondary">
-          No events today
-        </Typography>
-        <Typography variant="small" className="text-xs text-ui-text-tertiary mt-1">
-          Your schedule is clear
-        </Typography>
-      </div>
+      <EmptyState
+        icon={CalendarDays}
+        title="No events today"
+        description="Your schedule is clear"
+        size="compact"
+        surface="bare"
+      />
     );
   }
 
   return (
-    <div className="flex flex-col gap-1 p-2">
-      <Typography
-        variant="small"
-        className="text-xs font-medium uppercase tracking-wide text-ui-text-tertiary px-2 py-1"
-      >
-        Events
-      </Typography>
-      <div className="flex flex-col gap-0.5">
+    <Card recipe="calendarDayEventsPanel" padding="xs">
+      <Stack gap="xs">
+        <Card recipe="calendarDayEventsHeader" padding="xs">
+          <Typography variant="eyebrow" color="tertiary">
+            Events
+          </Typography>
+        </Card>
         {dayEvents.map((event) => (
-          <button
-            type="button"
+          <Button
             key={event.id}
             data-testid={TEST_IDS.CALENDAR.EVENT_ITEM}
-            className="flex items-center gap-2.5 px-2 py-1.5 rounded-secondary cursor-pointer text-left hover:bg-ui-bg-hover transition-colors duration-default group"
+            chrome="calendarSidebarEvent"
+            chromeSize="calendarSidebarEvent"
             onClick={() => onEventClick(event)}
           >
-            <div
-              className={cn(
-                "size-2 rounded-full shrink-0",
-                DOT_COLOR_CLASSES[event.color as EventColor] || DOT_COLOR_CLASSES.blue,
-              )}
-            />
-            <Typography
-              variant="p"
-              className="text-sm font-medium text-ui-text-secondary group-hover:text-ui-text truncate transition-colors duration-default"
-            >
-              {event.title}
-            </Typography>
-          </button>
+            <Flex as="span" align="center" gap="sm">
+              <span
+                className={cn(
+                  "size-2 rounded-full shrink-0",
+                  DOT_COLOR_CLASSES[event.color as EventColor] || DOT_COLOR_CLASSES.blue,
+                )}
+              />
+              <Typography as="span" variant="small" className="truncate">
+                {event.title}
+              </Typography>
+            </Flex>
+          </Button>
         ))}
-      </div>
-    </div>
+      </Stack>
+    </Card>
   );
 }

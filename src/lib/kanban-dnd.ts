@@ -84,14 +84,14 @@ export function createColumnData(columnId: string, status: string): ColumnData {
 /**
  * Check if data is an issue card payload
  */
-export function isIssueCardData(data: Record<string, unknown>): boolean {
+export function isIssueCardData(data: Record<string, unknown>): data is IssueCardData {
   return data.type === "issue" && typeof data.issueId === "string";
 }
 
 /**
  * Check if data is a column payload
  */
-export function isColumnData(data: Record<string, unknown>): boolean {
+export function isColumnData(data: Record<string, unknown>): data is ColumnData {
   return data.type === "column" && typeof data.columnId === "string";
 }
 

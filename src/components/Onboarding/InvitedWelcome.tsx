@@ -8,7 +8,9 @@
 
 import { Check, PartyPopper } from "lucide-react";
 import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface InvitedWelcomeProps {
@@ -20,82 +22,73 @@ interface InvitedWelcomeProps {
 /** Welcome screen for invited users with tour option. */
 export function InvitedWelcome({ inviterName, onStartTour, onSkip }: InvitedWelcomeProps) {
   return (
-    <div className="text-center space-y-8">
+    <Stack gap="2xl" align="center" className="text-center">
       {/* Icon - Mintlify-inspired with subtle ring */}
       <Flex justify="center">
-        <div className="relative">
-          <div className="p-6 rounded-full bg-brand-subtle ring-8 ring-brand/10">
+        <Card recipe="onboardingInviteHero" padding="lg" className="relative h-28 w-28">
+          <Flex align="center" justify="center" className="h-full w-full">
             <PartyPopper className="w-16 h-16 text-brand" />
-          </div>
-          {/* Decorative dot */}
-          <Flex
-            align="center"
-            justify="center"
-            className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-status-success ring-4 ring-ui-bg-secondary"
-          >
-            <Check className="w-3 h-3 text-brand-foreground" />
           </Flex>
-        </div>
+          {/* Decorative dot */}
+          <Card recipe="onboardingInviteHeroBadge" className="absolute -right-1 -top-1 h-5 w-5">
+            <Flex align="center" justify="center" className="h-full w-full">
+              <Check className="w-3 h-3 text-brand-foreground" />
+            </Flex>
+          </Card>
+        </Card>
       </Flex>
 
       {/* Welcome Message */}
-      <div className="space-y-3">
-        <Typography variant="h1" className="text-3xl font-bold text-ui-text tracking-tight">
-          Welcome to Nixelo!
-        </Typography>
-        <Typography className="text-lg text-ui-text-secondary">
-          <Typography variant="label" as="span" className="text-ui-text">
+      <Stack gap="sm" align="center">
+        <Typography variant="h1">Welcome to Nixelo!</Typography>
+        <Typography color="secondary" variant="lead">
+          <Typography as="span" variant="label">
             {inviterName}
           </Typography>{" "}
           invited you to collaborate
         </Typography>
-      </div>
+      </Stack>
 
       {/* Brief Description - Mintlify-inspired card */}
-      <div className="bg-ui-bg-soft rounded-container border border-ui-border p-6 text-left">
-        <Typography variant="h3" className="font-semibold text-ui-text mb-4 tracking-tight">
+      <Card recipe="onboardingInvitePanel" padding="lg" className="w-full max-w-xl text-left">
+        <Typography className="mb-4" variant="h4">
           What you can do in Nixelo:
         </Typography>
-        <ul className="space-y-3">
+        <Stack as="ul" gap="sm" className="list-none" style={{ margin: 0, padding: 0 }}>
           {[
             "View and work on project issues assigned to you",
             "Collaborate on documents in real-time",
             "Track time and participate in sprints",
             "Get notifications for mentions and updates",
           ].map((item) => (
-            <li key={item} className="flex items-start gap-3 text-ui-text-secondary">
-              <Flex
-                align="center"
-                justify="center"
-                className="w-5 h-5 rounded-full bg-brand-subtle shrink-0 mt-0.5"
-              >
-                <Check className="w-3 h-3 text-brand" />
-              </Flex>
-              <span>{item}</span>
-            </li>
+            <Flex as="li" key={item} align="start" gap="md">
+              <Card recipe="onboardingInviteBullet" className="mt-0.5 h-5 w-5 shrink-0">
+                <Flex align="center" justify="center" className="h-full w-full">
+                  <Check className="w-3 h-3 text-brand" />
+                </Flex>
+              </Card>
+              <Typography color="secondary" variant="small">
+                {item}
+              </Typography>
+            </Flex>
           ))}
-        </ul>
-      </div>
+        </Stack>
+      </Card>
 
       {/* Actions - Mintlify-inspired button styling */}
-      <Flex gap="md" justify="center">
+      <Flex gap="md" justify="center" wrap>
         <Button variant="primary" size="lg" onClick={onStartTour} className="min-w-40">
           Take a quick tour
         </Button>
-        <Button
-          variant="ghost"
-          size="lg"
-          onClick={onSkip}
-          className="text-ui-text-secondary hover:text-ui-text"
-        >
+        <Button variant="link" size="lg" onClick={onSkip}>
           Skip to dashboard
         </Button>
       </Flex>
 
       {/* Note */}
-      <Typography className="text-sm text-ui-text-tertiary">
+      <Typography color="tertiary" variant="small">
         Your team lead will add you to projects. You'll see them on your dashboard.
       </Typography>
-    </div>
+    </Stack>
   );
 }

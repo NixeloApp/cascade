@@ -1,5 +1,7 @@
 import { Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 
 interface PortalProjectViewProps {
@@ -20,15 +22,20 @@ export function PortalProjectView({ token, project }: PortalProjectViewProps) {
       <CardHeader>
         <CardTitle>{project.name}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2 pt-4">
-        <Typography variant="small" color="secondary">
-          Project key: {project.key}
-        </Typography>
-        <Link to="/portal/$token/projects/$projectId" params={{ token, projectId: project._id }}>
-          <Typography variant="small" className="text-brand underline">
-            Open project view
+      <CardContent>
+        <Stack gap="sm">
+          <Typography variant="small" color="secondary">
+            Project key: {project.key}
           </Typography>
-        </Link>
+          <Button asChild variant="link" size="none">
+            <Link
+              to="/portal/$token/projects/$projectId"
+              params={{ token, projectId: project._id }}
+            >
+              Open project view
+            </Link>
+          </Button>
+        </Stack>
       </CardContent>
     </Card>
   );

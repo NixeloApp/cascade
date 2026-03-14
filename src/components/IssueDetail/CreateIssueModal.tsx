@@ -24,6 +24,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Input, Select } from "@/components/ui/form";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
+import { IssueLabelChip } from "@/components/ui/IssueLabelChip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
 import { SelectItem } from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
@@ -35,7 +36,7 @@ import { useOrganization } from "@/hooks/useOrgContext";
 import { toggleInArray } from "@/lib/array-utils";
 import { COLORS } from "@/lib/constants";
 import { FormInput, FormSelectRadix } from "@/lib/form";
-import { Check, Plus, Sparkles, User } from "@/lib/icons";
+import { Check, Plus, Sparkles } from "@/lib/icons";
 import {
   getPriorityColor,
   getTypeLabel,
@@ -45,7 +46,6 @@ import {
   PRIORITY_ICONS,
 } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 
 // =============================================================================
 // Schema
@@ -69,6 +69,749 @@ interface IssueDraft {
   assigneeId: string;
   storyPoints: string;
   selectedLabels: Id<"labels">[];
+}
+
+type CreateIssueForm = z.infer<typeof createIssueSchema>;
+
+const createIssueDefaultValues = {
+  title: "",
+  description: "",
+  type: "task" as IssueTypeWithSubtask,
+  priority: "medium" as IssuePriority,
+  assigneeId: "",
+  storyPoints: "",
+} satisfies CreateIssueForm;
+
+interface AISuggestions {
+  description?: string;
+  priority?: IssuePriority;
+  labels?: string[];
+}
+
+type CreateIssueFieldGetter = (field: keyof CreateIssueForm) => string;
+type CreateIssueFieldSetter = (
+  field: keyof CreateIssueForm,
+  value: CreateIssueForm[keyof CreateIssueForm],
+) => void;
+
+interface CreateIssueDraftBannerProps {
+  draftTimestamp?: number | null;
+  onDiscard: () => void;
+  onRestore: () => void;
+}
+
+function CreateIssueDraftBanner({
+  draftTimestamp,
+  onDiscard,
+  onRestore,
+}: CreateIssueDraftBannerProps) {
+  return (
+    <Alert variant="info">
+      <Flex align="center" justify="between" className="w-full">
+        <AlertDescription>
+          You have an unsaved draft
+          {draftTimestamp && (
+            <Typography as="span" variant="caption" className="ml-1">
+              (saved {new Date(draftTimestamp).toLocaleTimeString()})
+            </Typography>
+          )}
+        </AlertDescription>
+        <Flex gap="sm">
+          <Button type="button" variant="secondary" size="sm" onClick={onDiscard}>
+            Discard
+          </Button>
+          <Button type="button" size="sm" onClick={onRestore}>
+            Restore
+          </Button>
+        </Flex>
+      </Flex>
+    </Alert>
+  );
+}
+
+interface ProjectSelectorProps {
+  projects: Doc<"projects">[];
+  selectedProjectId: Id<"projects"> | null;
+  onChange: (projectId: Id<"projects">) => void;
+}
+
+function CreateIssueProjectSelector({
+  projects,
+  selectedProjectId,
+  onChange,
+}: ProjectSelectorProps) {
+  return (
+    <Select
+      label="Project"
+      value={selectedProjectId || ""}
+      onChange={(e) => onChange(e.target.value as Id<"projects">)}
+      required
+    >
+      <option value="" disabled>
+        Select a project...
+      </option>
+      {projects.map((project) => (
+        <option key={project._id} value={project._id}>
+          {project.name} ({project.key})
+        </option>
+      ))}
+    </Select>
+  );
+}
+
+interface TemplateSelectorProps {
+  selectedTemplate: Id<"issueTemplates"> | "";
+  templates: Doc<"issueTemplates">[];
+  onChange: (templateId: Id<"issueTemplates"> | "") => void;
+}
+
+function CreateIssueTemplateSelector({
+  selectedTemplate,
+  templates,
+  onChange,
+}: TemplateSelectorProps) {
+  return (
+    <Select
+      label="Use Template (Optional)"
+      value={selectedTemplate}
+      onChange={(e) => onChange(e.target.value as Id<"issueTemplates"> | "")}
+    >
+      <option value="">Start from scratch</option>
+      {templates.map((template) => (
+        <option key={template._id} value={template._id}>
+          {template.name} ({template.type})
+        </option>
+      ))}
+    </Select>
+  );
+}
+
+interface CreateIssueAiActionProps {
+  isGeneratingAI: boolean;
+  showAISuggestions: boolean;
+  onGenerateSuggestions: () => void;
+}
+
+function CreateIssueAiAction({
+  isGeneratingAI,
+  showAISuggestions,
+  onGenerateSuggestions,
+}: CreateIssueAiActionProps) {
+  return (
+    <Flex align="center" gap="sm" className="pb-2">
+      <Button
+        type="button"
+        onClick={onGenerateSuggestions}
+        isLoading={isGeneratingAI}
+        variant="accentGradient"
+        leftIcon={<Icon icon={Sparkles} size="sm" />}
+      >
+        Get AI Suggestions
+      </Button>
+      {showAISuggestions && (
+        <Flex align="center" gap="xs" className="text-status-success" aria-live="polite">
+          <Icon icon={Check} size="sm" />
+          <Typography variant="small">AI suggestions applied</Typography>
+        </Flex>
+      )}
+    </Flex>
+  );
+}
+
+interface CreateIssueDuplicateDetectionProps {
+  projectId: Id<"projects">;
+  title: string;
+  onOpenChange: (open: boolean) => void;
+}
+
+function CreateIssueDuplicateDetection({
+  projectId,
+  title,
+  onOpenChange,
+}: CreateIssueDuplicateDetectionProps) {
+  return (
+    <DuplicateDetection
+      title={title}
+      projectId={projectId}
+      onIssueClick={(issueId) => {
+        onOpenChange(false);
+        showSuccess(`Opening ${issueId.slice(0, 8)}... You can find it in the board.`);
+      }}
+    />
+  );
+}
+
+interface CreateIssueLabelsSectionProps {
+  labels?: Doc<"labels">[];
+  selectedLabels: Id<"labels">[];
+  showCreateLabel: boolean;
+  newLabelName: string;
+  newLabelColor: string;
+  isCreatingLabel: boolean;
+  onCreateLabel: () => void;
+  onToggleLabel: (labelId: Id<"labels">) => void;
+  onCreateOpenChange: (open: boolean) => void;
+  onNewLabelNameChange: (name: string) => void;
+  onNewLabelColorChange: (color: string) => void;
+}
+
+function CreateIssueLabelsSection({
+  labels,
+  selectedLabels,
+  showCreateLabel,
+  newLabelName,
+  newLabelColor,
+  isCreatingLabel,
+  onCreateLabel,
+  onToggleLabel,
+  onCreateOpenChange,
+  onNewLabelNameChange,
+  onNewLabelColorChange,
+}: CreateIssueLabelsSectionProps) {
+  return (
+    <Stack as="fieldset" gap="xs">
+      <Typography as="legend" variant="label" className="block text-ui-text">
+        Labels
+      </Typography>
+      <Flex wrap gap="sm" align="center">
+        {labels?.map((label) => {
+          const isSelected = selectedLabels.includes(label._id);
+          return (
+            <IssueLabelChip
+              key={label._id}
+              onClick={() => onToggleLabel(label._id)}
+              aria-pressed={isSelected}
+              selected={isSelected}
+              color={label.color}
+              showCheck={isSelected}
+            >
+              {label.name}
+            </IssueLabelChip>
+          );
+        })}
+        <Popover open={showCreateLabel} onOpenChange={onCreateOpenChange}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 px-2"
+              aria-label="Create new label"
+            >
+              <Icon icon={Plus} size="sm" />
+              <span className="ml-1">New</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-64">
+            <Stack gap="sm">
+              <Typography variant="label">Create Label</Typography>
+              <Input
+                placeholder="Label name"
+                value={newLabelName}
+                onChange={(e) => onNewLabelNameChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    onCreateLabel();
+                  }
+                }}
+                autoFocus
+              />
+              <ColorPicker value={newLabelColor} onChange={onNewLabelColorChange} label="Color" />
+              <Flex justify="end" gap="sm">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => onCreateOpenChange(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={onCreateLabel}
+                  disabled={!newLabelName.trim()}
+                  isLoading={isCreatingLabel}
+                >
+                  Create
+                </Button>
+              </Flex>
+            </Stack>
+          </PopoverContent>
+        </Popover>
+      </Flex>
+    </Stack>
+  );
+}
+
+interface CreateIssueSupportFieldsProps {
+  draftTimestamp?: number | null;
+  effectiveProjectId: Id<"projects"> | null | undefined;
+  handleCreateLabel: () => void;
+  handleGenerateAISuggestions: () => void;
+  internalSelectedProjectId: Id<"projects"> | null;
+  isCreatingLabel: boolean;
+  isGeneratingAI: boolean;
+  labels?: Doc<"labels">[];
+  newLabelColor: string;
+  newLabelName: string;
+  onDiscardDraft: () => void;
+  onDraftRestore: () => void;
+  onNewLabelColorChange: (color: string) => void;
+  onNewLabelNameChange: (name: string) => void;
+  onProjectChange: (projectId: Id<"projects">) => void;
+  onTemplateChange: (templateId: Id<"issueTemplates"> | "") => void;
+  onToggleLabel: (labelId: Id<"labels">) => void;
+  orgProjects?: { page: Doc<"projects">[] };
+  projectId?: Id<"projects">;
+  selectedLabels: Id<"labels">[];
+  selectedTemplate: Id<"issueTemplates"> | "";
+  setShowCreateLabel: (open: boolean) => void;
+  showAISuggestions: boolean;
+  showCreateLabel: boolean;
+  showDraftBanner: boolean;
+  templates?: Doc<"issueTemplates">[];
+}
+
+function CreateIssueSupportFields({
+  draftTimestamp,
+  effectiveProjectId,
+  handleCreateLabel,
+  handleGenerateAISuggestions,
+  internalSelectedProjectId,
+  isCreatingLabel,
+  isGeneratingAI,
+  labels,
+  newLabelColor,
+  newLabelName,
+  onDiscardDraft,
+  onDraftRestore,
+  onNewLabelColorChange,
+  onNewLabelNameChange,
+  onProjectChange,
+  onTemplateChange,
+  onToggleLabel,
+  orgProjects,
+  projectId,
+  selectedLabels,
+  selectedTemplate,
+  setShowCreateLabel,
+  showAISuggestions,
+  showCreateLabel,
+  showDraftBanner,
+  templates,
+}: CreateIssueSupportFieldsProps) {
+  return (
+    <>
+      {showDraftBanner && (
+        <CreateIssueDraftBanner
+          draftTimestamp={draftTimestamp}
+          onDiscard={onDiscardDraft}
+          onRestore={onDraftRestore}
+        />
+      )}
+
+      {!projectId && orgProjects && (
+        <CreateIssueProjectSelector
+          projects={orgProjects.page}
+          selectedProjectId={internalSelectedProjectId}
+          onChange={onProjectChange}
+        />
+      )}
+
+      {templates && templates.length > 0 && (
+        <CreateIssueTemplateSelector
+          selectedTemplate={selectedTemplate}
+          templates={templates}
+          onChange={onTemplateChange}
+        />
+      )}
+
+      <CreateIssueAiAction
+        isGeneratingAI={isGeneratingAI}
+        showAISuggestions={showAISuggestions}
+        onGenerateSuggestions={handleGenerateAISuggestions}
+      />
+
+      {effectiveProjectId && (
+        <CreateIssueLabelsSection
+          labels={labels}
+          selectedLabels={selectedLabels}
+          showCreateLabel={showCreateLabel}
+          newLabelName={newLabelName}
+          newLabelColor={newLabelColor}
+          isCreatingLabel={isCreatingLabel}
+          onCreateLabel={handleCreateLabel}
+          onToggleLabel={onToggleLabel}
+          onCreateOpenChange={setShowCreateLabel}
+          onNewLabelNameChange={onNewLabelNameChange}
+          onNewLabelColorChange={onNewLabelColorChange}
+        />
+      )}
+    </>
+  );
+}
+
+function createIssueSubmitHandler({
+  clearDraft,
+  createAnother,
+  createIssue,
+  defaultDueDate,
+  effectiveProjectId,
+  onCreateAnother,
+  onOpenChange,
+  selectedLabels,
+  setDraftDismissed,
+  sprintId,
+}: {
+  clearDraft: () => void;
+  createAnother: boolean;
+  createIssue: (args: {
+    projectId: Id<"projects">;
+    title: string;
+    description?: string;
+    type: IssueTypeWithSubtask;
+    priority: IssuePriority;
+    assigneeId?: Id<"users">;
+    sprintId?: Id<"sprints">;
+    labels?: Id<"labels">[];
+    storyPoints?: number;
+    dueDate?: number;
+  }) => Promise<unknown>;
+  defaultDueDate?: number;
+  effectiveProjectId: Id<"projects"> | null | undefined;
+  onCreateAnother: () => void;
+  onOpenChange: (open: boolean) => void;
+  selectedLabels: Id<"labels">[];
+  setDraftDismissed: (dismissed: boolean) => void;
+  sprintId?: Id<"sprints">;
+}) {
+  return async ({ value }: { value: CreateIssueForm }) => {
+    if (!effectiveProjectId) {
+      showError(new Error("Project is required"), "Validation error");
+      return;
+    }
+
+    try {
+      await createIssue({
+        projectId: effectiveProjectId,
+        title: value.title.trim(),
+        description: value.description?.trim() || undefined,
+        type: value.type,
+        priority: value.priority,
+        assigneeId:
+          value.assigneeId && value.assigneeId !== "unassigned"
+            ? (value.assigneeId as Id<"users">)
+            : undefined,
+        sprintId,
+        labels: selectedLabels.length > 0 ? selectedLabels : undefined,
+        storyPoints: value.storyPoints ? Number.parseFloat(value.storyPoints) : undefined,
+        dueDate: defaultDueDate,
+      });
+
+      showSuccess("Issue created successfully");
+      clearDraft();
+      setDraftDismissed(false);
+
+      if (createAnother) {
+        onCreateAnother();
+        return;
+      }
+
+      onOpenChange(false);
+    } catch (error) {
+      showError(error, "Failed to create issue");
+    }
+  };
+}
+
+function useIssueDraftSupport({
+  effectiveProjectId,
+  formValues,
+  onEditorValueApplied,
+  open,
+  selectedLabels,
+  setFieldValue,
+  setSelectedLabels,
+}: {
+  effectiveProjectId: Id<"projects"> | null | undefined;
+  formValues: CreateIssueForm;
+  onEditorValueApplied: () => void;
+  open: boolean;
+  selectedLabels: Id<"labels">[];
+  setFieldValue: CreateIssueFieldSetter;
+  setSelectedLabels: React.Dispatch<React.SetStateAction<Id<"labels">[]>>;
+}) {
+  const [draftDismissed, setDraftDismissed] = useState(false);
+  const { hasDraft, draft, saveDraft, clearDraft, draftTimestamp } = useDraftAutoSave<IssueDraft>({
+    key: "create-issue",
+    contextKey: effectiveProjectId || undefined,
+    enabled: open,
+  });
+
+  const showDraftBanner = hasDraft && !draftDismissed && Boolean(draft?.title);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const { title, description, type, priority, assigneeId, storyPoints } = formValues;
+    if (!title.trim()) return;
+
+    saveDraft({
+      title,
+      description,
+      type,
+      priority,
+      assigneeId,
+      storyPoints,
+      selectedLabels,
+    });
+  }, [formValues, open, saveDraft, selectedLabels]);
+
+  useEffect(() => {
+    if (!open) {
+      setDraftDismissed(false);
+    }
+  }, [open]);
+
+  const restoreDraft = () => {
+    if (!draft) return;
+
+    setFieldValue("title", draft.title);
+    setFieldValue("description", draft.description);
+    setFieldValue("type", draft.type);
+    setFieldValue("priority", draft.priority);
+    setFieldValue("assigneeId", draft.assigneeId);
+    setFieldValue("storyPoints", draft.storyPoints);
+    setSelectedLabels(draft.selectedLabels);
+    onEditorValueApplied();
+    setDraftDismissed(true);
+    showSuccess("Draft restored");
+  };
+
+  const discardDraft = () => {
+    clearDraft();
+    setDraftDismissed(true);
+  };
+
+  return {
+    clearDraft,
+    discardDraft,
+    draftTimestamp,
+    restoreDraft,
+    setDraftDismissed,
+    showDraftBanner,
+  };
+}
+
+function useDefaultIssueTemplateSelection({
+  selectedTemplate,
+  setSelectedTemplate,
+  templates,
+}: {
+  selectedTemplate: Id<"issueTemplates"> | "";
+  setSelectedTemplate: React.Dispatch<React.SetStateAction<Id<"issueTemplates"> | "">>;
+  templates?: Doc<"issueTemplates">[];
+}) {
+  useEffect(() => {
+    if (!templates?.length || selectedTemplate) return;
+
+    const defaultTemplate = templates.find((template) => template.isDefault);
+    if (defaultTemplate) {
+      setSelectedTemplate(defaultTemplate._id);
+    }
+  }, [selectedTemplate, setSelectedTemplate, templates]);
+}
+
+function useApplySelectedIssueTemplate({
+  labels,
+  onEditorValueApplied,
+  selectedTemplate,
+  setFieldValue,
+  setSelectedLabels,
+  templates,
+}: {
+  labels?: Doc<"labels">[];
+  onEditorValueApplied: () => void;
+  selectedTemplate: Id<"issueTemplates"> | "";
+  setFieldValue: CreateIssueFieldSetter;
+  setSelectedLabels: React.Dispatch<React.SetStateAction<Id<"labels">[]>>;
+  templates?: Doc<"issueTemplates">[];
+}) {
+  useEffect(() => {
+    if (!(selectedTemplate && templates)) return;
+
+    const template = templates.find((value) => value._id === selectedTemplate);
+    if (!template) return;
+
+    setFieldValue("type", template.type);
+    setFieldValue("priority", template.defaultPriority);
+    setFieldValue("title", template.titleTemplate);
+    setFieldValue("description", template.descriptionTemplate || "");
+    onEditorValueApplied();
+
+    if (template.defaultLabels?.length && labels) {
+      const labelIds = labels
+        .filter((label) => template.defaultLabels?.includes(label.name))
+        .map((label) => label._id);
+      setSelectedLabels(labelIds);
+    }
+
+    if (template.defaultAssigneeId) {
+      setFieldValue("assigneeId", template.defaultAssigneeId);
+    }
+
+    if (template.defaultStoryPoints !== undefined) {
+      setFieldValue("storyPoints", template.defaultStoryPoints.toString());
+    }
+  }, [labels, onEditorValueApplied, selectedTemplate, setFieldValue, setSelectedLabels, templates]);
+}
+
+function applyAISuggestionsToForm({
+  description,
+  setFieldValue,
+  labels,
+  onEditorValueApplied,
+  setSelectedLabels,
+  suggestions,
+}: {
+  description: string;
+  setFieldValue: CreateIssueFieldSetter;
+  labels?: Doc<"labels">[];
+  onEditorValueApplied: () => void;
+  setSelectedLabels: React.Dispatch<React.SetStateAction<Id<"labels">[]>>;
+  suggestions: AISuggestions;
+}) {
+  if (suggestions.description && !description.trim()) {
+    setFieldValue("description", suggestions.description);
+    onEditorValueApplied();
+  }
+
+  if (suggestions.priority) {
+    setFieldValue("priority", suggestions.priority);
+  }
+
+  if (!suggestions.labels?.length || !labels) return;
+
+  const suggestedLabelIds = labels
+    .filter((label) => suggestions.labels?.includes(label.name))
+    .map((label) => label._id);
+
+  setSelectedLabels((previous) => [...new Set([...previous, ...suggestedLabelIds])]);
+}
+
+function createLabelCreationHandler({
+  createLabel,
+  effectiveProjectId,
+  newLabelColor,
+  newLabelName,
+  setIsCreatingLabel,
+  setNewLabelColor,
+  setNewLabelName,
+  setSelectedLabels,
+  setShowCreateLabel,
+}: {
+  createLabel: (args: {
+    projectId: Id<"projects">;
+    name: string;
+    color: string;
+  }) => Promise<{ labelId: Id<"labels"> }>;
+  effectiveProjectId: Id<"projects"> | null | undefined;
+  newLabelColor: string;
+  newLabelName: string;
+  setIsCreatingLabel: React.Dispatch<React.SetStateAction<boolean>>;
+  setNewLabelColor: React.Dispatch<React.SetStateAction<string>>;
+  setNewLabelName: React.Dispatch<React.SetStateAction<string>>;
+  setSelectedLabels: React.Dispatch<React.SetStateAction<Id<"labels">[]>>;
+  setShowCreateLabel: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
+  return async () => {
+    if (!effectiveProjectId || !newLabelName.trim()) return;
+
+    setIsCreatingLabel(true);
+    try {
+      const { labelId } = await createLabel({
+        projectId: effectiveProjectId,
+        name: newLabelName.trim(),
+        color: newLabelColor,
+      });
+      setSelectedLabels((previous) => [...previous, labelId]);
+      setNewLabelName("");
+      setNewLabelColor(COLORS.DEFAULT_LABEL);
+      setShowCreateLabel(false);
+      showSuccess("Label created");
+    } catch (error) {
+      showError(error, "Failed to create label");
+    } finally {
+      setIsCreatingLabel(false);
+    }
+  };
+}
+
+function createIssueSuggestionHandler({
+  effectiveProjectId,
+  generateSuggestions,
+  getFieldValue,
+  labels,
+  onEditorValueApplied,
+  setFieldValue,
+  setIsGeneratingAI,
+  setSelectedLabels,
+  setShowAISuggestions,
+}: {
+  effectiveProjectId: Id<"projects"> | null | undefined;
+  generateSuggestions: (args: {
+    projectId: Id<"projects">;
+    issueTitle: string;
+    issueDescription?: string;
+    suggestionTypes: ["description", "priority", "labels"];
+  }) => Promise<AISuggestions>;
+  getFieldValue: CreateIssueFieldGetter;
+  labels?: Doc<"labels">[];
+  onEditorValueApplied: () => void;
+  setFieldValue: CreateIssueFieldSetter;
+  setIsGeneratingAI: React.Dispatch<React.SetStateAction<boolean>>;
+  setSelectedLabels: React.Dispatch<React.SetStateAction<Id<"labels">[]>>;
+  setShowAISuggestions: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
+  return async () => {
+    const title = getFieldValue("title");
+    const description = getFieldValue("description");
+
+    if (!(effectiveProjectId && title.trim())) {
+      showError(
+        new Error(effectiveProjectId ? "Please enter a title" : "Please select a project"),
+        "Requirement missing",
+      );
+      return;
+    }
+
+    setIsGeneratingAI(true);
+    try {
+      const suggestions = await generateSuggestions({
+        projectId: effectiveProjectId,
+        issueTitle: title,
+        issueDescription: description || undefined,
+        suggestionTypes: ["description", "priority", "labels"],
+      });
+
+      applyAISuggestionsToForm({
+        description,
+        setFieldValue,
+        labels,
+        onEditorValueApplied,
+        setSelectedLabels,
+        suggestions,
+      });
+      setShowAISuggestions(true);
+      showSuccess("AI suggestions applied!");
+    } catch (error) {
+      showError(error, "Failed to generate AI suggestions");
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
 }
 
 // =============================================================================
@@ -98,7 +841,6 @@ interface CreateIssueModalProps {
  * @param onOpenChange - Callback invoked when the modal open state changes; receives the new open state.
  * @returns The modal's JSX element, or `null` when required project data is not yet available.
  */
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex modal with form state, templates, labels, AI suggestions, and draft management
 export function CreateIssueModal({
   projectId,
   sprintId,
@@ -107,50 +849,26 @@ export function CreateIssueModal({
   defaultDueDate,
 }: CreateIssueModalProps) {
   const { organizationId } = useOrganization();
-  // Only load data when modal is open (auth is handled by useAuthenticatedQuery)
   const shouldLoadData = open;
-
-  // Project selection for global use
   const [internalSelectedProjectId, setInternalSelectedProjectId] = useState<Id<"projects"> | null>(
     projectId || null,
   );
-  // Template selection (outside form - controls form reset)
   const [selectedTemplate, setSelectedTemplate] = useState<Id<"issueTemplates"> | "">("");
-  // Labels (array state, not simple string)
   const [selectedLabels, setSelectedLabels] = useState<Id<"labels">[]>([]);
-  // Inline label creation state
   const [showCreateLabel, setShowCreateLabel] = useState(false);
   const [newLabelName, setNewLabelName] = useState("");
   const [newLabelColor, setNewLabelColor] = useState<string>(COLORS.DEFAULT_LABEL);
   const [isCreatingLabel, setIsCreatingLabel] = useState(false);
-  // AI state
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [showAISuggestions, setShowAISuggestions] = useState(false);
-  // Create another toggle
   const [createAnother, setCreateAnother] = useState(false);
-  // Editor key to force re-mount on external value changes (AI/draft)
   const [editorKey, setEditorKey] = useState(0);
-  // Draft restore banner dismissed
-  const [draftDismissed, setDraftDismissed] = useState(false);
 
-  // Queries
   const orgProjects = useAuthenticatedQuery(
     api.projects.getCurrentUserProjects,
     shouldLoadData && !projectId ? { organizationId } : "skip",
   );
-
   const effectiveProjectId = projectId || internalSelectedProjectId;
-
-  // Draft auto-save hook
-  const { hasDraft, draft, saveDraft, clearDraft, draftTimestamp } = useDraftAutoSave<IssueDraft>({
-    key: "create-issue",
-    contextKey: effectiveProjectId || undefined,
-    enabled: open,
-  });
-
-  // Show draft banner only if draft exists, not dismissed, and modal just opened
-  const showDraftBanner = hasDraft && !draftDismissed && draft?.title;
-
   const project = useAuthenticatedQuery(
     api.projects.getProject,
     shouldLoadData && effectiveProjectId ? { id: effectiveProjectId } : "skip",
@@ -164,239 +882,118 @@ export function CreateIssueModal({
     shouldLoadData && effectiveProjectId ? { projectId: effectiveProjectId } : "skip",
   );
 
-  // Mutations
   const { mutate: createIssue } = useAuthenticatedMutation(api.issues.createIssue);
   const { mutate: createLabel } = useAuthenticatedMutation(api.labels.createLabel);
   const generateSuggestions = useAction(api.ai.actions.generateIssueSuggestions);
 
-  type CreateIssueForm = z.infer<typeof createIssueSchema>;
-
-  // Form
   const form = useForm({
-    defaultValues: {
-      title: "",
-      description: "",
-      type: "task" satisfies IssueTypeWithSubtask,
-      priority: "medium" satisfies IssuePriority,
-      assigneeId: "",
-      storyPoints: "",
-    },
+    defaultValues: createIssueDefaultValues,
     validators: { onChange: createIssueSchema },
-    onSubmit: async ({ value }: { value: CreateIssueForm }) => {
-      if (!effectiveProjectId) {
-        showError(new Error("Project is required"), "Validation error");
-        return;
-      }
-      try {
-        await createIssue({
-          projectId: effectiveProjectId,
-          title: value.title.trim(),
-          description: value.description?.trim() || undefined,
-          type: value.type,
-          priority: value.priority,
-          assigneeId:
-            value.assigneeId && value.assigneeId !== "unassigned"
-              ? (value.assigneeId as Id<"users">)
-              : undefined,
-          sprintId,
-          labels: selectedLabels.length > 0 ? selectedLabels : undefined,
-          storyPoints: value.storyPoints ? Number.parseFloat(value.storyPoints) : undefined,
-          dueDate: defaultDueDate,
-        });
-
-        showSuccess("Issue created successfully");
-
-        // Clear draft on successful submit
-        clearDraft();
-        setDraftDismissed(false);
-
-        if (createAnother) {
-          // Reset form for another issue
-          form.reset();
-          setSelectedLabels([]);
-          setSelectedTemplate("");
-          setShowAISuggestions(false);
-        } else {
-          onOpenChange(false);
-        }
-      } catch (error) {
-        showError(error, "Failed to create issue");
-      }
-    },
+    onSubmit: async ({ value }) => handleFormSubmit({ value }),
   });
 
-  // Restore draft handler
-  const handleRestoreDraft = () => {
-    if (!draft) return;
-    form.setFieldValue("title", draft.title);
-    form.setFieldValue("description", draft.description);
-    form.setFieldValue("type", draft.type);
-    form.setFieldValue("priority", draft.priority);
-    form.setFieldValue("assigneeId", draft.assigneeId);
-    form.setFieldValue("storyPoints", draft.storyPoints);
-    if (draft.selectedLabels) {
-      setSelectedLabels(draft.selectedLabels);
-    }
-    // Force editor re-mount with new value
-    setEditorKey((k) => k + 1);
-    setDraftDismissed(true);
-    showSuccess("Draft restored");
+  const bumpEditorKey = () => {
+    setEditorKey((current) => current + 1);
   };
 
-  // Discard draft handler
-  const handleDiscardDraft = () => {
-    clearDraft();
-    setDraftDismissed(true);
+  const setCreateIssueFieldValue: CreateIssueFieldSetter = (field, value) => {
+    switch (field) {
+      case "title":
+      case "description":
+      case "assigneeId":
+      case "storyPoints":
+        form.setFieldValue(field, value);
+        return;
+      case "type":
+        form.setFieldValue("type", value as IssueTypeWithSubtask);
+        return;
+      case "priority":
+        form.setFieldValue("priority", value as IssuePriority);
+        return;
+    }
   };
 
-  // Save draft when form values change
-  useEffect(() => {
-    if (!open) return;
+  const getCreateIssueFieldValue: CreateIssueFieldGetter = (field) => form.getFieldValue(field);
 
-    const { title, description, type, priority, assigneeId, storyPoints } = form.state.values;
-    // Only save if there's meaningful content
-    if (!title?.trim()) return;
+  const {
+    clearDraft,
+    discardDraft,
+    draftTimestamp,
+    restoreDraft,
+    setDraftDismissed,
+    showDraftBanner,
+  } = useIssueDraftSupport({
+    effectiveProjectId,
+    formValues: form.state.values,
+    onEditorValueApplied: bumpEditorKey,
+    open,
+    selectedLabels,
+    setFieldValue: setCreateIssueFieldValue,
+    setSelectedLabels,
+  });
 
-    const draftData: IssueDraft = {
-      title,
-      description,
-      type,
-      priority,
-      assigneeId,
-      storyPoints,
-      selectedLabels,
-    };
-    saveDraft(draftData);
-  }, [open, form.state.values, selectedLabels, saveDraft]);
+  useDefaultIssueTemplateSelection({
+    selectedTemplate,
+    setSelectedTemplate,
+    templates,
+  });
 
-  // Reset draft dismissed state when modal closes
-  useEffect(() => {
-    if (!open) {
-      setDraftDismissed(false);
-    }
-  }, [open]);
+  useApplySelectedIssueTemplate({
+    labels,
+    onEditorValueApplied: bumpEditorKey,
+    selectedTemplate,
+    setFieldValue: setCreateIssueFieldValue,
+    setSelectedLabels,
+    templates,
+  });
 
-  // Auto-select default template when modal opens
-  useEffect(() => {
-    if (!templates || selectedTemplate) return;
-    const defaultTemplate = templates.find((t: Doc<"issueTemplates">) => t.isDefault);
-    if (defaultTemplate) {
-      setSelectedTemplate(defaultTemplate._id);
-    }
-  }, [templates, selectedTemplate]);
+  const resetForAnotherIssue = () => {
+    form.reset();
+    setSelectedLabels([]);
+    setSelectedTemplate("");
+    setShowAISuggestions(false);
+  };
 
-  // Apply template when selected
-  useEffect(() => {
-    if (!(selectedTemplate && templates)) return;
-
-    const template = templates.find((t: Doc<"issueTemplates">) => t._id === selectedTemplate);
-    if (!template) return;
-
-    form.setFieldValue("type", template.type);
-    form.setFieldValue("priority", template.defaultPriority);
-    form.setFieldValue("title", template.titleTemplate);
-    form.setFieldValue("description", template.descriptionTemplate || "");
-    // Force editor re-mount with template description
-    setEditorKey((k) => k + 1);
-
-    // Apply default labels if they exist
-    if (template.defaultLabels && template.defaultLabels.length > 0 && labels) {
-      const labelIds = labels
-        .filter((label: Doc<"labels">) => template.defaultLabels?.includes(label.name))
-        .map((label: Doc<"labels">) => label._id);
-      setSelectedLabels(labelIds);
-    }
-
-    // Apply new Plane-parity fields
-    if (template.defaultAssigneeId) {
-      form.setFieldValue("assigneeId", template.defaultAssigneeId);
-    }
-    if (template.defaultStoryPoints !== undefined) {
-      form.setFieldValue("storyPoints", template.defaultStoryPoints.toString());
-    }
-  }, [selectedTemplate, templates, labels, form]);
+  const handleFormSubmit = createIssueSubmitHandler({
+    clearDraft,
+    createAnother,
+    createIssue,
+    defaultDueDate,
+    effectiveProjectId,
+    onCreateAnother: resetForAnotherIssue,
+    onOpenChange,
+    selectedLabels,
+    setDraftDismissed,
+    sprintId,
+  });
 
   const toggleLabel = (labelId: Id<"labels">) => {
     setSelectedLabels((prev) => toggleInArray(prev, labelId));
   };
 
-  const handleCreateLabel = async () => {
-    if (!effectiveProjectId || !newLabelName.trim()) return;
+  const handleCreateLabel = createLabelCreationHandler({
+    createLabel,
+    effectiveProjectId,
+    newLabelColor,
+    newLabelName,
+    setIsCreatingLabel,
+    setNewLabelColor,
+    setNewLabelName,
+    setSelectedLabels,
+    setShowCreateLabel,
+  });
 
-    setIsCreatingLabel(true);
-    try {
-      const { labelId } = await createLabel({
-        projectId: effectiveProjectId,
-        name: newLabelName.trim(),
-        color: newLabelColor,
-      });
-      // Auto-select the newly created label
-      setSelectedLabels((prev) => [...prev, labelId]);
-      // Reset the form
-      setNewLabelName("");
-      setNewLabelColor(COLORS.DEFAULT_LABEL);
-      setShowCreateLabel(false);
-      showSuccess("Label created");
-    } catch (error) {
-      showError(error, "Failed to create label");
-    } finally {
-      setIsCreatingLabel(false);
-    }
-  };
-
-  interface AISuggestions {
-    description?: string;
-    priority?: IssuePriority;
-    labels?: string[];
-  }
-
-  const applyAISuggestions = (suggestions: AISuggestions, description: string | undefined) => {
-    if (suggestions.description && !(description as string)?.trim()) {
-      form.setFieldValue("description", suggestions.description as string);
-      // Force editor re-mount with new value
-      setEditorKey((k) => k + 1);
-    }
-    if (suggestions.priority) {
-      form.setFieldValue("priority", suggestions.priority);
-    }
-    if (suggestions.labels && (suggestions.labels as string[]).length > 0 && labels) {
-      const suggestedLabelIds = labels
-        .filter((label: Doc<"labels">) => (suggestions.labels as string[]).includes(label.name))
-        .map((label: Doc<"labels">) => label._id);
-      setSelectedLabels((prev) => [...new Set([...prev, ...suggestedLabelIds])]);
-    }
-  };
-
-  const handleGenerateAISuggestions = async () => {
-    const title = form.getFieldValue("title") as string;
-    const description = form.getFieldValue("description");
-
-    if (!(effectiveProjectId && title?.trim())) {
-      showError(
-        new Error(effectiveProjectId ? "Please enter a title" : "Please select a project"),
-        "Requirement missing",
-      );
-      return;
-    }
-
-    setIsGeneratingAI(true);
-    try {
-      const suggestions = await generateSuggestions({
-        projectId: effectiveProjectId,
-        issueTitle: title,
-        issueDescription: description || undefined,
-        suggestionTypes: ["description", "priority", "labels"],
-      });
-
-      applyAISuggestions(suggestions, description);
-      setShowAISuggestions(true);
-      showSuccess("AI suggestions applied!");
-    } catch (error) {
-      showError(error, "Failed to generate AI suggestions");
-    } finally {
-      setIsGeneratingAI(false);
-    }
-  };
+  const handleGenerateAISuggestions = createIssueSuggestionHandler({
+    effectiveProjectId,
+    generateSuggestions,
+    getFieldValue: getCreateIssueFieldValue,
+    labels,
+    onEditorValueApplied: bumpEditorKey,
+    setFieldValue: setCreateIssueFieldValue,
+    setIsGeneratingAI,
+    setSelectedLabels,
+    setShowAISuggestions,
+  });
 
   // Only show loading if we don't have a projectId but are fetching projects
   if (!(projectId || orgProjects)) return null;
@@ -417,110 +1014,53 @@ export function CreateIssueModal({
         }}
         gap="md"
       >
-        {/* Draft Restore Banner */}
-        {showDraftBanner && (
-          <Alert variant="info">
-            <Flex align="center" justify="between" className="w-full">
-              <AlertDescription>
-                You have an unsaved draft
-                {draftTimestamp && (
-                  <Typography as="span" variant="caption" className="ml-1">
-                    (saved {new Date(draftTimestamp).toLocaleTimeString()})
-                  </Typography>
-                )}
-              </AlertDescription>
-              <Flex gap="sm">
-                <Button type="button" variant="secondary" size="sm" onClick={handleDiscardDraft}>
-                  Discard
-                </Button>
-                <Button type="button" size="sm" onClick={handleRestoreDraft}>
-                  Restore
-                </Button>
-              </Flex>
-            </Flex>
-          </Alert>
-        )}
+        <CreateIssueSupportFields
+          draftTimestamp={draftTimestamp}
+          effectiveProjectId={effectiveProjectId}
+          handleCreateLabel={handleCreateLabel}
+          handleGenerateAISuggestions={handleGenerateAISuggestions}
+          internalSelectedProjectId={internalSelectedProjectId}
+          isCreatingLabel={isCreatingLabel}
+          isGeneratingAI={isGeneratingAI}
+          labels={labels}
+          newLabelColor={newLabelColor}
+          newLabelName={newLabelName}
+          onDiscardDraft={discardDraft}
+          onDraftRestore={restoreDraft}
+          onNewLabelColorChange={setNewLabelColor}
+          onNewLabelNameChange={setNewLabelName}
+          onProjectChange={setInternalSelectedProjectId}
+          onTemplateChange={setSelectedTemplate}
+          onToggleLabel={toggleLabel}
+          orgProjects={orgProjects}
+          projectId={projectId}
+          selectedLabels={selectedLabels}
+          selectedTemplate={selectedTemplate}
+          setShowCreateLabel={setShowCreateLabel}
+          showAISuggestions={showAISuggestions}
+          showCreateLabel={showCreateLabel}
+          showDraftBanner={showDraftBanner}
+          templates={templates}
+        />
 
-        {/* Project Selector (if no projectId passed) */}
-        {!projectId && orgProjects && (
-          <Select
-            label="Project"
-            value={internalSelectedProjectId || ""}
-            onChange={(e) => setInternalSelectedProjectId(e.target.value as Id<"projects">)}
-            required
-          >
-            <option value="" disabled>
-              Select a project...
-            </option>
-            {orgProjects?.page.map((p: Doc<"projects">) => (
-              <option key={p._id} value={p._id}>
-                {p.name} ({p.key})
-              </option>
-            ))}
-          </Select>
-        )}
-
-        {/* Template Selector (outside form state) */}
-        {templates && templates.length > 0 && (
-          <Select
-            label="Use Template (Optional)"
-            value={selectedTemplate}
-            onChange={(e) => setSelectedTemplate(e.target.value as Id<"issueTemplates"> | "")}
-          >
-            <option value="">Start from scratch</option>
-            {templates.map((template: Doc<"issueTemplates">) => (
-              <option key={template._id} value={template._id}>
-                {template.name} ({template.type})
-              </option>
-            ))}
-          </Select>
-        )}
-
-        {/* Title */}
         <form.Field name="title">
           {(field) => (
             <FormInput field={field} label="Title" placeholder="Enter issue title..." required />
           )}
         </form.Field>
 
-        {/* Duplicate Detection */}
         <form.Subscribe selector={(state) => state.values.title}>
           {(title) =>
             effectiveProjectId && title ? (
-              <DuplicateDetection
+              <CreateIssueDuplicateDetection
                 title={title}
                 projectId={effectiveProjectId}
-                onIssueClick={(issueId) => {
-                  // Close modal and let user view the existing issue
-                  // The user can navigate to the issue from the main UI
-                  onOpenChange(false);
-                  showSuccess(`Opening ${issueId.slice(0, 8)}... You can find it in the board.`);
-                }}
+                onOpenChange={onOpenChange}
               />
             ) : null
           }
         </form.Subscribe>
 
-        {/* AI Suggestions Button */}
-        <Flex align="center" gap="sm" className="pb-2">
-          <Button
-            type="button"
-            onClick={handleGenerateAISuggestions}
-            isLoading={isGeneratingAI}
-            className="bg-linear-to-r from-brand to-accent hover:from-brand-hover hover:to-accent-hover text-brand-foreground border-0"
-            leftIcon={<Icon icon={Sparkles} size="sm" />}
-          >
-            Get AI Suggestions
-          </Button>
-          {showAISuggestions && (
-            <Flex align="center" gap="xs" className="text-status-success" aria-live="polite">
-              <Icon icon={Check} size="sm" />
-              <Typography variant="small">AI suggestions applied</Typography>
-            </Flex>
-          )}
-        </Flex>
-
-        {/* Description */}
         <form.Field name="description">
           {(field) => (
             <Stack gap="xs">
@@ -538,7 +1078,6 @@ export function CreateIssueModal({
           )}
         </form.Field>
 
-        {/* Type & Priority */}
         <Grid cols={1} colsSm={2} gap="lg">
           <form.Field name="type">
             {(field) => (
@@ -575,19 +1114,12 @@ export function CreateIssueModal({
           </form.Field>
         </Grid>
 
-        {/* Assignee */}
         <form.Field name="assigneeId">
           {(field) => (
             <FormSelectRadix field={field} label="Assignee" placeholder="Select assignee">
               <SelectItem value="unassigned">
                 <Flex align="center" gap="sm">
-                  <Flex
-                    align="center"
-                    justify="center"
-                    className="h-5 w-5 rounded-full bg-ui-bg-tertiary"
-                  >
-                    <User className="h-3 w-3 text-ui-text-secondary" />
-                  </Flex>
+                  <Avatar name="Unassigned" size="xs" variant="neutral" />
                   Unassigned
                 </Flex>
               </SelectItem>
@@ -603,7 +1135,6 @@ export function CreateIssueModal({
           )}
         </form.Field>
 
-        {/* Story Points */}
         <form.Field name="storyPoints">
           {(field) => (
             <FormInput
@@ -617,90 +1148,6 @@ export function CreateIssueModal({
           )}
         </form.Field>
 
-        {/* Labels (outside form - array state) */}
-        {effectiveProjectId && (
-          <Stack as="fieldset" gap="xs">
-            <Typography as="legend" variant="label" className="block text-ui-text">
-              Labels
-            </Typography>
-            <Flex wrap gap="sm" align="center">
-              {labels?.map((label: Doc<"labels">) => (
-                <Button
-                  key={label._id}
-                  variant="unstyled"
-                  onClick={() => toggleLabel(label._id)}
-                  aria-pressed={selectedLabels.includes(label._id)}
-                  className={cn(
-                    "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-brand-foreground transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-ring h-auto",
-                    selectedLabels.includes(label._id)
-                      ? "opacity-100 ring-2 ring-offset-2 ring-brand"
-                      : "opacity-60 hover:opacity-80",
-                  )}
-                  style={{ backgroundColor: label.color }}
-                >
-                  {selectedLabels.includes(label._id) && (
-                    <Icon icon={Check} size="sm" className="mr-1" />
-                  )}
-                  {label.name}
-                </Button>
-              ))}
-              {/* Inline label creation */}
-              <Popover open={showCreateLabel} onOpenChange={setShowCreateLabel}>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-7 px-2"
-                    aria-label="Create new label"
-                  >
-                    <Icon icon={Plus} size="sm" />
-                    <span className="ml-1">New</span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="start" className="w-64">
-                  <Stack gap="sm">
-                    <Typography variant="label">Create Label</Typography>
-                    <Input
-                      placeholder="Label name"
-                      value={newLabelName}
-                      onChange={(e) => setNewLabelName(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleCreateLabel();
-                        }
-                      }}
-                      autoFocus
-                    />
-                    <ColorPicker value={newLabelColor} onChange={setNewLabelColor} label="Color" />
-                    <Flex justify="end" gap="sm">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => setShowCreateLabel(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={handleCreateLabel}
-                        disabled={!newLabelName.trim()}
-                        isLoading={isCreatingLabel}
-                      >
-                        Create
-                      </Button>
-                    </Flex>
-                  </Stack>
-                </PopoverContent>
-              </Popover>
-            </Flex>
-          </Stack>
-        )}
-
-        {/* Footer - form.Subscribe needs to stay inside the form */}
         <form.Subscribe selector={(state) => state.isSubmitting}>
           {(isSubmitting) => (
             <Flex align="center" justify="between" className="pt-4">

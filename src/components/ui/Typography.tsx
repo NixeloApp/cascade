@@ -49,7 +49,23 @@ const typographyVariants = cva("", {
       meta: "text-xs text-ui-text-tertiary", // timestamps, counts, metadata
       caption: "text-xs text-ui-text-secondary", // descriptions, helper text
       label: "text-sm font-medium text-ui-text", // form labels
+      eyebrow: "text-xs font-semibold uppercase tracking-wider text-ui-text-secondary", // section labels, overlines
+      pageHeaderEyebrow:
+        "text-xs font-semibold uppercase tracking-[0.18em] text-ui-text-tertiary sm:tracking-[0.22em]",
       mono: "text-xs font-mono text-ui-text-secondary tracking-tight", // issue keys, codes
+      calendarHeaderDate: "text-xs font-medium text-ui-text sm:text-base",
+      calendarHeaderTitle: "text-sm font-semibold tracking-tight text-ui-text sm:text-lg",
+      calendarHeaderMonth: "text-center text-xs font-semibold text-brand-foreground uppercase",
+      calendarHeaderDay: "text-sm font-bold text-ui-text sm:text-lg",
+      calendarTimeLabel: "text-xs text-ui-text-secondary",
+      calendarEventTitle: "truncate font-bold",
+      calendarEventTitleMonth: "w-full truncate text-xs leading-tight font-bold",
+      calendarEventTime: "text-sm",
+      documentTitle: "-ml-2 px-2 py-1 text-2xl leading-tight sm:text-3xl lg:text-4xl",
+      documentTitleInteractive:
+        "-ml-2 cursor-pointer rounded px-2 py-1 text-2xl leading-tight transition-default hover:bg-ui-bg-hover sm:text-3xl lg:text-4xl",
+      pageHeaderTitle: "text-xl leading-tight text-ui-text sm:text-2xl lg:text-3xl",
+      pageHeaderDescription: "max-w-3xl text-xs leading-5 text-ui-text-tertiary sm:text-sm",
 
       // Special
       blockquote: "mt-6 border-l-2 border-ui-border-secondary pl-6 italic text-ui-text",
@@ -83,6 +99,8 @@ export interface TypographyProps
   as?: React.ElementType;
   /** For label elements */
   htmlFor?: string;
+  /** For time elements */
+  dateTime?: string;
 }
 
 export const Typography = React.forwardRef<HTMLElement, TypographyProps>(
@@ -120,8 +138,18 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
     case "meta":
     case "caption":
     case "label":
+    case "eyebrow":
+    case "pageHeaderEyebrow":
       return "p";
     case "mono":
+    case "calendarHeaderDate":
+    case "calendarHeaderTitle":
+    case "calendarHeaderMonth":
+    case "calendarHeaderDay":
+    case "calendarTimeLabel":
+    case "calendarEventTitle":
+    case "calendarEventTitleMonth":
+    case "calendarEventTime":
       return "span";
     case "blockquote":
       return "blockquote";

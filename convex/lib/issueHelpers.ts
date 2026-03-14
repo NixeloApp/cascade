@@ -9,6 +9,7 @@ import type { PaginationOptions, PaginationResult } from "convex/server";
 import { asyncMap } from "convex-helpers";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { RUNTIME_COLORS } from "../shared/colors";
 import { BOUNDED_LIST_LIMIT } from "./boundedQueries";
 import { notFound, validation } from "./errors";
 import { fetchPaginatedQuery } from "./queryHelpers";
@@ -197,7 +198,7 @@ export async function enrichIssue(ctx: QueryCtx, issue: Doc<"issues">): Promise<
       const info = labelMap.get(name);
       return {
         name,
-        color: info?.color ?? "#6b7280", // Default gray if not found
+        color: info?.color ?? RUNTIME_COLORS.FALLBACK_LABEL,
         description: info?.description,
       };
     });
@@ -255,7 +256,7 @@ function getLabelInfos(
     : undefined;
   return (issue.labels || []).map((name) => ({
     name,
-    color: projectLabelMap?.get(name) ?? "#6b7280",
+    color: projectLabelMap?.get(name) ?? RUNTIME_COLORS.FALLBACK_LABEL,
   }));
 }
 
@@ -420,14 +421,13 @@ export async function fetchPaginatedIssues(
   ctx: QueryCtx,
   opts: {
     paginationOpts: PaginationOptions;
-
-    query: (db: QueryCtx["db"]) => unknown; // Query builder keeps specific type implicitly
+    buildQuery: (db: QueryCtx["db"]) => unknown; // Query builder keeps specific type implicitly
     enrich?: boolean;
   },
 ): Promise<PaginationResult<EnrichedIssue | Doc<"issues">>> {
   const issuesResult = await fetchPaginatedQuery<Doc<"issues">>(ctx, {
     paginationOpts: opts.paginationOpts,
-    query: opts.query,
+    buildQuery: opts.buildQuery,
   });
 
   if (opts.enrich === false) {

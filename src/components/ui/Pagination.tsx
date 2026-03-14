@@ -11,6 +11,45 @@ import type * as React from "react";
 import { cn } from "@/lib/utils";
 import { Button, type ButtonProps } from "./Button";
 
+type PageItem = number | "dots-left" | "dots-right";
+
+/** Build the array of page numbers with ellipsis markers */
+function buildPageNumbers({
+  totalPages,
+  currentPage,
+  siblingCount,
+  totalPageNumbers,
+  range,
+}: {
+  totalPages: number;
+  currentPage: number;
+  siblingCount: number;
+  totalPageNumbers: number;
+  range: (start: number, end: number) => number[];
+}): PageItem[] {
+  if (totalPageNumbers >= totalPages) {
+    return range(1, totalPages);
+  }
+
+  const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
+  const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages);
+
+  const showLeftDots = leftSiblingIndex > 2;
+  const showRightDots = rightSiblingIndex < totalPages - 1;
+
+  if (!showLeftDots && showRightDots) {
+    const leftItemCount = 3 + 2 * siblingCount;
+    return [...range(1, leftItemCount), "dots-right", totalPages];
+  }
+
+  if (showLeftDots && !showRightDots) {
+    const rightItemCount = 3 + 2 * siblingCount;
+    return [1, "dots-left", ...range(totalPages - rightItemCount + 1, totalPages)];
+  }
+
+  return [1, "dots-left", ...range(leftSiblingIndex, rightSiblingIndex), "dots-right", totalPages];
+}
+
 export interface PaginationProps extends React.ComponentProps<"nav"> {
   /** Total number of pages */
   totalPages: number;
@@ -48,35 +87,13 @@ export function Pagination({
 
   const totalPageNumbers = siblingCount * 2 + 3 + (showEdges ? 2 : 0);
 
-  const pages = (() => {
-    if (totalPageNumbers >= totalPages) {
-      return range(1, totalPages);
-    }
-
-    const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
-    const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages);
-
-    const showLeftDots = leftSiblingIndex > 2;
-    const showRightDots = rightSiblingIndex < totalPages - 1;
-
-    if (!showLeftDots && showRightDots) {
-      const leftItemCount = 3 + 2 * siblingCount;
-      return [...range(1, leftItemCount), "dots-right", totalPages];
-    }
-
-    if (showLeftDots && !showRightDots) {
-      const rightItemCount = 3 + 2 * siblingCount;
-      return [1, "dots-left", ...range(totalPages - rightItemCount + 1, totalPages)];
-    }
-
-    return [
-      1,
-      "dots-left",
-      ...range(leftSiblingIndex, rightSiblingIndex),
-      "dots-right",
-      totalPages,
-    ];
-  })();
+  const pages = buildPageNumbers({
+    totalPages,
+    currentPage,
+    siblingCount,
+    totalPageNumbers,
+    range,
+  });
 
   if (totalPages <= 1) {
     return null;

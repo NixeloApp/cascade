@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { QueryCtx } from "../_generated/server";
 import { checkApiKeyRateLimit } from "./rateLimiter";
 
 // Mock the components object from the generated API
@@ -25,7 +26,7 @@ describe("checkApiKeyRateLimit", () => {
     const mockRunQuery = vi.fn().mockResolvedValue({ ok: true });
     const ctx = {
       runQuery: mockRunQuery,
-    } as any;
+    } as unknown as QueryCtx;
 
     const keyId = "test-key";
     const limit = 100;
@@ -50,7 +51,7 @@ describe("checkApiKeyRateLimit", () => {
     const mockRunQuery = vi.fn().mockResolvedValue({ ok: false, retryAfter });
     const ctx = {
       runQuery: mockRunQuery,
-    } as any;
+    } as unknown as QueryCtx;
 
     const result = await checkApiKeyRateLimit(ctx, "key", 10);
 

@@ -6,7 +6,7 @@
  */
 
 import { matchesKeyboardEvent, type ParsedHotkey, parseHotkey } from "@tanstack/hotkeys";
-import { useCallback, useEffect, useMemo } from "react";
+import { useEffect } from "react";
 
 export interface KeyboardShortcut {
   key: string;
@@ -194,25 +194,22 @@ export function useKeyboardShortcutsWithSequences(
   sequences: KeySequence[] = [],
   enabled = true,
 ) {
-  const parsedShortcuts = useMemo(
-    () =>
-      shortcuts.map((shortcut) => ({
-        definition: shortcut,
-        parsed: parseShortcut(shortcut),
-      })),
-    [shortcuts],
-  );
-  const parsedSequences = useMemo(
-    () =>
-      sequences.map((sequence) => ({
-        definition: sequence,
-        parsed: sequence.keys.map((sequenceKey) => parseSequenceKey(sequenceKey)),
-      })),
-    [sequences],
-  );
+  useEffect(() => {
+    if (!enabled) {
+      return;
+    }
 
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
+    const parsedShortcuts = shortcuts.map((shortcut) => ({
+      definition: shortcut,
+      parsed: parseShortcut(shortcut),
+    }));
+
+    const parsedSequences = sequences.map((sequence) => ({
+      definition: sequence,
+      parsed: sequence.keys.map((sequenceKey) => parseSequenceKey(sequenceKey)),
+    }));
+
+    const handleKeyDown = (event: KeyboardEvent) => {
       const isTyping = isUserTyping(event.target);
       const key = event.key.toLowerCase();
       const now = Date.now();
@@ -232,20 +229,13 @@ export function useKeyboardShortcutsWithSequences(
       }
 
       clearExpiredSequence(now);
-    },
-    [parsedSequences, parsedShortcuts],
-  );
-
-  useEffect(() => {
-    if (!enabled) {
-      return;
-    }
+    };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [enabled, handleKeyDown]);
+  }, [enabled, shortcuts, sequences]);
 }
 
 export function getShortcutDisplay(shortcut: KeyboardShortcut): string {

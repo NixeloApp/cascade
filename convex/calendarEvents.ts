@@ -11,6 +11,7 @@ import type { Id } from "./_generated/dataModel";
 import { internalQuery, type QueryCtx } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchUsers } from "./lib/batchHelpers";
+import { queryCalendarEventsByAttendeeInRange } from "./lib/calendarEventQueries";
 import { forbidden, notFound, validation } from "./lib/errors";
 import { isOrganizationAdmin, isOrganizationMember } from "./lib/organizationAccess";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
@@ -165,22 +166,14 @@ async function getUserEventsInRange(
       .take(MAX_PAGE_SIZE),
 
     // User is attendee
-    ctx.db
-      .query("calendarEvents")
-      .withIndex("by_attendee_start", (q) =>
-        q
-          // biome-ignore lint/suspicious/noExplicitAny: userId cast needed for strict types vs index query
-          .eq("attendeeIds", userId as any)
-          .gte("startTime", startDate)
-          .lte("startTime", endDate),
-      )
-      .take(MAX_PAGE_SIZE),
+    queryCalendarEventsByAttendeeInRange(ctx, userId, startDate, endDate),
   ]);
 
   let attendingEvents = attendingEventsResult;
 
   // Polyfill for convex-test limitation with multikey indexes
   // convex-test (as of current version) might not correctly simulate q.eq on array indexes
+  // @convex-validation-ignore TAKE_BEFORE_FILTER - test-only fallback, production uses multikey index
   if (process.env.IS_TEST_ENV === "true" && attendingEvents.length === 0) {
     const candidates = await ctx.db
       .query("calendarEvents")
@@ -439,7 +432,7 @@ export const listByOrganizationDateRange = authenticatedQuery({
       return [];
     }
 
-    const events = await ctx.db
+    let query = ctx.db
       .query("calendarEvents")
       .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
       .filter((q) =>
@@ -447,16 +440,20 @@ export const listByOrganizationDateRange = authenticatedQuery({
           q.gte(q.field("startTime"), args.startDate),
           q.lte(q.field("startTime"), args.endDate),
         ),
-      )
-      .take(MAX_PAGE_SIZE);
+      );
 
-    const filteredByWorkspace = args.workspaceId
-      ? events.filter((event) => event.workspaceId === args.workspaceId)
-      : events;
-    const filteredEvents = args.teamId
-      ? filteredByWorkspace.filter((event) => event.teamId === args.teamId)
-      : filteredByWorkspace;
-    const sortedEvents = filteredEvents.sort((a, b) => a.startTime - b.startTime);
+    // Apply workspace/team filters at query level
+    if (args.workspaceId) {
+      const workspaceId = args.workspaceId;
+      query = query.filter((q) => q.eq(q.field("workspaceId"), workspaceId));
+    }
+    if (args.teamId) {
+      const teamId = args.teamId;
+      query = query.filter((q) => q.eq(q.field("teamId"), teamId));
+    }
+
+    const events = await query.take(MAX_PAGE_SIZE);
+    const sortedEvents = events.sort((a, b) => a.startTime - b.startTime);
     return await enrichEventsWithOrganizers(ctx, sortedEvents);
   },
 });

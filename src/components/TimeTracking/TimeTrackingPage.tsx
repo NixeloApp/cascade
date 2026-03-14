@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { MONTH, WEEK } from "@convex/lib/timeUtils";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { formatCurrency, formatDurationHuman } from "@/lib/formatting";
@@ -230,7 +230,7 @@ function TimeTrackingControls({
           </TabsList>
         </Tabs>
 
-        <Flex align="center" gap="lg" className="flex-wrap">
+        <Flex align="center" gap="lg" wrap>
           {!projectId && (
             <Stack gap="xs">
               <Label htmlFor="tracking-project-filter">Project</Label>
@@ -240,7 +240,7 @@ function TimeTrackingControls({
                   onProjectChange(value === "all" ? "all" : (value as Id<"projects">))
                 }
               >
-                <SelectTrigger id="tracking-project-filter" className="px-3 py-2 text-sm">
+                <SelectTrigger id="tracking-project-filter">
                   <SelectValue placeholder="Select project..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -262,7 +262,7 @@ function TimeTrackingControls({
                 value={dateRange}
                 onValueChange={(value) => onDateRangeChange(value as TimeTrackingDateRange)}
               >
-                <SelectTrigger id="tracking-date-range" className="px-3 py-2 text-sm">
+                <SelectTrigger id="tracking-date-range">
                   <SelectValue placeholder="Select range..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -375,7 +375,7 @@ export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTra
   const canSeeSensitiveTabs = isGlobalAdmin || userRole === "admin";
 
   // Compute date bounds at render time to stay current in long-lived sessions
-  const { startDate, endDate } = useMemo(() => getDateRangeBounds(dateRange), [dateRange]);
+  const { startDate, endDate } = getDateRangeBounds(dateRange);
   const rangeLabel = DATE_RANGE_LABELS[dateRange];
 
   // Use aggregate query for accurate totals (no pagination limits)

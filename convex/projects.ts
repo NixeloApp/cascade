@@ -262,7 +262,7 @@ export const getCurrentUserProjects = authenticatedQuery({
     // Paginate memberships directly via index
     const results = await fetchPaginatedQuery<Doc<"projectMembers">>(ctx, {
       paginationOpts,
-      query: (db) =>
+      buildQuery: (db) =>
         db
           .query("projectMembers")
           .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
@@ -372,7 +372,8 @@ export const getTeamProjects = authenticatedQuery({
 
     return await fetchPaginatedQuery(ctx, {
       paginationOpts: args.paginationOpts || { numItems: 20, cursor: null },
-      query: (db) => db.query("projects").withIndex("by_team", (q) => q.eq("teamId", args.teamId)),
+      buildQuery: (db) =>
+        db.query("projects").withIndex("by_team", (q) => q.eq("teamId", args.teamId)),
     });
   },
 });
@@ -411,7 +412,7 @@ export const getWorkspaceProjects = authenticatedQuery({
     // But `filter` in `paginate` is supported.
     return await fetchPaginatedQuery(ctx, {
       paginationOpts: args.paginationOpts || { numItems: 20, cursor: null },
-      query: (db) =>
+      buildQuery: (db) =>
         db
           .query("projects")
           .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))

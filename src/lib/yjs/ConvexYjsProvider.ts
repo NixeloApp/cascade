@@ -11,6 +11,7 @@
  */
 
 import type { Id } from "@convex/_generated/dataModel";
+import { YJS_CURSOR_COLORS } from "@convex/shared/colors";
 import type { ConvexReactClient } from "convex/react";
 import { Observable } from "lib0/observable";
 import type * as Y from "yjs";
@@ -34,20 +35,6 @@ export interface AwarenessState {
     image?: string;
   };
 }
-
-// User colors for collaboration
-const USER_COLORS = [
-  "#F44336", // Red
-  "#E91E63", // Pink
-  "#9C27B0", // Purple
-  "#673AB7", // Deep Purple
-  "#3F51B5", // Indigo
-  "#2196F3", // Blue
-  "#00BCD4", // Cyan
-  "#009688", // Teal
-  "#4CAF50", // Green
-  "#FF9800", // Orange
-];
 
 /**
  * ConvexYjsProvider - Y.js Provider backed by Convex
@@ -297,7 +284,7 @@ export class ConvexYjsProvider extends Observable<string> {
       hash = (hash << 5) - hash + userId.charCodeAt(i);
       hash |= 0;
     }
-    return USER_COLORS[Math.abs(hash) % USER_COLORS.length];
+    return YJS_CURSOR_COLORS[Math.abs(hash) % YJS_CURSOR_COLORS.length].main;
   }
 }
 

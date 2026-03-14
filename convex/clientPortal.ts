@@ -301,18 +301,17 @@ export const getIssuesForToken = query({
     const issues = await ctx.db
       .query("issues")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .filter((q) => q.neq(q.field("isDeleted"), true))
       .take(MAX_PORTAL_ISSUES);
 
-    return issues
-      .filter((issue) => issue.isDeleted !== true)
-      .map((issue) => ({
-        _id: issue._id,
-        key: issue.key,
-        title: issue.title,
-        status: issue.status,
-        priority: issue.priority,
-        updatedAt: issue.updatedAt,
-      }));
+    return issues.map((issue) => ({
+      _id: issue._id,
+      key: issue.key,
+      title: issue.title,
+      status: issue.status,
+      priority: issue.priority,
+      updatedAt: issue.updatedAt,
+    }));
   },
 });
 
@@ -365,19 +364,18 @@ export const listTokensByClient = organizationAdminMutation({
     const tokens = await ctx.db
       .query("clientPortalTokens")
       .withIndex("by_client", (q) => q.eq("clientId", args.clientId))
+      .filter((q) => q.eq(q.field("organizationId"), ctx.organizationId))
       .take(MAX_PORTAL_TOKENS);
 
-    return tokens
-      .filter((token) => token.organizationId === ctx.organizationId)
-      .map((token) => ({
-        _id: token._id,
-        projectIds: token.projectIds,
-        permissions: token.permissions,
-        expiresAt: token.expiresAt,
-        lastAccessedAt: token.lastAccessedAt,
-        isRevoked: token.isRevoked,
-        revokedAt: token.revokedAt,
-        updatedAt: token.updatedAt,
-      }));
+    return tokens.map((token) => ({
+      _id: token._id,
+      projectIds: token.projectIds,
+      permissions: token.permissions,
+      expiresAt: token.expiresAt,
+      lastAccessedAt: token.lastAccessedAt,
+      isRevoked: token.isRevoked,
+      revokedAt: token.revokedAt,
+      updatedAt: token.updatedAt,
+    }));
   },
 });

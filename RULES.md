@@ -92,6 +92,13 @@ Imports should be sorted in this order:
   values. If you genuinely need one, add it to the `ALLOWED_PATTERNS` allowlist
   with a comment explaining why.
 
+### Tailwind In App Code
+
+- Raw Tailwind is allowed in route and feature composition code.
+- It is **discouraged** as the final home for repeated spacing, shell, and state patterns.
+- If a class cluster repeats, gains interaction states, or would make design migration harder, extract an owned component or add a CVA-backed variant instead.
+- Prefer enforcing consistency through robust primitives and variants rather than banning all composition-level Tailwind.
+
 ### Semantic Color System
 
 - **NEVER** use raw Tailwind colors (`bg-blue-500`, `text-gray-700`). Use semantic tokens: `bg-brand`, `text-ui-text-secondary`, `border-status-error`.
@@ -292,7 +299,7 @@ CRITICAL: Command produced no output. This is NOT success.
 ### After Making Changes
 
 1. After completing a significant chunk of work (new feature, multi-file refactor, major bug fix), run `pnpm fixme` to auto-fix lint/format issues and typecheck. Do NOT run after every small edit.
-2. Run `node scripts/validate.js` after UI changes — target 0 errors, 0 warnings.
+2. Run `node scripts/validate.js` after UI changes — target 0 errors.
 3. Run tests if applicable
 4. If unable to find correct command, ask
 

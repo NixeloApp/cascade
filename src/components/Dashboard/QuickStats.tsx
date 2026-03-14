@@ -7,7 +7,7 @@
  */
 
 import { cn } from "@/lib/utils";
-import { Card, CardBody } from "../ui/Card";
+import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Progress } from "../ui/Progress";
@@ -62,39 +62,38 @@ function StatCard({ title, value, subtitle, variant, progressValue }: StatCardPr
     <Card
       hoverable
       variant="outline"
+      padding="lg"
       className="group relative overflow-hidden border-ui-border/50 bg-ui-bg-soft/70 shadow-soft backdrop-blur-sm"
     >
       <div
         className={cn("absolute inset-x-0 top-0 h-16 bg-linear-to-b to-transparent", styles.glow)}
       />
       <div className={cn("absolute inset-x-4 top-0 h-0.5 rounded-full", styles.bg)} />
-      <CardBody className="p-5">
-        <Stack gap="md" className="relative">
-          <Typography
-            variant="label"
-            color="tertiary"
-            className="text-caption uppercase tracking-widest"
-          >
-            {title}
+      <Stack gap="md" className="relative">
+        <Typography
+          variant="label"
+          color="tertiary"
+          className="text-caption uppercase tracking-widest"
+        >
+          {title}
+        </Typography>
+        <Flex align="baseline" gap="sm" wrap>
+          <Typography variant="h2" className={cn("text-display-sm tracking-tight", styles.text)}>
+            {value || 0}
           </Typography>
-          <Flex align="baseline" gap="sm" wrap>
-            <Typography variant="h2" className={cn("text-display-sm tracking-tight", styles.text)}>
-              {value || 0}
-            </Typography>
-            <Typography variant="small" color="secondary">
-              {subtitle}
-            </Typography>
-          </Flex>
-          {progressValue !== undefined && (
-            <Progress
-              value={progressValue}
-              className="h-1.5 bg-ui-bg-secondary/70"
-              id="stat-progress"
-              indicatorClassName={styles.bg}
-            />
-          )}
-        </Stack>
-      </CardBody>
+          <Typography variant="small" color="secondary">
+            {subtitle}
+          </Typography>
+        </Flex>
+        {progressValue !== undefined && (
+          <Progress
+            value={progressValue}
+            className="h-1.5 bg-ui-bg-secondary/70"
+            id="stat-progress"
+            indicatorClassName={styles.bg}
+          />
+        )}
+      </Stack>
     </Card>
   );
 }
@@ -107,6 +106,7 @@ function HighPriorityCard({ count }: { count: number }) {
   return (
     <Card
       variant="outline"
+      padding="lg"
       className={cn(
         "relative overflow-hidden border-ui-border/50 bg-ui-bg-soft/70 shadow-soft backdrop-blur-sm",
         hasHighPriority && "border-status-warning/30",
@@ -118,37 +118,35 @@ function HighPriorityCard({ count }: { count: number }) {
           hasHighPriority ? "from-status-warning/15" : "from-ui-bg-soft/20",
         )}
       />
-      <CardBody className="p-5">
-        <Stack gap="md" className="relative">
+      <Stack gap="md" className="relative">
+        <Typography
+          variant="label"
+          className={cn(
+            "text-caption uppercase tracking-widest",
+            hasHighPriority ? "text-status-warning" : "text-ui-text-tertiary",
+          )}
+        >
+          Attention Needed
+        </Typography>
+        <Flex align="baseline" gap="sm" wrap>
           <Typography
-            variant="label"
+            variant="h2"
             className={cn(
-              "text-caption uppercase tracking-widest",
-              hasHighPriority ? "text-status-warning" : "text-ui-text-tertiary",
+              "text-3xl font-extrabold tracking-tight",
+              hasHighPriority ? "text-status-warning" : "text-ui-text",
             )}
           >
-            Attention Needed
+            {count || 0}
           </Typography>
-          <Flex align="baseline" gap="sm" wrap>
-            <Typography
-              variant="h2"
-              className={cn(
-                "text-3xl font-extrabold tracking-tight",
-                hasHighPriority ? "text-status-warning" : "text-ui-text",
-              )}
-            >
-              {count || 0}
-            </Typography>
-            <Typography variant="caption" color="secondary">
-              High Priority
-            </Typography>
-          </Flex>
-        </Stack>
+          <Typography variant="caption" color="secondary">
+            High Priority
+          </Typography>
+        </Flex>
+      </Stack>
 
-        {hasHighPriority && (
-          <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-status-warning" />
-        )}
-      </CardBody>
+      {hasHighPriority && (
+        <div className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-status-warning" />
+      )}
     </Card>
   );
 }

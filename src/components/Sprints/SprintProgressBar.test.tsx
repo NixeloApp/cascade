@@ -132,11 +132,9 @@ describe("SprintProgressBar", () => {
         ],
       };
 
-      const { container } = render(<SprintProgressBar {...defaultProps} />);
+      render(<SprintProgressBar {...defaultProps} />);
 
-      // Progress bar container
-      const progressBar = container.querySelector(".h-2.bg-ui-bg-secondary");
-      expect(progressBar).toBeInTheDocument();
+      expect(screen.getByRole("progressbar", { name: "Sprint progress" })).toBeInTheDocument();
     });
   });
 

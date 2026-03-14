@@ -12,7 +12,7 @@ import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { ChevronDown, Search, X } from "@/lib/icons";
+import { ChevronDown, Circle, Search, X } from "@/lib/icons";
 import { ISSUE_TYPE_ICONS, type IssuePriority, type IssueType } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/DropdownMenu";
 import { Flex, FlexItem } from "./ui/Flex";
@@ -169,27 +170,29 @@ function DateRangeDropdown({ label, shortLabel, value, onChange }: DateRangeDrop
           <ChevronDown className="ml-1 w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="p-3 min-w-56">
-        <Stack gap="sm">
-          <FormInput
-            label="From"
-            type="date"
-            value={value?.from ?? ""}
-            onChange={(e) => handleFromChange(e.target.value)}
-          />
-          <FormInput
-            label="To"
-            type="date"
-            value={value?.to ?? ""}
-            onChange={(e) => handleToChange(e.target.value)}
-          />
-          {isActive && (
-            <Button variant="ghost" size="sm" onClick={handleClear} className="w-full">
-              <X className="w-4 h-4 mr-1" />
-              Clear
-            </Button>
-          )}
-        </Stack>
+      <DropdownMenuContent align="start" className="min-w-56">
+        <Card padding="sm" radius="none" variant="ghost">
+          <Stack gap="sm">
+            <FormInput
+              label="From"
+              type="date"
+              value={value?.from ?? ""}
+              onChange={(e) => handleFromChange(e.target.value)}
+            />
+            <FormInput
+              label="To"
+              type="date"
+              value={value?.to ?? ""}
+              onChange={(e) => handleToChange(e.target.value)}
+            />
+            {isActive && (
+              <Button variant="ghost" size="sm" onClick={handleClear} className="w-full">
+                <X className="w-4 h-4 mr-1" />
+                Clear
+              </Button>
+            )}
+          </Stack>
+        </Card>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -221,40 +224,36 @@ function SavedFiltersDropdown({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="max-h-64 overflow-y-auto min-w-48">
         {savedFilters.map((filter) => (
-          <Flex
-            key={filter._id}
-            align="center"
-            justify="between"
-            className="rounded px-1 hover:bg-ui-bg-secondary transition-fast"
-          >
-            <Button
-              variant="unstyled"
-              onClick={() => onLoadFilter(filter)}
-              className="flex-1 text-left h-auto py-1"
-            >
-              <Typography variant="small" as="span">
-                {filter.name}
-              </Typography>
-              {filter.isPublic && (
-                <Typography variant="caption" color="tertiary" as="span" className="ml-1">
-                  (public)
-                </Typography>
+          <DropdownMenuItem key={filter._id} onSelect={() => onLoadFilter(filter)}>
+            <Flex align="center" justify="between" className="w-full">
+              <FlexItem flex="1" className="min-w-0">
+                <Stack gap="none" className="min-w-0">
+                  <Typography variant="small" className="truncate">
+                    {filter.name}
+                  </Typography>
+                  {filter.isPublic && (
+                    <Typography variant="caption" color="tertiary">
+                      Public
+                    </Typography>
+                  )}
+                </Stack>
+              </FlexItem>
+              {filter.isOwner && (
+                <IconButton
+                  variant="danger"
+                  size="xs"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteFilter(filter._id);
+                  }}
+                  aria-label="Delete filter"
+                >
+                  <X className="w-3 h-3" />
+                </IconButton>
               )}
-            </Button>
-            {filter.isOwner && (
-              <IconButton
-                variant="danger"
-                size="xs"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteFilter(filter._id);
-                }}
-                aria-label="Delete filter"
-              >
-                <X className="w-3 h-3" />
-              </IconButton>
-            )}
-          </Flex>
+            </Flex>
+          </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
@@ -397,167 +396,163 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
   };
 
   return (
-    <div className="px-1 pb-0 pt-0 sm:px-4 sm:pb-2 sm:pt-3">
-      <div className="overflow-x-auto pb-0.5">
-        <Flex
-          align="center"
-          gap="none"
-          className="min-w-max gap-1 rounded-none border-0 bg-transparent px-0 py-0 shadow-none sm:gap-2 sm:rounded-2xl sm:border sm:border-ui-border/70 sm:bg-ui-bg-elevated/92 sm:px-2 sm:py-2 sm:shadow-soft"
-        >
-          {/* Search Input */}
-          <Flex align="center" className="relative">
-            <Search className="pointer-events-none absolute left-2 h-3.5 w-3.5 text-ui-text-tertiary sm:h-4 sm:w-4" />
-            <Input
-              type="text"
-              placeholder="Search"
-              variant="filter"
-              inputSize="filterPill"
-              value={filters.query ?? ""}
-              onChange={handleSearchChange}
-              className="w-20 pl-7 pr-2 sm:w-64 sm:pr-3"
-              aria-label="Search issues"
-            />
-          </Flex>
-
-          {/* Divider */}
-          <div className="hidden h-5 w-px bg-ui-border/70 sm:block sm:h-6" />
-
-          {/* Type Filter */}
-          <FilterDropdown
-            label="Type"
-            shortLabel="Type"
-            activeCount={filters.type?.length ?? 0}
-            items={ISSUE_TYPES}
-            selectedValues={filters.type}
-            onToggle={(type) => toggleArrayFilter("type", type)}
-            getKey={(type) => type}
-            renderItem={(type) => (
-              <Flex align="center" gap="sm">
-                <Icon icon={ISSUE_TYPE_ICONS[type]} size="sm" />
-                <Typography variant="small" className="capitalize">
-                  {type}
-                </Typography>
-              </Flex>
-            )}
+    <Card
+      recipe="filterBar"
+      padding="none"
+      className="overflow-x-auto px-1 pb-0.5 sm:px-4 sm:pb-2 sm:pt-3"
+    >
+      <Flex align="center" gap="sm" className="min-w-max">
+        {/* Search Input */}
+        <Flex align="center" className="relative">
+          <Search className="pointer-events-none absolute left-2 h-3.5 w-3.5 text-ui-text-tertiary sm:h-4 sm:w-4" />
+          <Input
+            type="text"
+            placeholder="Search"
+            variant="filter"
+            inputSize="filterPill"
+            value={filters.query ?? ""}
+            onChange={handleSearchChange}
+            className="w-20 pl-7 pr-2 sm:w-64 sm:pr-3"
+            aria-label="Search issues"
           />
-
-          {/* Priority Filter */}
-          <FilterDropdown
-            label="Priority"
-            shortLabel="Pri"
-            activeCount={filters.priority?.length ?? 0}
-            items={PRIORITIES_DISPLAY_ORDER}
-            selectedValues={filters.priority}
-            onToggle={(priority) => toggleArrayFilter("priority", priority)}
-            getKey={(priority) => priority}
-            renderItem={(priority) => (
-              <Typography variant="small" className="capitalize">
-                {priority}
-              </Typography>
-            )}
-          />
-
-          {/* Assignee Filter */}
-          <FilterDropdown
-            label="Assignee"
-            shortLabel="Assign"
-            activeCount={filters.assigneeId?.length ?? 0}
-            items={members?.map((m) => m.userId)}
-            selectedValues={filters.assigneeId}
-            onToggle={(userId) => toggleArrayFilter("assigneeId", userId)}
-            getKey={(userId) => userId}
-            renderItem={(userId) =>
-              members?.find((m) => m.userId === userId)?.userName ?? "Unknown"
-            }
-            emptyMessage="No members"
-            scrollable
-          />
-
-          {/* Labels Filter */}
-          <FilterDropdown
-            label="Labels"
-            shortLabel="Tags"
-            activeCount={filters.labels?.length ?? 0}
-            items={labels?.map((l) => l.name)}
-            selectedValues={filters.labels}
-            onToggle={(name) => toggleArrayFilter("labels", name)}
-            getKey={(name) => name}
-            renderItem={(name) => {
-              const label = labels?.find((l) => l.name === name);
-              return (
-                <Flex align="center" gap="sm">
-                  <FlexItem
-                    as="span"
-                    shrink={false}
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: label?.color }}
-                  />
-                  {name}
-                </Flex>
-              );
-            }}
-            emptyMessage="No labels"
-            scrollable
-          />
-
-          {/* Date divider */}
-          <div className="hidden h-6 w-px bg-ui-border/70 sm:block" />
-
-          {/* Due Date Filter */}
-          <DateRangeDropdown
-            label="Due Date"
-            shortLabel="Due"
-            value={filters.dueDate}
-            onChange={(dueDate) => onFilterChange({ ...filters, dueDate })}
-          />
-
-          {/* Start Date Filter */}
-          <DateRangeDropdown
-            label="Start Date"
-            shortLabel="Start"
-            value={filters.startDate}
-            onChange={(startDate) => onFilterChange({ ...filters, startDate })}
-          />
-
-          {/* Created Date Filter */}
-          <DateRangeDropdown
-            label="Created"
-            shortLabel="Created"
-            value={filters.createdAt}
-            onChange={(createdAt) => onFilterChange({ ...filters, createdAt })}
-          />
-
-          {/* Divider */}
-          {hasActiveFilters && <div className="hidden h-5 w-px bg-ui-border/70 sm:block sm:h-6" />}
-
-          {/* Clear Filters */}
-          {hasActiveFilters && (
-            <Button chrome="filter" chromeSize="filterPill" onClick={handleClearFilters}>
-              <X className="w-4 h-4 mr-1" />
-              Clear ({activeFilterCount})
-            </Button>
-          )}
-
-          {/* Save Filter */}
-          {hasActiveFilters && (
-            <Button chrome="filter" chromeSize="filterPill" onClick={() => setShowSaveDialog(true)}>
-              Save Filter
-            </Button>
-          )}
-
-          {/* Saved Filters */}
-          {savedFilters && savedFilters.length > 0 && (
-            <>
-              <div className="hidden h-5 w-px bg-ui-border/70 sm:block sm:h-6" />
-              <SavedFiltersDropdown
-                savedFilters={savedFilters}
-                onLoadFilter={handleLoadFilter}
-                onDeleteFilter={(id) => void handleDeleteFilter(id)}
-              />
-            </>
-          )}
         </Flex>
-      </div>
+
+        {/* Divider */}
+        <div className="hidden h-5 w-px bg-ui-border/70 sm:block sm:h-6" />
+
+        {/* Type Filter */}
+        <FilterDropdown
+          label="Type"
+          shortLabel="Type"
+          activeCount={filters.type?.length ?? 0}
+          items={ISSUE_TYPES}
+          selectedValues={filters.type}
+          onToggle={(type) => toggleArrayFilter("type", type)}
+          getKey={(type) => type}
+          renderItem={(type) => (
+            <Flex align="center" gap="sm">
+              <Icon icon={ISSUE_TYPE_ICONS[type]} size="sm" />
+              <Typography variant="small" className="capitalize">
+                {type}
+              </Typography>
+            </Flex>
+          )}
+        />
+
+        {/* Priority Filter */}
+        <FilterDropdown
+          label="Priority"
+          shortLabel="Pri"
+          activeCount={filters.priority?.length ?? 0}
+          items={PRIORITIES_DISPLAY_ORDER}
+          selectedValues={filters.priority}
+          onToggle={(priority) => toggleArrayFilter("priority", priority)}
+          getKey={(priority) => priority}
+          renderItem={(priority) => (
+            <Typography variant="small" className="capitalize">
+              {priority}
+            </Typography>
+          )}
+        />
+
+        {/* Assignee Filter */}
+        <FilterDropdown
+          label="Assignee"
+          shortLabel="Assign"
+          activeCount={filters.assigneeId?.length ?? 0}
+          items={members?.map((m) => m.userId)}
+          selectedValues={filters.assigneeId}
+          onToggle={(userId) => toggleArrayFilter("assigneeId", userId)}
+          getKey={(userId) => userId}
+          renderItem={(userId) => members?.find((m) => m.userId === userId)?.userName ?? "Unknown"}
+          emptyMessage="No members"
+          scrollable
+        />
+
+        {/* Labels Filter */}
+        <FilterDropdown
+          label="Labels"
+          shortLabel="Tags"
+          activeCount={filters.labels?.length ?? 0}
+          items={labels?.map((l) => l.name)}
+          selectedValues={filters.labels}
+          onToggle={(name) => toggleArrayFilter("labels", name)}
+          getKey={(name) => name}
+          renderItem={(name) => {
+            const label = labels?.find((l) => l.name === name);
+            return (
+              <Flex align="center" gap="sm">
+                <Icon
+                  icon={Circle}
+                  size="xs"
+                  className="fill-current"
+                  style={{ color: label?.color }}
+                />
+                {name}
+              </Flex>
+            );
+          }}
+          emptyMessage="No labels"
+          scrollable
+        />
+
+        {/* Date divider */}
+        <div className="hidden h-6 w-px bg-ui-border/70 sm:block" />
+
+        {/* Due Date Filter */}
+        <DateRangeDropdown
+          label="Due Date"
+          shortLabel="Due"
+          value={filters.dueDate}
+          onChange={(dueDate) => onFilterChange({ ...filters, dueDate })}
+        />
+
+        {/* Start Date Filter */}
+        <DateRangeDropdown
+          label="Start Date"
+          shortLabel="Start"
+          value={filters.startDate}
+          onChange={(startDate) => onFilterChange({ ...filters, startDate })}
+        />
+
+        {/* Created Date Filter */}
+        <DateRangeDropdown
+          label="Created"
+          shortLabel="Created"
+          value={filters.createdAt}
+          onChange={(createdAt) => onFilterChange({ ...filters, createdAt })}
+        />
+
+        {/* Divider */}
+        {hasActiveFilters && <div className="hidden h-5 w-px bg-ui-border/70 sm:block sm:h-6" />}
+
+        {/* Clear Filters */}
+        {hasActiveFilters && (
+          <Button chrome="filter" chromeSize="filterPill" onClick={handleClearFilters}>
+            <X className="w-4 h-4 mr-1" />
+            Clear ({activeFilterCount})
+          </Button>
+        )}
+
+        {/* Save Filter */}
+        {hasActiveFilters && (
+          <Button chrome="filter" chromeSize="filterPill" onClick={() => setShowSaveDialog(true)}>
+            Save Filter
+          </Button>
+        )}
+
+        {/* Saved Filters */}
+        {savedFilters && savedFilters.length > 0 && (
+          <>
+            <div className="hidden h-5 w-px bg-ui-border/70 sm:block sm:h-6" />
+            <SavedFiltersDropdown
+              savedFilters={savedFilters}
+              onLoadFilter={handleLoadFilter}
+              onDeleteFilter={(id) => void handleDeleteFilter(id)}
+            />
+          </>
+        )}
+      </Flex>
 
       {/* Save Filter Dialog */}
       <SaveFilterDialog
@@ -580,6 +575,6 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
           setIsPublic(false);
         }}
       />
-    </div>
+    </Card>
   );
 }

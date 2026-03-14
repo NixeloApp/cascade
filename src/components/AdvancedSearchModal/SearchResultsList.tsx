@@ -1,12 +1,15 @@
 import type { Id } from "@convex/_generated/dataModel";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
+import { Search } from "@/lib/icons";
 import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface SearchResult {
@@ -40,44 +43,41 @@ export function SearchResultsList({
 }: SearchResultsListProps) {
   if (searchQuery.length < 2) {
     return (
-      <Card padding="lg" variant="ghost" className="text-center text-ui-text-tertiary">
-        <svg
-          aria-hidden="true"
-          className="mx-auto mb-3 h-10 w-10 text-ui-text-tertiary"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-          />
-        </svg>
-        <Typography variant="muted">Start typing to search issues</Typography>
-      </Card>
+      <EmptyState
+        icon={Search}
+        title="Start typing to search"
+        description="Search issues by title, key, or description."
+        size="compact"
+        surface="bare"
+      />
     );
   }
 
   if (results.length === 0) {
     return (
-      <Card padding="lg" variant="ghost" className="text-center text-ui-text-tertiary">
-        <Typography variant="muted">No issues found matching your criteria</Typography>
-      </Card>
+      <EmptyState
+        icon={Search}
+        title="No matching issues"
+        description="Try a broader query or clear one of the filters."
+        size="compact"
+        surface="bare"
+      />
     );
   }
 
   return (
-    <>
+    <Stack gap="none">
       {/* Results list - let parent Dialog handle scrolling */}
-      <div className="divide-y divide-ui-border-secondary">
+      <Stack gap="none">
         {results.map((issue) => (
-          <Button
-            variant="unstyled"
+          <Card
+            recipe="searchResultRow"
             key={issue._id}
+            padding="md"
+            radius="none"
             onClick={() => onSelectIssue(issue._id, issue.projectId)}
-            className="h-auto w-full rounded-none p-4 text-left transition-colors hover:bg-ui-bg-secondary"
+            className="w-full text-left"
+            aria-label={`${issue.key} ${issue.title}`}
           >
             <Flex gap="md" align="start">
               <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="md" className="shrink-0" />
@@ -93,22 +93,17 @@ export function SearchResultsList({
                 <Typography variant="label">{issue.title}</Typography>
               </FlexItem>
             </Flex>
-          </Button>
+          </Card>
         ))}
-      </div>
+      </Stack>
 
       {hasMore && (
-        <Card
-          padding="md"
-          radius="none"
-          variant="ghost"
-          className="border-t border-ui-border bg-ui-bg-secondary"
-        >
+        <Card recipe="listFooterBar" padding="md" radius="none">
           <Button variant="secondary" size="sm" onClick={onLoadMore} className="w-full">
             Load More ({total - results.length} remaining)
           </Button>
         </Card>
       )}
-    </>
+    </Stack>
   );
 }

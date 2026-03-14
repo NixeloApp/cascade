@@ -9,7 +9,11 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
+import { Avatar } from "@/components/ui/Avatar";
+import { Card } from "@/components/ui/Card";
+import { Icon } from "@/components/ui/Icon";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatDate, formatTime } from "@/lib/formatting";
 import { Calendar, Check, Clock, LinkIcon, MapPin, Trash2, X } from "@/lib/icons";
@@ -62,9 +66,11 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
         size="lg"
         data-testid={TEST_IDS.CALENDAR.EVENT_DETAILS_MODAL}
       >
-        <Flex justify="center" className="p-8">
-          <LoadingSpinner size="lg" />
-        </Flex>
+        <Card variant="ghost" padding="xl">
+          <Flex justify="center">
+            <LoadingSpinner size="lg" />
+          </Flex>
+        </Card>
       </Dialog>
     );
   }
@@ -119,7 +125,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
       open={open}
       onOpenChange={onOpenChange}
       title={event.title}
-      className="sm:max-w-2xl"
+      size="lg"
       data-testid={TEST_IDS.CALENDAR.EVENT_DETAILS_MODAL}
       footer={
         <>
@@ -127,7 +133,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
             onClick={() => setDeleteConfirmOpen(true)}
             variant="danger"
             isLoading={isDeleting}
-            leftIcon={<Trash2 className="w-4 h-4" />}
+            leftIcon={<Icon icon={Trash2} size="sm" />}
           >
             {isDeleting ? "Deleting..." : "Delete Event"}
           </Button>
@@ -137,8 +143,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
         </>
       }
     >
-      <Flex direction="column" gap="lg">
-        {/* Badges */}
+      <Stack gap="lg">
         <Flex gap="sm" align="center">
           <Badge size="md" className={cn("capitalize", getEventTypeColor(event.eventType))}>
             {event.eventType}
@@ -148,12 +153,10 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
           </Badge>
         </Flex>
 
-        {/* Content */}
-        <Flex direction="column" gap="lg">
-          {/* Date and Time */}
+        <Stack gap="lg">
           <Flex gap="md" align="start">
-            <Calendar className="w-5 h-5 text-ui-text-tertiary mt-0.5" />
-            <div>
+            <Icon icon={Calendar} size="md" className="mt-0.5 text-ui-text-tertiary" />
+            <Stack gap="xs">
               <Typography variant="label">
                 {formatDate(event.startTime, {
                   weekday: "long",
@@ -172,88 +175,82 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
                   </>
                 )}
               </Typography>
-            </div>
+            </Stack>
           </Flex>
 
-          {/* Organizer */}
           <Flex gap="md" align="start">
-            <Flex
-              align="center"
-              justify="center"
-              className="w-5 h-5 bg-brand rounded-full text-brand-foreground text-xs font-bold mt-0.5"
-            >
-              {event.organizerName?.[0]?.toUpperCase()}
-            </Flex>
-            <div>
+            <Avatar
+              name={event.organizerName}
+              email={event.organizerEmail}
+              size="xs"
+              variant="brand"
+              className="mt-0.5"
+            />
+            <Stack gap="xs">
               <Typography variant="caption">Organizer</Typography>
               <Typography variant="label">{event.organizerName}</Typography>
               {event.organizerEmail && (
                 <Typography variant="caption">{event.organizerEmail}</Typography>
               )}
-            </div>
+            </Stack>
           </Flex>
 
-          {/* Description */}
           {event.description && (
-            <div className="border-t border-ui-border pt-4">
-              <Typography variant="label" className="mb-2">
-                Description
-              </Typography>
-              <Typography variant="muted" className="whitespace-pre-wrap">
-                {event.description}
-              </Typography>
-            </div>
+            <Card recipe="eventDetailSection">
+              <Stack gap="xs">
+                <Typography variant="label">Description</Typography>
+                <Typography variant="muted" className="whitespace-pre-wrap">
+                  {event.description}
+                </Typography>
+              </Stack>
+            </Card>
           )}
 
-          {/* Location */}
           {event.location && (
-            <Flex gap="md" align="start" className="border-t border-ui-border pt-4">
-              <MapPin className="w-5 h-5 text-ui-text-tertiary mt-0.5" />
-              <div>
-                <Typography variant="caption">Location</Typography>
-                <Typography variant="label">{event.location}</Typography>
-              </div>
-            </Flex>
+            <Card recipe="eventDetailSection">
+              <Flex gap="md" align="start">
+                <Icon icon={MapPin} size="md" className="mt-0.5 text-ui-text-tertiary" />
+                <Stack gap="xs">
+                  <Typography variant="caption">Location</Typography>
+                  <Typography variant="label">{event.location}</Typography>
+                </Stack>
+              </Flex>
+            </Card>
           )}
 
-          {/* Meeting URL */}
           {event.meetingUrl && (
-            <Flex gap="md" align="start" className="border-t border-ui-border pt-4">
-              <LinkIcon className="w-5 h-5 text-ui-text-tertiary mt-0.5" />
-              <div>
-                <Typography variant="caption">Meeting Link</Typography>
-                <a
-                  href={event.meetingUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-brand hover:text-brand-hover:text-brand-muted"
-                >
-                  Join Meeting
-                </a>
-              </div>
-            </Flex>
+            <Card recipe="eventDetailSection">
+              <Flex gap="md" align="start">
+                <Icon icon={LinkIcon} size="md" className="mt-0.5 text-ui-text-tertiary" />
+                <Stack gap="xs" align="start">
+                  <Typography variant="caption">Meeting Link</Typography>
+                  <Button asChild variant="link" size="none">
+                    <a href={event.meetingUrl} target="_blank" rel="noopener noreferrer">
+                      Join Meeting
+                    </a>
+                  </Button>
+                </Stack>
+              </Flex>
+            </Card>
           )}
 
-          {/* Notes */}
           {event.notes && (
-            <div className="border-t border-ui-border pt-4">
-              <Typography variant="label" className="mb-2">
-                Notes
-              </Typography>
-              <Typography variant="muted" className="whitespace-pre-wrap">
-                {event.notes}
-              </Typography>
-            </div>
+            <Card recipe="eventDetailSection">
+              <Stack gap="xs">
+                <Typography variant="label">Notes</Typography>
+                <Typography variant="muted" className="whitespace-pre-wrap">
+                  {event.notes}
+                </Typography>
+              </Stack>
+            </Card>
           )}
 
-          {/* Recurring */}
           {event.isRecurring && (
-            <div className="border-t border-ui-border pt-4">
-              <MetadataItem icon={<Clock className="w-4 h-4" />}>Recurring event</MetadataItem>
-            </div>
+            <Card recipe="eventDetailSection">
+              <MetadataItem icon={<Icon icon={Clock} size="sm" />}>Recurring event</MetadataItem>
+            </Card>
           )}
 
-          {/* Meeting Recording Section (for meetings with a meeting URL) */}
           {event.eventType === "meeting" && event.meetingUrl && (
             <MeetingRecordingSection
               calendarEventId={eventId}
@@ -263,75 +260,74 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
             />
           )}
 
-          {/* Attendance Tracking (only for required meetings, only visible to organizer) */}
           {event.isRequired && attendance && (
-            <div className="border-t border-ui-border pt-4">
-              <Flex justify="between" align="center" className="mb-3">
-                <Typography variant="label">
-                  Attendance ({attendance.markedCount}/{attendance.totalAttendees} marked)
-                </Typography>
-              </Flex>
+            <Card recipe="eventDetailSection">
+              <Stack gap="sm">
+                <Flex justify="between" align="center">
+                  <Typography variant="label">
+                    Attendance ({attendance.markedCount}/{attendance.totalAttendees} marked)
+                  </Typography>
+                </Flex>
 
-              <Flex direction="column" gap="sm">
-                {attendance.attendees.map((attendee: AttendanceParticipant) => (
-                  <Flex
-                    key={attendee.userId}
-                    justify="between"
-                    align="center"
-                    className="p-2 bg-ui-bg-secondary rounded-md"
-                  >
-                    <Flex gap="sm" align="center" className="flex-1">
-                      {/* Status Icon */}
-                      {attendee.status === "present" && (
-                        <Check className="w-4 h-4 text-status-success" />
-                      )}
-                      {attendee.status === "tardy" && (
-                        <Clock className="w-4 h-4 text-status-warning" />
-                      )}
-                      {attendee.status === "absent" && <X className="w-4 h-4 text-status-error" />}
-                      {!attendee.status && <div className="w-4 h-4" />}
+                <Stack gap="sm">
+                  {attendance.attendees.map((attendee: AttendanceParticipant) => (
+                    <Card key={attendee.userId} recipe="eventAttendanceRow">
+                      <Flex justify="between" align="center" gap="sm">
+                        <Flex gap="sm" align="center" flex="1">
+                          {attendee.status === "present" && (
+                            <Icon icon={Check} size="sm" className="text-status-success" />
+                          )}
+                          {attendee.status === "tardy" && (
+                            <Icon icon={Clock} size="sm" className="text-status-warning" />
+                          )}
+                          {attendee.status === "absent" && (
+                            <Icon icon={X} size="sm" className="text-status-error" />
+                          )}
+                          {!attendee.status && (
+                            <Icon icon={Clock} size="sm" className="opacity-0" aria-hidden="true" />
+                          )}
 
-                      {/* Attendee Name */}
-                      <MetadataItem className="text-ui-text font-medium">
-                        {attendee.userName}
-                      </MetadataItem>
-                    </Flex>
+                          <Typography as="span" variant="label">
+                            {attendee.userName}
+                          </Typography>
+                        </Flex>
 
-                    {/* Status Dropdown */}
-                    <Select
-                      value={attendee.status || "none"}
-                      onValueChange={(value) => {
-                        if (value === "none") return;
-                        handleMarkAttendance(
-                          attendee.userId as Id<"users">,
-                          value as "present" | "tardy" | "absent",
-                        );
-                      }}
-                      disabled={isSavingAttendance}
-                    >
-                      <SelectTrigger className="text-sm px-2 py-1 border border-ui-border rounded bg-ui-bg text-ui-text">
-                        <SelectValue placeholder="Not marked" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Not marked</SelectItem>
-                        <SelectItem value="present">Present</SelectItem>
-                        <SelectItem value="tardy">Tardy</SelectItem>
-                        <SelectItem value="absent">Absent</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </Flex>
-                ))}
-              </Flex>
+                        <Select
+                          value={attendee.status || "none"}
+                          onValueChange={(value) => {
+                            if (value === "none") return;
+                            handleMarkAttendance(
+                              attendee.userId as Id<"users">,
+                              value as "present" | "tardy" | "absent",
+                            );
+                          }}
+                          disabled={isSavingAttendance}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Not marked" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Not marked</SelectItem>
+                            <SelectItem value="present">Present</SelectItem>
+                            <SelectItem value="tardy">Tardy</SelectItem>
+                            <SelectItem value="absent">Absent</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </Flex>
+                    </Card>
+                  ))}
+                </Stack>
 
-              {attendance.totalAttendees === 0 && (
-                <Typography variant="muted" className="text-center py-4">
-                  No attendees added to this meeting
-                </Typography>
-              )}
-            </div>
+                {attendance.totalAttendees === 0 && (
+                  <Typography variant="muted" className="text-center">
+                    No attendees added to this meeting
+                  </Typography>
+                )}
+              </Stack>
+            </Card>
           )}
-        </Flex>
-      </Flex>
+        </Stack>
+      </Stack>
 
       <ConfirmDialog
         isOpen={deleteConfirmOpen}

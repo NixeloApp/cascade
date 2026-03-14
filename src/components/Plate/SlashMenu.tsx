@@ -16,6 +16,7 @@ import {
   Image,
   List,
   ListOrdered,
+  type LucideIcon,
   Quote,
   Table,
   Type,
@@ -32,6 +33,7 @@ import {
   CommandList,
 } from "@/components/ui/Command";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/Popover";
 import { Typography } from "@/components/ui/Typography";
 import { NODE_TYPES } from "@/lib/plate/plugins";
@@ -40,7 +42,7 @@ interface SlashMenuItem {
   id: string;
   label: string;
   description: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   action: (editor: PlateEditor) => void;
 }
 
@@ -353,36 +355,28 @@ export function SlashMenu() {
         }}
       />
       <PopoverContent
-        className="w-72 p-0 bg-ui-bg-elevated border border-ui-border shadow-elevated rounded-container animate-scale-in"
+        recipe="slashMenu"
+        className="w-72"
         align="start"
         side="bottom"
         sideOffset={4}
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
-        <Command className="bg-transparent">
-          <CommandList className="max-h-80 scrollbar-subtle">
-            <CommandEmpty className="py-6 text-center text-sm text-ui-text-tertiary">
-              No results found
-            </CommandEmpty>
-            <CommandGroup
-              heading="Basic blocks"
-              className="px-1 py-1.5 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-ui-text-tertiary"
-            >
+        <Command>
+          <CommandList viewport="slashMenu">
+            <CommandEmpty tone="muted">No results found</CommandEmpty>
+            <CommandGroup heading="Basic blocks" recipe="slashMenu">
               {filteredItems.map((item) => (
                 <CommandItem
                   key={item.id}
                   value={item.id}
                   onSelect={() => handleSelect(item)}
-                  className="px-2 py-2 mx-1 rounded transition-default cursor-pointer aria-selected:bg-ui-bg-hover"
+                  recipe="slashMenu"
                 >
-                  <item.icon className="mr-3 h-4 w-4 text-ui-text-secondary" />
-                  <Flex direction="column" className="gap-0.5">
-                    <Typography variant="label" className="text-sm font-medium text-ui-text">
-                      {item.label}
-                    </Typography>
-                    <Typography variant="muted" className="text-xs">
-                      {item.description}
-                    </Typography>
+                  <Icon icon={item.icon} size="sm" className="mr-3" />
+                  <Flex direction="column" gap="xs">
+                    <Typography variant="label">{item.label}</Typography>
+                    <Typography variant="muted">{item.description}</Typography>
                   </Flex>
                 </CommandItem>
               ))}

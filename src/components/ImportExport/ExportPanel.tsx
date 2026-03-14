@@ -10,9 +10,9 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useEffect, useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { FileCode, FileSpreadsheet, Info } from "@/lib/icons";
+import { FileCode, FileSpreadsheet } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
+import { Alert, AlertDescription, AlertTitle } from "../ui/Alert";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
@@ -122,12 +122,11 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
         </Typography>
         <Grid cols={2} gap="md">
           <Card
+            recipe={exportFormat === "csv" ? "optionTileSelected" : "optionTile"}
             padding="md"
             onClick={() => setExportFormat("csv")}
-            className={cn(
-              "cursor-pointer transition-all",
-              exportFormat === "csv" ? "ring-2 ring-brand bg-brand/5" : "hover:bg-ui-bg-secondary",
-            )}
+            className="cursor-pointer"
+            aria-pressed={exportFormat === "csv"}
           >
             <Flex gap="md" align="center">
               <Icon icon={FileSpreadsheet} size="lg" />
@@ -143,12 +142,11 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
           </Card>
 
           <Card
+            recipe={exportFormat === "json" ? "optionTileSelected" : "optionTile"}
             padding="md"
             onClick={() => setExportFormat("json")}
-            className={cn(
-              "cursor-pointer transition-all",
-              exportFormat === "json" ? "ring-2 ring-brand bg-brand/5" : "hover:bg-ui-bg-secondary",
-            )}
+            className="cursor-pointer"
+            aria-pressed={exportFormat === "json"}
           >
             <Flex gap="md" align="center">
               <Icon icon={FileCode} size="lg" />
@@ -165,23 +163,24 @@ export function ExportPanel({ projectId, sprintId, status }: ExportPanelProps) {
         </Grid>
       </div>
 
-      <Card padding="md" className="bg-brand-subtle border border-brand-border">
-        <Flex gap="md" align="start">
-          <Icon icon={Info} size="lg" className="text-brand" />
-          <Stack gap="xs" className="text-brand-active">
-            <Typography variant="label">Export Information</Typography>
-            <ul className="list-disc list-inside text-brand-hover">
-              <li>CSV format is compatible with Excel, Google Sheets</li>
-              <li>JSON format includes full issue data and metadata</li>
-              <li>
-                {sprintId || status
-                  ? "Filtered issues will be exported"
-                  : "All issues in this project will be exported"}
-              </li>
-            </ul>
+      <Alert variant="info">
+        <AlertTitle>Export Information</AlertTitle>
+        <AlertDescription>
+          <Stack as="ul" gap="xs" className="list-disc list-inside">
+            <Typography as="li" variant="small">
+              CSV format is compatible with Excel and Google Sheets.
+            </Typography>
+            <Typography as="li" variant="small">
+              JSON format includes full issue data and metadata.
+            </Typography>
+            <Typography as="li" variant="small">
+              {sprintId || status
+                ? "Filtered issues will be exported."
+                : "All issues in this project will be exported."}
+            </Typography>
           </Stack>
-        </Flex>
-      </Card>
+        </AlertDescription>
+      </Alert>
 
       <Button onClick={handleExport} disabled={isExporting} className="w-full">
         {isExporting ? (

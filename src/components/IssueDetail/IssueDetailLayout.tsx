@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { IssueDetailContent } from "./IssueDetailContent";
 import { IssueDetailSidebar } from "./IssueDetailSidebar";
@@ -28,41 +29,40 @@ export function IssueDetailLayout({
       {header}
 
       <FlexItem flex="1" className="overflow-auto">
-        <Flex
-          direction="column"
-          className="max-w-400 mx-auto md:flex-row bg-ui-bg-elevated border border-ui-border rounded-lg shadow-card m-4"
-        >
-          <IssueDetailContent
-            issueId={issue._id}
-            projectId={issue.projectId}
-            issueTitle={issue.title}
-            issueDescription={issue.description}
-            issueType={issue.type}
-            subtasks={subtasks}
-            isEditing={detail.isEditing}
-            editTitle={detail.title}
-            editDescription={detail.description}
-            onTitleChange={detail.setTitle}
-            onDescriptionChange={detail.setDescription}
-            onSave={detail.handleSave}
-            onCancel={detail.handleCancelEdit}
-          />
+        <Card recipe="issueDetailLayoutShell" className="mx-auto my-4 max-w-400">
+          <Flex direction="column" directionMd="row">
+            <IssueDetailContent
+              issueId={issue._id}
+              projectId={issue.projectId}
+              issueTitle={issue.title}
+              issueDescription={issue.description}
+              issueType={issue.type}
+              subtasks={subtasks}
+              isEditing={detail.isEditing}
+              editTitle={detail.title}
+              editDescription={detail.description}
+              onTitleChange={detail.setTitle}
+              onDescriptionChange={detail.setDescription}
+              onSave={detail.handleSave}
+              onCancel={detail.handleCancelEdit}
+            />
 
-          <IssueDetailSidebar
-            issueId={issue._id}
-            projectId={issue.projectId}
-            status={issue.status}
-            type={issue.type}
-            priority={issue.priority}
-            assignee={issue.assignee}
-            reporter={issue.reporter}
-            storyPoints={issue.storyPoints}
-            labels={issue.labels}
-            estimatedHours={issue.estimatedHours}
-            billingEnabled={billingEnabled}
-            canEdit={canEdit}
-          />
-        </Flex>
+            <IssueDetailSidebar
+              issueId={issue._id}
+              projectId={issue.projectId}
+              status={issue.status}
+              type={issue.type}
+              priority={issue.priority}
+              assignee={issue.assignee}
+              reporter={issue.reporter}
+              storyPoints={issue.storyPoints}
+              labels={issue.labels}
+              estimatedHours={issue.estimatedHours}
+              billingEnabled={billingEnabled}
+              canEdit={canEdit}
+            />
+          </Flex>
+        </Card>
       </FlexItem>
     </Flex>
   );

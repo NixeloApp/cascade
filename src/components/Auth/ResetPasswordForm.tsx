@@ -11,6 +11,7 @@ import { useRef, useState } from "react";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
+import { Flex } from "../ui/Flex";
 import { Input } from "../ui/form/Input";
 import { Typography } from "../ui/Typography";
 import { AuthLinkButton } from "./AuthLink";
@@ -72,37 +73,40 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
       <Typography variant="p" color="secondary" className="mb-4 text-sm">
         We sent a code to <strong>{email}</strong>. Enter it below with your new password.
       </Typography>
-      <form ref={formRef} className="flex flex-col gap-form-field" onSubmit={handleSubmit}>
-        <Input
-          type="text"
-          name="code"
-          placeholder="8-digit code"
-          required
-          pattern="[0-9]{8}"
-          maxLength={8}
-          data-testid={TEST_IDS.AUTH.RESET_CODE_INPUT}
-        />
-        <Input
-          type="password"
-          name="newPassword"
-          placeholder="New password"
-          required
-          minLength={8}
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          data-testid={TEST_IDS.AUTH.RESET_PASSWORD_INPUT}
-        />
-        <PasswordStrengthIndicator password={newPassword} className="-mt-2" />
-        <Button
-          type="submit"
-          size="lg"
-          className="w-full"
-          disabled={submitting}
-          data-testid={TEST_IDS.AUTH.RESET_SUBMIT_BUTTON}
-        >
-          {submitting ? "Resetting..." : "Reset password"}
-        </Button>
-        <AuthLinkButton onClick={onRetry}>Didn't receive a code? Try again</AuthLinkButton>
+      <form ref={formRef} onSubmit={handleSubmit}>
+        <Flex direction="column" gap="md">
+          <Input
+            type="text"
+            name="code"
+            placeholder="8-digit code"
+            required
+            pattern="[0-9]{8}"
+            maxLength={8}
+            data-testid={TEST_IDS.AUTH.RESET_CODE_INPUT}
+            variant="otpCode"
+          />
+          <Input
+            type="password"
+            name="newPassword"
+            placeholder="New password"
+            required
+            minLength={8}
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            data-testid={TEST_IDS.AUTH.RESET_PASSWORD_INPUT}
+          />
+          <PasswordStrengthIndicator password={newPassword} className="-mt-2" />
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            disabled={submitting}
+            data-testid={TEST_IDS.AUTH.RESET_SUBMIT_BUTTON}
+          >
+            {submitting ? "Resetting..." : "Reset password"}
+          </Button>
+          <AuthLinkButton onClick={onRetry}>Didn't receive a code? Try again</AuthLinkButton>
+        </Flex>
       </form>
     </div>
   );

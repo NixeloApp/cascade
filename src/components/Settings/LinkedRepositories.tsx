@@ -56,7 +56,7 @@ export function LinkedRepositories() {
           value={selectedWorkspace || ""}
           onValueChange={(value) => setSelectedWorkspace(value as Id<"projects">)}
         >
-          <SelectTrigger className="w-full px-3 py-2 border border-ui-border rounded-md bg-ui-bg">
+          <SelectTrigger>
             <SelectValue placeholder="-- Select a project --" />
           </SelectTrigger>
           <SelectContent>

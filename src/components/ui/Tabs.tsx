@@ -73,6 +73,7 @@ const tabsTriggerVariants = cva(
       width: {
         default: "",
         responsive: "w-auto shrink-0",
+        fill: "flex-1",
       },
     },
     defaultVariants: {

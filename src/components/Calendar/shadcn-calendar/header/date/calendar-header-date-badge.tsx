@@ -1,4 +1,5 @@
 import { isSameMonth } from "date-fns";
+import { Badge } from "@/components/ui/Badge";
 import { useCalendarContext } from "../../calendar-context";
 
 /** Badge showing event count for the current month. */
@@ -8,8 +9,8 @@ export function CalendarHeaderDateBadge(): React.ReactElement | null {
 
   if (!monthEvents.length) return null;
   return (
-    <div className="whitespace-nowrap rounded-sm border px-1.5 py-0.5 text-xs">
+    <Badge variant="calendarHeaderCount" size="calendarHeaderCount" className="whitespace-nowrap">
       {monthEvents.length} events
-    </div>
+    </Badge>
   );
 }

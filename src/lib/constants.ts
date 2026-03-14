@@ -3,6 +3,8 @@
  * Centralized configuration for magic numbers, limits, and common values
  */
 
+import { RUNTIME_COLORS } from "@convex/shared/colors";
+
 /**
  * Animation delays and durations (in milliseconds)
  */
@@ -107,8 +109,7 @@ export const ICON_SIZES = {
  * stored in the database and need to work independently of the CSS theme.
  */
 export const COLORS = {
-  /** Default label color (brand indigo) */
-  DEFAULT_LABEL: "#6366F1",
+  ...RUNTIME_COLORS,
 } as const;
 
 /**

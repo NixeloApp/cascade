@@ -38,7 +38,7 @@ export const list = authenticatedQuery({
 
     const results = await fetchPaginatedQuery<Doc<"notifications">>(ctx, {
       paginationOpts: args.paginationOpts,
-      query: (db) => {
+      buildQuery: (db) => {
         if (onlyUnread) {
           // Optimization: Use by_user_read index which includes isDeleted
           // to avoid fetching deleted documents

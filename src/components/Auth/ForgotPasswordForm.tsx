@@ -11,6 +11,7 @@ import { useRef, useState } from "react";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
 import { Button } from "../ui/Button";
+import { Flex } from "../ui/Flex";
 import { Input } from "../ui/form/Input";
 import { Typography } from "../ui/Typography";
 import { AuthLinkButton } from "./AuthLink";
@@ -72,18 +73,20 @@ export function ForgotPasswordForm({ onCodeSent, onBack }: ForgotPasswordFormPro
       <Typography variant="p" color="secondary" className="mb-4 text-sm">
         Enter your email and we'll send you a code to reset your password.
       </Typography>
-      <form ref={formRef} className="flex flex-col gap-form-field" onSubmit={handleSubmit}>
-        <Input
-          type="email"
-          name="email"
-          placeholder="Email"
-          required
-          data-testid={TEST_IDS.AUTH.EMAIL_INPUT}
-        />
-        <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-          {submitting ? "Sending..." : "Send reset code"}
-        </Button>
-        <AuthLinkButton onClick={onBack}>Back to sign in</AuthLinkButton>
+      <form ref={formRef} onSubmit={handleSubmit}>
+        <Flex direction="column" gap="md">
+          <Input
+            type="email"
+            name="email"
+            placeholder="Email"
+            required
+            data-testid={TEST_IDS.AUTH.EMAIL_INPUT}
+          />
+          <Button type="submit" size="lg" className="w-full" disabled={submitting}>
+            {submitting ? "Sending..." : "Send reset code"}
+          </Button>
+          <AuthLinkButton onClick={onBack}>Back to sign in</AuthLinkButton>
+        </Flex>
       </form>
     </div>
   );

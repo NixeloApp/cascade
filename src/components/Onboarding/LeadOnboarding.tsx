@@ -18,7 +18,6 @@ import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
@@ -33,6 +32,21 @@ interface LeadOnboardingProps {
 }
 
 type LeadStep = "features" | "project" | "project-choice" | "creating";
+
+function getLeadStepBackConfig(
+  step: Exclude<LeadStep, "creating">,
+  onBack: () => void,
+  onStepChange: (step: LeadStep) => void,
+) {
+  switch (step) {
+    case "features":
+      return { label: "Back", onClick: onBack };
+    case "project":
+      return { label: "Back", onClick: () => onStepChange("features") };
+    case "project-choice":
+      return { label: "Back", onClick: () => onStepChange("project") };
+  }
+}
 
 /** Multi-step onboarding wizard for team leads creating their first workspace. */
 export function LeadOnboarding({
@@ -111,247 +125,274 @@ export function LeadOnboarding({
     }
   };
 
-  if (step === "features") {
-    return (
-      <Stack gap="xl">
-        {/* Back button - Mintlify-inspired */}
-        <Button variant="ghost" size="sm" onClick={onBack} className="self-start group">
-          <Flex align="center" gap="xs">
-            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-            <Typography variant="caption" className="font-medium">
-              Back
-            </Typography>
-          </Flex>
-        </Button>
+  if (step === "creating") {
+    return null;
+  }
 
-        {/* Header */}
-        <Stack gap="sm" className="text-center">
-          <Typography variant="h1" data-testid={TEST_IDS.ONBOARDING.TEAM_LEAD_HEADING}>
-            Perfect for Team Leads
-          </Typography>
-          <Typography variant="lead">Here's what you can do with Nixelo</Typography>
+  const backAction = getLeadStepBackConfig(step, onBack, setStep);
+
+  return (
+    <Stack gap="xl">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={backAction.onClick}
+        className="self-start"
+        leftIcon={<ArrowLeft className="h-4 w-4" />}
+      >
+        {backAction.label}
+      </Button>
+
+      <LeadStepContent
+        step={step}
+        projectName={projectName}
+        projectError={projectError}
+        isCreating={isCreating}
+        onProjectNameChange={(value) => {
+          setWorkspaceName(value);
+          setWorkspaceError(null);
+        }}
+        onCreateOrganization={handleCreateOrganization}
+        onContinueToProject={() => setStep("project")}
+        onCreateSample={handleCreateSample}
+        onFinishWithoutProject={handleFinishWithoutProject}
+      />
+    </Stack>
+  );
+}
+
+function LeadStepContent({
+  step,
+  projectName,
+  projectError,
+  isCreating,
+  onProjectNameChange,
+  onCreateOrganization,
+  onContinueToProject,
+  onCreateSample,
+  onFinishWithoutProject,
+}: {
+  step: Exclude<LeadStep, "creating">;
+  projectName: string;
+  projectError: string | null;
+  isCreating: boolean;
+  onProjectNameChange: (value: string) => void;
+  onCreateOrganization: () => void;
+  onContinueToProject: () => void;
+  onCreateSample: () => void;
+  onFinishWithoutProject: () => void;
+}) {
+  switch (step) {
+    case "features":
+      return <LeadFeaturesStep onContinue={onContinueToProject} />;
+    case "project":
+      return (
+        <LeadProjectSetupStep
+          projectName={projectName}
+          projectError={projectError}
+          isCreating={isCreating}
+          onProjectNameChange={onProjectNameChange}
+          onCreateOrganization={onCreateOrganization}
+        />
+      );
+    case "project-choice":
+      return (
+        <LeadProjectChoiceStep
+          isCreating={isCreating}
+          onCreateSample={onCreateSample}
+          onFinishWithoutProject={onFinishWithoutProject}
+        />
+      );
+  }
+}
+
+function LeadFeaturesStep({ onContinue }: { onContinue: () => void }) {
+  return (
+    <>
+      <Stack gap="sm" className="text-center">
+        <Typography variant="h1" data-testid={TEST_IDS.ONBOARDING.TEAM_LEAD_HEADING}>
+          Perfect for Team Leads
+        </Typography>
+        <Typography variant="lead">Here's what you can do with Nixelo</Typography>
+      </Stack>
+
+      <FeatureHighlights />
+
+      <Card padding="lg" radius="full">
+        <Stack gap="md">
+          <Typography variant="h3">As a team lead, you can also:</Typography>
+          <Stack gap="sm">
+            <LeadFeatureRow icon={UserPlus} text="Invite team members and manage roles" />
+            <LeadFeatureRow icon={FolderPlus} text="Create and customize project workflows" />
+            <LeadFeatureRow
+              icon={Sparkles}
+              text="Use AI to generate issue suggestions and summaries"
+            />
+          </Stack>
+        </Stack>
+      </Card>
+
+      <Flex justify="center">
+        <Button
+          variant="primary"
+          size="lg"
+          onClick={onContinue}
+          data-testid={TEST_IDS.ONBOARDING.SETUP_WORKSPACE_BUTTON}
+        >
+          Let's set up your project
+        </Button>
+      </Flex>
+    </>
+  );
+}
+
+function LeadFeatureRow({ icon, text }: { icon: typeof UserPlus; text: string }) {
+  return (
+    <Flex align="start" gap="sm">
+      <Icon icon={icon} size="md" className="text-brand-ring mt-0.5 shrink-0" />
+      <Typography color="secondary">{text}</Typography>
+    </Flex>
+  );
+}
+
+function LeadProjectSetupStep({
+  projectName,
+  projectError,
+  isCreating,
+  onProjectNameChange,
+  onCreateOrganization,
+}: {
+  projectName: string;
+  projectError: string | null;
+  isCreating: boolean;
+  onProjectNameChange: (value: string) => void;
+  onCreateOrganization: () => void;
+}) {
+  return (
+    <>
+      <Stack gap="md" className="text-center">
+        <Card recipe="onboardingHeroCircle" className="mx-auto h-16 w-16">
+          <Flex align="center" justify="center" className="h-full w-full">
+            <Icon icon={Building2} size="xl" className="text-brand" />
+          </Flex>
+        </Card>
+        <Stack gap="sm">
+          <Typography variant="h1">Name Your Project</Typography>
+          <Typography variant="lead">This is where your team will collaborate</Typography>
+        </Stack>
+      </Stack>
+
+      <Stack gap="md" className="mx-auto max-w-md">
+        <Stack gap="xs">
+          <Input
+            type="text"
+            placeholder="e.g., Acme Corp, My Startup, Design Team"
+            value={projectName}
+            onChange={(e) => onProjectNameChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !isCreating) {
+                onCreateOrganization();
+              }
+            }}
+            className="text-center"
+            autoFocus
+          />
+          {projectError ? (
+            <Typography variant="small" color="error" className="text-center">
+              {projectError}
+            </Typography>
+          ) : null}
         </Stack>
 
-        {/* Feature Highlights */}
-        <FeatureHighlights />
+        <Button
+          variant="primary"
+          size="lg"
+          onClick={onCreateOrganization}
+          disabled={isCreating || !projectName.trim()}
+          className="w-full"
+        >
+          {isCreating ? "Creating..." : "Create Project"}
+        </Button>
+      </Stack>
+    </>
+  );
+}
 
-        {/* Additional lead features */}
-        <Card padding="lg" radius="full">
-          <Stack gap="md">
-            <Typography variant="h3">As a team lead, you can also:</Typography>
-            <Stack gap="sm">
-              <Flex align="start" gap="sm">
-                <Icon icon={UserPlus} size="md" className="text-brand-ring mt-0.5 shrink-0" />
-                <Typography color="secondary">Invite team members and manage roles</Typography>
-              </Flex>
-              <Flex align="start" gap="sm">
-                <Icon icon={FolderPlus} size="md" className="text-brand-ring mt-0.5 shrink-0" />
-                <Typography color="secondary">Create and customize project workflows</Typography>
-              </Flex>
-              <Flex align="start" gap="sm">
-                <Icon icon={Sparkles} size="md" className="text-brand-ring mt-0.5 shrink-0" />
-                <Typography color="secondary">
-                  Use AI to generate issue suggestions and summaries
-                </Typography>
-              </Flex>
+function LeadProjectChoiceStep({
+  isCreating,
+  onCreateSample,
+  onFinishWithoutProject,
+}: {
+  isCreating: boolean;
+  onCreateSample: () => void;
+  onFinishWithoutProject: () => void;
+}) {
+  return (
+    <>
+      <Stack gap="sm" className="text-center">
+        <Typography variant="h1">Start Your First Project</Typography>
+        <Typography variant="lead">How would you like to get started?</Typography>
+      </Stack>
+
+      <Grid cols={1} colsSm={2} gap="lg">
+        <Card
+          recipe="onboardingActionTileRecommended"
+          padding="lg"
+          onClick={isCreating ? undefined : onCreateSample}
+          className={isCreating ? "opacity-50" : undefined}
+          aria-disabled={isCreating}
+        >
+          <Stack gap="lg">
+            <Flex align="center" justify="between">
+              <Card recipe="onboardingActionIconBrand" padding="md">
+                <Flex align="center" justify="center">
+                  <Icon icon={Sparkles} size="lg" className="text-brand" />
+                </Flex>
+              </Card>
+              <Badge variant="brand" shape="pill" size="md">
+                Recommended
+              </Badge>
+            </Flex>
+            <Stack gap="xs">
+              <Typography variant="h3">
+                {isCreating ? "Creating..." : "Start with a Sample"}
+              </Typography>
+              <Typography variant="small" color="secondary">
+                Explore Nixelo with pre-filled demo issues and sprints
+              </Typography>
             </Stack>
           </Stack>
         </Card>
 
-        {/* Continue */}
-        <Flex justify="center">
-          <Button
-            variant="primary"
-            size="lg"
-            onClick={() => setStep("project")}
-            data-testid={TEST_IDS.ONBOARDING.SETUP_WORKSPACE_BUTTON}
-          >
-            Let's set up your project
-          </Button>
-        </Flex>
-      </Stack>
-    );
-  }
-
-  if (step === "project") {
-    return (
-      <Stack gap="xl">
-        {/* Back button - Mintlify-inspired */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setStep("features")}
-          className="self-start group"
+        <Card
+          recipe="onboardingActionTile"
+          padding="lg"
+          onClick={isCreating ? undefined : onFinishWithoutProject}
+          className={isCreating ? "opacity-50" : undefined}
+          aria-disabled={isCreating}
         >
-          <Flex align="center" gap="xs">
-            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-            <Typography variant="caption" className="font-medium">
-              Back
-            </Typography>
-          </Flex>
-        </Button>
-
-        {/* Header */}
-        <Stack gap="md" className="text-center">
-          <Flex
-            inline
-            align="center"
-            justify="center"
-            className="w-16 h-16 rounded-full bg-brand-indigo-track mx-auto"
-          >
-            <Icon icon={Building2} size="xl" className="text-brand" />
-          </Flex>
-          <Stack gap="sm">
-            <Typography variant="h1">Name Your Project</Typography>
-            <Typography variant="lead">This is where your team will collaborate</Typography>
-          </Stack>
-        </Stack>
-
-        {/* Project Name Input */}
-        <Stack gap="md" className="max-w-md mx-auto">
-          <Stack gap="xs">
-            <Input
-              type="text"
-              placeholder="e.g., Acme Corp, My Startup, Design Team"
-              value={projectName}
-              onChange={(e) => {
-                setWorkspaceName(e.target.value);
-                setWorkspaceError(null);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !isCreating) {
-                  handleCreateOrganization();
-                }
-              }}
-              className="text-center text-lg"
-              autoFocus
-            />
-            {projectError && (
-              <Typography variant="small" color="error" className="text-center">
-                {projectError}
-              </Typography>
-            )}
-          </Stack>
-
-          <Button
-            variant="primary"
-            size="lg"
-            onClick={handleCreateOrganization}
-            disabled={isCreating || !projectName.trim()}
-            className="w-full"
-          >
-            {isCreating ? "Creating..." : "Create Project"}
-          </Button>
-        </Stack>
-      </Stack>
-    );
-  }
-
-  if (step === "project-choice") {
-    return (
-      <Stack gap="xl">
-        {/* Back button - Mintlify-inspired subtle styling */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setStep("project")}
-          className="self-start group"
-        >
-          <Flex align="center" gap="xs">
-            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-            <Typography variant="caption" className="font-medium">
-              Back
-            </Typography>
-          </Flex>
-        </Button>
-
-        {/* Header */}
-        <Stack gap="sm" className="text-center">
-          <Typography variant="h1">Start Your First Project</Typography>
-          <Typography variant="lead">How would you like to get started?</Typography>
-        </Stack>
-
-        {/* Options - Mintlify-inspired card styling */}
-        <Grid cols={1} colsSm={2} gap="lg">
-          {/* Sample Project - Highlighted as recommended */}
-          <Card
-            hoverable
-            padding="lg"
-            onClick={handleCreateSample}
-            className={cn(
-              "group border-2 border-brand/30 bg-brand-subtle/30 text-left",
-              isCreating && "opacity-50 pointer-events-none",
-            )}
-            aria-disabled={isCreating}
-          >
-            <Stack gap="lg">
-              <Flex align="center" justify="between">
-                <Flex
-                  align="center"
-                  justify="center"
-                  className="p-3 rounded-lg bg-brand-subtle group-hover:bg-brand/10 transition-colors"
-                >
-                  <Icon icon={Sparkles} size="lg" className="text-brand" />
-                </Flex>
-                <Badge variant="brand" shape="pill" size="md">
-                  Recommended
-                </Badge>
-              </Flex>
-              <Stack gap="xs">
-                <Typography variant="h3">
-                  {isCreating ? "Creating..." : "Start with a Sample"}
-                </Typography>
-                <Typography variant="small" color="secondary">
-                  Explore Nixelo with pre-filled demo issues and sprints
-                </Typography>
-              </Stack>
-            </Stack>
-          </Card>
-
-          {/* Start Fresh */}
-          <Card
-            hoverable
-            padding="lg"
-            onClick={handleFinishWithoutProject}
-            className={cn(
-              "group border-2 text-left",
-              isCreating && "opacity-50 pointer-events-none",
-            )}
-            aria-disabled={isCreating}
-          >
-            <Stack gap="lg">
-              <Flex
-                align="center"
-                justify="center"
-                className="p-3 rounded-lg bg-ui-bg-tertiary group-hover:bg-ui-bg-hover transition-colors w-fit"
-              >
+          <Stack gap="lg">
+            <Card recipe="onboardingActionIconNeutral" padding="md" className="w-fit">
+              <Flex align="center" justify="center">
                 <Icon icon={FolderPlus} size="lg" className="text-ui-text-secondary" />
               </Flex>
-              <Stack gap="xs">
-                <Typography variant="h3">Start from Scratch</Typography>
-                <Typography variant="small" color="secondary">
-                  Create your own project with a blank canvas
-                </Typography>
-              </Stack>
-              <Typography variant="caption">For experienced users</Typography>
+            </Card>
+            <Stack gap="xs">
+              <Typography variant="h3">Start from Scratch</Typography>
+              <Typography variant="small" color="secondary">
+                Create your own project with a blank canvas
+              </Typography>
             </Stack>
-          </Card>
-        </Grid>
+            <Typography variant="caption">For experienced users</Typography>
+          </Stack>
+        </Card>
+      </Grid>
 
-        {/* Skip option */}
-        <Flex justify="center">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleFinishWithoutProject}
-            disabled={isCreating}
-          >
-            I'll explore on my own
-          </Button>
-        </Flex>
-      </Stack>
-    );
-  }
-
-  return null;
+      <Flex justify="center">
+        <Button variant="ghost" size="sm" onClick={onFinishWithoutProject} disabled={isCreating}>
+          I'll explore on my own
+        </Button>
+      </Flex>
+    </>
+  );
 }

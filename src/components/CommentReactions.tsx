@@ -12,7 +12,6 @@ import { Smile } from "lucide-react";
 import { useState } from "react";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import type { ReactionInfo } from "../../convex/lib/issueHelpers";
 import { Button } from "./ui/Button";
 import { Flex } from "./ui/Flex";
@@ -50,15 +49,11 @@ export function CommentReactions({ commentId, reactions, currentUserId }: Commen
           <Tooltip key={reaction.emoji} content={hasReacted ? "Remove reaction" : "Add reaction"}>
             <Button
               variant="unstyled"
+              chrome={hasReacted ? "reactionActive" : "reaction"}
+              chromeSize="reactionPill"
               onClick={() => handleToggle(reaction.emoji)}
               aria-label={`${reaction.emoji} reaction, ${reaction.userIds.length} vote${reaction.userIds.length === 1 ? "" : "s"}`}
               aria-pressed={hasReacted}
-              className={cn(
-                "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border h-auto transition-fast",
-                hasReacted
-                  ? "bg-brand-subtle border-brand-border text-brand-subtle-foreground"
-                  : "bg-ui-bg-soft border-ui-border text-ui-text-secondary hover:border-ui-border-secondary hover:bg-ui-bg-hover",
-              )}
             >
               <span>{reaction.emoji}</span>
               <span>{reaction.userIds.length}</span>
@@ -75,7 +70,7 @@ export function CommentReactions({ commentId, reactions, currentUserId }: Commen
             </IconButton>
           </PopoverTrigger>
         </Tooltip>
-        <PopoverContent side="top" align="start" className="w-auto p-1.5">
+        <PopoverContent side="top" align="start" recipe="reactionPicker">
           <Flex gap="xs">
             {COMMON_EMOJIS.map((emoji) => (
               <Tooltip key={emoji} content={emoji}>

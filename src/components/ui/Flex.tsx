@@ -67,16 +67,30 @@ const selfAlignClasses: Record<SelfAlign, string> = {
 export interface FlexProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Direction of flex layout */
   direction?: Direction;
+  /** Direction from the sm breakpoint upward */
+  directionSm?: Direction;
+  /** Direction from the md breakpoint upward */
+  directionMd?: Direction;
   /** Gap between items */
   gap?: GapSize;
+  /** Gap from the sm breakpoint upward */
+  gapSm?: GapSize;
   /** Align items on cross axis */
   align?: Align;
+  /** Align items from the sm breakpoint upward */
+  alignSm?: Align;
+  /** Align items from the md breakpoint upward */
+  alignMd?: Align;
   /** Justify content on main axis */
   justify?: Justify;
+  /** Justify content from the sm breakpoint upward */
+  justifySm?: Justify;
   /** Wrap items */
   wrap?: boolean;
   /** Use inline-flex instead of flex */
   inline?: boolean;
+  /** Flex shorthand for the container itself */
+  flex?: FlexValue;
   /** Render as a different element */
   as?: React.ElementType;
 }
@@ -110,11 +124,18 @@ export const Flex = React.forwardRef<HTMLDivElement, FlexProps>(
   (
     {
       direction = "row",
+      directionSm,
+      directionMd,
       gap = "none",
+      gapSm,
       align,
+      alignSm,
+      alignMd,
       justify,
+      justifySm,
       wrap = false,
       inline = false,
+      flex,
       as: Component = "div",
       className,
       children,
@@ -128,9 +149,16 @@ export const Flex = React.forwardRef<HTMLDivElement, FlexProps>(
         className={cn(
           inline ? "inline-flex" : "flex",
           directionClasses[direction],
+          directionSm && `sm:${directionClasses[directionSm]}`,
+          directionMd && `md:${directionClasses[directionMd]}`,
           gapClasses[gap],
+          gapSm && `sm:${gapClasses[gapSm]}`,
           align && alignClasses[align],
+          alignSm && `sm:${alignClasses[alignSm]}`,
+          alignMd && `md:${alignClasses[alignMd]}`,
           justify && justifyClasses[justify],
+          justifySm && `sm:${justifyClasses[justifySm]}`,
+          flex && flexClasses[flex],
           wrap && "flex-wrap",
           className,
         )}
@@ -150,6 +178,10 @@ Flex.displayName = "Flex";
 export interface FlexItemProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Flex shorthand: "1" (grow), "auto", "initial", "none" */
   flex?: FlexValue;
+  /** Flex shorthand from the sm breakpoint upward */
+  flexSm?: FlexValue;
+  /** Flex shorthand from the md breakpoint upward */
+  flexMd?: FlexValue;
   /** Allow item to grow */
   grow?: boolean;
   /** Allow item to shrink */
@@ -176,12 +208,28 @@ export interface FlexItemProps extends React.HTMLAttributes<HTMLDivElement> {
  * </Flex>
  */
 export const FlexItem = React.forwardRef<HTMLDivElement, FlexItemProps>(
-  ({ flex, grow, shrink, align, as: Component = "div", className, children, ...props }, ref) => {
+  (
+    {
+      flex,
+      flexSm,
+      flexMd,
+      grow,
+      shrink,
+      align,
+      as: Component = "div",
+      className,
+      children,
+      ...props
+    },
+    ref,
+  ) => {
     return (
       <Component
         ref={ref}
         className={cn(
           flex && flexClasses[flex],
+          flexSm && `sm:${flexClasses[flexSm]}`,
+          flexMd && `md:${flexClasses[flexMd]}`,
           grow === true && "grow",
           grow === false && "grow-0",
           shrink === true && "shrink",

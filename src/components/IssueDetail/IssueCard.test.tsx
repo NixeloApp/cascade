@@ -53,6 +53,12 @@ vi.mock("@/lib/issue-utils", async (importOriginal) => {
 });
 
 describe("IssueCard", () => {
+  const mockAssignee = {
+    _id: "user-1" as Id<"users">,
+    name: "Alice Johnson",
+    image: "https://example.com/avatar.jpg",
+  };
+
   const mockIssue = {
     _id: "issue-1" as Id<"issues">,
     key: "TEST-123",
@@ -60,11 +66,7 @@ describe("IssueCard", () => {
     type: "bug" as const,
     priority: "high" as const,
     order: 0,
-    assignee: {
-      _id: "user-1" as Id<"users">,
-      name: "Alice Johnson",
-      image: "https://example.com/avatar.jpg",
-    },
+    assignee: mockAssignee,
     labels: [
       { name: "backend", color: "#3B82F6" },
       { name: "urgent", color: "#EF4444" },
@@ -103,10 +105,10 @@ describe("IssueCard", () => {
     const user = userEvent.setup();
     render(<IssueCard issue={mockIssue} status="todo" />);
 
-    const avatar = screen.getByAltText("Alice Johnson");
-    expect(avatar).toBeInTheDocument();
+    const assignee = screen.getByTestId(TEST_IDS.ISSUE.ASSIGNEE);
+    expect(assignee).toBeInTheDocument();
 
-    await user.hover(avatar);
+    await user.hover(assignee);
 
     const tooltipText = await screen.findByRole("tooltip", { name: "Assigned to: Alice Johnson" });
     expect(tooltipText).toBeInTheDocument();
@@ -167,25 +169,22 @@ describe("IssueCard", () => {
     expect(priorityIcon.closest('[aria-hidden="true"]')).toBeInTheDocument();
 
     // Assignee (find via alt text with hidden: true)
-    // @ts-expect-error - hidden option is supported by testing-library but types might be strict
-    const assigneeImg = screen.getByAltText("Alice Johnson", { hidden: true });
-    expect(assigneeImg).toBeInTheDocument();
-    expect(assigneeImg.closest("button")).not.toBeInTheDocument();
-    expect(assigneeImg.closest('[aria-hidden="true"]')).toBeInTheDocument();
+    const assignee = screen.getByTestId(TEST_IDS.ISSUE.ASSIGNEE);
+    expect(assignee).toBeInTheDocument();
+    expect(assignee.closest("button")).not.toBeInTheDocument();
+    expect(assignee.closest('[aria-hidden="true"]')).toBeInTheDocument();
   });
 
   it("should render fallback assignee avatar hidden from accessibility", () => {
     const issueWithoutAvatar = {
       ...mockIssue,
-      // biome-ignore lint/style/noNonNullAssertion: testing mock data
-      assignee: { ...mockIssue.assignee!, image: undefined },
+      assignee: { ...mockAssignee, image: undefined },
     };
     render(<IssueCard issue={issueWithoutAvatar} status="todo" />);
 
     // Fallback avatar should be hidden from accessibility
     expect(screen.queryByLabelText("Alice Johnson")).not.toBeInTheDocument();
-    // But verify it exists in DOM (using querySelector looking for initials)
-    const initials = screen.getByText("A", { selector: "div" });
+    const initials = screen.getByText("A");
     expect(initials).toBeInTheDocument();
     expect(initials.closest('[aria-hidden="true"]')).toBeInTheDocument();
   });
@@ -200,8 +199,7 @@ describe("IssueCard", () => {
     expect(handleClick).toHaveBeenCalledTimes(1);
 
     // Click Assignee (using alt text with hidden: true)
-    // @ts-expect-error - hidden option is supported by testing-library but types might be strict
-    await user.click(screen.getByAltText("Alice Johnson", { hidden: true }));
+    await user.click(screen.getByTestId(TEST_IDS.ISSUE.ASSIGNEE));
     expect(handleClick).toHaveBeenCalledTimes(2);
   });
 

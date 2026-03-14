@@ -5,7 +5,8 @@ import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Dialog } from "../ui/Dialog";
-import { Flex } from "../ui/Flex";
+import { Flex, FlexItem } from "../ui/Flex";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 interface SampleProjectModalProps {
@@ -38,19 +39,23 @@ export function SampleProjectModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} title="Welcome to Nixelo!" size="sm">
-      <div className="space-y-4">
-        <Typography className="text-ui-text-secondary leading-relaxed">
+      <Stack gap="lg">
+        <Typography color="secondary">
           Would you like us to create a sample project with demo issues to help you explore Nixelo?
         </Typography>
-        <Flex gap="md" className="pt-2">
-          <Button onClick={handleCreateSample} variant="primary" className="flex-1">
-            Yes, show me around!
-          </Button>
-          <Button onClick={onStartFromScratch} variant="secondary" className="flex-1">
-            I'll start from scratch
-          </Button>
+        <Flex gap="md">
+          <FlexItem flex="1">
+            <Button onClick={handleCreateSample} variant="primary" className="w-full">
+              Yes, show me around!
+            </Button>
+          </FlexItem>
+          <FlexItem flex="1">
+            <Button onClick={onStartFromScratch} variant="secondary" className="w-full">
+              I'll start from scratch
+            </Button>
+          </FlexItem>
         </Flex>
-      </div>
+      </Stack>
     </Dialog>
   );
 }

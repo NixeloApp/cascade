@@ -87,26 +87,23 @@ export function MemberOnboarding({
   if (step === "project") {
     return (
       <Stack gap="xl">
-        {/* Back button - Mintlify-inspired */}
-        <Button variant="ghost" size="sm" onClick={onBack} className="self-start group">
-          <Flex align="center" gap="xs">
-            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-            <Typography variant="caption" className="font-medium">
-              Back
-            </Typography>
-          </Flex>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onBack}
+          className="self-start"
+          leftIcon={<ArrowLeft className="h-4 w-4" />}
+        >
+          Back
         </Button>
 
         {/* Header */}
         <Stack gap="md" className="text-center">
-          <Flex
-            inline
-            align="center"
-            justify="center"
-            className="w-16 h-16 rounded-full bg-brand-indigo-track mx-auto"
-          >
-            <Icon icon={Building2} size="xl" className="text-brand" />
-          </Flex>
+          <Card recipe="onboardingHeroCircle" className="mx-auto h-16 w-16">
+            <Flex align="center" justify="center" className="h-full w-full">
+              <Icon icon={Building2} size="xl" className="text-brand" />
+            </Flex>
+          </Card>
           <Stack gap="sm">
             <Typography variant="h1" data-testid={TEST_IDS.ONBOARDING.NAME_PROJECT_HEADING}>
               Name Your Project
@@ -116,7 +113,7 @@ export function MemberOnboarding({
         </Stack>
 
         {/* Project Name Input */}
-        <Stack gap="md" className="max-w-md mx-auto">
+        <Stack gap="md" className="mx-auto max-w-md">
           <Stack gap="xs">
             <Input
               type="text"
@@ -131,7 +128,7 @@ export function MemberOnboarding({
                   handleCreateOrganization();
                 }
               }}
-              className="text-center text-lg"
+              className="text-center"
               autoFocus
             />
             {projectError && (
@@ -157,19 +154,14 @@ export function MemberOnboarding({
 
   return (
     <Stack gap="xl">
-      {/* Back button - Mintlify-inspired */}
       <Button
         variant="ghost"
         size="sm"
         onClick={() => setStep("project")}
-        className="self-start group"
+        className="self-start"
+        leftIcon={<ArrowLeft className="h-4 w-4" />}
       >
-        <Flex align="center" gap="xs">
-          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-          <Typography variant="caption" className="font-medium">
-            Back
-          </Typography>
-        </Flex>
+        Back
       </Button>
 
       {/* Header */}
@@ -184,13 +176,11 @@ export function MemberOnboarding({
       <Grid cols={1} colsSm={2} gap="md">
         <Card variant="soft" padding="md" hoverable>
           <Flex align="start" gap="md">
-            <Flex
-              align="center"
-              justify="center"
-              className="w-9 h-9 rounded-lg bg-palette-blue-bg shrink-0"
-            >
-              <Icon icon={Kanban} size="md" className="text-palette-blue" />
-            </Flex>
+            <Card recipe="onboardingMemberFeatureIconBlue" className="h-9 w-9 shrink-0">
+              <Flex align="center" justify="center" className="h-full w-full">
+                <Icon icon={Kanban} size="md" className="text-palette-blue" />
+              </Flex>
+            </Card>
             <Stack gap="none">
               <Typography variant="label">Work on Issues</Typography>
               <Typography variant="meta">Drag issues across the board as you progress</Typography>
@@ -200,13 +190,11 @@ export function MemberOnboarding({
 
         <Card variant="soft" padding="md" hoverable>
           <Flex align="start" gap="md">
-            <Flex
-              align="center"
-              justify="center"
-              className="w-9 h-9 rounded-lg bg-status-success-bg shrink-0"
-            >
-              <Icon icon={FileText} size="md" className="text-status-success" />
-            </Flex>
+            <Card recipe="onboardingMemberFeatureIconSuccess" className="h-9 w-9 shrink-0">
+              <Flex align="center" justify="center" className="h-full w-full">
+                <Icon icon={FileText} size="md" className="text-status-success" />
+              </Flex>
+            </Card>
             <Stack gap="none">
               <Typography variant="label">Collaborate on Docs</Typography>
               <Typography variant="meta">Edit documents together in real-time</Typography>
@@ -216,13 +204,11 @@ export function MemberOnboarding({
 
         <Card variant="soft" padding="md" hoverable>
           <Flex align="start" gap="md">
-            <Flex
-              align="center"
-              justify="center"
-              className="w-9 h-9 rounded-lg bg-status-warning-bg shrink-0"
-            >
-              <Icon icon={Clock} size="md" className="text-status-warning" />
-            </Flex>
+            <Card recipe="onboardingMemberFeatureIconWarning" className="h-9 w-9 shrink-0">
+              <Flex align="center" justify="center" className="h-full w-full">
+                <Icon icon={Clock} size="md" className="text-status-warning" />
+              </Flex>
+            </Card>
             <Stack gap="none">
               <Typography variant="label">Track Time</Typography>
               <Typography variant="meta">Log time spent on tasks</Typography>
@@ -232,13 +218,11 @@ export function MemberOnboarding({
 
         <Card variant="soft" padding="md" hoverable>
           <Flex align="start" gap="md">
-            <Flex
-              align="center"
-              justify="center"
-              className="w-9 h-9 rounded-lg bg-palette-purple-bg shrink-0"
-            >
-              <Icon icon={Bell} size="md" className="text-palette-purple" />
-            </Flex>
+            <Card recipe="onboardingMemberFeatureIconPurple" className="h-9 w-9 shrink-0">
+              <Flex align="center" justify="center" className="h-full w-full">
+                <Icon icon={Bell} size="md" className="text-palette-purple" />
+              </Flex>
+            </Card>
             <Stack gap="none">
               <Typography variant="label">Stay Updated</Typography>
               <Typography variant="meta">Get notified when mentioned or assigned</Typography>

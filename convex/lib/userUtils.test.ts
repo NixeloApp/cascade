@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Doc } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import {
   sanitizeUserForAuth,
   sanitizeUserForCurrent,
@@ -11,23 +11,27 @@ import {
 describe("User Sanitization Utils", () => {
   // Create a mock user with ALL fields populated, including sensitive ones
   const mockUser: Doc<"users"> = {
-    _id: "u123" as any,
+    _id: "u123" as Id<"users">,
     _creationTime: 1234567890,
     name: "Test User",
+    firstName: "Test",
+    lastName: "User",
     email: "test@example.com",
     image: "https://example.com/avatar.jpg",
     emailVerificationTime: 1234567890,
     phone: "+15551234567",
     phoneVerificationTime: 1234567890,
     isAnonymous: false,
-    defaultOrganizationId: "o123" as any,
+    defaultOrganizationId: "o123" as Id<"organizations">,
     bio: "Test Bio",
     timezone: "UTC",
     emailNotifications: true,
     desktopNotifications: false,
-    inviteId: "i123" as any,
+    inviteId: "i123" as Id<"invites">,
     isTestUser: true,
     testUserCreatedAt: 1234567890,
+    avatarStorageId: "s123" as Id<"_storage">,
+    coverImageStorageId: "s124" as Id<"_storage">,
     // Sensitive fields that MUST be stripped
     pendingEmail: "new@example.com",
     pendingEmailVerificationToken: "token123",
@@ -58,8 +62,7 @@ describe("User Sanitization Utils", () => {
     it("should not include email", () => {
       const result = sanitizeUserForPublic(mockUser);
       expect(result).not.toHaveProperty("email");
-      // @ts-expect-error - Checking runtime property existence
-      expect(result.email).toBeUndefined();
+      expect("email" in (result ?? {})).toBe(false);
     });
   });
 
@@ -71,6 +74,8 @@ describe("User Sanitization Utils", () => {
         name: mockUser.name,
         email: mockUser.email,
         image: mockUser.image,
+        firstName: mockUser.firstName,
+        lastName: mockUser.lastName,
       });
     });
 
@@ -81,10 +86,8 @@ describe("User Sanitization Utils", () => {
 
     it("should not include sensitive fields like phone or 2FA", () => {
       const result = sanitizeUserForAuth(mockUser);
-      // @ts-expect-error - Runtime check
-      expect(result.phone).toBeUndefined();
-      // @ts-expect-error - Runtime check
-      expect(result.twoFactorSecret).toBeUndefined();
+      expect("phone" in (result ?? {})).toBe(false);
+      expect("twoFactorSecret" in (result ?? {})).toBe(false);
     });
   });
 
@@ -104,12 +107,9 @@ describe("User Sanitization Utils", () => {
       });
 
       // Should explicitly exclude sensitive auth tokens
-      // @ts-expect-error - Runtime check
-      expect(result.pendingEmailVerificationToken).toBeUndefined();
-      // @ts-expect-error - Runtime check
-      expect(result.twoFactorSecret).toBeUndefined();
-      // @ts-expect-error - Runtime check
-      expect(result.twoFactorBackupCodes).toBeUndefined();
+      expect("pendingEmailVerificationToken" in (result ?? {})).toBe(false);
+      expect("twoFactorSecret" in (result ?? {})).toBe(false);
+      expect("twoFactorBackupCodes" in (result ?? {})).toBe(false);
     });
 
     it("should handle null/undefined", () => {
@@ -147,6 +147,8 @@ describe("User Sanitization Utils", () => {
         name: mockUser.name,
         email: mockUser.email,
         image: mockUser.image,
+        firstName: mockUser.firstName,
+        lastName: mockUser.lastName,
       });
       expect(result[1]).toBeNull();
     });

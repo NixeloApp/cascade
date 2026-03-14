@@ -24,6 +24,25 @@ Object.defineProperty(global.crypto, "randomUUID", {
   value: vi.fn().mockReturnValue(MOCK_STATE),
 });
 
+function createMockActionCtx() {
+  const ctx = {
+    runAction: vi.fn(),
+    runMutation: vi.fn(),
+    runQuery: vi.fn(),
+    vectorSearch: vi.fn(),
+    scheduler: {},
+    auth: {},
+    storage: {},
+  } as unknown as ActionCtx;
+
+  return {
+    ctx,
+    runAction: vi.mocked(ctx.runAction),
+    runMutation: vi.mocked(ctx.runMutation),
+    runQuery: vi.mocked(ctx.runQuery),
+  };
+}
+
 describe("GitHub OAuth HTTP Handler", () => {
   const originalEnv = process.env;
 
@@ -40,11 +59,7 @@ describe("GitHub OAuth HTTP Handler", () => {
   describe("initiateAuthHandler", () => {
     it("should redirect to GitHub OAuth page with correct params", async () => {
       const request = new Request(GITHUB_AUTH_URL);
-      const ctx = {
-        runAction: vi.fn(),
-        runMutation: vi.fn(),
-        runQuery: vi.fn(),
-      } as unknown as ActionCtx;
+      const { ctx } = createMockActionCtx();
 
       const response = await initiateAuthHandler();
 
@@ -74,11 +89,7 @@ describe("GitHub OAuth HTTP Handler", () => {
     it("should return 500 if environment variables are missing", async () => {
       process.env.GITHUB_CLIENT_ID = "";
       const request = new Request(GITHUB_AUTH_URL);
-      const ctx = {
-        runAction: vi.fn(),
-        runMutation: vi.fn(),
-        runQuery: vi.fn(),
-      } as unknown as ActionCtx;
+      const { ctx } = createMockActionCtx();
 
       const response = await initiateAuthHandler();
 
@@ -96,11 +107,7 @@ describe("GitHub OAuth HTTP Handler", () => {
           Cookie: `github-oauth-state=${MOCK_STATE}`,
         },
       });
-      const ctx = {
-        runAction: vi.fn(),
-        runMutation: vi.fn(),
-        runQuery: vi.fn(),
-      } as unknown as ActionCtx;
+      const { ctx } = createMockActionCtx();
 
       // Mock token exchange response
       mockFetch.mockResolvedValueOnce({
@@ -147,11 +154,7 @@ describe("GitHub OAuth HTTP Handler", () => {
       const request = new Request(
         `${GITHUB_CALLBACK_URL}?error=access_denied&error_description=User+denied`,
       );
-      const ctx = {
-        runAction: vi.fn(),
-        runMutation: vi.fn(),
-        runQuery: vi.fn(),
-      } as unknown as ActionCtx;
+      const { ctx } = createMockActionCtx();
 
       const response = await handleCallbackHandler(ctx, request);
 
@@ -167,11 +170,7 @@ describe("GitHub OAuth HTTP Handler", () => {
           Cookie: `github-oauth-state=${MOCK_STATE}`,
         },
       });
-      const ctx = {
-        runAction: vi.fn(),
-        runMutation: vi.fn(),
-        runQuery: vi.fn(),
-      } as unknown as ActionCtx;
+      const { ctx } = createMockActionCtx();
 
       const response = await handleCallbackHandler(ctx, request);
 
@@ -186,11 +185,7 @@ describe("GitHub OAuth HTTP Handler", () => {
           Cookie: `github-oauth-state=${MOCK_STATE}`,
         },
       });
-      const ctx = {
-        runAction: vi.fn(),
-        runMutation: vi.fn(),
-        runQuery: vi.fn(),
-      } as unknown as ActionCtx;
+      const { ctx } = createMockActionCtx();
 
       // Mock token exchange failure
       mockFetch.mockResolvedValueOnce({
@@ -208,7 +203,7 @@ describe("GitHub OAuth HTTP Handler", () => {
 
   describe("listReposHandler", () => {
     it("should return 401 if Authorization header is missing", async () => {
-      const ctx = { runQuery: vi.fn() } as unknown as ActionCtx;
+      const { ctx } = createMockActionCtx();
       const request = new Request(GITHUB_REPOS_URL);
 
       const response = await listReposHandler(ctx, request);
@@ -219,12 +214,12 @@ describe("GitHub OAuth HTTP Handler", () => {
     });
 
     it("should return 401 if session is invalid", async () => {
-      const ctx = { runQuery: vi.fn() } as unknown as ActionCtx;
+      const { ctx, runQuery } = createMockActionCtx();
       const request = new Request(GITHUB_REPOS_URL, {
         headers: { Authorization: "Bearer invalid-token" },
       });
 
-      vi.mocked(ctx.runQuery).mockResolvedValue(null);
+      runQuery.mockResolvedValue(null);
 
       const response = await listReposHandler(ctx, request);
 
@@ -237,19 +232,16 @@ describe("GitHub OAuth HTTP Handler", () => {
     });
 
     it("should return list of repositories if connected", async () => {
-      const ctx = {
-        runQuery: vi.fn(),
-        runMutation: vi.fn(),
-      } as unknown as ActionCtx;
+      const { ctx, runMutation, runQuery } = createMockActionCtx();
       const request = new Request(GITHUB_REPOS_URL, {
         headers: { Authorization: "Bearer valid-token" },
       });
 
       // Mock session verification
-      vi.mocked(ctx.runQuery).mockResolvedValue("user-123");
+      runQuery.mockResolvedValue("user-123");
 
       // Mock token retrieval
-      vi.mocked(ctx.runMutation).mockResolvedValue({ accessToken: "mock-access-token" });
+      runMutation.mockResolvedValue({ accessToken: "mock-access-token" });
 
       // Mock GitHub repos fetch
       mockFetch.mockResolvedValueOnce({
@@ -297,18 +289,15 @@ describe("GitHub OAuth HTTP Handler", () => {
     });
 
     it("should return 400 if not connected", async () => {
-      const ctx = {
-        runQuery: vi.fn(),
-        runMutation: vi.fn(),
-      } as unknown as ActionCtx;
+      const { ctx, runMutation, runQuery } = createMockActionCtx();
       const request = new Request(GITHUB_REPOS_URL, {
         headers: { Authorization: "Bearer valid-token" },
       });
 
       // Mock session
-      vi.mocked(ctx.runQuery).mockResolvedValue("user-123");
+      runQuery.mockResolvedValue("user-123");
       // Mock no connection (tokens null)
-      vi.mocked(ctx.runMutation).mockResolvedValue(null);
+      runMutation.mockResolvedValue(null);
 
       const response = await listReposHandler(ctx, request);
 
@@ -318,16 +307,13 @@ describe("GitHub OAuth HTTP Handler", () => {
     });
 
     it("should return error if GitHub API fails", async () => {
-      const ctx = {
-        runQuery: vi.fn(),
-        runMutation: vi.fn(),
-      } as unknown as ActionCtx;
+      const { ctx, runMutation, runQuery } = createMockActionCtx();
       const request = new Request(GITHUB_REPOS_URL, {
         headers: { Authorization: "Bearer valid-token" },
       });
 
-      vi.mocked(ctx.runQuery).mockResolvedValue("user-123");
-      vi.mocked(ctx.runMutation).mockResolvedValue({ accessToken: "token" });
+      runQuery.mockResolvedValue("user-123");
+      runMutation.mockResolvedValue({ accessToken: "token" });
 
       mockFetch.mockResolvedValueOnce({
         ok: false,

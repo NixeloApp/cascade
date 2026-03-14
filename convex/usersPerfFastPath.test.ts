@@ -62,13 +62,13 @@ describe("Users Performance Optimization (Fast Path)", () => {
       await t.run(async (ctx) => {
         const p = await ctx.db.get(projectId);
         if (!p) throw new Error("Project missing");
+        if (!p.workspaceId) throw new Error("Project missing workspaceId");
+        if (!p.teamId) throw new Error("Project missing teamId");
         await ctx.db.insert("issues", {
           projectId,
           organizationId: p.organizationId,
-          // biome-ignore lint/style/noNonNullAssertion: testing convenience
-          workspaceId: p.workspaceId!,
-          // biome-ignore lint/style/noNonNullAssertion: testing convenience
-          teamId: p.teamId!,
+          workspaceId: p.workspaceId,
+          teamId: p.teamId,
           key: `KEY-A-${i}`,
           title: `Active ${i}`,
           status: "todo",
@@ -90,13 +90,13 @@ describe("Users Performance Optimization (Fast Path)", () => {
         await t.run(async (ctx) => {
           const p = await ctx.db.get(projectId);
           if (!p) throw new Error("Project missing");
+          if (!p.workspaceId) throw new Error("Project missing workspaceId");
+          if (!p.teamId) throw new Error("Project missing teamId");
           await ctx.db.insert("issues", {
             projectId,
             organizationId: p.organizationId,
-            // biome-ignore lint/style/noNonNullAssertion: testing convenience
-            workspaceId: p.workspaceId!,
-            // biome-ignore lint/style/noNonNullAssertion: testing convenience
-            teamId: p.teamId!,
+            workspaceId: p.workspaceId,
+            teamId: p.teamId,
             key: `KEY-D-${i}`,
             title: `Done ${i}`,
             status: "done",

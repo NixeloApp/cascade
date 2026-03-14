@@ -1,5 +1,5 @@
 import { matchesKeyboardEvent, parseHotkey } from "@tanstack/hotkeys";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 type TabType = "all" | "issues" | "documents";
 const OPEN_SEARCH_HOTKEYS = [parseHotkey("Meta+K"), parseHotkey("Control+K")];
@@ -38,27 +38,29 @@ export function resetGlobalSearchStateForTests() {
 export function useSearchKeyboard() {
   const [isOpen, setIsOpenState] = useState(persistedSearchState.isOpen);
 
-  const setIsOpen = useCallback((open: boolean) => {
+  const setIsOpen = (open: boolean) => {
     persistedSearchState.isOpen = open;
     setIsOpenState(open);
-  }, []);
+  };
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (OPEN_SEARCH_HOTKEYS.some((hotkey) => matchesKeyboardEvent(event, hotkey))) {
         event.preventDefault();
-        setIsOpen(true);
+        persistedSearchState.isOpen = true;
+        setIsOpenState(true);
         return;
       }
 
       if (matchesKeyboardEvent(event, CLOSE_SEARCH_HOTKEY)) {
-        setIsOpen(false);
+        persistedSearchState.isOpen = false;
+        setIsOpenState(false);
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [setIsOpen]);
+  }, []);
 
   return { isOpen, setIsOpen };
 }

@@ -19,6 +19,7 @@ const stackVariants = cva("flex flex-col", {
       md: "gap-3",
       lg: "gap-4",
       xl: "gap-6",
+      "2xl": "gap-8",
     },
     align: {
       start: "items-start",

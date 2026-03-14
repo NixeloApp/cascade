@@ -1,5 +1,7 @@
 import { cva } from "class-variance-authority";
 import { FileText, PanelsTopLeft, Users } from "lucide-react";
+import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
@@ -10,43 +12,39 @@ const featureSectionVariants = {
   intro: cva("text-center mb-16"),
   heading: cva("text-3xl md:text-4xl font-bold mb-4 text-ui-text"),
   lead: cva("text-ui-text-secondary max-w-2xl mx-auto"),
-  card: cva(
-    "group relative p-6 rounded-2xl bg-linear-to-b from-ui-bg-soft/80 to-ui-bg-secondary/50 border border-ui-border/40 backdrop-blur-md transition-all duration-medium hover:shadow-xl hover:-translate-y-1",
-    {
-      variants: {
-        gradient: {
-          cyan: "hover:shadow-brand-cyan-text/20 hover:border-brand-cyan-text/40",
-          teal: "hover:shadow-brand-teal-text/20 hover:border-brand-teal-text/40",
-          amber: "hover:shadow-status-warning/20 hover:border-status-warning/40",
-        },
-      },
-    },
-  ),
-  iconHalo: cva(
-    "inline-flex p-0.5 rounded-xl mb-5 bg-linear-to-br opacity-80 group-hover:opacity-100 transition-opacity",
-    {
-      variants: {
-        gradient: {
-          cyan: "from-brand-cyan-bg to-brand-teal-bg",
-          teal: "from-brand-teal-bg to-brand-emerald-bg",
-          amber: "from-status-warning-bg to-status-warning/70",
-        },
-      },
-    },
-  ),
-  cardTitle: cva("text-lg font-semibold mb-2 text-ui-text"),
-  cardBody: cva("text-ui-text-secondary text-sm leading-relaxed mb-4"),
-  link: cva("inline-flex items-center gap-2 text-sm font-medium transition-colors", {
+  iconHalo: cva("mb-5 inline-flex rounded-xl bg-linear-to-br p-0.5 opacity-80", {
     variants: {
       gradient: {
-        cyan: "text-brand-cyan-text hover:text-brand-cyan-border",
-        teal: "text-brand-teal-text hover:text-brand-teal-border",
-        amber: "text-status-warning-text hover:text-status-warning",
+        cyan: "from-brand-cyan-bg to-brand-teal-bg",
+        teal: "from-brand-teal-bg to-brand-emerald-bg",
+        amber: "from-status-warning-bg to-status-warning/70",
+      },
+    },
+  }),
+  cardTitle: cva("text-lg font-semibold mb-2 text-ui-text"),
+  cardBody: cva("text-ui-text-secondary text-sm leading-relaxed mb-4"),
+  link: cva("", {
+    variants: {
+      gradient: {
+        cyan: "text-brand-cyan-text",
+        teal: "text-brand-teal-text",
+        amber: "text-status-warning-text",
       },
     },
   }),
   iconPlate: cva("w-12 h-12 rounded-feature bg-ui-bg-elevated"),
 };
+
+function getFeatureCardRecipe(gradient: "cyan" | "teal" | "amber") {
+  switch (gradient) {
+    case "cyan":
+      return "landingFeatureCardCyan" as const;
+    case "teal":
+      return "landingFeatureCardTeal" as const;
+    case "amber":
+      return "landingFeatureCardAmber" as const;
+  }
+}
 
 /** Landing page section showcasing key product features. */
 export function FeaturesSection() {
@@ -109,7 +107,7 @@ function FeatureCard({
   gradient: "cyan" | "teal" | "amber";
 }) {
   return (
-    <div className={featureSectionVariants.card({ gradient })}>
+    <Card recipe={getFeatureCardRecipe(gradient)} padding="none">
       {/* Icon */}
       <div className={featureSectionVariants.iconHalo({ gradient })}>
         <Flex align="center" justify="center" className={featureSectionVariants.iconPlate()}>
@@ -126,10 +124,17 @@ function FeatureCard({
       </Typography>
 
       {/* Link */}
-      <a href="#learn-more" className={featureSectionVariants.link({ gradient })}>
-        Learn more
-        <ArrowIcon className="w-4 h-4" />
-      </a>
-    </div>
+      <Button
+        asChild
+        variant="link"
+        size="none"
+        className={featureSectionVariants.link({ gradient })}
+      >
+        <a href="#learn-more">
+          Learn more
+          <ArrowIcon className="w-4 h-4" />
+        </a>
+      </Button>
+    </Card>
   );
 }

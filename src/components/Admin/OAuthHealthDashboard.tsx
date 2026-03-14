@@ -10,6 +10,7 @@ import { Card, CardBody, CardHeader } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
+import { Icon } from "../ui/Icon";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
@@ -149,26 +150,23 @@ function RecentFailures({ failures }: { failures: FailureEntry[] }) {
       ) : (
         <Stack gap="xs">
           {failures.map((failure) => (
-            <Flex
-              key={`${failure.timestamp}-${failure.error}`}
-              justify="between"
-              align="start"
-              className="rounded-md border border-ui-border-primary p-3"
-            >
-              <Stack gap="xs">
+            <Card key={`${failure.timestamp}-${failure.error}`} variant="flat" padding="sm">
+              <Flex justify="between" align="start" gap="md">
+                <Stack gap="xs">
+                  <Flex gap="xs" align="center">
+                    <Icon icon={AlertTriangle} size="sm" className="text-status-error" />
+                    <Typography variant="small">{failure.error}</Typography>
+                  </Flex>
+                  <Typography variant="caption" color="secondary">
+                    {formatTime(failure.timestamp)}
+                  </Typography>
+                </Stack>
                 <Flex gap="xs" align="center">
-                  <AlertTriangle className="text-status-error size-4" />
-                  <Typography variant="small">{failure.error}</Typography>
+                  <Badge variant="neutral">{failure.latencyMs}ms</Badge>
+                  {failure.errorCode ? <Badge variant="warning">{failure.errorCode}</Badge> : null}
                 </Flex>
-                <Typography variant="caption" color="secondary">
-                  {formatTime(failure.timestamp)}
-                </Typography>
-              </Stack>
-              <Flex gap="xs" align="center">
-                <Badge variant="neutral">{failure.latencyMs}ms</Badge>
-                {failure.errorCode ? <Badge variant="warning">{failure.errorCode}</Badge> : null}
               </Flex>
-            </Flex>
+            </Card>
           ))}
         </Stack>
       )}

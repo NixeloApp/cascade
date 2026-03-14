@@ -1,6 +1,7 @@
 import { addDays, isSameDay, startOfWeek } from "date-fns";
 import { useLayoutEffect, useRef } from "react";
-import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/Card";
+import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useCalendarContext } from "../../calendar-context";
 import { CalendarBodyDayContent } from "../day/calendar-body-day-content";
 import { CalendarBodyMarginDayMargin } from "../day/calendar-body-margin-day-margin";
@@ -43,27 +44,41 @@ export function CalendarBodyWeek(): React.ReactElement {
   }, [activeDateString]);
 
   return (
-    <div className="flex divide-x divide-ui-border flex-grow overflow-hidden bg-ui-bg">
-      <div className="flex flex-col flex-grow divide-y divide-ui-border overflow-hidden">
-        <div ref={scrollRef} className="flex flex-1 overflow-auto">
-          <div className="relative flex min-w-full flex-1">
-            <CalendarBodyMarginDayMargin className="hidden md:block" />
-            {weekDays.map((day) => (
-              <div
-                key={day.toISOString()}
-                ref={isSameDay(day, date) ? activeDayRef : undefined}
-                className={cn(
-                  "flex w-56 shrink-0 border-r border-ui-border last:border-r-0 sm:w-64 md:w-auto md:flex-1",
-                  isSameDay(day, date) && "bg-brand/[0.02]",
-                )}
-              >
-                <CalendarBodyMarginDayMargin className="block md:hidden" />
-                <CalendarBodyDayContent date={day} />
+    <Flex flex="1" className="overflow-hidden bg-ui-bg">
+      <Card recipe="calendarDayMainPanel" className="overflow-hidden">
+        <Flex direction="column" flex="1" className="overflow-hidden">
+          <Flex ref={scrollRef} flex="1" className="overflow-auto">
+            <Flex flex="1" className="relative min-w-full">
+              <div className="hidden md:block">
+                <CalendarBodyMarginDayMargin />
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
+              {weekDays.map((day) => {
+                const isActiveDay = isSameDay(day, date);
+                const dayShellRecipe = isActiveDay
+                  ? "calendarWeekActiveDayShell"
+                  : "calendarWeekDayShell";
+
+                return (
+                  <FlexItem
+                    key={day.toISOString()}
+                    ref={isActiveDay ? activeDayRef : undefined}
+                    flexMd="1"
+                    shrink={false}
+                    className="w-56 sm:w-64 md:w-auto"
+                  >
+                    <Card recipe={dayShellRecipe} className="h-full">
+                      <div className="block md:hidden">
+                        <CalendarBodyMarginDayMargin />
+                      </div>
+                      <CalendarBodyDayContent date={day} />
+                    </Card>
+                  </FlexItem>
+                );
+              })}
+            </Flex>
+          </Flex>
+        </Flex>
+      </Card>
+    </Flex>
   );
 }

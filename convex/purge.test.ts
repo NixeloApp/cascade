@@ -2,7 +2,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { internal } from "./_generated/api";
 import { TABLES } from "./purge";
-import schema from "./schema";
+import schema, { SCHEMA_TABLE_NAMES } from "./schema";
 import { modules } from "./testSetup.test-helper";
 
 describe("Purge Data", () => {
@@ -48,8 +48,7 @@ describe("Purge Data", () => {
         createdBy: userId,
         organizationId: orgId,
         updatedAt: Date.now(),
-        // biome-ignore lint/style/noNonNullAssertion: testing convenience
-        ownerId: userId!,
+        ownerId: userId,
         isPublic: false,
         boardType: "kanban",
         workflowStates: [],
@@ -82,9 +81,10 @@ describe("Purge Data", () => {
   });
 
   it("should cover all schema tables", () => {
-    const schemaTables = Object.keys((schema as any).tables);
-    // @ts-expect-error - convenient access
-    const missingTables = schemaTables.filter((table) => !TABLES.includes(table));
+    const schemaTables = SCHEMA_TABLE_NAMES;
+    const missingTables = schemaTables.filter(
+      (table) => !TABLES.includes(table as (typeof TABLES)[number]),
+    );
 
     if (missingTables.length > 0) {
       console.error("Missing tables in purge list:", missingTables);

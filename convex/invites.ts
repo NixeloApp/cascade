@@ -18,6 +18,7 @@ import { getSiteUrl } from "./lib/env";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { WEEK } from "./lib/timeUtils";
+import { RUNTIME_COLORS } from "./shared/colors";
 import { inviteRoles, projectRoles } from "./validators";
 
 // Helper: Check if user is a organization admin
@@ -174,8 +175,8 @@ function buildInviteEmail(
           <h2>You're invited to join ${projectName}</h2>
           <p>You have been invited to collaborate on the project <strong>${projectName}</strong> as a <strong>${projectRole}</strong>.</p>
           <p>Click the button below to accept your invitation:</p>
-          <a href="${inviteLink}" style="display: inline-block; background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0;">Accept Invitation</a>
-          <p style="color: #666; font-size: 14px;">This link will expire in 7 days.</p>
+          <a href="${inviteLink}" style="display: inline-block; background-color: ${RUNTIME_COLORS.INFO}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0;">Accept Invitation</a>
+          <p style="color: ${RUNTIME_COLORS.MUTED_TEXT}; font-size: 14px;">This link will expire in 7 days.</p>
         </div>
       `,
       text: `You have been invited to collaborate on ${projectName} as a ${projectRole}. Accept your invitation here: ${inviteLink}`,
@@ -189,8 +190,8 @@ function buildInviteEmail(
         <h2>Welcome to Nixelo</h2>
         <p>You have been invited to join Nixelo as a <strong>${platformRole}</strong>.</p>
         <p>Click the button below to accept your invitation:</p>
-        <a href="${inviteLink}" style="display: inline-block; background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0;">Accept Invitation</a>
-        <p style="color: #666; font-size: 14px;">This link will expire in 7 days.</p>
+        <a href="${inviteLink}" style="display: inline-block; background-color: ${RUNTIME_COLORS.INFO}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0;">Accept Invitation</a>
+        <p style="color: ${RUNTIME_COLORS.MUTED_TEXT}; font-size: 14px;">This link will expire in 7 days.</p>
       </div>
     `,
     text: `You have been invited to join Nixelo as a ${platformRole}. Accept your invitation here: ${inviteLink}`,

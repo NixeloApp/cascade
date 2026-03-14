@@ -80,6 +80,8 @@ const rateLimitConfig = {
   },
 } as const;
 
+export type RateLimitName = keyof typeof rateLimitConfig;
+
 const rateLimiter = new RateLimiter(components.rateLimiter, rateLimitConfig);
 
 /**
@@ -87,11 +89,10 @@ const rateLimiter = new RateLimiter(components.rateLimiter, rateLimitConfig);
  */
 export const rateLimit = async (
   ctx: ActionCtx | MutationCtx,
-  name: string,
+  name: RateLimitName,
   options?: { key?: string; count?: number; throws?: boolean; reserve?: boolean },
 ) => {
-  // biome-ignore lint/suspicious/noExplicitAny: library limitation
-  return await rateLimiter.limit(ctx, name as any, { throws: true, ...options });
+  return await rateLimiter.limit(ctx, name, { throws: true, ...options });
 };
 
 /**
@@ -99,11 +100,7 @@ export const rateLimit = async (
  * Skips checks in test environments.
  * Throws a standardized `rateLimited` error if the limit is exceeded.
  */
-export const enforceRateLimit = async (
-  ctx: MutationCtx,
-  name: keyof typeof rateLimitConfig,
-  userId: string,
-) => {
+export const enforceRateLimit = async (ctx: MutationCtx, name: RateLimitName, userId: string) => {
   if (isTestEnv) return;
 
   const { ok, retryAfter } = await rateLimiter.limit(ctx, name, { key: userId, throws: false });

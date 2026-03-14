@@ -5,26 +5,18 @@
  * and keyboard navigation support.
  */
 
-import { cva } from "class-variance-authority";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { FlexItem } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
+import { IconButton } from "@/components/ui/IconButton";
 import { Input } from "@/components/ui/Input";
+import { InlineSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
 import { type FuzzySearchResult, highlightMatches } from "@/hooks/useFuzzySearch";
+import { X } from "@/lib/icons";
 import { cn } from "@/lib/utils";
-
-const fuzzySearchVariants = cva("", {
-  variants: {
-    surface: {
-      input: "rounded-md hover:border-ui-border-secondary",
-      dropdown:
-        "absolute z-50 mt-1.5 w-full max-h-60 overflow-y-auto rounded-md border border-ui-border bg-ui-bg-elevated shadow-elevated scrollbar-subtle animate-scale-in",
-      clearButton:
-        "absolute right-3 top-1/2 h-auto -translate-y-1/2 rounded p-0.5 text-ui-text-tertiary transition-fast hover:bg-ui-bg-hover hover:text-ui-text",
-    },
-  },
-});
 
 interface FuzzySearchInputProps<T> {
   /**
@@ -204,44 +196,39 @@ export function FuzzySearchInput<T>({
           aria-autocomplete="list"
           aria-controls="fuzzy-search-results"
           aria-expanded={showDropdown}
-          className={cn(fuzzySearchVariants({ surface: "input" }), className)}
+          className={className}
         />
 
         {/* Loading indicator */}
         {isLoading && (
           <div className="absolute right-10 top-1/2 -translate-y-1/2">
-            <div className="animate-spin h-4 w-4 border-2 border-brand-ring border-t-transparent rounded-full" />
+            <InlineSpinner size="sm" variant="brand" />
           </div>
         )}
 
         {/* Clear button */}
         {query.length > 0 && (
-          <Button
-            variant="unstyled"
+          <IconButton
+            variant="ghost"
+            size="xs"
             onClick={handleClear}
-            className={fuzzySearchVariants({ surface: "clearButton" })}
+            className="absolute right-3 top-1/2 -translate-y-1/2"
             aria-label="Clear search"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <title>Clear</title>
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </Button>
+            <Icon icon={X} size="sm" />
+          </IconButton>
         )}
       </div>
 
       {/* Results Dropdown */}
       {showDropdown && (
-        <div
+        <Card
           ref={dropdownRef}
+          recipe="searchDropdown"
+          padding="none"
           id="fuzzy-search-results"
           role="listbox"
-          className={fuzzySearchVariants({ surface: "dropdown" })}
+          className="absolute z-50 mt-1.5 max-h-60 w-full overflow-y-auto scrollbar-subtle animate-scale-in"
         >
           {results.length === 0 ? (
             <Typography variant="small" color="tertiary" className="px-4 py-3">
@@ -262,9 +249,7 @@ export function FuzzySearchInput<T>({
                 onMouseEnter={() => setSelectedIndex(index)}
                 className={cn(
                   "w-full px-4 py-2.5 text-left flex items-center justify-between transition-fast h-auto",
-                  index === selectedIndex
-                    ? "bg-ui-bg-hover text-ui-text"
-                    : "hover:bg-ui-bg-hover text-ui-text",
+                  index === selectedIndex ? "bg-ui-bg-hover text-ui-text" : "text-ui-text",
                 )}
               >
                 <FlexItem flex="1">{renderItem(result)}</FlexItem>
@@ -276,7 +261,7 @@ export function FuzzySearchInput<T>({
               </Button>
             ))
           )}
-        </div>
+        </Card>
       )}
     </div>
   );

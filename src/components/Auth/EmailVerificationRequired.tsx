@@ -6,6 +6,7 @@ import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/form/Input";
+import { Stack } from "../ui/Stack";
 import { AuthLinkButton } from "./AuthLink";
 import { AuthPageLayout } from "./AuthPageLayout";
 /**
@@ -67,30 +68,34 @@ export function EmailVerificationRequired() {
         </>
       }
     >
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        <Input
-          className="text-center text-xl tracking-widest"
-          type="tel"
-          inputMode="numeric"
-          name="code"
-          placeholder="Enter 8-digit code"
-          required
-          pattern="[0-9]{8}"
-          maxLength={8}
-        />
-        <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-          {submitting ? "Verifying..." : "Verify email"}
-        </Button>
-      </form>
+      <Stack gap="xl">
+        <form onSubmit={handleSubmit}>
+          <Flex direction="column" gap="md">
+            <Input
+              variant="otpCode"
+              type="tel"
+              inputMode="numeric"
+              name="code"
+              placeholder="Enter 8-digit code"
+              required
+              pattern="[0-9]{8}"
+              maxLength={8}
+            />
+            <Button type="submit" size="lg" className="w-full" disabled={submitting}>
+              {submitting ? "Verifying..." : "Verify email"}
+            </Button>
+          </Flex>
+        </form>
 
-      <Flex direction="column" align="center" gap="sm" className="mt-6">
-        <AuthLinkButton onClick={handleResend} disabled={resending}>
-          {resending ? "Sending..." : "Resend code"}
-        </AuthLinkButton>
-        <AuthLinkButton onClick={handleSignOut} variant="muted">
-          Use a different account
-        </AuthLinkButton>
-      </Flex>
+        <Flex direction="column" align="center" gap="sm">
+          <AuthLinkButton onClick={handleResend} disabled={resending}>
+            {resending ? "Sending..." : "Resend code"}
+          </AuthLinkButton>
+          <AuthLinkButton onClick={handleSignOut} variant="muted">
+            Use a different account
+          </AuthLinkButton>
+        </Flex>
+      </Stack>
     </AuthPageLayout>
   );
 }

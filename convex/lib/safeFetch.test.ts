@@ -13,12 +13,8 @@ vi.mock("./fetchWithTimeout", () => ({
 }));
 
 describe("safeFetch", () => {
-  const mockValidateDestinationResolved = ssrf.validateDestinationResolved as unknown as ReturnType<
-    typeof vi.fn
-  >;
-  const mockFetchWithTimeout = fetchWithTimeoutModule.fetchWithTimeout as unknown as ReturnType<
-    typeof vi.fn
-  >;
+  const mockValidateDestinationResolved = vi.mocked(ssrf.validateDestinationResolved);
+  const mockFetchWithTimeout = vi.mocked(fetchWithTimeoutModule.fetchWithTimeout);
 
   beforeEach(() => {
     vi.resetAllMocks();
@@ -33,13 +29,14 @@ describe("safeFetch", () => {
     expect(mockValidateDestinationResolved).toHaveBeenCalledWith("http://example.com/foo");
 
     expect(mockFetchWithTimeout).toHaveBeenCalledTimes(1);
-    const [url, options, timeout] = mockFetchWithTimeout.mock.calls[0];
+    const [url, options, timeout] = mockFetchWithTimeout.mock.calls[0]!;
 
     expect(url).toBe("http://1.2.3.4/foo");
     expect(timeout).toBe(10000);
-    expect(options.headers).toBeInstanceOf(Headers);
-    expect(options.headers.get("Host")).toBe("example.com");
-    expect(options.redirect).toBe("error");
+    expect(options?.headers).toBeInstanceOf(Headers);
+    const headers = options?.headers as Headers;
+    expect(headers.get("Host")).toBe("example.com");
+    expect(options?.redirect).toBe("error");
   });
 
   it("preserves HTTPS URL (does not rewrite to IP)", async () => {
@@ -50,13 +47,14 @@ describe("safeFetch", () => {
     expect(mockValidateDestinationResolved).toHaveBeenCalledWith("https://example.com/foo");
 
     expect(mockFetchWithTimeout).toHaveBeenCalledTimes(1);
-    const [url, options, timeout] = mockFetchWithTimeout.mock.calls[0];
+    const [url, options, timeout] = mockFetchWithTimeout.mock.calls[0]!;
 
     expect(url).toBe("https://example.com/foo");
-    expect(options.headers).toBeInstanceOf(Headers);
+    expect(options?.headers).toBeInstanceOf(Headers);
+    const headers = options?.headers as Headers;
     // Host header should not be set manually for HTTPS
-    expect(options.headers.get("Host")).toBeNull();
-    expect(options.redirect).toBe("error");
+    expect(headers.get("Host")).toBeNull();
+    expect(options?.redirect).toBe("error");
   });
 
   it("propagates error from validateDestinationResolved (SSRF check)", async () => {
@@ -77,11 +75,12 @@ describe("safeFetch", () => {
     });
 
     expect(mockFetchWithTimeout).toHaveBeenCalledTimes(1);
-    const [url, options] = mockFetchWithTimeout.mock.calls[0];
+    const [url, options] = mockFetchWithTimeout.mock.calls[0]!;
+    const headers = options?.headers as Headers;
 
     expect(url).toBe("http://1.2.3.4/");
-    expect(options.headers.get("x-custom")).toBe("test-value");
-    expect(options.headers.get("host")).toBe("example.com");
+    expect(headers.get("x-custom")).toBe("test-value");
+    expect(headers.get("host")).toBe("example.com");
   });
 
   it("extracts URL from Request object", async () => {
@@ -94,9 +93,10 @@ describe("safeFetch", () => {
 
     expect(mockValidateDestinationResolved).toHaveBeenCalledWith("http://example.com/bar");
 
-    const [url, options] = mockFetchWithTimeout.mock.calls[0];
+    const [url, options] = mockFetchWithTimeout.mock.calls[0]!;
+    const headers = options?.headers as Headers;
     expect(url).toBe("http://1.2.3.4/bar");
-    expect(options.headers.get("host")).toBe("example.com");
+    expect(headers.get("host")).toBe("example.com");
   });
 
   it("passes custom timeout", async () => {
@@ -104,7 +104,7 @@ describe("safeFetch", () => {
 
     await safeFetch("http://example.com", {}, 5000);
 
-    const [_url, _options, timeout] = mockFetchWithTimeout.mock.calls[0];
+    const [_url, _options, timeout] = mockFetchWithTimeout.mock.calls[0]!;
     expect(timeout).toBe(5000);
   });
 });

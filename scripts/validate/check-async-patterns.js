@@ -40,19 +40,6 @@ const BAD_PATTERNS = [
   },
 ];
 
-// Files where toast.error is allowed (static messages, not dynamic errors)
-const ALLOWED_TOAST_ERROR_FILES = new Set([
-  "src/routes/forgot-password.tsx", // Static validation messages
-  "src/routes/signin.tsx", // Static validation messages
-  "src/routes/signup.tsx", // Static validation messages
-  "src/components/Auth/SignInForm.tsx",
-  "src/components/Auth/SignUpForm.tsx",
-  "src/components/Auth/EmailVerificationForm.tsx", // Static auth error messages
-  "src/components/Auth/EmailVerificationRequired.tsx", // Static auth error messages
-  "src/components/Auth/ForgotPasswordForm.tsx", // Static auth error messages
-  "src/components/Auth/ResetPasswordForm.tsx", // Static auth error messages
-]);
-
 const ALLOWED_CONSOLE_CATCH_FILES = new Set([
   "src/components/LazyPostHog.tsx",
   "src/components/Onboarding/WelcomeTour.tsx",
@@ -82,7 +69,6 @@ export function run() {
     if (SKIP_PATTERNS.some((pattern) => rel.includes(pattern))) return;
 
     // Skip allowed files
-    if (ALLOWED_TOAST_ERROR_FILES.has(rel)) return;
     if (ALLOWED_CONSOLE_CATCH_FILES.has(rel)) return;
 
     const content = fs.readFileSync(filePath, "utf-8");

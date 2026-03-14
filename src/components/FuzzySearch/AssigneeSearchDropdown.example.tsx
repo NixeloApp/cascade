@@ -9,6 +9,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
 import { Avatar } from "@/components/ui/Avatar";
+import { IconButton } from "@/components/ui/IconButton";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useUserFuzzySearch } from "@/hooks/useFuzzySearch";
 import { Flex } from "../ui/Flex";
@@ -96,10 +97,10 @@ export function AssigneeSearchDropdown({
               {selectedUser.userName}
             </Typography>
           </Flex>
-          <button
-            type="button"
+          <IconButton
+            variant="danger"
+            size="xs"
             onClick={() => onChange(null)}
-            className="text-ui-text-tertiary hover:text-status-error"
             aria-label="Clear assignee"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -111,7 +112,7 @@ export function AssigneeSearchDropdown({
                 d="M6 18L18 6M6 6l12 12"
               />
             </svg>
-          </button>
+          </IconButton>
         </Flex>
       )}
 

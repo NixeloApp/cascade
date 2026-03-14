@@ -15,6 +15,7 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
 import { Input } from "../ui/form/Input";
 import { Typography } from "../ui/Typography";
 import { EmailVerificationForm } from "./EmailVerificationForm";
@@ -82,12 +83,9 @@ export function SignUpForm() {
         {/* Step indicator */}
         <Flex justify="center" gap="sm" className="mb-6">
           {[0, 1, 2].map((step) => (
-            <div
+            <Card
               key={step}
-              className={cn(
-                "h-1.5 rounded-pill transition-all duration-medium",
-                step <= currentStep ? "w-8 bg-brand" : "w-4 bg-ui-border",
-              )}
+              recipe={step <= currentStep ? "authStepIndicatorActive" : "authStepIndicator"}
             />
           ))}
         </Flex>
@@ -113,12 +111,9 @@ export function SignUpForm() {
       {currentStep > 0 && (
         <Flex justify="center" gap="sm" className="mb-6">
           {[0, 1, 2].map((step) => (
-            <div
+            <Card
               key={step}
-              className={cn(
-                "h-1.5 rounded-pill transition-all duration-medium",
-                step <= currentStep ? "w-8 bg-brand" : "w-4 bg-ui-border",
-              )}
+              recipe={step <= currentStep ? "authStepIndicatorActive" : "authStepIndicator"}
             />
           ))}
         </Flex>
@@ -133,94 +128,94 @@ export function SignUpForm() {
         <hr className="grow border-ui-border" />
       </Flex>
       <form
-        className="flex flex-col"
         onSubmit={handleSubmit}
         data-form-ready={formReady}
         data-hydrated={hydrated}
         data-expanded={showEmailForm}
         data-testid={TEST_IDS.AUTH.FORM}
       >
-        <div
-          className={cn(
-            "grid transition-all duration-medium ease-out",
-            showEmailForm ? "grid-rows-[1fr] opacity-100 mb-3" : "grid-rows-[0fr] opacity-0",
-          )}
-        >
-          <Flex direction="column" className="overflow-hidden gap-form-field">
-            <Input
-              type="email"
-              name="email"
-              placeholder="Email"
-              required={formReady}
-              className="transition-default"
-              data-testid={TEST_IDS.AUTH.EMAIL_INPUT}
-            />
-            <Input
-              type="password"
-              name="password"
-              placeholder="Password"
-              minLength={8}
-              required={formReady}
-              className="transition-default"
-              data-testid={TEST_IDS.AUTH.PASSWORD_INPUT}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            {/* Password strength indicator */}
-            {password ? (
-              <PasswordStrengthIndicator password={password} className="-mt-1" />
-            ) : (
-              <Typography variant="caption" color="tertiary" className="-mt-2">
-                Must be at least 8 characters
-              </Typography>
+        <Flex direction="column">
+          <div
+            className={cn(
+              "overflow-hidden transition-all duration-medium ease-out",
+              showEmailForm ? "mb-3 max-h-64 opacity-100" : "max-h-0 opacity-0",
             )}
-          </Flex>
-        </div>
-        <Button
-          type={showEmailForm ? "submit" : "button"}
-          onClick={!showEmailForm ? handleShowEmailForm : undefined}
-          variant={showEmailForm ? "primary" : "secondary"}
-          size="lg"
-          className={cn("w-full transition-all duration-medium", showEmailForm && "shadow-card")}
-          disabled={submitting || !hydrated}
-          data-testid={TEST_IDS.AUTH.SUBMIT_BUTTON}
-        >
-          {!showEmailForm ? (
-            <Flex align="center" gap="md">
-              <svg
-                className="w-5 h-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <rect width="20" height="16" x="2" y="4" rx="2" />
-                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-              </svg>
-              <span>Continue with email</span>
+          >
+            <Flex direction="column" className="overflow-hidden gap-form-field">
+              <Input
+                type="email"
+                name="email"
+                placeholder="Email"
+                required={formReady}
+                className="transition-default"
+                data-testid={TEST_IDS.AUTH.EMAIL_INPUT}
+              />
+              <Input
+                type="password"
+                name="password"
+                placeholder="Password"
+                minLength={8}
+                required={formReady}
+                className="transition-default"
+                data-testid={TEST_IDS.AUTH.PASSWORD_INPUT}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              {password ? (
+                <PasswordStrengthIndicator password={password} className="-mt-1" />
+              ) : (
+                <Typography variant="caption" color="tertiary" className="-mt-2">
+                  Must be at least 8 characters
+                </Typography>
+              )}
             </Flex>
-          ) : submitting ? (
-            <Flex align="center" gap="sm">
-              <svg
-                className="w-4 h-4 animate-spin"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                aria-hidden="true"
-              >
-                <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
-                <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
-              </svg>
-              <span>Creating account...</span>
-            </Flex>
-          ) : (
-            "Create account"
-          )}
-        </Button>
+          </div>
+          <Button
+            type={showEmailForm ? "submit" : "button"}
+            onClick={!showEmailForm ? handleShowEmailForm : undefined}
+            variant={showEmailForm ? "primary" : "secondary"}
+            size="lg"
+            className={cn("w-full transition-all duration-medium", showEmailForm && "shadow-card")}
+            disabled={submitting || !hydrated}
+            data-testid={TEST_IDS.AUTH.SUBMIT_BUTTON}
+          >
+            {!showEmailForm ? (
+              <Flex align="center" gap="md">
+                <svg
+                  className="w-5 h-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect width="20" height="16" x="2" y="4" rx="2" />
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                </svg>
+                <span>Continue with email</span>
+              </Flex>
+            ) : submitting ? (
+              <Flex align="center" gap="sm">
+                <svg
+                  className="w-4 h-4 animate-spin"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                  <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+                </svg>
+                <span>Creating account...</span>
+              </Flex>
+            ) : (
+              "Create account"
+            )}
+          </Button>
+        </Flex>
       </form>
     </div>
   );

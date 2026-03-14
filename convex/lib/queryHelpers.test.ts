@@ -29,7 +29,7 @@ describe("queryHelpers", () => {
       const result = await t.run(async (ctx) => {
         return await fetchPaginatedQuery(ctx, {
           paginationOpts: { numItems: 10, cursor: null },
-          query: (db) =>
+          buildQuery: (db) =>
             db.query("issues").withIndex("by_project", (q) => q.eq("projectId", projectId)),
         });
       });
@@ -59,7 +59,7 @@ describe("queryHelpers", () => {
       const page1 = await t.run(async (ctx) => {
         return await fetchPaginatedQuery(ctx, {
           paginationOpts: { numItems: 2, cursor: null },
-          query: (db) =>
+          buildQuery: (db) =>
             db.query("issues").withIndex("by_project", (q) => q.eq("projectId", projectId)),
         });
       });
@@ -72,7 +72,7 @@ describe("queryHelpers", () => {
       const page2 = await t.run(async (ctx) => {
         return await fetchPaginatedQuery(ctx, {
           paginationOpts: { numItems: 2, cursor: page1.continueCursor },
-          query: (db) =>
+          buildQuery: (db) =>
             db.query("issues").withIndex("by_project", (q) => q.eq("projectId", projectId)),
         });
       });
@@ -89,7 +89,7 @@ describe("queryHelpers", () => {
       const page3 = await t.run(async (ctx) => {
         return await fetchPaginatedQuery(ctx, {
           paginationOpts: { numItems: 2, cursor: page2.continueCursor },
-          query: (db) =>
+          buildQuery: (db) =>
             db.query("issues").withIndex("by_project", (q) => q.eq("projectId", projectId)),
         });
       });

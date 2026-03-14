@@ -13,7 +13,7 @@ import { usePaginatedQuery } from "convex/react";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
-import { Grid } from "@/components/ui/Grid";
+import { Grid, GridItem } from "@/components/ui/Grid";
 import { Stack } from "@/components/ui/Stack";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery, useAuthReady } from "@/hooks/useConvexHelpers";
@@ -85,73 +85,65 @@ export function Dashboard() {
   });
 
   return (
-    <div className="relative overflow-hidden rounded-container border border-ui-border/40 bg-linear-to-b from-ui-bg to-ui-bg-secondary/50 px-4 py-5 shadow-soft sm:px-6 sm:py-6">
+    <Card recipe="dashboardShell" padding="lg" className="px-4 py-5 sm:px-6 sm:py-6">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-linear-to-b from-brand-subtle/40 to-transparent" />
       <div className="pointer-events-none absolute -left-16 top-16 h-48 w-48 rounded-full bg-brand-subtle/20 blur-glow" />
       <div className="pointer-events-none absolute right-0 top-24 h-56 w-56 rounded-full bg-accent/10 blur-glow" />
 
       <div className="relative">
-        <Greeting userName={user?.name} completedCount={stats?.completedThisWeek} />
+        <Stack gap="2xl">
+          <Greeting userName={user?.name} completedCount={stats?.completedThisWeek} />
 
-        <Grid cols={1} colsLg={12} gap="lg" className="mb-8">
-          <div className={showStats ? "lg:col-span-7" : "lg:col-span-12"}>
-            <FocusZone task={focusTask} />
-          </div>
+          <Grid cols={1} colsLg={12} gap="lg">
+            <GridItem colSpanLg={showStats ? 7 : 12}>
+              <FocusZone task={focusTask} />
+            </GridItem>
 
-          {showStats && (
-            <div className="lg:col-span-5">
-              <Flex direction="column" justify="end" className="h-full">
-                <Typography
-                  variant="label"
-                  color="tertiary"
-                  className="mb-3 uppercase tracking-widest"
-                >
-                  Overview
-                </Typography>
-                <Card
-                  variant="outline"
-                  padding="sm"
-                  className="border-ui-border-secondary/70 bg-ui-bg/75 shadow-soft"
-                >
-                  <QuickStats stats={stats} />
-                </Card>
-              </Flex>
-            </div>
-          )}
-        </Grid>
+            {showStats && (
+              <GridItem colSpanLg={5}>
+                <Flex direction="column" justify="end" gap="sm">
+                  <Typography variant="eyebrow" color="tertiary">
+                    Overview
+                  </Typography>
+                  <Card recipe="dashboardPanel" padding="sm">
+                    <QuickStats stats={stats} />
+                  </Card>
+                </Flex>
+              </GridItem>
+            )}
+          </Grid>
 
-        <Grid cols={1} colsLg={12} gap="lg">
-          <div className={sidebarVisible ? "lg:col-span-8" : "lg:col-span-12"}>
-            <Card
-              variant="outline"
-              radius="full"
-              className="h-full w-full overflow-hidden border-ui-border/50 bg-ui-bg/70 shadow-soft backdrop-blur-sm"
-            >
-              <MyIssuesList
-                myIssues={myIssues}
-                myCreatedIssues={myCreatedIssues}
-                displayIssues={displayIssues}
-                issueFilter={issueFilter}
-                onFilterChange={setIssueFilter}
-                issueNavigation={issueNavigation}
-                loadMore={loadMoreMyIssues}
-                status={myIssuesStatus}
-              />
-            </Card>
-          </div>
+          <Grid cols={1} colsLg={12} gap="lg">
+            <GridItem colSpanLg={sidebarVisible ? 8 : 12}>
+              <Card recipe="dashboardPanelInset" radius="full" className="h-full w-full">
+                <MyIssuesList
+                  myIssues={myIssues}
+                  myCreatedIssues={myCreatedIssues}
+                  displayIssues={displayIssues}
+                  issueFilter={issueFilter}
+                  onFilterChange={setIssueFilter}
+                  issueNavigation={issueNavigation}
+                  loadMore={loadMoreMyIssues}
+                  status={myIssuesStatus}
+                />
+              </Card>
+            </GridItem>
 
-          {sidebarVisible && (
-            <Stack gap="lg" className="lg:col-span-4">
-              {showWorkspaces && (
-                <WorkspacesList projects={myProjects} projectNavigation={projectNavigation} />
-              )}
+            {sidebarVisible && (
+              <GridItem colSpanLg={4}>
+                <Stack gap="lg">
+                  {showWorkspaces && (
+                    <WorkspacesList projects={myProjects} projectNavigation={projectNavigation} />
+                  )}
 
-              {showRecentActivity && <RecentActivity activities={recentActivity} />}
-            </Stack>
-          )}
-        </Grid>
+                  {showRecentActivity && <RecentActivity activities={recentActivity} />}
+                </Stack>
+              </GridItem>
+            )}
+          </Grid>
+        </Stack>
       </div>
-    </div>
+    </Card>
   );
 }
 

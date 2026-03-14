@@ -12,6 +12,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
 import type { ReactNode } from "react";
 import { Avatar } from "@/components/ui/Avatar";
+import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
@@ -32,7 +33,6 @@ import {
   ISSUE_TYPES_WITH_SUBTASK,
   PRIORITY_ICONS,
 } from "@/lib/issue-utils";
-import { cn } from "@/lib/utils";
 
 interface InlineSelectProps {
   label: string;
@@ -48,13 +48,7 @@ interface InlineSelectProps {
 function InlineSelect({ label, value, onChange, children, disabled }: InlineSelectProps) {
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
-      <SelectTrigger
-        className={cn(
-          "h-8 border-transparent bg-transparent hover:bg-ui-bg-hover hover:border-ui-border transition-colors",
-          "focus:bg-ui-bg focus:border-ui-border",
-        )}
-        aria-label={label}
-      >
+      <SelectTrigger variant="inlineEdit" aria-label={label}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>{children}</SelectContent>
@@ -146,13 +140,7 @@ export function InlineAssigneeSelect({ value, members, onChange, disabled }: Ass
       onValueChange={(v) => onChange(v === "unassigned" ? null : (v as Id<"users">))}
       disabled={disabled}
     >
-      <SelectTrigger
-        className={cn(
-          "h-8 border-transparent bg-transparent hover:bg-ui-bg-hover hover:border-ui-border transition-colors",
-          "focus:bg-ui-bg focus:border-ui-border",
-        )}
-        aria-label="Change assignee"
-      >
+      <SelectTrigger variant="inlineEdit" aria-label="Change assignee">
         <SelectValue>
           {selectedMember ? (
             <Flex align="center" gap="sm">
@@ -216,13 +204,7 @@ export function InlineStatusSelect({
 
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
-      <SelectTrigger
-        className={cn(
-          "h-8 border-transparent bg-transparent hover:bg-ui-bg-hover hover:border-ui-border transition-colors",
-          "focus:bg-ui-bg focus:border-ui-border",
-        )}
-        aria-label="Change status"
-      >
+      <SelectTrigger variant="inlineEdit" aria-label="Change status">
         <SelectValue>{currentState?.name || value}</SelectValue>
       </SelectTrigger>
       <SelectContent>
@@ -268,10 +250,9 @@ export function InlineStoryPointsInput({ value, onChange, disabled }: StoryPoint
       onChange={handleChange}
       placeholder="Not set"
       disabled={disabled}
-      className={cn(
-        "h-8 w-24 border-transparent bg-transparent hover:bg-ui-bg-hover hover:border-ui-border transition-colors",
-        "focus:bg-ui-bg focus:border-ui-border",
-      )}
+      variant="inlineEdit"
+      inputSize="sm"
+      className="w-24"
       aria-label="Story points"
     />
   );
@@ -288,11 +269,13 @@ interface PropertyRowProps {
 
 export function PropertyRow({ label, children }: PropertyRowProps) {
   return (
-    <Flex align="center" justify="between" className="py-1">
-      <Typography variant="meta" color="secondary" className="min-w-24">
-        {label}
-      </Typography>
-      <FlexItem flex="1">{children}</FlexItem>
-    </Flex>
+    <Card recipe="issueMetadataRow">
+      <Flex align="center" justify="between">
+        <Typography variant="meta" color="secondary" className="min-w-24">
+          {label}
+        </Typography>
+        <FlexItem flex="1">{children}</FlexItem>
+      </Flex>
+    </Card>
   );
 }

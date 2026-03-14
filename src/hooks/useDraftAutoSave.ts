@@ -6,7 +6,7 @@
  * Supports clearing drafts after successful form submission.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const DRAFT_PREFIX = "cascade_draft_";
 const DRAFT_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -94,37 +94,34 @@ export function useDraftAutoSave<T>({
   }, [storageKey, enabled]);
 
   // Save draft (debounced)
-  const saveDraft = useCallback(
-    (data: T) => {
-      if (!enabled) return;
+  const saveDraft = (data: T) => {
+    if (!enabled) return;
 
-      // Clear existing timeout
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
+    // Clear existing timeout
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    // Debounce the save
+    debounceRef.current = setTimeout(() => {
+      try {
+        const draftData: DraftData<T> = {
+          data,
+          timestamp: Date.now(),
+        };
+        localStorage.setItem(storageKey, JSON.stringify(draftData));
+        setHasDraft(true);
+        setDraft(data);
+        setDraftTimestamp(draftData.timestamp);
+      } catch (error) {
+        // localStorage might be full or unavailable
+        logDraftStorageError("save", storageKey, error);
       }
-
-      // Debounce the save
-      debounceRef.current = setTimeout(() => {
-        try {
-          const draftData: DraftData<T> = {
-            data,
-            timestamp: Date.now(),
-          };
-          localStorage.setItem(storageKey, JSON.stringify(draftData));
-          setHasDraft(true);
-          setDraft(data);
-          setDraftTimestamp(draftData.timestamp);
-        } catch (error) {
-          // localStorage might be full or unavailable
-          logDraftStorageError("save", storageKey, error);
-        }
-      }, debounceMs);
-    },
-    [storageKey, debounceMs, enabled],
-  );
+    }, debounceMs);
+  };
 
   // Clear draft
-  const clearDraft = useCallback(() => {
+  const clearDraft = () => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
@@ -132,15 +129,15 @@ export function useDraftAutoSave<T>({
     setHasDraft(false);
     setDraft(null);
     setDraftTimestamp(null);
-  }, [storageKey]);
+  };
 
   // Load draft and trigger callback
-  const loadDraft = useCallback(() => {
+  const loadDraft = () => {
     if (draft && onDraftLoaded) {
       onDraftLoaded(draft);
     }
     return draft;
-  }, [draft, onDraftLoaded]);
+  };
 
   // Cleanup on unmount
   useEffect(() => {

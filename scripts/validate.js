@@ -3,41 +3,42 @@
  *
  * Checks:
  *   1. Standards (AST)      — typography, className concat, dark mode, raw TW colors, shorthands
- *   2. Color audit          — raw TW colors, hardcoded hex, rgb/hsl, style props + allowlists
+ *   2. Color audit          — raw TW colors, hardcoded hex, rgb/hsl, style props outside owned color boundaries
  *   3. API calls            — validates api.X.Y calls match Convex exports
  *   4. Query issues         — N+1 queries, unbounded .collect(), missing indexes
  *   5. Arbitrary Tailwind      — arbitrary values like h-[50px]
  *   6. Raw Tailwind            — generic raw utility misuse outside approved areas
- *   7. Design-system ownership — recipe/chrome APIs required in high-drift surfaces
- *   8. Layout prop usage       — JSX should use Flex/Stack props instead of className hacks
- *   9. Type consistency        — ensures types imported from canonical sources, not duplicated
- *  10. Type safety             — flags unsafe type assertions and lint suppressions
- *  11. Emoji usage             — finds emoji that should be replaced with Lucide icons
- *  12. Test ID constants       — ensures data-testid uses TEST_IDS constants, not strings
- *  13. E2E hard rules          — waitForTimeout, Promise sleep, force:true, XPath, page.$
- *  14. E2E quality             — catches broad selectors, networkidle, waitForSelector
- *  15. UI patterns             — DialogDescription in dialogs, AuthPageLayout for auth pages
- *  16. Route constants         — use ROUTES from @/config/routes instead of hardcoded paths
- *  17. Convex patterns         — Envelope Pattern returns, security checks, test destructuring
- *  18. Convex naming           — function naming conventions (get/list/create/update/delete)
- *  19. Component naming        — PascalCase components, {Component}Props interfaces
- *  20. Component props         — consistent prop naming across component definitions
- *  21. Duplicate components    — detect components with same name in different directories
- *  22. CVA boundaries          — ban importing exported CVA recipes outside shared ui primitives
- *  23. Control ownership       — block low-level ToggleGroup in app code; use semantic primitives
- *  24. Interactive Tailwind    — hover:/focus: should be in CVA components, not scattered
- *  25. Tailwind consistency    — duration tokens, focus rings, disabled states, z-index, group-hover
- *  26. Recipe drift            — repeated visual patterns that should be Card recipes (info only)
- *  27. JSDoc coverage          — exported functions/components should have JSDoc documentation
- *  28. Import paths            — validates import path conventions
- *  29. Hook patterns           — custom hooks should follow consistent patterns
- *  30. Async patterns          — consistent error handling in async operations
- *  31. Time constants          — enforces use of timeUtils constants instead of magic numbers
- *  32. Unused parameters       — flags underscore-prefixed unused params (remove or use them)
- *  33. Test coverage           — critical files should have corresponding tests
- *  34. Weak assertions         — toBeDefined(), toBeTruthy(), {} as Type in tests
- *  35. Native confirm()        — ensure custom dialogs used instead of native confirm()
- *  36. Convex hooks            — validates Convex hook usage patterns
+ *   7. Surface shells         — reusable rounded/bg/border/shadow shells must use owned recipes
+ *   8. Design-system ownership — recipe/chrome APIs required in high-drift surfaces
+ *   9. Layout prop usage       — JSX should use Flex/Stack props instead of className hacks
+ *  10. Type consistency        — ensures types imported from canonical sources, not duplicated
+ *  11. Type safety             — flags unsafe type assertions and lint suppressions
+ *  12. Emoji usage             — finds emoji that should be replaced with Lucide icons
+ *  13. Test ID constants       — ensures data-testid uses TEST_IDS constants, not strings
+ *  14. E2E hard rules          — waitForTimeout, Promise sleep, force:true, XPath, page.$
+ *  15. E2E quality             — catches broad selectors, networkidle, waitForSelector
+ *  16. UI patterns             — DialogDescription in dialogs, AuthPageLayout for auth pages
+ *  17. Route constants         — use ROUTES from @/config/routes instead of hardcoded paths
+ *  18. Convex patterns         — Envelope Pattern returns, security checks, test destructuring
+ *  19. Convex naming           — function naming conventions (get/list/create/update/delete)
+ *  20. Component naming        — PascalCase components, {Component}Props interfaces
+ *  21. Component props         — consistent prop naming across component definitions
+ *  22. Duplicate components    — detect components with same name in different directories
+ *  23. CVA boundaries          — ban importing exported CVA recipes outside shared ui primitives
+ *  24. Control ownership       — block low-level ToggleGroup in app code; use semantic primitives
+ *  25. Interactive Tailwind    — hover:/focus: should be in CVA components, not scattered
+ *  26. Tailwind consistency    — duration tokens, focus rings, disabled states, z-index, group-hover
+ *  27. Recipe drift            — repeated visual shell patterns must move behind owned recipes
+ *  28. JSDoc coverage          — exported functions/components should have JSDoc documentation
+ *  29. Import paths            — validates import path conventions
+ *  30. Hook patterns           — custom hooks should follow consistent patterns
+ *  31. Async patterns          — consistent error handling in async operations
+ *  32. Time constants          — enforces use of timeUtils constants instead of magic numbers
+ *  33. Unused parameters       — flags underscore-prefixed unused params (remove or use them)
+ *  34. Test coverage           — critical files should have corresponding tests
+ *  35. Weak assertions         — toBeDefined(), toBeTruthy(), {} as Type in tests
+ *  36. Native confirm()        — ensure custom dialogs used instead of native confirm()
+ *  37. Convex hooks            — validates Convex hook usage patterns
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -121,6 +122,10 @@ const checks = [
   {
     name: "Raw Tailwind",
     modulePath: new URL("./validate/check-raw-tailwind.js", import.meta.url).href,
+  },
+  {
+    name: "Surface shells",
+    modulePath: new URL("./validate/check-surface-shells.js", import.meta.url).href,
   },
   {
     name: "Design-system ownership",
@@ -244,7 +249,6 @@ const checks = [
 console.log(`\n${c.bold}Running validation...${c.reset}\n`);
 
 let totalErrors = 0;
-
 const results = [];
 for (let i = 0; i < checks.length; i++) {
   const { name, modulePath } = checks[i];

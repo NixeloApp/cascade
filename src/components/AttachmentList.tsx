@@ -10,27 +10,15 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import {
-  Archive,
-  Download,
-  File,
-  FileImage,
-  FileSpreadsheet,
-  FileText,
-  Paperclip,
-  Trash2,
-} from "@/lib/icons";
+import { Archive, File, FileImage, FileSpreadsheet, FileText, Paperclip } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
+import { AttachmentRow } from "./ui/AttachmentRow";
 import { Flex, FlexItem } from "./ui/Flex";
-import { Icon } from "./ui/Icon";
-import { IconButton } from "./ui/IconButton";
 import { Stack } from "./ui/Stack";
 
 interface AttachmentListProps {
@@ -131,45 +119,18 @@ function AttachmentItem({
   const fileIcon = getFileIcon(filename);
 
   return (
-    <Card padding="sm" hoverable className="bg-ui-bg-soft group">
-      <Flex align="center" gap="sm">
-        <Icon icon={fileIcon} size="lg" />
-        <FlexItem flex="1" className="min-w-0">
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-ui-text hover:text-brand hover:underline truncate block transition-colors duration-default"
-          >
-            {filename}
-          </a>
-        </FlexItem>
-        <Flex
-          gap="xs"
-          className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity duration-default"
-        >
-          <Tooltip content="Download attachment">
-            <Button variant="ghost" size="sm" asChild>
-              <a href={url} download aria-label="Download attachment">
-                <Icon icon={Download} size="sm" />
-              </a>
-            </Button>
-          </Tooltip>
-          {canEdit && (
-            <Tooltip content="Remove attachment">
-              <IconButton
-                variant="danger"
-                size="sm"
-                onClick={onRemove}
-                aria-label="Remove attachment"
-              >
-                <Icon icon={Trash2} size="sm" />
-              </IconButton>
-            </Tooltip>
-          )}
-        </Flex>
-      </Flex>
-    </Card>
+    <AttachmentRow
+      filename={filename}
+      href={url}
+      icon={fileIcon}
+      linkProps={{
+        rel: "noopener noreferrer",
+        target: "_blank",
+      }}
+      downloadLabel="Download attachment"
+      deleteLabel={canEdit ? "Remove attachment" : undefined}
+      onDelete={canEdit ? onRemove : undefined}
+    />
   );
 }
 

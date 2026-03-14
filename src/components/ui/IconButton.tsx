@@ -47,6 +47,12 @@ const iconButtonVariants = cva(
       variant: {
         /** Default: subtle background on hover */
         ghost: "text-ui-text-tertiary hover:text-ui-text hover:bg-ui-bg-hover",
+        /** Drag handle trigger for block reordering */
+        dragHandle:
+          "cursor-grab text-ui-text-tertiary hover:bg-ui-bg-hover hover:text-ui-text active:cursor-grabbing",
+        /** Floating inline action on top of existing content */
+        floating:
+          "border border-ui-border bg-ui-bg text-ui-text-secondary shadow-sm hover:text-ui-text hover:shadow-md",
         /** Slightly more visible: secondary text */
         subtle: "text-ui-text-secondary hover:text-ui-text hover:bg-ui-bg-hover",
         /** For actions on existing backgrounds */
@@ -61,6 +67,7 @@ const iconButtonVariants = cva(
       },
       size: {
         xs: "h-6 w-6 p-1",
+        compact: "h-7 w-7 p-0.5",
         sm: "h-8 w-8 p-1.5",
         md: "h-9 w-9 p-2",
         lg: "h-10 w-10 p-2.5",
@@ -68,6 +75,8 @@ const iconButtonVariants = cva(
       /** Show only on parent hover/focus-within (use inside group containers) */
       reveal: {
         true: "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100",
+        responsive:
+          "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:focus:opacity-100",
         false: "",
       },
     },

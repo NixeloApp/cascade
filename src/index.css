@@ -215,6 +215,12 @@
   --color-brand-emerald-border: light-dark(var(--p-emerald-600), var(--p-emerald-400));
   --color-brand-emerald-track: light-dark(var(--p-emerald-100), rgba(6, 78, 59, 0.4));
 
+  /* --- Provider / OAuth brand colors (fixed brand marks) --- */
+  --color-provider-google-blue: #4285f4;
+  --color-provider-google-green: #34a853;
+  --color-provider-google-yellow: #fbbc05;
+  --color-provider-google-red: #ea4335;
+
   /* --- Scrollbar (4 vars) --- */
   /* Mintlify-inspired: subtle scrollbar with transparent track */
   --color-scrollbar-thumb: light-dark(rgba(0, 0, 0, 0.2), rgba(255, 255, 255, 0.2));

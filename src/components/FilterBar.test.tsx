@@ -345,8 +345,8 @@ describe("FilterBar", () => {
       await user.click(screen.getByRole("button", { name: /saved filters/i }));
 
       // Click on a saved filter
-      const filterButton = await screen.findByRole("button", { name: /high priority bugs/i });
-      await user.click(filterButton);
+      const filterItem = await screen.findByRole("menuitem", { name: /high priority bugs/i });
+      await user.click(filterItem);
 
       expect(mockOnFilterChange).toHaveBeenCalledWith({ priority: ["high"], type: ["bug"] });
       expect(toast.success).toHaveBeenCalledWith("Filter applied");

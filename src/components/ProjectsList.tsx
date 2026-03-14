@@ -128,39 +128,35 @@ function ProjectCard({
     >
       <Flex direction="column" gap={hasSingleProject ? "lg" : "md"}>
         {hasSingleProject && (
-          <Flex
-            align="center"
-            justify="between"
-            gap="sm"
-            wrap
-            className="rounded-2xl border border-ui-border/60 bg-ui-bg-soft/80 px-4 py-2.5"
-          >
-            <Flex align="center" gap="sm" wrap>
-              <Badge variant="secondary" shape="pill">
-                Primary workspace project
-              </Badge>
-              <Typography variant="small" color="secondary">
-                Board, roadmap, calendar, and delivery in one lane.
+          <Card recipe="projectFeatureStrip" padding="md">
+            <Flex align="center" justify="between" gap="sm" wrap>
+              <Flex align="center" gap="sm" wrap>
+                <Badge variant="secondary" shape="pill">
+                  Primary workspace project
+                </Badge>
+                <Typography variant="small" color="secondary">
+                  Board, roadmap, calendar, and delivery in one lane.
+                </Typography>
+              </Flex>
+              <Typography
+                variant="caption"
+                className="uppercase tracking-widest text-ui-text-tertiary"
+              >
+                Active
               </Typography>
             </Flex>
-            <Typography
-              variant="caption"
-              className="uppercase tracking-widest text-ui-text-tertiary"
-            >
-              Active
-            </Typography>
-          </Flex>
+          </Card>
         )}
 
         <Flex justify="between" align="start" gap="md">
           <Flex align="center" gap="md">
-            <Flex
-              align="center"
-              justify="center"
-              className="w-10 h-10 rounded-lg bg-brand/10 text-brand font-semibold text-sm shrink-0 ring-1 ring-brand/20 transition-all"
-            >
-              {project.key.substring(0, 2).toUpperCase()}
-            </Flex>
+            <Card recipe="projectKeyTile" padding="none" className="size-10 shrink-0">
+              <Flex align="center" justify="center" className="h-full">
+                <Typography variant="label" className="text-brand">
+                  {project.key.substring(0, 2).toUpperCase()}
+                </Typography>
+              </Flex>
+            </Card>
             <Typography variant="h3" className="tracking-tight">
               {project.name}
             </Typography>

@@ -431,14 +431,14 @@ export const listExpiringSoon = authenticatedQuery({
     const now = Date.now();
     const threshold = now + withinMs;
 
-    // Get all user's active keys
-    const keys = await ctx.db
+    // Get user's active keys that expire within threshold (filter at query level)
+    const expiring = await ctx.db
       .query("apiKeys")
       .withIndex("by_user_active", (q) => q.eq("userId", ctx.userId).eq("isActive", true))
+      .filter((q) =>
+        q.and(q.neq(q.field("expiresAt"), undefined), q.lte(q.field("expiresAt"), threshold)),
+      )
       .take(BOUNDED_LIST_LIMIT);
-
-    // Filter to expiring keys
-    const expiring = keys.filter((key) => key.expiresAt && key.expiresAt <= threshold);
 
     return expiring.map((key) => ({
       id: key._id,

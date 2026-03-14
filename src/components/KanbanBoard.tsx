@@ -11,7 +11,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import type { WorkflowState } from "@convex/shared/types";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useBoardDragAndDrop } from "@/hooks/useBoardDragAndDrop";
 import { useBoardHistory } from "@/hooks/useBoardHistory";
@@ -34,6 +34,7 @@ import { IssueDetailViewer } from "./IssueDetailViewer";
 import { BoardToolbar } from "./Kanban/BoardToolbar";
 import { KanbanColumn } from "./Kanban/KanbanColumn";
 import { SwimlanRow } from "./Kanban/SwimlanRow";
+import { Card } from "./ui/Card";
 import { SkeletonKanbanCard, SkeletonText } from "./ui/Skeleton";
 
 interface KanbanBoardProps {
@@ -142,6 +143,62 @@ function applyFilters(
   );
 }
 
+/** Toggle an item in a Set, returning new Set */
+function toggleSetItem<T>(set: Set<T>, item: T): Set<T> {
+  const next = new Set(set);
+  if (next.has(item)) {
+    next.delete(item);
+  } else {
+    next.add(item);
+  }
+  return next;
+}
+
+/** Build swimlane configuration from issues */
+function buildSwimlaneMeta(allIssues: EnrichedIssue[], swimlaneGroupBy: SwimlanGroupBy) {
+  const assigneesMap = new Map<Id<"users">, { name?: string; image?: string }>();
+  const labelsMap = new Map<string, { name: string; color: string }>();
+
+  for (const issue of allIssues) {
+    if (issue.assignee) {
+      assigneesMap.set(issue.assignee._id, {
+        name: issue.assignee.name,
+        image: issue.assignee.image,
+      });
+    }
+    for (const label of issue.labels) {
+      if (!labelsMap.has(label.name)) {
+        labelsMap.set(label.name, { name: label.name, color: label.color });
+      }
+    }
+  }
+
+  return getSwimlanConfigs(
+    swimlaneGroupBy,
+    allIssues,
+    assigneesMap,
+    Array.from(labelsMap.values()),
+  );
+}
+
+/** Resolve workflow states from project or smart data */
+function resolveWorkflowStates(
+  isProjectMode: boolean,
+  project: { workflowStates: WorkflowState[] } | null | undefined,
+  isTeamMode: boolean,
+  smartWorkflowStates:
+    | Array<{ id: string; name: string; category: "todo" | "inprogress" | "done"; order: number }>
+    | undefined,
+): WorkflowState[] {
+  if (isProjectMode && project) {
+    return [...project.workflowStates].sort((a, b) => a.order - b.order);
+  }
+  if (isTeamMode && smartWorkflowStates) {
+    return smartWorkflowStates.map((s) => ({ ...s, description: "" }));
+  }
+  return [];
+}
+
 /** Drag-and-drop Kanban board with swimlanes, filters, and bulk selection. */
 export function KanbanBoard({
   projectId,
@@ -195,24 +252,18 @@ export function KanbanBoard({
   const { historyStack, redoStack, handleUndo, handleRedo, pushAction } = useBoardHistory();
 
   // Apply filters to issues
-  const filteredIssuesByStatus = useMemo(() => {
-    const parsedQuery = parseBoardQuery(filters?.query);
-    const dateRanges = {
-      dueDate: normalizeDateRangeBounds(filters?.dueDate),
-      startDate: normalizeDateRangeBounds(filters?.startDate),
-      createdAt: normalizeDateRangeBounds(filters?.createdAt),
-    };
-    const result: Record<string, EnrichedIssue[]> = {};
-    for (const [status, issues] of Object.entries(issuesByStatus)) {
-      result[status] = applyFilters(issues, filters, parsedQuery, dateRanges);
-    }
-    return result;
-  }, [issuesByStatus, filters]);
+  const parsedQuery = parseBoardQuery(filters?.query);
+  const dateRanges = {
+    dueDate: normalizeDateRangeBounds(filters?.dueDate),
+    startDate: normalizeDateRangeBounds(filters?.startDate),
+    createdAt: normalizeDateRangeBounds(filters?.createdAt),
+  };
+  const filteredIssuesByStatus: Record<string, EnrichedIssue[]> = {};
+  for (const [status, issues] of Object.entries(issuesByStatus)) {
+    filteredIssuesByStatus[status] = applyFilters(issues, filters, parsedQuery, dateRanges);
+  }
 
-  const allIssues = useMemo(
-    () => Object.values(filteredIssuesByStatus).flat(),
-    [filteredIssuesByStatus],
-  );
+  const allIssues = Object.values(filteredIssuesByStatus).flat();
 
   // Keyboard Navigation
   const { selectedIndex } = useListNavigation({
@@ -221,15 +272,12 @@ export function KanbanBoard({
   });
   const focusedIssueId = allIssues[selectedIndex]?._id;
 
-  const boardOptions = useMemo(
-    () => ({
-      projectId,
-      teamId,
-      sprintId,
-      doneColumnDays: 14,
-    }),
-    [projectId, teamId, sprintId],
-  );
+  const boardOptions = {
+    projectId,
+    teamId,
+    sprintId,
+    doneColumnDays: 14,
+  };
 
   const { handleIssueDrop, handleIssueReorder } = useBoardDragAndDrop({
     allIssues,
@@ -245,15 +293,7 @@ export function KanbanBoard({
   };
 
   const handleToggleSelect = (issueId: Id<"issues">) => {
-    setSelectedIssueIds((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(issueId)) {
-        newSet.delete(issueId);
-      } else {
-        newSet.add(issueId);
-      }
-      return newSet;
-    });
+    setSelectedIssueIds((prev) => toggleSetItem(prev, issueId));
   };
 
   const handleClearSelection = () => {
@@ -269,79 +309,22 @@ export function KanbanBoard({
   };
 
   const handleToggleSwimlanCollapse = (swimlanId: string) => {
-    setCollapsedSwimlanes((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(swimlanId)) {
-        newSet.delete(swimlanId);
-      } else {
-        newSet.add(swimlanId);
-      }
-      return newSet;
-    });
+    setCollapsedSwimlanes((prev) => toggleSetItem(prev, swimlanId));
   };
 
   const handleToggleColumnCollapse = (columnId: string) => {
-    setCollapsedColumns((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(columnId)) {
-        newSet.delete(columnId);
-      } else {
-        newSet.add(columnId);
-      }
-      return newSet;
-    });
+    setCollapsedColumns((prev) => toggleSetItem(prev, columnId));
   };
 
   // Swimlane grouping
-  const swimlaneIssues = useMemo(
-    () => groupIssuesBySwimlane(filteredIssuesByStatus, swimlaneGroupBy),
-    [filteredIssuesByStatus, swimlaneGroupBy],
+  const swimlaneIssues = groupIssuesBySwimlane(filteredIssuesByStatus, swimlaneGroupBy);
+  const swimlaneConfigs = buildSwimlaneMeta(allIssues, swimlaneGroupBy);
+  const workflowStates = resolveWorkflowStates(
+    isProjectMode,
+    project,
+    isTeamMode,
+    smartWorkflowStates,
   );
-
-  const swimlaneConfigs = useMemo(() => {
-    // Build assignees Map for swimlane display names
-    const assigneesMap = new Map<Id<"users">, { name?: string; image?: string }>();
-    for (const issue of allIssues) {
-      if (issue.assignee) {
-        assigneesMap.set(issue.assignee._id, {
-          name: issue.assignee.name,
-          image: issue.assignee.image,
-        });
-      }
-    }
-
-    // Build unique labels array for swimlane colors
-    const labelsMap = new Map<string, { name: string; color: string }>();
-    for (const issue of allIssues) {
-      for (const label of issue.labels) {
-        if (!labelsMap.has(label.name)) {
-          labelsMap.set(label.name, { name: label.name, color: label.color });
-        }
-      }
-    }
-    const labels = Array.from(labelsMap.values());
-
-    return getSwimlanConfigs(swimlaneGroupBy, allIssues, assigneesMap, labels);
-  }, [swimlaneGroupBy, allIssues]);
-
-  // Determine Workflow States
-  const workflowStates = useMemo((): WorkflowState[] => {
-    if (isProjectMode && project) {
-      return [...project.workflowStates].sort(
-        (a: { order: number }, b: { order: number }) => a.order - b.order,
-      );
-    }
-
-    if (isTeamMode && smartWorkflowStates) {
-      return smartWorkflowStates.map((s) => ({
-        ...s,
-        description: "",
-        order: s.order,
-      }));
-    }
-
-    return [];
-  }, [isProjectMode, project, isTeamMode, smartWorkflowStates]);
 
   // Loading State
   const isLoading = isLoadingIssues || (isProjectMode && !project);
@@ -353,27 +336,22 @@ export function KanbanBoard({
           <SkeletonText lines={1} className="w-32" />
           <SkeletonText lines={1} className="w-32" />
         </Flex>
-        <Flex
-          gap="none"
-          className="overflow-x-auto overscroll-x-contain snap-x snap-mandatory scroll-px-2 gap-2 px-2 pb-3 sm:snap-none sm:gap-3 sm:px-4 sm:pb-3 lg:px-6"
-        >
-          {[1, 2, 3, 4].map((i) => (
-            <FlexItem
-              key={i}
-              shrink={false}
-              className="w-72 rounded-container border border-ui-border bg-ui-bg-soft lg:w-80"
-            >
-              <div className="border-b border-ui-border/50 bg-transparent rounded-t-container">
-                <SkeletonText lines={1} className="w-24" />
-              </div>
-              <div className="min-h-96">
-                <SkeletonKanbanCard />
-                <SkeletonKanbanCard />
-                <SkeletonKanbanCard />
-              </div>
-            </FlexItem>
-          ))}
-        </Flex>
+        <Card variant="ghost" recipe="kanbanBoardRail" ref={boardContainerRef}>
+          <Flex gap="sm" align="start">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i} recipe="kanbanLoadingColumn" padding="none" radius="lg">
+                <Card recipe="kanbanLoadingColumnHeader" padding="sm">
+                  <SkeletonText lines={1} className="w-24" />
+                </Card>
+                <div className="min-h-96">
+                  <SkeletonKanbanCard />
+                  <SkeletonKanbanCard />
+                  <SkeletonKanbanCard />
+                </div>
+              </Card>
+            ))}
+          </Flex>
+        </Card>
       </FlexItem>
     );
   }
@@ -400,47 +378,44 @@ export function KanbanBoard({
 
       {swimlaneGroupBy === "none" ? (
         /* Standard board view without swimlanes */
-        <Flex
-          ref={boardContainerRef}
-          align="start"
-          gap="none"
-          className="overflow-x-auto overscroll-x-contain snap-x snap-mandatory scroll-px-2 gap-2 px-2 pb-3 sm:snap-none sm:gap-3 sm:px-4 sm:pb-3 lg:px-6"
-        >
-          {workflowStates.map((state, columnIndex: number) => {
-            const counts = statusCounts[state.id] || {
-              total: 0,
-              loaded: 0,
-              hidden: 0,
-            };
-            return (
-              <KanbanColumn
-                key={state.id}
-                state={state}
-                issues={filteredIssuesByStatus[state.id] || []}
-                columnIndex={columnIndex}
-                selectionMode={selectionMode}
-                selectedIssueIds={selectedIssueIds}
-                focusedIssueId={focusedIssueId}
-                canEdit={canEdit}
-                onCreateIssue={isTeamMode || !canEdit ? undefined : handleCreateIssue}
-                onIssueClick={setSelectedIssue}
-                onToggleSelect={handleToggleSelect}
-                hiddenCount={counts.hidden}
-                totalCount={counts.total}
-                onLoadMore={loadMoreDone}
-                isLoadingMore={isLoadingMore}
-                onIssueDrop={handleIssueDrop}
-                onIssueReorder={handleIssueReorder}
-                isCollapsed={collapsedColumns.has(state.id)}
-                onToggleCollapse={handleToggleColumnCollapse}
-                displayOptions={displayOptions}
-              />
-            );
-          })}
-        </Flex>
+        <Card ref={boardContainerRef} variant="ghost" recipe="kanbanBoardRail">
+          <Flex align="start" gap="sm">
+            {workflowStates.map((state, columnIndex: number) => {
+              const counts = statusCounts[state.id] || {
+                total: 0,
+                loaded: 0,
+                hidden: 0,
+              };
+              return (
+                <KanbanColumn
+                  key={state.id}
+                  state={state}
+                  issues={filteredIssuesByStatus[state.id] || []}
+                  columnIndex={columnIndex}
+                  selectionMode={selectionMode}
+                  selectedIssueIds={selectedIssueIds}
+                  focusedIssueId={focusedIssueId}
+                  canEdit={canEdit}
+                  onCreateIssue={isTeamMode || !canEdit ? undefined : handleCreateIssue}
+                  onIssueClick={setSelectedIssue}
+                  onToggleSelect={handleToggleSelect}
+                  hiddenCount={counts.hidden}
+                  totalCount={counts.total}
+                  onLoadMore={loadMoreDone}
+                  isLoadingMore={isLoadingMore}
+                  onIssueDrop={handleIssueDrop}
+                  onIssueReorder={handleIssueReorder}
+                  isCollapsed={collapsedColumns.has(state.id)}
+                  onToggleCollapse={handleToggleColumnCollapse}
+                  displayOptions={displayOptions}
+                />
+              );
+            })}
+          </Flex>
+        </Card>
       ) : (
         /* Swimlane view */
-        <div ref={boardContainerRef} className="px-4 lg:px-6 pb-6">
+        <Card ref={boardContainerRef} variant="ghost" recipe="kanbanSwimlaneWrapper">
           {swimlaneConfigs.map((config) => (
             <SwimlanRow
               key={config.id}
@@ -463,7 +438,7 @@ export function KanbanBoard({
               onIssueReorder={handleIssueReorder}
             />
           ))}
-        </div>
+        </Card>
       )}
 
       {isProjectMode && (

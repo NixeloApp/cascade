@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Hook for keyboard navigation in lists
@@ -13,89 +13,75 @@ export function useListNavigation<T>({
   items: T[];
   onSelect: (item: T, index: number) => void;
   enabled?: boolean;
-  loop?: boolean; // Whether to loop from last to first
+  loop?: boolean;
 }) {
-  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Reset selection when items change
+  // Reset selection on mount
+  useEffect(() => setSelectedIndex(-1), []);
+
+  // Refs for stable keyboard handler
+  const stateRef = useRef({ items, onSelect, selectedIndex });
+  stateRef.current = { items, onSelect, selectedIndex };
+
   useEffect(() => {
-    setSelectedIndex(-1);
-  }, []);
+    if (!enabled) return;
 
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
-      if (!enabled || items.length === 0) return;
+    const getNextIndex = (current: number, length: number) => {
+      if (current < length - 1) return current + 1;
+      return loop ? 0 : current;
+    };
 
-      switch (event.key) {
+    const getPrevIndex = (current: number, length: number) => {
+      if (current > 0) return current - 1;
+      if (current === -1) return length - 1;
+      return loop ? length - 1 : current;
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      const { items: list, onSelect: select, selectedIndex: idx } = stateRef.current;
+      if (list.length === 0) return;
+
+      switch (e.key) {
         case "ArrowDown":
-          event.preventDefault();
-          setSelectedIndex((prev) => {
-            if (prev < items.length - 1) {
-              return prev + 1;
-            }
-            return loop ? 0 : prev;
-          });
+          e.preventDefault();
+          setSelectedIndex((prev) => getNextIndex(prev, list.length));
           break;
-
         case "ArrowUp":
-          event.preventDefault();
-          setSelectedIndex((prev) => {
-            if (prev > 0) {
-              return prev - 1;
-            }
-            if (prev === -1 && items.length > 0) {
-              return items.length - 1;
-            }
-            return loop ? items.length - 1 : prev;
-          });
+          e.preventDefault();
+          setSelectedIndex((prev) => getPrevIndex(prev, list.length));
           break;
-
         case "Enter":
-          if (selectedIndex >= 0 && selectedIndex < items.length) {
-            event.preventDefault();
-            onSelect(items[selectedIndex], selectedIndex);
+          if (idx >= 0 && idx < list.length) {
+            e.preventDefault();
+            select(list[idx], idx);
           }
           break;
-
         case "Escape":
-          event.preventDefault();
+          e.preventDefault();
           setSelectedIndex(-1);
           break;
-
         case "Home":
-          event.preventDefault();
+          e.preventDefault();
           setSelectedIndex(0);
           break;
-
         case "End":
-          event.preventDefault();
-          setSelectedIndex(items.length - 1);
+          e.preventDefault();
+          setSelectedIndex(list.length - 1);
           break;
       }
-    },
-    [enabled, items, selectedIndex, onSelect, loop],
-  );
+    };
 
-  useEffect(() => {
-    if (enabled) {
-      window.addEventListener("keydown", handleKeyDown);
-      return () => window.removeEventListener("keydown", handleKeyDown);
-    }
-  }, [enabled, handleKeyDown]);
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [enabled, loop]);
 
   // Scroll selected item into view
   useEffect(() => {
     if (selectedIndex >= 0 && listRef.current) {
-      const selectedElement = listRef.current.querySelector(
-        `[data-list-index="${selectedIndex}"]`,
-      ) as HTMLElement;
-      if (selectedElement) {
-        selectedElement.scrollIntoView({
-          behavior: "smooth",
-          block: "nearest",
-        });
-      }
+      const el = listRef.current.querySelector(`[data-list-index="${selectedIndex}"]`);
+      (el as HTMLElement | null)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }, [selectedIndex]);
 

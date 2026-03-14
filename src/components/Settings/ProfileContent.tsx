@@ -17,10 +17,12 @@ import { formatDate } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { UserActivityFeed } from "../UserActivityFeed";
+import { Avatar } from "../ui/Avatar";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Input } from "../ui/form";
 import { Grid } from "../ui/Grid";
+import { IconButton } from "../ui/IconButton";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Typography } from "../ui/Typography";
 import { AvatarUploadModal } from "./AvatarUploadModal";
@@ -66,11 +68,11 @@ export function UserStatsCards({ stats }: { stats: UserStats }) {
       {USER_STATS_ITEMS.map((item) => (
         <Card
           key={item.key}
+          recipe="metricTile"
           padding="sm"
-          variant="outline"
-          className="relative overflow-hidden border-ui-border-secondary/75 bg-ui-bg/94 px-3 py-3 text-center sm:px-4"
+          className="relative overflow-hidden text-center"
         >
-          <div className="absolute inset-x-4 top-0 h-px rounded-full bg-brand/60" />
+          <div className="absolute inset-x-4 top-0 h-px bg-brand/60" />
           <Stack gap="xs" align="center" className="relative">
             <Typography variant="h2" color="brand">
               {stats[item.key]}
@@ -99,10 +101,7 @@ export function AccountInfo({
     {
       label: "User ID:",
       value: (
-        <Typography
-          variant="mono"
-          className="max-w-full break-all text-left text-xs sm:max-w-40 sm:text-right"
-        >
+        <Typography variant="mono" className="block max-w-full break-all sm:max-w-40">
           {user._id}
         </Typography>
       ),
@@ -118,30 +117,17 @@ export function AccountInfo({
   ];
 
   return (
-    <Stack
-      gap="md"
-      className={cn(
-        "rounded-container border border-ui-border-secondary/70 bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/68 p-3.5 shadow-soft sm:p-4",
-        className,
-      )}
-    >
+    <Card variant="default" padding="md" className={className}>
       <Typography variant="h5">Account Information</Typography>
       <Stack gap="sm">
         {rows.map((row) => (
-          <Flex
-            key={row.label}
-            direction="column"
-            align="start"
-            justify="between"
-            gap="xs"
-            className="sm:flex-row sm:items-center sm:gap-sm"
-          >
-            <Typography variant="caption">{row.label}</Typography>
+          <Grid key={row.label} cols={1} colsSm={2} gap="xs">
+            <Typography variant="label">{row.label}</Typography>
             {row.value}
-          </Flex>
+          </Grid>
         ))}
       </Stack>
-    </Stack>
+    </Card>
   );
 }
 
@@ -182,43 +168,31 @@ export function ProfileHeader({
   onAvatarClick?: () => void;
 }) {
   return (
-    <Flex
-      align="center"
-      gap="lg"
-      direction="column"
-      className="items-start sm:flex-row sm:items-center sm:gap-xl"
-    >
+    <Grid cols={1} colsSm={5} gap="lg">
       {/* Avatar */}
-      <div className="relative group">
-        {user.image ? (
-          <img
-            src={user.image}
-            alt={user.name || "User"}
-            className="h-20 w-20 rounded-full border border-ui-border/70 object-cover shadow-soft sm:h-24 sm:w-24"
-          />
-        ) : (
-          <Flex
-            align="center"
-            justify="center"
-            className="h-20 w-20 rounded-full bg-brand text-2xl font-bold text-brand-foreground shadow-card sm:h-24 sm:w-24 sm:text-3xl"
-          >
-            {(user.name || user.email || "?").charAt(0).toUpperCase()}
-          </Flex>
-        )}
+      <div className="group relative">
+        <Avatar
+          src={user.image}
+          name={user.name}
+          email={user.email}
+          variant="brand"
+          className="h-20 w-20 shadow-card sm:h-24 sm:w-24"
+        />
         {isOwnProfile && onAvatarClick && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-ui-bg border border-ui-border shadow-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:focus:opacity-100 transition-opacity"
+          <IconButton
+            variant="solid"
+            size="sm"
+            className="absolute bottom-0 right-0"
             onClick={onAvatarClick}
+            tooltip="Change avatar"
           >
             <Camera className="h-4 w-4" />
-          </Button>
+          </IconButton>
         )}
       </div>
 
       {/* User Info */}
-      <FlexItem flex="1" className="w-full">
+      <FlexItem flex="1" className="w-full sm:col-span-4">
         {isEditing ? (
           <Stack gap="sm">
             <Flex gap="sm">
@@ -260,10 +234,8 @@ export function ProfileHeader({
           </Stack>
         ) : (
           <>
-            <Typography variant="h3" className="tracking-tight text-left">
-              {user.name || "Anonymous User"}
-            </Typography>
-            <Typography variant="caption" className="max-w-lg text-left">
+            <Typography variant="h3">{user.name || "Anonymous User"}</Typography>
+            <Typography variant="caption" className="max-w-lg">
               {user.email}
             </Typography>
             {isOwnProfile && (
@@ -274,7 +246,7 @@ export function ProfileHeader({
           </>
         )}
       </FlexItem>
-    </Flex>
+    </Grid>
   );
 }
 
@@ -335,13 +307,9 @@ function LoadedProfileContent({
     isOwnProfile && "_creationTime" in viewUser && typeof viewUser._creationTime === "number";
 
   return (
-    <Card
-      variant="outline"
-      padding="none"
-      className="overflow-hidden border-ui-border-secondary/90 bg-linear-to-b from-ui-bg-elevated/98 via-ui-bg-elevated/96 to-ui-bg-soft/80 shadow-card"
-    >
+    <Card variant="default" padding="none" className="overflow-hidden">
       {isOwnProfile && (
-        <div className="relative group">
+        <div className="group relative">
           <div
             className={cn(
               "h-8 w-full border-b border-ui-border-secondary/60 bg-linear-to-r from-brand/18 via-brand-subtle/80 to-accent/14 sm:h-12",
@@ -353,18 +321,19 @@ function LoadedProfileContent({
             )}
           </div>
           <Button
-            variant="ghost"
+            chrome="framed"
+            chromeSize="compactPill"
             size="sm"
-            className="absolute bottom-2 right-2 h-8 rounded-full border border-ui-border bg-ui-bg/82 px-3 shadow-sm backdrop-blur-sm transition-opacity opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:focus:opacity-100"
+            className="absolute bottom-2 right-2 backdrop-blur-sm"
             onClick={onCoverImageClick}
           >
-            <ImageIcon className="h-4 w-4 mr-2" />
+            <ImageIcon className="h-4 w-4" />
             {coverImageUrl ? "Change" : "Add"} cover
           </Button>
         </div>
       )}
 
-      <div className="p-3 sm:p-5">
+      <Card padding="md" radius="none" variant="ghost">
         <Stack gap="md">
           <Grid
             cols={1}
@@ -374,11 +343,8 @@ function LoadedProfileContent({
           >
             <Card
               variant="outline"
-              padding="none"
-              className={cn(
-                "border-ui-border-secondary/80 bg-linear-to-b from-ui-bg-elevated/98 via-ui-bg-elevated/96 to-ui-bg-soft/74 p-4 shadow-soft sm:p-6",
-                showAccountInfo && "lg:col-span-3",
-              )}
+              padding="lg"
+              className={showAccountInfo ? "lg:col-span-3" : undefined}
             >
               <ProfileHeader
                 user={viewUser}
@@ -423,18 +389,14 @@ function LoadedProfileContent({
 
           {userStats && <UserStatsCards stats={userStats} />}
 
-          <Card
-            padding="none"
-            variant="outline"
-            className="border-ui-border-secondary/80 bg-linear-to-br from-ui-bg-elevated/98 via-ui-bg-elevated/94 to-ui-bg-soft/72 p-3.5 shadow-soft sm:p-4"
-          >
+          <Card padding="md" variant="outline">
             <Stack gap="sm">
               <Typography variant="h5">Recent Activity</Typography>
               <UserActivityFeed userId={viewUser._id} limit={10} />
             </Stack>
           </Card>
         </Stack>
-      </div>
+      </Card>
     </Card>
   );
 }
