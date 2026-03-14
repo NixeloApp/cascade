@@ -264,8 +264,9 @@ describe("UserManagement", () => {
     mockUseOrganization.mockReturnValue({
       organizationId: "org_123" as never,
       organizationName: "Test Org",
-      organizationSlug: "test-org",
-      role: "admin",
+      orgSlug: "test-org",
+      userRole: "admin",
+      billingEnabled: true,
     });
 
     let queryCallCount = 0;

@@ -163,8 +163,9 @@ describe("OrganizationSettings", () => {
     mockUseOrganization.mockReturnValue({
       organizationId: "org_123" as never,
       organizationName: "Test Organization",
-      organizationSlug: "test-org",
-      role: "admin",
+      orgSlug: "test-org",
+      userRole: "admin",
+      billingEnabled: true,
     });
 
     mockUseAuthenticatedQuery.mockReturnValue(mockOrganization);

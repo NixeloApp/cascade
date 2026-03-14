@@ -103,17 +103,19 @@ describe("OAuthHealthDashboard", () => {
     mockUseOrganization.mockReturnValue({
       organizationId: "org_123" as never,
       organizationName: "Test Org",
-      organizationSlug: "test-org",
-      role: "admin",
+      orgSlug: "test-org",
+      userRole: "admin",
+      billingEnabled: true,
     });
   });
 
   it("returns null when no organizationId", () => {
     mockUseOrganization.mockReturnValue({
-      organizationId: null as never,
-      organizationName: null,
-      organizationSlug: null,
-      role: null,
+      organizationId: "" as never,
+      organizationName: "",
+      orgSlug: "",
+      userRole: "member",
+      billingEnabled: false,
     });
 
     const { container } = render(<OAuthHealthDashboard />);
