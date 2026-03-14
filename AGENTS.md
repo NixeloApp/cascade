@@ -31,6 +31,19 @@ Nixelo is a modern web application built with the following technologies:
 - **Verify File Paths**: Ensure imports point to existing files. Use `@/` alias for `src/` where configured.
 - **Context Awareness**: Read `README.md` and existing code to understand conventions before changing them.
 
+## AI-Generated Code Warning
+
+Much of this codebase was AI-generated and may contain design inconsistencies or "slop":
+- Card recipes that should be simple divs
+- Nested Cards that look off (banned by validator - 72 files need cleanup)
+- Inconsistent visual patterns across similar components
+- Over-engineered structures where simple solutions would work
+
+**If something looks visually wrong or smells like code smell, it probably is.** There was no intentional design - AI is the designer here. When you encounter these issues:
+1. Flag it to the human
+2. Add a `/todo` item for visual polish
+3. Don't assume existing patterns are intentional or correct
+
 ## Code Quality Rules
 
 ### Forbidden Patterns (Never Introduce)
