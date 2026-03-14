@@ -14,7 +14,7 @@ import {
   workspaceAdminMutation,
   workspaceQuery,
 } from "./customFunctions";
-import { BOUNDED_LIST_LIMIT, efficientCount } from "./lib/boundedQueries";
+import { BOUNDED_LIST_LIMIT, collectInBatches, efficientCount } from "./lib/boundedQueries";
 import { conflict, forbidden, notFound } from "./lib/errors";
 import { isOrganizationAdmin } from "./lib/organizationAccess";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
@@ -395,11 +395,15 @@ export const getCrossTeamDependencies = workspaceQuery({
     const rawLimit = args.limit ?? 200;
     const limit = Math.min(Math.max(rawLimit, 1), BOUNDED_LIST_LIMIT * 5);
 
-    const workspaceIssues = await ctx.db
-      .query("issues")
-      .withIndex("by_workspace", (q) => q.eq("workspaceId", ctx.workspaceId))
-      .filter(notDeleted)
-      .take(limit);
+    const workspaceIssues = await collectInBatches(
+      (cursor) =>
+        ctx.db
+          .query("issues")
+          .withIndex("by_workspace", (q) => q.eq("workspaceId", ctx.workspaceId))
+          .filter(notDeleted)
+          .paginate({ numItems: BOUNDED_LIST_LIMIT, cursor }),
+      { maxBatches: 20 },
+    );
 
     const issueMap = new Map(workspaceIssues.map((issue) => [issue._id, issue]));
 

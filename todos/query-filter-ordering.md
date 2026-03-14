@@ -1,17 +1,17 @@
 # Query Filter Ordering Issues
 
 > **Priority:** P0
-> **Status:** Active
+> **Status:** Complete
 > **Last Updated:** 2026-03-13
-> **Verification Summary:** `1` verified unresolved query-shape issue remains.
+> **Verification Summary:** `0` verified unresolved query-shape issues remain.
 
-## Remaining Queries
+## Completed Query Fixes
 
-### workspaces.ts - Cross-team dependencies
-
-- Takes a limit before evaluating link type and cross-team conditions.
-- Fix: filter before limit or add an appropriate index.
+- `workspaces.ts - Backlog filter` now paginates unsprinted workspace issues instead of truncating before backlog filtering.
+- `workspaces.ts - Sprint issue count` now uses `efficientCount` instead of capped `.take(...).length`.
+- `workspaces.ts - Cross-team dependencies` now evaluates all workspace issues in bounded batches before applying dependency filters.
+- `invoices.ts - Client filter` now uses organization/client indexes instead of filtering after the bounded organization query.
 
 ## Validation Requirement
 
-- [ ] Add tests with datasets larger than the active limit so the corrected query paths prove they do not truncate results.
+- [x] Added tests with datasets larger than the active limit so the corrected query paths prove they do not truncate results.

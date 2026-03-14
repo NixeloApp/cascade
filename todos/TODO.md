@@ -12,9 +12,9 @@ All open feature specifications and roadmap items are in [`/todos/README.md`](./
 
 ## Top Priority Docs
 
-- [query-filter-ordering.md](./query-filter-ordering.md)
 - [validator-exceptions-burndown.md](./validator-exceptions-burndown.md)
 - [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md)
+- [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md)
 
 ## Active P0 Docs
 
