@@ -35,7 +35,7 @@ Nixelo is a modern web application built with the following technologies:
 
 Much of this codebase was AI-generated and may contain design inconsistencies or "slop":
 - Card recipes that should be simple divs
-- Nested Cards that look off (banned by validator - 72 files need cleanup)
+- Nested Cards that look off
 - Inconsistent visual patterns across similar components
 - Over-engineered structures where simple solutions would work
 
