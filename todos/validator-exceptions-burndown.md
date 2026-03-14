@@ -14,8 +14,8 @@ Keep the validator suite green while eliminating the remaining allowlists and ba
 ### Test coverage baseline
 
 - **File:** `scripts/validate/test-coverage-baseline.js`
-- **Remaining entries:** `57`
-- **Breakdown:** `47` component files, `0` hooks, `10` Convex files
+- **Remaining entries:** `56`
+- **Breakdown:** `46` component files, `0` hooks, `10` Convex files
 - **Fix:** add tests or reduce the validator target surface until the baseline reaches `0`.
 
 ## Non-Goals
