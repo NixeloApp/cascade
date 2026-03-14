@@ -43,7 +43,6 @@ const ALLOWLIST = [
   "convex/issuesLoadMore.test.ts",
   "convex/issues/roadmap.test.ts",
   "convex/issues/roadmapPagination.test.ts",
-  "convex/lib/softDeleteHelpers.test.ts",
   "convex/notificationsPerf.test.ts",
 ];
 

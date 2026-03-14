@@ -95,7 +95,7 @@ describe("softDeleteHelpers", () => {
 
   describe("getTimeSinceDeletion", () => {
     it("should return time since deletion for deleted record", () => {
-      const deletedAt = Date.now() - 5000; // 5 seconds ago
+      const deletedAt = Date.now() - 5 * SECOND;
       const record = {
         isDeleted: true,
         deletedAt,
@@ -104,8 +104,8 @@ describe("softDeleteHelpers", () => {
       const timeSince = getTimeSinceDeletion(record);
 
       expect(timeSince).not.toBeNull();
-      expect(timeSince).toBeGreaterThanOrEqual(5000);
-      expect(timeSince).toBeLessThan(6000);
+      expect(timeSince).toBeGreaterThanOrEqual(5 * SECOND);
+      expect(timeSince).toBeLessThan(6 * SECOND);
     });
 
     it("should return null for non-deleted record", () => {
