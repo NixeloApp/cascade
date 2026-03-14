@@ -57,7 +57,6 @@ export const TEST_COVERAGE_BASELINE = [
   "src/components/ClientPortal/PortalTimeline.tsx",
   "src/components/CommandPalette.tsx",
   "src/components/CreateTeamModal.tsx",
-  "src/components/CreateWorkspaceModal.tsx",
   "src/components/FuzzySearch/AssigneeSearchDropdown.example.tsx",
   "src/components/ImportExport/ExportPanel.tsx",
   "src/components/ImportExport/ImportPanel.tsx",
