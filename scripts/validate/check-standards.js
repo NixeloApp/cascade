@@ -11,13 +11,7 @@ import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 export function run() {
   const SRC_DIR = path.join(ROOT, "src");
-  const IGNORE_DIRS = [
-    "src/lib",
-    "src/components/ui",
-    "src/components/landing",
-    "src/components/Calendar/shadcn-calendar",
-    "src/components/Kanban", // Contains complex drag-and-drop logic that uses raw divs
-  ];
+  const IGNORE_DIRS = ["src/lib", "src/components/ui", "src/components/Calendar/shadcn-calendar"];
 
   // Files/directories where raw <a> tags are allowed (external links, downloads, etc.)
   const ALLOW_RAW_LINKS_PATTERNS = [
@@ -93,21 +87,11 @@ export function run() {
   const FLEX_ITEM_PATTERN =
     /^(flex-(1|auto|initial|none)|grow|grow-0|shrink|shrink-0|self-(auto|start|center|end|stretch|baseline))$/;
 
-  // Elements that should NOT have font styles (use Typography, Badge, etc. instead)
-  const RAW_ELEMENTS = new Set([
-    "div",
-    "span",
-    "section",
-    "article",
-    "aside",
-    "header",
-    "footer",
-    "main",
-    "nav",
-    "li",
-    "ul",
-    "ol",
-  ]);
+  // Elements that should NOT have font styles or flex item classes
+  // (use Typography, Badge, FlexItem, etc. instead)
+  // Note: Semantic elements (section, article, aside, etc.) are NOT included
+  // because they should remain semantic and can have flex item classes
+  const RAW_ELEMENTS = new Set(["div", "span", "li", "ul", "ol"]);
 
   function getClassText(node) {
     let classText = "";
