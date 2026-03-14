@@ -40,7 +40,6 @@ const ALLOWLIST = [
   // Test files with existing violations - to be fixed incrementally
   "src/components/Calendar/RoadmapView.test.tsx",
   "src/lib/formatting.test.ts",
-  "convex/issues/roadmap.test.ts",
   "convex/issues/roadmapPagination.test.ts",
 ];
 
