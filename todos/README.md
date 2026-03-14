@@ -14,7 +14,7 @@
 ## Current Focus
 
 1. [validator-exceptions-burndown.md](./validator-exceptions-burndown.md)
-   - Burn down the remaining `161`-file test-coverage baseline.
+   - Burn down the remaining `160`-file test-coverage baseline.
 2. [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md)
    - Use screenshot review to drive a broader visual facelift across the weakest product surfaces.
 3. [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md)
