@@ -9,6 +9,8 @@
  * 2. Generic CSS-class selectors on page (page.locator(".animate-pulse"))
  * 3. `waitForSelector` usage (use locator assertions instead)
  * 4. `waitForLoadState("networkidle")` — flaky, prefer element assertions
+ * 5. Raw string getByTestId (use TEST_IDS constants)
+ * 6. Unscoped .first() calls on page-level locators
  */
 
 import fs from "node:fs";
@@ -55,6 +57,18 @@ const SKIP_FILES = new Set([
   "e2e/fixtures.ts", // Test fixture definitions
   "e2e/screenshot-pages.ts", // Screenshot utility with scoped spinner detection
 ]);
+
+// ── Directories to skip for certain checks ──
+const SKIP_TESTID_CHECK_DIRS = [
+  "/utils/", // Utility helpers define selectors dynamically
+  "/pages/", // Page objects define selectors as properties
+];
+
+// ── Skip .first() check in page objects (they define scoped selectors) ──
+const SKIP_FIRST_CHECK_DIRS = [
+  "/pages/", // Page object selectors are intentionally defined with .first()
+  "/utils/", // Utility helpers handle edge cases with .first()
+];
 
 export function run() {
   const E2E_DIR = path.join(ROOT, "e2e");
@@ -123,6 +137,35 @@ export function run() {
           lineNum,
           `waitForLoadState("networkidle") is flaky. Prefer waiting for a specific element assertion.`,
         );
+      }
+
+      // ── Rule 5: Raw string getByTestId (only in spec files) ──
+      // Matches: getByTestId("some-id") but not getByTestId(TEST_IDS.X)
+      if (!SKIP_TESTID_CHECK_DIRS.some((d) => rel.includes(d))) {
+        const testIdMatch = line.match(/getByTestId\(\s*["'`]([^"'`]+)["'`]\s*\)/);
+        if (testIdMatch) {
+          report(
+            filePath,
+            lineNum,
+            `Raw string getByTestId("${testIdMatch[1]}") — use TEST_IDS constant instead.`,
+          );
+        }
+      }
+
+      // ── Rule 6: Unscoped .first() on page locator (spec files only) ──
+      // Matches: page.locator(...).first() or page.getBy...().first()
+      // Skip page objects and utils - they define selectors intentionally
+      if (!SKIP_FIRST_CHECK_DIRS.some((d) => rel.includes(d))) {
+        if (/page\.(locator|getBy\w+)\([^)]+\)\.first\(\)/.test(line)) {
+          // Already caught by Rule 1 if it's a broad tag, but catch other cases too
+          if (!tagFirstMatch) {
+            report(
+              filePath,
+              lineNum,
+              `Unscoped .first() on page-level locator. Scope to a container or use more specific selector.`,
+            );
+          }
+        }
       }
     }
   }
