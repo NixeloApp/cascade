@@ -193,9 +193,10 @@ export const getProjectSuggestions = authenticatedQuery({
     }
 
     // Filter out responded suggestions unless requested (at query level)
+    // Use neq(true) instead of eq(false) because fields may be undefined for new suggestions
     if (!args.includeResponded) {
       query = query.filter((q) =>
-        q.and(q.eq(q.field("accepted"), false), q.eq(q.field("dismissed"), false)),
+        q.and(q.neq(q.field("accepted"), true), q.neq(q.field("dismissed"), true)),
       );
     }
 
