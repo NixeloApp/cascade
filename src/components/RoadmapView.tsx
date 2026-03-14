@@ -10,7 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { DAY } from "@convex/lib/timeUtils";
 import type { FunctionReturnType } from "convex/server";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { List, type ListImperativeAPI } from "react-window";
 import { PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
@@ -223,6 +223,48 @@ function getDependencyPath(line: DependencyLine) {
         ${line.toX}% ${line.toY}`;
 }
 
+/** Build a map of issue ID to array index for O(1) lookups */
+function buildIssueIndexMap(issues: RoadmapTimelineIssue[] | undefined) {
+  if (!issues) return new Map<string, number>();
+  const map = new Map<string, number>();
+  issues.forEach((issue, index) => {
+    map.set(issue._id, index);
+  });
+  return map;
+}
+
+/** Compute dependency lines from issue links */
+function computeDependencyLines({
+  showDependencies,
+  issueLinks,
+  filteredIssues,
+  issueIndexMap,
+  getPositionOnTimeline,
+}: {
+  showDependencies: boolean;
+  issueLinks: FunctionReturnType<typeof api.issueLinks.getForProject> | undefined;
+  filteredIssues: RoadmapTimelineIssue[] | undefined;
+  issueIndexMap: Map<string, number>;
+  getPositionOnTimeline: (date: number) => number;
+}): DependencyLine[] {
+  if (!showDependencies || !issueLinks?.links || !filteredIssues) return [];
+
+  const rowHeight = 56;
+
+  return issueLinks.links
+    .filter((link) => link.linkType === "blocks")
+    .map((link) =>
+      buildDependencyLine({
+        issueIndexMap,
+        issues: filteredIssues,
+        link,
+        rowHeight,
+        getPositionOnTimeline,
+      }),
+    )
+    .filter((line): line is DependencyLine => line !== null);
+}
+
 /** Gantt-style roadmap view with issue timeline bars and dependency lines. */
 export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapViewProps) {
   const [selectedIssue, setSelectedIssue] = useState<Id<"issues"> | null>(null);
@@ -256,43 +298,23 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   type RoadmapIssue = FunctionReturnType<typeof api.issues.listRoadmapIssues>[number];
   type Epic = NonNullable<FunctionReturnType<typeof api.issues.listEpics>>[number];
 
-  const { startOfMonth, timelineMonths, totalDays } = useMemo(() => {
-    const today = new Date();
-    const start = new Date(today.getFullYear(), today.getMonth(), 1);
-    const end = new Date(today.getFullYear(), today.getMonth() + timelineSpan, 0);
-    const months = Array.from(
-      { length: timelineSpan },
-      (_, index) => new Date(today.getFullYear(), today.getMonth() + index, 1),
-    );
-    const days = Math.max(1, Math.floor((end.getTime() - start.getTime()) / DAY));
-
-    return {
-      startOfMonth: start,
-      timelineMonths: months,
-      totalDays: days,
-    };
-  }, [timelineSpan]);
-
-  const getPositionOnTimeline = useCallback(
-    (date: number) => {
-      const issueDate = new Date(date);
-      const daysSinceStart = Math.floor((issueDate.getTime() - startOfMonth.getTime()) / DAY);
-      return (daysSinceStart / totalDays) * 100;
-    },
-    [startOfMonth, totalDays],
+  const today = new Date();
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const endOfTimespan = new Date(today.getFullYear(), today.getMonth() + timelineSpan, 0);
+  const timelineMonths = Array.from(
+    { length: timelineSpan },
+    (_, index) => new Date(today.getFullYear(), today.getMonth() + index, 1),
+  );
+  const totalDays = Math.max(
+    1,
+    Math.floor((endOfTimespan.getTime() - startOfMonth.getTime()) / DAY),
   );
 
-  // Convert percentage position back to timestamp
-  const getDateFromPosition = useCallback(
-    (percent: number) => {
-      const days = Math.round((percent / 100) * totalDays);
-      const date = new Date(startOfMonth.getTime() + days * DAY);
-      // Set to end of day for due dates
-      date.setHours(23, 59, 59, 999);
-      return date.getTime();
-    },
-    [totalDays, startOfMonth],
-  );
+  const getPositionOnTimeline = (date: number) => {
+    const issueDate = new Date(date);
+    const daysSinceStart = Math.floor((issueDate.getTime() - startOfMonth.getTime()) / DAY);
+    return (daysSinceStart / totalDays) * 100;
+  };
 
   // Reference to timeline container for calculating positions
   const timelineRef = useRef<HTMLDivElement>(null);
@@ -334,12 +356,27 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
       if (!container) return;
 
       const rect = container.getBoundingClientRect();
+
+      // Inline position calculations to avoid dependency issues
+      const getPosition = (date: number) => {
+        const issueDate = new Date(date);
+        const daysSinceStart = Math.floor((issueDate.getTime() - startOfMonth.getTime()) / DAY);
+        return (daysSinceStart / totalDays) * 100;
+      };
+
+      const getDate = (percent: number) => {
+        const days = Math.round((percent / 100) * totalDays);
+        const date = new Date(startOfMonth.getTime() + days * DAY);
+        date.setHours(23, 59, 59, 999);
+        return date.getTime();
+      };
+
       const resizeUpdate = buildResizePatch({
         resizing,
         clientX: e.clientX,
         containerWidth: rect.width,
-        getPositionOnTimeline,
-        getDateFromPosition,
+        getPositionOnTimeline: getPosition,
+        getDateFromPosition: getDate,
       });
 
       if (resizeUpdate) {
@@ -359,7 +396,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [resizing, getDateFromPosition, getPositionOnTimeline, updateIssue]);
+  }, [resizing, startOfMonth, totalDays, updateIssue]);
 
   // Keyboard navigation
   const listRef = useRef<ListImperativeAPI>(null);
@@ -376,36 +413,16 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   }, [selectedIndex]);
 
   // Create issue index map for dependency line rendering
-  // Memoized to avoid O(n) recomputation on every render
-  const issueIndexMap = useMemo(() => {
-    if (!filteredIssues) return new Map<string, number>();
-    const map = new Map<string, number>();
-    filteredIssues.forEach((issue, index) => {
-      map.set(issue._id, index);
-    });
-    return map;
-  }, [filteredIssues]);
+  const issueIndexMap = buildIssueIndexMap(filteredIssues);
 
   // Calculate dependency lines for "blocks" relationships
-  // Memoized to avoid O(links) recomputation on every render
-  const dependencyLines = useMemo((): DependencyLine[] => {
-    if (!showDependencies || !issueLinks?.links || !filteredIssues) return [];
-
-    const rowHeight = 56;
-
-    return issueLinks.links
-      .filter((link) => link.linkType === "blocks")
-      .map((link) =>
-        buildDependencyLine({
-          issueIndexMap,
-          issues: filteredIssues,
-          link,
-          rowHeight,
-          getPositionOnTimeline,
-        }),
-      )
-      .filter((line): line is DependencyLine => line !== null);
-  }, [showDependencies, issueLinks, filteredIssues, issueIndexMap, getPositionOnTimeline]);
+  const dependencyLines = computeDependencyLines({
+    showDependencies,
+    issueLinks,
+    filteredIssues,
+    issueIndexMap,
+    getPositionOnTimeline,
+  });
 
   // Row renderer for virtualization
   type RowData = {

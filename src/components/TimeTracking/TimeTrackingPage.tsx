@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { MONTH, WEEK } from "@convex/lib/timeUtils";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { formatCurrency, formatDurationHuman } from "@/lib/formatting";
@@ -375,7 +375,7 @@ export function TimeTrackingPage({ projectId, userRole, isGlobalAdmin }: TimeTra
   const canSeeSensitiveTabs = isGlobalAdmin || userRole === "admin";
 
   // Compute date bounds at render time to stay current in long-lived sessions
-  const { startDate, endDate } = useMemo(() => getDateRangeBounds(dateRange), [dateRange]);
+  const { startDate, endDate } = getDateRangeBounds(dateRange);
   const rangeLabel = DATE_RANGE_LABELS[dateRange];
 
   // Use aggregate query for accurate totals (no pagination limits)

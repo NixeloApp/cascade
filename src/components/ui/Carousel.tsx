@@ -103,42 +103,46 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
 
     const activeIndex = controlledIndex ?? internalIndex;
 
-    // Stable callback to set slide count from CarouselContent
-    const registerSlide = React.useCallback((count: number) => {
+    // Callback to set slide count from CarouselContent
+    const registerSlide = (count: number) => {
       setTotalSlides(count);
-    }, []);
+    };
 
-    const goToSlide = React.useCallback(
-      (index: number) => {
-        const newIndex = loop
-          ? (index + totalSlides) % totalSlides
-          : Math.max(0, Math.min(index, totalSlides - 1));
-        setInternalIndex(newIndex);
-        onSlideChange?.(newIndex);
-      },
-      [totalSlides, loop, onSlideChange],
-    );
+    const goToSlide = (index: number) => {
+      const newIndex = loop
+        ? (index + totalSlides) % totalSlides
+        : Math.max(0, Math.min(index, totalSlides - 1));
+      setInternalIndex(newIndex);
+      onSlideChange?.(newIndex);
+    };
 
-    const goToPrevious = React.useCallback(() => {
+    const goToPrevious = () => {
       if (activeIndex === 0 && !loop) return;
       goToSlide(activeIndex - 1);
-    }, [activeIndex, loop, goToSlide]);
+    };
 
-    const goToNext = React.useCallback(() => {
+    const goToNext = () => {
       if (activeIndex === totalSlides - 1 && !loop) return;
       goToSlide(activeIndex + 1);
-    }, [activeIndex, totalSlides, loop, goToSlide]);
+    };
 
     // Auto-play functionality
     React.useEffect(() => {
       if (!autoPlay || totalSlides <= 1) return;
 
       const interval = setInterval(() => {
-        goToNext();
+        // Inline goToNext logic to avoid dependency issues
+        setInternalIndex((current) => {
+          const nextIndex = current + 1;
+          if (nextIndex >= totalSlides) {
+            return loop ? 0 : current;
+          }
+          return nextIndex;
+        });
       }, autoPlay);
 
       return () => clearInterval(interval);
-    }, [autoPlay, totalSlides, goToNext]);
+    }, [autoPlay, totalSlides, loop]);
 
     const contextValue = {
       activeIndex,

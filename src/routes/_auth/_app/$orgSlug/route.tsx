@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import type { FunctionReturnType } from "convex/server";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { AppHeader, AppSidebar } from "@/components/App";
 import { useCommands } from "@/components/CommandPalette";
 import { CreateProjectFromTemplate } from "@/components/CreateProjectFromTemplate";
@@ -169,7 +169,7 @@ function OrganizationLayoutInner() {
   // Document creation mutation
   const { mutate: createDocument } = useAuthenticatedMutation(api.documents.create);
 
-  const handleCreateDocument = useCallback(async () => {
+  const handleCreateDocument = async () => {
     try {
       const { documentId } = await createDocument({
         title: "Untitled Document",
@@ -184,12 +184,27 @@ function OrganizationLayoutInner() {
     } catch (error) {
       showError(error, "Failed to create document");
     }
-  }, [createDocument, navigate, organizationId, orgSlug]);
+  };
 
   // Listen for keyboard shortcut events
   useEffect(() => {
     const handleCreateIssue = () => setShowCreateIssue(true);
-    const handleCreateDoc = () => void handleCreateDocument();
+    const handleCreateDoc = async () => {
+      try {
+        const { documentId } = await createDocument({
+          title: "Untitled Document",
+          isPublic: false,
+          organizationId,
+        });
+        navigate({
+          to: ROUTES.documents.detail.path,
+          params: { orgSlug, id: documentId },
+        });
+        showSuccess("Document created");
+      } catch (error) {
+        showError(error, "Failed to create document");
+      }
+    };
     const handleCreateProj = () => setShowCreateProject(true);
 
     window.addEventListener("nixelo:create-issue", handleCreateIssue);
@@ -201,7 +216,7 @@ function OrganizationLayoutInner() {
       window.removeEventListener("nixelo:create-document", handleCreateDoc);
       window.removeEventListener("nixelo:create-project", handleCreateProj);
     };
-  }, [handleCreateDocument]);
+  }, [createDocument, navigate, organizationId, orgSlug]);
 
   // Build keyboard shortcuts (need orgSlug for navigation)
   const shortcuts = createKeyboardShortcuts({

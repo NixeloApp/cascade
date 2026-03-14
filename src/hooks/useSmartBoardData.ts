@@ -8,7 +8,7 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import type { EnrichedIssue } from "../../convex/lib/issueHelpers";
 
@@ -114,6 +114,17 @@ export function mergeIssuesByStatus(
   }
 
   return result;
+}
+
+/** Get cursor for loading more "done" issues, based on oldest loaded issue */
+function getOldestIssueCursor(
+  allLoadedIssues: EnrichedIssue[],
+): { timestamp: number; id: string } | undefined {
+  if (allLoadedIssues.length === 0) return undefined;
+  const oldest = allLoadedIssues.reduce((min, issue) =>
+    issue.updatedAt < min.updatedAt ? issue : min,
+  );
+  return { timestamp: oldest.updatedAt, id: oldest._id.toString() };
 }
 
 export interface UseSmartBoardDataOptions {
@@ -313,41 +324,22 @@ export function useSmartBoardData({
     setLoadMoreCursor(undefined);
   }
 
-  const issuesByStatus = useMemo(
-    () => mergeIssuesByStatus(smartData?.issuesByStatus, additionalDoneIssues),
-    [smartData?.issuesByStatus, additionalDoneIssues],
-  );
+  const issuesByStatus = mergeIssuesByStatus(smartData?.issuesByStatus, additionalDoneIssues);
+  const statusCounts = calculateStatusCounts(countsData, issuesByStatus);
+  const doneStatusesWithMore = findDoneStatusesWithMore(statusCounts);
+  const hiddenDoneCount = calculateHiddenDoneCount(statusCounts);
 
-  const statusCounts = useMemo(
-    () => calculateStatusCounts(countsData, issuesByStatus),
-    [countsData, issuesByStatus],
-  );
+  const allLoadedIssues = getAllLoadedIssues(additionalDoneIssues, smartData);
+  const oldestIssueCursor = getOldestIssueCursor(allLoadedIssues);
 
-  const doneStatusesWithMore = useMemo(
-    () => findDoneStatusesWithMore(statusCounts),
-    [statusCounts],
-  );
-
-  const hiddenDoneCount = useMemo(() => calculateHiddenDoneCount(statusCounts), [statusCounts]);
-
-  const oldestIssueCursor = useMemo(() => {
-    const allLoadedIssues = getAllLoadedIssues(additionalDoneIssues, smartData);
-    if (allLoadedIssues.length === 0) return undefined;
-
-    const oldest = allLoadedIssues.reduce((min: EnrichedIssue, issue: EnrichedIssue) =>
-      issue.updatedAt < min.updatedAt ? issue : min,
-    );
-    return { timestamp: oldest.updatedAt, id: oldest._id.toString() };
-  }, [additionalDoneIssues, smartData]);
-
-  const loadMoreDone = useCallback(() => {
+  const loadMoreDone = () => {
     // Double-check with ref and state to prevent race conditions from rapid clicks
     if (loadingRef.current || isLoadingMore) return;
 
     loadingRef.current = true;
     setIsLoadingMore(true);
     setLoadMoreCursor(oldestIssueCursor);
-  }, [isLoadingMore, oldestIssueCursor]);
+  };
 
   return {
     issuesByStatus,

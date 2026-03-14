@@ -10,7 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { DAY } from "@convex/lib/timeUtils";
 import type { FunctionReturnType } from "convex/server";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -78,32 +78,29 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
   type Sprint = NonNullable<FunctionReturnType<typeof api.sprints.listByProject>>[number];
   type Issue = NonNullable<FunctionReturnType<typeof api.issues.listRoadmapIssues>>[number];
 
-  const sortedItems = useMemo(() => {
-    // Map to roadmap items (no filtering needed - backend already filtered)
-    const roadmapItems: RoadmapItem[] = [
-      ...(sprints?.map((sprint: Sprint) => ({
-        type: "sprint" as const,
-        id: sprint._id,
-        title: sprint.name,
-        startDate: sprint.startDate as number,
-        endDate: sprint.endDate as number,
-        status: sprint.status,
-      })) || []),
-      ...(issues?.map((issue: Issue) => ({
-        type: "issue" as const,
-        id: issue._id,
-        title: `${issue.key}: ${issue.title}`,
-        dueDate: issue.dueDate as number,
-        startDate: issue._creationTime,
-        endDate: issue.dueDate as number,
-        issueType: issue.type,
-        priority: issue.priority,
-        status: issue.status,
-      })) || []),
-    ];
-
-    return roadmapItems.slice().sort((a, b) => a.startDate - b.startDate);
-  }, [issues, sprints]);
+  // Map to roadmap items (no filtering needed - backend already filtered)
+  const roadmapItems: RoadmapItem[] = [
+    ...(sprints?.map((sprint: Sprint) => ({
+      type: "sprint" as const,
+      id: sprint._id,
+      title: sprint.name,
+      startDate: sprint.startDate as number,
+      endDate: sprint.endDate as number,
+      status: sprint.status,
+    })) || []),
+    ...(issues?.map((issue: Issue) => ({
+      type: "issue" as const,
+      id: issue._id,
+      title: `${issue.key}: ${issue.title}`,
+      dueDate: issue.dueDate as number,
+      startDate: issue._creationTime,
+      endDate: issue.dueDate as number,
+      issueType: issue.type,
+      priority: issue.priority,
+      status: issue.status,
+    })) || []),
+  ];
+  const sortedItems = roadmapItems.slice().sort((a, b) => a.startDate - b.startDate);
 
   const handlePrevious = () => {
     const newDate = new Date(currentDate);

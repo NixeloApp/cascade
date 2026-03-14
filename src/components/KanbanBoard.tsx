@@ -11,7 +11,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import type { WorkflowState } from "@convex/shared/types";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useBoardDragAndDrop } from "@/hooks/useBoardDragAndDrop";
 import { useBoardHistory } from "@/hooks/useBoardHistory";
@@ -143,6 +143,62 @@ function applyFilters(
   );
 }
 
+/** Toggle an item in a Set, returning new Set */
+function toggleSetItem<T>(set: Set<T>, item: T): Set<T> {
+  const next = new Set(set);
+  if (next.has(item)) {
+    next.delete(item);
+  } else {
+    next.add(item);
+  }
+  return next;
+}
+
+/** Build swimlane configuration from issues */
+function buildSwimlaneMeta(allIssues: EnrichedIssue[], swimlaneGroupBy: SwimlanGroupBy) {
+  const assigneesMap = new Map<Id<"users">, { name?: string; image?: string }>();
+  const labelsMap = new Map<string, { name: string; color: string }>();
+
+  for (const issue of allIssues) {
+    if (issue.assignee) {
+      assigneesMap.set(issue.assignee._id, {
+        name: issue.assignee.name,
+        image: issue.assignee.image,
+      });
+    }
+    for (const label of issue.labels) {
+      if (!labelsMap.has(label.name)) {
+        labelsMap.set(label.name, { name: label.name, color: label.color });
+      }
+    }
+  }
+
+  return getSwimlanConfigs(
+    swimlaneGroupBy,
+    allIssues,
+    assigneesMap,
+    Array.from(labelsMap.values()),
+  );
+}
+
+/** Resolve workflow states from project or smart data */
+function resolveWorkflowStates(
+  isProjectMode: boolean,
+  project: { workflowStates: WorkflowState[] } | null | undefined,
+  isTeamMode: boolean,
+  smartWorkflowStates:
+    | Array<{ id: string; name: string; category: "todo" | "inprogress" | "done"; order: number }>
+    | undefined,
+): WorkflowState[] {
+  if (isProjectMode && project) {
+    return [...project.workflowStates].sort((a, b) => a.order - b.order);
+  }
+  if (isTeamMode && smartWorkflowStates) {
+    return smartWorkflowStates.map((s) => ({ ...s, description: "" }));
+  }
+  return [];
+}
+
 /** Drag-and-drop Kanban board with swimlanes, filters, and bulk selection. */
 export function KanbanBoard({
   projectId,
@@ -196,24 +252,18 @@ export function KanbanBoard({
   const { historyStack, redoStack, handleUndo, handleRedo, pushAction } = useBoardHistory();
 
   // Apply filters to issues
-  const filteredIssuesByStatus = useMemo(() => {
-    const parsedQuery = parseBoardQuery(filters?.query);
-    const dateRanges = {
-      dueDate: normalizeDateRangeBounds(filters?.dueDate),
-      startDate: normalizeDateRangeBounds(filters?.startDate),
-      createdAt: normalizeDateRangeBounds(filters?.createdAt),
-    };
-    const result: Record<string, EnrichedIssue[]> = {};
-    for (const [status, issues] of Object.entries(issuesByStatus)) {
-      result[status] = applyFilters(issues, filters, parsedQuery, dateRanges);
-    }
-    return result;
-  }, [issuesByStatus, filters]);
+  const parsedQuery = parseBoardQuery(filters?.query);
+  const dateRanges = {
+    dueDate: normalizeDateRangeBounds(filters?.dueDate),
+    startDate: normalizeDateRangeBounds(filters?.startDate),
+    createdAt: normalizeDateRangeBounds(filters?.createdAt),
+  };
+  const filteredIssuesByStatus: Record<string, EnrichedIssue[]> = {};
+  for (const [status, issues] of Object.entries(issuesByStatus)) {
+    filteredIssuesByStatus[status] = applyFilters(issues, filters, parsedQuery, dateRanges);
+  }
 
-  const allIssues = useMemo(
-    () => Object.values(filteredIssuesByStatus).flat(),
-    [filteredIssuesByStatus],
-  );
+  const allIssues = Object.values(filteredIssuesByStatus).flat();
 
   // Keyboard Navigation
   const { selectedIndex } = useListNavigation({
@@ -222,15 +272,12 @@ export function KanbanBoard({
   });
   const focusedIssueId = allIssues[selectedIndex]?._id;
 
-  const boardOptions = useMemo(
-    () => ({
-      projectId,
-      teamId,
-      sprintId,
-      doneColumnDays: 14,
-    }),
-    [projectId, teamId, sprintId],
-  );
+  const boardOptions = {
+    projectId,
+    teamId,
+    sprintId,
+    doneColumnDays: 14,
+  };
 
   const { handleIssueDrop, handleIssueReorder } = useBoardDragAndDrop({
     allIssues,
@@ -246,15 +293,7 @@ export function KanbanBoard({
   };
 
   const handleToggleSelect = (issueId: Id<"issues">) => {
-    setSelectedIssueIds((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(issueId)) {
-        newSet.delete(issueId);
-      } else {
-        newSet.add(issueId);
-      }
-      return newSet;
-    });
+    setSelectedIssueIds((prev) => toggleSetItem(prev, issueId));
   };
 
   const handleClearSelection = () => {
@@ -270,79 +309,22 @@ export function KanbanBoard({
   };
 
   const handleToggleSwimlanCollapse = (swimlanId: string) => {
-    setCollapsedSwimlanes((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(swimlanId)) {
-        newSet.delete(swimlanId);
-      } else {
-        newSet.add(swimlanId);
-      }
-      return newSet;
-    });
+    setCollapsedSwimlanes((prev) => toggleSetItem(prev, swimlanId));
   };
 
   const handleToggleColumnCollapse = (columnId: string) => {
-    setCollapsedColumns((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(columnId)) {
-        newSet.delete(columnId);
-      } else {
-        newSet.add(columnId);
-      }
-      return newSet;
-    });
+    setCollapsedColumns((prev) => toggleSetItem(prev, columnId));
   };
 
   // Swimlane grouping
-  const swimlaneIssues = useMemo(
-    () => groupIssuesBySwimlane(filteredIssuesByStatus, swimlaneGroupBy),
-    [filteredIssuesByStatus, swimlaneGroupBy],
+  const swimlaneIssues = groupIssuesBySwimlane(filteredIssuesByStatus, swimlaneGroupBy);
+  const swimlaneConfigs = buildSwimlaneMeta(allIssues, swimlaneGroupBy);
+  const workflowStates = resolveWorkflowStates(
+    isProjectMode,
+    project,
+    isTeamMode,
+    smartWorkflowStates,
   );
-
-  const swimlaneConfigs = useMemo(() => {
-    // Build assignees Map for swimlane display names
-    const assigneesMap = new Map<Id<"users">, { name?: string; image?: string }>();
-    for (const issue of allIssues) {
-      if (issue.assignee) {
-        assigneesMap.set(issue.assignee._id, {
-          name: issue.assignee.name,
-          image: issue.assignee.image,
-        });
-      }
-    }
-
-    // Build unique labels array for swimlane colors
-    const labelsMap = new Map<string, { name: string; color: string }>();
-    for (const issue of allIssues) {
-      for (const label of issue.labels) {
-        if (!labelsMap.has(label.name)) {
-          labelsMap.set(label.name, { name: label.name, color: label.color });
-        }
-      }
-    }
-    const labels = Array.from(labelsMap.values());
-
-    return getSwimlanConfigs(swimlaneGroupBy, allIssues, assigneesMap, labels);
-  }, [swimlaneGroupBy, allIssues]);
-
-  // Determine Workflow States
-  const workflowStates = useMemo((): WorkflowState[] => {
-    if (isProjectMode && project) {
-      return [...project.workflowStates].sort(
-        (a: { order: number }, b: { order: number }) => a.order - b.order,
-      );
-    }
-
-    if (isTeamMode && smartWorkflowStates) {
-      return smartWorkflowStates.map((s) => ({
-        ...s,
-        description: "",
-        order: s.order,
-      }));
-    }
-
-    return [];
-  }, [isProjectMode, project, isTeamMode, smartWorkflowStates]);
 
   // Loading State
   const isLoading = isLoadingIssues || (isProjectMode && !project);

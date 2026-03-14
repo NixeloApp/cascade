@@ -11,7 +11,6 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { EnrichedIssue } from "@convex/lib/issueHelpers";
 import type { WorkflowState } from "@convex/shared/types";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { memo } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
@@ -50,7 +49,7 @@ interface SwimlanRowProps {
   ) => void;
 }
 
-const SwimlanRowComponent = function SwimlanRow({
+export function SwimlanRow({
   config,
   issuesByStatus,
   workflowStates,
@@ -142,6 +141,4 @@ const SwimlanRowComponent = function SwimlanRow({
       )}
     </Stack>
   );
-};
-
-export const SwimlanRow = memo(SwimlanRowComponent);
+}

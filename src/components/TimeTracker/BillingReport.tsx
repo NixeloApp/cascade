@@ -47,24 +47,26 @@ interface BillingReportProps {
   projectId: Id<"projects">;
 }
 
+/** Calculate date range params for billing query */
+function getDateRangeParams(dateRange: "week" | "month" | "all") {
+  const now = Date.now();
+  switch (dateRange) {
+    case "week":
+      return { startDate: now - WEEK, endDate: now };
+    case "month":
+      return { startDate: now - MONTH, endDate: now };
+    default:
+      return {};
+  }
+}
+
 /** Time tracking billing report with exportable member time summaries. */
 export function BillingReport({ projectId }: BillingReportProps) {
   const [dateRange, setDateRange] = useState<"week" | "month" | "all">("month");
   const project = useAuthenticatedQuery(api.projects.getProject, { id: projectId });
 
-  // Calculate date range parameters inline
-  const dateRangeParams = (() => {
-    const now = Date.now();
-
-    switch (dateRange) {
-      case "week":
-        return { startDate: now - WEEK, endDate: now };
-      case "month":
-        return { startDate: now - MONTH, endDate: now };
-      default:
-        return {};
-    }
-  })();
+  // Calculate date range parameters
+  const dateRangeParams = getDateRangeParams(dateRange);
 
   const billing = useAuthenticatedQuery(api.timeTracking.getProjectBilling, {
     projectId,

@@ -231,22 +231,25 @@ function ShortcutBadge({ item }: { item: ShortcutItem }) {
 // Main Component
 // =============================================================================
 
+/** Filter shortcut categories by search query */
+function filterShortcutCategories(searchQuery: string) {
+  if (!searchQuery.trim()) {
+    return SHORTCUT_CATEGORIES;
+  }
+
+  const query = searchQuery.toLowerCase();
+  return SHORTCUT_CATEGORIES.map((category) => ({
+    ...category,
+    items: category.items.filter((item) => item.description.toLowerCase().includes(query)),
+  })).filter((category) => category.items.length > 0);
+}
+
 /** Dialog displaying available keyboard shortcuts grouped by category. */
 export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsHelpProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filter shortcuts based on search query
-  const filteredCategories = (() => {
-    if (!searchQuery.trim()) {
-      return SHORTCUT_CATEGORIES;
-    }
-
-    const query = searchQuery.toLowerCase();
-    return SHORTCUT_CATEGORIES.map((category) => ({
-      ...category,
-      items: category.items.filter((item) => item.description.toLowerCase().includes(query)),
-    })).filter((category) => category.items.length > 0);
-  })();
+  const filteredCategories = filterShortcutCategories(searchQuery);
 
   const hasResults = filteredCategories.length > 0;
 

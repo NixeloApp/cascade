@@ -83,79 +83,75 @@ export interface KanbanColumnProps {
 }
 
 /**
- * Wrapper component for IssueCard to memoize the wrapper div and animation style.
- * This prevents the wrapper div from re-rendering when parent renders but issue props are stable.
+ * Wrapper component for IssueCard with animation delay.
  */
-const KanbanIssueItem = memo(
-  ({
-    issue,
-    columnIndex,
-    index,
-    onClick,
-    selectionMode,
-    isSelected,
-    isFocused,
-    onToggleSelect,
-    canEdit,
-    displayOptions,
-  }: {
-    issue: Issue;
-    columnIndex: number;
-    index: number;
-    onClick: (issueId: Id<"issues">) => void;
-    selectionMode: boolean;
-    isSelected: boolean;
-    isFocused: boolean;
-    onToggleSelect: (issueId: Id<"issues">) => void;
-    canEdit: boolean;
-    displayOptions?: CardDisplayOptions;
-  }) => {
-    const style = {
-      animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2) + index * ANIMATION.STAGGER_DELAY}ms`,
-    };
+function KanbanIssueItem({
+  issue,
+  columnIndex,
+  index,
+  onClick,
+  selectionMode,
+  isSelected,
+  isFocused,
+  onToggleSelect,
+  canEdit,
+  displayOptions,
+}: {
+  issue: Issue;
+  columnIndex: number;
+  index: number;
+  onClick: (issueId: Id<"issues">) => void;
+  selectionMode: boolean;
+  isSelected: boolean;
+  isFocused: boolean;
+  onToggleSelect: (issueId: Id<"issues">) => void;
+  canEdit: boolean;
+  displayOptions?: CardDisplayOptions;
+}) {
+  const style = {
+    animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2) + index * ANIMATION.STAGGER_DELAY}ms`,
+  };
 
-    return (
-      <div className="animate-scale-in" style={style}>
-        <IssueCard
-          issue={issue}
-          onClick={onClick}
-          selectionMode={selectionMode}
-          isSelected={isSelected}
-          isFocused={isFocused}
-          onToggleSelect={onToggleSelect}
-          canEdit={canEdit}
-          status={issue.status}
-          displayOptions={displayOptions}
-        />
-      </div>
-    );
-  },
-);
-KanbanIssueItem.displayName = "KanbanIssueItem";
+  return (
+    <div className="animate-scale-in" style={style}>
+      <IssueCard
+        issue={issue}
+        onClick={onClick}
+        selectionMode={selectionMode}
+        isSelected={isSelected}
+        isFocused={isFocused}
+        onToggleSelect={onToggleSelect}
+        canEdit={canEdit}
+        status={issue.status}
+        displayOptions={displayOptions}
+      />
+    </div>
+  );
+}
 
 /**
  * Collapsed column view - shows vertical name and count badge
  */
-const CollapsedColumn = memo(
-  ({
-    columnRef,
-    state,
-    columnIndex,
-    isDraggedOver,
-    stateIssues,
-    isOverWipLimit,
-    isAtWipLimit,
-    onToggleCollapse,
-  }: {
-    columnRef: React.RefObject<HTMLElement | null>;
-    state: WorkflowState;
-    columnIndex: number;
-    isDraggedOver: boolean;
-    stateIssues: Issue[];
-    isOverWipLimit: boolean;
-    isAtWipLimit: boolean;
-    onToggleCollapse: () => void;
-  }) => (
+function CollapsedColumn({
+  columnRef,
+  state,
+  columnIndex,
+  isDraggedOver,
+  stateIssues,
+  isOverWipLimit,
+  isAtWipLimit,
+  onToggleCollapse,
+}: {
+  columnRef: React.RefObject<HTMLElement | null>;
+  state: WorkflowState;
+  columnIndex: number;
+  isDraggedOver: boolean;
+  stateIssues: Issue[];
+  isOverWipLimit: boolean;
+  isAtWipLimit: boolean;
+  onToggleCollapse: () => void;
+}) {
+  return (
     <section
       ref={columnRef}
       aria-label={`${state.name} column (collapsed)`}
@@ -202,37 +198,36 @@ const CollapsedColumn = memo(
         </Flex>
       </Card>
     </section>
-  ),
-);
-CollapsedColumn.displayName = "CollapsedColumn";
+  );
+}
 
 /**
  * Column header with name, count, and action buttons
  */
-const ColumnHeader = memo(
-  ({
-    state,
-    stateIssues,
-    hiddenCount,
-    totalCount,
-    isOverWipLimit,
-    isAtWipLimit,
-    canEdit,
-    columnIndex,
-    onToggleCollapse,
-    onCreateIssue,
-  }: {
-    state: WorkflowState;
-    stateIssues: Issue[];
-    hiddenCount: number;
-    totalCount: number;
-    isOverWipLimit: boolean;
-    isAtWipLimit: boolean;
-    canEdit: boolean;
-    columnIndex: number;
-    onToggleCollapse?: () => void;
-    onCreateIssue?: () => void;
-  }) => (
+function ColumnHeader({
+  state,
+  stateIssues,
+  hiddenCount,
+  totalCount,
+  isOverWipLimit,
+  isAtWipLimit,
+  canEdit,
+  columnIndex,
+  onToggleCollapse,
+  onCreateIssue,
+}: {
+  state: WorkflowState;
+  stateIssues: Issue[];
+  hiddenCount: number;
+  totalCount: number;
+  isOverWipLimit: boolean;
+  isAtWipLimit: boolean;
+  canEdit: boolean;
+  columnIndex: number;
+  onToggleCollapse?: () => void;
+  onCreateIssue?: () => void;
+}) {
+  return (
     <Card data-testid={TEST_IDS.BOARD.COLUMN_HEADER} recipe="kanbanColumnHeader">
       <Flex align="center" justify="between" gap="xs">
         <Flex align="center" gap="xs" className="min-w-0">
@@ -286,15 +281,20 @@ const ColumnHeader = memo(
         </Flex>
       </Flex>
     </Card>
-  ),
-);
-ColumnHeader.displayName = "ColumnHeader";
+  );
+}
 
 /**
  * Empty column state with icon and message
  */
-const EmptyColumnState = memo(
-  ({ canEdit, onCreateIssue }: { canEdit: boolean; onCreateIssue?: () => void }) => (
+function EmptyColumnState({
+  canEdit,
+  onCreateIssue,
+}: {
+  canEdit: boolean;
+  onCreateIssue?: () => void;
+}) {
+  return (
     <EmptyState
       icon={Plus}
       title="No issues yet"
@@ -307,9 +307,8 @@ const EmptyColumnState = memo(
         canEdit && onCreateIssue ? { label: "Add first issue", onClick: onCreateIssue } : undefined
       }
     />
-  ),
-);
-EmptyColumnState.displayName = "EmptyColumnState";
+  );
+}
 
 function areSelectedIssuesEqual(prev: KanbanColumnProps, next: KanbanColumnProps) {
   if (prev.selectedIssueIds === next.selectedIssueIds) {

@@ -7,7 +7,7 @@
 import { EDITOR_HIGHLIGHT_COLOR_OPTIONS, EDITOR_TEXT_COLOR_OPTIONS } from "@convex/shared/colors";
 import { ChevronDown, Highlighter, type LucideIcon, Type } from "lucide-react";
 import { useEditorRef } from "platejs/react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { ColorSwatchButton } from "@/components/ui/ColorSwatchButton";
@@ -28,22 +28,19 @@ export function ColorPickerButton({ type }: ColorPickerButtonProps) {
   const TriggerIcon: LucideIcon = type === "fontColor" ? Type : Highlighter;
   const tooltip = type === "fontColor" ? "Text Color" : "Highlight";
 
-  const applyColor = useCallback(
-    (color: string) => {
-      if (!editor) return;
+  const applyColor = (color: string) => {
+    if (!editor) return;
 
-      // Remove the mark if no color selected
-      if (!color) {
-        editor.tf.removeMark(type);
-      } else {
-        editor.tf.addMark(type, color);
-      }
+    // Remove the mark if no color selected
+    if (!color) {
+      editor.tf.removeMark(type);
+    } else {
+      editor.tf.addMark(type, color);
+    }
 
-      setCurrentColor(color);
-      setOpen(false);
-    },
-    [editor, type],
-  );
+    setCurrentColor(color);
+    setOpen(false);
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

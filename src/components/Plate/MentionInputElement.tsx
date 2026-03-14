@@ -9,7 +9,7 @@ import { useComboboxInput } from "@platejs/combobox/react";
 import { getMentionOnSelectItem, type TMentionItemBase } from "@platejs/mention";
 import type { PlateElementProps } from "platejs/react";
 import { useEditorRef } from "platejs/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -101,40 +101,34 @@ export function MentionInputElement({
   });
 
   // Handle selection
-  const onSelectItem = useCallback(
-    (item: MentionUser) => {
-      getMentionOnSelectItem()(editor, item, search);
-      removeInput(true);
-    },
-    [editor, search, removeInput],
-  );
+  const onSelectItem = (item: MentionUser) => {
+    getMentionOnSelectItem()(editor, item, search);
+    removeInput(true);
+  };
 
   // Keyboard navigation
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLSpanElement>) => {
-      if (!items.length) {
-        inputProps.onKeyDown(e as React.KeyboardEvent<HTMLElement>);
-        return;
-      }
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLSpanElement>) => {
+    if (!items.length) {
+      inputProps.onKeyDown(e as React.KeyboardEvent<HTMLElement>);
+      return;
+    }
 
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev + 1) % items.length);
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev - 1 + items.length) % items.length);
-      } else if (e.key === "Enter" || e.key === "Tab") {
-        e.preventDefault();
-        if (items[selectedIndex]) {
-          onSelectItem(items[selectedIndex]);
-        }
-      } else {
-        // Forward to combobox input handler
-        inputProps.onKeyDown(e as React.KeyboardEvent<HTMLElement>);
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev + 1) % items.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev - 1 + items.length) % items.length);
+    } else if (e.key === "Enter" || e.key === "Tab") {
+      e.preventDefault();
+      if (items[selectedIndex]) {
+        onSelectItem(items[selectedIndex]);
       }
-    },
-    [items, selectedIndex, onSelectItem, inputProps],
-  );
+    } else {
+      // Forward to combobox input handler
+      inputProps.onKeyDown(e as React.KeyboardEvent<HTMLElement>);
+    }
+  };
 
   return (
     <Badge

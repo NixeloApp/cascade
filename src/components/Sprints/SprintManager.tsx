@@ -77,6 +77,48 @@ function findOverlappingSprints(
   });
 }
 
+type SprintPreset = (typeof SPRINT_DURATION_PRESETS)[number]["id"];
+
+/** Get overlapping sprints for sprint creation form */
+function getCreateOverlappingSprints(
+  sprints: SprintWithCounts[] | undefined,
+  selectedPreset: SprintPreset,
+  customStartDate: string,
+  customEndDate: string,
+): SprintWithCounts[] {
+  if (!sprints || selectedPreset !== "custom" || !customStartDate || !customEndDate) {
+    return [];
+  }
+  const startDate = new Date(customStartDate).getTime();
+  const endDate = new Date(customEndDate).getTime();
+  return findOverlappingSprints(sprints, startDate, endDate);
+}
+
+/** Get overlapping sprints when starting a sprint */
+function getStartOverlappingSprints(
+  sprints: SprintWithCounts[] | undefined,
+  startingSprintId: Id<"sprints"> | null,
+  startPreset: SprintPreset,
+  startCustomStart: string,
+  startCustomEnd: string,
+): SprintWithCounts[] {
+  if (!sprints || !startingSprintId) return [];
+
+  let startDate: number;
+  let endDate: number;
+
+  if (startPreset === "custom") {
+    if (!startCustomStart || !startCustomEnd) return [];
+    startDate = new Date(startCustomStart).getTime();
+    endDate = new Date(startCustomEnd).getTime();
+  } else {
+    startDate = Date.now();
+    endDate = calculateEndDate(startDate, startPreset).getTime();
+  }
+
+  return findOverlappingSprints(sprints, startDate, endDate, startingSprintId);
+}
+
 interface SprintManagerProps {
   projectId: Id<"projects">;
   canEdit?: boolean;
@@ -170,6 +212,7 @@ function SprintCard({ sprint, canEdit, onStartSprint, onCompleteSprint }: Sprint
   );
 }
 
+/** Sprint planning and tracking interface with drag-and-drop backlog management. */
 export function SprintManager({ projectId, canEdit = true }: SprintManagerProps) {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newSprintName, setNewSprintName] = useState("");
@@ -219,33 +262,21 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
   );
 
   // Check for overlapping sprints when creating with custom dates
-  const createOverlappingSprints = (() => {
-    if (!sprints || selectedPreset !== "custom" || !customStartDate || !customEndDate) {
-      return [];
-    }
-    const startDate = new Date(customStartDate).getTime();
-    const endDate = new Date(customEndDate).getTime();
-    return findOverlappingSprints(sprints, startDate, endDate);
-  })();
+  const createOverlappingSprints = getCreateOverlappingSprints(
+    sprints,
+    selectedPreset,
+    customStartDate,
+    customEndDate,
+  );
 
   // Check for overlapping sprints when starting a sprint
-  const startOverlappingSprints = (() => {
-    if (!sprints || !startingSprintId) return [];
-
-    let startDate: number;
-    let endDate: number;
-
-    if (startPreset === "custom") {
-      if (!startCustomStart || !startCustomEnd) return [];
-      startDate = new Date(startCustomStart).getTime();
-      endDate = new Date(startCustomEnd).getTime();
-    } else {
-      startDate = Date.now();
-      endDate = calculateEndDate(startDate, startPreset).getTime();
-    }
-
-    return findOverlappingSprints(sprints, startDate, endDate, startingSprintId);
-  })();
+  const startOverlappingSprints = getStartOverlappingSprints(
+    sprints,
+    startingSprintId,
+    startPreset,
+    startCustomStart,
+    startCustomEnd,
+  );
 
   const handleCreateSprint = async (e: React.FormEvent) => {
     e.preventDefault();
