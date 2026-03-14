@@ -7,6 +7,7 @@ import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/form/Input";
 import { Stack } from "../ui/Stack";
+import { Typography } from "../ui/Typography";
 import { AuthLinkButton } from "./AuthLink";
 import { AuthPageLayout } from "./AuthPageLayout";
 /**
@@ -64,7 +65,10 @@ export function EmailVerificationRequired() {
       title="Check your email"
       subtitle={
         <>
-          We sent a code to <strong>{email}</strong>
+          We sent a code to{" "}
+          <Typography as="strong" variant="label">
+            {email}
+          </Typography>
         </>
       }
     >

@@ -38,9 +38,9 @@ export function Greeting({ userName, completedCount = 0 }: GreetingProps) {
         {completedCount > 0 ? (
           <>
             You closed{" "}
-            <strong className="text-ui-text">
+            <Typography as="strong" variant="label" className="text-ui-text">
               {completedCount} {completedCount === 1 ? "task" : "tasks"}
-            </strong>{" "}
+            </Typography>{" "}
             this week. Keep the highest-impact work moving and the rest visible.
           </>
         ) : (

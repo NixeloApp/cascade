@@ -19,7 +19,6 @@ const IGNORE_DIRS = ["src/lib", "src/components/ui", "src/components/Calendar/sh
 // NOTE: <a> inside <Button asChild> is automatically allowed by the validator
 const ALLOW_RAW_LINKS_PATTERNS = [
   ".test.tsx",
-  "/AttachmentList.tsx",
   "/FileAttachments.tsx",
   "/CustomFieldValues.tsx",
   "/EventDetailsModal.tsx",
@@ -30,19 +29,8 @@ const ALLOW_RAW_LINKS_PATTERNS = [
 ];
 
 // Files where <strong>/<em> for inline emphasis is allowed
-const ALLOW_INLINE_STRONG_FILES = [
-  "/ActivityFeed.tsx",
-  "/RecentActivity.tsx",
-  "/Greeting.tsx",
-  "/MemberOnboarding.tsx",
-  "/ApiKeysManager.tsx",
-  "/HourComplianceDashboard.tsx",
-  "/EmailVerificationRequired.tsx",
-  "/ResetPasswordForm.tsx",
-  "/forgot-password.tsx",
-  "/invite.$token.tsx",
-  "/CommentRenderer.tsx",
-];
+// Only CommentRenderer needs this (renders user-authored markdown)
+const ALLOW_INLINE_STRONG_FILES = ["/CommentRenderer.tsx"];
 
 // Raw Tailwind color pattern
 const RAW_TW_COLORS =

@@ -112,7 +112,10 @@ function InviteRoute() {
           </Typography>
           <Typography variant="p" color="secondary" className="mb-6">
             This invitation has expired. Please contact{" "}
-            <strong className="font-medium">{invite.inviterName}</strong> to send a new invitation.
+            <Typography as="strong" variant="label">
+              {invite.inviterName}
+            </Typography>{" "}
+            to send a new invitation.
           </Typography>
           <Button variant="primary" onClick={goToHome}>
             Go to Home
@@ -195,11 +198,15 @@ function InviteRoute() {
                 You're Invited!
               </Typography>
               <Typography variant="p" color="secondary">
-                <strong className="font-semibold text-ui-text">{invite.inviterName}</strong>{" "}
+                <Typography as="strong" variant="label" className="text-ui-text">
+                  {invite.inviterName}
+                </Typography>{" "}
                 {isProjectInvite ? (
                   <>
                     has invited you to join the project{" "}
-                    <strong className="font-semibold text-ui-text">{invite.projectName}</strong>
+                    <Typography as="strong" variant="label" className="text-ui-text">
+                      {invite.projectName}
+                    </Typography>
                   </>
                 ) : (
                   "has invited you to join Nixelo"
@@ -278,8 +285,10 @@ function InviteRoute() {
                 <div className="space-y-4">
                   <Typography className="text-sm text-center text-ui-text-secondary mb-4">
                     Sign in or create an account with{" "}
-                    <strong className="font-semibold text-ui-text">{invite.email}</strong> to accept
-                    this invitation
+                    <Typography as="strong" variant="label" className="text-ui-text">
+                      {invite.email}
+                    </Typography>{" "}
+                    to accept this invitation
                   </Typography>
                   <SignInForm />
                 </div>

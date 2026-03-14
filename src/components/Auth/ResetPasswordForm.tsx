@@ -71,7 +71,11 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
         Enter reset code
       </Typography>
       <Typography variant="p" color="secondary" className="mb-4 text-sm">
-        We sent a code to <strong>{email}</strong>. Enter it below with your new password.
+        We sent a code to{" "}
+        <Typography as="strong" variant="label">
+          {email}
+        </Typography>
+        . Enter it below with your new password.
       </Typography>
       <form ref={formRef} onSubmit={handleSubmit}>
         <Flex direction="column" gap="md">

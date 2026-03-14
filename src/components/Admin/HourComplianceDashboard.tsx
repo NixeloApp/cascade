@@ -445,7 +445,10 @@ function ComplianceRecordCard({
             {record.reviewNotes ? (
               <Card variant="flat" padding="sm">
                 <Typography variant="small">
-                  <strong>Review Notes:</strong> {record.reviewNotes}
+                  <Typography as="strong" variant="label">
+                    Review Notes:
+                  </Typography>{" "}
+                  {record.reviewNotes}
                 </Typography>
               </Card>
             ) : null}

@@ -203,10 +203,16 @@ function ApiKeyCard({ apiKey, onViewStats }: { apiKey: ApiKey; onViewStats: () =
             {/* Stats */}
             <Metadata size="xs" gap="md">
               <MetadataItem>
-                <strong>{apiKey.usageCount}</strong> API calls
+                <Typography as="strong" variant="label">
+                  {apiKey.usageCount}
+                </Typography>{" "}
+                API calls
               </MetadataItem>
               <MetadataItem>
-                <strong>{apiKey.rateLimit}</strong> req/min
+                <Typography as="strong" variant="label">
+                  {apiKey.rateLimit}
+                </Typography>{" "}
+                req/min
               </MetadataItem>
               {apiKey.lastUsedAt && (
                 <MetadataItem>

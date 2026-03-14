@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AuthLink, AuthPageLayout, AuthRedirect, ResetPasswordForm } from "@/components/Auth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/form/Input";
+import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError } from "@/lib/toast";
@@ -145,7 +146,10 @@ function ForgotPasswordPage() {
         title="Check your email"
         subtitle={
           <>
-            We sent a code to <strong>{email}</strong>
+            We sent a code to{" "}
+            <Typography as="strong" variant="label">
+              {email}
+            </Typography>
           </>
         }
       >

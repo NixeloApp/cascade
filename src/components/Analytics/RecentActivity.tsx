@@ -45,10 +45,16 @@ export function RecentActivity({ activities }: { activities: Activity[] | undefi
                 />
                 <FlexItem flex="1" className="min-w-0">
                   <Typography variant="small">
-                    <strong>{activity.userName}</strong> {activity.action}{" "}
+                    <Typography as="strong" variant="label">
+                      {activity.userName}
+                    </Typography>{" "}
+                    {activity.action}{" "}
                     {activity.field && (
                       <>
-                        <strong>{activity.field}</strong> on{" "}
+                        <Typography as="strong" variant="label">
+                          {activity.field}
+                        </Typography>{" "}
+                        on{" "}
                       </>
                     )}
                     {activity.issueKey && (

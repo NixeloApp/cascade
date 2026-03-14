@@ -16,18 +16,14 @@ const SKIP_FILES = [
   /src\/components\/ui\//, // UI primitives are the owned boundary for tokens
 ];
 
-// Allow these specific patterns (Radix runtime vars, CSS selectors, dynamic values)
+// Allow these specific patterns (Radix runtime vars, CSS keywords, dynamic values)
 // NOTE: Keep this list minimal. If you need to add a pattern, consider defining a token instead.
 const ALLOWED_PATTERNS = [
   /var\(--radix-/, // Radix UI dynamic vars (runtime-computed)
   /var\(--scale-/, // Scale CSS vars from theme
-  /\[&>.*?\]:/, // Tailwind child selectors [&>svg]:
-  /\[&~.*?\]:/, // Tailwind sibling selectors [&~*]:
-  /\[perspective:/, // 3D perspective (valid CSS-in-TW)
-  /rounded-\[inherit\]/, // Inherit border-radius (dynamic)
-  /grid-cols-\[/, // Custom grid column layouts (design-specific)
-  /shadow-\[inset_/, // Inset shadows (CSS limitation - no token equivalent)
-  /max-w-\[calc\(100vw/, // Mobile-friendly width with viewport gutters (responsive pattern)
+  /\[perspective:/, // 3D perspective for dialog animations
+  /rounded-\[inherit\]/, // Inherit border-radius from parent (CSS keyword)
+  /max-w-\[calc\(100vw/, // Mobile-friendly width with viewport gutters
 ];
 
 export function run() {
