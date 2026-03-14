@@ -82,6 +82,20 @@ Use components from `src/components/ui/` instead of raw HTML:
 - Use `cn()` from `@/lib/utils` for conditional class merging. Never use template literals or string concatenation for className.
 - Raw Tailwind in routes and feature composition is allowed, but discouraged as a long-term API. If spacing, shells, or states repeat, move them behind an owned component or CVA variant.
 - Prefer extending the owning primitive over importing another component's variant helper or rebuilding the same surface locally.
+- **Never nest Cards inside Cards.** Use a `div` with appropriate styling instead. The validator bans this pattern.
+
+## AI-Generated Code Warning
+
+Much of this codebase was AI-generated and may contain design inconsistencies or "slop":
+- Card recipes that should be simple divs
+- Nested Cards that look off
+- Inconsistent visual patterns across similar components
+- Over-engineered structures where simple solutions would work
+
+**If something looks visually wrong or smells like code smell, it probably is.** There was no intentional design - AI is the designer here. When you encounter these issues:
+1. Flag it to the human
+2. Add a `/todo` item for visual polish
+3. Don't assume existing patterns are intentional or correct
 
 ## UI Patterns
 
