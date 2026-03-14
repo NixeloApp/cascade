@@ -152,7 +152,6 @@ export const TEST_COVERAGE_BASELINE = [
   "src/components/WebhooksManager.tsx",
   "src/components/layout/PageContent.tsx",
   "src/components/layout/PageHeader.tsx",
-  "src/components/layout/PageLayout.tsx",
   "src/hooks/useAsyncMutation.ts",
   "src/hooks/useBoardDragAndDrop.ts",
   "src/hooks/useBoardHistory.ts",
