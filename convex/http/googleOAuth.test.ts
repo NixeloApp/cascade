@@ -44,10 +44,11 @@ function createMockActionCtx() {
     runQuery: vi.fn(),
     runMutation: vi.fn(),
     runAction: vi.fn(),
+    vectorSearch: vi.fn(),
     scheduler: {},
     auth: {},
     storage: {},
-  } as ActionCtx;
+  } as unknown as ActionCtx;
 
   return {
     ctx,

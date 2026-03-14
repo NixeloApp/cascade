@@ -24,9 +24,9 @@ import { MINUTE } from "@convex-dev/rate-limiter";
 describe("checkApiKeyRateLimit", () => {
   it("should call the rate limiter component with correct arguments", async () => {
     const mockRunQuery = vi.fn().mockResolvedValue({ ok: true });
-    const ctx: Pick<QueryCtx, "runQuery"> = {
+    const ctx = {
       runQuery: mockRunQuery,
-    };
+    } as unknown as Pick<QueryCtx, "runQuery">;
 
     const keyId = "test-key";
     const limit = 100;
