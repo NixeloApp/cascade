@@ -1,7 +1,7 @@
 # Validator Exceptions Burndown
 
-> **Priority:** P2
-> **Status:** Queued
+> **Priority:** P0
+> **Status:** Active
 > **Last Updated:** 2026-03-13
 > **Verification Summary:** `37/37` validators pass, but `4` explicit exception buckets still remain.
 

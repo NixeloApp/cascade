@@ -297,26 +297,44 @@ export const list = organizationQuery({
       await assertClientInOrganization(ctx, ctx.organizationId, args.clientId);
     }
 
+    const clientId = args.clientId;
     const status = args.status;
-    const invoices = status
-      ? await ctx.db
-          .query("invoices")
-          .withIndex("by_status", (q) =>
-            q.eq("organizationId", ctx.organizationId).eq("status", status),
-          )
-          .order("desc")
-          .take(BOUNDED_LIST_LIMIT)
-      : await ctx.db
-          .query("invoices")
-          .withIndex("by_organization", (q) => q.eq("organizationId", ctx.organizationId))
-          .order("desc")
-          .take(BOUNDED_LIST_LIMIT);
 
-    if (!args.clientId) {
-      return invoices;
+    if (clientId && status) {
+      return await ctx.db
+        .query("invoices")
+        .withIndex("by_organization_client_status", (q) =>
+          q.eq("organizationId", ctx.organizationId).eq("clientId", clientId).eq("status", status),
+        )
+        .order("desc")
+        .take(BOUNDED_LIST_LIMIT);
     }
 
-    return invoices.filter((invoice) => invoice.clientId === args.clientId);
+    if (clientId) {
+      return await ctx.db
+        .query("invoices")
+        .withIndex("by_organization_client", (q) =>
+          q.eq("organizationId", ctx.organizationId).eq("clientId", clientId),
+        )
+        .order("desc")
+        .take(BOUNDED_LIST_LIMIT);
+    }
+
+    if (status) {
+      return await ctx.db
+        .query("invoices")
+        .withIndex("by_status", (q) =>
+          q.eq("organizationId", ctx.organizationId).eq("status", status),
+        )
+        .order("desc")
+        .take(BOUNDED_LIST_LIMIT);
+    }
+
+    return await ctx.db
+      .query("invoices")
+      .withIndex("by_organization", (q) => q.eq("organizationId", ctx.organizationId))
+      .order("desc")
+      .take(BOUNDED_LIST_LIMIT);
   },
 });
 

@@ -7,28 +7,32 @@
 
 - The validator-hardening and manual-memoization sweep is landed, and the validator-specific todo docs were pruned in that commit.
 - The validator suite now passes `37/37` checks, but explicit exception debt still remains in test-coverage and validator allowlists.
-- The active in-repo execution queue is now concentrated in four unblocked tracks: E2E reliability, Slack org scoping, query filter ordering, and validator exception burndown.
+- The top execution queue is now: query filter ordering, validator exception burndown, and a screenshot-driven facelift pass.
+- E2E reliability and Slack org scoping stay active, but they are no longer the first two priorities.
 - Everything else still open is blocked on external setup, environment access, or product/infra decisions.
 
 ## Current Focus
 
-1. [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md)
-   - Keep the full suite green while finishing deterministic waits, selector cleanup, and retry removal.
-2. [slack-integration-issues.md](./slack-integration-issues.md)
-   - Add organization-scoped Slack connection storage and destination lookup.
-3. [query-filter-ordering.md](./query-filter-ordering.md)
-   - Fix the remaining four filter-after-limit query paths and add over-limit coverage.
-4. [validator-exceptions-burndown.md](./validator-exceptions-burndown.md)
+1. [query-filter-ordering.md](./query-filter-ordering.md)
+   - Fix the remaining three filter-after-limit query paths and add over-limit coverage.
+2. [validator-exceptions-burndown.md](./validator-exceptions-burndown.md)
    - Remove the remaining validator allowlists and test-coverage baseline entries.
+3. [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md)
+   - Use screenshot review to drive a broader visual facelift across the weakest product surfaces.
+4. [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md)
+   - Keep the full suite green while finishing deterministic waits, selector cleanup, and retry removal.
+5. [slack-integration-issues.md](./slack-integration-issues.md)
+   - Add organization-scoped Slack connection storage and destination lookup.
 
 ## Open Tracks
 
 | Priority | File | State | Next Action |
 |---|---|---|---|
-| P0 | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | Finish deterministic E2E hardening |
+| P0 | [query-filter-ordering.md](./query-filter-ordering.md) | Active | Fix 3 remaining query-shape bugs |
+| P0 | [validator-exceptions-burndown.md](./validator-exceptions-burndown.md) | Active | Burn down validator allowlists and the test-coverage baseline |
+| P0 | [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md) | Active | Run a bigger screenshot-driven visual facelift pass |
+| P1 | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | Finish deterministic E2E hardening |
 | P1 | [slack-integration-issues.md](./slack-integration-issues.md) | Active | Scope Slack connections by organization |
-| P2 | [query-filter-ordering.md](./query-filter-ordering.md) | Queued | Fix 4 remaining query-shape bugs |
-| P2 | [validator-exceptions-burndown.md](./validator-exceptions-burndown.md) | Queued | Burn down validator allowlists and the test-coverage baseline |
 | P2 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Blocked | Finish field-projection audit and publish metrics report |
 | P2 | [feature-gaps.md](./feature-gaps.md) | Blocked | Complete external Slack dashboard setup |
 | P2 | [emoji-overhaul.md](./emoji-overhaul.md) | Blocked | Finish manual accessibility QA |
@@ -59,9 +63,10 @@
 
 ## Suggested Execution Order
 
-1. Keep [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) green.
-2. Fix [slack-integration-issues.md](./slack-integration-issues.md).
-3. Fix the 4 remaining issues in [query-filter-ordering.md](./query-filter-ordering.md).
-4. Burn down [validator-exceptions-burndown.md](./validator-exceptions-burndown.md).
-5. Close the near-finished blocked tracks as externals unblock.
-6. Then move to public launch, enterprise, and uptime.
+1. Fix the 3 remaining issues in [query-filter-ordering.md](./query-filter-ordering.md).
+2. Burn down [validator-exceptions-burndown.md](./validator-exceptions-burndown.md).
+3. Run the first pass in [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md).
+4. Keep [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) green while those changes land.
+5. Fix [slack-integration-issues.md](./slack-integration-issues.md).
+6. Close the near-finished blocked tracks as externals unblock.
+7. Then move to public launch, enterprise, and uptime.

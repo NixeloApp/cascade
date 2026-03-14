@@ -1,9 +1,9 @@
 # Query Filter Ordering Issues
 
-> **Priority:** P2
-> **Status:** Queued
+> **Priority:** P0
+> **Status:** Active
 > **Last Updated:** 2026-03-13
-> **Verification Summary:** `4` verified unresolved query-shape issues remain.
+> **Verification Summary:** `3` verified unresolved query-shape issues remain.
 
 ## Remaining Queries
 
@@ -21,11 +21,6 @@
 
 - Takes a limit before evaluating link type and cross-team conditions.
 - Fix: filter before limit or add an appropriate index.
-
-### invoices.ts - Client filter
-
-- `list` takes `BOUNDED_LIST_LIMIT`, then filters by `clientId`.
-- Fix: add `by_client` or `by_org_client`.
 
 ## Validation Requirement
 

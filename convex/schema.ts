@@ -1483,7 +1483,8 @@ const applicationTables = {
     .index("by_organization", ["organizationId"])
     .index("by_status", ["organizationId", "status"])
     .index("by_number", ["organizationId", "number"])
-    .index("by_organization_client", ["organizationId", "clientId"]),
+    .index("by_organization_client", ["organizationId", "clientId"])
+    .index("by_organization_client_status", ["organizationId", "clientId", "status"]),
 
   clientPortalTokens: defineTable({
     organizationId: v.id("organizations"),
