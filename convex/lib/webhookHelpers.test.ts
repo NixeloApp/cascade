@@ -44,7 +44,7 @@ describe("deliverWebhook", () => {
 
     // Check fetch call
     expect(global.fetch).toHaveBeenCalledTimes(1);
-    const callArgs = fetchMock.mock.calls[0]!;
+    const callArgs = fetchMock.mock.calls[0] ?? [];
     const targetUrl = callArgs[0];
     const options = callArgs[1];
 
@@ -125,7 +125,7 @@ describe("deliverWebhook", () => {
 
     await deliverWebhook(url, payload, event, secret);
 
-    const callArgs = fetchMock.mock.calls[0]!;
+    const callArgs = fetchMock.mock.calls[0] ?? [];
     const headers = callArgs[1]?.headers as Headers;
     const signature = headers.get("X-Webhook-Signature");
 

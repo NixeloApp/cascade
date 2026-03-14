@@ -29,7 +29,8 @@ describe("safeFetch", () => {
     expect(mockValidateDestinationResolved).toHaveBeenCalledWith("http://example.com/foo");
 
     expect(mockFetchWithTimeout).toHaveBeenCalledTimes(1);
-    const [url, options, timeout] = mockFetchWithTimeout.mock.calls[0]!;
+    const call = mockFetchWithTimeout.mock.calls[0];
+    const [url, options, timeout] = call ?? [];
 
     expect(url).toBe("http://1.2.3.4/foo");
     expect(timeout).toBe(10000);
@@ -47,7 +48,8 @@ describe("safeFetch", () => {
     expect(mockValidateDestinationResolved).toHaveBeenCalledWith("https://example.com/foo");
 
     expect(mockFetchWithTimeout).toHaveBeenCalledTimes(1);
-    const [url, options, timeout] = mockFetchWithTimeout.mock.calls[0]!;
+    const call = mockFetchWithTimeout.mock.calls[0];
+    const [url, options, timeout] = call ?? [];
 
     expect(url).toBe("https://example.com/foo");
     expect(options?.headers).toBeInstanceOf(Headers);
@@ -75,7 +77,8 @@ describe("safeFetch", () => {
     });
 
     expect(mockFetchWithTimeout).toHaveBeenCalledTimes(1);
-    const [url, options] = mockFetchWithTimeout.mock.calls[0]!;
+    const call = mockFetchWithTimeout.mock.calls[0];
+    const [url, options] = call ?? [];
     const headers = options?.headers as Headers;
 
     expect(url).toBe("http://1.2.3.4/");
@@ -93,7 +96,8 @@ describe("safeFetch", () => {
 
     expect(mockValidateDestinationResolved).toHaveBeenCalledWith("http://example.com/bar");
 
-    const [url, options] = mockFetchWithTimeout.mock.calls[0]!;
+    const call = mockFetchWithTimeout.mock.calls[0];
+    const [url, options] = call ?? [];
     const headers = options?.headers as Headers;
     expect(url).toBe("http://1.2.3.4/bar");
     expect(headers.get("host")).toBe("example.com");
@@ -104,7 +108,8 @@ describe("safeFetch", () => {
 
     await safeFetch("http://example.com", {}, 5000);
 
-    const [_url, _options, timeout] = mockFetchWithTimeout.mock.calls[0]!;
+    const call = mockFetchWithTimeout.mock.calls[0];
+    const [_url, _options, timeout] = call ?? [];
     expect(timeout).toBe(5000);
   });
 });
