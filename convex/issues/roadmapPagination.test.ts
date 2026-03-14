@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, test } from "vitest";
 import { api } from "../_generated/api";
+import { SECOND } from "../lib/timeUtils";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import { createProjectInOrganization, createTestContext } from "../testUtils";
@@ -55,7 +56,7 @@ describe("listRoadmapIssues pagination issue", () => {
             status: "todo",
             priority: "medium",
             reporterId: userId,
-            dueDate: Date.now() + 100000,
+            dueDate: Date.now() + 100 * SECOND,
             updatedAt: Date.now(),
             labels: [],
             linkedDocuments: [],
@@ -84,7 +85,7 @@ describe("listRoadmapIssues pagination issue", () => {
           status: "todo",
           priority: "medium",
           reporterId: userId,
-          dueDate: Date.now() + 200000,
+          dueDate: Date.now() + 200 * SECOND,
           updatedAt: Date.now(),
           labels: [],
           linkedDocuments: [],
