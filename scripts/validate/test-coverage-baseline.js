@@ -151,7 +151,6 @@ export const TEST_COVERAGE_BASELINE = [
   "src/components/Webhooks/WebhookLogs.tsx",
   "src/components/WebhooksManager.tsx",
   "src/components/layout/PageContent.tsx",
-  "src/components/layout/PageError.tsx",
   "src/components/layout/PageHeader.tsx",
   "src/components/layout/PageLayout.tsx",
   "src/hooks/useAsyncMutation.ts",
