@@ -54,7 +54,6 @@ export const TEST_COVERAGE_BASELINE = [
   "src/components/Calendar/shadcn-calendar/header/date/calendar-header-date-chevrons.tsx",
   "src/components/Calendar/shadcn-calendar/header/date/calendar-header-date.tsx",
   "src/components/FuzzySearch/AssigneeSearchDropdown.example.tsx",
-  "src/components/IssueDescriptionEditor.tsx",
   "src/components/IssueDetail/InlinePropertyEdit.tsx",
   "src/components/IssueDetail/IssueDetailContent.tsx",
   "src/components/IssueDetail/IssueDetailLayout.tsx",
