@@ -38,7 +38,6 @@ const TIME_MULTIPLICATIONS = [
 // Files allowed to have magic time numbers (existing violations to fix incrementally)
 const ALLOWLIST = [
   // Test files with existing violations - to be fixed incrementally
-  "src/components/Calendar/RoadmapView.test.tsx",
   "src/lib/formatting.test.ts",
 ];
 

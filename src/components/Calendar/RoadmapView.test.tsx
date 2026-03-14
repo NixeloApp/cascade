@@ -1,5 +1,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import { DAY } from "@convex/lib/timeUtils";
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@/test/custom-render";
 import { RoadmapView } from "./RoadmapView";
@@ -22,8 +23,8 @@ const mockSprints = [
   {
     _id: "sprint1" as Id<"sprints">,
     name: "Sprint 1",
-    startDate: Date.now() - 1000 * 60 * 60 * 24 * 5, // 5 days ago
-    endDate: Date.now() + 1000 * 60 * 60 * 24 * 5, // 5 days future
+    startDate: Date.now() - 5 * DAY,
+    endDate: Date.now() + 5 * DAY,
     status: "active",
   },
 ];
@@ -32,8 +33,8 @@ const mockIssues = [
     _id: "issue1" as Id<"issues">,
     key: "PROJ-1",
     title: "Test Issue",
-    dueDate: Date.now() + 1000 * 60 * 60 * 24 * 2, // 2 days future
-    _creationTime: Date.now() - 1000 * 60 * 60 * 24 * 1, // 1 day ago
+    dueDate: Date.now() + 2 * DAY,
+    _creationTime: Date.now() - DAY,
     type: "task",
     priority: "medium",
     status: "todo",
