@@ -116,7 +116,6 @@ export const TEST_COVERAGE_BASELINE = [
   "src/components/Plate/MentionInputElement.tsx",
   "src/components/Plate/SlashMenu.tsx",
   "src/components/RoadmapView.tsx",
-  "src/components/Settings/CoverImageUploadModal.tsx",
   "src/components/Settings/GitHubIntegration.tsx",
   "src/components/Settings/GoogleCalendarIntegration.tsx",
   "src/components/Settings/LinkedRepositories.tsx",
