@@ -112,7 +112,7 @@ function InviteRoute() {
           </Typography>
           <Typography variant="p" color="secondary" className="mb-6">
             This invitation has expired. Please contact{" "}
-            <Typography as="strong" variant="label">
+            <Typography as="strong" variant="strong">
               {invite.inviterName}
             </Typography>{" "}
             to send a new invitation.
@@ -198,13 +198,13 @@ function InviteRoute() {
                 You're Invited!
               </Typography>
               <Typography variant="p" color="secondary">
-                <Typography as="strong" variant="label" className="text-ui-text">
+                <Typography as="strong" variant="strong" className="text-ui-text">
                   {invite.inviterName}
                 </Typography>{" "}
                 {isProjectInvite ? (
                   <>
                     has invited you to join the project{" "}
-                    <Typography as="strong" variant="label" className="text-ui-text">
+                    <Typography as="strong" variant="strong" className="text-ui-text">
                       {invite.projectName}
                     </Typography>
                   </>
@@ -285,7 +285,7 @@ function InviteRoute() {
                 <div className="space-y-4">
                   <Typography className="text-sm text-center text-ui-text-secondary mb-4">
                     Sign in or create an account with{" "}
-                    <Typography as="strong" variant="label" className="text-ui-text">
+                    <Typography as="strong" variant="strong" className="text-ui-text">
                       {invite.email}
                     </Typography>{" "}
                     to accept this invitation

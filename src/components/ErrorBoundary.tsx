@@ -36,8 +36,8 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log to console.info for dev visibility (console.error would trigger error tracking twice)
-    console.info("[ErrorBoundary] Uncaught error:", error, errorInfo);
+    // Keep uncaught render failures at error severity for observability.
+    console.error("[ErrorBoundary] Uncaught error:", error, errorInfo);
     this.props.onError?.(error, errorInfo);
   }
 

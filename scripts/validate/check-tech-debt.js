@@ -1,6 +1,6 @@
 /**
  * CHECK: Tech Debt Comments
- * Tracks TODO, FIXME, HACK, XXX comments in the codebase.
+ * Tracks TODO, FIXME, HACK comments in the codebase.
  * These should be minimized and tracked.
  *
  */

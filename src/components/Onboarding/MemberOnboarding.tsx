@@ -234,7 +234,7 @@ export function MemberOnboarding({
       {/* Keyboard shortcuts tip */}
       <Card padding="md" radius="full" className="text-center">
         <Typography variant="small" color="secondary">
-          <Typography as="strong" variant="label">
+          <Typography as="strong" variant="strong">
             Pro tip:
           </Typography>{" "}
           Press <KeyboardShortcut shortcut="Ctrl+K" variant="subtle" /> or{" "}

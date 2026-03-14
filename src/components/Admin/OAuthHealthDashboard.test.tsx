@@ -1,3 +1,4 @@
+import type { Id } from "@convex/_generated/dataModel";
 import { MINUTE } from "@convex/lib/timeUtils";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
@@ -102,7 +103,7 @@ describe("OAuthHealthDashboard", () => {
     vi.clearAllMocks();
 
     mockUseOrganization.mockReturnValue({
-      organizationId: "org_123" as never,
+      organizationId: "org_123" as Id<"organizations">,
       organizationName: "Test Org",
       orgSlug: "test-org",
       userRole: "admin",
@@ -112,7 +113,7 @@ describe("OAuthHealthDashboard", () => {
 
   it("returns null when no organizationId", () => {
     mockUseOrganization.mockReturnValue({
-      organizationId: "" as never,
+      organizationId: "" as Id<"organizations">,
       organizationName: "",
       orgSlug: "",
       userRole: "member",

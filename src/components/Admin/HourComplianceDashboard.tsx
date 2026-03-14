@@ -445,7 +445,7 @@ function ComplianceRecordCard({
             {record.reviewNotes ? (
               <Card variant="flat" padding="sm">
                 <Typography variant="small">
-                  <Typography as="strong" variant="label">
+                  <Typography as="strong" variant="strong">
                     Review Notes:
                   </Typography>{" "}
                   {record.reviewNotes}

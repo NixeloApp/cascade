@@ -40,8 +40,9 @@
  *  36. Native confirm()        — ensure custom dialogs used instead of native confirm()
  *  37. Convex hooks            — validates Convex hook usage patterns
  *  38. Console usage           — bans console.* in production code
- *  39. Tech debt               — tracks TODO/FIXME/HACK/XXX comments
- *  40. Nested Cards            — Cards nested inside other Cards need visual differentiation
+ *  39. Tech debt               — tracks TODO/FIXME/HACK comments
+ *  40. Nested Cards            — bans Cards nested inside other Cards
+ *  41. Border Radius           — enforces consistent border radius usage
  *
  * Exit code 1 if any check reports blocking issues.
  *

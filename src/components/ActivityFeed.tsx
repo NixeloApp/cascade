@@ -208,7 +208,7 @@ export function ActivityFeed({ projectId, limit = 50, compact = false }: Activit
               <Flex align="start" justify="between" gap="sm">
                 <FlexItem flex="1" className="min-w-0">
                   <Typography variant={compact ? "small" : "p"} className="m-0">
-                    <Typography as="strong" variant="label">
+                    <Typography as="strong" variant="strong">
                       {activity.userName}
                     </Typography>{" "}
                     <span className={getActionColorClass(activity.action)}>

@@ -147,7 +147,7 @@ function ForgotPasswordPage() {
         subtitle={
           <>
             We sent a code to{" "}
-            <Typography as="strong" variant="label">
+            <Typography as="strong" variant="strong">
               {email}
             </Typography>
           </>

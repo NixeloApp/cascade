@@ -14,7 +14,7 @@ Implement CSV/PDF export functionality for billing reports.
 
 ## Acceptance Criteria
 
-- [ ] Add export button to billing report UI
+- [ ] Wire existing Export button to real export flows
 - [ ] Implement CSV export
 - [ ] Implement PDF export
 - [ ] Handle large datasets gracefully

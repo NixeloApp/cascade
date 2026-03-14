@@ -77,7 +77,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                     <FlexItem flex="1" className="min-w-0">
                       <Stack gap="xs">
                         <Typography variant="small">
-                          <Typography as="strong" variant="label">
+                          <Typography as="strong" variant="strong">
                             {activity.userName}
                           </Typography>{" "}
                           {activity.action}

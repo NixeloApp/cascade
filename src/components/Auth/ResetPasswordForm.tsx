@@ -72,7 +72,7 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
       </Typography>
       <Typography variant="p" color="secondary" className="mb-4 text-sm">
         We sent a code to{" "}
-        <Typography as="strong" variant="label">
+        <Typography as="strong" variant="strong">
           {email}
         </Typography>
         . Enter it below with your new password.

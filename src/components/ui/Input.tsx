@@ -102,7 +102,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           />
         )}
         <input
-          type={hasIcon ? "search" : type}
+          type={type ?? (hasIcon ? "search" : undefined)}
           id={inputId}
           className={cn(
             inputVariants({ variant: error ? "error" : variant, inputSize }),

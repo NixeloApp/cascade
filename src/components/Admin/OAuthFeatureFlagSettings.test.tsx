@@ -1,3 +1,4 @@
+import type { Id } from "@convex/_generated/dataModel";
 import type { ReactMutation } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import type { ReactNode } from "react";
@@ -114,7 +115,7 @@ describe("OAuthFeatureFlagSettings", () => {
     vi.clearAllMocks();
 
     mockUseOrganization.mockReturnValue({
-      organizationId: "org_123" as never,
+      organizationId: "org_123" as Id<"organizations">,
       organizationName: "Test Org",
       orgSlug: "test-org",
       userRole: "admin",
@@ -134,7 +135,7 @@ describe("OAuthFeatureFlagSettings", () => {
 
   it("returns null when no organizationId", () => {
     mockUseOrganization.mockReturnValue({
-      organizationId: "" as never,
+      organizationId: "" as Id<"organizations">,
       organizationName: "",
       orgSlug: "",
       userRole: "member",

@@ -80,6 +80,7 @@ function AllIssuesPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             variant="search"
+            aria-label="Search issues"
           />
         </FlexItem>
         <Flex gap="sm" align="center">

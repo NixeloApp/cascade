@@ -263,7 +263,7 @@ describe("UserManagement", () => {
     vi.clearAllMocks();
 
     mockUseOrganization.mockReturnValue({
-      organizationId: "org_123" as never,
+      organizationId: "org_123" as Id<"organizations">,
       organizationName: "Test Org",
       orgSlug: "test-org",
       userRole: "admin",

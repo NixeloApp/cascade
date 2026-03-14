@@ -21,6 +21,9 @@ export function run() {
     /routeTree\.gen\.ts$/, // Generated route tree
   ];
 
+  // Files where console.error is allowed (error boundaries, crash handlers)
+  const ALLOW_CONSOLE_ERROR = new Set(["src/components/ErrorBoundary.tsx"]);
+
   let errorCount = 0;
   const errors = [];
 
@@ -38,6 +41,7 @@ export function run() {
       const match = line.match(/\bconsole\.(log|warn|error)\s*\(/);
       if (match) {
         const method = match[1];
+        if (method === "error" && ALLOW_CONSOLE_ERROR.has(rel)) return;
         const suggestion =
           method === "log"
             ? "Use console.info/debug for dev logging or remove."
