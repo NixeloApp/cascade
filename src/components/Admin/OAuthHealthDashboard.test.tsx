@@ -1,3 +1,4 @@
+import { MINUTE } from "@convex/lib/timeUtils";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -179,8 +180,8 @@ describe("OAuthHealthDashboard", () => {
       avgLatencyMs: 150,
       consecutiveFailures: 3,
       lastCheckAt: Date.now(),
-      firstFailAt: Date.now() - 60000,
-      lastFailAt: Date.now() - 30000,
+      firstFailAt: Date.now() - MINUTE,
+      lastFailAt: Date.now() - MINUTE / 2,
       recoveredAt: null,
       recentFailures: [],
     });
@@ -203,7 +204,7 @@ describe("OAuthHealthDashboard", () => {
       recoveredAt: null,
       recentFailures: [
         {
-          timestamp: Date.now() - 60000,
+          timestamp: Date.now() - MINUTE,
           error: "Connection timeout",
           latencyMs: 5000,
           errorCode: "ETIMEDOUT",

@@ -1,4 +1,5 @@
 import type { Id } from "@convex/_generated/dataModel";
+import { DAY } from "@convex/lib/timeUtils";
 import type { ReactMutation } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import type { LucideIcon } from "lucide-react";
@@ -236,11 +237,11 @@ function createMutationMock(procedure: Procedure): ReactMutation<FunctionReferen
 const mockInvites = [
   {
     _id: "invite_1" as Id<"invites">,
-    _creationTime: Date.now() - 86400000,
+    _creationTime: Date.now() - DAY,
     email: "john@example.com",
     role: "user",
     status: "pending",
-    expiresAt: Date.now() + 86400000 * 7,
+    expiresAt: Date.now() + DAY * 7,
     inviterName: "Admin User",
   },
 ];
