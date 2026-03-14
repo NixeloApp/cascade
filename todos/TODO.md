@@ -10,6 +10,10 @@ All open feature specifications and roadmap items are in [`/todos/README.md`](./
 - [External Blockers](./README.md#external-blockers)
 - [Open Jules Issue](./README.md#open-jules-issue)
 
+## Active Validator Cleanup
+
+- [validator-exceptions-burndown.md](./validator-exceptions-burndown.md)
+
 ## Active P0 Docs
 
 - [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md)

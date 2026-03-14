@@ -1,0 +1,59 @@
+# Validator Exceptions Burndown
+
+> **Priority:** P2
+> **Status:** Queued
+> **Last Updated:** 2026-03-13
+> **Verification Summary:** `37/37` validators pass, but `4` explicit exception buckets still remain.
+
+## Objective
+
+Keep the validator suite green while eliminating the remaining allowlists and baselines that still mask work we want to finish.
+
+## Verified Exception Debt
+
+### Test coverage baseline
+
+- **File:** `scripts/validate/test-coverage-baseline.js`
+- **Remaining entries:** `168`
+- **Breakdown:** `145` component files, `13` hooks, `10` Convex files
+- **Fix:** add tests or reduce the validator target surface until the baseline reaches `0`.
+
+### Time constants allowlist
+
+- **File:** `scripts/validate/check-time-constants.js`
+- **Remaining effective entries:** `23`
+- **Notes:** `24` paths are listed, but `e2e/screenshot-pages.ts` is outside the validator scan scope and should be removed as dead configuration.
+- **Fix:** replace magic-time values with shared constants, then delete each allowlist entry.
+
+### Test coverage allowlist
+
+- **File:** `scripts/validate/check-test-coverage.js`
+- **Remaining entries:** `2`
+- **Files:** `src/components/PlateEditor.tsx`, `src/components/BlockNoteEditor.tsx`
+- **Fix:** either add durable coverage or narrow the validator rule with a principled boundary so the allowlist reaches `0`.
+
+### Unused-params allowlist
+
+- **File:** `scripts/validate/check-unused-params.js`
+- **Remaining entries:** `2`
+- **Files:** `src/components/ui/Card.tsx`, `src/components/ui/Alert.tsx`
+- **Fix:** remove the underscore-prefixed bindings or restructure the props so the components no longer need exceptions.
+
+## Non-Goals
+
+- Do not count `scripts/ci/e2e-hard-rules-baseline.json`; it is already effectively empty.
+- Do not count `convex/lib/` and `convex/internal/` envelope-pattern exclusions unless we decide to expand validator scope.
+
+## Execution Order
+
+1. Remove dead config and tiny allowlists first: time constants, unused params, test coverage allowlist.
+2. Then burn down `scripts/validate/test-coverage-baseline.js` in chunks that keep `pnpm run validate` green.
+3. Delete each exception only after the replacement test or code cleanup lands.
+
+## Acceptance Criteria
+
+- [ ] `scripts/validate/check-time-constants.js` has no exception entries.
+- [ ] `scripts/validate/check-test-coverage.js` has no allowlist entries.
+- [ ] `scripts/validate/check-unused-params.js` has no allowlist entries.
+- [ ] `scripts/validate/test-coverage-baseline.js` is empty or removed.
+- [ ] `pnpm run validate` still passes with no new exception buckets introduced.
