@@ -3,6 +3,12 @@
 > **Last Updated:** 2026-03-13
 > **Scope:** open work only
 
+## Status After `62ffb8a`
+
+- The validator-hardening and manual-memoization sweep is landed, and the validator-specific todo docs were pruned in that commit.
+- The active in-repo execution queue is now concentrated in three unblocked tracks: E2E reliability, Slack org scoping, and query filter ordering.
+- Everything else still open is blocked on external setup, environment access, or product/infra decisions.
+
 ## Current Focus
 
 1. [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md)
@@ -10,7 +16,7 @@
 2. [slack-integration-issues.md](./slack-integration-issues.md)
    - Add organization-scoped Slack connection storage and destination lookup.
 3. [query-filter-ordering.md](./query-filter-ordering.md)
-   - Fix the remaining filter-after-limit query paths and add over-limit coverage.
+   - Fix the remaining four filter-after-limit query paths and add over-limit coverage.
 
 ## Open Tracks
 
@@ -18,7 +24,7 @@
 |---|---|---|---|
 | P0 | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | Finish deterministic E2E hardening |
 | P1 | [slack-integration-issues.md](./slack-integration-issues.md) | Active | Scope Slack connections by organization |
-| P2 | [query-filter-ordering.md](./query-filter-ordering.md) | Queued | Fix remaining query-shape bugs |
+| P2 | [query-filter-ordering.md](./query-filter-ordering.md) | Queued | Fix 4 remaining query-shape bugs |
 | P2 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Blocked | Finish field-projection audit and publish metrics report |
 | P2 | [feature-gaps.md](./feature-gaps.md) | Blocked | Complete external Slack dashboard setup |
 | P2 | [emoji-overhaul.md](./emoji-overhaul.md) | Blocked | Finish manual accessibility QA |
@@ -51,6 +57,6 @@
 
 1. Keep [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) green.
 2. Fix [slack-integration-issues.md](./slack-integration-issues.md).
-3. Fix [query-filter-ordering.md](./query-filter-ordering.md).
+3. Fix the 4 remaining issues in [query-filter-ordering.md](./query-filter-ordering.md).
 4. Close the near-finished blocked tracks as externals unblock.
 5. Then move to public launch, enterprise, and uptime.

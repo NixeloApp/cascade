@@ -2,8 +2,8 @@
 
 > **Priority:** P2
 > **Status:** Queued
-> **Last Updated:** 2026-03-12
-> **Verification Summary:** `5` verified unresolved query-shape issues remain.
+> **Last Updated:** 2026-03-13
+> **Verification Summary:** `4` verified unresolved query-shape issues remain.
 
 ## Remaining Queries
 
@@ -21,11 +21,6 @@
 
 - Takes a limit before evaluating link type and cross-team conditions.
 - Fix: filter before limit or add an appropriate index.
-
-### calendarEvents.ts - Org calendar with workspace/team filter
-
-- `listByOrganizationDateRange` takes a limit, then filters workspace/team in memory.
-- Fix: use a more specific index or restructure the query.
 
 ### invoices.ts - Client filter
 
