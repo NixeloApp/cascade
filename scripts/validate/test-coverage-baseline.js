@@ -9,7 +9,6 @@ export const TEST_COVERAGE_BASELINE = [
   "convex/examples/rateLimitExample.ts",
   "convex/invoicesActions.ts",
   "convex/slackCommandsCore.ts",
-  "src/components/AI/AISuggestionsPanel.tsx",
   "src/components/ActivityFeed.tsx",
   "src/components/Admin/HourComplianceDashboard.tsx",
   "src/components/Admin/IpRestrictionsSettings.tsx",
