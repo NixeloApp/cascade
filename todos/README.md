@@ -39,6 +39,7 @@
 | P3 | [uptime-monitoring.md](./uptime-monitoring.md) | Blocked | Decide runner/routing architecture and start MVP |
 | P4 | [growth-features.md](./growth-features.md) | Blocked | Set up Outlook integration and prioritize next enhancement |
 | P4 | [enterprise.md](./enterprise.md) | Blocked | Resolve billing and IdP decisions, then implement wedge |
+| P3 | [bundle-optimization.md](./bundle-optimization.md) | Open | Split vendor chunks and reduce initial bundle size |
 
 ## External Blockers
 
