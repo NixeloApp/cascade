@@ -60,7 +60,6 @@ export const TEST_COVERAGE_BASELINE = [
   "src/components/CreateWorkspaceModal.tsx",
   "src/components/Dashboard.tsx",
   "src/components/Dashboard/DashboardCustomizeModal.tsx",
-  "src/components/Dashboard/QuickStats.tsx",
   "src/components/Dashboard/RecentActivity.tsx",
   "src/components/Fields/CustomFieldCard.tsx",
   "src/components/Fields/CustomFieldForm.tsx",
