@@ -40,11 +40,7 @@ const SKIP_PATTERNS = [
 const MIN_LINES_FOR_TEST = 30;
 
 // Known exceptions - files that intentionally don't have tests
-const ALLOWLIST = new Set([
-  // Thin wrappers or config files
-  "src/components/PlateEditor.tsx", // Wrapper around Plate
-  "src/components/BlockNoteEditor.tsx", // Wrapper around BlockNote
-]);
+const ALLOWLIST = new Set([]);
 
 function shouldRequireTest(filePath, content) {
   const rel = relPath(filePath);

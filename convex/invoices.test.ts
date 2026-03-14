@@ -1,6 +1,7 @@
 import { anyApi } from "convex/server";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
+import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -74,6 +75,82 @@ describe("invoices", () => {
     expect(sent[0].subtotal).toBe(500);
     expect(sent[0].total).toBe(550);
     expect(typeof sent[0].sentAt).toBe("number");
+  });
+
+  it("lists client invoices beyond the bounded organization limit", async () => {
+    const t = convexTest(schema, modules);
+    const { asUser, organizationId, userId } = await createTestContext(t);
+
+    const { clientId: targetClientId } = await asUser.mutation(clientsApi.create, {
+      organizationId,
+      name: "Target Client",
+      email: "target@example.com",
+    });
+    const { clientId: otherClientId } = await asUser.mutation(clientsApi.create, {
+      organizationId,
+      name: "Overflow Client",
+      email: "overflow@example.com",
+    });
+
+    const baseTime = Date.now();
+    await t.run(async (ctx) => {
+      await ctx.db.insert("invoices", {
+        organizationId,
+        clientId: targetClientId,
+        number: "INV-TARGET-001",
+        status: "sent",
+        issueDate: baseTime - 10_000,
+        dueDate: baseTime + 10_000,
+        lineItems: [{ description: "Target work", quantity: 1, rate: 100, amount: 100 }],
+        subtotal: 100,
+        tax: undefined,
+        total: 100,
+        notes: undefined,
+        pdfUrl: undefined,
+        createdBy: userId,
+        sentAt: baseTime - 5_000,
+        paidAt: undefined,
+        updatedAt: baseTime - 10_000,
+      });
+
+      // Insert more invoices than BOUNDED_LIST_LIMIT to test batched collection
+      const overflowCount = BOUNDED_LIST_LIMIT + 10;
+      for (let index = 0; index < overflowCount; index += 1) {
+        await ctx.db.insert("invoices", {
+          organizationId,
+          clientId: otherClientId,
+          number: `INV-OTHER-${index.toString().padStart(3, "0")}`,
+          status: index % 2 === 0 ? "sent" : "draft",
+          issueDate: baseTime + index,
+          dueDate: baseTime + 20_000 + index,
+          lineItems: [{ description: `Overflow ${index}`, quantity: 1, rate: 50, amount: 50 }],
+          subtotal: 50,
+          tax: undefined,
+          total: 50,
+          notes: undefined,
+          pdfUrl: undefined,
+          createdBy: userId,
+          sentAt: index % 2 === 0 ? baseTime + index : undefined,
+          paidAt: undefined,
+          updatedAt: baseTime + index,
+        });
+      }
+    });
+
+    const targetInvoices = await asUser.query(invoicesApi.list, {
+      organizationId,
+      clientId: targetClientId,
+    });
+    expect(targetInvoices).toHaveLength(1);
+    expect(targetInvoices[0]?.number).toBe("INV-TARGET-001");
+
+    const targetSentInvoices = await asUser.query(invoicesApi.list, {
+      organizationId,
+      clientId: targetClientId,
+      status: "sent",
+    });
+    expect(targetSentInvoices).toHaveLength(1);
+    expect(targetSentInvoices[0]?.number).toBe("INV-TARGET-001");
   });
 
   it("rejects invoices tied to clients from another organization", async () => {

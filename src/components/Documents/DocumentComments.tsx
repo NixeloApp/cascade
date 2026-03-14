@@ -39,13 +39,14 @@ export function DocumentComments({ documentId }: DocumentCommentsProps) {
   const { mutate: addComment } = useAuthenticatedMutation(api.documents.addComment);
 
   const handleSubmit = async () => {
-    if (!newComment.trim()) return;
+    const trimmedComment = newComment.trim();
+    if (!trimmedComment) return;
 
     setIsSubmitting(true);
     try {
       await addComment({
         documentId,
-        content: newComment,
+        content: trimmedComment,
       });
 
       setNewComment("");

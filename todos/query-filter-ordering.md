@@ -1,37 +1,17 @@
 # Query Filter Ordering Issues
 
-> **Priority:** P2
-> **Status:** Queued
-> **Last Updated:** 2026-03-12
-> **Verification Summary:** `5` verified unresolved query-shape issues remain.
+> **Priority:** P0
+> **Status:** Complete
+> **Last Updated:** 2026-03-13
+> **Verification Summary:** `0` verified unresolved query-shape issues remain.
 
-## Remaining Queries
+## Completed Query Fixes
 
-### workspaces.ts - Backlog filter
-
-- `getBacklogIssues` takes a limit, then filters `sprintId === undefined && status !== "done"`.
-- Fix: add an index such as `by_workspace_sprint` or move the filter into the query path.
-
-### workspaces.ts - Sprint issue count
-
-- Uses `.take(BOUNDED_LIST_LIMIT).length` for a count.
-- Fix: use `efficientCount` or a non-truncating bounded count path.
-
-### workspaces.ts - Cross-team dependencies
-
-- Takes a limit before evaluating link type and cross-team conditions.
-- Fix: filter before limit or add an appropriate index.
-
-### calendarEvents.ts - Org calendar with workspace/team filter
-
-- `listByOrganizationDateRange` takes a limit, then filters workspace/team in memory.
-- Fix: use a more specific index or restructure the query.
-
-### invoices.ts - Client filter
-
-- `list` takes `BOUNDED_LIST_LIMIT`, then filters by `clientId`.
-- Fix: add `by_client` or `by_org_client`.
+- `workspaces.ts - Backlog filter` now paginates unsprinted workspace issues instead of truncating before backlog filtering.
+- `workspaces.ts - Sprint issue count` now uses `efficientCount` instead of capped `.take(...).length`.
+- `workspaces.ts - Cross-team dependencies` now evaluates all workspace issues in bounded batches before applying dependency filters.
+- `invoices.ts - Client filter` now uses organization/client indexes instead of filtering after the bounded organization query.
 
 ## Validation Requirement
 
-- [ ] Add tests with datasets larger than the active limit so the corrected query paths prove they do not truncate results.
+- [x] Added tests with datasets larger than the active limit so the corrected query paths prove they do not truncate results.

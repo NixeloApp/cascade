@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { internal } from "./_generated/api";
+import { MINUTE } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { createTestUser } from "./testUtils";
@@ -31,8 +32,7 @@ describe("Notifications Performance", () => {
     const latestTime = Math.max(...times);
 
     // Sanity check: all notifications should be created within 1 minute of each other
-    const ONE_MINUTE = 60 * 1000;
-    expect(latestTime - earliestTime).toBeLessThan(ONE_MINUTE);
+    expect(latestTime - earliestTime).toBeLessThan(MINUTE);
 
     // Query with startTime before all notifications - should return all
     // Note: listForDigest uses .gt() so we need startTime < earliestTime

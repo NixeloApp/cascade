@@ -6,10 +6,11 @@
  * Supports clearing drafts after successful form submission.
  */
 
+import { DAY } from "@convex/lib/timeUtils";
 import { useEffect, useRef, useState } from "react";
 
 const DRAFT_PREFIX = "cascade_draft_";
-const DRAFT_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
+const DRAFT_EXPIRY_MS = DAY;
 
 interface DraftData<T> {
   data: T;

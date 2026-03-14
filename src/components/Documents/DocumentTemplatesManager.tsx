@@ -95,16 +95,18 @@ export function DocumentTemplatesManager({
       };
     }) => {
       try {
+        const trimmedName = value.name.trim();
+        const trimmedDescription = value.description?.trim() || undefined;
         const templateData = {
-          name: value.name.trim(),
-          description: value.description?.trim() || undefined,
+          name: trimmedName,
+          description: trimmedDescription,
           category: value.category,
           icon: value.icon,
           content: [
             {
               type: "heading",
               props: { level: 1 },
-              content: [{ type: "text", text: value.name }],
+              content: [{ type: "text", text: trimmedName }],
             },
             { type: "paragraph", content: [] },
           ],

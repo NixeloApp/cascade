@@ -316,6 +316,185 @@ describe("Workspaces", () => {
     });
   });
 
+  describe("getActiveSprints", () => {
+    it("should count sprint issues beyond the bounded list limit", async () => {
+      const t = convexTest(schema, modules);
+      const ownerId = await createTestUser(t);
+      const asOwner = asAuthenticatedUser(t, ownerId);
+
+      const { organizationId } = await asOwner.mutation(api.organizations.createOrganization, {
+        name: "Sprint Count organization",
+        timezone: "America/New_York",
+      });
+      const { workspaceId } = await asOwner.mutation(api.workspaces.create, {
+        organizationId,
+        name: "Sprint Count Workspace",
+        slug: "sprint-count-workspace",
+      });
+
+      const { teamId } = await asOwner.mutation(api.teams.createTeam, {
+        organizationId,
+        workspaceId,
+        name: "Platform",
+        isPrivate: false,
+      });
+
+      const sprintId = await t.run(async (ctx) => {
+        const now = Date.now();
+        const projectId = await ctx.db.insert("projects", {
+          name: "Platform Project",
+          key: "PLT",
+          organizationId,
+          workspaceId,
+          teamId,
+          ownerId,
+          createdBy: ownerId,
+          updatedAt: now,
+          boardType: "scrum",
+          workflowStates: [],
+        });
+
+        const sprintId = await ctx.db.insert("sprints", {
+          projectId,
+          name: "Sprint 1",
+          goal: "Ship the first milestone",
+          startDate: now - 10_000,
+          endDate: now + 10_000,
+          status: "active",
+          createdBy: ownerId,
+          updatedAt: now,
+        });
+
+        for (let index = 0; index <= 100; index += 1) {
+          await ctx.db.insert("issues", {
+            projectId,
+            organizationId,
+            workspaceId,
+            teamId,
+            sprintId,
+            key: `PLT-${index + 1}`,
+            title: `Sprint issue ${index + 1}`,
+            type: "task",
+            status: "todo",
+            priority: "medium",
+            reporterId: ownerId,
+            updatedAt: now + index,
+            labels: [],
+            linkedDocuments: [],
+            attachments: [],
+            loggedHours: 0,
+            order: index,
+          });
+        }
+
+        return sprintId;
+      });
+
+      const activeSprints = await asOwner.query(api.workspaces.getActiveSprints, {
+        workspaceId,
+      });
+
+      expect(activeSprints).toHaveLength(1);
+      expect(activeSprints[0]?._id).toBe(sprintId);
+      expect(activeSprints[0]?.issueCount).toBe(101);
+    });
+  });
+
+  describe("getBacklogIssues", () => {
+    it("should return unsprinted backlog issues beyond the initial filtered batch", async () => {
+      const t = convexTest(schema, modules);
+      const ownerId = await createTestUser(t);
+      const asOwner = asAuthenticatedUser(t, ownerId);
+
+      const { organizationId } = await asOwner.mutation(api.organizations.createOrganization, {
+        name: "Backlog organization",
+        timezone: "America/New_York",
+      });
+      const { workspaceId } = await asOwner.mutation(api.workspaces.create, {
+        organizationId,
+        name: "Backlog Workspace",
+        slug: "backlog-workspace",
+      });
+
+      const { teamId } = await asOwner.mutation(api.teams.createTeam, {
+        organizationId,
+        workspaceId,
+        name: "Backlog Team",
+        isPrivate: false,
+      });
+
+      await t.run(async (ctx) => {
+        const now = Date.now();
+        const projectId = await ctx.db.insert("projects", {
+          name: "Backlog Project",
+          key: "BLG",
+          organizationId,
+          workspaceId,
+          teamId,
+          ownerId,
+          createdBy: ownerId,
+          updatedAt: now,
+          boardType: "scrum",
+          workflowStates: [
+            { id: "todo", name: "To Do", category: "todo", order: 0 },
+            { id: "inprogress", name: "In Progress", category: "inprogress", order: 1 },
+            { id: "done", name: "Done", category: "done", order: 2 },
+          ],
+        });
+
+        for (let index = 0; index <= 60; index += 1) {
+          await ctx.db.insert("issues", {
+            projectId,
+            organizationId,
+            workspaceId,
+            teamId,
+            key: `BLG-DONE-${index + 1}`,
+            title: `Done issue ${index + 1}`,
+            type: "task",
+            status: "done",
+            priority: "medium",
+            reporterId: ownerId,
+            updatedAt: now + index + 1,
+            labels: [],
+            linkedDocuments: [],
+            attachments: [],
+            loggedHours: 0,
+            order: index,
+          });
+        }
+
+        await ctx.db.insert("issues", {
+          projectId,
+          organizationId,
+          workspaceId,
+          teamId,
+          key: "BLG-1",
+          title: "Backlog survivor",
+          type: "task",
+          status: "todo",
+          priority: "high",
+          reporterId: ownerId,
+          updatedAt: now,
+          labels: [],
+          linkedDocuments: [],
+          attachments: [],
+          loggedHours: 0,
+          order: 999,
+        });
+      });
+
+      const backlogIssues = await asOwner.query(api.workspaces.getBacklogIssues, {
+        workspaceId,
+        limit: 20,
+      });
+
+      expect(backlogIssues).toHaveLength(1);
+      expect(backlogIssues[0]?.key).toBe("BLG-1");
+      expect(backlogIssues[0]?.status).toBe("todo");
+      expect(backlogIssues[0]?.sprintId).toBeUndefined();
+    });
+  });
+
   describe("get", () => {
     it("should get workspace by ID", async () => {
       const t = convexTest(schema, modules);
@@ -809,6 +988,138 @@ describe("Workspaces", () => {
       expect(dependencies[0].linkId).toBe(crossLinkId);
       expect(dependencies[0].linkId).not.toBe(sameTeamLinkId);
       expect(dependencies[0].fromIssue.teamId).not.toBe(dependencies[0].toIssue.teamId);
+    });
+
+    it("should find cross-team dependencies beyond the initial workspace issue limit", async () => {
+      const t = convexTest(schema, modules);
+      const ownerId = await createTestUser(t);
+      const asOwner = asAuthenticatedUser(t, ownerId);
+
+      const { organizationId } = await asOwner.mutation(api.organizations.createOrganization, {
+        name: "Dependency Overflow organization",
+        timezone: "America/New_York",
+      });
+      const { workspaceId } = await asOwner.mutation(api.workspaces.create, {
+        organizationId,
+        name: "Dependency Overflow Workspace",
+        slug: "dependency-overflow-workspace",
+      });
+
+      const { teamId: teamAId } = await asOwner.mutation(api.teams.createTeam, {
+        organizationId,
+        workspaceId,
+        name: "Infrastructure",
+        isPrivate: false,
+      });
+      const { teamId: teamBId } = await asOwner.mutation(api.teams.createTeam, {
+        organizationId,
+        workspaceId,
+        name: "Product",
+        isPrivate: false,
+      });
+
+      const crossLinkId = await t.run(async (ctx) => {
+        const now = Date.now();
+        const infraProjectId = await ctx.db.insert("projects", {
+          name: "Infrastructure Project",
+          key: "INF",
+          organizationId,
+          workspaceId,
+          teamId: teamAId,
+          ownerId,
+          createdBy: ownerId,
+          updatedAt: now,
+          boardType: "kanban",
+          workflowStates: [],
+        });
+        const productProjectId = await ctx.db.insert("projects", {
+          name: "Product Project",
+          key: "PRD",
+          organizationId,
+          workspaceId,
+          teamId: teamBId,
+          ownerId,
+          createdBy: ownerId,
+          updatedAt: now,
+          boardType: "kanban",
+          workflowStates: [],
+        });
+
+        for (let index = 0; index < 25; index += 1) {
+          await ctx.db.insert("issues", {
+            projectId: infraProjectId,
+            organizationId,
+            workspaceId,
+            teamId: teamAId,
+            key: `INF-${index + 1}`,
+            title: `Infra filler ${index + 1}`,
+            type: "task",
+            status: "todo",
+            priority: "low",
+            reporterId: ownerId,
+            updatedAt: now + index,
+            labels: [],
+            linkedDocuments: [],
+            attachments: [],
+            loggedHours: 0,
+            order: index,
+          });
+        }
+
+        const blockerId = await ctx.db.insert("issues", {
+          projectId: infraProjectId,
+          organizationId,
+          workspaceId,
+          teamId: teamAId,
+          key: "INF-X",
+          title: "Shared API",
+          type: "task",
+          status: "todo",
+          priority: "high",
+          reporterId: ownerId,
+          updatedAt: now + 30,
+          labels: [],
+          linkedDocuments: [],
+          attachments: [],
+          loggedHours: 0,
+          order: 100,
+        });
+        const blockedId = await ctx.db.insert("issues", {
+          projectId: productProjectId,
+          organizationId,
+          workspaceId,
+          teamId: teamBId,
+          key: "PRD-X",
+          title: "Customer workflow",
+          type: "task",
+          status: "inprogress",
+          priority: "medium",
+          reporterId: ownerId,
+          updatedAt: now + 31,
+          labels: [],
+          linkedDocuments: [],
+          attachments: [],
+          loggedHours: 0,
+          order: 101,
+        });
+
+        return await ctx.db.insert("issueLinks", {
+          fromIssueId: blockerId,
+          toIssueId: blockedId,
+          linkType: "blocks",
+          createdBy: ownerId,
+        });
+      });
+
+      const dependencies = await asOwner.query(api.workspaces.getCrossTeamDependencies, {
+        workspaceId,
+        limit: 20,
+      });
+
+      expect(dependencies).toHaveLength(1);
+      expect(dependencies[0]?.linkId).toBe(crossLinkId);
+      expect(dependencies[0]?.fromIssue.teamId).toBe(teamAId);
+      expect(dependencies[0]?.toIssue.teamId).toBe(teamBId);
     });
 
     it("should apply team/status/priority filters", async () => {

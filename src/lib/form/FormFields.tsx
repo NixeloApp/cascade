@@ -175,7 +175,9 @@ export function FormSelect<TName extends string, TValue>({
       label={label}
       helperText={helperText}
       {...props}
-    />
+    >
+      {children}
+    </Select>
   );
 }
 

@@ -2,6 +2,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, test } from "vitest";
 import { api } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
+import { SECOND } from "../lib/timeUtils";
 import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import { createProjectInOrganization, createTestContext } from "../testUtils";
@@ -55,7 +56,7 @@ describe("listRoadmapIssues optimization", () => {
           status: "todo",
           priority: "medium",
           reporterId: userId,
-          dueDate: Date.now() + 100000,
+          dueDate: Date.now() + 100 * SECOND,
           updatedAt: Date.now(),
           labels: [],
           linkedDocuments: [],
@@ -82,7 +83,7 @@ describe("listRoadmapIssues optimization", () => {
         status: "todo",
         priority: "medium",
         reporterId: userId,
-        dueDate: Date.now() + 100000,
+        dueDate: Date.now() + 100 * SECOND,
         updatedAt: Date.now(),
         labels: [],
         linkedDocuments: [],

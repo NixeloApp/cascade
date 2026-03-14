@@ -44,11 +44,8 @@ export function SidebarTeamItem({
   onNavClick,
 }: SidebarTeamItemProps) {
   const location = useLocation();
-  // Use regex to ensure we match /teams/slug exactly, or /teams/slug/...
-  // but NOT /teams/slug-prefix... using word boundary or path separator check
-  const isActive =
-    location.pathname === `/teams/${team.slug}` ||
-    location.pathname.startsWith(`/teams/${team.slug}/`);
+  const teamPath = ROUTES.workspaces.teams.detail.build(orgSlug, workspaceSlug, team.slug);
+  const isActive = location.pathname === teamPath || location.pathname.startsWith(`${teamPath}/`);
 
   return (
     <Card recipe="sidebarTeamBranch" variant="ghost" padding="none">

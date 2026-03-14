@@ -14,7 +14,7 @@ import {
   workspaceAdminMutation,
   workspaceQuery,
 } from "./customFunctions";
-import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
+import { BOUNDED_LIST_LIMIT, collectInBatches } from "./lib/boundedQueries";
 import { conflict, forbidden, notFound } from "./lib/errors";
 import { isOrganizationAdmin } from "./lib/organizationAccess";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
@@ -300,21 +300,17 @@ export const getBacklogIssues = workspaceQuery({
     const rawLimit = args.limit ?? 200;
     const limit = Math.min(Math.max(rawLimit, 1), BOUNDED_LIST_LIMIT * 5);
 
-    // Fetch more issues than the limit to account for filtering
-    // This ensures we return enough backlog items even after filtering
-    const FETCH_MULTIPLIER = 3;
-    const fetchLimit = Math.min(limit * FETCH_MULTIPLIER, BOUNDED_LIST_LIMIT * 10);
-
-    const issues = await ctx.db
+    // Use the new index that includes status, filtering out "done" at the DB level
+    const backlogIssues = await ctx.db
       .query("issues")
-      .withIndex("by_workspace", (q) => q.eq("workspaceId", ctx.workspaceId))
-      .filter(notDeleted)
-      .take(fetchLimit);
+      .withIndex("by_workspace_sprint_status", (q) =>
+        q.eq("workspaceId", ctx.workspaceId).eq("sprintId", undefined),
+      )
+      .order("desc")
+      .filter((q) => q.and(q.neq(q.field("isDeleted"), true), q.neq(q.field("status"), "done")))
+      .take(limit);
 
-    return issues
-      .filter((issue) => issue.sprintId === undefined && issue.status !== "done")
-      .sort((a, b) => b.updatedAt - a.updatedAt)
-      .slice(0, limit);
+    return backlogIssues;
   },
 });
 
@@ -340,18 +336,17 @@ export const getActiveSprints = workspaceQuery({
 
         const enriched = await Promise.all(
           sprints.map(async (sprint) => {
-            // Use larger limit for counting to avoid undercount on large sprints
+            // Use bounded take() instead of efficientCount() to ensure
+            // we don't scan unlimited records in production.
             const MAX_SPRINT_ISSUE_COUNT = 2000;
-            const issueCount = (
-              await ctx.db
-                .query("issues")
-                .withIndex("by_sprint", (q) => q.eq("sprintId", sprint._id))
-                .filter(notDeleted)
-                .take(MAX_SPRINT_ISSUE_COUNT)
-            ).length;
+            const issues = await ctx.db
+              .query("issues")
+              .withIndex("by_sprint", (q) => q.eq("sprintId", sprint._id))
+              .filter(notDeleted)
+              .take(MAX_SPRINT_ISSUE_COUNT);
             return {
               ...sprint,
-              issueCount,
+              issueCount: issues.length,
               projectId: project._id,
               projectName: project.name,
               projectKey: project.key,
@@ -385,11 +380,22 @@ export const getCrossTeamDependencies = workspaceQuery({
     const rawLimit = args.limit ?? 200;
     const limit = Math.min(Math.max(rawLimit, 1), BOUNDED_LIST_LIMIT * 5);
 
-    const workspaceIssues = await ctx.db
-      .query("issues")
-      .withIndex("by_workspace", (q) => q.eq("workspaceId", ctx.workspaceId))
-      .filter(notDeleted)
-      .take(limit);
+    // Derive maxBatches from limit to avoid over-fetching.
+    // We need at least `limit` issues to find `limit` cross-team dependencies,
+    // but typically only a fraction of issues have cross-team links.
+    // Use a multiplier to ensure we scan enough while still bounding work.
+    const estimatedBatches = Math.ceil((limit * 3) / BOUNDED_LIST_LIMIT);
+    const maxBatches = Math.min(Math.max(estimatedBatches, 2), 20);
+
+    const workspaceIssues = await collectInBatches(
+      (cursor) =>
+        ctx.db
+          .query("issues")
+          .withIndex("by_workspace", (q) => q.eq("workspaceId", ctx.workspaceId))
+          .filter(notDeleted)
+          .paginate({ numItems: BOUNDED_LIST_LIMIT, cursor }),
+      { maxBatches },
+    );
 
     const issueMap = new Map(workspaceIssues.map((issue) => [issue._id, issue]));
 

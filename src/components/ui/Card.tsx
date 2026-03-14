@@ -550,6 +550,22 @@ const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
   ({ className, title, description, action, children, ...props }, ref) => {
     // Support both structured props and children
     if (children) {
+      if (action) {
+        return (
+          <Flex
+            ref={ref}
+            align="start"
+            justify="between"
+            gap="md"
+            className={cn("p-6", className)}
+            {...props}
+          >
+            <div className="min-w-0 flex-1">{children}</div>
+            <Flex className="shrink-0">{action}</Flex>
+          </Flex>
+        );
+      }
+
       return (
         <Flex ref={ref} direction="column" gap="xs" className={cn("p-6", className)} {...props}>
           {children}
@@ -584,25 +600,26 @@ const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
 );
 CardHeader.displayName = "CardHeader";
 
-const CardTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTMLHeadingElement>>(
-  ({ className, children, color: _color, ...props }, ref) => (
-    <Typography
-      ref={ref}
-      as="h3"
-      variant="h4"
-      className={cn("text-lg font-semibold leading-none tracking-tight", className)}
-      {...props}
-    >
-      {children}
-    </Typography>
-  ),
-);
+const CardTitle = React.forwardRef<
+  HTMLHeadingElement,
+  Omit<React.HTMLAttributes<HTMLHeadingElement>, "color">
+>(({ className, children, ...props }, ref) => (
+  <Typography
+    ref={ref}
+    as="h3"
+    variant="h4"
+    className={cn("text-lg font-semibold leading-none tracking-tight", className)}
+    {...props}
+  >
+    {children}
+  </Typography>
+));
 CardTitle.displayName = "CardTitle";
 
 const CardDescription = React.forwardRef<
   HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, children, color: _color, ...props }, ref) => (
+  Omit<React.HTMLAttributes<HTMLParagraphElement>, "color">
+>(({ className, children, ...props }, ref) => (
   <Typography ref={ref} variant="muted" className={cn("text-sm", className)} {...props}>
     {children}
   </Typography>

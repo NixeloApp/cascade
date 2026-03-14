@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import { SECOND } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import { asAuthenticatedUser, createTestProject, createTestUser } from "./testUtils";
@@ -76,7 +77,7 @@ describe("Load More Done Issues", () => {
       projectId,
       name: "Sprint 1",
       startDate: Date.now(),
-      endDate: Date.now() + 100000,
+      endDate: Date.now() + 100 * SECOND,
     });
 
     // Create 3 issues in sprint and move them to Done sequentially
