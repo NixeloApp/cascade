@@ -115,7 +115,6 @@ export const TEST_COVERAGE_BASELINE = [
   "src/components/Plate/MentionElement.tsx",
   "src/components/Plate/MentionInputElement.tsx",
   "src/components/Plate/SlashMenu.tsx",
-  "src/components/ProjectSettings/DangerZone.tsx",
   "src/components/ProjectSettings/GeneralSettings.tsx",
   "src/components/ProjectSettings/MemberManagement.tsx",
   "src/components/ProjectSettings/WorkflowSettings.tsx",
