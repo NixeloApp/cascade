@@ -6,7 +6,7 @@
 ## Status After `62ffb8a`
 
 - The validator-hardening and manual-memoization sweep is landed, and the validator-specific todo docs were pruned in that commit.
-- The validator suite now passes `37/37` checks, but explicit exception debt still remains in the test-coverage baseline and time-constants allowlist.
+- The validator suite now passes `37/37` checks, and the remaining explicit validator debt is the test-coverage baseline.
 - The top execution queue is now: validator exception burndown, screenshot-driven facelift, and E2E reliability.
 - Slack org scoping stays active behind those tracks.
 - Everything else still open is blocked on external setup, environment access, or product/infra decisions.
@@ -14,7 +14,7 @@
 ## Current Focus
 
 1. [validator-exceptions-burndown.md](./validator-exceptions-burndown.md)
-   - Remove the remaining `1` time-constants allowlist entry and the `168`-file test-coverage baseline.
+   - Burn down the remaining `168`-file test-coverage baseline.
 2. [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md)
    - Use screenshot review to drive a broader visual facelift across the weakest product surfaces.
 3. [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md)

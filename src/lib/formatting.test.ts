@@ -1,4 +1,4 @@
-import { DAY, HOUR } from "@convex/lib/timeUtils";
+import { DAY, HOUR, MINUTE, SECOND } from "@convex/lib/timeUtils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   formatCurrency,
@@ -17,6 +17,9 @@ import {
   parseDuration,
 } from "./formatting";
 
+const HOUR_IN_SECONDS = 60 * 60;
+const MINUTE_IN_SECONDS = 60;
+
 describe("formatting utilities", () => {
   describe("formatDuration", () => {
     it("should format zero seconds", () => {
@@ -32,16 +35,16 @@ describe("formatting utilities", () => {
     });
 
     it("should format hours, minutes, and seconds", () => {
-      expect(formatDuration(3661)).toBe("01:01:01");
+      expect(formatDuration(HOUR_IN_SECONDS + MINUTE_IN_SECONDS + 1)).toBe("01:01:01");
     });
 
     it("should handle large values", () => {
-      expect(formatDuration(36000)).toBe("10:00:00");
-      expect(formatDuration(86399)).toBe("23:59:59");
+      expect(formatDuration(10 * HOUR_IN_SECONDS)).toBe("10:00:00");
+      expect(formatDuration(23 * HOUR_IN_SECONDS + 59 * MINUTE_IN_SECONDS + 59)).toBe("23:59:59");
     });
 
     it("should pad single digits with zeros", () => {
-      expect(formatDuration(3723)).toBe("01:02:03");
+      expect(formatDuration(HOUR_IN_SECONDS + 2 * MINUTE_IN_SECONDS + 3)).toBe("01:02:03");
     });
   });
 
@@ -204,7 +207,7 @@ describe("formatting utilities", () => {
     });
 
     it("should format minutes ago", () => {
-      const timestamp = Date.now() - 5 * 60 * 1000;
+      const timestamp = Date.now() - 5 * MINUTE;
       expect(formatRelativeTime(timestamp)).toMatch(/5 minutes ago/);
     });
 
