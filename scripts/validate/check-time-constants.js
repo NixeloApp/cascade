@@ -42,27 +42,14 @@ const ALLOWLIST = [
   "src/components/Notifications/NotificationCenter.test.tsx",
   "src/components/TimeTracking/TimerWidget.test.tsx",
   "src/components/AnalyticsDashboard.test.tsx",
-  "src/components/InboxList.test.tsx",
   "src/lib/formatting.test.ts",
   "convex/issuesLoadMore.test.ts",
-  "convex/meetingBotSSRF.jules.test.ts",
-  "convex/meetingBot.jules.test.ts",
   "convex/issues/roadmap.test.ts",
   "convex/issues/roadmapPagination.test.ts",
   "convex/lib/softDeleteHelpers.test.ts",
-  "convex/meetingBotList.jules.test.ts",
-  "convex/userProfilesSecurity.jules.test.ts",
   "convex/notificationsPerf.test.ts",
-  "convex/dashboard.jules.test.ts",
   // Source files that define time constants or have legitimate uses
-  "convex/lib/timeUtils.ts", // Defines the constants
-  "convex/twoFactor.ts", // Uses named constant LOCKOUT_DURATION_MS
-  "convex/e2e.ts", // Uses named constant TEST_USER_EXPIRATION_MS
-  "convex/meetingBot.ts", // Uses named constant BOT_SERVICE_TIMEOUT_MS
-  "convex/lib/dns.ts", // Uses named constant DOH_TIMEOUT_MS
-  "convex/lib/webhookHelpers.ts", // Uses named constant WEBHOOK_TIMEOUT_MS
   "src/hooks/useDraftAutoSave.ts", // Uses named constant DRAFT_EXPIRY_MS
-  "e2e/screenshot-pages.ts", // Uses named constant SETTLE_MS
 ];
 
 export function run() {

@@ -2,7 +2,7 @@
 
 > **Priority:** P0
 > **Status:** Active
-> **Last Updated:** 2026-03-13
+> **Last Updated:** 2026-03-14
 > **Verification Summary:** `37/37` validators pass, but `2` explicit exception buckets still remain.
 
 ## Objective
@@ -21,8 +21,9 @@ Keep the validator suite green while eliminating the remaining allowlists and ba
 ### Time constants allowlist
 
 - **File:** `scripts/validate/check-time-constants.js`
-- **Remaining effective entries:** `23`
-- **Notes:** `24` paths are listed, but `e2e/screenshot-pages.ts` is outside the validator scan scope and should be removed as dead configuration.
+- **Remaining effective entries:** `11`
+- **Breakdown:** `10` test files, `1` source file
+- **Notes:** stale entries for deleted files, out-of-scope files, and already-clean source files have been pruned.
 - **Fix:** replace magic-time values with shared constants, then delete each allowlist entry.
 
 ## Non-Goals

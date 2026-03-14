@@ -1,6 +1,6 @@
 # Nixelo Todo Portfolio
 
-> **Last Updated:** 2026-03-13
+> **Last Updated:** 2026-03-14
 > **Scope:** open work only
 
 ## Status After `62ffb8a`
@@ -14,7 +14,7 @@
 ## Current Focus
 
 1. [validator-exceptions-burndown.md](./validator-exceptions-burndown.md)
-   - Remove the remaining time-constants allowlist and test-coverage baseline entries.
+   - Remove the remaining `11` time-constants allowlist entries and the `168`-file test-coverage baseline.
 2. [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md)
    - Use screenshot review to drive a broader visual facelift across the weakest product surfaces.
 3. [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md)
