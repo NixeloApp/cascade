@@ -58,7 +58,6 @@ export const TEST_COVERAGE_BASELINE = [
   "src/components/Landing/FinalCTASection.tsx",
   "src/components/Landing/Icons.tsx",
   "src/components/Landing/LogoBar.tsx",
-  "src/components/Landing/ProductShowcase.tsx",
   "src/components/LazyPostHog.tsx",
   "src/components/MeetingRecordingSection.tsx",
   "src/components/MentionInput.tsx",
