@@ -1,6 +1,7 @@
 import { anyApi } from "convex/server";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
+import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
@@ -112,7 +113,9 @@ describe("invoices", () => {
         updatedAt: baseTime - 10_000,
       });
 
-      for (let index = 0; index <= 100; index += 1) {
+      // Insert more invoices than BOUNDED_LIST_LIMIT to test batched collection
+      const overflowCount = BOUNDED_LIST_LIMIT + 10;
+      for (let index = 0; index < overflowCount; index += 1) {
         await ctx.db.insert("invoices", {
           organizationId,
           clientId: otherClientId,

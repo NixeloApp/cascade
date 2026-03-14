@@ -2,7 +2,7 @@ import userEvent from "@testing-library/user-event";
 import type { ReactMutation } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import type { Mock } from "vitest";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 import { fireEvent, render, screen, waitFor } from "@/test/custom-render";
@@ -118,6 +118,10 @@ describe("CoverImageUploadModal", () => {
       return result;
     });
     vi.stubGlobal("fetch", vi.fn());
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("shows the current cover image and removes it when requested", async () => {

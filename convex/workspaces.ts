@@ -14,7 +14,7 @@ import {
   workspaceAdminMutation,
   workspaceQuery,
 } from "./customFunctions";
-import { BOUNDED_LIST_LIMIT, collectInBatches, efficientCount } from "./lib/boundedQueries";
+import { BOUNDED_LIST_LIMIT, collectInBatches } from "./lib/boundedQueries";
 import { conflict, forbidden, notFound } from "./lib/errors";
 import { isOrganizationAdmin } from "./lib/organizationAccess";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
@@ -303,9 +303,12 @@ export const getBacklogIssues = workspaceQuery({
     const batchSize = Math.min(Math.max(limit, 50), BOUNDED_LIST_LIMIT);
     let cursor: string | null = null;
     let batchCount = 0;
-    const MAX_BATCHES = 20;
+    // Compute max batches based on limit to avoid over-scanning.
+    // Since we filter out "done" issues in-memory, we need some headroom
+    // (assume ~50% of backlog issues might be done in the worst case).
+    const maxBatches = Math.min(Math.max(Math.ceil((limit * 2) / batchSize), 2), 20);
 
-    while (backlogIssues.length < limit && batchCount < MAX_BATCHES) {
+    while (backlogIssues.length < limit && batchCount < maxBatches) {
       const batch = await ctx.db
         .query("issues")
         .withIndex("by_workspace_sprint_updated", (q) =>
@@ -351,17 +354,17 @@ export const getActiveSprints = workspaceQuery({
 
         const enriched = await Promise.all(
           sprints.map(async (sprint) => {
+            // Use bounded take() instead of efficientCount() to ensure
+            // we don't scan unlimited records in production.
             const MAX_SPRINT_ISSUE_COUNT = 2000;
-            const issueCount = await efficientCount(
-              ctx.db
-                .query("issues")
-                .withIndex("by_sprint", (q) => q.eq("sprintId", sprint._id))
-                .filter(notDeleted),
-              MAX_SPRINT_ISSUE_COUNT,
-            );
+            const issues = await ctx.db
+              .query("issues")
+              .withIndex("by_sprint", (q) => q.eq("sprintId", sprint._id))
+              .filter(notDeleted)
+              .take(MAX_SPRINT_ISSUE_COUNT);
             return {
               ...sprint,
-              issueCount,
+              issueCount: issues.length,
               projectId: project._id,
               projectName: project.name,
               projectKey: project.key,
@@ -395,6 +398,13 @@ export const getCrossTeamDependencies = workspaceQuery({
     const rawLimit = args.limit ?? 200;
     const limit = Math.min(Math.max(rawLimit, 1), BOUNDED_LIST_LIMIT * 5);
 
+    // Derive maxBatches from limit to avoid over-fetching.
+    // We need at least `limit` issues to find `limit` cross-team dependencies,
+    // but typically only a fraction of issues have cross-team links.
+    // Use a multiplier to ensure we scan enough while still bounding work.
+    const estimatedBatches = Math.ceil((limit * 3) / BOUNDED_LIST_LIMIT);
+    const maxBatches = Math.min(Math.max(estimatedBatches, 2), 20);
+
     const workspaceIssues = await collectInBatches(
       (cursor) =>
         ctx.db
@@ -402,7 +412,7 @@ export const getCrossTeamDependencies = workspaceQuery({
           .withIndex("by_workspace", (q) => q.eq("workspaceId", ctx.workspaceId))
           .filter(notDeleted)
           .paginate({ numItems: BOUNDED_LIST_LIMIT, cursor }),
-      { maxBatches: 20 },
+      { maxBatches },
     );
 
     const issueMap = new Map(workspaceIssues.map((issue) => [issue._id, issue]));
