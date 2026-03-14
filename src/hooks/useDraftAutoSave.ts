@@ -46,7 +46,7 @@ interface UseDraftAutoSaveReturn<T> {
 }
 
 function logDraftStorageError(operation: "load" | "save", storageKey: string, error: unknown) {
-  console.warn(`Draft auto-save ${operation} failed`, {
+  console.info(`[draft] auto-save ${operation} failed`, {
     storageKey,
     error,
   });

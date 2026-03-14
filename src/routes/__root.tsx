@@ -32,7 +32,7 @@ if (typeof window !== "undefined") {
       window.__convex_test_client = convex;
     }
   } catch (error) {
-    console.warn("[app] Failed to initialize Convex client", { error });
+    console.info("[app] Failed to initialize Convex client", { error });
   }
 }
 

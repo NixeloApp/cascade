@@ -42,7 +42,7 @@ export function WelcomeTour({ onComplete, onSkip }: WelcomeTourProps) {
           setDriverFn(() => driver);
         }
       } catch (error) {
-        console.warn("[onboarding] Failed to lazy-load Driver.js tour", { error });
+        console.info("[onboarding] Failed to lazy-load Driver.js tour", { error });
       }
     };
 

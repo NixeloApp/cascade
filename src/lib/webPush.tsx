@@ -101,7 +101,7 @@ export function WebPushProvider({ children, vapidPublicKey }: WebPushProviderPro
           setCurrentSubscription(subscription);
         }
       } catch (error) {
-        console.error("Failed to initialize push manager:", error);
+        console.info("[push] Failed to initialize push manager:", error);
       }
     };
 
@@ -158,7 +158,6 @@ export function WebPushProvider({ children, vapidPublicKey }: WebPushProviderPro
 
       showSuccess("Push notifications enabled");
     } catch (error) {
-      console.error("Failed to subscribe to push notifications:", error);
       showError(error, "Failed to enable push notifications");
     } finally {
       setIsLoading(false);
@@ -182,7 +181,6 @@ export function WebPushProvider({ children, vapidPublicKey }: WebPushProviderPro
       setCurrentSubscription(null);
       showSuccess("Push notifications disabled");
     } catch (error) {
-      console.error("Failed to unsubscribe from push notifications:", error);
       showError(error, "Failed to disable push notifications");
     } finally {
       setIsLoading(false);

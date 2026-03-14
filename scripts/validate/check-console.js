@@ -21,28 +21,12 @@ export function run() {
     /routeTree\.gen\.ts$/, // Generated route tree
   ];
 
-  // Baseline: files with legitimate console usage that need refactoring
-  // TODO: Burn down this list by replacing with proper error handling
-  const BASELINE_FILES = new Set([
-    "src/components/ErrorBoundary.tsx", // Error boundary logging
-    "src/components/LazyPostHog.tsx", // Analytics init warning
-    "src/components/Onboarding/WelcomeTour.tsx", // Tour warning
-    "src/components/Settings/TwoFactorSettings.tsx", // 2FA error
-    "src/components/TimeTracker/BillingReport.tsx", // Export warning
-    "src/hooks/useDraftAutoSave.ts", // Auto-save warning
-    "src/hooks/useOffline.ts", // Offline warning
-    "src/lib/offline.ts", // Offline handling
-    "src/lib/webPush.tsx", // Push notification errors
-    "src/routes/__root.tsx", // Root route warning
-  ]);
-
   let errorCount = 0;
   const errors = [];
 
   function checkFile(filePath) {
     const rel = relPath(filePath);
     if (IGNORE_PATTERNS.some((p) => p.test(rel))) return;
-    if (BASELINE_FILES.has(rel)) return; // Skip baselined files
 
     const content = fs.readFileSync(filePath, "utf-8");
     const lines = content.split("\n");

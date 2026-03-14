@@ -273,7 +273,6 @@ export function TwoFactorSettings() {
       await navigator.clipboard.writeText(codesText);
       showSuccess("Backup codes copied to clipboard");
     } catch (error) {
-      console.error("Failed to copy backup codes:", error);
       showError(error, "Failed to copy to clipboard");
     }
   };

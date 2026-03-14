@@ -12,6 +12,7 @@ import { MONTH, WEEK } from "@convex/lib/timeUtils";
 import { useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Clock, DollarSign, Download, TrendingUp, Users } from "@/lib/icons";
+import { showInfo } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card, CardBody } from "../ui/Card";
 import { Flex } from "../ui/Flex";
@@ -124,7 +125,7 @@ export function BillingReport({ projectId }: BillingReportProps) {
             leftIcon={<Download className="w-4 h-4" />}
             onClick={() => {
               // TODO: Implement CSV/PDF export functionality
-              console.warn("Export functionality not yet implemented");
+              showInfo("Export functionality coming soon");
             }}
           >
             Export

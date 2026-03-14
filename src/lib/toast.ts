@@ -25,6 +25,13 @@ export function showSuccess(message: string): void {
 }
 
 /**
+ * Show an info toast notification
+ */
+export function showInfo(message: string): void {
+  toast.info(message);
+}
+
+/**
  * Show an error toast notification with automatic error message extraction
  */
 export function showError(error: unknown, fallback = "An error occurred"): void {
