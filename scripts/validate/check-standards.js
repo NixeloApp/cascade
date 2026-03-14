@@ -14,34 +14,32 @@ export function run() {
   const IGNORE_DIRS = ["src/lib", "src/components/ui", "src/components/Calendar/shadcn-calendar"];
 
   // Files/directories where raw <a> tags are allowed (external links, downloads, etc.)
+  // NOTE: <a> inside <Button asChild> is already allowed by the validator
   const ALLOW_RAW_LINKS_PATTERNS = [
     ".test.tsx", // Test files mock elements
-    "/AttachmentList.tsx", // Download links
-    "/FileAttachments.tsx", // Download links
-    "/ApiKeysManager.tsx", // External docs links
-    "/PumbleIntegration.tsx", // External integration links
-    "/CustomFieldValues.tsx", // URL field type
+    "/AttachmentList.tsx", // Download links (href attribute for download)
+    "/FileAttachments.tsx", // Download links (href attribute for download)
+    "/CustomFieldValues.tsx", // URL field type (user-generated URLs)
     "/EventDetailsModal.tsx", // External event links (Google Meet, etc.)
-    "/onboarding.tsx", // External link to docs
+    "/onboarding.tsx", // mailto: link
     "/CommentRenderer.tsx", // User-generated markdown links
     "src/components/Landing/", // Landing page navigation (public-facing)
-    "src/components/Auth/", // Auth page legal links
     "src/routes/_auth/_app/$orgSlug/route.tsx", // Skip to content link
   ];
 
   // Files where <strong> for inline emphasis is allowed (inside Typography)
   // These use <strong> for semantic emphasis within text, which is valid HTML
+  // NOTE: Only add files that use <strong> for inline emphasis, not for styling
   const ALLOW_INLINE_STRONG_FILES = [
     "/ActivityFeed.tsx", // User names in activity messages
     "/RecentActivity.tsx", // User names in activity messages
-    "/Greeting.tsx", // Emphasized counts and names
-    "/FocusZone.tsx", // Emphasized text
-    "/MemberOnboarding.tsx", // Emphasized text in onboarding
-    "/ApiKeysManager.tsx", // Emphasized status messaging
-    "/HourComplianceDashboard.tsx", // Emphasized data
-    "/EmailVerificationRequired.tsx", // Emphasized email
-    "/ResetPasswordForm.tsx", // Emphasized email
-    "/forgot-password.tsx", // Emphasized email
+    "/Greeting.tsx", // Emphasized user name
+    "/MemberOnboarding.tsx", // Pro tip emphasis
+    "/ApiKeysManager.tsx", // Emphasized stats (usage count, rate limit)
+    "/HourComplianceDashboard.tsx", // Review notes label
+    "/EmailVerificationRequired.tsx", // Emphasized email address
+    "/ResetPasswordForm.tsx", // Emphasized email address
+    "/forgot-password.tsx", // Emphasized email address
     "/invite.$token.tsx", // Emphasized names
     "/CommentRenderer.tsx", // User-generated markdown (bold, italic)
   ];

@@ -16,15 +16,16 @@ import { c, ROOT, relPath } from "./utils.js";
 // Files to skip
 const SKIP_PATTERNS = [".test.", ".spec.", "index.ts", ".d.ts"];
 
-// Hooks that use Convex queries/mutations where errors are thrown (not returned)
-// These don't need explicit error state in return value
+// Hooks where the async pattern validator exception is justified:
+// - Convex hooks: errors are thrown, not returned (no error state needed)
+// - Client-side hooks: async is for debounce/setup only, not data fetching
 const CONVEX_PATTERN_HOOKS = [
-  "useCurrentUser", // Simple Convex query wrapper
-  "useFuzzySearch", // Client-side search, async is for setup only
-  "useConfirmDialog", // Modal state, mutation is for actions not data
-  "useConvexHelpers", // Auth wrappers over Convex hooks
-  "usePaginatedIssues", // Convex query - errors thrown
-  "useSmartBoardData", // Convex query - errors thrown
+  "useCurrentUser", // Convex query wrapper - has isLoading, errors thrown
+  "useFuzzySearch", // Client-side Fuse.js search - has isDebouncing, no async data
+  "useConfirmDialog", // State management - has isConfirming, action errors thrown
+  "useConvexHelpers", // Auth helpers - has isAuthLoading, errors thrown
+  "usePaginatedIssues", // Convex paginated - has isLoading/isLoadingMore, errors thrown
+  "useSmartBoardData", // Convex smart loading - has isLoading/isLoadingMore, errors thrown
 ];
 
 export function run() {
