@@ -116,7 +116,6 @@ export const TEST_COVERAGE_BASELINE = [
   "src/components/Plate/MentionInputElement.tsx",
   "src/components/Plate/SlashMenu.tsx",
   "src/components/RoadmapView.tsx",
-  "src/components/Settings/PumbleIntegration.tsx",
   "src/components/Settings/SSOSettings.tsx",
   "src/components/Settings/TwoFactorSettings.tsx",
   "src/components/Sidebar/SidebarTeamItem.tsx",
