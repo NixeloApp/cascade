@@ -3,7 +3,7 @@
 > **Priority:** P0
 > **Status:** Active
 > **Last Updated:** 2026-03-13
-> **Verification Summary:** `37/37` validators pass, but `3` explicit exception buckets still remain.
+> **Verification Summary:** `37/37` validators pass, but `2` explicit exception buckets still remain.
 
 ## Objective
 
@@ -25,13 +25,6 @@ Keep the validator suite green while eliminating the remaining allowlists and ba
 - **Notes:** `24` paths are listed, but `e2e/screenshot-pages.ts` is outside the validator scan scope and should be removed as dead configuration.
 - **Fix:** replace magic-time values with shared constants, then delete each allowlist entry.
 
-### Test coverage allowlist
-
-- **File:** `scripts/validate/check-test-coverage.js`
-- **Remaining entries:** `2`
-- **Files:** `src/components/PlateEditor.tsx`, `src/components/BlockNoteEditor.tsx`
-- **Fix:** either add durable coverage or narrow the validator rule with a principled boundary so the allowlist reaches `0`.
-
 ## Non-Goals
 
 - Do not count `scripts/ci/e2e-hard-rules-baseline.json`; it is already effectively empty.
@@ -39,14 +32,14 @@ Keep the validator suite green while eliminating the remaining allowlists and ba
 
 ## Execution Order
 
-1. Remove dead config and tiny allowlists first: time constants and test coverage allowlist.
+1. Remove dead config and the remaining time-constants allowlist first.
 2. Then burn down `scripts/validate/test-coverage-baseline.js` in chunks that keep `pnpm run validate` green.
 3. Delete each exception only after the replacement test or code cleanup lands.
 
 ## Acceptance Criteria
 
 - [ ] `scripts/validate/check-time-constants.js` has no exception entries.
-- [ ] `scripts/validate/check-test-coverage.js` has no allowlist entries.
+- [x] `scripts/validate/check-test-coverage.js` has no allowlist entries.
 - [x] `scripts/validate/check-unused-params.js` has no allowlist entries.
 - [ ] `scripts/validate/test-coverage-baseline.js` is empty or removed.
 - [ ] `pnpm run validate` still passes with no new exception buckets introduced.
