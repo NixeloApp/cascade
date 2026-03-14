@@ -14,7 +14,7 @@ import {
   workspaceAdminMutation,
   workspaceQuery,
 } from "./customFunctions";
-import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
+import { BOUNDED_LIST_LIMIT, efficientCount } from "./lib/boundedQueries";
 import { conflict, forbidden, notFound } from "./lib/errors";
 import { isOrganizationAdmin } from "./lib/organizationAccess";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
@@ -340,15 +340,14 @@ export const getActiveSprints = workspaceQuery({
 
         const enriched = await Promise.all(
           sprints.map(async (sprint) => {
-            // Use larger limit for counting to avoid undercount on large sprints
             const MAX_SPRINT_ISSUE_COUNT = 2000;
-            const issueCount = (
-              await ctx.db
+            const issueCount = await efficientCount(
+              ctx.db
                 .query("issues")
                 .withIndex("by_sprint", (q) => q.eq("sprintId", sprint._id))
-                .filter(notDeleted)
-                .take(MAX_SPRINT_ISSUE_COUNT)
-            ).length;
+                .filter(notDeleted),
+              MAX_SPRINT_ISSUE_COUNT,
+            );
             return {
               ...sprint,
               issueCount,

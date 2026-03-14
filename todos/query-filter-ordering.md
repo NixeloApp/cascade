@@ -3,7 +3,7 @@
 > **Priority:** P0
 > **Status:** Active
 > **Last Updated:** 2026-03-13
-> **Verification Summary:** `3` verified unresolved query-shape issues remain.
+> **Verification Summary:** `2` verified unresolved query-shape issues remain.
 
 ## Remaining Queries
 
@@ -11,11 +11,6 @@
 
 - `getBacklogIssues` takes a limit, then filters `sprintId === undefined && status !== "done"`.
 - Fix: add an index such as `by_workspace_sprint` or move the filter into the query path.
-
-### workspaces.ts - Sprint issue count
-
-- Uses `.take(BOUNDED_LIST_LIMIT).length` for a count.
-- Fix: use `efficientCount` or a non-truncating bounded count path.
 
 ### workspaces.ts - Cross-team dependencies
 

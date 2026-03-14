@@ -316,6 +316,90 @@ describe("Workspaces", () => {
     });
   });
 
+  describe("getActiveSprints", () => {
+    it("should count sprint issues beyond the bounded list limit", async () => {
+      const t = convexTest(schema, modules);
+      const ownerId = await createTestUser(t);
+      const asOwner = asAuthenticatedUser(t, ownerId);
+
+      const { organizationId } = await asOwner.mutation(api.organizations.createOrganization, {
+        name: "Sprint Count organization",
+        timezone: "America/New_York",
+      });
+      const { workspaceId } = await asOwner.mutation(api.workspaces.create, {
+        organizationId,
+        name: "Sprint Count Workspace",
+        slug: "sprint-count-workspace",
+      });
+
+      const { teamId } = await asOwner.mutation(api.teams.createTeam, {
+        organizationId,
+        workspaceId,
+        name: "Platform",
+        isPrivate: false,
+      });
+
+      const sprintId = await t.run(async (ctx) => {
+        const now = Date.now();
+        const projectId = await ctx.db.insert("projects", {
+          name: "Platform Project",
+          key: "PLT",
+          organizationId,
+          workspaceId,
+          teamId,
+          ownerId,
+          createdBy: ownerId,
+          updatedAt: now,
+          boardType: "scrum",
+          workflowStates: [],
+        });
+
+        const sprintId = await ctx.db.insert("sprints", {
+          projectId,
+          name: "Sprint 1",
+          goal: "Ship the first milestone",
+          startDate: now - 10_000,
+          endDate: now + 10_000,
+          status: "active",
+          createdBy: ownerId,
+          updatedAt: now,
+        });
+
+        for (let index = 0; index <= 100; index += 1) {
+          await ctx.db.insert("issues", {
+            projectId,
+            organizationId,
+            workspaceId,
+            teamId,
+            sprintId,
+            key: `PLT-${index + 1}`,
+            title: `Sprint issue ${index + 1}`,
+            type: "task",
+            status: "todo",
+            priority: "medium",
+            reporterId: ownerId,
+            updatedAt: now + index,
+            labels: [],
+            linkedDocuments: [],
+            attachments: [],
+            loggedHours: 0,
+            order: index,
+          });
+        }
+
+        return sprintId;
+      });
+
+      const activeSprints = await asOwner.query(api.workspaces.getActiveSprints, {
+        workspaceId,
+      });
+
+      expect(activeSprints).toHaveLength(1);
+      expect(activeSprints[0]?._id).toBe(sprintId);
+      expect(activeSprints[0]?.issueCount).toBe(101);
+    });
+  });
+
   describe("get", () => {
     it("should get workspace by ID", async () => {
       const t = convexTest(schema, modules);
