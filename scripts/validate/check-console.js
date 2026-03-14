@@ -1,7 +1,8 @@
 /**
  * CHECK: Console Usage
- * Bans console.log/info in production code.
- * console.warn/error/debug are allowed for legitimate dev warnings and error logging.
+ * Bans console.log/warn/error in production code.
+ * - console.warn/error should use showError/showSuccess toasts
+ * - console.log should be removed or use console.info/debug for dev logging
  *
  */
 
@@ -20,25 +21,48 @@ export function run() {
     /routeTree\.gen\.ts$/, // Generated route tree
   ];
 
+  // Baseline: files with legitimate console usage that need refactoring
+  // TODO: Burn down this list by replacing with proper error handling
+  const BASELINE_FILES = new Set([
+    "src/components/ErrorBoundary.tsx", // Error boundary logging
+    "src/components/LazyPostHog.tsx", // Analytics init warning
+    "src/components/Onboarding/WelcomeTour.tsx", // Tour warning
+    "src/components/Settings/TwoFactorSettings.tsx", // 2FA error
+    "src/components/TimeTracker/BillingReport.tsx", // Export warning
+    "src/hooks/useDraftAutoSave.ts", // Auto-save warning
+    "src/hooks/useOffline.ts", // Offline warning
+    "src/lib/offline.ts", // Offline handling
+    "src/lib/webPush.tsx", // Push notification errors
+    "src/routes/__root.tsx", // Root route warning
+  ]);
+
   let errorCount = 0;
   const errors = [];
 
   function checkFile(filePath) {
     const rel = relPath(filePath);
     if (IGNORE_PATTERNS.some((p) => p.test(rel))) return;
+    if (BASELINE_FILES.has(rel)) return; // Skip baselined files
 
     const content = fs.readFileSync(filePath, "utf-8");
     const lines = content.split("\n");
 
     lines.forEach((line, index) => {
-      // Ban console.log and console.info only
-      // console.warn/error/debug are allowed for dev warnings and error logging
-      const match = line.match(/\bconsole\.(log|info)\s*\(/);
+      // Ban console.log, console.warn, console.error
+      // - warn/error should use showError/showSuccess toasts
+      // - log should use console.info/debug for dev logging or be removed
+      const match = line.match(/\bconsole\.(log|warn|error)\s*\(/);
       if (match) {
+        const method = match[1];
+        const suggestion =
+          method === "log"
+            ? "Use console.info/debug for dev logging or remove."
+            : "Use showError/showSuccess from @/lib/toast instead.";
         errors.push({
           file: rel,
           line: index + 1,
-          method: match[1],
+          method,
+          suggestion,
         });
         errorCount++;
       }
@@ -51,10 +75,10 @@ export function run() {
   return {
     passed: errorCount === 0,
     errors: errorCount,
-    detail: errorCount > 0 ? `${errorCount} console.log/info statement(s)` : null,
+    detail: errorCount > 0 ? `${errorCount} banned console statement(s)` : null,
     messages: errors.map(
       (e) =>
-        `  ${c.red}ERROR${c.reset} ${e.file}:${e.line} - console.${e.method}() is banned. Use console.debug for dev logging or remove.`,
+        `  ${c.red}ERROR${c.reset} ${e.file}:${e.line} - console.${e.method}() is banned. ${e.suggestion}`,
     ),
   };
 }
