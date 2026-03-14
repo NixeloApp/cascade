@@ -259,6 +259,10 @@ const checks = [
     name: "Nested Cards",
     modulePath: new URL("./validate/check-nested-cards.js", import.meta.url).href,
   },
+  {
+    name: "Border Radius",
+    modulePath: new URL("./validate/check-border-radius.js", import.meta.url).href,
+  },
 ];
 
 console.log(`\n${c.bold}Running validation...${c.reset}\n`);

@@ -71,7 +71,7 @@ const cardRecipeVariants = cva("", {
 
       // Page layout surfaces
       pageHeader:
-        "rounded-2xl border-ui-border-secondary/82 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/96 to-ui-bg-soft/82 shadow-card sm:rounded-3xl",
+        "rounded-container border-ui-border-secondary/82 bg-linear-to-r from-ui-bg-elevated/98 via-ui-bg-elevated/96 to-ui-bg-soft/82 shadow-card",
       pageHeaderIndicator:
         "h-1.5 w-1.5 rounded-full border-transparent bg-brand shadow-brand-halo ring-2 ring-brand/8 sm:h-2 sm:w-2",
       documentHeaderShell:
