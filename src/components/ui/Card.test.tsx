@@ -378,6 +378,17 @@ describe("CardHeader", () => {
       expect(screen.getByText("Description")).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Action" })).toBeInTheDocument();
     });
+
+    it("renders actions alongside custom children content", () => {
+      render(
+        <CardHeader action={<button type="button">Action</button>}>
+          <div>Custom content</div>
+        </CardHeader>,
+      );
+
+      expect(screen.getByText("Custom content")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Action" })).toBeInTheDocument();
+    });
   });
 
   describe("Container Structure", () => {
