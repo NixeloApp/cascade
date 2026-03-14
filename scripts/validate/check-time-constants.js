@@ -48,8 +48,6 @@ const ALLOWLIST = [
   "convex/issues/roadmapPagination.test.ts",
   "convex/lib/softDeleteHelpers.test.ts",
   "convex/notificationsPerf.test.ts",
-  // Source files that define time constants or have legitimate uses
-  "src/hooks/useDraftAutoSave.ts", // Uses named constant DRAFT_EXPIRY_MS
 ];
 
 export function run() {

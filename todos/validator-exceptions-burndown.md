@@ -21,9 +21,9 @@ Keep the validator suite green while eliminating the remaining allowlists and ba
 ### Time constants allowlist
 
 - **File:** `scripts/validate/check-time-constants.js`
-- **Remaining effective entries:** `11`
-- **Breakdown:** `10` test files, `1` source file
-- **Notes:** stale entries for deleted files, out-of-scope files, and already-clean source files have been pruned.
+- **Remaining effective entries:** `10`
+- **Breakdown:** `10` test files
+- **Notes:** stale entries plus the lone source-file exception have been removed; the remaining debt is test-only.
 - **Fix:** replace magic-time values with shared constants, then delete each allowlist entry.
 
 ## Non-Goals
