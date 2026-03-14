@@ -299,36 +299,18 @@ export const getBacklogIssues = workspaceQuery({
   handler: async (ctx, args) => {
     const rawLimit = args.limit ?? 200;
     const limit = Math.min(Math.max(rawLimit, 1), BOUNDED_LIST_LIMIT * 5);
-    const backlogIssues = [];
-    const batchSize = Math.min(Math.max(limit, 50), BOUNDED_LIST_LIMIT);
-    let cursor: string | null = null;
-    let batchCount = 0;
-    // Compute max batches based on limit to avoid over-scanning.
-    // Since we filter out "done" issues in-memory, we need some headroom
-    // (assume ~50% of backlog issues might be done in the worst case).
-    const maxBatches = Math.min(Math.max(Math.ceil((limit * 2) / batchSize), 2), 20);
 
-    while (backlogIssues.length < limit && batchCount < maxBatches) {
-      const batch = await ctx.db
-        .query("issues")
-        .withIndex("by_workspace_sprint_updated", (q) =>
-          q.eq("workspaceId", ctx.workspaceId).eq("sprintId", undefined),
-        )
-        .order("desc")
-        .filter(notDeleted)
-        .paginate({ numItems: batchSize, cursor });
+    // Use the new index that includes status, filtering out "done" at the DB level
+    const backlogIssues = await ctx.db
+      .query("issues")
+      .withIndex("by_workspace_sprint_status", (q) =>
+        q.eq("workspaceId", ctx.workspaceId).eq("sprintId", undefined),
+      )
+      .order("desc")
+      .filter((q) => q.and(q.neq(q.field("isDeleted"), true), q.neq(q.field("status"), "done")))
+      .take(limit);
 
-      backlogIssues.push(...batch.page.filter((issue) => issue.status !== "done"));
-      batchCount += 1;
-
-      if (batch.isDone) {
-        break;
-      }
-
-      cursor = batch.continueCursor;
-    }
-
-    return backlogIssues.slice(0, limit);
+    return backlogIssues;
   },
 });
 
