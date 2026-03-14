@@ -39,7 +39,8 @@
  *  35. Weak assertions         — toBeDefined(), toBeTruthy(), {} as Type in tests
  *  36. Native confirm()        — ensure custom dialogs used instead of native confirm()
  *  37. Convex hooks            — validates Convex hook usage patterns
- *  38. Tech debt               — tracks TODO/FIXME/HACK/XXX comments
+ *  38. Console usage           — bans console.* in production code
+ *  39. Tech debt               — tracks TODO/FIXME/HACK/XXX comments
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -244,6 +245,10 @@ const checks = [
   {
     name: "Convex hooks",
     modulePath: new URL("./validate/check-convex-hooks.js", import.meta.url).href,
+  },
+  {
+    name: "Console usage",
+    modulePath: new URL("./validate/check-console.js", import.meta.url).href,
   },
   {
     name: "Tech debt",
