@@ -56,7 +56,6 @@ export const TEST_COVERAGE_BASELINE = [
   "src/components/FuzzySearch/AssigneeSearchDropdown.example.tsx",
   "src/components/Landing/CircuitFlowLines.tsx",
   "src/components/Landing/Icons.tsx",
-  "src/components/MentionInput.tsx",
   "src/components/MoveDocumentDialog.tsx",
   "src/components/Notifications/NotificationItem.tsx",
   "src/components/Onboarding/FeatureHighlights.tsx",
