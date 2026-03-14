@@ -62,7 +62,7 @@ describe("User Sanitization Utils", () => {
     it("should not include email", () => {
       const result = sanitizeUserForPublic(mockUser);
       expect(result).not.toHaveProperty("email");
-      expect(Object.hasOwn(result ?? {}, "email")).toBe(false);
+      expect("email" in (result ?? {})).toBe(false);
     });
   });
 
@@ -86,8 +86,8 @@ describe("User Sanitization Utils", () => {
 
     it("should not include sensitive fields like phone or 2FA", () => {
       const result = sanitizeUserForAuth(mockUser);
-      expect(Object.hasOwn(result ?? {}, "phone")).toBe(false);
-      expect(Object.hasOwn(result ?? {}, "twoFactorSecret")).toBe(false);
+      expect("phone" in (result ?? {})).toBe(false);
+      expect("twoFactorSecret" in (result ?? {})).toBe(false);
     });
   });
 
@@ -107,9 +107,9 @@ describe("User Sanitization Utils", () => {
       });
 
       // Should explicitly exclude sensitive auth tokens
-      expect(Object.hasOwn(result ?? {}, "pendingEmailVerificationToken")).toBe(false);
-      expect(Object.hasOwn(result ?? {}, "twoFactorSecret")).toBe(false);
-      expect(Object.hasOwn(result ?? {}, "twoFactorBackupCodes")).toBe(false);
+      expect("pendingEmailVerificationToken" in (result ?? {})).toBe(false);
+      expect("twoFactorSecret" in (result ?? {})).toBe(false);
+      expect("twoFactorBackupCodes" in (result ?? {})).toBe(false);
     });
 
     it("should handle null/undefined", () => {

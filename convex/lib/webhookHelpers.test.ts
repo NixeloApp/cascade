@@ -44,13 +44,13 @@ describe("deliverWebhook", () => {
 
     // Check fetch call
     expect(global.fetch).toHaveBeenCalledTimes(1);
-    const callArgs = fetchMock.mock.calls[0];
+    const callArgs = fetchMock.mock.calls[0]!;
     const targetUrl = callArgs[0];
     const options = callArgs[1];
 
     // Verify URL rewriting for HTTP (SSRF protection against DNS rebinding)
     expect(targetUrl).toBe("http://1.2.3.4/webhook");
-    const headers = options.headers as Headers;
+    const headers = options?.headers as Headers;
     expect(headers.get("Host")).toBe("example.com");
     expect(headers.get("X-Webhook-Event")).toBe(event);
     expect(headers.get("Content-Type")).toBe("application/json");
@@ -115,7 +115,7 @@ describe("deliverWebhook", () => {
     // HTTPS URLs should be used as-is for certificate validation
     expect(callArgs[0]).toBe(httpsUrl);
     // Host header should not be manually set for HTTPS fetch (browser/fetch handles it)
-    const headers = callArgs[1].headers as Headers;
+    const headers = callArgs[1]?.headers as Headers;
     expect(headers.get("Host")).toBeNull();
   });
 
@@ -125,8 +125,8 @@ describe("deliverWebhook", () => {
 
     await deliverWebhook(url, payload, event, secret);
 
-    const callArgs = fetchMock.mock.calls[0];
-    const headers = callArgs[1].headers as Headers;
+    const callArgs = fetchMock.mock.calls[0]!;
+    const headers = callArgs[1]?.headers as Headers;
     const signature = headers.get("X-Webhook-Signature");
 
     // Verify signature manually

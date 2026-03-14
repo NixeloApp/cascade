@@ -12,7 +12,7 @@ function createMockStorage(getMetadataResult: unknown, deleteResult = undefined)
       generateUploadUrl: vi.fn(),
       getUrl: vi.fn(),
     },
-  } as unknown as Pick<MutationCtx, "storage">;
+  } as unknown as MutationCtx;
 }
 
 describe("validateAttachment", () => {

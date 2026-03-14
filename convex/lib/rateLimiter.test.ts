@@ -26,7 +26,7 @@ describe("checkApiKeyRateLimit", () => {
     const mockRunQuery = vi.fn().mockResolvedValue({ ok: true });
     const ctx = {
       runQuery: mockRunQuery,
-    } as unknown as Pick<QueryCtx, "runQuery">;
+    } as unknown as QueryCtx;
 
     const keyId = "test-key";
     const limit = 100;
@@ -49,9 +49,9 @@ describe("checkApiKeyRateLimit", () => {
   it("should return the result from the rate limiter when limited", async () => {
     const retryAfter = 12345;
     const mockRunQuery = vi.fn().mockResolvedValue({ ok: false, retryAfter });
-    const ctx: Pick<QueryCtx, "runQuery"> = {
+    const ctx = {
       runQuery: mockRunQuery,
-    };
+    } as unknown as QueryCtx;
 
     const result = await checkApiKeyRateLimit(ctx, "key", 10);
 

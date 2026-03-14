@@ -82,7 +82,9 @@ describe("Purge Data", () => {
 
   it("should cover all schema tables", () => {
     const schemaTables = SCHEMA_TABLE_NAMES;
-    const missingTables = schemaTables.filter((table) => !TABLES.includes(table));
+    const missingTables = schemaTables.filter(
+      (table) => !TABLES.includes(table as (typeof TABLES)[number]),
+    );
 
     if (missingTables.length > 0) {
       console.error("Missing tables in purge list:", missingTables);

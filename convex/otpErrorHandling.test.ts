@@ -45,11 +45,11 @@ type VerificationProvider = {
 function createMockAuthContext(error: Error): ConvexAuthContext {
   return {
     runMutation: vi.fn().mockRejectedValue(error),
-  } as ConvexAuthContext;
+  } as unknown as ConvexAuthContext;
 }
 
-const passwordResetProvider = otpPasswordReset as VerificationProvider;
-const verificationProvider = otpVerification as VerificationProvider;
+const passwordResetProvider = otpPasswordReset as unknown as VerificationProvider;
+const verificationProvider = otpVerification as unknown as VerificationProvider;
 
 describe("OTP Error Handling", () => {
   describe("otpPasswordReset", () => {

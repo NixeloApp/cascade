@@ -48,10 +48,12 @@ function createMockAuthContext(): ConvexAuthContext {
   return {
     runMutation: vi.fn().mockResolvedValue(undefined),
     runQuery: vi.fn(),
-  } as ConvexAuthContext;
+  } as unknown as ConvexAuthContext;
 }
 
-const sendVerificationRequest = getSendVerificationRequest(otpVerification as VerificationProvider);
+const sendVerificationRequest = getSendVerificationRequest(
+  otpVerification as unknown as VerificationProvider,
+);
 
 describe("OTP Verification Environment Safety", () => {
   const originalEnv = process.env;
