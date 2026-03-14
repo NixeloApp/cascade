@@ -64,7 +64,6 @@ export const TEST_COVERAGE_BASELINE = [
   "src/components/Dashboard/Greeting.tsx",
   "src/components/Dashboard/QuickStats.tsx",
   "src/components/Dashboard/RecentActivity.tsx",
-  "src/components/Documents/DocumentComments.tsx",
   "src/components/DuplicateDetection.tsx",
   "src/components/Fields/CustomFieldCard.tsx",
   "src/components/Fields/CustomFieldForm.tsx",
