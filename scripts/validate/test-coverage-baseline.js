@@ -59,7 +59,6 @@ export const TEST_COVERAGE_BASELINE = [
   "src/components/CreateTeamModal.tsx",
   "src/components/CreateWorkspaceModal.tsx",
   "src/components/Dashboard.tsx",
-  "src/components/Dashboard/DashboardCustomizeModal.tsx",
   "src/components/Fields/CustomFieldCard.tsx",
   "src/components/Fields/CustomFieldForm.tsx",
   "src/components/FuzzySearch/AssigneeSearchDropdown.example.tsx",
