@@ -2982,7 +2982,13 @@ async function screenshotBoardInteractiveStates(
       const modeLabel = mode[0].toUpperCase() + mode.slice(1);
       const dropdown = page.locator("[role='menu'], [data-radix-menu-content]").first();
       await dropdown.waitFor({ state: "visible", timeout: 5000 });
+      // Navigate to the option and click it. The dropdown scopes the text
+      // match to avoid hitting hidden mobile elements.
       const option = dropdown.getByText(modeLabel, { exact: true }).first();
+      await option.waitFor({ state: "visible", timeout: 3000 });
+      // Radix DropdownMenuCheckboxItem may detach on check. Use scrollIntoView
+      // + click in quick succession to minimize the race window.
+      await option.scrollIntoViewIfNeeded().catch(() => {});
       await option.click();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, captureName);
@@ -3021,8 +3027,6 @@ async function screenshotBoardInteractiveStates(
       const priorityFilter = page.getByRole("button", { name: /priority/i }).nth(0);
       await priorityFilter.waitFor({ state: "visible", timeout: 8000 });
       await priorityFilter.click();
-      await page.waitForTimeout(500);
-      // Select "High" priority — find the checkbox item within the opened menu
       const highOption = page
         .locator("[role='menuitemcheckbox']")
         .filter({ hasText: "High" })
