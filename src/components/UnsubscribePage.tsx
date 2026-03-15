@@ -10,7 +10,6 @@ import { AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AuthPageLayout } from "@/components/Auth/AuthPageLayout";
 import { Card } from "@/components/ui/Card";
-import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { IconCircle } from "@/components/ui/IconCircle";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
