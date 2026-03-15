@@ -332,7 +332,7 @@ describe("UserManagement", () => {
     const inviteButtons = screen.getAllByRole("button", { name: "Invite User" });
     fireEvent.click(inviteButtons[0]);
 
-    expect(screen.getByText("Send Invitation")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Send Invitation" })).toBeInTheDocument();
     expect(screen.getByPlaceholderText("user@example.com")).toBeInTheDocument();
   });
 

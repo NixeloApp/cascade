@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
-import { act, fireEvent, render, screen } from "@/test/custom-render";
+import { act, fireEvent, render, screen, within } from "@/test/custom-render";
 import { UserTypeManager } from "./UserTypeManager";
 
 vi.mock("@/hooks/useConvexHelpers", () => ({
@@ -448,9 +448,12 @@ describe("UserTypeManager", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Assign Type" }));
 
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-    // The title shows either "Assign Employment Type" or "Edit User Employment" depending on state
-    expect(screen.getByText(/Employment/)).toBeInTheDocument();
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+    // The dialog title contains "Employment" - use heading role for specificity
+    expect(
+      within(dialog).getByText(/Assign Employment Type|Edit User Employment/),
+    ).toBeInTheDocument();
   });
 
   it("saves profile when assign form is submitted", async () => {

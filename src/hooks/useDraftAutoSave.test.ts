@@ -13,7 +13,7 @@ describe("useDraftAutoSave", () => {
   });
 
   it("should log save failures with storage context", () => {
-    const warningSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
     const storageError = new Error("Quota exceeded");
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw storageError;
@@ -32,14 +32,14 @@ describe("useDraftAutoSave", () => {
       vi.advanceTimersByTime(10);
     });
 
-    expect(warningSpy).toHaveBeenCalledWith("Draft auto-save save failed", {
+    expect(infoSpy).toHaveBeenCalledWith("[draft] auto-save save failed", {
       storageKey: "cascade_draft_create-issue_project-1",
       error: storageError,
     });
   });
 
   it("should log load failures with storage context when stored draft is invalid", () => {
-    const warningSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
     const parseError = new Error("Malformed JSON");
     vi.spyOn(Storage.prototype, "getItem").mockReturnValue("{not-json");
     const removeItemSpy = vi.spyOn(Storage.prototype, "removeItem").mockImplementation(() => {});
@@ -57,7 +57,7 @@ describe("useDraftAutoSave", () => {
     expect(result.current.hasDraft).toBe(false);
     expect(result.current.draft).toBeNull();
     expect(result.current.draftTimestamp).toBeNull();
-    expect(warningSpy).toHaveBeenCalledWith("Draft auto-save load failed", {
+    expect(infoSpy).toHaveBeenCalledWith("[draft] auto-save load failed", {
       storageKey: "cascade_draft_create-issue_project-1",
       error: parseError,
     });

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { createContext, useContext } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { showInfo } from "@/lib/toast";
 import { render, screen } from "@/test/custom-render";
 import { BillingReport } from "./BillingReport";
 
@@ -11,6 +12,12 @@ const SelectContext = createContext<{
   onValueChange?: (value: string) => void;
   value?: string;
 }>({});
+
+vi.mock("@/lib/toast", () => ({
+  showInfo: vi.fn(),
+  showError: vi.fn(),
+  showSuccess: vi.fn(),
+}));
 
 vi.mock("@/hooks/useConvexHelpers", () => ({
   useAuthenticatedQuery: vi.fn(),
@@ -101,7 +108,7 @@ vi.mock("../ui/Typography", () => ({
 const mockUseAuthenticatedQuery = vi.mocked(useAuthenticatedQuery);
 
 const projectId = "project_1" as Id<"projects">;
-const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+const mockShowInfo = vi.mocked(showInfo);
 
 let currentProject:
   | {
@@ -214,7 +221,7 @@ describe("BillingReport", () => {
 
     await user.click(screen.getByRole("button", { name: "Export" }));
 
-    expect(warnSpy).toHaveBeenCalledWith("Export functionality not yet implemented");
+    expect(mockShowInfo).toHaveBeenCalledWith("Export functionality coming soon");
   });
 
   it("switches date ranges and renders the empty team state when there are no time entries", async () => {
