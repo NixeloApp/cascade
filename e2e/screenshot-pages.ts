@@ -217,6 +217,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-project-[^-]+-board-column-collapsed$/, "06-board", "-column-collapsed"],
   [/^filled-project-[^-]+-board-filter-active$/, "06-board", "-filter-active"],
   [/^filled-project-[^-]+-board-display-properties$/, "06-board", "-display-properties"],
+  [/^filled-project-[^-]+-board-peek-mode$/, "06-board", "-peek-mode"],
   // Document editor: filled-document-editor → 10-editor
   [/^filled-document-editor$/, "10-editor", ""],
   [/^filled-document-editor-slash-menu$/, "10-editor", "-slash-menu"],
@@ -2120,6 +2121,7 @@ async function screenshotFilledStates(
         `project-${normalizedProjectKey}-board-column-collapsed`,
         `project-${normalizedProjectKey}-board-filter-active`,
         `project-${normalizedProjectKey}-board-display-properties`,
+        `project-${normalizedProjectKey}-board-peek-mode`,
       ])
     ) {
       await screenshotBoardInteractiveStates(page, orgSlug, projectKey, p);
@@ -2947,6 +2949,45 @@ async function screenshotBoardInteractiveStates(
       await page.keyboard.press("Escape");
     });
   }
+
+  // Peek / side panel mode — toggle view mode, click issue card
+  if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-peek-mode`)) {
+    await runCaptureStep("board peek mode", async () => {
+      // Reload board for clean state
+      await page
+        .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+        .catch(() => {});
+      await waitForExpectedContent(page, boardUrl, "board");
+      await waitForScreenshotReady(page);
+
+      // Toggle to side panel mode
+      const toggleBtn = page.getByLabel(/switch to side panel view/i).first();
+      await toggleBtn.waitFor({ state: "visible", timeout: 5000 });
+      await toggleBtn.click();
+      await waitForScreenshotReady(page);
+
+      // Click an issue card to open side panel
+      const issueCard = page.getByTestId(TEST_IDS.ISSUE.CARD).first();
+      await issueCard.waitFor({ state: "visible", timeout: 5000 });
+      await issueCard.click({ force: true });
+
+      // Wait for the side panel to appear (Sheet component)
+      await page
+        .locator("[role='dialog']")
+        .or(page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL))
+        .first()
+        .waitFor({ state: "visible", timeout: 5000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-board-peek-mode`);
+
+      // Close panel and reset to modal view
+      await page.keyboard.press("Escape");
+      const resetBtn = page.getByLabel(/switch to modal view/i).first();
+      if (await resetBtn.isVisible().catch(() => false)) {
+        await resetBtn.click();
+      }
+    });
+  }
 }
 
 async function screenshotSprintInteractiveStates(
@@ -3159,6 +3200,7 @@ const DRY_RUN_PAGES = [
   "filled-project-PROJ-board-column-collapsed",
   "filled-project-PROJ-board-filter-active",
   "filled-project-PROJ-board-display-properties",
+  "filled-project-PROJ-board-peek-mode",
   // Filled states — sprint interactive states
   "filled-project-PROJ-sprints-burndown",
   "filled-project-PROJ-sprints-burnup",

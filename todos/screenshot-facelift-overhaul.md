@@ -197,13 +197,13 @@ Beyond page loads — capture the states users actually see during interaction.
 
 ### Issue states
 
-- [ ] **Issue form with draft restoration banner** — auto-saved draft being offered
-- [ ] **Issue form with duplicate detection** — similar issues panel visible
-- [ ] **Issue form "create more" toggle active** — rapid creation mode
-- [ ] **Issue inline editing** — clicking a property field to edit in-place
-- [ ] **Issue peek/side panel mode** — side panel instead of modal view
-- [ ] **Label creation popover** — inline label creation within issue form
-- [ ] **Issue with all property types visible** — priority, assignee, labels, sprint, dates, story points, type
+- [ ] **Issue form with draft restoration banner** — needs localStorage draft + re-open
+- [ ] **Issue form with duplicate detection** — needs similar issue titles in seed
+- [ ] **Issue form "create more" toggle active** — simple switch, but modal must be open
+- [ ] **Issue inline editing** — needs issue detail page interaction
+- [x] **Issue peek/side panel mode** — toggle view mode on board, click issue card, capture side panel
+- [ ] **Label creation popover** — needs label creation flow in issue form
+- [ ] **Issue with all property types visible** — needs fully populated issue in seed
 
 ### Document editor states
 
