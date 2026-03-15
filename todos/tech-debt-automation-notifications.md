@@ -1,20 +1,12 @@
 # Tech Debt: Automation Rule Notifications
 
 > **Priority:** P3
-> **Status:** Backlog
-> **File:** `convex/automationRules.ts:186`
+> **Status:** Complete
+> **File:** `convex/automationRules.ts`
 
-## Description
+## Completed
 
-Implement notification sending for automation rules. Currently skipped.
-
-```typescript
-// TODO: Implement notification sending - skip execution count until implemented
-```
-
-## Acceptance Criteria
-
-- [ ] Implement notification action for automation rules
-- [ ] Support email notifications
-- [ ] Support in-app notifications
-- [ ] Track execution count after implementation
+- [x] Implement in-app notification action for automation rules
+- [x] Send to explicit recipients or fall back to issue assignee
+- [x] Track execution count (marks executed=true when recipients exist)
+- [ ] Email notifications (deferred — requires email template + preference check)
