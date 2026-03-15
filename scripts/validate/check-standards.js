@@ -24,6 +24,7 @@ const ALLOW_RAW_LINKS_PATTERNS = [
   "/EventDetailsModal.tsx",
   "/onboarding.tsx",
   "/CommentRenderer.tsx",
+  "/LinkElement.tsx",
   "src/components/Landing/",
   "src/routes/_auth/_app/$orgSlug/route.tsx",
 ];

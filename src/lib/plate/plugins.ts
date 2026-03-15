@@ -49,6 +49,7 @@ import {
 } from "@platejs/table/react";
 // Core
 import { BaseParagraphPlugin, createSlatePlugin } from "platejs";
+import { LinkElement } from "@/components/Plate/LinkElement";
 import { MentionElement } from "@/components/Plate/MentionElement";
 import { MentionInputElement } from "@/components/Plate/MentionInputElement";
 
@@ -122,6 +123,16 @@ export const platePlugins = [
     render: { node: MentionInputElement },
   }),
 
+  // Links
+  createSlatePlugin({
+    key: "a",
+    node: {
+      isElement: true,
+      isInline: true,
+    },
+    render: { node: LinkElement },
+  }),
+
   // Interaction
   DndPlugin,
   BaseSlashPlugin,
@@ -169,6 +180,7 @@ export const NODE_TYPES = {
   image: "img",
 
   // Inline elements
+  link: "a",
   mention: "mention",
   mentionInput: "mention_input",
 
