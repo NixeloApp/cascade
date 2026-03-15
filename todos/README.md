@@ -17,7 +17,6 @@
 |---|---|---|---|
 | P0 | [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md) | Active | Visual facelift (needs running app) |
 | P1 | [slack-integration-issues.md](./slack-integration-issues.md) | Blocked | Org-scoped Slack connections (needs external access) |
-| P2 | [validator-exceptions-burndown.md](./validator-exceptions-burndown.md) | Maintenance | 2 test coverage, 10 border-radius, 7 nested cards |
 | P2 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | Partial | CSV done, PDF export deferred |
 | P2 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Blocked | Field-projection audit |
 | P2 | [feature-gaps.md](./feature-gaps.md) | Blocked | Slack dashboard setup |

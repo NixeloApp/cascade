@@ -61,7 +61,7 @@ function triggerImageUpload(editor: PlateEditor): void {
       return;
     }
 
-    // Insert a placeholder, then swap with real URL after upload
+    // Read file as data URL and insert as image node
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;

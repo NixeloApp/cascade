@@ -13,7 +13,9 @@ export function LinkElement({
   className,
   attributes,
 }: PlateElementProps & { className?: string }) {
-  const url = (element as { url?: string }).url || "#";
+  const rawUrl = (element as { url?: string }).url || "#";
+  // Sanitize: only allow http(s) and mailto protocols
+  const url = /^(https?:|mailto:)/i.test(rawUrl) ? rawUrl : "#";
 
   return (
     <a

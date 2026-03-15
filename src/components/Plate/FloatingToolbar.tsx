@@ -142,7 +142,7 @@ export function FloatingToolbar() {
         { split: true },
       );
     } catch {
-      // Editor may not support wrapNodes in test environment
+      showError("Failed to insert link");
     }
     setOpen(false);
   };
