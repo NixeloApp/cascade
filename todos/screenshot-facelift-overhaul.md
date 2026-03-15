@@ -159,22 +159,25 @@ The app has ~65 routes. The screenshot tool currently covers ~20. Every route ne
 - [x] Create issue modal
 - [x] Calendar event details modal
 
-### Missing modals
+### Newly wired modals
 
-- [ ] **Issue detail modal** — full view with description, properties sidebar, activity feed
-- [ ] **Create event modal** — calendar event creation form
-- [ ] **Create team modal** — team creation within workspace
-- [ ] **Create workspace modal** — workspace creation form
-- [ ] **Dashboard customize modal** — widget/layout customization
-- [ ] **Import/export modal** — data import/export options
-- [ ] **Move document dialog** — project picker for moving docs
-- [ ] **Avatar upload modal** — drag-drop, preview, crop
-- [ ] **Cover image upload modal** — header image picker
-- [ ] **Manual time entry modal** — time entry form with project/issue pickers
-- [ ] **Markdown preview modal** — rendered markdown preview
-- [ ] **Sample project modal** — onboarding project wizard
-- [ ] **Confirm dialog** — at least one example of a destructive action confirmation
-- [ ] **Alert dialog** — at least one example of an alert/warning
+- [x] **Issue detail modal** — already captured via board modals section
+- [x] **Create event modal** — calendar page → "Add Event" button
+- [x] **Create team modal** — workspace detail → "Create team" button
+- [x] **Create workspace modal** — workspaces list → "Create Workspace" button
+- [x] **Dashboard customize modal** — dashboard → "Customize" button
+- [x] **Import/export modal** — board page → "Import / Export" button
+- [x] **Manual time entry modal** — time tracking → "Add Time Entry" button
+
+### Remaining modals (need special setup or complex triggers)
+
+- [ ] **Move document dialog** — needs document context menu interaction
+- [ ] **Avatar upload modal** — needs settings profile file upload flow
+- [ ] **Cover image upload modal** — needs settings profile header interaction
+- [ ] **Markdown preview modal** — needs specific content context
+- [ ] **Sample project modal** — needs onboarding flow (fresh user)
+- [ ] **Confirm dialog** — needs triggering a destructive action (e.g. delete)
+- [ ] **Alert dialog** — needs error state or warning condition
 
 ---
 
@@ -456,7 +459,7 @@ New pages need spec folder assignments. Proposed additions:
 - [x] No `.animate-shimmer` CSS selectors in `screenshot-pages.ts`.
 - [x] Auth token injection deduplicated into a shared helper.
 - [ ] Every route in `convex/shared/routes.ts` has at least one screenshot (empty + filled where applicable).
-- [ ] Every modal/dialog component has at least one open-state screenshot.
+- [ ] Every modal/dialog component has at least one open-state screenshot (13/20 wired, 7 remaining need special setup).
 - [ ] Interactive states cover board swimlanes, document editor toolbars, notification states, sprint charts.
 - [ ] At least 5 user journeys captured as sequential screenshot series.
 - [x] Hash-based screenshot diff tool exists (`scripts/screenshot-diff.js`).

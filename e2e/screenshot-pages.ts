@@ -76,6 +76,7 @@ const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
   "filled-org-analytics": "24-org-analytics",
   "filled-invoices": "25-invoices",
   "filled-clients": "26-clients",
+  "filled-time-tracking-manual-entry-modal": "22-time-tracking",
   "filled-authentication": "31-authentication",
   "filled-add-ons": "32-add-ons",
   "filled-assistant": "33-assistant",
@@ -184,10 +185,14 @@ function nextIndex(prefix: string): number {
 // Pattern: [regex to match pageId, spec folder, filename suffix]
 const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-dashboard-omnibox$/, "04-dashboard", "-omnibox"],
+  [/^filled-dashboard-customize-modal$/, "04-dashboard", "-customize-modal"],
   [/^filled-dashboard-advanced-search-modal$/, "04-dashboard", "-advanced-search-modal"],
   [/^filled-dashboard-shortcuts-modal$/, "04-dashboard", "-shortcuts-modal"],
   [/^filled-dashboard-time-entry-modal$/, "04-dashboard", "-time-entry-modal"],
   [/^filled-projects-create-project-modal$/, "05-projects", "-create-project-modal"],
+  // Workspace modals
+  [/^filled-workspaces-create-workspace-modal$/, "27-workspaces", "-create-workspace-modal"],
+  [/^filled-workspace-create-team-modal$/, "28-workspace-detail", "-create-team-modal"],
   // Project board: filled-project-xxx-board → 06-board
   [/^filled-project-[^-]+-board$/, "06-board", ""],
   [/^filled-project-[^-]+-create-issue-modal$/, "06-board", "-create-issue-modal"],
@@ -198,12 +203,14 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   // Issue detail: filled-issue-xxx → 08-issue
   [/^filled-issue-/, "08-issue", ""],
   [/^filled-project-[^-]+-issue-detail-modal$/, "08-issue", "-detail-modal"],
+  [/^filled-project-[^-]+-import-export-modal$/, "06-board", "-import-export-modal"],
   // Document editor: filled-document-editor → 10-editor
   [/^filled-document-editor$/, "10-editor", ""],
   // Project calendar views: filled-project-xxx-calendar, filled-calendar-{mode}
   [/^filled-project-[^-]+-calendar$/, "11-calendar", ""],
   [/^filled-calendar-(day|week|month)$/, "11-calendar", "-$1"],
   [/^filled-calendar-event-modal$/, "11-calendar", "-event-modal"],
+  [/^filled-calendar-create-event-modal$/, "11-calendar", "-create-event-modal"],
   // Project analytics: filled-project-xxx-analytics → 13-analytics
   [/^filled-project-[^-]+-analytics$/, "13-analytics", ""],
   // Project settings: filled-project-xxx-settings → 12-settings
@@ -2246,6 +2253,138 @@ async function screenshotFilledStates(
       await takeScreenshot(page, p, "document-editor", `/${orgSlug}/documents/${docId}`);
     }
   }
+
+  // ── Additional modal captures ──
+
+  // Dashboard customize modal
+  if (shouldCapture(p, "dashboard-customize-modal")) {
+    await runCaptureStep("dashboard customize modal", async () => {
+      await page
+        .goto(`${BASE_URL}/${orgSlug}/dashboard`, { waitUntil: "domcontentloaded", timeout: 15000 })
+        .catch(() => {});
+      await waitForExpectedContent(page, `/${orgSlug}/dashboard`, "dashboard");
+      await waitForScreenshotReady(page);
+      await dismissAllDialogs(page);
+      const trigger = page.getByRole("button", { name: /customize/i }).first();
+      await trigger.waitFor({ state: "visible", timeout: 5000 });
+      await trigger.click();
+      const dialog = page.getByRole("dialog", { name: /dashboard customization/i });
+      await dialog.waitFor({ state: "visible", timeout: 5000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "dashboard-customize-modal");
+      await dismissIfOpen(page, dialog);
+    });
+  }
+
+  // Create event modal (from calendar)
+  if (projectKey && shouldCapture(p, "calendar-create-event-modal")) {
+    await runCaptureStep("calendar create-event modal", async () => {
+      await page
+        .goto(`${BASE_URL}/${orgSlug}/projects/${projectKey}/calendar`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await waitForScreenshotReady(page);
+      await waitForCalendarReady(page);
+      const trigger = page.getByRole("button", { name: /add event/i }).first();
+      await trigger.waitFor({ state: "visible", timeout: 5000 });
+      await trigger.click();
+      const dialog = page.getByRole("dialog", { name: /create event/i });
+      await dialog.waitFor({ state: "visible", timeout: 5000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "calendar-create-event-modal");
+      await dismissIfOpen(page, dialog);
+    });
+  }
+
+  // Create workspace modal
+  if (shouldCapture(p, "workspaces-create-workspace-modal")) {
+    await runCaptureStep("create workspace modal", async () => {
+      await page
+        .goto(`${BASE_URL}/${orgSlug}/workspaces`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await waitForExpectedContent(page, `/${orgSlug}/workspaces`, "workspaces", p);
+      await waitForScreenshotReady(page);
+      await dismissAllDialogs(page);
+      const trigger = page.getByRole("button", { name: /create workspace/i }).first();
+      await trigger.waitFor({ state: "visible", timeout: 5000 });
+      await trigger.click();
+      const dialog = page.getByRole("dialog", { name: /create workspace/i });
+      await dialog.waitFor({ state: "visible", timeout: 5000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "workspaces-create-workspace-modal");
+      await dismissIfOpen(page, dialog);
+    });
+  }
+
+  // Create team modal (from workspace detail)
+  if (wsSlug && shouldCapture(p, "workspace-create-team-modal")) {
+    await runCaptureStep("create team modal", async () => {
+      const wsBase = `/${orgSlug}/workspaces/${wsSlug}`;
+      await page
+        .goto(`${BASE_URL}${wsBase}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+        .catch(() => {});
+      await waitForExpectedContent(page, wsBase, `workspace-${wsSlug}`);
+      await waitForScreenshotReady(page);
+      await dismissAllDialogs(page);
+      const trigger = page.getByRole("button", { name: /create team/i }).first();
+      await trigger.waitFor({ state: "visible", timeout: 5000 });
+      await trigger.click();
+      const dialog = page.getByRole("dialog", { name: /create team/i });
+      await dialog.waitFor({ state: "visible", timeout: 5000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "workspace-create-team-modal");
+      await dismissIfOpen(page, dialog);
+    });
+  }
+
+  // Import/export modal (from board)
+  if (projectKey && shouldCapture(p, `project-${normalizedProjectKey}-import-export-modal`)) {
+    await runCaptureStep("import/export modal", async () => {
+      const boardUrl = `/${orgSlug}/projects/${projectKey}/board`;
+      await page
+        .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+        .catch(() => {});
+      await waitForExpectedContent(page, boardUrl, "board");
+      await waitForScreenshotReady(page);
+      await dismissAllDialogs(page);
+      const trigger = page.getByRole("button", { name: /import \/ export/i }).first();
+      await trigger.waitFor({ state: "visible", timeout: 5000 });
+      await trigger.click();
+      const dialog = page.getByRole("dialog", { name: /import \/ export/i });
+      await dialog.waitFor({ state: "visible", timeout: 5000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, `project-${normalizedProjectKey}-import-export-modal`);
+      await dismissIfOpen(page, dialog);
+    });
+  }
+
+  // Manual time entry modal
+  if (shouldCapture(p, "time-tracking-manual-entry-modal")) {
+    await runCaptureStep("manual time entry modal", async () => {
+      await page
+        .goto(`${BASE_URL}/${orgSlug}/time-tracking`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await waitForExpectedContent(page, `/${orgSlug}/time-tracking`, "time-tracking");
+      await waitForScreenshotReady(page);
+      await dismissAllDialogs(page);
+      const trigger = page.getByRole("button", { name: /add time entry/i }).first();
+      await trigger.waitFor({ state: "visible", timeout: 5000 });
+      await trigger.click();
+      const dialog = page.getByRole("dialog", { name: /log time manually/i });
+      await dialog.waitFor({ state: "visible", timeout: 5000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "time-tracking-manual-entry-modal");
+      await dismissIfOpen(page, dialog);
+    });
+  }
 }
 
 async function screenshotDashboardModals(
@@ -2531,8 +2670,12 @@ const DRY_RUN_PAGES = [
   "filled-dashboard-advanced-search-modal",
   "filled-dashboard-shortcuts-modal",
   "filled-dashboard-time-entry-modal",
+  "filled-dashboard-customize-modal",
   // Filled states — projects modals
   "filled-projects-create-project-modal",
+  // Filled states — workspace modals
+  "filled-workspaces-create-workspace-modal",
+  "filled-workspace-create-team-modal",
   // Filled states — project sub-pages (use PROJ as placeholder key)
   "filled-project-PROJ-board",
   "filled-project-PROJ-backlog",
@@ -2547,11 +2690,15 @@ const DRY_RUN_PAGES = [
   "filled-project-PROJ-settings",
   "filled-project-PROJ-create-issue-modal",
   "filled-project-PROJ-issue-detail-modal",
+  "filled-project-PROJ-import-export-modal",
   // Filled states — calendar modes
   "filled-calendar-day",
   "filled-calendar-week",
   "filled-calendar-month",
   "filled-calendar-event-modal",
+  "filled-calendar-create-event-modal",
+  // Filled states — time tracking modals
+  "filled-time-tracking-manual-entry-modal",
   // Filled states — issue detail
   "filled-issue-PROJ-1",
   // Filled states — document editor
