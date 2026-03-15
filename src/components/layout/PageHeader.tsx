@@ -9,6 +9,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/Breadcrumb";
 import { Card } from "@/components/ui/Card";
+import { Dot } from "@/components/ui/Dot";
 import { Flex } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
@@ -67,7 +68,7 @@ export function PageHeader({
       >
         <Stack gap="xs" className="min-w-0">
           <Flex align="center" gap="xs" className="mb-0.5">
-            <Card recipe="pageHeaderIndicator" padding="none" aria-hidden="true" />
+            <Dot size="md" halo />
             <Typography variant="pageHeaderEyebrow">Workspace view</Typography>
           </Flex>
           <Typography variant="pageHeaderTitle" as="h2">

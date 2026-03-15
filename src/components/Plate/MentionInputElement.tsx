@@ -148,11 +148,9 @@ export function MentionInputElement({
       {/* Combobox dropdown */}
       <Card recipe="mentionInputMenu" padding="none">
         {items.length === 0 ? (
-          <Card variant="ghost" padding="sm" radius="none">
-            <Typography variant="small" color="secondary">
-              {search ? "No users found" : "Type to search users..."}
-            </Typography>
-          </Card>
+          <Typography variant="small" color="secondary" className="px-3 py-2">
+            {search ? "No users found" : "Type to search users..."}
+          </Typography>
         ) : (
           <Stack gap="none">
             {items.map((item, index) => (

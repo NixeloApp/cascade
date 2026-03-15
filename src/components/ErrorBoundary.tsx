@@ -88,11 +88,11 @@ export class ErrorBoundary extends Component<Props, State> {
                   >
                     View error details
                   </Typography>
-                  <Card variant="soft" padding="md" className="mt-2 overflow-auto max-h-40">
+                  <div className="mt-2 overflow-auto max-h-40 rounded bg-ui-bg-soft p-4">
                     <Typography as="pre" variant="mono" color="secondary">
                       {this.state.error.message}
                     </Typography>
-                  </Card>
+                  </div>
                 </details>
               )}
 

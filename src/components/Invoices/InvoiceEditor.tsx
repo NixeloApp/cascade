@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  getCardRecipeClassName,
+} from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Input } from "@/components/ui/Input";
@@ -78,7 +84,7 @@ export function InvoiceEditor({ initialLineItems, onSave, isSaving = false }: In
         <Stack gap="lg">
           <Stack gap="sm">
             {lineItems.map((line, index) => (
-              <Card key={line.localId} recipe="invoiceEditorLine" padding="sm">
+              <div key={line.localId} className={getCardRecipeClassName("invoiceEditorLine")}>
                 <Grid cols={1} colsMd={2} colsLg={4} gap="sm">
                   <Input
                     value={line.description}
@@ -113,7 +119,7 @@ export function InvoiceEditor({ initialLineItems, onSave, isSaving = false }: In
                     </Button>
                   </Flex>
                 </Grid>
-              </Card>
+              </div>
             ))}
           </Stack>
 

@@ -11,13 +11,14 @@ import type { Doc } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
 import { usePaginatedQuery } from "convex/react";
 import { useState } from "react";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid, GridItem } from "@/components/ui/Grid";
 import { Stack } from "@/components/ui/Stack";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery, useAuthReady } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { cn } from "@/lib/utils";
 import { useListNavigation } from "../hooks/useListNavigation";
 import { FocusZone } from "./Dashboard/FocusZone";
 import { Greeting } from "./Dashboard/Greeting";
@@ -105,9 +106,9 @@ export function Dashboard() {
                   <Typography variant="eyebrow" color="tertiary">
                     Overview
                   </Typography>
-                  <Card recipe="dashboardPanel" padding="sm">
+                  <div className={getCardRecipeClassName("dashboardPanel")}>
                     <QuickStats stats={stats} />
-                  </Card>
+                  </div>
                 </Flex>
               </GridItem>
             )}
@@ -115,7 +116,12 @@ export function Dashboard() {
 
           <Grid cols={1} colsLg={12} gap="lg">
             <GridItem colSpanLg={sidebarVisible ? 8 : 12}>
-              <Card recipe="dashboardPanelInset" radius="full" className="h-full w-full">
+              <div
+                className={cn(
+                  getCardRecipeClassName("dashboardPanelInset"),
+                  "h-full w-full rounded-2xl",
+                )}
+              >
                 <MyIssuesList
                   myIssues={myIssues}
                   myCreatedIssues={myCreatedIssues}
@@ -126,7 +132,7 @@ export function Dashboard() {
                   loadMore={loadMoreMyIssues}
                   status={myIssuesStatus}
                 />
-              </Card>
+              </div>
             </GridItem>
 
             {sidebarVisible && (

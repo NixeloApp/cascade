@@ -15,7 +15,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { IconButton } from "@/components/ui/IconButton";
 import { Stack } from "@/components/ui/Stack";
@@ -84,11 +84,7 @@ function SidebarSection({
           className={cn("h-3 w-3 transition-transform duration-default", !isOpen && "-rotate-90")}
         />
       </Button>
-      {isOpen && (
-        <Card padding="sm" variant="ghost" className="pt-0">
-          {children}
-        </Card>
-      )}
+      {isOpen && <div className="p-2 pt-0">{children}</div>}
     </section>
   );
 }
@@ -176,12 +172,12 @@ function TableOfContents({
 }) {
   if (headings.length === 0) {
     return (
-      <Card variant="ghost" padding="xs" className="text-ui-text-tertiary">
+      <div className="p-1 text-ui-text-tertiary">
         <Flex align="center" gap="sm">
           <FileText className="h-4 w-4" />
           <Typography variant="small">No headings found</Typography>
         </Flex>
-      </Card>
+      </div>
     );
   }
 
@@ -212,7 +208,7 @@ function InfoRow({ label, value }: { label: string; value: ReactNode }) {
   const isPlainValue = typeof value === "string" || typeof value === "number";
 
   return (
-    <Card recipe="documentSidebarInfoRow" padding="xs">
+    <div className={cn(getCardRecipeClassName("documentSidebarInfoRow"), "p-1")}>
       <Flex align="center" justify="between">
         <Typography variant="small" color="secondary">
           {label}
@@ -227,7 +223,7 @@ function InfoRow({ label, value }: { label: string; value: ReactNode }) {
           </Flex>
         )}
       </Flex>
-    </Card>
+    </div>
   );
 }
 
@@ -276,7 +272,7 @@ export function DocumentSidebar({
       className="h-full w-64 shrink-0 overflow-y-auto"
     >
       {/* Close button */}
-      <Card recipe="documentSidebarHeader" padding="sm">
+      <div className={cn(getCardRecipeClassName("documentSidebarHeader"), "p-2")}>
         <Flex align="center" justify="between">
           <Typography variant="label">Document</Typography>
           <IconButton
@@ -289,7 +285,7 @@ export function DocumentSidebar({
             ×
           </IconButton>
         </Flex>
-      </Card>
+      </div>
 
       {/* Document Info */}
       <SidebarSection title="Info" icon={Info}>

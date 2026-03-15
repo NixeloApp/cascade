@@ -82,7 +82,7 @@ export function DangerZone({
           </Stack>
         </Flex>
 
-        <Card variant="outline" padding="md" className="border-status-error/15 bg-status-error/5">
+        <div className="border border-status-error/15 bg-status-error/5 p-4">
           <Flex justify="between" align="start" gap="lg">
             <FlexItem flex="1">
               <Typography variant="label" color="error">
@@ -138,7 +138,7 @@ export function DangerZone({
               </Stack>
             </div>
           )}
-        </Card>
+        </div>
       </Stack>
     </Card>
   );

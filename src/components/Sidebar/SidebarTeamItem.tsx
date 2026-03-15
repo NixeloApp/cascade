@@ -13,7 +13,7 @@ import { usePaginatedQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
@@ -103,26 +103,26 @@ function SidebarTeamProjects({
 
   if (status === "LoadingFirstPage") {
     return (
-      <Card recipe="sidebarTeamStatus" variant="ghost" padding="none">
+      <div className={getCardRecipeClassName("sidebarTeamStatus")}>
         <Typography variant="caption" color="tertiary">
           Loading...
         </Typography>
-      </Card>
+      </div>
     );
   }
 
   if (projects.length === 0) {
     return (
-      <Card recipe="sidebarTeamStatus" variant="ghost" padding="none">
+      <div className={getCardRecipeClassName("sidebarTeamStatus")}>
         <Typography variant="caption" color="tertiary">
           No projects
         </Typography>
-      </Card>
+      </div>
     );
   }
 
   return (
-    <Card recipe="sidebarTeamProjectsRail" variant="ghost" padding="none">
+    <div className={getCardRecipeClassName("sidebarTeamProjectsRail")}>
       <Stack gap="xs">
         {projects.map((project) => {
           const isActive =
@@ -150,15 +150,15 @@ function SidebarTeamProjects({
         })}
 
         {status === "CanLoadMore" && (
-          <Card recipe="sidebarTeamLoadMore" variant="ghost" padding="none">
+          <div className={getCardRecipeClassName("sidebarTeamLoadMore")}>
             <Button variant="link" size="none" onClick={() => loadMore(10)}>
               <Typography variant="caption" color="brand">
                 Load more...
               </Typography>
             </Button>
-          </Card>
+          </div>
         )}
       </Stack>
-    </Card>
+    </div>
   );
 }

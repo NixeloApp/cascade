@@ -7,9 +7,10 @@
  */
 
 import { FileText, Kanban, Zap } from "lucide-react";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { cn } from "@/lib/utils";
 import { Typography } from "../ui/Typography";
 
 interface FeatureCardProps {
@@ -26,11 +27,11 @@ function FeatureCard({ icon, iconRecipe, title, description }: FeatureCardProps)
   return (
     <Card recipe="onboardingFeatureCard" hoverable padding="lg" className="group">
       <Flex direction="column" align="center">
-        <Card recipe={iconRecipe} className="mb-4 h-12 w-12">
+        <div className={cn(getCardRecipeClassName(iconRecipe), "mb-4 h-12 w-12")}>
           <Flex align="center" justify="center" className="h-full w-full">
             {icon}
           </Flex>
-        </Card>
+        </div>
         <Typography variant="h4" className="mb-1.5">
           {title}
         </Typography>

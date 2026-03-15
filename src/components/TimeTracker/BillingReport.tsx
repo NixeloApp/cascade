@@ -229,7 +229,7 @@ export function BillingReport({ projectId }: BillingReportProps) {
                     : 0;
 
                 return (
-                  <Card key={userId} variant="soft">
+                  <div key={userId} className="rounded bg-ui-bg-soft p-4">
                     <Flex justify="between" align="center" className="mb-2">
                       <div>
                         <Typography variant="label">{billingStats.name}</Typography>
@@ -251,7 +251,7 @@ export function BillingReport({ projectId }: BillingReportProps) {
 
                     {/* Progress bar */}
                     <Progress value={userUtilization} />
-                  </Card>
+                  </div>
                 );
               })}
             </Flex>

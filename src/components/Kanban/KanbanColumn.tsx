@@ -12,7 +12,7 @@ import type { LabelInfo } from "@convex/lib/issueHelpers";
 import type { WorkflowState } from "@convex/shared/types";
 import { Maximize2, Minimize2, Plus } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { IconButton } from "@/components/ui/IconButton";
@@ -228,7 +228,10 @@ function ColumnHeader({
   onCreateIssue?: () => void;
 }) {
   return (
-    <Card data-testid={TEST_IDS.BOARD.COLUMN_HEADER} recipe="kanbanColumnHeader">
+    <div
+      data-testid={TEST_IDS.BOARD.COLUMN_HEADER}
+      className={getCardRecipeClassName("kanbanColumnHeader")}
+    >
       <Flex align="center" justify="between" gap="xs">
         <Flex align="center" gap="xs" className="min-w-0">
           <Typography
@@ -280,7 +283,7 @@ function ColumnHeader({
           )}
         </Flex>
       </Flex>
-    </Card>
+    </div>
   );
 }
 
@@ -504,7 +507,7 @@ const KanbanColumnComponent = function KanbanColumn({
           onCreateIssue={createIssueHandler}
         />
 
-        <Card recipe="kanbanColumnBody">
+        <div className={getCardRecipeClassName("kanbanColumnBody")}>
           {showEmptyState ? (
             <Flex flex="1">
               <EmptyColumnState canEdit={canEdit} onCreateIssue={createIssueHandler} />
@@ -541,7 +544,7 @@ const KanbanColumnComponent = function KanbanColumn({
               )}
             </Stack>
           )}
-        </Card>
+        </div>
       </Card>
     </section>
   );

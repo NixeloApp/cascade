@@ -17,10 +17,11 @@ import { useSearchKeyboard, useSearchPagination } from "@/hooks/useGlobalSearch"
 import { ArrowRight, Command, Filter, Plus, Search } from "@/lib/icons";
 import { parseIssueSearchShortcuts } from "@/lib/search-shortcuts";
 import { TEST_IDS } from "@/lib/test-ids";
+import { cn } from "@/lib/utils";
 import type { CommandAction } from "./CommandPalette";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
-import { Card } from "./ui/Card";
+import { Card, getCardRecipeClassName } from "./ui/Card";
 import {
   CommandDialog,
   CommandGroup,
@@ -273,8 +274,8 @@ function SearchListContent({
   if (query.length === 0) {
     return (
       <>
-        <Card variant="ghost" padding="xs" className="pb-1">
-          <Card recipe="commandIntro" padding="md">
+        <div className="p-1 pb-1">
+          <div className={cn(getCardRecipeClassName("commandIntro"), "p-4")}>
             <Flex direction="column" gap="md">
               <div>
                 <Badge variant="brand" shape="pill">
@@ -300,8 +301,8 @@ function SearchListContent({
                 </Badge>
               </Flex>
             </Flex>
-          </Card>
-        </Card>
+          </div>
+        </div>
 
         {commandGroupEntries.map(([group, commands]) => (
           <CommandGroup key={group} heading={group}>
@@ -386,11 +387,11 @@ function SearchListContent({
           data-testid={TEST_IDS.GLOBAL_SEARCH.NO_RESULTS}
           className="text-ui-text-secondary"
         >
-          <Card variant="ghost" padding="lg">
+          <div className="p-6">
             <Flex direction="column" align="center">
-              <Card recipe="controlStrip" padding="sm" className="mb-4">
+              <div className={cn(getCardRecipeClassName("controlStrip"), "mb-4 p-2")}>
                 <Icon icon={Search} size="xl" />
-              </Card>
+              </div>
               <Typography variant="label">
                 {hasCommandMatches ? "No issue or document results" : "No results found"}
               </Typography>
@@ -398,7 +399,7 @@ function SearchListContent({
                 Open advanced search
               </Button>
             </Flex>
-          </Card>
+          </div>
         </Flex>
       ) : (
         <CommandGroup data-testid={TEST_IDS.SEARCH.RESULTS_GROUP} heading="Results">
