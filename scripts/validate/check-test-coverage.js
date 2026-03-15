@@ -35,6 +35,12 @@ const SKIP_PATTERNS = [
   /schema\.ts$/, // Convex schema
   /convex\.config\.ts$/, // Convex config
   /http\.ts$/, // HTTP routes (tested via integration)
+  /convex\/e2e\.ts$/, // E2E test helpers (testing tests is circular)
+  /convex\/examples\//, // Example/demo code
+  /convex\/auditLogs\.ts$/, // Skips in test env by design
+  /convex\/ai\//, // Requires external AI services
+  /convex\/email\//, // Requires external email service
+  /convex\/slackCommandsCore\.ts$/, // Requires external Slack service
 ];
 
 // Minimum lines for a file to require a test
