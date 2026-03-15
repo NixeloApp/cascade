@@ -2951,8 +2951,11 @@ async function screenshotBoardInteractiveStates(
         .first();
       await swimlaneButton.waitFor({ state: "visible", timeout: 15000 });
       await swimlaneButton.click();
-      // Select the mode
-      const option = page.getByRole("menuitemcheckbox", { name: new RegExp(`^${mode}$`, "i") });
+      // Select the mode — use hasText since Radix checkbox items may have
+      // additional accessible text from the checkmark indicator
+      const option = page
+        .getByRole("menuitemcheckbox")
+        .filter({ hasText: new RegExp(`^${mode}$`, "i") });
       await option.waitFor({ state: "visible", timeout: 3000 });
       await option.click();
       await waitForScreenshotReady(page);
@@ -2967,7 +2970,7 @@ async function screenshotBoardInteractiveStates(
       .first();
     if (await swimlaneButton.isVisible().catch(() => false)) {
       await swimlaneButton.click();
-      const noSwimlanes = page.getByRole("menuitemcheckbox", { name: /no swimlanes/i });
+      const noSwimlanes = page.getByRole("menuitemcheckbox").filter({ hasText: /no swimlanes/i });
       if (await noSwimlanes.isVisible().catch(() => false)) {
         await noSwimlanes.click();
         await waitForScreenshotReady(page);
@@ -3005,7 +3008,10 @@ async function screenshotBoardInteractiveStates(
       await priorityFilter.waitFor({ state: "visible", timeout: 8000 });
       await priorityFilter.click();
       // Select "High" priority
-      const highOption = page.getByRole("menuitemcheckbox", { name: /high/i }).first();
+      const highOption = page
+        .getByRole("menuitemcheckbox")
+        .filter({ hasText: /^high$/i })
+        .first();
       await highOption.waitFor({ state: "visible", timeout: 3000 });
       await highOption.click();
       // Close dropdown
