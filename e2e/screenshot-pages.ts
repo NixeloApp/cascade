@@ -92,6 +92,30 @@ const SCREENSHOT_USER = {
 };
 const SEARCH_SHORTCUT = process.platform === "darwin" ? "Meta+K" : "Control+K";
 
+/** Inject Convex auth tokens into the page's localStorage. */
+async function injectAuthTokens(
+  page: Page,
+  token: string,
+  refreshToken: string | null,
+): Promise<void> {
+  await page.evaluate(
+    ({ token, refreshToken, convexUrl }) => {
+      localStorage.setItem("convexAuthToken", token);
+      if (refreshToken) {
+        localStorage.setItem("convexAuthRefreshToken", refreshToken);
+      }
+      if (convexUrl) {
+        const ns = convexUrl.replace(/[^a-zA-Z0-9]/g, "");
+        localStorage.setItem(`__convexAuthJWT_${ns}`, token);
+        if (refreshToken) {
+          localStorage.setItem(`__convexAuthRefreshToken_${ns}`, refreshToken);
+        }
+      }
+    },
+    { token, refreshToken, convexUrl: CONVEX_URL },
+  );
+}
+
 interface CliOptions {
   headless: boolean;
   configFilters: Set<string> | null;
@@ -721,7 +745,7 @@ async function waitForCalendarReady(page: Page): Promise<boolean> {
         timeout: 4000,
       });
       await page
-        .locator(".animate-shimmer")
+        .locator("[data-loading-skeleton]")
         .first()
         .waitFor({ state: "hidden", timeout: 4000 })
         .catch(() => {});
@@ -804,7 +828,7 @@ async function waitForBoardReady(page: Page): Promise<boolean> {
         .waitFor({ state: "visible", timeout: 6000 })
         .catch(() => {});
       await page
-        .locator(".animate-shimmer")
+        .locator("[data-loading-skeleton]")
         .first()
         .waitFor({ state: "hidden", timeout: 4000 })
         .catch(() => {});
@@ -1217,7 +1241,7 @@ async function waitForAnalyticsReady(page: Page): Promise<void> {
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
   await page
-    .locator(".animate-shimmer")
+    .locator("[data-loading-skeleton]")
     .first()
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
@@ -1332,7 +1356,7 @@ async function waitForExpectedContent(
       .waitFor({ state: "visible", timeout: 12000 })
       .catch(() => {});
     await page
-      .locator(".animate-shimmer")
+      .locator("[data-loading-skeleton]")
       .first()
       .waitFor({ state: "hidden", timeout: 4000 })
       .catch(() => {});
@@ -1611,28 +1635,7 @@ async function autoLogin(page: Page): Promise<string | null> {
   }
 
   await page.goto(`${BASE_URL}/signin`, { waitUntil: "domcontentloaded" });
-
-  await page.evaluate(
-    ({ token, refreshToken, convexUrl }) => {
-      localStorage.setItem("convexAuthToken", token);
-      if (refreshToken) {
-        localStorage.setItem("convexAuthRefreshToken", refreshToken);
-      }
-      if (convexUrl) {
-        const ns = convexUrl.replace(/[^a-zA-Z0-9]/g, "");
-        localStorage.setItem(`__convexAuthJWT_${ns}`, token);
-        if (refreshToken) {
-          localStorage.setItem(`__convexAuthRefreshToken_${ns}`, refreshToken);
-        }
-      }
-    },
-    {
-      token: loginResult.token,
-      refreshToken: loginResult.refreshToken ?? null,
-      convexUrl: CONVEX_URL,
-    },
-  );
-
+  await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
   await page.goto(`${BASE_URL}/app`, { waitUntil: "domcontentloaded" });
 
   try {
@@ -2126,23 +2129,7 @@ async function captureForConfig(
   );
 
   if (loginResult.success && loginResult.token) {
-    await page.evaluate(
-      ({ token, refreshToken, convexUrl }) => {
-        localStorage.setItem("convexAuthToken", token);
-        if (refreshToken) localStorage.setItem("convexAuthRefreshToken", refreshToken);
-        if (convexUrl) {
-          const ns = convexUrl.replace(/[^a-zA-Z0-9]/g, "");
-          localStorage.setItem(`__convexAuthJWT_${ns}`, token);
-          if (refreshToken) localStorage.setItem(`__convexAuthRefreshToken_${ns}`, refreshToken);
-        }
-      },
-      {
-        token: loginResult.token,
-        refreshToken: loginResult.refreshToken ?? null,
-        convexUrl: CONVEX_URL,
-      },
-    );
-
+    await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
     await page.goto(`${BASE_URL}/app`, { waitUntil: "domcontentloaded" });
     try {
       await page.waitForURL(

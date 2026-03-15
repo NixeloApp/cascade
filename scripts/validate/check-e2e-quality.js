@@ -55,7 +55,12 @@ const BROAD_CLASS_PATTERNS = [
 const SKIP_FILES = new Set([
   "e2e/global-setup.ts", // Setup scaffolding, not a test
   "e2e/fixtures.ts", // Test fixture definitions
-  "e2e/screenshot-pages.ts", // Screenshot utility with scoped spinner detection
+  // screenshot-pages.ts is a capture utility, not a spec test. It intentionally
+  // uses broad selectors (page.locator("a")), force:true clicks, and .first()
+  // calls because it navigates the live app to take screenshots, not to assert
+  // behavior. Applying spec-level rules here would require rewriting the tool
+  // for no test-quality benefit.
+  "e2e/screenshot-pages.ts",
 ]);
 
 // ── Directories to skip for certain checks ──

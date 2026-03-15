@@ -2,7 +2,7 @@
 
 > **Priority:** P0
 > **Status:** Active
-> **Last Updated:** 2026-03-15
+> **Last Updated:** 2026-03-16
 > **Objective:** Transform the screenshot tool from a basic page capturer into a comprehensive visual QA system that covers every route, modal, interactive state, and user journey in the product.
 
 ---
@@ -11,17 +11,17 @@
 
 ### Dead code removal
 
-- [ ] Delete `scripts/capture-screenshots.mjs` — legacy script using banned anti-patterns (`waitForTimeout`, `networkidle`, hardcoded port 5173). Fully superseded by `e2e/screenshot-pages.ts`.
+- [x] Delete `scripts/capture-screenshots.mjs` — legacy script using banned anti-patterns (`waitForTimeout`, `networkidle`, hardcoded port 5173). Fully superseded by `e2e/screenshot-pages.ts`.
 
 ### Validator coverage
 
-- [ ] Document the `check-e2e-quality.js` skip for `screenshot-pages.ts` with an explicit comment explaining why it's exempt (utility, not a spec test).
+- [x] Document the `check-e2e-quality.js` skip for `screenshot-pages.ts` with an explicit comment explaining why it's exempt (utility, not a spec test).
 - [ ] Consider adding a dedicated screenshot-specific validator that catches issues relevant to the screenshot tool (e.g. missing `waitForScreenshotReady` calls, uncovered routes).
 
 ### Resilience
 
-- [ ] Replace all `.animate-shimmer` CSS class selectors in `screenshot-pages.ts` with a `data-loading-skeleton` attribute on skeleton components. If the CSS class name changes, screenshots silently capture loading states.
-- [ ] Deduplicate auth token injection — `autoLogin()` (line 1589) and inline auth in `captureForConfig()` (line 2122) repeat the same localStorage token-setting logic. Extract a shared `injectAuthTokens(page, token, refreshToken)` helper.
+- [x] Replace all `.animate-shimmer` CSS class selectors in `screenshot-pages.ts` with a `data-loading-skeleton` attribute on skeleton components. If the CSS class name changes, screenshots silently capture loading states.
+- [x] Deduplicate auth token injection — `autoLogin()` and inline auth in `captureForConfig()` now use shared `injectAuthTokens(page, token, refreshToken)` helper.
 
 ### Staging & output
 
@@ -452,9 +452,9 @@ New pages need spec folder assignments. Proposed additions:
 
 ## Acceptance Criteria
 
-- [ ] `scripts/capture-screenshots.mjs` deleted.
-- [ ] No `.animate-shimmer` CSS selectors in `screenshot-pages.ts`.
-- [ ] Auth token injection deduplicated into a shared helper.
+- [x] `scripts/capture-screenshots.mjs` deleted.
+- [x] No `.animate-shimmer` CSS selectors in `screenshot-pages.ts`.
+- [x] Auth token injection deduplicated into a shared helper.
 - [ ] Every route in `convex/shared/routes.ts` has at least one screenshot (empty + filled where applicable).
 - [ ] Every modal/dialog component has at least one open-state screenshot.
 - [ ] Interactive states cover board swimlanes, document editor toolbars, notification states, sprint charts.

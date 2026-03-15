@@ -38,6 +38,7 @@ export function AppSplashScreen({ message }: { message?: string }) {
           {/* Minimal high-end loader - Always show to indicate activity */}
           <Card recipe="authSplashLoaderRail" padding="none">
             <div
+              data-loading-skeleton
               className="h-full bg-linear-to-r from-landing-accent to-landing-accent-alt w-full -translate-x-full animate-shimmer"
               style={{ animation: "shimmer 1.5s infinite linear" }}
             />
