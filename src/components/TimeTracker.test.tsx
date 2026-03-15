@@ -22,6 +22,7 @@ vi.mock("@/lib/toast", () => ({
 
 vi.mock("@/components/ui/Card", () => ({
   Card: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  getCardRecipeClassName: (recipe: string) => `recipe-${recipe}`,
 }));
 
 vi.mock("@/components/ui/Flex", () => ({

@@ -1,3 +1,0 @@
-corepack pnpm run validate
-corepack pnpm run test:run
-corepack pnpm run test:convex:run

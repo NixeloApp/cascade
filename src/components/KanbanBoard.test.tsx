@@ -135,6 +135,7 @@ vi.mock("./ui/Card", () => ({
       </div>
     );
   }),
+  getCardRecipeClassName: (recipe: string) => `recipe-${recipe}`,
 }));
 
 vi.mock("./ui/Flex", () => ({
