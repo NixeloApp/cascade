@@ -255,17 +255,17 @@ Beyond page loads — capture the states users actually see during interaction.
 
 ### Navigation / Shell states
 
-- [ ] **Sidebar collapsed** — narrow sidebar with icons only
-- [ ] **Sidebar expanded** — full sidebar with labels
-- [ ] **Sidebar favorites section** — starred items
-- [ ] **Sidebar with project tree** — nested project structure
-- [ ] **Mobile hamburger menu open** — responsive navigation
+- [x] **Sidebar collapsed** — collapse on dashboard, capture, expand back
+- [ ] **Sidebar expanded** — default state (captured implicitly in all filled-state screenshots)
+- [ ] **Sidebar favorites section** — needs starred items in seed data
+- [ ] **Sidebar with project tree** — needs nested projects in seed data
+- [ ] **Mobile hamburger menu open** — needs mobile viewport context (tablet/mobile configs)
 
 ### Error / Edge states
 
-- [ ] **404 page** — invalid route
-- [ ] **Permission denied** — unauthorized access attempt
-- [ ] **Empty states** for every major section (most need seeding control)
+- [x] **404 page** — navigate to bogus URL while authenticated → spec folder `40-error`
+- [ ] **Permission denied** — needs multi-user setup (viewer role hitting admin page)
+- [ ] **Empty states** for every major section (already captured in empty-* screenshots)
 - [ ] **Loading skeletons** — capture a page mid-load with skeleton UI visible (requires timing control)
 - [ ] **Toast notification** — success and error toast examples
 - [ ] **Form validation errors** — at least one form with field-level errors visible

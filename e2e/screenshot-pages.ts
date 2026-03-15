@@ -77,6 +77,8 @@ const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
   "filled-invoices": "25-invoices",
   "filled-clients": "26-clients",
   "filled-time-tracking-manual-entry-modal": "22-time-tracking",
+  "filled-sidebar-collapsed": "04-dashboard",
+  "filled-404-page": "40-error",
   "filled-authentication": "31-authentication",
   "filled-add-ons": "32-add-ons",
   "filled-assistant": "33-assistant",
@@ -2405,6 +2407,54 @@ async function screenshotFilledStates(
       await dismissIfOpen(page, dialog);
     });
   }
+
+  // ── Navigation / Shell states ──
+
+  // Sidebar collapsed
+  if (shouldCapture(p, "sidebar-collapsed")) {
+    await runCaptureStep("sidebar collapsed", async () => {
+      await page
+        .goto(`${BASE_URL}/${orgSlug}/dashboard`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await waitForExpectedContent(page, `/${orgSlug}/dashboard`, "dashboard");
+      await waitForScreenshotReady(page);
+      const collapseBtn = page.getByLabel("Collapse sidebar");
+      await collapseBtn.waitFor({ state: "visible", timeout: 5000 });
+      await collapseBtn.click();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "sidebar-collapsed");
+      // Expand back
+      const expandBtn = page.getByLabel("Expand sidebar");
+      if (await expandBtn.isVisible().catch(() => false)) {
+        await expandBtn.click();
+        await waitForScreenshotReady(page);
+      }
+    });
+  }
+
+  // 404 page (navigate to bogus URL while authenticated)
+  if (shouldCapture(p, "404-page")) {
+    await runCaptureStep("404 page", async () => {
+      await page
+        .goto(`${BASE_URL}/${orgSlug}/nonexistent-page-screenshot-test`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await waitForScreenshotReady(page);
+      // Wait for the 404 content to render
+      await page
+        .getByText(/not found|page.*not.*found|404/i)
+        .first()
+        .waitFor({ state: "visible", timeout: 8000 })
+        .catch(() => {});
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "404-page");
+    });
+  }
 }
 
 async function screenshotDashboardModals(
@@ -2865,6 +2915,10 @@ const DRY_RUN_PAGES = [
   "filled-team-TEAM-calendar",
   "filled-team-TEAM-wiki",
   "filled-team-TEAM-settings",
+  // Filled states — navigation / shell states
+  "filled-sidebar-collapsed",
+  // Error / edge states
+  "filled-404-page",
 ];
 
 function dryRunEnumerate(
