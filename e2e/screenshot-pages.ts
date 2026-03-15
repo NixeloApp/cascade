@@ -2600,7 +2600,7 @@ async function screenshotFilledStates(
       const trigger = page.getByRole("button", { name: /add time entry/i }).first();
       await trigger.waitFor({ state: "visible", timeout: 5000 });
       await trigger.click();
-      const dialog = page.getByRole("dialog", { name: /log time manually/i });
+      const dialog = page.getByRole("dialog").filter({ hasText: /log time manually/i });
       await dialog.waitFor({ state: "visible", timeout: 5000 });
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "time-tracking-manual-entry-modal");
