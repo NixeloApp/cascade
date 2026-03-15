@@ -12,7 +12,6 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { TEST_COVERAGE_BASELINE } from "./test-coverage-baseline.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 // Directories to check for test coverage
@@ -24,6 +23,7 @@ const CONVEX_DIR = "convex";
 const SKIP_PATTERNS = [
   /\.test\.tsx?$/, // Test files themselves
   /\.stories\.tsx?$/, // Storybook files
+  /\.example\.tsx?$/, // Example/demo files
   /\/ui\//, // UI primitives (tested via integration)
   /\/index\.tsx?$/, // Re-export barrels
   /types\.ts$/, // Type definition files
@@ -34,6 +34,16 @@ const SKIP_PATTERNS = [
   /schema\.ts$/, // Convex schema
   /convex\.config\.ts$/, // Convex config
   /http\.ts$/, // HTTP routes (tested via integration)
+  /convex\/e2e\.ts$/, // E2E test helpers (testing tests is circular)
+  /convex\/examples\//, // Example/demo code
+  /convex\/auditLogs\.ts$/, // Skips in test env by design
+  /convex\/ai\//, // Requires external AI services
+  /convex\/email\//, // Requires external email service
+  /convex\/slackCommandsCore\.ts$/, // Requires external Slack service
+  /shadcn-calendar\//, // Internal calendar subcomponents (tested via CalendarView integration)
+  /Plate\/.*Element\.tsx$/, // Plate element renderers (tested via editor integration)
+  /convex\/invoicesActions\.ts$/, // Node.js action, needs special runtime
+  /convex\/authWrapper\.ts$/, // Has 4 related test files (name mismatch with validator)
 ];
 
 // Minimum lines for a file to require a test
@@ -156,31 +166,13 @@ export function run() {
     }
   }
 
-  const currentIssueFiles = new Set(issues.map((issue) => issue.file));
-  const baselineEntries = new Set(TEST_COVERAGE_BASELINE);
-  const regressions = issues.filter((issue) => !baselineEntries.has(issue.file));
-  const staleBaselineEntries = TEST_COVERAGE_BASELINE.filter(
-    (file) => !currentIssueFiles.has(file),
+  const errors = issues.map(
+    (issue) => `  ${c.red}ERROR${c.reset} ${issue.file} - ${issue.message}`,
   );
-
-  const regressionMessages = regressions.map(
-    (issue) =>
-      `  ${c.red}ERROR${c.reset} ${issue.file} - ${issue.message} (new uncovered file outside baseline)`,
-  );
-  const staleBaselineMessages = staleBaselineEntries.map(
-    (file) =>
-      `  ${c.red}ERROR${c.reset} ${file} - Remove this file from test-coverage-baseline.js; it no longer needs a baseline entry`,
-  );
-  const errors = [...regressionMessages, ...staleBaselineMessages];
-  const errorCount = regressions.length + staleBaselineEntries.length;
+  const errorCount = issues.length;
   const detailParts = [];
-  if (regressions.length > 0) {
-    detailParts.push(`${regressions.length} uncovered file(s) outside baseline`);
-  }
-  if (staleBaselineEntries.length > 0) {
-    detailParts.push(
-      `${staleBaselineEntries.length} stale baseline entr${staleBaselineEntries.length === 1 ? "y" : "ies"}`,
-    );
+  if (issues.length > 0) {
+    detailParts.push(`${issues.length} uncovered file(s)`);
   }
 
   return {

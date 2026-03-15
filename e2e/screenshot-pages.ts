@@ -450,9 +450,9 @@ async function takeScreenshot(
   const screenshotPath = getStagedScreenshotPath(finalPath);
 
   try {
-    await page.goto(`${BASE_URL}${url}`, { waitUntil: "networkidle", timeout: 15000 });
+    await page.goto(`${BASE_URL}${url}`, { waitUntil: "domcontentloaded", timeout: 15000 });
   } catch {
-    // networkidle often times out on real-time apps -- page is still usable
+    // Navigation timeout is acceptable -- page may still be usable
   }
   await waitForScreenshotReady(page);
   await waitForExpectedContent(page, url, name, prefix);
@@ -573,7 +573,6 @@ async function openOmnibox(page: Page, trigger: Locator, dialog: Locator): Promi
     .waitFor({ state: "visible", timeout: 5000 })
     .catch(() => {});
   await waitForScreenshotReady(page);
-  await page.waitForTimeout(250);
 }
 
 function isProjectBoardUrl(url: string): boolean {
@@ -696,7 +695,7 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
       .first()
       .waitFor({ state: "visible", timeout: 12000 })
       .catch(() => {});
-    await page.waitForTimeout(900);
+    await waitForScreenshotReady(page);
     return;
   }
 
@@ -706,7 +705,7 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
       .first()
       .waitFor({ state: "visible", timeout: 12000 })
       .catch(() => {});
-    await page.waitForTimeout(350);
+    await waitForScreenshotReady(page);
   }
 }
 
@@ -778,7 +777,7 @@ async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<bool
       await waitForCalendarState();
     }
 
-    await page.waitForTimeout(500);
+    await waitForScreenshotReady(page);
   }
 
   if (await navigateUntilVisible("previous", 2)) {
@@ -810,7 +809,7 @@ async function waitForBoardReady(page: Page): Promise<boolean> {
         .waitFor({ state: "hidden", timeout: 4000 })
         .catch(() => {});
       await page
-        .locator(".animate-spin")
+        .getByRole("status")
         .first()
         .waitFor({ state: "hidden", timeout: 4000 })
         .catch(() => {});
@@ -840,7 +839,7 @@ async function waitForProjectsReady(page: Page, prefix?: string): Promise<void> 
     .waitFor({ state: "visible", timeout: 12000 })
     .catch(() => {});
   await page
-    .locator(".animate-spin")
+    .getByRole("status")
     .first()
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
@@ -896,7 +895,7 @@ async function waitForIssuesReady(page: Page, prefix?: string): Promise<void> {
     )
     .catch(() => {});
   await page
-    .locator(".animate-spin")
+    .getByRole("status")
     .first()
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
@@ -935,7 +934,7 @@ async function waitForWorkspacesReady(page: Page, prefix?: string): Promise<void
     )
     .catch(() => {});
   await page
-    .locator(".animate-spin")
+    .getByRole("status")
     .first()
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
@@ -967,7 +966,7 @@ async function waitForTimeTrackingReady(page: Page): Promise<void> {
     )
     .catch(() => {});
   await page
-    .locator(".animate-spin")
+    .getByRole("status")
     .first()
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
@@ -1007,7 +1006,7 @@ async function waitForWorkspaceDetailReady(page: Page): Promise<void> {
     )
     .catch(() => {});
   await page
-    .locator(".animate-spin")
+    .getByRole("status")
     .first()
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
@@ -1025,7 +1024,7 @@ async function waitForWorkspaceSettingsReady(page: Page): Promise<void> {
     .waitFor({ state: "visible", timeout: 12000 })
     .catch(() => {});
   await page
-    .locator(".animate-spin")
+    .getByRole("status")
     .first()
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
@@ -1040,7 +1039,7 @@ async function waitForWorkspaceBacklogReady(page: Page): Promise<void> {
     .waitFor({ state: "visible", timeout: 12000 })
     .catch(() => {});
   await page
-    .locator(".animate-spin")
+    .getByRole("status")
     .first()
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
@@ -1077,7 +1076,7 @@ async function waitForTeamSettingsReady(page: Page): Promise<void> {
     .waitFor({ state: "visible", timeout: 12000 })
     .catch(() => {});
   await page
-    .locator(".animate-spin")
+    .getByRole("status")
     .first()
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
@@ -1091,7 +1090,7 @@ async function waitForIssueDetailReady(page: Page): Promise<void> {
     .waitFor({ state: "visible", timeout: 12000 })
     .catch(() => {});
   await page
-    .locator(".animate-spin")
+    .getByRole("status")
     .first()
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
@@ -1116,7 +1115,7 @@ async function waitForDocumentsReady(page: Page): Promise<void> {
     )
     .catch(() => {});
   await page
-    .locator(".animate-spin")
+    .getByRole("status")
     .first()
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
@@ -1144,7 +1143,7 @@ async function waitForDocumentEditorReady(page: Page): Promise<void> {
     )
     .catch(() => {});
   await page
-    .locator(".animate-spin")
+    .getByRole("status")
     .first()
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
@@ -1176,7 +1175,7 @@ async function waitForDocumentTemplatesReady(page: Page): Promise<void> {
     )
     .catch(() => {});
   await page
-    .locator(".animate-spin")
+    .getByRole("status")
     .first()
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
@@ -1195,7 +1194,7 @@ async function waitForActivityReady(page: Page): Promise<void> {
     .waitFor({ state: "visible", timeout: 12000 })
     .catch(() => {});
   await page
-    .locator(".animate-spin")
+    .getByRole("status")
     .first()
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
@@ -1213,7 +1212,7 @@ async function waitForAnalyticsReady(page: Page): Promise<void> {
     .waitFor({ state: "visible", timeout: 12000 })
     .catch(() => {});
   await page
-    .locator(".animate-spin")
+    .getByRole("status")
     .first()
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
@@ -1236,7 +1235,7 @@ async function waitForTimesheetReady(page: Page): Promise<void> {
     .waitFor({ state: "visible", timeout: 12000 })
     .catch(() => {});
   await page
-    .locator(".animate-spin")
+    .getByRole("status")
     .first()
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
@@ -1254,7 +1253,7 @@ async function waitForSprintsReady(page: Page): Promise<void> {
     .waitFor({ state: "visible", timeout: 12000 })
     .catch(() => {});
   await page
-    .locator(".animate-spin")
+    .getByRole("status")
     .first()
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
@@ -1281,7 +1280,7 @@ async function waitForRoadmapReady(page: Page): Promise<void> {
     )
     .catch(() => {});
   await page
-    .locator(".animate-spin")
+    .getByRole("status")
     .first()
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
@@ -1304,7 +1303,7 @@ async function waitForBillingReady(page: Page): Promise<void> {
     )
     .catch(() => {});
   await page
-    .locator(".animate-spin")
+    .getByRole("status")
     .first()
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
@@ -1382,7 +1381,7 @@ async function waitForExpectedContent(
       .waitFor({ state: "visible", timeout: 12000 })
       .catch(() => {});
     await page
-      .locator(".animate-spin")
+      .getByRole("status")
       .first()
       .waitFor({ state: "hidden", timeout: 5000 })
       .catch(() => {});
@@ -1497,13 +1496,12 @@ async function waitForExpectedContent(
 }
 
 async function waitForScreenshotReady(page: Page): Promise<void> {
-  await page.waitForFunction(() => document.readyState === "complete");
-  await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
+  await page.waitForLoadState("domcontentloaded").catch(() => {});
 
   // App shell loading indicator may appear during route/query transitions.
   const loadingSpinner = page
     .getByLabel("Loading")
-    .or(page.getByRole("status").filter({ has: page.locator(".animate-spin") }))
+    .or(page.getByRole("status").filter({ has: page.getByRole("status") }))
     .or(page.locator("[data-loading-spinner]"))
     .first();
   await loadingSpinner.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
@@ -1781,7 +1779,10 @@ async function screenshotFilledStates(
     ) {
       const calendarUrl = `/${orgSlug}/projects/${projectKey}/calendar`;
       try {
-        await page.goto(`${BASE_URL}${calendarUrl}`, { waitUntil: "networkidle", timeout: 15000 });
+        await page.goto(`${BASE_URL}${calendarUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
       } catch {}
       await waitForScreenshotReady(page);
       const isCalendarReady = await waitForCalendarReady(page);
@@ -1799,10 +1800,10 @@ async function screenshotFilledStates(
             continue;
           }
           const toggleItem = page.getByTestId(calendarModeTestIds[mode]);
-          for (let attempt = 0; attempt < 3; attempt++) {
-            if ((await toggleItem.count()) > 0) break;
-            await page.waitForTimeout(500);
-          }
+          await toggleItem
+            .first()
+            .waitFor({ state: "visible", timeout: 5000 })
+            .catch(() => {});
           if ((await toggleItem.count()) === 0) {
             throw new Error(`[${p}] calendar-${mode} toggle not found after retries`);
           }

@@ -28,6 +28,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/Popover";
 import { Separator } from "@/components/ui/Separator";
 import { NODE_TYPES } from "@/lib/plate/plugins";
+import { showError } from "@/lib/toast";
 import { ColorPickerButton } from "./ColorPickerButton";
 
 interface MarkButtonProps {
@@ -96,7 +97,7 @@ function getSelectionRect(): DOMRect | null {
  * Must be rendered inside Plate context
  */
 export function FloatingToolbar() {
-  useEditorRef();
+  const editor = useEditorRef();
   const selection = useEditorSelection();
   const [open, setOpen] = useState(false);
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
@@ -120,11 +121,30 @@ export function FloatingToolbar() {
 
   // Handle link insertion
   const handleLink = () => {
+    if (!selection) return;
+
     const url = window.prompt("Enter URL:");
-    if (url && selection) {
-      // TODO: Implement proper link insertion with LinkPlugin
-      // For now, this is a no-op until LinkPlugin is integrated
+    if (!url) return;
+
+    // Basic URL validation
+    try {
+      new URL(url.startsWith("http") ? url : `https://${url}`);
+    } catch {
+      showError("Invalid URL format");
+      return;
     }
+
+    const normalizedUrl = url.startsWith("http") ? url : `https://${url}`;
+
+    try {
+      editor.tf.wrapNodes(
+        { type: NODE_TYPES.link, url: normalizedUrl, children: [] },
+        { split: true },
+      );
+    } catch {
+      showError("Failed to insert link");
+    }
+    setOpen(false);
   };
 
   if (!open || !anchorRect) {

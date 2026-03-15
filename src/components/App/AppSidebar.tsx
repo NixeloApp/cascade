@@ -150,6 +150,7 @@ interface WorkspacesSectionContentProps {
   location: { pathname: string };
   onNavClick: () => void;
   onCreateTeam: (workspace: { id: Id<"workspaces">; slug: string }) => void;
+  onCreateProject?: () => void;
 }
 
 function WorkspacesSectionContent({
@@ -168,6 +169,7 @@ function WorkspacesSectionContent({
   location,
   onNavClick,
   onCreateTeam,
+  onCreateProject,
 }: WorkspacesSectionContentProps) {
   return (
     <>
@@ -182,6 +184,19 @@ function WorkspacesSectionContent({
               aria-label="Search workspaces"
             />
           </Card>
+        </li>
+      )}
+      {onCreateProject && (
+        <li className="list-none px-1 mb-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            chromeSize="listRow"
+            onClick={onCreateProject}
+            leftIcon={<Plus className="h-4 w-4" />}
+          >
+            New Project
+          </Button>
         </li>
       )}
       {workspaces.map((workspace: Doc<"workspaces">) => (
@@ -371,7 +386,11 @@ function WorkspaceNavItem({
   );
 }
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  onCreateProject?: () => void;
+}
+
+export function AppSidebar({ onCreateProject }: AppSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { isCollapsed, isMobileOpen, toggleCollapse, closeMobile } = useSidebarState();
@@ -421,7 +440,6 @@ export function AppSidebar() {
   // Mutations
   const { mutate: createDocument } = useAuthenticatedMutation(api.documents.create);
   const { mutate: createWorkspace } = useAuthenticatedMutation(api.workspaces.create);
-  // const { mutate: createProject } = useAuthenticatedMutation(api.projects.createProject); // TODO: Add project creation UI
 
   const isActive = (pathPart: string) => {
     return location.pathname.includes(pathPart);
@@ -752,6 +770,7 @@ export function AppSidebar() {
                       location={location}
                       onNavClick={handleNavClick}
                       onCreateTeam={setCreateTeamWorkspace}
+                      onCreateProject={onCreateProject}
                     />
                   </CollapsibleSection>
                   {/* Time Tracking (admin only) */}

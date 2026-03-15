@@ -182,10 +182,45 @@ async function executeAutomationAction(
       });
       break;
 
-    case "send_notification":
-      // TODO: Implement notification sending - skip execution count until implemented
-      executed = false;
+    case "send_notification": {
+      const actionValue = rule.actionValue as {
+        type: "send_notification";
+        message: string;
+        recipients?: Id<"users">[];
+      };
+      const issue = await ctx.db.get(issueId);
+      if (!issue) break;
+
+      // Determine recipients: explicit list, or fall back to assignee
+      const notifyRecipients = actionValue.recipients?.length
+        ? actionValue.recipients
+        : issue.assigneeId
+          ? [issue.assigneeId]
+          : [];
+
+      await Promise.all(
+        notifyRecipients
+          .filter((userId) => userId !== rule.createdBy) // Skip self-notifications
+          .map((userId) =>
+            ctx.db.insert("notifications", {
+              userId,
+              type: "automation",
+              title: `Automation: ${rule.name}`,
+              message: actionValue.message,
+              issueId,
+              projectId: rule.projectId,
+              actorId: rule.createdBy,
+              isRead: false,
+              isDeleted: false,
+            }),
+          ),
+      );
+
+      if (notifyRecipients.length === 0) {
+        executed = false;
+      }
       break;
+    }
   }
 
   return { executed, updatedLabels };

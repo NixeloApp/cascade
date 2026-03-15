@@ -227,11 +227,10 @@ async function waitForAppReady(page: Page, baseURL: string): Promise<boolean> {
     await page.goto(baseURL, { waitUntil: "load", timeout: 120000 });
 
     // Wait for EITHER sign-in page OR dashboard (whichever loads first)
-    // This is more reliable than checking for empty root
-    await page.waitForSelector('h1, h2, [role="heading"], button[type="submit"]', {
-      state: "visible",
-      timeout: 60000,
-    });
+    await page
+      .locator('h1, h2, [role="heading"], button[type="submit"]')
+      .first()
+      .waitFor({ state: "visible", timeout: 60000 });
 
     console.log("✓ React app is ready");
     return true;

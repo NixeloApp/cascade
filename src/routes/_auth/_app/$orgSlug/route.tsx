@@ -258,7 +258,7 @@ function OrganizationLayoutInner() {
         </a>
         <Flex className="h-screen overflow-hidden app-shell-bg">
           {/* Unified sidebar */}
-          <AppSidebar />
+          <AppSidebar onCreateProject={() => setShowCreateProject(true)} />
 
           {/* Main content area */}
           <Flex direction="column" className="flex-1 min-w-0">
