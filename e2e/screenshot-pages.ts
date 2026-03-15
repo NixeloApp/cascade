@@ -681,7 +681,7 @@ async function openOmnibox(page: Page, trigger: Locator, dialog: Locator): Promi
   await dismissAllDialogs(page);
 
   if (await trigger.isVisible().catch(() => false)) {
-    await trigger.click({ force: true });
+    await trigger.click();
   } else {
     await page.keyboard.press(SEARCH_SHORTCUT);
   }
@@ -2321,7 +2321,7 @@ async function screenshotFilledStates(
 
             eventItem = locateEvent();
             await eventItem.scrollIntoViewIfNeeded().catch(() => {});
-            await eventItem.click({ force: true });
+            await eventItem.click();
             const dialog = page.getByTestId(TEST_IDS.CALENDAR.EVENT_DETAILS_MODAL);
             await dialog.waitFor({ state: "visible", timeout: 5000 });
             await captureCurrentView(page, p, "calendar-event-modal");
@@ -2906,7 +2906,7 @@ async function screenshotBoardModals(
   if (shouldCapture(prefix, issueDetailModalName) && (await issueCard.count()) > 0) {
     await runCaptureStep("board issue-detail modal", async () => {
       await issueCard.scrollIntoViewIfNeeded().catch(() => {});
-      await issueCard.click({ force: true });
+      await issueCard.click();
       const issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
       await issueDetailDialog.waitFor({ state: "visible", timeout: 5000 });
       // Wait for issue content to hydrate - issue key pattern indicates content is loaded
@@ -3002,7 +3002,7 @@ async function screenshotBoardInteractiveStates(
         .filter({ hasText: "High" })
         .first();
       await highOption.waitFor({ state: "visible", timeout: 5000 });
-      await highOption.click({ force: true });
+      await highOption.click();
       // Close dropdown
       await page.keyboard.press("Escape");
       await waitForScreenshotReady(page);
@@ -3043,7 +3043,7 @@ async function screenshotBoardInteractiveStates(
       // Click an issue card to open side panel
       const issueCard = page.getByTestId(TEST_IDS.ISSUE.CARD).first();
       await issueCard.waitFor({ state: "visible", timeout: 5000 });
-      await issueCard.click({ force: true });
+      await issueCard.click();
 
       // Wait for the side panel to appear (Sheet component with data-testid)
       await page
