@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { usePaginatedQuery } from "convex/react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { CreateIssueModal, IssueCard } from "@/components/IssueDetail";
 import { IssueDetailViewer } from "@/components/IssueDetailViewer";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
@@ -33,24 +33,10 @@ function AllIssuesPage() {
 
   const { organizationId } = useOrganization();
 
-  const projects = useAuthenticatedQuery(
-    api.projects.getCurrentUserProjects,
+  const statusOptions = useAuthenticatedQuery(
+    api.projects.getOrganizationWorkflowStates,
     organizationId ? { organizationId } : "skip",
   );
-
-  // Collect unique workflow states across all projects
-  const statusOptions = useMemo(() => {
-    if (!projects?.page) return [];
-    const seen = new Map<string, string>();
-    for (const project of projects.page) {
-      for (const state of project.workflowStates ?? []) {
-        if (!seen.has(state.id)) {
-          seen.set(state.id, state.name);
-        }
-      }
-    }
-    return Array.from(seen, ([id, name]) => ({ id, name }));
-  }, [projects?.page]);
 
   const {
     results: issues,
@@ -113,7 +99,7 @@ function AllIssuesPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              {statusOptions.map((opt) => (
+              {(statusOptions ?? []).map((opt) => (
                 <SelectItem key={opt.id} value={opt.id}>
                   {opt.name}
                 </SelectItem>

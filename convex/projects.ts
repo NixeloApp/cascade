@@ -340,6 +340,38 @@ export const getCurrentUserProjects = authenticatedQuery({
 });
 
 /**
+ * Get all unique workflow states across projects the user can access.
+ * Lightweight query for populating status filter dropdowns.
+ */
+export const getOrganizationWorkflowStates = authenticatedQuery({
+  args: { organizationId: v.id("organizations") },
+  handler: async (ctx, args) => {
+    const isMember = await isOrganizationMember(ctx, args.organizationId, ctx.userId);
+    if (!isMember) throw forbidden();
+
+    const memberships = await ctx.db
+      .query("projectMembers")
+      .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
+      .filter(notDeleted)
+      .take(BOUNDED_LIST_LIMIT);
+
+    const projects = await Promise.all(memberships.map((m) => ctx.db.get(m.projectId)));
+
+    const seen = new Map<string, string>();
+    for (const project of projects) {
+      if (!project || project.organizationId !== args.organizationId) continue;
+      for (const state of project.workflowStates ?? []) {
+        if (!seen.has(state.id)) {
+          seen.set(state.id, state.name);
+        }
+      }
+    }
+
+    return Array.from(seen, ([id, name]) => ({ id, name }));
+  },
+});
+
+/**
  * Get paginated projects belonging to a specific team.
  *
  * @param teamId - The team ID.
