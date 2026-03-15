@@ -1,23 +1,22 @@
 # Nixelo Todo Portfolio
 
-> **Last Updated:** 2026-03-14
+> **Last Updated:** 2026-03-15
 > **Scope:** open work only
 
 ## Quick Links
 
-- [Status After `62ffb8a`](#status-after-62ffb8a)
 - [Current Focus](#current-focus)
 - [Open Tracks](#open-tracks)
 - [External Blockers](#external-blockers)
 - [Open Jules Issue](#open-jules-issue)
 
-## Status After `62ffb8a`
+## Current Status
 
-- The validator-hardening and manual-memoization sweep is landed, and the validator-specific todo docs were pruned in that commit.
-- The validator suite now passes `37/37` checks, and the remaining explicit validator debt is the test-coverage baseline.
-- The top execution queue is now: validator exception burndown, screenshot-driven facelift, and E2E reliability.
-- Slack org scoping stays active behind those tracks.
-- Everything else still open is blocked on external setup, environment access, or product/infra decisions.
+- The validator suite passes `41/41` checks (up from 37).
+- Validator baselines significantly reduced: border-radius 50→15, nested cards 73→7, inline strong 11→1.
+- New UI components: `Dot`, `IconCircle`, Typography `variant="strong"`, Alert `radius` prop.
+- Search inputs consolidated: `Input variant="search/filter"` includes icons automatically.
+- Dynamic workflow state filters on org-wide issues page.
 
 ## Current Focus
 
@@ -28,16 +27,16 @@
 3. [slack-integration-issues.md](./slack-integration-issues.md)
    - Add organization-scoped Slack connection storage and destination lookup.
 4. [validator-exceptions-burndown.md](./validator-exceptions-burndown.md)
-   - Burn down the remaining `52`-file test-coverage baseline (last priority).
+   - Remaining baselines: 15 border-radius, 7 nested cards, ~52 test coverage.
 
 ## Open Tracks
 
 | Priority | File | State | Next Action |
 |---|---|---|---|
-| P2 | [validator-exceptions-burndown.md](./validator-exceptions-burndown.md) | Backlog | Burn down test-coverage baseline (last priority) |
 | P0 | [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md) | Active | Run a bigger screenshot-driven visual facelift pass |
 | P1 | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | Finish deterministic E2E hardening |
 | P1 | [slack-integration-issues.md](./slack-integration-issues.md) | Active | Scope Slack connections by organization |
+| P2 | [validator-exceptions-burndown.md](./validator-exceptions-burndown.md) | In Progress | Border-radius, nested cards, test coverage baselines |
 | P2 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Blocked | Finish field-projection audit and publish metrics report |
 | P2 | [feature-gaps.md](./feature-gaps.md) | Blocked | Complete external Slack dashboard setup |
 | P2 | [emoji-overhaul.md](./emoji-overhaul.md) | Blocked | Finish manual accessibility QA |
@@ -45,9 +44,9 @@
 | P2 | [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) | Blocked | Choose monitoring destination and wire push path |
 | P3 | [public-launch.md](./public-launch.md) | Blocked | Execute launch ops and community setup |
 | P3 | [uptime-monitoring.md](./uptime-monitoring.md) | Blocked | Decide runner/routing architecture and start MVP |
+| P3 | [bundle-optimization.md](./bundle-optimization.md) | Open | Split vendor chunks and reduce initial bundle size |
 | P4 | [growth-features.md](./growth-features.md) | Blocked | Set up Outlook integration and prioritize next enhancement |
 | P4 | [enterprise.md](./enterprise.md) | Blocked | Resolve billing and IdP decisions, then implement wedge |
-| P3 | [bundle-optimization.md](./bundle-optimization.md) | Open | Split vendor chunks and reduce initial bundle size |
 
 ## External Blockers
 
