@@ -677,6 +677,25 @@ async function dismissAllDialogs(page: Page): Promise<void> {
   }
 }
 
+/**
+ * Wait for a Radix Dialog to open after clicking a trigger.
+ * Radix renders dialogs in a portal with an overlay. The overlay appears
+ * before role="dialog" is applied to the content element. We wait for
+ * the overlay first, then look for [data-state="open"] content.
+ */
+async function waitForDialogOpen(page: Page, timeout = 8000): Promise<Locator> {
+  // Wait for overlay to appear (proves dialog is mounting)
+  await page
+    .getByTestId(TEST_IDS.DIALOG.OVERLAY)
+    .waitFor({ state: "visible", timeout })
+    .catch(() => {});
+
+  // Wait for the dialog content with data-state="open"
+  const dialog = page.locator("[role='dialog'][data-state='open']").first();
+  await dialog.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
+  return dialog;
+}
+
 async function openOmnibox(page: Page, trigger: Locator, dialog: Locator): Promise<void> {
   await dismissAllDialogs(page);
 
@@ -2182,9 +2201,8 @@ async function screenshotFilledStates(
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
         await waitForScreenshotReady(page);
-        // Find the submit button inside the modal dialog
-        const modal = page.getByRole("dialog").filter({ hasText: /create issue/i });
-        await modal.waitFor({ state: "visible", timeout: 8000 });
+        // Wait for dialog, then find submit button
+        const modal = await waitForDialogOpen(page);
         const submitBtn = modal.getByRole("button", { name: /create issue/i }).last();
         await submitBtn.click();
         await waitForScreenshotReady(page);
@@ -2516,8 +2534,7 @@ async function screenshotFilledStates(
       const trigger = page.getByText("Customize", { exact: true }).first();
       await trigger.waitFor({ state: "visible", timeout: 10000 });
       await trigger.click();
-      const dialog = page.getByRole("dialog").filter({ hasText: /dashboard customization/i });
-      await dialog.waitFor({ state: "visible", timeout: 5000 });
+      const dialog = await waitForDialogOpen(page);
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "dashboard-customize-modal");
       await dismissIfOpen(page, dialog);
@@ -2538,8 +2555,7 @@ async function screenshotFilledStates(
       const trigger = page.getByRole("button", { name: /add event/i }).first();
       await trigger.waitFor({ state: "visible", timeout: 5000 });
       await trigger.click();
-      const dialog = page.getByRole("dialog").filter({ hasText: /create event/i });
-      await dialog.waitFor({ state: "visible", timeout: 5000 });
+      const dialog = await waitForDialogOpen(page);
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "calendar-create-event-modal");
       await dismissIfOpen(page, dialog);
@@ -2561,8 +2577,7 @@ async function screenshotFilledStates(
       const trigger = page.getByText("Create Workspace").first();
       await trigger.waitFor({ state: "visible", timeout: 10000 });
       await trigger.click();
-      const dialog = page.getByRole("dialog").filter({ hasText: /create workspace/i });
-      await dialog.waitFor({ state: "visible", timeout: 5000 });
+      const dialog = await waitForDialogOpen(page);
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "workspaces-create-workspace-modal");
       await dismissIfOpen(page, dialog);
@@ -2582,8 +2597,7 @@ async function screenshotFilledStates(
       const trigger = page.getByText("Create Team").first();
       await trigger.waitFor({ state: "visible", timeout: 10000 });
       await trigger.click();
-      const dialog = page.getByRole("dialog").filter({ hasText: /create team/i });
-      await dialog.waitFor({ state: "visible", timeout: 5000 });
+      const dialog = await waitForDialogOpen(page);
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "workspace-create-team-modal");
       await dismissIfOpen(page, dialog);
@@ -2603,8 +2617,7 @@ async function screenshotFilledStates(
       const trigger = page.getByRole("button", { name: /import \/ export/i }).first();
       await trigger.waitFor({ state: "visible", timeout: 5000 });
       await trigger.click();
-      const dialog = page.getByRole("dialog").filter({ hasText: /import.*export/i });
-      await dialog.waitFor({ state: "visible", timeout: 5000 });
+      const dialog = await waitForDialogOpen(page);
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, `project-${normalizedProjectKey}-import-export-modal`);
       await dismissIfOpen(page, dialog);
@@ -2626,8 +2639,7 @@ async function screenshotFilledStates(
       const trigger = page.getByRole("button", { name: /add time entry/i }).first();
       await trigger.waitFor({ state: "visible", timeout: 5000 });
       await trigger.click();
-      const dialog = page.getByRole("dialog").filter({ hasText: /log time manually/i });
-      await dialog.waitFor({ state: "visible", timeout: 5000 });
+      const dialog = await waitForDialogOpen(page);
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "time-tracking-manual-entry-modal");
       await dismissIfOpen(page, dialog);
@@ -2843,8 +2855,7 @@ async function screenshotDashboardModals(
     await runCaptureStep("dashboard shortcuts modal", async () => {
       await dismissAllDialogs(page);
       await shortcutsTrigger.click();
-      const shortcutsDialog = page.getByRole("dialog").filter({ hasText: /keyboard shortcuts/i });
-      await shortcutsDialog.waitFor({ state: "visible", timeout: 5000 });
+      const shortcutsDialog = await waitForDialogOpen(page);
       await captureCurrentView(page, prefix, "dashboard-shortcuts-modal");
       await dismissIfOpen(page, shortcutsDialog);
     });
@@ -2855,8 +2866,7 @@ async function screenshotDashboardModals(
     await runCaptureStep("dashboard time-entry modal", async () => {
       await dismissAllDialogs(page);
       await timeEntryTrigger.click();
-      const timeEntryDialog = page.getByRole("dialog").filter({ hasText: /start timer/i });
-      await timeEntryDialog.waitFor({ state: "visible", timeout: 5000 });
+      const timeEntryDialog = await waitForDialogOpen(page);
       await captureCurrentView(page, prefix, "dashboard-time-entry-modal");
       await dismissIfOpen(page, timeEntryDialog);
     });
