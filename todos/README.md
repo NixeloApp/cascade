@@ -34,9 +34,10 @@
 | Priority | File | State | Next Action |
 |---|---|---|---|
 | P0 | [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md) | Active | Run a bigger screenshot-driven visual facelift pass |
+| P0 | [validator-exceptions-burndown.md](./validator-exceptions-burndown.md) | In Progress | Border-radius, nested cards, test coverage baselines |
+| P0 | [bundle-optimization.md](./bundle-optimization.md) | Open | Split vendor chunks and reduce initial bundle size |
 | P1 | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | Finish deterministic E2E hardening |
 | P1 | [slack-integration-issues.md](./slack-integration-issues.md) | Active | Scope Slack connections by organization |
-| P2 | [validator-exceptions-burndown.md](./validator-exceptions-burndown.md) | In Progress | Border-radius, nested cards, test coverage baselines |
 | P2 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Blocked | Finish field-projection audit and publish metrics report |
 | P2 | [feature-gaps.md](./feature-gaps.md) | Blocked | Complete external Slack dashboard setup |
 | P2 | [emoji-overhaul.md](./emoji-overhaul.md) | Blocked | Finish manual accessibility QA |
@@ -44,7 +45,6 @@
 | P2 | [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) | Blocked | Choose monitoring destination and wire push path |
 | P3 | [public-launch.md](./public-launch.md) | Blocked | Execute launch ops and community setup |
 | P3 | [uptime-monitoring.md](./uptime-monitoring.md) | Blocked | Decide runner/routing architecture and start MVP |
-| P3 | [bundle-optimization.md](./bundle-optimization.md) | Open | Split vendor chunks and reduce initial bundle size |
 | P4 | [growth-features.md](./growth-features.md) | Blocked | Set up Outlook integration and prioritize next enhancement |
 | P4 | [enterprise.md](./enterprise.md) | Blocked | Resolve billing and IdP decisions, then implement wedge |
 
