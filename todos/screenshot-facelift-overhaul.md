@@ -187,12 +187,12 @@ Beyond page loads — capture the states users actually see during interaction.
 
 ### Board / Kanban states
 
-- [ ] **Swimlane modes** — Priority, Assignee, Type, Label grouping (4 screenshots)
-- [ ] **Column collapsed** — at least one column collapsed
+- [x] **Swimlane modes** — Priority, Assignee, Type, Label grouping (4 screenshots)
+- [x] **Column collapsed** — at least one column collapsed (with auto-expand after)
 - [ ] **Column empty** — a column with no issues showing empty state
 - [ ] **WIP limit warning** — column at/over WIP limit with visual indicator
-- [ ] **Filter bar active** — board with active type/priority/assignee filters
-- [ ] **Display properties toggle open** — toolbar dropdown showing property checkboxes
+- [x] **Filter bar active** — board with Priority "High" filter applied
+- [x] **Display properties toggle open** — toolbar dropdown showing property checkboxes
 - [ ] **Sprint selector dropdown** — sprint picker open on board
 
 ### Issue states

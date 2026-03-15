@@ -204,6 +204,11 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-issue-/, "08-issue", ""],
   [/^filled-project-[^-]+-issue-detail-modal$/, "08-issue", "-detail-modal"],
   [/^filled-project-[^-]+-import-export-modal$/, "06-board", "-import-export-modal"],
+  // Board interactive states
+  [/^filled-project-[^-]+-board-swimlane-(\w+)$/, "06-board", "-swimlane-$1"],
+  [/^filled-project-[^-]+-board-column-collapsed$/, "06-board", "-column-collapsed"],
+  [/^filled-project-[^-]+-board-filter-active$/, "06-board", "-filter-active"],
+  [/^filled-project-[^-]+-board-display-properties$/, "06-board", "-display-properties"],
   // Document editor: filled-document-editor → 10-editor
   [/^filled-document-editor$/, "10-editor", ""],
   // Project calendar views: filled-project-xxx-calendar, filled-calendar-{mode}
@@ -2093,6 +2098,21 @@ async function screenshotFilledStates(
       await screenshotBoardModals(page, orgSlug, projectKey, firstIssueKey, p);
     }
 
+    // Board interactive states
+    if (
+      shouldCaptureAny(p, [
+        `project-${normalizedProjectKey}-board-swimlane-priority`,
+        `project-${normalizedProjectKey}-board-swimlane-assignee`,
+        `project-${normalizedProjectKey}-board-swimlane-type`,
+        `project-${normalizedProjectKey}-board-swimlane-label`,
+        `project-${normalizedProjectKey}-board-column-collapsed`,
+        `project-${normalizedProjectKey}-board-filter-active`,
+        `project-${normalizedProjectKey}-board-display-properties`,
+      ])
+    ) {
+      await screenshotBoardInteractiveStates(page, orgSlug, projectKey, p);
+    }
+
     // Calendar view modes
     if (
       shouldCaptureAny(p, [
@@ -2552,6 +2572,126 @@ async function screenshotBoardModals(
   }
 }
 
+async function screenshotBoardInteractiveStates(
+  page: Page,
+  orgSlug: string,
+  projectKey: string,
+  prefix: string,
+): Promise<void> {
+  const normalizedProjectKey = projectKey.toLowerCase();
+  const boardUrl = `/${orgSlug}/projects/${projectKey}/board`;
+
+  // Navigate to board once for all interactive captures
+  await page
+    .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+    .catch(() => {});
+  await waitForExpectedContent(page, boardUrl, "board");
+  await waitForScreenshotReady(page);
+
+  // Swimlane modes
+  const swimlaneModes = ["priority", "assignee", "type", "label"] as const;
+  for (const mode of swimlaneModes) {
+    const captureName = `project-${normalizedProjectKey}-board-swimlane-${mode}`;
+    if (!shouldCapture(prefix, captureName)) continue;
+
+    await runCaptureStep(`board swimlane ${mode}`, async () => {
+      // Open swimlane dropdown
+      const swimlaneButton = page
+        .getByRole("button", { name: /swimlanes|priority|assignee|type|label|no swimlanes/i })
+        .first();
+      await swimlaneButton.waitFor({ state: "visible", timeout: 5000 });
+      await swimlaneButton.click();
+      // Select the mode
+      const option = page.getByRole("menuitemcheckbox", { name: new RegExp(`^${mode}$`, "i") });
+      await option.waitFor({ state: "visible", timeout: 3000 });
+      await option.click();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, captureName);
+    });
+  }
+
+  // Reset swimlanes to none before next captures
+  await runCaptureStep("reset swimlanes", async () => {
+    const swimlaneButton = page
+      .getByRole("button", { name: /swimlanes|priority|assignee|type|label|no swimlanes/i })
+      .first();
+    if (await swimlaneButton.isVisible().catch(() => false)) {
+      await swimlaneButton.click();
+      const noSwimlanes = page.getByRole("menuitemcheckbox", { name: /no swimlanes/i });
+      if (await noSwimlanes.isVisible().catch(() => false)) {
+        await noSwimlanes.click();
+        await waitForScreenshotReady(page);
+      } else {
+        await page.keyboard.press("Escape");
+      }
+    }
+  });
+
+  // Column collapsed
+  if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-column-collapsed`)) {
+    await runCaptureStep("board column collapsed", async () => {
+      const collapseButton = page.getByLabel(/collapse/i).first();
+      await collapseButton.waitFor({ state: "visible", timeout: 5000 });
+      await collapseButton.click();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(
+        page,
+        prefix,
+        `project-${normalizedProjectKey}-board-column-collapsed`,
+      );
+      // Expand it back
+      const expandButton = page.getByLabel(/expand/i).first();
+      if (await expandButton.isVisible().catch(() => false)) {
+        await expandButton.click();
+        await waitForScreenshotReady(page);
+      }
+    });
+  }
+
+  // Filter bar active (apply a Priority filter)
+  if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-filter-active`)) {
+    await runCaptureStep("board filter active", async () => {
+      const priorityFilter = page.getByRole("button", { name: /^priority$/i }).first();
+      await priorityFilter.waitFor({ state: "visible", timeout: 5000 });
+      await priorityFilter.click();
+      // Select "High" priority
+      const highOption = page.getByRole("menuitemcheckbox", { name: /high/i }).first();
+      await highOption.waitFor({ state: "visible", timeout: 3000 });
+      await highOption.click();
+      // Close dropdown
+      await page.keyboard.press("Escape");
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-board-filter-active`);
+    });
+  }
+
+  // Display properties dropdown open
+  if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-display-properties`)) {
+    await runCaptureStep("board display properties", async () => {
+      // Reload board to clear filters from previous capture
+      await page
+        .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+        .catch(() => {});
+      await waitForExpectedContent(page, boardUrl, "board");
+      await waitForScreenshotReady(page);
+
+      const propsButton = page.getByRole("button", { name: /properties/i }).first();
+      await propsButton.waitFor({ state: "visible", timeout: 5000 });
+      await propsButton.click();
+      // Wait for dropdown to be visible
+      await page.getByRole("menuitemcheckbox").first().waitFor({ state: "visible", timeout: 3000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(
+        page,
+        prefix,
+        `project-${normalizedProjectKey}-board-display-properties`,
+      );
+      // Close dropdown
+      await page.keyboard.press("Escape");
+    });
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Main capture function for a single viewport/theme combination
 // ---------------------------------------------------------------------------
@@ -2691,6 +2831,14 @@ const DRY_RUN_PAGES = [
   "filled-project-PROJ-create-issue-modal",
   "filled-project-PROJ-issue-detail-modal",
   "filled-project-PROJ-import-export-modal",
+  // Filled states — board interactive states
+  "filled-project-PROJ-board-swimlane-priority",
+  "filled-project-PROJ-board-swimlane-assignee",
+  "filled-project-PROJ-board-swimlane-type",
+  "filled-project-PROJ-board-swimlane-label",
+  "filled-project-PROJ-board-column-collapsed",
+  "filled-project-PROJ-board-filter-active",
+  "filled-project-PROJ-board-display-properties",
   // Filled states — calendar modes
   "filled-calendar-day",
   "filled-calendar-week",
