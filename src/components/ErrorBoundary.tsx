@@ -9,6 +9,7 @@
 import { AlertTriangle } from "lucide-react";
 import { Component, type ReactNode } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { IconCircle } from "@/components/ui/IconCircle";
 import { Stack } from "@/components/ui/Stack";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
@@ -57,13 +58,9 @@ export class ErrorBoundary extends Component<Props, State> {
           <Card variant="flat" padding="lg" className="max-w-md text-center">
             <Stack align="center" gap="lg">
               {/* Subtle icon */}
-              <Flex
-                align="center"
-                justify="center"
-                className="h-20 w-20 rounded-full bg-status-error-bg"
-              >
+              <IconCircle size="xl" variant="error">
                 <AlertTriangle className="h-10 w-10 text-status-error" />
-              </Flex>
+              </IconCircle>
 
               {/* Large error code with tight tracking */}
               <Typography variant="h1" className="text-display tracking-tightest">

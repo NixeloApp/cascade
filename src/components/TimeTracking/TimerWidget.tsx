@@ -7,6 +7,7 @@ import { Play } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { Dot } from "../ui/Dot";
 import { Flex } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { Tooltip } from "../ui/Tooltip";
@@ -62,11 +63,8 @@ export function TimerWidget() {
           <Flex align="center" gap="sm">
             {/* Pulsing dot - using output for semantics, spans for phrasing content */}
             <output className="relative block" aria-label="Timer is running">
-              <span className="block w-2 h-2 bg-brand rounded-full" aria-hidden="true" />
-              <span
-                className="absolute inset-0 block w-2 h-2 bg-brand rounded-full animate-ping"
-                aria-hidden="true"
-              />
+              <Dot />
+              <Dot className="absolute inset-0 animate-ping" />
             </output>
 
             {/* Timer display */}

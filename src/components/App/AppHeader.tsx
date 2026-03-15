@@ -17,6 +17,7 @@ import { TimerWidget as NavTimerWidget } from "@/components/TimeTracking/TimerWi
 import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Dot } from "@/components/ui/Dot";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
@@ -60,7 +61,7 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
               padding="none"
               className="hidden lg:flex lg:items-center lg:gap-3"
             >
-              <div className="h-2.5 w-2.5 rounded-full bg-brand shadow-brand-halo" />
+              <Dot size="md" halo />
               <div className="min-w-0">
                 <Typography
                   variant="caption"
