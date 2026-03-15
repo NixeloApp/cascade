@@ -2182,9 +2182,10 @@ async function screenshotFilledStates(
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
         await waitForScreenshotReady(page);
-        // Click Create Issue without filling title
-        const submitBtn = page.getByRole("button", { name: /create issue/i }).first();
-        await submitBtn.waitFor({ state: "visible", timeout: 5000 });
+        // Find the submit button inside the modal dialog
+        const modal = page.getByRole("dialog").filter({ hasText: /create issue/i });
+        await modal.waitFor({ state: "visible", timeout: 8000 });
+        const submitBtn = modal.getByRole("button", { name: /create issue/i }).last();
         await submitBtn.click();
         await waitForScreenshotReady(page);
         // Wait for validation error text to appear
@@ -2557,8 +2558,8 @@ async function screenshotFilledStates(
       await waitForExpectedContent(page, `/${orgSlug}/workspaces`, "workspaces", p);
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
-      const trigger = page.getByRole("button", { name: /create workspace/i }).first();
-      await trigger.waitFor({ state: "visible", timeout: 5000 });
+      const trigger = page.getByText("Create Workspace").first();
+      await trigger.waitFor({ state: "visible", timeout: 10000 });
       await trigger.click();
       const dialog = page.getByRole("dialog").filter({ hasText: /create workspace/i });
       await dialog.waitFor({ state: "visible", timeout: 5000 });
@@ -2578,8 +2579,8 @@ async function screenshotFilledStates(
       await waitForExpectedContent(page, wsBase, `workspace-${wsSlug}`);
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
-      const trigger = page.getByRole("button", { name: /create team/i }).first();
-      await trigger.waitFor({ state: "visible", timeout: 5000 });
+      const trigger = page.getByText("Create Team").first();
+      await trigger.waitFor({ state: "visible", timeout: 10000 });
       await trigger.click();
       const dialog = page.getByRole("dialog").filter({ hasText: /create team/i });
       await dialog.waitFor({ state: "visible", timeout: 5000 });
