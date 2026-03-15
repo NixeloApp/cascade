@@ -11,7 +11,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
 import { X } from "lucide-react";
 import { useState } from "react";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
@@ -19,6 +19,7 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { getTypeLabel, ISSUE_TYPE_ICONS, type IssueType } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
+import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
@@ -290,24 +291,34 @@ export function IssueDependencies({ issueId }: IssueDependenciesProps) {
 
             {/* Search Results - already filtered by backend (excludeIssueId) */}
             {searchResults?.page && searchResults.page.length > 0 && (
-              <Card padding="none" className="max-h-48 overflow-y-auto">
+              <div className="max-h-48 overflow-y-auto">
                 {searchResults.page.map((issue: Issue) => (
-                  <Card
+                  <div
                     key={issue._id}
-                    recipe={
-                      selectedIssue?.id === issue._id ? "selectionRowSelected" : "selectionRow"
-                    }
-                    padding="sm"
-                    radius="none"
+                    className={cn(
+                      getCardRecipeClassName(
+                        selectedIssue?.id === issue._id ? "selectionRowSelected" : "selectionRow",
+                      ),
+                      "p-3",
+                    )}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => {
                       setSelectedIssue({ id: issue._id, key: issue.key });
                       setSearchQuery("");
                     }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelectedIssue({ id: issue._id, key: issue.key });
+                        setSearchQuery("");
+                      }
+                    }}
                   >
                     <IssueDisplay type={issue.type} issueKey={issue.key} title={issue.title} />
-                  </Card>
+                  </div>
                 ))}
-              </Card>
+              </div>
             )}
 
             {/* Selected Issue */}

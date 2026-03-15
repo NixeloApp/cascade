@@ -1,6 +1,6 @@
 import { isSameDay } from "date-fns";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Dot } from "@/components/ui/Dot";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
@@ -8,6 +8,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { CalendarDays } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
+import { cn } from "@/lib/utils";
 import { DOT_COLOR_CLASSES, type EventColor } from "../../../calendar-colors";
 
 import { useCalendarContext } from "../../calendar-context";
@@ -32,11 +33,11 @@ export function CalendarBodyDayEvents(): React.ReactElement {
   return (
     <Card recipe="calendarDayEventsPanel" padding="xs">
       <Stack gap="xs">
-        <Card recipe="calendarDayEventsHeader" padding="xs">
+        <div className={cn(getCardRecipeClassName("calendarDayEventsHeader"), "p-2")}>
           <Typography variant="eyebrow" color="tertiary">
             Events
           </Typography>
-        </Card>
+        </div>
         {dayEvents.map((event) => (
           <Button
             key={event.id}

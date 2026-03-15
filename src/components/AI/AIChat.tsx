@@ -6,8 +6,9 @@ import type { Id } from "@convex/_generated/dataModel";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Bot, Check, Copy, Lightbulb } from "@/lib/icons";
+import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
-import { Card } from "../ui/Card";
+import { Card, getCardRecipeClassName } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
@@ -174,12 +175,12 @@ export function AIChat({ projectId, chatId: initialChatId, onChatCreated }: AICh
               ))}
             {isSending && (
               <Flex>
-                <Card recipe="chatBubbleAssistant" padding="sm" className="w-fit">
+                <div className={cn(getCardRecipeClassName("chatBubbleAssistant"), "p-3 w-fit")}>
                   <Flex align="center" gap="sm">
                     <InlineSpinner size="xs" variant="secondary" />
                     <Typography variant="caption">AI is thinking...</Typography>
                   </Flex>
-                </Card>
+                </div>
               </Flex>
             )}
             <div ref={messagesEndRef} />

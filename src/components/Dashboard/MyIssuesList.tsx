@@ -135,7 +135,7 @@ export function MyIssuesList({
           </TabsTrigger>
         </TabsList>
       </Tabs>
-      <Card padding="md" radius="none" variant="ghost" className="flex-1 overflow-hidden">
+      <FlexItem flex="1" className="overflow-hidden p-4">
         <Flex direction="column" className="h-full">
           {!displayIssues ? (
             /* Loading skeleton */
@@ -210,7 +210,7 @@ export function MyIssuesList({
             </FlexItem>
           )}
         </Flex>
-      </Card>
+      </FlexItem>
     </Flex>
   );
 }

@@ -1,6 +1,7 @@
+import { cn } from "@/lib/utils";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
-import { Card } from "../ui/Card";
+import { Card, getCardRecipeClassName } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Metadata, MetadataTimestamp } from "../ui/Metadata";
 import { Stack } from "../ui/Stack";
@@ -35,7 +36,7 @@ export function RecentActivity({ activities }: { activities: Activity[] | undefi
           )}
 
           {activities.map((activity) => (
-            <Card key={activity._id} recipe="timelineItem" padding="sm">
+            <div key={activity._id} className={cn(getCardRecipeClassName("timelineItem"), "p-3")}>
               <Flex gap="md" align="start">
                 <Avatar
                   name={activity.userName}
@@ -71,7 +72,7 @@ export function RecentActivity({ activities }: { activities: Activity[] | undefi
                   </Metadata>
                 </FlexItem>
               </Flex>
-            </Card>
+            </div>
           ))}
         </Stack>
       </Stack>

@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 
@@ -9,7 +9,7 @@ export const hours = Array.from({ length: 24 }, (_, i) => i);
 export function CalendarBodyMarginDayMargin(): React.ReactElement {
   return (
     <Card recipe="calendarTimeMarginRail">
-      <Card recipe="calendarTimeMarginSpacer" />
+      <div className={getCardRecipeClassName("calendarTimeMarginSpacer")} />
       <Flex direction="column" className="sticky left-0 z-10 w-full">
         {hours.map((hour) => (
           <div key={hour} className="relative h-24 first:mt-0 sm:h-32">

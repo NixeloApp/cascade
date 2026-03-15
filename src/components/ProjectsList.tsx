@@ -12,7 +12,7 @@ import { usePaginatedQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
@@ -24,6 +24,7 @@ import { ROUTES } from "@/config/routes";
 import { useAuthReady } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Folder } from "@/lib/icons";
+import { cn } from "@/lib/utils";
 
 // Type helper for paginated queries with custom return types
 type PaginatedQuery = FunctionReference<"query", "public">;
@@ -128,7 +129,7 @@ function ProjectCard({
     >
       <Flex direction="column" gap={hasSingleProject ? "lg" : "md"}>
         {hasSingleProject && (
-          <Card recipe="projectFeatureStrip" padding="md">
+          <div className={cn(getCardRecipeClassName("projectFeatureStrip"), "p-4")}>
             <Flex align="center" justify="between" gap="sm" wrap>
               <Flex align="center" gap="sm" wrap>
                 <Badge variant="secondary" shape="pill">
@@ -145,18 +146,18 @@ function ProjectCard({
                 Active
               </Typography>
             </Flex>
-          </Card>
+          </div>
         )}
 
         <Flex justify="between" align="start" gap="md">
           <Flex align="center" gap="md">
-            <Card recipe="projectKeyTile" padding="none" className="size-10 shrink-0">
+            <div className={cn(getCardRecipeClassName("projectKeyTile"), "size-10 shrink-0")}>
               <Flex align="center" justify="center" className="h-full">
                 <Typography variant="label" className="text-brand">
                   {project.key.substring(0, 2).toUpperCase()}
                 </Typography>
               </Flex>
-            </Card>
+            </div>
             <Typography variant="h3" className="tracking-tight">
               {project.name}
             </Typography>

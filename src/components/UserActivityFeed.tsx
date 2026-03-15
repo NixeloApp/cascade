@@ -23,7 +23,8 @@ import {
   Trash2,
   User,
 } from "@/lib/icons";
-import { Card } from "./ui/Card";
+import { cn } from "@/lib/utils";
+import { Card, getCardRecipeClassName } from "./ui/Card";
 import { EmptyState } from "./ui/EmptyState";
 import { Flex, FlexItem } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
@@ -220,29 +221,27 @@ export function UserActivityFeed({
           <Card padding="none" variant="flat">
             <Stack gap="none">
               {groupActivities.map((activity, index) => (
-                <Card
+                <div
                   key={activity._id}
-                  recipe="activityFeedEntry"
-                  padding="none"
-                  radius="none"
-                  className={
+                  className={cn(
+                    getCardRecipeClassName("activityFeedEntry"),
                     index !== groupActivities.length - 1
                       ? "border-x-0 border-t-0 border-b border-ui-border"
-                      : "border-0"
-                  }
+                      : "border-0",
+                  )}
                 >
                   <Flex gap="md" align="start">
                     {/* Action Icon */}
-                    <Card
-                      recipe="activityTimelineIcon"
-                      padding="none"
-                      radius="full"
-                      className="size-6 shrink-0"
+                    <div
+                      className={cn(
+                        getCardRecipeClassName("activityTimelineIcon"),
+                        "size-6 shrink-0",
+                      )}
                     >
                       <Flex align="center" justify="center" className="h-full">
                         <Icon icon={getActionIcon(activity.action)} size="xs" />
                       </Flex>
-                    </Card>
+                    </div>
 
                     {/* Activity Content */}
                     <FlexItem flex="1" className="min-w-0">
@@ -271,7 +270,7 @@ export function UserActivityFeed({
                       {formatRelativeTime(activity._creationTime)}
                     </Typography>
                   </Flex>
-                </Card>
+                </div>
               ))}
             </Stack>
           </Card>

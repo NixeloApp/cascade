@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Authenticated, Unauthenticated } from "convex/react";
 import { Laptop, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +13,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useTheme } from "@/contexts/ThemeContext";
+import { cn } from "@/lib/utils";
 import { NixeloLogo } from "./Icons";
 
 /** Landing page navigation header with logo, links, and theme toggle. */
@@ -23,10 +24,11 @@ export function NavHeader() {
     <header className="absolute inset-x-0 top-0 z-50 transition-all duration-default">
       <Card recipe="landingNavFrame" padding="none">
         <nav className="mx-auto max-w-6xl">
-          <Card
-            recipe="landingNavShell"
-            padding="none"
-            className="relative flex items-center justify-between"
+          <div
+            className={cn(
+              getCardRecipeClassName("landingNavShell"),
+              "relative flex items-center justify-between",
+            )}
           >
             <Button
               asChild
@@ -42,10 +44,11 @@ export function NavHeader() {
               </Link>
             </Button>
 
-            <Card
-              recipe="landingNavRail"
-              padding="none"
-              className="absolute left-1/2 hidden -translate-x-1/2 items-center justify-center gap-2 md:flex"
+            <div
+              className={cn(
+                getCardRecipeClassName("landingNavRail"),
+                "absolute left-1/2 hidden -translate-x-1/2 items-center justify-center gap-2 md:flex",
+              )}
             >
               {["Features", "Pricing", "Resources"].map((item) => (
                 <Button
@@ -58,7 +61,7 @@ export function NavHeader() {
                   <a href={`#${item.toLowerCase()}`}>{item}</a>
                 </Button>
               ))}
-            </Card>
+            </div>
 
             <Flex align="center" gap="xs" className="shrink-0 sm:gap-sm">
               <DropdownMenu>
@@ -108,7 +111,7 @@ export function NavHeader() {
                 </Button>
               </Authenticated>
             </Flex>
-          </Card>
+          </div>
         </nav>
       </Card>
     </header>

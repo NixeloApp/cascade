@@ -1,7 +1,8 @@
 import { addDays, isSameDay, startOfWeek } from "date-fns";
 import { useLayoutEffect, useRef } from "react";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { cn } from "@/lib/utils";
 import { useCalendarContext } from "../../calendar-context";
 import { CalendarBodyDayContent } from "../day/calendar-body-day-content";
 import { CalendarBodyMarginDayMargin } from "../day/calendar-body-margin-day-margin";
@@ -66,12 +67,12 @@ export function CalendarBodyWeek(): React.ReactElement {
                     shrink={false}
                     className="w-56 sm:w-64 md:w-auto"
                   >
-                    <Card recipe={dayShellRecipe} className="h-full">
+                    <div className={cn(getCardRecipeClassName(dayShellRecipe), "h-full")}>
                       <div className="block md:hidden">
                         <CalendarBodyMarginDayMargin />
                       </div>
                       <CalendarBodyDayContent date={day} />
-                    </Card>
+                    </div>
                   </FlexItem>
                 );
               })}

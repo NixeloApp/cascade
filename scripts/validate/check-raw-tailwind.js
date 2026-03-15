@@ -193,6 +193,7 @@ const RAW_TW_ESCAPE_HATCHES = [
   // Programmatic variant calls
   "cardVariants(",
   "cardRecipeVariants(",
+  "getCardRecipeClassName(",
   "buttonVariants(",
   "buttonChromeVariants(",
   "tabsTriggerVariants(",

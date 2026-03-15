@@ -1,6 +1,13 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  getCardRecipeClassName,
+} from "@/components/ui/Card";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { cn } from "@/lib/utils";
 
 interface PortalTimelineItem {
   id: string;
@@ -29,14 +36,17 @@ export function PortalTimeline({ items }: PortalTimelineProps) {
         ) : (
           <Stack gap="sm">
             {items.map((item) => (
-              <Card key={item.id} recipe="portalTimelineEntry" padding="sm">
+              <div
+                key={item.id}
+                className={cn(getCardRecipeClassName("portalTimelineEntry"), "p-3")}
+              >
                 <Stack gap="xs">
                   <Typography variant="small">{item.label}</Typography>
                   <Typography variant="caption" color="tertiary">
                     {item.timestamp}
                   </Typography>
                 </Stack>
-              </Card>
+              </div>
             ))}
           </Stack>
         )}

@@ -414,7 +414,7 @@ function EditorCanvas({
               </Grid>
             </Stack>
 
-            <Card variant="outline" padding="md" className="h-full bg-ui-bg/88 lg:col-span-2">
+            <div className="h-full p-4 bg-ui-bg/88 lg:col-span-2">
               <Stack gap="sm">
                 <Stack gap="xs">
                   <Typography variant="caption" className="uppercase tracking-widest">
@@ -434,7 +434,7 @@ function EditorCanvas({
                   </Typography>
                 </Stack>
               </Stack>
-            </Card>
+            </div>
           </Grid>
         </Card>
       )}
@@ -585,17 +585,14 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
           <Card padding="md" variant="ghost" className="mx-auto w-full max-w-5xl">
             <ErrorBoundary
               fallback={
-                <Card
-                  padding="lg"
-                  className="border-status-error/20 bg-status-error-bg text-status-error text-center"
-                >
+                <div className="p-6 border border-status-error/20 bg-status-error-bg text-status-error text-center">
                   <Stack gap="sm">
                     <Typography variant="label">Editor failed to load</Typography>
                     <Typography variant="muted" className="opacity-80">
                       There was an issue initializing the rich text editor.
                     </Typography>
                   </Stack>
-                </Card>
+                </div>
               }
             >
               <EditorCanvas

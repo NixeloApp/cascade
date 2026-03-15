@@ -22,7 +22,7 @@ import { CreateIssueModal } from "./IssueDetail";
 import { IssueDetailViewer } from "./IssueDetailViewer";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
-import { Card } from "./ui/Card";
+import { Card, getCardRecipeClassName } from "./ui/Card";
 import { Dot } from "./ui/Dot";
 import { Icon } from "./ui/Icon";
 import { IconButton } from "./ui/IconButton";
@@ -352,11 +352,11 @@ export function IssuesCalendarView({
             {/* Weekday Headers */}
             <Grid cols={7} className="border-b border-ui-border bg-ui-bg-secondary">
               {WEEKDAY_LABELS.map((day) => (
-                <Card key={day} recipe="calendarWeekdayHeaderCell">
+                <div key={day} className={getCardRecipeClassName("calendarWeekdayHeaderCell")}>
                   <Typography variant="label" className="text-center">
                     {day}
                   </Typography>
-                </Card>
+                </div>
               ))}
             </Grid>
 

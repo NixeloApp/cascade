@@ -23,7 +23,8 @@ import {
   User,
 } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
-import { Card } from "./ui/Card";
+import { cn } from "@/lib/utils";
+import { Card, getCardRecipeClassName } from "./ui/Card";
 import { EmptyState } from "./ui/EmptyState";
 import { Flex, FlexItem } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
@@ -190,18 +191,16 @@ export function ActivityFeed({ projectId, limit = 50, compact = false }: Activit
         >
           <Flex gap="lg">
             {/* Timeline icon */}
-            <Card
-              recipe="activityTimelineIcon"
-              padding="none"
-              radius="full"
-              className={
-                compact ? "size-5 shrink-0 relative z-10" : "size-6 shrink-0 relative z-10"
-              }
+            <div
+              className={cn(
+                getCardRecipeClassName("activityTimelineIcon"),
+                compact ? "size-5 shrink-0 relative z-10" : "size-6 shrink-0 relative z-10",
+              )}
             >
               <Flex align="center" justify="center" className="h-full">
                 <Icon icon={getActionIcon(activity.action)} size={compact ? "xs" : "sm"} />
               </Flex>
-            </Card>
+            </div>
 
             {/* Activity content */}
             <FlexItem flex="1" className="min-w-0">

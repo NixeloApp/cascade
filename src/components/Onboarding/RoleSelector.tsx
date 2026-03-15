@@ -9,11 +9,12 @@
 import { Check, User, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Stack } from "@/components/ui/Stack";
 import { TEST_IDS } from "@/lib/test-ids";
+import { cn } from "@/lib/utils";
 import { Typography } from "../ui/Typography";
 
 interface RoleSelectorProps {
@@ -53,14 +54,18 @@ function RoleCard({
         padding="xl"
         className="h-full w-full"
       >
-        <Card
-          recipe={selected ? "onboardingRoleIndicatorSelected" : "onboardingRoleIndicator"}
-          className="absolute right-4 top-4 z-10 h-6 w-6"
+        <div
+          className={cn(
+            getCardRecipeClassName(
+              selected ? "onboardingRoleIndicatorSelected" : "onboardingRoleIndicator",
+            ),
+            "absolute right-4 top-4 z-10 h-6 w-6",
+          )}
         >
           <Flex align="center" justify="center" className="h-full w-full">
             {selected ? <Check className="h-3.5 w-3.5" /> : null}
           </Flex>
-        </Card>
+        </div>
 
         <Flex
           direction="column"
@@ -68,13 +73,16 @@ function RoleCard({
           gap="xl"
           className="relative z-10 h-full text-center"
         >
-          <Card
-            recipe={selected ? "onboardingRoleIconShellSelected" : "onboardingRoleIconShell"}
-            padding="lg"
-            className="transition-default"
+          <div
+            className={cn(
+              getCardRecipeClassName(
+                selected ? "onboardingRoleIconShellSelected" : "onboardingRoleIconShell",
+              ),
+              "p-6 transition-default",
+            )}
           >
             {icon}
-          </Card>
+          </div>
 
           <Stack gap="md" align="center">
             <Typography variant="h4">{title}</Typography>

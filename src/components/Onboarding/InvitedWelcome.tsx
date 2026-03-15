@@ -7,8 +7,9 @@
  */
 
 import { Check, PartyPopper } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "../ui/Button";
-import { Card } from "../ui/Card";
+import { Card, getCardRecipeClassName } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
@@ -30,11 +31,16 @@ export function InvitedWelcome({ inviterName, onStartTour, onSkip }: InvitedWelc
             <PartyPopper className="w-16 h-16 text-brand" />
           </Flex>
           {/* Decorative dot */}
-          <Card recipe="onboardingInviteHeroBadge" className="absolute -right-1 -top-1 h-5 w-5">
+          <div
+            className={cn(
+              getCardRecipeClassName("onboardingInviteHeroBadge"),
+              "absolute -right-1 -top-1 h-5 w-5",
+            )}
+          >
             <Flex align="center" justify="center" className="h-full w-full">
               <Check className="w-3 h-3 text-brand-foreground" />
             </Flex>
-          </Card>
+          </div>
         </Card>
       </Flex>
 
@@ -62,11 +68,16 @@ export function InvitedWelcome({ inviterName, onStartTour, onSkip }: InvitedWelc
             "Get notifications for mentions and updates",
           ].map((item) => (
             <Flex as="li" key={item} align="start" gap="md">
-              <Card recipe="onboardingInviteBullet" className="mt-0.5 h-5 w-5 shrink-0">
+              <div
+                className={cn(
+                  getCardRecipeClassName("onboardingInviteBullet"),
+                  "mt-0.5 h-5 w-5 shrink-0",
+                )}
+              >
                 <Flex align="center" justify="center" className="h-full w-full">
                   <Check className="w-3 h-3 text-brand" />
                 </Flex>
-              </Card>
+              </div>
               <Typography color="secondary" variant="small">
                 {item}
               </Typography>

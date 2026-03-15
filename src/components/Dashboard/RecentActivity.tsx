@@ -62,14 +62,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
 
             <Flex direction="column" gap="none">
               {activities.map((activity: Activity) => (
-                <Card
-                  key={activity._id}
-                  variant="ghost"
-                  padding="none"
-                  hoverable
-                  radius="lg"
-                  className="relative border border-transparent px-2 py-2"
-                >
+                <div key={activity._id} className="relative px-2 py-2">
                   <Flex gap="md" align="start">
                     {/* User avatar */}
                     <IconCircle size="sm" className="relative z-10 bg-ui-bg">
@@ -97,7 +90,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                       </Stack>
                     </FlexItem>
                   </Flex>
-                </Card>
+                </div>
               ))}
             </Flex>
           </div>

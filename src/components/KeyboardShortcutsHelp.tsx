@@ -11,8 +11,9 @@
 
 import { Search } from "lucide-react";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { Button } from "./ui/Button";
-import { Card } from "./ui/Card";
+import { Card, getCardRecipeClassName } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import { EmptyState } from "./ui/EmptyState";
 import { Flex } from "./ui/Flex";
@@ -298,19 +299,22 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
           <Flex direction="column" gap="md">
             {filteredCategories.map((category) => (
               <Card key={category.id} recipe="commandSection">
-                <Card recipe="shortcutCategoryHeader" padding="md" radius="none">
+                <div className={cn(getCardRecipeClassName("shortcutCategoryHeader"), "p-4")}>
                   <Typography variant="eyebrow">{category.title}</Typography>
-                </Card>
+                </div>
                 <Stack gap="xs">
                   {category.items.map((item) => (
-                    <Card key={item.id} recipe="shortcutItemRow" padding="md">
+                    <div
+                      key={item.id}
+                      className={cn(getCardRecipeClassName("shortcutItemRow"), "p-4")}
+                    >
                       <Flex align="center" justify="between" gap="md">
                         <Typography variant="small" color="secondary">
                           {item.description}
                         </Typography>
                         <ShortcutBadge item={item} />
                       </Flex>
-                    </Card>
+                    </div>
                   ))}
                 </Stack>
               </Card>
