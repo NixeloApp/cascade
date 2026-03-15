@@ -2191,7 +2191,7 @@ async function screenshotFilledStates(
           .getByRole("combobox")
           .filter({ hasText: /sprint|active/i })
           .first();
-        await sprintSelect.waitFor({ state: "visible", timeout: 5000 });
+        await sprintSelect.waitFor({ state: "visible", timeout: 25000 });
         await sprintSelect.click();
         // Wait for dropdown options
         await page.getByRole("option").first().waitFor({ state: "visible", timeout: 3000 });
@@ -2930,11 +2930,12 @@ async function screenshotBoardInteractiveStates(
   const normalizedProjectKey = projectKey.toLowerCase();
   const boardUrl = `/${orgSlug}/projects/${projectKey}/board`;
 
-  // Navigate to board once for all interactive captures
+  // Navigate to board once for all interactive captures.
+  // Board loads in two phases: columns (~10s), then data + toolbar (~20s).
   await page
-    .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+    .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 30000 })
     .catch(() => {});
-  await waitForExpectedContent(page, boardUrl, "board");
+  await waitForBoardReady(page);
   await waitForScreenshotReady(page);
 
   // Swimlane modes
@@ -2948,7 +2949,7 @@ async function screenshotBoardInteractiveStates(
       const swimlaneButton = page
         .getByRole("button", { name: /swimlanes|priority|assignee|type|label|no swimlanes/i })
         .first();
-      await swimlaneButton.waitFor({ state: "visible", timeout: 5000 });
+      await swimlaneButton.waitFor({ state: "visible", timeout: 15000 });
       await swimlaneButton.click();
       // Select the mode
       const option = page.getByRole("menuitemcheckbox", { name: new RegExp(`^${mode}$`, "i") });
@@ -2980,7 +2981,7 @@ async function screenshotBoardInteractiveStates(
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-column-collapsed`)) {
     await runCaptureStep("board column collapsed", async () => {
       const collapseButton = page.getByLabel(/collapse/i).first();
-      await collapseButton.waitFor({ state: "visible", timeout: 5000 });
+      await collapseButton.waitFor({ state: "visible", timeout: 8000 });
       await collapseButton.click();
       await waitForScreenshotReady(page);
       await captureCurrentView(
@@ -3001,7 +3002,7 @@ async function screenshotBoardInteractiveStates(
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-filter-active`)) {
     await runCaptureStep("board filter active", async () => {
       const priorityFilter = page.getByRole("button", { name: /^priority$/i }).first();
-      await priorityFilter.waitFor({ state: "visible", timeout: 5000 });
+      await priorityFilter.waitFor({ state: "visible", timeout: 8000 });
       await priorityFilter.click();
       // Select "High" priority
       const highOption = page.getByRole("menuitemcheckbox", { name: /high/i }).first();
@@ -3025,7 +3026,7 @@ async function screenshotBoardInteractiveStates(
       await waitForScreenshotReady(page);
 
       const propsButton = page.getByRole("button", { name: /properties/i }).first();
-      await propsButton.waitFor({ state: "visible", timeout: 5000 });
+      await propsButton.waitFor({ state: "visible", timeout: 25000 });
       await propsButton.click();
       // Wait for dropdown to be visible
       await page.getByRole("menuitemcheckbox").first().waitFor({ state: "visible", timeout: 3000 });
@@ -3052,7 +3053,7 @@ async function screenshotBoardInteractiveStates(
 
       // Toggle to side panel mode
       const toggleBtn = page.getByLabel(/switch to side panel view/i).first();
-      await toggleBtn.waitFor({ state: "visible", timeout: 5000 });
+      await toggleBtn.waitFor({ state: "visible", timeout: 25000 });
       await toggleBtn.click();
       await waitForScreenshotReady(page);
 
