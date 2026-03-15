@@ -165,9 +165,9 @@ The app has ~65 routes. The screenshot tool currently covers ~20. Every route ne
 - [x] **Create event modal** — calendar page → "Add Event" button
 - [x] **Create team modal** — workspace detail → "Create team" button
 - [x] **Create workspace modal** — workspaces list → "Create Workspace" button
-- [ ] **Dashboard customize modal** — wired but "Customize" button not rendered on dashboard for screenshot user. May need different page header configuration.
-- [ ] **Import/export modal** — wired but skips (board toolbar doesn't hydrate, same root cause as board states)
-- [ ] **Manual time entry modal** — wired but "Add Time Entry" button not visible. May need time tracking data or different page state.
+- [ ] **Dashboard customize modal** — wired but "Customize" button not rendered for screenshot user
+- [ ] **Import/export modal** — wired, board loads now but filter dropdown items detach during click (Radix timing)
+- [ ] **Manual time entry modal** — wired but "Add Time Entry" button not visible in current page state
 
 ### Remaining modals (need special setup or complex triggers)
 
@@ -187,17 +187,15 @@ Beyond page loads — capture the states users actually see during interaction.
 
 ### Board / Kanban states
 
-- [ ] **Swimlane modes** — wired but board toolbar doesn't render in time; board data hydration too slow (~25s+), toolbar buttons not visible. Needs board query optimization or longer timeout.
-- [x] **Column collapsed** — captured when toolbar loads
-- [ ] **Column empty** — a column with no issues showing empty state
-- [ ] **WIP limit warning** — column at/over WIP limit with visual indicator
-- [ ] **Filter bar active** — wired but skips (priority button not visible after 8s)
-- [ ] **Display properties toggle open** — wired but skips (properties button not visible after 25s)
-- [ ] **Sprint selector dropdown** — wired but skips (sprint combobox not visible — may not exist on board route without active sprint)
+- [x] **Swimlane modes** — all 4 captured (priority, assignee, type, label). Reloads board fresh per mode.
+- [x] **Column collapsed** — captured (110ms)
+- [ ] **Column empty** — needs a workflow state with no issues
+- [ ] **WIP limit warning** — needs WIP limit configured + exceeded
+- [x] **Filter bar active** — captured with Priority → High filter (218ms)
+- [x] **Display properties toggle open** — captured (275ms)
+- [ ] **Sprint selector dropdown** — wired but combobox not visible (may need active sprint in seed)
 
-> **Root cause:** `canAccessProject()` returns false for the screenshot user on the seeded DEMO project. The seed inserts a `projectMembers` row, but the access check still denies access. The board route shows "Project Not Found" instead of the Kanban board. This affects ALL project sub-page captures (board, backlog, sprints, etc.) — they capture the error page, not the actual content. **This is a project access bug in the E2E seed, not a screenshot tool issue.**
->
-> **Investigation needed:** Check why `computeProjectAccessImpl` fails despite the seed inserting `{ projectId, userId, role: "admin" }` into `projectMembers`. Likely a stale user ID issue — the screenshot user gets deleted/recreated each run with a new `_id`, and the seed may be patching the wrong membership or the `notDeleted` filter is excluding the row.
+> **Resolved:** The `getByKey` bug that caused "Project Not Found" was fixed by adding a `by_organization_key` compound index. Board now loads in ~1.8s with full toolbar.
 
 ### Issue states
 
@@ -205,7 +203,7 @@ Beyond page loads — capture the states users actually see during interaction.
 - [ ] **Issue form with duplicate detection** — needs similar issue titles in seed
 - [x] **Issue form "create more" toggle active** — open create issue modal, toggle "Create another" switch
 - [ ] **Issue inline editing** — needs issue detail page interaction
-- [x] **Issue peek/side panel mode** — toggle view mode on board, click issue card, capture side panel
+- [ ] **Issue peek/side panel mode** — wired, toggle works but Sheet doesn't appear after card click (needs investigation)
 - [ ] **Label creation popover** — needs label creation flow in issue form
 - [ ] **Issue with all property types visible** — needs fully populated issue in seed
 
@@ -272,7 +270,7 @@ Beyond page loads — capture the states users actually see during interaction.
 - [ ] **Empty states** for every major section (already captured in empty-* screenshots)
 - [ ] **Loading skeletons** — capture a page mid-load with skeleton UI visible (requires timing control)
 - [ ] **Toast notification** — success and error toast examples
-- [x] **Form validation errors** — submit create issue with empty title, capture validation error
+- [ ] **Form validation errors** — wired but "Create" button selector doesn't match (skips)
 
 ---
 
