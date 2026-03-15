@@ -2,7 +2,7 @@
 
 > **Priority:** P0
 > **Status:** Active
-> **Last Updated:** 2026-03-16
+> **Last Updated:** 2026-03-15
 > **Objective:** Transform the screenshot tool from a basic page capturer into a comprehensive visual QA system that covers every route, modal, interactive state, and user journey in the product.
 
 ---
@@ -25,7 +25,7 @@
 
 ### Staging & output
 
-- [x] Add a `--dry-run` flag that lists what would be captured without launching a browser — useful for verifying filter logic. Shows 74 targets per config (296 total across 4 configs).
+- [x] Add a `--dry-run` flag that lists what would be captured without launching a browser — useful for verifying filter logic. Shows 103 targets per config (412 total across 4 configs).
 - [x] Add timing per screenshot to the console output (helps identify slow pages). Shows `(NNNms)` after each capture.
 
 ---
@@ -380,7 +380,7 @@ Organized by user story — sequential screenshots showing a complete workflow.
 
 - [x] `pnpm screenshots:diff` — compare current vs last approved
 - [x] `pnpm screenshots:approve` — update the hash manifest to accept current state
-- [x] Add `.screenshot-hashes.json` to git — serves as the visual baseline (193 screenshots baselined)
+- [x] Add `.screenshot-hashes.json` to git — serves as the visual baseline (300 screenshots baselined)
 
 ### CI integration
 

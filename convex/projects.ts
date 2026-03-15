@@ -512,11 +512,23 @@ export const getByKey = authenticatedQuery({
         .filter(notDeleted)
         .first();
     } else {
-      project = await ctx.db
+      // Project keys are unique within an org but NOT globally unique —
+      // multiple orgs can have a project with key "DEMO". Scan candidates
+      // and find one the user can access, rather than blindly taking .first().
+      const candidates = await ctx.db
         .query("projects")
         .withIndex("by_key", (q) => q.eq("key", normalizedKey))
         .filter(notDeleted)
-        .first();
+        .take(BOUNDED_LIST_LIMIT);
+
+      for (const candidate of candidates) {
+        const hasAccess = await canAccessProject(ctx, candidate._id, ctx.userId);
+        if (hasAccess) {
+          return await enrichProject(ctx, candidate);
+        }
+      }
+
+      return null;
     }
 
     if (!project) {

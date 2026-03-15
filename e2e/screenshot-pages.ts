@@ -51,7 +51,6 @@ const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
   "public-signin": "02-signin",
   "public-signup": "03-signup",
   "public-forgot-password": "04-forgot-password",
-  "public-verify-2fa": "02-signin",
 
   // Workspace-level pages (empty states)
   "empty-dashboard": "04-dashboard",
@@ -189,6 +188,8 @@ function nextIndex(prefix: string): number {
 // Dynamic page patterns that map to spec folders
 // Pattern: [regex to match pageId, spec folder, filename suffix]
 const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
+  // Public pages with suffixes to avoid overwriting base spec screenshots
+  [/^public-verify-2fa$/, "02-signin", "-verify-2fa"],
   [/^filled-dashboard-omnibox$/, "04-dashboard", "-omnibox"],
   [/^filled-dashboard-customize-modal$/, "04-dashboard", "-customize-modal"],
   [/^filled-dashboard-advanced-search-modal$/, "04-dashboard", "-advanced-search-modal"],
@@ -199,71 +200,69 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-workspaces-create-workspace-modal$/, "27-workspaces", "-create-workspace-modal"],
   [/^filled-workspace-create-team-modal$/, "28-workspace-detail", "-create-team-modal"],
   // Project board: filled-project-xxx-board → 06-board
-  [/^filled-project-[^-]+-board$/, "06-board", ""],
-  [/^filled-project-[^-]+-create-issue-modal$/, "06-board", "-create-issue-modal"],
+  [/^filled-project-.+-board$/, "06-board", ""],
+  [/^filled-project-.+-create-issue-modal$/, "06-board", "-create-issue-modal"],
   // Project backlog: filled-project-xxx-backlog → 07-backlog
-  [/^filled-project-[^-]+-backlog$/, "07-backlog", ""],
+  [/^filled-project-.+-backlog$/, "07-backlog", ""],
   // Project sprints: filled-project-xxx-sprints → 18-sprints
-  [/^filled-project-[^-]+-sprints$/, "18-sprints", ""],
-  [/^filled-project-[^-]+-sprints-burndown$/, "18-sprints", "-burndown"],
-  [/^filled-project-[^-]+-sprints-burnup$/, "18-sprints", "-burnup"],
-  [/^filled-project-[^-]+-sprints-workload$/, "18-sprints", "-workload"],
+  [/^filled-project-.+-sprints$/, "18-sprints", ""],
+  [/^filled-project-.+-sprints-burndown$/, "18-sprints", "-burndown"],
+  [/^filled-project-.+-sprints-burnup$/, "18-sprints", "-burnup"],
+  [/^filled-project-.+-sprints-workload$/, "18-sprints", "-workload"],
   // Issue detail: filled-issue-xxx → 08-issue
   [/^filled-issue-/, "08-issue", ""],
-  [/^filled-project-[^-]+-issue-detail-modal$/, "08-issue", "-detail-modal"],
-  [/^filled-project-[^-]+-import-export-modal$/, "06-board", "-import-export-modal"],
+  [/^filled-project-.+-issue-detail-modal$/, "08-issue", "-detail-modal"],
+  [/^filled-project-.+-import-export-modal$/, "06-board", "-import-export-modal"],
   // Board interactive states
-  [/^filled-project-[^-]+-board-swimlane-(\w+)$/, "06-board", "-swimlane-$1"],
-  [/^filled-project-[^-]+-board-column-collapsed$/, "06-board", "-column-collapsed"],
-  [/^filled-project-[^-]+-board-filter-active$/, "06-board", "-filter-active"],
-  [/^filled-project-[^-]+-board-display-properties$/, "06-board", "-display-properties"],
-  [/^filled-project-[^-]+-board-peek-mode$/, "06-board", "-peek-mode"],
-  [/^filled-project-[^-]+-board-sprint-selector$/, "06-board", "-sprint-selector"],
-  [
-    /^filled-project-[^-]+-create-issue-create-another$/,
-    "06-board",
-    "-create-issue-create-another",
-  ],
-  [/^filled-project-[^-]+-create-issue-validation$/, "06-board", "-create-issue-validation"],
+  [/^filled-project-.+-board-swimlane-(\w+)$/, "06-board", "-swimlane-$1"],
+  [/^filled-project-.+-board-column-collapsed$/, "06-board", "-column-collapsed"],
+  [/^filled-project-.+-board-filter-active$/, "06-board", "-filter-active"],
+  [/^filled-project-.+-board-display-properties$/, "06-board", "-display-properties"],
+  [/^filled-project-.+-board-peek-mode$/, "06-board", "-peek-mode"],
+  [/^filled-project-.+-board-sprint-selector$/, "06-board", "-sprint-selector"],
+  [/^filled-project-.+-create-issue-create-another$/, "06-board", "-create-issue-create-another"],
+  [/^filled-project-.+-create-issue-validation$/, "06-board", "-create-issue-validation"],
   // Document editor: filled-document-editor → 10-editor
   [/^filled-document-editor$/, "10-editor", ""],
   [/^filled-document-editor-slash-menu$/, "10-editor", "-slash-menu"],
   [/^filled-document-editor-floating-toolbar$/, "10-editor", "-floating-toolbar"],
   [/^filled-document-editor-mention-popover$/, "10-editor", "-mention-popover"],
   // Project calendar views: filled-project-xxx-calendar, filled-calendar-{mode}
-  [/^filled-project-[^-]+-calendar$/, "11-calendar", ""],
+  [/^filled-project-.+-calendar$/, "11-calendar", ""],
   [/^filled-calendar-(day|week|month)$/, "11-calendar", "-$1"],
   [/^filled-calendar-event-modal$/, "11-calendar", "-event-modal"],
   [/^filled-calendar-create-event-modal$/, "11-calendar", "-create-event-modal"],
   // Project analytics: filled-project-xxx-analytics → 13-analytics
-  [/^filled-project-[^-]+-analytics$/, "13-analytics", ""],
+  [/^filled-project-.+-analytics$/, "13-analytics", ""],
   // Project settings: filled-project-xxx-settings → 12-settings
-  [/^filled-project-[^-]+-settings$/, "12-settings", "-project"],
-  // Workspace pages: filled-workspace-xxx → 27-workspaces, filled-workspace-xxx-{tab} → 28-workspace-detail
-  [/^filled-workspace-[^-]+$/, "27-workspaces", ""],
-  [/^filled-workspace-[^-]+-backlog$/, "28-workspace-detail", "-backlog"],
-  [/^filled-workspace-[^-]+-calendar$/, "28-workspace-detail", "-calendar"],
-  [/^filled-workspace-[^-]+-sprints$/, "28-workspace-detail", "-sprints"],
-  [/^filled-workspace-[^-]+-dependencies$/, "28-workspace-detail", "-dependencies"],
-  [/^filled-workspace-[^-]+-wiki$/, "28-workspace-detail", "-wiki"],
-  [/^filled-workspace-[^-]+-settings$/, "28-workspace-detail", "-settings"],
-  // Team pages: filled-team-xxx → 29-team-detail
-  [/^filled-team-[^-]+$/, "29-team-detail", ""],
-  [/^filled-team-[^-]+-board$/, "29-team-detail", "-board"],
-  [/^filled-team-[^-]+-calendar$/, "29-team-detail", "-calendar"],
-  [/^filled-team-[^-]+-wiki$/, "29-team-detail", "-wiki"],
-  [/^filled-team-[^-]+-settings$/, "29-team-detail", "-settings"],
+  [/^filled-project-.+-settings$/, "12-settings", "-project"],
+  // Workspace pages: filled-workspace-xxx-{tab} → 28-workspace-detail (specific patterns first)
+  [/^filled-workspace-.+-backlog$/, "28-workspace-detail", "-backlog"],
+  [/^filled-workspace-.+-calendar$/, "28-workspace-detail", "-calendar"],
+  [/^filled-workspace-.+-sprints$/, "28-workspace-detail", "-sprints"],
+  [/^filled-workspace-.+-dependencies$/, "28-workspace-detail", "-dependencies"],
+  [/^filled-workspace-.+-wiki$/, "28-workspace-detail", "-wiki"],
+  [/^filled-workspace-.+-settings$/, "28-workspace-detail", "-settings"],
+  // Bare workspace (catch-all, must come after suffixed patterns)
+  [/^filled-workspace-.+$/, "27-workspaces", ""],
+  // Team pages: filled-team-xxx-{tab} → 29-team-detail (specific patterns first)
+  [/^filled-team-.+-board$/, "29-team-detail", "-board"],
+  [/^filled-team-.+-calendar$/, "29-team-detail", "-calendar"],
+  [/^filled-team-.+-wiki$/, "29-team-detail", "-wiki"],
+  [/^filled-team-.+-settings$/, "29-team-detail", "-settings"],
+  // Bare team (catch-all, must come after suffixed patterns)
+  [/^filled-team-.+$/, "29-team-detail", ""],
   // Project roadmap: filled-project-xxx-roadmap → 35-roadmap
-  [/^filled-project-[^-]+-roadmap$/, "35-roadmap", ""],
-  [/^filled-project-[^-]+-roadmap-timeline-selector$/, "35-roadmap", "-timeline-selector"],
+  [/^filled-project-.+-roadmap$/, "35-roadmap", ""],
+  [/^filled-project-.+-roadmap-timeline-selector$/, "35-roadmap", "-timeline-selector"],
   // Project activity: filled-project-xxx-activity → 36-activity
-  [/^filled-project-[^-]+-activity$/, "36-activity", ""],
+  [/^filled-project-.+-activity$/, "36-activity", ""],
   // Project billing: filled-project-xxx-billing → 37-billing
-  [/^filled-project-[^-]+-billing$/, "37-billing", ""],
+  [/^filled-project-.+-billing$/, "37-billing", ""],
   // Project timesheet: filled-project-xxx-timesheet → 38-timesheet
-  [/^filled-project-[^-]+-timesheet$/, "38-timesheet", ""],
+  [/^filled-project-.+-timesheet$/, "38-timesheet", ""],
   // Project inbox: filled-project-xxx-inbox → 39-project-inbox
-  [/^filled-project-[^-]+-inbox$/, "39-project-inbox", ""],
+  [/^filled-project-.+-inbox$/, "39-project-inbox", ""],
 ];
 
 function parseCsvValues(rawValues: string[]): string[] {
@@ -3403,8 +3402,6 @@ async function run(): Promise<void> {
   }
 
   const specFolders = getGeneratedSpecFolders();
-  fs.mkdirSync(SCREENSHOT_STAGING_BASE_DIR, { recursive: true });
-  stagingRootDir = fs.mkdtempSync(path.join(SCREENSHOT_STAGING_BASE_DIR, "run-"));
   const selectedConfigs = CONFIGS.filter((config) =>
     isConfigSelected(config.viewport, config.theme),
   );
@@ -3431,6 +3428,10 @@ async function run(): Promise<void> {
     dryRunEnumerate(selectedConfigs);
     return;
   }
+
+  // Create staging directory only when we are actually capturing (not dry-run)
+  fs.mkdirSync(SCREENSHOT_STAGING_BASE_DIR, { recursive: true });
+  stagingRootDir = fs.mkdtempSync(path.join(SCREENSHOT_STAGING_BASE_DIR, "run-"));
 
   const headless = cliOptions.headless;
   const launchBrowser = () => chromium.launch({ headless });
