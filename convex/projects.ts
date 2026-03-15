@@ -498,16 +498,23 @@ export const getByKey = authenticatedQuery({
   handler: async (ctx, args) => {
     const normalizedKey = args.key.toUpperCase();
 
-    // Always query by_key index (single lookup) since keys are globally unique
-    let project = await ctx.db
-      .query("projects")
-      .withIndex("by_key", (q) => q.eq("key", normalizedKey))
-      .filter(notDeleted)
-      .first();
+    let project: Doc<"projects"> | null = null;
 
-    // If organizationId provided, validate the project belongs to that org
-    if (project && args.organizationId && project.organizationId !== args.organizationId) {
-      project = null;
+    if (args.organizationId) {
+      // When org is known, scan by_key and match org to handle duplicate keys
+      // across organizations (e.g. multiple E2E orgs each with a "DEMO" project)
+      const candidates = await ctx.db
+        .query("projects")
+        .withIndex("by_key", (q) => q.eq("key", normalizedKey))
+        .filter(notDeleted)
+        .take(BOUNDED_LIST_LIMIT);
+      project = candidates.find((p) => p.organizationId === args.organizationId) ?? null;
+    } else {
+      project = await ctx.db
+        .query("projects")
+        .withIndex("by_key", (q) => q.eq("key", normalizedKey))
+        .filter(notDeleted)
+        .first();
     }
 
     if (!project) {
