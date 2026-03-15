@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { IconCircle } from "@/components/ui/IconCircle";
 import { Metadata, MetadataItem } from "@/components/ui/Metadata";
 import { OverviewBand } from "@/components/ui/OverviewBand";
 import { Stack } from "@/components/ui/Stack";
@@ -67,13 +68,13 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
               <Flex align="start" justify="between" gap="md">
                 <Flex align="center" gap="sm">
                   {workspace.icon && (
-                    <Flex
-                      align="center"
-                      justify="center"
-                      className="h-12 w-12 shrink-0 rounded-2xl border border-ui-border/60 bg-ui-bg-soft text-2xl shadow-soft"
+                    <IconCircle
+                      size="md"
+                      variant="soft"
+                      className="h-12 w-12 border border-ui-border/60 text-2xl shadow-soft"
                     >
                       <span aria-hidden="true">{workspace.icon}</span>
-                    </Flex>
+                    </IconCircle>
                   )}
                   <div>
                     <Typography variant="h4">{workspace.name}</Typography>
@@ -150,13 +151,13 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
           <Flex align="start" justify="between" gap="md">
             <Flex align="center" gap="sm">
               {workspace.icon && (
-                <Flex
-                  align="center"
-                  justify="center"
-                  className="h-12 w-12 shrink-0 rounded-2xl border border-ui-border/60 bg-ui-bg-soft text-2xl shadow-soft"
+                <IconCircle
+                  size="md"
+                  variant="soft"
+                  className="h-12 w-12 border border-ui-border/60 text-2xl shadow-soft"
                 >
                   <span aria-hidden="true">{workspace.icon}</span>
-                </Flex>
+                </IconCircle>
               )}
               <div>
                 <Typography variant="h4">{workspace.name}</Typography>

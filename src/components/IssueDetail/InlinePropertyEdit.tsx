@@ -15,6 +15,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { IconCircle } from "@/components/ui/IconCircle";
 import { Input } from "@/components/ui/Input";
 import {
   Select,
@@ -149,13 +150,9 @@ export function InlineAssigneeSelect({ value, members, onChange, disabled }: Ass
             </Flex>
           ) : (
             <Flex align="center" gap="sm">
-              <Flex
-                align="center"
-                justify="center"
-                className="size-5 rounded-full bg-ui-bg-tertiary"
-              >
+              <IconCircle variant="muted" className="size-5">
                 <User className="size-3 text-ui-text-secondary" />
-              </Flex>
+              </IconCircle>
               <span>Unassigned</span>
             </Flex>
           )}
@@ -164,9 +161,9 @@ export function InlineAssigneeSelect({ value, members, onChange, disabled }: Ass
       <SelectContent>
         <SelectItem value="unassigned">
           <Flex align="center" gap="sm">
-            <Flex align="center" justify="center" className="size-5 rounded-full bg-ui-bg-tertiary">
+            <IconCircle variant="muted" className="size-5">
               <User className="size-3 text-ui-text-secondary" />
-            </Flex>
+            </IconCircle>
             Unassigned
           </Flex>
         </SelectItem>

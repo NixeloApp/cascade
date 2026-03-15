@@ -4,6 +4,7 @@ import { FileText, Globe, Lock } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { IconCircle } from "@/components/ui/IconCircle";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Typography } from "@/components/ui/Typography";
@@ -68,13 +69,13 @@ function WorkspaceWikiPage() {
             <Flex direction="column" gap="md">
               <Flex justify="between" align="start" gap="md">
                 <Flex align="center" gap="md">
-                  <Flex
-                    align="center"
-                    justify="center"
-                    className="w-10 h-10 rounded-container bg-ui-bg-tertiary text-ui-text-secondary shrink-0"
+                  <IconCircle
+                    size="md"
+                    variant="muted"
+                    className="w-10 h-10 text-ui-text-secondary"
                   >
                     <FileText size={20} />
-                  </Flex>
+                  </IconCircle>
                   <Typography variant="h3" className="tracking-tight line-clamp-1">
                     {doc.title || "Untitled"}
                   </Typography>

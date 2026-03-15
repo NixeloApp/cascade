@@ -23,6 +23,7 @@ import { IssueDetailViewer } from "./IssueDetailViewer";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
+import { Dot } from "./ui/Dot";
 import { Icon } from "./ui/Icon";
 import { IconButton } from "./ui/IconButton";
 import { Typography } from "./ui/Typography";
@@ -261,12 +262,7 @@ export function IssuesCalendarView({
                 onDragEnd={handleDragEnd}
               >
                 <Flex align="center" gap="xs" className="w-full">
-                  <div
-                    className={cn(
-                      "w-2 h-2 rounded-full shrink-0",
-                      getPriorityColor(issue.priority),
-                    )}
-                  />
+                  <Dot className={getPriorityColor(issue.priority)} />
                   <FlexItem flex="1" className="min-w-0">
                     <Flex align="center" gap="xs">
                       <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="xs" className="shrink-0" />
@@ -373,7 +369,7 @@ export function IssuesCalendarView({
         <Flex align="center" gap="xl" className="mt-4">
           {PRIORITY_LEGEND_ITEMS.map((item) => (
             <Flex key={item.label} align="center" gap="sm">
-              <div className={cn("h-3 w-3 rounded-full", item.className)} />
+              <Dot size="lg" className={item.className} />
               <Typography variant="small" color="secondary">
                 {item.label}
               </Typography>

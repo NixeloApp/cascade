@@ -12,8 +12,10 @@ import { PageHeader, PageLayout } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Dot } from "@/components/ui/Dot";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { IconCircle } from "@/components/ui/IconCircle";
 import { Input } from "@/components/ui/Input";
 import {
   Select,
@@ -117,16 +119,15 @@ function AssistantConfig() {
             <CardBody className="p-6">
               <Flex justify="between" align="center">
                 <Flex gap="md" align="center">
-                  <div
+                  <IconCircle
+                    variant={enabled ? "success" : "muted"}
                     className={cn(
-                      "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
-                      enabled
-                        ? "bg-status-success-bg text-status-success"
-                        : "bg-ui-bg-tertiary text-ui-text-tertiary",
+                      "size-10 transition-colors",
+                      enabled ? "text-status-success" : "text-ui-text-tertiary",
                     )}
                   >
                     <Bot className="w-5 h-5" />
-                  </div>
+                  </IconCircle>
                   <div>
                     <Typography variant="h5" className="mb-1">
                       Assistant Status
@@ -140,16 +141,12 @@ function AssistantConfig() {
                 </Flex>
                 <Flex align="center" gap="md">
                   {enabled && (
-                    <Flex
-                      align="center"
-                      gap="xs"
-                      className="px-2.5 py-0.5 rounded-full bg-status-success-bg border border-status-success/20"
-                    >
-                      <div className="w-1.5 h-1.5 rounded-full bg-status-success animate-pulse" />
-                      <Typography variant="caption" as="span" className="text-status-success">
-                        Active
-                      </Typography>
-                    </Flex>
+                    <Badge variant="success" shape="pill">
+                      <Flex align="center" gap="xs">
+                        <Dot size="xs" color="success" pulse />
+                        <span>Active</span>
+                      </Flex>
+                    </Badge>
                   )}
                   <Switch checked={enabled} onCheckedChange={setEnabled} />
                 </Flex>
@@ -240,9 +237,9 @@ function AssistantConfig() {
           <Card className="card-subtle border-brand-subtle bg-brand-subtle/10 mb-6">
             <CardBody className="p-6">
               <Flex gap="md" align="start">
-                <div className="p-2 bg-brand-subtle rounded-md text-brand">
+                <IconCircle size="sm" variant="brand" className="text-brand">
                   <Sparkles className="w-5 h-5" />
-                </div>
+                </IconCircle>
                 <div>
                   <Typography variant="h5" className="mb-1 text-brand-foreground">
                     Upgrade to Pro
@@ -270,7 +267,7 @@ function AssistantConfig() {
               <Flex
                 align="center"
                 justify="center"
-                className="h-48 bg-ui-bg-tertiary rounded-md border border-dashed border-ui-border-secondary"
+                className="h-48 bg-ui-bg-tertiary border border-dashed border-ui-border-secondary"
               >
                 <Typography variant="small" color="tertiary">
                   Usage chart placeholder

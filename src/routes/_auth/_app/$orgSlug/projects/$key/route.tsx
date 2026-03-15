@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { IconCircle } from "@/components/ui/IconCircle";
 import { RouteNav, RouteNavItem } from "@/components/ui/RouteNav";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -167,15 +168,15 @@ function ProjectLayout() {
             className="flex-col sm:flex-row sm:items-center"
           >
             <Flex align="center" gap="xs" className="min-w-0 sm:gap-sm">
-              <Flex
-                align="center"
-                justify="center"
-                className="h-6 w-6 shrink-0 rounded-full bg-brand-subtle text-brand ring-1 ring-brand/18 sm:h-10 sm:w-10 sm:rounded-xl"
+              <IconCircle
+                size="sm"
+                variant="brand"
+                className="h-6 w-6 ring-1 ring-brand/18 sm:h-10 sm:w-10"
               >
                 <Typography variant="small" className="font-semibold text-current">
                   {project.key.slice(0, 2).toUpperCase()}
                 </Typography>
-              </Flex>
+              </IconCircle>
               <div className="min-w-0">
                 <Flex align="center" gap="xs" className="min-w-0">
                   <Typography variant="h4" className="truncate text-sm tracking-tight sm:text-2xl">

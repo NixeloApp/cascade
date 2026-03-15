@@ -148,7 +148,7 @@ function BoardPage() {
               <ExportButton projectId={project._id} sprintId={effectiveSprintId} />
               {project.boardType === "scrum" && sprints && (
                 <Select value={selectedSprintId || "active"} onValueChange={handleSprintChange}>
-                  <SelectTrigger className="w-48 px-3 py-2 border border-ui-border rounded-md text-sm">
+                  <SelectTrigger className="w-48 px-3 py-2 border border-ui-border text-sm">
                     <SelectValue placeholder="Active Sprint" />
                   </SelectTrigger>
                   <SelectContent>
@@ -179,7 +179,7 @@ function BoardPage() {
             <>
               {showMobileSprintControls && sprints && (
                 <Select value={selectedSprintId || "active"} onValueChange={handleSprintChange}>
-                  <SelectTrigger className="h-7 min-w-24 rounded-lg border border-ui-border/70 bg-ui-bg-elevated/92 px-2 text-xs shadow-soft">
+                  <SelectTrigger className="h-7 min-w-24 border border-ui-border/70 bg-ui-bg-elevated/92 px-2 text-xs shadow-soft">
                     <SelectValue placeholder="Sprint" />
                   </SelectTrigger>
                   <SelectContent>

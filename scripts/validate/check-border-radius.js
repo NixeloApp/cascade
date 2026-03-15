@@ -20,17 +20,19 @@ const ROUNDED_PATTERN = /\brounded(-\w+|-\[.+?\])\b/g;
 
 // Files with known violations - baseline to track and fix over time
 const BASELINE_FILES = new Set([
+  // Progress bars, chart elements (rounded-full on thin bars)
   "src/components/Analytics/BarChart.tsx",
-  "src/components/AttachmentUpload.tsx",
-  "src/components/Auth/AppSplashScreen.tsx",
-  "src/components/Calendar/shadcn-calendar/body/day/calendar-body-day-events.tsx",
-  "src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx",
   "src/components/Dashboard/QuickStats.tsx",
-  "src/components/Dashboard/RecentActivity.tsx",
+  // Decorative blurs (rounded-full on background glow circles)
+  "src/components/Auth/AppSplashScreen.tsx",
   "src/components/Dashboard.tsx",
-  "src/components/IssueDetail/InlinePropertyEdit.tsx",
+  // Pseudo-elements and drag handles (can't use React components)
   "src/components/IssueDetail/IssueCard.tsx",
-  "src/components/IssuesCalendarView.tsx",
+  "src/components/RoadmapView.tsx",
+  "src/lib/kanban-dnd.ts",
+  // Raw DOM strings (outside React rendering)
+  "src/lib/serviceWorker.ts",
+  // Landing page CVA definitions (component-level styles)
   "src/components/Landing/AIFeatureDemo.tsx",
   "src/components/Landing/FeaturesSection.tsx",
   "src/components/Landing/FinalCTASection.tsx",
@@ -38,19 +40,7 @@ const BASELINE_FILES = new Set([
   "src/components/Landing/HeroSection.tsx",
   "src/components/Landing/ProductShowcase.tsx",
   "src/components/Landing/WhyChooseSection.tsx",
-  "src/components/RoadmapView.tsx",
-  "src/lib/kanban-dnd.ts",
-  "src/lib/serviceWorker.ts",
-  "src/routes/_auth/_app/$orgSlug/assistant.tsx",
-  "src/routes/_auth/_app/$orgSlug/documents/index.tsx",
-  "src/routes/_auth/_app/$orgSlug/my-issues.tsx",
-  "src/routes/_auth/_app/$orgSlug/projects/$key/board.tsx",
-  "src/routes/_auth/_app/$orgSlug/projects/$key/route.tsx",
-  "src/routes/_auth/_app/$orgSlug/route.tsx",
-  "src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki.tsx",
-  "src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/wiki.tsx",
-  "src/routes/_auth/_app/$orgSlug/workspaces/index.tsx",
-  "src/routes/_auth/onboarding.tsx",
+  // Small badges with rounded-lg (need Badge radius prop)
   "src/routes/invite.$token.tsx",
 ]);
 

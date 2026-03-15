@@ -217,7 +217,7 @@ function InviteRoute() {
             </div>
 
             {/* Invite Details */}
-            <div className="bg-ui-bg-secondary rounded-container p-4 mb-6">
+            <div className="bg-ui-bg-secondary p-4 mb-6">
               <Flex justify="between" align="center" className="text-sm">
                 <Typography variant="muted">Invited email</Typography>
                 <Typography variant="small">{invite.email}</Typography>
