@@ -201,6 +201,20 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-project-[^-]+-analytics$/, "13-analytics", ""],
   // Project settings: filled-project-xxx-settings → 12-settings
   [/^filled-project-[^-]+-settings$/, "12-settings", "-project"],
+  // Workspace pages: filled-workspace-xxx → 27-workspaces, filled-workspace-xxx-{tab} → 28-workspace-detail
+  [/^filled-workspace-[^-]+$/, "27-workspaces", ""],
+  [/^filled-workspace-[^-]+-backlog$/, "28-workspace-detail", "-backlog"],
+  [/^filled-workspace-[^-]+-calendar$/, "28-workspace-detail", "-calendar"],
+  [/^filled-workspace-[^-]+-sprints$/, "28-workspace-detail", "-sprints"],
+  [/^filled-workspace-[^-]+-dependencies$/, "28-workspace-detail", "-dependencies"],
+  [/^filled-workspace-[^-]+-wiki$/, "28-workspace-detail", "-wiki"],
+  [/^filled-workspace-[^-]+-settings$/, "28-workspace-detail", "-settings"],
+  // Team pages: filled-team-xxx → 29-team-detail
+  [/^filled-team-[^-]+$/, "29-team-detail", ""],
+  [/^filled-team-[^-]+-board$/, "29-team-detail", "-board"],
+  [/^filled-team-[^-]+-calendar$/, "29-team-detail", "-calendar"],
+  [/^filled-team-[^-]+-wiki$/, "29-team-detail", "-wiki"],
+  [/^filled-team-[^-]+-settings$/, "29-team-detail", "-settings"],
   // Project roadmap: filled-project-xxx-roadmap → 35-roadmap
   [/^filled-project-[^-]+-roadmap$/, "35-roadmap", ""],
   // Project activity: filled-project-xxx-activity → 36-activity
@@ -729,6 +743,18 @@ function isWorkspaceCalendarUrl(url: string): boolean {
   return /\/[^/]+\/workspaces\/[^/]+\/calendar$/.test(url);
 }
 
+function isWorkspaceSprintsUrl(url: string): boolean {
+  return /\/[^/]+\/workspaces\/[^/]+\/sprints$/.test(url);
+}
+
+function isWorkspaceDependenciesUrl(url: string): boolean {
+  return /\/[^/]+\/workspaces\/[^/]+\/dependencies$/.test(url);
+}
+
+function isWorkspaceWikiUrl(url: string): boolean {
+  return /\/[^/]+\/workspaces\/[^/]+\/wiki$/.test(url);
+}
+
 function isTeamDetailUrl(url: string): boolean {
   return /\/[^/]+\/workspaces\/[^/]+\/teams\/[^/]+\/?$/.test(url);
 }
@@ -743,6 +769,10 @@ function isTeamCalendarUrl(url: string): boolean {
 
 function isTeamSettingsUrl(url: string): boolean {
   return /\/[^/]+\/workspaces\/[^/]+\/teams\/[^/]+\/settings$/.test(url);
+}
+
+function isTeamWikiUrl(url: string): boolean {
+  return /\/[^/]+\/workspaces\/[^/]+\/teams\/[^/]+\/wiki$/.test(url);
 }
 
 function isIssueDetailUrl(url: string): boolean {
@@ -1497,6 +1527,41 @@ async function waitForExpectedContent(
     return;
   }
 
+  if (isWorkspaceSprintsUrl(url) || /^workspace-[^-]+-sprints$/.test(name)) {
+    await waitForSprintsReady(page);
+    return;
+  }
+
+  if (isWorkspaceDependenciesUrl(url) || /^workspace-[^-]+-dependencies$/.test(name)) {
+    await page
+      .getByRole("heading", { name: /dependencies/i })
+      .or(page.getByText(/no dependencies/i))
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    return;
+  }
+
+  if (isWorkspaceWikiUrl(url) || /^workspace-[^-]+-wiki$/.test(name)) {
+    await page
+      .getByRole("heading", { name: /wiki/i })
+      .or(page.getByText(/no pages/i))
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    return;
+  }
+
   if (isTeamSettingsUrl(url) || /^team-[^-]+-settings$/.test(name)) {
     await waitForTeamSettingsReady(page);
     return;
@@ -1504,6 +1569,21 @@ async function waitForExpectedContent(
 
   if (isTeamDetailUrl(url) || isTeamBoardUrl(url) || /^team-[^-]+-board$/.test(name)) {
     await waitForTeamDetailReady(page);
+    return;
+  }
+
+  if (isTeamWikiUrl(url) || /^team-[^-]+-wiki$/.test(name)) {
+    await page
+      .getByRole("heading", { name: /wiki/i })
+      .or(page.getByText(/no pages/i))
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
     return;
   }
 
@@ -2046,24 +2126,29 @@ async function screenshotFilledStates(
 
   if (wsSlug) {
     const wsBase = `/${orgSlug}/workspaces/${wsSlug}`;
-    const workspaceTargets = [`workspace-${wsSlug}`, `workspace-${wsSlug}-settings`];
+    const wsTabs = ["backlog", "calendar", "sprints", "dependencies", "wiki", "settings"] as const;
+    const workspaceTargets = [
+      `workspace-${wsSlug}`,
+      ...wsTabs.map((tab) => `workspace-${wsSlug}-${tab}`),
+    ];
     if (shouldCaptureAny(p, workspaceTargets)) {
       await takeScreenshot(page, p, `workspace-${wsSlug}`, wsBase);
-      await takeScreenshot(page, p, `workspace-${wsSlug}-settings`, `${wsBase}/settings`);
+      for (const tab of wsTabs) {
+        await takeScreenshot(page, p, `workspace-${wsSlug}-${tab}`, `${wsBase}/${tab}`);
+      }
     }
 
     const resolvedTeam = teamSlug ?? (await discoverFirstHref(page, /\/teams\/([^/]+)/));
     if (resolvedTeam) {
       const teamBase = `${wsBase}/teams/${resolvedTeam}`;
+      const teamTabs = ["board", "calendar", "wiki", "settings"] as const;
       const teamTargets = [
         `team-${resolvedTeam}`,
-        `team-${resolvedTeam}-board`,
-        `team-${resolvedTeam}-calendar`,
-        `team-${resolvedTeam}-settings`,
+        ...teamTabs.map((tab) => `team-${resolvedTeam}-${tab}`),
       ];
       if (shouldCaptureAny(p, teamTargets)) {
         await takeScreenshot(page, p, `team-${resolvedTeam}`, teamBase);
-        for (const tab of ["board", "calendar", "settings"] as const) {
+        for (const tab of teamTabs) {
           await takeScreenshot(page, p, `team-${resolvedTeam}-${tab}`, `${teamBase}/${tab}`);
         }
       }

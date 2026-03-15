@@ -95,26 +95,26 @@ The app has ~65 routes. The screenshot tool currently covers ~20. Every route ne
 - [x] Document editor
 - [x] **Document templates** (`/$orgSlug/documents/templates`) — built-in + custom templates
 
-### Workspaces (0 coverage — 10+ pages)
+### Workspaces (covered)
 
-- [ ] **Workspaces list** (`/$orgSlug/workspaces`) — empty + filled
-- [ ] **Workspace home** (`/$orgSlug/workspaces/$slug`) — teams list, navigation
-- [ ] **Workspace board** (`/$orgSlug/workspaces/$slug/board`)
-- [ ] **Workspace backlog** (`/$orgSlug/workspaces/$slug/backlog`)
-- [ ] **Workspace calendar** (`/$orgSlug/workspaces/$slug/calendar`)
-- [ ] **Workspace sprints** (`/$orgSlug/workspaces/$slug/sprints`)
-- [ ] **Workspace dependencies** (`/$orgSlug/workspaces/$slug/dependencies`)
-- [ ] **Workspace wiki** (`/$orgSlug/workspaces/$slug/wiki`)
-- [ ] **Workspace settings** (`/$orgSlug/workspaces/$slug/settings`)
+- [x] **Workspaces list** (`/$orgSlug/workspaces`) — empty + filled
+- [x] **Workspace home** (`/$orgSlug/workspaces/$slug`) — teams list, navigation
+- ~~Workspace board~~ — route does not exist (workspace uses backlog instead)
+- [x] **Workspace backlog** (`/$orgSlug/workspaces/$slug/backlog`)
+- [x] **Workspace calendar** (`/$orgSlug/workspaces/$slug/calendar`)
+- [x] **Workspace sprints** (`/$orgSlug/workspaces/$slug/sprints`)
+- [x] **Workspace dependencies** (`/$orgSlug/workspaces/$slug/dependencies`)
+- [x] **Workspace wiki** (`/$orgSlug/workspaces/$slug/wiki`)
+- [x] **Workspace settings** (`/$orgSlug/workspaces/$slug/settings`)
 
-### Teams (0 coverage — 6+ pages)
+### Teams (covered)
 
-- [ ] **Team home** (`/.../teams/$teamSlug`)
-- [ ] **Team board** (`/.../teams/$teamSlug/board`)
-- [ ] **Team backlog** (`/.../teams/$teamSlug/backlog`) — if route exists
-- [ ] **Team calendar** (`/.../teams/$teamSlug/calendar`)
-- [ ] **Team wiki** (`/.../teams/$teamSlug/wiki`)
-- [ ] **Team settings** (`/.../teams/$teamSlug/settings`)
+- [x] **Team home** (`/.../teams/$teamSlug`)
+- [x] **Team board** (`/.../teams/$teamSlug/board`)
+- ~~Team backlog~~ — route does not exist
+- [x] **Team calendar** (`/.../teams/$teamSlug/calendar`)
+- [x] **Team wiki** (`/.../teams/$teamSlug/wiki`)
+- [x] **Team settings** (`/.../teams/$teamSlug/settings`)
 
 ### Invoices & Clients (list coverage added)
 
