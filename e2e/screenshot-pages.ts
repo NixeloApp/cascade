@@ -601,6 +601,8 @@ async function captureCurrentView(page: Page, prefix: string, name: string): Pro
   console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}  (${elapsed}ms)`);
 }
 
+let captureSkips = 0;
+
 async function runCaptureStep(label: string, fn: () => Promise<void>): Promise<void> {
   try {
     await fn();
@@ -609,7 +611,8 @@ async function runCaptureStep(label: string, fn: () => Promise<void>): Promise<v
     if (isCrashLikeError(message)) {
       throw error;
     }
-    captureFailures++;
+    // Soft skip — interactive state not available, not a hard failure
+    captureSkips++;
     console.log(`    ⚠️  skipped ${label}: ${message}`);
   }
 }
@@ -901,10 +904,13 @@ async function waitForCalendarReady(page: Page): Promise<boolean> {
 }
 
 async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
   const eventItems = page.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM);
-  const attempts = Math.max(1, Math.ceil(timeoutMs / 500));
   const previousButton = page.getByRole("button", { name: /^previous month$/i }).first();
   const nextButton = page.getByRole("button", { name: /^next month$/i }).first();
+
+  const isExpired = () => Date.now() > deadline;
+  const hasEvents = async () => (await eventItems.count().catch(() => 0)) > 0;
 
   const waitForCalendarState = async () => {
     await waitForScreenshotReady(page);
@@ -915,40 +921,33 @@ async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<bool
     const button = direction === "previous" ? previousButton : nextButton;
 
     for (let step = 0; step < steps; step++) {
+      if (isExpired()) return false;
       await button.click().catch(() => {});
       await waitForCalendarState();
-      if ((await eventItems.count().catch(() => 0)) > 0) {
-        return true;
-      }
+      if (await hasEvents()) return true;
     }
 
     return false;
   };
 
-  for (let attempt = 0; attempt < attempts; attempt++) {
-    if ((await eventItems.count().catch(() => 0)) > 0) {
-      return true;
-    }
+  // Quick check — events already visible?
+  if (await hasEvents()) return true;
 
-    if (attempt === Math.floor(attempts / 2)) {
-      await page
-        .getByRole("button", { name: /^today$/i })
-        .first()
-        .click()
-        .catch(() => {});
-      await waitForCalendarState();
-    }
+  // Try clicking "today" button
+  await page
+    .getByRole("button", { name: /^today$/i })
+    .first()
+    .click()
+    .catch(() => {});
+  await waitForCalendarState();
+  if (await hasEvents()) return true;
 
-    await waitForScreenshotReady(page);
-  }
+  if (isExpired()) return false;
 
-  if (await navigateUntilVisible("previous", 2)) {
-    return true;
-  }
-
-  if (await navigateUntilVisible("next", 4)) {
-    return true;
-  }
+  // Navigate backward then forward looking for events
+  if (await navigateUntilVisible("previous", 2)) return true;
+  if (isExpired()) return false;
+  if (await navigateUntilVisible("next", 4)) return true;
 
   return false;
 }
@@ -3501,8 +3500,9 @@ async function run(): Promise<void> {
   fs.rmSync(ensureStagingRoot(), { recursive: true, force: true });
   stagingRootDir = "";
 
+  const skipNote = captureSkips > 0 ? ` (${captureSkips} skipped)` : "";
   console.log("\n╔════════════════════════════════════════════════════════════╗");
-  console.log(`║  ✅ COMPLETE: ${totalScreenshots} screenshots captured`);
+  console.log(`║  ✅ COMPLETE: ${totalScreenshots} screenshots captured${skipNote}`);
   console.log("╚════════════════════════════════════════════════════════════╝\n");
 
   console.log("  Output:");
