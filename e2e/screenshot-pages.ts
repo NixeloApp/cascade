@@ -218,6 +218,13 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-project-[^-]+-board-filter-active$/, "06-board", "-filter-active"],
   [/^filled-project-[^-]+-board-display-properties$/, "06-board", "-display-properties"],
   [/^filled-project-[^-]+-board-peek-mode$/, "06-board", "-peek-mode"],
+  [/^filled-project-[^-]+-board-sprint-selector$/, "06-board", "-sprint-selector"],
+  [
+    /^filled-project-[^-]+-create-issue-create-another$/,
+    "06-board",
+    "-create-issue-create-another",
+  ],
+  [/^filled-project-[^-]+-create-issue-validation$/, "06-board", "-create-issue-validation"],
   // Document editor: filled-document-editor → 10-editor
   [/^filled-document-editor$/, "10-editor", ""],
   [/^filled-document-editor-slash-menu$/, "10-editor", "-slash-menu"],
@@ -2111,6 +2118,90 @@ async function screenshotFilledStates(
       await screenshotBoardModals(page, orgSlug, projectKey, firstIssueKey, p);
     }
 
+    // Create issue — "create another" toggle
+    if (shouldCapture(p, `project-${normalizedProjectKey}-create-issue-create-another`)) {
+      await runCaptureStep("create issue create-another toggle", async () => {
+        const boardUrl = `/${orgSlug}/projects/${projectKey}/board`;
+        await page
+          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+          .catch(() => {});
+        await waitForExpectedContent(page, boardUrl, "board");
+        await waitForScreenshotReady(page);
+        const projectsPage = new ProjectsPage(page, orgSlug);
+        await dismissAllDialogs(page);
+        await projectsPage.openCreateIssueModal();
+        await waitForScreenshotReady(page);
+        // Toggle "Create another" switch
+        const toggle = page.getByLabel(/create another/i);
+        await toggle.waitFor({ state: "visible", timeout: 5000 });
+        await toggle.click();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(
+          page,
+          p,
+          `project-${normalizedProjectKey}-create-issue-create-another`,
+        );
+        await dismissIfOpen(page, projectsPage.createIssueModal);
+      });
+    }
+
+    // Create issue — form validation errors (submit with empty title)
+    if (shouldCapture(p, `project-${normalizedProjectKey}-create-issue-validation`)) {
+      await runCaptureStep("create issue validation errors", async () => {
+        const boardUrl = `/${orgSlug}/projects/${projectKey}/board`;
+        await page
+          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+          .catch(() => {});
+        await waitForExpectedContent(page, boardUrl, "board");
+        await waitForScreenshotReady(page);
+        const projectsPage = new ProjectsPage(page, orgSlug);
+        await dismissAllDialogs(page);
+        await projectsPage.openCreateIssueModal();
+        await waitForScreenshotReady(page);
+        // Click Create without filling title
+        const submitBtn = page.getByRole("button", { name: /^create$/i }).first();
+        await submitBtn.waitFor({ state: "visible", timeout: 5000 });
+        await submitBtn.click();
+        await waitForScreenshotReady(page);
+        // Wait for validation error text to appear
+        await page
+          .getByText(/required|title is required|cannot be empty/i)
+          .first()
+          .waitFor({ state: "visible", timeout: 3000 })
+          .catch(() => {});
+        await waitForScreenshotReady(page);
+        await captureCurrentView(
+          page,
+          p,
+          `project-${normalizedProjectKey}-create-issue-validation`,
+        );
+        await dismissIfOpen(page, projectsPage.createIssueModal);
+      });
+    }
+
+    // Sprint selector dropdown (on board)
+    if (shouldCapture(p, `project-${normalizedProjectKey}-board-sprint-selector`)) {
+      await runCaptureStep("board sprint selector", async () => {
+        const boardUrl = `/${orgSlug}/projects/${projectKey}/board`;
+        await page
+          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+          .catch(() => {});
+        await waitForExpectedContent(page, boardUrl, "board");
+        await waitForScreenshotReady(page);
+        const sprintSelect = page
+          .getByRole("combobox")
+          .filter({ hasText: /sprint|active/i })
+          .first();
+        await sprintSelect.waitFor({ state: "visible", timeout: 5000 });
+        await sprintSelect.click();
+        // Wait for dropdown options
+        await page.getByRole("option").first().waitFor({ state: "visible", timeout: 3000 });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, p, `project-${normalizedProjectKey}-board-sprint-selector`);
+        await page.keyboard.press("Escape");
+      });
+    }
+
     // Board interactive states
     if (
       shouldCaptureAny(p, [
@@ -3201,6 +3292,9 @@ const DRY_RUN_PAGES = [
   "filled-project-PROJ-board-filter-active",
   "filled-project-PROJ-board-display-properties",
   "filled-project-PROJ-board-peek-mode",
+  "filled-project-PROJ-board-sprint-selector",
+  "filled-project-PROJ-create-issue-create-another",
+  "filled-project-PROJ-create-issue-validation",
   // Filled states — sprint interactive states
   "filled-project-PROJ-sprints-burndown",
   "filled-project-PROJ-sprints-burnup",

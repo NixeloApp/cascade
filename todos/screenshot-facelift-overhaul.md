@@ -193,13 +193,13 @@ Beyond page loads — capture the states users actually see during interaction.
 - [ ] **WIP limit warning** — column at/over WIP limit with visual indicator
 - [x] **Filter bar active** — board with Priority "High" filter applied
 - [x] **Display properties toggle open** — toolbar dropdown showing property checkboxes
-- [ ] **Sprint selector dropdown** — sprint picker open on board
+- [x] **Sprint selector dropdown** — open sprint combobox on board, capture dropdown
 
 ### Issue states
 
 - [ ] **Issue form with draft restoration banner** — needs localStorage draft + re-open
 - [ ] **Issue form with duplicate detection** — needs similar issue titles in seed
-- [ ] **Issue form "create more" toggle active** — simple switch, but modal must be open
+- [x] **Issue form "create more" toggle active** — open create issue modal, toggle "Create another" switch
 - [ ] **Issue inline editing** — needs issue detail page interaction
 - [x] **Issue peek/side panel mode** — toggle view mode on board, click issue card, capture side panel
 - [ ] **Label creation popover** — needs label creation flow in issue form
@@ -268,7 +268,7 @@ Beyond page loads — capture the states users actually see during interaction.
 - [ ] **Empty states** for every major section (already captured in empty-* screenshots)
 - [ ] **Loading skeletons** — capture a page mid-load with skeleton UI visible (requires timing control)
 - [ ] **Toast notification** — success and error toast examples
-- [ ] **Form validation errors** — at least one form with field-level errors visible
+- [x] **Form validation errors** — submit create issue with empty title, capture validation error
 
 ---
 
