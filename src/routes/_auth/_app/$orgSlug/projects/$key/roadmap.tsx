@@ -1,10 +1,14 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
 import { PageContent, PageError } from "@/components/layout";
-import { RoadmapView } from "@/components/RoadmapView";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useProjectByKey } from "@/hooks/useProjectByKey";
+
+const RoadmapView = lazy(() =>
+  import("@/components/RoadmapView").then((m) => ({ default: m.RoadmapView })),
+);
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/projects/$key/roadmap")({
   component: RoadmapPage,
@@ -35,10 +39,12 @@ function RoadmapPage() {
   const activeSprint = sprints?.find((s: Doc<"sprints">) => s.status === "active");
 
   return (
-    <RoadmapView
-      projectId={project._id}
-      sprintId={activeSprint?._id as Id<"sprints"> | undefined}
-      canEdit={canEdit}
-    />
+    <Suspense fallback={<PageContent isLoading>{null}</PageContent>}>
+      <RoadmapView
+        projectId={project._id}
+        sprintId={activeSprint?._id as Id<"sprints"> | undefined}
+        canEdit={canEdit}
+      />
+    </Suspense>
   );
 }

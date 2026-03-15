@@ -1,9 +1,13 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { CalendarView } from "@/components/Calendar/CalendarView";
+import { lazy, Suspense, useState } from "react";
 import { PageContent } from "@/components/layout";
+
+const CalendarView = lazy(() =>
+  import("@/components/Calendar/CalendarView").then((m) => ({ default: m.CalendarView })),
+);
+
 import { Flex } from "@/components/ui/Flex";
 import {
   Select,
@@ -92,12 +96,14 @@ function OrganizationCalendarPage() {
           </Select>
         </Flex>
       </Flex>
-      <CalendarView
-        organizationId={organizationId}
-        workspaceId={selectedWorkspaceId === "all" ? undefined : selectedWorkspaceId}
-        teamId={selectedTeamId === "all" ? undefined : selectedTeamId}
-        colorByScope={colorByScope}
-      />
+      <Suspense fallback={<PageContent isLoading>{null}</PageContent>}>
+        <CalendarView
+          organizationId={organizationId}
+          workspaceId={selectedWorkspaceId === "all" ? undefined : selectedWorkspaceId}
+          teamId={selectedTeamId === "all" ? undefined : selectedTeamId}
+          colorByScope={colorByScope}
+        />
+      </Suspense>
     </Flex>
   );
 }

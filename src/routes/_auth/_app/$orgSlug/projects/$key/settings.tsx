@@ -1,8 +1,13 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
 import { PageContent, PageError, PageLayout } from "@/components/layout";
-import { ProjectSettings } from "@/components/ProjectSettings";
 import { ROUTES } from "@/config/routes";
+
+const ProjectSettings = lazy(() =>
+  import("@/components/ProjectSettings").then((m) => ({ default: m.ProjectSettings })),
+);
+
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useProjectByKey } from "@/hooks/useProjectByKey";
@@ -51,18 +56,20 @@ function SettingsPage() {
 
   return (
     <PageLayout>
-      <ProjectSettings
-        projectId={project._id}
-        name={project.name}
-        projectKey={project.key}
-        description={project.description}
-        workflowStates={safeWorkflowStates}
-        members={safeMembers}
-        createdBy={project.createdBy}
-        ownerId={project.ownerId}
-        isOwner={project.ownerId === user?._id || project.createdBy === user?._id}
-        orgSlug={orgSlug}
-      />
+      <Suspense fallback={<PageContent isLoading>{null}</PageContent>}>
+        <ProjectSettings
+          projectId={project._id}
+          name={project.name}
+          projectKey={project.key}
+          description={project.description}
+          workflowStates={safeWorkflowStates}
+          members={safeMembers}
+          createdBy={project.createdBy}
+          ownerId={project.ownerId}
+          isOwner={project.ownerId === user?._id || project.createdBy === user?._id}
+          orgSlug={orgSlug}
+        />
+      </Suspense>
     </PageLayout>
   );
 }
