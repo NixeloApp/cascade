@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { usePaginatedQuery } from "convex/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CreateIssueModal, IssueCard } from "@/components/IssueDetail";
 import { IssueDetailViewer } from "@/components/IssueDetailViewer";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Plus, SearchX } from "@/lib/icons";
 
@@ -31,6 +32,25 @@ function AllIssuesPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const { organizationId } = useOrganization();
+
+  const projects = useAuthenticatedQuery(
+    api.projects.getCurrentUserProjects,
+    organizationId ? { organizationId } : "skip",
+  );
+
+  // Collect unique workflow states across all projects
+  const statusOptions = useMemo(() => {
+    if (!projects?.page) return [];
+    const seen = new Map<string, string>();
+    for (const project of projects.page) {
+      for (const state of project.workflowStates ?? []) {
+        if (!seen.has(state.id)) {
+          seen.set(state.id, state.name);
+        }
+      }
+    }
+    return Array.from(seen, ([id, name]) => ({ id, name }));
+  }, [projects?.page]);
 
   const {
     results: issues,
@@ -93,9 +113,11 @@ function AllIssuesPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="todo">To Do</SelectItem>
-              <SelectItem value="inprogress">In Progress</SelectItem>
-              <SelectItem value="done">Done</SelectItem>
+              {statusOptions.map((opt) => (
+                <SelectItem key={opt.id} value={opt.id}>
+                  {opt.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </Flex>

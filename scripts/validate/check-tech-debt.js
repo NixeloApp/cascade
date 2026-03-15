@@ -24,11 +24,11 @@ export function run() {
   ];
 
   // Only match TODO/FIXME/HACK at start of comment (after // or *)
-  // Avoids false positives like "todo" status or "xxx" in URLs
+  // Case-insensitive to catch // todo, // Todo, etc.
   const DEBT_PATTERNS = [
-    { regex: /(?:\/\/|\/\*|\*)\s*TODO\b/, type: "TODO" },
-    { regex: /(?:\/\/|\/\*|\*)\s*FIXME\b/, type: "FIXME" },
-    { regex: /(?:\/\/|\/\*|\*)\s*HACK\b/, type: "HACK" },
+    { regex: /(?:\/\/|\/\*|\*)\s*TODO\b/i, type: "TODO" },
+    { regex: /(?:\/\/|\/\*|\*)\s*FIXME\b/i, type: "FIXME" },
+    { regex: /(?:\/\/|\/\*|\*)\s*HACK\b/i, type: "HACK" },
   ];
 
   let totalCount = 0;
