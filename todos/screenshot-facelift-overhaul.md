@@ -165,9 +165,9 @@ The app has ~65 routes. The screenshot tool currently covers ~20. Every route ne
 - [x] **Create event modal** — calendar page → "Add Event" button
 - [x] **Create team modal** — workspace detail → "Create team" button
 - [x] **Create workspace modal** — workspaces list → "Create Workspace" button
-- [x] **Dashboard customize modal** — dashboard → "Customize" button
-- [x] **Import/export modal** — board page → "Import / Export" button
-- [x] **Manual time entry modal** — time tracking → "Add Time Entry" button
+- [ ] **Dashboard customize modal** — wired but "Customize" button not rendered on dashboard for screenshot user. May need different page header configuration.
+- [ ] **Import/export modal** — wired but skips (board toolbar doesn't hydrate, same root cause as board states)
+- [ ] **Manual time entry modal** — wired but "Add Time Entry" button not visible. May need time tracking data or different page state.
 
 ### Remaining modals (need special setup or complex triggers)
 
@@ -187,13 +187,15 @@ Beyond page loads — capture the states users actually see during interaction.
 
 ### Board / Kanban states
 
-- [x] **Swimlane modes** — Priority, Assignee, Type, Label grouping (4 screenshots)
-- [x] **Column collapsed** — at least one column collapsed (with auto-expand after)
+- [ ] **Swimlane modes** — wired but board toolbar doesn't render in time; board data hydration too slow (~25s+), toolbar buttons not visible. Needs board query optimization or longer timeout.
+- [x] **Column collapsed** — captured when toolbar loads
 - [ ] **Column empty** — a column with no issues showing empty state
 - [ ] **WIP limit warning** — column at/over WIP limit with visual indicator
-- [x] **Filter bar active** — board with Priority "High" filter applied
-- [x] **Display properties toggle open** — toolbar dropdown showing property checkboxes
-- [x] **Sprint selector dropdown** — open sprint combobox on board, capture dropdown
+- [ ] **Filter bar active** — wired but skips (priority button not visible after 8s)
+- [ ] **Display properties toggle open** — wired but skips (properties button not visible after 25s)
+- [ ] **Sprint selector dropdown** — wired but skips (sprint combobox not visible — may not exist on board route without active sprint)
+
+> **Root cause:** Board toolbar (`BoardToolbar`) only renders after Convex data queries complete. The screenshot user's board takes 25s+ to hydrate, leaving toolbar buttons invisible within wait timeouts. Fix: optimize board Convex queries or seed data to be lighter.
 
 ### Issue states
 
