@@ -15,8 +15,8 @@ import { c, ROOT, relPath, walkDir } from "./utils.js";
 // Only UI components can use raw rounded-* classes
 const ALLOWED_DIRS = ["src/components/ui/", "src/index.css"];
 
-// Match any rounded-* class (standard, custom tokens, and arbitrary values)
-const ROUNDED_PATTERN = /\brounded(-\w+|-\[.+?\])\b/g;
+// Match any rounded class: rounded, rounded-lg, rounded-tl-md, rounded-[inherit], etc.
+const ROUNDED_PATTERN = /\brounded(?:-(?:\[[^\]]+\]|[\w]+(?:-[\w]+)*))*\b/g;
 
 // Files with known violations - baseline to track and fix over time
 const BASELINE_FILES = new Set([
@@ -32,6 +32,12 @@ const BASELINE_FILES = new Set([
   "src/lib/kanban-dnd.ts",
   // Raw DOM strings (outside React rendering)
   "src/lib/serviceWorker.ts",
+  // Bare "rounded" class on divs (need component radius prop)
+  "src/components/ErrorBoundary.tsx",
+  "src/components/IssueDetailModal.tsx",
+  "src/components/Settings/GitHubIntegration.tsx",
+  "src/components/Settings/SlackIntegration.tsx",
+  "src/components/TimeTracker/BillingReport.tsx",
   // Small badges with rounded-lg (need Badge radius prop)
   "src/routes/invite.$token.tsx",
 ]);
@@ -88,9 +94,6 @@ export function run() {
       // Find all rounded-* matches
       const matches = line.matchAll(ROUNDED_PATTERN);
       for (const match of matches) {
-        // Skip if it's just "rounded" without suffix (not a valid class anyway)
-        if (match[0] === "rounded") continue;
-
         reportError(filePath, i + 1, match[0]);
       }
     }
