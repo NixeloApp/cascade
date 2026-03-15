@@ -78,6 +78,9 @@ const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
   "filled-clients": "26-clients",
   "filled-time-tracking-manual-entry-modal": "22-time-tracking",
   "filled-sidebar-collapsed": "04-dashboard",
+  "filled-notification-popover": "21-notifications",
+  "filled-notifications-archived": "21-notifications",
+  "filled-notifications-filter-active": "21-notifications",
   "filled-404-page": "40-error",
   "filled-authentication": "31-authentication",
   "filled-add-ons": "32-add-ons",
@@ -244,6 +247,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-team-[^-]+-settings$/, "29-team-detail", "-settings"],
   // Project roadmap: filled-project-xxx-roadmap → 35-roadmap
   [/^filled-project-[^-]+-roadmap$/, "35-roadmap", ""],
+  [/^filled-project-[^-]+-roadmap-timeline-selector$/, "35-roadmap", "-timeline-selector"],
   // Project activity: filled-project-xxx-activity → 36-activity
   [/^filled-project-[^-]+-activity$/, "36-activity", ""],
   // Project billing: filled-project-xxx-billing → 37-billing
@@ -2559,6 +2563,105 @@ async function screenshotFilledStates(
       await captureCurrentView(page, p, "404-page");
     });
   }
+
+  // ── Roadmap interactive states ──
+
+  if (projectKey && shouldCapture(p, `project-${normalizedProjectKey}-roadmap-timeline-selector`)) {
+    await runCaptureStep("roadmap timeline selector", async () => {
+      const roadmapUrl = `/${orgSlug}/projects/${projectKey}/roadmap`;
+      await page
+        .goto(`${BASE_URL}${roadmapUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+        .catch(() => {});
+      await waitForExpectedContent(page, roadmapUrl, "roadmap");
+      await waitForScreenshotReady(page);
+      // Click the timeline span select trigger (shows "3 Months" by default)
+      const selectTrigger = page
+        .getByRole("combobox")
+        .filter({ hasText: /month|year/i })
+        .first();
+      await selectTrigger.waitFor({ state: "visible", timeout: 5000 });
+      await selectTrigger.click();
+      // Wait for dropdown options
+      await page
+        .getByRole("option", { name: /1 month/i })
+        .first()
+        .waitFor({ state: "visible", timeout: 3000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(
+        page,
+        p,
+        `project-${normalizedProjectKey}-roadmap-timeline-selector`,
+      );
+      // Close dropdown
+      await page.keyboard.press("Escape");
+    });
+  }
+
+  // ── Notification interactive states ──
+
+  // Notification popover (bell icon in header)
+  if (shouldCapture(p, "notification-popover")) {
+    await runCaptureStep("notification popover", async () => {
+      // Navigate to dashboard to have a clean header
+      await page
+        .goto(`${BASE_URL}/${orgSlug}/dashboard`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await waitForExpectedContent(page, `/${orgSlug}/dashboard`, "dashboard");
+      await waitForScreenshotReady(page);
+      await dismissAllDialogs(page);
+      const bellButton = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_BUTTON);
+      await bellButton.waitFor({ state: "visible", timeout: 5000 });
+      await bellButton.click();
+      const panel = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_PANEL);
+      await panel.waitFor({ state: "visible", timeout: 5000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "notification-popover");
+      // Close popover
+      await page.keyboard.press("Escape");
+    });
+  }
+
+  // Notifications page — archived tab
+  if (shouldCapture(p, "notifications-archived")) {
+    await runCaptureStep("notifications archived tab", async () => {
+      await page
+        .goto(`${BASE_URL}/${orgSlug}/notifications`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await waitForExpectedContent(page, `/${orgSlug}/notifications`, "notifications");
+      await waitForScreenshotReady(page);
+      const archivedTab = page.getByRole("tab", { name: /archived/i });
+      await archivedTab.waitFor({ state: "visible", timeout: 5000 });
+      await archivedTab.click();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "notifications-archived");
+    });
+  }
+
+  // Notifications page — filter active (Mentions filter)
+  if (shouldCapture(p, "notifications-filter-active")) {
+    await runCaptureStep("notifications filter active", async () => {
+      await page
+        .goto(`${BASE_URL}/${orgSlug}/notifications`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await waitForExpectedContent(page, `/${orgSlug}/notifications`, "notifications");
+      await waitForScreenshotReady(page);
+      // Click the Mentions filter button
+      const mentionsFilter = page.getByRole("button", { name: /^mentions$/i }).first();
+      await mentionsFilter.waitFor({ state: "visible", timeout: 5000 });
+      await mentionsFilter.click();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "notifications-filter-active");
+    });
+  }
 }
 
 async function screenshotDashboardModals(
@@ -3089,6 +3192,12 @@ const DRY_RUN_PAGES = [
   "filled-team-TEAM-calendar",
   "filled-team-TEAM-wiki",
   "filled-team-TEAM-settings",
+  // Filled states — roadmap interactive states
+  "filled-project-PROJ-roadmap-timeline-selector",
+  // Filled states — notification interactive states
+  "filled-notification-popover",
+  "filled-notifications-archived",
+  "filled-notifications-filter-active",
   // Filled states — navigation / shell states
   "filled-sidebar-collapsed",
   // Error / edge states

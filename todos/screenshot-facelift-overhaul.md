@@ -232,18 +232,18 @@ Beyond page loads — capture the states users actually see during interaction.
 
 ### Gantt / Roadmap states
 
-- [ ] **Roadmap with dependency lines** — SVG arrows between related issues
-- [ ] **Roadmap timeline span selector** — 1/3/6/12 month options visible
-- [ ] **Roadmap block resize** — drag handle visible on timeline bar edges
+- [ ] **Roadmap with dependency lines** — needs issue relations in seed data
+- [x] **Roadmap timeline span selector** — click combobox, show 1/3/6/12 month options
+- [ ] **Roadmap block resize** — drag handle state, hard to capture statically
 
 ### Notification states
 
-- [ ] **Notification bell with unread badge** — header bell icon with count
-- [ ] **Notification popover open** — grouped by date (Today, Yesterday, This Week, Older)
-- [ ] **Notification snooze popover** — duration options visible (1h, 3h, tomorrow, next week)
-- [ ] **Notification filters active** — type filter (All, Mentions, Assigned, Comments, Updates)
-- [ ] **Notifications page — inbox tab** — full-page notification list
-- [ ] **Notifications page — archived tab** — archived notifications
+- [ ] **Notification bell with unread badge** — needs unread notifications in seed data
+- [x] **Notification popover open** — click bell button, capture panel
+- [ ] **Notification snooze popover** — needs existing notification to snooze
+- [x] **Notification filters active** — click "Mentions" filter on notifications page
+- [ ] **Notifications page — inbox tab** — already captured as base notifications page
+- [x] **Notifications page — archived tab** — click archived tab on notifications page
 
 ### Settings states
 
