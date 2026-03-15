@@ -573,7 +573,6 @@ async function openOmnibox(page: Page, trigger: Locator, dialog: Locator): Promi
     .waitFor({ state: "visible", timeout: 5000 })
     .catch(() => {});
   await waitForScreenshotReady(page);
-  await page.waitForTimeout(250);
 }
 
 function isProjectBoardUrl(url: string): boolean {
@@ -696,7 +695,7 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
       .first()
       .waitFor({ state: "visible", timeout: 12000 })
       .catch(() => {});
-    await page.waitForTimeout(900);
+    await waitForScreenshotReady(page);
     return;
   }
 
@@ -706,7 +705,7 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
       .first()
       .waitFor({ state: "visible", timeout: 12000 })
       .catch(() => {});
-    await page.waitForTimeout(350);
+    await waitForScreenshotReady(page);
   }
 }
 
@@ -778,7 +777,7 @@ async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<bool
       await waitForCalendarState();
     }
 
-    await page.waitForTimeout(500);
+    await waitForScreenshotReady(page);
   }
 
   if (await navigateUntilVisible("previous", 2)) {
@@ -1799,10 +1798,10 @@ async function screenshotFilledStates(
             continue;
           }
           const toggleItem = page.getByTestId(calendarModeTestIds[mode]);
-          for (let attempt = 0; attempt < 3; attempt++) {
-            if ((await toggleItem.count()) > 0) break;
-            await page.waitForTimeout(500);
-          }
+          await toggleItem
+            .first()
+            .waitFor({ state: "visible", timeout: 5000 })
+            .catch(() => {});
           if ((await toggleItem.count()) === 0) {
             throw new Error(`[${p}] calendar-${mode} toggle not found after retries`);
           }
