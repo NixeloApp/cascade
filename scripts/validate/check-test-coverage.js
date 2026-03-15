@@ -41,6 +41,7 @@ const SKIP_PATTERNS = [
   /convex\/ai\//, // Requires external AI services
   /convex\/email\//, // Requires external email service
   /convex\/slackCommandsCore\.ts$/, // Requires external Slack service
+  /shadcn-calendar\//, // Internal calendar subcomponents (tested via CalendarView integration)
 ];
 
 // Minimum lines for a file to require a test
