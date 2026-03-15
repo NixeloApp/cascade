@@ -25,8 +25,8 @@
 
 ### Staging & output
 
-- [ ] Add a `--dry-run` flag that lists what would be captured without launching a browser — useful for verifying filter logic.
-- [ ] Add timing per screenshot to the console output (helps identify slow pages).
+- [x] Add a `--dry-run` flag that lists what would be captured without launching a browser — useful for verifying filter logic. Shows 74 targets per config (296 total across 4 configs).
+- [x] Add timing per screenshot to the console output (helps identify slow pages). Shows `(NNNms)` after each capture.
 
 ---
 

@@ -135,6 +135,7 @@ async function injectAuthTokens(
 
 interface CliOptions {
   headless: boolean;
+  dryRun: boolean;
   configFilters: Set<string> | null;
   specFilters: string[];
   matchFilters: string[];
@@ -158,6 +159,7 @@ let stagingRootDir = "";
 let captureFailures = 0;
 let cliOptions: CliOptions = {
   headless: true,
+  dryRun: false,
   configFilters: null,
   specFilters: [],
   matchFilters: [],
@@ -268,6 +270,7 @@ function parseCliOptions(args: string[]): CliOptions {
 
   return {
     headless: !args.includes("--headed"),
+    dryRun: args.includes("--dry-run"),
     configFilters: configFilters.length > 0 ? new Set(configFilters) : null,
     specFilters,
     matchFilters,
@@ -291,6 +294,7 @@ function printUsage(): void {
   console.log(
     "  --match <list>        Filter by page id/name/spec substring, e.g. calendar,event-modal",
   );
+  console.log("  --dry-run             List what would be captured without launching a browser");
   console.log("  --help                Show this help");
 }
 
@@ -512,6 +516,15 @@ async function takeScreenshot(
   const n = nextIndex(prefix);
   const num = String(n).padStart(2, "0");
   const finalPath = getFinalScreenshotPath(prefix, name);
+  const relativePath = path.relative(process.cwd(), finalPath);
+
+  if (cliOptions.dryRun) {
+    totalScreenshots++;
+    console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}`);
+    return;
+  }
+
+  const startTime = performance.now();
   const screenshotPath = getStagedScreenshotPath(finalPath);
 
   try {
@@ -525,9 +538,8 @@ async function takeScreenshot(
   await page.screenshot({ path: screenshotPath });
   totalScreenshots++;
 
-  // Show relative path for clarity
-  const relativePath = path.relative(process.cwd(), finalPath);
-  console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}`);
+  const elapsed = Math.round(performance.now() - startTime);
+  console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}  (${elapsed}ms)`);
 }
 
 async function captureCurrentView(page: Page, prefix: string, name: string): Promise<void> {
@@ -538,14 +550,23 @@ async function captureCurrentView(page: Page, prefix: string, name: string): Pro
   const n = nextIndex(prefix);
   const num = String(n).padStart(2, "0");
   const finalPath = getFinalScreenshotPath(prefix, name);
+  const relativePath = path.relative(process.cwd(), finalPath);
+
+  if (cliOptions.dryRun) {
+    totalScreenshots++;
+    console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}`);
+    return;
+  }
+
+  const startTime = performance.now();
   const screenshotPath = getStagedScreenshotPath(finalPath);
 
   await waitForScreenshotReady(page);
   await page.screenshot({ path: screenshotPath });
   totalScreenshots++;
 
-  const relativePath = path.relative(process.cwd(), finalPath);
-  console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}`);
+  const elapsed = Math.round(performance.now() - startTime);
+  console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}  (${elapsed}ms)`);
 }
 
 async function runCaptureStep(label: string, fn: () => Promise<void>): Promise<void> {
@@ -2459,6 +2480,129 @@ async function captureForConfig(
 }
 
 // ---------------------------------------------------------------------------
+// Dry run
+// ---------------------------------------------------------------------------
+
+/** Known page IDs captured during a full run (excluding dynamic project/workspace/team slugs). */
+const DRY_RUN_PAGES = [
+  // Public
+  "public-landing",
+  "public-signin",
+  "public-signup",
+  "public-forgot-password",
+  "public-verify-2fa",
+  "public-invite-invalid",
+  // Empty states
+  "empty-dashboard",
+  "empty-projects",
+  "empty-issues",
+  "empty-documents",
+  "empty-documents-templates",
+  "empty-workspaces",
+  "empty-time-tracking",
+  "empty-notifications",
+  "empty-my-issues",
+  "empty-invoices",
+  "empty-clients",
+  "empty-settings",
+  "empty-settings-profile",
+  // Filled states — top-level
+  "filled-dashboard",
+  "filled-projects",
+  "filled-issues",
+  "filled-documents",
+  "filled-documents-templates",
+  "filled-workspaces",
+  "filled-time-tracking",
+  "filled-notifications",
+  "filled-my-issues",
+  "filled-org-calendar",
+  "filled-org-analytics",
+  "filled-invoices",
+  "filled-clients",
+  "filled-settings",
+  "filled-settings-profile",
+  "filled-authentication",
+  "filled-add-ons",
+  "filled-assistant",
+  "filled-mcp-server",
+  // Filled states — dashboard modals
+  "filled-dashboard-omnibox",
+  "filled-dashboard-advanced-search-modal",
+  "filled-dashboard-shortcuts-modal",
+  "filled-dashboard-time-entry-modal",
+  // Filled states — projects modals
+  "filled-projects-create-project-modal",
+  // Filled states — project sub-pages (use PROJ as placeholder key)
+  "filled-project-PROJ-board",
+  "filled-project-PROJ-backlog",
+  "filled-project-PROJ-inbox",
+  "filled-project-PROJ-sprints",
+  "filled-project-PROJ-roadmap",
+  "filled-project-PROJ-calendar",
+  "filled-project-PROJ-activity",
+  "filled-project-PROJ-analytics",
+  "filled-project-PROJ-billing",
+  "filled-project-PROJ-timesheet",
+  "filled-project-PROJ-settings",
+  "filled-project-PROJ-create-issue-modal",
+  "filled-project-PROJ-issue-detail-modal",
+  // Filled states — calendar modes
+  "filled-calendar-day",
+  "filled-calendar-week",
+  "filled-calendar-month",
+  "filled-calendar-event-modal",
+  // Filled states — issue detail
+  "filled-issue-PROJ-1",
+  // Filled states — document editor
+  "filled-document-editor",
+  // Filled states — workspace sub-pages (use WS as placeholder slug)
+  "filled-workspace-WS",
+  "filled-workspace-WS-backlog",
+  "filled-workspace-WS-calendar",
+  "filled-workspace-WS-sprints",
+  "filled-workspace-WS-dependencies",
+  "filled-workspace-WS-wiki",
+  "filled-workspace-WS-settings",
+  // Filled states — team sub-pages (use TEAM as placeholder slug)
+  "filled-team-TEAM",
+  "filled-team-TEAM-board",
+  "filled-team-TEAM-calendar",
+  "filled-team-TEAM-wiki",
+  "filled-team-TEAM-settings",
+];
+
+function dryRunEnumerate(
+  configs: Array<{ viewport: keyof typeof VIEWPORTS; theme: "dark" | "light" }>,
+): void {
+  let count = 0;
+  for (const config of configs) {
+    const configName = `${config.viewport}-${config.theme}`;
+    currentConfigPrefix = configName;
+    console.log(
+      `  📸 ${configName.toUpperCase()} (${VIEWPORTS[config.viewport].width}x${VIEWPORTS[config.viewport].height})`,
+    );
+
+    for (const pageId of DRY_RUN_PAGES) {
+      const [prefix, ...rest] = pageId.split("-");
+      const name = rest.join("-");
+      if (!shouldCapture(prefix, name)) {
+        continue;
+      }
+      const target = resolveCaptureTarget(prefix, name);
+      const specInfo = target.specFolder ? `→ ${target.specFolder}/` : "→ e2e/screenshots/";
+      console.log(`    [${prefix}] ${name}  ${specInfo}`);
+      count++;
+    }
+    console.log("");
+  }
+
+  console.log(
+    `  Total: ${count} screenshots would be captured across ${configs.length} config(s).\n`,
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -2491,6 +2635,12 @@ async function run(): Promise<void> {
   }
   if (cliOptions.matchFilters.length > 0) {
     console.log(`  Match filter: ${cliOptions.matchFilters.join(", ")}`);
+  }
+
+  if (cliOptions.dryRun) {
+    console.log("\n  🏃 DRY RUN — listing targets without launching a browser\n");
+    dryRunEnumerate(selectedConfigs);
+    return;
   }
 
   const headless = cliOptions.headless;
