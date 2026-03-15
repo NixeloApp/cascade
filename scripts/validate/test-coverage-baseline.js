@@ -1,18 +1,4 @@
 export const TEST_COVERAGE_BASELINE = [
-  "convex/authWrapper.ts",
-  "convex/invoicesActions.ts",
-  "src/components/AdvancedSearchModal.tsx",
-  "src/components/App/AppHeader.tsx",
-  "src/components/AttachmentUpload.tsx",
-  "src/components/Auth/AuthPageLayout.tsx",
-  "src/components/Auth/EmailVerificationForm.tsx",
   "src/components/Auth/EmailVerificationRequired.tsx",
-  "src/components/Auth/ForgotPasswordForm.tsx",
-  "src/components/Auth/ResetPasswordForm.tsx",
-  "src/components/Auth/SignInForm.tsx",
-  "src/components/Auth/SignUpForm.tsx",
-  "src/components/Automation/AutomationRuleForm.tsx",
-  "src/components/Calendar/CalendarView.tsx",
   "src/components/Calendar/EventDetailsModal.tsx",
-  "src/components/Calendar/UnifiedCalendarView.tsx",
 ];

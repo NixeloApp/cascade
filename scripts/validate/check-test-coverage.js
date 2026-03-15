@@ -43,6 +43,8 @@ const SKIP_PATTERNS = [
   /convex\/slackCommandsCore\.ts$/, // Requires external Slack service
   /shadcn-calendar\//, // Internal calendar subcomponents (tested via CalendarView integration)
   /Plate\/.*Element\.tsx$/, // Plate element renderers (tested via editor integration)
+  /convex\/invoicesActions\.ts$/, // Node.js action, needs special runtime
+  /convex\/authWrapper\.ts$/, // Has 4 related test files (name mismatch with validator)
 ];
 
 // Minimum lines for a file to require a test
