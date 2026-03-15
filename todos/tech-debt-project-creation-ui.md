@@ -1,19 +1,11 @@
 # Tech Debt: Project Creation UI
 
 > **Priority:** P3
-> **Status:** Backlog
-> **File:** `src/components/App/AppSidebar.tsx:422`
+> **Status:** Complete
+> **File:** `src/components/App/AppSidebar.tsx`
 
-## Description
+## Completed
 
-Add project creation UI to the sidebar. Currently commented out.
-
-```typescript
-// const { mutate: createProject } = useAuthenticatedMutation(api.projects.createProject); // TODO: Add project creation UI
-```
-
-## Acceptance Criteria
-
-- [ ] Add "Create Project" button to sidebar
-- [ ] Implement project creation modal/form
-- [ ] Wire up to `api.projects.createProject` mutation
+- [x] Add "New Project" button in sidebar Workspaces section
+- [x] Wire to existing `CreateProjectFromTemplate` modal via `onCreateProject` prop
+- [x] Remove TODO comment
