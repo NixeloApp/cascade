@@ -1,57 +1,40 @@
 # Bundle Size Optimization
 
 > **Created:** 2026-03-14
-> **Priority:** P3
-> **Status:** Open
+> **Priority:** P0
+> **Status:** In Progress
 
-## Current State
+## Current State (after optimization)
 
-- **Main bundle:** 721KB gzip (2.4MB raw)
-- **Budget:** 730KB gzip
-- **Headroom:** ~9KB
+- **Vendor chunk:** 337KB gzip (was 722KB — 53% reduction)
+- **App chunk:** 388KB gzip (unchanged, needs route-level splitting)
+- **Editor chunk:** 135KB gzip (deferred, only loads on doc pages)
+- **Budget:** 500KB gzip vendor
 
-The main vendor chunk (`index-*.js`) contains almost all vendor dependencies in a single file. Code splitting is working for routes (Settings, PlateEditor, TimeTracking, Analytics are lazy-loaded), but the vendor bundle is monolithic.
+## Completed
 
-## Problem
+- [x] Split vendor chunk via `manualChunks`: react, convex, editor, radix, router, motion, icons, date-fns, dnd, collab
+- [x] Lazy-load Calendar route (defers framer-motion)
+- [x] Lazy-load Roadmap route (defers react-window)
+- [x] Lazy-load ProjectSettings route
+- [x] Brotli compression enabled
 
-The 721KB vendor bundle loads on initial page load, which is at the upper end of acceptable for a complex SPA. As features grow, this will exceed budget again.
-
-## Optimization Opportunities
+## Remaining Opportunities
 
 ### High Impact
-
-1. **Split vendor chunk** - Separate React, Convex, Radix UI, BlockNote, date-fns into individual chunks
-   - Use `manualChunks` in Vite config
-   - Allows better caching (React changes rarely vs app code)
-
-2. **Audit unused exports** - Check if tree-shaking is working correctly
-   - Run `npx vite-bundle-visualizer` to see what's actually bundled
-   - Look for barrel file imports that pull in everything
-
-3. **Lazy load heavy features** - Move more routes to dynamic imports
-   - Calendar page
-   - Roadmap view
-   - Admin settings
+1. **Lazy-load Board page** — KanbanBoard + FilterBar + SprintProgressBar are heavy but need URL search param integration
+2. **Lazy-load Assistant page** — Full page component, straightforward
+3. **Lazy-load Invoices page** — Full page component
 
 ### Medium Impact
-
-4. **Replace heavy deps** - Consider lighter alternatives
-   - `date-fns` → `dayjs` (smaller)
-   - Check if all Radix components are needed
-
-5. **Preload critical chunks** - Use `<link rel="modulepreload">` for important chunks
+4. **Audit barrel imports** — Check if `@/components/ui` barrel pulls in everything
+5. **Tree-shake icons** — Verify lucide-react only includes used icons
 
 ### Low Impact
-
-6. **Enable Brotli** - Already configured, verify CDN serves it (563KB vs 721KB gzip)
+6. **Preload critical chunks** — `<link rel="modulepreload">` for react, router, convex
 
 ## Acceptance Criteria
 
-- [ ] Main vendor chunk < 500KB gzip
+- [x] Vendor chunk < 500KB gzip (achieved: 337KB)
 - [ ] Total initial load < 600KB gzip
 - [ ] No regression in Lighthouse performance score
-
-## Notes
-
-- Current 721KB is acceptable for a complex SPA with real-time collab, rich text editor, calendar, etc.
-- Optimization is not urgent but should be addressed before adding more features
