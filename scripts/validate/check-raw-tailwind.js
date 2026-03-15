@@ -194,6 +194,7 @@ const RAW_TW_ESCAPE_HATCHES = [
   "cardVariants(",
   "cardRecipeVariants(",
   "getCardRecipeClassName(",
+  "getCardVariantClassName(",
   "buttonVariants(",
   "buttonChromeVariants(",
   "tabsTriggerVariants(",

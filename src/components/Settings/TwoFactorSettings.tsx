@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardVariantClassName } from "@/components/ui/Card";
 import { Dialog } from "@/components/ui/Dialog";
 import { Flex } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/form";
@@ -24,6 +24,7 @@ import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Copy, Key, ShieldCheck } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
+import { cn } from "@/lib/utils";
 
 type SetupStep = "idle" | "setup" | "verify" | "backup" | "complete";
 
@@ -53,17 +54,28 @@ function BackupCodesView({
           </AlertDescription>
         </Alert>
 
-        <Card padding="md" className="bg-ui-bg-secondary">
+        <div
+          className={cn(
+            getCardVariantClassName({ variant: "ghost", padding: "md" }),
+            "bg-ui-bg-secondary",
+          )}
+        >
           <Grid cols={2} gap="sm">
             {backupCodes.map((code) => (
-              <Card key={code} variant="outline" padding="sm" className="bg-ui-bg">
+              <div
+                key={code}
+                className={cn(
+                  getCardVariantClassName({ variant: "outline", padding: "sm" }),
+                  "bg-ui-bg",
+                )}
+              >
                 <Typography as="code" variant="mono" className="block text-center">
                   {code}
                 </Typography>
-              </Card>
+              </div>
             ))}
           </Grid>
-        </Card>
+        </div>
 
         <Flex gap="sm">
           <Button onClick={onCopy} variant="secondary">
@@ -108,26 +120,38 @@ function SetupWizardView({
           etc.)
         </Typography>
 
-        <Card padding="md" variant="ghost" radius="none">
+        <div
+          className={getCardVariantClassName({ variant: "ghost", padding: "md", radius: "none" })}
+        >
           <Stack align="center" gap="md">
             {otpauthUrl && (
-              <Card padding="md" className="bg-ui-bg">
+              <div
+                className={cn(
+                  getCardVariantClassName({ variant: "ghost", padding: "md" }),
+                  "bg-ui-bg",
+                )}
+              >
                 <QRCodeSVG value={otpauthUrl} size={200} />
-              </Card>
+              </div>
             )}
 
             <Stack align="center" gap="xs">
               <Typography variant="caption">Can&apos;t scan? Enter this code manually:</Typography>
-              <Card padding="sm" variant="flat">
+              <div className={getCardVariantClassName({ variant: "flat", padding: "sm" })}>
                 <Typography as="code" variant="mono" className="select-all">
                   {secret}
                 </Typography>
-              </Card>
+              </div>
             </Stack>
           </Stack>
-        </Card>
+        </div>
 
-        <Card padding="md" variant="ghost" radius="none" className="border-t border-ui-border">
+        <div
+          className={cn(
+            getCardVariantClassName({ variant: "ghost", padding: "md", radius: "none" }),
+            "border-t border-ui-border",
+          )}
+        >
           <Stack gap="sm">
             <Typography variant="label">
               Enter the 6-digit code from your authenticator app:
@@ -144,7 +168,7 @@ function SetupWizardView({
               </Button>
             </Flex>
           </Stack>
-        </Card>
+        </div>
 
         <Button variant="ghost" onClick={onCancel} className="self-start">
           Cancel Setup
@@ -297,11 +321,11 @@ export function TwoFactorSettings() {
   if (status === undefined) {
     return (
       <Card padding="lg">
-        <Card padding="md" variant="ghost">
+        <div className={getCardVariantClassName({ variant: "ghost", padding: "md" })}>
           <Flex align="center" justify="center">
             <LoadingSpinner size="md" />
           </Flex>
-        </Card>
+        </div>
       </Card>
     );
   }

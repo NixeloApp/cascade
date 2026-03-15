@@ -10,7 +10,7 @@ import { api } from "@convex/_generated/api";
 import { ArrowLeft, Bell, Building2, Clock, FileText, Kanban } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
@@ -21,6 +21,7 @@ import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
+import { cn } from "@/lib/utils";
 
 interface MemberOnboardingProps {
   onComplete: () => void;
@@ -176,11 +177,16 @@ export function MemberOnboarding({
       <Grid cols={1} colsSm={2} gap="md">
         <Card variant="soft" padding="md" hoverable>
           <Flex align="start" gap="md">
-            <Card recipe="onboardingMemberFeatureIconBlue" className="h-9 w-9 shrink-0">
+            <div
+              className={cn(
+                getCardRecipeClassName("onboardingMemberFeatureIconBlue"),
+                "h-9 w-9 shrink-0",
+              )}
+            >
               <Flex align="center" justify="center" className="h-full w-full">
                 <Icon icon={Kanban} size="md" className="text-palette-blue" />
               </Flex>
-            </Card>
+            </div>
             <Stack gap="none">
               <Typography variant="label">Work on Issues</Typography>
               <Typography variant="meta">Drag issues across the board as you progress</Typography>
@@ -190,11 +196,16 @@ export function MemberOnboarding({
 
         <Card variant="soft" padding="md" hoverable>
           <Flex align="start" gap="md">
-            <Card recipe="onboardingMemberFeatureIconSuccess" className="h-9 w-9 shrink-0">
+            <div
+              className={cn(
+                getCardRecipeClassName("onboardingMemberFeatureIconSuccess"),
+                "h-9 w-9 shrink-0",
+              )}
+            >
               <Flex align="center" justify="center" className="h-full w-full">
                 <Icon icon={FileText} size="md" className="text-status-success" />
               </Flex>
-            </Card>
+            </div>
             <Stack gap="none">
               <Typography variant="label">Collaborate on Docs</Typography>
               <Typography variant="meta">Edit documents together in real-time</Typography>
@@ -204,11 +215,16 @@ export function MemberOnboarding({
 
         <Card variant="soft" padding="md" hoverable>
           <Flex align="start" gap="md">
-            <Card recipe="onboardingMemberFeatureIconWarning" className="h-9 w-9 shrink-0">
+            <div
+              className={cn(
+                getCardRecipeClassName("onboardingMemberFeatureIconWarning"),
+                "h-9 w-9 shrink-0",
+              )}
+            >
               <Flex align="center" justify="center" className="h-full w-full">
                 <Icon icon={Clock} size="md" className="text-status-warning" />
               </Flex>
-            </Card>
+            </div>
             <Stack gap="none">
               <Typography variant="label">Track Time</Typography>
               <Typography variant="meta">Log time spent on tasks</Typography>
@@ -218,11 +234,16 @@ export function MemberOnboarding({
 
         <Card variant="soft" padding="md" hoverable>
           <Flex align="start" gap="md">
-            <Card recipe="onboardingMemberFeatureIconPurple" className="h-9 w-9 shrink-0">
+            <div
+              className={cn(
+                getCardRecipeClassName("onboardingMemberFeatureIconPurple"),
+                "h-9 w-9 shrink-0",
+              )}
+            >
               <Flex align="center" justify="center" className="h-full w-full">
                 <Icon icon={Bell} size="md" className="text-palette-purple" />
               </Flex>
-            </Card>
+            </div>
             <Stack gap="none">
               <Typography variant="label">Stay Updated</Typography>
               <Typography variant="meta">Get notified when mentioned or assigned</Typography>

@@ -213,6 +213,7 @@ export const DESIGN_SYSTEM_ESCAPE_HATCHES = [
   "cardVariants(",
   "cardRecipeVariants(",
   "getCardRecipeClassName(",
+  "getCardVariantClassName(",
   "buttonVariants(",
   "buttonChromeVariants(",
   "tabsTriggerVariants(",

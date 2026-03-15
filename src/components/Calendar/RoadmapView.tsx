@@ -15,9 +15,10 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { CalendarDays, ChevronLeft, ChevronRight } from "@/lib/icons";
+import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Card } from "../ui/Card";
+import { Card, getCardRecipeClassName } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { IconButton } from "../ui/IconButton";
 import { ResponsiveText } from "../ui/ResponsiveText";
@@ -164,7 +165,7 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
   return (
     <Card recipe="calendarRoadmapShell">
       {/* Header */}
-      <Card recipe="calendarRoadmapHeader" padding="sm" radius="none">
+      <div className={cn(getCardRecipeClassName("calendarRoadmapHeader"), "p-3")}>
         <Flex
           direction="column"
           directionSm="row"
@@ -220,32 +221,37 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
             ))}
           </SegmentedControl>
         </Flex>
-      </Card>
+      </div>
 
       {/* Roadmap Grid */}
       <FlexItem flex="1" className="overflow-auto">
         <div className="min-w-max">
           {/* Timeline Header */}
-          <Card recipe="calendarRoadmapTimelineHeader" className="sticky top-0 z-10">
+          <div
+            className={cn(
+              getCardRecipeClassName("calendarRoadmapTimelineHeader"),
+              "sticky top-0 z-10",
+            )}
+          >
             <Flex>
-              <Card recipe="calendarRoadmapItemHeader">
+              <div className={getCardRecipeClassName("calendarRoadmapItemHeader")}>
                 <Typography variant="label">Item</Typography>
-              </Card>
+              </div>
               <FlexItem flex="1">
                 <Flex>
                   {columns.map((col) => (
                     <FlexItem key={col.date.getTime()} flex="1">
-                      <Card recipe="calendarRoadmapDateHeader">
+                      <div className={getCardRecipeClassName("calendarRoadmapDateHeader")}>
                         <Typography className="text-center" variant="label">
                           {col.label}
                         </Typography>
-                      </Card>
+                      </div>
                     </FlexItem>
                   ))}
                 </Flex>
               </FlexItem>
             </Flex>
-          </Card>
+          </div>
 
           {/* Roadmap Items */}
           {sortedItems.length === 0 ? (
@@ -260,9 +266,13 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
             <ul className="list-none" style={{ margin: 0, padding: 0 }}>
               {sortedItems.map((item) => (
                 <li key={`${item.type}-${item.id}`}>
-                  <Card recipe={item.type === "sprint" ? "roadmapRowSelected" : "roadmapRow"}>
+                  <div
+                    className={getCardRecipeClassName(
+                      item.type === "sprint" ? "roadmapRowSelected" : "roadmapRow",
+                    )}
+                  >
                     <Flex>
-                      <Card recipe="calendarRoadmapItemInfo">
+                      <div className={getCardRecipeClassName("calendarRoadmapItemInfo")}>
                         <Flex direction="column" gap="xs">
                           {item.type === "sprint" ? (
                             <Badge variant="accent" size="md">
@@ -277,25 +287,29 @@ export function RoadmapView({ projectId }: RoadmapViewProps) {
                             {item.title}
                           </Typography>
                         </Flex>
-                      </Card>
+                      </div>
 
                       {/* Timeline Bar */}
                       <FlexItem flex="1" className="relative">
                         <Flex className="absolute inset-0">
                           {columns.map((col) => (
                             <FlexItem key={col.date.getTime()} flex="1">
-                              <Card recipe="calendarRoadmapTimelineCell" />
+                              <div
+                                className={getCardRecipeClassName("calendarRoadmapTimelineCell")}
+                              />
                             </FlexItem>
                           ))}
                         </Flex>
 
                         {/* Date Bar */}
-                        <Card recipe="calendarRoadmapBarLane" className="w-full">
+                        <div
+                          className={cn(getCardRecipeClassName("calendarRoadmapBarLane"), "w-full")}
+                        >
                           {renderDateBar(item, startDate, endDate)}
-                        </Card>
+                        </div>
                       </FlexItem>
                     </Flex>
-                  </Card>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -333,9 +347,11 @@ function renderDateBar(
   const dateRangeLabel = `${itemStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${itemEnd.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
 
   return (
-    <Card
-      recipe={getRoadmapBarRecipe(item)}
-      className="h-6 overflow-hidden whitespace-nowrap"
+    <div
+      className={cn(
+        getCardRecipeClassName(getRoadmapBarRecipe(item)),
+        "h-6 overflow-hidden whitespace-nowrap",
+      )}
       style={{
         marginLeft: `${leftPercent}%`,
         width: `${widthPercent}%`,
@@ -346,7 +362,7 @@ function renderDateBar(
       <Typography className="truncate text-brand-foreground text-center" variant="small">
         {dateRangeLabel}
       </Typography>
-    </Card>
+    </div>
   );
 }
 

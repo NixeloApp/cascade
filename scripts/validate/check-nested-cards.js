@@ -21,25 +21,12 @@ const IGNORE_DIRS = ["src/lib", "src/components/ui"];
 // These are pre-existing violations; new violations will fail CI
 const BASELINE_FILES = new Set([
   "src/components/Admin/UserTypeManager.tsx",
-  "src/components/App/AppSidebar.tsx",
-  "src/components/Auth/AuthPageLayout.tsx",
-  "src/components/Calendar/RoadmapView.tsx",
-  "src/components/LabelsManager.tsx",
   "src/components/Landing/AIFeatureDemo.tsx",
   "src/components/Landing/ProductShowcase.tsx",
-  "src/components/Onboarding/MemberOnboarding.tsx",
-  "src/components/Onboarding/OnboardingChecklist.tsx",
-  "src/components/RoadmapView.tsx",
   "src/components/Settings/GoogleCalendarIntegration.tsx",
-  "src/components/Settings/NotificationsTab.tsx",
-  "src/components/Settings/OfflineTab.tsx",
   "src/components/Settings/ProfileContent.tsx",
   "src/components/Settings/PumbleIntegration.tsx",
-  "src/components/Settings/TwoFactorSettings.tsx",
   "src/components/TimeTracker/Timesheet.tsx",
-  "src/components/VersionHistory.tsx",
-  "src/components/Webhooks/WebhookLogs.tsx",
-  "src/routes/_auth/_app/$orgSlug/workspaces/index.tsx",
 ]);
 
 // ============================================================================

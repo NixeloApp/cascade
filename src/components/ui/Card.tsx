@@ -476,6 +476,12 @@ function getCardRecipeClassName(recipe: CardRecipe) {
   return cardRecipeVariants({ recipe });
 }
 
+type CardVariantOptions = VariantProps<typeof cardVariants>;
+
+function getCardVariantClassName(options: CardVariantOptions) {
+  return cardVariants(options);
+}
+
 export interface CardProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof cardVariants>,
@@ -657,4 +663,5 @@ export {
   cardVariants,
   cardRecipeVariants,
   getCardRecipeClassName,
+  getCardVariantClassName,
 };

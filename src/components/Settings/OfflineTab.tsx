@@ -33,18 +33,13 @@ export function OfflineTab() {
       <Card padding="lg">
         <Stack gap="lg">
           <Flex gap="lg" align="center">
-            <Card
-              padding="sm"
-              radius="md"
-              variant="ghost"
-              className={cn(isOnline ? "bg-status-success" : "bg-status-error")}
-            >
+            <div className={cn("p-2", isOnline ? "bg-status-success" : "bg-status-error")}>
               {isOnline ? (
                 <Wifi className="h-6 w-6 text-brand-foreground" />
               ) : (
                 <WifiOff className="h-6 w-6 text-brand-foreground" />
               )}
-            </Card>
+            </div>
             <Stack gap="xs">
               <Typography variant="h3">Connection Status</Typography>
               <Typography
@@ -61,30 +56,30 @@ export function OfflineTab() {
 
           <div className="pt-6 border-t border-ui-border">
             <Grid cols={1} colsSm={3} gap="lg">
-              <Card padding="md" className="bg-ui-bg-secondary">
+              <div className="p-4 bg-ui-bg-secondary">
                 <Stack gap="xs">
                   <Typography variant="small" color="secondary">
                     Pending Changes
                   </Typography>
                   <Typography variant="h2">{isLoading ? "..." : count}</Typography>
                 </Stack>
-              </Card>
-              <Card padding="md" className="bg-ui-bg-secondary">
+              </div>
+              <div className="p-4 bg-ui-bg-secondary">
                 <Stack gap="xs">
                   <Typography variant="small" color="secondary">
                     Sync Status
                   </Typography>
                   <Typography variant="h2">{isOnline ? "Ready" : "Paused"}</Typography>
                 </Stack>
-              </Card>
-              <Card padding="md" className="bg-ui-bg-secondary">
+              </div>
+              <div className="p-4 bg-ui-bg-secondary">
                 <Stack gap="xs">
                   <Typography variant="small" color="secondary">
                     Storage
                   </Typography>
                   <Typography variant="h2">IndexedDB</Typography>
                 </Stack>
-              </Card>
+              </div>
             </Grid>
           </div>
         </Stack>
@@ -152,7 +147,7 @@ export function OfflineTab() {
             </Flex>
             <Stack gap="sm">
               {pending.slice(0, 5).map((item) => (
-                <Card key={item.id} padding="sm" className="bg-ui-bg-secondary">
+                <div key={item.id} className="p-2 bg-ui-bg-secondary">
                   <Flex justify="between" align="center">
                     <Stack gap="none">
                       <Typography variant="label">{item.mutationType}</Typography>
@@ -164,7 +159,7 @@ export function OfflineTab() {
                       Pending
                     </Badge>
                   </Flex>
-                </Card>
+                </div>
               ))}
               {pending.length > 5 && (
                 <Typography variant="small" color="tertiary" className="text-center pt-2">

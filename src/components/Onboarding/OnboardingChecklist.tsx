@@ -10,7 +10,8 @@ import { api } from "@convex/_generated/api";
 import { useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Check, ChevronDown, ChevronUp, Rocket, X } from "@/lib/icons";
-import { Card } from "../ui/Card";
+import { cn } from "@/lib/utils";
+import { Card, getCardRecipeClassName } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/IconButton";
@@ -87,14 +88,14 @@ export function OnboardingChecklist() {
 
   return (
     <Card recipe="floatingWidget" padding="none" className="fixed bottom-6 right-6 z-40 w-80">
-      <Card recipe="onboardingChecklistHeader" padding="md">
+      <div className={cn(getCardRecipeClassName("onboardingChecklistHeader"), "p-4")}>
         <Flex justify="between" align="center">
           <Flex gap="md" align="center">
-            <Card recipe="onboardingChecklistHero" className="h-9 w-9">
+            <div className={cn(getCardRecipeClassName("onboardingChecklistHero"), "h-9 w-9")}>
               <Flex align="center" justify="center" className="h-full w-full">
                 <Icon icon={Rocket} size="md" />
               </Flex>
-            </Card>
+            </div>
             <Stack gap="none">
               <Typography variant="h4">Getting Started</Typography>
               <Typography variant="meta">
@@ -123,34 +124,40 @@ export function OnboardingChecklist() {
             </IconButton>
           </Flex>
         </Flex>
-      </Card>
+      </div>
 
-      <Card padding="md" className="border-0 shadow-none">
+      <div className="p-4">
         <Flex align="center" gap="md">
           <FlexItem flex="1">
             <Progress value={progress} indicatorClassName="bg-brand duration-slow" />
           </FlexItem>
           <Typography variant="meta">{progress}%</Typography>
         </Flex>
-      </Card>
+      </div>
 
       {isExpanded && (
-        <Card padding="md" className="border-0 shadow-none">
+        <div className="p-4">
           <Stack id="onboarding-checklist-items" gap="sm">
             {items.map((item, index) => (
-              <Card
+              <div
                 key={item.id}
-                recipe={
-                  item.completed ? "onboardingChecklistItemComplete" : "onboardingChecklistItem"
-                }
-                padding="sm"
+                className={cn(
+                  getCardRecipeClassName(
+                    item.completed ? "onboardingChecklistItemComplete" : "onboardingChecklistItem",
+                  ),
+                  "p-3",
+                )}
               >
                 <Flex gap="md" align="start">
-                  <Card
-                    recipe={
-                      item.completed ? "onboardingChecklistStepComplete" : "onboardingChecklistStep"
-                    }
-                    className="h-6 w-6 shrink-0"
+                  <div
+                    className={cn(
+                      getCardRecipeClassName(
+                        item.completed
+                          ? "onboardingChecklistStepComplete"
+                          : "onboardingChecklistStep",
+                      ),
+                      "h-6 w-6 shrink-0",
+                    )}
                   >
                     <Flex align="center" justify="center" className="h-full w-full">
                       {item.completed ? (
@@ -161,7 +168,7 @@ export function OnboardingChecklist() {
                         </Typography>
                       )}
                     </Flex>
-                  </Card>
+                  </div>
                   <FlexItem flex="1" className="min-w-0">
                     <Stack gap="xs">
                       <Typography
@@ -175,17 +182,22 @@ export function OnboardingChecklist() {
                     </Stack>
                   </FlexItem>
                 </Flex>
-              </Card>
+              </div>
             ))}
 
             {allComplete && (
-              <Card recipe="successCallout" padding="md" className="mt-2">
+              <div className={cn(getCardRecipeClassName("successCallout"), "p-4 mt-2")}>
                 <Flex gap="md" align="start">
-                  <Card recipe="onboardingChecklistSuccessIcon" className="h-8 w-8 shrink-0">
+                  <div
+                    className={cn(
+                      getCardRecipeClassName("onboardingChecklistSuccessIcon"),
+                      "h-8 w-8 shrink-0",
+                    )}
+                  >
                     <Flex align="center" justify="center" className="h-full w-full">
                       <Check className="h-4 w-4 text-status-success" />
                     </Flex>
-                  </Card>
+                  </div>
                   <Stack gap="xs">
                     <Typography variant="small" className="text-status-success-text">
                       All done!
@@ -195,10 +207,10 @@ export function OnboardingChecklist() {
                     </Typography>
                   </Stack>
                 </Flex>
-              </Card>
+              </div>
             )}
           </Stack>
-        </Card>
+        </div>
       )}
     </Card>
   );

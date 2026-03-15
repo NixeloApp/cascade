@@ -34,11 +34,7 @@ interface WorkspaceCardProps {
 
 function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardProps) {
   const footer = (
-    <Card
-      variant="flat"
-      radius="lg"
-      className="border-ui-border-secondary/70 bg-ui-bg-soft/90 px-3 py-2"
-    >
+    <div className="border border-ui-border-secondary/70 bg-ui-bg-soft/90 px-3 py-2">
       <Flex align="center" justify="between" gap="md" wrap>
         <Metadata size="sm">
           <MetadataItem>
@@ -52,7 +48,7 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
           Open workspace
         </Badge>
       </Flex>
-    </Card>
+    </div>
   );
 
   if (compact) {
@@ -106,30 +102,22 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
 
             <Stack gap="sm" className="lg:col-span-5">
               <Grid cols={2} gap="sm">
-                <Card
-                  variant="flat"
-                  padding="sm"
-                  className="border-ui-border-secondary/70 bg-ui-bg-soft/90"
-                >
+                <div className="border border-ui-border-secondary/70 bg-ui-bg-soft/90 p-3">
                   <Typography variant="caption" className="uppercase tracking-wide">
                     Teams
                   </Typography>
                   <Typography variant="h5" className="mt-2">
                     {workspace.teamCount}
                   </Typography>
-                </Card>
-                <Card
-                  variant="flat"
-                  padding="sm"
-                  className="border-ui-border-secondary/70 bg-ui-bg-soft/90"
-                >
+                </div>
+                <div className="border border-ui-border-secondary/70 bg-ui-bg-soft/90 p-3">
                   <Typography variant="caption" className="uppercase tracking-wide">
                     Projects
                   </Typography>
                   <Typography variant="h5" className="mt-2">
                     {workspace.projectCount}
                   </Typography>
-                </Card>
+                </div>
               </Grid>
 
               {footer}
@@ -175,30 +163,22 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
           </Typography>
 
           <Grid cols={2} gap="sm">
-            <Card
-              variant="flat"
-              padding="sm"
-              className="border-ui-border-secondary/70 bg-ui-bg-soft/90"
-            >
+            <div className="border border-ui-border-secondary/70 bg-ui-bg-soft/90 p-3">
               <Typography variant="caption" className="uppercase tracking-wide">
                 Teams
               </Typography>
               <Typography variant="h5" className="mt-2">
                 {workspace.teamCount}
               </Typography>
-            </Card>
-            <Card
-              variant="flat"
-              padding="sm"
-              className="border-ui-border-secondary/70 bg-ui-bg-soft/90"
-            >
+            </div>
+            <div className="border border-ui-border-secondary/70 bg-ui-bg-soft/90 p-3">
               <Typography variant="caption" className="uppercase tracking-wide">
                 Projects
               </Typography>
               <Typography variant="h5" className="mt-2">
                 {workspace.projectCount}
               </Typography>
-            </Card>
+            </div>
           </Grid>
 
           <div className="mt-auto">{footer}</div>
