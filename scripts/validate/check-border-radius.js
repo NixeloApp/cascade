@@ -32,14 +32,6 @@ const BASELINE_FILES = new Set([
   "src/lib/kanban-dnd.ts",
   // Raw DOM strings (outside React rendering)
   "src/lib/serviceWorker.ts",
-  // Landing page CVA definitions (component-level styles)
-  "src/components/Landing/AIFeatureDemo.tsx",
-  "src/components/Landing/FeaturesSection.tsx",
-  "src/components/Landing/FinalCTASection.tsx",
-  "src/components/Landing/Footer.tsx",
-  "src/components/Landing/HeroSection.tsx",
-  "src/components/Landing/ProductShowcase.tsx",
-  "src/components/Landing/WhyChooseSection.tsx",
   // Small badges with rounded-lg (need Badge radius prop)
   "src/routes/invite.$token.tsx",
 ]);
@@ -75,8 +67,18 @@ export function run() {
     const content = fs.readFileSync(filePath, "utf-8");
     const lines = content.split("\n");
 
+    // Detect if file uses CVA (component-level style definitions)
+    const usesCva = content.includes("cva(") || content.includes("cva`");
+    // Find the first exported React component function
+    const firstComponentLine = lines.findIndex((l) =>
+      /^export (default )?function \w+/.test(l.trim()),
+    );
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
+
+      // Skip CVA definition region (before first component function)
+      if (usesCva && firstComponentLine > 0 && i < firstComponentLine) continue;
 
       // Skip comments and imports
       if (line.trim().startsWith("//") || line.trim().startsWith("*") || line.includes("import ")) {

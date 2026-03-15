@@ -1,6 +1,7 @@
 import { cva } from "class-variance-authority";
 import { ShieldCheck } from "@/lib/icons";
 import { Button } from "../ui/Button";
+import { Dot } from "../ui/Dot";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
@@ -68,7 +69,7 @@ export function Footer() {
               </FlexItem>
               <div className={footerVariants.statusChip()}>
                 <Typography variant="meta" className={footerVariants.statusMeta()}>
-                  <span className="h-2 w-2 rounded-full bg-status-success-text" />
+                  <Dot color="success" />
                   All systems normal
                 </Typography>
               </div>

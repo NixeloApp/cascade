@@ -3,6 +3,7 @@ import { ArrowRight, Bot, Clock, Sparkles } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
+import { Dot } from "../ui/Dot";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Stack } from "../ui/Stack";
@@ -52,9 +53,9 @@ export function ProductShowcase() {
         <div className={showcaseVariants.frameHeader()}>
           <Flex align="center" justify="between" gap="md">
             <Flex align="center" gap="sm">
-              <div className="h-2.5 w-2.5 rounded-full bg-status-error/80" />
-              <div className="h-2.5 w-2.5 rounded-full bg-status-warning/80" />
-              <div className="h-2.5 w-2.5 rounded-full bg-status-success/80" />
+              <Dot size="md" color="error" className="opacity-80" />
+              <Dot size="md" color="warning" className="opacity-80" />
+              <Dot size="md" color="success" className="opacity-80" />
               <Badge variant="outline" shape="pill" className="ml-2">
                 Live workspace preview
               </Badge>
@@ -117,7 +118,7 @@ export function ProductShowcase() {
                     <Card key={column.title} recipe="showcasePanelQuiet" padding="sm">
                       <Flex align="center" justify="between" className="mb-3">
                         <Typography variant="label">{column.title}</Typography>
-                        <div className={cn("h-2 w-2 rounded-full", column.accent)} />
+                        <Dot className={column.accent} />
                       </Flex>
 
                       <Stack gap="sm">
