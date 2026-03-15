@@ -1,6 +1,5 @@
 import { cva } from "class-variance-authority";
 import { ArrowRight, Bot, Clock, Sparkles } from "@/lib/icons";
-import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
 import { Dot } from "../ui/Dot";
