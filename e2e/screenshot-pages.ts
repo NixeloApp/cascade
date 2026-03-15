@@ -51,6 +51,7 @@ const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
   "public-signin": "02-signin",
   "public-signup": "03-signup",
   "public-forgot-password": "04-forgot-password",
+  "public-verify-2fa": "02-signin",
 
   // Workspace-level pages (empty states)
   "empty-dashboard": "04-dashboard",
@@ -75,6 +76,10 @@ const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
   "filled-org-analytics": "24-org-analytics",
   "filled-invoices": "25-invoices",
   "filled-clients": "26-clients",
+  "filled-authentication": "31-authentication",
+  "filled-add-ons": "32-add-ons",
+  "filled-assistant": "33-assistant",
+  "filled-mcp-server": "34-mcp-server",
 
   // Project sub-pages (filled states) - these use dynamic keys
   // Pattern: filled-project-{key}-{tab}
@@ -1492,6 +1497,52 @@ async function waitForExpectedContent(
     return;
   }
 
+  if (name === "authentication" || /\/authentication\/?$/.test(url)) {
+    await page
+      .getByRole("heading", { name: /^authentication$/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    return;
+  }
+
+  if (name === "add-ons" || /\/add-ons\/?$/.test(url)) {
+    await page
+      .getByRole("heading", { name: /^add-ons$/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    return;
+  }
+
+  if (name === "assistant" || /\/assistant\/?$/.test(url)) {
+    await page
+      .getByRole("heading", { name: /assistant/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    return;
+  }
+
+  if (name === "mcp-server" || /\/mcp-server\/?$/.test(url)) {
+    await page
+      .getByRole("heading", { name: /^mcp server$/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    return;
+  }
+
   if (isProjectsUrl(url) || name === "projects") {
     await waitForProjectsReady(page, prefix);
     return;
@@ -1874,7 +1925,14 @@ async function autoLogin(page: Page): Promise<string | null> {
 // ---------------------------------------------------------------------------
 
 async function screenshotPublicPages(page: Page): Promise<void> {
-  const publicNames = ["landing", "signin", "signup", "forgot-password", "invite-invalid"];
+  const publicNames = [
+    "landing",
+    "signin",
+    "signup",
+    "forgot-password",
+    "verify-2fa",
+    "invite-invalid",
+  ];
   if (!shouldCaptureAny("public", publicNames)) {
     return;
   }
@@ -1884,6 +1942,7 @@ async function screenshotPublicPages(page: Page): Promise<void> {
   await takeScreenshot(page, "public", "signin", "/signin");
   await takeScreenshot(page, "public", "signup", "/signup");
   await takeScreenshot(page, "public", "forgot-password", "/forgot-password");
+  await takeScreenshot(page, "public", "verify-2fa", "/verify-2fa");
   await takeScreenshot(page, "public", "invite-invalid", "/invite/screenshot-test-token");
 }
 
@@ -1951,6 +2010,10 @@ async function screenshotFilledStates(
   await takeScreenshot(page, p, "clients", `/${orgSlug}/clients`);
   await takeScreenshot(page, p, "settings", `/${orgSlug}/settings`);
   await takeScreenshot(page, p, "settings-profile", `/${orgSlug}/settings/profile`);
+  await takeScreenshot(page, p, "authentication", `/${orgSlug}/authentication`);
+  await takeScreenshot(page, p, "add-ons", `/${orgSlug}/add-ons`);
+  await takeScreenshot(page, p, "assistant", `/${orgSlug}/assistant`);
+  await takeScreenshot(page, p, "mcp-server", `/${orgSlug}/mcp-server`);
 
   if (
     shouldCaptureAny(p, [

@@ -42,13 +42,13 @@ The app has ~65 routes. The screenshot tool currently covers ~20. Every route ne
 - [x] Forgot password (`/forgot-password`)
 - [x] Invite invalid (`/invite/$token`)
 
-### Public pages (missing)
+### Public pages (partially covered)
 
-- [ ] Verify email (`/verify-email`) — needs spec folder `14-verify-email`
+- [ ] Verify email — route does not exist yet
 - [ ] Portal page (`/portal/$token`) — unauthenticated document/project sharing view
-- [ ] Terms (`/terms`)
-- [ ] Privacy (`/privacy`)
-- [ ] Verify 2FA (`/verify-2fa`)
+- ~~Terms (`/terms`)~~ — route does not exist
+- ~~Privacy (`/privacy`)~~ — route does not exist
+- [x] Verify 2FA (`/verify-2fa`)
 
 ### Dashboard (currently covered: base + 4 modals)
 
@@ -73,7 +73,7 @@ The app has ~65 routes. The screenshot tool currently covers ~20. Every route ne
 - [x] Calendar (day/week/month modes + event modal)
 - [x] Analytics
 - [x] Settings
-- [ ] **Project home/index** — the project landing page (`/projects/$key`)
+- ~~Project home/index~~ — redirects to board, no screenshot needed
 - [x] **Project inbox** — (`/projects/$key/inbox`)
 - [x] **Project roadmap** — (`/projects/$key/roadmap`) — has Gantt with dependency lines, timeline span selector
 - [x] **Project activity** — (`/projects/$key/activity`) — activity feed with date grouping
@@ -129,14 +129,14 @@ The app has ~65 routes. The screenshot tool currently covers ~20. Every route ne
 - [x] **Organization calendar** (`/$orgSlug/calendar`)
 - [x] **Organization analytics** (`/$orgSlug/analytics`)
 
-### Settings (partially covered)
+### Settings & Admin (covered)
 
 - [x] Settings page (redirects to profile)
-- [ ] **Settings / profile** (`/$orgSlug/settings/profile`) — name, avatar, cover image
-- [ ] **Authentication settings** (`/$orgSlug/authentication`) — 2FA setup, SSO config
-- [ ] **Add-ons page** (`/$orgSlug/add-ons`)
-- [ ] **AI Assistant page** (`/$orgSlug/assistant`)
-- [ ] **MCP Server page** (`/$orgSlug/mcp-server`)
+- [x] **Settings / profile** (`/$orgSlug/settings/profile`) — name, avatar, cover image
+- [x] **Authentication settings** (`/$orgSlug/authentication`) — SSO config
+- [x] **Add-ons page** (`/$orgSlug/add-ons`)
+- [x] **AI Assistant page** (`/$orgSlug/assistant`)
+- [x] **MCP Server page** (`/$orgSlug/mcp-server`)
 
 ### Onboarding (0 coverage)
 
