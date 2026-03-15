@@ -8,5 +8,8 @@
 
 // Also export form primitives for components that need them
 export { FormDescription, FormItem, FormLabel, FormMessage } from "./FormPrimitives";
-// Re-export all form components from the directory
-export * from "./form/index";
+// Re-export form components from the directory
+export { Checkbox, type CheckboxProps } from "./form/Checkbox";
+export { Input, type InputProps } from "./form/Input";
+export { Select, type SelectProps } from "./form/Select";
+export { Textarea, type TextareaProps } from "./form/Textarea";
