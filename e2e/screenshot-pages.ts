@@ -57,12 +57,24 @@ const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
   "empty-projects": "05-projects",
   "empty-documents": "09-documents",
   "empty-settings": "12-settings",
+  "empty-issues": "19-issues",
+  "empty-notifications": "21-notifications",
+  "empty-my-issues": "20-my-issues",
+  "empty-invoices": "25-invoices",
+  "empty-clients": "26-clients",
 
   // Workspace-level pages (filled states)
   "filled-dashboard": "04-dashboard",
   "filled-projects": "05-projects",
   "filled-documents": "09-documents",
   "filled-settings": "12-settings",
+  "filled-issues": "19-issues",
+  "filled-notifications": "21-notifications",
+  "filled-my-issues": "20-my-issues",
+  "filled-org-calendar": "23-org-calendar",
+  "filled-org-analytics": "24-org-analytics",
+  "filled-invoices": "25-invoices",
+  "filled-clients": "26-clients",
 
   // Project sub-pages (filled states) - these use dynamic keys
   // Pattern: filled-project-{key}-{tab}
@@ -189,6 +201,16 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-project-[^-]+-analytics$/, "13-analytics", ""],
   // Project settings: filled-project-xxx-settings → 12-settings
   [/^filled-project-[^-]+-settings$/, "12-settings", "-project"],
+  // Project roadmap: filled-project-xxx-roadmap → 35-roadmap
+  [/^filled-project-[^-]+-roadmap$/, "35-roadmap", ""],
+  // Project activity: filled-project-xxx-activity → 36-activity
+  [/^filled-project-[^-]+-activity$/, "36-activity", ""],
+  // Project billing: filled-project-xxx-billing → 37-billing
+  [/^filled-project-[^-]+-billing$/, "37-billing", ""],
+  // Project timesheet: filled-project-xxx-timesheet → 38-timesheet
+  [/^filled-project-[^-]+-timesheet$/, "38-timesheet", ""],
+  // Project inbox: filled-project-xxx-inbox → 39-project-inbox
+  [/^filled-project-[^-]+-inbox$/, "39-project-inbox", ""],
 ];
 
 function parseCsvValues(rawValues: string[]): string[] {
@@ -661,6 +683,34 @@ function isWorkspacesUrl(url: string): boolean {
 
 function isTimeTrackingUrl(url: string): boolean {
   return /\/[^/]+\/time-tracking$/.test(url);
+}
+
+function isNotificationsUrl(url: string): boolean {
+  return /\/[^/]+\/notifications\/?$/.test(url);
+}
+
+function isMyIssuesUrl(url: string): boolean {
+  return /\/[^/]+\/my-issues\/?$/.test(url);
+}
+
+function isOrgCalendarUrl(url: string): boolean {
+  return (
+    /\/[^/]+\/calendar\/?$/.test(url) &&
+    !url.includes("/projects/") &&
+    !url.includes("/workspaces/")
+  );
+}
+
+function isInvoicesUrl(url: string): boolean {
+  return /\/[^/]+\/invoices\/?$/.test(url);
+}
+
+function isClientsUrl(url: string): boolean {
+  return /\/[^/]+\/clients\/?$/.test(url);
+}
+
+function isProjectInboxUrl(url: string): boolean {
+  return /\/projects\/[^/]+\/inbox$/.test(url);
 }
 
 function isWorkspaceDetailUrl(url: string): boolean {
@@ -1507,6 +1557,92 @@ async function waitForExpectedContent(
     return;
   }
 
+  if (isProjectInboxUrl(url) || name === "inbox") {
+    await page
+      .getByRole("heading", { name: /inbox/i })
+      .or(page.getByText(/no items in inbox/i))
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    return;
+  }
+
+  if (isNotificationsUrl(url) || name === "notifications") {
+    await page
+      .getByRole("heading", { name: /^notifications$/i })
+      .or(page.getByRole("tab", { name: /inbox/i }))
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    return;
+  }
+
+  if (isMyIssuesUrl(url) || name === "my-issues") {
+    await page
+      .getByRole("heading", { name: /my issues/i })
+      .or(page.getByText(/no issues assigned/i))
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    return;
+  }
+
+  if (isOrgCalendarUrl(url) || name === "org-calendar") {
+    await waitForCalendarReady(page);
+    await waitForCalendarEvents(page, 5000).catch(() => {});
+    return;
+  }
+
+  if (isInvoicesUrl(url) || name === "invoices") {
+    await page
+      .getByRole("heading", { name: /invoices/i })
+      .or(page.getByText(/no invoices/i))
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    return;
+  }
+
+  if (name === "org-analytics") {
+    await waitForAnalyticsReady(page).catch(() => {});
+    return;
+  }
+
+  if (isClientsUrl(url) || name === "clients") {
+    await page
+      .getByRole("heading", { name: /clients/i })
+      .or(page.getByText(/no clients/i))
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    return;
+  }
+
   if (
     isProjectCalendarUrl(url) ||
     isWorkspaceCalendarUrl(url) ||
@@ -1680,6 +1816,10 @@ async function screenshotEmptyStates(page: Page, orgSlug: string): Promise<void>
     "documents-templates",
     "workspaces",
     "time-tracking",
+    "notifications",
+    "my-issues",
+    "invoices",
+    "clients",
     "settings",
     "settings-profile",
   ];
@@ -1696,6 +1836,10 @@ async function screenshotEmptyStates(page: Page, orgSlug: string): Promise<void>
   await takeScreenshot(page, p, "documents-templates", `/${orgSlug}/documents/templates`);
   await takeScreenshot(page, p, "workspaces", `/${orgSlug}/workspaces`);
   await takeScreenshot(page, p, "time-tracking", `/${orgSlug}/time-tracking`);
+  await takeScreenshot(page, p, "notifications", `/${orgSlug}/notifications`);
+  await takeScreenshot(page, p, "my-issues", `/${orgSlug}/my-issues`);
+  await takeScreenshot(page, p, "invoices", `/${orgSlug}/invoices`);
+  await takeScreenshot(page, p, "clients", `/${orgSlug}/clients`);
   await takeScreenshot(page, p, "settings", `/${orgSlug}/settings`);
   await takeScreenshot(page, p, "settings-profile", `/${orgSlug}/settings/profile`);
 }
@@ -1719,6 +1863,12 @@ async function screenshotFilledStates(
   await takeScreenshot(page, p, "documents-templates", `/${orgSlug}/documents/templates`);
   await takeScreenshot(page, p, "workspaces", `/${orgSlug}/workspaces`);
   await takeScreenshot(page, p, "time-tracking", `/${orgSlug}/time-tracking`);
+  await takeScreenshot(page, p, "notifications", `/${orgSlug}/notifications`);
+  await takeScreenshot(page, p, "my-issues", `/${orgSlug}/my-issues`);
+  await takeScreenshot(page, p, "org-calendar", `/${orgSlug}/calendar`);
+  await takeScreenshot(page, p, "org-analytics", `/${orgSlug}/analytics`);
+  await takeScreenshot(page, p, "invoices", `/${orgSlug}/invoices`);
+  await takeScreenshot(page, p, "clients", `/${orgSlug}/clients`);
   await takeScreenshot(page, p, "settings", `/${orgSlug}/settings`);
   await takeScreenshot(page, p, "settings-profile", `/${orgSlug}/settings/profile`);
 
@@ -1741,6 +1891,7 @@ async function screenshotFilledStates(
     const tabs = [
       "board",
       "backlog",
+      "inbox",
       "sprints",
       "roadmap",
       "calendar",

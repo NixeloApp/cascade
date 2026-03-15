@@ -74,26 +74,26 @@ The app has ~65 routes. The screenshot tool currently covers ~20. Every route ne
 - [x] Analytics
 - [x] Settings
 - [ ] **Project home/index** — the project landing page (`/projects/$key`)
-- [ ] **Project inbox** — (`/projects/$key/inbox`)
-- [ ] **Project roadmap** — (`/projects/$key/roadmap`) — has Gantt with dependency lines, timeline span selector
-- [ ] **Project activity** — (`/projects/$key/activity`) — activity feed with date grouping
-- [ ] **Project billing** — (`/projects/$key/billing`) — billing report with CSV export
-- [ ] **Project timesheet** — (`/projects/$key/timesheet`) — time entries tab
+- [x] **Project inbox** — (`/projects/$key/inbox`)
+- [x] **Project roadmap** — (`/projects/$key/roadmap`) — has Gantt with dependency lines, timeline span selector
+- [x] **Project activity** — (`/projects/$key/activity`) — activity feed with date grouping
+- [x] **Project billing** — (`/projects/$key/billing`) — billing report with CSV export
+- [x] **Project timesheet** — (`/projects/$key/timesheet`) — time entries tab
 
 ### Issues (partially covered)
 
 - [x] Issue detail page
 - [x] Issue detail modal (from board)
 - [x] Create issue modal (from board)
-- [ ] **Global issues list** (`/$orgSlug/issues`) — with filter bar, status/priority/assignee filters, search
-- [ ] **My Issues page** (`/$orgSlug/my-issues`) — user's assigned issues
+- [x] **Global issues list** (`/$orgSlug/issues`) — with filter bar, status/priority/assignee filters, search
+- [x] **My Issues page** (`/$orgSlug/my-issues`) — user's assigned issues
 
 ### Documents (partially covered)
 
 - [x] Documents list empty
 - [x] Documents list filled
 - [x] Document editor
-- [ ] **Document templates** (`/$orgSlug/documents/templates`) — built-in + custom templates
+- [x] **Document templates** (`/$orgSlug/documents/templates`) — built-in + custom templates
 
 ### Workspaces (0 coverage — 10+ pages)
 
@@ -116,18 +116,18 @@ The app has ~65 routes. The screenshot tool currently covers ~20. Every route ne
 - [ ] **Team wiki** (`/.../teams/$teamSlug/wiki`)
 - [ ] **Team settings** (`/.../teams/$teamSlug/settings`)
 
-### Invoices & Clients (0 coverage)
+### Invoices & Clients (list coverage added)
 
-- [ ] **Invoices list** (`/$orgSlug/invoices`) — empty + filled
+- [x] **Invoices list** (`/$orgSlug/invoices`) — empty + filled
 - [ ] **Invoice detail** (`/$orgSlug/invoices/$invoiceId`)
-- [ ] **Clients list** (`/$orgSlug/clients`) — empty + filled
+- [x] **Clients list** (`/$orgSlug/clients`) — empty + filled
 
-### Global pages (0 coverage)
+### Global pages (partially covered)
 
-- [ ] **Notifications page** (`/$orgSlug/notifications`) — inbox + archived tabs
-- [ ] **Time tracking** (`/$orgSlug/time-tracking`) — time entries tab, burn rate
-- [ ] **Organization calendar** (`/$orgSlug/calendar`)
-- [ ] **Organization analytics** (`/$orgSlug/analytics`)
+- [x] **Notifications page** (`/$orgSlug/notifications`) — inbox + archived tabs
+- [x] **Time tracking** (`/$orgSlug/time-tracking`) — time entries tab, burn rate
+- [x] **Organization calendar** (`/$orgSlug/calendar`)
+- [x] **Organization analytics** (`/$orgSlug/analytics`)
 
 ### Settings (partially covered)
 
