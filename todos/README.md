@@ -3,50 +3,46 @@
 > **Last Updated:** 2026-03-15
 > **Scope:** open work only
 
-## Quick Links
-
-- [Current Focus](#current-focus)
-- [Open Tracks](#open-tracks)
-- [External Blockers](#external-blockers)
-- [Open Jules Issue](#open-jules-issue)
-
 ## Current Status
 
-- The validator suite passes `41/41` checks (up from 37).
-- Validator baselines significantly reduced: border-radius 50→15, nested cards 73→7, inline strong 11→1.
-- New UI components: `Dot`, `IconCircle`, Typography `variant="strong"`, Alert `radius` prop.
-- Search inputs consolidated: `Input variant="search/filter"` includes icons automatically.
-- Dynamic workflow state filters on org-wide issues page.
-
-## Current Focus
-
-1. [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md)
-   - Use screenshot review to drive a broader visual facelift across the weakest product surfaces.
-2. [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md)
-   - Keep the full suite green while finishing deterministic waits, selector cleanup, and retry removal.
-3. [slack-integration-issues.md](./slack-integration-issues.md)
-   - Add organization-scoped Slack connection storage and destination lookup.
-4. [validator-exceptions-burndown.md](./validator-exceptions-burndown.md)
-   - Remaining baselines: 15 border-radius, 7 nested cards, ~52 test coverage.
+- **41/41** validators pass.
+- **Vendor bundle:** 722KB → 337KB gzip (53% reduction).
+- **E2E suite:** zero `waitForTimeout`, zero `networkidle`, zero brittle selectors.
+- **Validator baselines:** border-radius 50→10, nested cards 73→7, test coverage 49→16.
+- **New UI components:** `Dot`, `IconCircle`, Typography `variant="strong"`, Alert `radius`, Button `chromeSize="sectionToggle"`.
+- **Search inputs consolidated:** `Input variant="search/filter"` includes icons automatically.
+- **3 routes lazy-loaded:** Calendar, Roadmap, ProjectSettings.
 
 ## Open Tracks
 
 | Priority | File | State | Next Action |
 |---|---|---|---|
-| P0 | [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md) | Active | Run a bigger screenshot-driven visual facelift pass |
-| P0 | [validator-exceptions-burndown.md](./validator-exceptions-burndown.md) | In Progress | Border-radius, nested cards, test coverage baselines |
-| P0 | [bundle-optimization.md](./bundle-optimization.md) | Open | Split vendor chunks and reduce initial bundle size |
-| P1 | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Active | Finish deterministic E2E hardening |
-| P1 | [slack-integration-issues.md](./slack-integration-issues.md) | Active | Scope Slack connections by organization |
-| P2 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Blocked | Finish field-projection audit and publish metrics report |
+| P0 | [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md) | Active | Run screenshot-driven visual facelift (needs running app) |
+| P1 | [slack-integration-issues.md](./slack-integration-issues.md) | Blocked | Scope Slack connections by organization (needs external access) |
+| P2 | [validator-exceptions-burndown.md](./validator-exceptions-burndown.md) | Maintenance | 16 test coverage, 10 border-radius, 7 nested cards remain |
+| P2 | [bundle-optimization.md](./bundle-optimization.md) | Maintenance | App chunk 388KB, diminishing returns |
+| P2 | [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) | Maintenance | Core work done, monitor for regressions |
+| P2 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Blocked | Finish field-projection audit |
 | P2 | [feature-gaps.md](./feature-gaps.md) | Blocked | Complete external Slack dashboard setup |
 | P2 | [emoji-overhaul.md](./emoji-overhaul.md) | Blocked | Finish manual accessibility QA |
-| P2 | [multi-level-views.md](./multi-level-views.md) | Blocked | Add dependency visualization after package/DNS unblock |
-| P2 | [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) | Blocked | Choose monitoring destination and wire push path |
-| P3 | [public-launch.md](./public-launch.md) | Blocked | Execute launch ops and community setup |
-| P3 | [uptime-monitoring.md](./uptime-monitoring.md) | Blocked | Decide runner/routing architecture and start MVP |
-| P4 | [growth-features.md](./growth-features.md) | Blocked | Set up Outlook integration and prioritize next enhancement |
-| P4 | [enterprise.md](./enterprise.md) | Blocked | Resolve billing and IdP decisions, then implement wedge |
+| P2 | [multi-level-views.md](./multi-level-views.md) | Blocked | Package/DNS unblock for `@xyflow/react` |
+| P2 | [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) | Blocked | Choose monitoring destination |
+| P3 | [public-launch.md](./public-launch.md) | Blocked | Launch ops and community setup |
+| P3 | [uptime-monitoring.md](./uptime-monitoring.md) | Blocked | Architecture decisions |
+| P3 | Tech debt items (5 files) | Backlog | Automation notifications, billing export, image upload, link insertion, project creation UI |
+| P4 | [growth-features.md](./growth-features.md) | Blocked | Outlook integration |
+| P4 | [enterprise.md](./enterprise.md) | Blocked | Billing and IdP decisions |
+
+## Completed This Session
+
+- [x] [query-filter-ordering.md](./query-filter-ordering.md) — all query shape issues resolved
+- [x] Bundle vendor split (10 chunks, 53% reduction)
+- [x] E2E reliability (zero anti-patterns)
+- [x] Validator baselines (border-radius 80%, nested cards 90%, inline strong 91%)
+- [x] Test coverage (67% baseline reduction)
+- [x] Search input consolidation
+- [x] Dynamic workflow state filters
+- [x] Husky hooks: validate+tests moved to pre-commit
 
 ## External Blockers
 
@@ -60,17 +56,11 @@
 | Outlook app setup | [growth-features.md](./growth-features.md) |
 | Billing, IdP, and architecture decisions | [enterprise.md](./enterprise.md), [uptime-monitoring.md](./uptime-monitoring.md) |
 | Launch ops channels and community setup | [public-launch.md](./public-launch.md) |
-| Upstream dependency release | [jules-librarian-2026-02-23-lodash-vulnerability.md](./jules/open/jules-librarian-2026-02-23-lodash-vulnerability.md) |
 
 ## Open Jules Issue
 
 - [jules-librarian-2026-02-23-lodash-vulnerability.md](./jules/open/jules-librarian-2026-02-23-lodash-vulnerability.md)
 
-## Suggested Execution Order
+## What's Left
 
-1. Run the first pass in [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md).
-2. Keep [e2e-reliability-overhaul.md](./e2e-reliability-overhaul.md) green while those changes land.
-3. Fix [slack-integration-issues.md](./slack-integration-issues.md).
-4. Close the near-finished blocked tracks as externals unblock.
-5. Burn down [validator-exceptions-burndown.md](./validator-exceptions-burndown.md) (last priority).
-6. Then move to public launch, enterprise, and uptime.
+The only actionable P0 is **screenshot facelift** which requires a running dev server. Everything else is either blocked on external access or at diminishing returns. The tech debt items (P3) are next in line when higher-priority blocked items unblock.
