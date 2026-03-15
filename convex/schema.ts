@@ -448,6 +448,7 @@ const applicationTables = {
   projects: defineTable(projectsFields)
     .index("by_creator", ["createdBy"])
     .index("by_key", ["key"])
+    .index("by_organization_key", ["organizationId", "key"])
     .index("by_public", ["isPublic"])
     .index("by_organization", ["organizationId"])
     .index("by_workspace", ["workspaceId"])

@@ -501,14 +501,16 @@ export const getByKey = authenticatedQuery({
     let project: Doc<"projects"> | null = null;
 
     if (args.organizationId) {
-      // When org is known, scan by_key and match org to handle duplicate keys
-      // across organizations (e.g. multiple E2E orgs each with a "DEMO" project)
-      const candidates = await ctx.db
+      // Use compound index for O(1) lookup when org is known.
+      // Project keys are unique within an org but NOT globally unique —
+      // multiple orgs can have a project with key "DEMO".
+      project = await ctx.db
         .query("projects")
-        .withIndex("by_key", (q) => q.eq("key", normalizedKey))
+        .withIndex("by_organization_key", (q) =>
+          q.eq("organizationId", args.organizationId!).eq("key", normalizedKey),
+        )
         .filter(notDeleted)
-        .take(BOUNDED_LIST_LIMIT);
-      project = candidates.find((p) => p.organizationId === args.organizationId) ?? null;
+        .first();
     } else {
       project = await ctx.db
         .query("projects")
