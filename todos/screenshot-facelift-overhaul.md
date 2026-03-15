@@ -166,7 +166,7 @@ The app has ~65 routes. The screenshot tool currently covers ~20. Every route ne
 - [x] **Create team modal** — workspace detail → "Create team" button
 - [x] **Create workspace modal** — workspaces list → "Create Workspace" button
 - [ ] **Dashboard customize modal** — wired but "Customize" button not rendered for screenshot user
-- [ ] **Import/export modal** — wired, board loads now but filter dropdown items detach during click (Radix timing)
+- [x] **Import/export modal** — captured (164ms) after getByKey fix unblocked board access
 - [ ] **Manual time entry modal** — wired but "Add Time Entry" button not visible in current page state
 
 ### Remaining modals (need special setup or complex triggers)
