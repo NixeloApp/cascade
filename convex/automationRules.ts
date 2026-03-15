@@ -199,19 +199,21 @@ async function executeAutomationAction(
           : [];
 
       await Promise.all(
-        notifyRecipients.map((userId) =>
-          ctx.db.insert("notifications", {
-            userId,
-            type: "automation",
-            title: `Automation: ${rule.name}`,
-            message: actionValue.message,
-            issueId,
-            projectId: rule.projectId,
-            actorId: rule.createdBy,
-            isRead: false,
-            isDeleted: false,
-          }),
-        ),
+        notifyRecipients
+          .filter((userId) => userId !== rule.createdBy) // Skip self-notifications
+          .map((userId) =>
+            ctx.db.insert("notifications", {
+              userId,
+              type: "automation",
+              title: `Automation: ${rule.name}`,
+              message: actionValue.message,
+              issueId,
+              projectId: rule.projectId,
+              actorId: rule.createdBy,
+              isRead: false,
+              isDeleted: false,
+            }),
+          ),
       );
 
       if (notifyRecipients.length === 0) {

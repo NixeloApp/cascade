@@ -26,12 +26,6 @@ export function LinkElement({
         className,
       )}
       title={url}
-      onClick={(e) => {
-        // Open link in new tab on Ctrl/Cmd+click
-        if (e.metaKey || e.ctrlKey) {
-          window.open(url, "_blank", "noopener,noreferrer");
-        }
-      }}
     >
       {children}
     </a>

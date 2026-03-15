@@ -28,6 +28,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/Popover";
 import { Separator } from "@/components/ui/Separator";
 import { NODE_TYPES } from "@/lib/plate/plugins";
+import { showError } from "@/lib/toast";
 import { ColorPickerButton } from "./ColorPickerButton";
 
 interface MarkButtonProps {
@@ -129,6 +130,7 @@ export function FloatingToolbar() {
     try {
       new URL(url.startsWith("http") ? url : `https://${url}`);
     } catch {
+      showError("Invalid URL format");
       return;
     }
 

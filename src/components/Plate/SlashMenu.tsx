@@ -71,6 +71,9 @@ function triggerImageUpload(editor: PlateEditor): void {
         children: [{ text: "" }],
       });
     };
+    reader.onerror = () => {
+      showError("Failed to read image file");
+    };
     reader.readAsDataURL(file);
   };
 
