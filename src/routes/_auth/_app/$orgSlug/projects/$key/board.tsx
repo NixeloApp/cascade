@@ -15,6 +15,7 @@ import { KanbanBoard } from "@/components/KanbanBoard";
 import { PageContent, PageError } from "@/components/layout";
 import { SprintProgressBar, SprintWorkload } from "@/components/Sprints";
 import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import {
   Select,
@@ -112,7 +113,7 @@ function BoardPage() {
   return (
     <Flex direction="column" className="h-full">
       <div className="hidden px-2 pt-1.5 sm:block sm:px-4 sm:pt-3">
-        <div className="rounded-2xl border border-ui-border/70 bg-ui-bg-elevated/90 px-4 py-3 shadow-soft">
+        <Card recipe="filterBar" className="px-4 py-3">
           <Flex
             align="center"
             justify="between"
@@ -162,7 +163,7 @@ function BoardPage() {
               )}
             </Flex>
           </Flex>
-        </div>
+        </Card>
       </div>
 
       {/* Filter Bar */}

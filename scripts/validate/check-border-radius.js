@@ -32,7 +32,6 @@ const BASELINE_FILES = new Set([
   "src/components/Dashboard.tsx",
   "src/components/Documents/DocumentSidebar.tsx",
   "src/components/ErrorBoundary.tsx",
-  "src/components/FuzzySearch/AssigneeSearchDropdown.example.tsx",
   "src/components/IssueDetail/InlinePropertyEdit.tsx",
   "src/components/IssueDetail/IssueCard.tsx",
   "src/components/IssuesCalendarView.tsx",

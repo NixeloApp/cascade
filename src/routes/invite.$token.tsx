@@ -13,6 +13,7 @@ import { AlertCircle, CheckCircle, Clock, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { AuthRedirect, SignInForm } from "@/components/Auth";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -192,7 +193,7 @@ function InviteRoute() {
       <FlexItem as="main" flex="1" className="flex items-center justify-center p-6">
         <div className="max-w-md w-full">
           {/* Invitation Card */}
-          <div className="bg-ui-bg rounded-2xl shadow-lg p-8 mb-6">
+          <Card radius="full" padding="xl" className="mb-6">
             <div className="text-center mb-6">
               <Typography variant="h3" className="mb-2">
                 You're Invited!
@@ -215,7 +216,7 @@ function InviteRoute() {
             </div>
 
             {/* Invite Details */}
-            <div className="bg-ui-bg-secondary rounded-lg p-4 mb-6">
+            <div className="bg-ui-bg-secondary rounded-container p-4 mb-6">
               <Flex justify="between" align="center" className="text-sm">
                 <Typography variant="muted">Invited email</Typography>
                 <Typography variant="small">{invite.email}</Typography>
@@ -294,7 +295,7 @@ function InviteRoute() {
                 </div>
               </Unauthenticated>
             )}
-          </div>
+          </Card>
         </div>
       </FlexItem>
     </Flex>

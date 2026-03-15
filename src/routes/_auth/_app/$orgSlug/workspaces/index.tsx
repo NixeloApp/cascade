@@ -33,25 +33,25 @@ interface WorkspaceCardProps {
 
 function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardProps) {
   const footer = (
-    <Flex
-      align="center"
-      justify="between"
-      gap="md"
-      className="rounded-xl border border-ui-border-secondary/70 bg-ui-bg-soft/90 px-3 py-2"
-      wrap
+    <Card
+      variant="flat"
+      radius="lg"
+      className="border-ui-border-secondary/70 bg-ui-bg-soft/90 px-3 py-2"
     >
-      <Metadata size="sm">
-        <MetadataItem>
-          {workspace.teamCount} {workspace.teamCount === 1 ? "team" : "teams"}
-        </MetadataItem>
-        <MetadataItem>
-          {workspace.projectCount} {workspace.projectCount === 1 ? "project" : "projects"}
-        </MetadataItem>
-      </Metadata>
-      <Badge variant="outline" shape="pill">
-        Open workspace
-      </Badge>
-    </Flex>
+      <Flex align="center" justify="between" gap="md" wrap>
+        <Metadata size="sm">
+          <MetadataItem>
+            {workspace.teamCount} {workspace.teamCount === 1 ? "team" : "teams"}
+          </MetadataItem>
+          <MetadataItem>
+            {workspace.projectCount} {workspace.projectCount === 1 ? "project" : "projects"}
+          </MetadataItem>
+        </Metadata>
+        <Badge variant="outline" shape="pill">
+          Open workspace
+        </Badge>
+      </Flex>
+    </Card>
   );
 
   if (compact) {

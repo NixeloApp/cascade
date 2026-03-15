@@ -3,6 +3,7 @@ import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-rout
 import { PageContent, PageError } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -155,7 +156,10 @@ function ProjectLayout() {
   return (
     <Flex direction="column" className="h-full">
       <div className="border-b border-ui-border/70 bg-ui-bg/84 px-1 py-0.5 backdrop-blur-xl sm:px-4 sm:py-3">
-        <div className="bg-transparent px-0 py-0 shadow-none sm:rounded-3xl sm:border sm:border-ui-border-secondary/75 sm:bg-linear-to-r sm:from-ui-bg-elevated sm:via-ui-bg-elevated/98 sm:to-ui-bg-soft/76 sm:px-4 sm:py-3 sm:shadow-card">
+        <Card
+          recipe="pageHeader"
+          className="border-transparent bg-transparent px-0 py-0 shadow-none sm:px-4 sm:py-3"
+        >
           <Flex
             align="start"
             justify="between"
@@ -258,7 +262,7 @@ function ProjectLayout() {
               </RouteNavItem>
             ))}
           </RouteNav>
-        </div>
+        </Card>
       </div>
 
       {/* Tab Content */}
