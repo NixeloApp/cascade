@@ -364,7 +364,7 @@ Organized by user story — sequential screenshots showing a complete workflow.
 
 ### Hash-based diff script
 
-- [ ] Build `scripts/screenshot-diff.js` that:
+- [x] Build `scripts/screenshot-diff.js` that:
   - Hashes all current screenshots (SHA-256 of file content)
   - Compares against a stored `.screenshot-hashes.json` manifest
   - Reports: new screenshots, removed screenshots, changed screenshots
@@ -373,9 +373,9 @@ Organized by user story — sequential screenshots showing a complete workflow.
 
 ### Approval workflow
 
-- [ ] `pnpm screenshots:diff` — compare current vs last approved
-- [ ] `pnpm screenshots:approve` — update the hash manifest to accept current state
-- [ ] Add `.screenshot-hashes.json` to git — serves as the visual baseline
+- [x] `pnpm screenshots:diff` — compare current vs last approved
+- [x] `pnpm screenshots:approve` — update the hash manifest to accept current state
+- [x] Add `.screenshot-hashes.json` to git — serves as the visual baseline (193 screenshots baselined)
 
 ### CI integration
 
@@ -459,6 +459,6 @@ New pages need spec folder assignments. Proposed additions:
 - [ ] Every modal/dialog component has at least one open-state screenshot.
 - [ ] Interactive states cover board swimlanes, document editor toolbars, notification states, sprint charts.
 - [ ] At least 5 user journeys captured as sequential screenshot series.
-- [ ] Hash-based screenshot diff tool exists and runs in CI.
+- [x] Hash-based screenshot diff tool exists (`scripts/screenshot-diff.js`).
 - [ ] The first visual facelift batch covers at least 5 pages with before/after comparison.
 - [ ] Total screenshot count covers all 4 viewport/theme combos across all pages.
