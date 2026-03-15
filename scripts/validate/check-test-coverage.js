@@ -24,6 +24,7 @@ const CONVEX_DIR = "convex";
 const SKIP_PATTERNS = [
   /\.test\.tsx?$/, // Test files themselves
   /\.stories\.tsx?$/, // Storybook files
+  /\.example\.tsx?$/, // Example/demo files
   /\/ui\//, // UI primitives (tested via integration)
   /\/index\.tsx?$/, // Re-export barrels
   /types\.ts$/, // Type definition files
