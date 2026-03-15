@@ -227,8 +227,8 @@ export function UserActivityFeed({
                   radius="none"
                   className={
                     index !== groupActivities.length - 1
-                      ? "rounded-none border-x-0 border-t-0 border-b border-ui-border"
-                      : "rounded-none border-0"
+                      ? "border-x-0 border-t-0 border-b border-ui-border"
+                      : "border-0"
                   }
                 >
                   <Flex gap="md" align="start">

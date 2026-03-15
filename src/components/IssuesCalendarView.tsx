@@ -188,7 +188,8 @@ export function IssuesCalendarView({
       <Card
         key={`empty-${i}`}
         variant="ghost"
-        className={cn(DAY_CELL_HEIGHT_CLASS, "rounded-none bg-ui-bg-secondary")}
+        radius="none"
+        className={cn(DAY_CELL_HEIGHT_CLASS, "bg-ui-bg-secondary")}
       />,
     );
   }

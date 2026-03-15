@@ -191,7 +191,7 @@ function LockedDocumentBanner({
   >;
 }) {
   return (
-    <Alert variant="warning" className="rounded-none border-x-0">
+    <Alert variant="warning" radius="none" className="border-x-0">
       <Lock className="h-4 w-4" />
       <AlertTitle>Document Locked</AlertTitle>
       <AlertDescription>

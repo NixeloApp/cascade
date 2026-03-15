@@ -72,7 +72,7 @@ function SidebarSection({
         variant="ghost"
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full justify-between rounded-none"
+        chromeSize="sectionToggle"
       >
         <Flex align="center" gap="sm">
           <Icon className="h-4 w-4" />

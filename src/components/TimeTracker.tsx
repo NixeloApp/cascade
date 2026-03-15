@@ -236,7 +236,7 @@ export function TimeTracker({
           variant="ghost"
           size="sm"
           onClick={() => setShowEntries(!showEntries)}
-          className="w-full justify-between min-h-0 rounded-none"
+          chromeSize="sectionToggle"
           rightIcon={
             <Icon
               icon={ChevronDown}

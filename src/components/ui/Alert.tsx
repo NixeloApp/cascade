@@ -24,7 +24,7 @@ import { Typography } from "./Typography";
  * - Proper text hierarchy via AlertTitle and AlertDescription
  */
 const alertVariants = cva(
-  "relative w-full rounded-lg border p-4 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:size-4 [&>svg~*]:pl-7",
+  "relative w-full border p-4 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:size-4 [&>svg~*]:pl-7",
   {
     variants: {
       variant: {
@@ -37,9 +37,14 @@ const alertVariants = cva(
         error:
           "bg-status-error-bg border-status-error/20 text-status-error-text [&>svg]:text-status-error",
       },
+      radius: {
+        default: "rounded-lg",
+        none: "rounded-none",
+      },
     },
     defaultVariants: {
       variant: "default",
+      radius: "default",
     },
   },
 );
@@ -57,14 +62,21 @@ interface AlertProps extends React.ComponentProps<"div">, VariantProps<typeof al
   onDismiss?: () => void;
 }
 
-function Alert({ className, variant = "default", onDismiss, children, ...props }: AlertProps) {
+function Alert({
+  className,
+  variant = "default",
+  radius,
+  onDismiss,
+  children,
+  ...props
+}: AlertProps) {
   const Icon = variant ? alertIcons[variant] : null;
 
   return (
     <div
       data-slot="alert"
       role={["error", "warning"].includes(variant || "") ? "alert" : "status"}
-      className={cn(alertVariants({ variant }), onDismiss && "pr-10", className)}
+      className={cn(alertVariants({ variant, radius }), onDismiss && "pr-10", className)}
       {...props}
     >
       {Icon && <Icon />}
