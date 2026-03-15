@@ -252,7 +252,7 @@ function OrganizationLayoutInner() {
       <IssueViewModeProvider>
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2 focus:bg-ui-bg focus:p-2 focus:border focus:border-ui-border focus:shadow-md focus:rounded-md focus:text-ui-text font-medium"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2 focus:bg-ui-bg focus:p-2 focus:border focus:border-ui-border focus:shadow-md focus:rounded-container focus:text-ui-text font-medium"
         >
           Skip to content
         </a>

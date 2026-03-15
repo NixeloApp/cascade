@@ -15,8 +15,8 @@ import { c, ROOT, relPath, walkDir } from "./utils.js";
 // Only UI components can use raw rounded-* classes
 const ALLOWED_DIRS = ["src/components/ui/", "src/index.css"];
 
-// Match any rounded-* class (including arbitrary values)
-const ROUNDED_PATTERN = /\brounded(-none|-sm|-md|-lg|-xl|-2xl|-3xl|-full|-\[.+?\])?\b/g;
+// Match any rounded-* class (standard, custom tokens, and arbitrary values)
+const ROUNDED_PATTERN = /\brounded(-\w+|-\[.+?\])\b/g;
 
 // Files with known violations - baseline to track and fix over time
 const BASELINE_FILES = new Set([
@@ -56,21 +56,16 @@ const BASELINE_FILES = new Set([
   "src/routes/__root.tsx",
   "src/routes/_auth/_app/$orgSlug/assistant.tsx",
   "src/routes/_auth/_app/$orgSlug/documents/index.tsx",
-  "src/routes/_auth/_app/$orgSlug/issues/index.tsx",
   "src/routes/_auth/_app/$orgSlug/my-issues.tsx",
   "src/routes/_auth/_app/$orgSlug/projects/$key/board.tsx",
   "src/routes/_auth/_app/$orgSlug/projects/$key/route.tsx",
   "src/routes/_auth/_app/$orgSlug/route.tsx",
-  "src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/backlog.tsx",
-  "src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/dependencies.tsx",
-  "src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints.tsx",
   "src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/settings.tsx",
   "src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/teams/$teamSlug/wiki.tsx",
   "src/routes/_auth/_app/$orgSlug/workspaces/$workspaceSlug/wiki.tsx",
   "src/routes/_auth/_app/$orgSlug/workspaces/index.tsx",
   "src/routes/_auth/onboarding.tsx",
   "src/routes/invite.$token.tsx",
-  "src/routes/portal.$token.projects.$projectId.tsx",
   "src/routes/verify-2fa.tsx",
 ]);
 

@@ -1,6 +1,7 @@
 import { api } from "@convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageContent, PageError } from "@/components/layout";
+import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -48,7 +49,7 @@ function WorkspaceSprintsPage() {
     >
       <Flex direction="column" gap="md">
         {activeSprints.map((sprint) => (
-          <div key={sprint._id} className="rounded-lg border border-ui-border bg-ui-bg p-4">
+          <Card key={sprint._id} padding="md">
             <Flex justify="between" align="start" gap="md">
               <Flex direction="column" gap="xs">
                 <Typography variant="small" color="tertiary">
@@ -63,7 +64,7 @@ function WorkspaceSprintsPage() {
                 {sprint.endDate ? new Date(sprint.endDate).toLocaleDateString() : "No end date"}
               </Typography>
             </Flex>
-          </div>
+          </Card>
         ))}
       </Flex>
     </PageContent>

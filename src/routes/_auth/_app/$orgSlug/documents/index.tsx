@@ -74,7 +74,7 @@ function DocumentsListPage() {
                       <Flex
                         align="center"
                         justify="center"
-                        className="h-11 w-11 shrink-0 rounded-xl bg-ui-bg-tertiary text-ui-text-secondary ring-1 ring-ui-border transition-colors group-hover:text-brand"
+                        className="h-11 w-11 shrink-0 rounded-container bg-ui-bg-tertiary text-ui-text-secondary ring-1 ring-ui-border transition-colors group-hover:text-brand"
                       >
                         <FileText size={20} />
                       </Flex>
@@ -109,7 +109,7 @@ function DocumentsListPage() {
                     align="center"
                     justify="between"
                     gap="md"
-                    className="rounded-xl border border-ui-border-secondary/70 bg-ui-bg-soft/90 px-3 py-2"
+                    className="rounded-container border border-ui-border-secondary/70 bg-ui-bg-soft/90 px-3 py-2"
                   >
                     <Metadata size="sm">
                       <MetadataItem>

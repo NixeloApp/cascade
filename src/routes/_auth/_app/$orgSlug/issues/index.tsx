@@ -7,6 +7,7 @@ import { CreateIssueModal, IssueCard } from "@/components/IssueDetail";
 import { IssueDetailViewer } from "@/components/IssueDetailViewer";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Input } from "@/components/ui/Input";
@@ -79,35 +80,37 @@ function AllIssuesPage() {
       />
 
       {/* Filters & Search */}
-      <Flex gap="md" className="mb-6 bg-ui-bg p-4 rounded-lg border border-ui-border">
-        <FlexItem flex="1">
-          <Input
-            placeholder="Search issues..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            variant="search"
-            aria-label="Search issues"
-          />
-        </FlexItem>
-        <Flex gap="sm" align="center">
-          <Select
-            value={statusFilter || "all"}
-            onValueChange={(value) => setStatusFilter(value === "all" ? undefined : value)}
-          >
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="All Statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              {(statusOptions ?? []).map((opt) => (
-                <SelectItem key={opt.id} value={opt.id}>
-                  {opt.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <Card recipe="filterBar" padding="md" className="mb-6">
+        <Flex gap="md">
+          <FlexItem flex="1">
+            <Input
+              placeholder="Search issues..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              variant="search"
+              aria-label="Search issues"
+            />
+          </FlexItem>
+          <Flex gap="sm" align="center">
+            <Select
+              value={statusFilter || "all"}
+              onValueChange={(value) => setStatusFilter(value === "all" ? undefined : value)}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                {(statusOptions ?? []).map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id}>
+                    {opt.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Flex>
         </Flex>
-      </Flex>
+      </Card>
 
       {/* Content */}
       <PageContent

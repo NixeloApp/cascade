@@ -78,7 +78,7 @@ function TeamWikiPage() {
                   <Flex
                     align="center"
                     justify="center"
-                    className="w-10 h-10 rounded-lg bg-ui-bg-tertiary text-ui-text-secondary shrink-0"
+                    className="w-10 h-10 rounded-container bg-ui-bg-tertiary text-ui-text-secondary shrink-0"
                   >
                     <FileText size={20} />
                   </Flex>

@@ -58,7 +58,7 @@ function MyIssuesBoardPage() {
         {groups.map(([groupKey, issues]) => (
           <FlexItem
             key={groupKey}
-            className="min-w-72 max-w-80 shrink-0 rounded-xl border border-ui-border bg-ui-bg-secondary p-3"
+            className="min-w-72 max-w-80 shrink-0 rounded-container border border-ui-border bg-ui-bg-secondary p-3"
           >
             <Flex justify="between" align="center" className="mb-3">
               <Typography variant="label">{groupKey}</Typography>
@@ -73,7 +73,7 @@ function MyIssuesBoardPage() {
                   to={ROUTES.issues.detail.path}
                   params={{ orgSlug, key: issue.key }}
                 >
-                  <div className="rounded-lg border border-ui-border bg-ui-bg p-3 hover:bg-ui-bg-tertiary transition-default">
+                  <div className="rounded-container border border-ui-border bg-ui-bg p-3 hover:bg-ui-bg-tertiary transition-default">
                     <Typography variant="small" color="secondary">
                       {issue.key} · {issue.projectKey}
                     </Typography>

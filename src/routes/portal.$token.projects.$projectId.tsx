@@ -31,7 +31,7 @@ function ClientPortalProjectPage() {
             {issues && issues.length > 0 ? (
               <div className="space-y-2">
                 {issues.map((issue) => (
-                  <div key={issue._id} className="rounded-lg border border-ui-border p-3">
+                  <div key={issue._id} className="border border-ui-border p-3">
                     <Typography variant="small">{issue.key}</Typography>
                     <Typography variant="small">{issue.title}</Typography>
                     <Typography variant="caption" color="secondary">
