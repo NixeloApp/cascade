@@ -37,6 +37,45 @@ import { Icon } from "@/components/ui/Icon";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/Popover";
 import { Typography } from "@/components/ui/Typography";
 import { NODE_TYPES } from "@/lib/plate/plugins";
+import { showError } from "@/lib/toast";
+
+const IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+
+/** Opens a file picker, validates the image, and inserts it into the editor. */
+function triggerImageUpload(editor: PlateEditor): void {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = IMAGE_TYPES.join(",");
+
+  input.onchange = async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (!IMAGE_TYPES.includes(file.type)) {
+      showError("Invalid file type. Use JPG, PNG, GIF, or WebP.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+      showError("Image too large. Maximum size is 5MB.");
+      return;
+    }
+
+    // Insert a placeholder, then swap with real URL after upload
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      editor.tf.insertNodes({
+        type: NODE_TYPES.image,
+        url: dataUrl,
+        children: [{ text: "" }],
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  input.click();
+}
 
 interface SlashMenuItem {
   id: string;
@@ -191,16 +230,7 @@ const SLASH_MENU_ITEMS: SlashMenuItem[] = [
     description: "Upload or embed an image",
     icon: Image,
     action: (editor) => {
-      // TODO: Open image upload dialog
-      const url = window.prompt("Enter image URL:");
-      if (url) {
-        const image = {
-          type: NODE_TYPES.image,
-          url,
-          children: [{ text: "" }],
-        };
-        editor.tf.insertNodes(image);
-      }
+      triggerImageUpload(editor);
     },
   },
 ];
