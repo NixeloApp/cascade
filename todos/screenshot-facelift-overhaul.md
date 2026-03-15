@@ -195,7 +195,9 @@ Beyond page loads — capture the states users actually see during interaction.
 - [ ] **Display properties toggle open** — wired but skips (properties button not visible after 25s)
 - [ ] **Sprint selector dropdown** — wired but skips (sprint combobox not visible — may not exist on board route without active sprint)
 
-> **Root cause:** Board toolbar (`BoardToolbar`) only renders after Convex data queries complete. The screenshot user's board takes 25s+ to hydrate, leaving toolbar buttons invisible within wait timeouts. Fix: optimize board Convex queries or seed data to be lighter.
+> **Root cause:** `canAccessProject()` returns false for the screenshot user on the seeded DEMO project. The seed inserts a `projectMembers` row, but the access check still denies access. The board route shows "Project Not Found" instead of the Kanban board. This affects ALL project sub-page captures (board, backlog, sprints, etc.) — they capture the error page, not the actual content. **This is a project access bug in the E2E seed, not a screenshot tool issue.**
+>
+> **Investigation needed:** Check why `computeProjectAccessImpl` fails despite the seed inserting `{ projectId, userId, role: "admin" }` into `projectMembers`. Likely a stale user ID issue — the screenshot user gets deleted/recreated each run with a new `_id`, and the seed may be patching the wrong membership or the `notDeleted` filter is excluding the row.
 
 ### Issue states
 
