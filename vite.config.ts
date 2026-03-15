@@ -151,6 +151,63 @@ window.addEventListener('message', async (message) => {
     cssCodeSplit: true,
     chunkSizeWarningLimit: 500,
     reportCompressedSize: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          // React core (changes rarely, cache forever)
+          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/")) {
+            return "react";
+          }
+          // Convex (real-time backend SDK)
+          if (id.includes("node_modules/convex/") || id.includes("node_modules/@convex-dev/")) {
+            return "convex";
+          }
+          // Rich text editor (heavy, only used on doc pages)
+          if (
+            id.includes("node_modules/@blocknote/") ||
+            id.includes("node_modules/prosemirror") ||
+            id.includes("node_modules/@tiptap/") ||
+            id.includes("node_modules/platejs") ||
+            id.includes("node_modules/@udecode/")
+          ) {
+            return "editor";
+          }
+          // Radix UI primitives
+          if (id.includes("node_modules/@radix-ui/")) {
+            return "radix";
+          }
+          // Date utilities
+          if (id.includes("node_modules/date-fns/")) {
+            return "date-fns";
+          }
+          // Icons
+          if (id.includes("node_modules/lucide-react/")) {
+            return "icons";
+          }
+          // Router
+          if (id.includes("node_modules/@tanstack/")) {
+            return "router";
+          }
+          // Drag and drop
+          if (id.includes("node_modules/@atlaskit/")) {
+            return "dnd";
+          }
+          // Collaboration (Yjs)
+          if (
+            id.includes("node_modules/yjs/") ||
+            id.includes("node_modules/y-") ||
+            id.includes("node_modules/lib0/") ||
+            id.includes("node_modules/@slate-yjs/")
+          ) {
+            return "collab";
+          }
+          // Animation
+          if (id.includes("node_modules/framer-motion/")) {
+            return "motion";
+          }
+        },
+      },
+    },
   },
   optimizeDeps: {
     include: ["convex/react", "sonner", "clsx", "tailwind-merge", "remark-gfm"],
