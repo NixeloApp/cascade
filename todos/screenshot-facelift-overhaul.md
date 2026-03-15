@@ -207,14 +207,14 @@ Beyond page loads — capture the states users actually see during interaction.
 
 ### Document editor states
 
-- [ ] **Document locked** — locked banner visible, editor read-only
-- [ ] **Document @mention popover** — `@` trigger showing user list
-- [ ] **Document slash menu** — `/` trigger showing block type options
-- [ ] **Document floating toolbar** — text selected, toolbar visible with formatting options
-- [ ] **Document text color picker** — foreground/background color selection
-- [ ] **Document with table** — table block inserted and visible
-- [ ] **Document with code block** — code block with syntax highlighting
-- [ ] **Document favorites star** — starred document in sidebar
+- [ ] **Document locked** — needs backend mutation to lock document
+- [x] **Document @mention popover** — type `@` in editor, wait for combobox/options
+- [x] **Document slash menu** — type `/` on new line, wait for option elements
+- [x] **Document floating toolbar** — triple-click to select text, wait for Bold button
+- [ ] **Document text color picker** — needs toolbar open + color picker click
+- [ ] **Document with table** — needs table block in seed content
+- [ ] **Document with code block** — needs code block in seed content
+- [ ] **Document favorites star** — needs starred items in seed data
 
 ### Calendar states
 

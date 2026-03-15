@@ -216,6 +216,9 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-project-[^-]+-board-display-properties$/, "06-board", "-display-properties"],
   // Document editor: filled-document-editor → 10-editor
   [/^filled-document-editor$/, "10-editor", ""],
+  [/^filled-document-editor-slash-menu$/, "10-editor", "-slash-menu"],
+  [/^filled-document-editor-floating-toolbar$/, "10-editor", "-floating-toolbar"],
+  [/^filled-document-editor-mention-popover$/, "10-editor", "-mention-popover"],
   // Project calendar views: filled-project-xxx-calendar, filled-calendar-{mode}
   [/^filled-project-[^-]+-calendar$/, "11-calendar", ""],
   [/^filled-calendar-(day|week|month)$/, "11-calendar", "-$1"],
@@ -2283,10 +2286,97 @@ async function screenshotFilledStates(
   }
 
   // Document editor
-  if (shouldCapture(p, "document-editor")) {
+  const editorTargets = [
+    "document-editor",
+    "document-editor-slash-menu",
+    "document-editor-floating-toolbar",
+    "document-editor-mention-popover",
+  ];
+  if (shouldCaptureAny(p, editorTargets)) {
     const docId = await discoverDocumentId(page, orgSlug);
     if (docId) {
-      await takeScreenshot(page, p, "document-editor", `/${orgSlug}/documents/${docId}`);
+      const docUrl = `/${orgSlug}/documents/${docId}`;
+      await takeScreenshot(page, p, "document-editor", docUrl);
+
+      // Document editor interactive states
+      // Slash menu — type "/" at end of content
+      if (shouldCapture(p, "document-editor-slash-menu")) {
+        await runCaptureStep("document slash menu", async () => {
+          const editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
+          await editor.waitFor({ state: "visible", timeout: 8000 });
+          // Click at end of editor to place cursor, then press Enter for new line
+          await editor.click();
+          await page.keyboard.press("End");
+          await page.keyboard.press("Enter");
+          await page.keyboard.type("/");
+          // Wait for slash menu options to appear
+          await page
+            .locator("[role='option']")
+            .first()
+            .waitFor({ state: "visible", timeout: 5000 });
+          await waitForScreenshotReady(page);
+          await captureCurrentView(page, p, "document-editor-slash-menu");
+          // Dismiss and undo
+          await page.keyboard.press("Escape");
+          await page.keyboard.press("Backspace"); // remove "/"
+          await page.keyboard.press("Backspace"); // remove newline
+        });
+      }
+
+      // Floating toolbar — select text in the editor
+      if (shouldCapture(p, "document-editor-floating-toolbar")) {
+        await runCaptureStep("document floating toolbar", async () => {
+          // Reload to get clean state
+          await page
+            .goto(`${BASE_URL}${docUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+            .catch(() => {});
+          await waitForExpectedContent(page, docUrl, "document-editor");
+          await waitForScreenshotReady(page);
+          const editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
+          await editor.waitFor({ state: "visible", timeout: 8000 });
+          // Triple-click to select a line of text
+          await editor.click({ clickCount: 3 });
+          // Wait for floating toolbar
+          await page
+            .getByRole("button", { name: /bold/i })
+            .first()
+            .waitFor({ state: "visible", timeout: 5000 });
+          await waitForScreenshotReady(page);
+          await captureCurrentView(page, p, "document-editor-floating-toolbar");
+          // Click away to deselect
+          await page.mouse.click(10, 10);
+        });
+      }
+
+      // @mention popover — type "@" in editor
+      if (shouldCapture(p, "document-editor-mention-popover")) {
+        await runCaptureStep("document mention popover", async () => {
+          // Reload to get clean state
+          await page
+            .goto(`${BASE_URL}${docUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+            .catch(() => {});
+          await waitForExpectedContent(page, docUrl, "document-editor");
+          await waitForScreenshotReady(page);
+          const editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
+          await editor.waitFor({ state: "visible", timeout: 8000 });
+          await editor.click();
+          await page.keyboard.press("End");
+          await page.keyboard.press("Enter");
+          await page.keyboard.type("@");
+          // Wait for mention combobox or user list
+          await page
+            .locator("[role='combobox']")
+            .or(page.locator("[role='option']").first())
+            .first()
+            .waitFor({ state: "visible", timeout: 5000 });
+          await waitForScreenshotReady(page);
+          await captureCurrentView(page, p, "document-editor-mention-popover");
+          // Dismiss and undo
+          await page.keyboard.press("Escape");
+          await page.keyboard.press("Backspace"); // remove "@"
+          await page.keyboard.press("Backspace"); // remove newline
+        });
+      }
     }
   }
 
@@ -2982,6 +3072,9 @@ const DRY_RUN_PAGES = [
   "filled-issue-PROJ-1",
   // Filled states — document editor
   "filled-document-editor",
+  "filled-document-editor-slash-menu",
+  "filled-document-editor-floating-toolbar",
+  "filled-document-editor-mention-popover",
   // Filled states — workspace sub-pages (use WS as placeholder slug)
   "filled-workspace-WS",
   "filled-workspace-WS-backlog",
