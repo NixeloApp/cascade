@@ -12,7 +12,7 @@ import { MONTH, WEEK } from "@convex/lib/timeUtils";
 import { useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Clock, DollarSign, Download, TrendingUp, Users } from "@/lib/icons";
-import { showInfo } from "@/lib/toast";
+import { showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card, CardBody } from "../ui/Card";
 import { Flex } from "../ui/Flex";
@@ -59,6 +59,41 @@ function getDateRangeParams(dateRange: "week" | "month" | "all") {
     default:
       return {};
   }
+}
+
+/** Export billing data as CSV and trigger browser download. */
+function exportBillingCsv(
+  projectName: string,
+  dateRange: string,
+  billing: { totalRevenue: number; totalHours: number; billableHours: number; entries: number },
+  users: [string, BillingStats][],
+): void {
+  const rows = [
+    ["Team Member", "Total Hours", "Billable Hours", "Utilization %", "Cost", "Revenue"],
+    ...users.map(([, stats]) => [
+      stats.name,
+      formatHours(stats.hours),
+      formatHours(stats.billableHours),
+      stats.hours > 0 ? `${Math.round((stats.billableHours / stats.hours) * 100)}%` : "0%",
+      formatCurrency(stats.cost),
+      formatCurrency(stats.revenue),
+    ]),
+    [],
+    ["Summary"],
+    ["Total Hours", formatHours(billing.totalHours)],
+    ["Billable Hours", formatHours(billing.billableHours)],
+    ["Total Revenue", formatCurrency(billing.totalRevenue)],
+    ["Time Entries", String(billing.entries)],
+  ];
+
+  const csv = rows.map((row) => row.map((cell) => `"${cell}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `billing-${projectName.toLowerCase().replace(/\s+/g, "-")}-${dateRange}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 /** Time tracking billing report with exportable member time summaries. */
@@ -124,8 +159,8 @@ export function BillingReport({ projectId }: BillingReportProps) {
           <Button
             leftIcon={<Download className="w-4 h-4" />}
             onClick={() => {
-              // TODO: Implement CSV/PDF export functionality
-              showInfo("Export functionality coming soon");
+              exportBillingCsv(project.name, dateRange, billing, sortedUsers);
+              showSuccess("Billing report exported");
             }}
           >
             Export

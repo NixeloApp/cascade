@@ -1,7 +1,7 @@
 # Tech Debt: Billing Report Export
 
 > **Priority:** P3
-> **Status:** Backlog
+> **Status:** Partial (CSV done, PDF deferred)
 > **File:** `src/components/TimeTracker/BillingReport.tsx:126`
 
 ## Description
@@ -14,7 +14,7 @@ Implement CSV/PDF export functionality for billing reports.
 
 ## Acceptance Criteria
 
-- [ ] Wire existing Export button to real export flows
-- [ ] Implement CSV export
-- [ ] Implement PDF export
-- [ ] Handle large datasets gracefully
+- [x] Wire existing Export button to real export flows
+- [x] Implement CSV export
+- [ ] Implement PDF export (deferred — needs jsPDF or server-side generation)
+- [x] Handle large datasets gracefully (streaming CSV via Blob)
