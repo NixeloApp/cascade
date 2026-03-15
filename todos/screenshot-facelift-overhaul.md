@@ -193,7 +193,7 @@ Beyond page loads — capture the states users actually see during interaction.
 - [ ] **WIP limit warning** — needs WIP limit configured + exceeded
 - [x] **Filter bar active** — captured with Priority → High filter (218ms)
 - [x] **Display properties toggle open** — captured (275ms)
-- [ ] **Sprint selector dropdown** — wired but combobox not visible (may need active sprint in seed)
+- ~~Sprint selector dropdown~~ — only renders for `boardType: "scrum"`, seed creates kanban. Not a bug.
 
 > **Resolved:** The `getByKey` bug that caused "Project Not Found" was fixed by adding a `by_organization_key` compound index. Board now loads in ~1.8s with full toolbar.
 
