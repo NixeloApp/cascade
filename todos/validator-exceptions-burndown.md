@@ -9,47 +9,31 @@
 
 Keep the validator suite green while eliminating the remaining allowlists and baselines.
 
-## Current Baselines
+## Remaining Baselines
 
-### Border Radius (`check-border-radius.js`)
-- **Remaining:** 15 files
-- **Breakdown:** 4 progress bars/chart bars, 2 decorative blurs, 3 pseudo-elements/drag handles, 2 raw DOM strings, 4 bare `rounded` on divs
-- **Fix:** Add radius props to components or extract to UI primitives
+### Border Radius (`check-border-radius.js`) — 15 files
+- 4 progress bars/chart bars (rounded-full on thin elements)
+- 2 decorative blurs (rounded-full on background glows)
+- 3 pseudo-elements/drag handles (can't use React components)
+- 2 raw DOM strings (service worker, kanban-dnd)
+- 4 bare `rounded` on divs (need component radius props)
 
-### Nested Cards (`check-nested-cards.js`)
-- **Remaining:** 7 files
-- **Breakdown:** 5 Settings pages (cause surface-shell regressions when fixed), 2 Landing CVA files
-- **Fix:** Extract inner Card styles into proper Card recipes, then replace inner Cards with divs using `getCardRecipeClassName()`
+### Nested Cards (`check-nested-cards.js`) — 7 files
+- 5 Settings pages (cause surface-shell regressions when inner Cards replaced)
+- 2 Landing CVA files (component-level patterns)
 
-### Test Coverage (`test-coverage-baseline.js`)
-- **Remaining:** ~52 files
-- **Fix:** Add tests or reduce validator target surface
+### Test Coverage (`test-coverage-baseline.js`) — ~52 files
+- Add tests or reduce validator target surface
 
-### Standards (`check-standards.js`)
-- **Inline strong:** 1 file (CommentRenderer - renders user markdown, genuine exception)
-- **Raw links:** 8 patterns (test files, Landing pages, markdown renderers)
+## Genuine Exceptions (permanent)
 
-### Arbitrary Tailwind (`check-arbitrary-tw.js`)
-- **Remaining:** 5 patterns (Radix runtime vars, CSS `inherit`, `perspective`, `calc()`)
-- **Status:** All genuine exceptions, can't be design tokens
-
-## Completed This Session
-
-- [x] Border radius: 50 → 15 (70% reduction)
-- [x] Nested cards: 73 → 7 (90% reduction)
-- [x] Inline strong: 11 → 1 (91% reduction)
-- [x] Arbitrary TW: 9 → 5 (44% reduction)
-- [x] Created `Dot`, `IconCircle` UI components
-- [x] Added `Typography variant="strong"` for inline emphasis
-- [x] Added `Alert radius` prop, `Button chromeSize="sectionToggle"`
-- [x] Border radius validator: skip CVA definition regions, catch bare `rounded`
+- **Inline strong:** 1 file (CommentRenderer — renders user markdown)
+- **Raw links:** 8 patterns (test files, Landing, markdown renderers)
+- **Arbitrary TW:** 5 patterns (Radix runtime vars, CSS `inherit`, `perspective`, `calc()`)
 
 ## Acceptance Criteria
 
-- [x] `scripts/validate/check-time-constants.js` has no exception entries
-- [x] `scripts/validate/check-test-coverage.js` has no allowlist entries
-- [x] `scripts/validate/check-unused-params.js` has no allowlist entries
-- [ ] `scripts/validate/test-coverage-baseline.js` is empty or removed
 - [ ] Border radius baseline ≤ 15
 - [ ] Nested cards baseline ≤ 7
+- [ ] `test-coverage-baseline.js` empty or removed
 - [x] `pnpm run validate` passes with all 41 checks
