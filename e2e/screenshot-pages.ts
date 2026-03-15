@@ -2953,10 +2953,10 @@ async function screenshotBoardInteractiveStates(
       await swimlaneButton.click();
       // Select the mode — use hasText since Radix checkbox items may have
       // additional accessible text from the checkmark indicator
-      const option = page
-        .getByRole("menuitemcheckbox")
-        .filter({ hasText: new RegExp(`^${mode}$`, "i") });
-      await option.waitFor({ state: "visible", timeout: 3000 });
+      // Wait for dropdown to open, then find the option by text
+      const modeLabel = mode[0].toUpperCase() + mode.slice(1);
+      const option = page.getByText(modeLabel, { exact: true }).first();
+      await option.waitFor({ state: "visible", timeout: 5000 });
       await option.click();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, captureName);
@@ -2970,7 +2970,7 @@ async function screenshotBoardInteractiveStates(
       .first();
     if (await swimlaneButton.isVisible().catch(() => false)) {
       await swimlaneButton.click();
-      const noSwimlanes = page.getByRole("menuitemcheckbox").filter({ hasText: /no swimlanes/i });
+      const noSwimlanes = page.getByText("No Swimlanes", { exact: true });
       if (await noSwimlanes.isVisible().catch(() => false)) {
         await noSwimlanes.click();
         await waitForScreenshotReady(page);
@@ -3008,11 +3008,8 @@ async function screenshotBoardInteractiveStates(
       await priorityFilter.waitFor({ state: "visible", timeout: 8000 });
       await priorityFilter.click();
       // Select "High" priority
-      const highOption = page
-        .getByRole("menuitemcheckbox")
-        .filter({ hasText: /^high$/i })
-        .first();
-      await highOption.waitFor({ state: "visible", timeout: 3000 });
+      const highOption = page.getByText("High", { exact: true }).first();
+      await highOption.waitFor({ state: "visible", timeout: 5000 });
       await highOption.click();
       // Close dropdown
       await page.keyboard.press("Escape");
@@ -3068,12 +3065,10 @@ async function screenshotBoardInteractiveStates(
       await issueCard.waitFor({ state: "visible", timeout: 5000 });
       await issueCard.click({ force: true });
 
-      // Wait for the side panel to appear (Sheet component)
+      // Wait for the side panel to appear (Sheet component with data-testid)
       await page
-        .locator("[role='dialog']")
-        .or(page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL))
-        .first()
-        .waitFor({ state: "visible", timeout: 5000 });
+        .getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL)
+        .waitFor({ state: "visible", timeout: 8000 });
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-board-peek-mode`);
 
