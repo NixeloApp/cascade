@@ -1482,15 +1482,40 @@ async function waitForExpectedContent(
   }
 
   if (isDashboardUrl(url) || name === "dashboard") {
-    await page
-      .getByRole("heading", { name: /^dashboard$/i })
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+    // Wait for the sidebar to render — this proves the app shell + auth
+    // has completed (splash screen is gone, org context loaded).
     await page
       .getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON)
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
+      .waitFor({ state: "visible", timeout: 30000 })
+      .catch(() => {});
+    // Wait for dashboard heading (confirms route rendered)
+    await page
+      .getByRole("heading", { name: /^dashboard$/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 15000 })
+      .catch(() => {});
+    // Wait for actual dashboard content to appear
+    await page
+      .waitForFunction(
+        () => {
+          const text = document.body.innerText || "";
+          return (
+            text.includes("DEMO-") ||
+            text.includes("My Issues") ||
+            text.includes("Recent Activity") ||
+            text.includes("Explore Projects") ||
+            text.includes("No projects yet")
+          );
+        },
+        undefined,
+        { timeout: 20000 },
+      )
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
       .catch(() => {});
     await page
       .locator("[data-loading-skeleton]")
