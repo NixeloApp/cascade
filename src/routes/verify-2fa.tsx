@@ -15,6 +15,7 @@ import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/form";
 import { Icon } from "@/components/ui/Icon";
+import { IconCircle } from "@/components/ui/IconCircle";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -89,9 +90,9 @@ function Verify2FARoute() {
     <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary p-4">
       <Card className="w-full max-w-md p-8">
         <Flex direction="column" align="center" gap="lg">
-          <Flex align="center" justify="center" className="w-16 h-16 rounded-full bg-brand-subtle">
+          <IconCircle size="lg" variant="brand">
             <Icon icon={ShieldCheck} size="xl" className="text-brand" />
-          </Flex>
+          </IconCircle>
 
           <div className="text-center">
             <Typography variant="h3" className="mb-2">

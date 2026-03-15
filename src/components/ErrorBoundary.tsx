@@ -9,6 +9,7 @@
 import { AlertTriangle } from "lucide-react";
 import { Component, type ReactNode } from "react";
 import { Flex } from "@/components/ui/Flex";
+import { IconCircle } from "@/components/ui/IconCircle";
 import { Stack } from "@/components/ui/Stack";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
@@ -36,7 +37,8 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
+    // Keep uncaught render failures at error severity for observability.
+    console.error("[ErrorBoundary] Uncaught error:", error, errorInfo);
     this.props.onError?.(error, errorInfo);
   }
 
@@ -56,13 +58,9 @@ export class ErrorBoundary extends Component<Props, State> {
           <Card variant="flat" padding="lg" className="max-w-md text-center">
             <Stack align="center" gap="lg">
               {/* Subtle icon */}
-              <Flex
-                align="center"
-                justify="center"
-                className="h-20 w-20 rounded-full bg-status-error-bg"
-              >
+              <IconCircle size="xl" variant="error">
                 <AlertTriangle className="h-10 w-10 text-status-error" />
-              </Flex>
+              </IconCircle>
 
               {/* Large error code with tight tracking */}
               <Typography variant="h1" className="text-display tracking-tightest">
@@ -90,11 +88,11 @@ export class ErrorBoundary extends Component<Props, State> {
                   >
                     View error details
                   </Typography>
-                  <Card variant="soft" padding="md" className="mt-2 overflow-auto max-h-40">
+                  <div className="mt-2 overflow-auto max-h-40 rounded bg-ui-bg-soft p-4">
                     <Typography as="pre" variant="mono" color="secondary">
                       {this.state.error.message}
                     </Typography>
-                  </Card>
+                  </div>
                 </details>
               )}
 

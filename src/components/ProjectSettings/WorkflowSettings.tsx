@@ -170,7 +170,7 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
         <Stack gap="md">
           <Stack gap="sm">
             {states.map((state, index) => (
-              <Card key={state.id} variant="outline" padding="md" className="bg-ui-bg">
+              <div key={state.id} className="p-4 bg-ui-bg">
                 <Flex align="center" gap="md">
                   <Flex gap="xs" direction="column">
                     <Button
@@ -209,7 +209,7 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
                     Remove
                   </Button>
                 </Flex>
-              </Card>
+              </div>
             ))}
           </Stack>
 
@@ -229,7 +229,7 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
       ) : (
         <Stack gap="lg">
           {(["todo", "inprogress", "done"] as const).map((category) => (
-            <Card key={category} variant="outline" padding="md" className="bg-ui-bg">
+            <div key={category} className="p-4 bg-ui-bg">
               <Stack gap="sm">
                 <Typography variant="label" color="secondary">
                   {category === "inprogress"
@@ -246,7 +246,7 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
                   ))}
                 </Flex>
               </Stack>
-            </Card>
+            </div>
           ))}
         </Stack>
       )}

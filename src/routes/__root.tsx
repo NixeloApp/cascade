@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
+import { IconCircle } from "@/components/ui/IconCircle";
 import { Toaster } from "@/components/ui/Sonner";
 import { getVapidPublicKey, WebPushProvider } from "@/lib/webPush";
 import { LazyPostHog } from "../components/LazyPostHog";
@@ -32,7 +33,7 @@ if (typeof window !== "undefined") {
       window.__convex_test_client = convex;
     }
   } catch (error) {
-    console.warn("[app] Failed to initialize Convex client", { error });
+    console.info("[app] Failed to initialize Convex client", { error });
   }
 }
 
@@ -81,13 +82,9 @@ function RootComponent() {
             >
               <Flex direction="column" align="center" className="max-w-md text-center px-6">
                 {/* Subtle icon */}
-                <Flex
-                  align="center"
-                  justify="center"
-                  className="mb-8 h-20 w-20 rounded-full bg-ui-bg-soft"
-                >
+                <IconCircle size="xl" variant="soft" className="mb-8">
                   <CloudOff className="h-10 w-10 text-ui-text-tertiary" />
-                </Flex>
+                </IconCircle>
 
                 {/* Large error code with tight tracking */}
                 <Typography

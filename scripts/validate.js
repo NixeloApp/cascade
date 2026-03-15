@@ -39,6 +39,10 @@
  *  35. Weak assertions         — toBeDefined(), toBeTruthy(), {} as Type in tests
  *  36. Native confirm()        — ensure custom dialogs used instead of native confirm()
  *  37. Convex hooks            — validates Convex hook usage patterns
+ *  38. Console usage           — bans console.* in production code
+ *  39. Tech debt               — tracks TODO/FIXME/HACK comments
+ *  40. Nested Cards            — bans Cards nested inside other Cards
+ *  41. Border Radius           — enforces consistent border radius usage
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -243,6 +247,22 @@ const checks = [
   {
     name: "Convex hooks",
     modulePath: new URL("./validate/check-convex-hooks.js", import.meta.url).href,
+  },
+  {
+    name: "Console usage",
+    modulePath: new URL("./validate/check-console.js", import.meta.url).href,
+  },
+  {
+    name: "Tech debt",
+    modulePath: new URL("./validate/check-tech-debt.js", import.meta.url).href,
+  },
+  {
+    name: "Nested Cards",
+    modulePath: new URL("./validate/check-nested-cards.js", import.meta.url).href,
+  },
+  {
+    name: "Border Radius",
+    modulePath: new URL("./validate/check-border-radius.js", import.meta.url).href,
   },
 ];
 

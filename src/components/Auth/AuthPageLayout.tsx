@@ -3,12 +3,13 @@ import type { ReactNode } from "react";
 import { NixeloLogo } from "@/components/Landing";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid, GridItem } from "@/components/ui/Grid";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
+import { cn } from "@/lib/utils";
 
 interface AuthPageLayoutProps {
   title: string;
@@ -30,7 +31,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
       >
         <Grid cols={1} colsLg={5} gap="2xl" className="w-full items-center">
           <GridItem colSpanLg={3} className="hidden lg:block">
-            <Card recipe="authShowcasePanel" padding="lg" className="xl:px-6 xl:py-7">
+            <div className={cn(getCardRecipeClassName("authShowcasePanel"), "p-6 xl:px-6 xl:py-7")}>
               <Badge variant="outline" shape="pill" className="mb-4 w-fit">
                 Unified delivery workspace
               </Badge>
@@ -52,32 +53,26 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
               </Stack>
 
               <Grid cols={1} colsSm={3} gap="md" className="mt-6 max-w-3xl">
-                <Card recipe="authFeatureTile" padding="md">
-                  <Typography variant="eyebrow" color="tertiary" className="tracking-[0.18em]">
-                    Search
-                  </Typography>
+                <div className={cn(getCardRecipeClassName("authFeatureTile"), "p-4")}>
+                  <Typography variant="pageHeaderEyebrow">Search</Typography>
                   <Typography variant="h4" className="mt-2">
                     Omnibox
                   </Typography>
-                </Card>
-                <Card recipe="authFeatureTile" padding="md">
-                  <Typography variant="eyebrow" color="tertiary" className="tracking-[0.18em]">
-                    Plan
-                  </Typography>
+                </div>
+                <div className={cn(getCardRecipeClassName("authFeatureTile"), "p-4")}>
+                  <Typography variant="pageHeaderEyebrow">Plan</Typography>
                   <Typography variant="h4" className="mt-2">
                     Boards
                   </Typography>
-                </Card>
-                <Card recipe="authFeatureTile" padding="md">
-                  <Typography variant="eyebrow" color="tertiary" className="tracking-[0.18em]">
-                    Deliver
-                  </Typography>
+                </div>
+                <div className={cn(getCardRecipeClassName("authFeatureTile"), "p-4")}>
+                  <Typography variant="pageHeaderEyebrow">Deliver</Typography>
                   <Typography variant="h4" className="mt-2">
                     Clients
                   </Typography>
-                </Card>
+                </div>
               </Grid>
-            </Card>
+            </div>
           </GridItem>
 
           <GridItem colSpanLg={2}>
@@ -86,12 +81,12 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
                 <Stack gap="lg" className="mb-5 lg:hidden">
                   <Button asChild variant="unstyled" size="none" className="w-fit">
                     <Link to={ROUTES.home.path}>
-                      <Card recipe="authMobileBrandChip" padding="sm">
+                      <div className={cn(getCardRecipeClassName("authMobileBrandChip"), "p-2")}>
                         <Flex align="center" gap="sm">
                           <NixeloLogo size={28} />
                           <Typography variant="small">Nixelo</Typography>
                         </Flex>
-                      </Card>
+                      </div>
                     </Link>
                   </Button>
 
@@ -103,7 +98,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
                   </Typography>
                 </Stack>
 
-                <Card recipe="authFormShell" padding="lg" className="sm:p-8">
+                <div className={cn(getCardRecipeClassName("authFormShell"), "p-6 sm:p-8")}>
                   <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-linear-to-r from-transparent via-brand/14 to-transparent" />
                   <Badge variant="outline" shape="pill" className="mb-4 w-fit">
                     Secure account access
@@ -137,7 +132,7 @@ export function AuthPageLayout({ title, subtitle, children }: AuthPageLayoutProp
                       <a href={ROUTES.privacy.build()}>Privacy Policy</a>
                     </Button>
                   </Typography>
-                </Card>
+                </div>
               </div>
             </Flex>
           </GridItem>

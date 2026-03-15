@@ -16,13 +16,15 @@ import { NotificationCenter } from "@/components/Notifications";
 import { TimerWidget as NavTimerWidget } from "@/components/TimeTracking/TimerWidget";
 import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
+import { Dot } from "@/components/ui/Dot";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import { CircleHelp, Menu } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
+import { cn } from "@/lib/utils";
 import type { CommandAction } from "../CommandPalette";
 
 interface AppHeaderProps {
@@ -55,12 +57,13 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
               <Menu className="h-5 w-5" />
             </Button>
 
-            <Card
-              recipe="workspaceCockpitChip"
-              padding="none"
-              className="hidden lg:flex lg:items-center lg:gap-3"
+            <div
+              className={cn(
+                getCardRecipeClassName("workspaceCockpitChip"),
+                "hidden lg:flex lg:items-center lg:gap-3",
+              )}
             >
-              <div className="h-2.5 w-2.5 rounded-full bg-brand shadow-brand-halo" />
+              <Dot size="md" halo />
               <div className="min-w-0">
                 <Typography
                   variant="caption"
@@ -72,7 +75,7 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
                   Search, track, and act from one surface
                 </Typography>
               </div>
-            </Card>
+            </div>
           </Flex>
 
           {/* Center section: Global search (grows to fill available space) */}

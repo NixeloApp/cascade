@@ -7,10 +7,20 @@ import { CreateIssueModal, IssueCard } from "@/components/IssueDetail";
 import { IssueDetailViewer } from "@/components/IssueDetailViewer";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Input } from "@/components/ui/Input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
-import { Filter, Plus, Search, SearchX } from "@/lib/icons";
+import { Plus, SearchX } from "@/lib/icons";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/issues/")({
   component: AllIssuesPage,
@@ -23,6 +33,11 @@ function AllIssuesPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const { organizationId } = useOrganization();
+
+  const statusOptions = useAuthenticatedQuery(
+    api.projects.getOrganizationWorkflowStates,
+    organizationId ? { organizationId } : "skip",
+  );
 
   const {
     results: issues,
@@ -65,31 +80,37 @@ function AllIssuesPage() {
       />
 
       {/* Filters & Search */}
-      <Flex gap="md" className="mb-6 bg-ui-bg p-4 rounded-lg border border-ui-border">
-        <FlexItem flex="1" className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ui-text-tertiary" />
-          <input
-            type="text"
-            placeholder="Search issues..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-ui-bg-secondary border border-ui-border rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
-          />
-        </FlexItem>
-        <Flex gap="sm" align="center">
-          <Filter className="w-4 h-4 text-ui-text-tertiary" />
-          <select
-            value={statusFilter || ""}
-            onChange={(e) => setStatusFilter(e.target.value || undefined)}
-            className="bg-ui-bg-secondary border border-ui-border rounded-md px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
-          >
-            <option value="">All Statuses</option>
-            <option value="todo">To Do</option>
-            <option value="inprogress">In Progress</option>
-            <option value="done">Done</option>
-          </select>
+      <Card recipe="filterBar" padding="md" className="mb-6">
+        <Flex gap="md">
+          <FlexItem flex="1">
+            <Input
+              placeholder="Search issues..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              variant="search"
+              aria-label="Search issues"
+            />
+          </FlexItem>
+          <Flex gap="sm" align="center">
+            <Select
+              value={statusFilter || "all"}
+              onValueChange={(value) => setStatusFilter(value === "all" ? undefined : value)}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                {(statusOptions ?? []).map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id}>
+                    {opt.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Flex>
         </Flex>
-      </Flex>
+      </Card>
 
       {/* Content */}
       <PageContent

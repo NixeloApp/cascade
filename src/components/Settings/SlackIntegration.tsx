@@ -173,9 +173,9 @@ export function SlackIntegration() {
     <Card padding="lg">
       <Flex justify="between" align="start">
         <Flex gap="lg" align="center">
-          <Card padding="sm" className="bg-ui-bg-tertiary">
+          <div className="rounded bg-ui-bg-tertiary p-2">
             <MessageSquare className="h-6 w-6" />
-          </Card>
+          </div>
           <Stack gap="xs">
             <Typography variant="h3">Slack</Typography>
             <Typography variant="small" color="secondary">

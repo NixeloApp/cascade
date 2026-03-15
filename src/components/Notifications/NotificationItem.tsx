@@ -26,6 +26,7 @@ import {
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Dot } from "@/components/ui/Dot";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { IconButton } from "@/components/ui/IconButton";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
@@ -271,9 +272,7 @@ export function NotificationItem({
         </Flex>
       </Flex>
 
-      {!notification.isRead && (
-        <div className="absolute top-4 right-4 h-2 w-2 rounded-full bg-brand" />
-      )}
+      {!notification.isRead && <Dot className="absolute top-4 right-4" />}
     </Card>
   );
 }

@@ -1,6 +1,7 @@
 import { useRef } from "react";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { cn } from "@/lib/utils";
 import { useCalendarContext } from "../../calendar-context";
 import { useCalendarInitialScroll } from "../use-calendar-initial-scroll";
 import { CalendarBodyDayCalendar } from "./calendar-body-day-calendar";
@@ -22,9 +23,11 @@ export function CalendarBodyDay(): React.ReactElement {
           <Flex ref={scrollRef} direction="column" flex="1" className="overflow-y-auto">
             <Flex flex="1" className="relative">
               <CalendarBodyMarginDayMargin />
-              <Card recipe="calendarDayContentRail" className="overflow-hidden">
+              <div
+                className={cn(getCardRecipeClassName("calendarDayContentRail"), "overflow-hidden")}
+              >
                 <CalendarBodyDayContent date={date} />
-              </Card>
+              </div>
             </Flex>
           </Flex>
         </Flex>

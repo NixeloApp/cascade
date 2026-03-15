@@ -10,7 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Stack } from "@/components/ui/Stack";
@@ -271,7 +271,10 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
 
                 <Stack gap="sm">
                   {attendance.attendees.map((attendee: AttendanceParticipant) => (
-                    <Card key={attendee.userId} recipe="eventAttendanceRow">
+                    <div
+                      key={attendee.userId}
+                      className={getCardRecipeClassName("eventAttendanceRow")}
+                    >
                       <Flex justify="between" align="center" gap="sm">
                         <Flex gap="sm" align="center" flex="1">
                           {attendee.status === "present" && (
@@ -314,7 +317,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
                           </SelectContent>
                         </Select>
                       </Flex>
-                    </Card>
+                    </div>
                   ))}
                 </Stack>
 

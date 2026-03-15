@@ -24,6 +24,7 @@ import {
   User,
 } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
+import { cn } from "@/lib/utils";
 import { getVapidPublicKey, useWebPush } from "@/lib/webPush";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -56,12 +57,7 @@ function PreferenceRow({
   isLast = false,
 }: PreferenceRowProps) {
   return (
-    <Card
-      variant="ghost"
-      padding="sm"
-      radius="none"
-      className={!isLast ? "border-b border-ui-border-secondary" : undefined}
-    >
+    <div className={cn("p-3", !isLast && "border-b border-ui-border-secondary")}>
       <Flex align="start" justify="between">
         <FlexItem flex="1">
           <Flex align="center" gap="sm">
@@ -79,7 +75,7 @@ function PreferenceRow({
           className="ml-4"
         />
       </Flex>
-    </Card>
+    </div>
   );
 }
 
@@ -94,7 +90,7 @@ interface PushPreferenceRowProps {
 
 function PushPreferenceRow({ icon, label, checked, isDisabled, onChange }: PushPreferenceRowProps) {
   return (
-    <Card variant="ghost" padding="xs" radius="none">
+    <div className="p-2">
       <Flex align="center" justify="between">
         <Flex align="center" gap="sm">
           <Icon icon={icon} size="sm" />
@@ -102,7 +98,7 @@ function PushPreferenceRow({ icon, label, checked, isDisabled, onChange }: PushP
         </Flex>
         <Switch checked={checked} onCheckedChange={onChange} disabled={isDisabled} />
       </Flex>
-    </Card>
+    </div>
   );
 }
 
@@ -169,7 +165,7 @@ function PushNotificationsCard({
   const renderContent = () => {
     if (!isSupported) {
       return (
-        <Card padding="md" variant="flat">
+        <div className="border border-ui-border-secondary/80 bg-ui-bg-soft/90 p-4">
           <Flex align="center" gap="sm">
             <Icon icon={BellOff} size="md" className="text-ui-text-tertiary" />
             <Typography variant="caption">
@@ -177,20 +173,20 @@ function PushNotificationsCard({
               Firefox.
             </Typography>
           </Flex>
-        </Card>
+        </div>
       );
     }
 
     if (!vapidKey) {
       return (
-        <Card padding="md" variant="flat">
+        <div className="border border-ui-border-secondary/80 bg-ui-bg-soft/90 p-4">
           <Flex align="center" gap="sm">
             <Icon icon={Info} size="md" className="text-ui-text-tertiary" />
             <Typography variant="caption">
               Push notifications require server configuration. Contact your administrator.
             </Typography>
           </Flex>
-        </Card>
+        </div>
       );
     }
 
@@ -307,15 +303,15 @@ export function NotificationsTab() {
         <Stack gap="md">
           <SkeletonText lines={2} />
           <Stack gap="sm">
-            <Card padding="sm" variant="flat">
+            <div className="border border-ui-border-secondary/80 bg-ui-bg-soft/90 p-3">
               <SkeletonText lines={1} />
-            </Card>
-            <Card padding="sm" variant="flat">
+            </div>
+            <div className="border border-ui-border-secondary/80 bg-ui-bg-soft/90 p-3">
               <SkeletonText lines={1} />
-            </Card>
-            <Card padding="sm" variant="flat">
+            </div>
+            <div className="border border-ui-border-secondary/80 bg-ui-bg-soft/90 p-3">
               <SkeletonText lines={1} />
-            </Card>
+            </div>
           </Stack>
         </Stack>
       </Card>

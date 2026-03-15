@@ -10,7 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { ArrowLeft, Building2, FolderPlus, Sparkles, UserPlus } from "lucide-react";
 import { useState } from "react";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
@@ -18,6 +18,7 @@ import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
+import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
@@ -344,11 +345,11 @@ function LeadProjectChoiceStep({
         >
           <Stack gap="lg">
             <Flex align="center" justify="between">
-              <Card recipe="onboardingActionIconBrand" padding="md">
+              <div className={cn(getCardRecipeClassName("onboardingActionIconBrand"), "p-4")}>
                 <Flex align="center" justify="center">
                   <Icon icon={Sparkles} size="lg" className="text-brand" />
                 </Flex>
-              </Card>
+              </div>
               <Badge variant="brand" shape="pill" size="md">
                 Recommended
               </Badge>
@@ -372,11 +373,11 @@ function LeadProjectChoiceStep({
           aria-disabled={isCreating}
         >
           <Stack gap="lg">
-            <Card recipe="onboardingActionIconNeutral" padding="md" className="w-fit">
+            <div className={cn(getCardRecipeClassName("onboardingActionIconNeutral"), "p-4 w-fit")}>
               <Flex align="center" justify="center">
                 <Icon icon={FolderPlus} size="lg" className="text-ui-text-secondary" />
               </Flex>
-            </Card>
+            </div>
             <Stack gap="xs">
               <Typography variant="h3">Start from Scratch</Typography>
               <Typography variant="small" color="secondary">

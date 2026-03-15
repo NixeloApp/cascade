@@ -27,6 +27,7 @@ import {
   getSwimlanConfigs,
   groupIssuesBySwimlane,
 } from "@/lib/swimlane-utils";
+import { cn } from "@/lib/utils";
 import { BulkOperationsBar } from "./BulkOperationsBar";
 import type { BoardFilters, DateRangeFilter } from "./FilterBar";
 import { CreateIssueModal } from "./IssueDetail";
@@ -34,7 +35,7 @@ import { IssueDetailViewer } from "./IssueDetailViewer";
 import { BoardToolbar } from "./Kanban/BoardToolbar";
 import { KanbanColumn } from "./Kanban/KanbanColumn";
 import { SwimlanRow } from "./Kanban/SwimlanRow";
-import { Card } from "./ui/Card";
+import { Card, getCardRecipeClassName } from "./ui/Card";
 import { SkeletonKanbanCard, SkeletonText } from "./ui/Skeleton";
 
 interface KanbanBoardProps {
@@ -339,16 +340,16 @@ export function KanbanBoard({
         <Card variant="ghost" recipe="kanbanBoardRail" ref={boardContainerRef}>
           <Flex gap="sm" align="start">
             {[1, 2, 3, 4].map((i) => (
-              <Card key={i} recipe="kanbanLoadingColumn" padding="none" radius="lg">
-                <Card recipe="kanbanLoadingColumnHeader" padding="sm">
+              <div key={i} className={getCardRecipeClassName("kanbanLoadingColumn")}>
+                <div className={cn(getCardRecipeClassName("kanbanLoadingColumnHeader"), "p-3")}>
                   <SkeletonText lines={1} className="w-24" />
-                </Card>
+                </div>
                 <div className="min-h-96">
                   <SkeletonKanbanCard />
                   <SkeletonKanbanCard />
                   <SkeletonKanbanCard />
                 </div>
-              </Card>
+              </div>
             ))}
           </Flex>
         </Card>

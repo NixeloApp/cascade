@@ -157,6 +157,7 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
       calendarMonthOverflow: "h-auto rounded-none p-0 text-xs font-medium",
       sprintPreset: "h-auto rounded-lg px-3 py-3 text-sm",
       swimlaneHeader: "h-auto w-full justify-start rounded-xl px-4 py-2 text-left text-sm",
+      sectionToggle: "w-full justify-between min-h-0 rounded-none",
     },
   },
 });

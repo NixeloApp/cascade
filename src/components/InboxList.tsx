@@ -21,9 +21,10 @@ import {
 import { useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
+import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
-import { Card } from "./ui/Card";
+import { Card, getCardRecipeClassName } from "./ui/Card";
 import { Checkbox } from "./ui/Checkbox";
 import {
   DropdownMenu,
@@ -231,7 +232,7 @@ export function InboxList({ projectId }: InboxListProps) {
 
           {/* Bulk Actions Bar */}
           {activeTab === "open" && triageableCount > 0 && (
-            <Card variant="soft" padding="sm">
+            <div className="p-3 bg-ui-bg-soft">
               <Flex align="center" gap="md">
                 <Checkbox
                   checked={selectedIds.size === triageableCount && triageableCount > 0}
@@ -268,7 +269,7 @@ export function InboxList({ projectId }: InboxListProps) {
                   </Typography>
                 )}
               </Flex>
-            </Card>
+            </div>
           )}
 
           <TabsContent value="open" className="overflow-auto">
@@ -436,11 +437,11 @@ function InboxIssueRow({
         )}
 
         {/* Status Badge */}
-        <Card recipe={config.recipe} padding="none" className="size-7">
+        <div className={cn(getCardRecipeClassName(config.recipe), "size-7")}>
           <Flex align="center" justify="center" className="h-full">
             <Icon icon={StatusIcon} size="sm" />
           </Flex>
-        </Card>
+        </div>
 
         {/* Issue Info */}
         <FlexItem flex="1" className="min-w-0">

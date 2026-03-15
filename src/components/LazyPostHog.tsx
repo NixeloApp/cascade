@@ -44,7 +44,7 @@ export function LazyPostHog({ apiKey, options, children }: LazyPostHogProps) {
           setPostHogProvider(() => Provider);
         }
       } catch (error) {
-        console.warn("[analytics] Failed to lazy-load PostHog provider", { error });
+        console.info("[analytics] Failed to lazy-load PostHog provider", { error });
       }
     };
 

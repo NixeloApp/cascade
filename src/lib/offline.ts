@@ -272,7 +272,7 @@ export class OfflineStatusManager {
     navigator.serviceWorker.ready
       .then((registration) => this.registerBackgroundSync(registration))
       .catch((error: unknown) => {
-        console.warn("[offline] Failed waiting for service worker readiness", { error });
+        console.info("[offline] Failed waiting for service worker readiness", { error });
       });
   }
 
@@ -282,7 +282,7 @@ export class OfflineStatusManager {
     }
 
     return registration.sync.register("sync-mutations").catch((error: unknown) => {
-      console.warn("[offline] Failed to register background sync", { error });
+      console.info("[offline] Failed to register background sync", { error });
     });
   }
 
@@ -381,7 +381,7 @@ async function persistMutationFailureStatus(
   try {
     await offlineDB.updateMutationStatus(mutation.id, nextStatus, getErrorMessage(error));
   } catch (statusError) {
-    console.warn("[offline] Failed to persist queued mutation failure status", {
+    console.info("[offline] Failed to persist queued mutation failure status", {
       id: mutation.id,
       mutationType: mutation.mutationType,
       statusError,
@@ -391,7 +391,7 @@ async function persistMutationFailureStatus(
 
 async function processQueuedMutation(mutation: OfflineMutation): Promise<void> {
   if (!mutation.id) {
-    console.warn("[offline] Skipping queued mutation without id", {
+    console.info("[offline] Skipping queued mutation without id", {
       mutationType: mutation.mutationType,
       timestamp: mutation.timestamp,
     });
@@ -404,7 +404,7 @@ async function processQueuedMutation(mutation: OfflineMutation): Promise<void> {
     await offlineDB.updateMutationStatus(mutation.id, "synced");
   } catch (error) {
     const nextStatus = getNextFailureStatus(mutation.attempts);
-    console.warn("[offline] Failed to process queued mutation", {
+    console.info("[offline] Failed to process queued mutation", {
       id: mutation.id,
       mutationType: mutation.mutationType,
       attempts: mutation.attempts,

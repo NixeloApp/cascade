@@ -4,7 +4,8 @@ import { usePaginatedQuery } from "convex/react";
 import { useState } from "react";
 import { PageContent } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
-import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Card } from "@/components/ui/Card";
+import { Flex } from "@/components/ui/Flex";
 import { SegmentedControl, SegmentedControlItem } from "@/components/ui/SegmentedControl";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -56,9 +57,12 @@ function MyIssuesBoardPage() {
 
       <Flex gap="md" className="overflow-x-auto pb-2">
         {groups.map(([groupKey, issues]) => (
-          <FlexItem
+          <Card
             key={groupKey}
-            className="min-w-72 max-w-80 shrink-0 rounded-xl border border-ui-border bg-ui-bg-secondary p-3"
+            radius="lg"
+            padding="sm"
+            variant="flat"
+            className="min-w-72 max-w-80 shrink-0 border-ui-border bg-ui-bg-secondary"
           >
             <Flex justify="between" align="center" className="mb-3">
               <Typography variant="label">{groupKey}</Typography>
@@ -73,7 +77,7 @@ function MyIssuesBoardPage() {
                   to={ROUTES.issues.detail.path}
                   params={{ orgSlug, key: issue.key }}
                 >
-                  <div className="rounded-lg border border-ui-border bg-ui-bg p-3 hover:bg-ui-bg-tertiary transition-default">
+                  <div className="border border-ui-border bg-ui-bg p-3 hover:bg-ui-bg-tertiary transition-default">
                     <Typography variant="small" color="secondary">
                       {issue.key} · {issue.projectKey}
                     </Typography>
@@ -87,7 +91,7 @@ function MyIssuesBoardPage() {
                 </Link>
               ))}
             </Flex>
-          </FlexItem>
+          </Card>
         ))}
       </Flex>
 

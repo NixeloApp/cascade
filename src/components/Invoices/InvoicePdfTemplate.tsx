@@ -1,5 +1,11 @@
 import { Button } from "@/components/ui/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  getCardRecipeClassName,
+} from "@/components/ui/Card";
 import { Grid } from "@/components/ui/Grid";
 import { Stack } from "@/components/ui/Stack";
 import {
@@ -11,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/Table";
 import { Typography } from "@/components/ui/Typography";
+import { cn } from "@/lib/utils";
 
 type InvoiceLineItem = {
   description: string;
@@ -66,7 +73,7 @@ export function InvoicePdfTemplate({
             <Typography variant="small">Due: {formatDate(dueDate)}</Typography>
           </Grid>
 
-          <Card recipe="invoicePreviewSection">
+          <div className={getCardRecipeClassName("invoicePreviewSection")}>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -89,15 +96,15 @@ export function InvoicePdfTemplate({
                 ))}
               </TableBody>
             </Table>
-          </Card>
+          </div>
 
-          <Card recipe="invoiceTotalsPanel" padding="sm">
+          <div className={cn(getCardRecipeClassName("invoiceTotalsPanel"), "p-3")}>
             <Stack gap="xs" align="end">
               <Typography variant="small">Subtotal: {formatCurrency(subtotal)}</Typography>
               <Typography variant="small">Tax: {formatCurrency(tax ?? 0)}</Typography>
               <Typography variant="h4">Total: {formatCurrency(total)}</Typography>
             </Stack>
-          </Card>
+          </div>
 
           {notes ? <Typography variant="small">Notes: {notes}</Typography> : null}
           {pdfUrl ? (

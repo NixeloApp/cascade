@@ -102,9 +102,9 @@ export function GitHubIntegration() {
     <Card padding="lg">
       <Flex justify="between" align="start">
         <Flex gap="lg" align="center">
-          <Card padding="sm" className="bg-ui-bg-tertiary">
+          <div className="rounded bg-ui-bg-tertiary p-2">
             <Github className="h-6 w-6" />
-          </Card>
+          </div>
           <Stack gap="xs">
             <Typography variant="h3">GitHub</Typography>
             <Typography variant="small" color="secondary">

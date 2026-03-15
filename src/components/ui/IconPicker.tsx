@@ -203,6 +203,7 @@ export function IconPicker({ value, onChange, disabled = false }: IconPickerProp
       </div>
 
       <Input
+        variant="search"
         value={searchQuery}
         onChange={(event) => setSearchQuery(event.target.value)}
         placeholder="Search icons"

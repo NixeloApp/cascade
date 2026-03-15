@@ -56,7 +56,7 @@ export function FocusZone({ task }: FocusZoneProps) {
       >
         <div className="absolute inset-x-0 top-0 h-24 bg-linear-to-b from-brand-subtle/30 to-transparent" />
         <div className="absolute left-0 top-0 h-full w-1 bg-brand" />
-        <Card padding="lg" radius="none" variant="ghost" className="pl-7">
+        <div className="p-6 pl-7">
           <Stack gap="lg" className="relative">
             <Flex justify="between" align="start" gap="md">
               <Stack gap="sm">
@@ -97,7 +97,7 @@ export function FocusZone({ task }: FocusZoneProps) {
               </Flex>
             </Flex>
           </Stack>
-        </Card>
+        </div>
       </Card>
     </Stack>
   );

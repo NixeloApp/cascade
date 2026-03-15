@@ -1,4 +1,5 @@
 import { Badge } from "../ui/Badge";
+import { Dot } from "../ui/Dot";
 import { Flex } from "../ui/Flex";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
@@ -25,7 +26,7 @@ export function Greeting({ userName, completedCount = 0 }: GreetingProps) {
         className="w-fit px-3 py-1 text-ui-text-tertiary shadow-soft backdrop-blur-sm"
       >
         <Flex align="center" gap="sm">
-          <span className="h-2 w-2 rounded-full bg-brand" aria-hidden="true" />
+          <Dot />
           <Typography variant="caption" className="uppercase tracking-widest text-ui-text-tertiary">
             Command Center
           </Typography>
@@ -38,9 +39,9 @@ export function Greeting({ userName, completedCount = 0 }: GreetingProps) {
         {completedCount > 0 ? (
           <>
             You closed{" "}
-            <strong className="text-ui-text">
+            <Typography as="strong" variant="strong" className="text-ui-text">
               {completedCount} {completedCount === 1 ? "task" : "tasks"}
-            </strong>{" "}
+            </Typography>{" "}
             this week. Keep the highest-impact work moving and the rest visible.
           </>
         ) : (

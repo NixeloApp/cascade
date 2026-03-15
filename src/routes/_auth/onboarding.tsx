@@ -16,6 +16,7 @@ import { MemberOnboarding } from "@/components/Onboarding/MemberOnboarding";
 import { RoleSelector } from "@/components/Onboarding/RoleSelector";
 import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { IconCircle } from "@/components/ui/IconCircle";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -127,15 +128,15 @@ function OnboardingPage() {
       {/* Header */}
       <header className="px-8 py-6 flex items-center justify-between bg-ui-bg-secondary/80 backdrop-blur-sm sticky top-0 z-50">
         <Flex align="center" gap="md" className="group cursor-pointer">
-          <Flex
-            align="center"
-            justify="center"
-            className="h-10 w-10 rounded-xl bg-brand-indigo-bg shadow-lg shadow-brand-indigo-bg/20 transition-transform group-hover:scale-110 active:scale-95"
+          <IconCircle
+            size="md"
+            variant="brand"
+            className="h-10 w-10 bg-brand-indigo-bg shadow-lg shadow-brand-indigo-bg/20 transition-transform group-hover:scale-110 active:scale-95"
           >
             <Typography variant="h4" as="span" className="text-brand-foreground">
               N
             </Typography>
-          </Flex>
+          </IconCircle>
           <Typography variant="h4">Nixelo</Typography>
         </Flex>
         {step !== "invited" && (

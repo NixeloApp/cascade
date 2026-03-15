@@ -179,14 +179,14 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
 
                 {/* Error message */}
                 {execution.error && (
-                  <Card padding="sm" className="bg-status-error-bg border-status-error/30 mt-3">
+                  <div className="mt-3 border border-status-error/30 bg-status-error-bg p-3">
                     <Typography variant="caption" className="text-status-error-text mb-1">
                       Error:
                     </Typography>
                     <Typography variant="mono" className="text-status-error-text/90">
                       {String(execution.error)}
                     </Typography>
-                  </Card>
+                  </div>
                 )}
 
                 {/* Expandable Details */}
@@ -195,22 +195,22 @@ export function WebhookLogs({ webhookId, open, onOpenChange }: WebhookLogsProps)
                     {/* Request Payload */}
                     <Stack gap="xs">
                       <Typography variant="label">Request Payload:</Typography>
-                      <Card padding="sm" className="bg-ui-bg-secondary overflow-x-auto">
+                      <div className="overflow-x-auto bg-ui-bg-secondary p-3">
                         <Typography as="pre" variant="mono">
                           {formatJson(execution.requestPayload)}
                         </Typography>
-                      </Card>
+                      </div>
                     </Stack>
 
                     {/* Response Body */}
                     {execution.responseBody && (
                       <Stack gap="xs">
                         <Typography variant="label">Response Body:</Typography>
-                        <Card padding="sm" className="bg-ui-bg-secondary overflow-x-auto max-h-48">
+                        <div className="max-h-48 overflow-x-auto bg-ui-bg-secondary p-3">
                           <Typography as="pre" variant="mono">
                             {execution.responseBody}
                           </Typography>
-                        </Card>
+                        </div>
                       </Stack>
                     )}
                   </Stack>

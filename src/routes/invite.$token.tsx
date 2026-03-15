@@ -13,7 +13,9 @@ import { AlertCircle, CheckCircle, Clock, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { AuthRedirect, SignInForm } from "@/components/Auth";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { IconCircle } from "@/components/ui/IconCircle";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, usePublicQuery } from "@/hooks/useConvexHelpers";
@@ -81,9 +83,9 @@ function InviteRoute() {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary p-6">
         <div className="max-w-md w-full text-center">
-          <div className="p-4 rounded-full bg-status-error-bg w-fit mx-auto mb-6">
+          <IconCircle size="xl" variant="error" className="mx-auto mb-6">
             <AlertCircle className="w-12 h-12 text-status-error" />
-          </div>
+          </IconCircle>
           <Typography variant="h3" className="mb-3">
             Invalid Invitation
           </Typography>
@@ -104,15 +106,18 @@ function InviteRoute() {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary p-6">
         <div className="max-w-md w-full text-center">
-          <div className="p-4 rounded-full bg-status-warning-bg w-fit mx-auto mb-6">
+          <IconCircle size="xl" variant="warning" className="mx-auto mb-6">
             <Clock className="w-12 h-12 text-status-warning-text" />
-          </div>
+          </IconCircle>
           <Typography variant="h3" className="mb-3">
             Invitation Expired
           </Typography>
           <Typography variant="p" color="secondary" className="mb-6">
             This invitation has expired. Please contact{" "}
-            <strong className="font-medium">{invite.inviterName}</strong> to send a new invitation.
+            <Typography as="strong" variant="strong">
+              {invite.inviterName}
+            </Typography>{" "}
+            to send a new invitation.
           </Typography>
           <Button variant="primary" onClick={goToHome}>
             Go to Home
@@ -127,9 +132,9 @@ function InviteRoute() {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary p-6">
         <div className="max-w-md w-full text-center">
-          <div className="p-4 rounded-full bg-status-success-bg w-fit mx-auto mb-6">
+          <IconCircle size="xl" variant="success" className="mx-auto mb-6">
             <CheckCircle className="w-12 h-12 text-status-success" />
-          </div>
+          </IconCircle>
           <Typography variant="h3" className="mb-3">
             Already Accepted
           </Typography>
@@ -149,9 +154,9 @@ function InviteRoute() {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary p-6">
         <div className="max-w-md w-full text-center">
-          <div className="p-4 rounded-full bg-status-error-bg w-fit mx-auto mb-6">
+          <IconCircle size="xl" variant="error" className="mx-auto mb-6">
             <AlertCircle className="w-12 h-12 text-status-error" />
-          </div>
+          </IconCircle>
           <Typography variant="h3" className="mb-3">
             Invitation Revoked
           </Typography>
@@ -189,17 +194,21 @@ function InviteRoute() {
       <FlexItem as="main" flex="1" className="flex items-center justify-center p-6">
         <div className="max-w-md w-full">
           {/* Invitation Card */}
-          <div className="bg-ui-bg rounded-2xl shadow-lg p-8 mb-6">
+          <Card radius="full" padding="xl" className="mb-6">
             <div className="text-center mb-6">
               <Typography variant="h3" className="mb-2">
                 You're Invited!
               </Typography>
               <Typography variant="p" color="secondary">
-                <strong className="font-semibold text-ui-text">{invite.inviterName}</strong>{" "}
+                <Typography as="strong" variant="strong" className="text-ui-text">
+                  {invite.inviterName}
+                </Typography>{" "}
                 {isProjectInvite ? (
                   <>
                     has invited you to join the project{" "}
-                    <strong className="font-semibold text-ui-text">{invite.projectName}</strong>
+                    <Typography as="strong" variant="strong" className="text-ui-text">
+                      {invite.projectName}
+                    </Typography>
                   </>
                 ) : (
                   "has invited you to join Nixelo"
@@ -208,7 +217,7 @@ function InviteRoute() {
             </div>
 
             {/* Invite Details */}
-            <div className="bg-ui-bg-secondary rounded-lg p-4 mb-6">
+            <div className="bg-ui-bg-secondary p-4 mb-6">
               <Flex justify="between" align="center" className="text-sm">
                 <Typography variant="muted">Invited email</Typography>
                 <Typography variant="small">{invite.email}</Typography>
@@ -278,14 +287,16 @@ function InviteRoute() {
                 <div className="space-y-4">
                   <Typography className="text-sm text-center text-ui-text-secondary mb-4">
                     Sign in or create an account with{" "}
-                    <strong className="font-semibold text-ui-text">{invite.email}</strong> to accept
-                    this invitation
+                    <Typography as="strong" variant="strong" className="text-ui-text">
+                      {invite.email}
+                    </Typography>{" "}
+                    to accept this invitation
                   </Typography>
                   <SignInForm />
                 </div>
               </Unauthenticated>
             )}
-          </div>
+          </Card>
         </div>
       </FlexItem>
     </Flex>

@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageContent, PageError } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import {
@@ -111,7 +112,7 @@ function WorkspaceDependenciesPage() {
       />
       <Flex direction="column" gap="md">
         {dependencies.map((dependency) => (
-          <div key={dependency.linkId} className="rounded-lg border border-ui-border bg-ui-bg p-4">
+          <Card key={dependency.linkId} padding="md">
             <Flex direction="column" gap="sm">
               <Flex justify="between" align="center">
                 <Badge variant="secondary">Blocks</Badge>
@@ -139,7 +140,7 @@ function WorkspaceDependenciesPage() {
                 </Typography>
               </Flex>
             </Flex>
-          </div>
+          </Card>
         ))}
       </Flex>
     </Flex>

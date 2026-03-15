@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Card } from "../ui/Card";
+import { Card, getCardRecipeClassName } from "../ui/Card";
 import { Checkbox } from "../ui/Checkbox";
 import { Flex } from "../ui/Flex";
 import { Stack } from "../ui/Stack";
@@ -36,10 +36,12 @@ export function FilterCheckboxGroup<T extends string>({
             const isSelected = selectedValues.includes(option);
 
             return (
-              <Card
+              <div
                 key={option}
-                recipe={isSelected ? "selectionRowSelected" : "selectionRow"}
-                padding="sm"
+                className={cn(
+                  getCardRecipeClassName(isSelected ? "selectionRowSelected" : "selectionRow"),
+                  "p-3",
+                )}
               >
                 <Checkbox
                   checked={isSelected}
@@ -56,7 +58,7 @@ export function FilterCheckboxGroup<T extends string>({
                     </Typography>
                   }
                 />
-              </Card>
+              </div>
             );
           })}
         </Stack>

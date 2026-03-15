@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { IconCircle } from "@/components/ui/IconCircle";
 import { Metadata, MetadataItem } from "@/components/ui/Metadata";
 import { OverviewBand } from "@/components/ui/OverviewBand";
 import { Stack } from "@/components/ui/Stack";
@@ -33,25 +34,21 @@ interface WorkspaceCardProps {
 
 function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardProps) {
   const footer = (
-    <Flex
-      align="center"
-      justify="between"
-      gap="md"
-      className="rounded-xl border border-ui-border-secondary/70 bg-ui-bg-soft/90 px-3 py-2"
-      wrap
-    >
-      <Metadata size="sm">
-        <MetadataItem>
-          {workspace.teamCount} {workspace.teamCount === 1 ? "team" : "teams"}
-        </MetadataItem>
-        <MetadataItem>
-          {workspace.projectCount} {workspace.projectCount === 1 ? "project" : "projects"}
-        </MetadataItem>
-      </Metadata>
-      <Badge variant="outline" shape="pill">
-        Open workspace
-      </Badge>
-    </Flex>
+    <div className="border border-ui-border-secondary/70 bg-ui-bg-soft/90 px-3 py-2">
+      <Flex align="center" justify="between" gap="md" wrap>
+        <Metadata size="sm">
+          <MetadataItem>
+            {workspace.teamCount} {workspace.teamCount === 1 ? "team" : "teams"}
+          </MetadataItem>
+          <MetadataItem>
+            {workspace.projectCount} {workspace.projectCount === 1 ? "project" : "projects"}
+          </MetadataItem>
+        </Metadata>
+        <Badge variant="outline" shape="pill">
+          Open workspace
+        </Badge>
+      </Flex>
+    </div>
   );
 
   if (compact) {
@@ -67,13 +64,13 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
               <Flex align="start" justify="between" gap="md">
                 <Flex align="center" gap="sm">
                   {workspace.icon && (
-                    <Flex
-                      align="center"
-                      justify="center"
-                      className="h-12 w-12 shrink-0 rounded-2xl border border-ui-border/60 bg-ui-bg-soft text-2xl shadow-soft"
+                    <IconCircle
+                      size="md"
+                      variant="soft"
+                      className="h-12 w-12 border border-ui-border/60 text-2xl shadow-soft"
                     >
                       <span aria-hidden="true">{workspace.icon}</span>
-                    </Flex>
+                    </IconCircle>
                   )}
                   <div>
                     <Typography variant="h4">{workspace.name}</Typography>
@@ -105,30 +102,22 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
 
             <Stack gap="sm" className="lg:col-span-5">
               <Grid cols={2} gap="sm">
-                <Card
-                  variant="flat"
-                  padding="sm"
-                  className="border-ui-border-secondary/70 bg-ui-bg-soft/90"
-                >
+                <div className="border border-ui-border-secondary/70 bg-ui-bg-soft/90 p-3">
                   <Typography variant="caption" className="uppercase tracking-wide">
                     Teams
                   </Typography>
                   <Typography variant="h5" className="mt-2">
                     {workspace.teamCount}
                   </Typography>
-                </Card>
-                <Card
-                  variant="flat"
-                  padding="sm"
-                  className="border-ui-border-secondary/70 bg-ui-bg-soft/90"
-                >
+                </div>
+                <div className="border border-ui-border-secondary/70 bg-ui-bg-soft/90 p-3">
                   <Typography variant="caption" className="uppercase tracking-wide">
                     Projects
                   </Typography>
                   <Typography variant="h5" className="mt-2">
                     {workspace.projectCount}
                   </Typography>
-                </Card>
+                </div>
               </Grid>
 
               {footer}
@@ -150,13 +139,13 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
           <Flex align="start" justify="between" gap="md">
             <Flex align="center" gap="sm">
               {workspace.icon && (
-                <Flex
-                  align="center"
-                  justify="center"
-                  className="h-12 w-12 shrink-0 rounded-2xl border border-ui-border/60 bg-ui-bg-soft text-2xl shadow-soft"
+                <IconCircle
+                  size="md"
+                  variant="soft"
+                  className="h-12 w-12 border border-ui-border/60 text-2xl shadow-soft"
                 >
                   <span aria-hidden="true">{workspace.icon}</span>
-                </Flex>
+                </IconCircle>
               )}
               <div>
                 <Typography variant="h4">{workspace.name}</Typography>
@@ -174,30 +163,22 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
           </Typography>
 
           <Grid cols={2} gap="sm">
-            <Card
-              variant="flat"
-              padding="sm"
-              className="border-ui-border-secondary/70 bg-ui-bg-soft/90"
-            >
+            <div className="border border-ui-border-secondary/70 bg-ui-bg-soft/90 p-3">
               <Typography variant="caption" className="uppercase tracking-wide">
                 Teams
               </Typography>
               <Typography variant="h5" className="mt-2">
                 {workspace.teamCount}
               </Typography>
-            </Card>
-            <Card
-              variant="flat"
-              padding="sm"
-              className="border-ui-border-secondary/70 bg-ui-bg-soft/90"
-            >
+            </div>
+            <div className="border border-ui-border-secondary/70 bg-ui-bg-soft/90 p-3">
               <Typography variant="caption" className="uppercase tracking-wide">
                 Projects
               </Typography>
               <Typography variant="h5" className="mt-2">
                 {workspace.projectCount}
               </Typography>
-            </Card>
+            </div>
           </Grid>
 
           <div className="mt-auto">{footer}</div>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { type OfflineMutation, offlineDB, offlineStatus } from "../lib/offline";
 
 function logOfflineError(operation: string, error: unknown) {
-  console.warn(`[offline] ${operation}`, { error });
+  console.info(`[offline] ${operation}`, { error });
 }
 
 /**

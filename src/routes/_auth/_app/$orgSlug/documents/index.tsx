@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { IconCircle } from "@/components/ui/IconCircle";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -71,13 +72,13 @@ function DocumentsListPage() {
                 <Flex direction="column" gap="lg">
                   <Flex justify="between" align="start" gap="md">
                     <Flex align="center" gap="md" className="min-w-0 flex-1">
-                      <Flex
-                        align="center"
-                        justify="center"
-                        className="h-11 w-11 shrink-0 rounded-xl bg-ui-bg-tertiary text-ui-text-secondary ring-1 ring-ui-border transition-colors group-hover:text-brand"
+                      <IconCircle
+                        size="md"
+                        variant="muted"
+                        className="h-11 w-11 text-ui-text-secondary ring-1 ring-ui-border transition-colors group-hover:text-brand"
                       >
                         <FileText size={20} />
-                      </Flex>
+                      </IconCircle>
                       <div className="min-w-0">
                         <Typography
                           variant="h4"
@@ -109,7 +110,7 @@ function DocumentsListPage() {
                     align="center"
                     justify="between"
                     gap="md"
-                    className="rounded-xl border border-ui-border-secondary/70 bg-ui-bg-soft/90 px-3 py-2"
+                    className="border border-ui-border-secondary/70 bg-ui-bg-soft/90 px-3 py-2"
                   >
                     <Metadata size="sm">
                       <MetadataItem>

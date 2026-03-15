@@ -205,7 +205,7 @@ function ClientsListPage() {
                   </Typography>
                 ) : null}
                 {(portalTokensByClient[client._id] || []).map((token) => (
-                  <Card key={token._id} padding="sm" className="mt-2">
+                  <div key={token._id} className="mt-2 p-3 border-t border-ui-border">
                     <Typography variant="caption" className="block">
                       Token: {token._id}
                     </Typography>
@@ -234,7 +234,7 @@ function ClientsListPage() {
                         Revoke token
                       </Button>
                     ) : null}
-                  </Card>
+                  </div>
                 ))}
               </div>
             </CardContent>

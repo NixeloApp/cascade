@@ -12,6 +12,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { IconButton } from "@/components/ui/IconButton";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useUserFuzzySearch } from "@/hooks/useFuzzySearch";
+import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Typography } from "../ui/Typography";
 import { FuzzySearchInput, HighlightedText } from "./FuzzySearchInput";
@@ -86,34 +87,32 @@ export function AssigneeSearchDropdown({
     <div className={className}>
       {/* Show selected user */}
       {selectedUser && !query && (
-        <Flex
-          align="center"
-          justify="between"
-          className="p-2 border border-ui-border-secondary rounded-lg mb-2"
-        >
-          <Flex gap="sm" align="center">
-            <Avatar name={selectedUser.userName} email={selectedUser.userEmail} size="sm" />
-            <Typography variant="small" as="span">
-              {selectedUser.userName}
-            </Typography>
+        <Card padding="sm" radius="md" className="mb-2">
+          <Flex align="center" justify="between">
+            <Flex gap="sm" align="center">
+              <Avatar name={selectedUser.userName} email={selectedUser.userEmail} size="sm" />
+              <Typography variant="small" as="span">
+                {selectedUser.userName}
+              </Typography>
+            </Flex>
+            <IconButton
+              variant="danger"
+              size="xs"
+              onClick={() => onChange(null)}
+              aria-label="Clear assignee"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <title>Clear</title>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </IconButton>
           </Flex>
-          <IconButton
-            variant="danger"
-            size="xs"
-            onClick={() => onChange(null)}
-            aria-label="Clear assignee"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <title>Clear</title>
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </IconButton>
-        </Flex>
+        </Card>
       )}
 
       {/* Fuzzy search input */}

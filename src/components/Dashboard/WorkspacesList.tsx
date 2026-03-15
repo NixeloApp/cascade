@@ -14,6 +14,7 @@ import { useOrganization } from "@/hooks/useOrgContext";
 import { Folder } from "@/lib/icons";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
+import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
@@ -92,12 +93,12 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
               const itemProps = projectNavigation.getItemProps(index);
 
               return (
-                <Card
+                <Button
                   key={project._id}
+                  variant="unstyled"
+                  chrome="listRow"
+                  chromeSize="listRow"
                   onClick={() => navigateToWorkspace(project.key)}
-                  hoverable
-                  variant="soft"
-                  padding="md"
                   {...itemProps}
                   className={itemProps.className}
                 >
@@ -122,7 +123,7 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
                       </Typography>
                     </FlexItem>
                   </Flex>
-                </Card>
+                </Button>
               );
             })}
           </Flex>

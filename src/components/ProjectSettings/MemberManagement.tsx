@@ -150,7 +150,7 @@ export function MemberManagement({
         </Flex>
 
         {showAddForm && (
-          <Card variant="outline" padding="md" className="mb-5 bg-ui-bg">
+          <div className="p-4 mb-5 bg-ui-bg">
             <Typography variant="label" className="mb-4">
               Add New Member
             </Typography>
@@ -191,12 +191,12 @@ export function MemberManagement({
                 </Button>
               </Flex>
             </Stack>
-          </Card>
+          </div>
         )}
 
         <Stack gap="sm">
           {members.map((member) => (
-            <Card key={member._id} hoverable variant="outline" padding="sm" className="bg-ui-bg">
+            <div key={member._id} className="p-3 bg-ui-bg">
               <Flex align="center" justify="between">
                 <Flex gap="md" align="center">
                   <Avatar src={member.image} name={member.name} email={member.email} size="sm" />
@@ -245,7 +245,7 @@ export function MemberManagement({
                   )}
                 </Flex>
               </Flex>
-            </Card>
+            </div>
           ))}
         </Stack>
       </Card>

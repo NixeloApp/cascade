@@ -11,6 +11,7 @@ import { FileQuestion } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
+import { IconCircle } from "@/components/ui/IconCircle";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -27,9 +28,9 @@ export function NotFoundPage() {
       <Card padding="lg" variant="ghost" className="max-w-md text-center">
         <Stack align="center" gap="lg">
           {/* Subtle icon */}
-          <Flex align="center" justify="center" className="h-20 w-20 rounded-full bg-ui-bg-soft">
+          <IconCircle size="xl" variant="soft">
             <FileQuestion className="h-10 w-10 text-ui-text-tertiary" />
-          </Flex>
+          </IconCircle>
 
           {/* Large error code with tight tracking */}
           <Typography variant="h1" className="text-display tracking-tightest">

@@ -18,9 +18,10 @@ import { useModal } from "@/hooks/useModal";
 import { COLORS } from "@/lib/constants";
 import { Tag } from "@/lib/icons";
 import { showSuccess } from "@/lib/toast";
+import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
-import { Card, CardBody, CardHeader } from "./ui/Card";
+import { Card, CardBody, CardHeader, getCardRecipeClassName } from "./ui/Card";
 import { ColorPicker } from "./ui/ColorPicker";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Dialog } from "./ui/Dialog";
@@ -281,13 +282,22 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                 const isUngrouped = group._id === null;
 
                 return (
-                  <Card key={groupKey} padding="none" className="overflow-hidden">
+                  <div
+                    key={groupKey}
+                    className="overflow-hidden border border-ui-border-secondary/90"
+                  >
                     {/* Group Header */}
-                    <Card
-                      recipe="labelGroupHeader"
-                      padding="sm"
-                      radius="none"
+                    <div
+                      className={cn(getCardRecipeClassName("labelGroupHeader"), "p-3")}
+                      role="button"
+                      tabIndex={0}
                       onClick={() => toggleGroup(groupKey)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          toggleGroup(groupKey);
+                        }
+                      }}
                       aria-expanded={!isCollapsed}
                     >
                       <Flex justify="between" align="center">
@@ -343,13 +353,16 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                           )}
                         </Flex>
                       </Flex>
-                    </Card>
+                    </div>
 
                     {/* Labels in Group */}
                     {!isCollapsed && group.labels.length > 0 && (
                       <Flex direction="column" className="divide-y divide-ui-border">
                         {group.labels.map((label) => (
-                          <Card key={label._id} recipe="labelGroupRow" padding="sm" radius="none">
+                          <div
+                            key={label._id}
+                            className={cn(getCardRecipeClassName("labelGroupRow"), "p-3")}
+                          >
                             <Flex justify="between" align="center">
                               <Flex gap="md" align="center">
                                 <Badge
@@ -387,14 +400,14 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                                 </Button>
                               </Flex>
                             </Flex>
-                          </Card>
+                          </div>
                         ))}
                       </Flex>
                     )}
 
                     {/* Empty Group State */}
                     {!isCollapsed && group.labels.length === 0 && (
-                      <Card padding="md" radius="none" variant="ghost" className="text-center">
+                      <div className="p-4 text-center">
                         <Typography variant="small" color="secondary">
                           No labels in this group.{" "}
                           <Button
@@ -405,9 +418,9 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                             Add one
                           </Button>
                         </Typography>
-                      </Card>
+                      </div>
                     )}
-                  </Card>
+                  </div>
                 );
               })}
             </Flex>

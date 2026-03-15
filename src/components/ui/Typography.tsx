@@ -49,6 +49,7 @@ const typographyVariants = cva("", {
       meta: "text-xs text-ui-text-tertiary", // timestamps, counts, metadata
       caption: "text-xs text-ui-text-secondary", // descriptions, helper text
       label: "text-sm font-medium text-ui-text", // form labels
+      strong: "font-semibold", // inline emphasis, inherits parent size
       eyebrow: "text-xs font-semibold uppercase tracking-wider text-ui-text-secondary", // section labels, overlines
       pageHeaderEyebrow:
         "text-xs font-semibold uppercase tracking-[0.18em] text-ui-text-tertiary sm:tracking-[0.22em]",

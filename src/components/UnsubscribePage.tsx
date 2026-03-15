@@ -10,8 +10,8 @@ import { AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AuthPageLayout } from "@/components/Auth/AuthPageLayout";
 import { Card } from "@/components/ui/Card";
-import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { IconCircle } from "@/components/ui/IconCircle";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
@@ -68,13 +68,9 @@ export function UnsubscribePage({ token }: UnsubscribePageProps) {
       <AuthPageLayout title="Unsubscribed">
         <Card padding="xl" variant="ghost">
           <Stack align="center" gap="lg">
-            <Flex
-              align="center"
-              justify="center"
-              className="w-12 h-12 rounded-full bg-status-success-bg"
-            >
+            <IconCircle size="md" variant="success">
               <Icon icon={CheckCircle} size="lg" className="text-status-success" />
-            </Flex>
+            </IconCircle>
             <Stack align="center" gap="sm">
               <Typography color="secondary">
                 You've been unsubscribed from email notifications.
@@ -94,13 +90,9 @@ export function UnsubscribePage({ token }: UnsubscribePageProps) {
       <AuthPageLayout title="Invalid link">
         <Card padding="xl" variant="ghost">
           <Stack align="center" gap="lg">
-            <Flex
-              align="center"
-              justify="center"
-              className="w-12 h-12 rounded-full bg-status-warning-bg"
-            >
+            <IconCircle size="md" variant="warning">
               <Icon icon={AlertTriangle} size="lg" className="text-status-warning" />
-            </Flex>
+            </IconCircle>
             <Typography color="secondary" className="text-center">
               This unsubscribe link is invalid or has expired.
             </Typography>
@@ -114,13 +106,9 @@ export function UnsubscribePage({ token }: UnsubscribePageProps) {
     <AuthPageLayout title="Something went wrong">
       <Card padding="xl" variant="ghost">
         <Stack align="center" gap="lg">
-          <Flex
-            align="center"
-            justify="center"
-            className="w-12 h-12 rounded-full bg-status-error-bg"
-          >
+          <IconCircle size="md" variant="error">
             <Icon icon={XCircle} size="lg" className="text-status-error" />
-          </Flex>
+          </IconCircle>
           <Typography color="secondary" className="text-center">
             We couldn't process your unsubscribe request.
           </Typography>

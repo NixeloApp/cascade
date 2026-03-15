@@ -3,6 +3,7 @@ import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-rout
 import { PageContent, PageError } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { IconCircle } from "@/components/ui/IconCircle";
 import { RouteNav, RouteNavItem } from "@/components/ui/RouteNav";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -155,7 +157,10 @@ function ProjectLayout() {
   return (
     <Flex direction="column" className="h-full">
       <div className="border-b border-ui-border/70 bg-ui-bg/84 px-1 py-0.5 backdrop-blur-xl sm:px-4 sm:py-3">
-        <div className="bg-transparent px-0 py-0 shadow-none sm:rounded-3xl sm:border sm:border-ui-border-secondary/75 sm:bg-linear-to-r sm:from-ui-bg-elevated sm:via-ui-bg-elevated/98 sm:to-ui-bg-soft/76 sm:px-4 sm:py-3 sm:shadow-card">
+        <Card
+          recipe="pageHeader"
+          className="border-transparent bg-transparent px-0 py-0 shadow-none sm:px-4 sm:py-3"
+        >
           <Flex
             align="start"
             justify="between"
@@ -163,15 +168,15 @@ function ProjectLayout() {
             className="flex-col sm:flex-row sm:items-center"
           >
             <Flex align="center" gap="xs" className="min-w-0 sm:gap-sm">
-              <Flex
-                align="center"
-                justify="center"
-                className="h-6 w-6 shrink-0 rounded-full bg-brand-subtle text-brand ring-1 ring-brand/18 sm:h-10 sm:w-10 sm:rounded-xl"
+              <IconCircle
+                size="sm"
+                variant="brand"
+                className="h-6 w-6 ring-1 ring-brand/18 sm:h-10 sm:w-10"
               >
                 <Typography variant="small" className="font-semibold text-current">
                   {project.key.slice(0, 2).toUpperCase()}
                 </Typography>
-              </Flex>
+              </IconCircle>
               <div className="min-w-0">
                 <Flex align="center" gap="xs" className="min-w-0">
                   <Typography variant="h4" className="truncate text-sm tracking-tight sm:text-2xl">
@@ -258,7 +263,7 @@ function ProjectLayout() {
               </RouteNavItem>
             ))}
           </RouteNav>
-        </div>
+        </Card>
       </div>
 
       {/* Tab Content */}

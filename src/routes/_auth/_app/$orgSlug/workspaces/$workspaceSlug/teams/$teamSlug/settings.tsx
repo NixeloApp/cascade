@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
+import { IconCircle } from "@/components/ui/IconCircle";
 import { Typography } from "@/components/ui/Typography";
 
 export const Route = createFileRoute(
@@ -26,12 +27,7 @@ function TeamSettings() {
         {/* Coming soon placeholder */}
         <Card variant="soft">
           <div className="p-8 text-center">
-            <Flex
-              inline
-              align="center"
-              justify="center"
-              className="w-12 h-12 rounded-full bg-brand-subtle mb-4"
-            >
+            <IconCircle size="md" variant="brand" className="mx-auto mb-4">
               <svg
                 role="img"
                 aria-label="Team settings icon"
@@ -49,7 +45,7 @@ function TeamSettings() {
                   d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                 />
               </svg>
-            </Flex>
+            </IconCircle>
             <Typography variant="large" className="font-semibold tracking-tight mb-2">
               Coming Soon
             </Typography>

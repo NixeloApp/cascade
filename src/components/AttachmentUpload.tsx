@@ -13,6 +13,7 @@ import { Flex } from "@/components/ui/Flex";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "./ui/Button";
+import { InlineSpinner } from "./ui/LoadingSpinner";
 
 interface AttachmentUploadProps {
   issueId: Id<"issues">;
@@ -121,7 +122,7 @@ export function AttachmentUpload({ issueId, onAttached }: AttachmentUploadProps)
         disabled={isUploading}
         leftIcon={
           isUploading ? (
-            <div className="animate-spin rounded-full h-4 w-4 border-2 border-ui-border border-t-brand" />
+            <InlineSpinner size="sm" variant="brand" />
           ) : (
             <svg
               aria-hidden="true"

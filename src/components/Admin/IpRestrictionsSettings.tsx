@@ -218,7 +218,7 @@ export function IpRestrictionsSettings() {
             ) : (
               <Stack gap="sm">
                 {allowlist.map((entry: IpAllowlistEntry) => (
-                  <Card key={entry._id} padding="sm" className="bg-ui-bg-soft">
+                  <div key={entry._id} className="p-3 bg-ui-bg-soft">
                     <Flex align="center" justify="between">
                       <Stack gap="xs">
                         <Flex align="center" gap="sm">
@@ -245,14 +245,14 @@ export function IpRestrictionsSettings() {
                         </IconButton>
                       </Tooltip>
                     </Flex>
-                  </Card>
+                  </div>
                 ))}
               </Stack>
             )}
           </Stack>
 
           {/* Help Text */}
-          <Card padding="md" className="bg-ui-bg-soft">
+          <div className="p-4 bg-ui-bg-soft">
             <Stack gap="sm">
               <Typography variant="label">How IP Restrictions Work</Typography>
               <Stack gap="xs">
@@ -273,7 +273,7 @@ export function IpRestrictionsSettings() {
                 </Typography>
               </Stack>
             </Stack>
-          </Card>
+          </div>
         </Flex>
       </CardBody>
     </Card>

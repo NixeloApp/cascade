@@ -7,21 +7,54 @@ export const RAW_TAILWIND_OWNED_DIRS = ["src/components/ui/"];
 export const RAW_TAILWIND_NON_PRODUCT_EXTENSIONS = [".stories.tsx", ".test.tsx", ".example.tsx"];
 
 export const RAW_TAILWIND_PATTERNS = [
+  // Layout
   { pattern: /className=.*\bflex\b/, replacement: "<Flex>" },
   { pattern: /className=.*\binline-flex\b/, replacement: "<Flex inline>" },
   { pattern: /\bgrid\b/, replacement: "<Grid>" },
+
+  // Spacing - gap, padding, margin
   { pattern: /\bgap-\d+/, replacement: "<Flex gap='...'>" },
   { pattern: /\bp-\d+/, replacement: "<Card padding='...'>" },
   { pattern: /\bpx-\d+/, replacement: "<Card padding='...'>" },
   { pattern: /\bpy-\d+/, replacement: "<Card padding='...'>" },
+  { pattern: /\bpt-\d+/, replacement: "padding token or component" },
+  { pattern: /\bpr-\d+/, replacement: "padding token or component" },
+  { pattern: /\bpb-\d+/, replacement: "padding token or component" },
+  { pattern: /\bpl-\d+/, replacement: "padding token or component" },
+  { pattern: /\bm-\d+/, replacement: "margin token or wrapper" },
+  { pattern: /\bmx-\d+/, replacement: "margin token or wrapper" },
+  { pattern: /\bmy-\d+/, replacement: "margin token or wrapper" },
+  { pattern: /\bmt-\d+/, replacement: "margin token or wrapper" },
+  { pattern: /\bmr-\d+/, replacement: "margin token or wrapper" },
+  { pattern: /\bmb-\d+/, replacement: "margin token or wrapper" },
+  { pattern: /\bml-\d+/, replacement: "margin token or wrapper" },
   { pattern: /\bspace-y-\d+/, replacement: "<Stack gap='...'>" },
   { pattern: /\bspace-x-\d+/, replacement: "<Flex gap='...'>" },
+
+  // Sizing - width, height
+  { pattern: /\bw-\d+(?!\/)\b/, replacement: "width token or component" },
+  { pattern: /\bh-\d+(?!\/)\b/, replacement: "height token or component" },
+  { pattern: /\bmin-w-\d+/, replacement: "min-width token" },
+  { pattern: /\bmax-w-\d+/, replacement: "max-width token" },
+  { pattern: /\bmin-h-\d+/, replacement: "min-height token" },
+  { pattern: /\bmax-h-\d+/, replacement: "max-height token" },
+
+  // Border radius
   { pattern: /\brounded-(?!none|full)/, replacement: "<Card>" },
+
+  // Typography
   { pattern: /\btext-(?:xs|sm|base|lg|xl|\d)/, replacement: "<Typography>" },
   {
     pattern: /\bfont-(?:thin|light|normal|medium|semibold|bold)/,
     replacement: "<Typography>",
   },
+
+  // Opacity - should use semantic tokens
+  { pattern: /\bopacity-\d+/, replacement: "opacity token or variant" },
+
+  // Animation - should use semantic tokens
+  { pattern: /\bdelay-\d+/, replacement: "delay token (delay-fast, etc.)" },
+  { pattern: /\banimate-(?!none|spin|ping|pulse|bounce)\w+/, replacement: "animation token" },
 ];
 
 export const DESIGN_SYSTEM_TARGET_FILES = [
@@ -179,6 +212,8 @@ export const DESIGN_SYSTEM_TARGET_FILES = [
 export const DESIGN_SYSTEM_ESCAPE_HATCHES = [
   "cardVariants(",
   "cardRecipeVariants(",
+  "getCardRecipeClassName(",
+  "getCardVariantClassName(",
   "buttonVariants(",
   "buttonChromeVariants(",
   "tabsTriggerVariants(",

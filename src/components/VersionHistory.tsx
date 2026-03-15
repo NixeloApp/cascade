@@ -14,9 +14,10 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { Clock, RotateCcw } from "@/lib/icons";
 import { DAY, HOUR, MINUTE } from "@/lib/time";
 import { showError, showSuccess } from "@/lib/toast";
+import { cn } from "@/lib/utils";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
-import { Card } from "./ui/Card";
+import { Card, getCardRecipeClassName } from "./ui/Card";
 import { Dialog } from "./ui/Dialog";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { Metadata, MetadataItem } from "./ui/Metadata";
@@ -189,7 +190,7 @@ export function VersionHistory({
           <Card padding="xs" variant="ghost" radius="none">
             <Stack gap="sm">
               {isComparing && (
-                <Card recipe="versionHistoryComparePanel" padding="md">
+                <div className={cn(getCardRecipeClassName("versionHistoryComparePanel"), "p-4")}>
                   <Stack gap="md">
                     <Flex align="center" justify="between">
                       <Typography variant="label">Diff View</Typography>
@@ -207,34 +208,36 @@ export function VersionHistory({
                           <Typography as="p" variant="caption">
                             Older: v{leftVersion?.version} {leftVersion?.title}
                           </Typography>
-                          <Card
-                            recipe="versionHistoryDiffPane"
-                            padding="sm"
-                            className="max-h-64 overflow-auto"
+                          <div
+                            className={cn(
+                              getCardRecipeClassName("versionHistoryDiffPane"),
+                              "max-h-64 overflow-auto p-3",
+                            )}
                           >
                             <Typography as="pre" variant="caption">
                               {diffLeft}
                             </Typography>
-                          </Card>
+                          </div>
                         </FlexItem>
                         <FlexItem flex="1">
                           <Typography as="p" variant="caption">
                             Newer: v{rightVersion?.version} {rightVersion?.title}
                           </Typography>
-                          <Card
-                            recipe="versionHistoryDiffPane"
-                            padding="sm"
-                            className="max-h-64 overflow-auto"
+                          <div
+                            className={cn(
+                              getCardRecipeClassName("versionHistoryDiffPane"),
+                              "max-h-64 overflow-auto p-3",
+                            )}
                           >
                             <Typography as="pre" variant="caption">
                               {diffRight}
                             </Typography>
-                          </Card>
+                          </div>
                         </FlexItem>
                       </Flex>
                     )}
                   </Stack>
-                </Card>
+                </div>
               )}
 
               {versions.map((version: DocumentVersion, index: number) => {
@@ -242,11 +245,14 @@ export function VersionHistory({
                 const isSelected = compareVersionIds.includes(version._id);
 
                 return (
-                  <Card
+                  <div
                     key={version._id}
-                    recipe={isSelected ? "versionHistoryEntrySelected" : "versionHistoryEntry"}
-                    padding="md"
-                    hoverable={!isSelected}
+                    className={cn(
+                      getCardRecipeClassName(
+                        isSelected ? "versionHistoryEntrySelected" : "versionHistoryEntry",
+                      ),
+                      "border p-4 transition-default",
+                    )}
                   >
                     <Flex align="start" justify="between">
                       <FlexItem flex="1">
@@ -289,7 +295,7 @@ export function VersionHistory({
                         </Flex>
                       )}
                     </Flex>
-                  </Card>
+                  </div>
                 );
               })}
             </Stack>

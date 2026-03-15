@@ -10,7 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { ChevronDown, Play, Plus, Square } from "lucide-react";
 import { useState } from "react";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { MetadataTimestamp } from "@/components/ui/Metadata";
@@ -100,7 +100,7 @@ function TimeEntriesList({
           const hours = formatHours(entry.duration);
 
           return (
-            <Card key={entry._id} padding="sm">
+            <div key={entry._id}>
               <Flex align="start" justify="between">
                 <Stack gap="xs">
                   <Typography variant="large" as="div">
@@ -121,7 +121,7 @@ function TimeEntriesList({
                   </Typography>
                 )}
               </Flex>
-            </Card>
+            </div>
           );
         })}
       </Stack>
@@ -183,7 +183,7 @@ export function TimeTracker({
   return (
     <Card recipe="timeTrackerShell" padding="none">
       {/* Header */}
-      <Card recipe="timeTrackerHeader" padding="md" radius="none" variant="ghost">
+      <div className={cn(getCardRecipeClassName("timeTrackerHeader"), "p-4")}>
         <Stack gap="sm">
           <Flex align="center" justify="between">
             <Typography variant="label">Time Tracking</Typography>
@@ -228,7 +228,7 @@ export function TimeTracker({
           {/* Progress Bar */}
           <TimeProgress estimatedHours={estimatedHours} totalLoggedHours={totalLoggedHours} />
         </Stack>
-      </Card>
+      </div>
 
       {/* Time Entries Toggle */}
       {totalLoggedHours > 0 && (
@@ -236,7 +236,7 @@ export function TimeTracker({
           variant="ghost"
           size="sm"
           onClick={() => setShowEntries(!showEntries)}
-          className="w-full justify-between min-h-0 rounded-none"
+          chromeSize="sectionToggle"
           rightIcon={
             <Icon
               icon={ChevronDown}

@@ -12,7 +12,7 @@ import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { ChevronDown, Circle, Search, X } from "@/lib/icons";
+import { ChevronDown, Circle, X } from "@/lib/icons";
 import { ISSUE_TYPE_ICONS, type IssuePriority, type IssueType } from "@/lib/issue-utils";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -403,19 +403,16 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
     >
       <Flex align="center" gap="sm" className="min-w-max">
         {/* Search Input */}
-        <Flex align="center" className="relative">
-          <Search className="pointer-events-none absolute left-2 h-3.5 w-3.5 text-ui-text-tertiary sm:h-4 sm:w-4" />
-          <Input
-            type="text"
-            placeholder="Search"
-            variant="filter"
-            inputSize="filterPill"
-            value={filters.query ?? ""}
-            onChange={handleSearchChange}
-            className="w-20 pl-7 pr-2 sm:w-64 sm:pr-3"
-            aria-label="Search issues"
-          />
-        </Flex>
+        <Input
+          type="text"
+          placeholder="Search"
+          variant="filter"
+          inputSize="filterPill"
+          value={filters.query ?? ""}
+          onChange={handleSearchChange}
+          className="w-20 pr-2 sm:w-64 sm:pr-3"
+          aria-label="Search issues"
+        />
 
         {/* Divider */}
         <div className="hidden h-5 w-px bg-ui-border/70 sm:block sm:h-6" />

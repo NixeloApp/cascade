@@ -17,6 +17,7 @@ vi.mock("@/lib/dates", () => ({
 
 vi.mock("./ui/Card", () => ({
   Card: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  getCardRecipeClassName: (recipe: string) => `recipe-${recipe}`,
 }));
 
 vi.mock("./ui/EmptyState", () => ({

@@ -22,10 +22,10 @@ import { getDotColorClass } from "@/components/Calendar/calendar-colors";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Dot } from "@/components/ui/Dot";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Typography } from "@/components/ui/Typography";
-import { cn } from "@/lib/utils";
 import { useCalendarContext } from "../../calendar-context";
 import { CalendarEvent } from "../../calendar-event";
 
@@ -124,11 +124,11 @@ export function CalendarBodyMonth(): React.ReactElement {
                     </Badge>
                     <Flex wrap gap="xs" className="mt-1 md:hidden">
                       {dayEvents.slice(0, 3).map((event) => (
-                        <span
+                        <Dot
                           key={`dot-${event.id}`}
-                          aria-hidden="true"
+                          size="xs"
                           title={event.title}
-                          className={cn("h-1.5 w-1.5 rounded-full", getDotColorClass(event.color))}
+                          className={getDotColorClass(event.color)}
                         />
                       ))}
                       {dayEvents.length > 3 && (

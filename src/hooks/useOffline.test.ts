@@ -29,7 +29,7 @@ describe("useOffline reliability", () => {
   });
 
   it("logs warning and keeps queue stable when refresh fails", async () => {
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, "info").mockImplementation(() => {});
     mockGetPendingMutations.mockRejectedValueOnce(new Error("indexeddb down"));
 
     const { result } = renderHook(() => useOfflineQueue());
@@ -45,7 +45,7 @@ describe("useOffline reliability", () => {
   });
 
   it("logs warning and exits loading state when sync status fetch fails", async () => {
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, "info").mockImplementation(() => {});
     mockGetPendingMutations.mockRejectedValueOnce(new Error("db blocked"));
 
     const { result } = renderHook(() => useOfflineSyncStatus());

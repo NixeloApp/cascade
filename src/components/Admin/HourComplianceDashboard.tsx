@@ -443,11 +443,14 @@ function ComplianceRecordCard({
             </Grid>
 
             {record.reviewNotes ? (
-              <Card variant="flat" padding="sm">
+              <div className="p-3 bg-ui-bg-secondary">
                 <Typography variant="small">
-                  <strong>Review Notes:</strong> {record.reviewNotes}
+                  <Typography as="strong" variant="strong">
+                    Review Notes:
+                  </Typography>{" "}
+                  {record.reviewNotes}
                 </Typography>
-              </Card>
+              </div>
             ) : null}
           </Stack>
         </FlexItem>

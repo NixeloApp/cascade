@@ -13,7 +13,7 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { Archive } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "./ui/Button";
-import { Card } from "./ui/Card";
+import { Card, getCardRecipeClassName } from "./ui/Card";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Flex, FlexItem } from "./ui/Flex";
 import { Grid } from "./ui/Grid";
@@ -204,7 +204,7 @@ export function BulkOperationsBar({
         radius="none"
         className="fixed right-0 bottom-0 left-0 z-30 animate-slide-up"
       >
-        <Card recipe="bulkActionContent">
+        <div className={getCardRecipeClassName("bulkActionContent")}>
           <Flex align="center" justify="between" gap="lg">
             <Flex align="center" gap="md">
               <Typography variant="label">
@@ -236,7 +236,7 @@ export function BulkOperationsBar({
           </Flex>
 
           {showActions && (
-            <Card recipe="bulkActionDetails">
+            <div className={getCardRecipeClassName("bulkActionDetails")}>
               <Grid cols={1} colsSm={2} colsMd={3} colsLg={6} gap="md">
                 <Stack gap="xs">
                   <Typography as="label" htmlFor={statusId} variant="label" color="secondary">
@@ -348,9 +348,9 @@ export function BulkOperationsBar({
                   </Flex>
                 </Stack>
               </Grid>
-            </Card>
+            </div>
           )}
-        </Card>
+        </div>
       </Card>
 
       {/* Archive Confirmation */}

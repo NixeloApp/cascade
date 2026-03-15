@@ -15,6 +15,7 @@ import { KanbanBoard } from "@/components/KanbanBoard";
 import { PageContent, PageError } from "@/components/layout";
 import { SprintProgressBar, SprintWorkload } from "@/components/Sprints";
 import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import {
   Select,
@@ -112,7 +113,7 @@ function BoardPage() {
   return (
     <Flex direction="column" className="h-full">
       <div className="hidden px-2 pt-1.5 sm:block sm:px-4 sm:pt-3">
-        <div className="rounded-2xl border border-ui-border/70 bg-ui-bg-elevated/90 px-4 py-3 shadow-soft">
+        <Card recipe="filterBar" className="px-4 py-3">
           <Flex
             align="center"
             justify="between"
@@ -147,7 +148,7 @@ function BoardPage() {
               <ExportButton projectId={project._id} sprintId={effectiveSprintId} />
               {project.boardType === "scrum" && sprints && (
                 <Select value={selectedSprintId || "active"} onValueChange={handleSprintChange}>
-                  <SelectTrigger className="w-48 px-3 py-2 border border-ui-border rounded-md text-sm">
+                  <SelectTrigger className="w-48 px-3 py-2 border border-ui-border text-sm">
                     <SelectValue placeholder="Active Sprint" />
                   </SelectTrigger>
                   <SelectContent>
@@ -162,7 +163,7 @@ function BoardPage() {
               )}
             </Flex>
           </Flex>
-        </div>
+        </Card>
       </div>
 
       {/* Filter Bar */}
@@ -178,7 +179,7 @@ function BoardPage() {
             <>
               {showMobileSprintControls && sprints && (
                 <Select value={selectedSprintId || "active"} onValueChange={handleSprintChange}>
-                  <SelectTrigger className="h-7 min-w-24 rounded-lg border border-ui-border/70 bg-ui-bg-elevated/92 px-2 text-xs shadow-soft">
+                  <SelectTrigger className="h-7 min-w-24 border border-ui-border/70 bg-ui-bg-elevated/92 px-2 text-xs shadow-soft">
                     <SelectValue placeholder="Sprint" />
                   </SelectTrigger>
                   <SelectContent>

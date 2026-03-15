@@ -4,7 +4,7 @@ import { ROUTES } from "@/config/routes";
 import { ArrowRight, Rocket, ShieldCheck } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Card } from "../ui/Card";
+import { Card, getCardRecipeClassName } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
@@ -53,7 +53,7 @@ export function FinalCTASection() {
           </div>
 
           <Grid cols={1} colsMd={2} gap="lg" className="mt-10">
-            <Card recipe="landingFinalFeatureCard" padding="none">
+            <div className={getCardRecipeClassName("landingFinalFeatureCard")}>
               <Flex align="center" gap="sm" className="mb-3">
                 <div className={finalCtaVariants.iconBadge({ tone: "brand" })}>
                   <Rocket className="h-4 w-4" />
@@ -70,9 +70,9 @@ export function FinalCTASection() {
                   <ArrowRight className="h-4 w-4" />
                 </a>
               </Button>
-            </Card>
+            </div>
 
-            <Card recipe="landingFinalFeatureCard" padding="none">
+            <div className={getCardRecipeClassName("landingFinalFeatureCard")}>
               <Flex align="center" gap="sm" className="mb-3">
                 <div className={finalCtaVariants.iconBadge({ tone: "success" })}>
                   <ShieldCheck className="h-4 w-4" />
@@ -89,7 +89,7 @@ export function FinalCTASection() {
                   <ArrowRight className="h-4 w-4" />
                 </a>
               </Button>
-            </Card>
+            </div>
           </Grid>
         </Card>
       </div>

@@ -15,7 +15,7 @@ import { CreateTeamModal } from "@/components/CreateTeamModal";
 import { SidebarTeamItem } from "@/components/Sidebar/SidebarTeamItem";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { IconButton } from "@/components/ui/IconButton";
 import { Input } from "@/components/ui/Input";
@@ -175,6 +175,7 @@ function WorkspacesSectionContent({
         <li className="list-none">
           <Card variant="ghost" padding="xs">
             <Input
+              variant="search"
               value={searchValue}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder="Search workspaces"
@@ -271,6 +272,7 @@ function DocumentsSectionContent({
         <li className="list-none">
           <Card variant="ghost" padding="xs">
             <Input
+              variant="search"
               value={searchValue}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder="Search documents"
@@ -496,7 +498,7 @@ export function AppSidebar() {
         <Card recipe="sidebarShell" padding="none" radius="none">
           <Flex direction="column" className="h-full">
             {/* Header with organization name and collapse toggle */}
-            <Card recipe="sidebarHeaderBar" padding="sm" radius="none">
+            <div className={cn(getCardRecipeClassName("sidebarHeaderBar"), "p-2")}>
               <Flex align="center" justify="between">
                 {!showCollapsed && (
                   <Tooltip content={organizationName}>
@@ -506,19 +508,20 @@ export function AppSidebar() {
                       onClick={handleNavClick}
                       className="min-w-0 grow"
                     >
-                      <Card recipe="sidebarOrgCard" padding="none" className="px-3 py-2">
+                      <div className={cn(getCardRecipeClassName("sidebarOrgCard"), "px-3 py-2")}>
                         <Flex align="center" gap="sm">
-                          <Card
-                            recipe="sidebarOrgInitial"
-                            padding="none"
-                            className="h-9 w-9 shrink-0"
+                          <div
+                            className={cn(
+                              getCardRecipeClassName("sidebarOrgInitial"),
+                              "h-9 w-9 shrink-0",
+                            )}
                           >
                             <Flex align="center" justify="center" className="h-full">
                               <Typography variant="small" className="font-semibold text-current">
                                 {organizationName.charAt(0).toUpperCase()}
                               </Typography>
                             </Flex>
-                          </Card>
+                          </div>
                           <div className="min-w-0">
                             <Typography
                               variant="caption"
@@ -532,7 +535,7 @@ export function AppSidebar() {
                             </Typography>
                           </div>
                         </Flex>
-                      </Card>
+                      </div>
                     </Link>
                   </Tooltip>
                 )}
@@ -563,7 +566,7 @@ export function AppSidebar() {
                   <X className="h-5 w-5" />
                 </IconButton>
               </Flex>
-            </Card>
+            </div>
 
             {/* Navigation */}
             <FlexItem
@@ -572,7 +575,7 @@ export function AppSidebar() {
               className="overflow-y-auto scrollbar-subtle"
               aria-label="Main Navigation"
             >
-              <Card variant="ghost" padding="xs" radius="none">
+              <div className="p-1">
                 <Stack as="ul" gap="sm" className="list-none">
                   {/* Dashboard */}
                   <NavItem
@@ -637,7 +640,7 @@ export function AppSidebar() {
                   {/* Products Section */}
                   {!showCollapsed && (
                     <li className="list-none">
-                      <Card variant="ghost" padding="xs" className="mb-3 mt-5">
+                      <div className="p-1 mb-3 mt-5">
                         <Badge
                           variant="outline"
                           shape="pill"
@@ -645,7 +648,7 @@ export function AppSidebar() {
                         >
                           Products
                         </Badge>
-                      </Card>
+                      </div>
                     </li>
                   )}
 
@@ -765,11 +768,11 @@ export function AppSidebar() {
                     />
                   )}
                 </Stack>
-              </Card>
+              </div>
             </FlexItem>
 
             {/* Bottom section - Settings */}
-            <Card recipe="sidebarFooterBar" padding="xs" radius="none">
+            <div className={cn(getCardRecipeClassName("sidebarFooterBar"), "p-1")}>
               <ul className="list-none">
                 <NavItem
                   to={ROUTES.settings.profile.path}
@@ -782,7 +785,7 @@ export function AppSidebar() {
                   data-tour="nav-settings"
                 />
               </ul>
-            </Card>
+            </div>
           </Flex>
         </Card>
 

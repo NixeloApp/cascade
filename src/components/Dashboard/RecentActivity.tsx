@@ -4,6 +4,7 @@ import { Badge } from "../ui/Badge";
 import { Card, CardBody, CardHeader } from "../ui/Card";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex, FlexItem } from "../ui/Flex";
+import { IconCircle } from "../ui/IconCircle";
 import { Metadata, MetadataItem, MetadataTimestamp } from "../ui/Metadata";
 import { SkeletonText } from "../ui/Skeleton";
 import { Stack } from "../ui/Stack";
@@ -61,23 +62,20 @@ export function RecentActivity({ activities }: RecentActivityProps) {
 
             <Flex direction="column" gap="none">
               {activities.map((activity: Activity) => (
-                <Card
-                  key={activity._id}
-                  variant="ghost"
-                  padding="none"
-                  hoverable
-                  className="relative rounded-xl border border-transparent px-2 py-2"
-                >
+                <div key={activity._id} className="relative px-2 py-2">
                   <Flex gap="md" align="start">
                     {/* User avatar */}
-                    <FlexItem shrink={false} className="relative z-10 bg-ui-bg rounded-full">
+                    <IconCircle size="sm" className="relative z-10 bg-ui-bg">
                       <Avatar name={activity.userName} size="md" variant="brand" />
-                    </FlexItem>
+                    </IconCircle>
 
                     <FlexItem flex="1" className="min-w-0">
                       <Stack gap="xs">
                         <Typography variant="small">
-                          <strong>{activity.userName}</strong> {activity.action}
+                          <Typography as="strong" variant="strong">
+                            {activity.userName}
+                          </Typography>{" "}
+                          {activity.action}
                         </Typography>
                         <Badge
                           variant="neutral"
@@ -92,7 +90,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                       </Stack>
                     </FlexItem>
                   </Flex>
-                </Card>
+                </div>
               ))}
             </Flex>
           </div>

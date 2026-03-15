@@ -33,6 +33,7 @@ vi.mock("./ui/Card", () => ({
       {children}
     </div>
   ),
+  getCardRecipeClassName: (recipe: string) => `recipe-${recipe}`,
 }));
 
 vi.mock("./ui/EmptyState", () => ({
