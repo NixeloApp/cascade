@@ -202,6 +202,9 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-project-[^-]+-backlog$/, "07-backlog", ""],
   // Project sprints: filled-project-xxx-sprints → 18-sprints
   [/^filled-project-[^-]+-sprints$/, "18-sprints", ""],
+  [/^filled-project-[^-]+-sprints-burndown$/, "18-sprints", "-burndown"],
+  [/^filled-project-[^-]+-sprints-burnup$/, "18-sprints", "-burnup"],
+  [/^filled-project-[^-]+-sprints-workload$/, "18-sprints", "-workload"],
   // Issue detail: filled-issue-xxx → 08-issue
   [/^filled-issue-/, "08-issue", ""],
   [/^filled-project-[^-]+-issue-detail-modal$/, "08-issue", "-detail-modal"],
@@ -2115,6 +2118,17 @@ async function screenshotFilledStates(
       await screenshotBoardInteractiveStates(page, orgSlug, projectKey, p);
     }
 
+    // Sprint interactive states
+    if (
+      shouldCaptureAny(p, [
+        `project-${normalizedProjectKey}-sprints-burndown`,
+        `project-${normalizedProjectKey}-sprints-burnup`,
+        `project-${normalizedProjectKey}-sprints-workload`,
+      ])
+    ) {
+      await screenshotSprintInteractiveStates(page, orgSlug, projectKey, p);
+    }
+
     // Calendar view modes
     if (
       shouldCaptureAny(p, [
@@ -2742,6 +2756,69 @@ async function screenshotBoardInteractiveStates(
   }
 }
 
+async function screenshotSprintInteractiveStates(
+  page: Page,
+  orgSlug: string,
+  projectKey: string,
+  prefix: string,
+): Promise<void> {
+  const normalizedProjectKey = projectKey.toLowerCase();
+  const sprintsUrl = `/${orgSlug}/projects/${projectKey}/sprints`;
+
+  // Navigate to sprints page
+  await page
+    .goto(`${BASE_URL}${sprintsUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+    .catch(() => {});
+  await waitForExpectedContent(page, sprintsUrl, "sprints");
+  await waitForScreenshotReady(page);
+
+  // Burndown chart (default view — click "Burndown" to ensure it's active)
+  if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-burndown`)) {
+    await runCaptureStep("sprint burndown chart", async () => {
+      const burndownBtn = page.getByRole("button", { name: /^burndown$/i }).first();
+      if (await burndownBtn.isVisible().catch(() => false)) {
+        await burndownBtn.click();
+        await waitForScreenshotReady(page);
+      }
+      await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-sprints-burndown`);
+    });
+  }
+
+  // Burnup chart (toggle)
+  if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-burnup`)) {
+    await runCaptureStep("sprint burnup chart", async () => {
+      const burnupBtn = page.getByRole("button", { name: /^burnup$/i }).first();
+      await burnupBtn.waitFor({ state: "visible", timeout: 5000 });
+      await burnupBtn.click();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-sprints-burnup`);
+      // Switch back to burndown
+      const burndownBtn = page.getByRole("button", { name: /^burndown$/i }).first();
+      if (await burndownBtn.isVisible().catch(() => false)) {
+        await burndownBtn.click();
+      }
+    });
+  }
+
+  // Workload popover
+  if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-workload`)) {
+    await runCaptureStep("sprint workload popover", async () => {
+      const workloadBtn = page.getByRole("button", { name: /assignees/i }).first();
+      await workloadBtn.waitFor({ state: "visible", timeout: 5000 });
+      await workloadBtn.click();
+      // Wait for popover content
+      await page
+        .getByText(/workload distribution/i)
+        .first()
+        .waitFor({ state: "visible", timeout: 5000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-sprints-workload`);
+      // Close popover
+      await page.keyboard.press("Escape");
+    });
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Main capture function for a single viewport/theme combination
 // ---------------------------------------------------------------------------
@@ -2889,6 +2966,10 @@ const DRY_RUN_PAGES = [
   "filled-project-PROJ-board-column-collapsed",
   "filled-project-PROJ-board-filter-active",
   "filled-project-PROJ-board-display-properties",
+  // Filled states — sprint interactive states
+  "filled-project-PROJ-sprints-burndown",
+  "filled-project-PROJ-sprints-burnup",
+  "filled-project-PROJ-sprints-workload",
   // Filled states — calendar modes
   "filled-calendar-day",
   "filled-calendar-week",

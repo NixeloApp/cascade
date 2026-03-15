@@ -224,11 +224,11 @@ Beyond page loads — capture the states users actually see during interaction.
 
 ### Sprint states
 
-- [ ] **Sprint burndown chart** — burndown view active
-- [ ] **Sprint burnup chart** — burnup toggle active
-- [ ] **Sprint workload popover** — assignee progress breakdown visible
-- [ ] **Sprint completion modal** — transfer remaining issues dialog
-- [ ] **Sprint date overlap warning** — validation warning visible
+- [x] **Sprint burndown chart** — click "Burndown" button, capture chart
+- [x] **Sprint burnup chart** — click "Burnup" toggle, capture chart, reset to burndown
+- [x] **Sprint workload popover** — click assignees button, wait for "Workload Distribution" popover
+- [ ] **Sprint completion modal** — needs active sprint with issues to complete
+- [ ] **Sprint date overlap warning** — needs overlapping sprint dates in seed
 
 ### Gantt / Roadmap states
 
