@@ -26,7 +26,7 @@ export function run() {
   ];
 
   // Files where only suppression patterns are checked (type assertions are expected)
-  const TEST_FILE_PATTERNS = [/\.test\.tsx?$/, /\.spec\.tsx?$/, /e2e\/fixtures\.ts$/];
+  const TEST_FILE_PATTERNS = [/\.(test|spec)\.[cm]?[jt]sx?$/, /e2e\/fixtures\//];
 
   // Type assertions that bypass the type system (skip in test/spec files)
   const TYPE_PATTERNS = [

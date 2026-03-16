@@ -22,10 +22,10 @@ import { c, ROOT, relPath, walkDir } from "./utils.js";
 // Generic detection: lines with path-like strings that should use ROUTES
 const ROUTE_PATTERNS = [
   // String literals with leading slash + alphabetic segment: "/signin", '/dashboard', etc.
-  { regex: /["']\/[a-z][-a-z]+["']/, message: "Hardcoded route string" },
+  { regex: /["'`]\/[a-z0-9][-a-z0-9]+["'`]/, message: "Hardcoded route string" },
 
   // Template literals with interpolated path: `/${orgSlug}/dashboard`
-  { regex: /`\/\$\{[^}]+\}\/[a-z]/, message: "Hardcoded template literal route" },
+  { regex: /`\/\$\{[^}]+\}\/[a-z0-9]/, message: "Hardcoded template literal route" },
 
   // toHaveURL with bare regex containing path-like segments: toHaveURL(/dashboard/)
   // Matches /word/ or /\/word/ but not /\/$/ (root) or /^https/ (external)
@@ -66,6 +66,7 @@ const ALLOWED_PATTERNS = [
   /import.*from\s+["']/, // Import statements
   /^\s*\*\s/, // JSDoc/block comment lines
   /^\s*\/\//, // Single-line comments
+  /isActive\(/, // Nav-active prefix checks (pathname.includes)
   /toHaveURL\(\/\\\/\$\//, // Root path assertion: toHaveURL(/\/$/)
   /toHaveURL\(\/\^https/, // External URL assertion: toHaveURL(/^https/)
   /["']\/app["']/, // App fallback redirect path

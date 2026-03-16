@@ -809,7 +809,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                   params={{ orgSlug }}
                   icon={Settings}
                   label="Settings"
-                  isActive={isActive(`/${ROUTES.settings.profile.path.split("/")[2]}`)}
+                  isActive={isActive("/settings")}
                   isCollapsed={showCollapsed}
                   onClick={handleNavClick}
                   data-tour="nav-settings"

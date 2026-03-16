@@ -13,7 +13,10 @@ export { ROUTES } from "../../convex/shared/routes";
  *   // Use:        toHaveURL(routePattern(ROUTES.projects.board.path))
  */
 export function routePattern(path: string, suffix = ""): RegExp {
-  return new RegExp(path.replace(/\$\w+/g, "[^/]+") + suffix);
+  // Replace dynamic segments first, then escape remaining regex metacharacters
+  const withWildcards = path.replace(/\$\w+/g, "__WILDCARD__");
+  const escaped = withWildcards.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(escaped.replace(/__WILDCARD__/g, "[^/]+") + suffix);
 }
 
 /**
