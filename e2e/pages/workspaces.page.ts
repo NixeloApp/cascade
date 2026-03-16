@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
-import { ROUTES } from "../../convex/shared/routes";
+import { ROUTES, routePattern } from "../utils/routes";
 import {
   createWorkspaceFromDialog,
   dismissWorkspaceDialogIfOpen,
@@ -100,7 +100,7 @@ export class WorkspacesPage extends BasePage {
 
   async expectWorkspaceDetailVisible(name: string) {
     await expect(this.page).toHaveURL(
-      new RegExp(ROUTES.workspaces.detail.path.replace(/\$\w+/g, "[^/]+")),
+      routePattern(ROUTES.workspaces.detail.path),
     );
     // PageHeader renders workspace name as h2
     await expect(this.page.getByRole("heading", { name, level: 2 })).toBeVisible();
@@ -143,7 +143,7 @@ export class WorkspacesPage extends BasePage {
   async openWorkspaceTeams(name: string) {
     await this.openWorkspace(name);
     await expect(this.page).toHaveURL(
-      new RegExp(ROUTES.workspaces.detail.path.replace(/\$\w+/g, "[^/]+")),
+      routePattern(ROUTES.workspaces.detail.path),
     );
 
     if (!/\/teams(?:[/?#]|$)/.test(this.page.url())) {
@@ -156,7 +156,7 @@ export class WorkspacesPage extends BasePage {
 
   async expectTeamsLoaded() {
     await expect(this.page).toHaveURL(
-      new RegExp(ROUTES.workspaces.teams.list.path.replace(/\$\w+/g, "[^/]+")),
+      routePattern(ROUTES.workspaces.teams.list.path),
     );
     await expect(this.teamsPageHeader).toBeVisible();
     await expect(this.createTeamButton).toBeVisible();
@@ -189,7 +189,7 @@ export class WorkspacesPage extends BasePage {
 
   async expectWorkspaceSettingsLoaded() {
     await expect(this.page).toHaveURL(
-      new RegExp(ROUTES.workspaces.settings.path.replace(/\$\w+/g, "[^/]+")),
+      routePattern(ROUTES.workspaces.settings.path),
     );
     await expect(this.workspaceSettingsHeader).toBeVisible();
   }

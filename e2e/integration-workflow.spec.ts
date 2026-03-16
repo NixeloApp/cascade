@@ -1,5 +1,5 @@
 import { expect, authenticatedTest as test } from "./fixtures";
-import { ROUTES } from "./utils/routes";
+import { ROUTES, routePattern } from "./utils/routes";
 import { createTestNamespace } from "./utils/test-helpers";
 
 /**
@@ -32,7 +32,7 @@ test.describe("Integration Workflows", () => {
       // Step 1: Navigate to projects
       await projectsPage.goto();
       await expect(page).toHaveURL(
-        new RegExp(ROUTES.projects.list.path.replace(/\$\w+/g, "[^/]+")),
+        routePattern(ROUTES.projects.list.path),
       );
 
       // Step 2: Create a workspace (needed for project)
@@ -80,7 +80,7 @@ test.describe("Integration Workflows", () => {
 
       // Verify we're on board
       await expect(page).toHaveURL(
-        new RegExp(ROUTES.projects.board.path.replace(/\$\w+/g, "[^/]+")),
+        routePattern(ROUTES.projects.board.path),
       );
       console.log("✓ On board tab");
 

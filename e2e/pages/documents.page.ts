@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { ROUTES } from "../utils/routes";
+import { ROUTES, routePattern } from "../utils/routes";
 import { BasePage } from "./base.page";
 
 /**
@@ -106,7 +106,7 @@ export class DocumentsPage extends BasePage {
     await expect(this.newDocumentButton).toBeEnabled();
     await this.newDocumentButton.click();
     await expect(this.page).toHaveURL(
-      new RegExp(ROUTES.documents.detail.path.replace(/\$\w+/g, "[^/]+") + "$"),
+      routePattern(ROUTES.documents.detail.path, "$"),
     );
 
     await this.expectEditorVisible();

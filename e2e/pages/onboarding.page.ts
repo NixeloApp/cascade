@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { ROUTES } from "../utils/routes";
+import { ROUTES, routePattern } from "../utils/routes";
 import { waitForConvexConnectionReady } from "../utils/wait-helpers";
 
 const TRANSITION_TIMEOUT = 15000;
@@ -462,7 +462,7 @@ export class OnboardingPage {
    */
   async expectDashboard(timeout = TRANSITION_TIMEOUT) {
     await expect(this.page).toHaveURL(
-      new RegExp(ROUTES.dashboard.path.replace(/\$\w+/g, "[^/]+")),
+      routePattern(ROUTES.dashboard.path),
       { timeout },
     );
     await expect(this.myWorkHeading).toBeVisible({ timeout });

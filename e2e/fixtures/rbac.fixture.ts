@@ -6,7 +6,7 @@ import { AUTH_PATHS, RBAC_TEST_CONFIG, TEST_USERS } from "../config";
 import { E2E_TIMEZONE } from "../constants";
 import { ProjectsPage, SettingsPage, WorkspacesPage } from "../pages";
 import { loginFixtureUserWithRepair } from "../utils/fixture-auth";
-import { ROUTES } from "../utils/routes";
+import { ROUTES, routePattern } from "../utils/routes";
 import {
   ensureAuthenticatedDashboardReady,
   waitForConvexConnectionReady,
@@ -228,7 +228,7 @@ export const rbacTest = base.extend<RbacFixtures>({
 
       // Final check: URL should contain /board
       await expect(page).toHaveURL(
-        new RegExp(ROUTES.projects.board.path.replace(/\$\w+/g, "[^/]+")),
+        routePattern(ROUTES.projects.board.path),
       );
       console.log(`✓ Navigated to ${page.url()}`);
     };

@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
-import { ROUTES } from "../../convex/shared/routes";
+import { ROUTES, routePattern } from "../utils/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import {
   createWorkspaceFromDialog,
@@ -425,7 +425,7 @@ export class ProjectsPage extends BasePage {
 
     // Deterministic completion: modal closes and workspace route remains active.
     await expect(this.page).toHaveURL(
-      new RegExp(ROUTES.workspaces.list.path.replace(/\$\w+/g, "[^/]+")),
+      routePattern(ROUTES.workspaces.list.path),
     );
   }
 
@@ -667,7 +667,7 @@ export class ProjectsPage extends BasePage {
 
   async expectAnalyticsLoaded() {
     await expect(this.page).toHaveURL(
-      new RegExp(ROUTES.projects.analytics.path.replace(/\$\w+/g, "[^/]+")),
+      routePattern(ROUTES.projects.analytics.path),
     );
     await expect(this.analyticsPageHeader).toBeVisible();
     await expect(this.analyticsTotalIssuesMetric).toBeVisible();
@@ -707,14 +707,14 @@ export class ProjectsPage extends BasePage {
 
   async expectProjectSettingsLoaded() {
     await expect(this.page).toHaveURL(
-      new RegExp(ROUTES.projects.settings.path.replace(/\$\w+/g, "[^/]+")),
+      routePattern(ROUTES.projects.settings.path),
     );
     await expect(this.projectSettingsHeader).toBeVisible();
   }
 
   async expectBacklogLoaded() {
     await expect(this.page).toHaveURL(
-      new RegExp(ROUTES.projects.backlog.path.replace(/\$\w+/g, "[^/]+")),
+      routePattern(ROUTES.projects.backlog.path),
     );
     await expect(this.boardColumns.first()).toBeVisible();
     await expect(this.getBoardColumn("Backlog")).toBeVisible();
@@ -722,14 +722,14 @@ export class ProjectsPage extends BasePage {
 
   async expectTimesheetLoaded() {
     await expect(this.page).toHaveURL(
-      new RegExp(ROUTES.projects.timesheet.path.replace(/\$\w+/g, "[^/]+")),
+      routePattern(ROUTES.projects.timesheet.path),
     );
     await expect(this.timesheetEntriesTab).toBeVisible();
   }
 
   async expectRoadmapLoaded() {
     await expect(this.page).toHaveURL(
-      new RegExp(ROUTES.projects.roadmap.path.replace(/\$\w+/g, "[^/]+")),
+      routePattern(ROUTES.projects.roadmap.path),
     );
     await expect(this.roadmapViewToggle).toBeVisible();
   }
@@ -747,7 +747,7 @@ export class ProjectsPage extends BasePage {
 
   async expectSprintsLoaded() {
     await expect(this.page).toHaveURL(
-      new RegExp(ROUTES.projects.sprints.path.replace(/\$\w+/g, "[^/]+")),
+      routePattern(ROUTES.projects.sprints.path),
     );
     await expect(this.sprintsPageHeader).toBeVisible();
 

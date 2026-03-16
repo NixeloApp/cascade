@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { ROUTES } from "../utils/routes";
+import { ROUTES, routePattern } from "../utils/routes";
 import { waitForIssueUpdateSuccess } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
@@ -73,7 +73,7 @@ export class IssueDetailPage extends BasePage {
   async returnToProjectBoard(projectKey: string) {
     await this.getProjectBreadcrumb(projectKey).click();
     await expect(this.page).toHaveURL(
-      new RegExp(ROUTES.projects.board.path.replace(/\$\w+/g, "[^/]+")),
+      routePattern(ROUTES.projects.board.path),
     );
   }
 

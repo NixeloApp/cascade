@@ -17,7 +17,7 @@
 
 import { RBAC_TEST_CONFIG } from "./config";
 import { clientSideNavigate, expect, rbacTest } from "./fixtures";
-import { ROUTES } from "./utils/routes";
+import { ROUTES, routePattern } from "./utils/routes";
 
 // Increase timeout for RBAC tests since they involve multiple navigations
 rbacTest.setTimeout(90000);
@@ -40,7 +40,7 @@ rbacTest(
     // 2. Verify board is visible - check for board element or project key in URL
     // URL should be like /:orgSlug/projects/:projectKey/board
     await expect(adminPage).toHaveURL(
-      new RegExp(ROUTES.projects.board.path.replace(/\$\w+/g, "[^/]+")),
+      routePattern(ROUTES.projects.board.path),
     );
     console.log("✓ Admin can view project board");
 
@@ -107,7 +107,7 @@ rbacTest(
 
     // 2. Verify board is visible - check for project name heading
     await expect(editorPage).toHaveURL(
-      new RegExp(ROUTES.projects.board.path.replace(/\$\w+/g, "[^/]+")),
+      routePattern(ROUTES.projects.board.path),
     );
     console.log("✓ Editor can view project board");
 

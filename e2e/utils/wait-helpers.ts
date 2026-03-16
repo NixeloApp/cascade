@@ -7,7 +7,7 @@
 
 import { type APIRequestContext, expect, type Locator, type Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { ROUTES } from "./routes";
+import { ROUTES, routePattern } from "./routes";
 
 /**
  * Wait timeouts used across tests.
@@ -372,7 +372,7 @@ export async function ensureAuthenticatedDashboardReady(
  * Wait for project board route and board controls to become interactive.
  */
 export async function waitForBoardLoaded(page: Page): Promise<void> {
-  await expect(page).toHaveURL(new RegExp(ROUTES.projects.board.path.replace(/\$\w+/g, "[^/]+")));
+  await expect(page).toHaveURL(routePattern(ROUTES.projects.board.path));
   const projectBoard = page
     .locator("[data-project-board]")
     .or(page.getByRole("heading", { name: /kanban board|scrum board/i }));
