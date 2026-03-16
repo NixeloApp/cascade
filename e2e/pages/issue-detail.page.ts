@@ -88,7 +88,7 @@ export class IssueDetailPage extends BasePage {
       return;
     }
 
-    await this.editIssueButton.click({ force: true });
+    await this.editIssueButton.click();
     await this.expectEditMode();
   }
 

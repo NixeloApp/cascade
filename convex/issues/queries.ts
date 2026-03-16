@@ -649,23 +649,23 @@ export const getByKey = query({
       return null;
     }
 
-    const issue = await ctx.db
+    // Issue keys are unique within a project but NOT globally unique —
+    // multiple orgs can have "DEMO-1". Scan candidates and find one
+    // the user can access, rather than blindly taking .first().
+    const candidates = await ctx.db
       .query("issues")
       .withIndex("by_key", (q) => q.eq("key", args.key))
       .filter(notDeleted)
-      .first();
+      .take(BOUNDED_LIST_LIMIT);
 
-    if (!issue) {
-      return null;
+    for (const issue of candidates) {
+      const hasAccess = await canAccessProject(ctx, issue.projectId, userId);
+      if (hasAccess) {
+        return await enrichIssue(ctx, issue);
+      }
     }
 
-    // Check if user has access to the project
-    const hasAccess = await canAccessProject(ctx, issue.projectId, userId);
-    if (!hasAccess) {
-      return null;
-    }
-
-    return await enrichIssue(ctx, issue);
+    return null;
   },
 });
 

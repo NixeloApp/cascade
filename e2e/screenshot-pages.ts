@@ -26,6 +26,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { type Browser, chromium, type Locator, type Page } from "@playwright/test";
+import { ROUTES } from "../convex/shared/routes";
 import { TEST_IDS } from "../src/lib/test-ids";
 import { TEST_USERS } from "./config";
 import { E2E_TIMEZONE } from "./constants";
@@ -57,12 +58,34 @@ const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
   "empty-projects": "05-projects",
   "empty-documents": "09-documents",
   "empty-settings": "12-settings",
+  "empty-issues": "19-issues",
+  "empty-notifications": "21-notifications",
+  "empty-my-issues": "20-my-issues",
+  "empty-invoices": "25-invoices",
+  "empty-clients": "26-clients",
 
   // Workspace-level pages (filled states)
   "filled-dashboard": "04-dashboard",
   "filled-projects": "05-projects",
   "filled-documents": "09-documents",
   "filled-settings": "12-settings",
+  "filled-issues": "19-issues",
+  "filled-notifications": "21-notifications",
+  "filled-my-issues": "20-my-issues",
+  "filled-org-calendar": "23-org-calendar",
+  "filled-org-analytics": "24-org-analytics",
+  "filled-invoices": "25-invoices",
+  "filled-clients": "26-clients",
+  "filled-time-tracking-manual-entry-modal": "22-time-tracking",
+  "filled-sidebar-collapsed": "04-dashboard",
+  "filled-notification-popover": "21-notifications",
+  "filled-notifications-archived": "21-notifications",
+  "filled-notifications-filter-active": "21-notifications",
+  "filled-404-page": "40-error",
+  "filled-authentication": "31-authentication",
+  "filled-add-ons": "32-add-ons",
+  "filled-assistant": "33-assistant",
+  "filled-mcp-server": "34-mcp-server",
 
   // Project sub-pages (filled states) - these use dynamic keys
   // Pattern: filled-project-{key}-{tab}
@@ -92,8 +115,33 @@ const SCREENSHOT_USER = {
 };
 const SEARCH_SHORTCUT = process.platform === "darwin" ? "Meta+K" : "Control+K";
 
+/** Inject Convex auth tokens into the page's localStorage. */
+async function injectAuthTokens(
+  page: Page,
+  token: string,
+  refreshToken: string | null,
+): Promise<void> {
+  await page.evaluate(
+    ({ token, refreshToken, convexUrl }) => {
+      localStorage.setItem("convexAuthToken", token);
+      if (refreshToken) {
+        localStorage.setItem("convexAuthRefreshToken", refreshToken);
+      }
+      if (convexUrl) {
+        const ns = convexUrl.replace(/[^a-zA-Z0-9]/g, "");
+        localStorage.setItem(`__convexAuthJWT_${ns}`, token);
+        if (refreshToken) {
+          localStorage.setItem(`__convexAuthRefreshToken_${ns}`, refreshToken);
+        }
+      }
+    },
+    { token, refreshToken, convexUrl: CONVEX_URL },
+  );
+}
+
 interface CliOptions {
   headless: boolean;
+  dryRun: boolean;
   configFilters: Set<string> | null;
   specFilters: string[];
   matchFilters: string[];
@@ -117,6 +165,7 @@ let stagingRootDir = "";
 let captureFailures = 0;
 let cliOptions: CliOptions = {
   headless: true,
+  dryRun: false,
   configFilters: null,
   specFilters: [],
   matchFilters: [],
@@ -140,31 +189,81 @@ function nextIndex(prefix: string): number {
 // Dynamic page patterns that map to spec folders
 // Pattern: [regex to match pageId, spec folder, filename suffix]
 const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
+  // Public pages with suffixes to avoid overwriting base spec screenshots
+  [/^public-verify-2fa$/, "02-signin", "-verify-2fa"],
   [/^filled-dashboard-omnibox$/, "04-dashboard", "-omnibox"],
+  [/^filled-dashboard-customize-modal$/, "04-dashboard", "-customize-modal"],
   [/^filled-dashboard-advanced-search-modal$/, "04-dashboard", "-advanced-search-modal"],
   [/^filled-dashboard-shortcuts-modal$/, "04-dashboard", "-shortcuts-modal"],
   [/^filled-dashboard-time-entry-modal$/, "04-dashboard", "-time-entry-modal"],
   [/^filled-projects-create-project-modal$/, "05-projects", "-create-project-modal"],
+  // Workspace modals
+  [/^filled-workspaces-create-workspace-modal$/, "27-workspaces", "-create-workspace-modal"],
+  [/^filled-workspace-create-team-modal$/, "28-workspace-detail", "-create-team-modal"],
   // Project board: filled-project-xxx-board → 06-board
-  [/^filled-project-[^-]+-board$/, "06-board", ""],
-  [/^filled-project-[^-]+-create-issue-modal$/, "06-board", "-create-issue-modal"],
+  [/^filled-project-.+-board$/, "06-board", ""],
+  [/^filled-project-.+-create-issue-modal$/, "06-board", "-create-issue-modal"],
   // Project backlog: filled-project-xxx-backlog → 07-backlog
-  [/^filled-project-[^-]+-backlog$/, "07-backlog", ""],
+  [/^filled-project-.+-backlog$/, "07-backlog", ""],
   // Project sprints: filled-project-xxx-sprints → 18-sprints
-  [/^filled-project-[^-]+-sprints$/, "18-sprints", ""],
+  [/^filled-project-.+-sprints$/, "18-sprints", ""],
+  [/^filled-project-.+-sprints-burndown$/, "18-sprints", "-burndown"],
+  [/^filled-project-.+-sprints-burnup$/, "18-sprints", "-burnup"],
+  [/^filled-project-.+-sprints-workload$/, "18-sprints", "-workload"],
   // Issue detail: filled-issue-xxx → 08-issue
   [/^filled-issue-/, "08-issue", ""],
-  [/^filled-project-[^-]+-issue-detail-modal$/, "08-issue", "-detail-modal"],
+  [/^filled-project-.+-issue-detail-modal$/, "08-issue", "-detail-modal"],
+  [/^filled-project-.+-import-export-modal$/, "06-board", "-import-export-modal"],
+  // Board interactive states
+  [/^filled-project-.+-board-swimlane-(\w+)$/, "06-board", "-swimlane-$1"],
+  [/^filled-project-.+-board-column-collapsed$/, "06-board", "-column-collapsed"],
+  [/^filled-project-.+-board-filter-active$/, "06-board", "-filter-active"],
+  [/^filled-project-.+-board-display-properties$/, "06-board", "-display-properties"],
+  [/^filled-project-.+-board-peek-mode$/, "06-board", "-peek-mode"],
+  [/^filled-project-.+-board-sprint-selector$/, "06-board", "-sprint-selector"],
+  [/^filled-project-.+-create-issue-create-another$/, "06-board", "-create-issue-create-another"],
+  [/^filled-project-.+-create-issue-validation$/, "06-board", "-create-issue-validation"],
   // Document editor: filled-document-editor → 10-editor
   [/^filled-document-editor$/, "10-editor", ""],
+  [/^filled-document-editor-slash-menu$/, "10-editor", "-slash-menu"],
+  [/^filled-document-editor-floating-toolbar$/, "10-editor", "-floating-toolbar"],
+  [/^filled-document-editor-mention-popover$/, "10-editor", "-mention-popover"],
   // Project calendar views: filled-project-xxx-calendar, filled-calendar-{mode}
-  [/^filled-project-[^-]+-calendar$/, "11-calendar", ""],
+  [/^filled-project-.+-calendar$/, "11-calendar", ""],
   [/^filled-calendar-(day|week|month)$/, "11-calendar", "-$1"],
   [/^filled-calendar-event-modal$/, "11-calendar", "-event-modal"],
+  [/^filled-calendar-create-event-modal$/, "11-calendar", "-create-event-modal"],
   // Project analytics: filled-project-xxx-analytics → 13-analytics
-  [/^filled-project-[^-]+-analytics$/, "13-analytics", ""],
+  [/^filled-project-.+-analytics$/, "13-analytics", ""],
   // Project settings: filled-project-xxx-settings → 12-settings
-  [/^filled-project-[^-]+-settings$/, "12-settings", "-project"],
+  [/^filled-project-.+-settings$/, "12-settings", "-project"],
+  // Workspace pages: filled-workspace-xxx-{tab} → 28-workspace-detail (specific patterns first)
+  [/^filled-workspace-.+-backlog$/, "28-workspace-detail", "-backlog"],
+  [/^filled-workspace-.+-calendar$/, "28-workspace-detail", "-calendar"],
+  [/^filled-workspace-.+-sprints$/, "28-workspace-detail", "-sprints"],
+  [/^filled-workspace-.+-dependencies$/, "28-workspace-detail", "-dependencies"],
+  [/^filled-workspace-.+-wiki$/, "28-workspace-detail", "-wiki"],
+  [/^filled-workspace-.+-settings$/, "28-workspace-detail", "-settings"],
+  // Bare workspace (catch-all, must come after suffixed patterns)
+  [/^filled-workspace-.+$/, "27-workspaces", ""],
+  // Team pages: filled-team-xxx-{tab} → 29-team-detail (specific patterns first)
+  [/^filled-team-.+-board$/, "29-team-detail", "-board"],
+  [/^filled-team-.+-calendar$/, "29-team-detail", "-calendar"],
+  [/^filled-team-.+-wiki$/, "29-team-detail", "-wiki"],
+  [/^filled-team-.+-settings$/, "29-team-detail", "-settings"],
+  // Bare team (catch-all, must come after suffixed patterns)
+  [/^filled-team-.+$/, "29-team-detail", ""],
+  // Project roadmap: filled-project-xxx-roadmap → 35-roadmap
+  [/^filled-project-.+-roadmap$/, "35-roadmap", ""],
+  [/^filled-project-.+-roadmap-timeline-selector$/, "35-roadmap", "-timeline-selector"],
+  // Project activity: filled-project-xxx-activity → 36-activity
+  [/^filled-project-.+-activity$/, "36-activity", ""],
+  // Project billing: filled-project-xxx-billing → 37-billing
+  [/^filled-project-.+-billing$/, "37-billing", ""],
+  // Project timesheet: filled-project-xxx-timesheet → 38-timesheet
+  [/^filled-project-.+-timesheet$/, "38-timesheet", ""],
+  // Project inbox: filled-project-xxx-inbox → 39-project-inbox
+  [/^filled-project-.+-inbox$/, "39-project-inbox", ""],
 ];
 
 function parseCsvValues(rawValues: string[]): string[] {
@@ -203,6 +302,7 @@ function parseCliOptions(args: string[]): CliOptions {
 
   return {
     headless: !args.includes("--headed"),
+    dryRun: args.includes("--dry-run"),
     configFilters: configFilters.length > 0 ? new Set(configFilters) : null,
     specFilters,
     matchFilters,
@@ -226,6 +326,7 @@ function printUsage(): void {
   console.log(
     "  --match <list>        Filter by page id/name/spec substring, e.g. calendar,event-modal",
   );
+  console.log("  --dry-run             List what would be captured without launching a browser");
   console.log("  --help                Show this help");
 }
 
@@ -447,6 +548,15 @@ async function takeScreenshot(
   const n = nextIndex(prefix);
   const num = String(n).padStart(2, "0");
   const finalPath = getFinalScreenshotPath(prefix, name);
+  const relativePath = path.relative(process.cwd(), finalPath);
+
+  if (cliOptions.dryRun) {
+    totalScreenshots++;
+    console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}`);
+    return;
+  }
+
+  const startTime = performance.now();
   const screenshotPath = getStagedScreenshotPath(finalPath);
 
   try {
@@ -460,9 +570,8 @@ async function takeScreenshot(
   await page.screenshot({ path: screenshotPath });
   totalScreenshots++;
 
-  // Show relative path for clarity
-  const relativePath = path.relative(process.cwd(), finalPath);
-  console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}`);
+  const elapsed = Math.round(performance.now() - startTime);
+  console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}  (${elapsed}ms)`);
 }
 
 async function captureCurrentView(page: Page, prefix: string, name: string): Promise<void> {
@@ -473,15 +582,26 @@ async function captureCurrentView(page: Page, prefix: string, name: string): Pro
   const n = nextIndex(prefix);
   const num = String(n).padStart(2, "0");
   const finalPath = getFinalScreenshotPath(prefix, name);
+  const relativePath = path.relative(process.cwd(), finalPath);
+
+  if (cliOptions.dryRun) {
+    totalScreenshots++;
+    console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}`);
+    return;
+  }
+
+  const startTime = performance.now();
   const screenshotPath = getStagedScreenshotPath(finalPath);
 
   await waitForScreenshotReady(page);
   await page.screenshot({ path: screenshotPath });
   totalScreenshots++;
 
-  const relativePath = path.relative(process.cwd(), finalPath);
-  console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}`);
+  const elapsed = Math.round(performance.now() - startTime);
+  console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}  (${elapsed}ms)`);
 }
+
+let captureSkips = 0;
 
 async function runCaptureStep(label: string, fn: () => Promise<void>): Promise<void> {
   try {
@@ -491,7 +611,8 @@ async function runCaptureStep(label: string, fn: () => Promise<void>): Promise<v
     if (isCrashLikeError(message)) {
       throw error;
     }
-    captureFailures++;
+    // Soft skip — interactive state not available, not a hard failure
+    captureSkips++;
     console.log(`    ⚠️  skipped ${label}: ${message}`);
   }
 }
@@ -556,11 +677,30 @@ async function dismissAllDialogs(page: Page): Promise<void> {
   }
 }
 
+/**
+ * Wait for a Radix Dialog to open after clicking a trigger.
+ * Radix renders dialogs in a portal with an overlay. The overlay appears
+ * before role="dialog" is applied to the content element. We wait for
+ * the overlay first, then look for [data-state="open"] content.
+ */
+async function waitForDialogOpen(page: Page, timeout = 8000): Promise<Locator> {
+  // Wait for overlay to appear (proves dialog is mounting)
+  await page
+    .getByTestId(TEST_IDS.DIALOG.OVERLAY)
+    .waitFor({ state: "visible", timeout })
+    .catch(() => {});
+
+  // Wait for the dialog content with data-state="open"
+  const dialog = page.locator("[role='dialog'][data-state='open']").first();
+  await dialog.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
+  return dialog;
+}
+
 async function openOmnibox(page: Page, trigger: Locator, dialog: Locator): Promise<void> {
   await dismissAllDialogs(page);
 
   if (await trigger.isVisible().catch(() => false)) {
-    await trigger.click({ force: true });
+    await trigger.click();
   } else {
     await page.keyboard.press(SEARCH_SHORTCUT);
   }
@@ -639,6 +779,34 @@ function isTimeTrackingUrl(url: string): boolean {
   return /\/[^/]+\/time-tracking$/.test(url);
 }
 
+function isNotificationsUrl(url: string): boolean {
+  return /\/[^/]+\/notifications\/?$/.test(url);
+}
+
+function isMyIssuesUrl(url: string): boolean {
+  return /\/[^/]+\/my-issues\/?$/.test(url);
+}
+
+function isOrgCalendarUrl(url: string): boolean {
+  return (
+    /\/[^/]+\/calendar\/?$/.test(url) &&
+    !url.includes("/projects/") &&
+    !url.includes("/workspaces/")
+  );
+}
+
+function isInvoicesUrl(url: string): boolean {
+  return /\/[^/]+\/invoices\/?$/.test(url);
+}
+
+function isClientsUrl(url: string): boolean {
+  return /\/[^/]+\/clients\/?$/.test(url);
+}
+
+function isProjectInboxUrl(url: string): boolean {
+  return /\/projects\/[^/]+\/inbox$/.test(url);
+}
+
 function isWorkspaceDetailUrl(url: string): boolean {
   return /\/[^/]+\/workspaces\/[^/]+\/?$/.test(url);
 }
@@ -655,6 +823,18 @@ function isWorkspaceCalendarUrl(url: string): boolean {
   return /\/[^/]+\/workspaces\/[^/]+\/calendar$/.test(url);
 }
 
+function isWorkspaceSprintsUrl(url: string): boolean {
+  return /\/[^/]+\/workspaces\/[^/]+\/sprints$/.test(url);
+}
+
+function isWorkspaceDependenciesUrl(url: string): boolean {
+  return /\/[^/]+\/workspaces\/[^/]+\/dependencies$/.test(url);
+}
+
+function isWorkspaceWikiUrl(url: string): boolean {
+  return /\/[^/]+\/workspaces\/[^/]+\/wiki$/.test(url);
+}
+
 function isTeamDetailUrl(url: string): boolean {
   return /\/[^/]+\/workspaces\/[^/]+\/teams\/[^/]+\/?$/.test(url);
 }
@@ -669,6 +849,10 @@ function isTeamCalendarUrl(url: string): boolean {
 
 function isTeamSettingsUrl(url: string): boolean {
   return /\/[^/]+\/workspaces\/[^/]+\/teams\/[^/]+\/settings$/.test(url);
+}
+
+function isTeamWikiUrl(url: string): boolean {
+  return /\/[^/]+\/workspaces\/[^/]+\/teams\/[^/]+\/wiki$/.test(url);
 }
 
 function isIssueDetailUrl(url: string): boolean {
@@ -721,7 +905,7 @@ async function waitForCalendarReady(page: Page): Promise<boolean> {
         timeout: 4000,
       });
       await page
-        .locator(".animate-shimmer")
+        .locator("[data-loading-skeleton]")
         .first()
         .waitFor({ state: "hidden", timeout: 4000 })
         .catch(() => {});
@@ -739,10 +923,13 @@ async function waitForCalendarReady(page: Page): Promise<boolean> {
 }
 
 async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
   const eventItems = page.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM);
-  const attempts = Math.max(1, Math.ceil(timeoutMs / 500));
   const previousButton = page.getByRole("button", { name: /^previous month$/i }).first();
   const nextButton = page.getByRole("button", { name: /^next month$/i }).first();
+
+  const isExpired = () => Date.now() > deadline;
+  const hasEvents = async () => (await eventItems.count().catch(() => 0)) > 0;
 
   const waitForCalendarState = async () => {
     await waitForScreenshotReady(page);
@@ -753,40 +940,33 @@ async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<bool
     const button = direction === "previous" ? previousButton : nextButton;
 
     for (let step = 0; step < steps; step++) {
+      if (isExpired()) return false;
       await button.click().catch(() => {});
       await waitForCalendarState();
-      if ((await eventItems.count().catch(() => 0)) > 0) {
-        return true;
-      }
+      if (await hasEvents()) return true;
     }
 
     return false;
   };
 
-  for (let attempt = 0; attempt < attempts; attempt++) {
-    if ((await eventItems.count().catch(() => 0)) > 0) {
-      return true;
-    }
+  // Quick check — events already visible?
+  if (await hasEvents()) return true;
 
-    if (attempt === Math.floor(attempts / 2)) {
-      await page
-        .getByRole("button", { name: /^today$/i })
-        .first()
-        .click()
-        .catch(() => {});
-      await waitForCalendarState();
-    }
+  // Try clicking "today" button
+  await page
+    .getByRole("button", { name: /^today$/i })
+    .first()
+    .click()
+    .catch(() => {});
+  await waitForCalendarState();
+  if (await hasEvents()) return true;
 
-    await waitForScreenshotReady(page);
-  }
+  if (isExpired()) return false;
 
-  if (await navigateUntilVisible("previous", 2)) {
-    return true;
-  }
-
-  if (await navigateUntilVisible("next", 4)) {
-    return true;
-  }
+  // Navigate backward then forward looking for events
+  if (await navigateUntilVisible("previous", 2)) return true;
+  if (isExpired()) return false;
+  if (await navigateUntilVisible("next", 4)) return true;
 
   return false;
 }
@@ -804,7 +984,7 @@ async function waitForBoardReady(page: Page): Promise<boolean> {
         .waitFor({ state: "visible", timeout: 6000 })
         .catch(() => {});
       await page
-        .locator(".animate-shimmer")
+        .locator("[data-loading-skeleton]")
         .first()
         .waitFor({ state: "hidden", timeout: 4000 })
         .catch(() => {});
@@ -1217,7 +1397,7 @@ async function waitForAnalyticsReady(page: Page): Promise<void> {
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
   await page
-    .locator(".animate-shimmer")
+    .locator("[data-loading-skeleton]")
     .first()
     .waitFor({ state: "hidden", timeout: 5000 })
     .catch(() => {});
@@ -1321,18 +1501,43 @@ async function waitForExpectedContent(
   }
 
   if (isDashboardUrl(url) || name === "dashboard") {
-    await page
-      .getByRole("heading", { name: /^dashboard$/i })
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+    // Wait for the sidebar to render — this proves the app shell + auth
+    // has completed (splash screen is gone, org context loaded).
     await page
       .getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON)
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
+      .waitFor({ state: "visible", timeout: 30000 })
+      .catch(() => {});
+    // Wait for dashboard heading (confirms route rendered)
+    await page
+      .getByRole("heading", { name: /^dashboard$/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 15000 })
+      .catch(() => {});
+    // Wait for actual dashboard content to appear
+    await page
+      .waitForFunction(
+        () => {
+          const text = document.body.innerText || "";
+          return (
+            text.includes("DEMO-") ||
+            text.includes("My Issues") ||
+            text.includes("Recent Activity") ||
+            text.includes("Explore Projects") ||
+            text.includes("No projects yet")
+          );
+        },
+        undefined,
+        { timeout: 20000 },
+      )
       .catch(() => {});
     await page
-      .locator(".animate-shimmer")
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    await page
+      .locator("[data-loading-skeleton]")
       .first()
       .waitFor({ state: "hidden", timeout: 4000 })
       .catch(() => {});
@@ -1388,6 +1593,52 @@ async function waitForExpectedContent(
     return;
   }
 
+  if (name === "authentication" || /\/authentication\/?$/.test(url)) {
+    await page
+      .getByRole("heading", { name: /^authentication$/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    return;
+  }
+
+  if (name === "add-ons" || /\/add-ons\/?$/.test(url)) {
+    await page
+      .getByRole("heading", { name: /^add-ons$/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    return;
+  }
+
+  if (name === "assistant" || /\/assistant\/?$/.test(url)) {
+    await page
+      .getByRole("heading", { name: /assistant/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    return;
+  }
+
+  if (name === "mcp-server" || /\/mcp-server\/?$/.test(url)) {
+    await page
+      .getByRole("heading", { name: /^mcp server$/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    return;
+  }
+
   if (isProjectsUrl(url) || name === "projects") {
     await waitForProjectsReady(page, prefix);
     return;
@@ -1423,6 +1674,41 @@ async function waitForExpectedContent(
     return;
   }
 
+  if (isWorkspaceSprintsUrl(url) || /^workspace-[^-]+-sprints$/.test(name)) {
+    await waitForSprintsReady(page);
+    return;
+  }
+
+  if (isWorkspaceDependenciesUrl(url) || /^workspace-[^-]+-dependencies$/.test(name)) {
+    await page
+      .getByRole("heading", { name: /dependencies/i })
+      .or(page.getByText(/no dependencies/i))
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    return;
+  }
+
+  if (isWorkspaceWikiUrl(url) || /^workspace-[^-]+-wiki$/.test(name)) {
+    await page
+      .getByRole("heading", { name: /wiki/i })
+      .or(page.getByText(/no pages/i))
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    return;
+  }
+
   if (isTeamSettingsUrl(url) || /^team-[^-]+-settings$/.test(name)) {
     await waitForTeamSettingsReady(page);
     return;
@@ -1430,6 +1716,21 @@ async function waitForExpectedContent(
 
   if (isTeamDetailUrl(url) || isTeamBoardUrl(url) || /^team-[^-]+-board$/.test(name)) {
     await waitForTeamDetailReady(page);
+    return;
+  }
+
+  if (isTeamWikiUrl(url) || /^team-[^-]+-wiki$/.test(name)) {
+    await page
+      .getByRole("heading", { name: /wiki/i })
+      .or(page.getByText(/no pages/i))
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
     return;
   }
 
@@ -1480,6 +1781,92 @@ async function waitForExpectedContent(
 
   if (isProjectBillingUrl(url)) {
     await waitForBillingReady(page);
+    return;
+  }
+
+  if (isProjectInboxUrl(url) || name === "inbox") {
+    await page
+      .getByRole("heading", { name: /inbox/i })
+      .or(page.getByText(/no items in inbox/i))
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    return;
+  }
+
+  if (isNotificationsUrl(url) || name === "notifications") {
+    await page
+      .getByRole("heading", { name: /^notifications$/i })
+      .or(page.getByRole("tab", { name: /inbox/i }))
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    return;
+  }
+
+  if (isMyIssuesUrl(url) || name === "my-issues") {
+    await page
+      .getByRole("heading", { name: /my issues/i })
+      .or(page.getByText(/no issues assigned/i))
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    return;
+  }
+
+  if (isOrgCalendarUrl(url) || name === "org-calendar") {
+    await waitForCalendarReady(page);
+    await waitForCalendarEvents(page, 5000).catch(() => {});
+    return;
+  }
+
+  if (isInvoicesUrl(url) || name === "invoices") {
+    await page
+      .getByRole("heading", { name: /invoices/i })
+      .or(page.getByText(/no invoices/i))
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    return;
+  }
+
+  if (name === "org-analytics") {
+    await waitForAnalyticsReady(page).catch(() => {});
+    return;
+  }
+
+  if (isClientsUrl(url) || name === "clients") {
+    await page
+      .getByRole("heading", { name: /clients/i })
+      .or(page.getByText(/no clients/i))
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
     return;
   }
 
@@ -1538,9 +1925,9 @@ async function discoverIssueKey(
   projectKey: string,
 ): Promise<string | null> {
   const candidatePaths = [
-    `/${orgSlug}/issues`,
-    `/${orgSlug}/projects/${projectKey}/backlog`,
-    `/${orgSlug}/projects/${projectKey}/board`,
+    ROUTES.issues.list.build(orgSlug),
+    ROUTES.projects.backlog.build(orgSlug, projectKey),
+    ROUTES.projects.board.build(orgSlug, projectKey),
   ];
 
   for (const pathName of candidatePaths) {
@@ -1561,9 +1948,12 @@ async function discoverIssueKey(
 
 async function discoverDocumentId(page: Page, orgSlug: string): Promise<string | null> {
   await page
-    .goto(`${BASE_URL}/${orgSlug}/documents`, { waitUntil: "domcontentloaded", timeout: 15000 })
+    .goto(`${BASE_URL}${ROUTES.documents.list.build(orgSlug)}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    })
     .catch(() => {});
-  await waitForExpectedContent(page, `/${orgSlug}/documents`, "documents");
+  await waitForExpectedContent(page, ROUTES.documents.list.build(orgSlug), "documents");
   await waitForScreenshotReady(page);
 
   try {
@@ -1610,30 +2000,9 @@ async function autoLogin(page: Page): Promise<string | null> {
     return null;
   }
 
-  await page.goto(`${BASE_URL}/signin`, { waitUntil: "domcontentloaded" });
-
-  await page.evaluate(
-    ({ token, refreshToken, convexUrl }) => {
-      localStorage.setItem("convexAuthToken", token);
-      if (refreshToken) {
-        localStorage.setItem("convexAuthRefreshToken", refreshToken);
-      }
-      if (convexUrl) {
-        const ns = convexUrl.replace(/[^a-zA-Z0-9]/g, "");
-        localStorage.setItem(`__convexAuthJWT_${ns}`, token);
-        if (refreshToken) {
-          localStorage.setItem(`__convexAuthRefreshToken_${ns}`, refreshToken);
-        }
-      }
-    },
-    {
-      token: loginResult.token,
-      refreshToken: loginResult.refreshToken ?? null,
-      convexUrl: CONVEX_URL,
-    },
-  );
-
-  await page.goto(`${BASE_URL}/app`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE_URL}${ROUTES.signin.build()}`, { waitUntil: "domcontentloaded" });
+  await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
+  await page.goto(`${BASE_URL}${ROUTES.app.build()}`, { waitUntil: "domcontentloaded" });
 
   try {
     await page.waitForURL((u) => /\/[^/]+\/(dashboard|projects|issues)/.test(new URL(u).pathname), {
@@ -1655,16 +2024,24 @@ async function autoLogin(page: Page): Promise<string | null> {
 // ---------------------------------------------------------------------------
 
 async function screenshotPublicPages(page: Page): Promise<void> {
-  const publicNames = ["landing", "signin", "signup", "forgot-password", "invite-invalid"];
+  const publicNames = [
+    "landing",
+    "signin",
+    "signup",
+    "forgot-password",
+    "verify-2fa",
+    "invite-invalid",
+  ];
   if (!shouldCaptureAny("public", publicNames)) {
     return;
   }
 
   console.log("    --- Public pages ---");
-  await takeScreenshot(page, "public", "landing", "/");
-  await takeScreenshot(page, "public", "signin", "/signin");
-  await takeScreenshot(page, "public", "signup", "/signup");
-  await takeScreenshot(page, "public", "forgot-password", "/forgot-password");
+  await takeScreenshot(page, "public", "landing", ROUTES.home.build());
+  await takeScreenshot(page, "public", "signin", ROUTES.signin.build());
+  await takeScreenshot(page, "public", "signup", ROUTES.signup.build());
+  await takeScreenshot(page, "public", "forgot-password", ROUTES.forgotPassword.build());
+  await takeScreenshot(page, "public", "verify-2fa", ROUTES.verify2FA.build());
   await takeScreenshot(page, "public", "invite-invalid", "/invite/screenshot-test-token");
 }
 
@@ -1677,6 +2054,10 @@ async function screenshotEmptyStates(page: Page, orgSlug: string): Promise<void>
     "documents-templates",
     "workspaces",
     "time-tracking",
+    "notifications",
+    "my-issues",
+    "invoices",
+    "clients",
     "settings",
     "settings-profile",
   ];
@@ -1686,15 +2067,19 @@ async function screenshotEmptyStates(page: Page, orgSlug: string): Promise<void>
 
   console.log("    --- Empty states ---");
   const p = "empty";
-  await takeScreenshot(page, p, "dashboard", `/${orgSlug}/dashboard`);
-  await takeScreenshot(page, p, "projects", `/${orgSlug}/projects`);
-  await takeScreenshot(page, p, "issues", `/${orgSlug}/issues`);
-  await takeScreenshot(page, p, "documents", `/${orgSlug}/documents`);
-  await takeScreenshot(page, p, "documents-templates", `/${orgSlug}/documents/templates`);
-  await takeScreenshot(page, p, "workspaces", `/${orgSlug}/workspaces`);
-  await takeScreenshot(page, p, "time-tracking", `/${orgSlug}/time-tracking`);
-  await takeScreenshot(page, p, "settings", `/${orgSlug}/settings`);
-  await takeScreenshot(page, p, "settings-profile", `/${orgSlug}/settings/profile`);
+  await takeScreenshot(page, p, "dashboard", ROUTES.dashboard.build(orgSlug));
+  await takeScreenshot(page, p, "projects", ROUTES.projects.list.build(orgSlug));
+  await takeScreenshot(page, p, "issues", ROUTES.issues.list.build(orgSlug));
+  await takeScreenshot(page, p, "documents", ROUTES.documents.list.build(orgSlug));
+  await takeScreenshot(page, p, "documents-templates", ROUTES.documents.templates.build(orgSlug));
+  await takeScreenshot(page, p, "workspaces", ROUTES.workspaces.list.build(orgSlug));
+  await takeScreenshot(page, p, "time-tracking", ROUTES.timeTracking.build(orgSlug));
+  await takeScreenshot(page, p, "notifications", ROUTES.notifications.build(orgSlug));
+  await takeScreenshot(page, p, "my-issues", ROUTES.myIssues.build(orgSlug));
+  await takeScreenshot(page, p, "invoices", ROUTES.invoices.list.build(orgSlug));
+  await takeScreenshot(page, p, "clients", ROUTES.clients.list.build(orgSlug));
+  await takeScreenshot(page, p, "settings", ROUTES.settings.profile.build(orgSlug));
+  await takeScreenshot(page, p, "settings-profile", ROUTES.settings.profile.build(orgSlug));
 }
 
 async function screenshotFilledStates(
@@ -1709,15 +2094,25 @@ async function screenshotFilledStates(
   const firstIssueKey = seed.issueKeys?.[0];
 
   // Top-level pages
-  await takeScreenshot(page, p, "dashboard", `/${orgSlug}/dashboard`);
-  await takeScreenshot(page, p, "projects", `/${orgSlug}/projects`);
-  await takeScreenshot(page, p, "issues", `/${orgSlug}/issues`);
-  await takeScreenshot(page, p, "documents", `/${orgSlug}/documents`);
-  await takeScreenshot(page, p, "documents-templates", `/${orgSlug}/documents/templates`);
-  await takeScreenshot(page, p, "workspaces", `/${orgSlug}/workspaces`);
-  await takeScreenshot(page, p, "time-tracking", `/${orgSlug}/time-tracking`);
-  await takeScreenshot(page, p, "settings", `/${orgSlug}/settings`);
-  await takeScreenshot(page, p, "settings-profile", `/${orgSlug}/settings/profile`);
+  await takeScreenshot(page, p, "dashboard", ROUTES.dashboard.build(orgSlug));
+  await takeScreenshot(page, p, "projects", ROUTES.projects.list.build(orgSlug));
+  await takeScreenshot(page, p, "issues", ROUTES.issues.list.build(orgSlug));
+  await takeScreenshot(page, p, "documents", ROUTES.documents.list.build(orgSlug));
+  await takeScreenshot(page, p, "documents-templates", ROUTES.documents.templates.build(orgSlug));
+  await takeScreenshot(page, p, "workspaces", ROUTES.workspaces.list.build(orgSlug));
+  await takeScreenshot(page, p, "time-tracking", ROUTES.timeTracking.build(orgSlug));
+  await takeScreenshot(page, p, "notifications", ROUTES.notifications.build(orgSlug));
+  await takeScreenshot(page, p, "my-issues", ROUTES.myIssues.build(orgSlug));
+  await takeScreenshot(page, p, "org-calendar", ROUTES.calendar.build(orgSlug));
+  await takeScreenshot(page, p, "org-analytics", ROUTES.analytics.build(orgSlug));
+  await takeScreenshot(page, p, "invoices", ROUTES.invoices.list.build(orgSlug));
+  await takeScreenshot(page, p, "clients", ROUTES.clients.list.build(orgSlug));
+  await takeScreenshot(page, p, "settings", ROUTES.settings.profile.build(orgSlug));
+  await takeScreenshot(page, p, "settings-profile", ROUTES.settings.profile.build(orgSlug));
+  await takeScreenshot(page, p, "authentication", ROUTES.authentication.build(orgSlug));
+  await takeScreenshot(page, p, "add-ons", ROUTES.addOns.build(orgSlug));
+  await takeScreenshot(page, p, "assistant", ROUTES.assistant.build(orgSlug));
+  await takeScreenshot(page, p, "mcp-server", ROUTES.mcp.build(orgSlug));
 
   if (
     shouldCaptureAny(p, [
@@ -1738,6 +2133,7 @@ async function screenshotFilledStates(
     const tabs = [
       "board",
       "backlog",
+      "inbox",
       "sprints",
       "roadmap",
       "calendar",
@@ -1768,6 +2164,117 @@ async function screenshotFilledStates(
       await screenshotBoardModals(page, orgSlug, projectKey, firstIssueKey, p);
     }
 
+    // Create issue — "create another" toggle
+    if (shouldCapture(p, `project-${normalizedProjectKey}-create-issue-create-another`)) {
+      await runCaptureStep("create issue create-another toggle", async () => {
+        const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
+        await page
+          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+          .catch(() => {});
+        await waitForExpectedContent(page, boardUrl, "board");
+        await waitForScreenshotReady(page);
+        const projectsPage = new ProjectsPage(page, orgSlug);
+        await dismissAllDialogs(page);
+        await projectsPage.openCreateIssueModal();
+        await waitForScreenshotReady(page);
+        // Toggle "Create another" switch
+        const toggle = page.getByLabel(/create another/i);
+        await toggle.waitFor({ state: "visible", timeout: 5000 });
+        await toggle.click();
+        await waitForScreenshotReady(page);
+        await captureCurrentView(
+          page,
+          p,
+          `project-${normalizedProjectKey}-create-issue-create-another`,
+        );
+        await dismissIfOpen(page, projectsPage.createIssueModal);
+      });
+    }
+
+    // Create issue — form validation errors (submit with empty title)
+    if (shouldCapture(p, `project-${normalizedProjectKey}-create-issue-validation`)) {
+      await runCaptureStep("create issue validation errors", async () => {
+        const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
+        await page
+          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+          .catch(() => {});
+        await waitForExpectedContent(page, boardUrl, "board");
+        await waitForScreenshotReady(page);
+        const projectsPage = new ProjectsPage(page, orgSlug);
+        await dismissAllDialogs(page);
+        await projectsPage.openCreateIssueModal();
+        await waitForScreenshotReady(page);
+        // Wait for dialog, then find submit button
+        const modal = await waitForDialogOpen(page);
+        const submitBtn = modal.getByRole("button", { name: /create issue/i }).last();
+        await submitBtn.click();
+        await waitForScreenshotReady(page);
+        // Wait for validation error text to appear
+        await page
+          .getByText(/required|title is required|cannot be empty/i)
+          .first()
+          .waitFor({ state: "visible", timeout: 3000 })
+          .catch(() => {});
+        await waitForScreenshotReady(page);
+        await captureCurrentView(
+          page,
+          p,
+          `project-${normalizedProjectKey}-create-issue-validation`,
+        );
+        await dismissIfOpen(page, projectsPage.createIssueModal);
+      });
+    }
+
+    // Sprint selector dropdown (on board)
+    if (shouldCapture(p, `project-${normalizedProjectKey}-board-sprint-selector`)) {
+      await runCaptureStep("board sprint selector", async () => {
+        const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
+        await page
+          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+          .catch(() => {});
+        await waitForExpectedContent(page, boardUrl, "board");
+        await waitForScreenshotReady(page);
+        const sprintSelect = page
+          .getByRole("combobox")
+          .filter({ hasText: /sprint|active/i })
+          .first();
+        await sprintSelect.waitFor({ state: "visible", timeout: 25000 });
+        await sprintSelect.click();
+        // Wait for dropdown options
+        await page.getByRole("option").first().waitFor({ state: "visible", timeout: 3000 });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, p, `project-${normalizedProjectKey}-board-sprint-selector`);
+        await page.keyboard.press("Escape");
+      });
+    }
+
+    // Board interactive states
+    if (
+      shouldCaptureAny(p, [
+        `project-${normalizedProjectKey}-board-swimlane-priority`,
+        `project-${normalizedProjectKey}-board-swimlane-assignee`,
+        `project-${normalizedProjectKey}-board-swimlane-type`,
+        `project-${normalizedProjectKey}-board-swimlane-label`,
+        `project-${normalizedProjectKey}-board-column-collapsed`,
+        `project-${normalizedProjectKey}-board-filter-active`,
+        `project-${normalizedProjectKey}-board-display-properties`,
+        `project-${normalizedProjectKey}-board-peek-mode`,
+      ])
+    ) {
+      await screenshotBoardInteractiveStates(page, orgSlug, projectKey, p);
+    }
+
+    // Sprint interactive states
+    if (
+      shouldCaptureAny(p, [
+        `project-${normalizedProjectKey}-sprints-burndown`,
+        `project-${normalizedProjectKey}-sprints-burnup`,
+        `project-${normalizedProjectKey}-sprints-workload`,
+      ])
+    ) {
+      await screenshotSprintInteractiveStates(page, orgSlug, projectKey, p);
+    }
+
     // Calendar view modes
     if (
       shouldCaptureAny(p, [
@@ -1777,7 +2284,7 @@ async function screenshotFilledStates(
         "calendar-event-modal",
       ])
     ) {
-      const calendarUrl = `/${orgSlug}/projects/${projectKey}/calendar`;
+      const calendarUrl = ROUTES.projects.calendar.build(orgSlug, projectKey);
       try {
         await page.goto(`${BASE_URL}${calendarUrl}`, {
           waitUntil: "domcontentloaded",
@@ -1839,10 +2346,13 @@ async function screenshotFilledStates(
             let eventItem = locateEvent();
             if (typeof seed.workspaceSlug === "string") {
               await page
-                .goto(`${BASE_URL}/${orgSlug}/workspaces/${seed.workspaceSlug}/calendar`, {
-                  waitUntil: "domcontentloaded",
-                  timeout: 15000,
-                })
+                .goto(
+                  `${BASE_URL}${ROUTES.workspaces.calendar.build(orgSlug, seed.workspaceSlug)}`,
+                  {
+                    waitUntil: "domcontentloaded",
+                    timeout: 15000,
+                  },
+                )
                 .catch(() => {});
               await waitForScreenshotReady(page);
               const workspaceCalendarReady = await waitForCalendarReady(page);
@@ -1861,7 +2371,7 @@ async function screenshotFilledStates(
 
             eventItem = locateEvent();
             await eventItem.scrollIntoViewIfNeeded().catch(() => {});
-            await eventItem.click({ force: true });
+            await eventItem.click();
             const dialog = page.getByTestId(TEST_IDS.CALENDAR.EVENT_DETAILS_MODAL);
             await dialog.waitFor({ state: "visible", timeout: 5000 });
             await captureCurrentView(page, p, "calendar-event-modal");
@@ -1881,7 +2391,7 @@ async function screenshotFilledStates(
         page,
         p,
         `issue-${firstIssue.toLowerCase()}`,
-        `/${orgSlug}/issues/${firstIssue}`,
+        ROUTES.issues.detail.build(orgSlug, firstIssue),
       );
     }
   }
@@ -1891,25 +2401,30 @@ async function screenshotFilledStates(
   const teamSlug = seed.teamSlug;
 
   if (wsSlug) {
-    const wsBase = `/${orgSlug}/workspaces/${wsSlug}`;
-    const workspaceTargets = [`workspace-${wsSlug}`, `workspace-${wsSlug}-settings`];
+    const wsBase = ROUTES.workspaces.detail.build(orgSlug, wsSlug);
+    const wsTabs = ["backlog", "calendar", "sprints", "dependencies", "wiki", "settings"] as const;
+    const workspaceTargets = [
+      `workspace-${wsSlug}`,
+      ...wsTabs.map((tab) => `workspace-${wsSlug}-${tab}`),
+    ];
     if (shouldCaptureAny(p, workspaceTargets)) {
       await takeScreenshot(page, p, `workspace-${wsSlug}`, wsBase);
-      await takeScreenshot(page, p, `workspace-${wsSlug}-settings`, `${wsBase}/settings`);
+      for (const tab of wsTabs) {
+        await takeScreenshot(page, p, `workspace-${wsSlug}-${tab}`, `${wsBase}/${tab}`);
+      }
     }
 
     const resolvedTeam = teamSlug ?? (await discoverFirstHref(page, /\/teams\/([^/]+)/));
     if (resolvedTeam) {
       const teamBase = `${wsBase}/teams/${resolvedTeam}`;
+      const teamTabs = ["board", "calendar", "wiki", "settings"] as const;
       const teamTargets = [
         `team-${resolvedTeam}`,
-        `team-${resolvedTeam}-board`,
-        `team-${resolvedTeam}-calendar`,
-        `team-${resolvedTeam}-settings`,
+        ...teamTabs.map((tab) => `team-${resolvedTeam}-${tab}`),
       ];
       if (shouldCaptureAny(p, teamTargets)) {
         await takeScreenshot(page, p, `team-${resolvedTeam}`, teamBase);
-        for (const tab of ["board", "calendar", "settings"] as const) {
+        for (const tab of teamTabs) {
           await takeScreenshot(page, p, `team-${resolvedTeam}-${tab}`, `${teamBase}/${tab}`);
         }
       }
@@ -1917,11 +2432,374 @@ async function screenshotFilledStates(
   }
 
   // Document editor
-  if (shouldCapture(p, "document-editor")) {
+  const editorTargets = [
+    "document-editor",
+    "document-editor-slash-menu",
+    "document-editor-floating-toolbar",
+    "document-editor-mention-popover",
+  ];
+  if (shouldCaptureAny(p, editorTargets)) {
     const docId = await discoverDocumentId(page, orgSlug);
     if (docId) {
-      await takeScreenshot(page, p, "document-editor", `/${orgSlug}/documents/${docId}`);
+      const docUrl = ROUTES.documents.detail.build(orgSlug, docId);
+      await takeScreenshot(page, p, "document-editor", docUrl);
+
+      // Document editor interactive states
+      // Slash menu — type "/" at end of content
+      if (shouldCapture(p, "document-editor-slash-menu")) {
+        await runCaptureStep("document slash menu", async () => {
+          const editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
+          await editor.waitFor({ state: "visible", timeout: 8000 });
+          // Click at end of editor to place cursor, then press Enter for new line
+          await editor.click();
+          await page.keyboard.press("End");
+          await page.keyboard.press("Enter");
+          await page.keyboard.type("/");
+          // Wait for slash menu options to appear
+          await page
+            .locator("[role='option']")
+            .first()
+            .waitFor({ state: "visible", timeout: 5000 });
+          await waitForScreenshotReady(page);
+          await captureCurrentView(page, p, "document-editor-slash-menu");
+          // Dismiss and undo
+          await page.keyboard.press("Escape");
+          await page.keyboard.press("Backspace"); // remove "/"
+          await page.keyboard.press("Backspace"); // remove newline
+        });
+      }
+
+      // Floating toolbar — select text in the editor
+      if (shouldCapture(p, "document-editor-floating-toolbar")) {
+        await runCaptureStep("document floating toolbar", async () => {
+          // Reload to get clean state
+          await page
+            .goto(`${BASE_URL}${docUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+            .catch(() => {});
+          await waitForExpectedContent(page, docUrl, "document-editor");
+          await waitForScreenshotReady(page);
+          const editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
+          await editor.waitFor({ state: "visible", timeout: 8000 });
+          // Triple-click to select a line of text
+          await editor.click({ clickCount: 3 });
+          // Wait for floating toolbar
+          await page
+            .getByRole("button", { name: /bold/i })
+            .first()
+            .waitFor({ state: "visible", timeout: 5000 });
+          await waitForScreenshotReady(page);
+          await captureCurrentView(page, p, "document-editor-floating-toolbar");
+          // Click away to deselect
+          await page.mouse.click(10, 10);
+        });
+      }
+
+      // @mention popover — type "@" in editor
+      if (shouldCapture(p, "document-editor-mention-popover")) {
+        await runCaptureStep("document mention popover", async () => {
+          // Reload to get clean state
+          await page
+            .goto(`${BASE_URL}${docUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+            .catch(() => {});
+          await waitForExpectedContent(page, docUrl, "document-editor");
+          await waitForScreenshotReady(page);
+          const editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
+          await editor.waitFor({ state: "visible", timeout: 8000 });
+          await editor.click();
+          await page.keyboard.press("End");
+          await page.keyboard.press("Enter");
+          await page.keyboard.type("@");
+          // Wait for mention combobox or user list
+          await page
+            .locator("[role='combobox']")
+            .or(page.locator("[role='option']").first())
+            .first()
+            .waitFor({ state: "visible", timeout: 5000 });
+          await waitForScreenshotReady(page);
+          await captureCurrentView(page, p, "document-editor-mention-popover");
+          // Dismiss and undo
+          await page.keyboard.press("Escape");
+          await page.keyboard.press("Backspace"); // remove "@"
+          await page.keyboard.press("Backspace"); // remove newline
+        });
+      }
     }
+  }
+
+  // ── Additional modal captures ──
+
+  // Dashboard customize modal
+  if (shouldCapture(p, "dashboard-customize-modal")) {
+    await runCaptureStep("dashboard customize modal", async () => {
+      await page
+        .goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
+      await waitForScreenshotReady(page);
+      await dismissAllDialogs(page);
+      const trigger = page.getByText("Customize", { exact: true }).first();
+      await trigger.waitFor({ state: "visible", timeout: 10000 });
+      await trigger.click();
+      const dialog = await waitForDialogOpen(page);
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "dashboard-customize-modal");
+      await dismissIfOpen(page, dialog);
+    });
+  }
+
+  // Create event modal (from calendar)
+  if (projectKey && shouldCapture(p, "calendar-create-event-modal")) {
+    await runCaptureStep("calendar create-event modal", async () => {
+      await page
+        .goto(`${BASE_URL}${ROUTES.projects.calendar.build(orgSlug, projectKey)}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await waitForScreenshotReady(page);
+      await waitForCalendarReady(page);
+      const trigger = page.getByRole("button", { name: /add event/i }).first();
+      await trigger.waitFor({ state: "visible", timeout: 5000 });
+      await trigger.click();
+      const dialog = await waitForDialogOpen(page);
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "calendar-create-event-modal");
+      await dismissIfOpen(page, dialog);
+    });
+  }
+
+  // Create workspace modal
+  if (shouldCapture(p, "workspaces-create-workspace-modal")) {
+    await runCaptureStep("create workspace modal", async () => {
+      await page
+        .goto(`${BASE_URL}${ROUTES.workspaces.list.build(orgSlug)}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await waitForExpectedContent(page, ROUTES.workspaces.list.build(orgSlug), "workspaces", p);
+      await waitForScreenshotReady(page);
+      await dismissAllDialogs(page);
+      const trigger = page.getByText("Create Workspace").first();
+      await trigger.waitFor({ state: "visible", timeout: 10000 });
+      await trigger.click();
+      const dialog = await waitForDialogOpen(page);
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "workspaces-create-workspace-modal");
+      await dismissIfOpen(page, dialog);
+    });
+  }
+
+  // Create team modal (from workspace detail)
+  if (wsSlug && shouldCapture(p, "workspace-create-team-modal")) {
+    await runCaptureStep("create team modal", async () => {
+      const wsBase = ROUTES.workspaces.detail.build(orgSlug, wsSlug);
+      await page
+        .goto(`${BASE_URL}${wsBase}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+        .catch(() => {});
+      await waitForExpectedContent(page, wsBase, `workspace-${wsSlug}`);
+      await waitForScreenshotReady(page);
+      await dismissAllDialogs(page);
+      const trigger = page.getByText("Create Team").first();
+      await trigger.waitFor({ state: "visible", timeout: 10000 });
+      await trigger.click();
+      const dialog = await waitForDialogOpen(page);
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "workspace-create-team-modal");
+      await dismissIfOpen(page, dialog);
+    });
+  }
+
+  // Import/export modal (from board)
+  if (projectKey && shouldCapture(p, `project-${normalizedProjectKey}-import-export-modal`)) {
+    await runCaptureStep("import/export modal", async () => {
+      const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
+      await page
+        .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+        .catch(() => {});
+      await waitForExpectedContent(page, boardUrl, "board");
+      await waitForScreenshotReady(page);
+      await dismissAllDialogs(page);
+      const trigger = page.getByRole("button", { name: /import \/ export/i }).first();
+      await trigger.waitFor({ state: "visible", timeout: 5000 });
+      await trigger.click();
+      const dialog = await waitForDialogOpen(page);
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, `project-${normalizedProjectKey}-import-export-modal`);
+      await dismissIfOpen(page, dialog);
+    });
+  }
+
+  // Manual time entry modal
+  if (shouldCapture(p, "time-tracking-manual-entry-modal")) {
+    await runCaptureStep("manual time entry modal", async () => {
+      await page
+        .goto(`${BASE_URL}${ROUTES.timeTracking.build(orgSlug)}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await waitForExpectedContent(page, ROUTES.timeTracking.build(orgSlug), "time-tracking");
+      await waitForScreenshotReady(page);
+      await dismissAllDialogs(page);
+      const trigger = page.getByRole("button", { name: /add time entry/i }).first();
+      await trigger.waitFor({ state: "visible", timeout: 5000 });
+      await trigger.click();
+      const dialog = await waitForDialogOpen(page);
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "time-tracking-manual-entry-modal");
+      await dismissIfOpen(page, dialog);
+    });
+  }
+
+  // ── Navigation / Shell states ──
+
+  // Sidebar collapsed
+  if (shouldCapture(p, "sidebar-collapsed")) {
+    await runCaptureStep("sidebar collapsed", async () => {
+      await page
+        .goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
+      await waitForScreenshotReady(page);
+      const collapseBtn = page.getByLabel("Collapse sidebar");
+      await collapseBtn.waitFor({ state: "visible", timeout: 5000 });
+      await collapseBtn.click();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "sidebar-collapsed");
+      // Expand back
+      const expandBtn = page.getByLabel("Expand sidebar");
+      if (await expandBtn.isVisible().catch(() => false)) {
+        await expandBtn.click();
+        await waitForScreenshotReady(page);
+      }
+    });
+  }
+
+  // 404 page (navigate to bogus URL while authenticated)
+  if (shouldCapture(p, "404-page")) {
+    await runCaptureStep("404 page", async () => {
+      await page
+        .goto(`${BASE_URL}/${orgSlug}/nonexistent-page-screenshot-test`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await waitForScreenshotReady(page);
+      // Wait for the 404 content to render
+      await page
+        .getByText(/not found|page.*not.*found|404/i)
+        .first()
+        .waitFor({ state: "visible", timeout: 8000 })
+        .catch(() => {});
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "404-page");
+    });
+  }
+
+  // ── Roadmap interactive states ──
+
+  if (projectKey && shouldCapture(p, `project-${normalizedProjectKey}-roadmap-timeline-selector`)) {
+    await runCaptureStep("roadmap timeline selector", async () => {
+      const roadmapUrl = ROUTES.projects.roadmap.build(orgSlug, projectKey);
+      await page
+        .goto(`${BASE_URL}${roadmapUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+        .catch(() => {});
+      await waitForExpectedContent(page, roadmapUrl, "roadmap");
+      await waitForScreenshotReady(page);
+      // Click the timeline span select trigger (shows "3 Months" by default)
+      const selectTrigger = page
+        .getByRole("combobox")
+        .filter({ hasText: /month|year/i })
+        .first();
+      await selectTrigger.waitFor({ state: "visible", timeout: 5000 });
+      await selectTrigger.click();
+      // Wait for dropdown options
+      await page
+        .getByRole("option", { name: /1 month/i })
+        .first()
+        .waitFor({ state: "visible", timeout: 3000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(
+        page,
+        p,
+        `project-${normalizedProjectKey}-roadmap-timeline-selector`,
+      );
+      // Close dropdown
+      await page.keyboard.press("Escape");
+    });
+  }
+
+  // ── Notification interactive states ──
+
+  // Notification popover (bell icon in header)
+  if (shouldCapture(p, "notification-popover")) {
+    await runCaptureStep("notification popover", async () => {
+      // Navigate to dashboard to have a clean header
+      await page
+        .goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
+      await waitForScreenshotReady(page);
+      await dismissAllDialogs(page);
+      const bellButton = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_BUTTON);
+      await bellButton.waitFor({ state: "visible", timeout: 5000 });
+      await bellButton.click();
+      const panel = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_PANEL);
+      await panel.waitFor({ state: "visible", timeout: 5000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "notification-popover");
+      // Close popover
+      await page.keyboard.press("Escape");
+    });
+  }
+
+  // Notifications page — archived tab
+  if (shouldCapture(p, "notifications-archived")) {
+    await runCaptureStep("notifications archived tab", async () => {
+      await page
+        .goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
+      await waitForScreenshotReady(page);
+      const archivedTab = page.getByRole("tab", { name: /archived/i });
+      await archivedTab.waitFor({ state: "visible", timeout: 5000 });
+      await archivedTab.click();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "notifications-archived");
+    });
+  }
+
+  // Notifications page — filter active (Mentions filter)
+  if (shouldCapture(p, "notifications-filter-active")) {
+    await runCaptureStep("notifications filter active", async () => {
+      await page
+        .goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
+      await waitForScreenshotReady(page);
+      // Click the Mentions filter button
+      const mentionsFilter = page.getByRole("button", { name: /^mentions$/i }).first();
+      await mentionsFilter.waitFor({ state: "visible", timeout: 5000 });
+      await mentionsFilter.click();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "notifications-filter-active");
+    });
   }
 }
 
@@ -1942,9 +2820,12 @@ async function screenshotDashboardModals(
   }
 
   await page
-    .goto(`${BASE_URL}/${orgSlug}/dashboard`, { waitUntil: "domcontentloaded", timeout: 15000 })
+    .goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    })
     .catch(() => {});
-  await waitForExpectedContent(page, `/${orgSlug}/dashboard`, "dashboard");
+  await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
   await waitForScreenshotReady(page);
 
   const omniboxTrigger = page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON);
@@ -1986,8 +2867,7 @@ async function screenshotDashboardModals(
     await runCaptureStep("dashboard shortcuts modal", async () => {
       await dismissAllDialogs(page);
       await shortcutsTrigger.click();
-      const shortcutsDialog = page.getByRole("dialog", { name: /keyboard shortcuts/i });
-      await shortcutsDialog.waitFor({ state: "visible", timeout: 5000 });
+      const shortcutsDialog = await waitForDialogOpen(page);
       await captureCurrentView(page, prefix, "dashboard-shortcuts-modal");
       await dismissIfOpen(page, shortcutsDialog);
     });
@@ -1998,8 +2878,7 @@ async function screenshotDashboardModals(
     await runCaptureStep("dashboard time-entry modal", async () => {
       await dismissAllDialogs(page);
       await timeEntryTrigger.click();
-      const timeEntryDialog = page.getByRole("dialog", { name: /^start timer$/i });
-      await timeEntryDialog.waitFor({ state: "visible", timeout: 5000 });
+      const timeEntryDialog = await waitForDialogOpen(page);
       await captureCurrentView(page, prefix, "dashboard-time-entry-modal");
       await dismissIfOpen(page, timeEntryDialog);
     });
@@ -2012,7 +2891,10 @@ async function screenshotProjectsModal(page: Page, orgSlug: string, prefix: stri
   }
 
   await page
-    .goto(`${BASE_URL}/${orgSlug}/projects`, { waitUntil: "domcontentloaded", timeout: 15000 })
+    .goto(`${BASE_URL}${ROUTES.projects.list.build(orgSlug)}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    })
     .catch(() => {});
   await waitForScreenshotReady(page);
 
@@ -2040,7 +2922,7 @@ async function screenshotBoardModals(
     return;
   }
 
-  const boardUrl = `/${orgSlug}/projects/${projectKey}/board`;
+  const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
   await page
     .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
     .catch(() => {});
@@ -2075,7 +2957,7 @@ async function screenshotBoardModals(
   if (shouldCapture(prefix, issueDetailModalName) && (await issueCard.count()) > 0) {
     await runCaptureStep("board issue-detail modal", async () => {
       await issueCard.scrollIntoViewIfNeeded().catch(() => {});
-      await issueCard.click({ force: true });
+      await issueCard.click();
       const issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
       await issueDetailDialog.waitFor({ state: "visible", timeout: 5000 });
       // Wait for issue content to hydrate - issue key pattern indicates content is loaded
@@ -2086,6 +2968,214 @@ async function screenshotBoardModals(
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, issueDetailModalName);
       await dismissIfOpen(page, issueDetailDialog);
+    });
+  }
+}
+
+async function screenshotBoardInteractiveStates(
+  page: Page,
+  orgSlug: string,
+  projectKey: string,
+  prefix: string,
+): Promise<void> {
+  const normalizedProjectKey = projectKey.toLowerCase();
+  const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
+
+  // Helper: navigate to board and wait for toolbar
+  const loadBoard = async () => {
+    await page
+      .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 30000 })
+      .catch(() => {});
+    await waitForBoardReady(page);
+    await waitForScreenshotReady(page);
+  };
+
+  // Swimlane modes — reload board fresh for each to avoid stale button text
+  const swimlaneModes = ["priority", "assignee", "type", "label"] as const;
+  for (const mode of swimlaneModes) {
+    const captureName = `project-${normalizedProjectKey}-board-swimlane-${mode}`;
+    if (!shouldCapture(prefix, captureName)) continue;
+
+    await runCaptureStep(`board swimlane ${mode}`, async () => {
+      await loadBoard();
+      // Open swimlane dropdown — button says "Swimlanes" on fresh load
+      const swimlaneButton = page.getByText("Swimlanes", { exact: true }).first();
+      await swimlaneButton.waitFor({ state: "visible", timeout: 8000 });
+      await swimlaneButton.click();
+      // Select the mode from the dropdown — scope to menuitemcheckbox to avoid
+      // matching hidden mobile text or other page elements with the same label
+      const modeLabel = mode[0].toUpperCase() + mode.slice(1);
+      const dropdown = page.locator("[role='menu'], [data-radix-menu-content]").first();
+      await dropdown.waitFor({ state: "visible", timeout: 5000 });
+      // Navigate to the option and click it. The dropdown scopes the text
+      // match to avoid hitting hidden mobile elements.
+      const option = dropdown.getByText(modeLabel, { exact: true }).first();
+      await option.waitFor({ state: "visible", timeout: 3000 });
+      // Radix DropdownMenuCheckboxItem may detach on check. Use scrollIntoView
+      // + click in quick succession to minimize the race window.
+      await option.scrollIntoViewIfNeeded().catch(() => {});
+      await option.click();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, captureName);
+    });
+  }
+
+  // Column collapsed — scope to board columns, not sidebar
+  if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-column-collapsed`)) {
+    await runCaptureStep("board column collapsed", async () => {
+      await loadBoard();
+      // Find collapse button INSIDE a board column header (not sidebar)
+      const columnHeader = page.getByTestId(TEST_IDS.BOARD.COLUMN).first();
+      const collapseButton = columnHeader.getByLabel(/collapse/i).first();
+      await collapseButton.waitFor({ state: "visible", timeout: 8000 });
+      await collapseButton.click();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(
+        page,
+        prefix,
+        `project-${normalizedProjectKey}-board-column-collapsed`,
+      );
+      // Expand it back
+      const expandButton = page.getByLabel(/expand/i).first();
+      if (await expandButton.isVisible().catch(() => false)) {
+        await expandButton.click();
+        await waitForScreenshotReady(page);
+      }
+    });
+  }
+
+  // Filter bar active (apply a Priority filter)
+  if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-filter-active`)) {
+    await runCaptureStep("board filter active", async () => {
+      await loadBoard();
+      // The filter bar "Priority" button has icon text "Pri" + label "Priority"
+      const priorityFilter = page.getByRole("button", { name: /priority/i }).nth(0);
+      await priorityFilter.waitFor({ state: "visible", timeout: 8000 });
+      await priorityFilter.click();
+      const highOption = page
+        .locator("[role='menuitemcheckbox']")
+        .filter({ hasText: "High" })
+        .first();
+      await highOption.waitFor({ state: "visible", timeout: 5000 });
+      await highOption.click();
+      // Close dropdown
+      await page.keyboard.press("Escape");
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-board-filter-active`);
+    });
+  }
+
+  // Display properties dropdown open
+  if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-display-properties`)) {
+    await runCaptureStep("board display properties", async () => {
+      await loadBoard();
+      const propsButton = page.getByText("Properties", { exact: true }).first();
+      await propsButton.waitFor({ state: "visible", timeout: 8000 });
+      await propsButton.click();
+      // Wait for dropdown to be visible
+      await page.getByRole("menuitemcheckbox").first().waitFor({ state: "visible", timeout: 3000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(
+        page,
+        prefix,
+        `project-${normalizedProjectKey}-board-display-properties`,
+      );
+      // Close dropdown
+      await page.keyboard.press("Escape");
+    });
+  }
+
+  // Peek / side panel mode — toggle view mode, click issue card
+  if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-peek-mode`)) {
+    await runCaptureStep("board peek mode", async () => {
+      await loadBoard();
+      // Toggle to side panel mode
+      const toggleBtn = page.getByLabel(/switch to side panel view/i).first();
+      await toggleBtn.waitFor({ state: "visible", timeout: 8000 });
+      await toggleBtn.click();
+      await waitForScreenshotReady(page);
+
+      // Click an issue card to open side panel
+      const issueCard = page.getByTestId(TEST_IDS.ISSUE.CARD).first();
+      await issueCard.waitFor({ state: "visible", timeout: 5000 });
+      await issueCard.click();
+
+      // Wait for the side panel to appear (Sheet component with data-testid)
+      await page
+        .getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL)
+        .waitFor({ state: "visible", timeout: 8000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-board-peek-mode`);
+
+      // Close panel and reset to modal view
+      await page.keyboard.press("Escape");
+      const resetBtn = page.getByLabel(/switch to modal view/i).first();
+      if (await resetBtn.isVisible().catch(() => false)) {
+        await resetBtn.click();
+      }
+    });
+  }
+}
+
+async function screenshotSprintInteractiveStates(
+  page: Page,
+  orgSlug: string,
+  projectKey: string,
+  prefix: string,
+): Promise<void> {
+  const normalizedProjectKey = projectKey.toLowerCase();
+  const sprintsUrl = ROUTES.projects.sprints.build(orgSlug, projectKey);
+
+  // Navigate to sprints page
+  await page
+    .goto(`${BASE_URL}${sprintsUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+    .catch(() => {});
+  await waitForExpectedContent(page, sprintsUrl, "sprints");
+  await waitForScreenshotReady(page);
+
+  // Burndown chart (default view — click "Burndown" to ensure it's active)
+  if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-burndown`)) {
+    await runCaptureStep("sprint burndown chart", async () => {
+      const burndownBtn = page.getByRole("button", { name: /^burndown$/i }).first();
+      if (await burndownBtn.isVisible().catch(() => false)) {
+        await burndownBtn.click();
+        await waitForScreenshotReady(page);
+      }
+      await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-sprints-burndown`);
+    });
+  }
+
+  // Burnup chart (toggle)
+  if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-burnup`)) {
+    await runCaptureStep("sprint burnup chart", async () => {
+      const burnupBtn = page.getByRole("button", { name: /^burnup$/i }).first();
+      await burnupBtn.waitFor({ state: "visible", timeout: 5000 });
+      await burnupBtn.click();
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-sprints-burnup`);
+      // Switch back to burndown
+      const burndownBtn = page.getByRole("button", { name: /^burndown$/i }).first();
+      if (await burndownBtn.isVisible().catch(() => false)) {
+        await burndownBtn.click();
+      }
+    });
+  }
+
+  // Workload popover
+  if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-workload`)) {
+    await runCaptureStep("sprint workload popover", async () => {
+      const workloadBtn = page.getByRole("button", { name: /assignees/i }).first();
+      await workloadBtn.waitFor({ state: "visible", timeout: 5000 });
+      await workloadBtn.click();
+      // Wait for popover content
+      await page
+        .getByText(/workload distribution/i)
+        .first()
+        .waitFor({ state: "visible", timeout: 5000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-sprints-workload`);
+      // Close popover
+      await page.keyboard.press("Escape");
     });
   }
 }
@@ -2119,31 +3209,15 @@ async function captureForConfig(
   await screenshotPublicPages(page);
 
   // Inject auth tokens
-  await page.goto(`${BASE_URL}/signin`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE_URL}${ROUTES.signin.build()}`, { waitUntil: "domcontentloaded" });
   const loginResult = await testUserService.loginTestUser(
     SCREENSHOT_USER.email,
     SCREENSHOT_USER.password,
   );
 
   if (loginResult.success && loginResult.token) {
-    await page.evaluate(
-      ({ token, refreshToken, convexUrl }) => {
-        localStorage.setItem("convexAuthToken", token);
-        if (refreshToken) localStorage.setItem("convexAuthRefreshToken", refreshToken);
-        if (convexUrl) {
-          const ns = convexUrl.replace(/[^a-zA-Z0-9]/g, "");
-          localStorage.setItem(`__convexAuthJWT_${ns}`, token);
-          if (refreshToken) localStorage.setItem(`__convexAuthRefreshToken_${ns}`, refreshToken);
-        }
-      },
-      {
-        token: loginResult.token,
-        refreshToken: loginResult.refreshToken ?? null,
-        convexUrl: CONVEX_URL,
-      },
-    );
-
-    await page.goto(`${BASE_URL}/app`, { waitUntil: "domcontentloaded" });
+    await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
+    await page.goto(`${BASE_URL}${ROUTES.app.build()}`, { waitUntil: "domcontentloaded" });
     try {
       await page.waitForURL(
         (u) => /\/[^/]+\/(dashboard|projects|issues)/.test(new URL(u).pathname),
@@ -2173,6 +3247,166 @@ async function captureForConfig(
 }
 
 // ---------------------------------------------------------------------------
+// Dry run
+// ---------------------------------------------------------------------------
+
+/** Known page IDs captured during a full run (excluding dynamic project/workspace/team slugs). */
+const DRY_RUN_PAGES = [
+  // Public
+  "public-landing",
+  "public-signin",
+  "public-signup",
+  "public-forgot-password",
+  "public-verify-2fa",
+  "public-invite-invalid",
+  // Empty states
+  "empty-dashboard",
+  "empty-projects",
+  "empty-issues",
+  "empty-documents",
+  "empty-documents-templates",
+  "empty-workspaces",
+  "empty-time-tracking",
+  "empty-notifications",
+  "empty-my-issues",
+  "empty-invoices",
+  "empty-clients",
+  "empty-settings",
+  "empty-settings-profile",
+  // Filled states — top-level
+  "filled-dashboard",
+  "filled-projects",
+  "filled-issues",
+  "filled-documents",
+  "filled-documents-templates",
+  "filled-workspaces",
+  "filled-time-tracking",
+  "filled-notifications",
+  "filled-my-issues",
+  "filled-org-calendar",
+  "filled-org-analytics",
+  "filled-invoices",
+  "filled-clients",
+  "filled-settings",
+  "filled-settings-profile",
+  "filled-authentication",
+  "filled-add-ons",
+  "filled-assistant",
+  "filled-mcp-server",
+  // Filled states — dashboard modals
+  "filled-dashboard-omnibox",
+  "filled-dashboard-advanced-search-modal",
+  "filled-dashboard-shortcuts-modal",
+  "filled-dashboard-time-entry-modal",
+  "filled-dashboard-customize-modal",
+  // Filled states — projects modals
+  "filled-projects-create-project-modal",
+  // Filled states — workspace modals
+  "filled-workspaces-create-workspace-modal",
+  "filled-workspace-create-team-modal",
+  // Filled states — project sub-pages (use PROJ as placeholder key)
+  "filled-project-PROJ-board",
+  "filled-project-PROJ-backlog",
+  "filled-project-PROJ-inbox",
+  "filled-project-PROJ-sprints",
+  "filled-project-PROJ-roadmap",
+  "filled-project-PROJ-calendar",
+  "filled-project-PROJ-activity",
+  "filled-project-PROJ-analytics",
+  "filled-project-PROJ-billing",
+  "filled-project-PROJ-timesheet",
+  "filled-project-PROJ-settings",
+  "filled-project-PROJ-create-issue-modal",
+  "filled-project-PROJ-issue-detail-modal",
+  "filled-project-PROJ-import-export-modal",
+  // Filled states — board interactive states
+  "filled-project-PROJ-board-swimlane-priority",
+  "filled-project-PROJ-board-swimlane-assignee",
+  "filled-project-PROJ-board-swimlane-type",
+  "filled-project-PROJ-board-swimlane-label",
+  "filled-project-PROJ-board-column-collapsed",
+  "filled-project-PROJ-board-filter-active",
+  "filled-project-PROJ-board-display-properties",
+  "filled-project-PROJ-board-peek-mode",
+  "filled-project-PROJ-board-sprint-selector",
+  "filled-project-PROJ-create-issue-create-another",
+  "filled-project-PROJ-create-issue-validation",
+  // Filled states — sprint interactive states
+  "filled-project-PROJ-sprints-burndown",
+  "filled-project-PROJ-sprints-burnup",
+  "filled-project-PROJ-sprints-workload",
+  // Filled states — calendar modes
+  "filled-calendar-day",
+  "filled-calendar-week",
+  "filled-calendar-month",
+  "filled-calendar-event-modal",
+  "filled-calendar-create-event-modal",
+  // Filled states — time tracking modals
+  "filled-time-tracking-manual-entry-modal",
+  // Filled states — issue detail
+  "filled-issue-PROJ-1",
+  // Filled states — document editor
+  "filled-document-editor",
+  "filled-document-editor-slash-menu",
+  "filled-document-editor-floating-toolbar",
+  "filled-document-editor-mention-popover",
+  // Filled states — workspace sub-pages (use WS as placeholder slug)
+  "filled-workspace-WS",
+  "filled-workspace-WS-backlog",
+  "filled-workspace-WS-calendar",
+  "filled-workspace-WS-sprints",
+  "filled-workspace-WS-dependencies",
+  "filled-workspace-WS-wiki",
+  "filled-workspace-WS-settings",
+  // Filled states — team sub-pages (use TEAM as placeholder slug)
+  "filled-team-TEAM",
+  "filled-team-TEAM-board",
+  "filled-team-TEAM-calendar",
+  "filled-team-TEAM-wiki",
+  "filled-team-TEAM-settings",
+  // Filled states — roadmap interactive states
+  "filled-project-PROJ-roadmap-timeline-selector",
+  // Filled states — notification interactive states
+  "filled-notification-popover",
+  "filled-notifications-archived",
+  "filled-notifications-filter-active",
+  // Filled states — navigation / shell states
+  "filled-sidebar-collapsed",
+  // Error / edge states
+  "filled-404-page",
+];
+
+function dryRunEnumerate(
+  configs: Array<{ viewport: keyof typeof VIEWPORTS; theme: "dark" | "light" }>,
+): void {
+  let count = 0;
+  for (const config of configs) {
+    const configName = `${config.viewport}-${config.theme}`;
+    currentConfigPrefix = configName;
+    console.log(
+      `  📸 ${configName.toUpperCase()} (${VIEWPORTS[config.viewport].width}x${VIEWPORTS[config.viewport].height})`,
+    );
+
+    for (const pageId of DRY_RUN_PAGES) {
+      const [prefix, ...rest] = pageId.split("-");
+      const name = rest.join("-");
+      if (!shouldCapture(prefix, name)) {
+        continue;
+      }
+      const target = resolveCaptureTarget(prefix, name);
+      const specInfo = target.specFolder ? `→ ${target.specFolder}/` : "→ e2e/screenshots/";
+      console.log(`    [${prefix}] ${name}  ${specInfo}`);
+      count++;
+    }
+    console.log("");
+  }
+
+  console.log(
+    `  Total: ${count} screenshots would be captured across ${configs.length} config(s).\n`,
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -2184,8 +3418,6 @@ async function run(): Promise<void> {
   }
 
   const specFolders = getGeneratedSpecFolders();
-  fs.mkdirSync(SCREENSHOT_STAGING_BASE_DIR, { recursive: true });
-  stagingRootDir = fs.mkdtempSync(path.join(SCREENSHOT_STAGING_BASE_DIR, "run-"));
   const selectedConfigs = CONFIGS.filter((config) =>
     isConfigSelected(config.viewport, config.theme),
   );
@@ -2206,6 +3438,16 @@ async function run(): Promise<void> {
   if (cliOptions.matchFilters.length > 0) {
     console.log(`  Match filter: ${cliOptions.matchFilters.join(", ")}`);
   }
+
+  if (cliOptions.dryRun) {
+    console.log("\n  🏃 DRY RUN — listing targets without launching a browser\n");
+    dryRunEnumerate(selectedConfigs);
+    return;
+  }
+
+  // Create staging directory only when we are actually capturing (not dry-run)
+  fs.mkdirSync(SCREENSHOT_STAGING_BASE_DIR, { recursive: true });
+  stagingRootDir = fs.mkdtempSync(path.join(SCREENSHOT_STAGING_BASE_DIR, "run-"));
 
   const headless = cliOptions.headless;
   const launchBrowser = () => chromium.launch({ headless });
@@ -2297,8 +3539,9 @@ async function run(): Promise<void> {
   fs.rmSync(ensureStagingRoot(), { recursive: true, force: true });
   stagingRootDir = "";
 
+  const skipNote = captureSkips > 0 ? ` (${captureSkips} skipped)` : "";
   console.log("\n╔════════════════════════════════════════════════════════════╗");
-  console.log(`║  ✅ COMPLETE: ${totalScreenshots} screenshots captured`);
+  console.log(`║  ✅ COMPLETE: ${totalScreenshots} screenshots captured${skipNote}`);
   console.log("╚════════════════════════════════════════════════════════════╝\n");
 
   console.log("  Output:");

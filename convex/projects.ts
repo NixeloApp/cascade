@@ -498,16 +498,37 @@ export const getByKey = authenticatedQuery({
   handler: async (ctx, args) => {
     const normalizedKey = args.key.toUpperCase();
 
-    // Always query by_key index (single lookup) since keys are globally unique
-    let project = await ctx.db
-      .query("projects")
-      .withIndex("by_key", (q) => q.eq("key", normalizedKey))
-      .filter(notDeleted)
-      .first();
+    let project: Doc<"projects"> | null = null;
 
-    // If organizationId provided, validate the project belongs to that org
-    if (project && args.organizationId && project.organizationId !== args.organizationId) {
-      project = null;
+    if (args.organizationId) {
+      // Use compound index for O(1) lookup when org is known.
+      // Project keys are unique within an org but NOT globally unique —
+      // multiple orgs can have a project with key "DEMO".
+      project = await ctx.db
+        .query("projects")
+        .withIndex("by_organization_key", (q) =>
+          q.eq("organizationId", args.organizationId!).eq("key", normalizedKey),
+        )
+        .filter(notDeleted)
+        .first();
+    } else {
+      // Project keys are unique within an org but NOT globally unique —
+      // multiple orgs can have a project with key "DEMO". Scan candidates
+      // and find one the user can access, rather than blindly taking .first().
+      const candidates = await ctx.db
+        .query("projects")
+        .withIndex("by_key", (q) => q.eq("key", normalizedKey))
+        .filter(notDeleted)
+        .take(BOUNDED_LIST_LIMIT);
+
+      for (const candidate of candidates) {
+        const hasAccess = await canAccessProject(ctx, candidate._id, ctx.userId);
+        if (hasAccess) {
+          return await enrichProject(ctx, candidate);
+        }
+      }
+
+      return null;
     }
 
     if (!project) {

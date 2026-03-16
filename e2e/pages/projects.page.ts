@@ -478,7 +478,7 @@ export class ProjectsPage extends BasePage {
     }
 
     await trigger.scrollIntoViewIfNeeded().catch(() => {});
-    await trigger.click({ force: true });
+    await trigger.click();
     return this.waitForCreateIssueModalReady(readyTimeout);
   }
 
@@ -872,9 +872,7 @@ export class ProjectsPage extends BasePage {
     await this.closeIssueDetailIfOpen();
     await issueCard.waitFor({ state: "visible" });
 
-    // Some card overlays intentionally sit behind visible title text and can be intercepted.
-    // Force click keeps targeting the semantic button while bypassing transient pointer blockers.
-    await issueCard.click({ force: true });
+    await issueCard.click();
     await expect(this.issueDetailDialog).toBeVisible();
 
     // Wait for modal content to be stable using the issue key metadata,

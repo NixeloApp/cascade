@@ -42,6 +42,22 @@ function collectFiles(dir, files = []) {
   return files;
 }
 
+/** Collect all .ts files in the E2E directory (not just specs). */
+function collectAllE2eFiles(dir, files = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      collectAllE2eFiles(fullPath, files);
+      continue;
+    }
+    const ext = path.extname(entry.name);
+    if (TARGET_EXTENSIONS.has(ext)) {
+      files.push(fullPath);
+    }
+  }
+  return files;
+}
+
 export function run() {
   if (!fs.existsSync(E2E_DIR)) {
     return { passed: true, errors: 0, detail: "No e2e/ directory" };
@@ -84,9 +100,7 @@ export function run() {
         violations.querySelector.push({ file, line: lineNum, text: trimmed });
       }
 
-      if (/force\s*:\s*true/.test(line)) {
-        violations.forcedAction.push({ file, line: lineNum, text: trimmed });
-      }
+      // force:true is checked in a separate all-files pass below
 
       if (/locator\(\s*["'`](?:xpath=|\/\/)/.test(line)) {
         violations.xpath.push({ file, line: lineNum, text: trimmed });
@@ -122,6 +136,21 @@ export function run() {
         text: match[0].replace(/\s+/g, " ").trim(),
       });
     }
+  }
+
+  // Check force:true across ALL e2e files (not just specs) — it bypasses
+  // Playwright actionability checks and hides real interaction issues.
+  // Exclude fs.rmSync({ force: true }) which is a Node.js API, not Playwright.
+  for (const filePath of collectAllE2eFiles(E2E_DIR)) {
+    const source = fs.readFileSync(filePath, "utf8");
+    const lines = source.split("\n");
+    const file = relPath(filePath);
+
+    lines.forEach((line, index) => {
+      if (/force\s*:\s*true/.test(line) && !line.includes("rmSync")) {
+        violations.forcedAction.push({ file, line: index + 1, text: line.trim() });
+      }
+    });
   }
 
   // Check baseline for selector anti-patterns

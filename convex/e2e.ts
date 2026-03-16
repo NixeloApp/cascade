@@ -3853,6 +3853,65 @@ export const seedScreenshotDataInternal = internalMutation({
       }
     }
 
+    // 10b. Create notifications (idempotent by type + title substring)
+    const notificationDefs: Array<{
+      type: string;
+      title: string;
+      body: string;
+      hoursAgo: number;
+    }> = [
+      {
+        type: "issue_assigned",
+        title: "Issue assigned to you",
+        body: "DEMO-1: Set up CI/CD pipeline was assigned to you",
+        hoursAgo: 1,
+      },
+      {
+        type: "issue_commented",
+        title: "New comment on DEMO-3",
+        body: 'Alex Rivera commented: "Dashboard layout looks great, merging now."',
+        hoursAgo: 3,
+      },
+      {
+        type: "issue_mentioned",
+        title: "You were mentioned",
+        body: "Sarah Kim mentioned you in DEMO-5: Database query optimization",
+        hoursAgo: 8,
+      },
+      {
+        type: "issue_status_changed",
+        title: "Issue status updated",
+        body: "DEMO-2: Fix login timeout moved from In Progress to In Review",
+        hoursAgo: 24,
+      },
+      {
+        type: "sprint_started",
+        title: "Sprint started",
+        body: "Sprint 1 has started with 5 issues assigned",
+        hoursAgo: 48,
+      },
+    ];
+
+    for (const notif of notificationDefs) {
+      const existing = await ctx.db
+        .query("notifications")
+        .withIndex("by_user_active", (q) => q.eq("userId", userId).eq("isDeleted", undefined))
+        .filter((q) => q.eq(q.field("title"), notif.title))
+        .first();
+
+      if (!existing) {
+        await ctx.db.insert("notifications", {
+          userId,
+          type: notif.type,
+          title: notif.title,
+          message: notif.body,
+          isRead: notif.hoursAgo > 12,
+          projectId,
+          actorId: syntheticUserIds[0],
+        });
+      }
+    }
+
     // 11. Return result
     return {
       success: true,
