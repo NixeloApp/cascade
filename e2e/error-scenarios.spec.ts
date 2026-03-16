@@ -1,5 +1,6 @@
 import { authenticatedTest, test } from "./fixtures";
 import { IssueDetailPage } from "./pages";
+import { ROUTES } from "./utils/routes";
 
 /**
  * Error Scenario E2E Tests
@@ -15,7 +16,7 @@ import { IssueDetailPage } from "./pages";
 test.describe("Unauthenticated Access", () => {
   test("redirects to signin when accessing protected route", async ({ page, landingPage }) => {
     // Try to access dashboard without auth
-    await page.goto("/some-org/dashboard");
+    await page.goto(ROUTES.dashboard.build("nonexistent-org"));
     await landingPage.expectLandingOrSignInPage();
   });
 });

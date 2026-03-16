@@ -51,7 +51,8 @@ const SKIP_PATTERNS = [
   ".next",
   "_generated",
   "routeTree.gen.ts",
-  "routes.ts", // The routes definition itself
+  "convex/shared/routes.ts", // The routes definition itself
+  "src/config/routes.ts", // Route config re-export
 ];
 
 // Lines matching these patterns are never flagged
@@ -85,9 +86,8 @@ const ALLOWED_PATTERNS = [
 const SKIP_FILE_PATTERNS = [
   /\.stories\.tsx?$/, // Storybook story files
   /screenshot-pages\.ts$/, // Screenshot utility
-  /\.test\.tsx?$/, // Unit test files use fixture paths
-  /\.spec\.tsx?$/, // Spec test files use fixture paths
-  /routes\.test\.ts$/, // Route config tests verify build() output
+  /src\/.*\.test\.tsx?$/, // Unit test files use fixture paths
+  /src\/.*\.spec\.tsx?$/, // Unit spec files use fixture paths
 ];
 
 export function run() {
