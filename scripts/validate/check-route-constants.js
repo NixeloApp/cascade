@@ -29,10 +29,16 @@ const ROUTE_PATTERNS = [
 
   // toHaveURL with bare regex containing path-like segments: toHaveURL(/dashboard/)
   // Matches /word/ or /\/word/ but not /\/$/ (root) or /^https/ (external)
-  { regex: /toHaveURL\(\/(?!\^https|\\\/\$).*[a-z]{4,}/, message: "Hardcoded regex route in toHaveURL" },
+  {
+    regex: /toHaveURL\(\/(?!\^https|\\\/\$).*[a-z]{4,}/,
+    message: "Hardcoded regex route in toHaveURL",
+  },
 
   // toHaveURL with new RegExp containing inline path strings (not from ROUTES)
-  { regex: /toHaveURL\(new RegExp\(`[^`]*\/[a-z][-a-z]/, message: "Hardcoded route in toHaveURL RegExp" },
+  {
+    regex: /toHaveURL\(new RegExp\(`[^`]*\/[a-z][-a-z]/,
+    message: "Hardcoded route in toHaveURL RegExp",
+  },
 ];
 
 // Files/directories to skip
@@ -98,9 +104,7 @@ export function run() {
         if (regex.test(line)) {
           const match = line.match(regex);
           const snippet = match ? match[0].slice(0, 50) : "";
-          messages.push(
-            `  ${c.red}ERROR${c.reset} ${rel}:${i + 1} - ${message}: ${snippet}`,
-          );
+          messages.push(`  ${c.red}ERROR${c.reset} ${rel}:${i + 1} - ${message}: ${snippet}`);
           issueCount++;
           break; // Only report once per line
         }

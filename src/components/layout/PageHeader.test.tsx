@@ -42,13 +42,19 @@ describe("PageHeader", () => {
     render(
       <PageHeader
         title="Issue detail"
-        breadcrumbs={[{ label: "Workspaces", to: ROUTES.workspaces.list.path.replace("/$orgSlug", "") }, { label: "Platform" }]}
+        breadcrumbs={[
+          { label: "Workspaces", to: ROUTES.workspaces.list.path.replace("/$orgSlug", "") },
+          { label: "Platform" },
+        ]}
         actions={<button type="button">Create issue</button>}
       />,
     );
 
     expect(screen.getByRole("navigation", { name: "breadcrumb" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Workspaces" })).toHaveAttribute("href", ROUTES.workspaces.list.path.replace("/$orgSlug", ""));
+    expect(screen.getByRole("link", { name: "Workspaces" })).toHaveAttribute(
+      "href",
+      ROUTES.workspaces.list.path.replace("/$orgSlug", ""),
+    );
     expect(screen.getByText("Platform")).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("button", { name: "Create issue" })).toBeInTheDocument();
   });

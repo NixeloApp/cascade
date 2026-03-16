@@ -263,7 +263,9 @@ export class DashboardPage extends BasePage {
       throw new Error(`Redirected to landing/signin page: ${currentUrl}. Auth session invalid.`);
     }
 
-    const escapedDashboardUrl = ROUTES.dashboard.build(this.orgSlug).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const escapedDashboardUrl = ROUTES.dashboard
+      .build(this.orgSlug)
+      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     await expect(this.page).toHaveURL(new RegExp(`${escapedDashboardUrl}(?:\\?.*)?$`), {
       timeout,
     });

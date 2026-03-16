@@ -118,12 +118,17 @@ rbacTest(
     console.log("✓ Editor cannot see settings tab");
 
     // 5. Try to access settings directly - should redirect to board
-    await clientSideNavigate(editorPage, ROUTES.projects.settings.build(rbacOrgSlug, rbacProjectKey));
+    await clientSideNavigate(
+      editorPage,
+      ROUTES.projects.settings.build(rbacOrgSlug, rbacProjectKey),
+    );
 
     // Wait for redirect to board
     await editorPage.waitForURL(`**${ROUTES.projects.board.build(rbacOrgSlug, rbacProjectKey)}`);
     expect(editorPage.url()).toContain(ROUTES.projects.board.build(rbacOrgSlug, rbacProjectKey));
-    expect(editorPage.url()).not.toContain(ROUTES.projects.settings.build(rbacOrgSlug, rbacProjectKey));
+    expect(editorPage.url()).not.toContain(
+      ROUTES.projects.settings.build(rbacOrgSlug, rbacProjectKey),
+    );
     console.log("✓ Editor is redirected from settings to board");
 
     // 6. Check sprints access (already on board page after redirect)
@@ -177,12 +182,17 @@ rbacTest(
     console.log("✓ Viewer cannot see settings tab");
 
     // 5. Try to access settings directly - should redirect to board
-    await clientSideNavigate(viewerPage, ROUTES.projects.settings.build(rbacOrgSlug, rbacProjectKey));
+    await clientSideNavigate(
+      viewerPage,
+      ROUTES.projects.settings.build(rbacOrgSlug, rbacProjectKey),
+    );
 
     // Wait for redirect to board
     await viewerPage.waitForURL(`**${ROUTES.projects.board.build(rbacOrgSlug, rbacProjectKey)}`);
     expect(viewerPage.url()).toContain(ROUTES.projects.board.build(rbacOrgSlug, rbacProjectKey));
-    expect(viewerPage.url()).not.toContain(ROUTES.projects.settings.build(rbacOrgSlug, rbacProjectKey));
+    expect(viewerPage.url()).not.toContain(
+      ROUTES.projects.settings.build(rbacOrgSlug, rbacProjectKey),
+    );
     console.log("✓ Viewer is redirected from settings to board");
 
     // 6. Check analytics access (viewers can view analytics - already on board page after redirect)
