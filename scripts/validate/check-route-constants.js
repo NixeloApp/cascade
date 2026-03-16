@@ -3,17 +3,14 @@
  *
  * Validates that route URLs use ROUTES constants instead of hardcoded strings.
  *
- * Patterns flagged:
- * - Template literals with route paths: `/${orgSlug}/dashboard`
- * - String literals with route paths: "/signin", "/dashboard"
- * - navigate(), Link to=, href= with hardcoded paths
+ * Strategy: Instead of enumerating every known route, detect the anti-patterns:
+ * 1. String literals that look like route paths: "/signin", "/dashboard"
+ * 2. Template literals with route segments: `/${orgSlug}/dashboard`
+ * 3. Bare regex with route paths in toHaveURL: toHaveURL(/dashboard/)
+ * 4. new RegExp() with inline route strings: toHaveURL(new RegExp(`/issues/...`))
  *
- * Allowed:
- * - ROUTES.*.build() calls
- * - ROUTES.*.path references
- * - External URLs (https://, http://)
- * - API routes (/api/*)
- * - Anchor links (#*)
+ * Lines are allowed if they reference ROUTES., routePattern(, routeMatch(,
+ * or other known-safe patterns (external URLs, imports, API routes, etc.).
  *
  * Enforced. Route constant issues are reported as plain errors.
  */
@@ -22,67 +19,20 @@ import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
-// Known route patterns that should use ROUTES constants
+// Generic detection: any line with a path-like string that should use ROUTES
 const ROUTE_PATTERNS = [
-  // Auth routes
-  /["'`]\/signin["'`]/,
-  /["'`]\/signup["'`]/,
-  /["'`]\/forgot-password["'`]/,
-  /["'`]\/onboarding["'`]/,
-  /["'`]\/verify-2fa["'`]/,
-  /["'`]\/terms["'`]/,
-  /["'`]\/privacy["'`]/,
+  // String literals with leading slash + alphabetic segment: "/signin", '/dashboard', etc.
+  { regex: /["']\/[a-z][-a-z]+["']/, message: "Hardcoded route string" },
 
-  // Dynamic org routes - template literals
-  /`\/\$\{[^}]+\}\/dashboard`/,
-  /`\/\$\{[^}]+\}\/inbox`/,
-  /`\/\$\{[^}]+\}\/analytics`/,
-  /`\/\$\{[^}]+\}\/team`/,
-  /`\/\$\{[^}]+\}\/documents`/,
-  /`\/\$\{[^}]+\}\/projects`/,
-  /`\/\$\{[^}]+\}\/issues`/,
-  /`\/\$\{[^}]+\}\/workspaces`/,
-  /`\/\$\{[^}]+\}\/settings`/,
-  /`\/\$\{[^}]+\}\/notifications`/,
-  /`\/\$\{[^}]+\}\/time-tracking`/,
-  /`\/\$\{[^}]+\}\/assistant`/,
-  /`\/\$\{[^}]+\}\/mcp-server`/,
-  /`\/\$\{[^}]+\}\/add-ons`/,
-  /`\/\$\{[^}]+\}\/authentication`/,
+  // Template literals with interpolated path: `/${orgSlug}/dashboard`
+  { regex: /`\/\$\{[^}]+\}\/[a-z]/, message: "Hardcoded template literal route" },
 
-  // Hardcoded regex routes in toHaveURL() / waitForURL() assertions
-  /toHaveURL\(\/.*signin/,
-  /toHaveURL\(\/.*signup/,
-  /toHaveURL\(\/.*forgot-password/,
-  /toHaveURL\(\/.*\\\/onboarding/,
-  /toHaveURL\(\/.*\\\/dashboard/,
-  /toHaveURL\(\/.*\\\/projects/,
-  /toHaveURL\(\/.*\\\/board/,
-  /toHaveURL\(\/.*\\\/backlog/,
-  /toHaveURL\(\/.*\\\/sprints/,
-  /toHaveURL\(\/.*\\\/roadmap/,
-  /toHaveURL\(\/.*\\\/timesheet/,
-  /toHaveURL\(\/.*\\\/analytics/,
-  /toHaveURL\(\/.*\\\/settings/,
-  /toHaveURL\(\/.*\\\/workspaces/,
-  /toHaveURL\(\/.*\\\/documents/,
-  /toHaveURL\(\/.*\\\/issues/,
+  // toHaveURL with bare regex containing path-like segments: toHaveURL(/dashboard/)
+  // Matches /word/ or /\/word/ but not /\/$/ (root) or /^https/ (external)
+  { regex: /toHaveURL\(\/(?!\^https|\\\/\$).*[a-z]{4,}/, message: "Hardcoded regex route in toHaveURL" },
 
-  // Bare regex with route words (no \/ prefix) — e.g. toHaveURL(/dashboard|onboarding/)
-  /toHaveURL\(\/[^\\]*dashboard/,
-  /toHaveURL\(\/[^\\]*onboarding/,
-  /toHaveURL\(\/[^\\]*signin/,
-  /toHaveURL\(\/[^\\]*signup/,
-
-  // Inline template literals with hardcoded route segments in toHaveURL
-  /toHaveURL\(new RegExp\(`[^`]*\/dashboard/,
-  /toHaveURL\(new RegExp\(`[^`]*\/signin/,
-  /toHaveURL\(new RegExp\(`[^`]*\/signup/,
-  /toHaveURL\(new RegExp\(`[^`]*\/onboarding/,
-  /toHaveURL\(new RegExp\(`[^`]*\/projects/,
-  /toHaveURL\(new RegExp\(`[^`]*\/workspaces/,
-  /toHaveURL\(new RegExp\(`[^`]*\/documents/,
-  /toHaveURL\(new RegExp\(`[^`]*\/issues/,
+  // toHaveURL with new RegExp containing inline path strings (not from ROUTES)
+  { regex: /toHaveURL\(new RegExp\(`[^`]*\/[a-z][-a-z]/, message: "Hardcoded route in toHaveURL RegExp" },
 ];
 
 // Files/directories to skip
@@ -92,47 +42,45 @@ const SKIP_PATTERNS = [
   ".next",
   "_generated",
   "routeTree.gen.ts",
-  "routes.ts", // The routes definition itself (both src/config/routes.ts and e2e/utils/routes.ts)
+  "routes.ts", // The routes definition itself
 ];
 
-// Allowed patterns (not flagged)
+// Lines matching any of these are never flagged
 const ALLOWED_PATTERNS = [
   /ROUTES\./, // Using ROUTES constant
+  /routePattern\(/, // routePattern() helper
+  /routeMatch\(/, // routeMatch() helper
   /["'`]https?:\/\//, // External URLs
   /["'`]\/api\//, // API routes
   /["'`]#/, // Anchor links
   /["'`]mailto:/, // Email links
   /["'`]tel:/, // Phone links
-  /path:\s*["'`]/, // Route path definitions
+  /path:\s*["'`]/, // Route path definitions (path: "/...")
   /createFileRoute/, // TanStack Router route definitions
-  /import.*from\s+["'].*routes["']/, // Importing routes module
-  /toHaveURL\(new RegExp\(.*ROUTES\./, // Dynamic regex constructed from ROUTES constants
-  /toHaveURL\(routePattern\(/, // routePattern() helper
-  /toHaveURL\(routeMatch\(/, // routeMatch() helper
-  /toHaveURL\([a-zA-Z](?!ew RegExp)/, // Variable/constant references (dashboardUrl, tabPaths, etc.) but not new RegExp
-  /toHaveURL\(\/\^https/, // External URL assertions (stripe.com etc.)
-  /toHaveURL\(\/\\\/\$\//, // Root path assertion
+  /import.*from\s+["']/, // Import statements
   /^\s*\*\s/, // JSDoc/block comment lines
+  /^\s*\/\//, // Single-line comments
+  /toHaveURL\(\/\\\/\$\//, // Root path assertion: toHaveURL(/\/$/)
+  /toHaveURL\(\/\^https/, // External URL assertion: toHaveURL(/^https/)
+  /["']\/app["']/, // App fallback redirect path
+  /\.includes\(/, // URL.includes() checks (string comparison, not navigation)
+  /\.stories\./, // Storybook files use fake paths
+];
+
+// Files where hardcoded paths are expected (not real app routes)
+const SKIP_FILE_PATTERNS = [
+  /\.stories\.tsx?$/, // Storybook story files
+  /screenshot-pages\.ts$/, // Screenshot utility
 ];
 
 export function run() {
   let issueCount = 0;
   const messages = [];
 
-  function reportIssue(filePath, line, _match, message) {
-    const rel = relPath(filePath);
-    messages.push(`  ${c.red}ERROR${c.reset} ${rel}:${line} - ${message}`);
-    issueCount++;
-  }
-
-  /**
-   * Check a file for hardcoded routes
-   */
   function checkFile(filePath) {
     const rel = relPath(filePath);
-
-    // Skip certain files
     if (SKIP_PATTERNS.some((pattern) => rel.includes(pattern))) return;
+    if (SKIP_FILE_PATTERNS.some((pattern) => pattern.test(rel))) return;
 
     const content = fs.readFileSync(filePath, "utf-8");
     const lines = content.split("\n");
@@ -144,24 +92,20 @@ export function run() {
       if (ALLOWED_PATTERNS.some((pattern) => pattern.test(line))) continue;
 
       // Check for hardcoded route patterns
-      for (const pattern of ROUTE_PATTERNS) {
-        if (pattern.test(line)) {
-          // Extract the matched route for the message
-          const match = line.match(pattern);
-          const routeStr = match ? match[0] : "route";
-          reportIssue(
-            filePath,
-            i + 1,
-            routeStr,
-            `Hardcoded route detected. Use ROUTES constant instead: ${routeStr.slice(0, 50)}`,
+      for (const { regex, message } of ROUTE_PATTERNS) {
+        if (regex.test(line)) {
+          const match = line.match(regex);
+          const snippet = match ? match[0].slice(0, 50) : "";
+          messages.push(
+            `  ${c.red}ERROR${c.reset} ${rel}:${i + 1} - ${message}: ${snippet}`,
           );
+          issueCount++;
           break; // Only report once per line
         }
       }
     }
   }
 
-  // Process all TypeScript/JavaScript files in src/ and e2e/
   const SCAN_DIRS = [path.join(ROOT, "src"), path.join(ROOT, "e2e")];
 
   for (const scanDir of SCAN_DIRS) {
