@@ -133,8 +133,7 @@ export const list = authenticatedQuery({
   },
   handler: async (ctx, args) => {
     // Cap limit to prevent abuse
-    const requestedLimit = args.limit ?? DEFAULT_PAGE_SIZE;
-    const limit = Math.min(requestedLimit, MAX_PAGE_SIZE);
+    const limit = Math.max(1, Math.min(Math.floor(args.limit ?? DEFAULT_PAGE_SIZE), MAX_PAGE_SIZE));
 
     const allDocuments = await fetchAndMergeAccessibleDocuments(ctx, args.organizationId, limit);
 
