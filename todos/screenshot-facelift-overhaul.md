@@ -240,11 +240,11 @@ Beyond page loads — capture the states users actually see during interaction.
 
 ### Notification states
 
-- [ ] **Notification bell with unread badge** — needs unread notifications in seed data
+- [x] **Notification bell with unread badge** — visible in notification popover capture (seed creates 3 unread)
 - [x] **Notification popover open** — click bell button, capture panel
-- [ ] **Notification snooze popover** — needs existing notification to snooze
+- [ ] **Notification snooze popover** — needs click on snooze button within a notification item
 - [x] **Notification filters active** — click "Mentions" filter on notifications page
-- [ ] **Notifications page — inbox tab** — already captured as base notifications page
+- [x] **Notifications page — inbox tab** — captured as base notifications page
 - [x] **Notifications page — archived tab** — click archived tab on notifications page
 
 ### Settings states
