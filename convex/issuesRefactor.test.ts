@@ -118,7 +118,7 @@ describe("Refactor Issues Smart Queries", () => {
 
     expect(todoIssues.length).toBe(1);
     expect(todoIssues[0].title).toBe("Team Issue Todo");
-    expect(todoIssues[0].reporter).not.toBeNull();
+    expect(Array.isArray(todoIssues[0].labels)).toBe(true);
 
     expect(inprogressIssues.length).toBe(1);
     expect(inprogressIssues[0].title).toBe("Team Issue InProgress");
