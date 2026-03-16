@@ -26,6 +26,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { type Browser, chromium, type Locator, type Page } from "@playwright/test";
+import { ROUTES } from "../convex/shared/routes";
 import { TEST_IDS } from "../src/lib/test-ids";
 import { TEST_USERS } from "./config";
 import { E2E_TIMEZONE } from "./constants";
@@ -1924,9 +1925,9 @@ async function discoverIssueKey(
   projectKey: string,
 ): Promise<string | null> {
   const candidatePaths = [
-    `/${orgSlug}/issues`,
-    `/${orgSlug}/projects/${projectKey}/backlog`,
-    `/${orgSlug}/projects/${projectKey}/board`,
+    ROUTES.issues.list.build(orgSlug),
+    ROUTES.projects.backlog.build(orgSlug, projectKey),
+    ROUTES.projects.board.build(orgSlug, projectKey),
   ];
 
   for (const pathName of candidatePaths) {
@@ -1947,9 +1948,12 @@ async function discoverIssueKey(
 
 async function discoverDocumentId(page: Page, orgSlug: string): Promise<string | null> {
   await page
-    .goto(`${BASE_URL}/${orgSlug}/documents`, { waitUntil: "domcontentloaded", timeout: 15000 })
+    .goto(`${BASE_URL}${ROUTES.documents.list.build(orgSlug)}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    })
     .catch(() => {});
-  await waitForExpectedContent(page, `/${orgSlug}/documents`, "documents");
+  await waitForExpectedContent(page, ROUTES.documents.list.build(orgSlug), "documents");
   await waitForScreenshotReady(page);
 
   try {
@@ -1996,9 +2000,9 @@ async function autoLogin(page: Page): Promise<string | null> {
     return null;
   }
 
-  await page.goto(`${BASE_URL}/signin`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE_URL}${ROUTES.signin.build()}`, { waitUntil: "domcontentloaded" });
   await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
-  await page.goto(`${BASE_URL}/app`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE_URL}${ROUTES.app.build()}`, { waitUntil: "domcontentloaded" });
 
   try {
     await page.waitForURL((u) => /\/[^/]+\/(dashboard|projects|issues)/.test(new URL(u).pathname), {
@@ -2033,11 +2037,11 @@ async function screenshotPublicPages(page: Page): Promise<void> {
   }
 
   console.log("    --- Public pages ---");
-  await takeScreenshot(page, "public", "landing", "/");
-  await takeScreenshot(page, "public", "signin", "/signin");
-  await takeScreenshot(page, "public", "signup", "/signup");
-  await takeScreenshot(page, "public", "forgot-password", "/forgot-password");
-  await takeScreenshot(page, "public", "verify-2fa", "/verify-2fa");
+  await takeScreenshot(page, "public", "landing", ROUTES.home.build());
+  await takeScreenshot(page, "public", "signin", ROUTES.signin.build());
+  await takeScreenshot(page, "public", "signup", ROUTES.signup.build());
+  await takeScreenshot(page, "public", "forgot-password", ROUTES.forgotPassword.build());
+  await takeScreenshot(page, "public", "verify-2fa", ROUTES.verify2FA.build());
   await takeScreenshot(page, "public", "invite-invalid", "/invite/screenshot-test-token");
 }
 
@@ -2063,19 +2067,19 @@ async function screenshotEmptyStates(page: Page, orgSlug: string): Promise<void>
 
   console.log("    --- Empty states ---");
   const p = "empty";
-  await takeScreenshot(page, p, "dashboard", `/${orgSlug}/dashboard`);
-  await takeScreenshot(page, p, "projects", `/${orgSlug}/projects`);
-  await takeScreenshot(page, p, "issues", `/${orgSlug}/issues`);
-  await takeScreenshot(page, p, "documents", `/${orgSlug}/documents`);
-  await takeScreenshot(page, p, "documents-templates", `/${orgSlug}/documents/templates`);
-  await takeScreenshot(page, p, "workspaces", `/${orgSlug}/workspaces`);
-  await takeScreenshot(page, p, "time-tracking", `/${orgSlug}/time-tracking`);
-  await takeScreenshot(page, p, "notifications", `/${orgSlug}/notifications`);
-  await takeScreenshot(page, p, "my-issues", `/${orgSlug}/my-issues`);
-  await takeScreenshot(page, p, "invoices", `/${orgSlug}/invoices`);
-  await takeScreenshot(page, p, "clients", `/${orgSlug}/clients`);
-  await takeScreenshot(page, p, "settings", `/${orgSlug}/settings`);
-  await takeScreenshot(page, p, "settings-profile", `/${orgSlug}/settings/profile`);
+  await takeScreenshot(page, p, "dashboard", ROUTES.dashboard.build(orgSlug));
+  await takeScreenshot(page, p, "projects", ROUTES.projects.list.build(orgSlug));
+  await takeScreenshot(page, p, "issues", ROUTES.issues.list.build(orgSlug));
+  await takeScreenshot(page, p, "documents", ROUTES.documents.list.build(orgSlug));
+  await takeScreenshot(page, p, "documents-templates", ROUTES.documents.templates.build(orgSlug));
+  await takeScreenshot(page, p, "workspaces", ROUTES.workspaces.list.build(orgSlug));
+  await takeScreenshot(page, p, "time-tracking", ROUTES.timeTracking.build(orgSlug));
+  await takeScreenshot(page, p, "notifications", ROUTES.notifications.build(orgSlug));
+  await takeScreenshot(page, p, "my-issues", ROUTES.myIssues.build(orgSlug));
+  await takeScreenshot(page, p, "invoices", ROUTES.invoices.list.build(orgSlug));
+  await takeScreenshot(page, p, "clients", ROUTES.clients.list.build(orgSlug));
+  await takeScreenshot(page, p, "settings", ROUTES.settings.profile.build(orgSlug));
+  await takeScreenshot(page, p, "settings-profile", ROUTES.settings.profile.build(orgSlug));
 }
 
 async function screenshotFilledStates(
@@ -2090,25 +2094,25 @@ async function screenshotFilledStates(
   const firstIssueKey = seed.issueKeys?.[0];
 
   // Top-level pages
-  await takeScreenshot(page, p, "dashboard", `/${orgSlug}/dashboard`);
-  await takeScreenshot(page, p, "projects", `/${orgSlug}/projects`);
-  await takeScreenshot(page, p, "issues", `/${orgSlug}/issues`);
-  await takeScreenshot(page, p, "documents", `/${orgSlug}/documents`);
-  await takeScreenshot(page, p, "documents-templates", `/${orgSlug}/documents/templates`);
-  await takeScreenshot(page, p, "workspaces", `/${orgSlug}/workspaces`);
-  await takeScreenshot(page, p, "time-tracking", `/${orgSlug}/time-tracking`);
-  await takeScreenshot(page, p, "notifications", `/${orgSlug}/notifications`);
-  await takeScreenshot(page, p, "my-issues", `/${orgSlug}/my-issues`);
-  await takeScreenshot(page, p, "org-calendar", `/${orgSlug}/calendar`);
-  await takeScreenshot(page, p, "org-analytics", `/${orgSlug}/analytics`);
-  await takeScreenshot(page, p, "invoices", `/${orgSlug}/invoices`);
-  await takeScreenshot(page, p, "clients", `/${orgSlug}/clients`);
-  await takeScreenshot(page, p, "settings", `/${orgSlug}/settings`);
-  await takeScreenshot(page, p, "settings-profile", `/${orgSlug}/settings/profile`);
-  await takeScreenshot(page, p, "authentication", `/${orgSlug}/authentication`);
-  await takeScreenshot(page, p, "add-ons", `/${orgSlug}/add-ons`);
-  await takeScreenshot(page, p, "assistant", `/${orgSlug}/assistant`);
-  await takeScreenshot(page, p, "mcp-server", `/${orgSlug}/mcp-server`);
+  await takeScreenshot(page, p, "dashboard", ROUTES.dashboard.build(orgSlug));
+  await takeScreenshot(page, p, "projects", ROUTES.projects.list.build(orgSlug));
+  await takeScreenshot(page, p, "issues", ROUTES.issues.list.build(orgSlug));
+  await takeScreenshot(page, p, "documents", ROUTES.documents.list.build(orgSlug));
+  await takeScreenshot(page, p, "documents-templates", ROUTES.documents.templates.build(orgSlug));
+  await takeScreenshot(page, p, "workspaces", ROUTES.workspaces.list.build(orgSlug));
+  await takeScreenshot(page, p, "time-tracking", ROUTES.timeTracking.build(orgSlug));
+  await takeScreenshot(page, p, "notifications", ROUTES.notifications.build(orgSlug));
+  await takeScreenshot(page, p, "my-issues", ROUTES.myIssues.build(orgSlug));
+  await takeScreenshot(page, p, "org-calendar", ROUTES.calendar.build(orgSlug));
+  await takeScreenshot(page, p, "org-analytics", ROUTES.analytics.build(orgSlug));
+  await takeScreenshot(page, p, "invoices", ROUTES.invoices.list.build(orgSlug));
+  await takeScreenshot(page, p, "clients", ROUTES.clients.list.build(orgSlug));
+  await takeScreenshot(page, p, "settings", ROUTES.settings.profile.build(orgSlug));
+  await takeScreenshot(page, p, "settings-profile", ROUTES.settings.profile.build(orgSlug));
+  await takeScreenshot(page, p, "authentication", ROUTES.authentication.build(orgSlug));
+  await takeScreenshot(page, p, "add-ons", ROUTES.addOns.build(orgSlug));
+  await takeScreenshot(page, p, "assistant", ROUTES.assistant.build(orgSlug));
+  await takeScreenshot(page, p, "mcp-server", ROUTES.mcp.build(orgSlug));
 
   if (
     shouldCaptureAny(p, [
@@ -2163,7 +2167,7 @@ async function screenshotFilledStates(
     // Create issue — "create another" toggle
     if (shouldCapture(p, `project-${normalizedProjectKey}-create-issue-create-another`)) {
       await runCaptureStep("create issue create-another toggle", async () => {
-        const boardUrl = `/${orgSlug}/projects/${projectKey}/board`;
+        const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
         await page
           .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
           .catch(() => {});
@@ -2190,7 +2194,7 @@ async function screenshotFilledStates(
     // Create issue — form validation errors (submit with empty title)
     if (shouldCapture(p, `project-${normalizedProjectKey}-create-issue-validation`)) {
       await runCaptureStep("create issue validation errors", async () => {
-        const boardUrl = `/${orgSlug}/projects/${projectKey}/board`;
+        const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
         await page
           .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
           .catch(() => {});
@@ -2224,7 +2228,7 @@ async function screenshotFilledStates(
     // Sprint selector dropdown (on board)
     if (shouldCapture(p, `project-${normalizedProjectKey}-board-sprint-selector`)) {
       await runCaptureStep("board sprint selector", async () => {
-        const boardUrl = `/${orgSlug}/projects/${projectKey}/board`;
+        const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
         await page
           .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
           .catch(() => {});
@@ -2280,7 +2284,7 @@ async function screenshotFilledStates(
         "calendar-event-modal",
       ])
     ) {
-      const calendarUrl = `/${orgSlug}/projects/${projectKey}/calendar`;
+      const calendarUrl = ROUTES.projects.calendar.build(orgSlug, projectKey);
       try {
         await page.goto(`${BASE_URL}${calendarUrl}`, {
           waitUntil: "domcontentloaded",
@@ -2342,10 +2346,13 @@ async function screenshotFilledStates(
             let eventItem = locateEvent();
             if (typeof seed.workspaceSlug === "string") {
               await page
-                .goto(`${BASE_URL}/${orgSlug}/workspaces/${seed.workspaceSlug}/calendar`, {
-                  waitUntil: "domcontentloaded",
-                  timeout: 15000,
-                })
+                .goto(
+                  `${BASE_URL}${ROUTES.workspaces.calendar.build(orgSlug, seed.workspaceSlug)}`,
+                  {
+                    waitUntil: "domcontentloaded",
+                    timeout: 15000,
+                  },
+                )
                 .catch(() => {});
               await waitForScreenshotReady(page);
               const workspaceCalendarReady = await waitForCalendarReady(page);
@@ -2384,7 +2391,7 @@ async function screenshotFilledStates(
         page,
         p,
         `issue-${firstIssue.toLowerCase()}`,
-        `/${orgSlug}/issues/${firstIssue}`,
+        ROUTES.issues.detail.build(orgSlug, firstIssue),
       );
     }
   }
@@ -2394,7 +2401,7 @@ async function screenshotFilledStates(
   const teamSlug = seed.teamSlug;
 
   if (wsSlug) {
-    const wsBase = `/${orgSlug}/workspaces/${wsSlug}`;
+    const wsBase = ROUTES.workspaces.detail.build(orgSlug, wsSlug);
     const wsTabs = ["backlog", "calendar", "sprints", "dependencies", "wiki", "settings"] as const;
     const workspaceTargets = [
       `workspace-${wsSlug}`,
@@ -2434,7 +2441,7 @@ async function screenshotFilledStates(
   if (shouldCaptureAny(p, editorTargets)) {
     const docId = await discoverDocumentId(page, orgSlug);
     if (docId) {
-      const docUrl = `/${orgSlug}/documents/${docId}`;
+      const docUrl = ROUTES.documents.detail.build(orgSlug, docId);
       await takeScreenshot(page, p, "document-editor", docUrl);
 
       // Document editor interactive states
@@ -2525,9 +2532,12 @@ async function screenshotFilledStates(
   if (shouldCapture(p, "dashboard-customize-modal")) {
     await runCaptureStep("dashboard customize modal", async () => {
       await page
-        .goto(`${BASE_URL}/${orgSlug}/dashboard`, { waitUntil: "domcontentloaded", timeout: 15000 })
+        .goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
         .catch(() => {});
-      await waitForExpectedContent(page, `/${orgSlug}/dashboard`, "dashboard");
+      await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
       const trigger = page.getByText("Customize", { exact: true }).first();
@@ -2544,7 +2554,7 @@ async function screenshotFilledStates(
   if (projectKey && shouldCapture(p, "calendar-create-event-modal")) {
     await runCaptureStep("calendar create-event modal", async () => {
       await page
-        .goto(`${BASE_URL}/${orgSlug}/projects/${projectKey}/calendar`, {
+        .goto(`${BASE_URL}${ROUTES.projects.calendar.build(orgSlug, projectKey)}`, {
           waitUntil: "domcontentloaded",
           timeout: 15000,
         })
@@ -2565,12 +2575,12 @@ async function screenshotFilledStates(
   if (shouldCapture(p, "workspaces-create-workspace-modal")) {
     await runCaptureStep("create workspace modal", async () => {
       await page
-        .goto(`${BASE_URL}/${orgSlug}/workspaces`, {
+        .goto(`${BASE_URL}${ROUTES.workspaces.list.build(orgSlug)}`, {
           waitUntil: "domcontentloaded",
           timeout: 15000,
         })
         .catch(() => {});
-      await waitForExpectedContent(page, `/${orgSlug}/workspaces`, "workspaces", p);
+      await waitForExpectedContent(page, ROUTES.workspaces.list.build(orgSlug), "workspaces", p);
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
       const trigger = page.getByText("Create Workspace").first();
@@ -2586,7 +2596,7 @@ async function screenshotFilledStates(
   // Create team modal (from workspace detail)
   if (wsSlug && shouldCapture(p, "workspace-create-team-modal")) {
     await runCaptureStep("create team modal", async () => {
-      const wsBase = `/${orgSlug}/workspaces/${wsSlug}`;
+      const wsBase = ROUTES.workspaces.detail.build(orgSlug, wsSlug);
       await page
         .goto(`${BASE_URL}${wsBase}`, { waitUntil: "domcontentloaded", timeout: 15000 })
         .catch(() => {});
@@ -2606,7 +2616,7 @@ async function screenshotFilledStates(
   // Import/export modal (from board)
   if (projectKey && shouldCapture(p, `project-${normalizedProjectKey}-import-export-modal`)) {
     await runCaptureStep("import/export modal", async () => {
-      const boardUrl = `/${orgSlug}/projects/${projectKey}/board`;
+      const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
       await page
         .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
         .catch(() => {});
@@ -2627,12 +2637,12 @@ async function screenshotFilledStates(
   if (shouldCapture(p, "time-tracking-manual-entry-modal")) {
     await runCaptureStep("manual time entry modal", async () => {
       await page
-        .goto(`${BASE_URL}/${orgSlug}/time-tracking`, {
+        .goto(`${BASE_URL}${ROUTES.timeTracking.build(orgSlug)}`, {
           waitUntil: "domcontentloaded",
           timeout: 15000,
         })
         .catch(() => {});
-      await waitForExpectedContent(page, `/${orgSlug}/time-tracking`, "time-tracking");
+      await waitForExpectedContent(page, ROUTES.timeTracking.build(orgSlug), "time-tracking");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
       const trigger = page.getByRole("button", { name: /add time entry/i }).first();
@@ -2651,12 +2661,12 @@ async function screenshotFilledStates(
   if (shouldCapture(p, "sidebar-collapsed")) {
     await runCaptureStep("sidebar collapsed", async () => {
       await page
-        .goto(`${BASE_URL}/${orgSlug}/dashboard`, {
+        .goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
           waitUntil: "domcontentloaded",
           timeout: 15000,
         })
         .catch(() => {});
-      await waitForExpectedContent(page, `/${orgSlug}/dashboard`, "dashboard");
+      await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
       await waitForScreenshotReady(page);
       const collapseBtn = page.getByLabel("Collapse sidebar");
       await collapseBtn.waitFor({ state: "visible", timeout: 5000 });
@@ -2697,7 +2707,7 @@ async function screenshotFilledStates(
 
   if (projectKey && shouldCapture(p, `project-${normalizedProjectKey}-roadmap-timeline-selector`)) {
     await runCaptureStep("roadmap timeline selector", async () => {
-      const roadmapUrl = `/${orgSlug}/projects/${projectKey}/roadmap`;
+      const roadmapUrl = ROUTES.projects.roadmap.build(orgSlug, projectKey);
       await page
         .goto(`${BASE_URL}${roadmapUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
         .catch(() => {});
@@ -2733,12 +2743,12 @@ async function screenshotFilledStates(
     await runCaptureStep("notification popover", async () => {
       // Navigate to dashboard to have a clean header
       await page
-        .goto(`${BASE_URL}/${orgSlug}/dashboard`, {
+        .goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
           waitUntil: "domcontentloaded",
           timeout: 15000,
         })
         .catch(() => {});
-      await waitForExpectedContent(page, `/${orgSlug}/dashboard`, "dashboard");
+      await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
       const bellButton = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_BUTTON);
@@ -2757,12 +2767,12 @@ async function screenshotFilledStates(
   if (shouldCapture(p, "notifications-archived")) {
     await runCaptureStep("notifications archived tab", async () => {
       await page
-        .goto(`${BASE_URL}/${orgSlug}/notifications`, {
+        .goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
           waitUntil: "domcontentloaded",
           timeout: 15000,
         })
         .catch(() => {});
-      await waitForExpectedContent(page, `/${orgSlug}/notifications`, "notifications");
+      await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
       await waitForScreenshotReady(page);
       const archivedTab = page.getByRole("tab", { name: /archived/i });
       await archivedTab.waitFor({ state: "visible", timeout: 5000 });
@@ -2776,12 +2786,12 @@ async function screenshotFilledStates(
   if (shouldCapture(p, "notifications-filter-active")) {
     await runCaptureStep("notifications filter active", async () => {
       await page
-        .goto(`${BASE_URL}/${orgSlug}/notifications`, {
+        .goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
           waitUntil: "domcontentloaded",
           timeout: 15000,
         })
         .catch(() => {});
-      await waitForExpectedContent(page, `/${orgSlug}/notifications`, "notifications");
+      await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
       await waitForScreenshotReady(page);
       // Click the Mentions filter button
       const mentionsFilter = page.getByRole("button", { name: /^mentions$/i }).first();
@@ -2810,9 +2820,12 @@ async function screenshotDashboardModals(
   }
 
   await page
-    .goto(`${BASE_URL}/${orgSlug}/dashboard`, { waitUntil: "domcontentloaded", timeout: 15000 })
+    .goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    })
     .catch(() => {});
-  await waitForExpectedContent(page, `/${orgSlug}/dashboard`, "dashboard");
+  await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
   await waitForScreenshotReady(page);
 
   const omniboxTrigger = page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON);
@@ -2878,7 +2891,10 @@ async function screenshotProjectsModal(page: Page, orgSlug: string, prefix: stri
   }
 
   await page
-    .goto(`${BASE_URL}/${orgSlug}/projects`, { waitUntil: "domcontentloaded", timeout: 15000 })
+    .goto(`${BASE_URL}${ROUTES.projects.list.build(orgSlug)}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    })
     .catch(() => {});
   await waitForScreenshotReady(page);
 
@@ -2906,7 +2922,7 @@ async function screenshotBoardModals(
     return;
   }
 
-  const boardUrl = `/${orgSlug}/projects/${projectKey}/board`;
+  const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
   await page
     .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
     .catch(() => {});
@@ -2963,7 +2979,7 @@ async function screenshotBoardInteractiveStates(
   prefix: string,
 ): Promise<void> {
   const normalizedProjectKey = projectKey.toLowerCase();
-  const boardUrl = `/${orgSlug}/projects/${projectKey}/board`;
+  const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
 
   // Helper: navigate to board and wait for toolbar
   const loadBoard = async () => {
@@ -3108,7 +3124,7 @@ async function screenshotSprintInteractiveStates(
   prefix: string,
 ): Promise<void> {
   const normalizedProjectKey = projectKey.toLowerCase();
-  const sprintsUrl = `/${orgSlug}/projects/${projectKey}/sprints`;
+  const sprintsUrl = ROUTES.projects.sprints.build(orgSlug, projectKey);
 
   // Navigate to sprints page
   await page
@@ -3193,7 +3209,7 @@ async function captureForConfig(
   await screenshotPublicPages(page);
 
   // Inject auth tokens
-  await page.goto(`${BASE_URL}/signin`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE_URL}${ROUTES.signin.build()}`, { waitUntil: "domcontentloaded" });
   const loginResult = await testUserService.loginTestUser(
     SCREENSHOT_USER.email,
     SCREENSHOT_USER.password,
@@ -3201,7 +3217,7 @@ async function captureForConfig(
 
   if (loginResult.success && loginResult.token) {
     await injectAuthTokens(page, loginResult.token, loginResult.refreshToken ?? null);
-    await page.goto(`${BASE_URL}/app`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${BASE_URL}${ROUTES.app.build()}`, { waitUntil: "domcontentloaded" });
     try {
       await page.waitForURL(
         (u) => /\/[^/]+\/(dashboard|projects|issues)/.test(new URL(u).pathname),
