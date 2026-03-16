@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { ROUTES, escapeRegExp, routePattern } from "../utils/routes";
+import { escapeRegExp, ROUTES, routePattern } from "../utils/routes";
 import {
   createWorkspaceFromDialog,
   dismissWorkspaceDialogIfOpen,

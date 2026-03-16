@@ -7,7 +7,7 @@
 
 import { type APIRequestContext, expect, type Locator, type Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { ROUTES, escapeRegExp, routePattern } from "./routes";
+import { escapeRegExp, ROUTES, routePattern } from "./routes";
 
 /**
  * Wait timeouts used across tests.

@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { ROUTES, escapeRegExp } from "../utils/routes";
+import { escapeRegExp, ROUTES } from "../utils/routes";
 import { waitForDashboardReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
