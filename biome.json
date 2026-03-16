@@ -46,7 +46,7 @@
         "noExcessiveCognitiveComplexity": "warn"
       },
       "a11y": {
-        "useSemanticElements": "off",
+        "useSemanticElements": "warn",
         "noStaticElementInteractions": "warn",
         "useKeyWithClickEvents": "warn"
       },
@@ -195,7 +195,12 @@
       }
     },
     {
-      "includes": ["**/src/components/ui/EmptyState.tsx", "**/src/components/IssueCard.tsx"],
+      "includes": [
+        "**/src/components/ui/EmptyState.tsx",
+        "**/src/components/IssueCard.tsx",
+        "**/src/components/IssueDependencies.tsx",
+        "**/src/components/LabelsManager.tsx"
+      ],
       "linter": {
         "rules": {
           "a11y": {

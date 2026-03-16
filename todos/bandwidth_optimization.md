@@ -6,17 +6,14 @@
 
 ## Completed
 
-- [x] **Sidebar queries** — added `listForSidebar` variants for workspaces, teams, documents. Eliminates N+1 count queries and returns only `{ _id, slug, name }`. ~70% bandwidth savings per sidebar load.
+- [x] **Sidebar queries** — added `listForSidebar` variants for workspaces, teams, documents. Eliminates N+1 count queries. Workspaces and teams return `{ _id, slug, name }`; documents return `{ _id, title }`. ~70% bandwidth savings per sidebar load.
 - [x] **Project list** — slimmed `getCurrentUserProjects` to return explicit fields instead of `...project`. Drops `workflowStates`, `updatedAt`, `workspaceId`, etc. ~50% savings.
 - [x] **Sprint list** — slimmed `sprints.listByProject` to return only needed fields. Drops `createdBy`, `updatedAt`, `boardViewConfig`. ~40% savings.
-
-## Remaining Work
-
-- [x] Slim `notifications.list` — returns explicit fields only. ~35% savings.
-- [x] Slim `calendarEvents.listByDateRange` — explicit field picks in shared enrichment function. ~25% savings (callers need more fields than initially estimated).
-- [x] Slim `dashboard.getMyProjects` — returns `_id`, `name`, `key`, `description`, `role`, `totalIssues`, `myIssues` only. ~50% savings.
-- [x] Slim board issue enrichment — `enrichIssuesForList` skips reporter/epic lookups. Board queries (`listByProjectSmart`, `listByTeamSmart`) use slim enrichment. Detail queries keep full `enrichIssues`. ~40% savings per board load.
-- [x] Bandwidth optimization report (see below).
+- [x] **Notifications** — slimmed `notifications.list` to return explicit fields only. ~35% savings.
+- [x] **Calendar events** — slimmed `calendarEvents.listByDateRange` with explicit field picks in shared enrichment function. ~25% savings (callers need more fields than initially estimated).
+- [x] **Dashboard projects** — slimmed `dashboard.getMyProjects` to return `_id`, `name`, `key`, `description`, `role`, `totalIssues`, `myIssues` only. ~50% savings.
+- [x] **Board issue enrichment** — `enrichIssuesForList` skips reporter/epic lookups. Board queries (`listByProjectSmart`, `listByTeamSmart`) use slim enrichment. Detail queries keep full `enrichIssues`. ~40% savings per board load.
+- [x] **Bandwidth optimization report** (see below).
 
 ## Bandwidth Optimization Report
 

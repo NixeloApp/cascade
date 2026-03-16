@@ -699,22 +699,13 @@ export const getOrganizationTeams = organizationQuery({
 export const listForSidebar = organizationQuery({
   args: {},
   handler: async (ctx) => {
-    const workspaces = await ctx.db
-      .query("workspaces")
+    const teams = await ctx.db
+      .query("teams")
       .withIndex("by_organization", (q) => q.eq("organizationId", ctx.organizationId))
+      .filter(notDeleted)
       .take(BOUNDED_LIST_LIMIT);
 
-    const teamsPerWorkspace = await Promise.all(
-      workspaces.map((ws) =>
-        ctx.db
-          .query("teams")
-          .withIndex("by_workspace", (q) => q.eq("workspaceId", ws._id))
-          .filter(notDeleted)
-          .take(BOUNDED_LIST_LIMIT),
-      ),
-    );
-
-    return teamsPerWorkspace.flat().map((team) => ({
+    return teams.map((team) => ({
       _id: team._id,
       slug: team.slug,
       name: team.name,
