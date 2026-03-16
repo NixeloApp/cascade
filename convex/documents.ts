@@ -172,6 +172,33 @@ export const list = authenticatedQuery({
   },
 });
 
+/**
+ * Lightweight document list for sidebar/navigation.
+ * Returns only { _id, title } — no creator enrichment or pagination.
+ * Use `list` for full data with pagination and creator info.
+ */
+export const listForSidebar = authenticatedQuery({
+  args: {
+    organizationId: v.id("organizations"),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = Math.min(args.limit ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+
+    const allDocuments = await fetchAndMergeAccessibleDocuments(ctx, args.organizationId, limit);
+
+    // Sort by updatedAt descending (most recent first for sidebar)
+    allDocuments.sort((a, b) => b.updatedAt - a.updatedAt);
+
+    return {
+      documents: allDocuments.slice(0, limit).map((doc) => ({
+        _id: doc._id,
+        title: doc.title,
+      })),
+    };
+  },
+});
+
 export const listByWorkspace = workspaceQuery({
   args: {
     limit: v.optional(v.number()),

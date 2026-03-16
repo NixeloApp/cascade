@@ -21,6 +21,7 @@ import {
 } from "./customFunctions";
 import { logAudit } from "./lib/audit";
 import { batchFetchTeams, batchFetchUsers, getUserName } from "./lib/batchHelpers";
+import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { isOrganizationAdmin } from "./lib/organizationAccess";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
@@ -687,6 +688,38 @@ export const getOrganizationTeams = organizationQuery({
     });
 
     return teamsWithInfo;
+  },
+});
+
+/**
+ * Lightweight team list for sidebar/navigation.
+ * Returns only { _id, slug, name, workspaceId } — no counts or role checks.
+ * Use getOrganizationTeams for full data.
+ */
+export const listForSidebar = organizationQuery({
+  args: {},
+  handler: async (ctx) => {
+    const workspaces = await ctx.db
+      .query("workspaces")
+      .withIndex("by_organization", (q) => q.eq("organizationId", ctx.organizationId))
+      .take(BOUNDED_LIST_LIMIT);
+
+    const teamsPerWorkspace = await Promise.all(
+      workspaces.map((ws) =>
+        ctx.db
+          .query("teams")
+          .withIndex("by_workspace", (q) => q.eq("workspaceId", ws._id))
+          .filter(notDeleted)
+          .take(BOUNDED_LIST_LIMIT),
+      ),
+    );
+
+    return teamsPerWorkspace.flat().map((team) => ({
+      _id: team._id,
+      slug: team.slug,
+      name: team.name,
+      workspaceId: team.workspaceId,
+    }));
   },
 });
 

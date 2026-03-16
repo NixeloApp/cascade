@@ -7,8 +7,9 @@
  */
 
 import { api } from "@convex/_generated/api";
-import type { Doc, Id } from "@convex/_generated/dataModel";
+import type { Id } from "@convex/_generated/dataModel";
 import { Link, type LinkProps, useLocation, useNavigate } from "@tanstack/react-router";
+import type { FunctionReturnType } from "convex/server";
 
 import { useState } from "react";
 import { CreateTeamModal } from "@/components/CreateTeamModal";
@@ -56,6 +57,12 @@ import { cn } from "@/lib/utils";
 /**
  * Main application sidebar with navigation, projects, and teams.
  */
+
+/** Slim shapes returned by the sidebar-specific queries. */
+type SidebarWorkspace = FunctionReturnType<typeof api.workspaces.listForSidebar>[number];
+type SidebarTeam = FunctionReturnType<typeof api.teams.listForSidebar>[number];
+type SidebarDocument = FunctionReturnType<typeof api.documents.listForSidebar>["documents"][number];
+
 const DOCUMENT_DISPLAY_LIMIT = 10;
 const WORKSPACE_DISPLAY_LIMIT = 25;
 
@@ -86,9 +93,9 @@ function filterItems<T extends { name?: string; title?: string }>(
 }
 
 function groupTeamsByWorkspace(
-  teams: Doc<"teams">[] | undefined,
-): Map<Id<"workspaces">, Doc<"teams">[]> {
-  const map = new Map<Id<"workspaces">, Doc<"teams">[]>();
+  teams: SidebarTeam[] | undefined,
+): Map<Id<"workspaces">, SidebarTeam[]> {
+  const map = new Map<Id<"workspaces">, SidebarTeam[]>();
   if (!teams) return map;
   for (const team of teams) {
     const existing = map.get(team.workspaceId);
@@ -135,13 +142,13 @@ function NavSubItem({
 }
 
 interface WorkspacesSectionContentProps {
-  workspaces: Doc<"workspaces">[];
+  workspaces: SidebarWorkspace[];
   filteredCount: number;
   totalCount: number;
   showSearch: boolean;
   searchValue: string;
   onSearchChange: (value: string) => void;
-  teamsByWorkspace: Map<Id<"workspaces">, Doc<"teams">[]>;
+  teamsByWorkspace: Map<Id<"workspaces">, SidebarTeam[]>;
   expandedWorkspaces: Set<string>;
   expandedTeams: Set<string>;
   onToggleWorkspace: (slug: string) => void;
@@ -199,7 +206,7 @@ function WorkspacesSectionContent({
           </Button>
         </li>
       )}
-      {workspaces.map((workspace: Doc<"workspaces">) => (
+      {workspaces.map((workspace: SidebarWorkspace) => (
         <WorkspaceNavItem
           key={workspace._id}
           workspace={workspace}
@@ -237,9 +244,9 @@ function WorkspacesSectionContent({
 }
 
 interface WorkspaceNavItemProps {
-  workspace: Doc<"workspaces">;
+  workspace: SidebarWorkspace;
   orgSlug: string;
-  teams: Doc<"teams">[];
+  teams: SidebarTeam[];
   isExpanded: boolean;
   expandedTeams: Set<string>;
   onToggleWorkspace: (slug: string) => void;
@@ -250,7 +257,7 @@ interface WorkspaceNavItemProps {
 }
 
 interface DocumentsSectionContentProps {
-  documents: Doc<"documents">[];
+  documents: SidebarDocument[];
   totalCount: number;
   showSearch: boolean;
   searchValue: string;
@@ -296,7 +303,7 @@ function DocumentsSectionContent({
           </Card>
         </li>
       )}
-      {documents.map((doc: Doc<"documents">) => (
+      {documents.map((doc: SidebarDocument) => (
         <li key={doc._id} className="list-none">
           <NavSubItem
             to={ROUTES.documents.detail.path}
@@ -369,7 +376,7 @@ function WorkspaceNavItem({
 
       {isExpanded && (
         <ul className="list-none">
-          {teams.map((team: Doc<"teams">) => (
+          {teams.map((team: SidebarTeam) => (
             <SidebarTeamItem
               key={team._id}
               team={team}
@@ -390,6 +397,7 @@ interface AppSidebarProps {
   onCreateProject?: () => void;
 }
 
+/** Main app sidebar with workspace navigation, documents, and settings. */
 export function AppSidebar({ onCreateProject }: AppSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -414,11 +422,14 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
     slug: string;
   } | null>(null);
 
-  // Data
-  const documentsResult = useAuthenticatedQuery(api.documents.list, { limit: 11, organizationId });
+  // Data — use lightweight sidebar-specific queries (no counts, no enrichment)
+  const documentsResult = useAuthenticatedQuery(api.documents.listForSidebar, {
+    limit: 11,
+    organizationId,
+  });
   const documents = documentsResult?.documents;
-  const workspaces = useAuthenticatedQuery(api.workspaces.list, { organizationId });
-  const teams = useAuthenticatedQuery(api.teams.getOrganizationTeams, { organizationId });
+  const workspaces = useAuthenticatedQuery(api.workspaces.listForSidebar, { organizationId });
+  const teams = useAuthenticatedQuery(api.teams.listForSidebar, { organizationId });
 
   const allDocuments = documents ?? [];
   const allWorkspaces = workspaces ?? [];
