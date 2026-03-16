@@ -13,7 +13,6 @@ vi.mock("./AdvancedSearchModal/SearchResultsList", () => ({
   SearchResultsList: () => <div data-testid="mock-search-results">SearchResultsList</div>,
 }));
 
-import type { Id } from "@convex/_generated/dataModel";
 import { AdvancedSearchModal } from "./AdvancedSearchModal";
 
 describe("AdvancedSearchModal", () => {

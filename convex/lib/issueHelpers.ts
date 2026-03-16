@@ -214,6 +214,68 @@ export async function enrichIssue(ctx: QueryCtx, issue: Doc<"issues">): Promise<
 }
 
 /**
+ * Slim enrichment for list/board views — drops description, dates, reporter,
+ * epic, and other fields the card component doesn't render.
+ */
+export async function enrichIssueForList(
+  ctx: QueryCtx,
+  issue: Doc<"issues">,
+): Promise<EnrichedIssueForList> {
+  const assignee = issue.assigneeId ? await ctx.db.get(issue.assigneeId) : null;
+
+  let labelInfos: LabelInfo[] = [];
+  if (issue.labels && issue.labels.length > 0 && issue.projectId) {
+    const neededLabels = new Set(issue.labels);
+    const labels = await fetchLabelsForProject(ctx, issue.projectId, neededLabels);
+    const labelMap = new Map<string, { color: string; description?: string }>();
+    for (const label of labels) {
+      labelMap.set(label.name, { color: label.color, description: label.description });
+    }
+    labelInfos = issue.labels.map((name) => {
+      const info = labelMap.get(name);
+      return {
+        name,
+        color: info?.color ?? RUNTIME_COLORS.FALLBACK_LABEL,
+        description: info?.description,
+      };
+    });
+  }
+
+  return {
+    _id: issue._id,
+    _creationTime: issue._creationTime,
+    key: issue.key,
+    title: issue.title,
+    type: issue.type,
+    status: issue.status,
+    priority: issue.priority,
+    order: issue.order,
+    storyPoints: issue.storyPoints,
+    projectId: issue.projectId,
+    sprintId: issue.sprintId,
+    assignee: sanitizeUserForAuth(assignee),
+    labels: labelInfos,
+  };
+}
+
+/** Slim enriched issue shape for list/board views. */
+export type EnrichedIssueForList = {
+  _id: Id<"issues">;
+  _creationTime: number;
+  key: string;
+  title: string;
+  type: string;
+  status: string;
+  priority: string;
+  order?: number;
+  storyPoints?: number;
+  projectId: Id<"projects">;
+  sprintId?: Id<"sprints">;
+  assignee: AuthenticatedUser | null;
+  labels: LabelInfo[];
+};
+
+/**
  * Build a lookup map from an array of documents
  */
 function buildLookupMap<T extends { _id: { toString(): string } }>(
@@ -321,6 +383,66 @@ export async function enrichIssues(
       : null,
     reporter: sanitizeUserForAuth(userMap.get(issue.reporterId.toString()) ?? null),
     epic: issue.epicId ? toEpicInfo(epicMap.get(issue.epicId.toString()) ?? null) : null,
+    labels: getLabelInfos(issue, labelsByProject),
+  }));
+}
+
+/**
+ * Slim batch enrichment for list/board views.
+ * Skips reporter, epic lookups — only fetches assignees and labels.
+ */
+export async function enrichIssuesForList(
+  ctx: QueryCtx,
+  issues: Doc<"issues">[],
+): Promise<EnrichedIssueForList[]> {
+  if (issues.length === 0) return [];
+
+  const userIds = new Set<Id<"users">>();
+  const projectLabelsNeeded = new Map<Id<"projects">, Set<string>>();
+
+  for (const issue of issues) {
+    if (issue.assigneeId) userIds.add(issue.assigneeId);
+    if (issue.projectId && issue.labels && issue.labels.length > 0) {
+      let set = projectLabelsNeeded.get(issue.projectId);
+      if (!set) {
+        set = new Set();
+        projectLabelsNeeded.set(issue.projectId, set);
+      }
+      for (const l of issue.labels) set.add(l);
+    }
+  }
+
+  const projectIdList = [...projectLabelsNeeded.keys()];
+  const [users, projectLabelsArrays] = await Promise.all([
+    asyncMap([...userIds], (id) => ctx.db.get(id)),
+    asyncMap(projectIdList, async (projectId) => {
+      const neededLabels = projectLabelsNeeded.get(projectId);
+      if (!neededLabels) return [];
+      return await fetchLabelsForProject(ctx, projectId, neededLabels);
+    }),
+  ]);
+
+  const userMap = buildLookupMap(users);
+  const labelsByProject = buildLabelsByProject(
+    projectIdList,
+    projectLabelsArrays as Doc<"labels">[][],
+  );
+
+  return issues.map((issue) => ({
+    _id: issue._id,
+    _creationTime: issue._creationTime,
+    key: issue.key,
+    title: issue.title,
+    type: issue.type,
+    status: issue.status,
+    priority: issue.priority,
+    order: issue.order,
+    storyPoints: issue.storyPoints,
+    projectId: issue.projectId,
+    sprintId: issue.sprintId,
+    assignee: issue.assigneeId
+      ? sanitizeUserForAuth(userMap.get(issue.assigneeId.toString()) ?? null)
+      : null,
     labels: getLabelInfos(issue, labelsByProject),
   }));
 }
@@ -467,4 +589,25 @@ export async function batchEnrichIssuesByStatus(
   }
 
   return enrichedIssuesByStatus;
+}
+
+/**
+ * Slim batch enrichment grouped by status — for board/list views.
+ * Skips reporter and epic lookups.
+ */
+export async function batchEnrichIssuesByStatusForList(
+  ctx: QueryCtx,
+  issuesByStatus: Record<string, Doc<"issues">[]>,
+): Promise<Record<string, EnrichedIssueForList[]>> {
+  const allIssues = Object.values(issuesByStatus).flat();
+  const enrichedAll = await enrichIssuesForList(ctx, allIssues);
+  const enrichedById = new Map(enrichedAll.map((issue) => [issue._id, issue]));
+
+  const result: Record<string, EnrichedIssueForList[]> = {};
+  for (const [statusId, issues] of Object.entries(issuesByStatus)) {
+    result[statusId] = issues
+      .map((issue) => enrichedById.get(issue._id))
+      .filter((issue): issue is EnrichedIssueForList => issue !== undefined);
+  }
+  return result;
 }

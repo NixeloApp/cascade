@@ -149,7 +149,14 @@ export const listByProject = projectQuery({
         completedCount: 0,
       };
       return {
-        ...sprint,
+        _id: sprint._id,
+        _creationTime: sprint._creationTime,
+        name: sprint.name,
+        status: sprint.status,
+        goal: sprint.goal,
+        startDate: sprint.startDate,
+        endDate: sprint.endDate,
+        projectId: sprint.projectId,
         issueCount: stats.count,
         completedCount: stats.completedCount,
       };

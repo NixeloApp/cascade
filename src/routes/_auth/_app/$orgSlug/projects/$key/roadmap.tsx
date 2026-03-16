@@ -1,5 +1,5 @@
 import { api } from "@convex/_generated/api";
-import type { Doc, Id } from "@convex/_generated/dataModel";
+import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 import { PageContent, PageError } from "@/components/layout";
@@ -36,7 +36,7 @@ function RoadmapPage() {
   }
 
   const canEdit = project.userRole !== "viewer";
-  const activeSprint = sprints?.find((s: Doc<"sprints">) => s.status === "active");
+  const activeSprint = sprints?.find((s) => s.status === "active");
 
   return (
     <Suspense fallback={<PageContent isLoading>{null}</PageContent>}>

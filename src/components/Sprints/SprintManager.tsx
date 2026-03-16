@@ -7,7 +7,8 @@
  */
 
 import { api } from "@convex/_generated/api";
-import type { Doc, Id } from "@convex/_generated/dataModel";
+import type { Id } from "@convex/_generated/dataModel";
+import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
 import { SprintBurnChart } from "@/components/Analytics/SprintBurnChart";
 import { Alert } from "@/components/ui/Alert";
@@ -44,7 +45,7 @@ import {
 } from "@/lib/sprint-presets";
 import { showError, showSuccess } from "@/lib/toast";
 
-type SprintWithCounts = Doc<"sprints"> & { issueCount: number; completedCount: number };
+type SprintWithCounts = FunctionReturnType<typeof api.sprints.listByProject>[number];
 
 /**
  * Check if two date ranges overlap
@@ -551,7 +552,7 @@ export function SprintManager({ projectId, canEdit = true }: SprintManagerProps)
             }
           />
         ) : (
-          sprints.map((sprint: SprintWithCounts) => (
+          sprints.map((sprint) => (
             <Stack key={sprint._id} gap="md">
               <SprintCard
                 sprint={sprint}

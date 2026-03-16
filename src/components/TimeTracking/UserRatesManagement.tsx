@@ -187,7 +187,7 @@ export function UserRatesManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="default">All Projects (Default)</SelectItem>
-                {projects?.page?.map((project: Doc<"projects">) => (
+                {projects?.page?.map((project) => (
                   <SelectItem key={project._id} value={project._id}>
                     {project.name} (Override)
                   </SelectItem>

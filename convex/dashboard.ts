@@ -23,7 +23,7 @@ import {
 } from "./lib/queryLimits";
 import { notDeleted } from "./lib/softDeleteHelpers";
 import { WEEK } from "./lib/timeUtils";
-import { issueActivityFields, issuesFields, projectsFields } from "./schemaFields";
+import { issueActivityFields, issuesFields } from "./schemaFields";
 import { projectRoles } from "./validators";
 
 /**
@@ -206,9 +206,10 @@ export const getMyProjects = authenticatedQuery({
   args: {},
   returns: v.array(
     v.object({
-      ...projectsFields,
       _id: v.id("projects"),
-      _creationTime: v.number(),
+      name: v.string(),
+      key: v.string(),
+      description: v.optional(v.string()),
       role: projectRoles,
       totalIssues: v.number(),
       myIssues: v.number(),
@@ -253,8 +254,10 @@ export const getMyProjects = authenticatedQuery({
 
         const projId = membership.projectId.toString();
         return {
-          ...project,
           _id: membership.projectId,
+          name: project.name,
+          key: project.key,
+          description: project.description,
           role: membership.role,
           totalIssues: totalIssuesByProject.get(projId) ?? 0,
           myIssues: myIssuesByProject.get(projId) ?? 0,

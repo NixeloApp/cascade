@@ -136,6 +136,12 @@ test.describe("Issues", () => {
 
       await projectsPage.closeIssueDetail();
 
+      // The board's real-time subscription may not immediately reflect the
+      // title change. Reload to ensure the board shows persisted data.
+      await projectsPage.page.reload();
+      await projectsPage.page.waitForLoadState("domcontentloaded");
+      await projectsPage.expectBacklogLoaded();
+
       await expect(projectsPage.getIssueCard(updatedTitle)).toBeVisible();
       await expect(projectsPage.getIssueCard(originalTitle)).toHaveCount(0);
     });

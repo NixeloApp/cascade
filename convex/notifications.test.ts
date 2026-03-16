@@ -578,7 +578,7 @@ describe("Notifications", () => {
 
       expect(notifications.page).toHaveLength(1);
       expect(notifications.page[0]?.type).toBe("issue_assigned");
-      expect(notifications.page[0]?.actorId).toBe(actorId);
+      expect(notifications.page[0]?.actorName).toBe("Actor");
     });
 
     it("create - should not create notification if user is actor", async () => {

@@ -7,10 +7,10 @@
  */
 
 import { api } from "@convex/_generated/api";
-import type { Doc, Id } from "@convex/_generated/dataModel";
+import type { Id } from "@convex/_generated/dataModel";
 import { Link, useLocation } from "@tanstack/react-router";
 import { usePaginatedQuery } from "convex/react";
-import type { FunctionReference } from "convex/server";
+import type { FunctionReference, FunctionReturnType } from "convex/server";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
@@ -26,7 +26,7 @@ import { ROUTES } from "@/config/routes";
 type PaginatedQuery = FunctionReference<"query", "public">;
 
 interface SidebarTeamItemProps {
-  team: Doc<"teams">;
+  team: FunctionReturnType<typeof api.teams.listForSidebar>[number];
   workspaceSlug: string;
   orgSlug: string;
   isExpanded: boolean;

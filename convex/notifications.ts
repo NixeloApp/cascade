@@ -80,7 +80,15 @@ export const list = authenticatedQuery({
     const enrichedPage = results.page.map((notification) => {
       const actor = notification.actorId ? actorMap.get(notification.actorId) : null;
       return {
-        ...notification,
+        _id: notification._id,
+        _creationTime: notification._creationTime,
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        isRead: notification.isRead,
+        issueId: notification.issueId,
+        projectId: notification.projectId,
+        documentId: notification.documentId,
         actorName: actor?.name,
       };
     });

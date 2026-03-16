@@ -58,9 +58,9 @@ vi.mock("@/hooks/useSidebarState", () => ({
 vi.mock("@convex/_generated/api", () => ({
   api: {
     users: { isOrganizationAdmin: "users.isOrganizationAdmin", getCurrent: "users.getCurrent" },
-    documents: { list: "documents.list", create: "documents.create" },
-    workspaces: { list: "workspaces.list", create: "workspaces.create" },
-    teams: { getOrganizationTeams: "teams.getOrganizationTeams" },
+    documents: { listForSidebar: "documents.listForSidebar", create: "documents.create" },
+    workspaces: { listForSidebar: "workspaces.listForSidebar", create: "workspaces.create" },
+    teams: { listForSidebar: "teams.listForSidebar" },
     dashboard: { getMyProjects: "dashboard.getMyProjects" },
     projects: { getTeamProjects: "projects.getTeamProjects" },
   },
@@ -77,10 +77,10 @@ vi.mock("lucide-react", async () => {
 
 const mockUseQueryImplementation = (query: any) => {
   switch (query) {
-    case "documents.list":
+    case "documents.listForSidebar":
       return { documents: [] };
-    case "workspaces.list":
-    case "teams.getOrganizationTeams":
+    case "workspaces.listForSidebar":
+    case "teams.listForSidebar":
     case "dashboard.getMyProjects":
       return [];
     case "users.isOrganizationAdmin":
@@ -164,7 +164,7 @@ describe("AppSidebar Accessibility", () => {
   it("adds aria-current='page' to active Document sub-item and NOT the parent section", async () => {
     // Setup documents query to return a doc
     (useQuery as any).mockImplementation((query: any) => {
-      if (query === "documents.list")
+      if (query === "documents.listForSidebar")
         return {
           documents: [{ _id: "doc1", title: "My Doc", isPublic: false }],
         };
@@ -222,7 +222,7 @@ describe("AppSidebar Accessibility", () => {
     const user = userEvent.setup();
     (useLocation as any).mockReturnValue({ pathname: "/demo-org/dashboard" });
     (useQuery as any).mockImplementation((query: string) => {
-      if (query === "documents.list") {
+      if (query === "documents.listForSidebar") {
         return {
           documents: Array.from({ length: 12 }).map((_, index) => ({
             _id: `doc-${index + 1}`,
@@ -231,7 +231,7 @@ describe("AppSidebar Accessibility", () => {
           })),
         };
       }
-      if (query === "workspaces.list" || query === "teams.getOrganizationTeams") return [];
+      if (query === "workspaces.listForSidebar" || query === "teams.listForSidebar") return [];
       if (query === "users.isOrganizationAdmin") return false;
       return undefined;
     });
@@ -251,15 +251,15 @@ describe("AppSidebar Accessibility", () => {
     const user = userEvent.setup();
     (useLocation as any).mockReturnValue({ pathname: "/demo-org/dashboard" });
     (useQuery as any).mockImplementation((query: string) => {
-      if (query === "workspaces.list") {
+      if (query === "workspaces.listForSidebar") {
         return Array.from({ length: 27 }).map((_, index) => ({
           _id: `workspace-${index + 1}`,
           name: `Workspace ${index + 1}`,
           slug: `workspace-${index + 1}`,
         }));
       }
-      if (query === "teams.getOrganizationTeams") return [];
-      if (query === "documents.list") return { documents: [] };
+      if (query === "teams.listForSidebar") return [];
+      if (query === "documents.listForSidebar") return { documents: [] };
       if (query === "users.isOrganizationAdmin") return false;
       return undefined;
     });

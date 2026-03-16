@@ -104,6 +104,27 @@ export const listWorkspaces = organizationQuery({
 export const list = listWorkspaces;
 
 /**
+ * Lightweight workspace list for sidebar/navigation.
+ * Returns only { _id, slug, name } — no team/project counts.
+ * Use listWorkspaces for full data (workspace index page, etc.).
+ */
+export const listForSidebar = organizationQuery({
+  args: {},
+  handler: async (ctx) => {
+    const workspaces = await ctx.db
+      .query("workspaces")
+      .withIndex("by_organization", (q) => q.eq("organizationId", ctx.organizationId))
+      .take(MAX_PAGE_SIZE);
+
+    return workspaces.map((ws) => ({
+      _id: ws._id,
+      slug: ws.slug,
+      name: ws.name,
+    }));
+  },
+});
+
+/**
  * Get a single workspace by ID
  * @deprecated Use `getWorkspace` instead which returns null if not found
  */

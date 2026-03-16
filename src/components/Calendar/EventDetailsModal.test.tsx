@@ -2,8 +2,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { HOUR } from "@convex/lib/timeUtils";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { TEST_IDS } from "@/lib/test-ids";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { render, screen } from "@/test/custom-render";
 import { EventDetailsModal } from "./EventDetailsModal";
 

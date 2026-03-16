@@ -166,8 +166,8 @@ The app has ~65 routes. The screenshot tool currently covers ~20. Every route ne
 - [x] **Create team modal** — workspace detail → "Create team" button
 - [x] **Create workspace modal** — workspaces list → "Create Workspace" button
 - [ ] **Dashboard customize modal** — wired but "Customize" button not rendered for screenshot user
-- [x] **Import/export modal** — captured (164ms) after getByKey fix unblocked board access
-- [ ] **Manual time entry modal** — wired but "Add Time Entry" button not visible in current page state
+- [x] **Import/export modal** — captured after getByKey fix unblocked board access
+- [x] **Manual time entry modal** — captured via waitForDialogOpen overlay detection
 
 ### Remaining modals (need special setup or complex triggers)
 
@@ -222,7 +222,7 @@ Beyond page loads — capture the states users actually see during interaction.
 
 - [ ] **Calendar drag-and-drop preview** — event being dragged between days
 - [ ] **Calendar quick-add on day click** — create issue form with pre-filled date
-- [ ] **Create event modal** — full event creation form
+- [x] **Create event modal** — captured via calendar page "Add Event" button
 
 ### Sprint states
 
@@ -240,11 +240,11 @@ Beyond page loads — capture the states users actually see during interaction.
 
 ### Notification states
 
-- [ ] **Notification bell with unread badge** — needs unread notifications in seed data
+- [x] **Notification bell with unread badge** — visible in notification popover capture (seed creates 3 unread)
 - [x] **Notification popover open** — click bell button, capture panel
-- [ ] **Notification snooze popover** — needs existing notification to snooze
+- [ ] **Notification snooze popover** — needs click on snooze button within a notification item
 - [x] **Notification filters active** — click "Mentions" filter on notifications page
-- [ ] **Notifications page — inbox tab** — already captured as base notifications page
+- [x] **Notifications page — inbox tab** — captured as base notifications page
 - [x] **Notifications page — archived tab** — click archived tab on notifications page
 
 ### Settings states

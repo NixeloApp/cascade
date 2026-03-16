@@ -7,8 +7,9 @@
  */
 
 import { api } from "@convex/_generated/api";
-import type { Doc, Id } from "@convex/_generated/dataModel";
+import type { Id } from "@convex/_generated/dataModel";
 import { MONTH, WEEK } from "@convex/lib/timeUtils";
+import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
@@ -175,7 +176,7 @@ interface TimeTrackingControlsProps {
   canSeeSensitiveTabs: boolean;
   dateRange: TimeTrackingDateRange;
   projectId?: Id<"projects">;
-  projects: Doc<"projects">[] | undefined;
+  projects: FunctionReturnType<typeof api.projects.getCurrentUserProjects>["page"] | undefined;
   selectedProject: Id<"projects"> | "all";
   onActiveTabChange: (value: TimeTrackingTab) => void;
   onDateRangeChange: (value: TimeTrackingDateRange) => void;

@@ -22,7 +22,7 @@ import {
 } from "../lib/boundedQueries";
 import { forbidden, notFound } from "../lib/errors";
 import {
-  batchEnrichIssuesByStatus,
+  batchEnrichIssuesByStatusForList,
   enrichComments,
   enrichIssue,
   enrichIssues,
@@ -997,7 +997,7 @@ export const listByProjectSmart = projectQuery({
       );
     }
 
-    const enrichedIssuesByStatus = await batchEnrichIssuesByStatus(ctx, issuesByColumn);
+    const enrichedIssuesByStatus = await batchEnrichIssuesByStatusForList(ctx, issuesByColumn);
 
     return {
       issuesByStatus: enrichedIssuesByStatus,
@@ -1070,7 +1070,7 @@ export const listByTeamSmart = authenticatedQuery({
       DEFAULT_PAGE_SIZE,
     );
 
-    const enrichedIssuesByStatus = await batchEnrichIssuesByStatus(ctx, issuesByColumn);
+    const enrichedIssuesByStatus = await batchEnrichIssuesByStatusForList(ctx, issuesByColumn);
 
     return {
       issuesByStatus: enrichedIssuesByStatus,

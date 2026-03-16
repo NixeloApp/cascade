@@ -7,7 +7,6 @@
  */
 
 import { api } from "@convex/_generated/api";
-import type { Doc } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
 
 import type { LucideIcon } from "lucide-react";
@@ -194,7 +193,7 @@ export function useCommands({
     },
 
     // Projects navigation
-    ...(projects?.map((project: Doc<"projects">) => ({
+    ...(projects?.map((project) => ({
       id: `project-${project._id}`,
       label: project.name,
       icon: LayoutGrid,
