@@ -1,6 +1,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import type { EnrichedIssue } from "@convex/lib/issueHelpers";
+import type { EnrichedIssueForList } from "@convex/lib/issueHelpers";
 import type { OptimisticLocalStore, OptimisticUpdate } from "convex/browser";
 import type { FunctionArgs } from "convex/server";
 
@@ -31,7 +31,6 @@ function updateBoardList(
   issueId: Id<"issues">,
   newStatus: string,
   newOrder: number,
-  now: number,
 ) {
   const queryArgs =
     boardOptions.projectId && boardOptions.sprintId
@@ -48,18 +47,17 @@ function updateBoardList(
   if (!currentBoard) return;
 
   const newIssuesByStatus = { ...currentBoard.issuesByStatus };
-  let issueToMove: EnrichedIssue | undefined;
+  let issueToMove: EnrichedIssueForList | undefined;
 
   // Remove from old status
   for (const status in newIssuesByStatus) {
     const issues = newIssuesByStatus[status];
-    const idx = issues.findIndex((i: EnrichedIssue) => i._id === issueId);
+    const idx = issues.findIndex((i) => i._id === issueId);
     if (idx !== -1) {
       issueToMove = {
         ...issues[idx],
         status: newStatus,
         order: newOrder,
-        updatedAt: now,
       };
       newIssuesByStatus[status] = [...issues.slice(0, idx), ...issues.slice(idx + 1)];
       break;
@@ -70,7 +68,9 @@ function updateBoardList(
   if (issueToMove) {
     const targetIssues = newIssuesByStatus[newStatus] || [];
     // Sort by order to insert correctly
-    const updatedTargetIssues = [...targetIssues, issueToMove].sort((a, b) => a.order - b.order);
+    const updatedTargetIssues = [...targetIssues, issueToMove].sort(
+      (a, b) => (a.order ?? 0) - (b.order ?? 0),
+    );
     newIssuesByStatus[newStatus] = updatedTargetIssues;
 
     localStore.setQuery(api.issues.listByProjectSmart, queryArgs, {
@@ -96,6 +96,6 @@ export const optimisticBoardUpdate =
     updateSingleIssue(localStore, issueId, newStatus, newOrder, now);
 
     if (boardOptions && !isTeamMode) {
-      updateBoardList(localStore, boardOptions, issueId, newStatus, newOrder, now);
+      updateBoardList(localStore, boardOptions, issueId, newStatus, newOrder);
     }
   };
