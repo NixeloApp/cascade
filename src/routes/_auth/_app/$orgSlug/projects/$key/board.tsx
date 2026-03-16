@@ -7,7 +7,7 @@
  */
 
 import { api } from "@convex/_generated/api";
-import type { Doc, Id } from "@convex/_generated/dataModel";
+import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { ExportButton } from "@/components/ExportButton";
 import { type BoardFilters, FilterBar } from "@/components/FilterBar";
@@ -95,7 +95,7 @@ function BoardPage() {
     );
   }
 
-  const activeSprint = sprints?.find((s: Doc<"sprints">) => s.status === "active");
+  const activeSprint = sprints?.find((s) => s.status === "active");
   const selectedSprintId = sprintParam as Id<"sprints"> | undefined;
   const effectiveSprintId = selectedSprintId || activeSprint?._id;
   const showMobileSprintControls = project.boardType === "scrum" && !!sprints;
@@ -153,7 +153,7 @@ function BoardPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="active">Active Sprint</SelectItem>
-                    {sprints.map((sprint: Doc<"sprints">) => (
+                    {sprints.map((sprint) => (
                       <SelectItem key={sprint._id} value={sprint._id}>
                         {sprint.name} ({sprint.status})
                       </SelectItem>
@@ -184,7 +184,7 @@ function BoardPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="active">Active Sprint</SelectItem>
-                    {sprints.map((sprint: Doc<"sprints">) => (
+                    {sprints.map((sprint) => (
                       <SelectItem key={sprint._id} value={sprint._id}>
                         {sprint.name} ({sprint.status})
                       </SelectItem>

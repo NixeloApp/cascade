@@ -7,7 +7,7 @@
  */
 
 import { api } from "@convex/_generated/api";
-import type { Doc, Id } from "@convex/_generated/dataModel";
+import type { Id } from "@convex/_generated/dataModel";
 import { useId, useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Archive } from "@/lib/icons";
@@ -303,7 +303,7 @@ export function BulkOperationsBar({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="backlog">Backlog</SelectItem>
-                      {sprints?.map((sprint: Doc<"sprints">) => (
+                      {sprints?.map((sprint) => (
                         <SelectItem key={sprint._id} value={sprint._id}>
                           {sprint.name}
                         </SelectItem>
