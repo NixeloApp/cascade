@@ -105,9 +105,7 @@ export class DocumentsPage extends BasePage {
     await expect(this.newDocumentButton).toBeVisible();
     await expect(this.newDocumentButton).toBeEnabled();
     await this.newDocumentButton.click();
-    await expect(this.page).toHaveURL(
-      routePattern(ROUTES.documents.detail.path, "$"),
-    );
+    await expect(this.page).toHaveURL(routePattern(ROUTES.documents.detail.path, "$"));
 
     await this.expectEditorVisible();
   }

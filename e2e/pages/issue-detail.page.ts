@@ -72,9 +72,7 @@ export class IssueDetailPage extends BasePage {
 
   async returnToProjectBoard(projectKey: string) {
     await this.getProjectBreadcrumb(projectKey).click();
-    await expect(this.page).toHaveURL(
-      routePattern(ROUTES.projects.board.path),
-    );
+    await expect(this.page).toHaveURL(routePattern(ROUTES.projects.board.path));
   }
 
   async enterEditMode() {

@@ -31,9 +31,7 @@ test.describe("Integration Workflows", () => {
 
       // Step 1: Navigate to projects
       await projectsPage.goto();
-      await expect(page).toHaveURL(
-        routePattern(ROUTES.projects.list.path),
-      );
+      await expect(page).toHaveURL(routePattern(ROUTES.projects.list.path));
 
       // Step 2: Create a workspace (needed for project)
       await projectsPage.createWorkspace(namespace.name("Int WS"));
@@ -79,9 +77,7 @@ test.describe("Integration Workflows", () => {
       await projectsPage.createProject(namespace.name("Nav Test"), projectKey);
 
       // Verify we're on board
-      await expect(page).toHaveURL(
-        routePattern(ROUTES.projects.board.path),
-      );
+      await expect(page).toHaveURL(routePattern(ROUTES.projects.board.path));
       console.log("✓ On board tab");
 
       // Switch to Calendar

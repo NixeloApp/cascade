@@ -227,9 +227,7 @@ export const rbacTest = base.extend<RbacFixtures>({
       }
 
       // Final check: URL should contain /board
-      await expect(page).toHaveURL(
-        routePattern(ROUTES.projects.board.path),
-      );
+      await expect(page).toHaveURL(routePattern(ROUTES.projects.board.path));
       console.log(`✓ Navigated to ${page.url()}`);
     };
     await use(goto);

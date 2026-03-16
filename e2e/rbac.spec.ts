@@ -39,9 +39,7 @@ rbacTest(
 
     // 2. Verify board is visible - check for board element or project key in URL
     // URL should be like /:orgSlug/projects/:projectKey/board
-    await expect(adminPage).toHaveURL(
-      routePattern(ROUTES.projects.board.path),
-    );
+    await expect(adminPage).toHaveURL(routePattern(ROUTES.projects.board.path));
     console.log("✓ Admin can view project board");
 
     // 3. Verify create issue button is visible
@@ -106,9 +104,7 @@ rbacTest(
     await gotoRbacProject(editorPage);
 
     // 2. Verify board is visible - check for project name heading
-    await expect(editorPage).toHaveURL(
-      routePattern(ROUTES.projects.board.path),
-    );
+    await expect(editorPage).toHaveURL(routePattern(ROUTES.projects.board.path));
     console.log("✓ Editor can view project board");
 
     // 3. Verify create issue button is visible (editors can create issues)

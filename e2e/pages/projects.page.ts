@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
-import { ROUTES, routePattern } from "../utils/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { ROUTES, routePattern } from "../utils/routes";
 import {
   createWorkspaceFromDialog,
   dismissWorkspaceDialogIfOpen,
@@ -424,9 +424,7 @@ export class ProjectsPage extends BasePage {
     });
 
     // Deterministic completion: modal closes and workspace route remains active.
-    await expect(this.page).toHaveURL(
-      routePattern(ROUTES.workspaces.list.path),
-    );
+    await expect(this.page).toHaveURL(routePattern(ROUTES.workspaces.list.path));
   }
 
   async cancelCreateProject() {
@@ -666,9 +664,7 @@ export class ProjectsPage extends BasePage {
   }
 
   async expectAnalyticsLoaded() {
-    await expect(this.page).toHaveURL(
-      routePattern(ROUTES.projects.analytics.path),
-    );
+    await expect(this.page).toHaveURL(routePattern(ROUTES.projects.analytics.path));
     await expect(this.analyticsPageHeader).toBeVisible();
     await expect(this.analyticsTotalIssuesMetric).toBeVisible();
   }
@@ -706,31 +702,23 @@ export class ProjectsPage extends BasePage {
   }
 
   async expectProjectSettingsLoaded() {
-    await expect(this.page).toHaveURL(
-      routePattern(ROUTES.projects.settings.path),
-    );
+    await expect(this.page).toHaveURL(routePattern(ROUTES.projects.settings.path));
     await expect(this.projectSettingsHeader).toBeVisible();
   }
 
   async expectBacklogLoaded() {
-    await expect(this.page).toHaveURL(
-      routePattern(ROUTES.projects.backlog.path),
-    );
+    await expect(this.page).toHaveURL(routePattern(ROUTES.projects.backlog.path));
     await expect(this.boardColumns.first()).toBeVisible();
     await expect(this.getBoardColumn("Backlog")).toBeVisible();
   }
 
   async expectTimesheetLoaded() {
-    await expect(this.page).toHaveURL(
-      routePattern(ROUTES.projects.timesheet.path),
-    );
+    await expect(this.page).toHaveURL(routePattern(ROUTES.projects.timesheet.path));
     await expect(this.timesheetEntriesTab).toBeVisible();
   }
 
   async expectRoadmapLoaded() {
-    await expect(this.page).toHaveURL(
-      routePattern(ROUTES.projects.roadmap.path),
-    );
+    await expect(this.page).toHaveURL(routePattern(ROUTES.projects.roadmap.path));
     await expect(this.roadmapViewToggle).toBeVisible();
   }
 
@@ -746,9 +734,7 @@ export class ProjectsPage extends BasePage {
   }
 
   async expectSprintsLoaded() {
-    await expect(this.page).toHaveURL(
-      routePattern(ROUTES.projects.sprints.path),
-    );
+    await expect(this.page).toHaveURL(routePattern(ROUTES.projects.sprints.path));
     await expect(this.sprintsPageHeader).toBeVisible();
 
     if (await this.createSprintButton.isVisible().catch(() => false)) {
