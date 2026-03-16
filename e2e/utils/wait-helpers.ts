@@ -334,7 +334,9 @@ export async function ensureAuthenticatedDashboardReady(
   const recoverAuthenticatedDashboard = async () => {
     const currentUrl = page.url();
     const isOutsideOrgShell =
-      currentUrl.endsWith("/") || currentUrl.includes(ROUTES.signin.build()) || !currentUrl.includes(orgSlug);
+      currentUrl.endsWith("/") ||
+      currentUrl.includes(ROUTES.signin.build()) ||
+      !currentUrl.includes(orgSlug);
 
     await page.goto(isOutsideOrgShell ? dashboardPath : "/app", {
       waitUntil: "domcontentloaded",
