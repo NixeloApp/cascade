@@ -31,7 +31,7 @@
 
 **Approach:** Replace `...doc` spreads with explicit field picks. Add `listForSidebar` variants for sidebar-only callers. Split issue enrichment into list (slim) vs detail (full) tiers.
 
-**Type discipline:** All callers now use `FunctionReturnType<typeof api.*>` instead of `Doc<"table">` for query results. TypeScript catches any removed field at compile time.
+**Type discipline:** Key callers of optimized queries now use `FunctionReturnType<typeof api.*>` instead of `Doc<"table">`. Some callers in the broader codebase still use `Doc<>` — migration is ongoing.
 
 **Convex dashboard metrics:** Not captured (requires manual dashboard access). The savings above are estimated from field counts and document structure analysis.
 
@@ -40,4 +40,4 @@
 - Avoid `.collect()` or large `.take()` values for counts.
 - Prefer index-backed query paths before adding in-memory filtering.
 - Keep sidebar and navigation queries especially small.
-- Use `FunctionReturnType<typeof api.*>` for caller types — never `Doc<"table">` for query results.
+- Prefer `FunctionReturnType<typeof api.*>` for caller types over `Doc<"table">` for query results.

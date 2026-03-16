@@ -183,7 +183,7 @@ export const listForSidebar = authenticatedQuery({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const limit = Math.min(args.limit ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+    const limit = Math.max(1, Math.min(Math.floor(args.limit ?? DEFAULT_PAGE_SIZE), MAX_PAGE_SIZE));
 
     const allDocuments = await fetchAndMergeAccessibleDocuments(ctx, args.organizationId, limit);
 
@@ -204,7 +204,7 @@ export const listByWorkspace = workspaceQuery({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const limit = Math.min(args.limit ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+    const limit = Math.max(1, Math.min(Math.floor(args.limit ?? DEFAULT_PAGE_SIZE), MAX_PAGE_SIZE));
     const docs = await ctx.db
       .query("documents")
       .withIndex("by_workspace", (q) => q.eq("workspaceId", ctx.workspaceId))
@@ -234,7 +234,7 @@ export const listByTeam = teamQuery({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const limit = Math.min(args.limit ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+    const limit = Math.max(1, Math.min(Math.floor(args.limit ?? DEFAULT_PAGE_SIZE), MAX_PAGE_SIZE));
     const docs = await ctx.db
       .query("documents")
       .withIndex("by_team", (q) => q.eq("teamId", ctx.teamId))
