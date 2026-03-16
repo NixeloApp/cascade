@@ -96,8 +96,8 @@ function BoardPage() {
   }
 
   const activeSprint = sprints?.find((s) => s.status === "active");
-  const selectedSprintId = sprintParam as Id<"sprints"> | undefined;
-  const effectiveSprintId = selectedSprintId || activeSprint?._id;
+  const selectedSprint = sprintParam ? sprints?.find((s) => s._id === sprintParam) : undefined;
+  const effectiveSprintId = selectedSprint?._id || activeSprint?._id;
   const showMobileSprintControls = project.boardType === "scrum" && !!sprints;
 
   const handleSprintChange = (value: string) => {
@@ -147,7 +147,7 @@ function BoardPage() {
 
               <ExportButton projectId={project._id} sprintId={effectiveSprintId} />
               {project.boardType === "scrum" && sprints && (
-                <Select value={selectedSprintId || "active"} onValueChange={handleSprintChange}>
+                <Select value={selectedSprint?._id || "active"} onValueChange={handleSprintChange}>
                   <SelectTrigger className="w-48 px-3 py-2 border border-ui-border text-sm">
                     <SelectValue placeholder="Active Sprint" />
                   </SelectTrigger>
@@ -178,7 +178,7 @@ function BoardPage() {
           mobileActions={
             <>
               {showMobileSprintControls && sprints && (
-                <Select value={selectedSprintId || "active"} onValueChange={handleSprintChange}>
+                <Select value={selectedSprint?._id || "active"} onValueChange={handleSprintChange}>
                   <SelectTrigger className="h-7 min-w-24 border border-ui-border/70 bg-ui-bg-elevated/92 px-2 text-xs shadow-soft">
                     <SelectValue placeholder="Sprint" />
                   </SelectTrigger>
