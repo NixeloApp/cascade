@@ -771,7 +771,7 @@ export class AuthPage extends BasePage {
   }
 
   async ensureForgotPasswordEntry(): Promise<"forgot" | "check-email" | "code"> {
-    if (!this.page.url().includes(ROUTES.forgotPassword.build())) {
+    if (!new URL(this.page.url()).pathname.startsWith(ROUTES.forgotPassword.build())) {
       await this.page.goto(ROUTES.forgotPassword.build(), { waitUntil: "domcontentloaded" });
     }
 
@@ -947,7 +947,7 @@ export class AuthPage extends BasePage {
   private async getVerificationSubmitState(): Promise<
     "submitting" | "redirect" | "success" | "error" | "pending"
   > {
-    if (!this.page.url().includes(ROUTES.signup.build())) {
+    if (!new URL(this.page.url()).pathname.startsWith(ROUTES.signup.build())) {
       return "redirect";
     }
 
@@ -975,7 +975,7 @@ export class AuthPage extends BasePage {
   private async getPasswordResetSubmitState(): Promise<
     "submitting" | "redirect" | "success" | "error" | "pending"
   > {
-    if (!this.page.url().includes(ROUTES.forgotPassword.build())) {
+    if (!new URL(this.page.url()).pathname.startsWith(ROUTES.forgotPassword.build())) {
       return "redirect";
     }
 
@@ -997,7 +997,7 @@ export class AuthPage extends BasePage {
   }
 
   private async getSignInSubmitState(): Promise<"submitting" | "redirect" | "error" | "pending"> {
-    if (!this.page.url().includes(ROUTES.signin.build())) {
+    if (!new URL(this.page.url()).pathname.startsWith(ROUTES.signin.build())) {
       return "redirect";
     }
 
