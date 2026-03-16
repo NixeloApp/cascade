@@ -50,7 +50,7 @@ export class IssueDetailPage extends BasePage {
   }
 
   async expectIssueLoaded(issueKey: string) {
-    await expect(this.page).toHaveURL(new RegExp(`/issues/${escapeRegExp(issueKey)}$`));
+    await expect(this.page).toHaveURL(new RegExp(`${escapeRegExp(ROUTES.issues.detail.build(this.orgSlug, issueKey))}$`));
     await expect(
       this.page
         .locator("code")

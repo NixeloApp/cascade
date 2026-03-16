@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
 
 /**
@@ -195,7 +196,7 @@ export class SettingsPage extends BasePage {
 
   async goto() {
     // Navigate directly to settings URL
-    const url = `/${this.orgSlug}/settings/profile`;
+    const url = ROUTES.settings.profile.build(this.orgSlug);
     await this.page.goto(url);
 
     try {

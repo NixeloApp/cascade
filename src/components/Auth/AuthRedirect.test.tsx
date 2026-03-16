@@ -44,7 +44,7 @@ describe("AuthRedirect", () => {
     });
 
     it("should render children even when redirect is pending", () => {
-      mockRedirectPath = "/dashboard";
+      mockRedirectPath = ROUTES.dashboard.build("test-org");
 
       render(
         <AuthRedirect>
@@ -59,7 +59,7 @@ describe("AuthRedirect", () => {
 
   describe("Navigation", () => {
     it("should navigate to redirect path when different from current", () => {
-      mockRedirectPath = "/dashboard";
+      mockRedirectPath = ROUTES.dashboard.build("test-org");
 
       render(
         <AuthRedirect>
@@ -68,7 +68,7 @@ describe("AuthRedirect", () => {
       );
 
       expect(mockNavigate).toHaveBeenCalledWith({
-        to: "/dashboard",
+        to: ROUTES.dashboard.build("test-org"),
         replace: true,
       });
     });

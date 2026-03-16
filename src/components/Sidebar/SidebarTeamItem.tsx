@@ -125,9 +125,10 @@ function SidebarTeamProjects({
     <div className={getCardRecipeClassName("sidebarTeamProjectsRail")}>
       <Stack gap="xs">
         {projects.map((project) => {
+          const projectBasePath = `${ROUTES.projects.list.build(orgSlug)}/${project.key}`;
           const isActive =
-            location.pathname === `/${orgSlug}/projects/${project.key}` ||
-            location.pathname.startsWith(`/${orgSlug}/projects/${project.key}/`);
+            location.pathname === projectBasePath ||
+            location.pathname.startsWith(`${projectBasePath}/`);
 
           return (
             <div key={project._id}>

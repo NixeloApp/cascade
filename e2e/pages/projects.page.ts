@@ -315,7 +315,7 @@ export class ProjectsPage extends BasePage {
   }
 
   async gotoProjectBoard(projectKey: string) {
-    await this.gotoPath(`/${this.orgSlug}/projects/${projectKey}/board`);
+    await this.gotoPath(ROUTES.projects.board.build(this.orgSlug, projectKey));
     await this.waitForLoad();
   }
 
@@ -372,8 +372,9 @@ export class ProjectsPage extends BasePage {
       }
 
       const normalizedProjectKey = key.toUpperCase();
-      const boardPath = `/${this.orgSlug}/projects/${normalizedProjectKey}/board`;
-      const boardUrlPattern = new RegExp(`/projects/${normalizedProjectKey}/board(?:[/?#]|$)`);
+      const boardPath = ROUTES.projects.board.build(this.orgSlug, normalizedProjectKey);
+      const escapedBoardPath = boardPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const boardUrlPattern = new RegExp(`${escapedBoardPath}(?:[/?#]|$)`);
 
       await this.createButton.waitFor({ state: "visible" });
       await expect(this.createButton).toBeEnabled();

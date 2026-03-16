@@ -201,12 +201,12 @@ export const rbacTest = base.extend<RbacFixtures>({
     await use(getRbacConfig(testInfo.parallelIndex).orgSlug);
   },
   rbacProjectUrl: async ({ rbacOrgSlug, rbacProjectKey }, use) => {
-    await use(`/${rbacOrgSlug}/projects/${rbacProjectKey}/board`);
+    await use(ROUTES.projects.board.build(rbacOrgSlug, rbacProjectKey));
   },
 
   gotoRbacProject: async ({ rbacOrgSlug, rbacProjectKey }, use) => {
     const goto = async (page: Page) => {
-      const targetUrl = `/${rbacOrgSlug}/projects/${rbacProjectKey}/board`;
+      const targetUrl = ROUTES.projects.board.build(rbacOrgSlug, rbacProjectKey);
 
       // 1. Identify role and prepare JWT
       const role = (page.context() as BrowserContext & { _role?: string })._role as UserRole;

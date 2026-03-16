@@ -93,7 +93,7 @@ export class DocumentsPage extends BasePage {
   }
 
   async gotoDocument(documentId: string) {
-    await this.page.goto(`/${this.orgSlug}/documents/${documentId}`);
+    await this.page.goto(ROUTES.documents.detail.build(this.orgSlug, documentId));
     await this.waitForLoad();
   }
 

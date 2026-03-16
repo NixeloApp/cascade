@@ -19,7 +19,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
-// Generic detection: any line with a path-like string that should use ROUTES
+// Generic detection: lines with path-like strings that should use ROUTES
 const ROUTE_PATTERNS = [
   // String literals with leading slash + alphabetic segment: "/signin", '/dashboard', etc.
   { regex: /["']\/[a-z][-a-z]+["']/, message: "Hardcoded route string" },
@@ -45,7 +45,7 @@ const SKIP_PATTERNS = [
   "routes.ts", // The routes definition itself
 ];
 
-// Lines matching any of these are never flagged
+// Lines matching these patterns are never flagged
 const ALLOWED_PATTERNS = [
   /ROUTES\./, // Using ROUTES constant
   /routePattern\(/, // routePattern() helper
@@ -65,6 +65,8 @@ const ALLOWED_PATTERNS = [
   /["']\/app["']/, // App fallback redirect path
   /\.includes\(/, // URL.includes() checks (string comparison, not navigation)
   /\.stories\./, // Storybook files use fake paths
+  /["']\/co["']/, // Slash command text, not a route
+  /["']\/home["']/, // Generic test href, not an app route
 ];
 
 // Files where hardcoded paths are expected (not real app routes)

@@ -305,9 +305,9 @@ export async function ensureAuthenticatedDashboardReady(
   page: Page,
   orgSlug: string,
 ): Promise<void> {
-  const escapedOrgSlug = orgSlug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const dashboardPath = ROUTES.dashboard.build(orgSlug);
-  const dashboardUrl = new RegExp(`/${escapedOrgSlug}/dashboard(?:\\?.*)?$`);
+  const escapedDashboardPath = dashboardPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const dashboardUrl = new RegExp(`${escapedDashboardPath}(?:\\?.*)?$`);
   const appErrorHeading = page.getByRole("heading", { name: "500" });
   const appErrorDetails = page.locator("details pre");
 
