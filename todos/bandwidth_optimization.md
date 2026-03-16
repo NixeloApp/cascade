@@ -13,7 +13,7 @@
 ## Remaining Work
 
 - [x] Slim `notifications.list` — returns explicit fields only. ~35% savings.
-- [ ] Slim `calendarEvents.listByDateRange` — returns full event docs + organizer enrichment, callers only need `_id`, `title`, `startTime`, `endTime`, `attendeeIds`, `color`, `eventType`. ~45% savings.
+- [x] Slim `calendarEvents.listByDateRange` — explicit field picks in shared enrichment function. ~25% savings (callers need more fields than initially estimated).
 - [x] Slim `dashboard.getMyProjects` — returns `_id`, `name`, `key`, `description`, `role`, `totalIssues`, `myIssues` only. ~50% savings.
 - [ ] Consider slim variant for `issues.listProjectIssues` — complex due to enrichment (assignee, reporter, labels). Would need to split enrichment into list vs detail tiers. ~40% savings but high implementation complexity.
 - [ ] Publish before/after bandwidth report using Convex dashboard metrics.
