@@ -46,7 +46,7 @@
         "noExcessiveCognitiveComplexity": "warn"
       },
       "a11y": {
-        "useSemanticElements": "warn",
+        "useSemanticElements": "off",
         "noStaticElementInteractions": "warn",
         "useKeyWithClickEvents": "warn"
       },

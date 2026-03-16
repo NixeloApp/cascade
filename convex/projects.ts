@@ -512,10 +512,11 @@ export const getByKey = authenticatedQuery({
       // Use compound index for O(1) lookup when org is known.
       // Project keys are unique within an org but NOT globally unique —
       // multiple orgs can have a project with key "DEMO".
+      const orgId = args.organizationId;
       project = await ctx.db
         .query("projects")
         .withIndex("by_organization_key", (q) =>
-          q.eq("organizationId", args.organizationId!).eq("key", normalizedKey),
+          q.eq("organizationId", orgId).eq("key", normalizedKey),
         )
         .filter(notDeleted)
         .first();
