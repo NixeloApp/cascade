@@ -220,8 +220,9 @@ export class SettingsPage extends BasePage {
         .catch(() => "Could not get localStorage");
       const convexClientState = await this.page
         .evaluate(() => {
-          // biome-ignore lint/suspicious/noExplicitAny: Accessing internal test client
-          const client = (window as any).__convex_test_client;
+          const client = (window as Record<string, unknown>).__convex_test_client as
+            | { authenticationToken?: unknown }
+            | undefined;
           return client
             ? `Found client. Auth token set: ${!!client.authenticationToken}`
             : "Client not found on window";

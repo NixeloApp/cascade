@@ -6,6 +6,7 @@ import { AUTH_PATHS, RBAC_TEST_CONFIG, TEST_USERS } from "../config";
 import { E2E_TIMEZONE } from "../constants";
 import { ProjectsPage, SettingsPage, WorkspacesPage } from "../pages";
 import { loginFixtureUserWithRepair } from "../utils/fixture-auth";
+import { ROUTES } from "../utils/routes";
 import {
   ensureAuthenticatedDashboardReady,
   waitForConvexConnectionReady,
@@ -246,7 +247,7 @@ async function ensureAuthenticatedDashboardIfNeeded(page: Page, orgSlug: string)
 
   // Check pathname rather than hardcoded URL for BASE_URL flexibility
   const { pathname } = new URL(targetUrl);
-  if (pathname === "/" || pathname === "/signin") {
+  if (pathname === "/" || pathname === ROUTES.signin.build()) {
     await ensureAuthenticatedDashboardReady(page, orgSlug);
   }
 }

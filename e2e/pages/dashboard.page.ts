@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { ROUTES } from "../utils/routes";
 import { waitForDashboardReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
@@ -223,10 +224,10 @@ export class DashboardPage extends BasePage {
   // ===================
 
   async goto() {
-    const dashboardUrl = `/${this.orgSlug}/dashboard`;
+    const dashboardUrl = ROUTES.dashboard.build(this.orgSlug);
     const currentUrl = this.page.url();
 
-    if (currentUrl.includes(`/${this.orgSlug}/dashboard`)) {
+    if (currentUrl.includes(ROUTES.dashboard.build(this.orgSlug))) {
       await this.page.waitForLoadState("domcontentloaded");
       if (await this.tryDashboardReady()) {
         return;
@@ -235,7 +236,7 @@ export class DashboardPage extends BasePage {
 
     const isInAuthenticatedAppShell =
       currentUrl.includes(`/${this.orgSlug}/`) &&
-      !currentUrl.includes("/signin") &&
+      !currentUrl.includes(ROUTES.signin.build()) &&
       (await this.dashboardTab.isVisible().catch(() => false));
 
     if (isInAuthenticatedAppShell) {
@@ -300,7 +301,7 @@ export class DashboardPage extends BasePage {
   }
 
   private isOutsideOrgShell(url: string) {
-    return !url.includes(`/${this.orgSlug}/`) || url.includes("/signin");
+    return !url.includes(`/${this.orgSlug}/`) || url.includes(ROUTES.signin.build());
   }
 
   async navigateTo(

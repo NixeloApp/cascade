@@ -1,5 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { ROUTES } from "@/config/routes";
 import { render, screen } from "@/test/custom-render";
 
 // Mock TanStack Router Link component
@@ -29,28 +30,28 @@ import { AuthLink, AuthLinkButton } from "./AuthLink";
 describe("AuthLink", () => {
   describe("Rendering", () => {
     it("should render children", () => {
-      render(<AuthLink to="/signin">Sign In</AuthLink>);
+      render(<AuthLink to={ROUTES.signin.build()}>Sign In</AuthLink>);
 
       expect(screen.getByText("Sign In")).toBeInTheDocument();
     });
 
     it("should render as a link", () => {
-      render(<AuthLink to="/signup">Create Account</AuthLink>);
+      render(<AuthLink to={ROUTES.signup.build()}>Create Account</AuthLink>);
 
       expect(screen.getByRole("link", { name: "Create Account" })).toBeInTheDocument();
     });
 
     it("should have correct href", () => {
-      render(<AuthLink to="/forgot-password">Forgot Password?</AuthLink>);
+      render(<AuthLink to={ROUTES.forgotPassword.build()}>Forgot Password?</AuthLink>);
 
-      expect(screen.getByRole("link")).toHaveAttribute("href", "/forgot-password");
+      expect(screen.getByRole("link")).toHaveAttribute("href", ROUTES.forgotPassword.build());
     });
   });
 
   describe("Styling", () => {
     it("should apply custom className", () => {
       render(
-        <AuthLink to="/signin" className="custom-class">
+        <AuthLink to={ROUTES.signin.build()} className="custom-class">
           Sign In
         </AuthLink>,
       );
@@ -59,7 +60,7 @@ describe("AuthLink", () => {
     });
 
     it("should apply base link styles", () => {
-      render(<AuthLink to="/signin">Sign In</AuthLink>);
+      render(<AuthLink to={ROUTES.signin.build()}>Sign In</AuthLink>);
 
       expect(screen.getByRole("link")).toHaveClass("text-sm");
     });

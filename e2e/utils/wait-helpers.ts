@@ -7,6 +7,7 @@
 
 import { type APIRequestContext, expect, type Locator, type Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { ROUTES } from "./routes";
 
 /**
  * Wait timeouts used across tests.
@@ -305,7 +306,7 @@ export async function ensureAuthenticatedDashboardReady(
   orgSlug: string,
 ): Promise<void> {
   const escapedOrgSlug = orgSlug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const dashboardPath = `/${orgSlug}/dashboard`;
+  const dashboardPath = ROUTES.dashboard.build(orgSlug);
   const dashboardUrl = new RegExp(`/${escapedOrgSlug}/dashboard(?:\\?.*)?$`);
   const appErrorHeading = page.getByRole("heading", { name: "500" });
   const appErrorDetails = page.locator("details pre");
@@ -333,7 +334,7 @@ export async function ensureAuthenticatedDashboardReady(
   const recoverAuthenticatedDashboard = async () => {
     const currentUrl = page.url();
     const isOutsideOrgShell =
-      currentUrl.endsWith("/") || currentUrl.includes("/signin") || !currentUrl.includes(orgSlug);
+      currentUrl.endsWith("/") || currentUrl.includes(ROUTES.signin.build()) || !currentUrl.includes(orgSlug);
 
     await page.goto(isOutsideOrgShell ? dashboardPath : "/app", {
       waitUntil: "domcontentloaded",

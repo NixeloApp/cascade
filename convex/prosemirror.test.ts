@@ -13,7 +13,6 @@ vi.mock("@convex-dev/prosemirror-sync", async () => {
 
   return {
     ProsemirrorSync: class {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       syncApi(options: any) {
         const onSnapshot = options.onSnapshot;
 

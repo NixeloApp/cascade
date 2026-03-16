@@ -58,10 +58,7 @@ const SKIP_PATTERNS = [
   ".next",
   "_generated",
   "routeTree.gen.ts",
-  "routes.ts", // The routes definition itself
-  ".test.",
-  ".spec.",
-  "e2e/",
+  "routes.ts", // The routes definition itself (both src/config/routes.ts and e2e/utils/routes.ts)
 ];
 
 // Allowed patterns (not flagged)
@@ -74,11 +71,10 @@ const ALLOWED_PATTERNS = [
   /["'`]tel:/, // Phone links
   /path:\s*["'`]/, // Route path definitions
   /createFileRoute/, // TanStack Router route definitions
+  /import.*from\s+["'].*routes["']/, // Importing routes module
 ];
 
 export function run() {
-  const SRC_DIR = path.join(ROOT, "src");
-
   let issueCount = 0;
   const messages = [];
 
@@ -124,11 +120,15 @@ export function run() {
     }
   }
 
-  // Process all TypeScript/JavaScript files in src/
-  const files = walkDir(SRC_DIR, { extensions: new Set([".ts", ".tsx", ".js", ".jsx"]) });
+  // Process all TypeScript/JavaScript files in src/ and e2e/
+  const SCAN_DIRS = [path.join(ROOT, "src"), path.join(ROOT, "e2e")];
 
-  for (const filePath of files) {
-    checkFile(filePath);
+  for (const scanDir of SCAN_DIRS) {
+    if (!fs.existsSync(scanDir)) continue;
+    const files = walkDir(scanDir, { extensions: new Set([".ts", ".tsx", ".js", ".jsx"]) });
+    for (const filePath of files) {
+      checkFile(filePath);
+    }
   }
 
   return {
