@@ -49,6 +49,24 @@ const ROUTE_PATTERNS = [
   /`\/\$\{[^}]+\}\/mcp-server`/,
   /`\/\$\{[^}]+\}\/add-ons`/,
   /`\/\$\{[^}]+\}\/authentication`/,
+
+  // Hardcoded regex routes in toHaveURL() / waitForURL() assertions
+  /toHaveURL\(\/.*signin/,
+  /toHaveURL\(\/.*signup/,
+  /toHaveURL\(\/.*forgot-password/,
+  /toHaveURL\(\/.*\\\/onboarding/,
+  /toHaveURL\(\/.*\\\/dashboard/,
+  /toHaveURL\(\/.*\\\/projects/,
+  /toHaveURL\(\/.*\\\/board/,
+  /toHaveURL\(\/.*\\\/backlog/,
+  /toHaveURL\(\/.*\\\/sprints/,
+  /toHaveURL\(\/.*\\\/roadmap/,
+  /toHaveURL\(\/.*\\\/timesheet/,
+  /toHaveURL\(\/.*\\\/analytics/,
+  /toHaveURL\(\/.*\\\/settings/,
+  /toHaveURL\(\/.*\\\/workspaces/,
+  /toHaveURL\(\/.*\\\/documents/,
+  /toHaveURL\(\/.*\\\/issues/,
 ];
 
 // Files/directories to skip
@@ -72,6 +90,11 @@ const ALLOWED_PATTERNS = [
   /path:\s*["'`]/, // Route path definitions
   /createFileRoute/, // TanStack Router route definitions
   /import.*from\s+["'].*routes["']/, // Importing routes module
+  /toHaveURL\(new RegExp\(/, // Dynamic regex constructed from constants
+  /toHaveURL\([a-zA-Z]/, // Variable/constant references (dashboardUrl, tabPaths, etc.)
+  /toHaveURL\(\/\^https/, // External URL assertions (stripe.com etc.)
+  /toHaveURL\(\/\\\/\$\//, // Root path assertion
+  /^\s*\*\s/, // JSDoc/block comment lines
 ];
 
 export function run() {
