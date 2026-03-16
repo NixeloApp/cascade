@@ -11,6 +11,7 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
 import { useForm } from "@tanstack/react-form";
 import { useAction } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { DuplicateDetection } from "@/components/DuplicateDetection";
@@ -129,8 +130,10 @@ function CreateIssueDraftBanner({
   );
 }
 
+type ProjectItem = FunctionReturnType<typeof api.projects.getCurrentUserProjects>["page"][number];
+
 interface ProjectSelectorProps {
-  projects: Doc<"projects">[];
+  projects: ProjectItem[];
   selectedProjectId: Id<"projects"> | null;
   onChange: (projectId: Id<"projects">) => void;
 }
@@ -363,7 +366,7 @@ interface CreateIssueSupportFieldsProps {
   onProjectChange: (projectId: Id<"projects">) => void;
   onTemplateChange: (templateId: Id<"issueTemplates"> | "") => void;
   onToggleLabel: (labelId: Id<"labels">) => void;
-  orgProjects?: { page: Doc<"projects">[] };
+  orgProjects?: { page: ProjectItem[] };
   projectId?: Id<"projects">;
   selectedLabels: Id<"labels">[];
   selectedTemplate: Id<"issueTemplates"> | "";

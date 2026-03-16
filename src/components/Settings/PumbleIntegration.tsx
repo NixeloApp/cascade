@@ -10,6 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useForm } from "@tanstack/react-form";
 import { useAction } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { ArrowUpRight, MessageSquare } from "lucide-react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
@@ -31,7 +32,7 @@ import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 type PumbleWebhook = Doc<"pumbleWebhooks">;
-type Project = Doc<"projects">;
+type Project = FunctionReturnType<typeof api.projects.getCurrentUserProjects>["page"][number];
 
 // =============================================================================
 // Schema & Constants

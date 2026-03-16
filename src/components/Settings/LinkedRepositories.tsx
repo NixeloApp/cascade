@@ -61,7 +61,7 @@ export function LinkedRepositories() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">-- Select a project --</SelectItem>
-            {projects?.page?.map((project: Doc<"projects">) => (
+            {projects?.page?.map((project) => (
               <SelectItem key={project._id} value={project._id}>
                 {project.name} ({project.key})
               </SelectItem>

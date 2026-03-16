@@ -7,7 +7,7 @@
  */
 
 import { api } from "@convex/_generated/api";
-import type { Doc, Id } from "@convex/_generated/dataModel";
+import type { Id } from "@convex/_generated/dataModel";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
@@ -101,7 +101,7 @@ export function MoveDocumentDialog({
           onChange={(e) => setSelectedProjectId(e.target.value as Id<"projects"> | "")}
         >
           <option value="">No project (organization level)</option>
-          {projects?.page.map((project: Doc<"projects">) => (
+          {projects?.page.map((project) => (
             <option key={project._id} value={project._id}>
               {project.name} ({project.key})
             </option>
