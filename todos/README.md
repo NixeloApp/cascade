@@ -7,7 +7,8 @@
 
 - **41/41** validators pass. **519** test files, **4100** tests passing.
 - **Vendor bundle:** 337KB gzip (was 722KB). 10 cached chunks. 3 lazy-loaded routes.
-- **E2E suite:** zero anti-patterns remaining.
+- **E2E suite:** zero anti-patterns remaining. `force:true` banned across all E2E files.
+- **Screenshot tool:** 300 screenshots across 4 viewport/theme combos. Visual regression tooling (`pnpm screenshots:diff`). 52+ page routes, 20+ interactive states, 13 modals captured.
 - **Test coverage baseline:** 2 files remain (was 49).
 - **All tech debt items closed.**
 
@@ -15,10 +16,10 @@
 
 | Priority | File | State | Next Action |
 |---|---|---|---|
-| P0 | [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md) | Active | Visual facelift (needs running app) |
+| P0 | [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md) | Mostly done | Remaining: seed data enrichment, visual facelift, CI integration |
 | P1 | [slack-integration-issues.md](./slack-integration-issues.md) | Blocked | Org-scoped Slack connections (needs external access) |
-| P2 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | Partial | CSV done, PDF export deferred |
-| P2 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Blocked | Field-projection audit |
+| P2 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | Partial | CSV done, PDF export deferred (needs jsPDF decision) |
+| P2 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Blocked | Field-projection audit (needs Convex dashboard metrics) |
 | P2 | [feature-gaps.md](./feature-gaps.md) | Blocked | Slack dashboard setup |
 | P2 | [emoji-overhaul.md](./emoji-overhaul.md) | Blocked | Accessibility QA |
 | P2 | [multi-level-views.md](./multi-level-views.md) | Blocked | `@xyflow/react` package |
