@@ -72,7 +72,9 @@ export class IssueDetailPage extends BasePage {
 
   async returnToProjectBoard(projectKey: string) {
     await this.getProjectBreadcrumb(projectKey).click();
-    await expect(this.page).toHaveURL(new RegExp(ROUTES.projects.board.path.replace(/\$\w+/g, '[^/]+')));
+    await expect(this.page).toHaveURL(
+      new RegExp(ROUTES.projects.board.path.replace(/\$\w+/g, "[^/]+")),
+    );
   }
 
   async enterEditMode() {

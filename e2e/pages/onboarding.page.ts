@@ -461,7 +461,10 @@ export class OnboardingPage {
    * Assert we're on the dashboard
    */
   async expectDashboard(timeout = TRANSITION_TIMEOUT) {
-    await expect(this.page).toHaveURL(new RegExp(ROUTES.dashboard.path.replace(/\$\w+/g, '[^/]+')), { timeout });
+    await expect(this.page).toHaveURL(
+      new RegExp(ROUTES.dashboard.path.replace(/\$\w+/g, "[^/]+")),
+      { timeout },
+    );
     await expect(this.myWorkHeading).toBeVisible({ timeout });
   }
 
