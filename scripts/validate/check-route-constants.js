@@ -67,6 +67,22 @@ const ROUTE_PATTERNS = [
   /toHaveURL\(\/.*\\\/workspaces/,
   /toHaveURL\(\/.*\\\/documents/,
   /toHaveURL\(\/.*\\\/issues/,
+
+  // Bare regex with route words (no \/ prefix) — e.g. toHaveURL(/dashboard|onboarding/)
+  /toHaveURL\(\/[^\\]*dashboard/,
+  /toHaveURL\(\/[^\\]*onboarding/,
+  /toHaveURL\(\/[^\\]*signin/,
+  /toHaveURL\(\/[^\\]*signup/,
+
+  // Inline template literals with hardcoded route segments in toHaveURL
+  /toHaveURL\(new RegExp\(`[^`]*\/dashboard/,
+  /toHaveURL\(new RegExp\(`[^`]*\/signin/,
+  /toHaveURL\(new RegExp\(`[^`]*\/signup/,
+  /toHaveURL\(new RegExp\(`[^`]*\/onboarding/,
+  /toHaveURL\(new RegExp\(`[^`]*\/projects/,
+  /toHaveURL\(new RegExp\(`[^`]*\/workspaces/,
+  /toHaveURL\(new RegExp\(`[^`]*\/documents/,
+  /toHaveURL\(new RegExp\(`[^`]*\/issues/,
 ];
 
 // Files/directories to skip
@@ -90,8 +106,10 @@ const ALLOWED_PATTERNS = [
   /path:\s*["'`]/, // Route path definitions
   /createFileRoute/, // TanStack Router route definitions
   /import.*from\s+["'].*routes["']/, // Importing routes module
-  /toHaveURL\(new RegExp\(/, // Dynamic regex constructed from constants
-  /toHaveURL\([a-zA-Z]/, // Variable/constant references (dashboardUrl, tabPaths, etc.)
+  /toHaveURL\(new RegExp\(.*ROUTES\./, // Dynamic regex constructed from ROUTES constants
+  /toHaveURL\(routePattern\(/, // routePattern() helper
+  /toHaveURL\(routeMatch\(/, // routeMatch() helper
+  /toHaveURL\([a-zA-Z](?!ew RegExp)/, // Variable/constant references (dashboardUrl, tabPaths, etc.) but not new RegExp
   /toHaveURL\(\/\^https/, // External URL assertions (stripe.com etc.)
   /toHaveURL\(\/\\\/\$\//, // Root path assertion
   /^\s*\*\s/, // JSDoc/block comment lines
