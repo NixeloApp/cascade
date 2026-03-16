@@ -21,8 +21,11 @@ import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 // Generic detection: lines with path-like strings that should use ROUTES
 const ROUTE_PATTERNS = [
-  // String literals with leading slash + alphabetic segment: "/signin", '/dashboard', etc.
-  { regex: /["'`]\/[a-z0-9][-a-z0-9]+["'`]/, message: "Hardcoded route string" },
+  // String literals with leading slash + path segments: "/signin", "/org/dashboard", etc.
+  {
+    regex: /["'`]\/[a-z0-9][-a-z0-9]+(\/[a-z0-9][-a-z0-9]*)*["'`]/,
+    message: "Hardcoded route string",
+  },
 
   // Template literals with interpolated path: `/${orgSlug}/dashboard`
   { regex: /`\/\$\{[^}]+\}\/[a-z0-9]/, message: "Hardcoded template literal route" },
@@ -74,12 +77,17 @@ const ALLOWED_PATTERNS = [
   /\.stories\./, // Storybook files use fake paths
   /["']\/co["']/, // Slash command text, not a route
   /["']\/home["']/, // Generic test href, not an app route
+  /["'`]\/google\//, // External OAuth callback paths
+  /["'`]\/v[0-9]+\//, // External API version paths (/v1/userinfo)
 ];
 
 // Files where hardcoded paths are expected (not real app routes)
 const SKIP_FILE_PATTERNS = [
   /\.stories\.tsx?$/, // Storybook story files
   /screenshot-pages\.ts$/, // Screenshot utility
+  /\.test\.tsx?$/, // Unit test files use fixture paths
+  /\.spec\.tsx?$/, // Spec test files use fixture paths
+  /routes\.test\.ts$/, // Route config tests verify build() output
 ];
 
 export function run() {
