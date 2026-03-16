@@ -198,7 +198,7 @@ export const onboardingTest = base.extend<AuthFixtures>({
 
       await bootstrapFixtureUser(page, onboardingUser, "onboardingTest", async () => {
         await page.goto(onboardingUrl, { waitUntil: "domcontentloaded" });
-        await expect(page).toHaveURL(/\/onboarding/);
+        await expect(page).toHaveURL(new RegExp(ROUTES.onboarding.path));
       });
 
       didAuthenticateThisTest = true;

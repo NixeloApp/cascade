@@ -429,7 +429,7 @@ export class OnboardingPage {
   }
 
   async expectOnboardingRoute(timeout = TRANSITION_TIMEOUT) {
-    await expect(this.page).toHaveURL(/\/onboarding$/, { timeout });
+    await expect(this.page).toHaveURL(new RegExp(`${ROUTES.onboarding.path}$`), { timeout });
   }
 
   /**
@@ -461,7 +461,7 @@ export class OnboardingPage {
    * Assert we're on the dashboard
    */
   async expectDashboard(timeout = TRANSITION_TIMEOUT) {
-    await expect(this.page).toHaveURL(/\/[^/]+\/dashboard/, { timeout });
+    await expect(this.page).toHaveURL(new RegExp(ROUTES.dashboard.path.replace(/\$\w+/g, '[^/]+')), { timeout });
     await expect(this.myWorkHeading).toBeVisible({ timeout });
   }
 

@@ -105,7 +105,7 @@ export class DocumentsPage extends BasePage {
     await expect(this.newDocumentButton).toBeVisible();
     await expect(this.newDocumentButton).toBeEnabled();
     await this.newDocumentButton.click();
-    await expect(this.page).toHaveURL(/\/documents\/[^/]+$/);
+    await expect(this.page).toHaveURL(new RegExp(ROUTES.documents.detail.path.replace(/\$\w+/g, '[^/]+') + '$'));
 
     await this.expectEditorVisible();
   }

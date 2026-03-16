@@ -99,7 +99,7 @@ export class WorkspacesPage extends BasePage {
   }
 
   async expectWorkspaceDetailVisible(name: string) {
-    await expect(this.page).toHaveURL(/\/workspaces\/[^/]+(?:[/?#]|$)/);
+    await expect(this.page).toHaveURL(new RegExp(ROUTES.workspaces.detail.path.replace(/\$\w+/g, '[^/]+')));
     // PageHeader renders workspace name as h2
     await expect(this.page.getByRole("heading", { name, level: 2 })).toBeVisible();
   }
@@ -140,7 +140,7 @@ export class WorkspacesPage extends BasePage {
 
   async openWorkspaceTeams(name: string) {
     await this.openWorkspace(name);
-    await expect(this.page).toHaveURL(/\/workspaces\/[^/]+(?:[/?#]|$|\/teams)/);
+    await expect(this.page).toHaveURL(new RegExp(ROUTES.workspaces.detail.path.replace(/\$\w+/g, '[^/]+')));
 
     if (!/\/teams(?:[/?#]|$)/.test(this.page.url())) {
       await expect(this.workspaceTeamsTab).toBeVisible();
@@ -151,7 +151,7 @@ export class WorkspacesPage extends BasePage {
   }
 
   async expectTeamsLoaded() {
-    await expect(this.page).toHaveURL(/\/workspaces\/[^/]+\/teams(?:[/?#]|$)/);
+    await expect(this.page).toHaveURL(new RegExp(ROUTES.workspaces.teams.list.path.replace(/\$\w+/g, '[^/]+')));
     await expect(this.teamsPageHeader).toBeVisible();
     await expect(this.createTeamButton).toBeVisible();
   }
@@ -182,7 +182,7 @@ export class WorkspacesPage extends BasePage {
   }
 
   async expectWorkspaceSettingsLoaded() {
-    await expect(this.page).toHaveURL(/\/workspaces\/[^/]+\/settings(?:[/?#]|$)/);
+    await expect(this.page).toHaveURL(new RegExp(ROUTES.workspaces.settings.path.replace(/\$\w+/g, '[^/]+')));
     await expect(this.workspaceSettingsHeader).toBeVisible();
   }
 

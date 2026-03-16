@@ -372,7 +372,7 @@ export async function ensureAuthenticatedDashboardReady(
  * Wait for project board route and board controls to become interactive.
  */
 export async function waitForBoardLoaded(page: Page): Promise<void> {
-  await expect(page).toHaveURL(/\/projects\/[A-Z0-9-]+\/board/);
+  await expect(page).toHaveURL(new RegExp(ROUTES.projects.board.path.replace(/\$\w+/g, '[^/]+')));
   const projectBoard = page
     .locator("[data-project-board]")
     .or(page.getByRole("heading", { name: /kanban board|scrum board/i }));

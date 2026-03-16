@@ -746,7 +746,7 @@ export class AuthPage extends BasePage {
   }
 
   async expectForgotPasswordReady(timeout = 15000) {
-    await expect(this.page).toHaveURL(/forgot-password/, { timeout });
+    await expect(this.page).toHaveURL(new RegExp(ROUTES.forgotPassword.path), { timeout });
     await this.waitForState(
       () => this.getPasswordResetEntryState(),
       (state) => state !== "pending",
@@ -758,7 +758,7 @@ export class AuthPage extends BasePage {
   }
 
   async expectForgotPasswordEntryFormReady(timeout = 15000) {
-    await expect(this.page).toHaveURL(/forgot-password/, { timeout });
+    await expect(this.page).toHaveURL(new RegExp(ROUTES.forgotPassword.path), { timeout });
     await this.waitForState(
       () => this.getPasswordResetEntryState(),
       (state) => state === "forgot",
