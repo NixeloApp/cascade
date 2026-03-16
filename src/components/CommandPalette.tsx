@@ -194,7 +194,7 @@ export function useCommands({
     },
 
     // Projects navigation
-    ...(projects?.map((project: Doc<"projects">) => ({
+    ...(projects?.map((project) => ({
       id: `project-${project._id}`,
       label: project.name,
       icon: LayoutGrid,

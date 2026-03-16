@@ -81,7 +81,7 @@ export function Dashboard() {
   // Keyboard navigation for projects list
   const projectNavigation = useListNavigation({
     items: myProjects || [],
-    onSelect: (project: Doc<"projects">) => navigateToWorkspace(project.key),
+    onSelect: (project) => navigateToWorkspace(project.key),
     enabled: !!myProjects && myProjects.length > 0,
   });
 
