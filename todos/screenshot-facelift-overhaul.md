@@ -222,7 +222,7 @@ Beyond page loads — capture the states users actually see during interaction.
 
 - [ ] **Calendar drag-and-drop preview** — event being dragged between days
 - [ ] **Calendar quick-add on day click** — create issue form with pre-filled date
-- [ ] **Create event modal** — full event creation form
+- [x] **Create event modal** — captured via calendar page "Add Event" button
 
 ### Sprint states
 
