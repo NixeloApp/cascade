@@ -12,9 +12,9 @@
 
 ## Remaining Work
 
-- [ ] Slim `notifications.list` — returns full notification docs, callers only need `_id`, `type`, `message`, `actorName`, `_creationTime`, `isRead`, `isArchived`. ~35% savings.
+- [x] Slim `notifications.list` — returns explicit fields only. ~35% savings.
 - [ ] Slim `calendarEvents.listByDateRange` — returns full event docs + organizer enrichment, callers only need `_id`, `title`, `startTime`, `endTime`, `attendeeIds`, `color`, `eventType`. ~45% savings.
-- [ ] Slim `dashboard.getMyProjects` — returns full project docs + role + counts, dashboard cards only need `_id`, `name`, `key`, `description`, `role`, `totalIssues`, `myIssues`. ~50% savings.
+- [x] Slim `dashboard.getMyProjects` — returns `_id`, `name`, `key`, `description`, `role`, `totalIssues`, `myIssues` only. ~50% savings.
 - [ ] Consider slim variant for `issues.listProjectIssues` — complex due to enrichment (assignee, reporter, labels). Would need to split enrichment into list vs detail tiers. ~40% savings but high implementation complexity.
 - [ ] Publish before/after bandwidth report using Convex dashboard metrics.
 
