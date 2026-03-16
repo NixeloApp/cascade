@@ -7,7 +7,6 @@
  */
 
 import { api } from "@convex/_generated/api";
-import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { ExportButton } from "@/components/ExportButton";
 import { type BoardFilters, FilterBar } from "@/components/FilterBar";
