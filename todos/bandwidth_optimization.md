@@ -1,17 +1,26 @@
 # Database Bandwidth Optimization
 
 > **Priority:** P2
-> **Status:** Blocked
-> **Last Audited:** 2026-03-12
-> **Blocker:** Convex dashboard metrics capture is still required for the final report.
+> **Status:** Active
+> **Last Audited:** 2026-03-15
+
+## Completed
+
+- [x] **Sidebar queries** — added `listForSidebar` variants for workspaces, teams, documents. Eliminates N+1 count queries and returns only `{ _id, slug, name }`. ~70% bandwidth savings per sidebar load.
+- [x] **Project list** — slimmed `getCurrentUserProjects` to return explicit fields instead of `...project`. Drops `workflowStates`, `updatedAt`, `workspaceId`, etc. ~50% savings.
+- [x] **Sprint list** — slimmed `sprints.listByProject` to return only needed fields. Drops `createdBy`, `updatedAt`, `boardViewConfig`. ~40% savings.
 
 ## Remaining Work
 
-- [ ] Review queries returning arrays of documents and apply field projection where callers only need a small subset of fields.
-- [ ] Publish the before/after bandwidth report using Convex dashboard metrics.
+- [ ] Slim `notifications.list` — returns full notification docs, callers only need `_id`, `type`, `message`, `actorName`, `_creationTime`, `isRead`, `isArchived`. ~35% savings.
+- [ ] Slim `calendarEvents.listByDateRange` — returns full event docs + organizer enrichment, callers only need `_id`, `title`, `startTime`, `endTime`, `attendeeIds`, `color`, `eventType`. ~45% savings.
+- [ ] Slim `dashboard.getMyProjects` — returns full project docs + role + counts, dashboard cards only need `_id`, `name`, `key`, `description`, `role`, `totalIssues`, `myIssues`. ~50% savings.
+- [ ] Consider slim variant for `issues.listProjectIssues` — complex due to enrichment (assignee, reporter, labels). Would need to split enrichment into list vs detail tiers. ~40% savings but high implementation complexity.
+- [ ] Publish before/after bandwidth report using Convex dashboard metrics.
 
 ## Guardrails
 
 - Avoid `.collect()` or large `.take()` values for counts.
 - Prefer index-backed query paths before adding in-memory filtering.
 - Keep sidebar and navigation queries especially small.
+- Use `FunctionReturnType<typeof api.*>` for caller types — never `Doc<"table">` for query results.
