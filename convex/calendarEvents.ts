@@ -207,7 +207,23 @@ async function enrichEventsWithOrganizers(
   return events.map((event) => {
     const organizer = organizerMap.get(event.organizerId);
     return {
-      ...event,
+      _id: event._id,
+      _creationTime: event._creationTime,
+      projectId: event.projectId,
+      workspaceId: event.workspaceId,
+      teamId: event.teamId,
+      title: event.title,
+      description: event.description,
+      startTime: event.startTime,
+      endTime: event.endTime,
+      allDay: event.allDay,
+      eventType: event.eventType,
+      color: event.color,
+      location: event.location,
+      isRecurring: event.isRecurring,
+      isRequired: event.isRequired,
+      meetingUrl: event.meetingUrl,
+      attendeeIds: event.attendeeIds,
       organizerName: organizer?.name,
       organizerEmail: organizer?.email,
     };
