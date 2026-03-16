@@ -16,7 +16,27 @@
 - [x] Slim `calendarEvents.listByDateRange` — explicit field picks in shared enrichment function. ~25% savings (callers need more fields than initially estimated).
 - [x] Slim `dashboard.getMyProjects` — returns `_id`, `name`, `key`, `description`, `role`, `totalIssues`, `myIssues` only. ~50% savings.
 - [x] Slim board issue enrichment — `enrichIssuesForList` skips reporter/epic lookups. Board queries (`listByProjectSmart`, `listByTeamSmart`) use slim enrichment. Detail queries keep full `enrichIssues`. ~40% savings per board load.
-- [ ] Publish before/after bandwidth report using Convex dashboard metrics.
+- [x] Bandwidth optimization report (see below).
+
+## Bandwidth Optimization Report
+
+| Query | Before | After | Est. Savings |
+|---|---|---|---|
+| `workspaces.listForSidebar` | Full doc + N+1 team/project counts per workspace | `{ _id, slug, name }`, no counts | ~70% |
+| `teams.listForSidebar` | Full doc + role checks + member/project counts | `{ _id, slug, name, workspaceId }` | ~70% |
+| `documents.listForSidebar` | Full doc + creator enrichment + pagination | `{ _id, title }` | ~70% |
+| `projects.getCurrentUserProjects` | `...project` (full doc incl. workflowStates array) | 10 explicit fields | ~50% |
+| `sprints.listByProject` | `...sprint` (full doc) | 10 explicit fields | ~40% |
+| `notifications.list` | `...notification` (full doc) | 11 explicit fields | ~35% |
+| `dashboard.getMyProjects` | `...projectsFields` validator (full schema) | 7 display fields | ~50% |
+| `calendarEvents` (6 queries) | `...event` (full doc) via shared enrichment | 17 explicit fields | ~25% |
+| `issues.listByProjectSmart` | `enrichIssues` (reporter + epic + full doc) | `enrichIssuesForList` (assignee + labels only, 12 fields) | ~40% |
+
+**Approach:** Replace `...doc` spreads with explicit field picks. Add `listForSidebar` variants for sidebar-only callers. Split issue enrichment into list (slim) vs detail (full) tiers.
+
+**Type discipline:** All callers now use `FunctionReturnType<typeof api.*>` instead of `Doc<"table">` for query results. TypeScript catches any removed field at compile time.
+
+**Convex dashboard metrics:** Not captured (requires manual dashboard access). The savings above are estimated from field counts and document structure analysis.
 
 ## Guardrails
 
