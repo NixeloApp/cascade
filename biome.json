@@ -246,16 +246,6 @@
           }
         }
       }
-    },
-    {
-      "includes": ["**/emails/**"],
-      "linter": {
-        "rules": {
-          "style": {
-            "useImportType": "off"
-          }
-        }
-      }
     }
   ]
 }
