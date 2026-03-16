@@ -15,3 +15,14 @@ export { ROUTES } from "../../convex/shared/routes";
 export function routePattern(path: string, suffix = ""): RegExp {
   return new RegExp(path.replace(/\$\w+/g, "[^/]+") + suffix);
 }
+
+/**
+ * Escape special regex characters in a string for safe use in `new RegExp()`.
+ *
+ * @example
+ *   const escaped = escapeRegExp(issueTitle);
+ *   await page.getByRole("button", { name: new RegExp(escaped) });
+ */
+export function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}

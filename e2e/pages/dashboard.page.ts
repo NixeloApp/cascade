@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { ROUTES } from "../utils/routes";
+import { ROUTES, escapeRegExp } from "../utils/routes";
 import { waitForDashboardReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
@@ -263,9 +263,7 @@ export class DashboardPage extends BasePage {
       throw new Error(`Redirected to landing/signin page: ${currentUrl}. Auth session invalid.`);
     }
 
-    const escapedDashboardUrl = ROUTES.dashboard
-      .build(this.orgSlug)
-      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const escapedDashboardUrl = escapeRegExp(ROUTES.dashboard.build(this.orgSlug));
     await expect(this.page).toHaveURL(new RegExp(`${escapedDashboardUrl}(?:\\?.*)?$`), {
       timeout,
     });

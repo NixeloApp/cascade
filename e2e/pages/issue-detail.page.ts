@@ -1,12 +1,8 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { ROUTES, routePattern } from "../utils/routes";
+import { ROUTES, escapeRegExp, routePattern } from "../utils/routes";
 import { waitForIssueUpdateSuccess } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
 
 /**
  * Page object for the standalone issue detail route: /$orgSlug/issues/$key

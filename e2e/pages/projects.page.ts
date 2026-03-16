@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { ROUTES, routePattern } from "../utils/routes";
+import { ROUTES, escapeRegExp, routePattern } from "../utils/routes";
 import {
   createWorkspaceFromDialog,
   dismissWorkspaceDialogIfOpen,
@@ -373,7 +373,7 @@ export class ProjectsPage extends BasePage {
 
       const normalizedProjectKey = key.toUpperCase();
       const boardPath = ROUTES.projects.board.build(this.orgSlug, normalizedProjectKey);
-      const escapedBoardPath = boardPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const escapedBoardPath = escapeRegExp(boardPath);
       const boardUrlPattern = new RegExp(`${escapedBoardPath}(?:[/?#]|$)`);
 
       await this.createButton.waitFor({ state: "visible" });
@@ -831,7 +831,7 @@ export class ProjectsPage extends BasePage {
     // Match the accessible name (aria-label) which contains the title
     // e.g. "Open issue PROJ-123: Issue Title"
     // Escape regex characters to prevent matching errors
-    const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const escaped = escapeRegExp(title);
     return this.page.getByRole("button", { name: new RegExp(escaped) });
   }
 

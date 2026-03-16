@@ -7,7 +7,7 @@
 
 import { type APIRequestContext, expect, type Locator, type Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { ROUTES, routePattern } from "./routes";
+import { ROUTES, escapeRegExp, routePattern } from "./routes";
 
 /**
  * Wait timeouts used across tests.
@@ -306,7 +306,7 @@ export async function ensureAuthenticatedDashboardReady(
   orgSlug: string,
 ): Promise<void> {
   const dashboardPath = ROUTES.dashboard.build(orgSlug);
-  const escapedDashboardPath = dashboardPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const escapedDashboardPath = escapeRegExp(dashboardPath);
   const dashboardUrl = new RegExp(`${escapedDashboardPath}(?:\\?.*)?$`);
   const appErrorHeading = page.getByRole("heading", { name: "500" });
   const appErrorDetails = page.locator("details pre");
@@ -394,7 +394,7 @@ export async function waitForIssueCreateSuccess(page: Page, issueTitle?: string)
   await expect(createIssueModal).not.toBeVisible();
 
   if (issueTitle) {
-    const escapedTitle = issueTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const escapedTitle = escapeRegExp(issueTitle);
     await expect(page.getByRole("button", { name: new RegExp(escapedTitle) })).toBeVisible();
   }
 
