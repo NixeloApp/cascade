@@ -1,199 +1,120 @@
-# Screenshot & Visual Facelift — Remaining Work
+# Visual Facelift & Layout Consistency
 
 > **Priority:** P0
 > **Status:** Active
-> **Last Updated:** 2026-03-16
-> **Objective:** Fix visual slop across the app and expand screenshot coverage to catch regressions.
+> **Last Updated:** 2026-03-17
+> **Objective:** Fix systemic layout inconsistency, broken component visuals, and establish enforceable patterns.
 
 ---
 
-## Part 1: Visual Fixes (Audit Findings)
+## Part 1: Page Layout Wrapper Consistency
 
-Concrete UI issues found by component audit. These are real bugs, not style preferences.
+The app has `PageLayout`, `PageHeader`, `PageContent` components but 10+ pages bypass them with ad-hoc `max-w-*` divs and custom padding. This creates inconsistent spacing, widths, and visual rhythm across pages.
 
-### Sidebar — Horizontal scroll on desktop
+### Pages rolling their own layout (must migrate to PageLayout)
 
-- [x] **Sidebar scrolls horizontally** — added `overflow-x-hidden` to nav container, added `min-w-0` to section header Link for proper truncation. (`AppSidebar.tsx`)
+- [ ] **`assistant.tsx`** — wraps content in `<div className="p-6 max-w-7xl mx-auto">` inside PageLayout (duplicated max-width). Stats grid has no max-width, config section has `max-w-4xl`. Sections don't align horizontally.
+- [ ] **`workspaces/$workspaceSlug/settings.tsx`** — uses `<div className="max-w-3xl mx-auto py-6">` instead of PageLayout.
+- [ ] **`workspaces/$workspaceSlug/teams/$teamSlug/settings.tsx`** — copy-paste of above pattern.
+- [ ] **`workspaces/$workspaceSlug/wiki.tsx`** — returns raw `<Grid>` with no padding/header.
+- [ ] **`workspaces/$workspaceSlug/teams/$teamSlug/wiki.tsx`** — returns raw `<Flex>` with `py-20`.
+- [ ] **`my-issues.tsx`** — returns raw `<Flex>` without PageLayout.
+- [ ] **`settings/profile.tsx`** — overrides PageHeader padding with className instead of using props.
 
-### Notification popover
+### Pages with custom headers (should use PageHeader or extend it)
 
-- [x] **Arbitrary values replaced** — `max-w-[calc(100vw-2rem)]` → `max-w-dialog-mobile` token; `max-h-[80vh]` → `max-h-popover-panel` token.
-- [x] **Scroll indicator** — added `scrollbar-subtle` to notification list scroll area.
-- [x] **Filter tabs no longer scroll horizontally** — replaced `overflow-x-auto` with `flex-wrap`.
-- [x] **Action buttons already animated** — `transition-fast` (150ms) on IconButton base class handles opacity reveal. No fix needed.
-- [x] **Entrance animation added** — `animate-fade-in` (200ms ease-out) on notification items and date group containers. Exit animations skipped — Convex reactivity removes items from the list instantly; holding DOM nodes for exit transitions would require significant state management for marginal gain.
+- [ ] **`projects/$key/board.tsx`** — ad-hoc Card-based filter bar instead of PageHeader.
+- [ ] **`projects/$key/route.tsx`** — inline card header with custom backdrop-blur styling.
+- [ ] **`calendar.tsx`** — custom select bar with hardcoded responsive padding.
 
-### Start Timer modal — too wide
+### Validator: enforce PageLayout usage
 
-- [x] **Timer modals downsized** — `TimeEntryModal.tsx` and `ManualTimeEntryModal.tsx` changed from `size="lg"` to `size="md"` (512px fits the single-column form).
-
-### Global Search / Command palette
-
-- [x] **Result spacing** — title `mt-1` → `mt-1.5` for more breathing room between key/badge and title.
-- [x] **Tabs hard to read** — dropped `uppercase tracking-widest`, replaced with `font-medium`. Much more readable.
-- [x] **Double footer consolidated** — merged search hints card + action buttons card into a single footer with Stack layout.
-- [x] **Empty state tightened** — `p-6` → `p-4`, `mb-4` → `mb-3` on icon. Less vertical waste.
-- [x] **Welcome section padding fixed** — `p-1`/`p-4` → `px-2 pt-2`/`p-3`. Cleaner spacing.
-
-### Oversized modals (content doesn't fill the space)
-
-- [x] **`UserProfile.tsx`** — `size="xl"` → `size="lg"` (672px fits profile form).
-- [x] **`DashboardCustomizeModal.tsx`** — added explicit `size="sm"` (448px for 3 toggle switches).
-
-### Fixed heights forcing unnecessary scroll
-
-- [x] **`RecentActivity.tsx`** — `h-96` → `max-h-96` so the container shrinks to fit when few activities. Also replaced dead `custom-scrollbar` class with `scrollbar-subtle`.
-- [x] **`MyIssuesList.tsx`** — already flex-based (correct), but replaced dead `custom-scrollbar` class with `scrollbar-subtle`.
-- [x] **`ApiKeysManager.tsx`** — already uses `max-h-64` (correct pattern for modal lists). No fix needed.
-
-### Missing text truncation
-
-- [x] **`ProjectsList.tsx`** — project name `h3` had no truncation; added `truncate` + `min-w-0` on parent flex. Description already uses `line-clamp-2` (correct).
-- [x] **`MentionInput.tsx`** — already has `truncate` on username + `min-w-0` on parent. No fix needed (audit was wrong).
-
-### Timer widget CSS variable bug
-
-- [x] **Timer widget CSS var** — `max-w-(--max-width-timer-description)` replaced with canonical `max-w-timer-description` token form. Both work in TW4 but the token form is cleaner.
-
-### Horizontal scroll in filter tabs
-
-- [x] **`GlobalSearch.tsx:555`** — removed `overflow-x-auto` from Tabs container (3 tabs always fit).
-- [x] **`NotificationCenter.tsx:220`** — already fixed (replaced `overflow-x-auto` with `<Flex wrap>`).
+- [ ] **Add `check-page-layout.js` validator** — scan route files in `src/routes/_auth/_app/` for ad-hoc `max-w-*` + `mx-auto` patterns that should use PageLayout. Flag `max-w-{sm,md,lg,xl,2xl,3xl,4xl,5xl,6xl,7xl}` + `mx-auto` in route files as violations.
 
 ---
 
-## Part 2: Animation Polish
+## Part 2: Notification Popover — Still Looks Wrong
 
-The app is missing entrance/exit animations in many places. Feels jarring.
+Scroll is fixed but the visual structure is broken.
 
-### Dialogs & popovers — currently OK
-- Dialog has `animate-scale-in` / `animate-scale-out`
-- Popover has `animate-scale-in`
-- Accordion has `animate-accordion-down`
-
-### Missing animations
-
-- [x] **Notification items** — added `animate-fade-in` entrance on items and date group wrappers.
-- [x] **Notification date group headers** — animate in with their group container.
-- [x] **Dashboard customize toggles** — Switch component already has `transition-default` (200ms) on root and thumb. Transitions work correctly.
-- [x] **MoveDocumentDialog** — Dialog already has scale-in/scale-out. Select value swap is standard behavior.
-- [x] **Label creation popover** — Popover already has `animate-scale-in`. No fix needed.
-- [x] **Notification unread badge** — added `animate-scale-in` so the badge scales in when it first appears.
+- [ ] **Empty state too tall** — `EmptyState` default size (`min-h-56`) is way too big for a 384px-wide popover. Use `size="compact"`.
+- [ ] **3-tier background color mess** — header uses `bg-ui-bg`, section headers use `bg-ui-bg-secondary`, footer uses `bg-ui-bg-secondary`. Too many background layers for a popover. Simplify to 2 colors max.
+- [ ] **No gap between date groups** — "Today", "Yesterday", "This Week" sections sit flush against each other with only a divider. Needs visual breathing room between groups.
+- [ ] **Header/footer border inconsistency** — header has `rounded-t-lg` but no left/right borders, footer has `rounded-b-lg` but no left/right borders. The outer PopoverContent has its own border/shadow via `overlayInset` recipe. Double-container effect.
+- [ ] **`max-h-popover-panel` (80vh) too aggressive** — with few notifications the panel stretches to fill 80% of viewport height. Consider `60vh` or a smarter constraint.
 
 ---
 
-## Part 3: Remaining Screenshot Coverage
+## Part 3: Workspace Card — Broken Layout
+
+- [ ] **"1 team" badge wraps to 2 lines** — footer `<Flex wrap>` causes the badge to wrap. Documents page uses the same pattern WITHOUT `wrap` and it works. Remove `wrap` from workspace card footer.
+- [ ] **Badge lacks `shrink-0`** — in `justify="between"` flex, unshrinkable children force wrapping. Add `shrink-0` to action badges.
+- [ ] **Metadata double-wrap** — `Metadata` component has built-in `flex-wrap`, and the parent Flex also has `wrap`. Creates double-wrapping potential.
+- [ ] **Compact vs standard layout inconsistency** — two nearly identical card layouts (lines 54-128 and 131-188) with subtle spacing differences. Compact footer has no `mt-auto`, standard does.
+- [ ] **Card padding inconsistency** — workspaces uses `p-6` via className, documents uses `padding="lg"` via Card prop. Should use the prop.
+
+---
+
+## Part 4: Assistant Page — Width Alignment
+
+- [ ] **Stats section has no max-width** — Grid stretches full container width while config below has `max-w-4xl`. The two sections don't align.
+- [ ] **Nested max-width** — outer wrapper `max-w-7xl`, inner config `max-w-4xl`. Should use PageLayout's `maxWidth` prop and remove ad-hoc divs.
+- [ ] **Spend/questions/answered cards don't match bottom sections** — different effective widths because stats have no constraint.
+
+---
+
+## Part 5: Validator Hardening
+
+Make the validator catch the patterns we keep finding manually.
+
+### New validators needed
+
+- [ ] **`check-page-layout.js`** — flag ad-hoc `max-w-* mx-auto` in route files. Pages should use `<PageLayout maxWidth="...">`.
+- [ ] **`check-empty-state-size.js`** — flag `<EmptyState>` without `size="compact"` inside popovers/panels (narrow containers).
+
+### Existing validator improvements
+
+- [ ] **`check-raw-tailwind.js`** — tighten baseline. Many baselined files have been partially cleaned up. Re-audit and shrink the baseline set.
+- [ ] **`check-layout-prop-usage.js`** — add rule for `<Flex className="justify-between">` → `<Flex justify="between">` if not already covered.
+
+---
+
+## Part 6: Screenshot Coverage (deferred — needs browser)
 
 ### Routes not yet captured
 
-- [ ] Verify email (route doesn't exist yet)
 - [ ] Portal page (`/portal/$token`)
 - [ ] Onboarding flow (`/onboarding`)
-- [ ] Sample project modal (onboarding)
 - [ ] Invoice detail (`/$orgSlug/invoices/$invoiceId`)
 
 ### Modals not yet captured
 
-- [ ] Dashboard customize modal (button not rendered for screenshot user)
-- [ ] Move document dialog
-- [ ] Avatar upload modal
-- [ ] Cover image upload modal
-- [ ] Markdown preview modal
-- [ ] Sample project modal (needs fresh user)
-- [ ] Confirm dialog (destructive action trigger)
-- [ ] Alert dialog (error/warning condition)
+- [ ] Dashboard customize modal, move document dialog, avatar/cover upload modals
+- [ ] Confirm dialog, alert dialog, markdown preview modal
 
 ### Interactive states not yet captured
 
-**Board/Kanban:**
-- [ ] Column empty (workflow state with no issues)
-- [ ] WIP limit warning (configured + exceeded)
-
-**Issues:**
-- [ ] Draft restoration banner (localStorage draft + re-open)
-- [ ] Duplicate detection (similar issue titles in seed)
-- [ ] Inline editing (issue detail interaction)
-- [ ] Side panel / peek mode (Sheet doesn't appear — needs investigation)
-- [ ] Label creation popover
-- [ ] Issue with all property types visible (fully populated seed)
-
-**Documents:**
-- [ ] Document locked (backend mutation needed)
-- [ ] Text color picker (toolbar + color picker click)
-- [ ] Document with table (seed content)
-- [ ] Document with code block (seed content)
-- [ ] Document favorites star (starred items in seed)
-
-**Calendar:**
-- [ ] Drag-and-drop preview
-- [ ] Quick-add on day click
-
-**Sprints:**
-- [ ] Completion modal (active sprint with issues)
-- [ ] Date overlap warning (overlapping dates in seed)
-
-**Gantt/Roadmap:**
-- [ ] Dependency lines (issue relations in seed)
-- [ ] Block resize (drag handle state)
-
-**Notifications:**
-- [ ] Snooze popover
-
-**Settings:**
-- [ ] Profile with avatar
-- [ ] Profile with cover image
-- [ ] 2FA setup flow
-- [ ] Workspace settings
-- [ ] Project settings (workflow states, WIP limits, danger zone)
-
-**Navigation:**
-- [ ] Sidebar favorites section
-- [ ] Sidebar with project tree
-- [ ] Mobile hamburger menu
-
-**Error/Edge:**
-- [ ] Permission denied
-- [ ] Loading skeletons
-- [ ] Toast notification (success + error)
-- [ ] Form validation errors
-
-### Screenshot-specific validator
-
-- [x] **Screenshot route coverage validator** — `check-screenshot-coverage.js` compares routes in `convex/shared/routes.ts` against refs in `screenshot-pages.ts`. Reports 55/59 covered, 4 legitimate gaps (invite, onboarding, inbox, invoices.detail). Informational, never blocks CI.
+- [ ] Board: column empty, WIP limit warning
+- [ ] Issues: draft restoration, duplicate detection, inline editing, side panel
+- [ ] Documents: locked, table/code blocks, color picker, favorites
+- [ ] Calendar: drag-and-drop, quick-add
+- [ ] Sprints: completion modal, date overlap warning
+- [ ] Notifications: snooze popover
+- [ ] Settings: profile with avatar/cover, 2FA setup, workspace/project settings
+- [ ] Navigation: sidebar favorites, project tree, mobile hamburger
+- [ ] Error: permission denied, loading skeletons, toasts, form validation
 
 ### CI integration (deferred — screenshots are gitignored)
 
-- [ ] **CI screenshot manifest check** — deferred. Screenshots are gitignored so CI has no PNGs to diff. Requires either generating screenshots in CI (browser + dev server) or committing PNGs to git. Use `node scripts/screenshot-diff.js` locally for now.
-- [ ] **Flag PRs with stale manifest** — deferred, blocked by above.
+- [ ] CI screenshot manifest check — deferred. Use `node scripts/screenshot-diff.js` locally.
 
 ---
 
-## Part 4: User Journeys
-
-Sequential screenshot series showing complete workflows. None implemented yet.
-
-1. **New user onboarding** — signup → verify → org creation → sample project → dashboard
-2. **Issue lifecycle** — board → create → detail → move column → close
-3. **Sprint planning** — sprints page → create → backlog assign → board → burndown → complete
-4. **Document collaboration** — list → new doc → slash menu → @mention → lock → comments
-5. **Search and navigation** — dashboard → omnibox → results → advanced search → filtered list
-6. **Time tracking** — empty page → start timer → manual entry → entries list → billing
-7. **Workspace management** — list → create → teams → create team → board → settings
-8. **Calendar and events** — month → week → day → create event → details → drag reschedule
-9. **Notifications workflow** — bell badge → popover → snooze → full-page inbox → archived
-10. **Settings and profile** — profile → avatar → cover image → 2FA → workspace settings
-
----
-
-## Part 5: Visual Facelift (after fixes)
-
-Once Part 1-2 fixes land, use the screenshot set to drive page-level improvements.
+## Part 7: Visual Facelift (after Parts 1-5)
 
 - [ ] Review screenshot set and rank pages by visual quality (1-5).
 - [ ] Pick bottom 5 pages for first facelift batch.
-- [ ] For each: fix spacing, hierarchy, patterns, clutter.
-- [ ] Re-run screenshots after each pass. Only keep material improvements.
-- [ ] Visual cohesion across all screens — consistent spacing, typography, color.
+- [ ] Fix spacing, hierarchy, patterns, clutter per page.
 - [ ] No nested cards, mismatched patterns, cramped layouts.
 - [ ] Before/after comparison using screenshot diff tool.
 
@@ -201,8 +122,10 @@ Once Part 1-2 fixes land, use the screenshot set to drive page-level improvement
 
 ## Execution Order
 
-1. **Visual fixes (Part 1)** — fix the concrete bugs found in audit.
-2. **Animation polish (Part 2)** — add missing transitions.
-3. **Screenshot coverage (Part 3)** — capture remaining routes, modals, states.
-4. **User journeys (Part 4)** — implement sequential capture mode.
-5. **Visual facelift (Part 5)** — use screenshots to identify and fix worst pages.
+1. **Page layout consistency (Part 1)** — migrate all pages to PageLayout, add validator.
+2. **Notification popover (Part 2)** — fix visual structure.
+3. **Workspace card (Part 3)** — fix badge wrapping, layout consistency.
+4. **Assistant page (Part 4)** — fix width alignment.
+5. **Validator hardening (Part 5)** — catch these patterns automatically.
+6. **Screenshot coverage (Part 6)** — expand captures (needs browser).
+7. **Visual facelift (Part 7)** — page-level improvements.
