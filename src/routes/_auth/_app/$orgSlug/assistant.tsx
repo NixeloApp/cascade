@@ -106,7 +106,7 @@ function AssistantConfig() {
   const [model, setModel] = useState("gpt-4o");
 
   return (
-    <div className="max-w-4xl">
+    <div>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="general">General</TabsTrigger>
@@ -283,16 +283,14 @@ function AssistantConfig() {
 
 function AssistantPage() {
   return (
-    <PageLayout>
+    <PageLayout maxWidth="xl">
       <PageHeader
         title="Assistant"
         description="Manage your AI assistant settings and view usage metrics."
       />
 
-      <div className="p-6 max-w-7xl mx-auto w-full">
-        <AssistantStats />
-        <AssistantConfig />
-      </div>
+      <AssistantStats />
+      <AssistantConfig />
     </PageLayout>
   );
 }

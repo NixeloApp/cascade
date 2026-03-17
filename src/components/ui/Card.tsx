@@ -254,10 +254,11 @@ const cardRecipeVariants = cva("", {
       roadmapMonthHeaderCell:
         "rounded-none border-y-0 border-r-0 border-l border-ui-border bg-transparent px-2 py-0 shadow-none",
       notificationPanelHeader:
-        "sticky top-0 rounded-t-lg border-x-0 border-t-0 bg-ui-bg shadow-none",
+        "sticky top-0 rounded-none border-x-0 border-t-0 bg-ui-bg shadow-none",
       notificationPanelSectionHeader:
-        "sticky top-0 rounded-none border-x-0 border-t-0 bg-ui-bg-secondary shadow-none",
-      notificationPanelFooter: "rounded-b-lg border-x-0 border-b-0 bg-ui-bg-secondary shadow-none",
+        "sticky top-0 rounded-none border-x-0 border-t-0 bg-ui-bg shadow-none",
+      notificationPanelFooter:
+        "rounded-none border-x-0 border-b-0 border-t border-ui-border bg-ui-bg shadow-none",
       notificationRow:
         "rounded-none border-x-0 border-t-0 bg-ui-bg shadow-none hover:bg-ui-bg-secondary focus-within:bg-ui-bg-secondary",
       notificationRowUnread:

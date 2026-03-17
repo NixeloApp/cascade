@@ -246,7 +246,7 @@ export function NotificationCenter() {
             {!notifications || notifications.length === 0 ? (
               <EmptyState icon={Inbox} title="No notifications" />
             ) : (
-              <Stack gap="none">
+              <Stack gap="xs">
                 {orderedGroups.map((group) => {
                   const groupNotifs = groupedNotifications.get(group);
                   if (!groupNotifs || groupNotifs.length === 0) return null;
