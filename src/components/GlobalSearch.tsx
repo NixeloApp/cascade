@@ -552,7 +552,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
             <Tabs
               value={activeTab}
               onValueChange={(value) => setActiveTab(value as "all" | "issues" | "documents")}
-              className="shrink-0 overflow-x-auto"
+              className="shrink-0"
             >
               <Card
                 variant="ghost"
@@ -564,7 +564,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
                   <TabsTrigger
                     value="all"
                     variant="underline"
-                    className="px-1 pb-3 text-xs uppercase tracking-widest sm:text-sm"
+                    className="px-1 pb-3 text-xs font-medium sm:text-sm"
                     data-testid={TEST_IDS.SEARCH.TAB_ALL}
                   >
                     All ({issueTotal + documentTotal})
@@ -572,7 +572,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
                   <TabsTrigger
                     value="issues"
                     variant="underline"
-                    className="px-1 pb-3 text-xs uppercase tracking-widest sm:text-sm"
+                    className="px-1 pb-3 text-xs font-medium sm:text-sm"
                     data-testid={TEST_IDS.SEARCH.TAB_ISSUES}
                   >
                     Issues ({issueTotal})
@@ -580,7 +580,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
                   <TabsTrigger
                     value="documents"
                     variant="underline"
-                    className="px-1 pb-3 text-xs uppercase tracking-widest sm:text-sm"
+                    className="px-1 pb-3 text-xs font-medium sm:text-sm"
                     data-testid={TEST_IDS.SEARCH.TAB_DOCUMENTS}
                   >
                     Documents ({documentTotal})

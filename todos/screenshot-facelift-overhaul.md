@@ -30,7 +30,7 @@ Concrete UI issues found by component audit. These are real bugs, not style pref
 ### Global Search / Command palette
 
 - [ ] **Overall feel is cramped** — search result items use `mt-1` (4px) spacing, icons are 36px. Needs more breathing room between results.
-- [ ] **Tabs hard to read** — `text-xs uppercase tracking-widest` is too small and aggressive. Needs larger text or clearer active indicator.
+- [x] **Tabs hard to read** — dropped `uppercase tracking-widest`, replaced with `font-medium`. Much more readable.
 - [ ] **Double footer** — search hints card + action buttons card are separate. Should be consolidated into one cohesive footer.
 - [ ] **Empty state oversized** — 24px padding + large icon takes too much vertical space in a narrow modal.
 - [ ] **Welcome section double-padding** — `p-1` wrapper + `p-4` card creates inconsistent spacing.
@@ -57,7 +57,7 @@ Concrete UI issues found by component audit. These are real bugs, not style pref
 
 ### Horizontal scroll in filter tabs
 
-- [ ] **`GlobalSearch.tsx:555`** — Tabs container has `shrink-0 overflow-x-auto`. On narrow screens, tab buttons force horizontal scroll in the fixed header.
+- [x] **`GlobalSearch.tsx:555`** — removed `overflow-x-auto` from Tabs container (3 tabs always fit).
 - [x] **`NotificationCenter.tsx:220`** — already fixed (replaced `overflow-x-auto` with `<Flex wrap>`).
 
 ---
