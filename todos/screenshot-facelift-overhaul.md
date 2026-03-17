@@ -25,7 +25,7 @@ Concrete UI issues found by component audit. These are real bugs, not style pref
 
 ### Start Timer modal — too wide
 
-- [ ] **`TimeEntryModal.tsx` uses `size="lg"` (42rem/672px)** — content is a simple form that fits in `size="md"` (32rem). Same for `ManualTimeEntryModal.tsx`. Both should be `size="md"`.
+- [x] **Timer modals downsized** — `TimeEntryModal.tsx` and `ManualTimeEntryModal.tsx` changed from `size="lg"` to `size="md"` (512px fits the single-column form).
 
 ### Global Search / Command palette
 
@@ -53,7 +53,7 @@ Concrete UI issues found by component audit. These are real bugs, not style pref
 
 ### Timer widget CSS variable bug
 
-- [ ] **`TimerWidget.tsx:85`** — `max-w-(--max-width-timer-description)` is invalid Tailwind syntax. The CSS variable reference doesn't work. Use inline style `style={{ maxWidth: "var(--max-width-timer-description)" }}` or define a proper theme token.
+- [x] **Timer widget CSS var** — `max-w-(--max-width-timer-description)` replaced with canonical `max-w-timer-description` token form. Both work in TW4 but the token form is cleaner.
 
 ### Horizontal scroll in filter tabs
 
