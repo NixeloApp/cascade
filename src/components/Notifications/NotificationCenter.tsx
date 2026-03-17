@@ -244,7 +244,7 @@ export function NotificationCenter() {
           {/* Notifications List - Grouped by Date */}
           <FlexItem flex="1" className="overflow-y-auto scrollbar-subtle">
             {!notifications || notifications.length === 0 ? (
-              <EmptyState icon={Inbox} title="No notifications" />
+              <EmptyState icon={Inbox} title="No notifications" size="compact" />
             ) : (
               <Stack gap="xs">
                 {orderedGroups.map((group) => {

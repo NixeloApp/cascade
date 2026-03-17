@@ -58,7 +58,7 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
         params={{ orgSlug, workspaceSlug: workspace.slug }}
         className="block h-full"
       >
-        <Card hoverable className="h-full p-6">
+        <Card hoverable padding="lg" className="h-full">
           <Grid cols={1} colsLg={12} gap="lg">
             <Flex direction="column" gap="lg" className="lg:col-span-7">
               <Flex align="start" justify="between" gap="md">
@@ -134,7 +134,7 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
       params={{ orgSlug, workspaceSlug: workspace.slug }}
       className="block h-full"
     >
-      <Card hoverable className="h-full p-6">
+      <Card hoverable padding="lg" className="h-full">
         <Flex direction="column" gap="lg" className="h-full">
           <Flex align="start" justify="between" gap="md">
             <Flex align="center" gap="sm">
