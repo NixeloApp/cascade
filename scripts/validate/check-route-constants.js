@@ -45,6 +45,9 @@ const ROUTE_PATTERNS = [
     regex: /toHaveURL\(new RegExp\(["'`][^"'`]*\/[a-z][-a-z]/,
     message: "Hardcoded route in toHaveURL RegExp",
   },
+
+  // Standalone hardcoded regex route constants: const X = /\/admin\/path\/[^/]+$/
+  { regex: /=\s*\/\\\/[a-z][-a-z]+(\\\/[a-z][-a-z]+)*\\\/\[/, message: "Hardcoded regex route constant" },
 ];
 
 // Files/directories to skip
@@ -106,8 +109,27 @@ export function run() {
     const content = fs.readFileSync(filePath, "utf-8");
     const lines = content.split("\n");
 
+    // Patterns that are violations even when ROUTES. is on the line
+    const ALWAYS_CHECK = [
+      { regex: /ROUTES\.[a-zA-Z_.]+\}\/\[/, message: "Use ROUTES .build() instead of ROUTES constant + inline regex" },
+    ];
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
+
+      // Check always-flagged patterns first (even if ROUTES. is present)
+      let alwaysFlagged = false;
+      for (const { regex, message } of ALWAYS_CHECK) {
+        if (regex.test(line)) {
+          const match = line.match(regex);
+          const snippet = match ? match[0].slice(0, 50) : "";
+          messages.push(`  ${c.red}ERROR${c.reset} ${rel}:${i + 1} - ${message}: ${snippet}`);
+          issueCount++;
+          alwaysFlagged = true;
+          break;
+        }
+      }
+      if (alwaysFlagged) continue;
 
       // Skip if line has allowed patterns
       if (ALLOWED_PATTERNS.some((pattern) => pattern.test(line))) continue;
