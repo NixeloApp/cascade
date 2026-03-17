@@ -48,8 +48,8 @@ Concrete UI issues found by component audit. These are real bugs, not style pref
 
 ### Missing text truncation
 
-- [ ] **`ProjectsList.tsx`** — project descriptions have `max-w-xl` but no `truncate`. Long descriptions wrap unpredictably.
-- [ ] **`MentionInput.tsx`** — user names in suggestion dropdown aren't truncated. Long names overflow container.
+- [x] **`ProjectsList.tsx`** — project name `h3` had no truncation; added `truncate` + `min-w-0` on parent flex. Description already uses `line-clamp-2` (correct).
+- [x] **`MentionInput.tsx`** — already has `truncate` on username + `min-w-0` on parent. No fix needed (audit was wrong).
 
 ### Timer widget CSS variable bug
 

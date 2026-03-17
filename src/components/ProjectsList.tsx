@@ -150,7 +150,7 @@ function ProjectCard({
         )}
 
         <Flex justify="between" align="start" gap="md">
-          <Flex align="center" gap="md">
+          <Flex align="center" gap="md" className="min-w-0">
             <div className={cn(getCardRecipeClassName("projectKeyTile"), "size-10 shrink-0")}>
               <Flex align="center" justify="center" className="h-full">
                 <Typography variant="label" className="text-brand">
@@ -158,7 +158,7 @@ function ProjectCard({
                 </Typography>
               </Flex>
             </div>
-            <Typography variant="h3" className="tracking-tight">
+            <Typography variant="h3" className="tracking-tight truncate">
               {project.name}
             </Typography>
           </Flex>
