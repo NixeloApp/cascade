@@ -163,8 +163,8 @@ The app is missing entrance/exit animations in many places. Feels jarring.
 
 ### CI integration
 
-- [x] **CI screenshot manifest check** — added `node scripts/screenshot-diff.js` step to CI workflow. Fails if screenshots changed without updating `.screenshot-hashes.json` via `--approve`.
-- [x] **Flag PRs with stale manifest** — covered by above (exit code 1 blocks the PR).
+- [ ] **CI screenshot manifest check** — screenshots are gitignored, so CI can't run the diff. Would require generating screenshots in CI (needs browser + dev server) or committing PNGs to git.
+- [ ] **Flag PRs with stale manifest** — blocked by above.
 
 ---
 
