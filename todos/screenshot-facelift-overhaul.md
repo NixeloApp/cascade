@@ -75,9 +75,9 @@ The app is missing entrance/exit animations in many places. Feels jarring.
 
 - [x] **Notification items** — added `animate-fade-in` entrance on items and date group wrappers.
 - [x] **Notification date group headers** — animate in with their group container.
-- [ ] **Dashboard customize toggles** — switching toggles has no visual transition feedback.
-- [ ] **MoveDocumentDialog** — project selection change has no transition.
-- [ ] **Label creation popover** — appears instantly with no animation.
+- [x] **Dashboard customize toggles** — Switch component already has `transition-default` (200ms) on root and thumb. Transitions work correctly.
+- [x] **MoveDocumentDialog** — Dialog already has scale-in/scale-out. Select value swap is standard behavior.
+- [x] **Label creation popover** — Popover already has `animate-scale-in`. No fix needed.
 - [x] **Notification unread badge** — added `animate-scale-in` so the badge scales in when it first appears.
 
 ---
