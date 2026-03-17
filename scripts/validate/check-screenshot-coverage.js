@@ -84,7 +84,8 @@ function extractScreenshotRouteRefs(content) {
     [/workspaces\\.+dependencies/, "workspaces.dependencies"],
     [/workspaces\\.+wiki/, "workspaces.wiki"],
     [/workspaces\\.+settings/, "workspaces.settings"],
-    [/workspaces\\.+teams/, "workspaces.teams.list"],
+    // Note: workspaces.teams.list is NOT covered — no teams index screenshot exists.
+    // Team detail/sub-routes are covered via individual matchers below.
     [/teams\\.+board/, "workspaces.teams.board"],
     [/teams\\.+backlog/, "workspaces.teams.backlog"],
     [/teams\\.+calendar/, "workspaces.teams.calendar"],

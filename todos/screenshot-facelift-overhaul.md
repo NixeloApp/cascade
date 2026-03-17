@@ -161,10 +161,10 @@ The app is missing entrance/exit animations in many places. Feels jarring.
 
 - [x] **Screenshot route coverage validator** — `check-screenshot-coverage.js` compares routes in `convex/shared/routes.ts` against refs in `screenshot-pages.ts`. Reports 55/59 covered, 4 legitimate gaps (invite, onboarding, inbox, invoices.detail). Informational, never blocks CI.
 
-### CI integration
+### CI integration (deferred — screenshots are gitignored)
 
-- [ ] **CI screenshot manifest check** — screenshots are gitignored, so CI can't run the diff. Would require generating screenshots in CI (needs browser + dev server) or committing PNGs to git.
-- [ ] **Flag PRs with stale manifest** — blocked by above.
+- [ ] **CI screenshot manifest check** — deferred. Screenshots are gitignored so CI has no PNGs to diff. Requires either generating screenshots in CI (browser + dev server) or committing PNGs to git. Use `node scripts/screenshot-diff.js` locally for now.
+- [ ] **Flag PRs with stale manifest** — deferred, blocked by above.
 
 ---
 
