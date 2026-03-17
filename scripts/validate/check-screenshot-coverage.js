@@ -91,7 +91,7 @@ function extractScreenshotRouteRefs(content) {
     [/teams\\.+calendar/, "workspaces.teams.calendar"],
     [/teams\\.+wiki/, "workspaces.teams.wiki"],
     [/teams\\.+settings/, "workspaces.teams.settings"],
-    [/isTeamDetailUrl|teams\\.+\$/, "workspaces.teams.detail"],
+    [/takeScreenshot.*team-/, "workspaces.teams.detail"],
     [/projects\\.+inbox/, "projects.inbox"],
     [/projects\\.+activity/, "projects.activity"],
     [/projects\\.+analytics/, "projects.analytics"],
@@ -106,25 +106,26 @@ function extractScreenshotRouteRefs(content) {
     }
   }
 
-  // String concatenation: `${wsBase}/backlog` or wsBase + "/backlog"
-  const CONCAT_SEGMENTS = [
-    "backlog",
-    "sprints",
-    "dependencies",
-    "wiki",
-    "settings",
-    "calendar",
-    "inbox",
-    "activity",
-    "analytics",
-    "billing",
-    "timesheet",
+  // String concatenation: `${wsBase}/backlog` or `${teamBase}/board`
+  // Require the base variable and segment on the same line to avoid false positives.
+  const lines = content.split("\n");
+  const CONCAT_PAIRS = [
+    {
+      base: "wsBase",
+      prefix: "workspaces",
+      segments: ["backlog", "sprints", "dependencies", "wiki", "settings", "calendar"],
+    },
+    {
+      base: "teamBase",
+      prefix: "workspaces.teams",
+      segments: ["board", "backlog", "calendar", "wiki", "settings"],
+    },
   ];
-  for (const segment of CONCAT_SEGMENTS) {
-    if (content.includes(`/${segment}`) && content.includes("wsBase")) {
-      // Workspace sub-routes via concatenation
-      if (!refs.has(`workspaces.${segment}`)) {
-        refs.add(`workspaces.${segment}`);
+  for (const { base, prefix, segments } of CONCAT_PAIRS) {
+    for (const segment of segments) {
+      const hasConcat = lines.some((line) => line.includes(base) && line.includes(`/${segment}`));
+      if (hasConcat && !refs.has(`${prefix}.${segment}`)) {
+        refs.add(`${prefix}.${segment}`);
       }
     }
   }
