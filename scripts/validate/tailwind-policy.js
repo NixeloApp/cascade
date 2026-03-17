@@ -323,7 +323,7 @@ export const LAYOUT_PROP_PATTERNS = [
   },
   {
     pattern:
-      /<Flex\b(?![^>]*\bwrap(?:\s|=|>))[^>]*\bclassName\s*=\s*(?:"[^"]*|'[^']*|\{[^}]*)\bflex-wrap\b/,
+      /<Flex\b(?![^>]*\bwrap(?:\s|=|>))[^>]*\bclassName\s*=\s*(?:"[^"]*|'[^']*|\{[^}]*)(?<![a-z]:)\bflex-wrap\b/,
     component: "Flex",
     prop: "wrap",
     tokenType: "wrap",
