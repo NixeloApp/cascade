@@ -83,7 +83,7 @@ const ALLOWED_PATTERNS = [
   /["']\/home["']/, // Generic test href, not an app route
   /["'`]\/google\//, // External OAuth callback paths
   /["'`]\/v[0-9]+\//, // External API version paths (/v1/userinfo)
-  /href\*?=/, // CSS attribute selectors for locating elements (a[href*='/path/'])
+  /\[href[*^$~|]?=/, // CSS attribute selectors: [href*='/path/'], [href^='/']
 ];
 
 // Files where hardcoded paths are expected (not real app routes)
