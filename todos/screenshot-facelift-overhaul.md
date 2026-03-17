@@ -112,9 +112,12 @@ Make the validator catch the patterns we keep finding manually.
 
 ## Part 7: Visual Facelift (after Parts 1-5)
 
-- [ ] Review screenshot set and rank pages by visual quality (1-5).
-- [ ] Pick bottom 5 pages for first facelift batch.
-- [ ] Fix spacing, hierarchy, patterns, clutter per page.
+- [x] Review screenshot set and rank pages by visual quality (1-5).
+- [x] Pick bottom 5 pages for first facelift batch.
+- [x] **Add-ons** — replaced bare Card+text with proper EmptyState (Puzzle icon).
+- [x] **MCP Server** — replaced bare Card+text with proper EmptyState (Server icon).
+- [x] **Invoices** — added empty state when no invoices, with "New draft" action button.
+- [ ] Fix spacing, hierarchy, patterns, clutter per page (remaining pages).
 - [ ] No nested cards, mismatched patterns, cramped layouts.
 - [ ] Before/after comparison using screenshot diff tool.
 
