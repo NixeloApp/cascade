@@ -51,6 +51,7 @@ export function DashboardCustomizeModal() {
       onOpenChange={setOpen}
       title="Dashboard Customization"
       description="Choose which widgets to display on your personal dashboard."
+      size="sm"
     >
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">

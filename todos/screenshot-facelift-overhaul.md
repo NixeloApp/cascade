@@ -37,8 +37,8 @@ Concrete UI issues found by component audit. These are real bugs, not style pref
 
 ### Oversized modals (content doesn't fill the space)
 
-- [ ] **`UserProfile.tsx`** — uses `size="xl"` for profile content that fits in `"md"` or `"lg"`.
-- [ ] **`DashboardCustomizeModal.tsx`** — no explicit size (defaults `"md"`) but content is just 3 toggles. Should be `"sm"`.
+- [x] **`UserProfile.tsx`** — `size="xl"` → `size="lg"` (672px fits profile form).
+- [x] **`DashboardCustomizeModal.tsx`** — added explicit `size="sm"` (448px for 3 toggle switches).
 
 ### Fixed heights forcing unnecessary scroll
 
@@ -58,7 +58,7 @@ Concrete UI issues found by component audit. These are real bugs, not style pref
 ### Horizontal scroll in filter tabs
 
 - [ ] **`GlobalSearch.tsx:555`** — Tabs container has `shrink-0 overflow-x-auto`. On narrow screens, tab buttons force horizontal scroll in the fixed header.
-- [ ] **`NotificationCenter.tsx:220`** — filter buttons (`All`, `Mentions`, `Assigned`, etc.) also use `overflow-x-auto` with `shrink-0` children. Same horizontal scroll issue.
+- [x] **`NotificationCenter.tsx:220`** — already fixed (replaced `overflow-x-auto` with `<Flex wrap>`).
 
 ---
 
