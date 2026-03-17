@@ -26,7 +26,7 @@ interface SearchResultsListProps {
   results: SearchResult[];
   total: number;
   hasMore: boolean;
-  onSelectIssue: (issueId: Id<"issues">, projectId: Id<"projects">) => void;
+  onSelectIssue: (issueKey: string) => void;
   onLoadMore: () => void;
 }
 
@@ -75,7 +75,7 @@ export function SearchResultsList({
             key={issue._id}
             padding="md"
             radius="none"
-            onClick={() => onSelectIssue(issue._id, issue.projectId)}
+            onClick={() => onSelectIssue(issue.key)}
             className="w-full text-left"
             aria-label={`${issue.key} ${issue.title}`}
           >

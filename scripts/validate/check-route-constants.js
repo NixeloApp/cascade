@@ -28,7 +28,10 @@ const ROUTE_PATTERNS = [
   },
 
   // Template literals with hardcoded path + interpolation: `/${slug}/dashboard` or `/admin/videos/${id}`
-  { regex: /`\/[a-z][-a-z0-9]*.*\$\{|`\/\$\{[^}]+\}\/[a-z0-9]/, message: "Hardcoded template literal route" },
+  {
+    regex: /`\/[a-z][-a-z0-9]*.*\$\{|`\/\$\{[^}]+\}\/[a-z0-9]/,
+    message: "Hardcoded template literal route",
+  },
 
   // toHaveURL with bare regex containing path-like segments: toHaveURL(/dashboard/)
   // Matches /word/ or /\/word/ but not /\/$/ (root) or /^https/ (external)

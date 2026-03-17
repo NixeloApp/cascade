@@ -45,9 +45,6 @@ describe("SearchResultsList", () => {
 
     await screen.getByRole("button", { name: /proj-123 fix hover regression/i }).click();
 
-    expect(onSelectIssue).toHaveBeenCalledWith(
-      "issue-1" as Id<"issues">,
-      "project-1" as Id<"projects">,
-    );
+    expect(onSelectIssue).toHaveBeenCalledWith("PROJ-123");
   });
 });
