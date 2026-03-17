@@ -64,7 +64,7 @@ export function run() {
       let classSpan = line;
       if (line.includes("className") && !line.includes("/>") && !line.includes(">")) {
         for (let j = i + 1; j < Math.min(i + 6, lines.length); j++) {
-          classSpan += " " + lines[j];
+          classSpan += ` ${lines[j]}`;
           if (lines[j].includes(">") || lines[j].includes("/>")) break;
         }
       }
