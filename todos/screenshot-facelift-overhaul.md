@@ -180,7 +180,7 @@ Sequential screenshot series showing complete workflows. None implemented yet.
 6. **Time tracking** — empty page → start timer → manual entry → entries list → billing
 7. **Workspace management** — list → create → teams → create team → board → settings
 8. **Calendar and events** — month → week → day → create event → details → drag reschedule
-9. **Notifications workflow** — bell badge → popover → snooze → full page inbox → archived
+9. **Notifications workflow** — bell badge → popover → snooze → full-page inbox → archived
 10. **Settings and profile** — profile → avatar → cover image → 2FA → workspace settings
 
 ---

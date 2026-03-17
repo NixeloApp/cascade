@@ -18,6 +18,7 @@ const EXCLUDED_ROUTES = new Set([
   "terms", // Route doesn't exist yet
   "privacy", // Route doesn't exist yet
   "team", // Legacy route
+  "invite", // Captured via literal URL "/invite/screenshot-test-token", not ROUTES ref
   "workspaces.teams.backlog", // Route defined but page doesn't exist
 ]);
 
