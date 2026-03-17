@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Puzzle } from "lucide-react";
 import { PageHeader, PageLayout } from "@/components/layout";
-import { Card, CardBody } from "@/components/ui/Card";
-import { Typography } from "@/components/ui/Typography";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/add-ons")({
   component: AddOnsPage,
@@ -11,11 +11,11 @@ function AddOnsPage() {
   return (
     <PageLayout>
       <PageHeader title="Add-ons" />
-      <Card>
-        <CardBody>
-          <Typography variant="muted">Add-ons marketplace coming soon.</Typography>
-        </CardBody>
-      </Card>
+      <EmptyState
+        icon={Puzzle}
+        title="Marketplace coming soon"
+        description="Browse and install add-ons to extend your workspace with integrations, automations, and more."
+      />
     </PageLayout>
   );
 }
