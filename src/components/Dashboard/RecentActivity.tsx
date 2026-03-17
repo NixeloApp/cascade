@@ -54,7 +54,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
             size="compact"
           />
         ) : (
-          <div className="relative h-96 overflow-y-auto pr-2 custom-scrollbar">
+          <div className="relative max-h-96 overflow-y-auto pr-2 scrollbar-subtle">
             {/* Timeline line */}
             {activities.length > 1 && (
               <div className="absolute bottom-4 left-4 top-4 w-px bg-ui-border/60" />

@@ -42,9 +42,9 @@ Concrete UI issues found by component audit. These are real bugs, not style pref
 
 ### Fixed heights forcing unnecessary scroll
 
-- [ ] **`RecentActivity.tsx`** — `h-96` (384px) with `overflow-y-auto`. If user has 2-3 activities, still shows empty scroll area. Use `max-h-96` instead.
-- [ ] **`MyIssuesList.tsx`** — same pattern, fixed height with scroll for small datasets.
-- [ ] **`ApiKeysManager.tsx`** — `max-h-64 overflow-y-auto` on API keys list, scrollbar appears with <5 items.
+- [x] **`RecentActivity.tsx`** — `h-96` → `max-h-96` so the container shrinks to fit when few activities. Also replaced dead `custom-scrollbar` class with `scrollbar-subtle`.
+- [x] **`MyIssuesList.tsx`** — already flex-based (correct), but replaced dead `custom-scrollbar` class with `scrollbar-subtle`.
+- [x] **`ApiKeysManager.tsx`** — already uses `max-h-64` (correct pattern for modal lists). No fix needed.
 
 ### Missing text truncation
 
