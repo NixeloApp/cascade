@@ -17,11 +17,11 @@ Concrete UI issues found by component audit. These are real bugs, not style pref
 
 ### Notification popover
 
-- [ ] **Unnecessary scroll** — `NotificationCenter.tsx` popover has `max-h-[80vh]` + `overflow-y-auto`, forces scroll even with few notifications. Should use `max-h` that fits content or a smarter constraint.
+- [x] **Arbitrary values replaced** — `max-w-[calc(100vw-2rem)]` → `max-w-dialog-mobile` token; `max-h-[80vh]` → `max-h-popover-panel` token.
+- [x] **Scroll indicator** — added `scrollbar-subtle` to notification list scroll area.
+- [x] **Filter tabs no longer scroll horizontally** — replaced `overflow-x-auto` with `flex-wrap`.
+- [x] **Action buttons already animated** — `transition-fast` (150ms) on IconButton base class handles opacity reveal. No fix needed.
 - [ ] **No enter/exit animation on items** — notification items appear/disappear instantly. Mark-as-read, archive, delete — no fade or slide. Items should animate out on removal.
-- [ ] **No scroll indicator** — no gradient fade or subtle scrollbar to hint at more content below.
-- [ ] **Arbitrary `calc()` value** — `max-w-[calc(100vw-2rem)]` should be a design token.
-- [ ] **Action buttons appear instantly on hover** — archive/snooze/delete buttons need `transition-interactive` for smooth reveal.
 
 ### Start Timer modal — too wide
 

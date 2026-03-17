@@ -231,6 +231,9 @@
   --max-width-dialog-mobile: calc(100% - 2rem);
   --max-width-toast: 90%;
 
+  /* Popover / Panel Max Heights */
+  --max-height-popover-panel: 80vh;
+
   /* Auth Content Width */
   --max-width-auth: 400px;
 

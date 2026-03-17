@@ -195,7 +195,7 @@ export function NotificationCenter() {
       <PopoverContent
         align="end"
         recipe="overlayInset"
-        className="max-h-[80vh] w-full max-w-[calc(100vw-2rem)] p-0 sm:w-96"
+        className="max-h-popover-panel w-full max-w-dialog-mobile p-0 sm:w-96"
         data-testid={TEST_IDS.HEADER.NOTIFICATION_PANEL}
       >
         <Stack gap="none" className="h-full">
@@ -217,7 +217,7 @@ export function NotificationCenter() {
               </Flex>
 
               {/* Filter Tabs */}
-              <Flex gap="xs" className="overflow-x-auto pb-1 -mb-1">
+              <Flex gap="xs" className="flex-wrap">
                 {(
                   [
                     { key: "all", label: "All" },
@@ -242,7 +242,7 @@ export function NotificationCenter() {
           </Card>
 
           {/* Notifications List - Grouped by Date */}
-          <FlexItem flex="1" className="overflow-y-auto">
+          <FlexItem flex="1" className="overflow-y-auto scrollbar-subtle">
             {!notifications || notifications.length === 0 ? (
               <EmptyState icon={Inbox} title="No notifications" />
             ) : (
