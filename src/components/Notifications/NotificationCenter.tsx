@@ -252,7 +252,7 @@ export function NotificationCenter() {
                   if (!groupNotifs || groupNotifs.length === 0) return null;
 
                   return (
-                    <div key={group}>
+                    <div key={group} className="animate-fade-in">
                       {/* Group Header */}
                       <Card recipe="notificationPanelSectionHeader" padding="sm" radius="none">
                         <Typography

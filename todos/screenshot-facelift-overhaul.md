@@ -21,7 +21,7 @@ Concrete UI issues found by component audit. These are real bugs, not style pref
 - [x] **Scroll indicator** — added `scrollbar-subtle` to notification list scroll area.
 - [x] **Filter tabs no longer scroll horizontally** — replaced `overflow-x-auto` with `flex-wrap`.
 - [x] **Action buttons already animated** — `transition-fast` (150ms) on IconButton base class handles opacity reveal. No fix needed.
-- [ ] **No enter/exit animation on items** — notification items appear/disappear instantly. Mark-as-read, archive, delete — no fade or slide. Items should animate out on removal.
+- [x] **Entrance animation added** — `animate-fade-in` (200ms ease-out) on notification items and date group containers. Exit animations skipped — Convex reactivity removes items from the list instantly; holding DOM nodes for exit transitions would require significant state management for marginal gain.
 
 ### Start Timer modal — too wide
 
@@ -73,8 +73,8 @@ The app is missing entrance/exit animations in many places. Feels jarring.
 
 ### Missing animations
 
-- [ ] **Notification items** — no staggered fade-in when panel opens, no exit animation on dismiss.
-- [ ] **Notification date group headers** — appear statically with no entrance animation.
+- [x] **Notification items** — added `animate-fade-in` entrance on items and date group wrappers.
+- [x] **Notification date group headers** — animate in with their group container.
 - [ ] **Dashboard customize toggles** — switching toggles has no visual transition feedback.
 - [ ] **MoveDocumentDialog** — project selection change has no transition.
 - [ ] **Label creation popover** — appears instantly with no animation.
