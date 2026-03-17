@@ -1,4 +1,5 @@
 import { rbacTest } from "./fixtures/rbac.fixture";
+import { ROUTES } from "./utils/routes";
 import { createTestNamespace } from "./utils/test-helpers";
 
 rbacTest.describe("Organization Management", () => {
@@ -66,7 +67,7 @@ rbacTest.describe("RBAC Verification", () => {
       await editorSettingsPage.expectAdminTabHidden();
 
       // Direct navigation to the admin tab should not surface admin-only content.
-      await editorPage.goto(`/${rbacOrgSlug}/settings/profile?tab=admin`);
+      await editorPage.goto(`${ROUTES.settings.profile.build(rbacOrgSlug)}?tab=admin`);
       await editorSettingsPage.expectAdminContentHidden();
     },
   );

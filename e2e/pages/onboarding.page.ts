@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { ROUTES, routePattern } from "../utils/routes";
 import { waitForConvexConnectionReady } from "../utils/wait-helpers";
 
 const TRANSITION_TIMEOUT = 15000;
@@ -111,7 +112,7 @@ export class OnboardingPage {
 
   async goto(): Promise<void> {
     // Onboarding shows on /onboarding route for new users
-    await this.page.goto("/onboarding", { waitUntil: "domcontentloaded" });
+    await this.page.goto(ROUTES.onboarding.build(), { waitUntil: "domcontentloaded" });
     await this.expectOnboardingRoute();
   }
 
@@ -125,7 +126,7 @@ export class OnboardingPage {
       return;
     }
 
-    await this.page.goto("/onboarding", { waitUntil: "domcontentloaded" });
+    await this.page.goto(ROUTES.onboarding.build(), { waitUntil: "domcontentloaded" });
     await this.expectOnboardingRoute();
   }
 
@@ -428,7 +429,7 @@ export class OnboardingPage {
   }
 
   async expectOnboardingRoute(timeout = TRANSITION_TIMEOUT) {
-    await expect(this.page).toHaveURL(/\/onboarding$/, { timeout });
+    await expect(this.page).toHaveURL(new RegExp(`${ROUTES.onboarding.path}$`), { timeout });
   }
 
   /**
@@ -460,7 +461,7 @@ export class OnboardingPage {
    * Assert we're on the dashboard
    */
   async expectDashboard(timeout = TRANSITION_TIMEOUT) {
-    await expect(this.page).toHaveURL(/\/[^/]+\/dashboard/, { timeout });
+    await expect(this.page).toHaveURL(routePattern(ROUTES.dashboard.path), { timeout });
     await expect(this.myWorkHeading).toBeVisible({ timeout });
   }
 

@@ -15,6 +15,7 @@ import {
   WorkspacesPage,
 } from "../pages";
 import { loginFixtureUserWithRepair } from "../utils/fixture-auth";
+import { ROUTES } from "../utils/routes";
 import { ensureAuthenticatedDashboardReady } from "../utils/wait-helpers";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -182,7 +183,7 @@ export const onboardingTest = base.extend<AuthFixtures>({
   ensureAuthenticated: async ({ page }, use, testInfo) => {
     let didAuthenticateThisTest = false;
 
-    const onboardingUrl = "/onboarding";
+    const onboardingUrl = ROUTES.onboarding.build();
 
     const authenticate = async () => {
       if (didAuthenticateThisTest) {
@@ -197,7 +198,7 @@ export const onboardingTest = base.extend<AuthFixtures>({
 
       await bootstrapFixtureUser(page, onboardingUser, "onboardingTest", async () => {
         await page.goto(onboardingUrl, { waitUntil: "domcontentloaded" });
-        await expect(page).toHaveURL(/\/onboarding/);
+        await expect(page).toHaveURL(new RegExp(ROUTES.onboarding.path));
       });
 
       didAuthenticateThisTest = true;

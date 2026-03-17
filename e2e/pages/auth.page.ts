@@ -3,6 +3,7 @@ import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import type { TestUser } from "../config";
 import { trySignInUser } from "../utils/auth-helpers";
+import { ROUTES } from "../utils/routes";
 import { waitForDashboardReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
@@ -162,7 +163,7 @@ export class AuthPage extends BasePage {
    * Navigate to sign in page and expand email form
    */
   async gotoSignIn() {
-    await this.page.goto("/signin", { waitUntil: "domcontentloaded" });
+    await this.page.goto(ROUTES.signin.build(), { waitUntil: "domcontentloaded" });
     await this.signInHeading.waitFor({ state: "visible", timeout: 30000 });
     await this.waitForAuthFormHydrated();
     // Expand form using robust click logic
@@ -172,7 +173,7 @@ export class AuthPage extends BasePage {
   }
 
   async gotoSignInLanding() {
-    await this.page.goto("/signin", { waitUntil: "domcontentloaded" });
+    await this.page.goto(ROUTES.signin.build(), { waitUntil: "domcontentloaded" });
     await this.signInHeading.waitFor({ state: "visible", timeout: 30000 });
     await this.waitForAuthFormHydrated();
   }
@@ -181,7 +182,7 @@ export class AuthPage extends BasePage {
    * Navigate to sign up page and expand email form
    */
   async gotoSignUp() {
-    await this.page.goto("/signup", { waitUntil: "domcontentloaded" });
+    await this.page.goto(ROUTES.signup.build(), { waitUntil: "domcontentloaded" });
     await this.signUpHeading.waitFor({ state: "visible", timeout: 30000 });
     await this.waitForAuthFormHydrated();
     // Expand form using robust click logic
@@ -194,7 +195,7 @@ export class AuthPage extends BasePage {
    * Navigate directly to forgot password page
    */
   async gotoForgotPassword() {
-    await this.page.goto("/forgot-password");
+    await this.page.goto(ROUTES.forgotPassword.build());
     await this.expectForgotPasswordEntryFormReady();
   }
 
@@ -350,7 +351,7 @@ export class AuthPage extends BasePage {
       return;
     }
 
-    await this.page.goto("/forgot-password", { waitUntil: "domcontentloaded" });
+    await this.page.goto(ROUTES.forgotPassword.build(), { waitUntil: "domcontentloaded" });
     await this.expectForgotPasswordReady();
   }
 
@@ -395,7 +396,7 @@ export class AuthPage extends BasePage {
     await this.backToSignInLink.waitFor({ state: "visible" });
     await this.backToSignInLink.click();
     if (!(await this.waitForAuthLandingReady("signin", 5000))) {
-      await this.page.goto("/signin", { waitUntil: "domcontentloaded" });
+      await this.page.goto(ROUTES.signin.build(), { waitUntil: "domcontentloaded" });
       await this.waitForAuthLanding("signin");
     }
     await this.expandEmailForm("signin");
@@ -445,7 +446,7 @@ export class AuthPage extends BasePage {
   async expectAuthenticatedApp(options?: { recoverFromLanding?: boolean }) {
     const isLandingOrSignIn = () => {
       const { pathname } = new URL(this.page.url());
-      return pathname === "/" || pathname === "/signin";
+      return pathname === "/" || pathname === ROUTES.signin.build();
     };
 
     const onboardingCandidates = [
@@ -745,7 +746,7 @@ export class AuthPage extends BasePage {
   }
 
   async expectForgotPasswordReady(timeout = 15000) {
-    await expect(this.page).toHaveURL(/forgot-password/, { timeout });
+    await expect(this.page).toHaveURL(new RegExp(ROUTES.forgotPassword.path), { timeout });
     await this.waitForState(
       () => this.getPasswordResetEntryState(),
       (state) => state !== "pending",
@@ -757,7 +758,7 @@ export class AuthPage extends BasePage {
   }
 
   async expectForgotPasswordEntryFormReady(timeout = 15000) {
-    await expect(this.page).toHaveURL(/forgot-password/, { timeout });
+    await expect(this.page).toHaveURL(new RegExp(ROUTES.forgotPassword.path), { timeout });
     await this.waitForState(
       () => this.getPasswordResetEntryState(),
       (state) => state === "forgot",
@@ -770,8 +771,8 @@ export class AuthPage extends BasePage {
   }
 
   async ensureForgotPasswordEntry(): Promise<"forgot" | "check-email" | "code"> {
-    if (!this.page.url().includes("/forgot-password")) {
-      await this.page.goto("/forgot-password", { waitUntil: "domcontentloaded" });
+    if (!new URL(this.page.url()).pathname.startsWith(ROUTES.forgotPassword.build())) {
+      await this.page.goto(ROUTES.forgotPassword.build(), { waitUntil: "domcontentloaded" });
     }
 
     return await this.waitForState(
@@ -946,7 +947,7 @@ export class AuthPage extends BasePage {
   private async getVerificationSubmitState(): Promise<
     "submitting" | "redirect" | "success" | "error" | "pending"
   > {
-    if (!this.page.url().includes("/signup")) {
+    if (!new URL(this.page.url()).pathname.startsWith(ROUTES.signup.build())) {
       return "redirect";
     }
 
@@ -974,7 +975,7 @@ export class AuthPage extends BasePage {
   private async getPasswordResetSubmitState(): Promise<
     "submitting" | "redirect" | "success" | "error" | "pending"
   > {
-    if (!this.page.url().includes("/forgot-password")) {
+    if (!new URL(this.page.url()).pathname.startsWith(ROUTES.forgotPassword.build())) {
       return "redirect";
     }
 
@@ -996,7 +997,7 @@ export class AuthPage extends BasePage {
   }
 
   private async getSignInSubmitState(): Promise<"submitting" | "redirect" | "error" | "pending"> {
-    if (!this.page.url().includes("/signin")) {
+    if (!new URL(this.page.url()).pathname.startsWith(ROUTES.signin.build())) {
       return "redirect";
     }
 
@@ -1122,7 +1123,7 @@ export class AuthPage extends BasePage {
   }
 
   private async retryPasswordResetRequest(email: string) {
-    await this.page.goto("/forgot-password", { waitUntil: "domcontentloaded" });
+    await this.page.goto(ROUTES.forgotPassword.build(), { waitUntil: "domcontentloaded" });
     const state = await this.ensureForgotPasswordEntry();
     if (state === "check-email" || state === "code") {
       await this.expectPasswordResetCodeStep();

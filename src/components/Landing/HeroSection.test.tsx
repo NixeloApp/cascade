@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { ROUTES } from "@/config/routes";
 import { render, screen } from "@/test/custom-render";
 
 vi.mock("@tanstack/react-router", () => ({
@@ -25,7 +26,7 @@ describe("HeroSection", () => {
 
     expect(screen.getByRole("link", { name: /Get Started Free/i })).toHaveAttribute(
       "href",
-      "/signup",
+      ROUTES.signup.build(),
     );
     expect(screen.getByRole("link", { name: /See workflow tour/i })).toHaveAttribute(
       "href",

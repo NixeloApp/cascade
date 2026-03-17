@@ -32,6 +32,7 @@
 
 import type { Page, Route } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { ROUTES } from "./routes";
 
 const GOOGLE_OAUTH_HOST = "accounts.google.com";
 
@@ -160,7 +161,7 @@ export async function clearGoogleOAuthMock(page: Page): Promise<void> {
  */
 export async function verifyOAuthSuccess(page: Page): Promise<void> {
   // Should not be on signin/signup page
-  await expect(page).not.toHaveURL(/signin|signup/);
+  await expect(page).not.toHaveURL(new RegExp(`${ROUTES.signin.path}|${ROUTES.signup.path}`));
 
   // Should not show error toast
   const errorToast = page.locator('[data-sonner-toast][data-type="error"]');

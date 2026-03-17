@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ROUTES } from "@/config/routes";
 import { render, screen } from "@/test/custom-render";
 
 // Mock useNavigate
@@ -10,7 +11,7 @@ vi.mock("@tanstack/react-router", async () => {
   return {
     ...actual,
     useNavigate: () => mockNavigate,
-    useLocation: () => ({ pathname: "/signin" }),
+    useLocation: () => ({ pathname: ROUTES.signin.build() }),
   };
 });
 
@@ -43,7 +44,7 @@ describe("AuthRedirect", () => {
     });
 
     it("should render children even when redirect is pending", () => {
-      mockRedirectPath = "/dashboard";
+      mockRedirectPath = ROUTES.dashboard.build("test-org");
 
       render(
         <AuthRedirect>
@@ -58,7 +59,7 @@ describe("AuthRedirect", () => {
 
   describe("Navigation", () => {
     it("should navigate to redirect path when different from current", () => {
-      mockRedirectPath = "/dashboard";
+      mockRedirectPath = ROUTES.dashboard.build("test-org");
 
       render(
         <AuthRedirect>
@@ -67,7 +68,7 @@ describe("AuthRedirect", () => {
       );
 
       expect(mockNavigate).toHaveBeenCalledWith({
-        to: "/dashboard",
+        to: ROUTES.dashboard.build("test-org"),
         replace: true,
       });
     });
@@ -86,7 +87,7 @@ describe("AuthRedirect", () => {
 
     it("should not navigate when redirect path matches current location", async () => {
       // Current location is /signin (from mock)
-      mockRedirectPath = "/signin";
+      mockRedirectPath = ROUTES.signin.build();
 
       render(
         <AuthRedirect>
@@ -98,7 +99,7 @@ describe("AuthRedirect", () => {
     });
 
     it("should use replace navigation mode", () => {
-      mockRedirectPath = "/onboarding";
+      mockRedirectPath = ROUTES.onboarding.build();
 
       render(
         <AuthRedirect>

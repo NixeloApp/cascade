@@ -11,6 +11,14 @@ vi.mock("convex/react", () => ({
   useQuery: vi.fn(),
 }));
 
+vi.mock("@/hooks/useOrgContext", () => ({
+  useOrganization: vi.fn(() => ({
+    orgSlug: "test-org",
+    organizationId: "org-123",
+    billingEnabled: false,
+  })),
+}));
+
 function withSearchResults({
   issues = [],
   issueTotal = issues.length,

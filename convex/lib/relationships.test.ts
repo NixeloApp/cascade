@@ -67,7 +67,7 @@ describe("Relationship Cascade Operations", () => {
         projectId,
         organizationId: orgId,
         workspaceId,
-        // createdBy: userId, // REMOVED: Not in schema
+
         updatedAt: Date.now(),
         status: "todo",
         type: "task",
@@ -166,7 +166,7 @@ describe("Relationship Cascade Operations", () => {
         projectId,
         organizationId: orgId,
         workspaceId,
-        // createdBy: userId, // REMOVED
+
         updatedAt: Date.now(),
         status: "todo",
         type: "task",
@@ -264,7 +264,7 @@ describe("Relationship Cascade Operations", () => {
         projectId,
         organizationId: orgId,
         workspaceId,
-        // createdBy: userId, // REMOVED
+
         updatedAt: now,
         status: "todo",
         type: "task",

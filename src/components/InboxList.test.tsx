@@ -304,7 +304,6 @@ describe("InboxList", () => {
       const mockBulkAccept = vi.fn().mockResolvedValue({ accepted: 1 });
       const issues = [createMockInboxIssue({ status: "pending" })];
       setupMocks(issues, createMockCounts({ pending: 1 }));
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(useMutation).mockReturnValue(mockBulkAccept as any);
 
       render(<InboxList projectId={"proj-1" as Id<"projects">} />);

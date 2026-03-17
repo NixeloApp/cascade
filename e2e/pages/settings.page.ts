@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
 
 /**
@@ -195,7 +196,7 @@ export class SettingsPage extends BasePage {
 
   async goto() {
     // Navigate directly to settings URL
-    const url = `/${this.orgSlug}/settings/profile`;
+    const url = ROUTES.settings.profile.build(this.orgSlug);
     await this.page.goto(url);
 
     try {
@@ -220,8 +221,9 @@ export class SettingsPage extends BasePage {
         .catch(() => "Could not get localStorage");
       const convexClientState = await this.page
         .evaluate(() => {
-          // biome-ignore lint/suspicious/noExplicitAny: Accessing internal test client
-          const client = (window as any).__convex_test_client;
+          const client = (window as Record<string, unknown>).__convex_test_client as
+            | { authenticationToken?: unknown }
+            | undefined;
           return client
             ? `Found client. Auth token set: ${!!client.authenticationToken}`
             : "Client not found on window";

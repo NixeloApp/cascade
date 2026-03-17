@@ -1,4 +1,5 @@
 import { expect, authenticatedTest as test } from "./fixtures";
+import { escapeRegExp } from "./utils/routes";
 import { createTestNamespace } from "./utils/test-helpers";
 import { testUserService } from "./utils/test-user-service";
 
@@ -140,7 +141,7 @@ test.describe("Board Drag-Drop", () => {
     const targetColumnLabel = await targetColumn.getAttribute("aria-label");
     console.log(`Target column: ${targetColumnLabel}`);
 
-    const escapedIssueTitle = issueTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const escapedIssueTitle = escapeRegExp(issueTitle);
     const issueButtonInTargetColumn = targetColumn.getByRole("button", {
       name: new RegExp(escapedIssueTitle),
     });

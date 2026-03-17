@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { ROUTES, routePattern } from "../utils/routes";
 import { BasePage } from "./base.page";
 
 /**
@@ -87,12 +88,12 @@ export class DocumentsPage extends BasePage {
   // ===================
 
   async goto() {
-    await this.page.goto(`/${this.orgSlug}/documents`);
+    await this.page.goto(ROUTES.documents.list.build(this.orgSlug));
     await this.waitForLoad();
   }
 
   async gotoDocument(documentId: string) {
-    await this.page.goto(`/${this.orgSlug}/documents/${documentId}`);
+    await this.page.goto(ROUTES.documents.detail.build(this.orgSlug, documentId));
     await this.waitForLoad();
   }
 
@@ -104,7 +105,7 @@ export class DocumentsPage extends BasePage {
     await expect(this.newDocumentButton).toBeVisible();
     await expect(this.newDocumentButton).toBeEnabled();
     await this.newDocumentButton.click();
-    await expect(this.page).toHaveURL(/\/documents\/[^/]+$/);
+    await expect(this.page).toHaveURL(routePattern(ROUTES.documents.detail.path, "$"));
 
     await this.expectEditorVisible();
   }

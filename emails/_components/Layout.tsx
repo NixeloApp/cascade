@@ -16,12 +16,11 @@ import {
   Section,
   Text,
 } from "@react-email/components";
-// biome-ignore lint/style/useImportType: required for React Email
-import * as React from "react";
+import type { ReactNode } from "react";
 
 interface EmailLayoutProps {
   preview: string;
-  children: React.ReactNode;
+  children: ReactNode;
   unsubscribeUrl?: string;
 }
 

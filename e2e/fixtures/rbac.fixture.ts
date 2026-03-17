@@ -6,6 +6,7 @@ import { AUTH_PATHS, RBAC_TEST_CONFIG, TEST_USERS } from "../config";
 import { E2E_TIMEZONE } from "../constants";
 import { ProjectsPage, SettingsPage, WorkspacesPage } from "../pages";
 import { loginFixtureUserWithRepair } from "../utils/fixture-auth";
+import { ROUTES, routePattern } from "../utils/routes";
 import {
   ensureAuthenticatedDashboardReady,
   waitForConvexConnectionReady,
@@ -200,12 +201,12 @@ export const rbacTest = base.extend<RbacFixtures>({
     await use(getRbacConfig(testInfo.parallelIndex).orgSlug);
   },
   rbacProjectUrl: async ({ rbacOrgSlug, rbacProjectKey }, use) => {
-    await use(`/${rbacOrgSlug}/projects/${rbacProjectKey}/board`);
+    await use(ROUTES.projects.board.build(rbacOrgSlug, rbacProjectKey));
   },
 
   gotoRbacProject: async ({ rbacOrgSlug, rbacProjectKey }, use) => {
     const goto = async (page: Page) => {
-      const targetUrl = `/${rbacOrgSlug}/projects/${rbacProjectKey}/board`;
+      const targetUrl = ROUTES.projects.board.build(rbacOrgSlug, rbacProjectKey);
 
       // 1. Identify role and prepare JWT
       const role = (page.context() as BrowserContext & { _role?: string })._role as UserRole;
@@ -226,7 +227,7 @@ export const rbacTest = base.extend<RbacFixtures>({
       }
 
       // Final check: URL should contain /board
-      await expect(page).toHaveURL(/.*\/board/);
+      await expect(page).toHaveURL(routePattern(ROUTES.projects.board.path));
       console.log(`✓ Navigated to ${page.url()}`);
     };
     await use(goto);
@@ -246,7 +247,7 @@ async function ensureAuthenticatedDashboardIfNeeded(page: Page, orgSlug: string)
 
   // Check pathname rather than hardcoded URL for BASE_URL flexibility
   const { pathname } = new URL(targetUrl);
-  if (pathname === "/" || pathname === "/signin") {
+  if (pathname === "/" || pathname === ROUTES.signin.build()) {
     await ensureAuthenticatedDashboardReady(page, orgSlug);
   }
 }

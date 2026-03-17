@@ -7,6 +7,7 @@
 
 import { type APIRequestContext, expect, type Locator, type Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { escapeRegExp, ROUTES, routePattern } from "./routes";
 
 /**
  * Wait timeouts used across tests.
@@ -304,9 +305,9 @@ export async function ensureAuthenticatedDashboardReady(
   page: Page,
   orgSlug: string,
 ): Promise<void> {
-  const escapedOrgSlug = orgSlug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const dashboardPath = `/${orgSlug}/dashboard`;
-  const dashboardUrl = new RegExp(`/${escapedOrgSlug}/dashboard(?:\\?.*)?$`);
+  const dashboardPath = ROUTES.dashboard.build(orgSlug);
+  const escapedDashboardPath = escapeRegExp(dashboardPath);
+  const dashboardUrl = new RegExp(`${escapedDashboardPath}(?:\\?.*)?$`);
   const appErrorHeading = page.getByRole("heading", { name: "500" });
   const appErrorDetails = page.locator("details pre");
 
@@ -333,7 +334,9 @@ export async function ensureAuthenticatedDashboardReady(
   const recoverAuthenticatedDashboard = async () => {
     const currentUrl = page.url();
     const isOutsideOrgShell =
-      currentUrl.endsWith("/") || currentUrl.includes("/signin") || !currentUrl.includes(orgSlug);
+      currentUrl.endsWith("/") ||
+      currentUrl.includes(ROUTES.signin.build()) ||
+      !currentUrl.includes(orgSlug);
 
     await page.goto(isOutsideOrgShell ? dashboardPath : "/app", {
       waitUntil: "domcontentloaded",
@@ -369,7 +372,7 @@ export async function ensureAuthenticatedDashboardReady(
  * Wait for project board route and board controls to become interactive.
  */
 export async function waitForBoardLoaded(page: Page): Promise<void> {
-  await expect(page).toHaveURL(/\/projects\/[A-Z0-9-]+\/board/);
+  await expect(page).toHaveURL(routePattern(ROUTES.projects.board.path));
   const projectBoard = page
     .locator("[data-project-board]")
     .or(page.getByRole("heading", { name: /kanban board|scrum board/i }));
@@ -391,7 +394,7 @@ export async function waitForIssueCreateSuccess(page: Page, issueTitle?: string)
   await expect(createIssueModal).not.toBeVisible();
 
   if (issueTitle) {
-    const escapedTitle = issueTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const escapedTitle = escapeRegExp(issueTitle);
     await expect(page.getByRole("button", { name: new RegExp(escapedTitle) })).toBeVisible();
   }
 

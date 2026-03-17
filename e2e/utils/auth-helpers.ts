@@ -219,7 +219,9 @@ declare global {
  */
 export async function isOnDashboard(page: Page): Promise<boolean> {
   const url = page.url();
-  return urlPatterns.dashboard.test(url) || url.endsWith("/dashboard");
+  return (
+    urlPatterns.dashboard.test(url) || url.endsWith(ROUTES.dashboard.path.replace("/$orgSlug", ""))
+  );
 }
 
 /**

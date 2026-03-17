@@ -1,4 +1,5 @@
 import { expect, test } from "./fixtures";
+import { ROUTES } from "./utils/routes";
 
 /**
  * Comprehensive Authentication E2E Tests
@@ -10,7 +11,7 @@ import { expect, test } from "./fixtures";
 test.describe("Sign In Form - Elements", () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to sign-in page directly without auto-expansion
-    await page.goto("/signin", { waitUntil: "commit" });
+    await page.goto(ROUTES.signin.build(), { waitUntil: "commit" });
   });
 
   test("displays all sign in form elements", async ({ authPage }) => {
@@ -61,7 +62,7 @@ test.describe("Sign In Form - Elements", () => {
 test.describe("Sign Up Form - Elements", () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to sign-up page directly without auto-expansion
-    await page.goto("/signup", { waitUntil: "commit" });
+    await page.goto(ROUTES.signup.build(), { waitUntil: "commit" });
   });
 
   test("displays all sign up form elements", async ({ authPage }) => {

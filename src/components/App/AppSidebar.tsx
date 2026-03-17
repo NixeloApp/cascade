@@ -612,7 +612,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     params={{ orgSlug }}
                     icon={Home}
                     label="Dashboard"
-                    isActive={isActive("/dashboard")}
+                    isActive={isActive(ROUTES.dashboard.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
                     data-tour="nav-dashboard"
@@ -623,7 +623,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     params={{ orgSlug }}
                     icon={ListIcon}
                     label="Issues"
-                    isActive={isActive("/issues")}
+                    isActive={isActive(ROUTES.issues.list.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
                     data-tour="nav-issues"
@@ -633,7 +633,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     params={{ orgSlug }}
                     icon={FolderKanban}
                     label="My Board"
-                    isActive={isActive("/my-issues")}
+                    isActive={isActive(ROUTES.myIssues.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
                   />
@@ -642,7 +642,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     params={{ orgSlug }}
                     icon={CreditCard}
                     label="Invoices"
-                    isActive={isActive("/invoices")}
+                    isActive={isActive(ROUTES.invoices.list.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
                   />
@@ -651,7 +651,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     params={{ orgSlug }}
                     icon={Users}
                     label="Clients"
-                    isActive={isActive("/clients")}
+                    isActive={isActive(ROUTES.clients.list.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
                   />
@@ -660,7 +660,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     params={{ orgSlug }}
                     icon={Calendar}
                     label="General"
-                    isActive={isActive("/calendar")}
+                    isActive={isActive(ROUTES.calendar.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
                     data-tour="nav-calendar"
@@ -686,7 +686,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     params={{ orgSlug }}
                     icon={Bot}
                     label="Assistant"
-                    isActive={isActive("/assistant")}
+                    isActive={isActive(ROUTES.assistant.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
                   />
@@ -695,7 +695,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     params={{ orgSlug }}
                     icon={BarChart3}
                     label="Analytics"
-                    isActive={isActive("/analytics")}
+                    isActive={isActive(ROUTES.analytics.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
                   />
@@ -704,7 +704,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     params={{ orgSlug }}
                     icon={ShieldCheck}
                     label="Authentication"
-                    isActive={isActive("/authentication")}
+                    isActive={isActive(ROUTES.authentication.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
                   />
@@ -713,7 +713,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     params={{ orgSlug }}
                     icon={Server}
                     label="MCP Server"
-                    isActive={isActive("/mcp-server")}
+                    isActive={isActive(ROUTES.mcp.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
                   />
@@ -722,7 +722,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     params={{ orgSlug }}
                     icon={Puzzle}
                     label="Add-ons"
-                    isActive={isActive("/add-ons")}
+                    isActive={isActive(ROUTES.addOns.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
                   />
@@ -732,7 +732,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     label="Documents"
                     isExpanded={docsExpanded}
                     onToggle={() => setDocsExpanded(!docsExpanded)}
-                    isActive={isActive("/documents")}
+                    isActive={isActive(ROUTES.documents.list.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onAdd={handleCreateDocument}
                     to={ROUTES.documents.list.path}
@@ -757,7 +757,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     label="Workspaces"
                     isExpanded={workspacesExpanded}
                     onToggle={() => setWorkspacesExpanded(!workspacesExpanded)}
-                    isActive={isActive("/workspaces")}
+                    isActive={isActive(ROUTES.workspaces.list.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onAdd={handleCreateWorkspace}
                     to={ROUTES.workspaces.list.path}
@@ -791,7 +791,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                       params={{ orgSlug }}
                       icon={Clock}
                       label="Time Tracking"
-                      isActive={isActive("/time-tracking")}
+                      isActive={isActive(ROUTES.timeTracking.path.replace("/$orgSlug", ""))}
                       isCollapsed={showCollapsed}
                       onClick={handleNavClick}
                       data-tour="nav-timesheet"

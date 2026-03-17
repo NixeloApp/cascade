@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
 
 /**
@@ -126,7 +127,7 @@ export class CalendarPage extends BasePage {
   // ===================
 
   async goto() {
-    await this.page.goto(`/${this.orgSlug}/calendar`);
+    await this.page.goto(ROUTES.calendar.build(this.orgSlug));
     await this.waitForLoad();
   }
 

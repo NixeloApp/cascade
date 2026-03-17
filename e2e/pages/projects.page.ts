@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
-import { ROUTES } from "../../convex/shared/routes";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { escapeRegExp, ROUTES, routePattern } from "../utils/routes";
 import {
   createWorkspaceFromDialog,
   dismissWorkspaceDialogIfOpen,
@@ -315,7 +315,7 @@ export class ProjectsPage extends BasePage {
   }
 
   async gotoProjectBoard(projectKey: string) {
-    await this.gotoPath(`/${this.orgSlug}/projects/${projectKey}/board`);
+    await this.gotoPath(ROUTES.projects.board.build(this.orgSlug, projectKey));
     await this.waitForLoad();
   }
 
@@ -372,8 +372,9 @@ export class ProjectsPage extends BasePage {
       }
 
       const normalizedProjectKey = key.toUpperCase();
-      const boardPath = `/${this.orgSlug}/projects/${normalizedProjectKey}/board`;
-      const boardUrlPattern = new RegExp(`/projects/${normalizedProjectKey}/board(?:[/?#]|$)`);
+      const boardPath = ROUTES.projects.board.build(this.orgSlug, normalizedProjectKey);
+      const escapedBoardPath = escapeRegExp(boardPath);
+      const boardUrlPattern = new RegExp(`${escapedBoardPath}(?:[/?#]|$)`);
 
       await this.createButton.waitFor({ state: "visible" });
       await expect(this.createButton).toBeEnabled();
@@ -424,7 +425,7 @@ export class ProjectsPage extends BasePage {
     });
 
     // Deterministic completion: modal closes and workspace route remains active.
-    await expect(this.page).toHaveURL(/\/workspaces(\/[^/?#]+)?(?:[/?#]|$)/);
+    await expect(this.page).toHaveURL(routePattern(ROUTES.workspaces.list.path));
   }
 
   async cancelCreateProject() {
@@ -664,7 +665,7 @@ export class ProjectsPage extends BasePage {
   }
 
   async expectAnalyticsLoaded() {
-    await expect(this.page).toHaveURL(/\/analytics(?:[/?#]|$)/);
+    await expect(this.page).toHaveURL(routePattern(ROUTES.projects.analytics.path));
     await expect(this.analyticsPageHeader).toBeVisible();
     await expect(this.analyticsTotalIssuesMetric).toBeVisible();
   }
@@ -702,23 +703,23 @@ export class ProjectsPage extends BasePage {
   }
 
   async expectProjectSettingsLoaded() {
-    await expect(this.page).toHaveURL(/\/settings(?:[/?#]|$)/);
+    await expect(this.page).toHaveURL(routePattern(ROUTES.projects.settings.path));
     await expect(this.projectSettingsHeader).toBeVisible();
   }
 
   async expectBacklogLoaded() {
-    await expect(this.page).toHaveURL(/\/backlog(?:[/?#]|$)/);
+    await expect(this.page).toHaveURL(routePattern(ROUTES.projects.backlog.path));
     await expect(this.boardColumns.first()).toBeVisible();
     await expect(this.getBoardColumn("Backlog")).toBeVisible();
   }
 
   async expectTimesheetLoaded() {
-    await expect(this.page).toHaveURL(/\/timesheet(?:[/?#]|$)/);
+    await expect(this.page).toHaveURL(routePattern(ROUTES.projects.timesheet.path));
     await expect(this.timesheetEntriesTab).toBeVisible();
   }
 
   async expectRoadmapLoaded() {
-    await expect(this.page).toHaveURL(/\/roadmap(?:[/?#]|$)/);
+    await expect(this.page).toHaveURL(routePattern(ROUTES.projects.roadmap.path));
     await expect(this.roadmapViewToggle).toBeVisible();
   }
 
@@ -734,7 +735,7 @@ export class ProjectsPage extends BasePage {
   }
 
   async expectSprintsLoaded() {
-    await expect(this.page).toHaveURL(/\/sprints(?:[/?#]|$)/);
+    await expect(this.page).toHaveURL(routePattern(ROUTES.projects.sprints.path));
     await expect(this.sprintsPageHeader).toBeVisible();
 
     if (await this.createSprintButton.isVisible().catch(() => false)) {
@@ -830,7 +831,7 @@ export class ProjectsPage extends BasePage {
     // Match the accessible name (aria-label) which contains the title
     // e.g. "Open issue PROJ-123: Issue Title"
     // Escape regex characters to prevent matching errors
-    const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const escaped = escapeRegExp(title);
     return this.page.getByRole("button", { name: new RegExp(escaped) });
   }
 

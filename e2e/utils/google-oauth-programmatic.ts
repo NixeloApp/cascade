@@ -16,8 +16,8 @@
 
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
-
 import { E2E_ENDPOINTS, getE2EHeaders } from "../config";
+import { ROUTES } from "./routes";
 
 /**
  * Configuration for programmatic Google OAuth
@@ -173,7 +173,10 @@ export async function loginWithGoogleOAuthAndNavigate(
  */
 export async function verifyGoogleOAuthSuccess(page: Page): Promise<void> {
   // Should be on app or onboarding
-  await expect(page).toHaveURL(/app|onboarding|dashboard/);
+  const dashboardSegment = ROUTES.dashboard.path.split("/").pop();
+  await expect(page).toHaveURL(
+    new RegExp(`${ROUTES.app.path}|${ROUTES.onboarding.path}|${dashboardSegment}`),
+  );
 
   // Should not have error messages (check for alert roles and error styling)
   const errorAlert = page.locator('[role="alert"], .error-message');

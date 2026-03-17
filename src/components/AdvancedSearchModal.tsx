@@ -7,7 +7,6 @@
  */
 
 import { api } from "@convex/_generated/api";
-import type { Id } from "@convex/_generated/dataModel";
 import { ISSUE_PRIORITIES, ISSUE_TYPES } from "@convex/validators";
 import { useState } from "react";
 import { Typography } from "@/components/ui/Typography";
@@ -29,7 +28,7 @@ import { Stack } from "./ui/Stack";
 interface AdvancedSearchModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectIssue: (issueId: Id<"issues">, projectId: Id<"projects">) => void;
+  onSelectIssue: (issueKey: string) => void;
 }
 
 /**
@@ -66,8 +65,8 @@ export function AdvancedSearchModal({
   const total = searchResult?.total ?? 0;
   const hasMore = (searchResult?.page?.length ?? 0) === LIMIT;
 
-  const handleSelectIssue = (issueId: Id<"issues">, projectId: Id<"projects">) => {
-    onSelectIssue(issueId, projectId);
+  const handleSelectIssue = (issueKey: string) => {
+    onSelectIssue(issueKey);
     onOpenChange(false);
     setSearchQuery("");
     setSelectedType([]);

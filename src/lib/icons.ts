@@ -99,7 +99,6 @@ export {
   Pencil,
   PieChart,
   Play,
-  Plug,
   Plus,
   Puzzle,
   RefreshCw,

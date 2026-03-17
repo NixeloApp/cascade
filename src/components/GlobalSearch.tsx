@@ -12,8 +12,10 @@ import { type ComponentProps, useEffect, useState } from "react";
 import { AdvancedSearchModal } from "@/components/AdvancedSearchModal";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useSearchKeyboard, useSearchPagination } from "@/hooks/useGlobalSearch";
+import { useOrganization } from "@/hooks/useOrgContext";
 import { ArrowRight, Command, Filter, Plus, Search } from "@/lib/icons";
 import { parseIssueSearchShortcuts } from "@/lib/search-shortcuts";
 import { TEST_IDS } from "@/lib/test-ids";
@@ -175,10 +177,11 @@ function CommandActionItem({ command, onClose }: { command: CommandAction; onClo
 }
 
 function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: () => void }) {
+  const { orgSlug } = useOrganization();
   const href =
     result.type === "issue"
-      ? `/project/${result.projectId}?issue=${result._id}`
-      : `/document/${result._id}`;
+      ? ROUTES.issues.detail.build(orgSlug, result.key)
+      : ROUTES.documents.detail.build(orgSlug, result._id);
 
   return (
     <CommandItem
@@ -422,6 +425,7 @@ function SearchListContent({
 
 /** Unified omnibox for searching issues/documents and executing app actions. */
 export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) {
+  const { orgSlug } = useOrganization();
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [shouldOpenAdvancedSearch, setShouldOpenAdvancedSearch] = useState(false);
   const { isOpen, setIsOpen } = useSearchKeyboard();
@@ -664,8 +668,8 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
         <AdvancedSearchModal
           open={isAdvancedOpen}
           onOpenChange={setIsAdvancedOpen}
-          onSelectIssue={(issueId, projectId) => {
-            window.location.href = `/project/${projectId}?issue=${issueId}`;
+          onSelectIssue={(issueKey) => {
+            window.location.href = ROUTES.issues.detail.build(orgSlug, issueKey);
           }}
         />
       ) : null}

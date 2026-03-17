@@ -1,6 +1,6 @@
 # Nixelo Todo Portfolio
 
-> **Last Updated:** 2026-03-15
+> **Last Updated:** 2026-03-16
 > **Scope:** open work only
 
 ## Current Status
@@ -19,7 +19,6 @@
 | P0 | [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md) | Mostly done | Remaining: seed data enrichment, visual facelift, CI integration |
 | P1 | [slack-integration-issues.md](./slack-integration-issues.md) | Blocked | Org-scoped Slack connections (needs external access) |
 | P2 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | Partial | CSV done, PDF export deferred (needs jsPDF decision) |
-| P2 | [bandwidth_optimization.md](./bandwidth_optimization.md) | Blocked | Field-projection audit (needs Convex dashboard metrics) |
 | P2 | [feature-gaps.md](./feature-gaps.md) | Blocked | Slack dashboard setup |
 | P2 | [emoji-overhaul.md](./emoji-overhaul.md) | Blocked | Accessibility QA |
 | P2 | [multi-level-views.md](./multi-level-views.md) | Blocked | `@xyflow/react` package |
@@ -35,7 +34,6 @@
 |---|---|
 | Slack app/dashboard | [feature-gaps.md](./feature-gaps.md) |
 | Monitoring destination | [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) |
-| Convex dashboard metrics | [bandwidth_optimization.md](./bandwidth_optimization.md) |
 | Accessibility QA | [emoji-overhaul.md](./emoji-overhaul.md) |
 | `@xyflow/react` package | [multi-level-views.md](./multi-level-views.md) |
 | Outlook app setup | [growth-features.md](./growth-features.md) |
