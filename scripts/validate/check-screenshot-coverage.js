@@ -69,9 +69,7 @@ function extractScreenshotRouteRefs(content) {
   const refs = new Set();
 
   // Direct ROUTES.xxx references
-  const RE = /ROUTES\.([a-zA-Z0-9.]+)/g;
-  let match;
-  while ((match = RE.exec(content)) !== null) {
+  for (const match of content.matchAll(/ROUTES\.([a-zA-Z0-9.]+)/g)) {
     const key = match[1].replace(/\.(build|path)$/, "");
     refs.add(key);
   }
