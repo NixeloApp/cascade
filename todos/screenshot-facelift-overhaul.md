@@ -79,7 +79,7 @@ Make the validator catch the patterns we keep finding manually.
 
 ---
 
-## Part 6: Screenshot Coverage (deferred — needs browser)
+## Part 6: Screenshot Coverage (dev server runs on localhost:5555)
 
 ### Routes not yet captured
 
@@ -104,9 +104,9 @@ Make the validator catch the patterns we keep finding manually.
 - [ ] Navigation: sidebar favorites, project tree, mobile hamburger
 - [ ] Error: permission denied, loading skeletons, toasts, form validation
 
-### CI integration (deferred — screenshots are gitignored)
+### CI integration (blocked — screenshots are gitignored)
 
-- [ ] CI screenshot manifest check — deferred. Use `node scripts/screenshot-diff.js` locally.
+- [ ] CI screenshot manifest check — blocked until screenshots are either generated in CI or committed to git. Use `node scripts/screenshot-diff.js` locally for now.
 
 ---
 
