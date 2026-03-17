@@ -167,6 +167,24 @@ pnpm run test         # Vitest unit tests
 pnpm e2e:ui           # E2E tests (interactive, Playwright)
 ```
 
+### Screenshots (visual QA)
+
+```bash
+pnpm screenshots                                    # Capture all pages (4 viewport/theme combos)
+pnpm screenshots -- --headed                        # Visible browser
+pnpm screenshots -- --spec 11-calendar              # Single spec folder
+pnpm screenshots -- --spec calendar --match event   # Filter by name
+pnpm screenshots -- --dry-run                       # List targets without capturing
+pnpm screenshots:diff                               # Compare current vs approved manifest
+pnpm screenshots:approve                            # Accept current screenshots as baseline
+```
+
+**Requires dev server running (`pnpm dev`).** The tool auto-creates a test user, seeds data, and captures authenticated pages. Output goes to `docs/design/specs/pages/*/screenshots/` and `e2e/screenshots/`.
+
+### AI: When to use screenshots
+
+**Always take screenshots before and after visual changes.** Don't make UI changes blind — capture the current state, make the change, capture again, and verify the improvement visually. Use `--spec` and `--match` filters to capture only the relevant pages instead of running all 400+ screenshots.
+
 ### AI: When to run `pnpm fixme`
 
 Run `pnpm fixme` after completing a significant chunk of work (new feature, multi-file refactor, major bug fix). Do NOT run it after every small edit — only when a logical unit of work is done and you're ready to validate.
