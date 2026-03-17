@@ -305,6 +305,16 @@ if (failedResults.length > 0) {
   }
 }
 
+// Print informational messages from passing checks that opt in.
+// Checks signal this by setting showMessagesOnPass: true in their result.
+const infoResults = results.filter(
+  (r) => r.passed && r.showMessagesOnPass && r.messages && r.messages.length > 0,
+);
+for (const result of infoResults) {
+  console.log(`\n${c.bold}── ${result.name} ──${c.reset}`);
+  for (const msg of result.messages) console.log(msg);
+}
+
 console.log("");
 
 if (totalErrors > 0) {

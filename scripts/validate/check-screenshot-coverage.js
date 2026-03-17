@@ -79,7 +79,6 @@ function extractScreenshotRouteRefs(content) {
   // Regex source in TS uses escaped slashes: teams\/[^/]+\/board
   // We match these escaped forms in the raw file text
   const URL_PATTERN_MAP = [
-    [/workspaces\\.+board/, "workspaces.board"],
     [/workspaces\\.+backlog/, "workspaces.backlog"],
     [/workspaces\\.+sprints/, "workspaces.sprints"],
     [/workspaces\\.+dependencies/, "workspaces.dependencies"],
@@ -109,7 +108,6 @@ function extractScreenshotRouteRefs(content) {
   // String concatenation: `${wsBase}/backlog` or wsBase + "/backlog"
   const CONCAT_SEGMENTS = [
     "backlog",
-    "board",
     "sprints",
     "dependencies",
     "wiki",
@@ -176,10 +174,11 @@ export function run() {
     }
   }
 
-  // Informational — never blocks CI
+  // Informational — never blocks CI, but shows uncovered routes in output
   return {
     passed: true,
     errors: 0,
+    showMessagesOnPass: uncovered.length > 0,
     detail:
       uncovered.length > 0
         ? `${allRouteKeys.length - uncovered.length}/${allRouteKeys.length} routes covered (${uncovered.length} uncovered)`
