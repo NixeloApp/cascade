@@ -174,7 +174,7 @@ function DependencyFilters({
   priorityOptions,
 }: DependencyFiltersProps) {
   return (
-    <Flex align="center" gap="sm" className="flex-wrap">
+    <Flex align="center" gap="sm" wrap>
       <Select value={teamId} onValueChange={(value) => setTeamId(value as Id<"teams"> | "all")}>
         <SelectTrigger className="w-full sm:w-52 bg-ui-bg">
           <SelectValue placeholder="All teams" />

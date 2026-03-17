@@ -44,7 +44,7 @@ function MyIssuesBoardPage() {
 
   return (
     <Flex direction="column" gap="lg">
-      <Flex justify="between" align="center" className="flex-wrap gap-3">
+      <Flex justify="between" align="center" wrap className="gap-3">
         <Typography variant="h2">My Issues Board</Typography>
         <SegmentedControl
           value={groupBy}

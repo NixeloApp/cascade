@@ -321,6 +321,13 @@ export const LAYOUT_PROP_PATTERNS = [
     prop: "justify",
     tokenType: "stack-unsupported-justify",
   },
+  {
+    pattern:
+      /<Flex\b(?![^>]*\swrap[\s>])[^>]*\bclassName\s*=\s*(?:"[^"]*|'[^']*|\{[^}]*)\bflex-wrap\b/,
+    component: "Flex",
+    prop: "wrap",
+    tokenType: "wrap",
+  },
 ];
 
 export function isRawTailwindBoundary(rel) {

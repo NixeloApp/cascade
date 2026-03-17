@@ -217,7 +217,7 @@ export function NotificationCenter() {
               </Flex>
 
               {/* Filter Tabs */}
-              <Flex gap="xs" className="flex-wrap">
+              <Flex gap="xs" wrap>
                 {(
                   [
                     { key: "all", label: "All" },
