@@ -21,14 +21,14 @@ import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 // Generic detection: lines with path-like strings that should use ROUTES
 const ROUTE_PATTERNS = [
-  // String literals with leading slash + path segments: "/signin", "/org/dashboard", etc.
+  // String literals with leading slash + path segments, optional trailing /, ?, #
   {
-    regex: /["'`]\/[a-z0-9][-a-z0-9]+(\/[a-z0-9][-a-z0-9]*)*["'`]/,
+    regex: /["'`]\/[a-z0-9][-a-z0-9]+(\/[a-z0-9][-a-z0-9]*)*[/?#]?["'`]/,
     message: "Hardcoded route string",
   },
 
-  // Template literals with interpolated path: `/${orgSlug}/dashboard`
-  { regex: /`\/\$\{[^}]+\}\/[a-z0-9]/, message: "Hardcoded template literal route" },
+  // Template literals with hardcoded path + interpolation: `/${slug}/dashboard` or `/admin/videos/${id}`
+  { regex: /`\/[a-z][-a-z0-9]*.*\$\{|`\/\$\{[^}]+\}\/[a-z0-9]/, message: "Hardcoded template literal route" },
 
   // toHaveURL with bare regex containing path-like segments: toHaveURL(/dashboard/)
   // Matches /word/ or /\/word/ but not /\/$/ (root) or /^https/ (external)
@@ -80,6 +80,7 @@ const ALLOWED_PATTERNS = [
   /["']\/home["']/, // Generic test href, not an app route
   /["'`]\/google\//, // External OAuth callback paths
   /["'`]\/v[0-9]+\//, // External API version paths (/v1/userinfo)
+  /href\*?=/, // CSS attribute selectors for locating elements (a[href*='/path/'])
 ];
 
 // Files where hardcoded paths are expected (not real app routes)
