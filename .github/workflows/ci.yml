@@ -72,6 +72,9 @@ jobs:
       - name: Architectural Checks
         run: pnpm run validate
 
+      - name: Screenshot manifest check
+        run: node scripts/screenshot-diff.js
+
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
