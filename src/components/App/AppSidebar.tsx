@@ -601,7 +601,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
             <FlexItem
               as="nav"
               grow
-              className="overflow-y-auto scrollbar-subtle"
+              className="overflow-y-auto overflow-x-hidden scrollbar-subtle"
               aria-label="Main Navigation"
             >
               <div className="p-1">
@@ -983,7 +983,7 @@ function CollapsibleSection({
             params={props.params}
             search={props.search}
             aria-current={isActive ? "page" : undefined}
-            className="grow"
+            className="min-w-0 grow"
           >
             <Flex align="center" gap="sm" className="min-w-0">
               <Card

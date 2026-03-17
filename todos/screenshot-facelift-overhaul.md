@@ -13,7 +13,7 @@ Concrete UI issues found by component audit. These are real bugs, not style pref
 
 ### Sidebar — Horizontal scroll on desktop
 
-- [ ] **Sidebar scrolls horizontally** — long nav items or project names cause `overflow-x` scroll. Nav container should be `overflow-x-hidden` with text truncation enforced on all children. (`AppSidebar.tsx`)
+- [x] **Sidebar scrolls horizontally** — added `overflow-x-hidden` to nav container, added `min-w-0` to section header Link for proper truncation. (`AppSidebar.tsx`)
 
 ### Notification popover
 
