@@ -29,7 +29,7 @@ The app has `PageLayout`, `PageHeader`, `PageContent` components but 10+ pages b
 
 ### Validator: enforce PageLayout usage
 
-- [ ] **Add `check-page-layout.js` validator** — scan route files in `src/routes/_auth/_app/` for ad-hoc `max-w-*` + `mx-auto` patterns that should use PageLayout. Flag `max-w-{sm,md,lg,xl,2xl,3xl,4xl,5xl,6xl,7xl}` + `mx-auto` in route files as violations.
+- [x] **Add `check-page-layout.js` validator** — Done. Flags `max-w-*` + `mx-auto` on container elements (`div`, `section`) in route files. Registered in validate.js.
 
 ---
 
@@ -69,13 +69,13 @@ Make the validator catch the patterns we keep finding manually.
 
 ### New validators needed
 
-- [ ] **`check-page-layout.js`** — flag ad-hoc `max-w-* mx-auto` in route files. Pages should use `<PageLayout maxWidth="...">`.
-- [ ] **`check-empty-state-size.js`** — flag `<EmptyState>` without `size="compact"` inside popovers/panels (narrow containers).
+- [x] **`check-page-layout.js`** — Done. See `scripts/validate/check-page-layout.js`.
+- [ ] **`check-empty-state-size.js`** — flag `<EmptyState>` without `size="compact"` inside popovers/panels (narrow containers). Note: user prefers default EmptyState size; may not be needed.
 
 ### Existing validator improvements
 
 - [ ] **`check-raw-tailwind.js`** — tighten baseline. Many baselined files have been partially cleaned up. Re-audit and shrink the baseline set.
-- [ ] **`check-layout-prop-usage.js`** — add rule for `<Flex className="justify-between">` → `<Flex justify="between">` if not already covered.
+- [x] **`check-layout-prop-usage.js`** — Already covered: `tailwind-policy.js` line 298 flags `justify-*` in Flex className.
 
 ---
 
