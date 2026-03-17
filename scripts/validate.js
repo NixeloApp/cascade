@@ -269,6 +269,10 @@ const checks = [
     name: "Screenshot coverage",
     modulePath: new URL("./validate/check-screenshot-coverage.js", import.meta.url).href,
   },
+  {
+    name: "Page layout",
+    modulePath: new URL("./validate/check-page-layout.js", import.meta.url).href,
+  },
 ];
 
 console.log(`\n${c.bold}Running validation...${c.reset}\n`);

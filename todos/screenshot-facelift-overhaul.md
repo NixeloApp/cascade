@@ -37,7 +37,7 @@ The app has `PageLayout`, `PageHeader`, `PageContent` components but 10+ pages b
 
 Scroll is fixed but the visual structure is broken.
 
-- [x] **Empty state too tall** — Fixed: added `size="compact"` to EmptyState in notification popover.
+- [x] **Empty state too tall** — Reverted: compact EmptyState looked bad. Default size is fine — popover flex layout naturally constrains it.
 - [x] **3-tier background color mess** — Fixed: simplified to 2-tier. Section headers now use `bg-ui-bg` (same as header), footer uses `border-t` for separation.
 - [x] **No gap between date groups** — Fixed: added `gap="xs"` between date groups.
 - [x] **Header/footer border inconsistency** — Fixed: removed inner `rounded-t-lg`/`rounded-b-lg`, outer PopoverContent handles rounding.
