@@ -43,6 +43,7 @@
  *  39. Tech debt               — tracks TODO/FIXME/HACK comments
  *  40. Nested Cards            — bans Cards nested inside other Cards
  *  41. Border Radius           — enforces consistent border radius usage
+ *  42. Screenshot coverage     — routes without screenshot coverage (informational)
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -263,6 +264,10 @@ const checks = [
   {
     name: "Border Radius",
     modulePath: new URL("./validate/check-border-radius.js", import.meta.url).href,
+  },
+  {
+    name: "Screenshot coverage",
+    modulePath: new URL("./validate/check-screenshot-coverage.js", import.meta.url).href,
   },
 ];
 

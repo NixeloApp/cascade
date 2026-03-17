@@ -159,7 +159,7 @@ The app is missing entrance/exit animations in many places. Feels jarring.
 
 ### Screenshot-specific validator
 
-- [ ] Dedicated validator catching missing `waitForScreenshotReady` calls and uncovered routes.
+- [x] **Screenshot route coverage validator** — `check-screenshot-coverage.js` compares routes in `convex/shared/routes.ts` against refs in `screenshot-pages.ts`. Reports 55/59 covered, 4 legitimate gaps (invite, onboarding, inbox, invoices.detail). Informational, never blocks CI.
 
 ### CI integration
 
