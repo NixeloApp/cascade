@@ -29,11 +29,11 @@ Concrete UI issues found by component audit. These are real bugs, not style pref
 
 ### Global Search / Command palette
 
-- [ ] **Overall feel is cramped** — search result items use `mt-1` (4px) spacing, icons are 36px. Needs more breathing room between results.
+- [x] **Result spacing** — title `mt-1` → `mt-1.5` for more breathing room between key/badge and title.
 - [x] **Tabs hard to read** — dropped `uppercase tracking-widest`, replaced with `font-medium`. Much more readable.
-- [ ] **Double footer** — search hints card + action buttons card are separate. Should be consolidated into one cohesive footer.
-- [ ] **Empty state oversized** — 24px padding + large icon takes too much vertical space in a narrow modal.
-- [ ] **Welcome section double-padding** — `p-1` wrapper + `p-4` card creates inconsistent spacing.
+- [x] **Double footer consolidated** — merged search hints card + action buttons card into a single footer with Stack layout.
+- [x] **Empty state tightened** — `p-6` → `p-4`, `mb-4` → `mb-3` on icon. Less vertical waste.
+- [x] **Welcome section padding fixed** — `p-1`/`p-4` → `px-2 pt-2`/`p-3`. Cleaner spacing.
 
 ### Oversized modals (content doesn't fill the space)
 
