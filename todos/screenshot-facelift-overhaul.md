@@ -13,7 +13,7 @@ The app has `PageLayout`, `PageHeader`, `PageContent` components but 10+ pages b
 
 ### Pages rolling their own layout (must migrate to PageLayout)
 
-- [ ] **`assistant.tsx`** — wraps content in `<div className="p-6 max-w-7xl mx-auto">` inside PageLayout (duplicated max-width). Stats grid has no max-width, config section has `max-w-4xl`. Sections don't align horizontally.
+- [x] **`assistant.tsx`** — ~~wraps content in `<div className="p-6 max-w-7xl mx-auto">` inside PageLayout~~ Fixed: uses `PageLayout maxWidth="xl"`, removed ad-hoc wrapper and inner `max-w-4xl`.
 - [ ] **`workspaces/$workspaceSlug/settings.tsx`** — uses `<div className="max-w-3xl mx-auto py-6">` instead of PageLayout.
 - [ ] **`workspaces/$workspaceSlug/teams/$teamSlug/settings.tsx`** — copy-paste of above pattern.
 - [ ] **`workspaces/$workspaceSlug/wiki.tsx`** — returns raw `<Grid>` with no padding/header.
@@ -38,17 +38,17 @@ The app has `PageLayout`, `PageHeader`, `PageContent` components but 10+ pages b
 Scroll is fixed but the visual structure is broken.
 
 - [ ] **Empty state too tall** — `EmptyState` default size (`min-h-56`) is way too big for a 384px-wide popover. Use `size="compact"`.
-- [ ] **3-tier background color mess** — header uses `bg-ui-bg`, section headers use `bg-ui-bg-secondary`, footer uses `bg-ui-bg-secondary`. Too many background layers for a popover. Simplify to 2 colors max.
-- [ ] **No gap between date groups** — "Today", "Yesterday", "This Week" sections sit flush against each other with only a divider. Needs visual breathing room between groups.
-- [ ] **Header/footer border inconsistency** — header has `rounded-t-lg` but no left/right borders, footer has `rounded-b-lg` but no left/right borders. The outer PopoverContent has its own border/shadow via `overlayInset` recipe. Double-container effect.
+- [x] **3-tier background color mess** — Fixed: simplified to 2-tier. Section headers now use `bg-ui-bg` (same as header), footer uses `border-t` for separation.
+- [x] **No gap between date groups** — Fixed: added `gap="xs"` between date groups.
+- [x] **Header/footer border inconsistency** — Fixed: removed inner `rounded-t-lg`/`rounded-b-lg`, outer PopoverContent handles rounding.
 - [ ] **`max-h-popover-panel` (80vh) too aggressive** — with few notifications the panel stretches to fill 80% of viewport height. Consider `60vh` or a smarter constraint.
 
 ---
 
 ## Part 3: Workspace Card — Broken Layout
 
-- [ ] **"1 team" badge wraps to 2 lines** — footer `<Flex wrap>` causes the badge to wrap. Documents page uses the same pattern WITHOUT `wrap` and it works. Remove `wrap` from workspace card footer.
-- [ ] **Badge lacks `shrink-0`** — in `justify="between"` flex, unshrinkable children force wrapping. Add `shrink-0` to action badges.
+- [x] **"1 team" badge wraps to 2 lines** — Fixed: removed `wrap` from workspace card footer Flex.
+- [x] **Badge lacks `shrink-0`** — Fixed: added `shrink-0` to "Open workspace" badge.
 - [ ] **Metadata double-wrap** — `Metadata` component has built-in `flex-wrap`, and the parent Flex also has `wrap`. Creates double-wrapping potential.
 - [ ] **Compact vs standard layout inconsistency** — two nearly identical card layouts (lines 54-128 and 131-188) with subtle spacing differences. Compact footer has no `mt-auto`, standard does.
 - [ ] **Card padding inconsistency** — workspaces uses `p-6` via className, documents uses `padding="lg"` via Card prop. Should use the prop.
@@ -57,9 +57,9 @@ Scroll is fixed but the visual structure is broken.
 
 ## Part 4: Assistant Page — Width Alignment
 
-- [ ] **Stats section has no max-width** — Grid stretches full container width while config below has `max-w-4xl`. The two sections don't align.
-- [ ] **Nested max-width** — outer wrapper `max-w-7xl`, inner config `max-w-4xl`. Should use PageLayout's `maxWidth` prop and remove ad-hoc divs.
-- [ ] **Spend/questions/answered cards don't match bottom sections** — different effective widths because stats have no constraint.
+- [x] **Stats section has no max-width** — Fixed: PageLayout `maxWidth="xl"` constrains both sections equally.
+- [x] **Nested max-width** — Fixed: removed ad-hoc wrapper and inner `max-w-4xl`, using PageLayout prop.
+- [x] **Spend/questions/answered cards don't match bottom sections** — Fixed: both sections now share the same PageLayout constraint.
 
 ---
 
