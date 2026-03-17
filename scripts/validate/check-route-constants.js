@@ -39,7 +39,7 @@ const ROUTE_PATTERNS = [
 
   // toHaveURL with new RegExp containing inline path strings (not from ROUTES)
   {
-    regex: /toHaveURL\(new RegExp\(`[^`]*\/[a-z][-a-z]/,
+    regex: /toHaveURL\(new RegExp\(["'`][^"'`]*\/[a-z][-a-z]/,
     message: "Hardcoded route in toHaveURL RegExp",
   },
 ];
