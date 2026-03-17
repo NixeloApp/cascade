@@ -154,7 +154,7 @@ export function MyIssuesList({
           ) : (
             <FlexItem
               flex="1"
-              className="overflow-y-auto pr-2 custom-scrollbar"
+              className="overflow-y-auto pr-2 scrollbar-subtle"
               ref={issueNavigation.listRef}
             >
               <Flex direction="column" gap="xs">

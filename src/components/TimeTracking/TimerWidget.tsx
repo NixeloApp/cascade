@@ -82,7 +82,7 @@ export function TimerWidget() {
                 <Button
                   variant="unstyled"
                   size="none"
-                  className="max-w-(--max-width-timer-description) truncate text-brand-indigo-text cursor-help"
+                  className="max-w-timer-description truncate text-brand-indigo-text cursor-help"
                 >
                   {runningTimer.issue ? runningTimer.issue.key : runningTimer.description}
                 </Button>

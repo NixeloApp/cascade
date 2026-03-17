@@ -43,6 +43,7 @@
  *  39. Tech debt               — tracks TODO/FIXME/HACK comments
  *  40. Nested Cards            — bans Cards nested inside other Cards
  *  41. Border Radius           — enforces consistent border radius usage
+ *  42. Screenshot coverage     — routes without screenshot coverage (informational)
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -264,6 +265,10 @@ const checks = [
     name: "Border Radius",
     modulePath: new URL("./validate/check-border-radius.js", import.meta.url).href,
   },
+  {
+    name: "Screenshot coverage",
+    modulePath: new URL("./validate/check-screenshot-coverage.js", import.meta.url).href,
+  },
 ];
 
 console.log(`\n${c.bold}Running validation...${c.reset}\n`);
@@ -298,6 +303,16 @@ if (failedResults.length > 0) {
     console.log(`\n${c.bold}── ${result.name} details ──${c.reset}`);
     for (const msg of result.messages) console.log(msg);
   }
+}
+
+// Print informational messages from passing checks that opt in.
+// Checks signal this by setting showMessagesOnPass: true in their result.
+const infoResults = results.filter(
+  (r) => r.passed && r.showMessagesOnPass && r.messages && r.messages.length > 0,
+);
+for (const result of infoResults) {
+  console.log(`\n${c.bold}── ${result.name} ──${c.reset}`);
+  for (const msg of result.messages) console.log(msg);
 }
 
 console.log("");

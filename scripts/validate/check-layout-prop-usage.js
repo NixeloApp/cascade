@@ -35,6 +35,10 @@ function getReplacement(match, component, prop, tokenType) {
     return 'Stack does not support justify-*; use <Flex direction="column" justify="..."> or a wrapper';
   }
 
+  if (tokenType === "wrap") {
+    return `<${component} ${prop}>`;
+  }
+
   const rawGap = Number.parseInt(match[1], 10);
   const propValue = LAYOUT_PROP_GAP_MAP[rawGap];
   return propValue ? `<${component} ${prop}="${propValue}">` : `gap-${rawGap} has no prop`;

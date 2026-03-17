@@ -74,7 +74,7 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
                   )}
                   <div>
                     <Typography variant="h4">{workspace.name}</Typography>
-                    <Flex align="center" gap="sm" className="mt-2 flex-wrap">
+                    <Flex align="center" gap="sm" wrap className="mt-2">
                       <Badge variant="secondary" shape="pill">
                         Workspace
                       </Badge>

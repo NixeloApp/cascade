@@ -86,7 +86,7 @@ function DocumentsListPage() {
                         >
                           {doc.title || "Untitled"}
                         </Typography>
-                        <Flex align="center" gap="sm" className="mt-2 flex-wrap">
+                        <Flex align="center" gap="sm" wrap className="mt-2">
                           <Badge variant={doc.isPublic ? "info" : "secondary"} shape="pill">
                             {doc.isPublic ? "Shared document" : "Private document"}
                           </Badge>

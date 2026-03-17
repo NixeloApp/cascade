@@ -1,469 +1,208 @@
-# Screenshot Tool — Complete Overhaul
+# Screenshot & Visual Facelift — Remaining Work
 
 > **Priority:** P0
 > **Status:** Active
-> **Last Updated:** 2026-03-15
-> **Objective:** Transform the screenshot tool from a basic page capturer into a comprehensive visual QA system that covers every route, modal, interactive state, and user journey in the product.
+> **Last Updated:** 2026-03-16
+> **Objective:** Fix visual slop across the app and expand screenshot coverage to catch regressions.
 
 ---
 
-## Part 1: Infrastructure Cleanup
+## Part 1: Visual Fixes (Audit Findings)
 
-### Dead code removal
+Concrete UI issues found by component audit. These are real bugs, not style preferences.
 
-- [x] Delete `scripts/capture-screenshots.mjs` — legacy script using banned anti-patterns (`waitForTimeout`, `networkidle`, hardcoded port 5173). Fully superseded by `e2e/screenshot-pages.ts`.
+### Sidebar — Horizontal scroll on desktop
 
-### Validator coverage
+- [x] **Sidebar scrolls horizontally** — added `overflow-x-hidden` to nav container, added `min-w-0` to section header Link for proper truncation. (`AppSidebar.tsx`)
 
-- [x] Document the `check-e2e-quality.js` skip for `screenshot-pages.ts` with an explicit comment explaining why it's exempt (utility, not a spec test).
-- [ ] Consider adding a dedicated screenshot-specific validator that catches issues relevant to the screenshot tool (e.g. missing `waitForScreenshotReady` calls, uncovered routes).
+### Notification popover
 
-### Resilience
+- [x] **Arbitrary values replaced** — `max-w-[calc(100vw-2rem)]` → `max-w-dialog-mobile` token; `max-h-[80vh]` → `max-h-popover-panel` token.
+- [x] **Scroll indicator** — added `scrollbar-subtle` to notification list scroll area.
+- [x] **Filter tabs no longer scroll horizontally** — replaced `overflow-x-auto` with `flex-wrap`.
+- [x] **Action buttons already animated** — `transition-fast` (150ms) on IconButton base class handles opacity reveal. No fix needed.
+- [x] **Entrance animation added** — `animate-fade-in` (200ms ease-out) on notification items and date group containers. Exit animations skipped — Convex reactivity removes items from the list instantly; holding DOM nodes for exit transitions would require significant state management for marginal gain.
 
-- [x] Replace all `.animate-shimmer` CSS class selectors in `screenshot-pages.ts` with a `data-loading-skeleton` attribute on skeleton components. If the CSS class name changes, screenshots silently capture loading states.
-- [x] Deduplicate auth token injection — `autoLogin()` and inline auth in `captureForConfig()` now use shared `injectAuthTokens(page, token, refreshToken)` helper.
+### Start Timer modal — too wide
 
-### Staging & output
+- [x] **Timer modals downsized** — `TimeEntryModal.tsx` and `ManualTimeEntryModal.tsx` changed from `size="lg"` to `size="md"` (512px fits the single-column form).
 
-- [x] Add a `--dry-run` flag that lists what would be captured without launching a browser — useful for verifying filter logic. Shows 103 targets per config (412 total across 4 configs).
-- [x] Add timing per screenshot to the console output (helps identify slow pages). Shows `(NNNms)` after each capture.
+### Global Search / Command palette
 
----
+- [x] **Result spacing** — title `mt-1` → `mt-1.5` for more breathing room between key/badge and title.
+- [x] **Tabs hard to read** — dropped `uppercase tracking-widest`, replaced with `font-medium`. Much more readable.
+- [x] **Double footer consolidated** — merged search hints card + action buttons card into a single footer with Stack layout.
+- [x] **Empty state tightened** — `p-6` → `p-4`, `mb-4` → `mb-3` on icon. Less vertical waste.
+- [x] **Welcome section padding fixed** — `p-1`/`p-4` → `px-2 pt-2`/`p-3`. Cleaner spacing.
 
-## Part 2: Route Coverage — Every Page
+### Oversized modals (content doesn't fill the space)
 
-The app has ~65 routes. The screenshot tool currently covers ~20. Every route needs at least an empty state and a filled state screenshot.
+- [x] **`UserProfile.tsx`** — `size="xl"` → `size="lg"` (672px fits profile form).
+- [x] **`DashboardCustomizeModal.tsx`** — added explicit `size="sm"` (448px for 3 toggle switches).
 
-### Public pages (5 routes — currently covered)
+### Fixed heights forcing unnecessary scroll
 
-- [x] Landing (`/`)
-- [x] Sign in (`/signin`)
-- [x] Sign up (`/signup`)
-- [x] Forgot password (`/forgot-password`)
-- [x] Invite invalid (`/invite/$token`)
+- [x] **`RecentActivity.tsx`** — `h-96` → `max-h-96` so the container shrinks to fit when few activities. Also replaced dead `custom-scrollbar` class with `scrollbar-subtle`.
+- [x] **`MyIssuesList.tsx`** — already flex-based (correct), but replaced dead `custom-scrollbar` class with `scrollbar-subtle`.
+- [x] **`ApiKeysManager.tsx`** — already uses `max-h-64` (correct pattern for modal lists). No fix needed.
 
-### Public pages (partially covered)
+### Missing text truncation
 
-- [ ] Verify email — route does not exist yet
-- [ ] Portal page (`/portal/$token`) — unauthenticated document/project sharing view
-- ~~Terms (`/terms`)~~ — route does not exist
-- ~~Privacy (`/privacy`)~~ — route does not exist
-- [x] Verify 2FA (`/verify-2fa`)
+- [x] **`ProjectsList.tsx`** — project name `h3` had no truncation; added `truncate` + `min-w-0` on parent flex. Description already uses `line-clamp-2` (correct).
+- [x] **`MentionInput.tsx`** — already has `truncate` on username + `min-w-0` on parent. No fix needed (audit was wrong).
 
-### Dashboard (currently covered: base + 4 modals)
+### Timer widget CSS variable bug
 
-- [x] Dashboard empty
-- [x] Dashboard filled
-- [x] Omnibox open
-- [x] Advanced search modal
-- [x] Shortcuts modal
-- [x] Time entry modal
+- [x] **Timer widget CSS var** — `max-w-(--max-width-timer-description)` replaced with canonical `max-w-timer-description` token form. Both work in TW4 but the token form is cleaner.
 
-### Projects (currently covered: list + create modal)
+### Horizontal scroll in filter tabs
 
-- [x] Projects list empty
-- [x] Projects list filled
-- [x] Create project modal
-
-### Project sub-pages (partially covered)
-
-- [x] Board
-- [x] Backlog
-- [x] Sprints
-- [x] Calendar (day/week/month modes + event modal)
-- [x] Analytics
-- [x] Settings
-- ~~Project home/index~~ — redirects to board, no screenshot needed
-- [x] **Project inbox** — (`/projects/$key/inbox`)
-- [x] **Project roadmap** — (`/projects/$key/roadmap`) — has Gantt with dependency lines, timeline span selector
-- [x] **Project activity** — (`/projects/$key/activity`) — activity feed with date grouping
-- [x] **Project billing** — (`/projects/$key/billing`) — billing report with CSV export
-- [x] **Project timesheet** — (`/projects/$key/timesheet`) — time entries tab
-
-### Issues (partially covered)
-
-- [x] Issue detail page
-- [x] Issue detail modal (from board)
-- [x] Create issue modal (from board)
-- [x] **Global issues list** (`/$orgSlug/issues`) — with filter bar, status/priority/assignee filters, search
-- [x] **My Issues page** (`/$orgSlug/my-issues`) — user's assigned issues
-
-### Documents (partially covered)
-
-- [x] Documents list empty
-- [x] Documents list filled
-- [x] Document editor
-- [x] **Document templates** (`/$orgSlug/documents/templates`) — built-in + custom templates
-
-### Workspaces (covered)
-
-- [x] **Workspaces list** (`/$orgSlug/workspaces`) — empty + filled
-- [x] **Workspace home** (`/$orgSlug/workspaces/$slug`) — teams list, navigation
-- ~~Workspace board~~ — route does not exist (workspace uses backlog instead)
-- [x] **Workspace backlog** (`/$orgSlug/workspaces/$slug/backlog`)
-- [x] **Workspace calendar** (`/$orgSlug/workspaces/$slug/calendar`)
-- [x] **Workspace sprints** (`/$orgSlug/workspaces/$slug/sprints`)
-- [x] **Workspace dependencies** (`/$orgSlug/workspaces/$slug/dependencies`)
-- [x] **Workspace wiki** (`/$orgSlug/workspaces/$slug/wiki`)
-- [x] **Workspace settings** (`/$orgSlug/workspaces/$slug/settings`)
-
-### Teams (covered)
-
-- [x] **Team home** (`/.../teams/$teamSlug`)
-- [x] **Team board** (`/.../teams/$teamSlug/board`)
-- ~~Team backlog~~ — route does not exist
-- [x] **Team calendar** (`/.../teams/$teamSlug/calendar`)
-- [x] **Team wiki** (`/.../teams/$teamSlug/wiki`)
-- [x] **Team settings** (`/.../teams/$teamSlug/settings`)
-
-### Invoices & Clients (list coverage added)
-
-- [x] **Invoices list** (`/$orgSlug/invoices`) — empty + filled
-- [ ] **Invoice detail** (`/$orgSlug/invoices/$invoiceId`)
-- [x] **Clients list** (`/$orgSlug/clients`) — empty + filled
-
-### Global pages (partially covered)
-
-- [x] **Notifications page** (`/$orgSlug/notifications`) — inbox + archived tabs
-- [x] **Time tracking** (`/$orgSlug/time-tracking`) — time entries tab, burn rate
-- [x] **Organization calendar** (`/$orgSlug/calendar`)
-- [x] **Organization analytics** (`/$orgSlug/analytics`)
-
-### Settings & Admin (covered)
-
-- [x] Settings page (redirects to profile)
-- [x] **Settings / profile** (`/$orgSlug/settings/profile`) — name, avatar, cover image
-- [x] **Authentication settings** (`/$orgSlug/authentication`) — SSO config
-- [x] **Add-ons page** (`/$orgSlug/add-ons`)
-- [x] **AI Assistant page** (`/$orgSlug/assistant`)
-- [x] **MCP Server page** (`/$orgSlug/mcp-server`)
-
-### Onboarding (0 coverage)
-
-- [ ] **Onboarding flow** (`/onboarding`) — post-signup org creation
-- [ ] **Sample project modal** — shown during onboarding
+- [x] **`GlobalSearch.tsx:555`** — removed `overflow-x-auto` from Tabs container (3 tabs always fit).
+- [x] **`NotificationCenter.tsx:220`** — already fixed (replaced `overflow-x-auto` with `<Flex wrap>`).
 
 ---
 
-## Part 3: Modal & Dialog Coverage
+## Part 2: Animation Polish
 
-22 modals/dialogs exist. Screenshot tool currently captures 7. Every modal needs a screenshot in its open state.
+The app is missing entrance/exit animations in many places. Feels jarring.
 
-### Currently captured
+### Dialogs & popovers — currently OK
+- Dialog has `animate-scale-in` / `animate-scale-out`
+- Popover has `animate-scale-in`
+- Accordion has `animate-accordion-down`
 
-- [x] Omnibox / command palette
-- [x] Advanced search modal
-- [x] Keyboard shortcuts modal
-- [x] Time entry modal
-- [x] Create project modal
-- [x] Create issue modal
-- [x] Calendar event details modal
+### Missing animations
 
-### Newly wired modals
-
-- [x] **Issue detail modal** — already captured via board modals section
-- [x] **Create event modal** — calendar page → "Add Event" button
-- [x] **Create team modal** — workspace detail → "Create team" button
-- [x] **Create workspace modal** — workspaces list → "Create Workspace" button
-- [ ] **Dashboard customize modal** — wired but "Customize" button not rendered for screenshot user
-- [x] **Import/export modal** — captured after getByKey fix unblocked board access
-- [x] **Manual time entry modal** — captured via waitForDialogOpen overlay detection
-
-### Remaining modals (need special setup or complex triggers)
-
-- [ ] **Move document dialog** — needs document context menu interaction
-- [ ] **Avatar upload modal** — needs settings profile file upload flow
-- [ ] **Cover image upload modal** — needs settings profile header interaction
-- [ ] **Markdown preview modal** — needs specific content context
-- [ ] **Sample project modal** — needs onboarding flow (fresh user)
-- [ ] **Confirm dialog** — needs triggering a destructive action (e.g. delete)
-- [ ] **Alert dialog** — needs error state or warning condition
+- [x] **Notification items** — added `animate-fade-in` entrance on items and date group wrappers.
+- [x] **Notification date group headers** — animate in with their group container.
+- [x] **Dashboard customize toggles** — Switch component already has `transition-default` (200ms) on root and thumb. Transitions work correctly.
+- [x] **MoveDocumentDialog** — Dialog already has scale-in/scale-out. Select value swap is standard behavior.
+- [x] **Label creation popover** — Popover already has `animate-scale-in`. No fix needed.
+- [x] **Notification unread badge** — added `animate-scale-in` so the badge scales in when it first appears.
 
 ---
 
-## Part 4: Interactive State Captures
+## Part 3: Remaining Screenshot Coverage
 
-Beyond page loads — capture the states users actually see during interaction.
+### Routes not yet captured
 
-### Board / Kanban states
+- [ ] Verify email (route doesn't exist yet)
+- [ ] Portal page (`/portal/$token`)
+- [ ] Onboarding flow (`/onboarding`)
+- [ ] Sample project modal (onboarding)
+- [ ] Invoice detail (`/$orgSlug/invoices/$invoiceId`)
 
-- [x] **Swimlane modes** — all 4 captured (priority, assignee, type, label). Reloads board fresh per mode.
-- [x] **Column collapsed** — captured (110ms)
-- [ ] **Column empty** — needs a workflow state with no issues
-- [ ] **WIP limit warning** — needs WIP limit configured + exceeded
-- [x] **Filter bar active** — captured with Priority → High filter (218ms)
-- [x] **Display properties toggle open** — captured (275ms)
-- ~~Sprint selector dropdown~~ — only renders for `boardType: "scrum"`, seed creates kanban. Not a bug.
+### Modals not yet captured
 
-> **Resolved:** The `getByKey` bug that caused "Project Not Found" was fixed by adding a `by_organization_key` compound index. Board now loads in ~1.8s with full toolbar.
+- [ ] Dashboard customize modal (button not rendered for screenshot user)
+- [ ] Move document dialog
+- [ ] Avatar upload modal
+- [ ] Cover image upload modal
+- [ ] Markdown preview modal
+- [ ] Sample project modal (needs fresh user)
+- [ ] Confirm dialog (destructive action trigger)
+- [ ] Alert dialog (error/warning condition)
 
-### Issue states
+### Interactive states not yet captured
 
-- [ ] **Issue form with draft restoration banner** — needs localStorage draft + re-open
-- [ ] **Issue form with duplicate detection** — needs similar issue titles in seed
-- [x] **Issue form "create more" toggle active** — open create issue modal, toggle "Create another" switch
-- [ ] **Issue inline editing** — needs issue detail page interaction
-- [ ] **Issue peek/side panel mode** — wired, toggle works but Sheet doesn't appear after card click (needs investigation)
-- [ ] **Label creation popover** — needs label creation flow in issue form
-- [ ] **Issue with all property types visible** — needs fully populated issue in seed
+**Board/Kanban:**
+- [ ] Column empty (workflow state with no issues)
+- [ ] WIP limit warning (configured + exceeded)
 
-### Document editor states
+**Issues:**
+- [ ] Draft restoration banner (localStorage draft + re-open)
+- [ ] Duplicate detection (similar issue titles in seed)
+- [ ] Inline editing (issue detail interaction)
+- [ ] Side panel / peek mode (Sheet doesn't appear — needs investigation)
+- [ ] Label creation popover
+- [ ] Issue with all property types visible (fully populated seed)
 
-- [ ] **Document locked** — needs backend mutation to lock document
-- [x] **Document @mention popover** — type `@` in editor, wait for combobox/options
-- [x] **Document slash menu** — type `/` on new line, wait for option elements
-- [x] **Document floating toolbar** — triple-click to select text, wait for Bold button
-- [ ] **Document text color picker** — needs toolbar open + color picker click
-- [ ] **Document with table** — needs table block in seed content
-- [ ] **Document with code block** — needs code block in seed content
-- [ ] **Document favorites star** — needs starred items in seed data
+**Documents:**
+- [ ] Document locked (backend mutation needed)
+- [ ] Text color picker (toolbar + color picker click)
+- [ ] Document with table (seed content)
+- [ ] Document with code block (seed content)
+- [ ] Document favorites star (starred items in seed)
 
-### Calendar states
+**Calendar:**
+- [ ] Drag-and-drop preview
+- [ ] Quick-add on day click
 
-- [ ] **Calendar drag-and-drop preview** — event being dragged between days
-- [ ] **Calendar quick-add on day click** — create issue form with pre-filled date
-- [x] **Create event modal** — captured via calendar page "Add Event" button
+**Sprints:**
+- [ ] Completion modal (active sprint with issues)
+- [ ] Date overlap warning (overlapping dates in seed)
 
-### Sprint states
+**Gantt/Roadmap:**
+- [ ] Dependency lines (issue relations in seed)
+- [ ] Block resize (drag handle state)
 
-- [x] **Sprint burndown chart** — click "Burndown" button, capture chart
-- [x] **Sprint burnup chart** — click "Burnup" toggle, capture chart, reset to burndown
-- [x] **Sprint workload popover** — click assignees button, wait for "Workload Distribution" popover
-- [ ] **Sprint completion modal** — needs active sprint with issues to complete
-- [ ] **Sprint date overlap warning** — needs overlapping sprint dates in seed
+**Notifications:**
+- [ ] Snooze popover
 
-### Gantt / Roadmap states
+**Settings:**
+- [ ] Profile with avatar
+- [ ] Profile with cover image
+- [ ] 2FA setup flow
+- [ ] Workspace settings
+- [ ] Project settings (workflow states, WIP limits, danger zone)
 
-- [ ] **Roadmap with dependency lines** — needs issue relations in seed data
-- [x] **Roadmap timeline span selector** — click combobox, show 1/3/6/12 month options
-- [ ] **Roadmap block resize** — drag handle state, hard to capture statically
+**Navigation:**
+- [ ] Sidebar favorites section
+- [ ] Sidebar with project tree
+- [ ] Mobile hamburger menu
 
-### Notification states
+**Error/Edge:**
+- [ ] Permission denied
+- [ ] Loading skeletons
+- [ ] Toast notification (success + error)
+- [ ] Form validation errors
 
-- [x] **Notification bell with unread badge** — visible in notification popover capture (seed creates 3 unread)
-- [x] **Notification popover open** — click bell button, capture panel
-- [ ] **Notification snooze popover** — needs click on snooze button within a notification item
-- [x] **Notification filters active** — click "Mentions" filter on notifications page
-- [x] **Notifications page — inbox tab** — captured as base notifications page
-- [x] **Notifications page — archived tab** — click archived tab on notifications page
+### Screenshot-specific validator
 
-### Settings states
+- [x] **Screenshot route coverage validator** — `check-screenshot-coverage.js` compares routes in `convex/shared/routes.ts` against refs in `screenshot-pages.ts`. Reports 55/59 covered, 4 legitimate gaps (invite, onboarding, inbox, invoices.detail). Informational, never blocks CI.
 
-- [ ] **Profile with avatar** — uploaded avatar visible
-- [ ] **Profile with cover image** — header cover image visible
-- [ ] **2FA setup flow** — QR code or setup step visible
-- [ ] **Workspace settings** — name, icon, description fields
-- [ ] **Project settings** — workflow states, WIP limits, danger zone
+### CI integration (deferred — screenshots are gitignored)
 
-### Navigation / Shell states
-
-- [x] **Sidebar collapsed** — collapse on dashboard, capture, expand back
-- [ ] **Sidebar expanded** — default state (captured implicitly in all filled-state screenshots)
-- [ ] **Sidebar favorites section** — needs starred items in seed data
-- [ ] **Sidebar with project tree** — needs nested projects in seed data
-- [ ] **Mobile hamburger menu open** — needs mobile viewport context (tablet/mobile configs)
-
-### Error / Edge states
-
-- [x] **404 page** — navigate to bogus URL while authenticated → spec folder `40-error`
-- [ ] **Permission denied** — needs multi-user setup (viewer role hitting admin page)
-- [ ] **Empty states** for every major section (already captured in empty-* screenshots)
-- [ ] **Loading skeletons** — capture a page mid-load with skeleton UI visible (requires timing control)
-- [ ] **Toast notification** — success and error toast examples
-- [ ] **Form validation errors** — wired but "Create" button selector doesn't match (skips)
+- [ ] **CI screenshot manifest check** — deferred. Screenshots are gitignored so CI has no PNGs to diff. Requires either generating screenshots in CI (browser + dev server) or committing PNGs to git. Use `node scripts/screenshot-diff.js` locally for now.
+- [ ] **Flag PRs with stale manifest** — deferred, blocked by above.
 
 ---
 
-## Part 5: User Journey Captures
+## Part 4: User Journeys
 
-Organized by user story — sequential screenshots showing a complete workflow.
+Sequential screenshot series showing complete workflows. None implemented yet.
 
-### Journey 1: New user onboarding
-
-1. Sign up page (filled form)
-2. Email verification page
-3. Onboarding — org creation
-4. Onboarding — sample project modal
-5. Dashboard (first visit)
-
-### Journey 2: Issue lifecycle
-
-1. Board view (starting state)
-2. Create issue modal (filled)
-3. Board with new issue in "To Do" column
-4. Issue detail (properties filled)
-5. Board with issue dragged to "In Progress"
-6. Issue closed — board with issue in "Done"
-
-### Journey 3: Sprint planning
-
-1. Sprints page (no active sprint)
-2. Create sprint form
-3. Backlog with issues ready to assign
-4. Sprint board with assigned issues
-5. Sprint burndown chart mid-sprint
-6. Sprint completion modal (transfer issues)
-
-### Journey 4: Document collaboration
-
-1. Documents list
-2. New document (empty editor)
-3. Editor with content, slash menu open
-4. Editor with @mention popover
-5. Document locked by another user
-6. Document with comments thread
-
-### Journey 5: Search and navigation
-
-1. Dashboard
-2. Omnibox open (empty)
-3. Omnibox with search results
-4. Advanced search modal with filters
-5. Filtered issues list (URL-persisted filters)
-
-### Journey 6: Time tracking
-
-1. Time tracking page (empty)
-2. Start timer modal
-3. Manual time entry modal
-4. Time entries list (filled)
-5. Project billing report
-
-### Journey 7: Workspace management
-
-1. Workspaces list
-2. Create workspace modal
-3. Workspace home with teams
-4. Create team modal
-5. Team board view
-6. Workspace settings
-
-### Journey 8: Calendar and events
-
-1. Calendar month view
-2. Calendar week view
-3. Calendar day view with events
-4. Create event modal
-5. Event details modal
-6. Calendar drag-to-reschedule
-
-### Journey 9: Notifications workflow
-
-1. Dashboard with notification bell (unread badge)
-2. Notification popover open
-3. Notification snooze popover
-4. Notifications full page — inbox
-5. Notifications full page — archived
-
-### Journey 10: Settings and profile
-
-1. Settings page — profile tab
-2. Avatar upload modal
-3. Cover image upload modal
-4. Authentication — 2FA setup
-5. Workspace settings
+1. **New user onboarding** — signup → verify → org creation → sample project → dashboard
+2. **Issue lifecycle** — board → create → detail → move column → close
+3. **Sprint planning** — sprints page → create → backlog assign → board → burndown → complete
+4. **Document collaboration** — list → new doc → slash menu → @mention → lock → comments
+5. **Search and navigation** — dashboard → omnibox → results → advanced search → filtered list
+6. **Time tracking** — empty page → start timer → manual entry → entries list → billing
+7. **Workspace management** — list → create → teams → create team → board → settings
+8. **Calendar and events** — month → week → day → create event → details → drag reschedule
+9. **Notifications workflow** — bell badge → popover → snooze → full-page inbox → archived
+10. **Settings and profile** — profile → avatar → cover image → 2FA → workspace settings
 
 ---
 
-## Part 6: Visual Regression Tooling
+## Part 5: Visual Facelift (after fixes)
 
-### Hash-based diff script
+Once Part 1-2 fixes land, use the screenshot set to drive page-level improvements.
 
-- [x] Build `scripts/screenshot-diff.js` that:
-  - Hashes all current screenshots (SHA-256 of file content)
-  - Compares against a stored `.screenshot-hashes.json` manifest
-  - Reports: new screenshots, removed screenshots, changed screenshots
-  - Exit code 0 if no changes, 1 if changes detected
-  - Outputs a summary table to stdout
-
-### Approval workflow
-
-- [x] `pnpm screenshots:diff` — compare current vs last approved
-- [x] `pnpm screenshots:approve` — update the hash manifest to accept current state
-- [x] Add `.screenshot-hashes.json` to git — serves as the visual baseline (300 screenshots baselined)
-
-### CI integration
-
-- [ ] Run screenshot diff in CI after visual changes
-- [ ] Flag PRs that change screenshots without updating the hash manifest
-
----
-
-## Part 7: Visual Facelift
-
-Once infrastructure is solid and coverage is complete, use the full screenshot set to drive visual improvements.
-
-### Facelift pass
-
-- [ ] Review the complete screenshot set and rank pages by visual quality (1-5 scale).
-- [ ] Pick the bottom 5 pages for the first facelift batch.
-- [ ] For each page: identify spacing issues, hierarchy problems, inconsistent patterns, visual clutter.
-- [ ] Redesign in larger passes — not isolated component tweaks, page-level improvements.
-- [ ] Re-run screenshots after each pass. Only keep changes that materially improve the product.
-
-### Quality bar
-
-- [ ] Visual cohesion across all captured screens.
-- [ ] Consistent spacing rhythm, typography hierarchy, and color usage.
-- [ ] No obvious AI-generated slop (nested cards, mismatched patterns, cramped layouts).
-- [ ] The product should feel intentionally designed, not incrementally patched.
-
-### Before/after documentation
-
-- [ ] For each facelift pass, keep `reference-*.png` screenshots as the "before" baseline.
-- [ ] Use the diff tool to generate a change report with the PR.
-
----
-
-## Spec Folder Mapping (for new pages)
-
-New pages need spec folder assignments. Proposed additions:
-
-| Page | Spec Folder |
-|------|------------|
-| Global issues | `19-issues` |
-| My issues | `20-my-issues` |
-| Notifications | `21-notifications` |
-| Time tracking | `22-time-tracking` |
-| Org calendar | `23-org-calendar` |
-| Org analytics | `24-org-analytics` |
-| Invoices | `25-invoices` |
-| Clients | `26-clients` |
-| Workspaces | `27-workspaces` |
-| Workspace detail | `28-workspace-detail` |
-| Team detail | `29-team-detail` |
-| Onboarding | `30-onboarding` |
-| Authentication | `31-authentication` |
-| Add-ons | `32-add-ons` |
-| AI Assistant | `33-assistant` |
-| Portal | `34-portal` |
-| Roadmap | `35-roadmap` |
-| Activity | `36-activity` |
-| Billing | `37-billing` |
-| Timesheet | `38-timesheet` |
-| Project inbox | `39-project-inbox` |
+- [ ] Review screenshot set and rank pages by visual quality (1-5).
+- [ ] Pick bottom 5 pages for first facelift batch.
+- [ ] For each: fix spacing, hierarchy, patterns, clutter.
+- [ ] Re-run screenshots after each pass. Only keep material improvements.
+- [ ] Visual cohesion across all screens — consistent spacing, typography, color.
+- [ ] No nested cards, mismatched patterns, cramped layouts.
+- [ ] Before/after comparison using screenshot diff tool.
 
 ---
 
 ## Execution Order
 
-1. **Infra cleanup** — delete legacy script, fix shimmer selectors, dedup auth helper.
-2. **Route coverage** — add every missing route to the capture set with proper spec folders.
-3. **Modal coverage** — add every dialog/modal to the capture set.
-4. **Interactive states** — add state-specific captures (filters, dropdowns, inline editing, etc.).
-5. **User journeys** — implement sequential capture mode for multi-step workflows.
-6. **Visual regression** — build the hash-based diff script and approval workflow.
-7. **Visual facelift** — use the complete screenshot set to identify and fix the worst pages.
-
-## Acceptance Criteria
-
-- [x] `scripts/capture-screenshots.mjs` deleted.
-- [x] No `.animate-shimmer` CSS selectors in `screenshot-pages.ts`.
-- [x] Auth token injection deduplicated into a shared helper.
-- [ ] Every route in `convex/shared/routes.ts` has at least one screenshot (empty + filled where applicable).
-- [ ] Every modal/dialog component has at least one open-state screenshot (13/20 wired, 7 remaining need special setup).
-- [ ] Interactive states cover board swimlanes, document editor toolbars, notification states, sprint charts.
-- [ ] At least 5 user journeys captured as sequential screenshot series.
-- [x] Hash-based screenshot diff tool exists (`scripts/screenshot-diff.js`).
-- [ ] The first visual facelift batch covers at least 5 pages with before/after comparison.
-- [ ] Total screenshot count covers all 4 viewport/theme combos across all pages.
+1. **Visual fixes (Part 1)** — fix the concrete bugs found in audit.
+2. **Animation polish (Part 2)** — add missing transitions.
+3. **Screenshot coverage (Part 3)** — capture remaining routes, modals, states.
+4. **User journeys (Part 4)** — implement sequential capture mode.
+5. **Visual facelift (Part 5)** — use screenshots to identify and fix worst pages.

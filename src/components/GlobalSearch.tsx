@@ -12,6 +12,7 @@ import { type ComponentProps, useEffect, useState } from "react";
 import { AdvancedSearchModal } from "@/components/AdvancedSearchModal";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
+import { Stack } from "@/components/ui/Stack";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useSearchKeyboard, useSearchPagination } from "@/hooks/useGlobalSearch";
@@ -237,7 +238,7 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
               {result.type}
             </Badge>
           </Flex>
-          <Typography variant="label" className="mt-1 truncate">
+          <Typography variant="label" className="mt-1.5 truncate">
             {result.title}
           </Typography>
           <Typography variant="meta" className="mt-1 line-clamp-2">
@@ -277,8 +278,8 @@ function SearchListContent({
   if (query.length === 0) {
     return (
       <>
-        <div className="p-1 pb-1">
-          <div className={cn(getCardRecipeClassName("commandIntro"), "p-4")}>
+        <div className="px-2 pt-2">
+          <div className={cn(getCardRecipeClassName("commandIntro"), "p-3")}>
             <Flex direction="column" gap="md">
               <div>
                 <Badge variant="brand" shape="pill">
@@ -390,9 +391,9 @@ function SearchListContent({
           data-testid={TEST_IDS.GLOBAL_SEARCH.NO_RESULTS}
           className="text-ui-text-secondary"
         >
-          <div className="p-6">
+          <div className="p-4">
             <Flex direction="column" align="center">
-              <div className={cn(getCardRecipeClassName("controlStrip"), "mb-4 p-2")}>
+              <div className={cn(getCardRecipeClassName("controlStrip"), "mb-3 p-2")}>
                 <Icon icon={Search} size="xl" />
               </div>
               <Typography variant="label">
@@ -552,7 +553,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
             <Tabs
               value={activeTab}
               onValueChange={(value) => setActiveTab(value as "all" | "issues" | "documents")}
-              className="shrink-0 overflow-x-auto"
+              className="shrink-0"
             >
               <Card
                 variant="ghost"
@@ -564,7 +565,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
                   <TabsTrigger
                     value="all"
                     variant="underline"
-                    className="px-1 pb-3 text-xs uppercase tracking-widest sm:text-sm"
+                    className="px-1 pb-3 text-xs font-medium sm:text-sm"
                     data-testid={TEST_IDS.SEARCH.TAB_ALL}
                   >
                     All ({issueTotal + documentTotal})
@@ -572,7 +573,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
                   <TabsTrigger
                     value="issues"
                     variant="underline"
-                    className="px-1 pb-3 text-xs uppercase tracking-widest sm:text-sm"
+                    className="px-1 pb-3 text-xs font-medium sm:text-sm"
                     data-testid={TEST_IDS.SEARCH.TAB_ISSUES}
                   >
                     Issues ({issueTotal})
@@ -580,7 +581,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
                   <TabsTrigger
                     value="documents"
                     variant="underline"
-                    className="px-1 pb-3 text-xs uppercase tracking-widest sm:text-sm"
+                    className="px-1 pb-3 text-xs font-medium sm:text-sm"
                     data-testid={TEST_IDS.SEARCH.TAB_DOCUMENTS}
                   >
                     Documents ({documentTotal})
@@ -606,32 +607,14 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
             />
           </CommandList>
 
-          {/* Fixed footer: search hints */}
-          <FlexItem shrink={false} className="text-ui-text-tertiary">
-            <Card
-              variant="ghost"
-              padding="md"
-              radius="none"
-              className="border-t border-ui-border/50 bg-ui-bg-soft/20"
-            >
-              <Typography variant="meta" className="hidden sm:block">
-                Search filters: <code>type:bug</code> <code>status:done</code>{" "}
-                <code>priority:high</code> <code>label:frontend</code> <code>@me</code>
-              </Typography>
-              <Typography variant="meta" className="sm:hidden">
-                Try <code>@me</code>, <code>type:bug</code>, or <code>status:done</code>
-              </Typography>
-            </Card>
-          </FlexItem>
-
-          {/* Fixed footer: action buttons and shortcuts */}
-          <Flex align="center" justify="between" className="shrink-0">
-            <Card
-              variant="ghost"
-              padding="md"
-              radius="none"
-              className="w-full border-t border-ui-border/50 bg-ui-bg-soft/10"
-            >
+          {/* Fixed footer: actions, hints, and shortcuts */}
+          <Card
+            variant="ghost"
+            padding="md"
+            radius="none"
+            className="shrink-0 border-t border-ui-border/50 bg-ui-bg-soft/20"
+          >
+            <Stack gap="sm">
               <Flex align="center" justify="between">
                 <Flex align="center" gap="sm" wrap>
                   <Button
@@ -659,8 +642,12 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
                   </Flex>
                 </div>
               </Flex>
-            </Card>
-          </Flex>
+              <Typography variant="meta" className="hidden text-ui-text-tertiary sm:block">
+                Filters: <code>type:bug</code> <code>status:done</code> <code>priority:high</code>{" "}
+                <code>label:frontend</code> <code>@me</code>
+              </Typography>
+            </Stack>
+          </Card>
         </CommandMenu>
       </CommandDialog>
 
