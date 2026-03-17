@@ -14,18 +14,18 @@ The app has `PageLayout`, `PageHeader`, `PageContent` components but 10+ pages b
 ### Pages rolling their own layout (must migrate to PageLayout)
 
 - [x] **`assistant.tsx`** — ~~wraps content in `<div className="p-6 max-w-7xl mx-auto">` inside PageLayout~~ Fixed: uses `PageLayout maxWidth="xl"`, removed ad-hoc wrapper and inner `max-w-4xl`.
-- [ ] **`workspaces/$workspaceSlug/settings.tsx`** — uses `<div className="max-w-3xl mx-auto py-6">` instead of PageLayout.
-- [ ] **`workspaces/$workspaceSlug/teams/$teamSlug/settings.tsx`** — copy-paste of above pattern.
-- [ ] **`workspaces/$workspaceSlug/wiki.tsx`** — returns raw `<Grid>` with no padding/header.
-- [ ] **`workspaces/$workspaceSlug/teams/$teamSlug/wiki.tsx`** — returns raw `<Flex>` with `py-20`.
-- [ ] **`my-issues.tsx`** — returns raw `<Flex>` without PageLayout.
-- [ ] **`settings/profile.tsx`** — overrides PageHeader padding with className instead of using props.
+- [x] **`workspaces/$workspaceSlug/settings.tsx`** — Fixed: removed ad-hoc header div and `mx-auto py-6` (parent workspace layout provides PageLayout + PageHeader). Kept `max-w-3xl` as inner content constraint.
+- [x] **`workspaces/$workspaceSlug/teams/$teamSlug/settings.tsx`** — Fixed: same cleanup as workspace settings.
+- [x] **`workspaces/$workspaceSlug/wiki.tsx`** — N/A: tab panel inside parent PageLayout, raw Grid is correct here.
+- [x] **`workspaces/$workspaceSlug/teams/$teamSlug/wiki.tsx`** — N/A: same as workspace wiki, already inside parent PageLayout.
+- [x] **`my-issues.tsx`** — Fixed: wrapped in PageLayout, title moved to PageHeader with segmented control as actions.
+- [x] **`settings/profile.tsx`** — Fixed: removed className override on PageHeader, uses default padding.
 
-### Pages with custom headers (should use PageHeader or extend it)
+### Pages with custom headers (deferred — too specialized for PageHeader)
 
-- [ ] **`projects/$key/board.tsx`** — ad-hoc Card-based filter bar instead of PageHeader.
-- [ ] **`projects/$key/route.tsx`** — inline card header with custom backdrop-blur styling.
-- [ ] **`calendar.tsx`** — custom select bar with hardcoded responsive padding.
+- [ ] **`projects/$key/board.tsx`** — sprint selector, progress bar, export button, separate FilterBar. Too coupled to board logic for simple PageHeader migration.
+- [ ] **`projects/$key/route.tsx`** — tab navigation with conditional mobile/desktop layouts, backdrop-blur wrapper. Fundamentally different from PageHeader purpose.
+- [ ] **`calendar.tsx`** — two scope-filter selects. Simplest of the three but responsive widths need PageHeader support first.
 
 ### Validator: enforce PageLayout usage
 
@@ -37,11 +37,11 @@ The app has `PageLayout`, `PageHeader`, `PageContent` components but 10+ pages b
 
 Scroll is fixed but the visual structure is broken.
 
-- [ ] **Empty state too tall** — `EmptyState` default size (`min-h-56`) is way too big for a 384px-wide popover. Use `size="compact"`.
+- [x] **Empty state too tall** — Fixed: added `size="compact"` to EmptyState in notification popover.
 - [x] **3-tier background color mess** — Fixed: simplified to 2-tier. Section headers now use `bg-ui-bg` (same as header), footer uses `border-t` for separation.
 - [x] **No gap between date groups** — Fixed: added `gap="xs"` between date groups.
 - [x] **Header/footer border inconsistency** — Fixed: removed inner `rounded-t-lg`/`rounded-b-lg`, outer PopoverContent handles rounding.
-- [ ] **`max-h-popover-panel` (80vh) too aggressive** — with few notifications the panel stretches to fill 80% of viewport height. Consider `60vh` or a smarter constraint.
+- [x] **`max-h-popover-panel` (80vh) too aggressive** — N/A: panel uses flex + overflow-y-auto, so max-h only caps the upper bound. With few notifications it naturally sizes to content.
 
 ---
 
@@ -49,9 +49,9 @@ Scroll is fixed but the visual structure is broken.
 
 - [x] **"1 team" badge wraps to 2 lines** — Fixed: removed `wrap` from workspace card footer Flex.
 - [x] **Badge lacks `shrink-0`** — Fixed: added `shrink-0` to "Open workspace" badge.
-- [ ] **Metadata double-wrap** — `Metadata` component has built-in `flex-wrap`, and the parent Flex also has `wrap`. Creates double-wrapping potential.
-- [ ] **Compact vs standard layout inconsistency** — two nearly identical card layouts (lines 54-128 and 131-188) with subtle spacing differences. Compact footer has no `mt-auto`, standard does.
-- [ ] **Card padding inconsistency** — workspaces uses `p-6` via className, documents uses `padding="lg"` via Card prop. Should use the prop.
+- [x] **Metadata double-wrap** — N/A: footer Flex has no `wrap`, Metadata in footer has no `wrap`. Compact variant's badge Flex has `wrap` which is correct for badges.
+- [x] **Compact vs standard layout inconsistency** — N/A: compact uses Grid (footer naturally positioned), standard uses Flex column (needs `mt-auto`). Both correct for their layouts.
+- [x] **Card padding inconsistency** — Fixed: both compact and standard variants now use `padding="lg"` prop instead of `className="p-6"`.
 
 ---
 
