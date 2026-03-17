@@ -167,6 +167,13 @@ pnpm run test         # Vitest unit tests
 pnpm e2e:ui           # E2E tests (interactive, Playwright)
 ```
 
+### AI: Running scripts and validators
+
+**Always use `pnpm run` or the package.json scripts** for running validators, tests, and checks. Do NOT write inline `node -e` scripts to parse validator output or modify validator files temporarily — it's fragile, breaks on module imports, and wastes time. If you need to audit or inspect something:
+1. Run the existing script: `node scripts/validate.js` or `pnpm run validate`
+2. Read the output directly
+3. If you need a one-off analysis, write a small `.js` file in `/tmp/` and run it, or use the existing validator's baseline mechanism
+
 ### Screenshots (visual QA)
 
 ```bash
