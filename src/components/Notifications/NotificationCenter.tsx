@@ -183,7 +183,7 @@ export function NotificationCenter() {
                 variant="alertCount"
                 size="sm"
                 shape="pill"
-                className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2"
+                className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 animate-scale-in"
               >
                 {unreadCount > 99 ? "99+" : unreadCount}
               </Badge>

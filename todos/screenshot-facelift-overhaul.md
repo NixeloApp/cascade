@@ -78,7 +78,7 @@ The app is missing entrance/exit animations in many places. Feels jarring.
 - [ ] **Dashboard customize toggles** — switching toggles has no visual transition feedback.
 - [ ] **MoveDocumentDialog** — project selection change has no transition.
 - [ ] **Label creation popover** — appears instantly with no animation.
-- [ ] **Notification unread badge** — static count, no subtle pulse or entrance animation when count changes.
+- [x] **Notification unread badge** — added `animate-scale-in` so the badge scales in when it first appears.
 
 ---
 
