@@ -47,7 +47,10 @@ const ROUTE_PATTERNS = [
   },
 
   // Standalone hardcoded regex route constants: const X = /\/admin\/path\/[^/]+$/
-  { regex: /=\s*\/\\\/[a-z][-a-z]+(\\\/[a-z][-a-z]+)*\\\/\[/, message: "Hardcoded regex route constant" },
+  {
+    regex: /=\s*\/\\\/[a-z][-a-z]+(\\\/[a-z][-a-z]+)*(\\\/)?\[?\$?\//,
+    message: "Hardcoded regex route constant",
+  },
 ];
 
 // Files/directories to skip
@@ -111,7 +114,10 @@ export function run() {
 
     // Patterns that are violations even when ROUTES. is on the line
     const ALWAYS_CHECK = [
-      { regex: /ROUTES\.[a-zA-Z_.]+\}\/\[/, message: "Use ROUTES .build() instead of ROUTES constant + inline regex" },
+      {
+        regex: /ROUTES\.[a-zA-Z_.]+\}\/\[/,
+        message: "Use ROUTES .build() instead of ROUTES constant + inline regex",
+      },
     ];
 
     for (let i = 0; i < lines.length; i++) {
