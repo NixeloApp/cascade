@@ -94,9 +94,13 @@ export function run() {
 
       const lines = fs.readFileSync(filePath, "utf-8").split("\n");
       for (let i = 0; i < lines.length; i++) {
+        // Check current line and a 2-line window to catch multiline chains
+        // e.g. new Date(value)\n  .toLocaleDateString(...)
         const line = lines[i];
+        const twoLineWindow = i + 1 < lines.length ? `${line}\n${lines[i + 1]}` : line;
+
         for (const { regex, message } of PATTERNS) {
-          if (regex.test(line)) {
+          if (regex.test(line) || regex.test(twoLineWindow)) {
             issueCount++;
             const bucket = byFile[rel] ?? [];
             bucket.push({ line: i + 1, message });

@@ -12,7 +12,7 @@ export const Route = createFileRoute(
 
 function TeamSettings() {
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-prose">
       <Flex direction="column" gap="xl">
         <Typography variant="h2">Team Settings</Typography>
 

@@ -98,7 +98,7 @@ function WorkspaceSettings() {
     allowExternalSharing !== (workspace.settings?.allowExternalSharing ?? false);
 
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-prose">
       <Stack gap="xl">
         <Typography variant="h2">Workspace Settings</Typography>
 
