@@ -504,7 +504,7 @@ export const getOrgAnalytics = authenticatedQuery({
     } else {
       const memberships = await ctx.db
         .query("projectMembers")
-        .withIndex("by_user_deleted", (q) => q.eq("userId", ctx.userId).lt("isDeleted", true)) // @convex-validation-ignore TAKE_BEFORE_FILTER — .filter() below is on allProjects, not this query
+        .withIndex("by_user_deleted", (q) => q.eq("userId", ctx.userId).lt("isDeleted", true))
         .take(MAX_PAGE_SIZE);
       const memberProjectIds = new Set(memberships.map((m) => m.projectId));
       projects = allProjects.filter((p) => p.isPublic || memberProjectIds.has(p._id));

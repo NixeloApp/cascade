@@ -246,6 +246,14 @@ export function run() {
         const usesHas = /\.filter\s*\([^)]*\.has\s*\(/.test(lookAhead);
         if (usesHas) continue;
 
+        // Extract the variable name assigned by this .take() line
+        // Patterns: "const foo = await ctx.db..." or "foo = await ctx.db..."
+        const takeVarMatch = lines
+          .slice(Math.max(0, i - 8), i + 1)
+          .join("\n")
+          .match(/(?:const|let)\s+(\w+)\s*=\s*(?:await\s+)?ctx\.db/);
+        const takeVarName = takeVarMatch?.[1];
+
         // Match JS array .filter() - direct usage pattern
         // Looking for: variable.filter(item => item.field === value)
         const hasDirectFilter =
@@ -255,7 +263,17 @@ export function run() {
         // Exclude Convex query .filter() which uses (q) => q.eq/q.and/etc
         const isConvexFilter = /\.filter\s*\(\s*\(?\s*q\s*\)?\s*=>\s*q\./.test(lookAhead);
 
-        if (hasDirectFilter && !isConvexFilter) {
+        // Exclude .filter() on a DIFFERENT variable than the .take() result
+        let isFilterOnDifferentVar = false;
+        if (takeVarName && hasDirectFilter) {
+          // Check if the .filter() in the lookahead is on a different variable
+          const filterMatch = lookAhead.match(/(\w+)\.filter\s*\(/g);
+          if (filterMatch) {
+            isFilterOnDifferentVar = filterMatch.every((f) => !f.startsWith(`${takeVarName}.`));
+          }
+        }
+
+        if (hasDirectFilter && !isConvexFilter && !isFilterOnDifferentVar) {
           issues.push({
             type: "TAKE_BEFORE_FILTER",
             line: lineNum,
