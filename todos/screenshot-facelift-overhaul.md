@@ -118,7 +118,7 @@ Make the validator catch the patterns we keep finding manually.
 - [x] **MCP Server** — replaced bare Card+text with proper EmptyState (Server icon).
 - [x] **Invoices** — added empty state when no invoices, with "New draft" action button.
 - [ ] Fix spacing, hierarchy, patterns, clutter per page (remaining pages).
-- [ ] No nested cards — **BLOCKED**: replacing inner Cards with divs triggers raw Tailwind, surface shell, and border radius validators. Needs either a Card "section" recipe or validator exceptions for nested-card replacements. 7 baselined files remain.
+- [ ] No nested cards — **UNBLOCKED**: added Card `variant="section"` (exempt from nested-card ban). Migrated GoogleCalendarIntegration and ProfileContent (removed from baseline). 5 baselined files remain (Admin/UserTypeManager, Landing/AIFeatureDemo, Landing/ProductShowcase, Settings/PumbleIntegration, TimeTracker/Timesheet).
 - [ ] Before/after comparison using screenshot diff tool.
 
 ---

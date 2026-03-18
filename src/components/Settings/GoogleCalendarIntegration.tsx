@@ -154,7 +154,7 @@ export function GoogleCalendarIntegration() {
           }
         >
           <Flex gap="lg" align="center">
-            <Card padding="sm" radius="md" variant="flat">
+            <Card padding="sm" radius="md" variant="section">
               <Icon icon={Calendar} size="lg" color="currentColor" className="text-brand" />
             </Card>
             <Stack gap="xs">
@@ -192,7 +192,7 @@ export function GoogleCalendarIntegration() {
       />
 
       {calendarConnection && (
-        <Card padding="md" variant="flat" className="mt-6">
+        <Card padding="md" variant="section" className="mt-6">
           {/* Sync Toggle */}
           <Stack gap="xl">
             <Switch
@@ -215,21 +215,21 @@ export function GoogleCalendarIntegration() {
                   }
                   disabled={isSaving}
                 >
-                  <Card padding="sm" variant="interactive">
+                  <Card padding="sm" variant="section">
                     <RadioGroupItem
                       value="bidirectional"
                       label="Bidirectional"
                       description="Sync both ways (recommended)"
                     />
                   </Card>
-                  <Card padding="sm" variant="interactive">
+                  <Card padding="sm" variant="section">
                     <RadioGroupItem
                       value="import"
                       label="Import Only"
                       description="Only import from Google to Nixelo"
                     />
                   </Card>
-                  <Card padding="sm" variant="interactive">
+                  <Card padding="sm" variant="section">
                     <RadioGroupItem
                       value="export"
                       label="Export Only"

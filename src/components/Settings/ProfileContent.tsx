@@ -333,7 +333,7 @@ function LoadedProfileContent({
         </div>
       )}
 
-      <Card padding="md" radius="none" variant="ghost">
+      <Card padding="md" radius="none" variant="section">
         <Stack gap="md">
           <Grid
             cols={1}
@@ -342,7 +342,7 @@ function LoadedProfileContent({
             className={cn(isOwnProfile && "-mt-2 sm:-mt-4")}
           >
             <Card
-              variant="outline"
+              variant="section"
               padding="lg"
               className={showAccountInfo ? "lg:col-span-3" : undefined}
             >
@@ -389,7 +389,7 @@ function LoadedProfileContent({
 
           {userStats && <UserStatsCards stats={userStats} />}
 
-          <Card padding="md" variant="outline">
+          <Card padding="md" variant="section">
             <Stack gap="sm">
               <Typography variant="h5">Recent Activity</Typography>
               <UserActivityFeed userId={viewUser._id} limit={10} />

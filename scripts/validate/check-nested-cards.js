@@ -23,8 +23,6 @@ const BASELINE_FILES = new Set([
   "src/components/Admin/UserTypeManager.tsx",
   "src/components/Landing/AIFeatureDemo.tsx",
   "src/components/Landing/ProductShowcase.tsx",
-  "src/components/Settings/GoogleCalendarIntegration.tsx",
-  "src/components/Settings/ProfileContent.tsx",
   "src/components/Settings/PumbleIntegration.tsx",
   "src/components/TimeTracker/Timesheet.tsx",
 ]);
@@ -57,6 +55,24 @@ export function run() {
     const content = fs.readFileSync(filePath, "utf-8");
     const sourceFile = ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest, true);
 
+    /** Check if a JSX opening or self-closing element has variant="section" */
+    function isSectionVariant(element) {
+      const attrs = element.attributes;
+      if (!attrs || !ts.isJsxAttributes(attrs)) return false;
+      for (const prop of attrs.properties) {
+        if (
+          ts.isJsxAttribute(prop) &&
+          prop.name.getText() === "variant" &&
+          prop.initializer &&
+          ts.isStringLiteral(prop.initializer) &&
+          prop.initializer.text === "section"
+        ) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     function visit(node, cardDepth = 0) {
       // Handle JsxElement (opening + children + closing)
       if (ts.isJsxElement(node)) {
@@ -64,11 +80,12 @@ export function run() {
         const tagName = opening.tagName.getText();
 
         if (tagName === "Card") {
-          if (cardDepth > 0) {
+          // variant="section" Cards are exempt — they're intentional inner sections
+          if (cardDepth > 0 && !isSectionVariant(opening)) {
             reportError(
               filePath,
               opening,
-              `Card inside Card is banned. Use a div with appropriate styling instead.`,
+              `Card inside Card is banned. Use variant="section" for inner sections or a div with appropriate styling.`,
             );
           }
 
@@ -84,11 +101,11 @@ export function run() {
       if (ts.isJsxSelfClosingElement(node)) {
         const tagName = node.tagName.getText();
 
-        if (tagName === "Card" && cardDepth > 0) {
+        if (tagName === "Card" && cardDepth > 0 && !isSectionVariant(node)) {
           reportError(
             filePath,
             node,
-            `Card inside Card is banned. Use a div with appropriate styling instead.`,
+            `Card inside Card is banned. Use variant="section" for inner sections or a div with appropriate styling.`,
           );
         }
       }

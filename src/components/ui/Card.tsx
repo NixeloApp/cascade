@@ -26,6 +26,9 @@ const cardVariants = cva("border transition-default", {
         "bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/72 border-ui-border-secondary/90 shadow-soft",
       ghost: "bg-transparent border-transparent",
       flat: "bg-linear-to-b from-ui-bg-elevated/98 via-ui-bg-secondary/88 to-ui-bg-soft/78 border-ui-border-secondary/80 shadow-soft",
+      /** Inner section within a Card. Visually identical to flat but exempt from the nested-card ban. */
+      section:
+        "bg-linear-to-b from-ui-bg-elevated/98 via-ui-bg-secondary/88 to-ui-bg-soft/78 border-ui-border-secondary/80 shadow-soft",
     },
     padding: {
       none: "",
