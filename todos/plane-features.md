@@ -3,7 +3,7 @@
 > **Priority:** P2
 > **Status:** New
 > **Last Updated:** 2026-03-18
-> **Source:** Plane repo at `/Desktop/plane` (pulled 2026-03-18, 45 new commits on preview)
+> **Source:** Plane repo at `github.com/makeplane/plane` (pulled 2026-03-18, 45 new commits on preview)
 
 ## High Priority (We're Missing These)
 

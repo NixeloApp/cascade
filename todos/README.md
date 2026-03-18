@@ -75,5 +75,5 @@ Based on Cal.com v6.3 and Plane preview (both repos updated 2026-03-18):
 
 | Repo | Path | Last pulled |
 |------|------|-------------|
-| Cal.com | `/Desktop/cal.com` | 2026-03-18 |
-| Plane | `/Desktop/plane` | 2026-03-18 |
+| Cal.com | [github.com/calcom/cal.com](https://github.com/calcom/cal.com) | 2026-03-18 |
+| Plane | [github.com/makeplane/plane](https://github.com/makeplane/plane) | 2026-03-18 |

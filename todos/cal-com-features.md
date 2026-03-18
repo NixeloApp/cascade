@@ -3,7 +3,7 @@
 > **Priority:** P2
 > **Status:** New
 > **Last Updated:** 2026-03-18
-> **Source:** Cal.com changelog v6.3 + repo at `/Desktop/cal.com` (pulled 2026-03-18, 119 new commits)
+> **Source:** Cal.com changelog v6.3 + repo at `github.com/calcom/cal.com` (pulled 2026-03-18, 119 new commits)
 
 ## High Priority
 
