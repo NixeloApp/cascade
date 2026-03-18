@@ -109,7 +109,8 @@ function InvoiceDetailPage() {
 
       <div className="space-y-4">
         <Typography variant="small" color="secondary">
-          Issue date: {formatDate(invoice.issueDate)} · Due date: {formatDate(invoice.dueDate)}
+          Issue date: {formatDate(invoice.issueDate, { timeZone: "UTC" })} · Due date:{" "}
+          {formatDate(invoice.dueDate, { timeZone: "UTC" })}
         </Typography>
 
         <InvoicePdfTemplate

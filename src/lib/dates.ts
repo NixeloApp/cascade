@@ -96,6 +96,5 @@ export function formatRelativeTimeSimple(timestamp: number): string {
     month: "short",
     day: "numeric",
     year: "numeric",
-    timeZone: "UTC",
   });
 }

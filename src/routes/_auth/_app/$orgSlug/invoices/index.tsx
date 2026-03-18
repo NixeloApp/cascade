@@ -115,7 +115,7 @@ function InvoicesListPage() {
                 <Typography variant="small">Status: {invoice.status}</Typography>
                 <Typography variant="small">Total: {formatCurrency(invoice.total)}</Typography>
                 <Typography variant="small" color="secondary">
-                  Due: {formatDate(invoice.dueDate)}
+                  Due: {formatDate(invoice.dueDate, { timeZone: "UTC" })}
                 </Typography>
                 <Link
                   to={ROUTES.invoices.detail.path}

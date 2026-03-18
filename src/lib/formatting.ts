@@ -46,10 +46,9 @@ export function formatDate(
     month: "short",
     day: "numeric",
     year: "numeric",
-    timeZone: "UTC",
   },
 ): string {
-  return new Date(timestamp).toLocaleDateString("en-US", { timeZone: "UTC", ...options });
+  return new Date(timestamp).toLocaleDateString("en-US", options);
 }
 
 /**
@@ -63,10 +62,9 @@ export function formatTime(
   options: Intl.DateTimeFormatOptions = {
     hour: "numeric",
     minute: "2-digit",
-    timeZone: "UTC",
   },
 ): string {
-  return new Date(timestamp).toLocaleTimeString("en-US", { timeZone: "UTC", ...options });
+  return new Date(timestamp).toLocaleTimeString("en-US", options);
 }
 
 /**

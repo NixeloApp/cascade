@@ -55,14 +55,16 @@ describe("dates utility functions", () => {
   });
 
   describe("formatDate (re-exported from formatting)", () => {
-    it("should format timestamp with UTC timezone", () => {
+    it("should format timestamp as short date", () => {
       const timestamp = new Date("2026-01-15T12:00:00Z").getTime();
       expect(formatDate(timestamp)).toBe("Jan 15, 2026");
     });
 
-    it("should not shift date for timestamps near midnight UTC", () => {
+    it("should accept timeZone option for UTC-stable billing dates", () => {
       const timestamp = new Date("2026-01-15T00:00:00Z").getTime();
-      expect(formatDate(timestamp)).toBe("Jan 15, 2026");
+      expect(
+        formatDate(timestamp, { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }),
+      ).toBe("Jan 15, 2026");
     });
   });
 
