@@ -1,62 +1,34 @@
 /**
- * Date and time formatting utilities
+ * Date and time utilities
+ *
+ * Date FORMATTING lives in @/lib/formatting (single source of truth).
+ * This file re-exports formatting functions for backward compatibility
+ * and provides date calculation/comparison utilities.
  */
 import { DAY, HOUR, MINUTE } from "@/lib/time";
 
+// Re-export all date formatting from the canonical source
 /**
- * Format a timestamp as a relative time string (e.g., "2h ago", "3d ago")
- * Falls back to absolute date for older timestamps
+ * Format a date with custom locale options (delegates to formatDate with options)
  */
-export function formatRelativeTime(timestamp: number): string {
-  const date = new Date(timestamp);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / MINUTE);
-  const diffHours = Math.floor(diffMs / HOUR);
-  const diffDays = Math.floor(diffMs / DAY);
-
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-
-  return date.toLocaleDateString();
-}
+export {
+  formatDate,
+  formatDate as formatDateCustom,
+  formatDateForInput,
+  formatDateTime,
+  formatRelativeTime,
+  formatTime,
+} from "@/lib/formatting";
 
 /**
- * Format a timestamp as a locale date string
- */
-export function formatDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString();
-}
-
-/**
- * Format a timestamp as a locale date and time string
- */
-export function formatDateTime(timestamp: number): string {
-  return new Date(timestamp).toLocaleString();
-}
-
-/**
- * Format a date for use in HTML date inputs (YYYY-MM-DD)
- */
-export function formatDateForInput(date: Date = new Date()): string {
-  return date.toISOString().split("T")[0];
-}
-
-/**
- * Get today's date in YYYY-MM-DD format
+ * Get today's date in YYYY-MM-DD format (local timezone)
  */
 export function getTodayString(): string {
-  return formatDateForInput(new Date());
-}
-
-/**
- * Format a date with custom locale options
- */
-export function formatDateCustom(timestamp: number, options: Intl.DateTimeFormatOptions): string {
-  return new Date(timestamp).toLocaleDateString("en-US", options);
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 /**
@@ -103,4 +75,39 @@ export function formatHours(hours: number): string {
     return m > 0 ? `${h}h ${m}m` : `${h}h`;
   }
   return `${hours}h`;
+}
+
+/**
+ * Format a timestamp as a relative time string (e.g., "2h ago", "3d ago")
+ * Simpler version — for the full Intl.RelativeTimeFormat version, use
+ * formatRelativeTime from @/lib/formatting.
+ */
+export function formatRelativeTimeSimple(timestamp: number): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / MINUTE);
+  const diffHours = Math.floor(diffMs / HOUR);
+  const diffDays = Math.floor(diffMs / DAY);
+
+  // Future timestamps fall through to absolute date
+  if (diffMs < 0) {
+    return new Date(timestamp).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+
+  return new Date(timestamp).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }

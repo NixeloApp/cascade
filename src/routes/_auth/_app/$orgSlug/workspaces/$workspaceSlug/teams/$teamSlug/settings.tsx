@@ -12,17 +12,9 @@ export const Route = createFileRoute(
 
 function TeamSettings() {
   return (
-    <div className="max-w-3xl mx-auto py-6">
+    <div className="max-w-prose">
       <Flex direction="column" gap="xl">
-        {/* Page header with Mintlify-inspired typography */}
-        <div className="pb-2 border-b border-ui-border">
-          <Typography variant="h2" className="text-2xl font-semibold tracking-tight">
-            Team Settings
-          </Typography>
-          <Typography variant="p" color="secondary" className="mt-1.5">
-            Manage team members and preferences
-          </Typography>
-        </div>
+        <Typography variant="h2">Team Settings</Typography>
 
         {/* Coming soon placeholder */}
         <Card variant="soft">

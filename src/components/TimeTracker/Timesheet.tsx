@@ -159,6 +159,7 @@ export function Timesheet() {
               <Card
                 key={day.dayKey}
                 padding="sm"
+                variant="section"
                 className={cn(isToday && "border-brand-ring bg-brand-subtle")}
               >
                 {/* Day header */}
@@ -179,7 +180,12 @@ export function Timesheet() {
                 {/* Time entries */}
                 <Stack gap="sm">
                   {day.entries.map((entry: TimeEntryWithHours) => (
-                    <Card key={entry._id} padding="sm" className="bg-ui-bg-secondary">
+                    <Card
+                      key={entry._id}
+                      padding="sm"
+                      variant="section"
+                      className="bg-ui-bg-secondary"
+                    >
                       <Flex justify="between" align="start" className="mb-1">
                         <FlexItem flex="1" className="min-w-0">
                           <Typography variant="mono" className="truncate block">
@@ -227,7 +233,7 @@ export function Timesheet() {
 
         {/* Empty state */}
         {timesheet.totalHours === 0 && (
-          <Card padding="xl" variant="ghost">
+          <Card padding="xl" variant="section">
             <Stack gap="md" align="center">
               <Calendar className="w-12 h-12 text-ui-text-tertiary" />
               <Typography color="secondary">

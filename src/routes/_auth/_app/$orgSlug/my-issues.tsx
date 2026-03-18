@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { usePaginatedQuery } from "convex/react";
 import { useState } from "react";
-import { PageContent } from "@/components/layout";
+import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
@@ -43,17 +43,19 @@ function MyIssuesBoardPage() {
   }
 
   return (
-    <Flex direction="column" gap="lg">
-      <Flex justify="between" align="center" wrap className="gap-3">
-        <Typography variant="h2">My Issues Board</Typography>
-        <SegmentedControl
-          value={groupBy}
-          onValueChange={(value: string) => value && setGroupBy(value as GroupBy)}
-        >
-          <SegmentedControlItem value="status">Group by status</SegmentedControlItem>
-          <SegmentedControlItem value="project">Group by project</SegmentedControlItem>
-        </SegmentedControl>
-      </Flex>
+    <PageLayout>
+      <PageHeader
+        title="My Issues Board"
+        actions={
+          <SegmentedControl
+            value={groupBy}
+            onValueChange={(value: string) => value && setGroupBy(value as GroupBy)}
+          >
+            <SegmentedControlItem value="status">Group by status</SegmentedControlItem>
+            <SegmentedControlItem value="project">Group by project</SegmentedControlItem>
+          </SegmentedControl>
+        }
+      />
 
       <Flex gap="md" className="overflow-x-auto pb-2">
         {groups.map(([groupKey, issues]) => (
@@ -102,6 +104,6 @@ function MyIssuesBoardPage() {
           </Button>
         </Flex>
       )}
-    </Flex>
+    </PageLayout>
   );
 }

@@ -119,7 +119,7 @@ export class WorkspacesPage extends BasePage {
 
   async openWorkspace(name: string) {
     // Only skip navigation if we're already on a workspace detail route with the heading visible
-    const onWorkspaceRoute = /\/workspaces\/[^/]+(?:[/?#]|$)/.test(this.page.url());
+    const onWorkspaceRoute = routePattern(ROUTES.workspaces.detail.path).test(this.page.url());
     if (onWorkspaceRoute) {
       // PageHeader renders workspace name as h2
       const headingVisible = await this.page

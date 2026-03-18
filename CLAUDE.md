@@ -167,6 +167,43 @@ pnpm run test         # Vitest unit tests
 pnpm e2e:ui           # E2E tests (interactive, Playwright)
 ```
 
+### AI: Running scripts and validators
+
+**Always use `pnpm run` or the package.json scripts** for running validators, tests, and checks. Do NOT write inline `node -e` scripts to parse validator output or modify validator files temporarily — it's fragile, breaks on module imports, and wastes time. If you need to audit or inspect something:
+1. Run the existing script: `node scripts/validate.js` or `pnpm run validate`
+2. Read the output directly
+3. If you need a one-off analysis, write a small `.js` file in `/tmp/` and run it, or use the existing validator's baseline mechanism
+
+### Screenshots (visual QA)
+
+```bash
+pnpm screenshots                                    # Capture all pages (4 viewport/theme combos)
+pnpm screenshots -- --headed                        # Visible browser
+pnpm screenshots -- --spec 11-calendar              # Single spec folder
+pnpm screenshots -- --spec calendar --match event   # Filter by name
+pnpm screenshots -- --config desktop-dark           # Single viewport/theme combo
+pnpm screenshots -- --dry-run                       # List targets without capturing
+pnpm screenshots:diff                               # Compare current vs approved manifest
+pnpm screenshots:approve                            # Accept current screenshots as baseline
+```
+
+**Requires dev server running (`pnpm dev`).** The tool auto-creates a test user, seeds data, and captures authenticated pages.
+
+**Flag reference:**
+- `--spec` — filter by spec folder (partial match, e.g. `--spec calendar` matches `11-calendar`)
+- `--match` — filter by screenshot name within a spec (e.g. `--match event`)
+- `--config` — filter by viewport/theme combo (`desktop-dark`, `desktop-light`, `mobile-dark`, `mobile-light`)
+- `--dry-run` — list all matching targets without capturing
+- Combine flags for precision: `--spec workspaces --match filled --config desktop-dark`
+
+**Output paths (read these to verify changes):**
+- `docs/design/specs/pages/<spec-folder>/screenshots/<config>-<name>.png`
+- `e2e/screenshots/<config>-<state>-<name>.png`
+
+### AI: When to use screenshots
+
+**Always take screenshots before and after visual changes.** Don't make UI changes blind — capture the current state, make the change, capture again, and verify the improvement visually. Use `--spec`, `--match`, and `--config` filters to capture only the relevant pages instead of running all 400+ screenshots.
+
 ### AI: When to run `pnpm fixme`
 
 Run `pnpm fixme` after completing a significant chunk of work (new feature, multi-file refactor, major bug fix). Do NOT run it after every small edit — only when a logical unit of work is done and you're ready to validate.

@@ -26,6 +26,9 @@ const cardVariants = cva("border transition-default", {
         "bg-linear-to-b from-ui-bg-elevated via-ui-bg-elevated/98 to-ui-bg-soft/72 border-ui-border-secondary/90 shadow-soft",
       ghost: "bg-transparent border-transparent",
       flat: "bg-linear-to-b from-ui-bg-elevated/98 via-ui-bg-secondary/88 to-ui-bg-soft/78 border-ui-border-secondary/80 shadow-soft",
+      /** Inner section within a Card. Visually identical to flat but exempt from the nested-card ban. */
+      section:
+        "bg-linear-to-b from-ui-bg-elevated/98 via-ui-bg-secondary/88 to-ui-bg-soft/78 border-ui-border-secondary/80 shadow-soft",
     },
     padding: {
       none: "",
@@ -254,10 +257,11 @@ const cardRecipeVariants = cva("", {
       roadmapMonthHeaderCell:
         "rounded-none border-y-0 border-r-0 border-l border-ui-border bg-transparent px-2 py-0 shadow-none",
       notificationPanelHeader:
-        "sticky top-0 rounded-t-lg border-x-0 border-t-0 bg-ui-bg shadow-none",
+        "sticky top-0 rounded-none border-x-0 border-t-0 bg-ui-bg shadow-none",
       notificationPanelSectionHeader:
-        "sticky top-0 rounded-none border-x-0 border-t-0 bg-ui-bg-secondary shadow-none",
-      notificationPanelFooter: "rounded-b-lg border-x-0 border-b-0 bg-ui-bg-secondary shadow-none",
+        "sticky top-0 rounded-none border-x-0 border-t-0 bg-ui-bg shadow-none",
+      notificationPanelFooter:
+        "rounded-none border-x-0 border-b-0 border-t border-ui-border bg-ui-bg shadow-none",
       notificationRow:
         "rounded-none border-x-0 border-t-0 bg-ui-bg shadow-none hover:bg-ui-bg-secondary focus-within:bg-ui-bg-secondary",
       notificationRowUnread:

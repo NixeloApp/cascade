@@ -11,6 +11,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { formatDate } from "@/lib/dates";
 import { showError, showSuccess } from "@/lib/toast";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/invoices/$invoiceId")({
   component: InvoiceDetailPage,
@@ -108,8 +109,8 @@ function InvoiceDetailPage() {
 
       <div className="space-y-4">
         <Typography variant="small" color="secondary">
-          Issue date: {new Date(invoice.issueDate).toISOString().slice(0, 10)} · Due date:{" "}
-          {new Date(invoice.dueDate).toISOString().slice(0, 10)}
+          Issue date: {formatDate(invoice.issueDate, { timeZone: "UTC" })} · Due date:{" "}
+          {formatDate(invoice.dueDate, { timeZone: "UTC" })}
         </Typography>
 
         <InvoicePdfTemplate

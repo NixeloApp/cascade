@@ -35,7 +35,7 @@ interface WorkspaceCardProps {
 function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardProps) {
   const footer = (
     <div className="border border-ui-border-secondary/70 bg-ui-bg-soft/90 px-3 py-2">
-      <Flex align="center" justify="between" gap="md" wrap>
+      <Flex align="center" justify="between" gap="md">
         <Metadata size="sm">
           <MetadataItem>
             {workspace.teamCount} {workspace.teamCount === 1 ? "team" : "teams"}
@@ -44,7 +44,7 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
             {workspace.projectCount} {workspace.projectCount === 1 ? "project" : "projects"}
           </MetadataItem>
         </Metadata>
-        <Badge variant="outline" shape="pill">
+        <Badge variant="outline" shape="pill" className="shrink-0">
           Open workspace
         </Badge>
       </Flex>
@@ -58,7 +58,7 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
         params={{ orgSlug, workspaceSlug: workspace.slug }}
         className="block h-full"
       >
-        <Card hoverable className="h-full p-6">
+        <Card hoverable padding="lg" className="h-full">
           <Grid cols={1} colsLg={12} gap="lg">
             <Flex direction="column" gap="lg" className="lg:col-span-7">
               <Flex align="start" justify="between" gap="md">
@@ -134,7 +134,7 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
       params={{ orgSlug, workspaceSlug: workspace.slug }}
       className="block h-full"
     >
-      <Card hoverable className="h-full p-6">
+      <Card hoverable padding="lg" className="h-full">
         <Flex direction="column" gap="lg" className="h-full">
           <Flex align="start" justify="between" gap="md">
             <Flex align="center" gap="sm">

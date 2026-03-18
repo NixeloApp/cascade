@@ -19,7 +19,12 @@ const EXCLUDED_ROUTES = new Set([
   "privacy", // Route doesn't exist yet
   "team", // Legacy route
   "invite", // Captured via literal URL "/invite/screenshot-test-token", not ROUTES ref
+  "inbox", // Route defined in routes.ts but page not implemented
+  "workspaces.board", // Route defined in routes.ts but page not implemented
   "workspaces.teams.backlog", // Route defined but page doesn't exist
+  "workspaces.teams.list", // No standalone teams list page (only team detail sub-pages)
+  "onboarding", // Requires fresh user state, can't capture with seeded test user
+  "invoices.detail", // Requires creating an invoice first; list page is captured
 ]);
 
 /**

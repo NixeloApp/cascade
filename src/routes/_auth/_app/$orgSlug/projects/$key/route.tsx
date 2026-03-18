@@ -163,9 +163,11 @@ function ProjectLayout() {
         >
           <Flex
             align="start"
+            alignSm="center"
             justify="between"
             gap="xs"
-            className="flex-col sm:flex-row sm:items-center"
+            direction="column"
+            directionSm="row"
           >
             <Flex align="center" gap="xs" className="min-w-0 sm:gap-sm">
               <IconCircle

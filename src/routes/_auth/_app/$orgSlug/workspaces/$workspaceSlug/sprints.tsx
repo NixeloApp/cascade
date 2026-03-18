@@ -6,6 +6,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { formatDate } from "@/lib/dates";
 import { Calendar } from "@/lib/icons";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/workspaces/$workspaceSlug/sprints")({
   component: WorkspaceSprintsPage,
@@ -61,7 +62,7 @@ function WorkspaceSprintsPage() {
                 </Typography>
               </Flex>
               <Typography variant="small" color="secondary">
-                {sprint.endDate ? new Date(sprint.endDate).toLocaleDateString() : "No end date"}
+                {sprint.endDate ? formatDate(sprint.endDate) : "No end date"}
               </Typography>
             </Flex>
           </Card>

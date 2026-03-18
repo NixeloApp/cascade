@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { BarChart3 } from "lucide-react";
 import { PageHeader, PageLayout } from "@/components/layout";
-import { Card, CardBody } from "@/components/ui/Card";
-import { Typography } from "@/components/ui/Typography";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export const Route = createFileRoute("/_auth/_app/$orgSlug/analytics")({
   component: AnalyticsPage,
@@ -11,11 +11,11 @@ function AnalyticsPage() {
   return (
     <PageLayout>
       <PageHeader title="Analytics" />
-      <Card>
-        <CardBody>
-          <Typography variant="muted">Analytics dashboard coming soon.</Typography>
-        </CardBody>
-      </Card>
+      <EmptyState
+        icon={BarChart3}
+        title="Analytics dashboard coming soon"
+        description="Track team velocity, issue throughput, and project health metrics across your organization."
+      />
     </PageLayout>
   );
 }

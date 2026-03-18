@@ -234,8 +234,9 @@
   /* Popover / Panel Max Heights */
   --max-height-popover-panel: 80vh;
 
-  /* Auth Content Width */
+  /* Content Width Constraints */
   --max-width-auth: 400px;
+  --max-width-prose: 48rem; /* Reading/form width — settings, editor, descriptions */
 
   /* Decorative Blur */
   --blur-glow: 120px;

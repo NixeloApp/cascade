@@ -1,10 +1,12 @@
 import { api } from "@convex/_generated/api";
 import type { Doc } from "@convex/_generated/dataModel";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { FileText } from "lucide-react";
 import { useState } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import {
@@ -18,6 +20,7 @@ import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { formatDate } from "@/lib/dates";
 import { WEEK } from "@/lib/time";
 import { showError, showSuccess } from "@/lib/toast";
 
@@ -86,29 +89,46 @@ function InvoicesListPage() {
         }
       />
 
-      <Grid cols={1} gap="md" className="lg:grid-cols-2">
-        {invoices.map((invoice: Doc<"invoices">) => (
-          <Card key={invoice._id}>
-            <CardHeader>
-              <CardTitle>{invoice.number}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 pt-4">
-              <Typography variant="small">Status: {invoice.status}</Typography>
-              <Typography variant="small">Total: {formatCurrency(invoice.total)}</Typography>
-              <Typography variant="small" color="secondary">
-                Due: {new Date(invoice.dueDate).toISOString().slice(0, 10)}
-              </Typography>
-              <Link
-                to={ROUTES.invoices.detail.path}
-                params={{ orgSlug, invoiceId: invoice._id }}
-                className="text-brand underline text-sm"
-              >
-                Open invoice
-              </Link>
-            </CardContent>
-          </Card>
-        ))}
-      </Grid>
+      {invoices.length === 0 ? (
+        <EmptyState
+          icon={FileText}
+          title={status === "all" ? "No invoices yet" : `No ${status} invoices`}
+          description={
+            status === "all"
+              ? "Create a draft invoice to get started with billing."
+              : `No invoices match the "${status}" filter.`
+          }
+          action={
+            status === "all"
+              ? { label: "New draft", onClick: handleCreateDraft }
+              : { label: "Clear filter", onClick: () => setStatus("all") }
+          }
+        />
+      ) : (
+        <Grid cols={1} gap="md" className="lg:grid-cols-2">
+          {invoices.map((invoice: Doc<"invoices">) => (
+            <Card key={invoice._id}>
+              <CardHeader>
+                <CardTitle>{invoice.number}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 pt-4">
+                <Typography variant="small">Status: {invoice.status}</Typography>
+                <Typography variant="small">Total: {formatCurrency(invoice.total)}</Typography>
+                <Typography variant="small" color="secondary">
+                  Due: {formatDate(invoice.dueDate, { timeZone: "UTC" })}
+                </Typography>
+                <Link
+                  to={ROUTES.invoices.detail.path}
+                  params={{ orgSlug, invoiceId: invoice._id }}
+                  className="text-brand underline text-sm"
+                >
+                  Open invoice
+                </Link>
+              </CardContent>
+            </Card>
+          ))}
+        </Grid>
+      )}
     </PageLayout>
   );
 }

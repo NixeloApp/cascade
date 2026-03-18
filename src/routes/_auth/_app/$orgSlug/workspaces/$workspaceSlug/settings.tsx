@@ -98,17 +98,9 @@ function WorkspaceSettings() {
     allowExternalSharing !== (workspace.settings?.allowExternalSharing ?? false);
 
   return (
-    <div className="max-w-3xl mx-auto py-6">
+    <div className="max-w-prose">
       <Stack gap="xl">
-        {/* Page header */}
-        <div className="pb-2 border-b border-ui-border">
-          <Typography variant="h2" className="text-2xl font-semibold tracking-tight">
-            Workspace Settings
-          </Typography>
-          <Typography variant="p" color="secondary" className="mt-1.5">
-            Configure workspace settings and preferences
-          </Typography>
-        </div>
+        <Typography variant="h2">Workspace Settings</Typography>
 
         {/* General Settings */}
         <Card variant="elevated" padding="lg">

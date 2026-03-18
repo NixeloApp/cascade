@@ -164,9 +164,7 @@ const BASELINE_FILES = new Set([
   "src/components/TimeTracking/TimeEntriesList.tsx",
   "src/components/TimeTracking/TimeEntryModal.tsx",
   "src/components/TimeTracking/TimeTrackingPage.tsx",
-  "src/components/TimeTracking/TimerWidget.tsx",
   "src/components/TimeTracking/UserRatesManagement.tsx",
-  "src/components/UnsubscribePage.tsx",
   "src/components/UserActivityFeed.tsx",
   "src/components/UserMenu.tsx",
   "src/components/VersionHistory.tsx",
@@ -283,6 +281,10 @@ export function run() {
       ? ` (${baselineViolations.length} baselined in ${BASELINE_FILES.size} files)`
       : "";
 
+  // Compute which baseline files are now clean (zero violations)
+  const baselineFilesWithViolations = new Set(baselineViolations.map((v) => v.file));
+  const cleanBaselineFiles = [...BASELINE_FILES].filter((f) => !baselineFilesWithViolations.has(f));
+
   return {
     passed: violations.length === 0,
     errors: violations.length,
@@ -291,5 +293,19 @@ export function run() {
         ? `${violations.length} raw Tailwind violations`
         : `owned boundary${baselineDetail}`,
     messages,
+    cleanBaselineFiles,
   };
+}
+
+// Standalone audit mode: node scripts/validate/check-raw-tailwind.js --audit
+if (process.argv.includes("--audit")) {
+  const result = run();
+  const clean = result.cleanBaselineFiles;
+  console.log(`\nBaseline: ${BASELINE_FILES.size} files`);
+  console.log(`Clean (removable): ${clean.length}`);
+  console.log(`Still violating: ${BASELINE_FILES.size - clean.length}\n`);
+  if (clean.length > 0) {
+    console.log("Remove from BASELINE_FILES:");
+    for (const f of clean.sort()) console.log(`  "${f}",`);
+  }
 }
