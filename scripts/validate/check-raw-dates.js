@@ -3,7 +3,7 @@
  * Flags direct use of new Date().toLocaleDateString(), .toLocaleString(),
  * .toLocaleTimeString(), and .toISOString() in component and route files.
  *
- * Use the shared date utilities from @/lib/dates instead:
+ * Use the shared date utilities from @/lib/formatting (or @/lib/dates) instead:
  * - formatDate(timestamp) — locale date
  * - formatDateTime(timestamp) — locale date + time
  * - formatRelativeTime(timestamp) — "2h ago", "3d ago"
@@ -54,11 +54,11 @@ const BASELINE_FILES = new Set([
 const PATTERNS = [
   {
     regex: /new Date\([^)]*\)\.toLocaleDateString\(/,
-    message: "use formatDate() or formatDateCustom() from @/lib/dates",
+    message: "use formatDate() or formatDateCustom() from @/lib/formatting (or @/lib/dates)",
   },
   {
     regex: /new Date\([^)]*\)\.toLocaleString\(/,
-    message: "use formatDateTime() from @/lib/dates",
+    message: "use formatDateTime() from @/lib/formatting (or @/lib/dates)",
   },
   {
     regex: /new Date\([^)]*\)\.toLocaleTimeString\(/,
@@ -67,11 +67,12 @@ const PATTERNS = [
   {
     regex: /new Date\([^)]*\)\.toISOString\(\)/,
     message:
-      "use formatDateForInput() from @/lib/dates for YYYY-MM-DD, or formatDate() for display",
+      "use formatDateForInput() from @/lib/formatting (or @/lib/dates) for YYYY-MM-DD, or formatDate() for display",
   },
   {
     regex: /\.toLocaleDateString\(\)/,
-    message: "use formatDate() from @/lib/dates (handles locale consistently)",
+    message:
+      "use formatDate() from @/lib/formatting (or @/lib/dates) (handles locale consistently)",
   },
 ];
 
