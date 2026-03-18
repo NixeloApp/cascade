@@ -7,7 +7,6 @@
 | Metric | Value |
 |--------|-------|
 | Validators | 44/44 pass |
-| Tests | 1934 suites, 4099 tests |
 | Bundle | 337KB gzip |
 | Screenshots | 300+ across 4 viewport/theme combos, 0 uncovered routes |
 | Raw TW baseline | 148 files (run `node scripts/validate/check-raw-tailwind.js --audit` to check) |
