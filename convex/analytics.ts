@@ -491,20 +491,32 @@ export const getOrgAnalytics = authenticatedQuery({
     const isMember = await isOrganizationMember(ctx, organizationId, ctx.userId);
     if (!isMember) throw new Error("Not a member of this organization");
 
-    // Fetch all non-deleted issues in the org (bounded)
-    const issues = await ctx.db
+    // Fetch projects the user has access to (via projectMembers)
+    const memberships = await ctx.db
+      .query("projectMembers")
+      .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
+      .filter(notDeleted)
+      .take(MAX_PAGE_SIZE);
+
+    const allProjects = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
+      .filter(notDeleted)
+      .take(MAX_PAGE_SIZE);
+
+    const memberProjectIds = new Set(memberships.map((m) => m.projectId));
+    const projects = allProjects.filter((p) => p.isPublic || memberProjectIds.has(p._id));
+    const accessibleProjectIds = new Set(projects.map((p) => p._id));
+
+    // Fetch non-deleted issues, filtered to accessible projects
+    const allIssues = await ctx.db
       .query("issues")
       .withIndex("by_organization_deleted", (q) =>
         q.eq("organizationId", organizationId).lt("isDeleted", true),
       )
       .take(ORG_ANALYTICS_ISSUE_LIMIT);
 
-    // Fetch all projects in the org for workflow state resolution
-    const projects = await ctx.db
-      .query("projects")
-      .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
-      .filter(notDeleted)
-      .take(MAX_PAGE_SIZE);
+    const issues = allIssues.filter((i) => accessibleProjectIds.has(i.projectId));
 
     // Build per-project done-state sets
     const doneStates = new Map<string, Set<string>>();
