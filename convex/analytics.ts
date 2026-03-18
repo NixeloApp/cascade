@@ -7,7 +7,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { authenticatedQuery, projectQuery, sprintQuery } from "./customFunctions";
 import { batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { efficientCount } from "./lib/boundedQueries";
-import { isOrganizationMember } from "./lib/organizationAccess";
+import { isOrganizationAdmin, isOrganizationMember } from "./lib/organizationAccess";
 import { logQueryPayloadTelemetry } from "./lib/payloadTelemetry";
 import {
   clampLimit,
@@ -491,21 +491,28 @@ export const getOrgAnalytics = authenticatedQuery({
     const isMember = await isOrganizationMember(ctx, organizationId, ctx.userId);
     if (!isMember) throw new Error("Not a member of this organization");
 
-    // Fetch projects the user has access to (via projectMembers)
-    const memberships = await ctx.db
-      .query("projectMembers")
-      .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
-      .filter(notDeleted)
-      .take(MAX_PAGE_SIZE);
+    // Fetch all org projects, then filter by access
+    const isAdmin = await isOrganizationAdmin(ctx, organizationId, ctx.userId);
 
-    const allProjects = await ctx.db
+    const orgProjects = await ctx.db
       .query("projects")
       .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
-      .filter(notDeleted)
       .take(MAX_PAGE_SIZE);
+    const allProjects = orgProjects.filter((p) => !p.isDeleted);
 
-    const memberProjectIds = new Set(memberships.map((m) => m.projectId));
-    const projects = allProjects.filter((p) => p.isPublic || memberProjectIds.has(p._id));
+    // Org admins see everything; others see public + member projects
+    let projects: typeof allProjects;
+    if (isAdmin) {
+      projects = allProjects;
+    } else {
+      const memberships = await ctx.db
+        .query("projectMembers")
+        .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
+        // @convex-validation-ignore TAKE_BEFORE_FILTER — filter below is on allProjects, not this query
+        .take(MAX_PAGE_SIZE);
+      const memberProjectIds = new Set(memberships.map((m) => m.projectId));
+      projects = allProjects.filter((p) => p.isPublic || memberProjectIds.has(p._id));
+    }
     const accessibleProjectIds = new Set(projects.map((p) => p._id));
 
     // Fetch non-deleted issues, filtered to accessible projects
@@ -568,8 +575,8 @@ export const getOrgAnalytics = authenticatedQuery({
       issuesByType: buildIssuesByType(typeCounts),
       issuesByPriority: buildIssuesByPriority(priorityCounts),
       projectBreakdown,
-      isIssuesTruncated: issues.length >= ORG_ANALYTICS_ISSUE_LIMIT,
-      isProjectsTruncated: projects.length >= MAX_PAGE_SIZE,
+      isIssuesTruncated: allIssues.length >= ORG_ANALYTICS_ISSUE_LIMIT,
+      isProjectsTruncated: allProjects.length >= MAX_PAGE_SIZE,
     };
   },
 });
