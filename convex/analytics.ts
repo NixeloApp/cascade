@@ -576,7 +576,7 @@ export const getOrgAnalytics = authenticatedQuery({
       issuesByPriority: buildIssuesByPriority(priorityCounts),
       projectBreakdown,
       isIssuesTruncated: allIssues.length >= ORG_ANALYTICS_ISSUE_LIMIT,
-      isProjectsTruncated: allProjects.length >= MAX_PAGE_SIZE,
+      isProjectsTruncated: orgProjects.length >= MAX_PAGE_SIZE,
     };
   },
 });
