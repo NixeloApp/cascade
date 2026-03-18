@@ -215,21 +215,21 @@ export function GoogleCalendarIntegration() {
                   }
                   disabled={isSaving}
                 >
-                  <Card padding="sm" variant="section">
+                  <Card padding="sm" variant="section" hoverable>
                     <RadioGroupItem
                       value="bidirectional"
                       label="Bidirectional"
                       description="Sync both ways (recommended)"
                     />
                   </Card>
-                  <Card padding="sm" variant="section">
+                  <Card padding="sm" variant="section" hoverable>
                     <RadioGroupItem
                       value="import"
                       label="Import Only"
                       description="Only import from Google to Nixelo"
                     />
                   </Card>
-                  <Card padding="sm" variant="section">
+                  <Card padding="sm" variant="section" hoverable>
                     <RadioGroupItem
                       value="export"
                       label="Export Only"

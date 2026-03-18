@@ -54,14 +54,20 @@ export function run() {
       const attrs = element.attributes;
       if (!attrs || !ts.isJsxAttributes(attrs)) return false;
       for (const prop of attrs.properties) {
-        if (
-          ts.isJsxAttribute(prop) &&
-          prop.name.getText() === "variant" &&
-          prop.initializer &&
-          ts.isStringLiteral(prop.initializer) &&
-          prop.initializer.text === "section"
-        ) {
-          return true;
+        if (ts.isJsxAttribute(prop) && prop.name.getText() === "variant" && prop.initializer) {
+          // variant="section"
+          if (ts.isStringLiteral(prop.initializer) && prop.initializer.text === "section") {
+            return true;
+          }
+          // variant={"section"}
+          if (
+            ts.isJsxExpression(prop.initializer) &&
+            prop.initializer.expression &&
+            ts.isStringLiteral(prop.initializer.expression) &&
+            prop.initializer.expression.text === "section"
+          ) {
+            return true;
+          }
         }
       }
       return false;

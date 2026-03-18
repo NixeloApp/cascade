@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense, useState } from "react";
-import { PageContent, PageHeader } from "@/components/layout";
+import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 
 const CalendarView = lazy(() =>
   import("@/components/Calendar/CalendarView").then((m) => ({ default: m.CalendarView })),
@@ -48,7 +48,7 @@ function OrganizationCalendarPage() {
     selectedTeamId !== "all" ? undefined : selectedWorkspaceId !== "all" ? "team" : "workspace";
 
   return (
-    <Flex direction="column" className="h-full">
+    <PageLayout fullHeight>
       <PageHeader
         title={scopeLabel}
         actions={
@@ -99,6 +99,6 @@ function OrganizationCalendarPage() {
           colorByScope={colorByScope}
         />
       </Suspense>
-    </Flex>
+    </PageLayout>
   );
 }

@@ -100,6 +100,8 @@ function WorkspaceSettings() {
   return (
     <div className="max-w-3xl">
       <Stack gap="xl">
+        <Typography variant="h2">Workspace Settings</Typography>
+
         {/* General Settings */}
         <Card variant="elevated" padding="lg">
           <Stack gap="lg">
