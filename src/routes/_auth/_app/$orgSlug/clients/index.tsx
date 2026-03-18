@@ -16,6 +16,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { formatDate } from "@/lib/dates";
 import { showError, showSuccess } from "@/lib/toast";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/clients/")({
   component: ClientsListPage,
@@ -233,25 +234,16 @@ function ClientsListPage() {
                             Status: {token.isRevoked ? "revoked" : "active"}
                           </Typography>
                           <Typography variant="caption" className="block">
-                            Updated:{" "}
-                            {new Date(token.updatedAt).toLocaleDateString(undefined, {
-                              timeZone: "UTC",
-                            })}
+                            Updated: {formatDate(token.updatedAt)}
                           </Typography>
                           {token.lastAccessedAt ? (
                             <Typography variant="caption" className="block">
-                              Last accessed:{" "}
-                              {new Date(token.lastAccessedAt).toLocaleDateString(undefined, {
-                                timeZone: "UTC",
-                              })}
+                              Last accessed: {formatDate(token.lastAccessedAt)}
                             </Typography>
                           ) : null}
                           {token.expiresAt ? (
                             <Typography variant="caption" className="block">
-                              Expires:{" "}
-                              {new Date(token.expiresAt).toLocaleDateString(undefined, {
-                                timeZone: "UTC",
-                              })}
+                              Expires: {formatDate(token.expiresAt)}
                             </Typography>
                           ) : null}
                           {!token.isRevoked ? (

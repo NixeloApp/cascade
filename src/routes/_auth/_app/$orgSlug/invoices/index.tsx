@@ -20,6 +20,7 @@ import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
+import { formatDate } from "@/lib/dates";
 import { WEEK } from "@/lib/time";
 import { showError, showSuccess } from "@/lib/toast";
 
@@ -114,10 +115,7 @@ function InvoicesListPage() {
                 <Typography variant="small">Status: {invoice.status}</Typography>
                 <Typography variant="small">Total: {formatCurrency(invoice.total)}</Typography>
                 <Typography variant="small" color="secondary">
-                  Due:{" "}
-                  {new Date(invoice.dueDate).toLocaleDateString(undefined, {
-                    timeZone: "UTC",
-                  })}
+                  Due: {formatDate(invoice.dueDate)}
                 </Typography>
                 <Link
                   to={ROUTES.invoices.detail.path}

@@ -273,6 +273,10 @@ const checks = [
     name: "Page layout",
     modulePath: new URL("./validate/check-page-layout.js", import.meta.url).href,
   },
+  {
+    name: "Raw Date formatting",
+    modulePath: new URL("./validate/check-raw-dates.js", import.meta.url).href,
+  },
 ];
 
 console.log(`\n${c.bold}Running validation...${c.reset}\n`);
