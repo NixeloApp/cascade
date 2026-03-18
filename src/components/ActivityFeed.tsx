@@ -226,6 +226,7 @@ export function ActivityFeed({ projectId, limit = 50, compact = false }: Activit
                 <Typography
                   variant={compact ? "meta" : "small"}
                   className="shrink-0 text-ui-text-tertiary"
+                  data-testid={TEST_IDS.ACTIVITY.TIMESTAMP}
                 >
                   {formatRelativeTime(activity._creationTime)}
                 </Typography>

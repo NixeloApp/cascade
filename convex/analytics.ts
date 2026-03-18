@@ -4,9 +4,10 @@
 
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
-import { projectQuery, sprintQuery } from "./customFunctions";
+import { authenticatedQuery, projectQuery, sprintQuery } from "./customFunctions";
 import { batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { efficientCount } from "./lib/boundedQueries";
+import { isOrganizationAdmin, isOrganizationMember } from "./lib/organizationAccess";
 import { logQueryPayloadTelemetry } from "./lib/payloadTelemetry";
 import {
   clampLimit,
@@ -471,5 +472,169 @@ export const getRecentActivity = projectQuery({
         issueTitle: issue?.title || "Unknown",
       };
     });
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Organization-level analytics
+// ---------------------------------------------------------------------------
+
+/**
+ * Get organization-wide analytics — aggregate issue stats across accessible projects.
+ * Uses per-project index-based counting (no bulk issue loading).
+ */
+export const getOrgAnalytics = authenticatedQuery({
+  args: { organizationId: v.id("organizations") },
+  handler: async (ctx, { organizationId }) => {
+    const isMember = await isOrganizationMember(ctx, organizationId, ctx.userId);
+    if (!isMember) throw new Error("Not a member of this organization");
+
+    const isAdmin = await isOrganizationAdmin(ctx, organizationId, ctx.userId);
+
+    // 1. Resolve accessible projects
+    const orgProjects = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organizationId))
+      .take(MAX_PAGE_SIZE);
+    const allProjects = orgProjects.filter((p) => !p.isDeleted);
+
+    let projects: typeof allProjects;
+    if (isAdmin) {
+      projects = allProjects;
+    } else {
+      const memberships = await ctx.db
+        .query("projectMembers")
+        .withIndex("by_user_deleted", (q) => q.eq("userId", ctx.userId).lt("isDeleted", true))
+        .take(MAX_PAGE_SIZE);
+      const memberProjectIds = new Set(memberships.map((m) => m.projectId));
+      projects = allProjects.filter((p) => p.isPublic || memberProjectIds.has(p._id));
+    }
+
+    // 2. Count per-project using indexes (no bulk issue loading)
+    const issueTypes = ["task", "bug", "story", "epic", "subtask"] as const;
+    const priorities = ["lowest", "low", "medium", "high", "highest"] as const;
+
+    const perProject = await Promise.all(
+      projects.map(async (project) => {
+        const pid = project._id;
+        const doneStateIds = new Set(
+          project.workflowStates.filter((s) => s.category === "done").map((s) => s.id),
+        );
+
+        // Parallel index counts for this project
+        const [total, unassigned, typeEntries, priorityEntries, doneEntries] = await Promise.all([
+          efficientCount(
+            ctx.db
+              .query("issues")
+              .withIndex("by_project_deleted", (q) => q.eq("projectId", pid).lt("isDeleted", true)),
+            MAX_SPRINT_ISSUES,
+          ),
+          efficientCount(
+            ctx.db
+              .query("issues")
+              .withIndex("by_project_assignee", (q) =>
+                q.eq("projectId", pid).eq("assigneeId", undefined).lt("isDeleted", true),
+              ),
+            MAX_SPRINT_ISSUES,
+          ),
+          Promise.all(
+            issueTypes.map(
+              async (type) =>
+                [
+                  type,
+                  await efficientCount(
+                    ctx.db
+                      .query("issues")
+                      .withIndex("by_project_type_deleted", (q) =>
+                        q.eq("projectId", pid).eq("type", type).lt("isDeleted", true),
+                      ),
+                    MAX_SPRINT_ISSUES,
+                  ),
+                ] as const,
+            ),
+          ),
+          Promise.all(
+            priorities.map(
+              async (priority) =>
+                [
+                  priority,
+                  await efficientCount(
+                    ctx.db
+                      .query("issues")
+                      .withIndex("by_project_priority_deleted", (q) =>
+                        q.eq("projectId", pid).eq("priority", priority).lt("isDeleted", true),
+                      ),
+                    MAX_SPRINT_ISSUES,
+                  ),
+                ] as const,
+            ),
+          ),
+          // Count completed: sum across done workflow states
+          Promise.all(
+            [...doneStateIds].map(async (stateId) =>
+              efficientCount(
+                ctx.db
+                  .query("issues")
+                  .withIndex("by_project_status_deleted", (q) =>
+                    q.eq("projectId", pid).eq("status", stateId).lt("isDeleted", true),
+                  ),
+                MAX_SPRINT_ISSUES,
+              ),
+            ),
+          ),
+        ]);
+
+        return {
+          projectId: pid,
+          name: project.name,
+          key: project.key,
+          total,
+          unassigned,
+          completed: doneEntries.reduce((sum, n) => sum + n, 0),
+          types: Object.fromEntries(typeEntries),
+          priorities: Object.fromEntries(priorityEntries),
+        };
+      }),
+    );
+
+    // 3. Aggregate across projects
+    const typeCounts: Record<string, number> = {};
+    const priorityCounts: Record<string, number> = {};
+    let totalIssues = 0;
+    let completedCount = 0;
+    let unassignedCount = 0;
+
+    for (const p of perProject) {
+      totalIssues += p.total;
+      completedCount += p.completed;
+      unassignedCount += p.unassigned;
+      for (const [type, count] of Object.entries(p.types)) {
+        typeCounts[type] = (typeCounts[type] || 0) + count;
+      }
+      for (const [priority, count] of Object.entries(p.priorities)) {
+        priorityCounts[priority] = (priorityCounts[priority] || 0) + count;
+      }
+    }
+
+    const projectBreakdown = perProject
+      .filter((p) => p.total > 0)
+      .sort((a, b) => b.total - a.total)
+      .map((p) => ({
+        projectId: p.projectId,
+        name: p.name,
+        key: p.key,
+        issueCount: p.total,
+      }));
+
+    return {
+      totalIssues,
+      completedCount,
+      unassignedCount,
+      projectCount: projects.length,
+      issuesByType: buildIssuesByType(typeCounts),
+      issuesByPriority: buildIssuesByPriority(priorityCounts),
+      projectBreakdown,
+      isProjectsTruncated: orgProjects.length >= MAX_PAGE_SIZE,
+    };
   },
 });

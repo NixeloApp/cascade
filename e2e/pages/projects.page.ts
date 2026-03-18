@@ -816,11 +816,7 @@ export class ProjectsPage extends BasePage {
 
   async expectActivityRelativeTimestampVisible() {
     await this.expectActivityEntriesVisible();
-    await expect(
-      this.activityFeed
-        .getByText(/just now|seconds? ago|minutes? ago|hours? ago|days? ago/i)
-        .first(),
-    ).toBeVisible();
+    await expect(this.activityFeed.getByTestId(TEST_IDS.ACTIVITY.TIMESTAMP).first()).toBeVisible();
   }
 
   /**

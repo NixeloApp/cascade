@@ -1,45 +1,79 @@
 # Nixelo Todo Portfolio
 
-> **Last Updated:** 2026-03-16
-> **Scope:** open work only
+> **Last Updated:** 2026-03-18
 
-## Current Status
+## Health
 
-- **41/41** validators pass. **519** test files, **4100** tests passing.
-- **Vendor bundle:** 337KB gzip (was 722KB). 10 cached chunks. 3 lazy-loaded routes.
-- **E2E suite:** zero anti-patterns remaining. `force:true` banned across all E2E files.
-- **Screenshot tool:** 300 screenshots across 4 viewport/theme combos. Visual regression tooling (`pnpm screenshots:diff`). 52+ page routes, 20+ interactive states, 13 modals captured.
-- **Test coverage baseline:** 2 files remain (was 49).
-- **All tech debt items closed.**
+| Metric | Value |
+|--------|-------|
+| Validators | 44/44 pass |
+| Tests | 250 files, 1966 tests |
+| Bundle | 337KB gzip |
+| Screenshots | 300+ across 4 viewport/theme combos, 0 uncovered routes |
+| Raw TW baseline | 148 files (run `node scripts/validate/check-raw-tailwind.js --audit` to check) |
 
-## Open Tracks
+---
 
-| Priority | File | State | Next Action |
-|---|---|---|---|
-| P0 | [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md) | Mostly done | Remaining: seed data enrichment, visual facelift, CI integration |
-| P1 | [slack-integration-issues.md](./slack-integration-issues.md) | Blocked | Org-scoped Slack connections (needs external access) |
-| P2 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | Partial | CSV done, PDF export deferred (needs jsPDF decision) |
-| P2 | [feature-gaps.md](./feature-gaps.md) | Blocked | Slack dashboard setup |
-| P2 | [emoji-overhaul.md](./emoji-overhaul.md) | Blocked | Accessibility QA |
-| P2 | [multi-level-views.md](./multi-level-views.md) | Blocked | `@xyflow/react` package |
-| P2 | [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) | Blocked | Monitoring destination |
-| P3 | [public-launch.md](./public-launch.md) | Blocked | Launch ops |
-| P3 | [uptime-monitoring.md](./uptime-monitoring.md) | Blocked | Architecture decisions |
-| P4 | [growth-features.md](./growth-features.md) | Blocked | Outlook integration |
-| P4 | [enterprise.md](./enterprise.md) | Blocked | Billing/IdP decisions |
+## What to work on next
 
-## External Blockers
+### Actionable now (no external blockers)
 
-| Blocker | Affected Files |
-|---|---|
-| Slack app/dashboard | [feature-gaps.md](./feature-gaps.md) |
-| Monitoring destination | [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) |
-| Accessibility QA | [emoji-overhaul.md](./emoji-overhaul.md) |
-| `@xyflow/react` package | [multi-level-views.md](./multi-level-views.md) |
-| Outlook app setup | [growth-features.md](./growth-features.md) |
-| Billing/IdP decisions | [enterprise.md](./enterprise.md), [uptime-monitoring.md](./uptime-monitoring.md) |
-| Launch ops | [public-launch.md](./public-launch.md) |
+| Priority | File | What | Open items |
+|----------|------|------|------------|
+| P2 | [cal-com-features.md](./cal-com-features.md) | Port features from Cal.com v6.3 | 8 items: AI agents, OOO status, cancellation reasons, workflow translation, custom domain/SMTP, branding |
+| P2 | [plane-features.md](./plane-features.md) | Port features from Plane | 12 items: Gantt chart, intake/triage, deploy boards, stickies, analytics, auto-archive, multi-provider AI, page versions |
+| P3 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export for billing reports | 1 item: needs jsPDF or server-side generation |
 
-## Open Jules Issue
+### Blocked (needs human action first)
 
-- [jules-librarian-2026-02-23-lodash-vulnerability.md](./jules/open/jules-librarian-2026-02-23-lodash-vulnerability.md)
+| Priority | File | What | Blocker | To unblock |
+|----------|------|------|---------|------------|
+| P1 | [slack-integration-issues.md](./slack-integration-issues.md) | Org-scoped Slack connections leak across orgs | Slack API dashboard | Create Slack OAuth app, register commands |
+| P1 | [multi-level-views.md](./multi-level-views.md) | Cross-team dependency graph | Package install | Install `@xyflow/react` |
+| P2 | [feature-gaps.md](./feature-gaps.md) | Slack slash commands + URL unfurl | Slack dashboard | Register `/nixelo` command, unfurl patterns, provision env vars |
+| P2 | [emoji-overhaul.md](./emoji-overhaul.md) | Accessibility QA for icon changes | Manual testing | Screen reader + WCAG contrast testing |
+| P2 | [oauth-monitoring-finalization.md](./oauth-monitoring-finalization.md) | Ship OAuth health metrics | Monitoring destination | Pick DataDog/Grafana/etc, provision credentials |
+| P3 | [public-launch.md](./public-launch.md) | Launch on HN, Reddit, PH | Content + ops | Record demo, write blog post, set up Discord |
+| P3 | [uptime-monitoring.md](./uptime-monitoring.md) | Status pages + monitoring | Architecture | Decide check runner model, domain strategy, alerting policy |
+| P4 | [growth-features.md](./growth-features.md) | Outlook Calendar integration | Microsoft Entra | App registration, calendar scopes, redirect URIs |
+| P4 | [enterprise.md](./enterprise.md) | Stripe billing, SSO (Google/MS/Okta/SAML) | Billing + IdP decisions | Define enterprise wedge, pick billing approach |
+
+### Done (archive when ready)
+
+| File | Status |
+|------|--------|
+| [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md) | **Complete** — all visual polish done (PR #899). Residual: screenshot coverage for modals/interactive states, raw TW baseline. |
+
+---
+
+## Biggest feature gaps vs competitors
+
+Based on Cal.com v6.3 and Plane preview (both repos updated 2026-03-18):
+
+| Feature | Cal.com | Plane | Nixelo | Impact |
+|---------|---------|-------|--------|--------|
+| **Gantt chart** | — | ✅ Full | ❌ Simple roadmap only | High — standard PM expectation |
+| **OOO status** | ✅ Full API | — | ❌ Missing | High — affects calendar, assignments, notifications |
+| **Org analytics** | — | ✅ Trends, insights | ✅ Metrics + charts | ~~High~~ Done |
+| **AI agents** | ✅ Multi-channel | — | ❌ MCP placeholder | Medium — differentiator |
+| **Intake/triage** | — | ✅ Full system | ❌ Skeleton inbox | Medium — external request capture |
+| **Auto-archive** | — | ✅ Scheduled | ❌ Basic automation | Medium — reduces clutter |
+| **Deploy boards** | — | ✅ Per-entity | ⚠️ Token portal | Medium — public sharing |
+| **Multi-provider AI** | — | ✅ Admin config | ❌ Single provider | Low — flexibility |
+| **Page versions** | — | ✅ Restore UI | ⚠️ Component exists | Low — may already work |
+| **Custom domain** | ✅ Waitlist | — | ❌ Missing | Low — enterprise only |
+| **Workflow translation** | ✅ lingo.dev | — | ❌ English only | Low — i18n |
+
+---
+
+## Maintenance
+
+- **Raw tailwind baseline:** 148 files with violations. Gradually shrinks as components are touched.
+- **Jules:** [lodash vulnerability](./jules/open/jules-librarian-2026-02-23-lodash-vulnerability.md) — open issue.
+
+## Reference repos
+
+| Repo | Path | Last pulled |
+|------|------|-------------|
+| Cal.com | [github.com/calcom/cal.com](https://github.com/calcom/cal.com) | 2026-03-18 |
+| Plane | [github.com/makeplane/plane](https://github.com/makeplane/plane) | 2026-03-18 |

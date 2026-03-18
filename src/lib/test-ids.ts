@@ -206,6 +206,8 @@ export const TEST_IDS = {
     ENTRY: "activity-entry",
     /** @see src/components/ActivityFeed.tsx - shown when no activity */
     EMPTY_STATE: "activity-empty-state",
+    /** @see src/components/ActivityFeed.tsx - relative timestamp on each entry */
+    TIMESTAMP: "activity-timestamp",
   },
 
   // ============================================================
