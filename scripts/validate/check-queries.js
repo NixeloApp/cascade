@@ -248,10 +248,13 @@ export function run() {
 
         // Extract the variable name assigned by this .take() line
         // Patterns: "const foo = await ctx.db..." or "foo = await ctx.db..."
-        const takeVarMatch = lines
-          .slice(Math.max(0, i - 8), i + 1)
-          .join("\n")
-          .match(/(?:const|let)\s+(\w+)\s*=\s*(?:await\s+)?ctx\.db/);
+        // Use the LAST (nearest) assignment to infer which variable .take() belongs to
+        const takeContext = lines.slice(Math.max(0, i - 8), i + 1).join("\n");
+        const takeVarMatches = [
+          ...takeContext.matchAll(/(?:const|let)\s+(\w+)\s*=\s*(?:await\s+)?ctx\.db/g),
+        ];
+        const takeVarMatch =
+          takeVarMatches.length > 0 ? takeVarMatches[takeVarMatches.length - 1] : null;
         const takeVarName = takeVarMatch?.[1];
 
         // Match JS array .filter() - direct usage pattern

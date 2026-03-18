@@ -819,7 +819,7 @@ export class ProjectsPage extends BasePage {
     await expect(
       this.activityFeed
         .getByText(
-          /now|just now|seconds? ago|minutes? ago|hours? ago|days? ago|yesterday|last week/i,
+          /\bjust now\b|\b\d+ seconds? ago\b|\b\d+ minutes? ago\b|\b\d+ hours? ago\b|\b\d+ days? ago\b|\byesterday\b|\blast week\b|\bright now\b/i,
         )
         .first(),
     ).toBeVisible();
