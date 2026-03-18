@@ -505,12 +505,13 @@ export const getOrgAnalytics = authenticatedQuery({
     if (isAdmin) {
       projects = allProjects;
     } else {
-      const memberships = await ctx.db
+      const rawMemberships = await ctx.db
         .query("projectMembers")
         .withIndex("by_user", (q) => q.eq("userId", ctx.userId))
-        // @convex-validation-ignore TAKE_BEFORE_FILTER — filter below is on allProjects, not this query
         .take(MAX_PAGE_SIZE);
-      const memberProjectIds = new Set(memberships.map((m) => m.projectId));
+      const memberProjectIds = new Set(
+        rawMemberships.filter((m) => !m.isDeleted).map((m) => m.projectId),
+      );
       projects = allProjects.filter((p) => p.isPublic || memberProjectIds.has(p._id));
     }
     const accessibleProjectIds = new Set(projects.map((p) => p._id));
