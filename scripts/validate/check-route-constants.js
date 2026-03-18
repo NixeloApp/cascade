@@ -47,8 +47,9 @@ const ROUTE_PATTERNS = [
   },
 
   // Standalone hardcoded regex route constants: const X = /\/admin\/path\/[^/]+$/
+  // Matches assignments of regex literals containing route-like paths (2+ segments)
   {
-    regex: /=\s*\/\\\/[a-z][-a-z]+(\\\/[a-z][-a-z]+)*(\\\/)?\[?\$?\//,
+    regex: /=\s*\/\\\/[a-z][-a-z]+(\\\/[a-z[(\][-a-z^/]*)+/,
     message: "Hardcoded regex route constant",
   },
 ];
