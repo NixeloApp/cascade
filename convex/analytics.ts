@@ -556,6 +556,8 @@ export const getOrgAnalytics = authenticatedQuery({
       issuesByType: buildIssuesByType(typeCounts),
       issuesByPriority: buildIssuesByPriority(priorityCounts),
       projectBreakdown,
+      isIssuesTruncated: issues.length >= ORG_ANALYTICS_ISSUE_LIMIT,
+      isProjectsTruncated: projects.length >= MAX_PAGE_SIZE,
     };
   },
 });
