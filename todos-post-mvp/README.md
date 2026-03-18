@@ -2,7 +2,7 @@
 
 > **Last Updated:** 2026-03-18
 
-Items moved here are blocked on external dependencies or deferred past MVP.
+Items moved here are blocked on external dependencies or deferred past MVP. See [../todos/README.md](../todos/README.md) for MVP work.
 
 ## Blocked (needs human action)
 
