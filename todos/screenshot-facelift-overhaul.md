@@ -74,7 +74,7 @@ Make the validator catch the patterns we keep finding manually.
 
 ### Existing validator improvements
 
-- [ ] **`check-raw-tailwind.js`** — tighten baseline. Many baselined files have been partially cleaned up. Re-audit and shrink the baseline set.
+- [x] **`check-raw-tailwind.js`** — Added `--audit` mode (`node scripts/validate/check-raw-tailwind.js --audit`). Tightened baseline 150 → 148 (removed TimerWidget, UnsubscribePage). Remaining 148 files have real violations requiring manual cleanup.
 - [x] **`check-layout-prop-usage.js`** — Already covered: `tailwind-policy.js` line 298 flags `justify-*` in Flex className.
 
 ---
