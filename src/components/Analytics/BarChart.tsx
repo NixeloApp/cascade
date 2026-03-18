@@ -35,7 +35,7 @@ export function BarChart({
                 minWidth: item.value > 0 ? "2rem" : "0",
               }}
             >
-              <Typography variant="label" className="text-white drop-shadow-sm">
+              <Typography variant="label" className="text-ui-text-inverse drop-shadow-sm">
                 {item.value}
               </Typography>
             </Flex>
