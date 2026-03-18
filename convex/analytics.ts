@@ -7,6 +7,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { authenticatedQuery, projectQuery, sprintQuery } from "./customFunctions";
 import { batchFetchUsers, getUserName } from "./lib/batchHelpers";
 import { efficientCount } from "./lib/boundedQueries";
+import { isOrganizationMember } from "./lib/organizationAccess";
 import { logQueryPayloadTelemetry } from "./lib/payloadTelemetry";
 import {
   clampLimit,
@@ -486,11 +487,15 @@ const ORG_ANALYTICS_ISSUE_LIMIT = 5000;
 export const getOrgAnalytics = authenticatedQuery({
   args: { organizationId: v.id("organizations") },
   handler: async (ctx, { organizationId }) => {
+    // Enforce membership
+    const isMember = await isOrganizationMember(ctx, organizationId, ctx.userId);
+    if (!isMember) throw new Error("Not a member of this organization");
+
     // Fetch all non-deleted issues in the org (bounded)
     const issues = await ctx.db
       .query("issues")
       .withIndex("by_organization_deleted", (q) =>
-        q.eq("organizationId", organizationId).eq("isDeleted", false),
+        q.eq("organizationId", organizationId).lt("isDeleted", true),
       )
       .take(ORG_ANALYTICS_ISSUE_LIMIT);
 
