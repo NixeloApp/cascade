@@ -3,13 +3,16 @@ import type { Doc } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { anyApi } from "convex/server";
+import { Users } from "lucide-react";
 import { useState } from "react";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Input } from "@/components/ui/Input";
+import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
@@ -138,109 +141,130 @@ function ClientsListPage() {
     <PageLayout>
       <PageHeader title="Clients" description="Manage billing contacts and default rates." />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>New Client</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-3 pt-4 lg:grid-cols-4">
-          <Input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder="Client name"
-          />
-          <Input
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="client@example.com"
-          />
-          <Input
-            value={company}
-            onChange={(event) => setCompany(event.target.value)}
-            placeholder="Company"
-          />
-          <Input
-            type="number"
-            min={0}
-            step={0.01}
-            value={hourlyRate}
-            onChange={(event) => setHourlyRate(event.target.value)}
-            placeholder="Hourly rate"
-          />
-          <div className="lg:col-span-4">
-            <Button onClick={handleCreateClient} disabled={!name.trim() || !email.trim()}>
-              Create client
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <Stack gap="md">
+        <Card>
+          <CardHeader>
+            <CardTitle>New Client</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Grid cols={1} colsLg={4} gap="sm" className="pt-4">
+              <Input
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Client name"
+              />
+              <Input
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="client@example.com"
+              />
+              <Input
+                value={company}
+                onChange={(event) => setCompany(event.target.value)}
+                placeholder="Company"
+              />
+              <Input
+                type="number"
+                min={0}
+                step={0.01}
+                value={hourlyRate}
+                onChange={(event) => setHourlyRate(event.target.value)}
+                placeholder="Hourly rate"
+              />
+            </Grid>
+            <div className="mt-3">
+              <Button onClick={handleCreateClient} disabled={!name.trim() || !email.trim()}>
+                Create client
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
-      <Grid cols={1} gap="md" className="mt-4 lg:grid-cols-2">
-        {clients.map((client: Doc<"clients">) => (
-          <Card key={client._id}>
-            <CardHeader>
-              <CardTitle>{client.name}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1 pt-4">
-              <Typography variant="small">{client.email}</Typography>
-              {client.company ? (
-                <Typography variant="small" color="secondary">
-                  {client.company}
-                </Typography>
-              ) : null}
-              <Typography variant="small" color="secondary">
-                Default rate: ${client.hourlyRate?.toFixed(2) ?? "0.00"}
-              </Typography>
-              <div className="pt-2">
-                <Flex wrap gap="sm">
-                  <Button variant="secondary" onClick={() => handleGeneratePortalLink(client._id)}>
-                    Generate portal link
-                  </Button>
-                  <Button variant="ghost" onClick={() => handleRefreshPortalTokens(client._id)}>
-                    Refresh tokens
-                  </Button>
-                </Flex>
-                {generatedPortalLinks[client._id] ? (
-                  <Typography variant="caption" className="mt-2 block text-brand">
-                    {generatedPortalLinks[client._id]}
-                  </Typography>
-                ) : null}
-                {(portalTokensByClient[client._id] || []).map((token) => (
-                  <div key={token._id} className="mt-2 p-3 border-t border-ui-border">
-                    <Typography variant="caption" className="block">
-                      Token: {token._id}
-                    </Typography>
-                    <Typography variant="caption" className="block">
-                      Status: {token.isRevoked ? "revoked" : "active"}
-                    </Typography>
-                    <Typography variant="caption" className="block">
-                      Updated: {new Date(token.updatedAt).toISOString().slice(0, 10)}
-                    </Typography>
-                    {token.lastAccessedAt ? (
-                      <Typography variant="caption" className="block">
-                        Last accessed: {new Date(token.lastAccessedAt).toISOString().slice(0, 10)}
+        {clients.length === 0 ? (
+          <EmptyState
+            icon={Users}
+            title="No clients yet"
+            description="Add your first billing contact above to get started."
+          />
+        ) : (
+          <Grid cols={1} colsLg={2} gap="md">
+            {clients.map((client: Doc<"clients">) => (
+              <Card key={client._id}>
+                <CardHeader>
+                  <CardTitle>{client.name}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Stack gap="xs" className="pt-4">
+                    <Typography variant="small">{client.email}</Typography>
+                    {client.company ? (
+                      <Typography variant="small" color="secondary">
+                        {client.company}
                       </Typography>
                     ) : null}
-                    {token.expiresAt ? (
-                      <Typography variant="caption" className="block">
-                        Expires: {new Date(token.expiresAt).toISOString().slice(0, 10)}
-                      </Typography>
-                    ) : null}
-                    {!token.isRevoked ? (
-                      <Button
-                        variant="ghost"
-                        className="mt-1"
-                        onClick={() => handleRevokePortalToken(client._id, token._id)}
-                      >
-                        Revoke token
-                      </Button>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </Grid>
+                    <Typography variant="small" color="secondary">
+                      Default rate: ${client.hourlyRate?.toFixed(2) ?? "0.00"}
+                    </Typography>
+                    <div className="pt-2">
+                      <Flex wrap gap="sm">
+                        <Button
+                          variant="secondary"
+                          onClick={() => handleGeneratePortalLink(client._id)}
+                        >
+                          Generate portal link
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={() => handleRefreshPortalTokens(client._id)}
+                        >
+                          Refresh tokens
+                        </Button>
+                      </Flex>
+                      {generatedPortalLinks[client._id] ? (
+                        <Typography variant="caption" className="mt-2 block text-brand">
+                          {generatedPortalLinks[client._id]}
+                        </Typography>
+                      ) : null}
+                      {(portalTokensByClient[client._id] || []).map((token) => (
+                        <div key={token._id} className="mt-2 p-3 border-t border-ui-border">
+                          <Typography variant="caption" className="block">
+                            Token: {token._id}
+                          </Typography>
+                          <Typography variant="caption" className="block">
+                            Status: {token.isRevoked ? "revoked" : "active"}
+                          </Typography>
+                          <Typography variant="caption" className="block">
+                            Updated: {new Date(token.updatedAt).toISOString().slice(0, 10)}
+                          </Typography>
+                          {token.lastAccessedAt ? (
+                            <Typography variant="caption" className="block">
+                              Last accessed:{" "}
+                              {new Date(token.lastAccessedAt).toISOString().slice(0, 10)}
+                            </Typography>
+                          ) : null}
+                          {token.expiresAt ? (
+                            <Typography variant="caption" className="block">
+                              Expires: {new Date(token.expiresAt).toISOString().slice(0, 10)}
+                            </Typography>
+                          ) : null}
+                          {!token.isRevoked ? (
+                            <Button
+                              variant="ghost"
+                              className="mt-1"
+                              onClick={() => handleRevokePortalToken(client._id, token._id)}
+                            >
+                              Revoke token
+                            </Button>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  </Stack>
+                </CardContent>
+              </Card>
+            ))}
+          </Grid>
+        )}
+      </Stack>
     </PageLayout>
   );
 }
