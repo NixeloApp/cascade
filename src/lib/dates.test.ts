@@ -91,11 +91,16 @@ describe("dates utility functions", () => {
   });
 
   describe("getTodayString", () => {
-    it("should return today's date in YYYY-MM-DD format", () => {
+    beforeEach(() => {
       vi.useFakeTimers();
       vi.setSystemTime(new Date("2026-01-15T12:00:00Z"));
-      expect(getTodayString()).toBe("2026-01-15");
+    });
+    afterEach(() => {
       vi.useRealTimers();
+    });
+
+    it("should return today's date in YYYY-MM-DD format", () => {
+      expect(getTodayString()).toBe("2026-01-15");
     });
   });
 

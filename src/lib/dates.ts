@@ -86,6 +86,15 @@ export function formatRelativeTimeSimple(timestamp: number): string {
   const diffHours = Math.floor(diffMs / HOUR);
   const diffDays = Math.floor(diffMs / DAY);
 
+  // Future timestamps fall through to absolute date
+  if (diffMs < 0) {
+    return new Date(timestamp).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+
   if (diffMins < 1) return "Just now";
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
