@@ -72,8 +72,9 @@ Tracked separately — these are tooling tasks, not visual fixes.
 ### Routes not yet captured
 
 - [ ] Portal page (`/portal/$token`)
-- [ ] Onboarding flow (`/onboarding`)
-- [ ] Invoice detail (`/$orgSlug/invoices/$invoiceId`)
+- [x] Onboarding flow — excluded (requires fresh user state, can't capture with seeded test user)
+- [x] Invoice detail — excluded (requires creating an invoice; list page is captured)
+- [x] Org inbox, workspaces.board, workspaces.teams.list — excluded (routes defined but pages not implemented)
 
 ### Modals not yet captured
 
