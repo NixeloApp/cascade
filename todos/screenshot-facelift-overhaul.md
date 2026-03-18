@@ -24,7 +24,7 @@ All pages that bypassed `PageLayout`/`PageHeader` have been migrated or confirme
 
 ### Deferred (working correctly, just not using PageHeader)
 
-- [ ] `projects/$key/board.tsx` — sprint selector, progress bar, export button, FilterBar. Uses `Card recipe="filterBar"` properly.
+- [x] `projects/$key/board.tsx` — Cleaned up: Card `padding="md"` prop instead of className, simplified Flex props, removed raw Badge/SelectTrigger className overrides.
 - [ ] `projects/$key/route.tsx` — tab navigation with mobile/desktop layouts, backdrop-blur. Fundamentally different from PageHeader.
 
 ### Validator

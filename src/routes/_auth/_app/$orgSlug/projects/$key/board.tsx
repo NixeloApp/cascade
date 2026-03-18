@@ -111,14 +111,9 @@ function BoardPage() {
 
   return (
     <Flex direction="column" className="h-full">
-      <div className="hidden px-2 pt-1.5 sm:block sm:px-4 sm:pt-3">
-        <Card recipe="filterBar" className="px-4 py-3">
-          <Flex
-            align="center"
-            justify="between"
-            gap="md"
-            className="flex-row flex-wrap sm:flex-nowrap"
-          >
+      <div className="hidden sm:block sm:px-4 sm:pt-3">
+        <Card recipe="filterBar" padding="md">
+          <Flex align="center" justify="between" gap="md" wrap>
             <Flex align="center" gap="sm" wrap className="min-w-0">
               <div>
                 <Typography variant="h4" className="tracking-tight">
@@ -128,14 +123,14 @@ function BoardPage() {
                   Filter issues, switch sprints, and move work without leaving the board.
                 </Typography>
               </div>
-              <Badge variant="neutral" size="sm" className="inline-flex text-xs">
+              <Badge variant="neutral" size="sm">
                 {project.key}
               </Badge>
-              <Badge variant="accent" size="md" className="inline-flex">
+              <Badge variant="accent" size="md">
                 {project.boardType}
               </Badge>
             </Flex>
-            <Flex align="center" gap="sm" wrap className="w-full justify-end sm:ml-auto sm:w-auto">
+            <Flex align="center" gap="sm" wrap className="shrink-0">
               {/* Sprint Progress & Workload */}
               {project.boardType === "scrum" && effectiveSprintId && (
                 <>
@@ -147,7 +142,7 @@ function BoardPage() {
               <ExportButton projectId={project._id} sprintId={effectiveSprintId} />
               {project.boardType === "scrum" && sprints && (
                 <Select value={selectedSprint?._id || "active"} onValueChange={handleSprintChange}>
-                  <SelectTrigger className="w-48 px-3 py-2 border border-ui-border text-sm">
+                  <SelectTrigger className="w-48">
                     <SelectValue placeholder="Active Sprint" />
                   </SelectTrigger>
                   <SelectContent>
