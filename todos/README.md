@@ -54,7 +54,7 @@ Based on Cal.com v6.3 and Plane preview (both repos updated 2026-03-18):
 |---------|---------|-------|--------|--------|
 | **Gantt chart** | — | ✅ Full | ❌ Simple roadmap only | High — standard PM expectation |
 | **OOO status** | ✅ Full API | — | ❌ Missing | High — affects calendar, assignments, notifications |
-| **Org analytics** | — | ✅ Trends, insights | ❌ Placeholder page | High — visible gap |
+| **Org analytics** | — | ✅ Trends, insights | ✅ Metrics + charts | ~~High~~ Done |
 | **AI agents** | ✅ Multi-channel | — | ❌ MCP placeholder | Medium — differentiator |
 | **Intake/triage** | — | ✅ Full system | ❌ Skeleton inbox | Medium — external request capture |
 | **Auto-archive** | — | ✅ Scheduled | ❌ Basic automation | Medium — reduces clutter |

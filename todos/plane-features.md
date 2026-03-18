@@ -36,7 +36,7 @@ Widget-based sticky notes at `apps/web/core/components/stickies/`. Quick capture
 Plane has priority charts, created-vs-resolved trends, customizable insights at `apps/web/core/components/analytics/`.
 
 - [ ] **Enhance our analytics** — Our project analytics page has basic charts. Plane has trend analysis and custom insights.
-- [ ] **Org-level analytics** — Our org analytics page is a placeholder (EmptyState). Port Plane's workspace analytics pattern.
+- [x] **Org-level analytics** — Implemented: metrics (total/completed/unassigned/projects), charts (by type, priority, project). Backend query aggregates across all org projects.
 
 ### Automation Workflows
 Auto-archive, auto-close, monthly scheduling at `apps/web/core/components/automation/`.
