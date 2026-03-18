@@ -486,9 +486,6 @@ const ORG_ANALYTICS_ISSUE_LIMIT = 5000;
 export const getOrgAnalytics = authenticatedQuery({
   args: { organizationId: v.id("organizations") },
   handler: async (ctx, { organizationId }) => {
-    const issueTypes = ["task", "bug", "story", "epic", "subtask"] as const;
-    const priorities = ["lowest", "low", "medium", "high", "highest"] as const;
-
     // Fetch all non-deleted issues in the org (bounded)
     const issues = await ctx.db
       .query("issues")
