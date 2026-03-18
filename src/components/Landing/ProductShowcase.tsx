@@ -77,7 +77,7 @@ export function ProductShowcase() {
         <div className={showcaseVariants.frameBody()}>
           <Stack gap="xl">
             {/* Hero section: intro + board preview side by side */}
-            <Card recipe="showcasePanel" padding="lg">
+            <Card recipe="showcasePanel" variant="section" padding="lg">
               <Grid cols={1} colsLg={12} gap="xl">
                 {/* Left: Intro content with breathing room */}
                 <Stack gap="lg" className="lg:col-span-4">
@@ -114,7 +114,12 @@ export function ProductShowcase() {
                 {/* Right: Board preview columns */}
                 <Grid cols={1} colsSm={3} gap="md" className="lg:col-span-8">
                   {boardColumns.map((column) => (
-                    <Card key={column.title} recipe="showcasePanelQuiet" padding="sm">
+                    <Card
+                      key={column.title}
+                      recipe="showcasePanelQuiet"
+                      variant="section"
+                      padding="sm"
+                    >
                       <Flex align="center" justify="between" className="mb-3">
                         <Typography variant="label">{column.title}</Typography>
                         <Dot className={column.accent} />
@@ -122,7 +127,7 @@ export function ProductShowcase() {
 
                       <Stack gap="sm">
                         {column.cards.map((card) => (
-                          <Card key={card} recipe="overlayInset" padding="sm">
+                          <Card key={card} recipe="overlayInset" variant="section" padding="sm">
                             <Typography variant="small">{card}</Typography>
                           </Card>
                         ))}
@@ -137,7 +142,7 @@ export function ProductShowcase() {
             <Grid cols={1} colsLg={12} gap="lg">
               {/* Metrics strip */}
               <Grid cols={1} colsSm={3} gap="md" className="lg:col-span-7">
-                <Card recipe="metricTile" padding="md">
+                <Card recipe="metricTile" variant="section" padding="md">
                   <Typography variant="meta" className="uppercase tracking-widest">
                     Active projects
                   </Typography>
@@ -149,7 +154,7 @@ export function ProductShowcase() {
                   </Typography>
                 </Card>
 
-                <Card recipe="metricTile" padding="md">
+                <Card recipe="metricTile" variant="section" padding="md">
                   <Typography variant="meta" className="uppercase tracking-widest">
                     AI assists today
                   </Typography>
@@ -161,7 +166,7 @@ export function ProductShowcase() {
                   </Typography>
                 </Card>
 
-                <Card recipe="metricTile" padding="md">
+                <Card recipe="metricTile" variant="section" padding="md">
                   <Typography variant="meta" className="uppercase tracking-widest">
                     Time recovered
                   </Typography>
@@ -175,7 +180,7 @@ export function ProductShowcase() {
               </Grid>
 
               {/* AI assistant card */}
-              <Card recipe="showcasePanel" padding="lg" className="lg:col-span-5">
+              <Card recipe="showcasePanel" variant="section" padding="lg" className="lg:col-span-5">
                 <Flex align="center" gap="sm" className="mb-4">
                   <div className={showcaseVariants.sparkBadge()}>
                     <Sparkles className="h-4 w-4" />
@@ -186,7 +191,7 @@ export function ProductShowcase() {
                   </div>
                 </Flex>
 
-                <Card recipe="overlayInset" padding="md">
+                <Card recipe="overlayInset" variant="section" padding="md">
                   <Typography variant="small" color="secondary">
                     "Summarize what changed since the last client review and flag blockers."
                   </Typography>

@@ -19,13 +19,7 @@ const IGNORE_DIRS = ["src/lib", "src/components/ui"];
 
 // Files with known nested Card issues - baseline to track and fix over time
 // These are pre-existing violations; new violations will fail CI
-const BASELINE_FILES = new Set([
-  "src/components/Admin/UserTypeManager.tsx",
-  "src/components/Landing/AIFeatureDemo.tsx",
-  "src/components/Landing/ProductShowcase.tsx",
-  "src/components/Settings/PumbleIntegration.tsx",
-  "src/components/TimeTracker/Timesheet.tsx",
-]);
+const BASELINE_FILES = new Set([]);
 
 // ============================================================================
 // Main

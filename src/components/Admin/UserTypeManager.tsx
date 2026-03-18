@@ -381,7 +381,7 @@ export function UserTypeManager() {
           ) : (
             <Grid cols={1} colsMd={3} gap="lg">
               {configs.map((config: EmploymentTypeConfig) => (
-                <Card key={config.type} padding="md" hoverable>
+                <Card key={config.type} padding="md" variant="section" hoverable>
                   <Stack gap="sm">
                     <Flex justify="between" align="start">
                       <Flex align="center" gap="sm">
@@ -461,14 +461,18 @@ export function UserTypeManager() {
         <CardBody>
           {/* Users without profiles */}
           {usersWithoutProfiles && usersWithoutProfiles.length > 0 && (
-            <Card padding="md" className="mb-6 bg-status-warning-bg border-status-warning">
+            <Card
+              padding="md"
+              variant="section"
+              className="mb-6 bg-status-warning-bg border-status-warning"
+            >
               <Stack gap="sm">
                 <Typography variant="label" className="text-status-warning-text">
                   Unassigned Users ({usersWithoutProfiles.length})
                 </Typography>
                 <Stack gap="sm">
                   {usersWithoutProfiles.slice(0, 5).map((user: UserWithoutProfile) => (
-                    <Card key={user._id} padding="sm" variant="interactive">
+                    <Card key={user._id} padding="sm" variant="section">
                       <Flex justify="between" align="center">
                         <Typography variant="small">
                           {user.name || user.email || "Unknown User"}
@@ -505,7 +509,7 @@ export function UserTypeManager() {
           ) : (
             <Stack gap="sm">
               {profiles.map((profile: UserProfileWithUser) => (
-                <Card key={profile._id} padding="md" hoverable>
+                <Card key={profile._id} padding="md" variant="section" hoverable>
                   <Flex justify="between" align="start" gap="md">
                     <FlexItem flex="1">
                       <Stack gap="sm">
@@ -869,7 +873,7 @@ export function UserTypeManager() {
                         rows={2}
                       />
 
-                      <Card padding="sm" className="bg-brand-subtle">
+                      <Card padding="sm" variant="section" className="bg-brand-subtle">
                         <Flex align="start" gap="sm" className="text-brand-hover">
                           <Icon icon={Lightbulb} size="sm" className="shrink-0 mt-0.5" />
                           <span>

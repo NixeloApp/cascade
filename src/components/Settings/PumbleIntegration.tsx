@@ -69,7 +69,7 @@ export function PumbleIntegration() {
       {/* Header */}
       <CardHeader action={<Button onClick={() => setShowAddModal(true)}>Add Webhook</Button>}>
         <Flex gap="md" align="center">
-          <Card variant="flat" padding="sm" radius="md">
+          <Card variant="section" padding="sm" radius="md">
             <MessageSquare className="h-5 w-5 text-accent" />
           </Card>
           <Stack gap="xs">
@@ -82,10 +82,10 @@ export function PumbleIntegration() {
       </CardHeader>
 
       {/* Content */}
-      <Card padding="lg" radius="none" variant="ghost">
+      <Card padding="lg" radius="none" variant="section">
         <Stack gap="lg">
           {webhooks === undefined ? (
-            <Card padding="xl" variant="flat">
+            <Card padding="xl" variant="section">
               <Flex align="center" justify="center">
                 <Typography color="tertiary">Loading webhooks...</Typography>
               </Flex>
@@ -100,7 +100,7 @@ export function PumbleIntegration() {
             </Stack>
           )}
 
-          <Card variant="flat" padding="sm">
+          <Card variant="section" padding="sm">
             <Flex gap="md" align="center">
               <Button
                 asChild
@@ -233,7 +233,7 @@ function WebhookCard({ webhook, projects }: WebhookCardProps) {
           </Typography>
         )}
 
-        <Card padding="sm" variant="flat">
+        <Card padding="sm" variant="section">
           <Flex justify="between" align="center" gap="sm" wrap>
             <Flex gap="sm" wrap>
               <Button onClick={handleTest} variant="ghost" size="sm">

@@ -62,7 +62,7 @@ export function AIFeatureDemo() {
               </div>
             </Flex>
 
-            <Card variant="soft" padding="md" className={aiFeatureDemoVariants.softCard()}>
+            <Card variant="section" padding="md" className={aiFeatureDemoVariants.softCard()}>
               <Typography variant="small">
                 “How do I add a board to my project and keep the client-facing summary updated?”
               </Typography>
@@ -101,7 +101,7 @@ export function AIFeatureDemo() {
               </Badge>
             </Flex>
 
-            <Card variant="soft" padding="lg" className={aiFeatureDemoVariants.softCard()}>
+            <Card variant="section" padding="lg" className={aiFeatureDemoVariants.softCard()}>
               <Typography variant="small" color="secondary" className="mb-4 leading-7">
                 To add a new board, open the workspace from the sidebar, choose the project, and
                 create the board from the project overview. If you attach the related spec and
