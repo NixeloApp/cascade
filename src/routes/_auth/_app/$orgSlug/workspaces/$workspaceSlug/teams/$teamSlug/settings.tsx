@@ -14,6 +14,8 @@ function TeamSettings() {
   return (
     <div className="max-w-3xl">
       <Flex direction="column" gap="xl">
+        <Typography variant="h2">Team Settings</Typography>
+
         {/* Coming soon placeholder */}
         <Card variant="soft">
           <div className="p-8 text-center">

@@ -124,6 +124,10 @@ export function run() {
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
 
+      // Skip comments and non-executable lines
+      const trimmed = line.trimStart();
+      if (trimmed.startsWith("//") || trimmed.startsWith("*") || trimmed.startsWith("/*")) continue;
+
       // Check always-flagged patterns first (even if ROUTES. is present)
       let alwaysFlagged = false;
       for (const { regex, message } of ALWAYS_CHECK) {
