@@ -472,6 +472,7 @@ const applicationTables = {
   })
     .index("by_project", ["projectId"])
     .index("by_user", ["userId"])
+    .index("by_user_deleted", ["userId", "isDeleted"])
     .index("by_project_user", ["projectId", "userId"])
     .index("by_role", ["role"])
     .index("by_deleted", ["isDeleted"]),

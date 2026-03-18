@@ -54,12 +54,10 @@ function AnalyticsPage() {
       />
 
       <Stack gap="lg">
-        {(analytics.isIssuesTruncated || analytics.isProjectsTruncated) && (
+        {analytics.isProjectsTruncated && (
           <Card padding="sm" variant="section">
             <Typography variant="small" color="secondary">
-              Showing approximate counts.{" "}
-              {analytics.isIssuesTruncated && "Issue data is capped at 5,000 records. "}
-              {analytics.isProjectsTruncated && "Project data is capped at 100 projects."}
+              Showing approximate counts. Project data is capped at 100 projects.
             </Typography>
           </Card>
         )}
