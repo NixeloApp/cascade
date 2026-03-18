@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense, useState } from "react";
-import { PageContent } from "@/components/layout";
+import { PageContent, PageHeader } from "@/components/layout";
 
 const CalendarView = lazy(() =>
   import("@/components/Calendar/CalendarView").then((m) => ({ default: m.CalendarView })),
@@ -16,7 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
-import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/calendar")({
@@ -50,52 +49,48 @@ function OrganizationCalendarPage() {
 
   return (
     <Flex direction="column" className="h-full">
-      <Flex
-        align="center"
-        justify="between"
-        className="gap-3 p-3 sm:p-4 border-b border-ui-border bg-ui-bg"
-      >
-        <Typography variant="label" color="secondary">
-          {scopeLabel}
-        </Typography>
-        <Flex gap="sm" className="w-full sm:w-auto">
-          <Select
-            value={selectedWorkspaceId}
-            onValueChange={(value) => {
-              setSelectedWorkspaceId(value as Id<"workspaces"> | "all");
-              setSelectedTeamId("all");
-            }}
-          >
-            <SelectTrigger className="w-full sm:w-56 bg-ui-bg">
-              <SelectValue placeholder="All workspaces" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All workspaces</SelectItem>
-              {workspaces.map((workspace) => (
-                <SelectItem key={workspace._id} value={workspace._id}>
-                  {workspace.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={selectedTeamId}
-            onValueChange={(value) => setSelectedTeamId(value as Id<"teams"> | "all")}
-          >
-            <SelectTrigger className="w-full sm:w-56 bg-ui-bg">
-              <SelectValue placeholder="All teams" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All teams</SelectItem>
-              {workspaceTeams.map((team) => (
-                <SelectItem key={team._id} value={team._id}>
-                  {team.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Flex>
-      </Flex>
+      <PageHeader
+        title={scopeLabel}
+        actions={
+          <Flex gap="sm" className="w-full sm:w-auto">
+            <Select
+              value={selectedWorkspaceId}
+              onValueChange={(value) => {
+                setSelectedWorkspaceId(value as Id<"workspaces"> | "all");
+                setSelectedTeamId("all");
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-56">
+                <SelectValue placeholder="All workspaces" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All workspaces</SelectItem>
+                {workspaces.map((workspace) => (
+                  <SelectItem key={workspace._id} value={workspace._id}>
+                    {workspace.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={selectedTeamId}
+              onValueChange={(value) => setSelectedTeamId(value as Id<"teams"> | "all")}
+            >
+              <SelectTrigger className="w-full sm:w-56">
+                <SelectValue placeholder="All teams" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All teams</SelectItem>
+                {workspaceTeams.map((team) => (
+                  <SelectItem key={team._id} value={team._id}>
+                    {team.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Flex>
+        }
+      />
       <Suspense fallback={<PageContent isLoading>{null}</PageContent>}>
         <CalendarView
           organizationId={organizationId}

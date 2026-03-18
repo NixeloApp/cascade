@@ -25,7 +25,7 @@ The app has `PageLayout`, `PageHeader`, `PageContent` components but 10+ pages b
 
 - [ ] **`projects/$key/board.tsx`** — sprint selector, progress bar, export button, separate FilterBar. Too coupled to board logic for simple PageHeader migration.
 - [ ] **`projects/$key/route.tsx`** — tab navigation with conditional mobile/desktop layouts, backdrop-blur wrapper. Fundamentally different from PageHeader purpose.
-- [ ] **`calendar.tsx`** — two scope-filter selects. Simplest of the three but responsive widths need PageHeader support first.
+- [x] **`calendar.tsx`** — Fixed: replaced ad-hoc Flex filter bar with PageHeader. Scope label as title, selects as actions.
 
 ### Validator: enforce PageLayout usage
 
