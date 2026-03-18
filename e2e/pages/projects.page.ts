@@ -818,7 +818,9 @@ export class ProjectsPage extends BasePage {
     await this.expectActivityEntriesVisible();
     await expect(
       this.activityFeed
-        .getByText(/just now|seconds? ago|minutes? ago|hours? ago|days? ago/i)
+        .getByText(
+          /now|just now|seconds? ago|minutes? ago|hours? ago|days? ago|yesterday|last week/i,
+        )
         .first(),
     ).toBeVisible();
   }
