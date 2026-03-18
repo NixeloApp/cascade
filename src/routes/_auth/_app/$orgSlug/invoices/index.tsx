@@ -91,9 +91,17 @@ function InvoicesListPage() {
       {invoices.length === 0 ? (
         <EmptyState
           icon={FileText}
-          title="No invoices yet"
-          description="Create a draft invoice to get started with billing."
-          action={{ label: "New draft", onClick: handleCreateDraft }}
+          title={status === "all" ? "No invoices yet" : `No ${status} invoices`}
+          description={
+            status === "all"
+              ? "Create a draft invoice to get started with billing."
+              : `No invoices match the "${status}" filter.`
+          }
+          action={
+            status === "all"
+              ? { label: "New draft", onClick: handleCreateDraft }
+              : { label: "Clear filter", onClick: () => setStatus("all") }
+          }
         />
       ) : (
         <Grid cols={1} gap="md" className="lg:grid-cols-2">

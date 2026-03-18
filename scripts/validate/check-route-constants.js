@@ -116,8 +116,8 @@ export function run() {
     // Patterns that are violations even when ROUTES. is on the line
     const ALWAYS_CHECK = [
       {
-        regex: /ROUTES\.[a-zA-Z_.]+\}\/\[/,
-        message: "Use ROUTES .build() instead of ROUTES constant + inline regex",
+        regex: /\$\{ROUTES\.[^}\n]+\}\/\[/,
+        message: "Use ROUTES.build() instead of ROUTES constant + inline regex",
       },
     ];
 
