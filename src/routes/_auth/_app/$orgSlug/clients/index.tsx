@@ -233,16 +233,25 @@ function ClientsListPage() {
                             Status: {token.isRevoked ? "revoked" : "active"}
                           </Typography>
                           <Typography variant="caption" className="block">
-                            Updated: {new Date(token.updatedAt).toLocaleDateString()}
+                            Updated:{" "}
+                            {new Date(token.updatedAt).toLocaleDateString(undefined, {
+                              timeZone: "UTC",
+                            })}
                           </Typography>
                           {token.lastAccessedAt ? (
                             <Typography variant="caption" className="block">
-                              Last accessed: {new Date(token.lastAccessedAt).toLocaleDateString()}
+                              Last accessed:{" "}
+                              {new Date(token.lastAccessedAt).toLocaleDateString(undefined, {
+                                timeZone: "UTC",
+                              })}
                             </Typography>
                           ) : null}
                           {token.expiresAt ? (
                             <Typography variant="caption" className="block">
-                              Expires: {new Date(token.expiresAt).toLocaleDateString()}
+                              Expires:{" "}
+                              {new Date(token.expiresAt).toLocaleDateString(undefined, {
+                                timeZone: "UTC",
+                              })}
                             </Typography>
                           ) : null}
                           {!token.isRevoked ? (
