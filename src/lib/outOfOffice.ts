@@ -47,3 +47,18 @@ export function formatOutOfOfficeDateRange(status: OutOfOfficeStatusSummary): st
 export function formatOutOfOfficeUntil(status: OutOfOfficeStatusSummary): string {
   return `Until ${formatDate(status.endsAt)}`;
 }
+
+/**
+ * Determine whether a selected event time range overlaps a configured OOO window.
+ */
+export function doesOutOfOfficeOverlapTimeRange(
+  status: OutOfOfficeStatusSummary | null | undefined,
+  startTime: number,
+  endTime: number,
+): boolean {
+  if (!status) {
+    return false;
+  }
+
+  return startTime < status.endsAt && endTime > status.startsAt;
+}

@@ -17,7 +17,7 @@
 
 | Priority | File | What | Open items |
 |----------|------|------|------------|
-| P2 | [cal-com-features.md](./cal-com-features.md) | Port features from Cal.com v6.3 | 7 items: AI agents, OOO internal-calendar follow-through, cancellation reasons, workflow translation, custom domain/SMTP, branding |
+| P2 | [cal-com-features.md](./cal-com-features.md) | Port features from Cal.com v6.3 | 6 items: AI agents, cancellation reasons, workflow translation, custom domain/SMTP, branding |
 | P2 | [plane-features.md](./plane-features.md) | Port features from Plane | 12 items: Gantt chart, intake/triage, deploy boards, stickies, analytics, auto-archive, multi-provider AI, page versions |
 | P3 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export for billing reports | 1 item: needs jsPDF or server-side generation |
 
@@ -36,7 +36,7 @@ Based on Cal.com v6.3 and Plane preview (both repos updated 2026-03-18):
 | Feature | Cal.com | Plane | Nixelo | Impact |
 |---------|---------|-------|--------|--------|
 | **Gantt chart** | — | ✅ Full | ❌ Simple roadmap only | High — standard PM expectation |
-| **OOO status** | ✅ Full API | — | ⚠️ Profile + assignee visibility + issue/booking delegation shipped; internal calendar integration missing | High — affects calendar, assignments, notifications |
+| **OOO status** | ✅ Full API | — | ✅ Profile settings, assignee visibility, issue delegation, booking redirect, and internal calendar blocking shipped | High — affects calendar, assignments, notifications |
 | **Org analytics** | — | ✅ Trends, insights | ✅ Metrics + charts | ~~High~~ Done |
 | **AI agents** | ✅ Multi-channel | — | ❌ MCP placeholder | Medium — differentiator |
 | **Intake/triage** | — | ✅ Full system | ❌ Skeleton inbox | Medium — external request capture |

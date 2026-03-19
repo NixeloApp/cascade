@@ -19,6 +19,21 @@ export function isOutOfOfficeActive(
 }
 
 /**
+ * Determine whether an event time range overlaps an out-of-office window.
+ */
+export function doesOutOfOfficeOverlapTimeRange(
+  status: StoredOutOfOfficeStatus | undefined,
+  startTime: number,
+  endTime: number,
+): boolean {
+  if (!status) {
+    return false;
+  }
+
+  return startTime < status.endsAt && endTime > status.startsAt;
+}
+
+/**
  * Return the active out-of-office status for a user, if one is currently in effect.
  */
 export function getActiveOutOfOfficeStatus(
@@ -31,6 +46,22 @@ export function getActiveOutOfOfficeStatus(
   }
 
   return isOutOfOfficeActive(status, now) ? status : undefined;
+}
+
+/**
+ * Return the configured out-of-office status when an event overlaps that window.
+ */
+export function getOutOfOfficeStatusForTimeRange(
+  user: Doc<"users"> | null | undefined,
+  startTime: number,
+  endTime: number,
+): StoredOutOfOfficeStatus | undefined {
+  const status = user?.outOfOffice;
+  if (!status) {
+    return undefined;
+  }
+
+  return doesOutOfOfficeOverlapTimeRange(status, startTime, endTime) ? status : undefined;
 }
 
 /**
