@@ -15,6 +15,7 @@ This directory contains design specifications for modal dialogs and overlay comp
 | Cover Image Upload | 🟢 SPEC'D | `cover-image-upload.md` |
 | Dashboard Customize | 🟢 SPEC'D | `dashboard-customize.md` |
 | Move Document | 🟢 SPEC'D | `move-document.md` |
+| Markdown Preview | 🟢 SPEC'D | `markdown-preview.md` |
 | Create Workspace | 🟡 REVIEW | - |
 | Create Team | 🟡 REVIEW | - |
 | Issue Detail | 🟡 REVIEW | - |

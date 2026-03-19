@@ -33,6 +33,7 @@ import {
   isEmptyValue,
   proseMirrorSnapshotToValue,
 } from "@/lib/plate/editor";
+import { markdownToValue, readMarkdownForPreview } from "@/lib/plate/markdown";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { DocumentHeader, DocumentSidebar } from "./Documents";
@@ -40,6 +41,7 @@ import { ErrorBoundary } from "./ErrorBoundary";
 import { MoveDocumentDialog } from "./MoveDocumentDialog";
 import { FloatingToolbar } from "./Plate/FloatingToolbar";
 import { SlashMenu } from "./Plate/SlashMenu";
+import { MarkdownPreviewModal } from "./ui/MarkdownPreviewModal";
 import { VersionHistory } from "./VersionHistory";
 
 interface PlateEditorProps {
@@ -138,6 +140,11 @@ interface LoadedPlateEditorProps {
     userId: NonNullable<PlateEditorData["userId"]>;
     versions: PlateEditorVersions;
   };
+}
+
+interface MarkdownImportPreview {
+  markdown: string;
+  filename: string;
 }
 
 function PlateEditorLoadingState({ versionsLoaded }: PlateEditorLoadingStateProps) {
@@ -291,6 +298,8 @@ function usePlateEditorUiState({
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [editorSeedValue, setEditorSeedValue] = useState<Value>(getInitialValue());
+  const [editorResetKey, setEditorResetKey] = useState(0);
   const [editorValue, setEditorValue] = useState<Value>(getInitialValue());
 
   useEffect(() => {
@@ -309,9 +318,11 @@ function usePlateEditorUiState({
     }
 
     const latestVersion = versions[0];
-    setEditorValue(
-      latestVersion ? proseMirrorSnapshotToValue(latestVersion.snapshot) : getInitialValue(),
-    );
+    const nextValue = latestVersion
+      ? proseMirrorSnapshotToValue(latestVersion.snapshot)
+      : getInitialValue();
+    setEditorSeedValue(nextValue);
+    setEditorValue(nextValue);
   }, [versions]);
 
   const handleChange = (value: Value) => {
@@ -334,14 +345,23 @@ function usePlateEditorUiState({
     }
   };
 
+  const replaceEditorValue = (value: Value) => {
+    setEditorSeedValue(value);
+    setEditorValue(value);
+    setEditorResetKey((prev) => prev + 1);
+  };
+
   return {
     showVersionHistory,
     setShowVersionHistory,
     showMoveDialog,
     setShowMoveDialog,
     showSidebar,
+    editorSeedValue,
+    editorResetKey,
     editorValue,
     handleChange,
+    replaceEditorValue,
     toggleSidebar: () => setShowSidebar((prev) => !prev),
     handleRestoreVersion,
   };
@@ -510,8 +530,11 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
     showMoveDialog,
     setShowMoveDialog,
     showSidebar,
+    editorSeedValue,
+    editorResetKey,
     editorValue,
     handleChange,
+    replaceEditorValue,
     toggleSidebar,
     handleRestoreVersion,
   } = usePlateEditorUiState({
@@ -520,10 +543,10 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
     versions,
     updateTitle,
   });
-  const initialEditorValue = versions[0]
-    ? proseMirrorSnapshotToValue(versions[0].snapshot)
-    : getInitialValue();
-  const isEmptyEditor = isEmptyValue(initialEditorValue);
+  const [markdownImportPreview, setMarkdownImportPreview] = useState<MarkdownImportPreview | null>(
+    null,
+  );
+  const isEmptyEditor = isEmptyValue(editorSeedValue);
 
   const {
     handleTitleEdit,
@@ -545,6 +568,27 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
     unlockDocument,
   });
 
+  const handleOpenMarkdownImportPreview = async () => {
+    const preview = await readMarkdownForPreview();
+    if (preview) {
+      setMarkdownImportPreview(preview);
+    }
+  };
+
+  const handleConfirmMarkdownImport = () => {
+    if (!markdownImportPreview) {
+      return;
+    }
+
+    try {
+      replaceEditorValue(markdownToValue(markdownImportPreview.markdown));
+      showSuccess(`Imported ${markdownImportPreview.filename}`);
+      setMarkdownImportPreview(null);
+    } catch (error) {
+      showError(error, "Failed to import markdown file");
+    }
+  };
+
   return (
     <Flex direction="column" className="h-full bg-ui-bg">
       <DocumentHeader
@@ -560,9 +604,7 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
         onToggleArchive={handleToggleArchive}
         onToggleLock={handleToggleLock}
         onMoveToProject={() => setShowMoveDialog(true)}
-        onImportMarkdown={async () => {
-          showError("Markdown import not yet implemented for Plate editor");
-        }}
+        onImportMarkdown={handleOpenMarkdownImportPreview}
         onExportMarkdown={async () => {
           showError("Markdown export not yet implemented for Plate editor");
         }}
@@ -588,8 +630,8 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
               }
             >
               <EditorCanvas
-                key={`${documentId}:${versions[0]?._id ?? "empty"}`}
-                initialEditorValue={initialEditorValue}
+                key={`${documentId}:${versions[0]?._id ?? "empty"}:${editorResetKey}`}
+                initialEditorValue={editorSeedValue}
                 isEmptyEditor={isEmptyEditor}
                 isLocked={lockStatus?.isLocked === true}
                 onChange={handleChange}
@@ -625,6 +667,18 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
         documentId={documentId}
         currentProjectId={document.projectId}
         organizationId={document.organizationId}
+      />
+
+      <MarkdownPreviewModal
+        open={markdownImportPreview !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setMarkdownImportPreview(null);
+          }
+        }}
+        onConfirm={handleConfirmMarkdownImport}
+        markdown={markdownImportPreview?.markdown ?? ""}
+        filename={markdownImportPreview?.filename ?? "document.md"}
       />
     </Flex>
   );

@@ -14,8 +14,6 @@ Core visual facelift work is done. Only the unfinished screenshot and validation
 
 ### Modals Still Not Captured
 
-- [ ] Markdown preview modal
-
 ### Interactive States Still Not Captured
 
 - [ ] Board: column empty, WIP limit warning

@@ -126,6 +126,15 @@ const SCREENSHOT_USER = {
   password: TEST_USERS.teamLead.password,
 };
 const SEARCH_SHORTCUT = process.platform === "darwin" ? "Meta+K" : "Control+K";
+const MARKDOWN_IMPORT_PREVIEW = `# Imported Product Brief
+
+- Align launch copy
+- Finalize onboarding checklist
+
+\`\`\`ts
+export const launchReady = true;
+\`\`\`
+`;
 
 /** Inject Convex auth tokens into the page's localStorage. */
 async function injectAuthTokens(
@@ -242,6 +251,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   // Document editor: filled-document-editor → 10-editor
   [/^filled-document-editor$/, "10-editor", ""],
   [/^filled-document-editor-move-dialog$/, "10-editor", "-move-dialog"],
+  [/^filled-document-editor-markdown-preview-modal$/, "10-editor", "-markdown-preview-modal"],
   [/^filled-document-editor-slash-menu$/, "10-editor", "-slash-menu"],
   [/^filled-document-editor-floating-toolbar$/, "10-editor", "-floating-toolbar"],
   [/^filled-document-editor-mention-popover$/, "10-editor", "-mention-popover"],
@@ -299,6 +309,7 @@ const MODAL_SPEC_PATTERNS: Array<[RegExp, string]> = [
   [/^filled-project-.+-members-confirm-dialog$/, "confirm-dialog"],
   [/^filled-dashboard-customize-modal$/, "dashboard-customize"],
   [/^filled-document-editor-move-dialog$/, "move-document"],
+  [/^filled-document-editor-markdown-preview-modal$/, "markdown-preview"],
   [/^filled-project-.+-create-issue-modal$/, "create-issue"],
   [/^filled-calendar-create-event-modal$/, "create-event"],
 ];
@@ -2818,6 +2829,7 @@ async function screenshotFilledStates(
   const editorTargets = [
     "document-editor",
     "document-editor-move-dialog",
+    "document-editor-markdown-preview-modal",
     "document-editor-slash-menu",
     "document-editor-floating-toolbar",
     "document-editor-mention-popover",
@@ -2845,6 +2857,34 @@ async function screenshotFilledStates(
           await waitForScreenshotReady(page);
           await captureCurrentView(page, p, "document-editor-move-dialog");
           await page.keyboard.press("Escape");
+        });
+      }
+
+      if (shouldCapture(p, "document-editor-markdown-preview-modal")) {
+        await runCaptureStep("document markdown preview modal", async () => {
+          await page
+            .goto(`${BASE_URL}${docUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+            .catch(() => {});
+          await waitForExpectedContent(page, docUrl, "document-editor");
+          await waitForScreenshotReady(page);
+          await dismissAllDialogs(page);
+          const trigger = page.getByRole("button", { name: /import from markdown/i }).first();
+          await trigger.waitFor({ state: "visible", timeout: 8000 });
+          const fileChooserPromise = page.waitForEvent("filechooser");
+          await trigger.click();
+          const fileChooser = await fileChooserPromise;
+          await fileChooser.setFiles({
+            name: "import.md",
+            mimeType: "text/markdown",
+            buffer: Buffer.from(MARKDOWN_IMPORT_PREVIEW, "utf8"),
+          });
+          const dialog = await waitForDialogOpen(page);
+          await page
+            .getByRole("dialog", { name: /preview markdown import/i })
+            .waitFor({ state: "visible", timeout: 5000 });
+          await waitForScreenshotReady(page);
+          await captureCurrentView(page, p, "document-editor-markdown-preview-modal");
+          await dismissIfOpen(page, dialog);
         });
       }
 
@@ -3761,6 +3801,7 @@ const DRY_RUN_PAGES = [
   // Filled states — document editor
   "filled-document-editor",
   "filled-document-editor-move-dialog",
+  "filled-document-editor-markdown-preview-modal",
   "filled-document-editor-slash-menu",
   "filled-document-editor-floating-toolbar",
   "filled-document-editor-mention-popover",
