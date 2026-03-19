@@ -359,6 +359,42 @@ describe("RoadmapView", () => {
     expect(screen.getByText("Mar 2026")).toBeInTheDocument();
   });
 
+  it("navigates the timeline window and resets back to today", () => {
+    mockRoadmapQueries({
+      issues: [
+        {
+          _id: issue1Id,
+          key: "PROJ-1",
+          title: "Plan onboarding",
+          status: "todo",
+          startDate: Date.UTC(2026, 2, 10),
+          dueDate: Date.UTC(2026, 2, 20),
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Alex Rivera" },
+        },
+      ],
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "1 Month" }));
+
+    expect(screen.getByText("March 2026")).toBeInTheDocument();
+    expect(screen.getByText("Mar 2026")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Next timeline window" }));
+
+    expect(screen.getByText("April 2026")).toBeInTheDocument();
+    expect(screen.getByText("Apr 2026")).toBeInTheDocument();
+    expect(screen.queryByText("March 2026")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Today" }));
+
+    expect(screen.getByText("March 2026")).toBeInTheDocument();
+    expect(screen.getByText("Mar 2026")).toBeInTheDocument();
+  });
+
   it("groups roadmap rows by assignee", () => {
     mockRoadmapQueries({
       issues: [

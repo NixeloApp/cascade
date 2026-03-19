@@ -18,7 +18,7 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useListNavigation } from "@/hooks/useListNavigation";
 import { formatDate } from "@/lib/dates";
-import { CalendarDays, ChevronDown, ChevronRight, LinkIcon } from "@/lib/icons";
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, LinkIcon } from "@/lib/icons";
 import { getPriorityColor, getStatusColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
 import { IssueDetailViewer } from "./IssueDetailViewer";
@@ -370,6 +370,30 @@ function buildWeekHeaderCells(startDate: Date, endDate: Date): TimelineHeaderCel
   }
 
   return weekCells;
+}
+
+function getTimelineRangeLabel(startDate: Date, endDate: Date) {
+  const sameMonthAndYear =
+    startDate.getFullYear() === endDate.getFullYear() &&
+    startDate.getMonth() === endDate.getMonth();
+
+  if (sameMonthAndYear) {
+    return startDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  }
+
+  return `${startDate.toLocaleDateString("en-US", {
+    month: "short",
+    year: "numeric",
+  })} - ${endDate.toLocaleDateString("en-US", {
+    month: "short",
+    year: "numeric",
+  })}`;
+}
+
+function shiftTimelineAnchorDate(anchorDate: Date, direction: -1 | 1) {
+  const nextAnchor = new Date(anchorDate);
+  nextAnchor.setMonth(nextAnchor.getMonth() + direction);
+  return nextAnchor;
 }
 
 function getPriorityLabel(priority: string) {
@@ -765,6 +789,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   const [collapsedGroupKeys, setCollapsedGroupKeys] = useState<string[]>([]);
   const [filterEpic, setFilterEpic] = useState<Id<"issues"> | "all">("all");
   const [timelineSpan, setTimelineSpan] = useState<TimelineSpan>(6);
+  const [timelineAnchorDate, setTimelineAnchorDate] = useState(() => new Date());
   const [showDependencies, setShowDependencies] = useState(true);
 
   // Resize state
@@ -792,13 +817,17 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
 
   type Epic = NonNullable<FunctionReturnType<typeof api.issues.listEpics>>[number];
 
-  const today = new Date();
-  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const endOfTimespan = new Date(today.getFullYear(), today.getMonth() + timelineSpan, 0);
+  const startOfMonth = new Date(timelineAnchorDate.getFullYear(), timelineAnchorDate.getMonth(), 1);
+  const endOfTimespan = new Date(
+    timelineAnchorDate.getFullYear(),
+    timelineAnchorDate.getMonth() + timelineSpan,
+    0,
+  );
   const totalDays = Math.max(
     1,
     Math.floor((endOfTimespan.getTime() - startOfMonth.getTime()) / DAY),
   );
+  const timelineRangeLabel = getTimelineRangeLabel(startOfMonth, endOfTimespan);
   const timelineHeaderCells =
     viewMode === "weeks"
       ? buildWeekHeaderCells(startOfMonth, endOfTimespan)
@@ -1080,12 +1109,48 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
           <Stack gap="xs">
             <Typography variant="h2">Roadmap</Typography>
             <Typography variant="small" color="secondary">
-              Visualize issue timeline and dependencies
+              Visualize issue timeline and dependencies across {timelineRangeLabel}
             </Typography>
           </Stack>
 
           <Card recipe="controlRail" padding="xs" radius="full">
             <Flex align="center" gap="sm" wrap>
+              <Flex align="center" gap="xs">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() =>
+                    setTimelineAnchorDate((currentDate) => shiftTimelineAnchorDate(currentDate, -1))
+                  }
+                  aria-label="Previous timeline window"
+                  title="Previous timeline window"
+                >
+                  <Icon icon={ChevronLeft} size="sm" />
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setTimelineAnchorDate(new Date())}
+                >
+                  Today
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() =>
+                    setTimelineAnchorDate((currentDate) => shiftTimelineAnchorDate(currentDate, 1))
+                  }
+                  aria-label="Next timeline window"
+                  title="Next timeline window"
+                >
+                  <Icon icon={ChevronRight} size="sm" />
+                </Button>
+              </Flex>
+
+              <Typography variant="label" color="secondary" className="min-w-36">
+                {timelineRangeLabel}
+              </Typography>
+
               {/* Epic Filter */}
               <Select
                 value={filterEpic === "all" ? "all" : filterEpic}
