@@ -257,6 +257,8 @@ export const E2E_ENDPOINTS = {
   updateProjectWorkflowState: `${CONVEX_SITE_URL}/e2e/update-project-workflow-state`,
   // Replace a seeded project's workflow states for interactive screenshot capture
   replaceProjectWorkflowStates: `${CONVEX_SITE_URL}/e2e/replace-project-workflow-states`,
+  // Check whether seeded project issues are searchable for duplicate detection screenshots
+  checkProjectIssueDuplicates: `${CONVEX_SITE_URL}/e2e/check-project-issue-duplicates`,
   // Google OAuth login via refresh token (bypasses browser OAuth flow)
   googleOAuthLogin: `${CONVEX_SITE_URL}/e2e/google-oauth-login`,
 };

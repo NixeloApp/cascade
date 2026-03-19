@@ -11,6 +11,7 @@ import { handler as issuesHandler } from "./api/issues";
 import { securePasswordReset, securePasswordResetPreflight } from "./authWrapper";
 import {
   batchCleanupEndpoint,
+  checkProjectIssueDuplicatesEndpoint,
   cleanupE2EWorkspacesEndpoint,
   cleanupRbacProjectEndpoint,
   cleanupTestUsersEndpoint,
@@ -236,6 +237,13 @@ http.route({
   path: "/e2e/replace-project-workflow-states",
   method: "POST",
   handler: replaceProjectWorkflowStatesEndpoint,
+});
+
+// Check duplicate-detection search readiness for seeded screenshot projects
+http.route({
+  path: "/e2e/check-project-issue-duplicates",
+  method: "POST",
+  handler: checkProjectIssueDuplicatesEndpoint,
 });
 
 // Seed built-in project templates

@@ -1909,6 +1909,131 @@ export const replaceProjectWorkflowStatesEndpoint = httpAction(async (ctx, reque
   }
 });
 
+/**
+ * Check whether duplicate-detection issue search is ready for a seeded project.
+ * POST /e2e/check-project-issue-duplicates
+ * Body: {
+ *   orgSlug: string,
+ *   projectKey: string,
+ *   query: string,
+ * }
+ */
+export const checkProjectIssueDuplicatesEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, projectKey, query } = body;
+
+    if (!(orgSlug && projectKey && query)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug, projectKey, or query" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runQuery(internal.e2e.checkProjectIssueDuplicatesInternal, {
+      orgSlug,
+      projectKey,
+      query,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const checkProjectIssueDuplicatesInternal = internalQuery({
+  args: {
+    orgSlug: v.string(),
+    projectKey: v.string(),
+    query: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    matchCount: v.optional(v.number()),
+    issueKeys: v.optional(v.array(v.string())),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to query non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), args.projectKey)))
+      .first();
+
+    if (!project) {
+      return {
+        success: false,
+        error: `project not found: ${args.projectKey} in ${args.orgSlug}`,
+      };
+    }
+
+    const matchingIssues = await ctx.db
+      .query("issues")
+      .withSearchIndex("search_title", (q) =>
+        q.search("searchContent", args.query).eq("projectId", project._id),
+      )
+      .filter(notDeleted)
+      .take(5);
+
+    const normalizedQueryTokens = args.query
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((token) => token.length > 0);
+
+    const fallbackIssues =
+      matchingIssues.length === 0 && normalizedQueryTokens.length > 0
+        ? (
+            await ctx.db
+              .query("issues")
+              .withIndex("by_project_updated", (q) => q.eq("projectId", project._id))
+              .filter(notDeleted)
+              .take(50)
+          )
+            .filter((issue) => {
+              const normalizedTitle = issue.title.trim().toLowerCase();
+              return normalizedQueryTokens.every((token) => normalizedTitle.includes(token));
+            })
+            .slice(0, 5)
+        : matchingIssues;
+
+    return {
+      success: true,
+      matchCount: fallbackIssues.length,
+      issueKeys: fallbackIssues.map((issue) => issue.key),
+    };
+  },
+});
+
 export const updateProjectWorkflowStatesInternal = internalMutation({
   args: {
     orgSlug: v.string(),

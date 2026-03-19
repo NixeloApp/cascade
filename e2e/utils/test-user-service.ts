@@ -56,6 +56,13 @@ export interface UpdateProjectWorkflowStateResult {
   error?: string;
 }
 
+export interface CheckProjectIssueDuplicatesResult {
+  success: boolean;
+  matchCount?: number;
+  issueKeys?: string[];
+  error?: string;
+}
+
 export interface E2EWorkflowState {
   id: string;
   name: string;
@@ -436,6 +443,27 @@ export class TestUserService {
       return await response.json();
     } catch (error) {
       console.warn(`  ⚠️ Failed to replace workflow states for ${projectKey} in ${orgSlug}:`, error);
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Check whether duplicate-detection search is ready for a seeded project.
+   */
+  async checkProjectIssueDuplicates(
+    orgSlug: string,
+    projectKey: string,
+    query: string,
+  ): Promise<CheckProjectIssueDuplicatesResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.checkProjectIssueDuplicates, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, projectKey, query }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(`  ⚠️ Failed to check duplicate matches for ${projectKey} in ${orgSlug}:`, error);
       return { success: false, error: String(error) };
     }
   }

@@ -918,15 +918,35 @@ export const findSimilarIssues = authenticatedQuery({
     }
 
     const limit = args.limit ?? 5;
+    const normalizedQueryTokens = args.query
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((token) => token.length > 0);
 
     // Search for issues with similar titles
-    const issues = await ctx.db
+    let issues = await ctx.db
       .query("issues")
       .withSearchIndex("search_title", (q) =>
         q.search("searchContent", args.query).eq("projectId", args.projectId),
       )
       .filter(notDeleted)
       .take(limit);
+
+    if (issues.length === 0 && normalizedQueryTokens.length > 0) {
+      const fallbackIssues = await ctx.db
+        .query("issues")
+        .withIndex("by_project_updated", (q) => q.eq("projectId", args.projectId))
+        .filter(notDeleted)
+        .take(50);
+
+      issues = fallbackIssues
+        .filter((issue) => {
+          const normalizedTitle = issue.title.trim().toLowerCase();
+          return normalizedQueryTokens.every((token) => normalizedTitle.includes(token));
+        })
+        .slice(0, limit);
+    }
 
     // Return minimal info for duplicate detection UI
     return issues.map((issue) => ({

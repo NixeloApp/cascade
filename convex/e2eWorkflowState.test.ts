@@ -89,4 +89,45 @@ describe("e2e workflow state updates", () => {
     expect(replaced.projectId).toBe(projectId);
     expect(replaced.workflowStates).toEqual(replacementWorkflowStates);
   });
+
+  it("checks duplicate-detection matches for seeded-style projects in E2E orgs", async () => {
+    const t = convexTest(schema, modules);
+    const { organizationId, workspaceId, teamId, asUser } = await createTestContext(t, {
+      email: "screenshots-duplicate-check@inbox.mailtrap.io",
+    });
+
+    const orgSlug = "nixelo-e2e-duplicate-check";
+    await t.run(async (ctx) => {
+      await ctx.db.patch(organizationId, { slug: orgSlug });
+    });
+
+    const { projectId } = await asUser.mutation(api.projects.createProject, {
+      name: "Demo Project",
+      key: "DEMO",
+      description: "Demo project for screenshot visual review",
+      isPublic: false,
+      boardType: "kanban",
+      organizationId,
+      workspaceId,
+      teamId,
+    });
+
+    await asUser.mutation(api.issues.createIssue, {
+      projectId,
+      title: "Fix login timeout on mobile",
+      description: "Bug repro for duplicate detection",
+      type: "bug",
+      priority: "high",
+    });
+
+    const matches = await t.query(internal.e2e.checkProjectIssueDuplicatesInternal, {
+      orgSlug,
+      projectKey: "DEMO",
+      query: "login timeout",
+    });
+
+    expect(matches.success).toBe(true);
+    expect(matches.matchCount).toBeGreaterThanOrEqual(1);
+    expect(matches.issueKeys).toEqual(expect.arrayContaining(["DEMO-1"]));
+  });
 });

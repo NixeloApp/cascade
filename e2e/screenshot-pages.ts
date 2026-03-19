@@ -277,6 +277,11 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-project-.+-board-display-properties$/, "06-board", "-display-properties"],
   [/^filled-project-.+-board-peek-mode$/, "06-board", "-peek-mode"],
   [/^filled-project-.+-board-sprint-selector$/, "06-board", "-sprint-selector"],
+  [
+    /^filled-project-.+-create-issue-duplicate-detection$/,
+    "06-board",
+    "-create-issue-duplicate-detection",
+  ],
   [/^filled-project-.+-create-issue-create-another$/, "06-board", "-create-issue-create-another"],
   [/^filled-project-.+-create-issue-validation$/, "06-board", "-create-issue-validation"],
   // Document editor: filled-document-editor → 10-editor
@@ -750,6 +755,28 @@ async function runCaptureStep(label: string, fn: () => Promise<void>): Promise<v
     captureSkips++;
     console.log(`    ⚠️  skipped ${label}: ${message}`);
   }
+}
+
+async function waitForDuplicateDetectionSearchReady(
+  orgSlug: string,
+  projectKey: string,
+  query: string,
+  timeoutMs = 30000,
+): Promise<void> {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    const result = await testUserService.checkProjectIssueDuplicates(orgSlug, projectKey, query);
+    if (result.success && (result.matchCount ?? 0) > 0) {
+      return;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+
+  throw new Error(
+    `Duplicate search not ready for ${projectKey} in ${orgSlug} after ${timeoutMs}ms`,
+  );
 }
 
 function isCrashLikeError(message: string): boolean {
@@ -2697,6 +2724,92 @@ async function screenshotFilledStates(
       });
     }
 
+    if (shouldCapture(p, `project-${normalizedProjectKey}-create-issue-duplicate-detection`)) {
+      await runCaptureStep("create issue duplicate detection", async () => {
+        const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
+        const duplicateQuery = "login timeout";
+        await waitForDuplicateDetectionSearchReady(orgSlug, projectKey, duplicateQuery);
+        await page
+          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+          .catch(() => {});
+        await waitForExpectedContent(page, boardUrl, "board");
+        await waitForScreenshotReady(page);
+        const projectsPage = new ProjectsPage(page, orgSlug);
+        await dismissAllDialogs(page);
+        await projectsPage.openCreateIssueModal();
+        await page.waitForTimeout(1000);
+        await waitForScreenshotReady(page);
+        const titleUpdated = await page.evaluate((value) => {
+          const submitButton = Array.from(document.querySelectorAll("button")).find((button) => {
+            if (!(button instanceof HTMLElement)) {
+              return false;
+            }
+            const style = window.getComputedStyle(button);
+            const visible =
+              style.display !== "none" &&
+              style.visibility !== "hidden" &&
+              button.offsetParent !== null;
+            const label = button.textContent?.trim().toLowerCase() ?? "";
+            return visible && label === "create issue";
+          });
+
+          const modal =
+            submitButton?.closest<HTMLElement>("[role='dialog'], [role='alertdialog']") ?? null;
+          const visibleInputs = Array.from(
+            modal?.querySelectorAll<HTMLInputElement>('input:not([type="hidden"])') ?? [],
+          ).filter((input) => {
+            const style = window.getComputedStyle(input);
+            return (
+              style.display !== "none" &&
+              style.visibility !== "hidden" &&
+              input.offsetParent !== null
+            );
+          });
+
+          const titleInput =
+            visibleInputs.find((input) => {
+              const placeholder = input.getAttribute("placeholder")?.toLowerCase() ?? "";
+              return placeholder.includes("enter issue title");
+            }) ??
+            visibleInputs.find((input) => input.getAttribute("name") === "title") ??
+            visibleInputs.find((input) => {
+              const type = input.getAttribute("type")?.toLowerCase() ?? "text";
+              return type === "text" || type === "search";
+            }) ??
+            null;
+
+          if (!(titleInput instanceof HTMLInputElement)) {
+            return false;
+          }
+
+          titleInput.focus();
+          const descriptor = Object.getOwnPropertyDescriptor(
+            window.HTMLInputElement.prototype,
+            "value",
+          );
+          descriptor?.set?.call(titleInput, value);
+          titleInput.dispatchEvent(new Event("input", { bubbles: true }));
+          titleInput.dispatchEvent(new Event("change", { bubbles: true }));
+          return true;
+        }, duplicateQuery);
+        if (!titleUpdated) {
+          throw new Error("Create issue title input not found");
+        }
+        const duplicateBanner = page.getByText("Potential duplicates found", { exact: true });
+        await duplicateBanner.waitFor({ state: "visible", timeout: 20000 });
+        await page
+          .getByRole("button", { name: /DEMO-2.*fix login timeout on mobile/i })
+          .waitFor({ state: "visible", timeout: 8000 });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(
+          page,
+          p,
+          `project-${normalizedProjectKey}-create-issue-duplicate-detection`,
+        );
+        await dismissIfOpen(page, projectsPage.createIssueModal);
+      });
+    }
+
     // Sprint selector dropdown (on board)
     if (shouldCapture(p, `project-${normalizedProjectKey}-board-sprint-selector`)) {
       await runCaptureStep("board sprint selector", async () => {
@@ -4084,6 +4197,7 @@ const DRY_RUN_PAGES = [
   "filled-project-PROJ-board-display-properties",
   "filled-project-PROJ-board-peek-mode",
   "filled-project-PROJ-board-sprint-selector",
+  "filled-project-PROJ-create-issue-duplicate-detection",
   "filled-project-PROJ-create-issue-create-another",
   "filled-project-PROJ-create-issue-validation",
   // Filled states — sprint interactive states

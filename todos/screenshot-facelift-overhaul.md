@@ -16,7 +16,7 @@ Core visual facelift work is done. Only the unfinished screenshot and validation
 
 ### Interactive States Still Not Captured
 
-- [ ] Issues: draft restoration, duplicate detection
+- [ ] Issues: draft restoration
 - [ ] Calendar: drag-and-drop, quick-add
 - [ ] Sprints: completion modal, date overlap warning
 - [ ] Notifications: snooze popover
