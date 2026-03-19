@@ -1,85 +1,71 @@
-# Plane Features to Evaluate
+# Plane Features To Evaluate
 
 > **Priority:** P2
-> **Status:** New
+> **Status:** Partial
 > **Last Updated:** 2026-03-18
-> **Source:** Plane repo at `github.com/makeplane/plane` (pulled 2026-03-18, 45 new commits on preview)
+> **Source:** Plane repo at `github.com/makeplane/plane` (pulled 2026-03-18)
 
-## High Priority (We're Missing These)
+Only unfinished items remain here. Completed roadmap/Gantt slices and org analytics are kept as shipped notes, not as open backlog.
+
+## High Priority
 
 ### Gantt Chart / Timeline View
-Plane has a full Gantt chart at `apps/web/core/components/gantt-chart/`. We have a roadmap view but no Gantt with drag-and-drop.
 
-- [ ] **Evaluate Gantt implementation** — blocks, sidebar, helpers, date rendering. Our `RoadmapView.tsx` is simpler.
-- [ ] **Decide: enhance roadmap or add Gantt** — Gantt is standard for PM tools. Our roadmap could evolve into one.
+- [ ] **Finish the dedicated Gantt polish** — The roadmap has shipped core Gantt behavior, but it still needs the remaining deeper timeline-management and dedicated-Gantt polish.
 
-### Intake/Triage System
-Plane has a dedicated intake system (`apps/api/plane/app/views/intake.py`, `apps/web/core/components/inbox/`) for capturing external requests separately from issues.
+### Intake / Triage System
 
-- [ ] **Evaluate intake vs our inbox** — Our project inbox (`/projects/$key/inbox`) shows "No pending items". Plane's intake has filtering, status management, dedicated triage workflow.
-- [ ] **External request capture** — Client-submitted issues that need triage before entering the backlog.
+- [ ] **Evaluate intake vs our inbox** — Our project inbox is still skeletal next to Plane’s triage workflow.
+- [ ] **External request capture** — Client-submitted requests still need a first-class triage path before backlog entry.
 
 ### Deploy Boards (Public Sharing)
-Plane has per-entity public sharing with granular controls (comments, reactions, votes, activity) via `apps/api/plane/db/models/deploy_board.py`.
 
-- [ ] **Enhance client portal** — Our portal is token-based with fixed permissions. Plane's approach is more granular per entity type.
-- [ ] **Public issue boards** — Share a project board publicly without auth. Useful for open-source projects or client visibility.
+- [ ] **Enhance client portal permissions** — Our token portal is still much simpler than Plane’s deploy-board model.
+- [ ] **Public issue boards** — We still do not expose a shareable public board surface.
 
 ### Stickies / Quick Notes
-Widget-based sticky notes at `apps/web/core/components/stickies/`. Quick capture for brainstorming.
 
-- [ ] **Evaluate for dashboard** — Our dashboard has Focus Zone. Stickies could complement it for quick capture.
+- [ ] **Evaluate dashboard stickies** — Quick-capture notes are still missing.
 
-## Medium Priority (Enhancements to Existing Features)
+## Medium Priority
 
 ### Advanced Analytics
-Plane has priority charts, created-vs-resolved trends, customizable insights at `apps/web/core/components/analytics/`.
 
-- [ ] **Enhance our analytics** — Our project analytics page has basic charts. Plane has trend analysis and custom insights.
-- [x] **Org-level analytics** — Implemented: metrics (total/completed/unassigned/projects), charts (by type, priority, project). Backend query aggregates across all org projects.
+- [ ] **Enhance project analytics** — Org analytics shipped, but Plane-style trend/insight depth is still open at the project level.
 
 ### Automation Workflows
-Auto-archive, auto-close, monthly scheduling at `apps/web/core/components/automation/`.
 
-- [ ] **Enhance our automation** — We have `AutomationRulesManager.tsx` but it's basic. Plane has scheduled automations.
-- [ ] **Auto-archive stale issues** — Common PM pattern. Issues in "Done" for N days get archived automatically.
+- [ ] **Enhance automation scheduling** — `AutomationRulesManager.tsx` still lacks Plane-style scheduled workflows.
+- [ ] **Auto-archive stale issues** — Done-state cleanup automation is still open.
 
 ### Multi-Provider AI
-Plane supports OpenAI, Anthropic, Gemini with admin-panel config at `apps/api/plane/app/views/external/base.py`.
 
-- [ ] **Add provider selection** — Our AI uses a single provider. Admin-configurable multi-provider would be more flexible.
-- [ ] **Model fallbacks** — Plane has smart model selection with fallbacks. Good resilience pattern.
+- [ ] **Add provider selection** — Admin-configurable model/provider choice is still missing.
+- [ ] **Model fallbacks** — Resilience/fallback behavior remains open.
 
 ### Page Version Control
-Version history with restore at `apps/web/core/components/pages/version/`.
 
-- [ ] **Evaluate for documents** — We have ProseMirror Sync for real-time collab but no version history UI. Our `VersionHistory.tsx` exists — check if it's functional.
+- [ ] **Version history for documents/pages** — Real restoreable version history is still not a confirmed shipped surface.
 
-## Low Priority (Nice to Have)
+## Low Priority
 
 ### Rich Filters
-Advanced filter system at `apps/web/core/components/rich-filters/`.
 
-- [ ] **Compare with our FilterBar** — Our `FilterBar.tsx` handles basic filters. Plane's is more sophisticated with item-level filters.
+- [ ] **Compare with Plane’s richer filtering model** — Our filter surface is still simpler.
 
 ### Home Dashboard Widgets
-Customizable homepage at `apps/web/core/components/home/`.
 
-- [ ] **Compare with our Dashboard** — We have `Dashboard.tsx` with Focus Zone, QuickStats, etc. Plane's is widget-based and customizable.
+- [ ] **Evaluate customizable dashboard widgets** — Current dashboard is fixed-layout, not Plane-style widgetized.
 
-## Already Have (No Action)
+## Already Shipped From This Review
 
-- GitHub integration — We have `GitHubIntegration.tsx`
-- Slack integration — We have Pumble (similar)
-- API tokens — We have `ApiKeysManager.tsx`
-- Webhooks — We have `WebhooksManager.tsx`
-- Email notifications — We have React Email templates
-- Search — We have `GlobalSearch.tsx` and `AdvancedSearchModal`
+- [x] Roadmap/Gantt core upgrade across drag, resize, milestones, zoom, navigation, grouping, hierarchy, progress rollups, sticky sidebar, and dependency interaction
+- [x] Org-level analytics
 
 ## Reference Paths
 
 | Feature | Plane Path |
-|---------|-----------|
+|---------|------------|
 | Gantt | `apps/web/core/components/gantt-chart/` |
 | Intake | `apps/web/core/components/inbox/`, `apps/api/plane/app/views/intake.py` |
 | Deploy boards | `apps/api/plane/db/models/deploy_board.py` |
@@ -88,4 +74,4 @@ Customizable homepage at `apps/web/core/components/home/`.
 | Automation | `apps/web/core/components/automation/` |
 | AI | `apps/api/plane/app/views/external/base.py` |
 | Page versions | `apps/web/core/components/pages/version/` |
-| Propel UI | `packages/propel/src/` (40+ components) |
+| Propel UI | `packages/propel/src/` |

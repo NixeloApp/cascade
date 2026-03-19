@@ -6,6 +6,7 @@
  */
 
 import type { Doc } from "../_generated/dataModel";
+import { getActiveOutOfOfficeStatus } from "./outOfOffice";
 
 /**
  * Public user fields that are safe to expose
@@ -26,6 +27,7 @@ export type AuthenticatedUser = Omit<PublicUser, "email"> & {
   email?: string;
   firstName?: string;
   lastName?: string;
+  outOfOffice?: NonNullable<Doc<"users">["outOfOffice"]>;
 };
 
 /**
@@ -57,6 +59,8 @@ export function sanitizeUserForAuth(
 ): AuthenticatedUser | null {
   if (!user) return null;
 
+  const outOfOffice = getActiveOutOfOfficeStatus(user);
+
   return {
     _id: user._id,
     name: user.name || user.email || "Unknown",
@@ -64,6 +68,7 @@ export function sanitizeUserForAuth(
     image: user.image,
     firstName: user.firstName,
     lastName: user.lastName,
+    outOfOffice,
   };
 }
 
@@ -92,6 +97,7 @@ export function sanitizeUserForCurrent(user: Doc<"users"> | null | undefined) {
     timezone: user.timezone,
     emailNotifications: user.emailNotifications,
     desktopNotifications: user.desktopNotifications,
+    outOfOffice: user.outOfOffice,
     inviteId: user.inviteId,
     isTestUser: user.isTestUser,
     testUserCreatedAt: user.testUserCreatedAt,

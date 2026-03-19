@@ -1,55 +1,62 @@
 # Nixelo Todo — MVP
 
-> **Last Updated:** 2026-03-18
+> **Last Updated:** 2026-03-19
 
 ## Health
 
 | Metric | Value |
 |--------|-------|
-| Validators | 44/44 pass |
+| Validators | 47/47 pass |
 | Bundle | 337KB gzip |
 | Screenshots | 300+ across 4 viewport/theme combos, 0 uncovered routes |
-| Raw TW baseline | 148 files (run `node scripts/validate/check-raw-tailwind.js --audit` to check) |
+| Screenshot validation | Route coverage audit + page/modal screenshot audit + hash diff workflow |
+| Raw TW baseline | 148 files (run `node scripts/validate/check-raw-tailwind.js --audit` to inspect) |
 
 ---
 
-## What to work on next
+## What Is Still Open
 
-| Priority | File | What | Open items |
-|----------|------|------|------------|
-| P2 | [cal-com-features.md](./cal-com-features.md) | Port features from Cal.com v6.3 | 8 items: AI agents, OOO status, cancellation reasons, workflow translation, custom domain/SMTP, branding |
-| P2 | [plane-features.md](./plane-features.md) | Port features from Plane | 12 items: Gantt chart, intake/triage, deploy boards, stickies, analytics, auto-archive, multi-provider AI, page versions |
-| P3 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export for billing reports | 1 item: needs jsPDF or server-side generation |
+Only unfinished work stays in `/todos`. Completed slices should be removed from these files instead of lingering as historical backlog.
 
-### Done (archive when ready)
-
-| File | Status |
-|------|--------|
-| [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md) | **Complete** — all visual polish done (PR #899). Residual: screenshot coverage for modals/interactive states, raw TW baseline. |
+| Priority | File | Remaining work |
+|----------|------|----------------|
+| P1 | [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md) | Screenshot residue: 6 page spec folders missing canonical variants, 3 spec'd modal sets missing canonical variants, portal capture, deeper modal/interactive-state coverage, CI manifest workflow |
+| P1 | [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Broader consistency system is in place; cleanup remains for 94 Typography drift points, 49 control-chrome drift points, 2 repeated inline summary-shape groups, and residual screenshot/state cohesion gaps |
+| P2 | [feature-docs-expansion.md](./feature-docs-expansion.md) | Expand current feature/design docs into concrete user-story-grade product specs for shipped behavior, starting with the 21 page spec folders still missing CURRENT / IMPLEMENTATION / TARGET docs |
+| P2 | [plane-features.md](./plane-features.md) | Remaining Plane-inspired gaps: dedicated Gantt polish, intake/triage, deploy boards, stickies, analytics enhancements, automation, multi-provider AI, page versions |
+| P2 | [cal-com-features.md](./cal-com-features.md) | Remaining Cal.com-inspired gaps: AI agents/MCP, cancellation reasons, workflow translation, custom domain/SMTP, branding |
+| P3 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export for billing reports |
 
 ---
 
-## Biggest feature gaps vs competitors
+## Biggest Remaining Feature Gaps
 
 Based on Cal.com v6.3 and Plane preview (both repos updated 2026-03-18):
 
 | Feature | Cal.com | Plane | Nixelo | Impact |
 |---------|---------|-------|--------|--------|
-| **Gantt chart** | — | ✅ Full | ❌ Simple roadmap only | High — standard PM expectation |
-| **OOO status** | ✅ Full API | — | ❌ Missing | High — affects calendar, assignments, notifications |
-| **Org analytics** | — | ✅ Trends, insights | ✅ Metrics + charts | ~~High~~ Done |
+| **Gantt chart** | — | ✅ Full | ⚠️ Roadmap is substantially upgraded, but still has remaining dedicated Gantt polish and deeper timeline-management work | High — standard PM expectation |
+| **OOO status** | ✅ Full API | — | ✅ Shipped | Done |
 | **AI agents** | ✅ Multi-channel | — | ❌ MCP placeholder | Medium — differentiator |
 | **Intake/triage** | — | ✅ Full system | ❌ Skeleton inbox | Medium — external request capture |
 | **Auto-archive** | — | ✅ Scheduled | ❌ Basic automation | Medium — reduces clutter |
-| **Deploy boards** | — | ✅ Per-entity | ⚠️ Token portal | Medium — public sharing |
+| **Deploy boards** | — | ✅ Per-entity | ⚠️ Token portal only | Medium — public sharing |
+| **Billing PDF export** | — | — | ❌ CSV only | Low — focused tech debt |
 
 ---
 
+## Visual Validation Workflow
+
+- Capture current UI state with `pnpm screenshots`
+- Audit route/spec screenshot coverage with `pnpm run validate`
+- Detect screenshot drift with `pnpm screenshots:diff`
+- Approve intentional visual changes with `pnpm screenshots:approve`
+
 ## Maintenance
 
-- **Raw tailwind baseline:** 148 files with violations. Gradually shrinks as components are touched.
+- Raw Tailwind baseline: 148 files with violations. Shrink opportunistically as touched files are cleaned up.
 
-## Reference repos
+## Reference Repos
 
 | Repo | Path | Last pulled |
 |------|------|-------------|
@@ -59,3 +66,6 @@ Based on Cal.com v6.3 and Plane preview (both repos updated 2026-03-18):
 ## Post-MVP
 
 See [../todos-post-mvp/README.md](../todos-post-mvp/README.md) for blocked and post-MVP items.
+
+## P2 Backlog
+- [x] `convex/bookings.ts:263` — Per-slot OOO delegate resolution. ✅ Fixed: resolves per-slot using cached user data.

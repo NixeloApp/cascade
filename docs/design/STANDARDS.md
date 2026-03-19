@@ -1,6 +1,8 @@
 # Design Standards
 
 > Timeless principles. These don't change.
+>
+> For the operational review loop and validator mapping, see [CONSISTENCY.md](./CONSISTENCY.md).
 
 ## Core Principles
 
@@ -157,4 +159,11 @@ Never use `shadow-sm`, `shadow-md`, `shadow-lg`.
 ```bash
 node scripts/validate.js
 # Target: 0 errors
+```
+
+For visually meaningful changes also run:
+
+```bash
+pnpm screenshots
+pnpm screenshots:diff
 ```

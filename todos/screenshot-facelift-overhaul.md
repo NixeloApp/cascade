@@ -1,87 +1,42 @@
-# Visual Facelift & Layout Consistency
+# Screenshot Validation & Visual Residue
 
-> **Priority:** P0
-> **Status:** Complete (core work done, residual items tracked below)
-> **Last Updated:** 2026-03-17
-> **Objective:** Fix systemic layout inconsistency, broken component visuals, and establish enforceable patterns.
+> **Priority:** P1
+> **Status:** Partial
+> **Last Updated:** 2026-03-19
 
----
+Core visual facelift work is done. Only the unfinished screenshot and validation residue stays here.
 
-## Part 1: Page Layout Wrapper Consistency ✅
+## Remaining Screenshot Coverage
 
-All pages that bypassed `PageLayout`/`PageHeader` have been migrated or confirmed correct.
+### Canonical Spec Screenshot Variants Missing
 
-### Pages migrated
+- [ ] `14-verify-email` — missing `desktop-dark.png`, `desktop-light.png`, `tablet-light.png`, `mobile-light.png`
+- [ ] `15-invite` — missing `desktop-dark.png`, `desktop-light.png`, `tablet-light.png`, `mobile-light.png`
+- [ ] `16-unsubscribe` — missing `desktop-dark.png`, `desktop-light.png`, `tablet-light.png`, `mobile-light.png`
+- [ ] `17-members` — missing `desktop-dark.png`, `desktop-light.png`, `tablet-light.png`, `mobile-light.png`
+- [ ] `22-time-tracking` — missing `desktop-light.png`, `tablet-light.png`, `mobile-light.png`
+- [ ] `28-workspace-detail` — missing `desktop-dark.png`, `desktop-light.png`, `tablet-light.png`, `mobile-light.png`
 
-- [x] `assistant.tsx` — uses `PageLayout maxWidth="xl"`
-- [x] `workspaces/$workspaceSlug/settings.tsx` — removed ad-hoc header + `mx-auto py-6`
-- [x] `workspaces/$workspaceSlug/teams/$teamSlug/settings.tsx` — same
-- [x] `workspaces/$workspaceSlug/wiki.tsx` — N/A (tab panel, correct as-is)
-- [x] `workspaces/$workspaceSlug/teams/$teamSlug/wiki.tsx` — N/A (same)
-- [x] `my-issues.tsx` — wrapped in PageLayout + PageHeader
-- [x] `settings/profile.tsx` — removed className override on PageHeader
-- [x] `calendar.tsx` — replaced ad-hoc Flex filter bar with PageHeader
-
-### Deferred (working correctly, just not using PageHeader)
-
-- [x] `projects/$key/board.tsx` — Cleaned up: Card `padding="md"` prop instead of className, simplified Flex props, removed raw Badge/SelectTrigger className overrides.
-- [x] `projects/$key/route.tsx` — Cleaned up: replaced raw `flex-col sm:flex-row sm:items-center` with Flex `direction`/`directionSm`/`alignSm` props.
-
-### Validator
-
-- [x] `check-page-layout.js` — flags `max-w-*` + `mx-auto` on container elements in route files.
-
----
-
-## Part 2: Notification Popover ✅
-
-- [x] Simplified to 2-tier backgrounds
-- [x] Added `gap="xs"` between date groups
-- [x] Removed inner rounded corners (outer PopoverContent handles rounding)
-- [x] Footer uses `border-t` for separation
-
----
-
-## Part 3: Workspace Card ✅
-
-- [x] Fixed badge wrapping + shrink-0
-- [x] Card `padding="lg"` prop instead of `className="p-6"`
-
----
-
-## Part 4: Assistant Page ✅
-
-- [x] `PageLayout maxWidth="xl"` constrains stats and config equally
-
----
-
-## Part 5: Validator Hardening ✅
-
-- [x] `check-page-layout.js` — new validator
-- [x] `check-raw-tailwind.js` — added `--audit` mode, tightened baseline 150 → 148
-- [x] `check-layout-prop-usage.js` — already covered `justify-*` in Flex className
-- [x] Nested card ban fully enforced (baseline empty, `variant="section"` for inner sections)
-- [ ] ~~`check-empty-state-size.js`~~ — not needed per user preference
-
----
-
-## Part 6: Screenshot Coverage
-
-Tracked separately — these are tooling tasks, not visual fixes.
-
-### Routes not yet captured
+### Routes / Flows Still Not Captured
 
 - [ ] Portal page (`/portal/$token`)
-- [x] Onboarding flow — excluded (requires fresh user state, can't capture with seeded test user)
-- [x] Invoice detail — excluded (requires creating an invoice; list page is captured)
-- [x] Org inbox, workspaces.board, workspaces.teams.list — excluded (routes defined but pages not implemented)
 
-### Modals not yet captured
+### Canonical Modal Screenshot Variants Missing
 
-- [ ] Dashboard customize modal, move document dialog, avatar/cover upload modals
-- [ ] Confirm dialog, alert dialog, markdown preview modal
+- [ ] `create-issue` — missing `create-issue-desktop-dark.png`, `create-issue-desktop-light.png`, `create-issue-tablet-light.png`, `create-issue-mobile-light.png`
+- [ ] `create-event` — missing `create-event-desktop-dark.png`, `create-event-desktop-light.png`, `create-event-tablet-light.png`, `create-event-mobile-light.png`
+- [ ] `command-palette` — missing `command-palette-desktop-dark.png`, `command-palette-desktop-light.png`, `command-palette-tablet-light.png`, `command-palette-mobile-light.png`
 
-### Interactive states not yet captured
+### Modals Still Not Captured
+
+- [ ] Dashboard customize modal
+- [ ] Move document dialog
+- [ ] Avatar / cover upload modals
+- [ ] Confirm dialog
+- [ ] Alert dialog
+- [ ] Markdown preview modal
+
+### Interactive States Still Not Captured
 
 - [ ] Board: column empty, WIP limit warning
 - [ ] Issues: draft restoration, duplicate detection, inline editing, side panel
@@ -93,38 +48,21 @@ Tracked separately — these are tooling tasks, not visual fixes.
 - [ ] Navigation: sidebar favorites, project tree, mobile hamburger
 - [ ] Error: permission denied, loading skeletons, toasts, form validation
 
-### CI integration (blocked)
+### CI Integration
 
-- [ ] CI screenshot manifest check — blocked until screenshots are committed to git or generated in CI.
+- [ ] CI screenshot manifest check — still blocked until screenshots are committed to git or generated in CI.
 
----
+## Already Done
 
-## Part 7: Visual Facelift ✅
+- [x] Page layout wrapper consistency cleanup
+- [x] Notification popover cleanup
+- [x] Workspace card cleanup
+- [x] Assistant page cleanup
+- [x] Validator hardening for layout/raw-tailwind drift
+- [x] Route screenshot coverage audit
+- [x] Canonical spec screenshot audit in `pnpm run validate`
+- [x] Screenshot diff workflow via `pnpm screenshots:diff` and `pnpm screenshots:approve`
 
-All pages audited via screenshots. Every page with visible problems has been fixed.
+## Ongoing Maintenance
 
-- [x] Reviewed all 66+ page screenshots, ranked by quality
-- [x] **Add-ons** — EmptyState with Puzzle icon
-- [x] **MCP Server** — EmptyState with Server icon
-- [x] **Analytics** — EmptyState with BarChart3 icon
-- [x] **Invoices** — EmptyState with "New draft" action
-- [x] **Clients** — EmptyState + Grid/Stack cleanup
-- [x] Nested card ban enforced (7 files migrated to `variant="section"`)
-
-### Residual
-
-- [ ] Raw tailwind baseline: 148 files with violations. Run `node scripts/validate/check-raw-tailwind.js --audit` to check for newly-clean files after edits.
-
----
-
-## Summary
-
-| Part | Status | Items |
-|------|--------|-------|
-| 1. Page layout | ✅ Done | 8 migrated, 2 deferred (working fine) |
-| 2. Notifications | ✅ Done | 4 fixes |
-| 3. Workspace card | ✅ Done | 3 fixes |
-| 4. Assistant page | ✅ Done | 3 fixes |
-| 5. Validators | ✅ Done | 2 new validators, 1 baseline tightened, nested cards enforced |
-| 6. Screenshots | Ongoing | Tooling work, not blocking |
-| 7. Visual facelift | ✅ Done | 6 pages fixed, all audited |
+- [ ] Raw Tailwind baseline remains at 148 files and should continue shrinking as touched files are cleaned up

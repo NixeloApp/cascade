@@ -221,6 +221,23 @@ export const TEST_IDS = {
     NAME: "sprint-name",
   },
 
+  ROADMAP: {
+    /** @see src/components/RoadmapView.tsx */
+    TIMELINE_CANVAS: "roadmap-timeline-canvas",
+    /** @see src/components/RoadmapView.tsx */
+    ISSUE_HEADER: "roadmap-issue-header",
+    /** @see src/components/RoadmapView.tsx */
+    ISSUE_COLUMN: "roadmap-issue-column",
+    /** @see src/components/RoadmapView.tsx */
+    DEPENDENCY_PANEL: "roadmap-dependency-panel",
+    /** @see src/components/RoadmapView.tsx */
+    TODAY_MARKER_HEADER: "roadmap-today-marker-header",
+    /** @see src/components/RoadmapView.tsx */
+    TODAY_MARKER_BODY: "roadmap-today-marker-body",
+    /** @see src/components/RoadmapView.tsx */
+    RANGE_LABEL: "roadmap-range-label",
+  },
+
   // ============================================================
   // Analytics
   // ============================================================

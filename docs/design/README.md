@@ -5,6 +5,7 @@
 | Doc | Purpose |
 |-----|---------|
 | [STANDARDS.md](./STANDARDS.md) | Core principles (tokens, spacing, semantic HTML) |
+| [CONSISTENCY.md](./CONSISTENCY.md) | Cross-cutting UI consistency contract + review loop |
 | [PATTERNS.md](./PATTERNS.md) | Do this, not that (component usage) |
 | [REFERENCE.md](./REFERENCE.md) | Token values & component inventory |
 | [GAPS.md](./GAPS.md) | Actionable improvements (prioritized) |
@@ -15,6 +16,7 @@ Detailed page and component breakdowns with ASCII wireframes:
 
 - [specs/pages/](./specs/pages/) - Page-by-page analysis
 - [specs/components/](./specs/components/) - Component deep-dives
+- [specs/modals/](./specs/modals/) - Modal and overlay specs
 
 ## Research
 
@@ -43,5 +45,14 @@ bg-brand, text-status-error
 ## Validation
 
 ```bash
-node scripts/validate.js  # Target: 0 errors
+pnpm run validate  # Target: 0 errors
 ```
+
+Visual work should also run:
+
+```bash
+pnpm screenshots -- --spec <spec-name>   # Capture specific pages
+pnpm screenshots:diff                     # Compare against baseline
+```
+
+Use [CONSISTENCY.md](./CONSISTENCY.md) for the enforcement map: what is hard-failed by validators, what is advisory inventory, and what still requires human screenshot review.

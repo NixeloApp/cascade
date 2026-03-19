@@ -105,4 +105,43 @@ describe("Roadmap Issues Optimization", () => {
     expect(titlesNoEpics[1]).toBe("Story Tomorrow");
     expect(titlesNoEpics[2]).toBe("Task Next Year");
   });
+
+  it("should include dated subtasks with their parent context when requested", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await createTestUser(t);
+    const projectId = await createTestProject(t, userId);
+
+    const asUser = asAuthenticatedUser(t, userId);
+    const now = Date.now();
+
+    const { issueId: parentTaskId } = await asUser.mutation(api.issues.createIssue, {
+      projectId,
+      title: "Parent Task",
+      type: "task",
+      priority: "medium",
+    });
+
+    await asUser.mutation(api.issues.createIssue, {
+      projectId,
+      title: "Subtask Today",
+      type: "subtask",
+      priority: "medium",
+      dueDate: now,
+      parentId: parentTaskId,
+    });
+
+    const issues = await asUser.query(api.issues.listRoadmapIssues, {
+      projectId,
+      hasDueDate: true,
+      excludeEpics: true,
+      includeSubtasks: true,
+    });
+
+    const titles = issues.map((issue) => issue.title);
+
+    expect(titles).toContain("Parent Task");
+    expect(titles).toContain("Subtask Today");
+    expect(issues.find((issue) => issue.title === "Parent Task")?.dueDate).toBeUndefined();
+    expect(issues.find((issue) => issue.title === "Subtask Today")?.parentId).toBe(parentTaskId);
+  });
 });

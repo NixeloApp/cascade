@@ -12,6 +12,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
 import type { ReactNode } from "react";
 import { Avatar } from "@/components/ui/Avatar";
+import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
@@ -34,6 +35,7 @@ import {
   ISSUE_TYPES_WITH_SUBTASK,
   PRIORITY_ICONS,
 } from "@/lib/issue-utils";
+import { formatOutOfOfficeUntil, type OutOfOfficeStatusSummary } from "@/lib/outOfOffice";
 
 interface InlineSelectProps {
   label: string;
@@ -127,9 +129,41 @@ export function InlineTypeSelect({ value, onChange, disabled }: TypeSelectProps)
 
 interface AssigneeSelectProps {
   value: string | null | undefined;
-  members: Array<{ _id: Id<"users">; name: string; image?: string }>;
+  members: Array<{
+    _id: Id<"users">;
+    name: string;
+    image?: string;
+    outOfOffice?: OutOfOfficeStatusSummary;
+  }>;
   onChange: (value: Id<"users"> | null) => void;
   disabled?: boolean;
+}
+
+function AssigneeOption({
+  image,
+  name,
+  outOfOffice,
+}: {
+  image?: string;
+  name: string;
+  outOfOffice?: OutOfOfficeStatusSummary;
+}) {
+  return (
+    <Flex align="center" gap="sm">
+      <Avatar name={name} src={image} size="xs" />
+      <FlexItem flex="1">
+        <Flex align="center" gap="xs">
+          <Typography variant="small">{name}</Typography>
+          {outOfOffice ? <Badge variant="warning">OOO</Badge> : null}
+        </Flex>
+        {outOfOffice ? (
+          <Typography variant="caption" color="secondary">
+            {formatOutOfOfficeUntil(outOfOffice)}
+          </Typography>
+        ) : null}
+      </FlexItem>
+    </Flex>
+  );
 }
 
 export function InlineAssigneeSelect({ value, members, onChange, disabled }: AssigneeSelectProps) {
@@ -144,10 +178,11 @@ export function InlineAssigneeSelect({ value, members, onChange, disabled }: Ass
       <SelectTrigger variant="inlineEdit" aria-label="Change assignee">
         <SelectValue>
           {selectedMember ? (
-            <Flex align="center" gap="sm">
-              <Avatar name={selectedMember.name} src={selectedMember.image} size="xs" />
-              <span>{selectedMember.name}</span>
-            </Flex>
+            <AssigneeOption
+              name={selectedMember.name}
+              image={selectedMember.image}
+              outOfOffice={selectedMember.outOfOffice}
+            />
           ) : (
             <Flex align="center" gap="sm">
               <IconCircle variant="muted" className="size-5">
@@ -169,10 +204,11 @@ export function InlineAssigneeSelect({ value, members, onChange, disabled }: Ass
         </SelectItem>
         {members.map((member) => (
           <SelectItem key={member._id} value={member._id}>
-            <Flex align="center" gap="sm">
-              <Avatar name={member.name} src={member.image} size="xs" />
-              {member.name}
-            </Flex>
+            <AssigneeOption
+              name={member.name}
+              image={member.image}
+              outOfOffice={member.outOfOffice}
+            />
           </SelectItem>
         ))}
       </SelectContent>

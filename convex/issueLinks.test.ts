@@ -289,4 +289,59 @@ describe("Issue Links", () => {
       await t.finishInProgressScheduledFunctions();
     });
   });
+
+  describe("getForProject", () => {
+    it("returns project-internal links with link ids for roadmap management", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t);
+      const projectId = await createTestProject(t, userId);
+      const otherProjectId = await createTestProject(t, userId, {
+        name: "Other Project",
+        key: "OTH",
+      });
+
+      const asUser = asAuthenticatedUser(t, userId);
+      const { issueId: issueAId } = await asUser.mutation(api.issues.createIssue, {
+        projectId,
+        title: "Issue A",
+        type: "task",
+        priority: "medium",
+      });
+      const { issueId: issueBId } = await asUser.mutation(api.issues.createIssue, {
+        projectId,
+        title: "Issue B",
+        type: "task",
+        priority: "medium",
+      });
+      const { issueId: issueCId } = await asUser.mutation(api.issues.createIssue, {
+        projectId: otherProjectId,
+        title: "Issue C",
+        type: "task",
+        priority: "medium",
+      });
+
+      const { linkId } = await asUser.mutation(api.issueLinks.create, {
+        fromIssueId: issueAId,
+        toIssueId: issueBId,
+        linkType: "blocks",
+      });
+      await asUser.mutation(api.issueLinks.create, {
+        fromIssueId: issueAId,
+        toIssueId: issueCId,
+        linkType: "blocks",
+      });
+
+      const result = await asUser.query(api.issueLinks.getForProject, { projectId });
+
+      expect(result.links).toEqual([
+        {
+          linkId,
+          fromIssueId: issueAId,
+          toIssueId: issueBId,
+          linkType: "blocks",
+        },
+      ]);
+      await t.finishInProgressScheduledFunctions();
+    });
+  });
 });

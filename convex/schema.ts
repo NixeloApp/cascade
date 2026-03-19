@@ -50,6 +50,7 @@ import {
   oidcProviders,
   organizationRoles,
   otpCodeTypes,
+  outOfOfficeStatus,
   periodTypes,
   personas,
   projectRoles,
@@ -1886,6 +1887,7 @@ export const schemaDefinition = {
     timezone: v.optional(v.string()),
     emailNotifications: v.optional(v.boolean()),
     desktopNotifications: v.optional(v.boolean()),
+    outOfOffice: v.optional(outOfOfficeStatus),
     // Invite tracking
     inviteId: v.optional(v.id("invites")),
     // E2E Testing fields

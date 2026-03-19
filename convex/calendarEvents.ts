@@ -14,6 +14,7 @@ import { batchFetchUsers } from "./lib/batchHelpers";
 import { queryCalendarEventsByAttendeeInRange } from "./lib/calendarEventQueries";
 import { forbidden, notFound, validation } from "./lib/errors";
 import { isOrganizationAdmin, isOrganizationMember } from "./lib/organizationAccess";
+import { getOutOfOfficeStatusForTimeRange } from "./lib/outOfOffice";
 import { MAX_PAGE_SIZE } from "./lib/queryLimits";
 import { getTeamRole } from "./lib/teamAccess";
 import { DAY, WEEK } from "./lib/timeUtils";
@@ -230,6 +231,23 @@ async function enrichEventsWithOrganizers(
   });
 }
 
+async function ensureEventDoesNotOverlapOutOfOffice(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  startTime: number,
+  endTime: number,
+): Promise<void> {
+  const user = await ctx.db.get(userId);
+  const overlappingStatus = getOutOfOfficeStatusForTimeRange(user, startTime, endTime);
+
+  if (overlappingStatus) {
+    throw validation(
+      "startTime",
+      "Cannot schedule internal calendar events during your out-of-office window",
+    );
+  }
+}
+
 // Create a new calendar event
 export const create = authenticatedMutation({
   args: {
@@ -263,6 +281,8 @@ export const create = authenticatedMutation({
     if (args.endTime <= args.startTime) {
       throw validation("endTime", "End time must be after start time");
     }
+
+    await ensureEventDoesNotOverlapOutOfOffice(ctx, ctx.userId, args.startTime, args.endTime);
 
     const now = Date.now();
     // Resolve scope from project/issue if provided (verifies user has project access)
@@ -556,6 +576,11 @@ export const update = authenticatedMutation({
     const endTime = args.endTime ?? event.endTime;
     if (endTime <= startTime) {
       throw validation("endTime", "End time must be after start time");
+    }
+
+    // Only check OOO overlap when time fields are actually changing
+    if (args.startTime !== undefined || args.endTime !== undefined) {
+      await ensureEventDoesNotOverlapOutOfOffice(ctx, ctx.userId, startTime, endTime);
     }
 
     // Build update object using helper
