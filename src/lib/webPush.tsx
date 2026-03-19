@@ -10,6 +10,14 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "./toast";
 
+declare global {
+  interface Window {
+    __NIXELO_E2E_NOTIFICATION_PERMISSION__?: NotificationPermission;
+    __NIXELO_E2E_WEB_PUSH_SUPPORTED__?: boolean;
+    __NIXELO_E2E_VAPID_PUBLIC_KEY__?: string;
+  }
+}
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -60,14 +68,52 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return outputArray;
 }
 
+function getNotificationPermissionOverride(): NotificationPermission | undefined {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  return window.__NIXELO_E2E_NOTIFICATION_PERMISSION__;
+}
+
+function getWebPushSupportOverride(): boolean | undefined {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  return window.__NIXELO_E2E_WEB_PUSH_SUPPORTED__;
+}
+
+function isWebPushSupported(): boolean {
+  const supportOverride = getWebPushSupportOverride();
+  if (supportOverride !== undefined) {
+    return supportOverride;
+  }
+
+  return (
+    typeof window !== "undefined" &&
+    "serviceWorker" in navigator &&
+    "PushManager" in window &&
+    "Notification" in window
+  );
+}
+
+function getBrowserNotificationPermission(): NotificationPermission {
+  if (typeof window === "undefined" || !("Notification" in window)) {
+    return "denied";
+  }
+
+  return getNotificationPermissionOverride() ?? Notification.permission;
+}
+
 // ============================================================================
 // Provider
 // ============================================================================
 
 export function WebPushProvider({ children, vapidPublicKey }: WebPushProviderProps) {
   // State
-  const [permission, setPermission] = useState<NotificationPermission>(() =>
-    typeof window !== "undefined" && "Notification" in window ? Notification.permission : "denied",
+  const [permission, setPermission] = useState<NotificationPermission>(
+    getBrowserNotificationPermission,
   );
   const [pushManager, setPushManager] = useState<PushManager | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -80,11 +126,7 @@ export function WebPushProvider({ children, vapidPublicKey }: WebPushProviderPro
   );
 
   // Check if push is supported
-  const isSupported =
-    typeof window !== "undefined" &&
-    "serviceWorker" in navigator &&
-    "PushManager" in window &&
-    "Notification" in window;
+  const isSupported = isWebPushSupported();
 
   // Initialize service worker and check subscription
   useEffect(() => {
@@ -118,7 +160,8 @@ export function WebPushProvider({ children, vapidPublicKey }: WebPushProviderPro
     setIsLoading(true);
     try {
       // Request notification permission
-      const newPermission = await Notification.requestPermission();
+      const newPermission =
+        getNotificationPermissionOverride() ?? (await Notification.requestPermission());
       setPermission(newPermission);
 
       if (newPermission !== "granted") {
@@ -225,5 +268,9 @@ export function useWebPush(): WebPushContextValue {
  * Must be set in VITE_VAPID_PUBLIC_KEY
  */
 export function getVapidPublicKey(): string | undefined {
+  if (typeof window !== "undefined" && window.__NIXELO_E2E_VAPID_PUBLIC_KEY__) {
+    return window.__NIXELO_E2E_VAPID_PUBLIC_KEY__;
+  }
+
   return import.meta.env.VITE_VAPID_PUBLIC_KEY;
 }

@@ -246,6 +246,11 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-time-tracking-manual-entry-modal$/, "22-time-tracking", "-manual-entry-modal"],
   [/^filled-settings-profile-avatar-upload-modal$/, "12-settings", "-profile-avatar-upload-modal"],
   [/^filled-settings-profile-cover-upload-modal$/, "12-settings", "-profile-cover-upload-modal"],
+  [
+    /^filled-settings-notifications-permission-denied$/,
+    "12-settings",
+    "-notifications-permission-denied",
+  ],
   [/^filled-notification-popover$/, "21-notifications", "-popover"],
   [/^filled-notification-snooze-popover$/, "21-notifications", "-snooze-popover"],
   [/^filled-notifications-archived$/, "21-notifications", "-archived"],
@@ -2617,6 +2622,7 @@ async function screenshotFilledStates(
     shouldCaptureAny(p, [
       "settings-profile-avatar-upload-modal",
       "settings-profile-cover-upload-modal",
+      "settings-notifications-permission-denied",
     ])
   ) {
     const settingsUrl = ROUTES.settings.profile.build(orgSlug);
@@ -2668,6 +2674,41 @@ async function screenshotFilledStates(
         await waitForScreenshotReady(page);
         await captureCurrentView(page, p, "settings-profile-cover-upload-modal");
         await dismissIfOpen(page, dialog);
+      });
+    }
+
+    if (shouldCapture(p, "settings-notifications-permission-denied")) {
+      await runCaptureStep("settings notifications permission denied", async () => {
+        const permissionPage = await page.context().newPage();
+        try {
+          await permissionPage.addInitScript(() => {
+            window.__NIXELO_E2E_NOTIFICATION_PERMISSION__ = "denied";
+            window.__NIXELO_E2E_WEB_PUSH_SUPPORTED__ = true;
+            window.__NIXELO_E2E_VAPID_PUBLIC_KEY__ = "e2e-screenshot-vapid-key";
+          });
+
+          const notificationsSettingsUrl = `${settingsUrl}?tab=notifications`;
+          await permissionPage
+            .goto(`${BASE_URL}${notificationsSettingsUrl}`, {
+              waitUntil: "domcontentloaded",
+              timeout: 15000,
+            })
+            .catch(() => {});
+          await waitForExpectedContent(permissionPage, settingsUrl, "settings-profile", p);
+          await permissionPage
+            .getByText(/browser notifications blocked/i)
+            .first()
+            .waitFor({ state: "visible", timeout: 5000 })
+            .catch(() => {});
+          await permissionPage
+            .getByRole("button", { name: /^blocked$/i })
+            .first()
+            .waitFor({ state: "visible", timeout: 5000 });
+          await waitForScreenshotReady(permissionPage);
+          await captureCurrentView(permissionPage, p, "settings-notifications-permission-denied");
+        } finally {
+          await permissionPage.close().catch(() => {});
+        }
       });
     }
   }
@@ -4662,6 +4703,7 @@ const DRY_RUN_PAGES = [
   "filled-dashboard-customize-modal",
   "filled-settings-profile-avatar-upload-modal",
   "filled-settings-profile-cover-upload-modal",
+  "filled-settings-notifications-permission-denied",
   // Filled states — projects modals
   "filled-projects-create-project-modal",
   "filled-issues-side-panel",

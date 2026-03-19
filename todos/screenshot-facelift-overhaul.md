@@ -16,7 +16,6 @@ Core visual facelift work is done. Only the unfinished screenshot and validation
 
 ### Interactive States Still Not Captured
 
-- [ ] Error: permission denied
 - [ ] Loading skeletons
 
 ### CI Integration
