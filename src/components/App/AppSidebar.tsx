@@ -48,6 +48,7 @@ import {
   Server,
   Settings,
   ShieldCheck,
+  Star,
   Users,
   X,
 } from "@/lib/icons";
@@ -62,6 +63,7 @@ import { cn } from "@/lib/utils";
 type SidebarWorkspace = FunctionReturnType<typeof api.workspaces.listForSidebar>[number];
 type SidebarTeam = FunctionReturnType<typeof api.teams.listForSidebar>[number];
 type SidebarDocument = FunctionReturnType<typeof api.documents.listForSidebar>["documents"][number];
+type SidebarFavoriteDocument = FunctionReturnType<typeof api.documents.listFavorites>[number];
 
 const DOCUMENT_DISPLAY_LIMIT = 10;
 const WORKSPACE_DISPLAY_LIMIT = 25;
@@ -257,6 +259,7 @@ interface WorkspaceNavItemProps {
 }
 
 interface DocumentsSectionContentProps {
+  favorites: SidebarFavoriteDocument[];
   documents: SidebarDocument[];
   totalCount: number;
   showSearch: boolean;
@@ -268,6 +271,7 @@ interface DocumentsSectionContentProps {
 }
 
 function DocumentsSectionContent({
+  favorites,
   documents,
   totalCount,
   showSearch,
@@ -290,6 +294,29 @@ function DocumentsSectionContent({
         />
       </li>
       <li className="h-px bg-ui-border my-1 mx-2 list-none" aria-hidden="true" />
+      {favorites.length > 0 && (
+        <>
+          <li className="list-none px-3 pt-1">
+            <Flex align="center" gap="xs" className="text-ui-text-tertiary">
+              <Star className="h-3.5 w-3.5 fill-status-warning text-status-warning" />
+              <Typography variant="caption">Favorites</Typography>
+            </Flex>
+          </li>
+          {favorites.map((doc) => (
+            <li key={doc._id} className="list-none">
+              <NavSubItem
+                to={ROUTES.documents.detail.path}
+                params={{ orgSlug, id: doc._id }}
+                label={doc.title || "Untitled"}
+                isActive={location.pathname.includes(`/documents/${doc._id}`)}
+                onClick={onNavClick}
+                icon={Star}
+              />
+            </li>
+          ))}
+          <li className="h-px bg-ui-border my-1 mx-2 list-none" aria-hidden="true" />
+        </>
+      )}
       {showSearch && (
         <li className="list-none">
           <Card variant="ghost" padding="xs">
@@ -427,18 +454,25 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
     limit: 11,
     organizationId,
   });
+  const favoritesResult = useAuthenticatedQuery(api.documents.listFavorites, {
+    limit: 5,
+    organizationId,
+  });
   const documents = documentsResult?.documents;
+  const favorites = favoritesResult ?? [];
   const workspaces = useAuthenticatedQuery(api.workspaces.listForSidebar, { organizationId });
   const teams = useAuthenticatedQuery(api.teams.listForSidebar, { organizationId });
 
   const allDocuments = documents ?? [];
+  const favoriteDocumentIds = new Set(favorites.map((favorite) => favorite._id));
   const allWorkspaces = workspaces ?? [];
   const showDocumentSearch = allDocuments.length > DOCUMENT_DISPLAY_LIMIT;
   const showWorkspaceSearch = allWorkspaces.length > WORKSPACE_DISPLAY_LIMIT;
 
-  const filteredDocuments = showDocumentSearch
-    ? filterItems(allDocuments, documentSearch, "title")
-    : allDocuments;
+  const filteredFavorites = filterItems(favorites, documentSearch, "title");
+  const filteredDocuments = (
+    showDocumentSearch ? filterItems(allDocuments, documentSearch, "title") : allDocuments
+  ).filter((doc) => !favoriteDocumentIds.has(doc._id));
   const displayedDocuments = filteredDocuments.slice(0, DOCUMENT_DISPLAY_LIMIT);
 
   const filteredWorkspaces = showWorkspaceSearch
@@ -737,6 +771,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     data-tour="nav-documents"
                   >
                     <DocumentsSectionContent
+                      favorites={filteredFavorites}
                       documents={displayedDocuments}
                       totalCount={allDocuments.length}
                       showSearch={showDocumentSearch}

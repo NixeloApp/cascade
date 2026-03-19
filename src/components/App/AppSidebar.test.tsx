@@ -58,7 +58,11 @@ vi.mock("@/hooks/useSidebarState", () => ({
 vi.mock("@convex/_generated/api", () => ({
   api: {
     users: { isOrganizationAdmin: "users.isOrganizationAdmin", getCurrent: "users.getCurrent" },
-    documents: { listForSidebar: "documents.listForSidebar", create: "documents.create" },
+    documents: {
+      listForSidebar: "documents.listForSidebar",
+      listFavorites: "documents.listFavorites",
+      create: "documents.create",
+    },
     workspaces: { listForSidebar: "workspaces.listForSidebar", create: "workspaces.create" },
     teams: { listForSidebar: "teams.listForSidebar" },
     dashboard: { getMyProjects: "dashboard.getMyProjects" },
@@ -79,6 +83,8 @@ const mockUseQueryImplementation = (query: any) => {
   switch (query) {
     case "documents.listForSidebar":
       return { documents: [] };
+    case "documents.listFavorites":
+      return [];
     case "workspaces.listForSidebar":
     case "teams.listForSidebar":
     case "dashboard.getMyProjects":
@@ -216,6 +222,48 @@ describe("AppSidebar Accessibility", () => {
 
     const documentsLink = screen.getByRole("link", { name: "Documents" });
     expect(documentsLink).toHaveAttribute("aria-label", "Documents");
+  });
+
+  it("renders favorite documents ahead of recent sidebar documents without duplication", () => {
+    (useLocation as any).mockReturnValue({ pathname: "/demo-org/documents/fav-doc" });
+    (useQuery as any).mockImplementation((query: string) => {
+      if (query === "documents.listFavorites") {
+        return [
+          {
+            _id: "fav-doc",
+            title: "Project Requirements",
+            isPublic: false,
+            createdBy: "user-1",
+            updatedAt: Date.now(),
+            organizationId: "org1",
+            favoritedAt: Date.now(),
+          },
+        ];
+      }
+      if (query === "documents.listForSidebar") {
+        return {
+          documents: [
+            { _id: "fav-doc", title: "Project Requirements", isPublic: false },
+            { _id: "recent-doc", title: "Sprint Retrospective Notes", isPublic: false },
+          ],
+        };
+      }
+      if (query === "workspaces.listForSidebar" || query === "teams.listForSidebar") return [];
+      if (query === "users.isOrganizationAdmin") return false;
+      return undefined;
+    });
+
+    render(<AppSidebar />);
+
+    expect(screen.getByText("Favorites")).toBeInTheDocument();
+
+    const favoriteLink = screen.getByRole("link", { name: "Project Requirements" });
+    expect(favoriteLink).toHaveAttribute("aria-current", "page");
+
+    const recentLink = screen.getByRole("link", { name: "Sprint Retrospective Notes" });
+    expect(recentLink).toBeInTheDocument();
+
+    expect(screen.getAllByRole("link", { name: "Project Requirements" })).toHaveLength(1);
   });
 
   it("shows document search and show-all affordance when document count exceeds sidebar cap", async () => {

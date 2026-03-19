@@ -298,6 +298,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-document-editor-move-dialog$/, "10-editor", "-move-dialog"],
   [/^filled-document-editor-markdown-preview-modal$/, "10-editor", "-markdown-preview-modal"],
   [/^filled-document-editor-favorite$/, "10-editor", "-favorite"],
+  [/^filled-document-editor-sidebar-favorites$/, "10-editor", "-sidebar-favorites"],
   [/^filled-document-editor-locked$/, "10-editor", "-locked"],
   [/^filled-document-editor-rich-blocks$/, "10-editor", "-rich-blocks"],
   [/^filled-document-editor-color-picker$/, "10-editor", "-color-picker"],
@@ -3282,6 +3283,7 @@ async function screenshotFilledStates(
     "document-editor-move-dialog",
     "document-editor-markdown-preview-modal",
     "document-editor-favorite",
+    "document-editor-sidebar-favorites",
     "document-editor-locked",
     "document-editor-rich-blocks",
     "document-editor-color-picker",
@@ -3335,6 +3337,25 @@ async function screenshotFilledStates(
           await activeToggle.waitFor({ state: "visible", timeout: 5000 });
           await waitForScreenshotReady(page);
           await captureCurrentView(page, p, "document-editor-favorite");
+          await activeToggle.click();
+          await toggle.waitFor({ state: "visible", timeout: 5000 });
+        });
+      }
+
+      if (shouldCapture(p, "document-editor-sidebar-favorites")) {
+        await runCaptureStep("document sidebar favorites", async () => {
+          await openDocumentEditorForCapture(page, docUrl);
+          const toggle = page.getByRole("button", { name: /add to favorites/i }).first();
+          await toggle.waitFor({ state: "visible", timeout: 8000 });
+          await toggle.click();
+          const activeToggle = page.getByRole("button", { name: /remove from favorites/i }).first();
+          await activeToggle.waitFor({ state: "visible", timeout: 5000 });
+          await page
+            .locator("aside")
+            .getByText("Favorites")
+            .waitFor({ state: "visible", timeout: 5000 });
+          await waitForScreenshotReady(page);
+          await captureCurrentView(page, p, "document-editor-sidebar-favorites");
           await activeToggle.click();
           await toggle.waitFor({ state: "visible", timeout: 5000 });
         });
@@ -4630,6 +4651,7 @@ const DRY_RUN_PAGES = [
   "filled-document-editor-move-dialog",
   "filled-document-editor-markdown-preview-modal",
   "filled-document-editor-favorite",
+  "filled-document-editor-sidebar-favorites",
   "filled-document-editor-locked",
   "filled-document-editor-rich-blocks",
   "filled-document-editor-color-picker",

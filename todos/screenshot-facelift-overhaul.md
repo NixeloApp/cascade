@@ -16,7 +16,7 @@ Core visual facelift work is done. Only the unfinished screenshot and validation
 
 ### Interactive States Still Not Captured
 
-- [ ] Navigation: sidebar favorites, project tree
+- [ ] Navigation: project tree
 - [ ] Error: permission denied, loading skeletons, toasts, form validation
 
 ### CI Integration
