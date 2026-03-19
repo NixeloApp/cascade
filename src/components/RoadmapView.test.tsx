@@ -170,6 +170,7 @@ type RoadmapIssue = {
   status: string;
   startDate?: number;
   dueDate?: number;
+  parentId?: Id<"issues">;
   type: IssueType;
   priority: IssuePriority;
   assignee?: { name: string };
@@ -347,6 +348,43 @@ describe("RoadmapView", () => {
       startDate: undefined,
       dueDate: expectedDueDate.getTime(),
     });
+  });
+
+  it("renders parent context rows and nests subtasks beneath them", () => {
+    mockRoadmapQueries({
+      issues: [
+        {
+          _id: issue2Id,
+          key: "PROJ-2",
+          title: "Ship migration slice",
+          status: "in progress",
+          dueDate: Date.UTC(2026, 2, 16),
+          parentId: issue1Id,
+          type: "subtask",
+          priority: "high",
+          assignee: { name: "Sam Lee" },
+        },
+        {
+          _id: issue1Id,
+          key: "PROJ-1",
+          title: "Ship migration",
+          status: "todo",
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Alex Rivera" },
+        },
+      ],
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    const parentIssueButton = screen.getByRole("button", { name: "PROJ-1" });
+    const childIssueButton = screen.getByRole("button", { name: "PROJ-2" });
+
+    expect(parentIssueButton.compareDocumentPosition(childIssueButton)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(screen.getByText("Subtask of PROJ-1")).toBeInTheDocument();
   });
 
   it("hides dependency lines when the toggle is clicked", async () => {

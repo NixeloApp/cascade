@@ -218,9 +218,17 @@ type TimelineRow =
       group: TimelineGroup;
     }
   | {
+      depth: 0 | 1;
       type: "issue";
       issue: RoadmapIssue;
+      parentIssueId?: Id<"issues">;
     };
+
+interface HierarchyIssueRow {
+  depth: 0 | 1;
+  issue: RoadmapIssue;
+  parentIssueId?: Id<"issues">;
+}
 
 function getBarWidth(
   startDate: number | undefined,
@@ -581,6 +589,74 @@ function getTimelineGroupSummary(
   };
 }
 
+function getRoadmapIssueSortDate(
+  issue: Pick<RoadmapIssue, "_id" | "dueDate" | "startDate">,
+  childSortDates: Map<string, number>,
+) {
+  return (
+    issue.startDate ??
+    issue.dueDate ??
+    childSortDates.get(issue._id.toString()) ??
+    Number.MAX_SAFE_INTEGER
+  );
+}
+
+function compareRoadmapIssues(
+  left: RoadmapIssue,
+  right: RoadmapIssue,
+  childSortDates: Map<string, number>,
+) {
+  return (
+    getRoadmapIssueSortDate(left, childSortDates) -
+      getRoadmapIssueSortDate(right, childSortDates) ||
+    (left.dueDate ?? Number.MAX_SAFE_INTEGER) - (right.dueDate ?? Number.MAX_SAFE_INTEGER) ||
+    left.key.localeCompare(right.key, undefined, { sensitivity: "base" })
+  );
+}
+
+function buildIssueHierarchyRows(
+  issues: FunctionReturnType<typeof api.issues.listRoadmapIssues>,
+): HierarchyIssueRow[] {
+  const issueById = new Map(issues.map((issue) => [issue._id.toString(), issue]));
+  const childIssuesByParent = new Map<string, RoadmapIssue[]>();
+  const rootIssues: RoadmapIssue[] = [];
+
+  for (const issue of issues) {
+    const parentIssueId = issue.parentId?.toString();
+    if (parentIssueId && issueById.has(parentIssueId)) {
+      const existingChildren = childIssuesByParent.get(parentIssueId);
+      if (existingChildren) {
+        existingChildren.push(issue);
+      } else {
+        childIssuesByParent.set(parentIssueId, [issue]);
+      }
+      continue;
+    }
+
+    rootIssues.push(issue);
+  }
+
+  const childSortDates = new Map<string, number>();
+  for (const [parentIssueId, childIssues] of childIssuesByParent) {
+    const earliestChildDate = Math.min(
+      ...childIssues.map((issue) => getRoadmapIssueSortDate(issue, new Map())),
+    );
+    childSortDates.set(parentIssueId, earliestChildDate);
+  }
+
+  const sortIssues = (issueList: RoadmapIssue[]) =>
+    [...issueList].sort((left, right) => compareRoadmapIssues(left, right, childSortDates));
+
+  return sortIssues(rootIssues).flatMap((issue) => [
+    { depth: 0 as const, issue },
+    ...sortIssues(childIssuesByParent.get(issue._id.toString()) ?? []).map((childIssue) => ({
+      depth: 1 as const,
+      issue: childIssue,
+      parentIssueId: issue._id,
+    })),
+  ]);
+}
+
 function buildTimelineRows(
   issues: FunctionReturnType<typeof api.issues.listRoadmapIssues> | undefined,
   groupBy: GroupBy,
@@ -591,7 +667,7 @@ function buildTimelineRows(
   }
 
   if (groupBy === "none") {
-    return issues.map((issue) => ({ type: "issue", issue }));
+    return buildIssueHierarchyRows(issues).map((row) => ({ type: "issue", ...row }));
   }
 
   const groupedIssues = new Map<string, { group: TimelineGroup; issues: typeof issues }>();
@@ -618,7 +694,12 @@ function buildTimelineRows(
       const groupSummary = getTimelineGroupSummary(groupedRows);
       return [
         { type: "group" as const, group: { ...group, ...groupSummary, collapsed } },
-        ...(collapsed ? [] : groupedRows.map((issue) => ({ type: "issue" as const, issue }))),
+        ...(collapsed
+          ? []
+          : buildIssueHierarchyRows(groupedRows).map((row) => ({
+              type: "issue" as const,
+              ...row,
+            }))),
       ];
     });
 }
@@ -896,6 +977,7 @@ function RoadmapGroupRow({ getPositionOnTimeline, group, onToggle, style }: Road
 
 interface RoadmapIssueRowProps {
   canEdit: boolean;
+  depth: 0 | 1;
   draggingIssueId?: Id<"issues">;
   getPositionOnTimeline: (date: number) => number;
   issue: RoadmapIssue;
@@ -917,10 +999,12 @@ interface RoadmapIssueRowProps {
   selected: boolean;
   style: React.CSSProperties;
   timelineRef: React.RefObject<HTMLDivElement | null>;
+  parentIssue: Pick<RoadmapIssue, "_id" | "key" | "title"> | null;
 }
 
 function RoadmapIssueRow({
   canEdit,
+  depth,
   draggingIssueId,
   getPositionOnTimeline,
   issue,
@@ -931,7 +1015,10 @@ function RoadmapIssueRow({
   selected,
   style,
   timelineRef,
+  parentIssue,
 }: RoadmapIssueRowProps) {
+  const isNestedSubtask = depth === 1 && parentIssue !== null;
+
   return (
     <Card
       recipe={selected ? "roadmapRowSelected" : "roadmapRow"}
@@ -944,20 +1031,38 @@ function RoadmapIssueRow({
           className={getStickyIssueColumnClassName(selected)}
           data-testid={TEST_IDS.ROADMAP.ISSUE_COLUMN}
         >
-          <Flex align="center" gap="sm" className="mb-1">
-            <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" />
-            <Button
-              variant="unstyled"
-              onClick={() => onOpenIssue(issue._id)}
-              className={cn(
-                "h-auto truncate p-0 text-left text-sm font-medium",
-                selected ? "text-brand-hover" : "text-ui-text",
-              )}
-            >
-              {issue.key}
-            </Button>
-          </Flex>
-          <Typography variant="caption">{issue.title}</Typography>
+          <div className="relative">
+            {isNestedSubtask ? (
+              <>
+                <div className="absolute top-1 bottom-3 left-2 w-px bg-ui-border/80" />
+                <div className="absolute top-4 left-2 h-px w-3 bg-ui-border/80" />
+              </>
+            ) : null}
+
+            <div className={cn(isNestedSubtask && "pl-6")}>
+              <Flex align="center" gap="sm" className="mb-1">
+                <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" />
+                <Button
+                  variant="unstyled"
+                  onClick={() => onOpenIssue(issue._id)}
+                  className={cn(
+                    "h-auto truncate p-0 text-left text-sm font-medium",
+                    selected ? "text-brand-hover" : "text-ui-text",
+                  )}
+                >
+                  {issue.key}
+                </Button>
+              </Flex>
+              {isNestedSubtask ? (
+                <Typography variant="caption" color="secondary" className="truncate">
+                  Subtask of {parentIssue.key}
+                </Typography>
+              ) : null}
+              <Typography variant="caption" className="truncate">
+                {issue.title}
+              </Typography>
+            </div>
+          </div>
         </FlexItem>
 
         <FlexItem flex="1" className="relative h-8" ref={timelineRef}>
@@ -1064,6 +1169,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     excludeEpics: true, // Don't include epics in main list
     epicId: filterEpic !== "all" ? filterEpic : undefined, // Filter by selected epic
     hasDueDate: true, // Only show issues with due dates
+    includeSubtasks: true,
   });
 
   const project = useAuthenticatedQuery(api.projects.getProject, { id: projectId });
@@ -1223,6 +1329,9 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   const selectedIssueId =
     selectedIndex >= 0 ? (filteredIssues?.[selectedIndex]?._id ?? null) : null;
   const issueById = buildIssueLookupMap(filteredIssues);
+  const roadmapIssueById = new Map(
+    (filteredIssues ?? []).map((issue) => [issue._id.toString(), issue]),
+  );
   const issueRowIndexMap = buildIssueRowIndexMap(timelineRows);
 
   // Sync keyboard selection with scroll
@@ -1283,6 +1392,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     return (
       <RoadmapIssueRow
         canEdit={canEdit}
+        depth={row.depth}
         draggingIssueId={dragging?.issueId}
         getPositionOnTimeline={getPositionOnTimeline}
         issue={row.issue}
@@ -1293,6 +1403,9 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
         selected={row.issue._id === selectedIssueId}
         style={style}
         timelineRef={timelineRef}
+        parentIssue={
+          row.parentIssueId ? (roadmapIssueById.get(row.parentIssueId.toString()) ?? null) : null
+        }
       />
     );
   }

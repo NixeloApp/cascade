@@ -179,13 +179,16 @@ async function fetchRoadmapSprintIssues(
   sprintId: Id<"sprints">,
   excludeEpics?: boolean,
   hasDueDate?: boolean,
+  includeSubtasks?: boolean,
 ) {
   let q = ctx.db
     .query("issues")
     .withIndex("by_sprint", (q) => q.eq("sprintId", sprintId))
-    .filter(notDeleted)
-    .order("desc")
-    .filter((q) => q.neq(q.field("type"), "subtask"));
+    .filter(notDeleted);
+
+  if (!includeSubtasks) {
+    q = q.filter((q) => q.neq(q.field("type"), "subtask"));
+  }
 
   if (excludeEpics) {
     q = q.filter((q) => q.neq(q.field("type"), "epic"));
@@ -194,10 +197,15 @@ async function fetchRoadmapSprintIssues(
     q = q.filter((q) => q.gt(q.field("dueDate"), 0));
   }
 
-  const allSprintIssues = await safeCollect(q, BOUNDED_LIST_LIMIT, "roadmap sprint issues");
+  const allSprintIssues = await safeCollect(
+    q.order("desc"),
+    BOUNDED_LIST_LIMIT,
+    "roadmap sprint issues",
+  );
+  const allowedTypes = includeSubtasks ? [...ROOT_ISSUE_TYPES, "subtask"] : ROOT_ISSUE_TYPES;
 
   return allSprintIssues.filter(
-    (i) => i.projectId === projectId && (ROOT_ISSUE_TYPES as readonly string[]).includes(i.type),
+    (i) => i.projectId === projectId && (allowedTypes as readonly string[]).includes(i.type),
   );
 }
 
@@ -208,6 +216,7 @@ async function fetchRoadmapEpicIssues(
   epicId: Id<"issues">,
   excludeEpics?: boolean,
   hasDueDate?: boolean,
+  includeSubtasks?: boolean,
 ) {
   let q = ctx.db
     .query("issues")
@@ -223,9 +232,10 @@ async function fetchRoadmapEpicIssues(
   }
 
   const allEpicIssues = await safeCollect(q, BOUNDED_LIST_LIMIT, "roadmap epic issues");
+  const allowedTypes = includeSubtasks ? [...ROOT_ISSUE_TYPES, "subtask"] : ROOT_ISSUE_TYPES;
 
   return allEpicIssues.filter(
-    (i) => i.projectId === projectId && (ROOT_ISSUE_TYPES as readonly string[]).includes(i.type),
+    (i) => i.projectId === projectId && (allowedTypes as readonly string[]).includes(i.type),
   );
 }
 
@@ -234,10 +244,12 @@ async function fetchRoadmapDueIssues(
   ctx: QueryCtx,
   projectId: Id<"projects">,
   excludeEpics?: boolean,
+  includeSubtasks?: boolean,
 ) {
-  const typesToFetch = excludeEpics
-    ? ROOT_ISSUE_TYPES.filter((t) => t !== "epic")
-    : ROOT_ISSUE_TYPES;
+  const typesToFetch = [
+    ...(excludeEpics ? ROOT_ISSUE_TYPES.filter((t) => t !== "epic") : ROOT_ISSUE_TYPES),
+    ...(includeSubtasks ? (["subtask"] as const) : []),
+  ];
 
   const issuesByType = await Promise.all(
     typesToFetch.map((type) =>
@@ -266,10 +278,12 @@ async function fetchRoadmapIssuesByType(
   ctx: QueryCtx,
   projectId: Id<"projects">,
   excludeEpics?: boolean,
+  includeSubtasks?: boolean,
 ) {
-  const typesToFetch = excludeEpics
-    ? ROOT_ISSUE_TYPES.filter((t) => t !== "epic")
-    : ROOT_ISSUE_TYPES;
+  const typesToFetch = [
+    ...(excludeEpics ? ROOT_ISSUE_TYPES.filter((t) => t !== "epic") : ROOT_ISSUE_TYPES),
+    ...(includeSubtasks ? (["subtask"] as const) : []),
+  ];
 
   const outcomes = await Promise.all(
     typesToFetch.map((type) =>
@@ -291,6 +305,33 @@ async function fetchRoadmapIssuesByType(
   return outcomes.flat();
 }
 
+async function includeRoadmapParentContextIssues(
+  ctx: QueryCtx,
+  projectId: Id<"projects">,
+  issues: Doc<"issues">[],
+) {
+  const parentIds = [
+    ...new Set(issues.flatMap((issue) => (issue.parentId ? [issue.parentId] : []))),
+  ];
+  if (parentIds.length === 0) {
+    return issues;
+  }
+
+  const existingIssueIds = new Set(issues.map((issue) => issue._id));
+  const parentIssues = await Promise.all(parentIds.map((parentId) => ctx.db.get(parentId)));
+
+  return [
+    ...issues,
+    ...parentIssues.filter(
+      (parentIssue): parentIssue is Doc<"issues"> =>
+        parentIssue !== null &&
+        parentIssue.projectId === projectId &&
+        !parentIssue.isDeleted &&
+        !existingIssueIds.has(parentIssue._id),
+    ),
+  ];
+}
+
 export const listRoadmapIssues = authenticatedQuery({
   args: {
     projectId: v.id("projects"),
@@ -298,6 +339,7 @@ export const listRoadmapIssues = authenticatedQuery({
     epicId: v.optional(v.id("issues")),
     excludeEpics: v.optional(v.boolean()),
     hasDueDate: v.optional(v.boolean()),
+    includeSubtasks: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const project = await ctx.db.get(args.projectId);
@@ -315,6 +357,7 @@ export const listRoadmapIssues = authenticatedQuery({
         args.sprintId,
         args.excludeEpics,
         args.hasDueDate,
+        args.includeSubtasks,
       );
     } else if (args.epicId) {
       issues = await fetchRoadmapEpicIssues(
@@ -323,11 +366,22 @@ export const listRoadmapIssues = authenticatedQuery({
         args.epicId,
         args.excludeEpics,
         args.hasDueDate,
+        args.includeSubtasks,
       );
     } else if (args.hasDueDate) {
-      issues = await fetchRoadmapDueIssues(ctx, args.projectId, args.excludeEpics);
+      issues = await fetchRoadmapDueIssues(
+        ctx,
+        args.projectId,
+        args.excludeEpics,
+        args.includeSubtasks,
+      );
     } else {
-      issues = await fetchRoadmapIssuesByType(ctx, args.projectId, args.excludeEpics);
+      issues = await fetchRoadmapIssuesByType(
+        ctx,
+        args.projectId,
+        args.excludeEpics,
+        args.includeSubtasks,
+      );
     }
 
     // Apply memory filters for safety/completeness
@@ -339,6 +393,9 @@ export const listRoadmapIssues = authenticatedQuery({
     }
     if (args.hasDueDate) {
       issues = issues.filter((i) => i.dueDate !== undefined);
+    }
+    if (args.includeSubtasks) {
+      issues = await includeRoadmapParentContextIssues(ctx, args.projectId, issues);
     }
 
     return await enrichIssues(ctx, issues);
