@@ -387,6 +387,48 @@ describe("RoadmapView", () => {
     expect(screen.getByText("Subtask of PROJ-1")).toBeInTheDocument();
   });
 
+  it("collapses subtasks beneath their parent roadmap row", () => {
+    mockRoadmapQueries({
+      issues: [
+        {
+          _id: issue2Id,
+          key: "PROJ-2",
+          title: "Ship migration slice",
+          status: "in progress",
+          dueDate: Date.UTC(2026, 2, 16),
+          parentId: issue1Id,
+          type: "subtask",
+          priority: "high",
+          assignee: { name: "Sam Lee" },
+        },
+        {
+          _id: issue1Id,
+          key: "PROJ-1",
+          title: "Ship migration",
+          status: "todo",
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Alex Rivera" },
+        },
+      ],
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    const parentToggle = screen.getByRole("button", { name: "Collapse subtasks for PROJ-1" });
+    expect(parentToggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: "PROJ-2" })).toBeInTheDocument();
+
+    fireEvent.click(parentToggle);
+
+    expect(screen.getByRole("button", { name: "Expand subtasks for PROJ-1" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(screen.queryByRole("button", { name: "PROJ-2" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Subtask of PROJ-1")).not.toBeInTheDocument();
+  });
+
   it("hides dependency lines when the toggle is clicked", async () => {
     mockRoadmapQueries({
       issues: [

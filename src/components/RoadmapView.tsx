@@ -218,14 +218,20 @@ type TimelineRow =
       group: TimelineGroup;
     }
   | {
+      childCount: number;
+      childrenCollapsed: boolean;
       depth: 0 | 1;
+      hasChildren: boolean;
       type: "issue";
       issue: RoadmapIssue;
       parentIssueId?: Id<"issues">;
     };
 
 interface HierarchyIssueRow {
+  childCount: number;
+  childrenCollapsed: boolean;
   depth: 0 | 1;
+  hasChildren: boolean;
   issue: RoadmapIssue;
   parentIssueId?: Id<"issues">;
 }
@@ -616,6 +622,7 @@ function compareRoadmapIssues(
 
 function buildIssueHierarchyRows(
   issues: FunctionReturnType<typeof api.issues.listRoadmapIssues>,
+  collapsedParentIssueIds: string[],
 ): HierarchyIssueRow[] {
   const issueById = new Map(issues.map((issue) => [issue._id.toString(), issue]));
   const childIssuesByParent = new Map<string, RoadmapIssue[]>();
@@ -647,27 +654,47 @@ function buildIssueHierarchyRows(
   const sortIssues = (issueList: RoadmapIssue[]) =>
     [...issueList].sort((left, right) => compareRoadmapIssues(left, right, childSortDates));
 
-  return sortIssues(rootIssues).flatMap((issue) => [
-    { depth: 0 as const, issue },
-    ...sortIssues(childIssuesByParent.get(issue._id.toString()) ?? []).map((childIssue) => ({
-      depth: 1 as const,
-      issue: childIssue,
-      parentIssueId: issue._id,
-    })),
-  ]);
+  return sortIssues(rootIssues).flatMap((issue) => {
+    const childIssues = sortIssues(childIssuesByParent.get(issue._id.toString()) ?? []);
+    const childrenCollapsed = collapsedParentIssueIds.includes(issue._id.toString());
+
+    return [
+      {
+        childCount: childIssues.length,
+        childrenCollapsed,
+        depth: 0 as const,
+        hasChildren: childIssues.length > 0,
+        issue,
+      },
+      ...(childrenCollapsed
+        ? []
+        : childIssues.map((childIssue) => ({
+            childCount: 0,
+            childrenCollapsed: false,
+            depth: 1 as const,
+            hasChildren: false,
+            issue: childIssue,
+            parentIssueId: issue._id,
+          }))),
+    ];
+  });
 }
 
 function buildTimelineRows(
   issues: FunctionReturnType<typeof api.issues.listRoadmapIssues> | undefined,
   groupBy: GroupBy,
   collapsedGroupKeys: string[],
+  collapsedParentIssueIds: string[],
 ): TimelineRow[] {
   if (!issues || issues.length === 0) {
     return [];
   }
 
   if (groupBy === "none") {
-    return buildIssueHierarchyRows(issues).map((row) => ({ type: "issue", ...row }));
+    return buildIssueHierarchyRows(issues, collapsedParentIssueIds).map((row) => ({
+      type: "issue",
+      ...row,
+    }));
   }
 
   const groupedIssues = new Map<string, { group: TimelineGroup; issues: typeof issues }>();
@@ -696,7 +723,7 @@ function buildTimelineRows(
         { type: "group" as const, group: { ...group, ...groupSummary, collapsed } },
         ...(collapsed
           ? []
-          : buildIssueHierarchyRows(groupedRows).map((row) => ({
+          : buildIssueHierarchyRows(groupedRows, collapsedParentIssueIds).map((row) => ({
               type: "issue" as const,
               ...row,
             }))),
@@ -976,10 +1003,13 @@ function RoadmapGroupRow({ getPositionOnTimeline, group, onToggle, style }: Road
 }
 
 interface RoadmapIssueRowProps {
+  childCount: number;
   canEdit: boolean;
+  childrenCollapsed: boolean;
   depth: 0 | 1;
   draggingIssueId?: Id<"issues">;
   getPositionOnTimeline: (date: number) => number;
+  hasChildren: boolean;
   issue: RoadmapIssue;
   onBarDragStart: (
     e: React.MouseEvent,
@@ -988,6 +1018,7 @@ interface RoadmapIssueRowProps {
     dueDate: number | undefined,
   ) => void;
   onOpenIssue: (issueId: Id<"issues">) => void;
+  onToggleChildren: (issueId: Id<"issues">) => void;
   onResizeStart: (
     e: React.MouseEvent,
     issueId: Id<"issues">,
@@ -1002,14 +1033,116 @@ interface RoadmapIssueRowProps {
   parentIssue: Pick<RoadmapIssue, "_id" | "key" | "title"> | null;
 }
 
+interface RoadmapIssueIdentityProps {
+  childCount: number;
+  childrenCollapsed: boolean;
+  hasChildren: boolean;
+  isNestedSubtask: boolean;
+  issue: RoadmapIssue;
+  onOpenIssue: (issueId: Id<"issues">) => void;
+  onToggleChildren: (issueId: Id<"issues">) => void;
+  parentIssue: Pick<RoadmapIssue, "_id" | "key" | "title"> | null;
+  selected: boolean;
+}
+
+function getRoadmapSubtaskCaption(
+  childCount: number,
+  hasChildren: boolean,
+  isNestedSubtask: boolean,
+  parentIssue: Pick<RoadmapIssue, "_id" | "key" | "title"> | null,
+) {
+  if (isNestedSubtask && parentIssue) {
+    return `Subtask of ${parentIssue.key}`;
+  }
+
+  if (hasChildren) {
+    return `${childCount} ${childCount === 1 ? "subtask" : "subtasks"}`;
+  }
+
+  return null;
+}
+
+function RoadmapIssueIdentity({
+  childCount,
+  childrenCollapsed,
+  hasChildren,
+  isNestedSubtask,
+  issue,
+  onOpenIssue,
+  onToggleChildren,
+  parentIssue,
+  selected,
+}: RoadmapIssueIdentityProps) {
+  const childToggleLabel = `${childrenCollapsed ? "Expand" : "Collapse"} subtasks for ${issue.key}`;
+  const subtaskCaption = getRoadmapSubtaskCaption(
+    childCount,
+    hasChildren,
+    isNestedSubtask,
+    parentIssue,
+  );
+
+  return (
+    <div className="relative">
+      {isNestedSubtask ? (
+        <>
+          <div className="absolute top-1 bottom-3 left-2 w-px bg-ui-border/80" />
+          <div className="absolute top-4 left-2 h-px w-3 bg-ui-border/80" />
+        </>
+      ) : null}
+
+      <div className={cn(isNestedSubtask && "pl-6")}>
+        <Flex align="center" gap="sm" className="mb-1">
+          {hasChildren ? (
+            <Button
+              type="button"
+              variant="unstyled"
+              className="flex h-4 w-4 items-center justify-center p-0 text-ui-text-tertiary"
+              onClick={() => onToggleChildren(issue._id)}
+              aria-expanded={!childrenCollapsed}
+              aria-label={childToggleLabel}
+            >
+              <Icon icon={childrenCollapsed ? ChevronRight : ChevronDown} size="sm" />
+            </Button>
+          ) : (
+            <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" />
+          )}
+          {hasChildren ? <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" /> : null}
+          <Button
+            variant="unstyled"
+            onClick={() => onOpenIssue(issue._id)}
+            className={cn(
+              "h-auto truncate p-0 text-left text-sm font-medium",
+              selected ? "text-brand-hover" : "text-ui-text",
+            )}
+          >
+            {issue.key}
+          </Button>
+        </Flex>
+        {subtaskCaption ? (
+          <Typography variant="caption" color="secondary" className="truncate">
+            {subtaskCaption}
+          </Typography>
+        ) : null}
+        <Typography variant="caption" className="truncate">
+          {issue.title}
+        </Typography>
+      </div>
+    </div>
+  );
+}
+
 function RoadmapIssueRow({
+  childCount,
   canEdit,
+  childrenCollapsed,
   depth,
   draggingIssueId,
   getPositionOnTimeline,
+  hasChildren,
   issue,
   onBarDragStart,
   onOpenIssue,
+  onToggleChildren,
   onResizeStart,
   resizingIssueId,
   selected,
@@ -1031,38 +1164,17 @@ function RoadmapIssueRow({
           className={getStickyIssueColumnClassName(selected)}
           data-testid={TEST_IDS.ROADMAP.ISSUE_COLUMN}
         >
-          <div className="relative">
-            {isNestedSubtask ? (
-              <>
-                <div className="absolute top-1 bottom-3 left-2 w-px bg-ui-border/80" />
-                <div className="absolute top-4 left-2 h-px w-3 bg-ui-border/80" />
-              </>
-            ) : null}
-
-            <div className={cn(isNestedSubtask && "pl-6")}>
-              <Flex align="center" gap="sm" className="mb-1">
-                <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" />
-                <Button
-                  variant="unstyled"
-                  onClick={() => onOpenIssue(issue._id)}
-                  className={cn(
-                    "h-auto truncate p-0 text-left text-sm font-medium",
-                    selected ? "text-brand-hover" : "text-ui-text",
-                  )}
-                >
-                  {issue.key}
-                </Button>
-              </Flex>
-              {isNestedSubtask ? (
-                <Typography variant="caption" color="secondary" className="truncate">
-                  Subtask of {parentIssue.key}
-                </Typography>
-              ) : null}
-              <Typography variant="caption" className="truncate">
-                {issue.title}
-              </Typography>
-            </div>
-          </div>
+          <RoadmapIssueIdentity
+            childCount={childCount}
+            childrenCollapsed={childrenCollapsed}
+            hasChildren={hasChildren}
+            isNestedSubtask={isNestedSubtask}
+            issue={issue}
+            onOpenIssue={onOpenIssue}
+            onToggleChildren={onToggleChildren}
+            parentIssue={parentIssue}
+            selected={selected}
+          />
         </FlexItem>
 
         <FlexItem flex="1" className="relative h-8" ref={timelineRef}>
@@ -1144,6 +1256,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   const [viewMode, setViewMode] = useState<ViewMode>("months");
   const [groupBy, setGroupBy] = useState<GroupBy>("none");
   const [collapsedGroupKeys, setCollapsedGroupKeys] = useState<string[]>([]);
+  const [collapsedParentIssueIds, setCollapsedParentIssueIds] = useState<string[]>([]);
   const [filterEpic, setFilterEpic] = useState<Id<"issues"> | "all">("all");
   const [timelineSpan, setTimelineSpan] = useState<TimelineSpan>(6);
   const [timelineZoom, setTimelineZoom] = useState<TimelineZoom>("standard");
@@ -1197,7 +1310,12 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     timelineHeaderCells.length,
   );
   const timelineBucketWidth = TIMELINE_BUCKET_WIDTH[viewMode][timelineZoom];
-  const timelineRows = buildTimelineRows(filteredIssues, groupBy, collapsedGroupKeys);
+  const timelineRows = buildTimelineRows(
+    filteredIssues,
+    groupBy,
+    collapsedGroupKeys,
+    collapsedParentIssueIds,
+  );
   const todayMarkerOffsetPx = getTodayMarkerOffsetPx(
     Date.now(),
     startOfMonth,
@@ -1392,12 +1510,22 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     return (
       <RoadmapIssueRow
         canEdit={canEdit}
+        childCount={row.childCount}
+        childrenCollapsed={row.childrenCollapsed}
         depth={row.depth}
         draggingIssueId={dragging?.issueId}
         getPositionOnTimeline={getPositionOnTimeline}
+        hasChildren={row.hasChildren}
         issue={row.issue}
         onBarDragStart={handleBarDragStart}
         onOpenIssue={(issueId) => setSelectedIssue(issueId)}
+        onToggleChildren={(issueId) =>
+          setCollapsedParentIssueIds((currentIds) =>
+            currentIds.includes(issueId)
+              ? currentIds.filter((currentId) => currentId !== issueId)
+              : [...currentIds, issueId],
+          )
+        }
         onResizeStart={handleResizeStart}
         resizingIssueId={resizing?.issueId}
         selected={row.issue._id === selectedIssueId}
