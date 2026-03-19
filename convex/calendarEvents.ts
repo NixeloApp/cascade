@@ -578,7 +578,10 @@ export const update = authenticatedMutation({
       throw validation("endTime", "End time must be after start time");
     }
 
-    await ensureEventDoesNotOverlapOutOfOffice(ctx, ctx.userId, startTime, endTime);
+    // Only check OOO overlap when time fields are actually changing
+    if (args.startTime !== undefined || args.endTime !== undefined) {
+      await ensureEventDoesNotOverlapOutOfOffice(ctx, ctx.userId, startTime, endTime);
+    }
 
     // Build update object using helper
     let updates = buildEventUpdateObject(args);

@@ -12,7 +12,7 @@ import { v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import { internalQuery, type QueryCtx, query } from "../_generated/server";
 import { authenticatedQuery, organizationQuery, projectQuery } from "../customFunctions";
-import { batchFetchUsers } from "../lib/batchHelpers";
+import { batchFetchIssues, batchFetchUsers } from "../lib/batchHelpers";
 import {
   BOUNDED_LIST_LIMIT,
   BOUNDED_SEARCH_LIMIT,
@@ -318,13 +318,12 @@ async function includeRoadmapParentContextIssues(
   }
 
   const existingIssueIds = new Set(issues.map((issue) => issue._id));
-  const parentIssues = await Promise.all(parentIds.map((parentId) => ctx.db.get(parentId)));
+  const parentIssueMap = await batchFetchIssues(ctx, parentIds);
 
   return [
     ...issues,
-    ...parentIssues.filter(
-      (parentIssue): parentIssue is Doc<"issues"> =>
-        parentIssue !== null &&
+    ...[...parentIssueMap.values()].filter(
+      (parentIssue) =>
         parentIssue.projectId === projectId &&
         !parentIssue.isDeleted &&
         !existingIssueIds.has(parentIssue._id),

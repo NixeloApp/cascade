@@ -38,10 +38,10 @@ const EXPECTED_PAGE_SPEC_SCREENSHOTS = [
   "mobile-light.png",
 ];
 const EXPECTED_MODAL_SPEC_SCREENSHOTS = [
-  "desktop-dark.png",
-  "desktop-light.png",
-  "tablet-light.png",
-  "mobile-light.png",
+  "desktop-dark",
+  "desktop-light",
+  "tablet-light",
+  "mobile-light",
 ];
 
 /**

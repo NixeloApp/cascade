@@ -10,7 +10,6 @@ import { Input, Select, Textarea } from "@/components/ui/form";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { formatDateForInput } from "@/lib/formatting";
 import {
   formatOutOfOfficeDateRange,
   getOutOfOfficeReasonLabel,
@@ -24,6 +23,15 @@ function parseStartDate(value: string): number {
 
 function parseEndDate(value: string): number {
   return new Date(`${value}T23:59:59.999`).getTime();
+}
+
+/** Format timestamp as YYYY-MM-DD in local timezone (matches parseStartDate/parseEndDate) */
+function formatLocalDateForInput(timestamp: number): string {
+  const d = new Date(timestamp);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 /** Settings card for creating, updating, and clearing the current user's out-of-office window. */
@@ -50,8 +58,8 @@ export function OutOfOfficeSettings() {
       return;
     }
 
-    setStartDate(formatDateForInput(status.startsAt));
-    setEndDate(formatDateForInput(status.endsAt));
+    setStartDate(formatLocalDateForInput(status.startsAt));
+    setEndDate(formatLocalDateForInput(status.endsAt));
     setReason(status.reason);
     setNote(status.note ?? "");
     setDelegateUserId(status.delegate?._id ?? status.delegateUserId ?? "");
