@@ -3109,6 +3109,7 @@ export const seedScreenshotDataInternal = internalMutation({
   returns: v.object({
     success: v.boolean(),
     orgSlug: v.optional(v.string()),
+    projectId: v.optional(v.string()),
     projectKey: v.optional(v.string()),
     issueKeys: v.optional(v.array(v.string())),
     workspaceSlug: v.optional(v.string()),
@@ -4444,6 +4445,7 @@ export const seedScreenshotDataInternal = internalMutation({
     return {
       success: true,
       orgSlug,
+      projectId,
       projectKey,
       issueKeys: createdIssueKeys,
       workspaceSlug: "product",

@@ -20,6 +20,10 @@ vi.mock("@/hooks/useOrgContext", () => ({
   })),
 }));
 
+vi.mock("@/components/DuplicateDetection", () => ({
+  DuplicateDetection: () => null,
+}));
+
 // Mock toast utilities
 vi.mock("@/lib/toast", () => ({
   showSuccess: vi.fn(),
@@ -71,6 +75,7 @@ describe("CreateIssueModal", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
     (useConvexAuth as any).mockReturnValue({ isAuthenticated: true, isLoading: false });
     (useMutation as any).mockReturnValue(mockCreateIssue);
     (useAction as any).mockReturnValue(vi.fn());
@@ -209,5 +214,41 @@ describe("CreateIssueModal", () => {
     // Verify buttons are inside the group
     const bugLabel = screen.getByRole("button", { name: /bug/i });
     expect(group).toContainElement(bugLabel);
+  });
+
+  it("restores a saved draft after remounting the modal", async () => {
+    const user = userEvent.setup();
+    let callCount = 0;
+    (useQuery as any).mockImplementation(() => {
+      callCount++;
+      const callIndex = (callCount - 1) % 4;
+      return [undefined, mockProject, mockTemplates, mockLabels][callIndex];
+    });
+    window.localStorage.setItem(
+      "cascade_draft_create-issue_project-123",
+      JSON.stringify({
+        data: {
+          title: "Recovered issue draft",
+          description: "",
+          type: "task",
+          priority: "medium",
+          assigneeId: "",
+          storyPoints: "3",
+          selectedLabels: [],
+        },
+        timestamp: Date.now(),
+      }),
+    );
+
+    render(
+      <CreateIssueModal projectId={mockProjectId} open={true} onOpenChange={mockOnOpenChange} />,
+    );
+
+    expect(screen.getByText(/You have an unsaved draft/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /^restore$/i }));
+
+    expect(screen.getByPlaceholderText(/Enter issue title/i)).toHaveValue("Recovered issue draft");
+    expect(screen.getByPlaceholderText(/Enter story points/i)).toHaveValue(3);
   });
 });

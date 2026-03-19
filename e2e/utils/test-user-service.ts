@@ -34,6 +34,7 @@ export interface RbacProjectResult {
 export interface SeedScreenshotResult {
   success: boolean;
   orgSlug?: string;
+  projectId?: string;
   projectKey?: string;
   issueKeys?: string[];
   workspaceSlug?: string;

@@ -252,6 +252,11 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   // Project board: filled-project-xxx-board → 06-board
   [/^filled-project-.+-board$/, "06-board", ""],
   [/^filled-project-.+-create-issue-modal$/, "06-board", "-create-issue-modal"],
+  [
+    /^filled-project-.+-create-issue-draft-restoration$/,
+    "06-board",
+    "-create-issue-draft-restoration",
+  ],
   // Project backlog: filled-project-xxx-backlog → 07-backlog
   [/^filled-project-.+-backlog$/, "07-backlog", ""],
   // Project sprints: filled-project-xxx-sprints → 18-sprints
@@ -2323,6 +2328,44 @@ async function importMarkdownIntoEditor(
   await waitForScreenshotReady(page);
 }
 
+async function clearIssueDrafts(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const draftKeys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith("cascade_draft_create-issue_")) {
+        draftKeys.push(key);
+      }
+    }
+    for (const key of draftKeys) {
+      localStorage.removeItem(key);
+    }
+  });
+}
+
+async function seedIssueDraft(page: Page, projectId: string, title: string): Promise<void> {
+  await page.evaluate(
+    ({ projectId, title }) => {
+      localStorage.setItem(
+        `cascade_draft_create-issue_${projectId}`,
+        JSON.stringify({
+          data: {
+            title,
+            description: "",
+            type: "task",
+            priority: "medium",
+            assigneeId: "",
+            storyPoints: "",
+            selectedLabels: [],
+          },
+          timestamp: Date.now(),
+        }),
+      );
+    },
+    { projectId, title },
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Authentication
 // ---------------------------------------------------------------------------
@@ -2471,6 +2514,7 @@ async function screenshotFilledStates(
   console.log("    --- Filled states ---");
   const p = "filled";
   const projectKey = seed.projectKey;
+  const projectId = seed.projectId;
   const normalizedProjectKey = projectKey?.toLowerCase() ?? "";
   const firstIssueKey = seed.issueKeys?.[0];
 
@@ -2807,6 +2851,40 @@ async function screenshotFilledStates(
           `project-${normalizedProjectKey}-create-issue-duplicate-detection`,
         );
         await dismissIfOpen(page, projectsPage.createIssueModal);
+      });
+    }
+
+    if (shouldCapture(p, `project-${normalizedProjectKey}-create-issue-draft-restoration`)) {
+      await runCaptureStep("create issue draft restoration", async () => {
+        const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
+        const draftTitle = "Restore saved launch checklist";
+        if (!projectId) {
+          throw new Error("Screenshot seed did not return projectId");
+        }
+
+        await page
+          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+          .catch(() => {});
+        await waitForExpectedContent(page, boardUrl, "board");
+        await waitForScreenshotReady(page);
+        await dismissAllDialogs(page);
+        await clearIssueDrafts(page);
+        await seedIssueDraft(page, projectId, draftTitle);
+
+        const projectsPage = new ProjectsPage(page, orgSlug);
+        await projectsPage.openCreateIssueModal();
+        await page
+          .getByText(/you have an unsaved draft/i)
+          .first()
+          .waitFor({ state: "visible", timeout: 8000 });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(
+          page,
+          p,
+          `project-${normalizedProjectKey}-create-issue-draft-restoration`,
+        );
+        await dismissIfOpen(page, projectsPage.createIssueModal);
+        await clearIssueDrafts(page);
       });
     }
 
@@ -4197,6 +4275,7 @@ const DRY_RUN_PAGES = [
   "filled-project-PROJ-board-display-properties",
   "filled-project-PROJ-board-peek-mode",
   "filled-project-PROJ-board-sprint-selector",
+  "filled-project-PROJ-create-issue-draft-restoration",
   "filled-project-PROJ-create-issue-duplicate-detection",
   "filled-project-PROJ-create-issue-create-another",
   "filled-project-PROJ-create-issue-validation",
