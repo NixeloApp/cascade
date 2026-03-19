@@ -725,7 +725,7 @@ export class ProjectsPage extends BasePage {
 
   async expectRoadmapCurrentMonthVisible(date = new Date()) {
     await this.expectRoadmapLoaded();
-    const currentMonth = date.toLocaleString("default", { month: "short" });
+    const currentMonth = date.toLocaleDateString("en-US", { month: "short" });
     const rangeLabel = this.page.getByTestId(TEST_IDS.ROADMAP.RANGE_LABEL);
     await expect(rangeLabel).toContainText(currentMonth);
   }

@@ -74,12 +74,23 @@ export function OutOfOfficeSettings() {
         image: user.image,
       })) ?? [];
 
-  if (
-    status?.delegate &&
-    status.delegate._id !== currentUser?._id &&
-    !delegateOptions.some((user) => user._id === status.delegate?._id)
+  if (status?.delegate && status.delegate._id !== currentUser?._id) {
+    if (!delegateOptions.some((user) => user._id === status.delegate?._id)) {
+      delegateOptions.unshift(status.delegate);
+    }
+  } else if (
+    status?.delegateUserId &&
+    status.delegateUserId !== currentUser?._id &&
+    !delegateOptions.some((user) => user._id === status.delegateUserId)
   ) {
-    delegateOptions.unshift(status.delegate);
+    const match = searchableUsers?.find((u) => u._id === status.delegateUserId);
+    if (match) {
+      delegateOptions.unshift({
+        _id: match._id,
+        name: match.name ?? match.email ?? "Unknown",
+        image: match.image,
+      });
+    }
   }
 
   const handleSave = async () => {
