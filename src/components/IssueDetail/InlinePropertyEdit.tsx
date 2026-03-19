@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { Typography } from "@/components/ui/Typography";
+import type { UserSummaryWithOutOfOffice } from "@/lib/entitySummaries";
 import { User } from "@/lib/icons";
 import {
   getPriorityColor,
@@ -35,7 +36,7 @@ import {
   ISSUE_TYPES_WITH_SUBTASK,
   PRIORITY_ICONS,
 } from "@/lib/issue-utils";
-import { formatOutOfOfficeUntil, type OutOfOfficeStatusSummary } from "@/lib/outOfOffice";
+import { formatOutOfOfficeUntil } from "@/lib/outOfOffice";
 
 interface InlineSelectProps {
   label: string;
@@ -129,12 +130,7 @@ export function InlineTypeSelect({ value, onChange, disabled }: TypeSelectProps)
 
 interface AssigneeSelectProps {
   value: string | null | undefined;
-  members: Array<{
-    _id: Id<"users">;
-    name: string;
-    image?: string;
-    outOfOffice?: OutOfOfficeStatusSummary;
-  }>;
+  members: UserSummaryWithOutOfOffice[];
   onChange: (value: Id<"users"> | null) => void;
   disabled?: boolean;
 }
@@ -143,11 +139,7 @@ function AssigneeOption({
   image,
   name,
   outOfOffice,
-}: {
-  image?: string;
-  name: string;
-  outOfOffice?: OutOfOfficeStatusSummary;
-}) {
+}: Pick<UserSummaryWithOutOfOffice, "image" | "name" | "outOfOffice">) {
   return (
     <Flex align="center" gap="sm">
       <Avatar name={name} src={image} size="xs" />
