@@ -73,12 +73,26 @@ interface ResizeState {
   originalDueDate?: number;
 }
 
+interface DragState {
+  issueId: Id<"issues">;
+  startX: number;
+  originalStartDate?: number;
+  originalDueDate?: number;
+}
+
 interface ResizeComputationArgs {
   resizing: ResizeState;
   clientX: number;
   containerWidth: number;
   getPositionOnTimeline: (date: number) => number;
   getDateFromPosition: (percent: number) => number;
+}
+
+interface DragComputationArgs {
+  dragging: DragState;
+  clientX: number;
+  containerWidth: number;
+  totalDays: number;
 }
 
 interface TimelineGeometryArgs {
@@ -95,6 +109,38 @@ interface DependencyLineBuildArgs {
   };
   rowHeight: number;
   getPositionOnTimeline: (date: number) => number;
+}
+
+interface RoadmapBarIssue {
+  _id: Id<"issues">;
+  assignee?: { name?: string | null } | null;
+  dueDate: number;
+  key: string;
+  priority: string;
+  startDate?: number;
+  title: string;
+}
+
+interface RoadmapTimelineBarProps {
+  canEdit: boolean;
+  draggingIssueId?: Id<"issues">;
+  getPositionOnTimeline: (date: number) => number;
+  issue: RoadmapBarIssue;
+  onBarDragStart: (
+    e: React.MouseEvent,
+    issueId: Id<"issues">,
+    startDate: number | undefined,
+    dueDate: number | undefined,
+  ) => void;
+  onOpenIssue: (issueId: Id<"issues">) => void;
+  onResizeStart: (
+    e: React.MouseEvent,
+    issueId: Id<"issues">,
+    edge: "left" | "right",
+    startDate: number | undefined,
+    dueDate: number | undefined,
+  ) => void;
+  resizingIssueId?: Id<"issues">;
 }
 
 function getBarWidth(
@@ -180,6 +226,33 @@ function buildResizePatch({
   return null;
 }
 
+function buildDragPatch({ dragging, clientX, containerWidth, totalDays }: DragComputationArgs) {
+  if (!dragging.originalDueDate) {
+    return null;
+  }
+
+  const deltaX = clientX - dragging.startX;
+  const deltaDays = Math.round((deltaX / containerWidth) * totalDays);
+
+  if (deltaDays === 0) {
+    return null;
+  }
+
+  const startDate =
+    dragging.originalStartDate === undefined
+      ? undefined
+      : new Date(dragging.originalStartDate + deltaDays * DAY).setHours(0, 0, 0, 0);
+  const dueDate = new Date(dragging.originalDueDate + deltaDays * DAY).setHours(23, 59, 59, 999);
+
+  return {
+    issueId: dragging.issueId,
+    patch: {
+      startDate,
+      dueDate,
+    },
+  };
+}
+
 function buildDependencyLine({
   issueIndexMap,
   issues,
@@ -221,6 +294,89 @@ function getDependencyPath(line: DependencyLine) {
       C ${line.fromX + 5}% ${line.fromY},
         ${line.toX - 5}% ${line.toY},
         ${line.toX}% ${line.toY}`;
+}
+
+function getRoadmapBarTitle(issue: RoadmapBarIssue, canEdit: boolean): string {
+  return `${issue.title}${canEdit ? " - Drag to move date range" : ""}${issue.startDate ? ` - Start: ${formatDate(issue.startDate)}` : ""} - Due: ${formatDate(issue.dueDate)}`;
+}
+
+function RoadmapTimelineBar({
+  canEdit,
+  draggingIssueId,
+  getPositionOnTimeline,
+  issue,
+  onBarDragStart,
+  onOpenIssue,
+  onResizeStart,
+  resizingIssueId,
+}: RoadmapTimelineBarProps) {
+  if (!issue.dueDate) {
+    return null;
+  }
+
+  const isActive = resizingIssueId === issue._id || draggingIssueId === issue._id;
+
+  return (
+    <div
+      className={cn(
+        getCardRecipeClassName(isActive ? "roadmapTimelineBarActive" : "roadmapTimelineBar"),
+        "group absolute h-6",
+        getPriorityColor(issue.priority, "bg"),
+      )}
+      style={{
+        left: `${getBarLeft(issue.startDate, issue.dueDate, getPositionOnTimeline)}%`,
+        width: `${getBarWidth(issue.startDate, issue.dueDate, getPositionOnTimeline)}%`,
+      }}
+    >
+      <Flex align="center" className="h-full">
+        {canEdit && issue.startDate ? (
+          <Button
+            variant="unstyled"
+            size="none"
+            chrome="roadmapResizeHandle"
+            reveal={true}
+            className="absolute top-0 bottom-0 left-0 w-2 cursor-ew-resize rounded-l-full"
+            onMouseDown={(e) => onResizeStart(e, issue._id, "left", issue.startDate, issue.dueDate)}
+            title="Drag to change start date"
+          >
+            <div className="h-3 w-0.5 bg-ui-text-tertiary" />
+          </Button>
+        ) : null}
+
+        <Button
+          variant="unstyled"
+          data-testid={`roadmap-bar-${issue._id}`}
+          className="h-full w-full px-2"
+          onMouseDown={(e) => onBarDragStart(e, issue._id, issue.startDate, issue.dueDate)}
+          onClick={() => onOpenIssue(issue._id)}
+          title={getRoadmapBarTitle(issue, canEdit)}
+          aria-label={`View issue ${issue.key}`}
+        >
+          <Flex align="center" justify="center" className="h-full">
+            <Typography variant="label" className="truncate text-brand-foreground">
+              {issue.assignee?.name?.split(" ")[0] ?? ""}
+            </Typography>
+          </Flex>
+        </Button>
+
+        {canEdit ? (
+          <Button
+            variant="unstyled"
+            size="none"
+            chrome="roadmapResizeHandle"
+            reveal={true}
+            className="absolute top-0 right-0 bottom-0 w-2 cursor-ew-resize rounded-r-full"
+            onMouseDown={(e) =>
+              onResizeStart(e, issue._id, "right", issue.startDate, issue.dueDate)
+            }
+            title="Drag to change due date"
+          >
+            <div className="h-3 w-0.5 bg-ui-text-tertiary" />
+          </Button>
+        ) : null}
+      </Flex>
+    </div>
+  );
 }
 
 /** Build a map of issue ID to array index for O(1) lookups */
@@ -275,6 +431,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
 
   // Resize state
   const [resizing, setResizing] = useState<ResizeState | null>(null);
+  const [dragging, setDragging] = useState<DragState | null>(null);
 
   const { mutate: updateIssue } = useAuthenticatedMutation(api.issues.update);
 
@@ -339,9 +496,26 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     });
   };
 
+  const handleBarDragStart = (
+    e: React.MouseEvent,
+    issueId: Id<"issues">,
+    startDate: number | undefined,
+    dueDate: number | undefined,
+  ) => {
+    if (!canEdit || !dueDate) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging({
+      issueId,
+      startX: e.clientX,
+      originalStartDate: startDate,
+      originalDueDate: dueDate,
+    });
+  };
+
   // Handle mouse move during resize
   useEffect(() => {
-    if (!resizing || !timelineRef.current) return;
+    if (!(resizing || dragging) || !timelineRef.current) return;
 
     const handleMouseMove = () => {
       const container = timelineRef.current;
@@ -371,22 +545,32 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
         return date.getTime();
       };
 
-      const resizeUpdate = buildResizePatch({
-        resizing,
-        clientX: e.clientX,
-        containerWidth: rect.width,
-        getPositionOnTimeline: getPosition,
-        getDateFromPosition: getDate,
-      });
+      const nextUpdate = resizing
+        ? buildResizePatch({
+            resizing,
+            clientX: e.clientX,
+            containerWidth: rect.width,
+            getPositionOnTimeline: getPosition,
+            getDateFromPosition: getDate,
+          })
+        : dragging
+          ? buildDragPatch({
+              dragging,
+              clientX: e.clientX,
+              containerWidth: rect.width,
+              totalDays,
+            })
+          : null;
 
-      if (resizeUpdate) {
+      if (nextUpdate) {
         await updateIssue({
-          issueId: resizeUpdate.issueId,
-          ...resizeUpdate.patch,
+          issueId: nextUpdate.issueId,
+          ...nextUpdate.patch,
         });
       }
 
       setResizing(null);
+      setDragging(null);
     };
 
     document.addEventListener("mousemove", handleMouseMove);
@@ -396,7 +580,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [resizing, startOfMonth, totalDays, updateIssue]);
+  }, [dragging, resizing, startOfMonth, totalDays, updateIssue]);
 
   // Keyboard navigation
   const listRef = useRef<ListImperativeAPI>(null);
@@ -470,74 +654,26 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
 
           {/* Timeline Bar */}
           <FlexItem flex="1" className="relative h-8" ref={timelineRef}>
-            {issue.dueDate && (
-              <div
-                className={cn(
-                  getCardRecipeClassName(
-                    resizing?.issueId === issue._id
-                      ? "roadmapTimelineBarActive"
-                      : "roadmapTimelineBar",
-                  ),
-                  "group absolute h-6",
-                  getPriorityColor(issue.priority, "bg"),
-                )}
-                style={{
-                  left: `${getBarLeft(issue.startDate, issue.dueDate, getPositionOnTimeline)}%`,
-                  width: `${getBarWidth(issue.startDate, issue.dueDate, getPositionOnTimeline)}%`,
+            {issue.dueDate ? (
+              <RoadmapTimelineBar
+                canEdit={canEdit}
+                draggingIssueId={dragging?.issueId}
+                getPositionOnTimeline={getPositionOnTimeline}
+                issue={{
+                  _id: issue._id,
+                  assignee: issue.assignee ?? undefined,
+                  dueDate: issue.dueDate,
+                  key: issue.key,
+                  priority: issue.priority,
+                  startDate: issue.startDate,
+                  title: issue.title,
                 }}
-              >
-                <Flex align="center" className="h-full">
-                  {/* Left resize handle */}
-                  {canEdit && issue.startDate && (
-                    <Button
-                      variant="unstyled"
-                      size="none"
-                      chrome="roadmapResizeHandle"
-                      reveal={true}
-                      className="absolute top-0 bottom-0 left-0 w-2 cursor-ew-resize rounded-l-full"
-                      onMouseDown={(e) =>
-                        handleResizeStart(e, issue._id, "left", issue.startDate, issue.dueDate)
-                      }
-                      title="Drag to change start date"
-                    >
-                      <div className="h-3 w-0.5 bg-ui-text-tertiary" />
-                    </Button>
-                  )}
-
-                  {/* Bar content - clickable */}
-                  <Button
-                    variant="unstyled"
-                    className="h-full w-full px-2"
-                    onClick={() => setSelectedIssue(issue._id)}
-                    title={`${issue.title}${issue.startDate ? ` - Start: ${formatDate(issue.startDate)}` : ""} - Due: ${formatDate(issue.dueDate)}`}
-                    aria-label={`View issue ${issue.key}`}
-                  >
-                    <Flex align="center" justify="center" className="h-full">
-                      <Typography variant="label" className="truncate text-brand-foreground">
-                        {issue.assignee?.name.split(" ")[0]}
-                      </Typography>
-                    </Flex>
-                  </Button>
-
-                  {/* Right resize handle */}
-                  {canEdit && (
-                    <Button
-                      variant="unstyled"
-                      size="none"
-                      chrome="roadmapResizeHandle"
-                      reveal={true}
-                      className="absolute top-0 right-0 bottom-0 w-2 cursor-ew-resize rounded-r-full"
-                      onMouseDown={(e) =>
-                        handleResizeStart(e, issue._id, "right", issue.startDate, issue.dueDate)
-                      }
-                      title="Drag to change due date"
-                    >
-                      <div className="h-3 w-0.5 bg-ui-text-tertiary" />
-                    </Button>
-                  )}
-                </Flex>
-              </div>
-            )}
+                onBarDragStart={handleBarDragStart}
+                onOpenIssue={(issueId) => setSelectedIssue(issueId)}
+                onResizeStart={handleResizeStart}
+                resizingIssueId={resizing?.issueId}
+              />
+            ) : null}
 
             {/* Today Indicator */}
             <div

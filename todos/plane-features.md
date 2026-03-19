@@ -10,8 +10,8 @@
 ### Gantt Chart / Timeline View
 Plane has a full Gantt chart at `apps/web/core/components/gantt-chart/`. We have a roadmap view but no Gantt with drag-and-drop.
 
-- [ ] **Evaluate Gantt implementation** — blocks, sidebar, helpers, date rendering. Our `RoadmapView.tsx` is simpler.
-- [ ] **Decide: enhance roadmap or add Gantt** — Gantt is standard for PM tools. Our roadmap could evolve into one.
+- [~] **Evaluate Gantt implementation** — Our roadmap now supports draggable bars, resize handles, and dependency lines, but still needs fuller Gantt affordances (grouping/sidebar/zoom polish).
+- [~] **Decide: enhance roadmap or add Gantt** — Current direction is enhancing `RoadmapView.tsx` incrementally toward a fuller Gantt.
 
 ### Intake/Triage System
 Plane has a dedicated intake system (`apps/api/plane/app/views/intake.py`, `apps/web/core/components/inbox/`) for capturing external requests separately from issues.

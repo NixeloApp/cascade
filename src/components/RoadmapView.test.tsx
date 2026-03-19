@@ -1,4 +1,6 @@
 import type { Id } from "@convex/_generated/dataModel";
+import { DAY } from "@convex/lib/timeUtils";
+import { act } from "@testing-library/react";
 import type { ReactMutation } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import type { ReactNode } from "react";
@@ -319,5 +321,109 @@ describe("RoadmapView", () => {
     fireEvent.click(screen.getByTitle("Hide dependency lines"));
 
     expect(screen.queryByLabelText("Issue dependency lines")).not.toBeInTheDocument();
+  });
+
+  it("shifts an issue date range when its roadmap bar is dragged", async () => {
+    mockRoadmapQueries({
+      issues: [
+        {
+          _id: issue1Id,
+          key: "PROJ-1",
+          title: "Plan onboarding",
+          startDate: Date.UTC(2026, 2, 10),
+          dueDate: Date.UTC(2026, 2, 20),
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Alex Rivera" },
+        },
+      ],
+    });
+
+    const getBoundingClientRectSpy = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect");
+    getBoundingClientRectSpy.mockReturnValue({
+      x: 0,
+      y: 0,
+      width: 300,
+      height: 32,
+      top: 0,
+      right: 300,
+      bottom: 32,
+      left: 0,
+      toJSON: () => ({}),
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "1 Month" }));
+
+    const roadmapBar = screen.getByTestId(`roadmap-bar-${issue1Id}`);
+    const expectedStartDate = new Date(Date.UTC(2026, 2, 10) + 3 * DAY);
+    expectedStartDate.setHours(0, 0, 0, 0);
+    const expectedDueDate = new Date(Date.UTC(2026, 2, 20) + 3 * DAY);
+    expectedDueDate.setHours(23, 59, 59, 999);
+
+    await act(async () => {
+      fireEvent.mouseDown(roadmapBar, { clientX: 100 });
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      fireEvent.mouseUp(document, { clientX: 130 });
+      await Promise.resolve();
+    });
+
+    expect(updateIssueDates).toHaveBeenCalledWith({
+      issueId: issue1Id,
+      startDate: expectedStartDate.getTime(),
+      dueDate: expectedDueDate.getTime(),
+    });
+  });
+
+  it("does not update issue dates when the bar drag stays within the same day bucket", async () => {
+    mockRoadmapQueries({
+      issues: [
+        {
+          _id: issue1Id,
+          key: "PROJ-1",
+          title: "Plan onboarding",
+          startDate: Date.UTC(2026, 2, 10),
+          dueDate: Date.UTC(2026, 2, 20),
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Alex Rivera" },
+        },
+      ],
+    });
+
+    const getBoundingClientRectSpy = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect");
+    getBoundingClientRectSpy.mockReturnValue({
+      x: 0,
+      y: 0,
+      width: 300,
+      height: 32,
+      top: 0,
+      right: 300,
+      bottom: 32,
+      left: 0,
+      toJSON: () => ({}),
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "1 Month" }));
+
+    const roadmapBar = screen.getByTestId(`roadmap-bar-${issue1Id}`);
+
+    await act(async () => {
+      fireEvent.mouseDown(roadmapBar, { clientX: 100 });
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      fireEvent.mouseUp(document, { clientX: 102 });
+      await Promise.resolve();
+    });
+
+    expect(updateIssueDates).not.toHaveBeenCalled();
   });
 });
