@@ -15,6 +15,7 @@ import { batchFetchBookingPages } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { validate, validateEmail } from "./lib/constrainedValidators";
 import { conflict, notFound, rateLimited, requireOwned, validation } from "./lib/errors";
+import { getActiveOutOfOfficeDelegateUserId } from "./lib/outOfOffice";
 import { DAY, HOUR, MINUTE } from "./lib/timeUtils";
 import { getUserWorkspaceContext } from "./lib/workspaceAccess";
 import { bookerAnswers } from "./validators";
@@ -173,7 +174,10 @@ export const createBooking = mutation({
       throw notFound("bookingPage");
     }
 
-    await validateAvailability(ctx, page.userId, args.startTime, page.duration);
+    const effectiveHostId =
+      (await getActiveOutOfOfficeDelegateUserId(ctx, page.userId)) ?? page.userId;
+
+    await validateAvailability(ctx, effectiveHostId, args.startTime, page.duration);
 
     const endTime = args.startTime + page.duration * MINUTE;
     const now = Date.now();
@@ -182,7 +186,7 @@ export const createBooking = mutation({
 
     const conflictingBooking = await findConflictingBooking(
       ctx,
-      page.userId,
+      effectiveHostId,
       args.startTime,
       endTime,
     );
@@ -193,7 +197,7 @@ export const createBooking = mutation({
     // Create the booking
     const bookingId = await ctx.db.insert("bookings", {
       bookingPageId: page._id,
-      hostId: page.userId,
+      hostId: effectiveHostId,
       bookerName: args.bookerName,
       bookerEmail: args.bookerEmail,
       bookerPhone: args.bookerPhone,
@@ -210,7 +214,7 @@ export const createBooking = mutation({
 
     // If auto-confirm, create calendar event (if host has workspace context)
     if (!page.requiresConfirmation) {
-      const workspaceContext = await getUserWorkspaceContext(ctx, page.userId);
+      const workspaceContext = await getUserWorkspaceContext(ctx, effectiveHostId);
       if (workspaceContext) {
         const eventId = await ctx.db.insert("calendarEvents", {
           organizationId: workspaceContext.organizationId,
@@ -222,7 +226,7 @@ export const createBooking = mutation({
           allDay: false,
           location: page.locationDetails,
           eventType: "meeting",
-          organizerId: page.userId,
+          organizerId: effectiveHostId,
           attendeeIds: [],
           externalAttendees: [args.bookerEmail],
           status: "confirmed",
@@ -255,6 +259,9 @@ export const getAvailableSlots = query({
 
     if (!page?.isActive) return [];
 
+    const effectiveHostId =
+      (await getActiveOutOfOfficeDelegateUserId(ctx, page.userId)) ?? page.userId;
+
     // Get host's availability for this day of week
     const date = new Date(args.date);
     const dayNames = [
@@ -270,7 +277,7 @@ export const getAvailableSlots = query({
 
     const availability = await ctx.db
       .query("availabilitySlots")
-      .withIndex("by_user_day", (q) => q.eq("userId", page.userId).eq("dayOfWeek", dayOfWeek))
+      .withIndex("by_user_day", (q) => q.eq("userId", effectiveHostId).eq("dayOfWeek", dayOfWeek))
       .first();
 
     if (!availability?.isActive) return [];
@@ -281,7 +288,7 @@ export const getAvailableSlots = query({
 
     const existingBookings = await ctx.db
       .query("bookings")
-      .withIndex("by_host", (q) => q.eq("hostId", page.userId))
+      .withIndex("by_host", (q) => q.eq("hostId", effectiveHostId))
       .filter((q) =>
         q.and(
           q.or(q.eq(q.field("status"), "pending"), q.eq(q.field("status"), "confirmed")),

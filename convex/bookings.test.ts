@@ -6,7 +6,13 @@ import type { Id } from "./_generated/dataModel";
 import { DAY, HOUR, MINUTE } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { createOrganizationAdmin, createTestUser, expectThrowsAsync } from "./testUtils";
+import {
+  addUserToOrganization,
+  asAuthenticatedUser,
+  createOrganizationAdmin,
+  createTestUser,
+  expectThrowsAsync,
+} from "./testUtils";
 
 describe("Bookings", () => {
   beforeEach(() => {
@@ -104,6 +110,67 @@ describe("Bookings", () => {
     const event = await t.run(async (ctx) => ctx.db.get(calendarEventId));
     expect(event).not.toBeNull();
     expect(event?.title).toContain("Test Page with Guest");
+  });
+
+  it("should route booking slots and created bookings to an active OOO delegate host", async () => {
+    const t = convexTest(schema, modules);
+    const hostId = await createTestUser(t, { name: "OOO Host" });
+    const delegateUserId = await createTestUser(t, { name: "Delegate Host" });
+
+    const { organizationId } = await createOrganizationAdmin(t, hostId);
+
+    await addUserToOrganization(t, organizationId, delegateUserId, hostId);
+
+    const asHost = asAuthenticatedUser(t, hostId);
+    const now = Date.now();
+    await asHost.mutation(api.outOfOffice.upsert, {
+      startsAt: now - DAY,
+      endsAt: now + DAY,
+      reason: "travel",
+      delegateUserId,
+    });
+
+    await t.run(async (ctx) => {
+      await ctx.db.insert("availabilitySlots", {
+        userId: delegateUserId,
+        dayOfWeek: "tuesday",
+        startTime: "00:00",
+        endTime: "23:59",
+        timezone: "UTC",
+        isActive: true,
+      });
+    });
+
+    await createBookingPage(t, hostId, "delegate-page");
+
+    const date = new Date("2024-01-02T12:00:00Z").getTime();
+    const slots = await t.query(api.bookings.getAvailableSlots, {
+      bookingPageSlug: "delegate-page",
+      date,
+      timezone: "UTC",
+    });
+
+    expect(slots.length).toBeGreaterThan(0);
+
+    const bookingStart = slots[0];
+    const { bookingId } = await t.mutation(api.bookings.createBooking, {
+      bookingPageSlug: "delegate-page",
+      bookerName: "Guest",
+      bookerEmail: "guest@example.com",
+      startTime: bookingStart,
+      timezone: "UTC",
+    });
+
+    const booking = await t.run(async (ctx) => ctx.db.get(bookingId));
+    expect(booking?.hostId).toBe(delegateUserId);
+
+    const eventId = booking?.calendarEventId;
+    if (!eventId) {
+      throw new Error("Expected delegated booking to create a calendar event");
+    }
+
+    const event = await t.run(async (ctx) => ctx.db.get(eventId));
+    expect(event?.organizerId).toBe(delegateUserId);
   });
 
   it("should prevent overlapping bookings", async () => {

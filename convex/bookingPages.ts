@@ -11,6 +11,7 @@ import { query } from "./_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { conflict, requireOwned, validation } from "./lib/errors";
+import { getActiveOutOfOfficeDelegateUserId } from "./lib/outOfOffice";
 import { RUNTIME_COLORS } from "./shared/colors";
 import { bookingFieldTypes } from "./validators";
 
@@ -144,11 +145,13 @@ export const getBySlug = query({
 
     if (!page?.isActive) return null;
 
-    // Get host info
-    const host = await ctx.db.get(page.userId);
+    const effectiveHostId =
+      (await getActiveOutOfOfficeDelegateUserId(ctx, page.userId)) ?? page.userId;
+    const host = await ctx.db.get(effectiveHostId);
 
     return {
       ...page,
+      effectiveHostId,
       hostName: host?.name,
       hostEmail: host?.email,
     };

@@ -34,6 +34,26 @@ export function getActiveOutOfOfficeStatus(
 }
 
 /**
+ * Return the active delegate for a user when their out-of-office window is in effect.
+ */
+export async function getActiveOutOfOfficeDelegateUserId(
+  ctx: QueryCtx | MutationCtx,
+  userId: Id<"users">,
+  now = Date.now(),
+): Promise<Id<"users"> | undefined> {
+  const user = await ctx.db.get(userId);
+  const status = getActiveOutOfOfficeStatus(user, now);
+  const delegateUserId = status?.delegateUserId;
+
+  if (!delegateUserId || delegateUserId === userId) {
+    return undefined;
+  }
+
+  const delegateUser = await ctx.db.get(delegateUserId);
+  return delegateUser ? delegateUserId : undefined;
+}
+
+/**
  * Redirect assignee selection to an active delegate when the requested user is out of office.
  * Falls back to the original user when no active delegate is configured or the delegate
  * cannot access the target project.
@@ -44,11 +64,9 @@ export async function resolveOutOfOfficeDelegateUserId(
   projectId: Id<"projects">,
   now = Date.now(),
 ): Promise<Id<"users">> {
-  const user = await ctx.db.get(userId);
-  const status = getActiveOutOfOfficeStatus(user, now);
-  const delegateUserId = status?.delegateUserId;
+  const delegateUserId = await getActiveOutOfOfficeDelegateUserId(ctx, userId, now);
 
-  if (!delegateUserId || delegateUserId === userId) {
+  if (!delegateUserId) {
     return userId;
   }
 
