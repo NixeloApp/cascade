@@ -175,7 +175,7 @@ export const createBooking = mutation({
     }
 
     const effectiveHostId =
-      (await getActiveOutOfOfficeDelegateUserId(ctx, page.userId)) ?? page.userId;
+      (await getActiveOutOfOfficeDelegateUserId(ctx, page.userId, args.startTime)) ?? page.userId;
 
     await validateAvailability(ctx, effectiveHostId, args.startTime, page.duration);
 
@@ -260,7 +260,7 @@ export const getAvailableSlots = query({
     if (!page?.isActive) return [];
 
     const effectiveHostId =
-      (await getActiveOutOfOfficeDelegateUserId(ctx, page.userId)) ?? page.userId;
+      (await getActiveOutOfOfficeDelegateUserId(ctx, page.userId, args.date)) ?? page.userId;
 
     // Get host's availability for this day of week
     const date = new Date(args.date);

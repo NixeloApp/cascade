@@ -5,7 +5,7 @@ import type { ReactMutation } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import type { ReactNode } from "react";
 import { createContext, useContext } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatDate } from "@/lib/dates";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
@@ -288,6 +288,10 @@ describe("RoadmapView", () => {
         isAuthLoading: false,
       };
     });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("renders the empty state when there are no roadmap issues", () => {

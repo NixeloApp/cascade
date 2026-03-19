@@ -88,10 +88,18 @@ export function OutOfOfficeSettings() {
       return;
     }
 
+    const startsAt = parseStartDate(startDate);
+    const endsAt = parseEndDate(endDate);
+
+    if (endsAt < startsAt) {
+      showError("End date must be on or after start date");
+      return;
+    }
+
     try {
       await saveOutOfOffice({
-        startsAt: parseStartDate(startDate),
-        endsAt: parseEndDate(endDate),
+        startsAt,
+        endsAt,
         reason,
         note: note.trim() || undefined,
         delegateUserId: delegateUserId || undefined,
