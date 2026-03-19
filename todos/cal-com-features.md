@@ -18,7 +18,7 @@ Cal.com launched agent-powered scheduling via Slack, Telegram, email, CLI. Maps 
 Full CRUD API at `apps/api/v2/src/modules/ooo/`. Reasons: vacation, travel, sick_leave, public_holiday. Optional redirect to another user.
 
 - [x] **Add OOO status to user profile** — Implemented: profile settings card, persisted OOO state, and assignee visibility in issue surfaces.
-- [ ] **OOO redirect** — When a user is OOO, redirect their calendar bookings or issue assignments to a delegate.
+- [~] **OOO redirect** — Issue assignment redirect to a delegate is shipped. Calendar booking redirect is still open.
 
 ### Cancellation Reason Requirement
 New spec at `specs/cancellation-reason-requirement/`. Event type hosts can require cancellation reasons (mandatory/optional, by role).

@@ -1,5 +1,7 @@
 import { api } from "@convex/_generated/api";
+import type { Id } from "@convex/_generated/dataModel";
 import { useEffect, useState } from "react";
+import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -27,6 +29,8 @@ function parseEndDate(value: string): number {
 /** Settings card for creating, updating, and clearing the current user's out-of-office window. */
 export function OutOfOfficeSettings() {
   const status = useAuthenticatedQuery(api.outOfOffice.getCurrent, {});
+  const currentUser = useAuthenticatedQuery(api.users.getCurrent, {});
+  const searchableUsers = useAuthenticatedQuery(api.users.searchUsers, { query: "", limit: 50 });
   const { mutate: saveOutOfOffice } = useAuthenticatedMutation(api.outOfOffice.upsert);
   const { mutate: clearOutOfOffice } = useAuthenticatedMutation(api.outOfOffice.clear);
 
@@ -34,6 +38,7 @@ export function OutOfOfficeSettings() {
   const [endDate, setEndDate] = useState("");
   const [reason, setReason] = useState<keyof typeof OUT_OF_OFFICE_REASON_LABELS>("vacation");
   const [note, setNote] = useState("");
+  const [delegateUserId, setDelegateUserId] = useState<Id<"users"> | "">("");
 
   useEffect(() => {
     if (!status) {
@@ -41,6 +46,7 @@ export function OutOfOfficeSettings() {
       setEndDate("");
       setReason("vacation");
       setNote("");
+      setDelegateUserId("");
       return;
     }
 
@@ -48,7 +54,25 @@ export function OutOfOfficeSettings() {
     setEndDate(formatDateForInput(status.endsAt));
     setReason(status.reason);
     setNote(status.note ?? "");
+    setDelegateUserId(status.delegate?._id ?? status.delegateUserId ?? "");
   }, [status]);
+
+  const delegateOptions =
+    searchableUsers
+      ?.filter((user) => user._id !== currentUser?._id)
+      .map((user) => ({
+        _id: user._id,
+        name: user.name ?? user.email ?? "Unknown",
+        image: user.image,
+      })) ?? [];
+
+  if (
+    status?.delegate &&
+    status.delegate._id !== currentUser?._id &&
+    !delegateOptions.some((user) => user._id === status.delegate?._id)
+  ) {
+    delegateOptions.unshift(status.delegate);
+  }
 
   const handleSave = async () => {
     if (!startDate || !endDate) {
@@ -62,6 +86,7 @@ export function OutOfOfficeSettings() {
         endsAt: parseEndDate(endDate),
         reason,
         note: note.trim() || undefined,
+        delegateUserId: delegateUserId || undefined,
       });
       showSuccess("Out-of-office status saved");
     } catch (error) {
@@ -102,6 +127,19 @@ export function OutOfOfficeSettings() {
                 <Typography variant="small" color="secondary">
                   {status.note}
                 </Typography>
+              ) : null}
+              {status.delegate ? (
+                <Flex align="center" gap="sm">
+                  <Avatar
+                    name={status.delegate.name}
+                    src={status.delegate.image}
+                    size="xs"
+                    variant="neutral"
+                  />
+                  <Typography variant="small" color="secondary">
+                    Assignment delegate: {status.delegate.name}
+                  </Typography>
+                </Flex>
               ) : null}
             </Stack>
           </Card>
@@ -145,9 +183,23 @@ export function OutOfOfficeSettings() {
           helperText="Shown in assignment surfaces when your OOO window is active."
         />
 
+        <Select
+          label="Delegate assignments to"
+          value={delegateUserId}
+          onChange={(event) => setDelegateUserId(event.target.value as Id<"users"> | "")}
+          helperText="When active, new issue assignments redirect to this teammate if they can access the project."
+        >
+          <option value="">No delegate</option>
+          {delegateOptions.map((user) => (
+            <option key={user._id} value={user._id}>
+              {user.name}
+            </option>
+          ))}
+        </Select>
+
         <Flex align="center" gap="sm" justify="between">
           <Typography variant="small" color="secondary">
-            Redirects and calendar-level availability can build on top of this status later.
+            Calendar availability can build on top of this status next.
           </Typography>
           <Flex gap="sm">
             {status ? (

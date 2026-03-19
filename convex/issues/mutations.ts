@@ -19,6 +19,7 @@ import {
 import { BOUNDED_LIST_LIMIT } from "../lib/boundedQueries";
 import { validate } from "../lib/constrainedValidators";
 import { conflict, forbidden, validation } from "../lib/errors";
+import { resolveOutOfOfficeDelegateUserId } from "../lib/outOfOffice";
 import { syncProjectIssueStats } from "../lib/projectIssueStats";
 import { notDeleted, softDeleteFields } from "../lib/softDeleteHelpers";
 import { assertIsProjectAdmin, canAccessProject } from "../projectAccess";
@@ -172,6 +173,9 @@ async function createIssueImpl(
 
   const { issueKey, inheritedEpicId, defaultStatus, maxOrder, labelNames } =
     await prepareCreateIssue(ctx, args);
+  const resolvedAssigneeId = args.assigneeId
+    ? await resolveOutOfOfficeDelegateUserId(ctx, args.assigneeId, ctx.projectId)
+    : undefined;
 
   const now = Date.now();
   const issueId = await ctx.db.insert("issues", {
@@ -185,7 +189,7 @@ async function createIssueImpl(
     type: args.type,
     status: defaultStatus,
     priority: args.priority,
-    assigneeId: args.assigneeId,
+    assigneeId: resolvedAssigneeId,
     reporterId: ctx.userId,
     updatedAt: now,
     labels: labelNames,
@@ -332,25 +336,41 @@ export const update = issueMutation({
       newValue: string | number | null | undefined;
     }> = [];
 
-    const updates = processIssueUpdates(ctx.issue, args, changes);
+    const resolvedAssigneeId =
+      args.assigneeId === undefined || args.assigneeId === null
+        ? args.assigneeId
+        : await resolveOutOfOfficeDelegateUserId(ctx, args.assigneeId, ctx.issue.projectId);
+
+    const updates = processIssueUpdates(
+      ctx.issue,
+      {
+        ...args,
+        assigneeId: resolvedAssigneeId,
+      },
+      changes,
+    );
 
     // Always increment version on update
     updates.version = getNextVersion(ctx.issue.version);
 
     if (
-      args.assigneeId !== undefined &&
-      args.assigneeId !== ctx.issue.assigneeId &&
-      args.assigneeId &&
-      args.assigneeId !== ctx.userId
+      resolvedAssigneeId !== undefined &&
+      resolvedAssigneeId !== ctx.issue.assigneeId &&
+      resolvedAssigneeId &&
+      resolvedAssigneeId !== ctx.userId
     ) {
-      const assigneeHasAccess = await canAccessProject(ctx, ctx.issue.projectId, args.assigneeId);
+      const assigneeHasAccess = await canAccessProject(
+        ctx,
+        ctx.issue.projectId,
+        resolvedAssigneeId,
+      );
 
       if (assigneeHasAccess) {
         const actor = await ctx.db.get(ctx.userId);
         // Dynamic import to avoid cycles
         const { sendEmailNotification } = await import("../email/helpers");
         await sendEmailNotification(ctx, {
-          userId: args.assigneeId,
+          userId: resolvedAssigneeId,
           type: "assigned",
           issueId: ctx.issue._id,
           actorId: ctx.userId,
@@ -386,9 +406,9 @@ export const update = issueMutation({
         });
 
         if (
-          args.assigneeId !== undefined &&
-          args.assigneeId !== ctx.issue.assigneeId &&
-          args.assigneeId !== null
+          resolvedAssigneeId !== undefined &&
+          resolvedAssigneeId !== ctx.issue.assigneeId &&
+          resolvedAssigneeId !== null
         ) {
           await ctx.scheduler.runAfter(0, internal.slack.sendIssueNotification, {
             issueId: ctx.issue._id,
@@ -574,7 +594,36 @@ export const bulkAssign = authenticatedMutation({
   },
   returns: v.object({ updated: v.number() }),
   handler: async (ctx, args) => {
-    return performSimpleBulkUpdate(ctx, args.issueIds, "assigneeId", args.assigneeId, "assignee");
+    return performBulkUpdate(ctx, args.issueIds, async (issue) => {
+      const resolvedAssigneeId =
+        args.assigneeId === null
+          ? null
+          : await resolveOutOfOfficeDelegateUserId(ctx, args.assigneeId, issue.projectId);
+
+      const currentValue = issue.assigneeId;
+      const patchValue = resolvedAssigneeId ?? undefined;
+
+      const isCurrentUnset = currentValue === undefined || currentValue === null;
+      const isNewUnset = patchValue === undefined;
+
+      if (isCurrentUnset && isNewUnset) {
+        return null;
+      }
+
+      if (!isCurrentUnset && !isNewUnset && currentValue === patchValue) {
+        return null;
+      }
+
+      return {
+        patch: { assigneeId: patchValue },
+        activity: {
+          action: "updated",
+          field: "assignee",
+          oldValue: currentValue !== undefined && currentValue !== null ? String(currentValue) : "",
+          newValue: patchValue !== undefined ? String(patchValue) : "",
+        },
+      };
+    });
   },
 });
 

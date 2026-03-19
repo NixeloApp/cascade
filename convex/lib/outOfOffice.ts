@@ -1,4 +1,6 @@
-import type { Doc } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
+import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { canAccessProject } from "../projectAccess";
 
 export type StoredOutOfOfficeStatus = NonNullable<Doc<"users">["outOfOffice"]>;
 
@@ -29,4 +31,27 @@ export function getActiveOutOfOfficeStatus(
   }
 
   return isOutOfOfficeActive(status, now) ? status : undefined;
+}
+
+/**
+ * Redirect assignee selection to an active delegate when the requested user is out of office.
+ * Falls back to the original user when no active delegate is configured or the delegate
+ * cannot access the target project.
+ */
+export async function resolveOutOfOfficeDelegateUserId(
+  ctx: QueryCtx | MutationCtx,
+  userId: Id<"users">,
+  projectId: Id<"projects">,
+  now = Date.now(),
+): Promise<Id<"users">> {
+  const user = await ctx.db.get(userId);
+  const status = getActiveOutOfOfficeStatus(user, now);
+  const delegateUserId = status?.delegateUserId;
+
+  if (!delegateUserId || delegateUserId === userId) {
+    return userId;
+  }
+
+  const delegateHasProjectAccess = await canAccessProject(ctx, projectId, delegateUserId);
+  return delegateHasProjectAccess ? delegateUserId : userId;
 }

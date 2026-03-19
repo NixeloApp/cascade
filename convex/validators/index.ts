@@ -141,6 +141,7 @@ export const outOfOfficeStatus = v.object({
   endsAt: v.number(),
   reason: outOfOfficeReasons,
   note: v.optional(v.string()),
+  delegateUserId: v.optional(v.id("users")),
   updatedAt: v.number(),
 });
 

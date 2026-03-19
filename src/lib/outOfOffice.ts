@@ -14,6 +14,12 @@ export interface OutOfOfficeStatusSummary {
   endsAt: number;
   reason: OutOfOfficeReason;
   note?: string;
+  delegateUserId?: string;
+  delegate?: {
+    _id: string;
+    name: string;
+    image?: string;
+  };
   updatedAt: number;
   isActive?: boolean;
 }

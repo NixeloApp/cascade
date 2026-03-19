@@ -6,6 +6,7 @@ import schema from "../schema";
 import { modules } from "../testSetup.test-helper";
 import {
   addProjectMember,
+  addUserToOrganization,
   asAuthenticatedUser,
   createProjectInOrganization,
   createTestContext,
@@ -116,6 +117,44 @@ describe("Issue Mutations", () => {
       expect(activities).toHaveLength(1);
       expect(activities[0].action).toBe("created");
       expect(activities[0].userId).toBe(userId);
+      await t.finishInProgressScheduledFunctions();
+    });
+
+    it("redirects assignment to an active OOO delegate", async () => {
+      const t = convexTest(schema, modules);
+      const { userId, organizationId, asUser } = await createTestContext(t);
+      const assigneeId = await createTestUser(t, { name: "OOO Assignee" });
+      const delegateUserId = await createTestUser(t, { name: "Delegate" });
+
+      const projectId = await createProjectInOrganization(t, userId, organizationId, {
+        name: "OOO Redirect Project",
+        key: "OOORD",
+      });
+
+      await addUserToOrganization(t, organizationId, assigneeId, userId);
+      await addUserToOrganization(t, organizationId, delegateUserId, userId);
+      await addProjectMember(t, projectId, assigneeId, "editor", userId);
+      await addProjectMember(t, projectId, delegateUserId, "editor", userId);
+
+      const asAssignee = asAuthenticatedUser(t, assigneeId);
+      const now = Date.now();
+      await asAssignee.mutation(api.outOfOffice.upsert, {
+        startsAt: now - DAY,
+        endsAt: now + DAY,
+        reason: "vacation",
+        delegateUserId,
+      });
+
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
+        projectId,
+        title: "Redirected Issue",
+        type: "task",
+        priority: "medium",
+        assigneeId,
+      });
+
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
+      expect(issue?.assigneeId).toBe(delegateUserId);
       await t.finishInProgressScheduledFunctions();
     });
   });
@@ -362,6 +401,49 @@ describe("Issue Mutations", () => {
       expect(labelNames).toContain("bug");
       expect(labelNames).toContain("urgent");
       expect(labelNames).toContain("frontend");
+      await t.finishInProgressScheduledFunctions();
+    });
+
+    it("redirects assignee updates to an active OOO delegate", async () => {
+      const t = convexTest(schema, modules);
+      const { userId, organizationId, asUser } = await createTestContext(t);
+      const assigneeId = await createTestUser(t, { name: "OOO Assignee" });
+      const delegateUserId = await createTestUser(t, { name: "Delegate" });
+
+      const projectId = await createProjectInOrganization(t, userId, organizationId, {
+        name: "OOO Update Project",
+        key: "OOOUP",
+      });
+
+      await addUserToOrganization(t, organizationId, assigneeId, userId);
+      await addUserToOrganization(t, organizationId, delegateUserId, userId);
+      await addProjectMember(t, projectId, assigneeId, "editor", userId);
+      await addProjectMember(t, projectId, delegateUserId, "editor", userId);
+
+      const asAssignee = asAuthenticatedUser(t, assigneeId);
+      const now = Date.now();
+      await asAssignee.mutation(api.outOfOffice.upsert, {
+        startsAt: now - DAY,
+        endsAt: now + DAY,
+        reason: "travel",
+        delegateUserId,
+      });
+
+      const { issueId } = await asUser.mutation(api.issues.createIssue, {
+        projectId,
+        title: "Update Redirect Issue",
+        type: "task",
+        priority: "medium",
+      });
+
+      const result = await asUser.mutation(api.issues.update, {
+        issueId,
+        assigneeId,
+      });
+      expect(result).toEqual({ success: true });
+
+      const issue = await asUser.query(api.issues.getIssue, { id: issueId });
+      expect(issue?.assigneeId).toBe(delegateUserId);
       await t.finishInProgressScheduledFunctions();
     });
   });
