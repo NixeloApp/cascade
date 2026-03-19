@@ -10,7 +10,7 @@
 ### Gantt Chart / Timeline View
 Plane has a full Gantt chart at `apps/web/core/components/gantt-chart/`. We have a roadmap view but no Gantt with drag-and-drop.
 
-- [~] **Evaluate Gantt implementation** — Our roadmap now supports draggable bars, resize handles, milestone-style markers for due-date-only items, dependency lines, real month/week timeline buckets, timeline window navigation, zoom controls, a sticky issue sidebar, a unified today marker, progress-aware epic summary and parent rollup bars, epic/status/assignee/priority grouping, collapsible swimlanes, and a collapsible parent/subtask tree, but still needs fuller Gantt affordances (sidebar polish/deeper timeline controls).
+- [~] **Evaluate Gantt implementation** — Our roadmap now supports draggable bars, resize handles, milestone-style markers for due-date-only items, dependency lines, real month/week timeline buckets, timeline window navigation, a fit-to-issues control, zoom controls, a sticky issue sidebar, a unified today marker, progress-aware epic summary and parent rollup bars, epic/status/assignee/priority grouping, collapsible swimlanes, and a collapsible parent/subtask tree, but still needs fuller Gantt affordances (sidebar polish/deeper timeline controls).
 - [~] **Decide: enhance roadmap or add Gantt** — Current direction is enhancing `RoadmapView.tsx` incrementally toward a fuller Gantt.
 
 ### Intake/Triage System

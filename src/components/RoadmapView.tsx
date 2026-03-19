@@ -503,6 +503,61 @@ function shiftTimelineAnchorDate(anchorDate: Date, direction: -1 | 1) {
   return nextAnchor;
 }
 
+function getTimelineMonthsCovered(startDate: Date, endDate: Date) {
+  return (
+    (endDate.getFullYear() - startDate.getFullYear()) * 12 +
+    endDate.getMonth() -
+    startDate.getMonth() +
+    1
+  );
+}
+
+function getBestFitTimelineSpan(monthsCovered: number): TimelineSpan {
+  for (const { value } of TIMELINE_SPANS) {
+    if (monthsCovered <= value) {
+      return value;
+    }
+  }
+
+  return TIMELINE_SPANS[TIMELINE_SPANS.length - 1]?.value ?? 12;
+}
+
+function getTimelineFitWindow(
+  issues: FunctionReturnType<typeof api.issues.listRoadmapIssues> | undefined,
+): { anchorDate: Date; timelineSpan: TimelineSpan } | null {
+  if (!issues || issues.length === 0) {
+    return null;
+  }
+
+  const datedIssues = issues.filter((issue) => issue.dueDate !== undefined);
+  if (datedIssues.length === 0) {
+    return null;
+  }
+
+  const earliestDate = Math.min(
+    ...datedIssues.map((issue) => issue.startDate ?? issue.dueDate ?? Number.POSITIVE_INFINITY),
+  );
+  const latestDate = Math.max(
+    ...datedIssues.map((issue) => issue.dueDate ?? Number.NEGATIVE_INFINITY),
+  );
+
+  if (!Number.isFinite(earliestDate) || !Number.isFinite(latestDate)) {
+    return null;
+  }
+
+  const anchorDate = new Date(
+    new Date(earliestDate).getFullYear(),
+    new Date(earliestDate).getMonth(),
+    1,
+  );
+  const endDate = new Date(latestDate);
+
+  return {
+    anchorDate,
+    timelineSpan: getBestFitTimelineSpan(getTimelineMonthsCovered(anchorDate, endDate)),
+  };
+}
+
 function getPriorityLabel(priority: string) {
   return priority.charAt(0).toUpperCase() + priority.slice(1);
 }
@@ -1435,6 +1490,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     collapsedGroupKeys,
     collapsedParentIssueIds,
   );
+  const fitTimelineWindow = getTimelineFitWindow(filteredIssues);
   const todayMarkerOffsetPx = getTodayMarkerOffsetPx(
     Date.now(),
     startOfMonth,
@@ -1762,6 +1818,21 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                   onClick={() => setTimelineAnchorDate(new Date())}
                 >
                   Today
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    if (!fitTimelineWindow) {
+                      return;
+                    }
+
+                    setTimelineAnchorDate(fitTimelineWindow.anchorDate);
+                    setTimelineSpan(fitTimelineWindow.timelineSpan);
+                  }}
+                  disabled={fitTimelineWindow === null}
+                >
+                  Fit to issues
                 </Button>
                 <Button
                   variant="ghost"

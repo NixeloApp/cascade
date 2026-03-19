@@ -580,6 +580,46 @@ describe("RoadmapView", () => {
     expect(screen.getByText("Mar 2026")).toBeInTheDocument();
   });
 
+  it("fits the timeline window to the visible issues", () => {
+    mockRoadmapQueries({
+      issues: [
+        {
+          _id: issue1Id,
+          key: "PROJ-1",
+          title: "Plan launch",
+          status: "todo",
+          startDate: Date.UTC(2026, 10, 10),
+          dueDate: Date.UTC(2026, 10, 15),
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Alex Rivera" },
+        },
+        {
+          _id: issue2Id,
+          key: "PROJ-2",
+          title: "Ship launch",
+          status: "in progress",
+          startDate: Date.UTC(2026, 11, 2),
+          dueDate: Date.UTC(2026, 11, 20),
+          type: "story",
+          priority: "high",
+          assignee: { name: "Sam Lee" },
+        },
+      ],
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    expect(screen.getByText("Mar 2026")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Fit to issues" }));
+
+    expect(screen.queryByText("Mar 2026")).not.toBeInTheDocument();
+    expect(screen.getByText("Nov 2026")).toBeInTheDocument();
+    expect(screen.getByText("Dec 2026")).toBeInTheDocument();
+    expect(screen.getByText("Jan 2027")).toBeInTheDocument();
+  });
+
   it("changes roadmap canvas width when the timeline zoom changes", () => {
     mockRoadmapQueries({
       issues: [
