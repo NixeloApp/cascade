@@ -5,6 +5,11 @@
 > **Type:** API Platform (SaaS)
 > **Website:** https://nylas.com
 
+> **Refresh Note (2026-03-19):** This doc predates the March 2026 market refresh. Use
+> [market-refresh-2026-03.md](/C:/Users/mikes/Desktop/cascade/docs/research/competitors/meeting-ai/market-refresh-2026-03.md)
+> for the current market read. If this doc conflicts with the current repo implementation,
+> the repo and refresh doc win.
+
 ---
 
 ## Overview
@@ -177,7 +182,7 @@ Nylas uses a "Base Fee + Usage" model where each end-user email, calendar, or co
 | **Primary Function** | Project management platform | Communications API provider |
 | **Calendar Integration** | Google Calendar sync (built-in) | Universal calendar API (Google/Microsoft/IMAP) |
 | **Email** | Notification emails via React Email | Full Email API (send, receive, manage) |
-| **Meeting Intelligence** | Voice AI bot via Recall.ai | Notetaker API (newer) |
+| **Meeting Intelligence** | Custom Voice AI stack in repo | Notetaker API (newer) |
 | **Scheduling** | Calendar events with attendees | Scheduler UI + Availability API |
 | **Contacts** | Project member management | Universal contacts API |
 | **Target User** | End-user teams | Developer teams building integrations |
@@ -207,11 +212,11 @@ Nylas serves as a useful reference for Nixelo's **Calendar Integration** strateg
 1. **Calendar API Reference:** Study Nylas's Availability API and Events API patterns for enhancing Nixelo's Google Calendar sync with availability checking and multi-provider support.
 2. **Microsoft Calendar Support:** If Nixelo needs to expand beyond Google Calendar to Outlook/Exchange, Nylas's Calendar Only plan ($10/month + $1/account) provides a faster path than building direct Microsoft Graph integration.
 3. **Scheduler Competition:** Nixelo's calendar events with attendees compete indirectly with Nylas's Scheduler; evaluate whether to build deeper scheduling features natively or integrate Nylas's React Scheduler components.
-4. **Notetaker Comparison:** Nylas's Notetaker API at $0.70/hour is not competitive with Nixelo's current Recall.ai integration for meeting bot features; Recall.ai remains the better choice for Voice AI infrastructure.
+4. **Notetaker Comparison:** Nylas's Notetaker API should be compared against Nixelo's current custom bot-service plus any future capture vendor decision; it is still less central to the strategy than dedicated meeting-capture vendors.
 5. **Email Enhancement:** If Nixelo ever needs full email integration (beyond notification emails), Nylas's Email API would be the fastest path, though cost at scale must be carefully evaluated.
 
 ---
 
 ## Verdict
 
-Nylas is the most comprehensive communications API platform available, excelling at calendar and email integration with an industry-leading compliance portfolio. For Nixelo, its primary value is as a reference architecture for calendar integration patterns and as a potential infrastructure provider for Microsoft Calendar support. The Notetaker API is not yet competitive enough to replace Recall.ai for Nixelo's Voice AI needs. **Recommendation:** Use Nylas's Calendar API patterns as a design reference; evaluate the Calendar Only plan if Microsoft Outlook/Exchange support becomes a priority; do not adopt the Notetaker API until it matures to feature parity with dedicated meeting bot providers.
+Nylas is still most valuable to Nixelo as a communications-platform reference and as a possible shortcut for broader calendar/email coverage. The Notetaker API is currently less strategically important than dedicated capture vendors or Nixelo's own workflow layer. **Recommendation:** Use Nylas primarily as a calendar/email reference and only revisit Notetaker if Nixelo wants to consolidate communications infrastructure rather than optimize meeting capture specifically.

@@ -5,13 +5,21 @@
 > **Type:** Paid API (Bot-as-a-Service)
 > **Website:** https://www.recall.ai
 
+> **Refresh Note (2026-03-19):** This doc predates the March 2026 market refresh. Use
+> [market-refresh-2026-03.md](/C:/Users/mikes/Desktop/cascade/docs/research/competitors/meeting-ai/market-refresh-2026-03.md)
+> for the current market read. If this doc conflicts with the current repo implementation,
+> the repo and refresh doc win.
+
 ---
 
 ## Overview
 
 **Recall.ai** is a unified API for meeting bots and recording infrastructure. You call their API, and they spin up a fully managed bot that joins the meeting to capture audio, video, transcriptions, and participant metadata. The platform is the market leader in the meeting bot API space, trusted by major companies including HubSpot, ClickUp, and Rippling as core recording infrastructure. Recall.ai closed a $38M Series B in September 2025 led by Bessemer Venture Partners, bringing total funding to $51M at a $250M valuation and establishing an estimated $10M ARR with 300+ enterprise clients.
 
-Recall.ai is Nixelo's **current infrastructure provider** for the Voice AI meeting bot service (bot-service/). The platform handles all the complexity of joining meetings across multiple video conferencing platforms, managing bot lifecycle, and delivering recordings and transcripts back to Nixelo for processing into action items and meeting intelligence.
+Older notes in this repo treated Recall.ai as Nixelo's default provider direction. The
+current repo implementation instead shows a custom bot-service / Google Meet-first pipeline,
+so Recall.ai should currently be read as a **serious buy candidate**, not as a confirmed
+active production dependency.
 
 ---
 
@@ -190,12 +198,12 @@ At $0.50/hour for recording plus $0.15/hour for transcription, a typical meeting
 | Dimension | Nixelo | Recall.ai |
 |-----------|--------|-----------|
 | **Primary Function** | Project management + Voice AI | Meeting bot infrastructure API |
-| **Relationship** | Customer (bot-service uses Recall.ai) | Infrastructure provider |
-| **Meeting Platforms** | Via Recall.ai integration | Zoom, Meet, Teams, Webex, Slack, GoTo |
+| **Relationship** | Potential customer / build-vs-buy evaluation | Infrastructure provider |
+| **Meeting Platforms** | Custom Google Meet-first bot today | Zoom, Meet, Teams, Webex, Slack, GoTo |
 | **AI Processing** | Text AI chat/search, Voice AI action items | Raw recording, transcription, metadata |
 | **Calendar** | Google Calendar sync | No calendar features |
 | **User Facing** | End-user teams and organizations | Developer teams building meeting products |
-| **Compliance** | Inherits from Convex + Recall.ai | SOC2, ISO 27001, GDPR, CCPA, HIPAA |
+| **Compliance** | Depends on chosen capture stack | SOC2, ISO 27001, GDPR, CCPA, HIPAA |
 | **Pricing** | Platform subscription | Per-hour usage-based |
 
 ---
@@ -217,18 +225,19 @@ At $0.50/hour for recording plus $0.15/hour for transcription, a typical meeting
 
 ## Nixelo Integration Strategy
 
-Recall.ai is Nixelo's **primary meeting bot infrastructure provider** and the best option for the cloud-hosted Voice AI tier:
+Recall.ai is still the strongest managed capture candidate if Nixelo decides to buy the
+meeting-joining layer:
 
-1. **Current State:** Nixelo's bot-service already integrates with Recall.ai for meeting bot deployment, recording, and transcription. This is the production infrastructure.
-2. **Cost Management:** At $0.50/hour recording + $0.15/hour transcription, implement intelligent recording controls (start/stop based on meeting activity, skip silence) to optimize per-meeting costs.
-3. **Volume Negotiation:** As Nixelo scales, negotiate enterprise volume discounts with Recall.ai; their pricing model supports custom enterprise agreements.
-4. **Secondary Provider:** Add Meeting BaaS as a fallback provider for self-hosted deployments and as leverage in pricing negotiations with Recall.ai.
-5. **Desktop SDK Evaluation:** Evaluate Recall.ai's Desktop Recording SDK as an alternative to bot-based recording for users who prefer no visible bot in meetings.
-6. **Output Media for Agentic AI:** Leverage Recall.ai's Output Media feature to build interactive Voice AI that can speak and respond in meetings, evolving beyond passive recording to active AI participation.
-7. **Data Residency:** Use regional endpoints (eu-central-1) for European customers requiring GDPR-compliant data processing.
+1. **Current State:** The repo currently shows a custom bot-service with Google Meet-first runtime behavior, not a confirmed Recall-backed production path.
+2. **Buy Case:** If Nixelo wants faster expansion to Zoom / Teams / Slack Huddles / enterprise capture reliability, Recall is the most credible vendor to evaluate first.
+3. **Cost Management:** At $0.50/hour recording + $0.15/hour transcription, intelligent recording controls and retention strategy still matter.
+4. **Fallback Strategy:** Keep Meeting BaaS or another provider in view to reduce lock-in and strengthen negotiation leverage.
+5. **Desktop SDK Evaluation:** Recall's Desktop Recording SDK is strategically important because the market is moving beyond visible meeting bots.
+6. **Agent Direction:** Output Media is relevant if Nixelo later wants interactive voice agents, not just passive recording.
+7. **Data Residency:** Regional endpoints remain relevant for enterprise deployment decisions.
 
 ---
 
 ## Verdict
 
-Recall.ai is the clear market leader in meeting bot infrastructure, offering the broadest platform coverage, strongest compliance posture, and most proven reliability at enterprise scale. For Nixelo, it remains the correct choice for the cloud-hosted Voice AI tier, backed by $51M in funding and 300+ enterprise clients. The primary risk is cost at scale and vendor lock-in. **Recommendation:** Continue using Recall.ai as the primary meeting bot provider; negotiate volume discounts as usage grows; implement Meeting BaaS as a secondary provider for self-hosted deployments; explore the Desktop SDK and Output Media features for expanding Voice AI capabilities beyond passive recording. Too expensive for self-hosted users unless they bring their own API key.
+Recall.ai still looks like the most credible managed capture vendor in this category, especially if Nixelo needs broader platform coverage and enterprise trust quickly. The primary risk remains cost at scale plus vendor lock-in. **Recommendation:** Treat Recall.ai as the leading buy option for the capture layer, not as something the repo has already conclusively standardized on. Pair any Recall evaluation with a lower-cost fallback such as Meeting BaaS and keep workflow intelligence in Nixelo-owned logic.

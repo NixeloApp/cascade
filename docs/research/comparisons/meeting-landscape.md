@@ -2,7 +2,13 @@
 
 > Comprehensive analysis of competitors, open source alternatives, and infrastructure options for Nixelo's meeting intelligence + project management platform.
 >
-> **Last Updated:** 2026-01-20
+> **Last Updated:** 2026-03-19
+>
+> **Important:** The older sections in this file are still useful for orientation, but the
+> current market refresh lives in
+> [market-refresh-2026-03.md](/C:/Users/mikes/Desktop/cascade/docs/research/competitors/meeting-ai/market-refresh-2026-03.md).
+> Use that doc for the latest read on market direction, build-vs-buy choices, and reusable
+> open-source components.
 
 ---
 
@@ -22,6 +28,27 @@
 ---
 
 ## Market Positioning
+
+### March 2026 Refresh
+
+The category has moved beyond "AI meeting notes" as the primary wedge.
+
+The current leaders are converging on:
+
+- meeting capture across bots and desktop capture
+- cross-meeting memory and search
+- AI chat / MCP / agent surfaces
+- workflow automation and enterprise governance
+
+For Nixelo, this changes the question from "can we transcribe meetings?" to:
+
+- should we own meeting capture or buy it
+- where should we use OSS vs vendors
+- how do we turn meeting data into a first-class product surface instead of a calendar subfeature
+
+See the dedicated refresh doc for the full current-state analysis:
+
+- [market-refresh-2026-03.md](/C:/Users/mikes/Desktop/cascade/docs/research/competitors/meeting-ai/market-refresh-2026-03.md)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -414,6 +441,13 @@ curl -X POST https://us-east-1.recall.ai/api/v1/bot \
 ---
 
 ## Open Source Solutions
+
+> **Current note:** The strongest OSS reuse opportunities are now in transcription,
+> diarization, and speaker-aware post-processing rather than enterprise-grade bot joining.
+> See
+> [market-refresh-2026-03.md](/C:/Users/mikes/Desktop/cascade/docs/research/competitors/meeting-ai/market-refresh-2026-03.md)
+> for the current shortlist: `faster-whisper`, `whisper.cpp`, `WhisperX`,
+> `pyannote.audio`, `joinly`, and `LiveKit Agents`.
 
 ### Meetily (meeting-minutes)
 

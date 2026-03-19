@@ -26,7 +26,9 @@ markets meetings, messaging, email, agents, and search together.
 - Meetings, summaries, transcription, playback, and uploads
 - Speaker Coach and recommendations
 - Search Copilot / cross-workflow search
+- Direct access to GPT / Claude inside Read for paid plans
 - Messaging and email product areas
+- Agents / Free Agent positioning in newer product messaging
 - Workspaces, platform integrations, desktop, and mobile support
 - Zoom Essential Apps distribution
 
@@ -35,6 +37,8 @@ markets meetings, messaging, email, agents, and search together.
   intelligence.
 - [inference] It differentiates from plain transcript tools by emphasizing meeting quality,
   coaching, and cross-channel retrieval.
+- [inference] The current product direction is increasingly "context + search + agent access,"
+  not just transcription.
 
 **Retained market narrative:**
 - [conflict] This repo still contains both `750K+ new users/month` and `1M+ users/month`
@@ -70,6 +74,8 @@ The repo now includes a direct Read AI pricing capture at
 - [conflict] Older research notes mention `Pro+`; the current pricing capture does not.
 - The free tier is still restrictive relative to Fireflies and tl;dv.
 - Enterprise+ clearly pushes toward larger managed deployments.
+- [inference] Bundling premium LLM access into paid plans is part of Read AI's current market
+  wedge, not just a side feature.
 
 ---
 
@@ -238,13 +244,16 @@ This section should be treated as non-canonical until those claims are mirrored 
 ## Verdict
 
 **Bottom Line:** Read AI is still one of the clearest examples of moving beyond generic
-meeting notes into coaching, engagement, and search. The current repo now supports its
-pricing structure much better than before, but most market-size and implementation claims
-should still be treated cautiously.
+meeting notes into coaching, engagement, search, and agent-style workflow access. The
+current repo now supports its pricing structure much better than before, but most
+market-size and implementation claims should still be treated cautiously.
 
 **Strategy:** Borrow the idea that meeting data should become organizational intelligence,
 but route that intelligence into execution. Read AI tells teams how a meeting went. Nixelo
 should tell teams what changed in the work because the meeting happened.
+
+**See also:** the broader current-state market update in
+[market-refresh-2026-03.md](/C:/Users/mikes/Desktop/cascade/docs/research/competitors/meeting-ai/market-refresh-2026-03.md).
 
 ---
 

@@ -5,6 +5,11 @@
 > **Type:** Paid API (Developer Focused)
 > **Website:** https://skribby.io
 
+> **Refresh Note (2026-03-19):** This doc predates the March 2026 market refresh. Use
+> [market-refresh-2026-03.md](/C:/Users/mikes/Desktop/cascade/docs/research/competitors/meeting-ai/market-refresh-2026-03.md)
+> for the current market read. If this doc conflicts with the current repo implementation,
+> the repo and refresh doc win.
+
 ---
 
 ## Overview
@@ -174,12 +179,12 @@ Skribby is the most affordable proprietary option in the meeting bot API space. 
 |-----------|--------|---------|
 | **Primary Function** | Project management + Voice AI | Meeting bot API |
 | **Relationship** | Potential customer | Infrastructure provider |
-| **Meeting Platforms** | Via Recall.ai (6 platforms) | Zoom, Teams, Meet (3 platforms) |
+| **Meeting Platforms** | Custom Google Meet-first bot today | Zoom, Teams, Meet (3 platforms) |
 | **AI Processing** | Text AI, Voice AI, action items | Raw recording + transcription |
-| **Transcription** | Via Recall.ai built-in | 10+ model options with BYO creds |
+| **Transcription** | Custom summary stack + provider flexibility in repo | 10+ model options with BYO creds |
 | **Calendar** | Google Calendar sync | No calendar features |
 | **Target User** | End-user teams | Developer teams / startups |
-| **Compliance** | Inherits from Convex + Recall.ai | No formal certifications |
+| **Compliance** | Depends on chosen capture provider | No formal certifications |
 | **Pricing** | Platform subscription | $0.35/hour usage-based |
 
 ---
@@ -202,10 +207,11 @@ Skribby is the most affordable proprietary option in the meeting bot API space. 
 
 ## Nixelo Integration Strategy
 
-Skribby is a potential **backup provider** if Recall.ai becomes too expensive, but Meeting BaaS is likely a better "low-cost" alignment since it allows self-hosting which fits Nixelo's architecture:
+Skribby is still a plausible lower-cost provider to keep on the board, though Meeting BaaS
+has a stronger self-hosting story:
 
-1. **Current Position:** Skribby is not integrated with Nixelo. Recall.ai is the primary provider and Meeting BaaS is the preferred secondary option for self-hosted deployments.
-2. **Cost Savings Scenario:** If Nixelo's meeting volume grows significantly and Recall.ai pricing becomes prohibitive, Skribby at $0.35/hour (46% cheaper) could serve as a cost-optimization provider for non-enterprise tiers.
+1. **Current Position:** Skribby is not integrated with Nixelo, and the repo does not show a finalized provider strategy yet.
+2. **Cost Savings Scenario:** If Nixelo wants a cheaper hosted option than Recall without going fully self-hosted, Skribby could be worth a targeted evaluation.
 3. **Transcription Flexibility:** Skribby's 10+ transcription model options could benefit Nixelo users who need specialized language support or want to bring their own transcription credentials for cost control.
 4. **Evaluation Criteria:** Before adopting Skribby, Nixelo should evaluate: (a) company stability and funding status, (b) SOC2 certification timeline, (c) SDK availability, and (d) platform coverage expansion plans.
 5. **Architecture Consideration:** Nixelo's bot-service abstraction layer should support multiple providers; Skribby's REST API simplicity would make it the easiest secondary provider to integrate after Meeting BaaS.
@@ -214,4 +220,4 @@ Skribby is a potential **backup provider** if Recall.ai becomes too expensive, b
 
 ## Verdict
 
-Skribby fills a clear niche as the most affordable and developer-friendly meeting bot API, with standout transcription provider flexibility (10+ models with BYO credentials) and impressively fast transcript delivery. However, the lack of compliance certifications, limited platform coverage (3 vs. Recall.ai's 6), and startup risk profile make it unsuitable as Nixelo's primary infrastructure provider. **Recommendation:** Monitor Skribby's growth, compliance certification progress, and funding status. Consider as a tertiary provider option if cost optimization becomes critical, but prioritize Recall.ai (enterprise/cloud) and Meeting BaaS (self-hosted) as the primary and secondary providers respectively. The transcription provider flexibility concept is worth adopting in Nixelo's own Voice AI architecture regardless of which bot provider is used.
+Skribby still fills a useful niche as a low-cost, developer-friendly bot API with unusually flexible transcription options. However, the compliance gap, narrower platform coverage, and startup risk keep it from being the default recommendation for Nixelo. **Recommendation:** Keep it as a monitored option for cost-sensitive hosted capture, but prioritize the idea of transcription flexibility over the assumption that Skribby itself should become the main provider.
