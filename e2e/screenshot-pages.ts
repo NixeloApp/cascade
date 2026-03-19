@@ -284,6 +284,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
 
 const MODAL_SPEC_PATTERNS: Array<[RegExp, string]> = [
   [/^filled-dashboard-omnibox$/, "command-palette"],
+  [/^filled-dashboard-customize-modal$/, "dashboard-customize"],
   [/^filled-project-.+-create-issue-modal$/, "create-issue"],
   [/^filled-calendar-create-event-modal$/, "create-event"],
 ];
@@ -2779,7 +2780,7 @@ async function screenshotFilledStates(
       await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
-      const trigger = page.getByText("Customize", { exact: true }).first();
+      const trigger = page.getByRole("button", { name: /^customize$/i }).first();
       await trigger.waitFor({ state: "visible", timeout: 10000 });
       await trigger.click();
       const dialog = await waitForDialogOpen(page);
