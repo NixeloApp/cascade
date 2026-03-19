@@ -26,6 +26,7 @@ import { Dot } from "@/components/ui/Dot";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Typography } from "@/components/ui/Typography";
+import { TEST_IDS } from "@/lib/test-ids";
 import { useCalendarContext } from "../../calendar-context";
 import { CalendarEvent } from "../../calendar-event";
 
@@ -41,7 +42,7 @@ const WEEKDAY_NAMES = [
 
 /** Month view grid showing all days with event indicators. */
 export function CalendarBodyMonth(): React.ReactElement {
-  const { date, events, setDate, setMode } = useCalendarContext();
+  const { date, events, onAddEvent, setDate, setMode } = useCalendarContext();
 
   const monthStart = startOfMonth(date);
   const monthEnd = endOfMonth(date);
@@ -117,11 +118,29 @@ export function CalendarBodyMonth(): React.ReactElement {
                     key={day.toISOString()}
                     recipe={dayCellRecipe}
                     padding="xs"
+                    className="group"
                     onClick={() => openDay(day)}
                   >
-                    <Badge variant={dayBadgeVariant} size="calendarDay" shape="pill">
-                      {format(day, "d")}
-                    </Badge>
+                    <Flex align="start" justify="between" gap="xs">
+                      <Badge variant={dayBadgeVariant} size="calendarDay" shape="pill">
+                        {format(day, "d")}
+                      </Badge>
+                      <Button
+                        type="button"
+                        chrome="calendarHeaderControl"
+                        chromeSize="calendarHeaderIcon"
+                        reveal="responsive"
+                        aria-label={`Add event for ${format(day, "MMMM d, yyyy")}`}
+                        data-testid={TEST_IDS.CALENDAR.QUICK_ADD_DAY}
+                        title={`Add event for ${format(day, "MMMM d, yyyy")}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onAddEvent(day);
+                        }}
+                      >
+                        <span aria-hidden="true">+</span>
+                      </Button>
+                    </Flex>
                     <Flex wrap gap="xs" className="mt-1 md:hidden">
                       {dayEvents.slice(0, 3).map((event) => (
                         <Dot

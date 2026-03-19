@@ -59,6 +59,7 @@ export function CalendarView({
   const [mode, setMode] = useState<Mode>("week");
   const [date, setDate] = useState(new Date());
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createEventDate, setCreateEventDate] = useState(new Date());
   const [selectedEventId, setSelectedEventId] = useState<Id<"calendarEvents"> | null>(null);
 
   const { startDate, endDate } = getDateRange(date, mode);
@@ -134,6 +135,11 @@ export function CalendarView({
     setSelectedEventId(extractConvexId(event as NixeloCalendarEvent));
   }
 
+  function handleAddEvent(requestedDate?: Date): void {
+    setCreateEventDate(requestedDate ?? date);
+    setShowCreateModal(true);
+  }
+
   return (
     <Flex direction="column" className="h-full" data-calendar>
       <ShadcnCalendar
@@ -142,14 +148,14 @@ export function CalendarView({
         setMode={setMode}
         date={date}
         setDate={setDate}
-        onAddEvent={() => setShowCreateModal(true)}
+        onAddEvent={handleAddEvent}
         onEventClick={handleEventClick}
       />
 
       <CreateEventModal
         open={showCreateModal}
         onOpenChange={setShowCreateModal}
-        defaultDate={date}
+        defaultDate={createEventDate}
         projectId={projectId}
       />
 

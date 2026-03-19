@@ -305,6 +305,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-calendar-(day|week|month)$/, "11-calendar", "-$1"],
   [/^filled-calendar-event-modal$/, "11-calendar", "-event-modal"],
   [/^filled-calendar-create-event-modal$/, "11-calendar", "-create-event-modal"],
+  [/^filled-calendar-quick-add$/, "11-calendar", "-quick-add"],
   // Project analytics: filled-project-xxx-analytics → 13-analytics
   [/^filled-project-.+-analytics$/, "13-analytics", ""],
   // Project members: filled-project-xxx-members → 17-members
@@ -2951,6 +2952,7 @@ async function screenshotFilledStates(
         "calendar-week",
         "calendar-month",
         "calendar-event-modal",
+        "calendar-quick-add",
       ])
     ) {
       const calendarUrl = ROUTES.projects.calendar.build(orgSlug, projectKey);
@@ -3044,6 +3046,39 @@ async function screenshotFilledStates(
             const dialog = page.getByTestId(TEST_IDS.CALENDAR.EVENT_DETAILS_MODAL);
             await dialog.waitFor({ state: "visible", timeout: 5000 });
             await captureCurrentView(page, p, "calendar-event-modal");
+            await dismissIfOpen(page, dialog);
+          });
+        }
+
+        if (shouldCapture(p, "calendar-quick-add")) {
+          await runCaptureStep("calendar quick-add", async () => {
+            const monthToggle = page.getByTestId(TEST_IDS.CALENDAR.MODE_MONTH).first();
+            await monthToggle.waitFor({ state: "visible", timeout: 5000 });
+            await monthToggle.click();
+            await waitForScreenshotReady(page);
+            await waitForCalendarReady(page);
+
+            const quickAddButton = page.getByTestId(TEST_IDS.CALENDAR.QUICK_ADD_DAY).first();
+            if ((await quickAddButton.count()) > 0) {
+              if (!(await quickAddButton.isVisible())) {
+                const firstDayCell = page.locator("[data-calendar] .group").first();
+                if ((await firstDayCell.count()) > 0) {
+                  await firstDayCell.hover().catch(() => {});
+                }
+              }
+            }
+
+            if ((await quickAddButton.count()) > 0 && (await quickAddButton.isVisible())) {
+              await quickAddButton.click();
+            } else {
+              const headerAddButton = page.getByRole("button", { name: /add event/i }).first();
+              await headerAddButton.waitFor({ state: "visible", timeout: 5000 });
+              await headerAddButton.click();
+            }
+            const dialog = await waitForDialogOpen(page);
+            await page.getByLabel(/date/i).waitFor({ state: "visible", timeout: 5000 });
+            await waitForScreenshotReady(page);
+            await captureCurrentView(page, p, "calendar-quick-add");
             await dismissIfOpen(page, dialog);
           });
         }
@@ -4289,6 +4324,7 @@ const DRY_RUN_PAGES = [
   "filled-calendar-month",
   "filled-calendar-event-modal",
   "filled-calendar-create-event-modal",
+  "filled-calendar-quick-add",
   // Filled states — time tracking modals
   "filled-time-tracking-manual-entry-modal",
   // Filled states — issue detail

@@ -180,6 +180,8 @@ export const TEST_IDS = {
     EVENT_ITEM: "calendar-event-item",
     /** @see src/components/Calendar/EventDetailsModal.tsx */
     EVENT_DETAILS_MODAL: "calendar-event-details-modal",
+    /** @see src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx */
+    QUICK_ADD_DAY: "calendar-quick-add-day",
     /** @see src/components/Calendar/shadcn-calendar/header/actions/calendar-header-actions-mode.tsx */
     MODE_DAY: "calendar-mode-day",
     MODE_WEEK: "calendar-mode-week",
