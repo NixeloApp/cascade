@@ -397,6 +397,55 @@ describe("RoadmapView", () => {
     expect(screen.getAllByText("1 issue")).toHaveLength(2);
   });
 
+  it("collapses grouped roadmap sections and hides dependency lines for hidden rows", () => {
+    mockRoadmapQueries({
+      links: [{ fromIssueId: issue1Id, toIssueId: issue2Id, linkType: "blocks" }],
+      issues: [
+        {
+          _id: issue1Id,
+          key: "PROJ-1",
+          title: "Plan onboarding",
+          status: "todo",
+          startDate: Date.UTC(2026, 2, 10),
+          dueDate: Date.UTC(2026, 2, 20),
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Alex Rivera" },
+        },
+        {
+          _id: issue2Id,
+          key: "PROJ-2",
+          title: "Ship migration",
+          status: "in progress",
+          startDate: Date.UTC(2026, 2, 18),
+          dueDate: Date.UTC(2026, 2, 28),
+          type: "story",
+          priority: "high",
+          assignee: { name: "Alex Rivera" },
+        },
+      ],
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Assignee" }));
+
+    const groupToggle = screen.getByTestId("roadmap-group-assignee:alex rivera");
+    expect(groupToggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: "PROJ-1" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Issue dependency lines")).toBeInTheDocument();
+
+    fireEvent.click(groupToggle);
+
+    expect(screen.getByTestId("roadmap-group-assignee:alex rivera")).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(screen.queryByRole("button", { name: "PROJ-1" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "PROJ-2" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Issue dependency lines")).not.toBeInTheDocument();
+  });
+
   it("shifts an issue date range when its roadmap bar is dragged", async () => {
     mockRoadmapQueries({
       issues: [

@@ -18,7 +18,7 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useListNavigation } from "@/hooks/useListNavigation";
 import { formatDate } from "@/lib/dates";
-import { CalendarDays, LinkIcon } from "@/lib/icons";
+import { CalendarDays, ChevronDown, ChevronRight, LinkIcon } from "@/lib/icons";
 import { getPriorityColor, getStatusColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
 import { IssueDetailViewer } from "./IssueDetailViewer";
@@ -170,6 +170,7 @@ interface TimelineHeaderCell {
 }
 
 interface TimelineGroup {
+  collapsed: boolean;
   count: number;
   kind: Exclude<GroupBy, "none">;
   key: string;
@@ -380,6 +381,7 @@ function getGroupDescriptor(issue: RoadmapIssue, groupBy: Exclude<GroupBy, "none
     case "assignee": {
       const assigneeName = issue.assignee?.name?.trim() || "Unassigned";
       return {
+        collapsed: false,
         count: 0,
         kind: groupBy,
         key: `assignee:${assigneeName.toLowerCase()}`,
@@ -389,6 +391,7 @@ function getGroupDescriptor(issue: RoadmapIssue, groupBy: Exclude<GroupBy, "none
     }
     case "priority":
       return {
+        collapsed: false,
         count: 0,
         kind: groupBy,
         key: `priority:${issue.priority}`,
@@ -397,6 +400,7 @@ function getGroupDescriptor(issue: RoadmapIssue, groupBy: Exclude<GroupBy, "none
       };
     case "status":
       return {
+        collapsed: false,
         count: 0,
         kind: groupBy,
         key: `status:${issue.status.toLowerCase()}`,
@@ -425,6 +429,7 @@ function compareTimelineGroups(a: TimelineGroup, b: TimelineGroup) {
 function buildTimelineRows(
   issues: FunctionReturnType<typeof api.issues.listRoadmapIssues> | undefined,
   groupBy: GroupBy,
+  collapsedGroupKeys: string[],
 ): TimelineRow[] {
   if (!issues || issues.length === 0) {
     return [];
@@ -453,10 +458,13 @@ function buildTimelineRows(
 
   return [...groupedIssues.values()]
     .sort((left, right) => compareTimelineGroups(left.group, right.group))
-    .flatMap(({ group, issues: groupedRows }) => [
-      { type: "group" as const, group },
-      ...groupedRows.map((issue) => ({ type: "issue" as const, issue })),
-    ]);
+    .flatMap(({ group, issues: groupedRows }) => {
+      const collapsed = collapsedGroupKeys.includes(group.key);
+      return [
+        { type: "group" as const, group: { ...group, collapsed } },
+        ...(collapsed ? [] : groupedRows.map((issue) => ({ type: "issue" as const, issue }))),
+      ];
+    });
 }
 
 function getTimelineGroupLabel(group: TimelineGroup) {
@@ -563,18 +571,29 @@ function RoadmapTimelineBar({
 
 interface RoadmapGroupRowProps {
   group: TimelineGroup;
+  onToggle: (groupKey: string) => void;
   style: React.CSSProperties;
 }
 
-function RoadmapGroupRow({ group, style }: RoadmapGroupRowProps) {
+function RoadmapGroupRow({ group, onToggle, style }: RoadmapGroupRowProps) {
   return (
-    <div
+    <Button
+      type="button"
+      variant="unstyled"
+      onClick={() => onToggle(group.key)}
+      aria-expanded={!group.collapsed}
+      aria-label={`Toggle ${group.label} group`}
       style={style}
-      className="border-b border-ui-border bg-ui-bg-secondary/60 px-4"
+      className="w-full border-b border-ui-border bg-ui-bg-secondary/60 px-4 text-left"
       data-testid={`roadmap-group-${group.key}`}
     >
       <Flex align="center" justify="between" className="h-full">
         <Flex align="center" gap="sm">
+          <Icon
+            icon={group.collapsed ? ChevronRight : ChevronDown}
+            size="sm"
+            className="text-ui-text-tertiary"
+          />
           <Typography variant="label" color="secondary">
             {getTimelineGroupLabel(group)}
           </Typography>
@@ -591,7 +610,7 @@ function RoadmapGroupRow({ group, style }: RoadmapGroupRowProps) {
           {group.count} {group.count === 1 ? "issue" : "issues"}
         </Typography>
       </Flex>
-    </div>
+    </Button>
   );
 }
 
@@ -743,6 +762,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   const [selectedIssue, setSelectedIssue] = useState<Id<"issues"> | null>(null);
   const [viewMode, setViewMode] = useState<"months" | "weeks">("months");
   const [groupBy, setGroupBy] = useState<GroupBy>("none");
+  const [collapsedGroupKeys, setCollapsedGroupKeys] = useState<string[]>([]);
   const [filterEpic, setFilterEpic] = useState<Id<"issues"> | "all">("all");
   const [timelineSpan, setTimelineSpan] = useState<TimelineSpan>(6);
   const [showDependencies, setShowDependencies] = useState(true);
@@ -783,7 +803,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     viewMode === "weeks"
       ? buildWeekHeaderCells(startOfMonth, endOfTimespan)
       : buildMonthHeaderCells(startOfMonth, timelineSpan);
-  const timelineRows = buildTimelineRows(filteredIssues, groupBy);
+  const timelineRows = buildTimelineRows(filteredIssues, groupBy, collapsedGroupKeys);
 
   const getPositionOnTimeline = (date: number) => {
     const issueDate = new Date(date);
@@ -950,7 +970,19 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     if (!row) return null;
 
     if (row.type === "group") {
-      return <RoadmapGroupRow group={row.group} style={style} />;
+      return (
+        <RoadmapGroupRow
+          group={row.group}
+          onToggle={(groupKey) =>
+            setCollapsedGroupKeys((currentKeys) =>
+              currentKeys.includes(groupKey)
+                ? currentKeys.filter((key) => key !== groupKey)
+                : [...currentKeys, groupKey],
+            )
+          }
+          style={style}
+        />
+      );
     }
 
     return (
@@ -1091,7 +1123,13 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                 </SelectContent>
               </Select>
 
-              <Select value={groupBy} onValueChange={(value) => setGroupBy(value as GroupBy)}>
+              <Select
+                value={groupBy}
+                onValueChange={(value) => {
+                  setGroupBy(value as GroupBy);
+                  setCollapsedGroupKeys([]);
+                }}
+              >
                 <SelectTrigger className="w-40">
                   <SelectValue />
                 </SelectTrigger>
