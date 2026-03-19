@@ -143,6 +143,8 @@ export interface GridProps extends React.HTMLAttributes<HTMLDivElement> {
   colsXl?: Cols;
   /** Gap between items */
   gap?: GapSize;
+  /** Explicit CSS grid-template-columns value */
+  templateColumns?: React.CSSProperties["gridTemplateColumns"];
   /** Render as a different element */
   as?: React.ElementType;
 }
@@ -180,9 +182,11 @@ export const Grid = React.forwardRef<HTMLDivElement, GridProps>(
       colsLg,
       colsXl,
       gap = "none",
+      templateColumns,
       as: Component = "div",
       className,
       children,
+      style,
       ...props
     },
     ref,
@@ -192,14 +196,22 @@ export const Grid = React.forwardRef<HTMLDivElement, GridProps>(
         ref={ref}
         className={cn(
           "grid",
-          colsClasses[cols],
-          colsSm && colsSmClasses[colsSm],
-          colsMd && colsMdClasses[colsMd],
-          colsLg && colsLgClasses[colsLg],
-          colsXl && colsXlClasses[colsXl],
+          !templateColumns && colsClasses[cols],
+          !templateColumns && colsSm && colsSmClasses[colsSm],
+          !templateColumns && colsMd && colsMdClasses[colsMd],
+          !templateColumns && colsLg && colsLgClasses[colsLg],
+          !templateColumns && colsXl && colsXlClasses[colsXl],
           gapClasses[gap],
           className,
         )}
+        style={
+          templateColumns
+            ? {
+                ...style,
+                gridTemplateColumns: templateColumns,
+              }
+            : style
+        }
         {...props}
       >
         {children}

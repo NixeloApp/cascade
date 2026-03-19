@@ -143,6 +143,11 @@ interface RoadmapTimelineBarProps {
   resizingIssueId?: Id<"issues">;
 }
 
+interface TimelineHeaderCell {
+  key: string;
+  label: string;
+}
+
 function getBarWidth(
   startDate: number | undefined,
   dueDate: number,
@@ -298,6 +303,33 @@ function getDependencyPath(line: DependencyLine) {
 
 function getRoadmapBarTitle(issue: RoadmapBarIssue, canEdit: boolean): string {
   return `${issue.title}${canEdit ? " - Drag to move date range" : ""}${issue.startDate ? ` - Start: ${formatDate(issue.startDate)}` : ""} - Due: ${formatDate(issue.dueDate)}`;
+}
+
+function buildMonthHeaderCells(startDate: Date, timelineSpan: TimelineSpan): TimelineHeaderCell[] {
+  return Array.from({ length: timelineSpan }, (_, index) => {
+    const month = new Date(startDate.getFullYear(), startDate.getMonth() + index, 1);
+    return {
+      key: String(month.getTime()),
+      label: month.toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+    };
+  });
+}
+
+function buildWeekHeaderCells(startDate: Date, endDate: Date): TimelineHeaderCell[] {
+  const weekCells: TimelineHeaderCell[] = [];
+  const cursor = new Date(startDate);
+
+  while (cursor <= endDate) {
+    const weekStart = new Date(cursor);
+    const weekEnd = new Date(Math.min(cursor.getTime() + 6 * DAY, endDate.getTime()));
+    weekCells.push({
+      key: String(weekStart.getTime()),
+      label: `${weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${weekEnd.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
+    });
+    cursor.setDate(cursor.getDate() + 7);
+  }
+
+  return weekCells;
 }
 
 function RoadmapTimelineBar({
@@ -458,14 +490,14 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   const today = new Date();
   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   const endOfTimespan = new Date(today.getFullYear(), today.getMonth() + timelineSpan, 0);
-  const timelineMonths = Array.from(
-    { length: timelineSpan },
-    (_, index) => new Date(today.getFullYear(), today.getMonth() + index, 1),
-  );
   const totalDays = Math.max(
     1,
     Math.floor((endOfTimespan.getTime() - startOfMonth.getTime()) / DAY),
   );
+  const timelineHeaderCells =
+    viewMode === "weeks"
+      ? buildWeekHeaderCells(startOfMonth, endOfTimespan)
+      : buildMonthHeaderCells(startOfMonth, timelineSpan);
 
   const getPositionOnTimeline = (date: number) => {
     const issueDate = new Date(date);
@@ -840,14 +872,17 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                 Issue
               </Typography>
               <FlexItem flex="1">
-                <Grid cols={timelineSpan} gap="none">
-                  {timelineMonths.map((month) => (
+                <Grid
+                  gap="none"
+                  templateColumns={`repeat(${timelineHeaderCells.length}, minmax(0, 1fr))`}
+                >
+                  {timelineHeaderCells.map((headerCell) => (
                     <div
-                      key={month.getTime()}
+                      key={headerCell.key}
                       className={getCardRecipeClassName("roadmapMonthHeaderCell")}
                     >
                       <Typography variant="label" className="text-center">
-                        {month.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                        {headerCell.label}
                       </Typography>
                     </div>
                   ))}

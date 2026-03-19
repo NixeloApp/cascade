@@ -323,6 +323,36 @@ describe("RoadmapView", () => {
     expect(screen.queryByLabelText("Issue dependency lines")).not.toBeInTheDocument();
   });
 
+  it("switches the roadmap header between month and week buckets", () => {
+    mockRoadmapQueries({
+      issues: [
+        {
+          _id: issue1Id,
+          key: "PROJ-1",
+          title: "Plan onboarding",
+          startDate: Date.UTC(2026, 2, 10),
+          dueDate: Date.UTC(2026, 2, 20),
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Alex Rivera" },
+        },
+      ],
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    expect(screen.getByText("Mar 2026")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Weeks" }));
+
+    expect(screen.getByText("Mar 1 - Mar 7")).toBeInTheDocument();
+    expect(screen.queryByText("Mar 2026")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Months" }));
+
+    expect(screen.getByText("Mar 2026")).toBeInTheDocument();
+  });
+
   it("shifts an issue date range when its roadmap bar is dragged", async () => {
     mockRoadmapQueries({
       issues: [
