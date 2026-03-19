@@ -6,8 +6,8 @@
  * Enforces project access permissions on link operations.
  */
 
-import type { Id } from "./_generated/dataModel";
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchIssues } from "./lib/batchHelpers";
 import { conflict, notFound, validation } from "./lib/errors";

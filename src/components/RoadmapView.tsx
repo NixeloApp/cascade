@@ -10,13 +10,12 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { DAY } from "@convex/lib/timeUtils";
 import type { FunctionReturnType } from "convex/server";
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { List, type ListImperativeAPI } from "react-window";
 import { PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { showError, showSuccess } from "@/lib/toast";
 import { useListNavigation } from "@/hooks/useListNavigation";
 import { formatDate } from "@/lib/dates";
 import {
@@ -30,6 +29,7 @@ import {
 } from "@/lib/icons";
 import { getPriorityColor, getStatusColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { TEST_IDS } from "@/lib/test-ids";
+import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { IssueDetailViewer } from "./IssueDetailViewer";
 import { Badge } from "./ui/Badge";
@@ -52,6 +52,7 @@ interface RoadmapViewProps {
 }
 
 type RoadmapIssue = FunctionReturnType<typeof api.issues.listRoadmapIssues>[number];
+type RoadmapEpic = NonNullable<FunctionReturnType<typeof api.issues.listEpics>>[number];
 
 /** Timeline span options in months */
 type TimelineSpan = 1 | 3 | 6 | 12;
@@ -1793,6 +1794,9 @@ function RoadmapDependencyPanel({
 type RoadmapRowData = {
   rows: TimelineRow[];
   activeIssueId: Id<"issues"> | null;
+};
+
+type RoadmapRowController = {
   canEdit: boolean;
   draggingIssueId?: Id<"issues">;
   getPositionOnTimeline: (date: number) => number;
@@ -1806,26 +1810,39 @@ type RoadmapRowData = {
   timelineRef: React.RefObject<HTMLDivElement | null>;
 };
 
+const RoadmapRowControllerContext = createContext<RoadmapRowController | null>(null);
+
+function useRoadmapRowController() {
+  const controller = useContext(RoadmapRowControllerContext);
+  if (controller === null) {
+    throw new Error("Roadmap row controller is missing");
+  }
+
+  return controller;
+}
+
 function RoadmapVirtualizedRow({
   rows,
   activeIssueId,
-  canEdit,
-  draggingIssueId,
-  getPositionOnTimeline,
   index,
-  onBarDragStart,
-  onOpenIssue,
-  onResizeStart,
-  onToggleChildren,
-  onToggleGroup,
-  resizingIssueId,
-  roadmapIssueById,
   style,
-  timelineRef,
 }: RoadmapRowData & {
   index: number;
   style: React.CSSProperties;
 }) {
+  const {
+    canEdit,
+    draggingIssueId,
+    getPositionOnTimeline,
+    onBarDragStart,
+    onOpenIssue,
+    onResizeStart,
+    onToggleChildren,
+    onToggleGroup,
+    resizingIssueId,
+    roadmapIssueById,
+    timelineRef,
+  } = useRoadmapRowController();
   const row = rows[index];
   if (!row) return null;
 
@@ -1866,6 +1883,486 @@ function RoadmapVirtualizedRow({
       }
     />
   );
+}
+
+function RoadmapLoadingState() {
+  return (
+    <PageLayout fullHeight className="overflow-hidden">
+      <Flex direction="column" className="h-full">
+        <Flex align="center" justify="between" className="mb-6 shrink-0">
+          <Stack gap="xs">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </Stack>
+          <Flex gap="md">
+            <Skeleton className="h-10 w-32" />
+            <Skeleton className="h-8 w-32" />
+          </Flex>
+        </Flex>
+
+        <Card variant="default" padding="none" className="flex-1 overflow-hidden">
+          <div className="border-b border-ui-border bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78 p-4">
+            <Flex>
+              <FlexItem shrink={false} className="w-64">
+                <Skeleton className="h-5 w-24" />
+              </FlexItem>
+              <FlexItem flex="1">
+                <Grid cols={6} gap="sm">
+                  {[1, 2, 3, 4, 5, 6].map((id) => (
+                    <Skeleton key={id} className="h-5 w-full" />
+                  ))}
+                </Grid>
+              </FlexItem>
+            </Flex>
+          </div>
+
+          <FlexItem flex="1">
+            <Stack className="overflow-auto">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <div key={i} className="border-b border-ui-border">
+                  <Flex align="center">
+                    <FlexItem shrink={false} className="w-64 pr-4">
+                      <Flex align="center" gap="sm">
+                        <Skeleton className="h-4 w-4 rounded-full" />
+                        <Skeleton className="h-4 w-16" />
+                      </Flex>
+                      <Skeleton className="h-3 w-32" />
+                    </FlexItem>
+                    <FlexItem flex="1" className="relative h-8">
+                      <div
+                        className="absolute h-6"
+                        style={{
+                          left: `${(i * 13) % 70}%`,
+                          width: `${10 + ((i * 3) % 10)}%`,
+                        }}
+                      >
+                        <Skeleton className="h-full w-full rounded-full opacity-50" />
+                      </div>
+                    </FlexItem>
+                  </Flex>
+                </div>
+              ))}
+            </Stack>
+          </FlexItem>
+        </Card>
+      </Flex>
+    </PageLayout>
+  );
+}
+
+function RoadmapHeaderControls({
+  epics,
+  filterEpic,
+  fitTimelineWindow,
+  groupBy,
+  nextWindowLabel,
+  onFilterEpicChange,
+  onFitToIssues,
+  onGroupByChange,
+  onNextWindow,
+  onPreviousWindow,
+  onTimelineSpanChange,
+  onTimelineZoomChange,
+  onToday,
+  onToggleDependencies,
+  onViewModeChange,
+  previousWindowLabel,
+  showDependencies,
+  timelineRangeLabel,
+  timelineSpan,
+  timelineZoom,
+  viewMode,
+}: {
+  epics: RoadmapEpic[];
+  filterEpic: Id<"issues"> | "all";
+  fitTimelineWindow: ReturnType<typeof getTimelineFitWindow>;
+  groupBy: GroupBy;
+  nextWindowLabel: string;
+  onFilterEpicChange: (value: Id<"issues"> | "all") => void;
+  onFitToIssues: () => void;
+  onGroupByChange: (value: GroupBy) => void;
+  onNextWindow: () => void;
+  onPreviousWindow: () => void;
+  onTimelineSpanChange: (value: TimelineSpan) => void;
+  onTimelineZoomChange: (value: TimelineZoom) => void;
+  onToday: () => void;
+  onToggleDependencies: () => void;
+  onViewModeChange: (value: ViewMode) => void;
+  previousWindowLabel: string;
+  showDependencies: boolean;
+  timelineRangeLabel: string;
+  timelineSpan: TimelineSpan;
+  timelineZoom: TimelineZoom;
+  viewMode: ViewMode;
+}) {
+  return (
+    <Card recipe="controlRail" padding="xs" radius="full">
+      <Flex align="center" gap="sm" wrap>
+        <Flex align="center" gap="xs">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onPreviousWindow}
+            aria-label={previousWindowLabel}
+            title={previousWindowLabel}
+          >
+            <Icon icon={ChevronLeft} size="sm" />
+          </Button>
+          <Button variant="secondary" size="sm" onClick={onToday}>
+            Today
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onFitToIssues}
+            disabled={fitTimelineWindow === null}
+          >
+            Fit to issues
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onNextWindow}
+            aria-label={nextWindowLabel}
+            title={nextWindowLabel}
+          >
+            <Icon icon={ChevronRight} size="sm" />
+          </Button>
+        </Flex>
+
+        <Typography variant="label" color="secondary" className="min-w-36">
+          {timelineRangeLabel}
+        </Typography>
+
+        <Select
+          value={filterEpic === "all" ? "all" : filterEpic}
+          onValueChange={(value) =>
+            onFilterEpicChange(value === "all" ? "all" : (value as Id<"issues">))
+          }
+        >
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="All Epics" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Epics</SelectItem>
+            {epics.map((epic) => (
+              <SelectItem key={epic._id} value={epic._id}>
+                {epic.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={String(timelineSpan)}
+          onValueChange={(value) => onTimelineSpanChange(Number(value) as TimelineSpan)}
+        >
+          <SelectTrigger className="w-32">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {TIMELINE_SPANS.map((span) => (
+              <SelectItem key={span.value} value={String(span.value)}>
+                {span.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={groupBy} onValueChange={(value) => onGroupByChange(value as GroupBy)}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {GROUP_BY_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <SegmentedControl
+          value={viewMode}
+          onValueChange={(value: string) => value && onViewModeChange(value as ViewMode)}
+          size="sm"
+        >
+          <SegmentedControlItem value="months">Months</SegmentedControlItem>
+          <SegmentedControlItem value="weeks">Weeks</SegmentedControlItem>
+        </SegmentedControl>
+
+        <SegmentedControl
+          value={timelineZoom}
+          onValueChange={(value: string) => value && onTimelineZoomChange(value as TimelineZoom)}
+          size="sm"
+        >
+          {TIMELINE_ZOOM_OPTIONS.map((option) => (
+            <SegmentedControlItem key={option.value} value={option.value}>
+              {option.label}
+            </SegmentedControlItem>
+          ))}
+        </SegmentedControl>
+
+        <Button
+          variant={showDependencies ? "primary" : "ghost"}
+          size="sm"
+          onClick={onToggleDependencies}
+          title={showDependencies ? "Hide dependency lines" : "Show dependency lines"}
+        >
+          <Icon icon={LinkIcon} size="sm" />
+        </Button>
+      </Flex>
+    </Card>
+  );
+}
+
+function RoadmapTimelineContainer({
+  activeIssueId,
+  dependencyLines,
+  filteredIssues,
+  listRef,
+  roadmapRowController,
+  showDependencies,
+  timelineHeaderCells,
+  timelineLayoutWidth,
+  timelineRows,
+  timelineBucketWidth,
+  todayMarkerOffsetPx,
+}: {
+  activeIssueId: Id<"issues"> | null;
+  dependencyLines: DependencyLine[];
+  filteredIssues: RoadmapIssue[];
+  listRef: React.RefObject<ListImperativeAPI | null>;
+  roadmapRowController: RoadmapRowController;
+  showDependencies: boolean;
+  timelineHeaderCells: TimelineHeaderCell[];
+  timelineLayoutWidth: number;
+  timelineRows: TimelineRow[];
+  timelineBucketWidth: number;
+  todayMarkerOffsetPx: number | null;
+}) {
+  return (
+    <Card variant="default" padding="none" className="flex-1 overflow-hidden">
+      <FlexItem flex="1">
+        {filteredIssues.length === 0 ? (
+          <EmptyState
+            icon={CalendarDays}
+            title="Roadmap is ready for planning"
+            description="No issues with due dates to display yet. Add due dates in your board or backlog to populate this timeline view."
+            className="m-6 min-h-96 max-w-none border-dashed"
+          />
+        ) : (
+          <div className="h-full overflow-x-auto">
+            <div
+              data-testid={TEST_IDS.ROADMAP.TIMELINE_CANVAS}
+              className="min-w-full"
+              style={{ width: `${timelineLayoutWidth}px` }}
+            >
+              <div className="border-b border-ui-border bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78 p-4">
+                <div className="relative">
+                  {renderRoadmapTodayMarker(todayMarkerOffsetPx, "header")}
+                  <Flex>
+                    <FlexItem
+                      shrink={false}
+                      className="sticky left-0 z-30 w-64 shrink-0 border-r border-ui-border/70 bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78 pr-4"
+                      data-testid={TEST_IDS.ROADMAP.ISSUE_HEADER}
+                    >
+                      <Typography variant="label">Issue</Typography>
+                    </FlexItem>
+                    <FlexItem flex="1">
+                      <Grid
+                        gap="none"
+                        templateColumns={`repeat(${timelineHeaderCells.length}, minmax(${timelineBucketWidth}px, 1fr))`}
+                      >
+                        {timelineHeaderCells.map((headerCell) => (
+                          <div
+                            key={headerCell.key}
+                            className={getCardRecipeClassName("roadmapMonthHeaderCell")}
+                          >
+                            <Typography variant="label" className="text-center">
+                              {headerCell.label}
+                            </Typography>
+                          </div>
+                        ))}
+                      </Grid>
+                    </FlexItem>
+                  </Flex>
+                </div>
+              </div>
+
+              <div className="relative">
+                {renderRoadmapTodayMarker(todayMarkerOffsetPx, "body")}
+                <RoadmapRowControllerContext.Provider value={roadmapRowController}>
+                  <List<RoadmapRowData>
+                    listRef={listRef}
+                    style={{ height: 600, width: "100%" }}
+                    rowCount={timelineRows.length}
+                    rowHeight={ROADMAP_ROW_HEIGHT}
+                    rowProps={{
+                      rows: timelineRows,
+                      activeIssueId,
+                    }}
+                    rowComponent={RoadmapVirtualizedRow}
+                  />
+                </RoadmapRowControllerContext.Provider>
+
+                {showDependencies && dependencyLines.length > 0 ? (
+                  <svg
+                    className="pointer-events-none absolute top-0"
+                    style={{
+                      left: ISSUE_INFO_COLUMN_WIDTH,
+                      width: `calc(100% - ${ISSUE_INFO_COLUMN_WIDTH}px)`,
+                      height: 600,
+                    }}
+                    role="img"
+                    aria-label="Issue dependency lines"
+                  >
+                    <defs>
+                      <marker
+                        id="arrowhead"
+                        markerWidth="6"
+                        markerHeight="4"
+                        refX="5"
+                        refY="2"
+                        orient="auto"
+                      >
+                        <polygon points="0 0, 6 2, 0 4" fill="var(--color-status-warning)" />
+                      </marker>
+                    </defs>
+                    {dependencyLines.map((line) =>
+                      renderDependencyLine(line, activeIssueId?.toString() ?? null),
+                    )}
+                  </svg>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        )}
+      </FlexItem>
+    </Card>
+  );
+}
+
+function useRoadmapTimelineInteractions({
+  canEdit,
+  startOfMonth,
+  timelineRef,
+  totalDays,
+  updateIssue,
+}: {
+  canEdit: boolean;
+  startOfMonth: Date;
+  timelineRef: React.RefObject<HTMLDivElement | null>;
+  totalDays: number;
+  updateIssue: ReturnType<typeof useAuthenticatedMutation<typeof api.issues.update>>["mutate"];
+}) {
+  const [resizing, setResizing] = useState<ResizeState | null>(null);
+  const [dragging, setDragging] = useState<DragState | null>(null);
+
+  const handleResizeStart = (
+    e: React.MouseEvent,
+    issueId: Id<"issues">,
+    edge: "left" | "right",
+    startDate: number | undefined,
+    dueDate: number | undefined,
+  ) => {
+    if (!canEdit) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setResizing({
+      issueId,
+      edge,
+      startX: e.clientX,
+      originalStartDate: startDate,
+      originalDueDate: dueDate,
+    });
+  };
+
+  const handleBarDragStart = (
+    e: React.MouseEvent,
+    issueId: Id<"issues">,
+    startDate: number | undefined,
+    dueDate: number | undefined,
+  ) => {
+    if (!canEdit || !dueDate) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging({
+      issueId,
+      startX: e.clientX,
+      originalStartDate: startDate,
+      originalDueDate: dueDate,
+    });
+  };
+
+  useEffect(() => {
+    if (!(resizing || dragging) || !timelineRef.current) return;
+
+    const handleMouseMove = () => {
+      const container = timelineRef.current;
+      if (!container) return;
+    };
+
+    const handleMouseUp = async (e: MouseEvent) => {
+      const container = timelineRef.current;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      const getPosition = (date: number) => {
+        const issueDate = new Date(date);
+        const daysSinceStart = Math.floor((issueDate.getTime() - startOfMonth.getTime()) / DAY);
+        return (daysSinceStart / totalDays) * 100;
+      };
+      const getDate = (percent: number) => {
+        const days = Math.round((percent / 100) * totalDays);
+        const date = new Date(startOfMonth.getTime() + days * DAY);
+        date.setHours(23, 59, 59, 999);
+        return date.getTime();
+      };
+
+      const nextUpdate = resizing
+        ? buildResizePatch({
+            resizing,
+            clientX: e.clientX,
+            containerWidth: rect.width,
+            getPositionOnTimeline: getPosition,
+            getDateFromPosition: getDate,
+          })
+        : dragging
+          ? buildDragPatch({
+              dragging,
+              clientX: e.clientX,
+              containerWidth: rect.width,
+              totalDays,
+            })
+          : null;
+
+      if (nextUpdate) {
+        await updateIssue({
+          issueId: nextUpdate.issueId,
+          ...nextUpdate.patch,
+        });
+      }
+
+      setResizing(null);
+      setDragging(null);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [dragging, resizing, startOfMonth, timelineRef, totalDays, updateIssue]);
+
+  return {
+    dragging,
+    handleBarDragStart,
+    handleResizeStart,
+    resizing,
+  };
 }
 
 /** Compute dependency lines from issue links */
@@ -1911,10 +2408,6 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   const [timelineAnchorDate, setTimelineAnchorDate] = useState(() => new Date());
   const [showDependencies, setShowDependencies] = useState(true);
 
-  // Resize state
-  const [resizing, setResizing] = useState<ResizeState | null>(null);
-  const [dragging, setDragging] = useState<DragState | null>(null);
-
   const { mutate: updateIssue } = useAuthenticatedMutation(api.issues.update);
 
   // Fetch epics for the dropdown (separate optimized query)
@@ -1934,8 +2427,6 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   });
 
   const project = useAuthenticatedQuery(api.projects.getProject, { id: projectId });
-
-  type Epic = NonNullable<FunctionReturnType<typeof api.issues.listEpics>>[number];
 
   const startOfMonth = new Date(timelineAnchorDate.getFullYear(), timelineAnchorDate.getMonth(), 1);
   const endOfTimespan = new Date(
@@ -1982,112 +2473,14 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
 
   // Reference to timeline container for calculating positions
   const timelineRef = useRef<HTMLDivElement>(null);
-
-  // Start resizing
-  const handleResizeStart = (
-    e: React.MouseEvent,
-    issueId: Id<"issues">,
-    edge: "left" | "right",
-    startDate: number | undefined,
-    dueDate: number | undefined,
-  ) => {
-    if (!canEdit) return;
-    e.preventDefault();
-    e.stopPropagation();
-    setResizing({
-      issueId,
-      edge,
-      startX: e.clientX,
-      originalStartDate: startDate,
-      originalDueDate: dueDate,
+  const { dragging, handleBarDragStart, handleResizeStart, resizing } =
+    useRoadmapTimelineInteractions({
+      canEdit,
+      startOfMonth,
+      timelineRef,
+      totalDays,
+      updateIssue,
     });
-  };
-
-  const handleBarDragStart = (
-    e: React.MouseEvent,
-    issueId: Id<"issues">,
-    startDate: number | undefined,
-    dueDate: number | undefined,
-  ) => {
-    if (!canEdit || !dueDate) return;
-    e.preventDefault();
-    e.stopPropagation();
-    setDragging({
-      issueId,
-      startX: e.clientX,
-      originalStartDate: startDate,
-      originalDueDate: dueDate,
-    });
-  };
-
-  // Handle mouse move during resize
-  useEffect(() => {
-    if (!(resizing || dragging) || !timelineRef.current) return;
-
-    const handleMouseMove = () => {
-      const container = timelineRef.current;
-      if (!container) return;
-
-      // Visual feedback only - actual update happens on mouse up
-      // Mouse position is tracked relative to container for date calculation
-    };
-
-    const handleMouseUp = async (e: MouseEvent) => {
-      const container = timelineRef.current;
-      if (!container) return;
-
-      const rect = container.getBoundingClientRect();
-
-      // Inline position calculations to avoid dependency issues
-      const getPosition = (date: number) => {
-        const issueDate = new Date(date);
-        const daysSinceStart = Math.floor((issueDate.getTime() - startOfMonth.getTime()) / DAY);
-        return (daysSinceStart / totalDays) * 100;
-      };
-
-      const getDate = (percent: number) => {
-        const days = Math.round((percent / 100) * totalDays);
-        const date = new Date(startOfMonth.getTime() + days * DAY);
-        date.setHours(23, 59, 59, 999);
-        return date.getTime();
-      };
-
-      const nextUpdate = resizing
-        ? buildResizePatch({
-            resizing,
-            clientX: e.clientX,
-            containerWidth: rect.width,
-            getPositionOnTimeline: getPosition,
-            getDateFromPosition: getDate,
-          })
-        : dragging
-          ? buildDragPatch({
-              dragging,
-              clientX: e.clientX,
-              containerWidth: rect.width,
-              totalDays,
-            })
-          : null;
-
-      if (nextUpdate) {
-        await updateIssue({
-          issueId: nextUpdate.issueId,
-          ...nextUpdate.patch,
-        });
-      }
-
-      setResizing(null);
-      setDragging(null);
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [dragging, resizing, startOfMonth, totalDays, updateIssue]);
 
   // Keyboard navigation
   const listRef = useRef<ListImperativeAPI>(null);
@@ -2137,75 +2530,55 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     issueRowIndexMap,
     getPositionOnTimeline,
   });
+  const handleToggleChildren = (issueId: Id<"issues">) => {
+    setCollapsedParentIssueIds((currentIds) =>
+      currentIds.includes(issueId)
+        ? currentIds.filter((currentId) => currentId !== issueId)
+        : [...currentIds, issueId],
+    );
+  };
+  const handleToggleGroup = (groupKey: string) => {
+    setCollapsedGroupKeys((currentKeys) =>
+      currentKeys.includes(groupKey)
+        ? currentKeys.filter((key) => key !== groupKey)
+        : [...currentKeys, groupKey],
+    );
+  };
+  const roadmapRowController: RoadmapRowController = {
+    canEdit,
+    draggingIssueId: dragging?.issueId,
+    getPositionOnTimeline,
+    onBarDragStart: handleBarDragStart,
+    onOpenIssue: setSelectedIssue,
+    onResizeStart: handleResizeStart,
+    onToggleChildren: handleToggleChildren,
+    onToggleGroup: handleToggleGroup,
+    resizingIssueId: resizing?.issueId,
+    roadmapIssueById,
+    timelineRef,
+  };
+  const handlePreviousWindow = () => {
+    setTimelineAnchorDate((currentDate) => shiftTimelineAnchorDate(currentDate, -1, timelineSpan));
+  };
+  const handleNextWindow = () => {
+    setTimelineAnchorDate((currentDate) => shiftTimelineAnchorDate(currentDate, 1, timelineSpan));
+  };
+  const handleFitToIssues = () => {
+    if (!fitTimelineWindow) {
+      return;
+    }
+
+    setTimelineAnchorDate(fitTimelineWindow.anchorDate);
+    setTimelineSpan(fitTimelineWindow.timelineSpan);
+  };
+  const handleGroupByChange = (value: GroupBy) => {
+    setGroupBy(value);
+    setCollapsedGroupKeys([]);
+  };
 
   // Loading State
   if (!(project && filteredIssues && epics)) {
-    return (
-      <PageLayout fullHeight className="overflow-hidden">
-        <Flex direction="column" className="h-full">
-          {/* Skeleton Header */}
-          <Flex align="center" justify="between" className="mb-6 shrink-0">
-            <Stack gap="xs">
-              <Skeleton className="h-8 w-48" />
-              <Skeleton className="h-4 w-64" />
-            </Stack>
-            <Flex gap="md">
-              <Skeleton className="h-10 w-32" />
-              <Skeleton className="h-8 w-32" />
-            </Flex>
-          </Flex>
-
-          {/* Skeleton Timeline */}
-          <Card variant="default" padding="none" className="flex-1 overflow-hidden">
-            {/* Skeleton Dates Header */}
-            <div className="p-4 border-b border-ui-border bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78">
-              <Flex>
-                <FlexItem shrink={false} className="w-64">
-                  <Skeleton className="h-5 w-24" />
-                </FlexItem>
-                <FlexItem flex="1">
-                  <Grid cols={6} gap="sm">
-                    {[1, 2, 3, 4, 5, 6].map((id) => (
-                      <Skeleton key={id} className="h-5 w-full" />
-                    ))}
-                  </Grid>
-                </FlexItem>
-              </Flex>
-            </div>
-
-            {/* Skeleton Rows */}
-            <FlexItem flex="1">
-              <Stack className="overflow-auto">
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                  <div key={i} className="border-b border-ui-border">
-                    <Flex align="center">
-                      <FlexItem shrink={false} className="w-64 pr-4">
-                        <Flex align="center" gap="sm">
-                          <Skeleton className="h-4 w-4 rounded-full" />
-                          <Skeleton className="h-4 w-16" />
-                        </Flex>
-                        <Skeleton className="h-3 w-32" />
-                      </FlexItem>
-                      <FlexItem flex="1" className="relative h-8">
-                        <div
-                          className="absolute h-6"
-                          style={{
-                            left: `${(i * 13) % 70}%`, // Deterministic position
-                            width: `${10 + ((i * 3) % 10)}%`,
-                          }}
-                        >
-                          <Skeleton className="h-full w-full rounded-full opacity-50" />
-                        </div>
-                      </FlexItem>
-                    </Flex>
-                  </div>
-                ))}
-              </Stack>
-            </FlexItem>
-          </Card>
-        </Flex>
-      </PageLayout>
-    );
+    return <RoadmapLoadingState />;
   }
 
   return (
@@ -2220,152 +2593,29 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
             </Typography>
           </Stack>
 
-          <Card recipe="controlRail" padding="xs" radius="full">
-            <Flex align="center" gap="sm" wrap>
-              <Flex align="center" gap="xs">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() =>
-                    setTimelineAnchorDate((currentDate) =>
-                      shiftTimelineAnchorDate(currentDate, -1, timelineSpan),
-                    )
-                  }
-                  aria-label={previousWindowLabel}
-                  title={previousWindowLabel}
-                >
-                  <Icon icon={ChevronLeft} size="sm" />
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setTimelineAnchorDate(new Date())}
-                >
-                  Today
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => {
-                    if (!fitTimelineWindow) {
-                      return;
-                    }
-
-                    setTimelineAnchorDate(fitTimelineWindow.anchorDate);
-                    setTimelineSpan(fitTimelineWindow.timelineSpan);
-                  }}
-                  disabled={fitTimelineWindow === null}
-                >
-                  Fit to issues
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() =>
-                    setTimelineAnchorDate((currentDate) =>
-                      shiftTimelineAnchorDate(currentDate, 1, timelineSpan),
-                    )
-                  }
-                  aria-label={nextWindowLabel}
-                  title={nextWindowLabel}
-                >
-                  <Icon icon={ChevronRight} size="sm" />
-                </Button>
-              </Flex>
-
-              <Typography variant="label" color="secondary" className="min-w-36">
-                {timelineRangeLabel}
-              </Typography>
-
-              {/* Epic Filter */}
-              <Select
-                value={filterEpic === "all" ? "all" : filterEpic}
-                onValueChange={(value) =>
-                  setFilterEpic(value === "all" ? "all" : (value as Id<"issues">))
-                }
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="All Epics" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Epics</SelectItem>
-                  {epics?.map((epic: Epic) => (
-                    <SelectItem key={epic._id} value={epic._id}>
-                      {epic.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Timeline Span Selector */}
-              <Select
-                value={String(timelineSpan)}
-                onValueChange={(value) => setTimelineSpan(Number(value) as TimelineSpan)}
-              >
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TIMELINE_SPANS.map((span) => (
-                    <SelectItem key={span.value} value={String(span.value)}>
-                      {span.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={groupBy}
-                onValueChange={(value) => {
-                  setGroupBy(value as GroupBy);
-                  setCollapsedGroupKeys([]);
-                }}
-              >
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {GROUP_BY_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* View Mode Toggle */}
-              <SegmentedControl
-                value={viewMode}
-                onValueChange={(value: string) => value && setViewMode(value as ViewMode)}
-                size="sm"
-              >
-                <SegmentedControlItem value="months">Months</SegmentedControlItem>
-                <SegmentedControlItem value="weeks">Weeks</SegmentedControlItem>
-              </SegmentedControl>
-
-              <SegmentedControl
-                value={timelineZoom}
-                onValueChange={(value: string) => value && setTimelineZoom(value as TimelineZoom)}
-                size="sm"
-              >
-                {TIMELINE_ZOOM_OPTIONS.map((option) => (
-                  <SegmentedControlItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SegmentedControlItem>
-                ))}
-              </SegmentedControl>
-
-              {/* Dependency Lines Toggle */}
-              <Button
-                variant={showDependencies ? "primary" : "ghost"}
-                size="sm"
-                onClick={() => setShowDependencies(!showDependencies)}
-                title={showDependencies ? "Hide dependency lines" : "Show dependency lines"}
-              >
-                <Icon icon={LinkIcon} size="sm" />
-              </Button>
-            </Flex>
-          </Card>
+          <RoadmapHeaderControls
+            epics={epics}
+            filterEpic={filterEpic}
+            fitTimelineWindow={fitTimelineWindow}
+            groupBy={groupBy}
+            nextWindowLabel={nextWindowLabel}
+            onFilterEpicChange={setFilterEpic}
+            onFitToIssues={handleFitToIssues}
+            onGroupByChange={handleGroupByChange}
+            onNextWindow={handleNextWindow}
+            onPreviousWindow={handlePreviousWindow}
+            onTimelineSpanChange={setTimelineSpan}
+            onTimelineZoomChange={setTimelineZoom}
+            onToday={() => setTimelineAnchorDate(new Date())}
+            onToggleDependencies={() => setShowDependencies((current) => !current)}
+            onViewModeChange={setViewMode}
+            previousWindowLabel={previousWindowLabel}
+            showDependencies={showDependencies}
+            timelineRangeLabel={timelineRangeLabel}
+            timelineSpan={timelineSpan}
+            timelineZoom={timelineZoom}
+            viewMode={viewMode}
+          />
         </Flex>
 
         {activeRoadmapIssue ? (
@@ -2380,127 +2630,19 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
           />
         ) : null}
 
-        {/* Timeline Container */}
-        <Card variant="default" padding="none" className="flex-1 overflow-hidden">
-          <FlexItem flex="1">
-            {filteredIssues.length === 0 ? (
-              <EmptyState
-                icon={CalendarDays}
-                title="Roadmap is ready for planning"
-                description="No issues with due dates to display yet. Add due dates in your board or backlog to populate this timeline view."
-                className="m-6 min-h-96 max-w-none border-dashed"
-              />
-            ) : (
-              <div className="h-full overflow-x-auto">
-                <div
-                  data-testid={TEST_IDS.ROADMAP.TIMELINE_CANVAS}
-                  className="min-w-full"
-                  style={{ width: `${timelineLayoutWidth}px` }}
-                >
-                  {/* Timeline Header (Fixed) */}
-                  <div className="border-b border-ui-border bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78 p-4">
-                    <div className="relative">
-                      {renderRoadmapTodayMarker(todayMarkerOffsetPx, "header")}
-                      <Flex>
-                        <FlexItem
-                          shrink={false}
-                          className="sticky left-0 z-30 w-64 shrink-0 border-r border-ui-border/70 bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78 pr-4"
-                          data-testid={TEST_IDS.ROADMAP.ISSUE_HEADER}
-                        >
-                          <Typography variant="label">Issue</Typography>
-                        </FlexItem>
-                        <FlexItem flex="1">
-                          <Grid
-                            gap="none"
-                            templateColumns={`repeat(${timelineHeaderCells.length}, minmax(${timelineBucketWidth}px, 1fr))`}
-                          >
-                            {timelineHeaderCells.map((headerCell) => (
-                              <div
-                                key={headerCell.key}
-                                className={getCardRecipeClassName("roadmapMonthHeaderCell")}
-                              >
-                                <Typography variant="label" className="text-center">
-                                  {headerCell.label}
-                                </Typography>
-                              </div>
-                            ))}
-                          </Grid>
-                        </FlexItem>
-                      </Flex>
-                    </div>
-                  </div>
-
-                  {/* Timeline Body (Virtualized) */}
-                  <div className="relative">
-                    {renderRoadmapTodayMarker(todayMarkerOffsetPx, "body")}
-                    <List<RoadmapRowData>
-                      listRef={listRef}
-                      style={{ height: 600, width: "100%" }}
-                      rowCount={timelineRows.length}
-                      rowHeight={ROADMAP_ROW_HEIGHT}
-                      rowProps={{
-                        rows: timelineRows,
-                        activeIssueId: activeRoadmapIssueId,
-                        canEdit,
-                        draggingIssueId: dragging?.issueId,
-                        getPositionOnTimeline,
-                        onBarDragStart: handleBarDragStart,
-                        onOpenIssue: setSelectedIssue,
-                        onResizeStart: handleResizeStart,
-                        onToggleChildren: (issueId) =>
-                          setCollapsedParentIssueIds((currentIds) =>
-                            currentIds.includes(issueId)
-                              ? currentIds.filter((currentId) => currentId !== issueId)
-                              : [...currentIds, issueId],
-                          ),
-                        onToggleGroup: (groupKey) =>
-                          setCollapsedGroupKeys((currentKeys) =>
-                            currentKeys.includes(groupKey)
-                              ? currentKeys.filter((key) => key !== groupKey)
-                              : [...currentKeys, groupKey],
-                          ),
-                        resizingIssueId: resizing?.issueId,
-                        roadmapIssueById,
-                        timelineRef,
-                      }}
-                      rowComponent={RoadmapVirtualizedRow}
-                    />
-
-                    {/* Dependency Lines SVG Overlay */}
-                    {showDependencies && dependencyLines.length > 0 && (
-                      <svg
-                        className="pointer-events-none absolute top-0"
-                        style={{
-                          left: ISSUE_INFO_COLUMN_WIDTH,
-                          width: `calc(100% - ${ISSUE_INFO_COLUMN_WIDTH}px)`,
-                          height: 600,
-                        }}
-                        role="img"
-                        aria-label="Issue dependency lines"
-                      >
-                        <defs>
-                          <marker
-                            id="arrowhead"
-                            markerWidth="6"
-                            markerHeight="4"
-                            refX="5"
-                            refY="2"
-                            orient="auto"
-                          >
-                            <polygon points="0 0, 6 2, 0 4" fill="var(--color-status-warning)" />
-                          </marker>
-                        </defs>
-                        {dependencyLines.map((line) =>
-                          renderDependencyLine(line, activeRoadmapIssueId?.toString() ?? null),
-                        )}
-                      </svg>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </FlexItem>
-        </Card>
+        <RoadmapTimelineContainer
+          activeIssueId={activeRoadmapIssueId}
+          dependencyLines={dependencyLines}
+          filteredIssues={filteredIssues}
+          listRef={listRef}
+          roadmapRowController={roadmapRowController}
+          showDependencies={showDependencies}
+          timelineHeaderCells={timelineHeaderCells}
+          timelineLayoutWidth={timelineLayoutWidth}
+          timelineRows={timelineRows}
+          timelineBucketWidth={timelineBucketWidth}
+          todayMarkerOffsetPx={todayMarkerOffsetPx}
+        />
 
         {/* Issue Detail */}
         {selectedIssue && (

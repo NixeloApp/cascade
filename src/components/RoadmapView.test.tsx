@@ -119,12 +119,14 @@ vi.mock("react-window", () => ({
     style,
   }: {
     rowCount: number;
-    rowComponent: React.ComponentType<{
-      index: number;
-      style: React.CSSProperties;
-      rows: Array<{ _id?: Id<"issues"> }>;
-      activeIssueId: Id<"issues"> | null;
-    } & Record<string, unknown>>;
+    rowComponent: React.ComponentType<
+      {
+        index: number;
+        style: React.CSSProperties;
+        rows: Array<{ _id?: Id<"issues"> }>;
+        activeIssueId: Id<"issues"> | null;
+      } & Record<string, unknown>
+    >;
     rowProps: {
       rows: Array<{ _id?: Id<"issues"> }>;
       activeIssueId: Id<"issues"> | null;
@@ -197,13 +199,14 @@ const updateIssueDates = vi.fn();
 const createIssueLink = vi.fn();
 const removeIssueLink = vi.fn();
 
-function createMutationMock<Args extends unknown[], ReturnValue>(
-  procedure: (...args: Args) => ReturnValue,
+function createMutationMock<Args extends Record<string, unknown>, ReturnValue>(
+  procedure: (args: Args) => ReturnValue,
 ): ReactMutation<FunctionReference<"mutation">> {
-  const mutation = ((...args: Args) => procedure(...args)) as ReactMutation<
-    FunctionReference<"mutation">
-  >;
-  mutation.withOptimisticUpdate = () => mutation;
+  const mutation = Object.assign((args: Args) => procedure(args), {
+    withOptimisticUpdate() {
+      return mutation;
+    },
+  }) as ReactMutation<FunctionReference<"mutation">>;
   return mutation;
 }
 
