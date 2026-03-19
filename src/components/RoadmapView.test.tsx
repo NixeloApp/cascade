@@ -10,7 +10,7 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { formatDate } from "@/lib/dates";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
 import { TEST_IDS } from "@/lib/test-ids";
-import { fireEvent, render, screen } from "@/test/custom-render";
+import { fireEvent, render, screen, within } from "@/test/custom-render";
 import { RoadmapView } from "./RoadmapView";
 
 const { mockUseListNavigation } = vi.hoisted(() => ({
@@ -31,6 +31,11 @@ const SegmentedControlContext = createContext<{
 vi.mock("@/hooks/useConvexHelpers", () => ({
   useAuthenticatedMutation: vi.fn(),
   useAuthenticatedQuery: vi.fn(),
+}));
+
+vi.mock("@/lib/toast", () => ({
+  showError: vi.fn(),
+  showSuccess: vi.fn(),
 }));
 
 vi.mock("@/hooks/useListNavigation", () => ({
@@ -119,11 +124,11 @@ vi.mock("react-window", () => ({
       style: React.CSSProperties;
       rows: Array<{ _id?: Id<"issues"> }>;
       activeIssueId: Id<"issues"> | null;
-    }>;
+    } & Record<string, unknown>>;
     rowProps: {
       rows: Array<{ _id?: Id<"issues"> }>;
       activeIssueId: Id<"issues"> | null;
-    };
+    } & Record<string, unknown>;
     listRef: { current: { scrollToRow: (options: { index: number }) => void } | null };
     style?: React.CSSProperties;
   }) => {
@@ -189,11 +194,13 @@ const issue3Id = "issue_3" as Id<"issues">;
 const issue4Id = "issue_4" as Id<"issues">;
 const now = Date.UTC(2026, 2, 14);
 const updateIssueDates = vi.fn();
+const createIssueLink = vi.fn();
+const removeIssueLink = vi.fn();
 
-function createMutationMock(
-  procedure: typeof updateIssueDates,
+function createMutationMock<Args extends unknown[], ReturnValue>(
+  procedure: (...args: Args) => ReturnValue,
 ): ReactMutation<FunctionReference<"mutation">> {
-  const mutation = ((...args: Parameters<typeof procedure>) => procedure(...args)) as ReactMutation<
+  const mutation = ((...args: Args) => procedure(...args)) as ReactMutation<
     FunctionReference<"mutation">
   >;
   mutation.withOptimisticUpdate = () => mutation;
@@ -206,19 +213,34 @@ function mockRoadmapQueries({
   issues = [],
 }: {
   epics?: Array<{ _id: Id<"issues">; title: string }>;
-  links?: Array<{ fromIssueId: string; toIssueId: string; linkType: string }>;
+  links?: Array<{
+    linkId?: Id<"issueLinks">;
+    fromIssueId: string;
+    toIssueId: string;
+    linkType: string;
+  }>;
   issues?: RoadmapIssue[];
 } = {}) {
   let callIndex = 0;
+  const projectLinks = {
+    links: links.map((link, index) => ({
+      linkId: link.linkId ?? (`link_${index + 1}` as Id<"issueLinks">),
+      fromIssueId: link.fromIssueId,
+      toIssueId: link.toIssueId,
+      linkType: link.linkType,
+    })),
+  };
 
   mockUseAuthenticatedQuery.mockImplementation(() => {
-    const result = [epics, { links }, issues, { _id: projectId, name: "Roadmap Project" }][
+    const result = [epics, projectLinks, issues, { _id: projectId, name: "Roadmap Project" }][
       callIndex % 4
     ];
 
     callIndex += 1;
     return result;
   });
+
+  return { projectLinks };
 }
 
 describe("RoadmapView", () => {
@@ -227,11 +249,31 @@ describe("RoadmapView", () => {
     vi.useFakeTimers();
     vi.setSystemTime(now);
     updateIssueDates.mockResolvedValue(undefined);
+    createIssueLink.mockResolvedValue({ linkId: "new_link" as Id<"issueLinks"> });
+    removeIssueLink.mockResolvedValue({ success: true, deleted: true });
     mockUseListNavigation.mockReturnValue({ selectedIndex: -1 });
-    mockUseAuthenticatedMutation.mockReturnValue({
-      mutate: createMutationMock(updateIssueDates),
-      canAct: true,
-      isAuthLoading: false,
+    mockUseAuthenticatedMutation.mockImplementation(() => {
+      const mutate = createMutationMock((args: Record<string, unknown>) => {
+        if ("fromIssueId" in args && "toIssueId" in args) {
+          return createIssueLink(args);
+        }
+
+        if ("linkId" in args) {
+          return removeIssueLink(args);
+        }
+
+        if ("issueId" in args) {
+          return updateIssueDates(args);
+        }
+
+        throw new Error("Unexpected mutation arguments");
+      });
+
+      return {
+        mutate,
+        canAct: true,
+        isAuthLoading: false,
+      };
     });
   });
 
@@ -636,6 +678,131 @@ describe("RoadmapView", () => {
     expect(resetDependencyLines[0]).toHaveAttribute("opacity", "0.7");
     expect(resetDependencyLines[1]).toHaveAttribute("stroke-width", "2");
     expect(resetDependencyLines[1]).toHaveAttribute("opacity", "0.7");
+  });
+
+  it("manages visible blockers for the active roadmap issue", async () => {
+    const { projectLinks } = mockRoadmapQueries({
+      issues: [
+        {
+          _id: issue1Id,
+          key: "PROJ-1",
+          title: "Plan onboarding",
+          status: "todo",
+          startDate: Date.UTC(2026, 2, 10),
+          dueDate: Date.UTC(2026, 2, 20),
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Alex Rivera" },
+        },
+        {
+          _id: issue2Id,
+          key: "PROJ-2",
+          title: "Ship migration",
+          status: "in progress",
+          startDate: Date.UTC(2026, 2, 12),
+          dueDate: Date.UTC(2026, 2, 24),
+          type: "story",
+          priority: "high",
+          assignee: { name: "Sam Lee" },
+        },
+        {
+          _id: issue3Id,
+          key: "PROJ-3",
+          title: "Review launch",
+          status: "todo",
+          startDate: Date.UTC(2026, 2, 16),
+          dueDate: Date.UTC(2026, 2, 28),
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Terry Jones" },
+        },
+        {
+          _id: issue4Id,
+          key: "PROJ-4",
+          title: "Publish release notes",
+          status: "backlog",
+          startDate: Date.UTC(2026, 2, 18),
+          dueDate: Date.UTC(2026, 2, 30),
+          type: "task",
+          priority: "low",
+          assignee: { name: "Morgan Diaz" },
+        },
+      ],
+      links: [
+        {
+          linkId: "link_existing_blocker" as Id<"issueLinks">,
+          fromIssueId: issue2Id,
+          toIssueId: issue1Id,
+          linkType: "blocks",
+        },
+        {
+          linkId: "link_existing_blocked_issue" as Id<"issueLinks">,
+          fromIssueId: issue1Id,
+          toIssueId: issue3Id,
+          linkType: "blocks",
+        },
+      ],
+    });
+    createIssueLink.mockImplementation(async ({ fromIssueId, toIssueId, linkType }) => {
+      projectLinks.links.push({
+        linkId: "link_new_blocked_issue" as Id<"issueLinks">,
+        fromIssueId,
+        toIssueId,
+        linkType,
+      });
+      return { linkId: "link_new_blocked_issue" as Id<"issueLinks"> };
+    });
+    removeIssueLink.mockImplementation(async ({ linkId }) => {
+      projectLinks.links = projectLinks.links.filter((link) => link.linkId !== linkId);
+      return { success: true, deleted: true } as const;
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "PROJ-1" }));
+
+    const dependencyPanel = screen.getByTestId(TEST_IDS.ROADMAP.DEPENDENCY_PANEL);
+    expect(within(dependencyPanel).getByText("Dependencies for PROJ-1")).toBeInTheDocument();
+    expect(within(dependencyPanel).getByText("PROJ-2")).toBeInTheDocument();
+    expect(within(dependencyPanel).getByText("PROJ-3")).toBeInTheDocument();
+
+    fireEvent.click(within(dependencyPanel).getByText("PROJ-3"));
+    expect(screen.getByTestId("issue-detail-viewer")).toHaveTextContent(issue3Id);
+
+    fireEvent.click(screen.getByRole("button", { name: "PROJ-1" }));
+    const refreshedDependencyPanel = screen.getByTestId(TEST_IDS.ROADMAP.DEPENDENCY_PANEL);
+
+    await act(async () => {
+      fireEvent.click(
+        within(refreshedDependencyPanel).getByRole("button", {
+          name: "PROJ-4 · Publish release notes",
+        }),
+      );
+    });
+    const updatedDependencyPanel = screen.getByTestId(TEST_IDS.ROADMAP.DEPENDENCY_PANEL);
+    await act(async () => {
+      fireEvent.click(
+        within(updatedDependencyPanel).getByRole("button", { name: "Add blocked issue" }),
+      );
+    });
+
+    expect(createIssueLink).toHaveBeenCalledWith({
+      fromIssueId: issue1Id,
+      toIssueId: issue4Id,
+      linkType: "blocks",
+    });
+
+    await act(async () => {
+      fireEvent.click(
+        within(screen.getByTestId(TEST_IDS.ROADMAP.DEPENDENCY_PANEL)).getByLabelText(
+          "Remove blocked issue PROJ-3",
+        ),
+      );
+    });
+
+    expect(removeIssueLink).toHaveBeenCalledWith({
+      linkId: "link_existing_blocked_issue" as Id<"issueLinks">,
+    });
   });
 
   it("switches the roadmap header between month and week buckets", () => {

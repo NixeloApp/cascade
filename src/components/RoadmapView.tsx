@@ -16,9 +16,18 @@ import { PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { showError, showSuccess } from "@/lib/toast";
 import { useListNavigation } from "@/hooks/useListNavigation";
 import { formatDate } from "@/lib/dates";
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, LinkIcon } from "@/lib/icons";
+import {
+  CalendarDays,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  LinkIcon,
+  Plus,
+  X,
+} from "@/lib/icons";
 import { getPriorityColor, getStatusColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
@@ -110,6 +119,7 @@ const DIMMED_DEPENDENCY_STROKE_WIDTH = 1.5;
 const ACTIVE_DEPENDENCY_OPACITY = 1;
 const DEFAULT_DEPENDENCY_OPACITY = 0.7;
 const DIMMED_DEPENDENCY_OPACITY = 0.18;
+const ROADMAP_DEPENDENCY_TARGET_NONE = "none";
 
 interface RoadmapTimelineIssue {
   _id: Id<"issues">;
@@ -118,6 +128,11 @@ interface RoadmapTimelineIssue {
   dueDate?: number;
   priority: string;
   status: string;
+}
+
+interface RoadmapDependencyItem {
+  issue: RoadmapIssue;
+  linkId: Id<"issueLinks">;
 }
 
 interface ResizeState {
@@ -1506,6 +1521,353 @@ function renderDependencyLine(line: DependencyLine, activeIssueId: string | null
   );
 }
 
+function buildRoadmapDependencyItems({
+  activeIssueId,
+  issueLinks,
+  roadmapIssueById,
+}: {
+  activeIssueId: string | null;
+  issueLinks: FunctionReturnType<typeof api.issueLinks.getForProject> | undefined;
+  roadmapIssueById: Map<string, RoadmapIssue>;
+}) {
+  if (activeIssueId === null || !issueLinks?.links) {
+    return {
+      blockedBy: [] as RoadmapDependencyItem[],
+      blocks: [] as RoadmapDependencyItem[],
+    };
+  }
+
+  const blocks: RoadmapDependencyItem[] = [];
+  const blockedBy: RoadmapDependencyItem[] = [];
+
+  for (const link of issueLinks.links) {
+    if (link.linkType !== "blocks") {
+      continue;
+    }
+
+    if (link.fromIssueId === activeIssueId) {
+      const issue = roadmapIssueById.get(link.toIssueId.toString());
+      if (issue) {
+        blocks.push({ issue, linkId: link.linkId });
+      }
+    }
+
+    if (link.toIssueId === activeIssueId) {
+      const issue = roadmapIssueById.get(link.fromIssueId.toString());
+      if (issue) {
+        blockedBy.push({ issue, linkId: link.linkId });
+      }
+    }
+  }
+
+  const sortDependencyItems = (left: RoadmapDependencyItem, right: RoadmapDependencyItem) =>
+    left.issue.key.localeCompare(right.issue.key);
+
+  blocks.sort(sortDependencyItems);
+  blockedBy.sort(sortDependencyItems);
+
+  return { blockedBy, blocks };
+}
+
+function getAvailableRoadmapDependencyTargets({
+  activeIssueId,
+  blocks,
+  issues,
+}: {
+  activeIssueId: string | null;
+  blocks: RoadmapDependencyItem[];
+  issues: RoadmapIssue[] | undefined;
+}) {
+  if (activeIssueId === null || !issues) {
+    return [] as RoadmapIssue[];
+  }
+
+  const excludedIssueIds = new Set([
+    activeIssueId,
+    ...blocks.map((dependency) => dependency.issue._id.toString()),
+  ]);
+
+  return issues.filter((issue) => !excludedIssueIds.has(issue._id.toString()));
+}
+
+function RoadmapDependencySection({
+  emptyLabel,
+  items,
+  onFocusIssue,
+  onRemove,
+  removeLabelPrefix,
+  title,
+}: {
+  emptyLabel: string;
+  items: RoadmapDependencyItem[];
+  onFocusIssue: (issueId: Id<"issues">) => void;
+  onRemove: (linkId: Id<"issueLinks">) => void;
+  removeLabelPrefix: string;
+  title: string;
+}) {
+  return (
+    <Stack gap="sm" className="min-w-0 flex-1">
+      <Flex align="center" justify="between" gap="sm">
+        <Typography variant="label">{title}</Typography>
+        <Badge variant="secondary" shape="pill">
+          {items.length}
+        </Badge>
+      </Flex>
+
+      {items.length === 0 ? (
+        <Card padding="sm" variant="ghost">
+          <Typography variant="caption" color="secondary">
+            {emptyLabel}
+          </Typography>
+        </Card>
+      ) : (
+        <Stack gap="sm">
+          {items.map((item) => (
+            <Card recipe="dependencyRow" padding="sm" key={item.linkId}>
+              <Flex align="center" justify="between" gap="sm">
+                <Button
+                  variant="unstyled"
+                  className="min-w-0 flex-1 truncate p-0 text-left"
+                  onClick={() => onFocusIssue(item.issue._id)}
+                >
+                  <Flex direction="column" align="start" gap="xs" className="min-w-0">
+                    <Typography variant="label" className="truncate">
+                      {item.issue.key}
+                    </Typography>
+                    <Typography variant="caption" color="secondary" className="truncate">
+                      {item.issue.title}
+                    </Typography>
+                  </Flex>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onRemove(item.linkId)}
+                  aria-label={`${removeLabelPrefix} ${item.issue.key}`}
+                  title={`${removeLabelPrefix} ${item.issue.key}`}
+                >
+                  <Icon icon={X} size="sm" />
+                </Button>
+              </Flex>
+            </Card>
+          ))}
+        </Stack>
+      )}
+    </Stack>
+  );
+}
+
+function RoadmapDependencyPanel({
+  activeIssue,
+  availableTargetIssues,
+  blockedBy,
+  blocks,
+  canEdit,
+  onFocusIssue,
+}: {
+  activeIssue: RoadmapIssue;
+  availableTargetIssues: RoadmapIssue[];
+  blockedBy: RoadmapDependencyItem[];
+  blocks: RoadmapDependencyItem[];
+  canEdit: boolean;
+  onFocusIssue: (issueId: Id<"issues">) => void;
+}) {
+  const [dependencyTargetIssueId, setDependencyTargetIssueId] = useState<
+    Id<"issues"> | typeof ROADMAP_DEPENDENCY_TARGET_NONE
+  >(ROADMAP_DEPENDENCY_TARGET_NONE);
+  const { mutate: createIssueLink } = useAuthenticatedMutation(api.issueLinks.create);
+  const { mutate: removeIssueLink } = useAuthenticatedMutation(api.issueLinks.remove);
+
+  const handleAddDependency = async () => {
+    if (dependencyTargetIssueId === ROADMAP_DEPENDENCY_TARGET_NONE) {
+      return;
+    }
+
+    try {
+      await createIssueLink({
+        fromIssueId: activeIssue._id,
+        toIssueId: dependencyTargetIssueId,
+        linkType: "blocks",
+      });
+      showSuccess("Blocking dependency added");
+      setDependencyTargetIssueId(ROADMAP_DEPENDENCY_TARGET_NONE);
+    } catch (error) {
+      showError(error, "Failed to add blocking dependency");
+    }
+  };
+
+  const handleRemoveDependency = async (linkId: Id<"issueLinks">) => {
+    try {
+      await removeIssueLink({ linkId });
+      showSuccess("Blocking dependency removed");
+    } catch (error) {
+      showError(error, "Failed to remove blocking dependency");
+    }
+  };
+
+  return (
+    <Card
+      variant="default"
+      padding="md"
+      className="mb-4 shrink-0"
+      data-testid={TEST_IDS.ROADMAP.DEPENDENCY_PANEL}
+    >
+      <Stack gap="md">
+        <Flex align="center" justify="between" gap="md" wrap>
+          <Stack gap="xs">
+            <Flex align="center" gap="sm">
+              <Icon icon={LinkIcon} size="sm" />
+              <Typography variant="label">Dependencies for {activeIssue.key}</Typography>
+            </Flex>
+            <Typography variant="caption" color="secondary">
+              Manage visible roadmap blockers without leaving the timeline.
+            </Typography>
+          </Stack>
+
+          {canEdit ? (
+            <Flex align="center" gap="sm" wrap>
+              <Select
+                value={dependencyTargetIssueId}
+                onValueChange={(value) =>
+                  setDependencyTargetIssueId(
+                    value === ROADMAP_DEPENDENCY_TARGET_NONE
+                      ? ROADMAP_DEPENDENCY_TARGET_NONE
+                      : (value as Id<"issues">),
+                  )
+                }
+              >
+                <SelectTrigger className="w-64">
+                  <SelectValue placeholder="Issue this blocks" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ROADMAP_DEPENDENCY_TARGET_NONE}>Select issue</SelectItem>
+                  {availableTargetIssues.map((issue) => (
+                    <SelectItem key={issue._id} value={issue._id}>
+                      {issue.key} · {issue.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  void handleAddDependency();
+                }}
+                disabled={
+                  dependencyTargetIssueId === ROADMAP_DEPENDENCY_TARGET_NONE ||
+                  availableTargetIssues.length === 0
+                }
+                aria-label="Add blocked issue"
+              >
+                <Icon icon={Plus} size="sm" />
+                Add blocked issue
+              </Button>
+            </Flex>
+          ) : null}
+        </Flex>
+
+        <Flex gap="md" wrap>
+          <RoadmapDependencySection
+            title="Blocks"
+            items={blocks}
+            emptyLabel="This issue does not block any visible roadmap items yet."
+            onFocusIssue={onFocusIssue}
+            onRemove={handleRemoveDependency}
+            removeLabelPrefix="Remove blocked issue"
+          />
+          <RoadmapDependencySection
+            title="Blocked by"
+            items={blockedBy}
+            emptyLabel="No visible roadmap blockers yet."
+            onFocusIssue={onFocusIssue}
+            onRemove={handleRemoveDependency}
+            removeLabelPrefix="Remove blocker"
+          />
+        </Flex>
+      </Stack>
+    </Card>
+  );
+}
+
+type RoadmapRowData = {
+  rows: TimelineRow[];
+  activeIssueId: Id<"issues"> | null;
+  canEdit: boolean;
+  draggingIssueId?: Id<"issues">;
+  getPositionOnTimeline: (date: number) => number;
+  onBarDragStart: RoadmapIssueRowProps["onBarDragStart"];
+  onOpenIssue: (issueId: Id<"issues">) => void;
+  onResizeStart: RoadmapIssueRowProps["onResizeStart"];
+  onToggleChildren: (issueId: Id<"issues">) => void;
+  onToggleGroup: (groupKey: string) => void;
+  resizingIssueId?: Id<"issues">;
+  roadmapIssueById: Map<string, RoadmapIssue>;
+  timelineRef: React.RefObject<HTMLDivElement | null>;
+};
+
+function RoadmapVirtualizedRow({
+  rows,
+  activeIssueId,
+  canEdit,
+  draggingIssueId,
+  getPositionOnTimeline,
+  index,
+  onBarDragStart,
+  onOpenIssue,
+  onResizeStart,
+  onToggleChildren,
+  onToggleGroup,
+  resizingIssueId,
+  roadmapIssueById,
+  style,
+  timelineRef,
+}: RoadmapRowData & {
+  index: number;
+  style: React.CSSProperties;
+}) {
+  const row = rows[index];
+  if (!row) return null;
+
+  if (row.type === "group") {
+    return (
+      <RoadmapGroupRow
+        getPositionOnTimeline={getPositionOnTimeline}
+        group={row.group}
+        onToggle={onToggleGroup}
+        style={style}
+      />
+    );
+  }
+
+  return (
+    <RoadmapIssueRow
+      canEdit={canEdit}
+      childCount={row.childCount}
+      childrenCollapsed={row.childrenCollapsed}
+      depth={row.depth}
+      draggingIssueId={draggingIssueId}
+      getPositionOnTimeline={getPositionOnTimeline}
+      hasChildren={row.hasChildren}
+      issue={row.issue}
+      onBarDragStart={onBarDragStart}
+      onOpenIssue={onOpenIssue}
+      onToggleChildren={onToggleChildren}
+      onResizeStart={onResizeStart}
+      resizingIssueId={resizingIssueId}
+      selected={row.issue._id === activeIssueId}
+      summaryCompletedCount={row.summaryCompletedCount}
+      summaryDueDate={row.summaryDueDate}
+      summaryStartDate={row.summaryStartDate}
+      style={style}
+      timelineRef={timelineRef}
+      parentIssue={
+        row.parentIssueId ? (roadmapIssueById.get(row.parentIssueId.toString()) ?? null) : null
+      }
+    />
+  );
+}
+
 /** Compute dependency lines from issue links */
 function computeDependencyLines({
   showDependencies,
@@ -1740,6 +2102,20 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   const roadmapIssueById = new Map(
     (filteredIssues ?? []).map((issue) => [issue._id.toString(), issue]),
   );
+  const activeRoadmapIssue =
+    activeRoadmapIssueId === null
+      ? null
+      : (roadmapIssueById.get(activeRoadmapIssueId.toString()) ?? null);
+  const activeRoadmapIssueDependencies = buildRoadmapDependencyItems({
+    activeIssueId: activeRoadmapIssueId?.toString() ?? null,
+    issueLinks,
+    roadmapIssueById,
+  });
+  const availableRoadmapDependencyTargets = getAvailableRoadmapDependencyTargets({
+    activeIssueId: activeRoadmapIssueId?.toString() ?? null,
+    blocks: activeRoadmapIssueDependencies.blocks,
+    issues: filteredIssues,
+  });
   const issueRowIndexMap = buildIssueRowIndexMap(timelineRows);
 
   // Sync keyboard selection with scroll
@@ -1761,75 +2137,6 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     issueRowIndexMap,
     getPositionOnTimeline,
   });
-
-  // Row renderer for virtualization
-  type RowData = {
-    rows: TimelineRow[];
-    activeIssueId: Id<"issues"> | null;
-  };
-
-  function Row({
-    rows,
-    activeIssueId,
-    index,
-    style,
-  }: RowData & {
-    index: number;
-    style: React.CSSProperties;
-  }) {
-    const row = rows[index];
-    if (!row) return null;
-
-    if (row.type === "group") {
-      return (
-        <RoadmapGroupRow
-          getPositionOnTimeline={getPositionOnTimeline}
-          group={row.group}
-          onToggle={(groupKey) =>
-            setCollapsedGroupKeys((currentKeys) =>
-              currentKeys.includes(groupKey)
-                ? currentKeys.filter((key) => key !== groupKey)
-                : [...currentKeys, groupKey],
-            )
-          }
-          style={style}
-        />
-      );
-    }
-
-    return (
-      <RoadmapIssueRow
-        canEdit={canEdit}
-        childCount={row.childCount}
-        childrenCollapsed={row.childrenCollapsed}
-        depth={row.depth}
-        draggingIssueId={dragging?.issueId}
-        getPositionOnTimeline={getPositionOnTimeline}
-        hasChildren={row.hasChildren}
-        issue={row.issue}
-        onBarDragStart={handleBarDragStart}
-        onOpenIssue={(issueId) => setSelectedIssue(issueId)}
-        onToggleChildren={(issueId) =>
-          setCollapsedParentIssueIds((currentIds) =>
-            currentIds.includes(issueId)
-              ? currentIds.filter((currentId) => currentId !== issueId)
-              : [...currentIds, issueId],
-          )
-        }
-        onResizeStart={handleResizeStart}
-        resizingIssueId={resizing?.issueId}
-        selected={row.issue._id === activeIssueId}
-        summaryCompletedCount={row.summaryCompletedCount}
-        summaryDueDate={row.summaryDueDate}
-        summaryStartDate={row.summaryStartDate}
-        style={style}
-        timelineRef={timelineRef}
-        parentIssue={
-          row.parentIssueId ? (roadmapIssueById.get(row.parentIssueId.toString()) ?? null) : null
-        }
-      />
-    );
-  }
 
   // Loading State
   if (!(project && filteredIssues && epics)) {
@@ -2061,6 +2368,18 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
           </Card>
         </Flex>
 
+        {activeRoadmapIssue ? (
+          <RoadmapDependencyPanel
+            key={activeRoadmapIssue._id}
+            activeIssue={activeRoadmapIssue}
+            availableTargetIssues={availableRoadmapDependencyTargets}
+            blockedBy={activeRoadmapIssueDependencies.blockedBy}
+            blocks={activeRoadmapIssueDependencies.blocks}
+            canEdit={canEdit}
+            onFocusIssue={setSelectedIssue}
+          />
+        ) : null}
+
         {/* Timeline Container */}
         <Card variant="default" padding="none" className="flex-1 overflow-hidden">
           <FlexItem flex="1">
@@ -2114,13 +2433,37 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                   {/* Timeline Body (Virtualized) */}
                   <div className="relative">
                     {renderRoadmapTodayMarker(todayMarkerOffsetPx, "body")}
-                    <List<RowData>
+                    <List<RoadmapRowData>
                       listRef={listRef}
                       style={{ height: 600, width: "100%" }}
                       rowCount={timelineRows.length}
                       rowHeight={ROADMAP_ROW_HEIGHT}
-                      rowProps={{ rows: timelineRows, activeIssueId: activeRoadmapIssueId }}
-                      rowComponent={Row}
+                      rowProps={{
+                        rows: timelineRows,
+                        activeIssueId: activeRoadmapIssueId,
+                        canEdit,
+                        draggingIssueId: dragging?.issueId,
+                        getPositionOnTimeline,
+                        onBarDragStart: handleBarDragStart,
+                        onOpenIssue: setSelectedIssue,
+                        onResizeStart: handleResizeStart,
+                        onToggleChildren: (issueId) =>
+                          setCollapsedParentIssueIds((currentIds) =>
+                            currentIds.includes(issueId)
+                              ? currentIds.filter((currentId) => currentId !== issueId)
+                              : [...currentIds, issueId],
+                          ),
+                        onToggleGroup: (groupKey) =>
+                          setCollapsedGroupKeys((currentKeys) =>
+                            currentKeys.includes(groupKey)
+                              ? currentKeys.filter((key) => key !== groupKey)
+                              : [...currentKeys, groupKey],
+                          ),
+                        resizingIssueId: resizing?.issueId,
+                        roadmapIssueById,
+                        timelineRef,
+                      }}
+                      rowComponent={RoadmapVirtualizedRow}
                     />
 
                     {/* Dependency Lines SVG Overlay */}
