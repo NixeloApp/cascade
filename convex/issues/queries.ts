@@ -309,6 +309,7 @@ async function includeRoadmapParentContextIssues(
   ctx: QueryCtx,
   projectId: Id<"projects">,
   issues: Doc<"issues">[],
+  excludeEpics?: boolean,
 ) {
   const parentIds = [
     ...new Set(issues.flatMap((issue) => (issue.parentId ? [issue.parentId] : []))),
@@ -326,7 +327,8 @@ async function includeRoadmapParentContextIssues(
       (parentIssue) =>
         parentIssue.projectId === projectId &&
         !parentIssue.isDeleted &&
-        !existingIssueIds.has(parentIssue._id),
+        !existingIssueIds.has(parentIssue._id) &&
+        !(excludeEpics && parentIssue.type === "epic"),
     ),
   ];
 }
@@ -394,7 +396,12 @@ export const listRoadmapIssues = authenticatedQuery({
       issues = issues.filter((i) => i.dueDate !== undefined);
     }
     if (args.includeSubtasks) {
-      issues = await includeRoadmapParentContextIssues(ctx, args.projectId, issues);
+      issues = await includeRoadmapParentContextIssues(
+        ctx,
+        args.projectId,
+        issues,
+        args.excludeEpics,
+      );
     }
 
     return await enrichIssues(ctx, issues);

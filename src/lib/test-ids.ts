@@ -234,6 +234,8 @@ export const TEST_IDS = {
     TODAY_MARKER_HEADER: "roadmap-today-marker-header",
     /** @see src/components/RoadmapView.tsx */
     TODAY_MARKER_BODY: "roadmap-today-marker-body",
+    /** @see src/components/RoadmapView.tsx */
+    RANGE_LABEL: "roadmap-range-label",
   },
 
   // ============================================================

@@ -2036,7 +2036,12 @@ function RoadmapHeaderControls({
           </Button>
         </Flex>
 
-        <Typography variant="label" color="secondary" className="min-w-36">
+        <Typography
+          variant="label"
+          color="secondary"
+          className="min-w-36"
+          data-testid={TEST_IDS.ROADMAP.RANGE_LABEL}
+        >
           {timelineRangeLabel}
         </Typography>
 

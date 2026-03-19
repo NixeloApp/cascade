@@ -253,6 +253,7 @@ export function CreateEventModal({
                             )}
                             title={color}
                             aria-label={`Select ${color} color`}
+                            aria-pressed={isActive}
                           />
                         );
                       })}
@@ -396,7 +397,7 @@ export function CreateEventModal({
                         )
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger id="event-project">
                         <SelectValue placeholder="No project" />
                       </SelectTrigger>
                       <SelectContent>

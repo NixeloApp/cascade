@@ -726,7 +726,8 @@ export class ProjectsPage extends BasePage {
   async expectRoadmapCurrentMonthVisible(date = new Date()) {
     await this.expectRoadmapLoaded();
     const currentMonth = date.toLocaleString("default", { month: "short" });
-    await expect(this.page.getByText(currentMonth)).toBeVisible();
+    const rangeLabel = this.page.getByTestId(TEST_IDS.ROADMAP.RANGE_LABEL);
+    await expect(rangeLabel).toContainText(currentMonth);
   }
 
   async getRoadmapEpicFilterState(): Promise<"visible" | "hidden"> {
