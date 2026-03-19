@@ -552,11 +552,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                             </Flex>
                           </div>
                           <div className="min-w-0">
-                            <Typography
-                              variant="caption"
-                              color="tertiary"
-                              className="uppercase tracking-wider"
-                            >
+                            <Typography variant="eyebrow" color="tertiary">
                               Workspace
                             </Typography>
                             <Typography variant="large" className="max-w-36 truncate">

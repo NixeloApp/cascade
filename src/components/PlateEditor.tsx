@@ -395,17 +395,13 @@ function EditorCanvas({
 
               <Grid cols={1} colsSm={2} gap="md">
                 <Stack gap="xs">
-                  <Typography variant="caption" className="uppercase tracking-widest">
-                    Suggested outline
-                  </Typography>
+                  <Typography variant="eyebrowWide">Suggested outline</Typography>
                   <Typography variant="small" color="secondary">
                     Summary, decisions, follow-ups, owners, and review date.
                   </Typography>
                 </Stack>
                 <Stack gap="xs">
-                  <Typography variant="caption" className="uppercase tracking-widest">
-                    Quick actions
-                  </Typography>
+                  <Typography variant="eyebrowWide">Quick actions</Typography>
                   <Typography variant="small" color="secondary">
                     Turn decisions into checklists, link risks to issues, and assign owners while
                     the discussion is still fresh.
@@ -417,17 +413,13 @@ function EditorCanvas({
             <div className="h-full p-4 bg-ui-bg/88 lg:col-span-2">
               <Stack gap="sm">
                 <Stack gap="xs">
-                  <Typography variant="caption" className="uppercase tracking-widest">
-                    Starter flow
-                  </Typography>
+                  <Typography variant="eyebrowWide">Starter flow</Typography>
                   <Typography variant="small" color="secondary">
                     Capture the summary first, then turn action items into tasks or linked issues.
                   </Typography>
                 </Stack>
                 <Stack gap="xs">
-                  <Typography variant="caption" className="uppercase tracking-widest">
-                    Suggested first section
-                  </Typography>
+                  <Typography variant="eyebrowWide">Suggested first section</Typography>
                   <Typography variant="small" color="secondary">
                     Add a short context paragraph, then break out the decisions, open risks, and
                     next steps before expanding into full notes.
