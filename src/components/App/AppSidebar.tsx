@@ -368,6 +368,12 @@ function WorkspaceNavItem({
   onCreateTeam,
   location,
 }: WorkspaceNavItemProps) {
+  const workspaceBasePath = ROUTES.workspaces.detail.build(orgSlug, workspace.slug);
+  const isWorkspaceRouteActive =
+    location.pathname === workspaceBasePath ||
+    location.pathname.startsWith(`${workspaceBasePath}/`);
+  const shouldShowTeams = isExpanded || isWorkspaceRouteActive;
+
   return (
     <li className="ml-2 group list-none">
       <Flex align="center" gap="xs">
@@ -375,10 +381,14 @@ function WorkspaceNavItem({
           variant="ghost"
           size="compact"
           onClick={() => onToggleWorkspace(workspace.slug)}
-          aria-expanded={isExpanded}
-          aria-label={isExpanded ? `Collapse ${workspace.name}` : `Expand ${workspace.name}`}
+          aria-expanded={shouldShowTeams}
+          aria-label={shouldShowTeams ? `Collapse ${workspace.name}` : `Expand ${workspace.name}`}
         >
-          {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          {shouldShowTeams ? (
+            <ChevronDown className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
         </IconButton>
         <NavSubItem
           to={ROUTES.workspaces.detail.path}
@@ -401,7 +411,7 @@ function WorkspaceNavItem({
         </IconButton>
       </Flex>
 
-      {isExpanded && (
+      {shouldShowTeams && (
         <ul className="list-none">
           {teams.map((team: SidebarTeam) => (
             <SidebarTeamItem

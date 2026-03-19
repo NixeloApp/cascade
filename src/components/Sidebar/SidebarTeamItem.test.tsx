@@ -113,17 +113,20 @@ describe("SidebarTeamItem", () => {
     const user = userEvent.setup();
     const onToggle = vi.fn();
     const onNavClick = vi.fn();
-    mockUseLocation.mockReturnValue(createLocation("/acme/workspaces/engineering/teams/frontend"));
+    mockUseLocation.mockReturnValue(createLocation("/acme/workspaces/engineering/board"));
 
     const { rerender } = render(
       <SidebarTeamItem {...defaultProps} onToggle={onToggle} onNavClick={onNavClick} />,
     );
 
-    const teamLink = screen.getByRole("link", { name: "Frontend" });
-    expect(teamLink).toHaveAttribute("aria-current", "page");
-
     await user.click(screen.getByRole("button", { name: "Expand Frontend" }));
     expect(onToggle).toHaveBeenCalledWith("frontend");
+
+    mockUseLocation.mockReturnValue(createLocation("/acme/workspaces/engineering/teams/frontend"));
+    rerender(<SidebarTeamItem {...defaultProps} onToggle={onToggle} onNavClick={onNavClick} />);
+
+    const teamLink = screen.getByRole("link", { name: "Frontend" });
+    expect(teamLink).toHaveAttribute("aria-current", "page");
 
     await user.click(teamLink);
     expect(onNavClick).toHaveBeenCalledTimes(1);
@@ -135,6 +138,27 @@ describe("SidebarTeamItem", () => {
     rerender(<SidebarTeamItem {...defaultProps} />);
 
     expect(screen.getByRole("link", { name: "Frontend" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("auto-expands the active team route and reveals its projects", () => {
+    mockUseLocation.mockReturnValue(createLocation("/acme/workspaces/engineering/teams/frontend"));
+    mockUsePaginatedQuery.mockReturnValue({
+      results: [
+        {
+          _id: "project_1",
+          key: "FE",
+          name: "Frontend Platform",
+        },
+      ],
+      status: "Exhausted",
+      loadMore: vi.fn(),
+      isLoading: false,
+    });
+
+    render(<SidebarTeamItem {...defaultProps} />);
+
+    expect(screen.getByRole("button", { name: "Collapse Frontend" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "FE - Frontend Platform" })).toBeInTheDocument();
   });
 
   it("shows a loading state for expanded team projects before the first page resolves", () => {

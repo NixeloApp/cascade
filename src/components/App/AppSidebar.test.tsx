@@ -1,6 +1,6 @@
 import { useLocation } from "@tanstack/react-router";
 import userEvent from "@testing-library/user-event";
-import { useQuery } from "convex/react";
+import { usePaginatedQuery, useQuery } from "convex/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import { render, screen, waitFor } from "@/test/custom-render";
@@ -29,6 +29,7 @@ vi.mock("@tanstack/react-router", async () => {
 
 vi.mock("convex/react", () => ({
   useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
+  usePaginatedQuery: vi.fn(),
   useQuery: vi.fn(),
   useMutation: vi.fn(),
 }));
@@ -102,6 +103,12 @@ describe("AppSidebar Accessibility", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (useQuery as any).mockImplementation(mockUseQueryImplementation);
+    (usePaginatedQuery as any).mockReturnValue({
+      results: [],
+      status: "Exhausted",
+      loadMore: vi.fn(),
+      isLoading: false,
+    });
     vi.mocked(useSidebarState).mockReturnValue({
       isCollapsed: false,
       isMobileOpen: false,
@@ -321,6 +328,43 @@ describe("AppSidebar Accessibility", () => {
     await user.type(screen.getByLabelText("Search workspaces"), "26");
 
     expect(screen.getByRole("link", { name: "Workspace 26" })).toBeInTheDocument();
+  });
+
+  it("auto-expands the active workspace and team branch to reveal the project tree", () => {
+    (useLocation as any).mockReturnValue({
+      pathname: "/demo-org/workspaces/product/teams/engineering/board",
+    });
+    (useQuery as any).mockImplementation((query: string) => {
+      if (query === "documents.listForSidebar") return { documents: [] };
+      if (query === "documents.listFavorites") return [];
+      if (query === "workspaces.listForSidebar") {
+        return [{ _id: "workspace-1", name: "Product", slug: "product" }];
+      }
+      if (query === "teams.listForSidebar") {
+        return [
+          {
+            _id: "team-1",
+            name: "Engineering",
+            slug: "engineering",
+            workspaceId: "workspace-1",
+          },
+        ];
+      }
+      if (query === "users.isOrganizationAdmin") return false;
+      return undefined;
+    });
+    (usePaginatedQuery as any).mockReturnValue({
+      results: [{ _id: "project-1", key: "DEMO", name: "Demo Project" }],
+      status: "Exhausted",
+      loadMore: vi.fn(),
+      isLoading: false,
+    });
+
+    render(<AppSidebar />);
+
+    expect(screen.getByRole("button", { name: "Collapse Product" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Collapse Engineering" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "DEMO - Demo Project" })).toBeInTheDocument();
   });
 
   describe("AppSidebar Mobile Behavior", () => {
