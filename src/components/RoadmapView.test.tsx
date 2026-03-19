@@ -13,16 +13,6 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { fireEvent, render, screen, within } from "@/test/custom-render";
 import { RoadmapView } from "./RoadmapView";
 
-/** UTC-safe formatDate for tests using Date.UTC timestamps */
-function formatDateUTC(timestamp: number): string {
-  return formatDate(timestamp, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-}
-
 const { mockUseListNavigation } = vi.hoisted(() => ({
   mockUseListNavigation: vi.fn(),
 }));
@@ -438,7 +428,7 @@ describe("RoadmapView", () => {
     expect(screen.getByText("Medium")).toBeInTheDocument();
     expect(screen.getByText("Alex Rivera")).toBeInTheDocument();
     expect(
-      screen.getByText(`${formatDateUTC(startDate)} - ${formatDateUTC(dueDate)}`),
+      screen.getByText(`${formatDate(startDate)} - ${formatDate(dueDate)}`),
     ).toBeInTheDocument();
   });
 
@@ -569,9 +559,7 @@ describe("RoadmapView", () => {
     expect(screen.getByTitle("Task rollup for PROJ-1 · 1 of 2 complete")).toHaveTextContent("50%");
     expect(screen.queryByTestId(`roadmap-bar-${issue1Id}`)).not.toBeInTheDocument();
     expect(
-      screen.getByText(
-        `Rollup ${formatDateUTC(subtaskStartDate)} - ${formatDateUTC(childDueDate)}`,
-      ),
+      screen.getByText(`Rollup ${formatDate(subtaskStartDate)} - ${formatDate(childDueDate)}`),
     ).toBeInTheDocument();
   });
 
