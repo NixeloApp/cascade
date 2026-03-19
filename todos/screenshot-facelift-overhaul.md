@@ -16,8 +16,7 @@ Core visual facelift work is done. Only the unfinished screenshot and validation
 
 ### Interactive States Still Not Captured
 
-- [ ] Settings: profile with avatar/cover, 2FA setup, workspace/project settings
-- [ ] Navigation: sidebar favorites, project tree, mobile hamburger
+- [ ] Navigation: sidebar favorites, project tree
 - [ ] Error: permission denied, loading skeletons, toasts, form validation
 
 ### CI Integration

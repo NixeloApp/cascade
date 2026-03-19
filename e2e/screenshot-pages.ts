@@ -250,6 +250,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-notification-snooze-popover$/, "21-notifications", "-snooze-popover"],
   [/^filled-notifications-archived$/, "21-notifications", "-archived"],
   [/^filled-notifications-filter-active$/, "21-notifications", "-filter-active"],
+  [/^filled-mobile-hamburger$/, "04-dashboard", "-mobile-hamburger"],
   // Project board: filled-project-xxx-board → 06-board
   [/^filled-project-.+-board$/, "06-board", ""],
   [/^filled-project-.+-create-issue-modal$/, "06-board", "-create-issue-modal"],
@@ -3642,6 +3643,43 @@ async function screenshotFilledStates(
     });
   }
 
+  if (
+    shouldCapture(p, "mobile-hamburger") &&
+    (currentConfigPrefix === "tablet-light" || currentConfigPrefix === "mobile-light")
+  ) {
+    await runCaptureStep("mobile hamburger", async () => {
+      const dashboardUrl = ROUTES.dashboard.build(orgSlug);
+      await page
+        .goto(`${BASE_URL}${dashboardUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await waitForExpectedContent(page, dashboardUrl, "dashboard");
+      await waitForScreenshotReady(page);
+      await dismissAllDialogs(page);
+      const trigger = page.getByRole("button", { name: /toggle sidebar menu/i });
+      await trigger.waitFor({ state: "visible", timeout: 5000 });
+      await trigger.click();
+      await page.waitForFunction(() => {
+        return (
+          document.querySelectorAll('button[aria-label="Close sidebar"]').length >= 2 &&
+          document.querySelector("aside")?.className.includes("translate-x-0") === true
+        );
+      });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "mobile-hamburger");
+      const closeButton = page
+        .locator('button[aria-label="Close sidebar"]')
+        .filter({ has: page.locator("svg") })
+        .last();
+      if (await closeButton.isVisible().catch(() => false)) {
+        await closeButton.click();
+        await waitForScreenshotReady(page);
+      }
+    });
+  }
+
   // 404 page (navigate to bogus URL while authenticated)
   if (shouldCapture(p, "404-page")) {
     await runCaptureStep("404 page", async () => {
@@ -4621,6 +4659,7 @@ const DRY_RUN_PAGES = [
   "filled-notifications-filter-active",
   // Filled states — navigation / shell states
   "filled-sidebar-collapsed",
+  "filled-mobile-hamburger",
   // Error / edge states
   "filled-404-page",
 ];
