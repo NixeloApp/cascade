@@ -365,6 +365,43 @@ describe("NotificationCenter", () => {
     });
   });
 
+  it("should snooze a notification from the snooze popover", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(Date, "now").mockReturnValue(1_700_000_000_000);
+    const mockNotifications = [
+      {
+        _id: "notif-3",
+        type: "issue_assigned",
+        title: "Snooze me",
+        message: "Reminder",
+        isRead: false,
+        _creationTime: Date.now(),
+      },
+    ];
+
+    vi.mocked(usePaginatedQuery).mockReturnValue({
+      results: mockNotifications,
+      status: "Exhausted",
+      isLoading: false,
+      loadMore: vi.fn(),
+    });
+    vi.mocked(useQuery).mockReturnValue(1);
+    mockSnooze.mockResolvedValue(undefined);
+
+    render(<NotificationCenter />);
+
+    await user.click(screen.getByRole("button", { name: /notifications/i }));
+    await user.click(screen.getByRole("button", { name: "Snooze notification" }));
+    await user.click(screen.getByRole("button", { name: "3 hours" }));
+
+    await waitFor(() => {
+      expect(mockSnooze).toHaveBeenCalledWith({
+        id: "notif-3",
+        snoozedUntil: 1_700_000_000_000 + 3 * HOUR,
+      });
+    });
+  });
+
   it("should format time correctly", async () => {
     const user = userEvent.setup();
     const now = Date.now();

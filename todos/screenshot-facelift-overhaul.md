@@ -16,7 +16,6 @@ Core visual facelift work is done. Only the unfinished screenshot and validation
 
 ### Interactive States Still Not Captured
 
-- [ ] Notifications: snooze popover
 - [ ] Settings: profile with avatar/cover, 2FA setup, workspace/project settings
 - [ ] Navigation: sidebar favorites, project tree, mobile hamburger
 - [ ] Error: permission denied, loading skeletons, toasts, form validation

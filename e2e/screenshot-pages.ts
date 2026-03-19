@@ -94,9 +94,6 @@ const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
   "filled-clients": "26-clients",
   "filled-time-tracking": "22-time-tracking",
   "filled-sidebar-collapsed": "04-dashboard",
-  "filled-notification-popover": "21-notifications",
-  "filled-notifications-archived": "21-notifications",
-  "filled-notifications-filter-active": "21-notifications",
   "filled-404-page": "40-error",
   "filled-authentication": "31-authentication",
   "filled-add-ons": "32-add-ons",
@@ -249,6 +246,10 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-time-tracking-manual-entry-modal$/, "22-time-tracking", "-manual-entry-modal"],
   [/^filled-settings-profile-avatar-upload-modal$/, "12-settings", "-profile-avatar-upload-modal"],
   [/^filled-settings-profile-cover-upload-modal$/, "12-settings", "-profile-cover-upload-modal"],
+  [/^filled-notification-popover$/, "21-notifications", "-popover"],
+  [/^filled-notification-snooze-popover$/, "21-notifications", "-snooze-popover"],
+  [/^filled-notifications-archived$/, "21-notifications", "-archived"],
+  [/^filled-notifications-filter-active$/, "21-notifications", "-filter-active"],
   // Project board: filled-project-xxx-board → 06-board
   [/^filled-project-.+-board$/, "06-board", ""],
   [/^filled-project-.+-create-issue-modal$/, "06-board", "-create-issue-modal"],
@@ -3697,6 +3698,27 @@ async function screenshotFilledStates(
 
   // ── Notification interactive states ──
 
+  async function openNotificationPanel(): Promise<Locator> {
+    const bellButton = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_BUTTON);
+    const panel = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_PANEL);
+
+    await bellButton.waitFor({ state: "visible", timeout: 5000 });
+
+    if (await panel.isVisible().catch(() => false)) {
+      return panel;
+    }
+
+    await bellButton.click();
+    try {
+      await panel.waitFor({ state: "visible", timeout: 2500 });
+      return panel;
+    } catch {
+      await bellButton.click();
+      await panel.waitFor({ state: "visible", timeout: 5000 });
+      return panel;
+    }
+  }
+
   // Notification popover (bell icon in header)
   if (shouldCapture(p, "notification-popover")) {
     await runCaptureStep("notification popover", async () => {
@@ -3710,14 +3732,38 @@ async function screenshotFilledStates(
       await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
-      const bellButton = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_BUTTON);
-      await bellButton.waitFor({ state: "visible", timeout: 5000 });
-      await bellButton.click();
-      const panel = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_PANEL);
-      await panel.waitFor({ state: "visible", timeout: 5000 });
+      await openNotificationPanel();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "notification-popover");
       // Close popover
+      await page.keyboard.press("Escape");
+    });
+  }
+
+  if (shouldCapture(p, "notification-snooze-popover")) {
+    await runCaptureStep("notification snooze popover", async () => {
+      await page
+        .goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
+      await waitForScreenshotReady(page);
+      await dismissAllDialogs(page);
+
+      const firstNotification = page.locator("[data-notification-item]").first();
+      await firstNotification.waitFor({ state: "visible", timeout: 5000 });
+      await page.waitForTimeout(300);
+      await firstNotification.hover();
+
+      const snoozeButton = firstNotification.getByRole("button", { name: /snooze notification/i });
+      await snoozeButton.waitFor({ state: "visible", timeout: 5000 });
+      await snoozeButton.click();
+
+      await page.getByText(/snooze until/i).waitFor({ state: "visible", timeout: 5000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, p, "notification-snooze-popover");
       await page.keyboard.press("Escape");
     });
   }
@@ -4570,6 +4616,7 @@ const DRY_RUN_PAGES = [
   "filled-project-PROJ-roadmap-timeline-selector",
   // Filled states — notification interactive states
   "filled-notification-popover",
+  "filled-notification-snooze-popover",
   "filled-notifications-archived",
   "filled-notifications-filter-active",
   // Filled states — navigation / shell states

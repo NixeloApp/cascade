@@ -3,7 +3,7 @@
  *
  * Full-page notification center with filtering and pagination.
  * Groups notifications by date (today, yesterday, this week, earlier).
- * Supports mark all read, archive, and individual notification actions.
+ * Supports mark all read, archive, snooze, and individual notification actions.
  */
 
 import { api } from "@convex/_generated/api";
@@ -83,7 +83,8 @@ function groupNotificationsByDate(
   return groups;
 }
 
-function NotificationsPage() {
+/** Full-page notifications hub with filters, tabs, and per-notification actions. */
+export function NotificationsPage() {
   const [bulkActionLoading, setBulkActionLoading] = useState<"markAll" | "archiveAll" | null>(null);
   const [filter, setFilter] = useState<NotificationFilter>("all");
   const [activeTab, setActiveTab] = useState<"inbox" | "archived">("inbox");
@@ -116,6 +117,9 @@ function NotificationsPage() {
   );
   const { mutate: archiveAllNotifications } = useAuthenticatedMutation(
     api.notifications.archiveAllNotifications,
+  );
+  const { mutate: snoozeNotification } = useAuthenticatedMutation(
+    api.notifications.snoozeNotification,
   );
   const { mutate: removeNotification } = useAuthenticatedMutation(
     api.notifications.softDeleteNotification,
@@ -182,6 +186,14 @@ function NotificationsPage() {
     }
   };
 
+  const handleSnooze = async (id: Id<"notifications">, snoozedUntil: number) => {
+    try {
+      await snoozeNotification({ id, snoozedUntil });
+    } catch (error) {
+      showError(error, "Failed to snooze notification");
+    }
+  };
+
   const renderNotificationList = (notifs: NotificationWithActor[], isArchived = false) => {
     if (!notifs || notifs.length === 0) {
       return (
@@ -236,6 +248,7 @@ function NotificationsPage() {
                     onMarkAsRead={handleMarkAsRead}
                     onArchive={handleArchive}
                     onDelete={handleDelete}
+                    onSnooze={handleSnooze}
                     orgSlug={orgContext?.orgSlug}
                   />
                 ))}
