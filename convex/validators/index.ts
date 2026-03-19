@@ -134,6 +134,15 @@ export const cancelledByOptions = literals("host", "booker");
 export const bookingStatuses = literals("pending", "confirmed", "cancelled", "completed");
 export const ssoConnectionTypes = literals("saml", "oidc");
 export const oidcProviders = literals("google-workspace", "microsoft-entra", "okta");
+export const outOfOfficeReasons = literals("vacation", "travel", "sick_leave", "public_holiday");
+
+export const outOfOfficeStatus = v.object({
+  startsAt: v.number(),
+  endsAt: v.number(),
+  reason: outOfOfficeReasons,
+  note: v.optional(v.string()),
+  updatedAt: v.number(),
+});
 
 // User Preferences
 export const emailDigests = literals("none", "daily", "weekly");

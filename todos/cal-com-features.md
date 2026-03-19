@@ -1,7 +1,7 @@
 # Cal.com v6.3 Features to Evaluate
 
 > **Priority:** P2
-> **Status:** New
+> **Status:** In Progress
 > **Last Updated:** 2026-03-18
 > **Source:** Cal.com changelog v6.3 + repo at `github.com/calcom/cal.com` (pulled 2026-03-18, 119 new commits)
 
@@ -17,7 +17,7 @@ Cal.com launched agent-powered scheduling via Slack, Telegram, email, CLI. Maps 
 ### Out of Office (OOO)
 Full CRUD API at `apps/api/v2/src/modules/ooo/`. Reasons: vacation, travel, sick_leave, public_holiday. Optional redirect to another user.
 
-- [ ] **Add OOO status to user profile** — We have no OOO concept. This affects calendar availability, issue assignment, and notifications.
+- [x] **Add OOO status to user profile** — Implemented: profile settings card, persisted OOO state, and assignee visibility in issue surfaces.
 - [ ] **OOO redirect** — When a user is OOO, redirect their calendar bookings or issue assignments to a delegate.
 
 ### Cancellation Reason Requirement

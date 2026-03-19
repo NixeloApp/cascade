@@ -18,6 +18,7 @@ import { DuplicateDetection } from "@/components/DuplicateDetection";
 import { IssueDescriptionEditor } from "@/components/IssueDescriptionEditor";
 import { Alert, AlertDescription } from "@/components/ui/Alert";
 import { Avatar } from "@/components/ui/Avatar";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ColorPicker } from "@/components/ui/ColorPicker";
 import { Dialog } from "@/components/ui/Dialog";
@@ -46,6 +47,7 @@ import {
   ISSUE_TYPES_WITH_SUBTASK,
   PRIORITY_ICONS,
 } from "@/lib/issue-utils";
+import { formatOutOfOfficeUntil } from "@/lib/outOfOffice";
 import { showError, showSuccess } from "@/lib/toast";
 
 // =============================================================================
@@ -1130,7 +1132,17 @@ export function CreateIssueModal({
                 <SelectItem key={member._id} value={member._id}>
                   <Flex align="center" gap="sm">
                     <Avatar name={member.name} src={member.image} size="xs" className="h-5 w-5" />
-                    {member.name}
+                    <div className="min-w-0">
+                      <Flex align="center" gap="xs">
+                        <span>{member.name}</span>
+                        {member.outOfOffice ? <Badge variant="warning">OOO</Badge> : null}
+                      </Flex>
+                      {member.outOfOffice ? (
+                        <span className="text-xs text-ui-text-tertiary">
+                          {formatOutOfOfficeUntil(member.outOfOffice)}
+                        </span>
+                      ) : null}
+                    </div>
                   </Flex>
                 </SelectItem>
               ))}

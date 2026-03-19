@@ -98,7 +98,16 @@ describe("InlinePropertyEdit", () => {
     const onAssigneeChange = vi.fn();
     const onStatusChange = vi.fn();
     const members = [
-      { _id: "user_1" as Id<"users">, name: "Alex" },
+      {
+        _id: "user_1" as Id<"users">,
+        name: "Alex",
+        outOfOffice: {
+          startsAt: new Date("2026-03-20T00:00:00Z").getTime(),
+          endsAt: new Date("2026-03-22T23:59:59Z").getTime(),
+          reason: "vacation" as const,
+          updatedAt: Date.now(),
+        },
+      },
       { _id: "user_2" as Id<"users">, name: "Morgan" },
     ];
     const workflowStates = [
@@ -120,8 +129,9 @@ describe("InlinePropertyEdit", () => {
     expect(screen.getByLabelText("Change assignee")).toHaveTextContent("Unassigned");
     expect(screen.getByLabelText("Change status")).toHaveTextContent("In Progress");
 
-    await user.click(screen.getByRole("button", { name: "Alex" }));
+    await user.click(screen.getByRole("button", { name: /Alex/i }));
     expect(onAssigneeChange).toHaveBeenCalledWith("user_1");
+    expect(screen.getByText("OOO")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Unassigned" }));
     expect(onAssigneeChange).toHaveBeenCalledWith(null);

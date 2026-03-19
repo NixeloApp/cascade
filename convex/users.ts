@@ -31,7 +31,7 @@ import { MINUTE } from "./lib/timeUtils";
 import { collectUserStats } from "./lib/userStats";
 import { sanitizeUserForAuth, sanitizeUserForCurrent } from "./lib/userUtils";
 import { rateLimit } from "./rateLimits";
-import { digestFrequencies, issueActivityActions } from "./validators";
+import { digestFrequencies, issueActivityActions, outOfOfficeStatus } from "./validators";
 
 /**
  * Internal query to get user by ID (system use only)
@@ -72,6 +72,7 @@ export const getUser = authenticatedQuery({
       image: v.optional(v.string()),
       firstName: v.optional(v.string()),
       lastName: v.optional(v.string()),
+      outOfOffice: v.optional(outOfOfficeStatus),
     }),
   ),
   handler: async (ctx, args) => {
@@ -115,6 +116,7 @@ export const getCurrent = authenticatedQuery({
       timezone: v.optional(v.string()),
       emailNotifications: v.optional(v.boolean()),
       desktopNotifications: v.optional(v.boolean()),
+      outOfOffice: v.optional(outOfOfficeStatus),
       inviteId: v.optional(v.id("invites")),
       isTestUser: v.optional(v.boolean()),
       testUserCreatedAt: v.optional(v.number()),

@@ -23,6 +23,7 @@ import { logAudit } from "./lib/audit";
 import { ARRAY_LIMITS, validate } from "./lib/constrainedValidators";
 import { conflict, forbidden, notFound, validation } from "./lib/errors";
 import { getOrganizationRole, isOrganizationMember } from "./lib/organizationAccess";
+import { getActiveOutOfOfficeStatus } from "./lib/outOfOffice";
 import { fetchPaginatedQuery } from "./lib/queryHelpers";
 import { cascadeRestore, cascadeSoftDelete } from "./lib/relationships";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
@@ -931,6 +932,7 @@ interface ProjectMember {
   name: string;
   email: string | undefined;
   image: string | undefined;
+  outOfOffice: NonNullable<Doc<"users">["outOfOffice"]> | undefined;
   role: Doc<"projectMembers">["role"];
   addedAt: number;
 }
@@ -973,6 +975,7 @@ async function getProjectMembers(
       name: displayName,
       email: member?.email,
       image: member?.image,
+      outOfOffice: getActiveOutOfOfficeStatus(member),
       role: membership.role,
       addedAt: membership._creationTime,
     };

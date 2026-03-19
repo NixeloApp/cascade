@@ -119,7 +119,16 @@ describe("IssueMetadataSection", () => {
         status="todo"
         type="bug"
         priority="high"
-        assignee={null}
+        assignee={{
+          _id: "user_1" as Id<"users">,
+          name: "Alex",
+          outOfOffice: {
+            startsAt: new Date("2026-03-20T00:00:00Z").getTime(),
+            endsAt: new Date("2026-03-22T23:59:59Z").getTime(),
+            reason: "vacation",
+            updatedAt: Date.now(),
+          },
+        }}
         reporter={null}
         storyPoints={null}
         labels={[]}
@@ -131,7 +140,8 @@ describe("IssueMetadataSection", () => {
     expect(screen.getByText("To Do")).toBeInTheDocument();
     expect(screen.getByText("bug")).toBeInTheDocument();
     expect(screen.getByText("high")).toBeInTheDocument();
-    expect(screen.getByText("Unassigned")).toBeInTheDocument();
+    expect(screen.getByText("Alex")).toBeInTheDocument();
+    expect(screen.getByText("OOO:")).toBeInTheDocument();
     expect(screen.getByText("Unknown")).toBeInTheDocument();
     expect(screen.getByText("Not set")).toBeInTheDocument();
     expect(screen.queryByText("Labels")).not.toBeInTheDocument();
