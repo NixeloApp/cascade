@@ -549,6 +549,13 @@ function getTimelineGroupBadgeClassName(group: TimelineGroup) {
   return "bg-ui-bg-tertiary text-ui-text-secondary";
 }
 
+function getStickyIssueColumnClassName(selected: boolean) {
+  return cn(
+    "sticky left-0 z-20 w-64 shrink-0 border-r border-ui-border/70 pr-4",
+    selected ? "bg-brand-subtle/50" : "bg-ui-bg group-hover:bg-ui-bg-secondary",
+  );
+}
+
 function RoadmapTimelineBar({
   canEdit,
   draggingIssueId,
@@ -715,10 +722,14 @@ function RoadmapIssueRow({
     <Card
       recipe={selected ? "roadmapRowSelected" : "roadmapRow"}
       style={style}
-      className={cn("transition-colors", selected && "z-10")}
+      className={cn("group transition-colors", selected && "z-10")}
     >
       <Flex align="center">
-        <FlexItem shrink={false} className="w-64 pr-4">
+        <FlexItem
+          shrink={false}
+          className={getStickyIssueColumnClassName(selected)}
+          data-testid={TEST_IDS.ROADMAP.ISSUE_COLUMN}
+        >
           <Flex align="center" gap="sm" className="mb-1">
             <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" />
             <Button
@@ -1302,9 +1313,13 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                   {/* Timeline Header (Fixed) */}
                   <div className="border-b border-ui-border bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78 p-4">
                     <Flex>
-                      <Typography variant="label" className="w-64 shrink-0">
-                        Issue
-                      </Typography>
+                      <FlexItem
+                        shrink={false}
+                        className="sticky left-0 z-30 w-64 shrink-0 border-r border-ui-border/70 bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78 pr-4"
+                        data-testid={TEST_IDS.ROADMAP.ISSUE_HEADER}
+                      >
+                        <Typography variant="label">Issue</Typography>
+                      </FlexItem>
                       <FlexItem flex="1">
                         <Grid
                           gap="none"

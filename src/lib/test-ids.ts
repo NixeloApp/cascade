@@ -224,6 +224,10 @@ export const TEST_IDS = {
   ROADMAP: {
     /** @see src/components/RoadmapView.tsx */
     TIMELINE_CANVAS: "roadmap-timeline-canvas",
+    /** @see src/components/RoadmapView.tsx */
+    ISSUE_HEADER: "roadmap-issue-header",
+    /** @see src/components/RoadmapView.tsx */
+    ISSUE_COLUMN: "roadmap-issue-column",
   },
 
   // ============================================================

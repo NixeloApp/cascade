@@ -429,6 +429,32 @@ describe("RoadmapView", () => {
     expect(timelineCanvas).toHaveStyle({ width: "384px" });
   });
 
+  it("keeps the issue sidebar sticky while the timeline scrolls", () => {
+    mockRoadmapQueries({
+      issues: [
+        {
+          _id: issue1Id,
+          key: "PROJ-1",
+          title: "Plan onboarding",
+          status: "todo",
+          startDate: Date.UTC(2026, 2, 10),
+          dueDate: Date.UTC(2026, 2, 20),
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Alex Rivera" },
+        },
+      ],
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "1 Year" }));
+    fireEvent.click(screen.getByRole("button", { name: "Expanded" }));
+
+    expect(screen.getByTestId(TEST_IDS.ROADMAP.ISSUE_HEADER)).toHaveClass("sticky", "left-0");
+    expect(screen.getAllByTestId(TEST_IDS.ROADMAP.ISSUE_COLUMN)[0]).toHaveClass("sticky", "left-0");
+  });
+
   it("groups roadmap rows by assignee", () => {
     mockRoadmapQueries({
       issues: [
