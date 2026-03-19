@@ -1,6 +1,6 @@
 # 📊 Live Research Inventory
 
-**Last Updated:** 2026-01-28
+**Last Updated:** 2026-03-19
 
 | Competitor | Category | Analysis Doc | Scraped Data | Deep Metadata | Assets |
 | :--- | :--- | :---: | :---: | :---: | :---: |
@@ -9,30 +9,30 @@
 | **Cal-com** | Open Source | [View](competitors/open-source/cal-com.md) | ❌ | ❌ | ❌ |
 | **Canvas-lms** | Open Source | [View](competitors/open-source/canvas-lms.md) | ❌ | ❌ | ❌ |
 | **Clickup** | PM Suites | [View](competitors/pm-suites/clickup.md) | ✅ | ✅ | ✅ |
-| **Clockify** | Time Tracking | [View](competitors/time-tracking/clockify.md) | ✅ | ❌ | ✅ |
+| **Clockify** | Time Tracking | [View](competitors/time-tracking/clockify.md) | ✅ | ✅ | ✅ |
 | **Fireflies** | Meeting AI | [View](competitors/meeting-ai/fireflies.md) | ✅ | ✅ | ✅ |
 | **Gong** | Meeting AI | [View](competitors/meeting-ai/gong.md) | ✅ | ✅ | ✅ |
-| **Harvest** | Unknown | ❌ Missing | ✅ | ❌ | ✅ |
+| **Harvest** | Unknown | ❌ Missing | ✅ | ✅ | ✅ |
 | **Height** | PM Suites | [View](competitors/pm-suites/height.md) | ✅ | ❌ | ✅ |
-| **Jibble** | Time Tracking | [View](competitors/time-tracking/jibble.md) | ✅ | ❌ | ✅ |
+| **Jibble** | Time Tracking | [View](competitors/time-tracking/jibble.md) | ✅ | ✅ | ✅ |
 | **Jira** | PM Suites | [View](competitors/pm-suites/jira.md) | ✅ | ✅ | ✅ |
 | **Kimai** | Open Source | [View](competitors/open-source/kimai.md) | ❌ | ❌ | ❌ |
 | **Linear** | PM Suites | [View](competitors/pm-suites/linear.md) | ✅ | ✅ | ✅ |
 | **Meeting-baas** | Infrastructure | [View](competitors/infrastructure/meeting-baas.md) | ✅ | ✅ | ✅ |
+| **Mintlify** | Unknown | ❌ Missing | ✅ | ✅ | ✅ |
 | **Monday** | PM Suites | [View](competitors/pm-suites/monday.md) | ✅ | ✅ | ✅ |
 | **Notion** | PM Suites | [View](competitors/pm-suites/notion.md) | ✅ | ✅ | ✅ |
 | **Nylas** | Infrastructure | [View](competitors/infrastructure/nylas.md) | ❌ | ❌ | ❌ |
 | **Otter** | Meeting AI | [View](competitors/meeting-ai/otter.md) | ✅ | ✅ | ✅ |
 | **Overview** | Time Tracking | [View](competitors/time-tracking/overview.md) | ❌ | ❌ | ❌ |
-| **Read-ai** | Meeting AI | [View](competitors/meeting-ai/read-ai.md) | ✅ | ❌ | ✅ |
-| **Recall** | Unknown | ❌ Missing | ✅ | ✅ | ✅ |
-| **Recall-ai** | Infrastructure | [View](competitors/infrastructure/recall-ai.md) | ❌ | ❌ | ❌ |
-| **Shortcut** | PM Suites | [View](competitors/pm-suites/shortcut.md) | ✅ | ❌ | ✅ |
+| **Read-ai** | Meeting AI | [View](competitors/meeting-ai/read-ai.md) | ✅ | ✅ | ✅ |
+| **Recall-ai** | Infrastructure | [View](competitors/infrastructure/recall-ai.md) | ✅ | ✅ | ✅ |
+| **Shortcut** | PM Suites | [View](competitors/pm-suites/shortcut.md) | ✅ | ✅ | ✅ |
 | **Skribby** | Infrastructure | [View](competitors/infrastructure/skribby.md) | ❌ | ❌ | ❌ |
-| **Timecamp** | Time Tracking | [View](competitors/time-tracking/timecamp.md) | ✅ | ❌ | ✅ |
+| **Timecamp** | Time Tracking | [View](competitors/time-tracking/timecamp.md) | ✅ | ✅ | ✅ |
 | **Tldv** | Meeting AI | [View](competitors/meeting-ai/tldv.md) | ✅ | ✅ | ✅ |
-| **Tmetric** | Time Tracking | [View](competitors/time-tracking/tmetric.md) | ✅ | ❌ | ✅ |
-| **Toggl** | Time Tracking | [View](competitors/time-tracking/toggl.md) | ✅ | ❌ | ✅ |
+| **Tmetric** | Time Tracking | [View](competitors/time-tracking/tmetric.md) | ✅ | ✅ | ✅ |
+| **Toggl** | Time Tracking | [View](competitors/time-tracking/toggl.md) | ✅ | ✅ | ✅ |
 
 ---
 

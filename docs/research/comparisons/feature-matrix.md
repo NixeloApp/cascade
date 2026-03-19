@@ -674,7 +674,12 @@
 | **Real-time Transcript**  | ✅ Yes         | ❌ Post-call | ✅ Yes    | ❌ Post-call    | ❌ Post-call |
 | **Audio Upload**          | ✅ Yes         | ✅ Yes       | ✅ Yes    | ✅ Yes          | ✅ Yes       |
 | **Bot Joining**           | ✅ Agent       | ✅ Agent     | ✅ Agent  | ✅ Agent        | ✅ Agent     |
-| **Price**                 | Included       | ~$20/mo      | ~$20/mo   | ~$19/mo         | ~$100+/mo    |
+| **Price**                 | Included (simple for now) | [speculation] Free / Pro / Pro+ / Enterprise / Enterprise+ | ~$20/mo   | ~$19/mo         | ~$100+/mo    |
 
 **Insight:**
 Nixelo is the **only tool** that natively bridges the gap between _meeting data_ and _project execution_. Competitors create "data islands" where meeting notes live separately from the work.
+
+**Note:** Read AI has a multi-tier structure in local research notes, but exact pricing and
+feature boundaries are not fully verified in this repo. Use
+`docs/research/competitors/meeting-ai/read-ai.md` as the canonical file for confidence
+labels until pricing is re-verified.

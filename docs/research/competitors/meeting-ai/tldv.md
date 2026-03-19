@@ -8,6 +8,13 @@
 
 ---
 
+> **Research Note:** Unlabeled statements are supported by the local capture set or are
+> stable product-level descriptions. Use `[inference]` for deductions from local evidence,
+> `[speculation]` for retained but unverified claims, and `[conflict]` where local docs
+> disagree.
+
+---
+
 ## Overview
 
 tl;dv (Too Long; Didn't View) is a meeting recorder for Zoom, Google Meet, and Microsoft
@@ -19,36 +26,43 @@ identity that contrasts with the utilitarian feel of competitors like Fireflies.
 **Tagline:** "AI Meeting Recorder: Transcribe, Summarize & Take Notes"
 
 **Key Stats:**
-- 2M+ users worldwide
-- $4.5M revenue (2024), 5x year-over-year growth
-- ~50 employees globally
-- ~$4.6-4.7M USD total funding raised (EUR 4.3M Seed round, June 2022)
-- Backed by K Fund, Seedcamp, Shilling
-- Expanding into Japan (targeting 1.5M users, 100K+ existing)
-- 5,000+ tool integrations via CRM and workflow connectors
+- [speculation] 2M+ users worldwide
+- [speculation] $4.5M revenue (2024), 5x year-over-year growth
+- [speculation] ~50 employees globally
+- [speculation] ~$4.6-4.7M USD total funding raised (EUR 4.3M Seed round, June 2022)
+- [speculation] Backed by K Fund, Seedcamp, Shilling
+- [speculation] Expanding into Japan (targeting 1.5M users, 100K+ existing)
+- [speculation] 5,000+ tool integrations via CRM and workflow connectors
 
 ---
 
 ## Pricing
 
+> **Pricing Note:** tl;dv pricing is inconsistent across local docs. This file preserves the
+> more detailed tier structure, while `meeting-landscape.md` currently uses a simplified and
+> conflicting pricing summary. Treat exact limits and prices below as `[conflict]` unless
+> re-verified from a local pricing capture.
+
 | Plan | Monthly Billing | Annual Billing (40% off) | Key Features |
 |:-----|:---------------|:------------------------|:-------------|
-| **Free** | $0 | $0 | Unlimited recordings, 10 lifetime AI summaries |
-| **Pro** | $29/seat/mo | $18/seat/mo | Full AI summaries, integrations, custom templates |
-| **Business** | $98/seat/mo | $59/seat/mo | Sales intelligence, multi-meeting analytics |
-| **Enterprise** | Custom | Custom | Private AI hosting, advanced security, CSM |
+| **Free** | [conflict] $0 | [conflict] $0 | [conflict] Unlimited recordings, 10 lifetime AI summaries |
+| **Pro** | [conflict] $29/seat/mo | [conflict] $18/seat/mo | [conflict] Full AI summaries, integrations, custom templates |
+| **Business** | [conflict] $98/seat/mo | [conflict] $59/seat/mo | [conflict] Sales intelligence, multi-meeting analytics |
+| **Enterprise** | [conflict] Custom | [conflict] Custom | [inference] Private AI hosting, advanced security, CSM |
 
 **Pricing Analysis:**
-- The "unlimited recordings" free tier is technically true but misleading: recordings older
+- [conflict] The "unlimited recordings" free tier is technically true but misleading:
+  recordings older
   than 90 days are automatically deleted, and AI summaries are capped at 10 for the
   account lifetime.
-- 40% annual discount is aggressive and heavily promoted (running through 2025+).
-- Pro at $18/mo (annual) is mid-range but more expensive than Fireflies Pro ($10/mo).
-- Business at $59/mo (annual) is a significant jump (3.3x Pro) for similar features with
+- [speculation] 40% annual discount is aggressive and heavily promoted.
+- [conflict] Pro at $18/mo (annual) is mid-range but more expensive than Fireflies Pro
+  ($10/mo).
+- [conflict] Business at $59/mo (annual) is a significant jump (3.3x Pro) for similar features with
   the main differentiator being advanced AI analytics.
-- Enterprise is not about features but infrastructure: private AI hosting for organizations
+- [inference] Enterprise is positioned around infrastructure and control: private AI hosting for organizations
   with strict security requirements (healthcare, finance, legal).
-- 3-hour maximum per recorded/uploaded meeting across all plans.
+- [speculation] 3-hour maximum per recorded/uploaded meeting across all plans.
 
 ---
 
@@ -61,10 +75,10 @@ identity that contrasts with the utilitarian feel of competitors like Fireflies.
 - Cloud storage with playback
 
 ### AI Transcription & Summaries (★★★☆☆)
-- GPT-powered transcription and meeting summaries
+- [speculation] GPT-powered transcription and meeting summaries
 - Action items and key moment extraction
 - Custom summary templates
-- Accuracy often rated lower than Otter, Fireflies, and Read AI
+- [speculation] Accuracy often rated lower than Otter, Fireflies, and Read AI
 
 ### Video Clipping & Sharing (★★★★★)
 - "Reels for meetings" -- easy video clipping to share key moments
@@ -79,7 +93,7 @@ identity that contrasts with the utilitarian feel of competitors like Fireflies.
 - Jump to specific moments without watching full recordings
 
 ### CRM & Workflow Integrations (★★★☆☆)
-- 5,000+ tool integrations via connectors
+- [speculation] 5,000+ tool integrations via connectors
 - CRM sync (Salesforce, HubSpot) for sales teams
 - Slack, Notion, and other productivity tool connections
 - Primarily creates clips/links rather than deep data sync
@@ -91,9 +105,9 @@ identity that contrasts with the utilitarian feel of competitors like Fireflies.
 - Win/loss pattern analysis (limited compared to Gong)
 
 ### MCP Connectivity (★★★☆☆)
-- 2025 roadmap: Model Context Protocol integration with Anthropic/ChatGPT
-- Enables AI agents to access meeting data programmatically
-- Early-stage feature, not yet widely adopted
+- [speculation] 2025 roadmap: Model Context Protocol integration with Anthropic/ChatGPT
+- [inference] Would enable AI agents to access meeting data programmatically
+- [speculation] Early-stage feature, not yet widely adopted
 
 ---
 
@@ -103,7 +117,7 @@ identity that contrasts with the utilitarian feel of competitors like Fireflies.
    - Free recordings with tl;dv watermarks create organic brand exposure
    - Clip sharing drives recipient sign-ups (viral loop)
    - Fun, consumer-friendly brand attracts younger professionals
-   - 2M+ users achieved with minimal marketing spend
+   - [speculation] 2M+ users achieved with minimal marketing spend
 
 2. **Video Clipping UX (Category Best)**
    - "Reels for meetings" concept is intuitive and shareable
@@ -127,27 +141,27 @@ identity that contrasts with the utilitarian feel of competitors like Fireflies.
    - Low learning curve -- users start clipping within minutes
 
 6. **Japanese Market Expansion**
-   - Official entry into Japan (2025) with plans for local subsidiary
-   - 100K+ existing users with 12x growth, targeting 1.5M
-   - First-mover advantage in Japanese meeting AI space
+   - [speculation] Official entry into Japan with plans for local subsidiary
+   - [speculation] 100K+ existing users with 12x growth, targeting 1.5M
+   - [inference] Could create first-mover advantage in Japanese meeting AI space
 
 7. **Private AI Hosting (Enterprise)**
-   - Enterprise tier offers privately hosted AI (data never touches shared servers)
+   - [inference] Enterprise tier appears to offer privately hosted AI
    - Attractive to regulated industries (healthcare, finance, legal)
    - Differentiator vs competitors who only offer shared cloud infrastructure
 
 8. **Rapid Revenue Growth**
-   - 5x year-over-year revenue growth (2023 to 2024)
-   - ARR reached eight digits, demonstrating strong monetization
-   - Lean team of ~50 employees maintaining high growth
+   - [speculation] 5x year-over-year revenue growth (2023 to 2024)
+   - [conflict] This doc says `$4.5M revenue` while also claiming `ARR reached eight digits`
+   - [speculation] Lean team of ~50 employees maintaining high growth
 
 ---
 
 ## Weaknesses
 
 1. **Lower Transcription Quality**
-   - Often rated lower than Otter, Fireflies, and Read AI for accuracy
-   - GPT-dependent transcription lacks proprietary ASR optimization
+   - [speculation] Often rated lower than Otter, Fireflies, and Read AI for accuracy
+   - [speculation] GPT-dependent transcription lacks proprietary ASR optimization
    - Struggles with accented speech and technical terminology
 
 2. **Shallow PM Integrations**
@@ -156,12 +170,12 @@ identity that contrasts with the utilitarian feel of competitors like Fireflies.
    - "Integration" often means sending a link, not creating a ticket
 
 3. **Misleading Free Tier**
-   - "Unlimited recordings" but 90-day auto-deletion for free users
-   - Only 10 AI summaries for the entire lifetime of the account
+   - [conflict] "Unlimited recordings" but 90-day auto-deletion for free users
+   - [conflict] Only 10 AI summaries for the entire lifetime of the account
    - Creates trust issues when users discover limitations
 
 4. **3-Hour Recording Limit**
-   - Maximum 3 hours per recorded or uploaded meeting across all plans
+   - [speculation] Maximum 3 hours per recorded or uploaded meeting across all plans
    - Problematic for workshops, all-hands, and training sessions
    - Must start a new recording to continue beyond 3 hours
 
@@ -203,18 +217,18 @@ best-in-class transcription accuracy, or teams with meetings regularly exceeding
 
 ## Market Share & Adoption
 
-- **Users:** 2M+ worldwide
-- **Revenue:** $4.5M (2024), 5x YoY growth, ARR in eight digits
-- **Customers:** Fortune 500 users including Cloudflare, Forbes, Salesforce, HelloFresh,
+- [speculation] **Users:** 2M+ worldwide
+- [conflict] **Revenue:** $4.5M (2024), 5x YoY growth, ARR in eight digits
+- [speculation] **Customers:** Fortune 500 users including Cloudflare, Forbes, Salesforce, HelloFresh,
   Zalando
-- **Funding:** ~$4.6-4.7M USD total (EUR 4.3M Seed round, June 2022)
-- **Investors:** K Fund, Seedcamp, Shilling, Oscar Pierre (Glovo founder)
-- **Employees:** ~50 globally
-- **Market Rank:** 39th among 379 active competitors, 12th by total funding
-- **Japan:** 100K+ users, 12x growth in past year, targeting 1.5M
+- [speculation] **Funding:** ~$4.6-4.7M USD total (EUR 4.3M Seed round, June 2022)
+- [speculation] **Investors:** K Fund, Seedcamp, Shilling, Oscar Pierre (Glovo founder)
+- [speculation] **Employees:** ~50 globally
+- [speculation] **Market Rank:** 39th among 379 active competitors, 12th by total funding
+- [speculation] **Japan:** 100K+ users, 12x growth in past year, targeting 1.5M
 
-**Notable Users:** Cloudflare, Forbes, Salesforce, HelloFresh, Zalando. Popular among
-sales and customer success teams across SaaS companies.
+**Notable Users:** [speculation] Cloudflare, Forbes, Salesforce, HelloFresh, Zalando.
+[inference] The product appears especially popular among sales and customer-success teams.
 
 ---
 
@@ -222,14 +236,14 @@ sales and customer success teams across SaaS companies.
 
 | Component | Technology |
 |:----------|:-----------|
-| **ASR/Transcription** | GPT-powered (likely OpenAI Whisper + GPT for summaries) |
-| **AI/NLP** | GPT models for summarization and topic detection |
+| **ASR/Transcription** | [speculation] GPT-powered or Whisper-class ASR plus summary models |
+| **AI/NLP** | [speculation] GPT-family models for summarization and topic detection |
 | **Video Processing** | Cloud-based recording and clip generation |
 | **Platform Support** | Chrome extension, desktop app (Zoom, Meet, Teams) |
-| **Integrations** | CRM connectors (Salesforce, HubSpot), 5,000+ tools |
-| **Enterprise** | Private AI hosting option, advanced security |
-| **Planned** | MCP connectivity with Anthropic/ChatGPT (2025 roadmap) |
-| **Mobile** | Smartphone app in development for in-person meetings |
+| **Integrations** | [speculation] CRM connectors (Salesforce, HubSpot), 5,000+ tools |
+| **Enterprise** | [inference] Private AI hosting option and advanced security positioning |
+| **Planned** | [speculation] MCP connectivity with Anthropic/ChatGPT |
+| **Mobile** | [speculation] Smartphone app in development for in-person meetings |
 
 ---
 
@@ -322,6 +336,7 @@ Meetings should drive work, not just create content."
    brand awareness faster than Nixelo's platform-led approach.
 2. **MCP Connectivity:** Planned Model Context Protocol integration with Anthropic/ChatGPT
    could enable AI agents to create issues from meeting data, reducing the integration gap.
+   [speculation] The MCP item itself is not verified in the local capture set.
 3. **Japanese Market First-Mover:** tl;dv's aggressive Japan expansion could establish
    brand dominance in a key Asian market before Nixelo enters.
 4. **Private AI Hosting:** Enterprise tier with privately hosted AI is attractive to

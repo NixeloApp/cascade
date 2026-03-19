@@ -207,6 +207,10 @@ curl -X POST https://us-east-1.recall.ai/api/v1/bot \
 
 ## End-User Products
 
+> **Evidence Note:** Where competitor-specific docs use `[inference]`, `[speculation]`, or
+> `[conflict]`, this summary should be read with the same confidence level. The detailed
+> competitor docs are the canonical place for nuance.
+
 ### Read AI
 
 > **What it is:** AI meeting assistant with cross-platform search. Primary competitor for meeting intelligence.
@@ -221,19 +225,19 @@ curl -X POST https://us-east-1.recall.ai/api/v1/bot \
 - Meeting transcription & recording
 - AI-generated summaries
 - Action item extraction
-- Real-time notes during meetings
+- [inference] Real-time or in-meeting note assistance
 - Speaker analytics ("Speaker Coach")
 - Email summaries
 - Cross-platform search (meetings + emails + chats)
 - Chrome extension
-- Desktop apps (Windows, macOS)
-- Mobile apps (iOS, Android)
-- Integrations: Slack, Notion, Salesforce, HubSpot, 20+ others
+- [inference] Desktop and mobile app support
+- [speculation] Integrations: Slack, Notion, Salesforce, HubSpot, 20+ others
 
 **Pricing:**
-- Free: 5 meetings/month
-- Pro: ~$20/user/month (estimated)
-- Enterprise: Custom
+- [speculation] Tiers referenced locally: Free, Pro, Pro+, Enterprise, Enterprise+
+- [speculation] Free tier is documented locally as `5 meetings/month`
+- [conflict] Exact paid-tier pricing and feature boundaries are not consistently captured in this repo
+- [speculation] Enterprise and above include custom or sales-led packaging
 
 **Pros:**
 - Polished consumer product
@@ -348,12 +352,13 @@ curl -X POST https://us-east-1.recall.ai/api/v1/bot \
 **Pricing:**
 | Tier | Cost | Features |
 |------|------|----------|
-| Free | $0 | Unlimited recordings, 10 AI transcripts/mo |
-| Pro | $20/user/mo | Unlimited AI features |
-| Enterprise | Custom | + SSO, admin |
+| Free | [conflict] $0 | [conflict] Unlimited recordings, AI limits vary across local docs |
+| Pro | [conflict] Pro tier exists; exact price differs across local docs | [conflict] Paid AI summaries and integrations are mentioned, but exact packaging differs locally |
+| Business | [conflict] Business tier appears in the dedicated tl;dv doc but not in this summary's earlier pricing snapshot | [conflict] Sales intelligence / analytics positioning appears in dedicated notes only |
+| Enterprise | Custom | + SSO, admin; [inference] security and private-hosting positioning |
 
 **Pros:**
-- Generous free tier
+- [conflict] Generous free-tier perception, but local docs disagree on actual AI limits
 - Good for teams starting out
 - Simple UX
 
