@@ -30,6 +30,7 @@ import {
   seedTemplatesEndpoint,
   setupRbacProjectEndpoint,
   updateOrganizationSettingsEndpoint,
+  updateProjectWorkflowStateEndpoint,
   verifyTestUserEndpoint,
 } from "./e2e";
 import {
@@ -220,6 +221,13 @@ http.route({
   path: "/e2e/update-organization-settings",
   method: "POST",
   handler: updateOrganizationSettingsEndpoint,
+});
+
+// Update a seeded project's workflow state for interactive screenshot capture
+http.route({
+  path: "/e2e/update-project-workflow-state",
+  method: "POST",
+  handler: updateProjectWorkflowStateEndpoint,
 });
 
 // Seed built-in project templates

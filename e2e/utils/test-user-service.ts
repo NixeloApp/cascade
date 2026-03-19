@@ -50,6 +50,12 @@ export interface SeedScreenshotResult {
   error?: string;
 }
 
+export interface UpdateProjectWorkflowStateResult {
+  success: boolean;
+  projectId?: string;
+  error?: string;
+}
+
 export interface GoogleOAuthLoginResult {
   success: boolean;
   email?: string;
@@ -376,6 +382,31 @@ export class TestUserService {
       return await response.json();
     } catch (error) {
       console.warn(`  ⚠️ Failed to seed screenshot data:`, error);
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Update a seeded project's workflow state for interactive screenshot capture.
+   */
+  async updateProjectWorkflowState(
+    orgSlug: string,
+    projectKey: string,
+    stateId: string,
+    wipLimit: number | null,
+  ): Promise<UpdateProjectWorkflowStateResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.updateProjectWorkflowState, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, projectKey, stateId, wipLimit }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(
+        `  ⚠️ Failed to update workflow state ${stateId} for ${projectKey} in ${orgSlug}:`,
+        error,
+      );
       return { success: false, error: String(error) };
     }
   }

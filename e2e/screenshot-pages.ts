@@ -261,6 +261,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   // Board interactive states
   [/^filled-project-.+-board-swimlane-(\w+)$/, "06-board", "-swimlane-$1"],
   [/^filled-project-.+-board-column-collapsed$/, "06-board", "-column-collapsed"],
+  [/^filled-project-.+-board-wip-limit-warning$/, "06-board", "-wip-limit-warning"],
   [/^filled-project-.+-board-filter-active$/, "06-board", "-filter-active"],
   [/^filled-project-.+-board-display-properties$/, "06-board", "-display-properties"],
   [/^filled-project-.+-board-peek-mode$/, "06-board", "-peek-mode"],
@@ -2716,6 +2717,7 @@ async function screenshotFilledStates(
         `project-${normalizedProjectKey}-board-swimlane-type`,
         `project-${normalizedProjectKey}-board-swimlane-label`,
         `project-${normalizedProjectKey}-board-column-collapsed`,
+        `project-${normalizedProjectKey}-board-wip-limit-warning`,
         `project-${normalizedProjectKey}-board-filter-active`,
         `project-${normalizedProjectKey}-board-display-properties`,
         `project-${normalizedProjectKey}-board-peek-mode`,
@@ -3658,6 +3660,35 @@ async function screenshotBoardInteractiveStates(
     });
   }
 
+  if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-wip-limit-warning`)) {
+    await runCaptureStep("board WIP limit warning", async () => {
+      const stateId = "todo";
+      const warningLimit = 1;
+      const updateResult = await testUserService.updateProjectWorkflowState(
+        orgSlug,
+        projectKey,
+        stateId,
+        warningLimit,
+      );
+      if (!updateResult.success) {
+        throw new Error(updateResult.error || "Failed to configure board WIP limit");
+      }
+
+      try {
+        await loadBoard();
+        await page.getByText("Over limit", { exact: true }).first().waitFor({ timeout: 8000 });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(
+          page,
+          prefix,
+          `project-${normalizedProjectKey}-board-wip-limit-warning`,
+        );
+      } finally {
+        await testUserService.updateProjectWorkflowState(orgSlug, projectKey, stateId, null);
+      }
+    });
+  }
+
   // Filter bar active (apply a Priority filter)
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-board-filter-active`)) {
     await runCaptureStep("board filter active", async () => {
@@ -3995,6 +4026,7 @@ const DRY_RUN_PAGES = [
   "filled-project-PROJ-board-swimlane-type",
   "filled-project-PROJ-board-swimlane-label",
   "filled-project-PROJ-board-column-collapsed",
+  "filled-project-PROJ-board-wip-limit-warning",
   "filled-project-PROJ-board-filter-active",
   "filled-project-PROJ-board-display-properties",
   "filled-project-PROJ-board-peek-mode",

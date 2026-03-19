@@ -23,7 +23,7 @@ import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { logger } from "./lib/logger";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { DAY, HOUR, MINUTE, MONTH, SECOND, WEEK } from "./lib/timeUtils";
-import { type CalendarEventColor, otpCodeTypes } from "./validators";
+import { type CalendarEventColor, otpCodeTypes, workflowCategories } from "./validators";
 
 // Test user expiration (1 hour - for garbage collection)
 const TEST_USER_EXPIRATION_MS = HOUR;
@@ -1715,6 +1715,147 @@ export const updateOrganizationSettingsInternal = internalMutation({
       success: true,
       organizationId: organization._id,
       updatedSettings: newSettings,
+    };
+  },
+});
+
+/**
+ * Update a seeded project's workflow state for interactive screenshot capture.
+ * POST /e2e/update-project-workflow-state
+ * Body: {
+ *   orgSlug: string,
+ *   projectKey: string,
+ *   stateId: string,
+ *   wipLimit: number | null,
+ * }
+ */
+export const updateProjectWorkflowStateEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, projectKey, stateId, wipLimit } = body;
+
+    if (!(orgSlug && projectKey && stateId)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug, projectKey, or stateId" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (wipLimit !== null && typeof wipLimit !== "number") {
+      return new Response(JSON.stringify({ error: "wipLimit must be a number or null" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateProjectWorkflowStateInternal, {
+      orgSlug,
+      projectKey,
+      stateId,
+      wipLimit,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const updateProjectWorkflowStateInternal = internalMutation({
+  args: {
+    orgSlug: v.string(),
+    projectKey: v.string(),
+    stateId: v.string(),
+    wipLimit: v.union(v.number(), v.null()),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    projectId: v.optional(v.id("projects")),
+    workflowStates: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          name: v.string(),
+          category: workflowCategories,
+          order: v.number(),
+          wipLimit: v.optional(v.number()),
+        }),
+      ),
+    ),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), args.projectKey)))
+      .first();
+
+    if (!project) {
+      return {
+        success: false,
+        error: `project not found: ${args.projectKey} in ${args.orgSlug}`,
+      };
+    }
+
+    const workflowStates = project.workflowStates ?? [];
+    let stateFound = false;
+    const updatedWorkflowStates = workflowStates.map((state) => {
+      if (state.id !== args.stateId) {
+        return state;
+      }
+
+      stateFound = true;
+      return {
+        ...state,
+        wipLimit: args.wipLimit ?? undefined,
+      };
+    });
+
+    if (!stateFound) {
+      return {
+        success: false,
+        error: `workflow state not found: ${args.stateId}`,
+      };
+    }
+
+    await ctx.db.patch(project._id, {
+      workflowStates: updatedWorkflowStates,
+      updatedAt: Date.now(),
+    });
+
+    return {
+      success: true,
+      projectId: project._id,
+      workflowStates: updatedWorkflowStates,
     };
   },
 });
