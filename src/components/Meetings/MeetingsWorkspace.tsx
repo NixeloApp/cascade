@@ -1,24 +1,72 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
-import { useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 import { PageContent } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
+import { Input } from "@/components/ui/Input";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Metadata, MetadataItem } from "@/components/ui/Metadata";
 import { Section } from "@/components/ui/Section";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
-import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { formatDateTime, formatDurationHuman, formatNumber, formatRelativeTime } from "@/lib/formatting";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import {
+  formatDateTime,
+  formatDurationHuman,
+  formatNumber,
+  formatRelativeTime,
+} from "@/lib/formatting";
 import { Calendar, CheckCircle, FileText, Mic, XCircle } from "@/lib/icons";
+import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 
 type MeetingListItem = FunctionReturnType<typeof api.meetingBot.listRecordings>[number];
+type MeetingSearchItem = FunctionReturnType<typeof api.meetingBot.searchRecordings>[number];
+type MeetingOverview = MeetingListItem | MeetingSearchItem;
 type MeetingDetail = FunctionReturnType<typeof api.meetingBot.getRecording>;
+type MeetingSummary = NonNullable<NonNullable<MeetingDetail>["summary"]>;
+type MeetingParticipants = NonNullable<NonNullable<MeetingDetail>["participants"]>;
+type ProjectOption = FunctionReturnType<typeof api.dashboard.getMyProjects>[number];
+
+function getSelectedActionItemProjects(
+  summary: MeetingSummary,
+  projects: ProjectOption[] | undefined,
+  defaultProjectId: Id<"projects"> | undefined,
+  currentSelections: Record<number, Id<"projects"> | null>,
+) {
+  const availableProjectIds = new Set((projects ?? []).map((project) => project._id));
+  const nextSelections: Record<number, Id<"projects"> | null> = {};
+
+  for (const [index, item] of summary.actionItems.entries()) {
+    if (item.issueCreated) {
+      nextSelections[index] = null;
+      continue;
+    }
+
+    const existingProjectId = currentSelections[index];
+    if (existingProjectId && availableProjectIds.has(existingProjectId)) {
+      nextSelections[index] = existingProjectId;
+      continue;
+    }
+
+    nextSelections[index] =
+      defaultProjectId && availableProjectIds.has(defaultProjectId) ? defaultProjectId : null;
+  }
+
+  return nextSelections;
+}
 
 const STATUS_LABELS: Record<string, string> = {
   scheduled: "Scheduled",
@@ -72,17 +120,14 @@ function RecordingListItem({
 }: {
   isSelected: boolean;
   onSelect: () => void;
-  recording: MeetingListItem;
+  recording: MeetingOverview;
 }) {
   return (
     <button type="button" onClick={onSelect} className="w-full text-left">
       <Card
         variant={isSelected ? "outline" : "soft"}
         padding="md"
-        className={cn(
-          "transition-default",
-          isSelected && "border-brand-ring bg-brand-subtle/40",
-        )}
+        className={cn("transition-default", isSelected && "border-brand-ring bg-brand-subtle/40")}
       >
         <Stack gap="sm">
           <Flex justify="between" align="start" gap="sm">
@@ -91,9 +136,14 @@ function RecordingListItem({
                 {recording.title}
               </Typography>
               <Typography variant="caption" color="secondary">
-                {formatMeetingPlatform(recording.meetingPlatform)}{" "}
-                <span aria-hidden="true">•</span> {formatRelativeTime(recording.createdAt)}
+                {formatMeetingPlatform(recording.meetingPlatform)} <span aria-hidden="true">•</span>{" "}
+                {formatRelativeTime(recording.createdAt)}
               </Typography>
+              {"matchExcerpt" in recording && recording.matchExcerpt && (
+                <Typography variant="caption" color="secondary" className="line-clamp-2">
+                  {recording.matchExcerpt}
+                </Typography>
+              )}
             </Stack>
             <StatusBadge status={recording.status} />
           </Flex>
@@ -118,8 +168,52 @@ function RecordingListItem({
   );
 }
 
-function ActionItemsSection({ summary }: { summary: NonNullable<MeetingDetail>["summary"] }) {
-  if (!(summary && summary.actionItems.length > 0)) return null;
+function ActionItemsSection({
+  summary,
+  defaultProjectId,
+  projects,
+}: {
+  summary: MeetingSummary;
+  defaultProjectId: Id<"projects"> | undefined;
+  projects: ProjectOption[] | undefined;
+}) {
+  const { mutate: createIssueFromActionItem, canAct } = useAuthenticatedMutation(
+    api.meetingBot.createIssueFromActionItem,
+  );
+  const [selectedProjectIds, setSelectedProjectIds] = useState<
+    Record<number, Id<"projects"> | null>
+  >({});
+  const [creatingIndex, setCreatingIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    setSelectedProjectIds((current) =>
+      getSelectedActionItemProjects(summary, projects, defaultProjectId, current),
+    );
+  }, [defaultProjectId, projects, summary]);
+
+  const handleCreateIssue = async (actionItemIndex: number) => {
+    const projectId = selectedProjectIds[actionItemIndex];
+    if (!projectId) {
+      showError("Select a project before creating an issue");
+      return;
+    }
+
+    setCreatingIndex(actionItemIndex);
+    try {
+      await createIssueFromActionItem({
+        summaryId: summary._id,
+        actionItemIndex,
+        projectId,
+      });
+      showSuccess("Issue created from action item");
+    } catch (error) {
+      showError(error, "Failed to create issue from action item");
+    } finally {
+      setCreatingIndex(null);
+    }
+  };
+
+  if (summary.actionItems.length === 0) return null;
 
   return (
     <Section title="Action Items" gap="sm">
@@ -141,6 +235,63 @@ function ActionItemsSection({ summary }: { summary: NonNullable<MeetingDetail>["
                   {item.priority && <Badge size="sm">Priority: {item.priority}</Badge>}
                   {item.issueCreated && <Badge size="sm">Issue linked</Badge>}
                 </Flex>
+
+                {!item.issueCreated && (
+                  <div className="rounded-lg border border-ui-border bg-ui-bg-elevated p-3">
+                    <Stack gap="xs">
+                      <Typography variant="caption" color="secondary">
+                        Turn this follow-up into a tracked issue.
+                      </Typography>
+
+                      {projects === undefined ? (
+                        <Typography variant="caption" color="secondary">
+                          Loading available projects...
+                        </Typography>
+                      ) : projects.length === 0 ? (
+                        <Typography variant="caption" color="secondary">
+                          Join a project to create issues from meeting action items.
+                        </Typography>
+                      ) : (
+                        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                          <Select
+                            key={`${summary._id}-${index}-${selectedProjectIds[index] ?? "none"}`}
+                            defaultValue={selectedProjectIds[index] ?? undefined}
+                            onValueChange={(value) =>
+                              setSelectedProjectIds((current) => ({
+                                ...current,
+                                [index]: value as Id<"projects">,
+                              }))
+                            }
+                          >
+                            <SelectTrigger
+                              aria-label={`Project for action item ${index + 1}`}
+                              className="w-full"
+                            >
+                              <SelectValue placeholder="Choose project" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {projects.map((project) => (
+                                <SelectItem key={project._id} value={project._id}>
+                                  {project.key} - {project.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            isLoading={creatingIndex === index}
+                            disabled={!canAct || !selectedProjectIds[index]}
+                            onClick={() => void handleCreateIssue(index)}
+                          >
+                            Create issue
+                          </Button>
+                        </div>
+                      )}
+                    </Stack>
+                  </div>
+                )}
               </Stack>
             </Card>
           </li>
@@ -150,7 +301,7 @@ function ActionItemsSection({ summary }: { summary: NonNullable<MeetingDetail>["
   );
 }
 
-function ParticipantsSection({ participants }: { participants: NonNullable<MeetingDetail>["participants"] }) {
+function ParticipantsSection({ participants }: { participants: MeetingParticipants }) {
   if (!(participants && participants.length > 0)) return null;
 
   return (
@@ -185,6 +336,7 @@ function ParticipantsSection({ participants }: { participants: NonNullable<Meeti
 
 function SummarySections({ recording }: { recording: NonNullable<MeetingDetail> }) {
   const { summary, transcript } = recording;
+  const projects = useAuthenticatedQuery(api.dashboard.getMyProjects, {});
 
   if (!summary) {
     return (
@@ -203,7 +355,9 @@ function SummarySections({ recording }: { recording: NonNullable<MeetingDetail> 
         <Section title="Summary" gap="sm">
           <Typography variant="muted">{summary.executiveSummary}</Typography>
           <Flex gap="xs" className="flex-wrap">
-            {summary.overallSentiment && <Badge size="sm">Sentiment: {summary.overallSentiment}</Badge>}
+            {summary.overallSentiment && (
+              <Badge size="sm">Sentiment: {summary.overallSentiment}</Badge>
+            )}
             <Badge size="sm">Model: {summary.modelUsed}</Badge>
           </Flex>
         </Section>
@@ -211,7 +365,11 @@ function SummarySections({ recording }: { recording: NonNullable<MeetingDetail> 
 
       {summary.keyPoints.length > 0 && (
         <Section title="Key Points" gap="sm">
-          <Stack as="ul" gap="xs" className="list-disc list-inside text-ui-text-secondary marker:text-brand">
+          <Stack
+            as="ul"
+            gap="xs"
+            className="list-disc list-inside text-ui-text-secondary marker:text-brand"
+          >
             {summary.keyPoints.map((point) => (
               <li key={point}>{point}</li>
             ))}
@@ -219,7 +377,11 @@ function SummarySections({ recording }: { recording: NonNullable<MeetingDetail> 
         </Section>
       )}
 
-      <ActionItemsSection summary={summary} />
+      <ActionItemsSection
+        summary={summary}
+        defaultProjectId={recording.projectId}
+        projects={projects}
+      />
 
       {summary.decisions.length > 0 && (
         <Section title="Decisions" gap="sm">
@@ -238,7 +400,11 @@ function SummarySections({ recording }: { recording: NonNullable<MeetingDetail> 
 
       {summary.openQuestions.length > 0 && (
         <Section title="Open Questions" gap="sm">
-          <Stack as="ul" gap="xs" className="list-disc list-inside text-ui-text-secondary marker:text-brand">
+          <Stack
+            as="ul"
+            gap="xs"
+            className="list-disc list-inside text-ui-text-secondary marker:text-brand"
+          >
             {summary.openQuestions.map((question) => (
               <li key={question}>{question}</li>
             ))}
@@ -278,11 +444,7 @@ function SummarySections({ recording }: { recording: NonNullable<MeetingDetail> 
   );
 }
 
-function RecordingDetailPanel({
-  recording,
-}: {
-  recording: MeetingDetail | undefined;
-}) {
+function RecordingDetailPanel({ recording }: { recording: MeetingDetail | undefined }) {
   if (recording === undefined) {
     return (
       <Card variant="soft" padding="xl">
@@ -346,25 +508,32 @@ function RecordingDetailPanel({
 
 export function MeetingsWorkspace() {
   const recordings = useAuthenticatedQuery(api.meetingBot.listRecordings, { limit: 50 });
+  const [searchQuery, setSearchQuery] = useState("");
+  const deferredSearchQuery = useDeferredValue(searchQuery.trim());
+  const searchedRecordings = useAuthenticatedQuery(
+    api.meetingBot.searchRecordings,
+    deferredSearchQuery.length >= 2 ? { query: deferredSearchQuery, limit: 50 } : "skip",
+  );
   const [selectedRecordingId, setSelectedRecordingId] = useState<Id<"meetingRecordings"> | null>(
     null,
   );
+  const displayedRecordings = deferredSearchQuery.length >= 2 ? searchedRecordings : recordings;
 
   useEffect(() => {
-    if (!recordings) return;
+    if (!displayedRecordings) return;
 
-    if (recordings.length === 0) {
+    if (displayedRecordings.length === 0) {
       setSelectedRecordingId(null);
       return;
     }
 
     setSelectedRecordingId((current) => {
-      if (current && recordings.some((recording) => recording._id === current)) {
+      if (current && displayedRecordings.some((recording) => recording._id === current)) {
         return current;
       }
-      return recordings[0]._id;
+      return displayedRecordings[0]._id;
     });
-  }, [recordings]);
+  }, [displayedRecordings]);
 
   const selectedRecording = useAuthenticatedQuery(
     api.meetingBot.getRecording,
@@ -373,7 +542,10 @@ export function MeetingsWorkspace() {
 
   return (
     <PageContent
-      isLoading={recordings === undefined}
+      isLoading={
+        recordings === undefined ||
+        (deferredSearchQuery.length >= 2 && searchedRecordings === undefined)
+      }
       isEmpty={recordings !== undefined && recordings.length === 0}
       emptyState={{
         icon: Mic,
@@ -388,16 +560,41 @@ export function MeetingsWorkspace() {
           description="Recordings created from calendar-linked meetings and direct bot runs."
           gap="sm"
         >
-          <Stack as="ul" gap="sm" className="list-none">
-            {recordings?.map((recording) => (
-              <li key={recording._id}>
-                <RecordingListItem
-                  recording={recording}
-                  isSelected={selectedRecordingId === recording._id}
-                  onSelect={() => setSelectedRecordingId(recording._id)}
-                />
-              </li>
-            ))}
+          <Stack gap="sm">
+            <Input
+              variant="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search transcript text"
+              aria-label="Search meetings"
+            />
+
+            {deferredSearchQuery.length >= 2 && (
+              <Typography variant="caption" color="secondary">
+                Searching transcript content for "{deferredSearchQuery}".
+              </Typography>
+            )}
+
+            {displayedRecordings !== undefined && displayedRecordings.length === 0 ? (
+              <EmptyState
+                icon={FileText}
+                size="compact"
+                title="No meetings match this search"
+                description="Try a different keyword or open a recent meeting from the full list."
+              />
+            ) : (
+              <Stack as="ul" gap="sm" className="list-none">
+                {displayedRecordings?.map((recording) => (
+                  <li key={recording._id}>
+                    <RecordingListItem
+                      recording={recording}
+                      isSelected={selectedRecordingId === recording._id}
+                      onSelect={() => setSelectedRecordingId(recording._id)}
+                    />
+                  </li>
+                ))}
+              </Stack>
+            )}
           </Stack>
         </Section>
 
