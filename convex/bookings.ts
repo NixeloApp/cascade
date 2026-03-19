@@ -15,7 +15,10 @@ import { batchFetchBookingPages } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { validate, validateEmail } from "./lib/constrainedValidators";
 import { conflict, notFound, rateLimited, requireOwned, validation } from "./lib/errors";
-import { getActiveOutOfOfficeDelegateUserId } from "./lib/outOfOffice";
+import {
+  getActiveOutOfOfficeDelegateUserId,
+  getOutOfOfficeDelegateForRange,
+} from "./lib/outOfOffice";
 import { DAY, HOUR, MINUTE } from "./lib/timeUtils";
 import { getUserWorkspaceContext } from "./lib/workspaceAccess";
 import { bookerAnswers } from "./validators";
@@ -174,12 +177,13 @@ export const createBooking = mutation({
       throw notFound("bookingPage");
     }
 
+    const endTime = args.startTime + page.duration * MINUTE;
+
     const effectiveHostId =
-      (await getActiveOutOfOfficeDelegateUserId(ctx, page.userId, args.startTime)) ?? page.userId;
+      (await getOutOfOfficeDelegateForRange(ctx, page.userId, args.startTime, endTime)) ??
+      page.userId;
 
     await validateAvailability(ctx, effectiveHostId, args.startTime, page.duration);
-
-    const endTime = args.startTime + page.duration * MINUTE;
     const now = Date.now();
 
     assertMinimumNotice(args.startTime, page.minimumNotice);

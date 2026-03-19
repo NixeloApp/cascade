@@ -85,6 +85,27 @@ export async function getActiveOutOfOfficeDelegateUserId(
 }
 
 /**
+ * Return the active delegate for a user when their out-of-office window overlaps a time range.
+ */
+export async function getOutOfOfficeDelegateForRange(
+  ctx: QueryCtx | MutationCtx,
+  userId: Id<"users">,
+  startTime: number,
+  endTime: number,
+): Promise<Id<"users"> | undefined> {
+  const user = await ctx.db.get(userId);
+  const status = getOutOfOfficeStatusForTimeRange(user, startTime, endTime);
+  const delegateUserId = status?.delegateUserId;
+
+  if (!delegateUserId || delegateUserId === userId) {
+    return undefined;
+  }
+
+  const delegateUser = await ctx.db.get(delegateUserId);
+  return delegateUser ? delegateUserId : undefined;
+}
+
+/**
  * Redirect assignee selection to an active delegate when the requested user is out of office.
  * Falls back to the original user when no active delegate is configured or the delegate
  * cannot access the target project.
