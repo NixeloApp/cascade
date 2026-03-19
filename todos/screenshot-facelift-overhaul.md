@@ -14,7 +14,6 @@ Core visual facelift work is done. Only the unfinished screenshot and validation
 
 ### Modals Still Not Captured
 
-- [ ] Avatar / cover upload modals
 - [ ] Alert dialog
 - [ ] Markdown preview modal
 

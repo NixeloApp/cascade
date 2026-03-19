@@ -214,6 +214,8 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-workspaces-create-workspace-modal$/, "27-workspaces", "-create-workspace-modal"],
   [/^filled-workspace-create-team-modal$/, "28-workspace-detail", "-create-team-modal"],
   [/^filled-time-tracking-manual-entry-modal$/, "22-time-tracking", "-manual-entry-modal"],
+  [/^filled-settings-profile-avatar-upload-modal$/, "12-settings", "-profile-avatar-upload-modal"],
+  [/^filled-settings-profile-cover-upload-modal$/, "12-settings", "-profile-cover-upload-modal"],
   // Project board: filled-project-xxx-board → 06-board
   [/^filled-project-.+-board$/, "06-board", ""],
   [/^filled-project-.+-create-issue-modal$/, "06-board", "-create-issue-modal"],
@@ -285,6 +287,8 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
 ];
 
 const MODAL_SPEC_PATTERNS: Array<[RegExp, string]> = [
+  [/^filled-settings-profile-avatar-upload-modal$/, "avatar-upload"],
+  [/^filled-settings-profile-cover-upload-modal$/, "cover-image-upload"],
   [/^filled-dashboard-omnibox$/, "command-palette"],
   [/^filled-project-.+-members-confirm-dialog$/, "confirm-dialog"],
   [/^filled-dashboard-customize-modal$/, "dashboard-customize"],
@@ -2357,6 +2361,65 @@ async function screenshotFilledStates(
     await screenshotProjectsModal(page, orgSlug, p);
   }
 
+  if (
+    shouldCaptureAny(p, [
+      "settings-profile-avatar-upload-modal",
+      "settings-profile-cover-upload-modal",
+    ])
+  ) {
+    const settingsUrl = ROUTES.settings.profile.build(orgSlug);
+
+    if (shouldCapture(p, "settings-profile-avatar-upload-modal")) {
+      await runCaptureStep("settings profile avatar upload modal", async () => {
+        await page
+          .goto(`${BASE_URL}${settingsUrl}`, {
+            waitUntil: "domcontentloaded",
+            timeout: 15000,
+          })
+          .catch(() => {});
+        await waitForExpectedContent(page, settingsUrl, "settings-profile", p);
+        await waitForScreenshotReady(page);
+        await dismissAllDialogs(page);
+        const trigger = page.getByRole("button", { name: /^change avatar$/i }).first();
+        await trigger.waitFor({ state: "visible", timeout: 8000 });
+        await trigger.click();
+        const dialog = await waitForDialogOpen(page);
+        await page
+          .getByRole("heading", { name: /^upload avatar$/i })
+          .first()
+          .waitFor({ state: "visible", timeout: 5000 });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, p, "settings-profile-avatar-upload-modal");
+        await dismissIfOpen(page, dialog);
+      });
+    }
+
+    if (shouldCapture(p, "settings-profile-cover-upload-modal")) {
+      await runCaptureStep("settings profile cover upload modal", async () => {
+        await page
+          .goto(`${BASE_URL}${settingsUrl}`, {
+            waitUntil: "domcontentloaded",
+            timeout: 15000,
+          })
+          .catch(() => {});
+        await waitForExpectedContent(page, settingsUrl, "settings-profile", p);
+        await waitForScreenshotReady(page);
+        await dismissAllDialogs(page);
+        const trigger = page.getByRole("button", { name: /^(add|change) cover$/i }).first();
+        await trigger.waitFor({ state: "visible", timeout: 8000 });
+        await trigger.click();
+        const dialog = await waitForDialogOpen(page);
+        await page
+          .getByRole("heading", { name: /^upload cover image$/i })
+          .first()
+          .waitFor({ state: "visible", timeout: 5000 });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, p, "settings-profile-cover-upload-modal");
+        await dismissIfOpen(page, dialog);
+      });
+    }
+  }
+
   // Project sub-pages
   if (projectKey) {
     const tabs = [
@@ -3587,6 +3650,8 @@ const DRY_RUN_PAGES = [
   "filled-dashboard-shortcuts-modal",
   "filled-dashboard-time-entry-modal",
   "filled-dashboard-customize-modal",
+  "filled-settings-profile-avatar-upload-modal",
+  "filled-settings-profile-cover-upload-modal",
   // Filled states — projects modals
   "filled-projects-create-project-modal",
   // Filled states — workspace modals

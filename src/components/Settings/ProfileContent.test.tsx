@@ -100,4 +100,24 @@ describe("ProfileContent", () => {
     const call = mockUpdateProfile.mock.calls[0][0];
     expect(call.name).toBe("Updated Name");
   });
+
+  it("opens the avatar upload modal from the profile header", async () => {
+    const user = userEvent.setup();
+    render(<ProfileContent />);
+
+    await user.click(screen.getByRole("button", { name: /^change avatar$/i }));
+
+    expect(screen.getByText("Upload Avatar")).toBeInTheDocument();
+    expect(screen.getByText("Choose a profile picture to display")).toBeInTheDocument();
+  });
+
+  it("opens the cover image upload modal from the profile header", async () => {
+    const user = userEvent.setup();
+    render(<ProfileContent />);
+
+    await user.click(screen.getByRole("button", { name: /^add cover$/i }));
+
+    expect(screen.getByText("Upload Cover Image")).toBeInTheDocument();
+    expect(screen.getByText("Choose a cover image for your profile")).toBeInTheDocument();
+  });
 });
