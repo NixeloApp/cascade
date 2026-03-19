@@ -10,7 +10,7 @@ Core visual facelift work is done. Only the unfinished screenshot and validation
 
 ### Canonical Spec Screenshot Variants Missing
 
-- [ ] `17-members` — missing `desktop-dark.png`, `desktop-light.png`, `tablet-light.png`, `mobile-light.png`
+- [x] All current page spec folders have canonical `desktop-dark`, `desktop-light`, `tablet-light`, and `mobile-light` variants
 
 ### Modals Still Not Captured
 

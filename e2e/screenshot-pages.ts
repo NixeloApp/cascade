@@ -249,6 +249,8 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-calendar-create-event-modal$/, "11-calendar", "-create-event-modal"],
   // Project analytics: filled-project-xxx-analytics → 13-analytics
   [/^filled-project-.+-analytics$/, "13-analytics", ""],
+  // Project members: filled-project-xxx-members → 17-members
+  [/^filled-project-.+-members$/, "17-members", ""],
   // Project settings: filled-project-xxx-settings → 12-settings
   [/^filled-project-.+-settings$/, "12-settings", "-project"],
   // Workspace pages: filled-workspace-xxx-{tab} → 28-workspace-detail (specific patterns first)
@@ -1590,6 +1592,44 @@ async function waitForSprintsReady(page: Page): Promise<void> {
     .catch(() => {});
 }
 
+async function waitForProjectMembersReady(page: Page): Promise<void> {
+  await page
+    .getByRole("heading", { name: /^project settings$/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .getByRole("heading", { name: /^members$/i })
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .getByText(/members? with access/i)
+    .first()
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => {});
+  await page
+    .getByRole("status")
+    .first()
+    .waitFor({ state: "hidden", timeout: 5000 })
+    .catch(() => {});
+}
+
+async function scrollSectionNearViewportTop(
+  locator: Locator,
+  page: Page,
+  offset = 24,
+): Promise<void> {
+  await locator.scrollIntoViewIfNeeded().catch(() => {});
+  await locator
+    .evaluate((element, topOffset) => {
+      const targetTop = element.getBoundingClientRect().top + window.scrollY - topOffset;
+      window.scrollTo({ top: Math.max(0, targetTop), behavior: "auto" });
+    }, offset)
+    .catch(() => {});
+  await page.waitForTimeout(100);
+}
+
 async function waitForRoadmapReady(page: Page): Promise<void> {
   await page
     .getByText(/^roadmap$/i)
@@ -1709,6 +1749,9 @@ async function waitForExpectedContent(
         timeout: 12000,
       })
       .catch(() => {});
+    if (/^project-[^-]+-members$/.test(name)) {
+      await waitForProjectMembersReady(page);
+    }
     return;
   }
 
@@ -2334,6 +2377,21 @@ async function screenshotFilledStates(
         `project-${normalizedProjectKey}-${tab}`,
         `/${orgSlug}/projects/${projectKey}/${tab}`,
       );
+    }
+
+    if (shouldCapture(p, `project-${normalizedProjectKey}-members`)) {
+      await runCaptureStep("project members", async () => {
+        const settingsUrl = `/${orgSlug}/projects/${projectKey}/settings`;
+        await page.goto(`${BASE_URL}${settingsUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        await waitForExpectedContent(page, settingsUrl, `project-${normalizedProjectKey}-members`);
+        const membersHeading = page.getByRole("heading", { name: /^members$/i }).first();
+        await scrollSectionNearViewportTop(membersHeading, page);
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, p, `project-${normalizedProjectKey}-members`);
+      });
     }
 
     if (
@@ -3501,6 +3559,7 @@ const DRY_RUN_PAGES = [
   "filled-project-PROJ-analytics",
   "filled-project-PROJ-billing",
   "filled-project-PROJ-timesheet",
+  "filled-project-PROJ-members",
   "filled-project-PROJ-settings",
   "filled-project-PROJ-create-issue-modal",
   "filled-project-PROJ-issue-detail-modal",
