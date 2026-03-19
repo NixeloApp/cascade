@@ -16,8 +16,6 @@ Core visual facelift work is done. Only the unfinished screenshot and validation
 
 ### Interactive States Still Not Captured
 
-- [ ] Loading skeletons
-
 ### CI Integration
 
 - [ ] CI screenshot manifest check — still blocked until screenshots are committed to git or generated in CI.

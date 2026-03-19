@@ -193,6 +193,7 @@ function primeDashboardQueries(
 describe("Dashboard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    delete window.__NIXELO_E2E_DASHBOARD_LOADING__;
     mockUseNavigate.mockReturnValue(mockNavigate);
     mockUseOrganization.mockReturnValue({
       orgSlug: "acme",
@@ -335,6 +336,37 @@ describe("Dashboard", () => {
     expect(mockUsePaginatedQuery).toHaveBeenCalledWith(api.dashboard.getMyIssues, "skip", {
       initialNumItems: 20,
     });
+    expect(mockUseListNavigation).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        items: [],
+        enabled: false,
+      }),
+    );
+    expect(mockUseListNavigation).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        items: [],
+        enabled: false,
+      }),
+    );
+  });
+
+  it("forces dashboard loading placeholders when the E2E loading override is enabled", () => {
+    window.__NIXELO_E2E_DASHBOARD_LOADING__ = true;
+    primeDashboardQueries();
+
+    render(<Dashboard />);
+
+    expect(screen.getByTestId("greeting")).toHaveTextContent("unknown:0");
+    expect(screen.getByTestId("focus-zone")).toHaveTextContent("no-focus-task");
+    expect(screen.getByTestId("quick-stats")).toHaveTextContent("0");
+    expect(screen.getByTestId("workspaces-list")).toHaveTextContent("0");
+    expect(screen.getByTestId("recent-activity")).toHaveTextContent("0");
+    expect(screen.getByTestId("my-issues-state")).toHaveTextContent(
+      "filter:assigned;display:0;assigned:0;created:0",
+    );
+
     expect(mockUseListNavigation).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({

@@ -238,6 +238,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-dashboard-advanced-search-modal$/, "04-dashboard", "-advanced-search-modal"],
   [/^filled-dashboard-shortcuts-modal$/, "04-dashboard", "-shortcuts-modal"],
   [/^filled-dashboard-time-entry-modal$/, "04-dashboard", "-time-entry-modal"],
+  [/^filled-dashboard-loading-skeletons$/, "04-dashboard", "-loading-skeletons"],
   [/^filled-projects-create-project-modal$/, "05-projects", "-create-project-modal"],
   [/^filled-issues-side-panel$/, "19-issues", "-side-panel"],
   // Workspace modals
@@ -2610,9 +2611,11 @@ async function screenshotFilledStates(
       "dashboard-advanced-search-modal",
       "dashboard-shortcuts-modal",
       "dashboard-time-entry-modal",
+      "dashboard-loading-skeletons",
     ])
   ) {
     await screenshotDashboardModals(page, orgSlug, p);
+    await screenshotDashboardLoadingState(page, orgSlug, p);
   }
   if (shouldCaptureAny(p, ["projects-create-project-modal"])) {
     await screenshotProjectsModal(page, orgSlug, p);
@@ -4065,6 +4068,58 @@ async function screenshotDashboardModals(
   }
 }
 
+async function screenshotDashboardLoadingState(
+  page: Page,
+  orgSlug: string,
+  prefix: string,
+): Promise<void> {
+  if (!shouldCapture(prefix, "dashboard-loading-skeletons")) {
+    return;
+  }
+
+  await runCaptureStep("dashboard loading skeletons", async () => {
+    const loadingPage = await page.context().newPage();
+
+    try {
+      await loadingPage.addInitScript(() => {
+        window.__NIXELO_E2E_DASHBOARD_LOADING__ = true;
+      });
+
+      const dashboardUrl = ROUTES.dashboard.build(orgSlug);
+      await loadingPage
+        .goto(`${BASE_URL}${dashboardUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await loadingPage
+        .waitForURL((currentUrl) => /\/[^/]+\/dashboard$/.test(new URL(currentUrl).pathname), {
+          timeout: 15000,
+        })
+        .catch(() => {});
+      await loadingPage
+        .getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON)
+        .first()
+        .waitFor({ state: "visible", timeout: 15000 })
+        .catch(() => {});
+      await loadingPage
+        .getByRole("heading", { name: /^dashboard$/i })
+        .first()
+        .waitFor({ state: "visible", timeout: 12000 })
+        .catch(() => {});
+      await loadingPage.waitForFunction(
+        () => document.querySelectorAll("[data-loading-skeleton]").length >= 6,
+        undefined,
+        { timeout: 12000 },
+      );
+      await waitForScreenshotReady(loadingPage);
+      await captureCurrentView(loadingPage, prefix, "dashboard-loading-skeletons");
+    } finally {
+      await loadingPage.close().catch(() => {});
+    }
+  });
+}
+
 async function screenshotProjectsModal(page: Page, orgSlug: string, prefix: string): Promise<void> {
   if (!shouldCapture(prefix, "projects-create-project-modal")) {
     return;
@@ -4701,6 +4756,7 @@ const DRY_RUN_PAGES = [
   "filled-dashboard-shortcuts-modal",
   "filled-dashboard-time-entry-modal",
   "filled-dashboard-customize-modal",
+  "filled-dashboard-loading-skeletons",
   "filled-settings-profile-avatar-upload-modal",
   "filled-settings-profile-cover-upload-modal",
   "filled-settings-notifications-permission-denied",
