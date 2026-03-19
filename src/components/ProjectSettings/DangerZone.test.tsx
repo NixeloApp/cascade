@@ -105,6 +105,11 @@ describe("DangerZone", () => {
       to: ROUTES.projects.list.path,
       params: { orgSlug: "demo-org" },
     });
+    expect(
+      screen.queryByRole("button", {
+        name: "I understand, delete this project",
+      }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows an error and stays on the page when deletion fails", async () => {
@@ -133,5 +138,20 @@ describe("DangerZone", () => {
         name: "I understand, delete this project",
       }),
     ).toBeEnabled();
+  });
+
+  it("closes and resets the dialog when cancelled", async () => {
+    const user = userEvent.setup();
+
+    render(<DangerZone {...defaultProps} />);
+
+    await user.click(screen.getByRole("button", { name: "Delete Project" }));
+    await user.type(screen.getByPlaceholderText("Type ALPHA to confirm"), "ALPHA");
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(screen.queryByPlaceholderText("Type ALPHA to confirm")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Delete Project" }));
+    expect(screen.getByPlaceholderText("Type ALPHA to confirm")).toHaveValue("");
   });
 });

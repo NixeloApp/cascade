@@ -256,6 +256,11 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-project-.+-members$/, "17-members", ""],
   [/^filled-project-.+-members-confirm-dialog$/, "17-members", "-confirm-dialog"],
   // Project settings: filled-project-xxx-settings → 12-settings
+  [
+    /^filled-project-.+-settings-delete-alert-dialog$/,
+    "12-settings",
+    "-project-delete-alert-dialog",
+  ],
   [/^filled-project-.+-settings$/, "12-settings", "-project"],
   // Workspace pages: filled-workspace-xxx-{tab} → 28-workspace-detail (specific patterns first)
   [/^filled-workspace-.+-backlog$/, "28-workspace-detail", "-backlog"],
@@ -289,6 +294,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
 const MODAL_SPEC_PATTERNS: Array<[RegExp, string]> = [
   [/^filled-settings-profile-avatar-upload-modal$/, "avatar-upload"],
   [/^filled-settings-profile-cover-upload-modal$/, "cover-image-upload"],
+  [/^filled-project-.+-settings-delete-alert-dialog$/, "alert-dialog"],
   [/^filled-dashboard-omnibox$/, "command-palette"],
   [/^filled-project-.+-members-confirm-dialog$/, "confirm-dialog"],
   [/^filled-dashboard-customize-modal$/, "dashboard-customize"],
@@ -773,8 +779,10 @@ async function waitForDialogOpen(page: Page, timeout = 8000): Promise<Locator> {
     .waitFor({ state: "visible", timeout })
     .catch(() => {});
 
-  // Wait for the dialog content with data-state="open"
-  const dialog = page.locator("[role='dialog'][data-state='open']").first();
+  // Wait for the dialog or alert dialog content with data-state="open"
+  const dialog = page
+    .locator("[role='dialog'][data-state='open'], [role='alertdialog'][data-state='open']")
+    .first();
   await dialog.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
   return dialog;
 }
@@ -796,6 +804,31 @@ async function openOmnibox(page: Page, trigger: Locator, dialog: Locator): Promi
     .waitFor({ state: "visible", timeout: 5000 })
     .catch(() => {});
   await waitForScreenshotReady(page);
+}
+
+async function openStableAlertDialog(
+  page: Page,
+  trigger: Locator,
+  readyLocator: Locator,
+  attempts = 3,
+): Promise<Locator> {
+  let dialog = page
+    .locator("[role='dialog'][data-state='open'], [role='alertdialog'][data-state='open']")
+    .first();
+
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    await dismissAllDialogs(page);
+    await trigger.scrollIntoViewIfNeeded().catch(() => {});
+    await trigger.click();
+    dialog = await waitForDialogOpen(page);
+    await readyLocator.waitFor({ state: "visible", timeout: 3000 }).catch(() => {});
+    await page.waitForTimeout(350);
+    if (await readyLocator.isVisible().catch(() => false)) {
+      return dialog;
+    }
+  }
+
+  throw new Error("Alert dialog did not remain open");
 }
 
 function isProjectBoardUrl(url: string): boolean {
@@ -2481,6 +2514,30 @@ async function screenshotFilledStates(
       });
     }
 
+    if (shouldCapture(p, `project-${normalizedProjectKey}-settings-delete-alert-dialog`)) {
+      await runCaptureStep("project settings delete alert dialog", async () => {
+        const settingsUrl = `/${orgSlug}/projects/${projectKey}/settings`;
+        await page.goto(`${BASE_URL}${settingsUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
+        await waitForExpectedContent(page, settingsUrl, `project-${normalizedProjectKey}-settings`);
+        await waitForScreenshotReady(page);
+        await dismissAllDialogs(page);
+        const trigger = page.getByRole("button", { name: /^delete project$/i }).first();
+        const confirmInput = page.getByPlaceholder(`Type ${projectKey} to confirm`).first();
+        await trigger.waitFor({ state: "visible", timeout: 8000 });
+        const dialog = await openStableAlertDialog(page, trigger, confirmInput);
+        await waitForScreenshotReady(page);
+        await captureCurrentView(
+          page,
+          p,
+          `project-${normalizedProjectKey}-settings-delete-alert-dialog`,
+        );
+        await dismissIfOpen(page, dialog);
+      });
+    }
+
     if (
       shouldCaptureAny(p, [
         `project-${normalizedProjectKey}-create-issue-modal`,
@@ -3671,6 +3728,7 @@ const DRY_RUN_PAGES = [
   "filled-project-PROJ-members",
   "filled-project-PROJ-members-confirm-dialog",
   "filled-project-PROJ-settings",
+  "filled-project-PROJ-settings-delete-alert-dialog",
   "filled-project-PROJ-create-issue-modal",
   "filled-project-PROJ-issue-detail-modal",
   "filled-project-PROJ-import-export-modal",
