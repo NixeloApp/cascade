@@ -22,6 +22,7 @@ export type CalendarProps = {
   setDate: (date: Date) => void;
   calendarIconIsToday?: boolean;
   onAddEvent: (date?: Date) => void;
+  onEventMove: (event: CalendarEvent, date: Date) => Promise<void> | void;
   onEventClick: (event: CalendarEvent) => void;
 };
 

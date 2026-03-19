@@ -1,9 +1,19 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { endOfDay, endOfMonth, endOfWeek, startOfDay, startOfMonth, startOfWeek } from "date-fns";
+import {
+  endOfDay,
+  endOfMonth,
+  endOfWeek,
+  isSameDay,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+} from "date-fns";
 import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
-import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { formatDate } from "@/lib/formatting";
+import { showError, showSuccess } from "@/lib/toast";
 import { CreateEventModal } from "./CreateEventModal";
 import { type EventColor, PALETTE_COLORS } from "./calendar-colors";
 import { EventDetailsModal } from "./EventDetailsModal";
@@ -61,6 +71,7 @@ export function CalendarView({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createEventDate, setCreateEventDate] = useState(new Date());
   const [selectedEventId, setSelectedEventId] = useState<Id<"calendarEvents"> | null>(null);
+  const { mutate: updateEvent } = useAuthenticatedMutation(api.calendarEvents.update);
 
   const { startDate, endDate } = getDateRange(date, mode);
 
@@ -140,6 +151,29 @@ export function CalendarView({
     setShowCreateModal(true);
   }
 
+  async function handleEventMove(event: CalendarEvent, requestedDate: Date): Promise<void> {
+    const movedTimes = getMovedEventTimes(event, requestedDate);
+    if (!movedTimes) {
+      return;
+    }
+
+    try {
+      await updateEvent({
+        id: extractConvexId(event as NixeloCalendarEvent),
+        startTime: movedTimes.startTime,
+        endTime: movedTimes.endTime,
+      });
+      showSuccess(
+        `Event moved to ${formatDate(movedTimes.startTime, {
+          month: "short",
+          day: "numeric",
+        })}`,
+      );
+    } catch (error) {
+      showError(error, "Failed to move event");
+    }
+  }
+
   return (
     <Flex direction="column" className="h-full" data-calendar>
       <ShadcnCalendar
@@ -149,6 +183,7 @@ export function CalendarView({
         date={date}
         setDate={setDate}
         onAddEvent={handleAddEvent}
+        onEventMove={handleEventMove}
         onEventClick={handleEventClick}
       />
 
@@ -168,6 +203,29 @@ export function CalendarView({
       )}
     </Flex>
   );
+}
+
+export function getMovedEventTimes(
+  event: CalendarEvent,
+  requestedDate: Date,
+): { startTime: number; endTime: number } | null {
+  if (isSameDay(event.start, requestedDate)) {
+    return null;
+  }
+
+  const nextStart = new Date(requestedDate);
+  nextStart.setHours(
+    event.start.getHours(),
+    event.start.getMinutes(),
+    event.start.getSeconds(),
+    event.start.getMilliseconds(),
+  );
+
+  const durationMs = event.end.getTime() - event.start.getTime();
+  return {
+    startTime: nextStart.getTime(),
+    endTime: nextStart.getTime() + durationMs,
+  };
 }
 
 function pickScopeColor(scopeId: string): EventColor {

@@ -75,10 +75,18 @@ export function CalendarEvent({
   event,
   month = false,
   className,
+  draggable = false,
+  isDragging = false,
+  onDragStart,
+  onDragEnd,
 }: {
   event: CalendarEventType;
   month?: boolean;
   className?: string;
+  draggable?: boolean;
+  isDragging?: boolean;
+  onDragStart?: (event: React.DragEvent<HTMLDivElement>) => void;
+  onDragEnd?: (event: React.DragEvent<HTMLDivElement>) => void;
 }): React.ReactElement {
   const { events, onEventClick, date } = useCalendarContext();
   const style = month ? {} : calculateEventPosition(event, events);
@@ -95,16 +103,21 @@ export function CalendarEvent({
         <motion.div
           tabIndex={0}
           data-testid={TEST_IDS.CALENDAR.EVENT_ITEM}
+          data-dragging={isDragging ? "true" : undefined}
+          draggable={draggable}
           className={cn(
             getCardRecipeClassName(eventRecipe),
             "truncate cursor-pointer transition-all duration-medium",
             colors.bg,
             colors.hover,
             colors.border,
+            isDragging && "opacity-60 shadow-card",
             !month && "absolute",
             className,
           )}
           style={style}
+          onDragStartCapture={onDragStart}
+          onDragEndCapture={onDragEnd}
           onClick={(e) => {
             e.stopPropagation();
             onEventClick(event);

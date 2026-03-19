@@ -18,6 +18,7 @@ import {
   startOfWeek,
 } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
 import { getDotColorClass } from "@/components/Calendar/calendar-colors";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -27,6 +28,7 @@ import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Typography } from "@/components/ui/Typography";
 import { TEST_IDS } from "@/lib/test-ids";
+import { cn } from "@/lib/utils";
 import { useCalendarContext } from "../../calendar-context";
 import { CalendarEvent } from "../../calendar-event";
 
@@ -42,7 +44,9 @@ const WEEKDAY_NAMES = [
 
 /** Month view grid showing all days with event indicators. */
 export function CalendarBodyMonth(): React.ReactElement {
-  const { date, events, onAddEvent, setDate, setMode } = useCalendarContext();
+  const { date, events, onAddEvent, onEventMove, setDate, setMode } = useCalendarContext();
+  const [draggedEventId, setDraggedEventId] = useState<string | null>(null);
+  const [dropTargetDate, setDropTargetDate] = useState<string | null>(null);
 
   const monthStart = startOfMonth(date);
   const monthEnd = endOfMonth(date);
@@ -67,6 +71,10 @@ export function CalendarBodyMonth(): React.ReactElement {
   function openDay(day: Date): void {
     setDate(day);
     setMode("day");
+  }
+
+  function getDayKey(day: Date): string {
+    return format(day, "yyyy-MM-dd");
   }
 
   return (
@@ -102,6 +110,7 @@ export function CalendarBodyMonth(): React.ReactElement {
                 const dayEvents = visibleEvents.filter((event) => isSameDay(event.start, day));
                 const isToday = isSameDay(day, today);
                 const isCurrentMonth = isSameMonth(day, date);
+                const dayKey = getDayKey(day);
                 const dayCellRecipe = isToday
                   ? "calendarMonthDayCellToday"
                   : isCurrentMonth
@@ -118,7 +127,39 @@ export function CalendarBodyMonth(): React.ReactElement {
                     key={day.toISOString()}
                     recipe={dayCellRecipe}
                     padding="xs"
-                    className="group"
+                    data-testid={TEST_IDS.CALENDAR.DAY_CELL}
+                    data-date={dayKey}
+                    data-drop-target={dropTargetDate === dayKey ? "true" : undefined}
+                    className={cn(
+                      "group",
+                      dropTargetDate === dayKey && "ring-2 ring-brand bg-brand-subtle",
+                    )}
+                    onDragOver={(event) => {
+                      if (!draggedEventId) {
+                        return;
+                      }
+                      event.preventDefault();
+                      if (dropTargetDate !== dayKey) {
+                        setDropTargetDate(dayKey);
+                      }
+                    }}
+                    onDragLeave={() => {
+                      if (dropTargetDate === dayKey) {
+                        setDropTargetDate(null);
+                      }
+                    }}
+                    onDrop={async (event) => {
+                      event.preventDefault();
+                      const draggedEvent =
+                        dayEvents.find((item) => item.id === draggedEventId) ??
+                        visibleEvents.find((item) => item.id === draggedEventId);
+                      setDropTargetDate(dayKey);
+                      if (draggedEvent) {
+                        await onEventMove(draggedEvent, day);
+                      }
+                      setDraggedEventId(null);
+                      setDropTargetDate(null);
+                    }}
                     onClick={() => openDay(day)}
                   >
                     <Flex align="start" justify="between" gap="xs">
@@ -160,7 +201,28 @@ export function CalendarBodyMonth(): React.ReactElement {
                       <div className="mt-1 hidden md:block">
                         {dayEvents.slice(0, 3).map((event) => (
                           <div key={event.id} className="mb-1 last:mb-0">
-                            <CalendarEvent event={event} className="relative h-auto" month />
+                            <CalendarEvent
+                              event={event}
+                              className="relative h-auto"
+                              month
+                              draggable
+                              isDragging={draggedEventId === event.id}
+                              onDragStart={(dragEvent) => {
+                                dragEvent.stopPropagation();
+                                dragEvent.dataTransfer?.setData("text/plain", event.id);
+                                dragEvent.dataTransfer?.setDragImage(
+                                  dragEvent.currentTarget,
+                                  16,
+                                  16,
+                                );
+                                setDraggedEventId(event.id);
+                                setDropTargetDate(dayKey);
+                              }}
+                              onDragEnd={() => {
+                                setDraggedEventId(null);
+                                setDropTargetDate(null);
+                              }}
+                            />
                           </div>
                         ))}
                         {dayEvents.length > 3 && (

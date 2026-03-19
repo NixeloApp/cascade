@@ -16,6 +16,7 @@ export function ShadcnCalendar({
   setDate,
   calendarIconIsToday = true,
   onAddEvent,
+  onEventMove,
   onEventClick,
 }: CalendarProps): React.ReactElement {
   return (
@@ -27,6 +28,7 @@ export function ShadcnCalendar({
       setDate={setDate}
       calendarIconIsToday={calendarIconIsToday}
       onAddEvent={onAddEvent}
+      onEventMove={onEventMove}
       onEventClick={onEventClick}
     >
       <CalendarHeader>

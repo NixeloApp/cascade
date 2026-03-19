@@ -305,6 +305,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-calendar-(day|week|month)$/, "11-calendar", "-$1"],
   [/^filled-calendar-event-modal$/, "11-calendar", "-event-modal"],
   [/^filled-calendar-create-event-modal$/, "11-calendar", "-create-event-modal"],
+  [/^filled-calendar-drag-and-drop$/, "11-calendar", "-drag-and-drop"],
   [/^filled-calendar-quick-add$/, "11-calendar", "-quick-add"],
   // Project analytics: filled-project-xxx-analytics → 13-analytics
   [/^filled-project-.+-analytics$/, "13-analytics", ""],
@@ -1243,6 +1244,57 @@ async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<bool
   if (await navigateUntilVisible("next", 4)) return true;
 
   return false;
+}
+
+async function waitForCalendarMonthReady(page: Page): Promise<void> {
+  const monthToggle = page.getByTestId(TEST_IDS.CALENDAR.MODE_MONTH).first();
+  await monthToggle.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
+  if ((await monthToggle.count().catch(() => 0)) > 0) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const isSelected = (await monthToggle.getAttribute("data-state").catch(() => null)) === "on";
+      if (isSelected) {
+        break;
+      }
+
+      await monthToggle.scrollIntoViewIfNeeded().catch(() => {});
+      await monthToggle.click().catch(() => {});
+      await page.waitForTimeout(150);
+
+      const selectedAfterClick =
+        (await monthToggle.getAttribute("data-state").catch(() => null)) === "on";
+      if (selectedAfterClick) {
+        break;
+      }
+
+      await monthToggle.evaluate((element) => {
+        if (element instanceof HTMLButtonElement) {
+          element.click();
+        }
+      });
+      await page.waitForTimeout(150);
+    }
+  }
+  await page.waitForFunction(
+    (monthToggleTestId) =>
+      document.querySelector(`[data-testid="${monthToggleTestId}"]`)?.getAttribute("data-state") ===
+      "on",
+    TEST_IDS.CALENDAR.MODE_MONTH,
+    { timeout: 5000 },
+  );
+  await waitForScreenshotReady(page);
+  await waitForCalendarReady(page);
+  await page
+    .waitForFunction(
+      ({ dayCellTestId, quickAddTestId }) =>
+        document.querySelectorAll(`[data-testid="${dayCellTestId}"]`).length >= 28 &&
+        document.querySelectorAll(`[data-testid="${quickAddTestId}"]`).length >= 28,
+      {
+        dayCellTestId: TEST_IDS.CALENDAR.DAY_CELL,
+        quickAddTestId: TEST_IDS.CALENDAR.QUICK_ADD_DAY,
+      },
+      { timeout: 5000 },
+    )
+    .catch(() => {});
 }
 
 async function waitForBoardReady(page: Page): Promise<boolean> {
@@ -2952,6 +3004,7 @@ async function screenshotFilledStates(
         "calendar-week",
         "calendar-month",
         "calendar-event-modal",
+        "calendar-drag-and-drop",
         "calendar-quick-add",
       ])
     ) {
@@ -3052,11 +3105,7 @@ async function screenshotFilledStates(
 
         if (shouldCapture(p, "calendar-quick-add")) {
           await runCaptureStep("calendar quick-add", async () => {
-            const monthToggle = page.getByTestId(TEST_IDS.CALENDAR.MODE_MONTH).first();
-            await monthToggle.waitFor({ state: "visible", timeout: 5000 });
-            await monthToggle.click();
-            await waitForScreenshotReady(page);
-            await waitForCalendarReady(page);
+            await waitForCalendarMonthReady(page);
 
             const quickAddButton = page.getByTestId(TEST_IDS.CALENDAR.QUICK_ADD_DAY).first();
             if ((await quickAddButton.count()) > 0) {
@@ -3080,6 +3129,92 @@ async function screenshotFilledStates(
             await waitForScreenshotReady(page);
             await captureCurrentView(page, p, "calendar-quick-add");
             await dismissIfOpen(page, dialog);
+          });
+        }
+
+        if (shouldCapture(p, "calendar-drag-and-drop")) {
+          await runCaptureStep("calendar drag-and-drop", async () => {
+            const orgCalendarUrl = ROUTES.calendar.build(orgSlug);
+            await page
+              .goto(`${BASE_URL}${orgCalendarUrl}`, {
+                waitUntil: "domcontentloaded",
+                timeout: 15000,
+              })
+              .catch(() => {});
+            await waitForExpectedContent(page, orgCalendarUrl, "org-calendar");
+            await waitForScreenshotReady(page);
+            await waitForCalendarMonthReady(page);
+            await waitForCalendarEvents(page);
+
+            const dragState = await page.evaluate(
+              ({ dayCellTestId, eventItemTestId }) => {
+                const sourceCell = Array.from(
+                  document.querySelectorAll<HTMLElement>(`[data-testid="${dayCellTestId}"]`),
+                ).find((cell) => cell.querySelector(`[data-testid="${eventItemTestId}"]`));
+                const targetCell = sourceCell?.nextElementSibling;
+
+                if (!(sourceCell && targetCell instanceof HTMLElement)) {
+                  return {
+                    sourceDate: null,
+                    targetDate: null,
+                    dayCellCount: document.querySelectorAll(`[data-testid="${dayCellTestId}"]`)
+                      .length,
+                    eventItemCount: document.querySelectorAll(`[data-testid="${eventItemTestId}"]`)
+                      .length,
+                  };
+                }
+
+                return {
+                  sourceDate: sourceCell.dataset.date ?? null,
+                  targetDate: targetCell.dataset.date ?? null,
+                  dayCellCount: document.querySelectorAll(`[data-testid="${dayCellTestId}"]`)
+                    .length,
+                  eventItemCount: document.querySelectorAll(`[data-testid="${eventItemTestId}"]`)
+                    .length,
+                };
+              },
+              {
+                dayCellTestId: TEST_IDS.CALENDAR.DAY_CELL,
+                eventItemTestId: TEST_IDS.CALENDAR.EVENT_ITEM,
+              },
+            );
+
+            if (!(dragState?.targetDate && dragState.sourceDate)) {
+              throw new Error(
+                `[${p}] Unable to establish calendar drag state (day cells=${dragState?.dayCellCount ?? 0}, events=${dragState?.eventItemCount ?? 0})`,
+              );
+            }
+
+            const targetCell = page.locator(
+              `[data-testid="${TEST_IDS.CALENDAR.DAY_CELL}"][data-date="${dragState.targetDate}"]`,
+            );
+            const sourceCell = page.locator(
+              `[data-testid="${TEST_IDS.CALENDAR.DAY_CELL}"][data-date="${dragState.sourceDate}"]`,
+            );
+            const sourceEvent = sourceCell.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM).first();
+            const dataTransfer = await page.evaluateHandle(() => new DataTransfer());
+
+            await sourceEvent.scrollIntoViewIfNeeded().catch(() => {});
+            await targetCell.waitFor({ state: "visible", timeout: 5000 });
+            await targetCell.scrollIntoViewIfNeeded().catch(() => {});
+            await sourceEvent.dispatchEvent("dragstart", { dataTransfer });
+            await targetCell.dispatchEvent("dragenter", { dataTransfer });
+            await targetCell.dispatchEvent("dragover", { dataTransfer });
+            await page.waitForFunction(
+              ({ dayCellTestId, targetDate }) =>
+                document
+                  .querySelector(`[data-testid="${dayCellTestId}"][data-date="${targetDate}"]`)
+                  ?.getAttribute("data-drop-target") === "true",
+              {
+                dayCellTestId: TEST_IDS.CALENDAR.DAY_CELL,
+                targetDate: dragState.targetDate,
+              },
+              { timeout: 5000 },
+            );
+            await waitForScreenshotReady(page);
+            await captureCurrentView(page, p, "calendar-drag-and-drop");
+
+            await sourceEvent.dispatchEvent("dragend", { dataTransfer });
           });
         }
       }
@@ -4324,6 +4459,7 @@ const DRY_RUN_PAGES = [
   "filled-calendar-month",
   "filled-calendar-event-modal",
   "filled-calendar-create-event-modal",
+  "filled-calendar-drag-and-drop",
   "filled-calendar-quick-add",
   // Filled states — time tracking modals
   "filled-time-tracking-manual-entry-modal",

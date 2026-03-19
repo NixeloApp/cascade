@@ -16,7 +16,6 @@ Core visual facelift work is done. Only the unfinished screenshot and validation
 
 ### Interactive States Still Not Captured
 
-- [ ] Calendar: drag-and-drop
 - [ ] Sprints: completion modal, date overlap warning
 - [ ] Notifications: snooze popover
 - [ ] Settings: profile with avatar/cover, 2FA setup, workspace/project settings
