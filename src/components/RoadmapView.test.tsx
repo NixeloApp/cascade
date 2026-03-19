@@ -558,6 +558,8 @@ describe("RoadmapView", () => {
 
     expect(screen.getByTestId(`roadmap-group-epic:${epicId}`)).toHaveTextContent("Growth");
     expect(screen.getByTestId("roadmap-group-epic:none")).toHaveTextContent("No epic");
+    expect(screen.getByTitle("Epic summary for Growth")).toBeInTheDocument();
+    expect(screen.queryByTitle("Epic summary for No epic")).not.toBeInTheDocument();
     expect(screen.getAllByText("1 issue")).toHaveLength(2);
   });
 

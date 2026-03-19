@@ -35,7 +35,7 @@ Based on Cal.com v6.3 and Plane preview (both repos updated 2026-03-18):
 
 | Feature | Cal.com | Plane | Nixelo | Impact |
 |---------|---------|-------|--------|--------|
-| **Gantt chart** | — | ✅ Full | ⚠️ Roadmap now has dependency lines, resize handles, draggable date-range bars, real month/week timeline buckets, timeline window navigation, zoom controls, a sticky issue sidebar, a unified today marker, epic/status/assignee/priority grouping, and collapsible swimlanes; still lacks full dedicated Gantt experience | High — standard PM expectation |
+| **Gantt chart** | — | ✅ Full | ⚠️ Roadmap now has dependency lines, resize handles, draggable date-range bars, real month/week timeline buckets, timeline window navigation, zoom controls, a sticky issue sidebar, a unified today marker, epic summary bars, epic/status/assignee/priority grouping, and collapsible swimlanes; still lacks full dedicated Gantt experience | High — standard PM expectation |
 | **OOO status** | ✅ Full API | — | ✅ Profile settings, assignee visibility, issue delegation, booking redirect, and internal calendar blocking shipped | High — affects calendar, assignments, notifications |
 | **Org analytics** | — | ✅ Trends, insights | ✅ Metrics + charts | ~~High~~ Done |
 | **AI agents** | ✅ Multi-channel | — | ❌ MCP placeholder | Medium — differentiator |

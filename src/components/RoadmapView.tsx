@@ -204,9 +204,11 @@ interface RoadmapTodayMarkerProps {
 interface TimelineGroup {
   collapsed: boolean;
   count: number;
+  dueDate?: number;
   kind: Exclude<GroupBy, "none">;
   key: string;
   label: string;
+  startDate?: number;
   value: string;
 }
 
@@ -546,6 +548,31 @@ function compareTimelineGroups(a: TimelineGroup, b: TimelineGroup) {
   return a.label.localeCompare(b.label, undefined, { sensitivity: "base" });
 }
 
+function getTimelineGroupSummary(
+  issues: FunctionReturnType<typeof api.issues.listRoadmapIssues>,
+): Pick<TimelineGroup, "dueDate" | "startDate"> {
+  const issuesWithDueDate = issues.filter((issue) => issue.dueDate !== undefined);
+  if (issuesWithDueDate.length === 0) {
+    return {};
+  }
+
+  let earliestStartDate = Number.POSITIVE_INFINITY;
+  let latestDueDate = Number.NEGATIVE_INFINITY;
+
+  for (const issue of issuesWithDueDate) {
+    const startDate = issue.startDate ?? issue.dueDate;
+    if (startDate !== undefined) {
+      earliestStartDate = Math.min(earliestStartDate, startDate);
+    }
+    latestDueDate = Math.max(latestDueDate, issue.dueDate ?? latestDueDate);
+  }
+
+  return {
+    startDate: Number.isFinite(earliestStartDate) ? earliestStartDate : undefined,
+    dueDate: Number.isFinite(latestDueDate) ? latestDueDate : undefined,
+  };
+}
+
 function buildTimelineRows(
   issues: FunctionReturnType<typeof api.issues.listRoadmapIssues> | undefined,
   groupBy: GroupBy,
@@ -580,8 +607,9 @@ function buildTimelineRows(
     .sort((left, right) => compareTimelineGroups(left.group, right.group))
     .flatMap(({ group, issues: groupedRows }) => {
       const collapsed = collapsedGroupKeys.includes(group.key);
+      const groupSummary = getTimelineGroupSummary(groupedRows);
       return [
-        { type: "group" as const, group: { ...group, collapsed } },
+        { type: "group" as const, group: { ...group, ...groupSummary, collapsed } },
         ...(collapsed ? [] : groupedRows.map((issue) => ({ type: "issue" as const, issue }))),
       ];
     });
@@ -739,12 +767,24 @@ function RoadmapTimelineBar({
 }
 
 interface RoadmapGroupRowProps {
+  getPositionOnTimeline: (date: number) => number;
   group: TimelineGroup;
   onToggle: (groupKey: string) => void;
   style: React.CSSProperties;
 }
 
-function RoadmapGroupRow({ group, onToggle, style }: RoadmapGroupRowProps) {
+function shouldRenderEpicSummaryBar(group: TimelineGroup) {
+  return (
+    group.kind === "epic" &&
+    group.key !== "epic:none" &&
+    group.startDate !== undefined &&
+    group.dueDate !== undefined
+  );
+}
+
+function RoadmapGroupRow({ getPositionOnTimeline, group, onToggle, style }: RoadmapGroupRowProps) {
+  const epicSummaryDueDate = shouldRenderEpicSummaryBar(group) ? group.dueDate : undefined;
+
   return (
     <Button
       type="button"
@@ -756,28 +796,57 @@ function RoadmapGroupRow({ group, onToggle, style }: RoadmapGroupRowProps) {
       className="w-full border-b border-ui-border bg-ui-bg-secondary/60 px-4 text-left"
       data-testid={`roadmap-group-${group.key}`}
     >
-      <Flex align="center" justify="between" className="h-full">
-        <Flex align="center" gap="sm">
-          <Icon
-            icon={group.collapsed ? ChevronRight : ChevronDown}
-            size="sm"
-            className="text-ui-text-tertiary"
-          />
-          <Typography variant="label" color="secondary">
-            {getTimelineGroupLabel(group)}
-          </Typography>
-          <span
-            className={cn(
-              "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium",
-              getTimelineGroupBadgeClassName(group),
-            )}
-          >
-            {group.label}
-          </span>
-        </Flex>
-        <Typography variant="caption" color="secondary">
-          {group.count} {group.count === 1 ? "issue" : "issues"}
-        </Typography>
+      <Flex align="center">
+        <FlexItem
+          flex="none"
+          className="sticky left-0 z-20 w-64 border-r border-ui-border/70 bg-ui-bg-secondary/80 pr-4"
+        >
+          <Flex align="center" justify="between" className="h-full">
+            <Flex align="center" gap="sm">
+              <Icon
+                icon={group.collapsed ? ChevronRight : ChevronDown}
+                size="sm"
+                className="text-ui-text-tertiary"
+              />
+              <Typography variant="label" color="secondary">
+                {getTimelineGroupLabel(group)}
+              </Typography>
+              <span
+                className={cn(
+                  "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium",
+                  getTimelineGroupBadgeClassName(group),
+                )}
+              >
+                {group.label}
+              </span>
+            </Flex>
+            <Typography variant="caption" color="secondary">
+              {group.count} {group.count === 1 ? "issue" : "issues"}
+            </Typography>
+          </Flex>
+        </FlexItem>
+
+        <FlexItem flex="1" className="relative h-8">
+          {group.startDate !== undefined && epicSummaryDueDate !== undefined ? (
+            <div
+              className={cn(
+                getCardRecipeClassName("roadmapTimelineBar"),
+                "absolute top-2 h-4 border border-accent-border bg-accent-subtle text-accent-active opacity-90",
+              )}
+              style={{
+                left: `${getBarLeft(group.startDate, epicSummaryDueDate, getPositionOnTimeline)}%`,
+                width: `${getBarWidth(group.startDate, epicSummaryDueDate, getPositionOnTimeline)}%`,
+              }}
+              title={`Epic summary for ${group.label}`}
+            >
+              <Flex align="center" justify="center" className="h-full px-2">
+                <Typography variant="caption" className="truncate">
+                  {group.value}
+                </Typography>
+              </Flex>
+            </div>
+          ) : null}
+        </FlexItem>
       </Flex>
     </Button>
   );
@@ -1155,6 +1224,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     if (row.type === "group") {
       return (
         <RoadmapGroupRow
+          getPositionOnTimeline={getPositionOnTimeline}
           group={row.group}
           onToggle={(groupKey) =>
             setCollapsedGroupKeys((currentKeys) =>
