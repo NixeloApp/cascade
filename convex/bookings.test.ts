@@ -308,14 +308,11 @@ describe("Bookings", () => {
     const { organizationId } = await createOrganizationAdmin(t, hostId);
     await addUserToOrganization(t, organizationId, delegateId, hostId);
 
-    // The code uses new Date(args.date).setHours() which operates in local time.
-    // To keep the test deterministic, we construct the date the same way the code does:
-    // start with a "day" timestamp and derive slot times from it using setHours.
-    // 2024-01-01 (Monday in local CDT) - the fake timer is set to this day at noon.
-    const dayBase = new Date("2024-01-01T12:00:00Z"); // matches vi.setSystemTime
-    const dayStart = new Date(dayBase);
-    dayStart.setHours(0, 0, 0, 0); // start of local day
-    const dayStartMs = dayStart.getTime();
+    // Use a future date so slots pass the minimum-notice filter (Date.now() is real time).
+    // Pick a date 7 days from now, start of day in local timezone.
+    const futureDate = new Date(Date.now() + 7 * DAY);
+    futureDate.setHours(0, 0, 0, 0);
+    const dayStartMs = futureDate.getTime();
 
     // Determine day of week for local interpretation
     const dayNames = [
@@ -327,9 +324,9 @@ describe("Bookings", () => {
       "friday",
       "saturday",
     ] as const;
-    const dayOfWeek = dayNames[dayStart.getDay()];
+    const dayOfWeek = dayNames[futureDate.getDay()];
 
-    // OOO starts at local 11am (mid-day, early enough that slots still fall within UTC 9-5)
+    // OOO starts at local 11am (mid-day)
     const oooStartDate = new Date(dayStartMs);
     oooStartDate.setHours(11, 0, 0, 0);
     const oooStart = oooStartDate.getTime();
@@ -343,8 +340,9 @@ describe("Bookings", () => {
       delegateUserId: delegateId,
     });
 
-    // Use America/Chicago timezone to match local system time, avoiding UTC day-boundary issues.
-    const tz = "America/Chicago";
+    // Use the runtime's local timezone so availability windows align with setHours()
+    // math in getAvailableSlots (which operates in local time).
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     // Host has availability 8am-5pm local
     await t.run(async (ctx) => {
