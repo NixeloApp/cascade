@@ -1155,6 +1155,8 @@ interface RoadmapIssueIdentityProps {
   onToggleChildren: (issueId: Id<"issues">) => void;
   parentIssue: Pick<RoadmapIssue, "_id" | "key" | "title"> | null;
   selected: boolean;
+  summaryDueDate?: number;
+  summaryStartDate?: number;
 }
 
 function getRoadmapSubtaskCaption(
@@ -1174,6 +1176,34 @@ function getRoadmapSubtaskCaption(
   return null;
 }
 
+function getRoadmapStatusLabel(status: string) {
+  return status
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function getRoadmapDateBadgeLabel(
+  issue: Pick<RoadmapIssue, "dueDate" | "startDate">,
+  summaryStartDate?: number,
+  summaryDueDate?: number,
+) {
+  const startDate = issue.startDate ?? summaryStartDate;
+  const dueDate = issue.dueDate ?? summaryDueDate;
+
+  if (dueDate === undefined) {
+    return null;
+  }
+
+  const prefix = issue.dueDate === undefined && summaryDueDate !== undefined ? "Rollup " : "";
+  if (startDate !== undefined && startDate !== dueDate) {
+    return `${prefix}${formatDate(startDate)} - ${formatDate(dueDate)}`;
+  }
+
+  return `${prefix}Due ${formatDate(dueDate)}`;
+}
+
 function RoadmapIssueIdentity({
   childCount,
   childrenCollapsed,
@@ -1184,6 +1214,8 @@ function RoadmapIssueIdentity({
   onToggleChildren,
   parentIssue,
   selected,
+  summaryDueDate,
+  summaryStartDate,
 }: RoadmapIssueIdentityProps) {
   const childToggleLabel = `${childrenCollapsed ? "Expand" : "Collapse"} subtasks for ${issue.key}`;
   const subtaskCaption = getRoadmapSubtaskCaption(
@@ -1192,6 +1224,10 @@ function RoadmapIssueIdentity({
     isNestedSubtask,
     parentIssue,
   );
+  const dateBadgeLabel = getRoadmapDateBadgeLabel(issue, summaryStartDate, summaryDueDate);
+  const assigneeLabel = issue.assignee?.name?.trim() || "Unassigned";
+  const statusLabel = getRoadmapStatusLabel(issue.status);
+  const priorityLabel = getPriorityLabel(issue.priority);
 
   return (
     <div className="relative">
@@ -1238,6 +1274,26 @@ function RoadmapIssueIdentity({
         <Typography variant="caption" className="truncate">
           {issue.title}
         </Typography>
+        <Flex align="center" gap="xs" wrap className="mt-2">
+          <Badge variant="neutral" shape="pill" className={getStatusColor(issue.status)}>
+            {statusLabel}
+          </Badge>
+          <Badge
+            variant="neutral"
+            shape="pill"
+            className={getPriorityColor(issue.priority, "badge")}
+          >
+            {priorityLabel}
+          </Badge>
+          <Badge variant="secondary" shape="pill">
+            {assigneeLabel}
+          </Badge>
+          {dateBadgeLabel ? (
+            <Badge variant="secondary" shape="pill">
+              {dateBadgeLabel}
+            </Badge>
+          ) : null}
+        </Flex>
       </div>
     </div>
   );
@@ -1339,6 +1395,8 @@ function RoadmapIssueRow({
             onToggleChildren={onToggleChildren}
             parentIssue={parentIssue}
             selected={selected}
+            summaryDueDate={summaryDueDate}
+            summaryStartDate={summaryStartDate}
           />
         </FlexItem>
 

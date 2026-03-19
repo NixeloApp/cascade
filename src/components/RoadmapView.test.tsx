@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { createContext, useContext } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { formatDate } from "@/lib/dates";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
 import { TEST_IDS } from "@/lib/test-ids";
 import { fireEvent, render, screen } from "@/test/custom-render";
@@ -351,6 +352,36 @@ describe("RoadmapView", () => {
     });
   });
 
+  it("renders sticky sidebar metadata badges for roadmap rows", () => {
+    const startDate = Date.UTC(2026, 2, 10);
+    const dueDate = Date.UTC(2026, 2, 20);
+
+    mockRoadmapQueries({
+      issues: [
+        {
+          _id: issue1Id,
+          key: "PROJ-1",
+          title: "Plan onboarding",
+          status: "todo",
+          startDate,
+          dueDate,
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Alex Rivera" },
+        },
+      ],
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    expect(screen.getByText("Todo")).toBeInTheDocument();
+    expect(screen.getByText("Medium")).toBeInTheDocument();
+    expect(screen.getByText("Alex Rivera")).toBeInTheDocument();
+    expect(
+      screen.getByText(`${formatDate(startDate)} - ${formatDate(dueDate)}`),
+    ).toBeInTheDocument();
+  });
+
   it("renders parent context rows and nests subtasks beneath them", () => {
     mockRoadmapQueries({
       issues: [
@@ -431,6 +462,10 @@ describe("RoadmapView", () => {
   });
 
   it("renders a parent rollup bar when only subtasks have roadmap dates", () => {
+    const subtaskStartDate = Date.UTC(2026, 2, 14);
+    const subtaskDueDate = Date.UTC(2026, 2, 16);
+    const childDueDate = Date.UTC(2026, 2, 18);
+
     mockRoadmapQueries({
       issues: [
         {
@@ -438,8 +473,8 @@ describe("RoadmapView", () => {
           key: "PROJ-2",
           title: "Ship migration slice",
           status: "in progress",
-          startDate: Date.UTC(2026, 2, 14),
-          dueDate: Date.UTC(2026, 2, 16),
+          startDate: subtaskStartDate,
+          dueDate: subtaskDueDate,
           parentId: issue1Id,
           type: "subtask",
           priority: "high",
@@ -450,8 +485,8 @@ describe("RoadmapView", () => {
           key: "PROJ-3",
           title: "Finish rollout checks",
           status: "done",
-          startDate: Date.UTC(2026, 2, 16),
-          dueDate: Date.UTC(2026, 2, 18),
+          startDate: subtaskDueDate,
+          dueDate: childDueDate,
           parentId: issue1Id,
           type: "subtask",
           priority: "medium",
@@ -473,6 +508,9 @@ describe("RoadmapView", () => {
 
     expect(screen.getByTitle("Task rollup for PROJ-1 · 1 of 2 complete")).toHaveTextContent("50%");
     expect(screen.queryByTestId(`roadmap-bar-${issue1Id}`)).not.toBeInTheDocument();
+    expect(
+      screen.getByText(`Rollup ${formatDate(subtaskStartDate)} - ${formatDate(childDueDate)}`),
+    ).toBeInTheDocument();
   });
 
   it("hides dependency lines when the toggle is clicked", async () => {
