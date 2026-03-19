@@ -43,9 +43,7 @@ function SidebarSection({ title, children }: { title: string; children: ReactNod
   return (
     <section className="pb-6 border-b border-ui-border/30 last:border-b-0 last:pb-0">
       <Stack gap="md">
-        <Typography variant="caption" color="tertiary" className="uppercase tracking-widest">
-          {title}
-        </Typography>
+        <Typography variant="eyebrowWide">{title}</Typography>
         {children}
       </Stack>
     </section>

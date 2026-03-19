@@ -27,12 +27,10 @@ export function Greeting({ userName, completedCount = 0 }: GreetingProps) {
       >
         <Flex align="center" gap="sm">
           <Dot />
-          <Typography variant="caption" className="uppercase tracking-widest text-ui-text-tertiary">
-            Command Center
-          </Typography>
+          <Typography variant="eyebrowWide">Command Center</Typography>
         </Flex>
       </Badge>
-      <Typography variant="h1" className="max-w-4xl text-4xl tracking-tight md:text-5xl">
+      <Typography variant="dashboardHeroTitle" className="max-w-4xl">
         {greeting}, <span className="text-brand">{firstName}</span>.
       </Typography>
       <Typography variant="lead" color="secondary" className="max-w-3xl text-balance">

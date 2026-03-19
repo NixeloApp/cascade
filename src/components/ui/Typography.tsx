@@ -51,8 +51,14 @@ const typographyVariants = cva("", {
       label: "text-sm font-medium text-ui-text", // form labels
       strong: "font-semibold", // inline emphasis, inherits parent size
       eyebrow: "text-xs font-semibold uppercase tracking-wider text-ui-text-secondary", // section labels, overlines
+      eyebrowWide: "text-xs font-semibold uppercase tracking-widest text-ui-text-tertiary",
       pageHeaderEyebrow:
         "text-xs font-semibold uppercase tracking-[0.18em] text-ui-text-tertiary sm:tracking-[0.22em]",
+      authTitle: "text-xl font-semibold tracking-tight text-ui-text",
+      authBody: "text-sm text-ui-text-secondary",
+      dashboardHeroTitle: "text-4xl font-extrabold tracking-tight text-ui-text md:text-5xl",
+      dashboardStatValue: "text-display-sm font-semibold tracking-tight text-ui-text",
+      dashboardStatValueStrong: "text-3xl font-extrabold tracking-tight text-ui-text",
       mono: "text-xs font-mono text-ui-text-secondary tracking-tight", // issue keys, codes
       calendarHeaderDate: "text-xs font-medium text-ui-text sm:text-base",
       calendarHeaderTitle: "text-sm font-semibold tracking-tight text-ui-text sm:text-lg",
@@ -122,8 +128,10 @@ Typography.displayName = "Typography";
 function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType {
   switch (variant) {
     case "h1":
+    case "dashboardHeroTitle":
       return "h1";
     case "h2":
+    case "authTitle":
       return "h2";
     case "h3":
       return "h3";
@@ -140,7 +148,11 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
     case "caption":
     case "label":
     case "eyebrow":
+    case "eyebrowWide":
     case "pageHeaderEyebrow":
+    case "authBody":
+    case "dashboardStatValue":
+    case "dashboardStatValueStrong":
       return "p";
     case "mono":
     case "calendarHeaderDate":

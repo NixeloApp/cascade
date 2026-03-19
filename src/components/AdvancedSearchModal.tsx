@@ -115,7 +115,7 @@ export function AdvancedSearchModal({
       <Stack gap="lg">
         <Card recipe="overlayInset" padding="md">
           <Stack gap="xs">
-            <Typography variant="label" className="uppercase tracking-wider text-ui-text-tertiary">
+            <Typography variant="eyebrow" color="tertiary">
               Search playbook
             </Typography>
             <Typography variant="small" color="secondary">
@@ -173,10 +173,7 @@ export function AdvancedSearchModal({
         {searchQuery.length >= 2 ? (
           <Stack gap="sm">
             <Flex align="center" justify="between">
-              <Typography
-                variant="label"
-                className="uppercase tracking-wider text-ui-text-tertiary"
-              >
+              <Typography variant="eyebrow" color="tertiary">
                 Results ({total} total, showing {results.length})
               </Typography>
               {(selectedType.length > 0 ||
