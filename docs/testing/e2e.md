@@ -75,6 +75,7 @@ pnpm screenshots:diff
 Rules:
 
 - `pnpm run validate` includes an informational screenshot audit for uncovered routes and missing canonical spec screenshot variants.
+- `pnpm run validate` also includes a `Typography drift` audit for `Typography` override drift outside owned primitives.
 - `pnpm screenshots` writes captures into `docs/design/specs/pages/*/screenshots` for spec-owned pages and `e2e/screenshots/` for fallback pages.
 - `pnpm screenshots:diff` must be clean before treating a visual baseline as unchanged.
 - If screenshot drift is intentional, run `pnpm screenshots:approve` in the same change set that updates the UI.

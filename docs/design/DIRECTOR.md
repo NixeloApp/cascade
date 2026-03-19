@@ -91,8 +91,10 @@ These are the SOURCE OF TRUTH for current state.
 
 Validation expectations:
 - `pnpm run validate` audits screenshot route coverage and missing canonical spec variants
+- `pnpm run validate` also includes a `Typography drift` audit for `Typography` override drift
 - `pnpm screenshots:diff` detects image drift against `.screenshot-hashes.json`
 - `pnpm screenshots:approve` updates the approved visual baseline after intentional changes
+- use [CONSISTENCY.md](./CONSISTENCY.md) as the practical review checklist for keeping shells, typography, layout, and state treatment cohesive
 
 ---
 

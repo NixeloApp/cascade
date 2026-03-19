@@ -44,6 +44,7 @@
  *  40. Nested Cards            — bans Cards nested inside other Cards
  *  41. Border Radius           — enforces consistent border radius usage
  *  42. Screenshot coverage     — route coverage + canonical spec screenshot audit (informational)
+ *  43. Typography drift       — advisory audit for Typography/style drift outside owned primitives
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -268,6 +269,10 @@ const checks = [
   {
     name: "Screenshot coverage",
     modulePath: new URL("./validate/check-screenshot-coverage.js", import.meta.url).href,
+  },
+  {
+    name: "Typography drift",
+    modulePath: new URL("./validate/check-typography-drift.js", import.meta.url).href,
   },
   {
     name: "Page layout",

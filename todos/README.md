@@ -1,6 +1,6 @@
 # Nixelo Todo — MVP
 
-> **Last Updated:** 2026-03-18
+> **Last Updated:** 2026-03-19
 
 ## Health
 
@@ -21,6 +21,8 @@ Only unfinished work stays in `/todos`. Completed slices should be removed from 
 | Priority | File | Remaining work |
 |----------|------|----------------|
 | P1 | [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md) | Screenshot capture/approval residue: 6 spec folders missing canonical variants, portal capture, modal/interactive-state coverage, CI manifest workflow |
+| P1 | [visual-consistency-hardening.md](./visual-consistency-hardening.md) | New visual-consistency audit surfaced 94 Typography override drift points; consistency docs/validator are now in place, cleanup remains |
+| P2 | [feature-docs-expansion.md](./feature-docs-expansion.md) | Expand current feature/design docs into concrete user-story-grade product specs for shipped behavior |
 | P2 | [plane-features.md](./plane-features.md) | Remaining Plane-inspired gaps: dedicated Gantt polish, intake/triage, deploy boards, stickies, analytics enhancements, automation, multi-provider AI, page versions |
 | P2 | [cal-com-features.md](./cal-com-features.md) | Remaining Cal.com-inspired gaps: AI agents/MCP, cancellation reasons, workflow translation, custom domain/SMTP, branding |
 | P3 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export for billing reports |

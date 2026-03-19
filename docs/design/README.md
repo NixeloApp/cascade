@@ -5,6 +5,7 @@
 | Doc | Purpose |
 |-----|---------|
 | [STANDARDS.md](./STANDARDS.md) | Core principles (tokens, spacing, semantic HTML) |
+| [CONSISTENCY.md](./CONSISTENCY.md) | Cross-cutting UI consistency contract + review loop |
 | [PATTERNS.md](./PATTERNS.md) | Do this, not that (component usage) |
 | [REFERENCE.md](./REFERENCE.md) | Token values & component inventory |
 | [GAPS.md](./GAPS.md) | Actionable improvements (prioritized) |
@@ -44,4 +45,11 @@ bg-brand, text-status-error
 
 ```bash
 node scripts/validate.js  # Target: 0 errors
+```
+
+Visual work should also run:
+
+```bash
+pnpm screenshots
+pnpm screenshots:diff
 ```
