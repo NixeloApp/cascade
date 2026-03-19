@@ -68,4 +68,4 @@ Based on Cal.com v6.3 and Plane preview (both repos updated 2026-03-18):
 See [../todos-post-mvp/README.md](../todos-post-mvp/README.md) for blocked and post-MVP items.
 
 ## P2 Backlog
-- [ ] `convex/bookings.ts:263` — Per-slot OOO delegate resolution. Currently resolves once per day; if OOO starts/ends mid-day, slots may show against wrong host. Needs per-slot lookup (perf tradeoff).
+- [x] `convex/bookings.ts:263` — Per-slot OOO delegate resolution. ✅ Fixed: resolves per-slot using cached user data.
