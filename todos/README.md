@@ -1,61 +1,43 @@
-# Nixelo Todo — MVP
+# Nixelo Todo Archive — MVP
 
 > **Last Updated:** 2026-03-18
 
-## Health
+## Status
+
+`/todos` is no longer an active MVP backlog. Everything in this directory is either complete, intentionally retired, or preserved as historical benchmark context.
 
 | Metric | Value |
 |--------|-------|
-| Validators | 44/44 pass |
-| Bundle | 337KB gzip |
+| Blocking validators | 42/42 pass |
+| Screenshot validation | Route coverage audit + canonical spec screenshot audit + hash diff workflow |
 | Screenshots | 300+ across 4 viewport/theme combos, 0 uncovered routes |
-| Raw TW baseline | 148 files (run `node scripts/validate/check-raw-tailwind.js --audit` to check) |
+| Raw TW baseline | 148 files (run `node scripts/validate/check-raw-tailwind.js --audit` to inspect) |
 
 ---
 
-## What to work on next
+## Archived Files
 
-| Priority | File | What | Open items |
-|----------|------|------|------------|
-| P2 | [cal-com-features.md](./cal-com-features.md) | Port features from Cal.com v6.3 | 6 items: AI agents, cancellation reasons, workflow translation, custom domain/SMTP, branding |
-| P2 | [plane-features.md](./plane-features.md) | Port features from Plane | 12 items: Gantt chart, intake/triage, deploy boards, stickies, analytics, auto-archive, multi-provider AI, page versions |
-| P3 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export for billing reports | 1 item: needs jsPDF or server-side generation |
-
-### Done (archive when ready)
-
-| File | Status |
-|------|--------|
-| [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md) | **Complete** — all visual polish done (PR #899). Residual: screenshot coverage for modals/interactive states, raw TW baseline. |
+| File | Status | Notes |
+|------|--------|-------|
+| [cal-com-features.md](./cal-com-features.md) | **Archived** | Historical Cal.com benchmark. OOO work shipped; remaining ideas are no longer tracked as active MVP todo items. |
+| [plane-features.md](./plane-features.md) | **Archived** | Historical Plane benchmark. Roadmap/Gantt parity work shipped enough for MVP; remaining ideas are not active `/todos` work. |
+| [tech-debt-billing-export.md](./tech-debt-billing-export.md) | **Archived** | CSV export shipped. PDF export is not an active MVP task. |
+| [screenshot-facelift-overhaul.md](./screenshot-facelift-overhaul.md) | **Archived Complete** | Visual facelift landed. Ongoing screenshot maintenance moved into validator + docs workflow. |
 
 ---
 
-## Biggest feature gaps vs competitors
+## Visual Validation Workflow
 
-Based on Cal.com v6.3 and Plane preview (both repos updated 2026-03-18):
+- Capture current UI state with `pnpm screenshots`
+- Audit route/spec screenshot coverage with `pnpm run validate`
+- Detect screenshot drift with `pnpm screenshots:diff`
+- Approve intentional visual changes with `pnpm screenshots:approve`
 
-| Feature | Cal.com | Plane | Nixelo | Impact |
-|---------|---------|-------|--------|--------|
-| **Gantt chart** | — | ✅ Full | ⚠️ Roadmap now has interactive dependency highlighting, active-issue dependency management, resize handles, milestone-style markers for due-date-only items, draggable date-range bars, real month/week timeline buckets, range-aware timeline window navigation, a fit-to-issues control, zoom controls, a sticky issue sidebar with richer row metadata, a unified today marker, progress-aware epic summary and parent rollup bars, epic/status/assignee/priority grouping, collapsible swimlanes, and a collapsible parent/subtask tree; still lacks full dedicated Gantt experience | High — standard PM expectation |
-| **OOO status** | ✅ Full API | — | ✅ Profile settings, assignee visibility, issue delegation, booking redirect, and internal calendar blocking shipped | High — affects calendar, assignments, notifications |
-| **Org analytics** | — | ✅ Trends, insights | ✅ Metrics + charts | ~~High~~ Done |
-| **AI agents** | ✅ Multi-channel | — | ❌ MCP placeholder | Medium — differentiator |
-| **Intake/triage** | — | ✅ Full system | ❌ Skeleton inbox | Medium — external request capture |
-| **Auto-archive** | — | ✅ Scheduled | ❌ Basic automation | Medium — reduces clutter |
-| **Deploy boards** | — | ✅ Per-entity | ⚠️ Token portal | Medium — public sharing |
+If a new gap reopens later, track it in [../todos-post-mvp/README.md](../todos-post-mvp/README.md) or the feature-comparison docs instead of reactivating `/todos` as a live MVP queue.
 
----
-
-## Maintenance
-
-- **Raw tailwind baseline:** 148 files with violations. Gradually shrinks as components are touched.
-
-## Reference repos
+## Reference Repos
 
 | Repo | Path | Last pulled |
 |------|------|-------------|
 | Cal.com | [github.com/calcom/cal.com](https://github.com/calcom/cal.com) | 2026-03-18 |
 | Plane | [github.com/makeplane/plane](https://github.com/makeplane/plane) | 2026-03-18 |
-
-## Post-MVP
-
-See [../todos-post-mvp/README.md](../todos-post-mvp/README.md) for blocked and post-MVP items.

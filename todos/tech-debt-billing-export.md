@@ -1,20 +1,16 @@
 # Tech Debt: Billing Report Export
 
-> **Priority:** P3
-> **Status:** Partial (CSV done, PDF deferred)
-> **File:** `src/components/TimeTracker/BillingReport.tsx:126`
+> **Priority:** Archived
+> **Status:** Closed for MVP
+> **File:** `src/components/TimeTracker/BillingReport.tsx`
 
-## Description
+This is no longer an active todo item.
 
-Implement CSV/PDF export functionality for billing reports.
+## Final State
 
-```typescript
-// TODO: Implement CSV/PDF export functionality
-```
+- Export button is wired to real export flows
+- CSV export shipped
+- Large datasets are handled via Blob-based CSV generation
+- PDF export is intentionally not tracked as active MVP work
 
-## Acceptance Criteria
-
-- [x] Wire existing Export button to real export flows
-- [x] Implement CSV export
-- [ ] Implement PDF export (deferred — needs jsPDF or server-side generation)
-- [x] Handle large datasets gracefully (streaming CSV via Blob)
+If PDF export comes back, treat it as a new scoped feature or post-MVP technical task instead of reopening this file as ongoing debt.

@@ -1,21 +1,23 @@
 # Feature Comparison Index
 
-A detailed UI/UX comparison between **cal.com**, **plane**, and **Cascade**.
+A detailed UI/UX comparison between **Cal.com**, **Plane**, and **Nixelo**.
 
 ## Purpose
 
 This documentation analyzes how features are implemented across three codebases to identify:
 - What each app does well
-- Where Cascade can improve
+- Where Nixelo can improve
 - UI/UX patterns to adopt
+
+This folder is reference material, not the active MVP backlog. The old competitor-gap todo files in `/todos` are now archived snapshots.
 
 ## Repository Paths
 
 | App | Path | Focus |
 |-----|------|-------|
-| cal.com | `~/Desktop/cal.com` | Scheduling/booking platform |
-| plane | `~/Desktop/plane` | Project management (issues, cycles, modules) |
-| Cascade | `~/Desktop/cascade` | Issues, projects, sprints, docs |
+| Cal.com | `~/Desktop/cal.com` | Scheduling/booking platform |
+| Plane | `~/Desktop/plane` | Project management (issues, cycles, modules) |
+| Nixelo | `~/Desktop/cascade` | Issues, projects, sprints, docs |
 
 ---
 

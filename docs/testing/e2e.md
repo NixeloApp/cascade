@@ -57,6 +57,27 @@ Note:
 | `pnpm e2e:debug` | `playwright test --debug` |
 | `pnpm e2e:cross-browser:smoke` | `E2E_CROSS_BROWSER=1 playwright test e2e/landing.spec.ts --workers=1 --reporter=line` |
 | `pnpm screenshots` | `tsx --env-file=.env.local e2e/screenshot-pages.ts` |
+| `pnpm screenshots:diff` | `node scripts/screenshot-diff.js` |
+| `pnpm screenshots:approve` | `node scripts/screenshot-diff.js --approve` |
+
+## Visual Validation
+
+Use the screenshot workflow whenever a PR changes layout, styling, interaction chrome, or page composition.
+
+Recommended loop:
+
+```bash
+pnpm screenshots
+pnpm run validate
+pnpm screenshots:diff
+```
+
+Rules:
+
+- `pnpm run validate` includes an informational screenshot audit for uncovered routes and missing canonical spec screenshot variants.
+- `pnpm screenshots` writes captures into `docs/design/specs/pages/*/screenshots` for spec-owned pages and `e2e/screenshots/` for fallback pages.
+- `pnpm screenshots:diff` must be clean before treating a visual baseline as unchanged.
+- If screenshot drift is intentional, run `pnpm screenshots:approve` in the same change set that updates the UI.
 
 ## PR Review Checklist (E2E Reliability)
 

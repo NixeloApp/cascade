@@ -89,6 +89,11 @@ Pages without specs go to `e2e/screenshots/` (fallback).
 
 These are the SOURCE OF TRUTH for current state.
 
+Validation expectations:
+- `pnpm run validate` audits screenshot route coverage and missing canonical spec variants
+- `pnpm screenshots:diff` detects image drift against `.screenshot-hashes.json`
+- `pnpm screenshots:approve` updates the approved visual baseline after intentional changes
+
 ---
 
 ## Spec Coverage Summary

@@ -7,6 +7,8 @@
 ```bash
 pnpm dev              # Start frontend + backend
 pnpm run check        # Typecheck + lint + tests
+pnpm screenshots      # Capture current visual baselines
+pnpm screenshots:diff # Check screenshot drift vs approved manifest
 pnpm e2e:ui           # E2E tests (interactive)
 pnpm convex deploy    # Deploy backend
 ```
@@ -253,8 +255,17 @@ pnpm test              # Unit tests (watch)
 pnpm test:convex       # Backend tests
 pnpm e2e               # E2E tests (headless)
 pnpm e2e:ui            # E2E tests (interactive)
+pnpm screenshots       # Capture spec/fallback screenshots
+pnpm screenshots:diff  # Detect screenshot drift
+pnpm screenshots:approve # Approve intentional visual changes
 pnpm run check         # All checks (CI)
 ```
+
+**Visual Validation:**
+
+- `pnpm run validate` includes an informational screenshot audit for route coverage and canonical spec screenshot variants.
+- `pnpm screenshots` writes page captures into `docs/design/specs/pages/*/screenshots` when a spec exists, or `e2e/screenshots/` otherwise.
+- `pnpm screenshots:diff` compares the current image set against `.screenshot-hashes.json` so intentional visual changes can be explicitly approved.
 
 **Selector Priority (Playwright):**
 

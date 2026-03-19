@@ -1,11 +1,15 @@
 /**
- * CHECK: Screenshot Route Coverage
+ * CHECK: Screenshot Coverage
  *
- * Compares routes defined in convex/shared/routes.ts against ROUTES references
- * in e2e/screenshot-pages.ts to find routes with no screenshot coverage.
+ * Audits two visual-maintenance signals:
+ *   1. Route coverage — compares routes defined in convex/shared/routes.ts
+ *      against ROUTES references in e2e/screenshot-pages.ts.
+ *   2. Canonical spec variants — checks that each design spec screenshot
+ *      directory contains the expected baseline captures.
  *
  * Informational only — does not block CI. Some routes legitimately cannot be
- * captured (onboarding, portal, verify-email, etc.).
+ * captured (onboarding, portal, verify-email, etc.), and some spec folders are
+ * still maintained incrementally.
  */
 
 import fs from "node:fs";
@@ -26,6 +30,13 @@ const EXCLUDED_ROUTES = new Set([
   "onboarding", // Requires fresh user state, can't capture with seeded test user
   "invoices.detail", // Requires creating an invoice first; list page is captured
 ]);
+
+const EXPECTED_SPEC_SCREENSHOTS = [
+  "desktop-dark.png",
+  "desktop-light.png",
+  "tablet-light.png",
+  "mobile-light.png",
+];
 
 /**
  * Extract all dotted route keys from convex/shared/routes.ts.
@@ -139,6 +150,34 @@ function extractScreenshotRouteRefs(content) {
   return refs;
 }
 
+function collectSpecScreenshotCoverageGaps() {
+  const specsBaseDir = path.join(ROOT, "docs", "design", "specs", "pages");
+  if (!fs.existsSync(specsBaseDir)) {
+    return [];
+  }
+
+  const gaps = [];
+
+  for (const entry of fs.readdirSync(specsBaseDir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+
+    const screenshotDir = path.join(specsBaseDir, entry.name, "screenshots");
+    if (!fs.existsSync(screenshotDir)) continue;
+
+    const screenshotFiles = new Set(fs.readdirSync(screenshotDir));
+    const missingFiles = EXPECTED_SPEC_SCREENSHOTS.filter((file) => !screenshotFiles.has(file));
+
+    if (missingFiles.length > 0) {
+      gaps.push({
+        specFolder: entry.name,
+        missingFiles,
+      });
+    }
+  }
+
+  return gaps.sort((a, b) => a.specFolder.localeCompare(b.specFolder));
+}
+
 export function run() {
   const routesFile = path.join(ROOT, "convex/shared/routes.ts");
   const screenshotFile = path.join(ROOT, "e2e/screenshot-pages.ts");
@@ -152,6 +191,7 @@ export function run() {
 
   const allRouteKeys = extractRouteKeys(routesContent);
   const capturedRefs = extractScreenshotRouteRefs(screenshotContent);
+  const missingSpecVariants = collectSpecScreenshotCoverageGaps();
 
   const uncovered = [];
   for (const key of allRouteKeys) {
@@ -182,15 +222,38 @@ export function run() {
     }
   }
 
+  if (missingSpecVariants.length > 0) {
+    messages.push(
+      `${c.yellow}Spec screenshot folders missing canonical variants (${missingSpecVariants.length}):${c.reset}`,
+    );
+    for (const gap of missingSpecVariants) {
+      messages.push(
+        `  ${c.dim}docs/design/specs/pages/${gap.specFolder}/screenshots${c.reset} missing ${gap.missingFiles.join(", ")}`,
+      );
+    }
+  }
+
+  const completeSpecFolders = (() => {
+    const specsBaseDir = path.join(ROOT, "docs", "design", "specs", "pages");
+    if (!fs.existsSync(specsBaseDir)) return 0;
+    return fs
+      .readdirSync(specsBaseDir, { withFileTypes: true })
+      .filter(
+        (entry) =>
+          entry.isDirectory() && fs.existsSync(path.join(specsBaseDir, entry.name, "screenshots")),
+      ).length;
+  })();
+  const specsWithCanonicalVariants = completeSpecFolders - missingSpecVariants.length;
+
   // Informational — never blocks CI, but shows uncovered routes in output
   return {
     passed: true,
     errors: 0,
-    showMessagesOnPass: uncovered.length > 0,
+    showMessagesOnPass: uncovered.length > 0 || missingSpecVariants.length > 0,
     detail:
-      uncovered.length > 0
-        ? `${allRouteKeys.length - uncovered.length}/${allRouteKeys.length} routes covered (${uncovered.length} uncovered)`
-        : `all ${allRouteKeys.length} routes covered`,
+      uncovered.length > 0 || missingSpecVariants.length > 0
+        ? `${allRouteKeys.length - uncovered.length}/${allRouteKeys.length} routes covered, ${specsWithCanonicalVariants}/${completeSpecFolders} spec folders have canonical screenshots`
+        : `all ${allRouteKeys.length} routes covered, all ${completeSpecFolders} spec folders have canonical screenshots`,
     messages,
   };
 }

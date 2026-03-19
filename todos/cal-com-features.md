@@ -1,58 +1,33 @@
-# Cal.com v6.3 Features to Evaluate
+# Cal.com v6.3 Feature Snapshot
 
-> **Priority:** P2
-> **Status:** In Progress
+> **Priority:** Archived
+> **Status:** Historical reference only
 > **Last Updated:** 2026-03-18
-> **Source:** Cal.com changelog v6.3 + repo at `github.com/calcom/cal.com` (pulled 2026-03-18, 119 new commits)
+> **Source:** Cal.com changelog v6.3 + repo at `github.com/calcom/cal.com` (pulled 2026-03-18)
 
-## High Priority
+This file is no longer an active todo list. It remains here as a compact reference for what was reviewed against Cal.com during MVP parity work.
 
-### AI Agents & Skills
-Cal.com launched agent-powered scheduling via Slack, Telegram, email, CLI. Maps directly to our AI/MCP Server placeholders.
+## Shipped From This Review
 
-- [ ] **Evaluate agent architecture** — `agents/` dir has skills for API patterns, React, and design guidelines. Lightweight skill-based system, not a full agent framework.
-- [ ] **Scheduling via chat** — Agents can schedule/reschedule from Slack. Our Pumble integration could add scheduling commands.
-- [ ] **MCP Server implementation** — Our MCP Server page is a placeholder. Cal.com's agent CLI could inform what we expose.
+- Out of office status and visibility
+- OOO delegation / redirect behavior
+- Booking-page delegation while the owner is OOO
+- Internal calendar blocking for OOO windows
 
-### Out of Office (OOO)
-Full CRUD API at `apps/api/v2/src/modules/ooo/`. Reasons: vacation, travel, sick_leave, public_holiday. Optional redirect to another user.
+## Not Tracked As Active MVP Work
 
-- [x] **Add OOO status to user profile** — Implemented: profile settings card, persisted OOO state, and assignee visibility in issue surfaces.
-- [x] **OOO redirect** — Issue assignment redirect, booking-page delegation, and internal calendar event blocking for OOO windows are shipped.
+- AI agents / chat scheduling / MCP expansion
+- Cancellation reasons
+- Workflow auto-translation
+- Custom domains and SMTP
+- Branding / whitelabel controls
 
-### Cancellation Reason Requirement
-New spec at `specs/cancellation-reason-requirement/`. Event type hosts can require cancellation reasons (mandatory/optional, by role).
-
-- [ ] **Evaluate for calendar events** — Our calendar events can be cancelled but don't track reasons. Could add to `calendarEvents` schema.
-
-## Medium Priority
-
-### Workflow Auto-Translation
-Spec at `specs/workflow-translation/`. Uses lingo.dev to auto-translate workflow email/SMS to attendee's browser language.
-
-- [ ] **Evaluate for notifications/emails** — Our email templates in `emails/` are English-only. Translation service pattern could apply.
-
-### Custom Domain & SMTP
-Custom domains for booking links, custom SMTP for email.
-
-- [ ] **Custom domain for client portal** — Our `/portal/$token` uses app domain. Enterprise feature.
-- [ ] **Custom SMTP** — We use Resend. Could add SMTP provider option for enterprise orgs.
-
-### Branding Control
-Hide Cal.com branding for orgs/teams.
-
-- [ ] **Whitelabel option** — Our client portal and emails show Nixelo branding. Enterprise whitelabel feature.
-
-## Low Priority (Already Have or Not Applicable)
-
-- [ ] Microsoft Sign-up — We already have multi-provider auth
-- [ ] Booking attendees API — We have `calendarEvents.attendeeIds`
-- [ ] API v2 architecture — We use Convex, different paradigm
+If any of these reopen later, treat them as new scoped work in `todos-post-mvp/` or feature-comparison docs instead of reviving this file as an active backlog.
 
 ## Reference Paths
 
 | Feature | Cal.com Path |
-|---------|-------------|
+|---------|---------------|
 | Agents | `agents/`, `agents/skills/` |
 | OOO | `apps/api/v2/src/modules/ooo/` |
 | Cancellation | `specs/cancellation-reason-requirement/` |

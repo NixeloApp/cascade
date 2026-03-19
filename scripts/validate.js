@@ -43,7 +43,7 @@
  *  39. Tech debt               — tracks TODO/FIXME/HACK comments
  *  40. Nested Cards            — bans Cards nested inside other Cards
  *  41. Border Radius           — enforces consistent border radius usage
- *  42. Screenshot coverage     — routes without screenshot coverage (informational)
+ *  42. Screenshot coverage     — route coverage + canonical spec screenshot audit (informational)
  *
  * Exit code 1 if any check reports blocking issues.
  *
