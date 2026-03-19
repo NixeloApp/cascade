@@ -252,6 +252,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-project-.+-analytics$/, "13-analytics", ""],
   // Project members: filled-project-xxx-members → 17-members
   [/^filled-project-.+-members$/, "17-members", ""],
+  [/^filled-project-.+-members-confirm-dialog$/, "17-members", "-confirm-dialog"],
   // Project settings: filled-project-xxx-settings → 12-settings
   [/^filled-project-.+-settings$/, "12-settings", "-project"],
   // Workspace pages: filled-workspace-xxx-{tab} → 28-workspace-detail (specific patterns first)
@@ -285,6 +286,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
 
 const MODAL_SPEC_PATTERNS: Array<[RegExp, string]> = [
   [/^filled-dashboard-omnibox$/, "command-palette"],
+  [/^filled-project-.+-members-confirm-dialog$/, "confirm-dialog"],
   [/^filled-dashboard-customize-modal$/, "dashboard-customize"],
   [/^filled-document-editor-move-dialog$/, "move-document"],
   [/^filled-project-.+-create-issue-modal$/, "create-issue"],
@@ -2382,7 +2384,12 @@ async function screenshotFilledStates(
       );
     }
 
-    if (shouldCapture(p, `project-${normalizedProjectKey}-members`)) {
+    if (
+      shouldCaptureAny(p, [
+        `project-${normalizedProjectKey}-members`,
+        `project-${normalizedProjectKey}-members-confirm-dialog`,
+      ])
+    ) {
       await runCaptureStep("project members", async () => {
         const settingsUrl = `/${orgSlug}/projects/${projectKey}/settings`;
         await page.goto(`${BASE_URL}${settingsUrl}`, {
@@ -2394,6 +2401,20 @@ async function screenshotFilledStates(
         await scrollSectionNearViewportTop(membersHeading, page);
         await waitForScreenshotReady(page);
         await captureCurrentView(page, p, `project-${normalizedProjectKey}-members`);
+
+        if (shouldCapture(p, `project-${normalizedProjectKey}-members-confirm-dialog`)) {
+          const removeButton = page.getByRole("button", { name: /^remove$/i }).first();
+          await removeButton.waitFor({ state: "visible", timeout: 5000 });
+          await removeButton.click();
+          const dialog = await waitForDialogOpen(page);
+          await waitForScreenshotReady(page);
+          await captureCurrentView(
+            page,
+            p,
+            `project-${normalizedProjectKey}-members-confirm-dialog`,
+          );
+          await dismissIfOpen(page, dialog);
+        }
       });
     }
 
@@ -3583,6 +3604,7 @@ const DRY_RUN_PAGES = [
   "filled-project-PROJ-billing",
   "filled-project-PROJ-timesheet",
   "filled-project-PROJ-members",
+  "filled-project-PROJ-members-confirm-dialog",
   "filled-project-PROJ-settings",
   "filled-project-PROJ-create-issue-modal",
   "filled-project-PROJ-issue-detail-modal",

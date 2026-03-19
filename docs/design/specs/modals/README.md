@@ -9,6 +9,7 @@ This directory contains design specifications for modal dialogs and overlay comp
 | Create Issue | 🟢 SPEC'D | `create-issue.md` |
 | Create Event | 🟢 SPEC'D | `create-event.md` |
 | Command Palette | 🟢 SPEC'D | `command-palette.md` |
+| Confirm Dialog | 🟢 SPEC'D | `confirm-dialog.md` |
 | Dashboard Customize | 🟢 SPEC'D | `dashboard-customize.md` |
 | Move Document | 🟢 SPEC'D | `move-document.md` |
 | Create Workspace | 🟡 REVIEW | - |
