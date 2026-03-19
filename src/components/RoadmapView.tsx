@@ -20,6 +20,7 @@ import { useListNavigation } from "@/hooks/useListNavigation";
 import { formatDate } from "@/lib/dates";
 import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, LinkIcon } from "@/lib/icons";
 import { getPriorityColor, getStatusColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
+import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { IssueDetailViewer } from "./IssueDetailViewer";
 import { Card, getCardRecipeClassName } from "./ui/Card";
@@ -44,7 +45,12 @@ type RoadmapIssue = FunctionReturnType<typeof api.issues.listRoadmapIssues>[numb
 
 /** Timeline span options in months */
 type TimelineSpan = 1 | 3 | 6 | 12;
+type ViewMode = "months" | "weeks";
 type GroupBy = "none" | "status" | "assignee" | "priority";
+type TimelineZoom = "compact" | "standard" | "expanded";
+
+const ISSUE_INFO_COLUMN_WIDTH = 256;
+const ROADMAP_ROW_HEIGHT = 56;
 
 const TIMELINE_SPANS: { value: TimelineSpan; label: string }[] = [
   { value: 1, label: "1 Month" },
@@ -52,6 +58,25 @@ const TIMELINE_SPANS: { value: TimelineSpan; label: string }[] = [
   { value: 6, label: "6 Months" },
   { value: 12, label: "1 Year" },
 ];
+
+const TIMELINE_ZOOM_OPTIONS: { label: string; value: TimelineZoom }[] = [
+  { label: "Compact", value: "compact" },
+  { label: "Standard", value: "standard" },
+  { label: "Expanded", value: "expanded" },
+];
+
+const TIMELINE_BUCKET_WIDTH: Record<ViewMode, Record<TimelineZoom, number>> = {
+  months: {
+    compact: 128,
+    standard: 176,
+    expanded: 224,
+  },
+  weeks: {
+    compact: 88,
+    standard: 120,
+    expanded: 152,
+  },
+};
 
 const GROUP_BY_OPTIONS: { label: string; value: GroupBy }[] = [
   { label: "No grouping", value: "none" },
@@ -370,6 +395,16 @@ function buildWeekHeaderCells(startDate: Date, endDate: Date): TimelineHeaderCel
   }
 
   return weekCells;
+}
+
+function getTimelineLayoutWidth(
+  viewMode: ViewMode,
+  timelineZoom: TimelineZoom,
+  timelineCellCount: number,
+) {
+  return (
+    ISSUE_INFO_COLUMN_WIDTH + timelineCellCount * TIMELINE_BUCKET_WIDTH[viewMode][timelineZoom]
+  );
 }
 
 function getTimelineRangeLabel(startDate: Date, endDate: Date) {
@@ -765,8 +800,6 @@ function computeDependencyLines({
 }): DependencyLine[] {
   if (!showDependencies || !issueLinks?.links || issueById.size === 0) return [];
 
-  const rowHeight = 56;
-
   return issueLinks.links
     .filter((link) => link.linkType === "blocks")
     .map((link) =>
@@ -774,7 +807,7 @@ function computeDependencyLines({
         issueById,
         issueRowIndexMap,
         link,
-        rowHeight,
+        rowHeight: ROADMAP_ROW_HEIGHT,
         getPositionOnTimeline,
       }),
     )
@@ -784,11 +817,12 @@ function computeDependencyLines({
 /** Gantt-style roadmap view with issue timeline bars and dependency lines. */
 export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapViewProps) {
   const [selectedIssue, setSelectedIssue] = useState<Id<"issues"> | null>(null);
-  const [viewMode, setViewMode] = useState<"months" | "weeks">("months");
+  const [viewMode, setViewMode] = useState<ViewMode>("months");
   const [groupBy, setGroupBy] = useState<GroupBy>("none");
   const [collapsedGroupKeys, setCollapsedGroupKeys] = useState<string[]>([]);
   const [filterEpic, setFilterEpic] = useState<Id<"issues"> | "all">("all");
   const [timelineSpan, setTimelineSpan] = useState<TimelineSpan>(6);
+  const [timelineZoom, setTimelineZoom] = useState<TimelineZoom>("standard");
   const [timelineAnchorDate, setTimelineAnchorDate] = useState(() => new Date());
   const [showDependencies, setShowDependencies] = useState(true);
 
@@ -832,6 +866,12 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     viewMode === "weeks"
       ? buildWeekHeaderCells(startOfMonth, endOfTimespan)
       : buildMonthHeaderCells(startOfMonth, timelineSpan);
+  const timelineLayoutWidth = getTimelineLayoutWidth(
+    viewMode,
+    timelineZoom,
+    timelineHeaderCells.length,
+  );
+  const timelineBucketWidth = TIMELINE_BUCKET_WIDTH[viewMode][timelineZoom];
   const timelineRows = buildTimelineRows(filteredIssues, groupBy, collapsedGroupKeys);
 
   const getPositionOnTimeline = (date: number) => {
@@ -1210,11 +1250,23 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
               {/* View Mode Toggle */}
               <SegmentedControl
                 value={viewMode}
-                onValueChange={(value: string) => value && setViewMode(value as "months" | "weeks")}
+                onValueChange={(value: string) => value && setViewMode(value as ViewMode)}
                 size="sm"
               >
                 <SegmentedControlItem value="months">Months</SegmentedControlItem>
                 <SegmentedControlItem value="weeks">Weeks</SegmentedControlItem>
+              </SegmentedControl>
+
+              <SegmentedControl
+                value={timelineZoom}
+                onValueChange={(value: string) => value && setTimelineZoom(value as TimelineZoom)}
+                size="sm"
+              >
+                {TIMELINE_ZOOM_OPTIONS.map((option) => (
+                  <SegmentedControlItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SegmentedControlItem>
+                ))}
               </SegmentedControl>
 
               {/* Dependency Lines Toggle */}
@@ -1232,33 +1284,6 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
 
         {/* Timeline Container */}
         <Card variant="default" padding="none" className="flex-1 overflow-hidden">
-          {/* Timeline Header (Fixed) */}
-          <div className="p-4 border-b border-ui-border bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78">
-            <Flex>
-              <Typography variant="label" className="w-64 shrink-0">
-                Issue
-              </Typography>
-              <FlexItem flex="1">
-                <Grid
-                  gap="none"
-                  templateColumns={`repeat(${timelineHeaderCells.length}, minmax(0, 1fr))`}
-                >
-                  {timelineHeaderCells.map((headerCell) => (
-                    <div
-                      key={headerCell.key}
-                      className={getCardRecipeClassName("roadmapMonthHeaderCell")}
-                    >
-                      <Typography variant="label" className="text-center">
-                        {headerCell.label}
-                      </Typography>
-                    </div>
-                  ))}
-                </Grid>
-              </FlexItem>
-            </Flex>
-          </div>
-
-          {/* Timeline Body (Virtualized) */}
           <FlexItem flex="1">
             {filteredIssues.length === 0 ? (
               <EmptyState
@@ -1268,57 +1293,92 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                 className="m-6 min-h-96 max-w-none border-dashed"
               />
             ) : (
-              <div className="relative">
-                <List<RowData>
-                  listRef={listRef}
-                  style={{ height: 600, width: "100%" }}
-                  rowCount={timelineRows.length}
-                  rowHeight={56}
-                  rowProps={{ rows: timelineRows, selectedIssueId }}
-                  rowComponent={Row}
-                />
+              <div className="h-full overflow-x-auto">
+                <div
+                  data-testid={TEST_IDS.ROADMAP.TIMELINE_CANVAS}
+                  className="min-w-full"
+                  style={{ width: `${timelineLayoutWidth}px` }}
+                >
+                  {/* Timeline Header (Fixed) */}
+                  <div className="border-b border-ui-border bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78 p-4">
+                    <Flex>
+                      <Typography variant="label" className="w-64 shrink-0">
+                        Issue
+                      </Typography>
+                      <FlexItem flex="1">
+                        <Grid
+                          gap="none"
+                          templateColumns={`repeat(${timelineHeaderCells.length}, minmax(${timelineBucketWidth}px, 1fr))`}
+                        >
+                          {timelineHeaderCells.map((headerCell) => (
+                            <div
+                              key={headerCell.key}
+                              className={getCardRecipeClassName("roadmapMonthHeaderCell")}
+                            >
+                              <Typography variant="label" className="text-center">
+                                {headerCell.label}
+                              </Typography>
+                            </div>
+                          ))}
+                        </Grid>
+                      </FlexItem>
+                    </Flex>
+                  </div>
 
-                {/* Dependency Lines SVG Overlay */}
-                {showDependencies && dependencyLines.length > 0 && (
-                  <svg
-                    className="absolute top-0 pointer-events-none"
-                    style={{
-                      left: 256, // w-64 issue info column
-                      width: "calc(100% - 256px)",
-                      height: 600,
-                    }}
-                    role="img"
-                    aria-label="Issue dependency lines"
-                  >
-                    <defs>
-                      <marker
-                        id="arrowhead"
-                        markerWidth="6"
-                        markerHeight="4"
-                        refX="5"
-                        refY="2"
-                        orient="auto"
+                  {/* Timeline Body (Virtualized) */}
+                  <div className="relative">
+                    <List<RowData>
+                      listRef={listRef}
+                      style={{ height: 600, width: "100%" }}
+                      rowCount={timelineRows.length}
+                      rowHeight={ROADMAP_ROW_HEIGHT}
+                      rowProps={{ rows: timelineRows, selectedIssueId }}
+                      rowComponent={Row}
+                    />
+
+                    {/* Dependency Lines SVG Overlay */}
+                    {showDependencies && dependencyLines.length > 0 && (
+                      <svg
+                        className="pointer-events-none absolute top-0"
+                        style={{
+                          left: ISSUE_INFO_COLUMN_WIDTH,
+                          width: `calc(100% - ${ISSUE_INFO_COLUMN_WIDTH}px)`,
+                          height: 600,
+                        }}
+                        role="img"
+                        aria-label="Issue dependency lines"
                       >
-                        <polygon points="0 0, 6 2, 0 4" fill="var(--color-status-warning)" />
-                      </marker>
-                    </defs>
-                    {dependencyLines.map((line) => {
-                      if (!line) return null;
-                      return (
-                        <path
-                          key={`${line.fromIssueId}-${line.toIssueId}`}
-                          d={getDependencyPath(line)}
-                          fill="none"
-                          stroke="var(--color-status-warning)"
-                          strokeWidth="2"
-                          strokeDasharray="4 2"
-                          markerEnd="url(#arrowhead)"
-                          opacity="0.7"
-                        />
-                      );
-                    })}
-                  </svg>
-                )}
+                        <defs>
+                          <marker
+                            id="arrowhead"
+                            markerWidth="6"
+                            markerHeight="4"
+                            refX="5"
+                            refY="2"
+                            orient="auto"
+                          >
+                            <polygon points="0 0, 6 2, 0 4" fill="var(--color-status-warning)" />
+                          </marker>
+                        </defs>
+                        {dependencyLines.map((line) => {
+                          if (!line) return null;
+                          return (
+                            <path
+                              key={`${line.fromIssueId}-${line.toIssueId}`}
+                              d={getDependencyPath(line)}
+                              fill="none"
+                              stroke="var(--color-status-warning)"
+                              strokeWidth="2"
+                              strokeDasharray="4 2"
+                              markerEnd="url(#arrowhead)"
+                              opacity="0.7"
+                            />
+                          );
+                        })}
+                      </svg>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </FlexItem>

@@ -8,6 +8,7 @@ import { createContext, useContext } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
+import { TEST_IDS } from "@/lib/test-ids";
 import { fireEvent, render, screen } from "@/test/custom-render";
 import { RoadmapView } from "./RoadmapView";
 
@@ -393,6 +394,39 @@ describe("RoadmapView", () => {
 
     expect(screen.getByText("March 2026")).toBeInTheDocument();
     expect(screen.getByText("Mar 2026")).toBeInTheDocument();
+  });
+
+  it("changes roadmap canvas width when the timeline zoom changes", () => {
+    mockRoadmapQueries({
+      issues: [
+        {
+          _id: issue1Id,
+          key: "PROJ-1",
+          title: "Plan onboarding",
+          status: "todo",
+          startDate: Date.UTC(2026, 2, 10),
+          dueDate: Date.UTC(2026, 2, 20),
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Alex Rivera" },
+        },
+      ],
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "1 Month" }));
+
+    const timelineCanvas = screen.getByTestId(TEST_IDS.ROADMAP.TIMELINE_CANVAS);
+    expect(timelineCanvas).toHaveStyle({ width: "432px" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Expanded" }));
+
+    expect(timelineCanvas).toHaveStyle({ width: "480px" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Compact" }));
+
+    expect(timelineCanvas).toHaveStyle({ width: "384px" });
   });
 
   it("groups roadmap rows by assignee", () => {

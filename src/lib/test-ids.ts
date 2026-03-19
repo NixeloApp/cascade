@@ -221,6 +221,11 @@ export const TEST_IDS = {
     NAME: "sprint-name",
   },
 
+  ROADMAP: {
+    /** @see src/components/RoadmapView.tsx */
+    TIMELINE_CANVAS: "roadmap-timeline-canvas",
+  },
+
   // ============================================================
   // Analytics
   // ============================================================
