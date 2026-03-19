@@ -36,7 +36,7 @@ Only unfinished items remain here. OOO work is complete and intentionally remove
 
 ## Already Shipped From This Review
 
-- [x] Out of office profile status
+- [x] Out-of-office profile status
 - [x] OOO assignee visibility
 - [x] OOO delegation / redirect behavior
 - [x] Booking-page delegation while the owner is OOO

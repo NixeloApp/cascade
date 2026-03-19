@@ -13,14 +13,23 @@ import { c, ROOT, relPath, walkDir } from "./utils.js";
 const SRC_DIR = path.join(ROOT, "src");
 const TARGET_PROPERTY_NAMES = new Set([
   "assignee",
+  "assignees",
   "reporter",
+  "reporters",
   "owner",
+  "owners",
   "user",
+  "users",
   "member",
+  "members",
   "creator",
+  "creators",
   "actor",
+  "actors",
   "delegate",
+  "delegates",
   "author",
+  "authors",
 ]);
 
 function isIgnoredFile(rel) {

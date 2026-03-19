@@ -147,13 +147,16 @@ export const getBySlug = query({
 
     const effectiveHostId =
       (await getActiveOutOfOfficeDelegateUserId(ctx, page.userId)) ?? page.userId;
-    const host = await ctx.db.get(effectiveHostId);
+    const [pageOwner, effectiveHost] = await Promise.all([
+      ctx.db.get(page.userId),
+      ctx.db.get(effectiveHostId),
+    ]);
 
     return {
       ...page,
       effectiveHostId,
-      hostName: host?.name,
-      hostEmail: host?.email,
+      hostName: effectiveHost?.name,
+      hostEmail: pageOwner?.email,
     };
   },
 });

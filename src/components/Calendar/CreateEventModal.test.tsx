@@ -275,7 +275,7 @@ describe("CreateEventModal", () => {
 
   describe("Default Date", () => {
     it("should use provided default date", () => {
-      const testDate = new Date("2026-03-15");
+      const testDate = new Date(2026, 2, 15);
 
       render(<CreateEventModal {...defaultProps} defaultDate={testDate} />);
 

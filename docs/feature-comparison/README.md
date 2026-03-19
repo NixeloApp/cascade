@@ -21,7 +21,7 @@ This documentation analyzes how features are implemented across three codebases 
 
 ## Feature Categories
 
-### ✅ Issues (Plane + Cascade focus)
+### ✅ Issues (Plane + Nixelo focus)
 | Feature | Status | Doc |
 |---------|--------|-----|
 | Create Issue | ✅ Done | [create-issue.md](./issues/create-issue.md) |
@@ -82,7 +82,7 @@ This documentation analyzes how features are implemented across three codebases 
 | 2FA | ✅ Done | [2fa.md](./auth/2fa.md) |
 
 ### ⏭️ Scheduling (cal.com focus - SKIPPED)
-> **Note:** These features are specific to cal.com's scheduling/booking platform and don't apply to Cascade or Plane's project management focus.
+> **Note:** These features are specific to cal.com's scheduling/booking platform and don't apply to Nixelo or Plane's project management focus.
 
 | Feature | Status | Doc |
 |---------|--------|-----|
@@ -95,7 +95,7 @@ This documentation analyzes how features are implemented across three codebases 
 
 ## Key Findings Summary
 
-### Top Recommendations for Cascade (Prioritized)
+### Top Recommendations for Nixelo (Prioritized)
 
 #### High Priority
 1. ~~**Keyboard shortcuts**~~ ✅ Global `C` for create issue, `Escape` to close, arrow navigation
@@ -188,7 +188,7 @@ This documentation analyzes how features are implemented across three codebases 
 8. **Slack/Teams integration** - Additional notification channels
 9. **Email preview** - Show sample of each notification type
 
-### Cascade Strengths vs Plane (Notifications)
+### Nixelo Strengths vs Plane (Notifications)
 - **Push notifications** - Web Push API for browser notifications
 - **Digest emails** - Daily and weekly summaries
 - **More notification types** - 8 types vs 5
@@ -214,7 +214,7 @@ This documentation analyzes how features are implemented across three codebases 
 8. ~~**Add cover image**~~ ✅ Profile header personalization with upload/remove modal
 9. **Add integration marketplace** - Browse/install integrations UI
 
-### Cascade Strengths vs Plane (Settings)
+### Nixelo Strengths vs Plane (Settings)
 - **Two-Factor Authentication** - Full TOTP with backup codes
 - **Google Calendar sync** - Bi-directional calendar integration
 - **SSO per-organization** - Each org configures own SAML/OIDC
@@ -241,7 +241,7 @@ This documentation analyzes how features are implemented across three codebases 
 8. **Add admin 2FA enforcement** - Require 2FA per organization
 9. **Add SCIM support** - Enterprise user provisioning
 
-### Cascade Strengths vs Plane (Auth)
+### Nixelo Strengths vs Plane (Auth)
 - **Full 2FA implementation** - TOTP with backup codes (plane has none)
 - **Per-organization SSO** - SAML/OIDC config per org
 - **Email enumeration protection** - Password reset always returns success
@@ -250,7 +250,7 @@ This documentation analyzes how features are implemented across three codebases 
 - **Session verification** - Per-session 2FA with 24h window
 - **Rate limiting** - 5 attempts, 15-minute lockout
 
-### Cascade Strengths vs Plane
+### Nixelo Strengths vs Plane
 - **Saved filters with sharing** - Team-wide filter presets
 - **Advanced search modal** - Dedicated complex search UI
 - **Label groups with descriptions** - Better organization

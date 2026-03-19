@@ -92,7 +92,7 @@ export function CreateEventModal({
     defaultValues: {
       title: "",
       description: "",
-      startDate: defaultDate.toISOString().split("T")[0],
+      startDate: `${defaultDate.getFullYear()}-${String(defaultDate.getMonth() + 1).padStart(2, "0")}-${String(defaultDate.getDate()).padStart(2, "0")}`,
       startTime: "09:00",
       endTime: "10:00",
       allDay: false,
@@ -108,10 +108,10 @@ export function CreateEventModal({
         const [startHour, startMinute] = value.startTime.split(":").map(Number);
         const [endHour, endMinute] = value.endTime.split(":").map(Number);
 
-        const startDateTime = new Date(value.startDate);
+        const startDateTime = new Date(`${value.startDate}T00:00:00`);
         startDateTime.setHours(startHour, startMinute, 0, 0);
 
-        const endDateTime = new Date(value.startDate);
+        const endDateTime = new Date(`${value.startDate}T00:00:00`);
         endDateTime.setHours(endHour, endMinute, 0, 0);
 
         await createEvent({
@@ -154,8 +154,8 @@ export function CreateEventModal({
       >
         <form.Subscribe selector={(state) => state.values}>
           {({ eventType, allDay, isRequired, startDate, startTime, endTime }) => {
-            const draftStart = new Date(startDate);
-            const draftEnd = new Date(startDate);
+            const draftStart = new Date(`${startDate}T00:00:00`);
+            const draftEnd = new Date(`${startDate}T00:00:00`);
 
             if (allDay) {
               draftStart.setHours(0, 0, 0, 0);

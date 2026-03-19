@@ -45,14 +45,14 @@ bg-brand, text-status-error
 ## Validation
 
 ```bash
-node scripts/validate.js  # Target: 0 errors
+pnpm run validate  # Target: 0 errors
 ```
 
 Visual work should also run:
 
 ```bash
-pnpm screenshots
-pnpm screenshots:diff
+pnpm screenshots -- --spec <spec-name>   # Capture specific pages
+pnpm screenshots:diff                     # Compare against baseline
 ```
 
 Use [CONSISTENCY.md](./CONSISTENCY.md) for the enforcement map: what is hard-failed by validators, what is advisory inventory, and what still requires human screenshot review.

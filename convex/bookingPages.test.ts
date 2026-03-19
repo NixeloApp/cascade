@@ -173,7 +173,7 @@ describe("Booking Pages", () => {
       const page = await t.query(api.bookingPages.getBySlug, { slug: "delegated-page" });
 
       expect(page?.hostName).toBe("Delegate Host");
-      expect(page?.hostEmail).toBe("delegate@test.com");
+      expect(page?.hostEmail).toBe("host@test.com");
       expect(page?.effectiveHostId).toBe(delegateUserId);
     });
 

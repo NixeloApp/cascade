@@ -141,17 +141,20 @@ describe("calendarEvents", () => {
       const t = convexTest(schema, modules);
       const { asUser } = await setupCalendarTestContext(t);
 
+      const oooStart = Date.now() + DAY;
+      const oooEnd = oooStart + 2 * DAY;
+
       await asUser.mutation(api.outOfOffice.upsert, {
-        startsAt: new Date("2026-03-20T00:00:00Z").getTime(),
-        endsAt: new Date("2026-03-22T23:59:59Z").getTime(),
+        startsAt: oooStart,
+        endsAt: oooEnd,
         reason: "vacation",
       });
 
       await expect(
         asUser.mutation(api.calendarEvents.create, {
           title: "Vacation Conflict",
-          startTime: new Date("2026-03-21T15:00:00Z").getTime(),
-          endTime: new Date("2026-03-21T16:00:00Z").getTime(),
+          startTime: oooStart + HOUR,
+          endTime: oooStart + 2 * HOUR,
           allDay: false,
           eventType: "meeting",
         }),

@@ -1592,6 +1592,7 @@ function getAvailableRoadmapDependencyTargets({
 }
 
 function RoadmapDependencySection({
+  canEdit,
   emptyLabel,
   items,
   onFocusIssue,
@@ -1599,6 +1600,7 @@ function RoadmapDependencySection({
   removeLabelPrefix,
   title,
 }: {
+  canEdit: boolean;
   emptyLabel: string;
   items: RoadmapDependencyItem[];
   onFocusIssue: (issueId: Id<"issues">) => void;
@@ -1640,15 +1642,17 @@ function RoadmapDependencySection({
                     </Typography>
                   </Flex>
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onRemove(item.linkId)}
-                  aria-label={`${removeLabelPrefix} ${item.issue.key}`}
-                  title={`${removeLabelPrefix} ${item.issue.key}`}
-                >
-                  <Icon icon={X} size="sm" />
-                </Button>
+                {canEdit ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onRemove(item.linkId)}
+                    aria-label={`${removeLabelPrefix} ${item.issue.key}`}
+                    title={`${removeLabelPrefix} ${item.issue.key}`}
+                  >
+                    <Icon icon={X} size="sm" />
+                  </Button>
+                ) : null}
               </Flex>
             </Card>
           ))}
@@ -1770,6 +1774,7 @@ function RoadmapDependencyPanel({
 
         <Flex gap="md" wrap>
           <RoadmapDependencySection
+            canEdit={canEdit}
             title="Blocks"
             items={blocks}
             emptyLabel="This issue does not block any visible roadmap items yet."
@@ -1778,6 +1783,7 @@ function RoadmapDependencyPanel({
             removeLabelPrefix="Remove blocked issue"
           />
           <RoadmapDependencySection
+            canEdit={canEdit}
             title="Blocked by"
             items={blockedBy}
             emptyLabel="No visible roadmap blockers yet."
@@ -2337,15 +2343,17 @@ function useRoadmapTimelineInteractions({
             })
           : null;
 
-      if (nextUpdate) {
-        await updateIssue({
-          issueId: nextUpdate.issueId,
-          ...nextUpdate.patch,
-        });
+      try {
+        if (nextUpdate) {
+          await updateIssue({
+            issueId: nextUpdate.issueId,
+            ...nextUpdate.patch,
+          });
+        }
+      } finally {
+        setResizing(null);
+        setDragging(null);
       }
-
-      setResizing(null);
-      setDragging(null);
     };
 
     document.addEventListener("mousemove", handleMouseMove);

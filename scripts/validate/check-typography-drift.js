@@ -36,12 +36,23 @@ function getClassNameText(node) {
     return attr.initializer.text;
   }
 
-  if (
-    ts.isJsxExpression(attr.initializer) &&
-    attr.initializer.expression &&
-    ts.isStringLiteral(attr.initializer.expression)
-  ) {
-    return attr.initializer.expression.text;
+  if (ts.isJsxExpression(attr.initializer) && attr.initializer.expression) {
+    // className={"literal"}
+    if (ts.isStringLiteral(attr.initializer.expression)) {
+      return attr.initializer.expression.text;
+    }
+
+    // className={cn("...", "...")} — extract string literal arguments from cn()
+    if (
+      ts.isCallExpression(attr.initializer.expression) &&
+      ts.isIdentifier(attr.initializer.expression.expression) &&
+      attr.initializer.expression.expression.text === "cn"
+    ) {
+      return attr.initializer.expression.arguments
+        .filter((arg) => ts.isStringLiteral(arg) || ts.isNoSubstitutionTemplateLiteral(arg))
+        .map((arg) => arg.text)
+        .join(" ");
+    }
   }
 
   return null;

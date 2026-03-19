@@ -1,10 +1,11 @@
 import type { Id } from "@convex/_generated/dataModel";
+import { DAY } from "@convex/lib/timeUtils";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { createContext, useContext } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@/test/custom-render";
+import { fireEvent, render, screen, within } from "@/test/custom-render";
 import {
   InlineAssigneeSelect,
   InlinePrioritySelect,
@@ -102,8 +103,8 @@ describe("InlinePropertyEdit", () => {
         _id: "user_1" as Id<"users">,
         name: "Alex",
         outOfOffice: {
-          startsAt: new Date("2026-03-20T00:00:00Z").getTime(),
-          endsAt: new Date("2026-03-22T23:59:59Z").getTime(),
+          startsAt: Date.now() + DAY,
+          endsAt: Date.now() + 3 * DAY,
           reason: "vacation" as const,
           updatedAt: Date.now(),
         },
@@ -129,9 +130,10 @@ describe("InlinePropertyEdit", () => {
     expect(screen.getByLabelText("Change assignee")).toHaveTextContent("Unassigned");
     expect(screen.getByLabelText("Change status")).toHaveTextContent("In Progress");
 
-    await user.click(screen.getByRole("button", { name: /Alex/i }));
+    const alexOption = screen.getByRole("button", { name: /Alex/i });
+    expect(within(alexOption).getByText("OOO")).toBeInTheDocument();
+    await user.click(alexOption);
     expect(onAssigneeChange).toHaveBeenCalledWith("user_1");
-    expect(screen.getByText("OOO")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Unassigned" }));
     expect(onAssigneeChange).toHaveBeenCalledWith(null);
