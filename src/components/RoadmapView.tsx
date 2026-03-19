@@ -47,7 +47,7 @@ type RoadmapIssue = FunctionReturnType<typeof api.issues.listRoadmapIssues>[numb
 /** Timeline span options in months */
 type TimelineSpan = 1 | 3 | 6 | 12;
 type ViewMode = "months" | "weeks";
-type GroupBy = "none" | "status" | "assignee" | "priority";
+type GroupBy = "none" | "status" | "assignee" | "priority" | "epic";
 type TimelineZoom = "compact" | "standard" | "expanded";
 
 const ISSUE_INFO_COLUMN_WIDTH = 256;
@@ -81,6 +81,7 @@ const TIMELINE_BUCKET_WIDTH: Record<ViewMode, Record<TimelineZoom, number>> = {
 
 const GROUP_BY_OPTIONS: { label: string; value: GroupBy }[] = [
   { label: "No grouping", value: "none" },
+  { label: "Epic", value: "epic" },
   { label: "Status", value: "status" },
   { label: "Assignee", value: "assignee" },
   { label: "Priority", value: "priority" },
@@ -480,6 +481,18 @@ function getGroupDescriptor(issue: RoadmapIssue, groupBy: Exclude<GroupBy, "none
         label: getPriorityLabel(issue.priority),
         value: issue.priority,
       };
+    case "epic": {
+      const epicTitle = issue.epic?.title?.trim() || "No epic";
+      const epicKey = issue.epic?._id ?? "none";
+      return {
+        collapsed: false,
+        count: 0,
+        kind: groupBy,
+        key: `epic:${epicKey}`,
+        label: epicTitle,
+        value: issue.epic?.key ?? epicTitle,
+      };
+    }
     case "status":
       return {
         collapsed: false,
@@ -492,17 +505,42 @@ function getGroupDescriptor(issue: RoadmapIssue, groupBy: Exclude<GroupBy, "none
   }
 }
 
+function comparePriorityTimelineGroups(a: TimelineGroup, b: TimelineGroup) {
+  return (
+    (PRIORITY_SORT_ORDER[a.value] ?? Number.MAX_SAFE_INTEGER) -
+      (PRIORITY_SORT_ORDER[b.value] ?? Number.MAX_SAFE_INTEGER) || a.label.localeCompare(b.label)
+  );
+}
+
+function compareAssigneeTimelineGroups(a: TimelineGroup, b: TimelineGroup) {
+  if (a.value === "Unassigned") return 1;
+  if (b.value === "Unassigned") return -1;
+  return null;
+}
+
+function compareEpicTimelineGroups(a: TimelineGroup, b: TimelineGroup) {
+  if (a.label === "No epic") return 1;
+  if (b.label === "No epic") return -1;
+  return null;
+}
+
 function compareTimelineGroups(a: TimelineGroup, b: TimelineGroup) {
   if (a.kind === "priority" && b.kind === "priority") {
-    return (
-      (PRIORITY_SORT_ORDER[a.value] ?? Number.MAX_SAFE_INTEGER) -
-        (PRIORITY_SORT_ORDER[b.value] ?? Number.MAX_SAFE_INTEGER) || a.label.localeCompare(b.label)
-    );
+    return comparePriorityTimelineGroups(a, b);
   }
 
   if (a.kind === "assignee" && b.kind === "assignee") {
-    if (a.value === "Unassigned") return 1;
-    if (b.value === "Unassigned") return -1;
+    const assigneeComparison = compareAssigneeTimelineGroups(a, b);
+    if (assigneeComparison !== null) {
+      return assigneeComparison;
+    }
+  }
+
+  if (a.kind === "epic" && b.kind === "epic") {
+    const epicComparison = compareEpicTimelineGroups(a, b);
+    if (epicComparison !== null) {
+      return epicComparison;
+    }
   }
 
   return a.label.localeCompare(b.label, undefined, { sensitivity: "base" });
@@ -557,6 +595,8 @@ function getTimelineGroupLabel(group: TimelineGroup) {
       return "Priority";
     case "status":
       return "Status";
+    case "epic":
+      return "Epic";
   }
 }
 

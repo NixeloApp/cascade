@@ -173,6 +173,7 @@ type RoadmapIssue = {
   type: IssueType;
   priority: IssuePriority;
   assignee?: { name: string };
+  epic?: { _id: Id<"issues">; key: string; title: string } | null;
 };
 
 const mockUseAuthenticatedQuery = vi.mocked(useAuthenticatedQuery);
@@ -520,6 +521,43 @@ describe("RoadmapView", () => {
       "Alex Rivera",
     );
     expect(screen.getByTestId("roadmap-group-assignee:unassigned")).toHaveTextContent("Unassigned");
+    expect(screen.getAllByText("1 issue")).toHaveLength(2);
+  });
+
+  it("groups roadmap rows by epic", () => {
+    mockRoadmapQueries({
+      issues: [
+        {
+          _id: issue1Id,
+          key: "PROJ-1",
+          title: "Plan onboarding",
+          status: "todo",
+          startDate: Date.UTC(2026, 2, 10),
+          dueDate: Date.UTC(2026, 2, 20),
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Alex Rivera" },
+          epic: { _id: epicId, key: "PROJ-EPIC", title: "Growth" },
+        },
+        {
+          _id: issue2Id,
+          key: "PROJ-2",
+          title: "Ship migration",
+          status: "in progress",
+          startDate: Date.UTC(2026, 2, 18),
+          dueDate: Date.UTC(2026, 2, 28),
+          type: "story",
+          priority: "high",
+        },
+      ],
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Epic" }));
+
+    expect(screen.getByTestId(`roadmap-group-epic:${epicId}`)).toHaveTextContent("Growth");
+    expect(screen.getByTestId("roadmap-group-epic:none")).toHaveTextContent("No epic");
     expect(screen.getAllByText("1 issue")).toHaveLength(2);
   });
 
