@@ -252,6 +252,11 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   // Issue detail: filled-issue-xxx → 08-issue
   [/^filled-issue-/, "08-issue", ""],
   [/^filled-project-.+-issue-detail-modal$/, "08-issue", "-detail-modal"],
+  [
+    /^filled-project-.+-issue-detail-modal-inline-editing$/,
+    "08-issue",
+    "-detail-modal-inline-editing",
+  ],
   [/^filled-project-.+-import-export-modal$/, "06-board", "-import-export-modal"],
   // Board interactive states
   [/^filled-project-.+-board-swimlane-(\w+)$/, "06-board", "-swimlane-$1"],
@@ -2613,6 +2618,7 @@ async function screenshotFilledStates(
       shouldCaptureAny(p, [
         `project-${normalizedProjectKey}-create-issue-modal`,
         `project-${normalizedProjectKey}-issue-detail-modal`,
+        `project-${normalizedProjectKey}-issue-detail-modal-inline-editing`,
       ])
     ) {
       await screenshotBoardModals(page, orgSlug, projectKey, firstIssueKey, p);
@@ -3492,7 +3498,14 @@ async function screenshotBoardModals(
   const normalizedProjectKey = projectKey.toLowerCase();
   const createIssueModalName = `project-${normalizedProjectKey}-create-issue-modal`;
   const issueDetailModalName = `project-${normalizedProjectKey}-issue-detail-modal`;
-  if (!shouldCaptureAny(prefix, [createIssueModalName, issueDetailModalName])) {
+  const issueDetailInlineEditingName = `project-${normalizedProjectKey}-issue-detail-modal-inline-editing`;
+  if (
+    !shouldCaptureAny(prefix, [
+      createIssueModalName,
+      issueDetailModalName,
+      issueDetailInlineEditingName,
+    ])
+  ) {
     return;
   }
 
@@ -3528,19 +3541,46 @@ async function screenshotBoardModals(
     }
   }
 
-  if (shouldCapture(prefix, issueDetailModalName) && (await issueCard.count()) > 0) {
+  if (
+    shouldCaptureAny(prefix, [issueDetailModalName, issueDetailInlineEditingName]) &&
+    (await issueCard.count()) > 0
+  ) {
     await runCaptureStep("board issue-detail modal", async () => {
       await issueCard.scrollIntoViewIfNeeded().catch(() => {});
-      await issueCard.click();
       const issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
-      await issueDetailDialog.waitFor({ state: "visible", timeout: 5000 });
+      await issueCard.click();
+      const dialogOpened = await issueDetailDialog
+        .waitFor({ state: "visible", timeout: 3000 })
+        .then(() => true)
+        .catch(() => false);
+      if (!dialogOpened) {
+        await waitForScreenshotReady(page);
+        await issueCard.click();
+        await issueDetailDialog.waitFor({ state: "visible", timeout: 5000 });
+      }
       // Wait for issue content to hydrate - issue key pattern indicates content is loaded
       await issueDetailDialog
         .getByText(/[A-Z][A-Z0-9]+-\d+/)
         .first()
         .waitFor({ timeout: 5000 });
-      await waitForScreenshotReady(page);
-      await captureCurrentView(page, prefix, issueDetailModalName);
+
+      if (shouldCapture(prefix, issueDetailModalName)) {
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, issueDetailModalName);
+      }
+
+      if (shouldCapture(prefix, issueDetailInlineEditingName)) {
+        await projectsPage.issueDetailEditButton.waitFor({ state: "visible", timeout: 5000 });
+        await projectsPage.issueDetailEditButton.click();
+        await projectsPage.issueDetailTitleInput.waitFor({ state: "visible", timeout: 5000 });
+        await projectsPage.issueDetailDescriptionEditor.waitFor({
+          state: "visible",
+          timeout: 5000,
+        });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(page, prefix, issueDetailInlineEditingName);
+      }
+
       await dismissIfOpen(page, issueDetailDialog);
     });
   }
@@ -3947,6 +3987,7 @@ const DRY_RUN_PAGES = [
   "filled-project-PROJ-settings-delete-alert-dialog",
   "filled-project-PROJ-create-issue-modal",
   "filled-project-PROJ-issue-detail-modal",
+  "filled-project-PROJ-issue-detail-modal-inline-editing",
   "filled-project-PROJ-import-export-modal",
   // Filled states — board interactive states
   "filled-project-PROJ-board-swimlane-priority",
