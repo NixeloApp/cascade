@@ -264,6 +264,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-project-.+-sprints-burndown$/, "18-sprints", "-burndown"],
   [/^filled-project-.+-sprints-burnup$/, "18-sprints", "-burnup"],
   [/^filled-project-.+-sprints-completion-modal$/, "18-sprints", "-completion-modal"],
+  [/^filled-project-.+-sprints-date-overlap-warning$/, "18-sprints", "-date-overlap-warning"],
   [/^filled-project-.+-sprints-workload$/, "18-sprints", "-workload"],
   // Issue detail: filled-issue-xxx → 08-issue
   [/^filled-issue-/, "08-issue", ""],
@@ -2989,6 +2990,7 @@ async function screenshotFilledStates(
         `project-${normalizedProjectKey}-sprints-burndown`,
         `project-${normalizedProjectKey}-sprints-burnup`,
         `project-${normalizedProjectKey}-sprints-completion-modal`,
+        `project-${normalizedProjectKey}-sprints-date-overlap-warning`,
         `project-${normalizedProjectKey}-sprints-workload`,
       ])
     ) {
@@ -4239,6 +4241,53 @@ async function screenshotSprintInteractiveStates(
     });
   }
 
+  // Create sprint overlap warning
+  if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-date-overlap-warning`)) {
+    await runCaptureStep("sprint date overlap warning", async () => {
+      let startSprintButton = page.getByRole("button", { name: /^start sprint$/i }).first();
+
+      if (!(await startSprintButton.isVisible().catch(() => false))) {
+        const createSprintButton = page
+          .getByRole("button", { name: /create sprint|\+\s*sprint/i })
+          .first();
+        await createSprintButton.waitFor({ state: "visible", timeout: 5000 });
+        await createSprintButton.click();
+
+        const sprintNameInput = page.getByLabel("Sprint Name");
+        await sprintNameInput.waitFor({ state: "visible", timeout: 5000 });
+
+        const createForm = page.locator("form").filter({ has: sprintNameInput }).first();
+        await createForm.waitFor({ state: "visible", timeout: 5000 });
+        await sprintNameInput.fill("Overlap Warning Sprint");
+        await createForm.evaluate((form) => {
+          (form as HTMLFormElement).requestSubmit();
+        });
+
+        startSprintButton = page.getByRole("button", { name: /^start sprint$/i }).first();
+        await startSprintButton.waitFor({ state: "visible", timeout: 5000 });
+      }
+
+      await startSprintButton.waitFor({ state: "visible", timeout: 5000 });
+      await startSprintButton.click();
+
+      const dialog = page.getByRole("dialog", { name: /^start sprint$/i });
+      await dialog.waitFor({ state: "visible", timeout: 5000 });
+      await waitForScreenshotReady(page);
+      await page.waitForTimeout(300);
+      const overlapWarning = dialog.getByText(/these dates overlap with:/i).first();
+      if ((await overlapWarning.count()) > 0) {
+        await overlapWarning.scrollIntoViewIfNeeded().catch(() => {});
+      }
+      await waitForScreenshotReady(page);
+      await captureCurrentView(
+        page,
+        prefix,
+        `project-${normalizedProjectKey}-sprints-date-overlap-warning`,
+      );
+      await dismissIfOpen(page, dialog);
+    });
+  }
+
   // Complete sprint modal
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-completion-modal`)) {
     await runCaptureStep("sprint completion modal", async () => {
@@ -4478,6 +4527,7 @@ const DRY_RUN_PAGES = [
   "filled-project-PROJ-sprints-burndown",
   "filled-project-PROJ-sprints-burnup",
   "filled-project-PROJ-sprints-completion-modal",
+  "filled-project-PROJ-sprints-date-overlap-warning",
   "filled-project-PROJ-sprints-workload",
   // Filled states — calendar modes
   "filled-calendar-day",
