@@ -45,6 +45,15 @@ describe("ROUTES configuration", () => {
       expect(ROUTES.invite.build("special-token-xyz")).toBe("/invite/special-token-xyz");
     });
 
+    it("should build portal routes with token and projectId", () => {
+      expect(ROUTES.portal.entry.path).toBe("/portal/$token");
+      expect(ROUTES.portal.entry.build("abc123")).toBe("/portal/abc123");
+      expect(ROUTES.portal.project.path).toBe("/portal/$token/projects/$projectId");
+      expect(ROUTES.portal.project.build("abc123", "project-42")).toBe(
+        "/portal/abc123/projects/project-42",
+      );
+    });
+
     it("should build dashboard route with orgSlug", () => {
       expect(ROUTES.dashboard.path).toBe("/$orgSlug/dashboard");
       expect(ROUTES.dashboard.build("acme")).toBe("/acme/dashboard");
@@ -251,6 +260,8 @@ describe("ROUTES configuration", () => {
       // All paths with parameters should use $paramName format
       expect(ROUTES.dashboard.path).toMatch(/\$orgSlug/);
       expect(ROUTES.invite.path).toMatch(/\$token/);
+      expect(ROUTES.portal.entry.path).toMatch(/\$token/);
+      expect(ROUTES.portal.project.path).toMatch(/\$projectId/);
       expect(ROUTES.projects.board.path).toMatch(/\$key/);
       expect(ROUTES.workspaces.detail.path).toMatch(/\$workspaceSlug/);
       expect(ROUTES.workspaces.teams.detail.path).toMatch(/\$teamSlug/);
@@ -260,6 +271,7 @@ describe("ROUTES configuration", () => {
       // All build outputs should start with /
       expect(ROUTES.home.build()).toMatch(/^\//);
       expect(ROUTES.dashboard.build("test")).toMatch(/^\//);
+      expect(ROUTES.portal.entry.build("token")).toMatch(/^\//);
       expect(ROUTES.projects.board.build("org", "key")).toMatch(/^\//);
       expect(ROUTES.workspaces.teams.detail.build("org", "ws", "team")).toMatch(/^\//);
     });

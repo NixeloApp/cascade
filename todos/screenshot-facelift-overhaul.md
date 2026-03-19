@@ -17,10 +17,6 @@ Core visual facelift work is done. Only the unfinished screenshot and validation
 - [ ] `22-time-tracking` — missing `desktop-light.png`, `tablet-light.png`, `mobile-light.png`
 - [ ] `28-workspace-detail` — missing `desktop-dark.png`, `desktop-light.png`, `tablet-light.png`, `mobile-light.png`
 
-### Routes / Flows Still Not Captured
-
-- [ ] Portal page (`/portal/$token`)
-
 ### Canonical Modal Screenshot Variants Missing
 
 - [ ] `create-issue` — missing `create-issue-desktop-dark.png`, `create-issue-desktop-light.png`, `create-issue-tablet-light.png`, `create-issue-mobile-light.png`

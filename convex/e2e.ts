@@ -2710,6 +2710,8 @@ export const seedScreenshotDataInternal = internalMutation({
     issueKeys: v.optional(v.array(v.string())),
     workspaceSlug: v.optional(v.string()),
     teamSlug: v.optional(v.string()),
+    portalToken: v.optional(v.string()),
+    portalProjectId: v.optional(v.string()),
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
@@ -3199,6 +3201,72 @@ export const seedScreenshotDataInternal = internalMutation({
     }
 
     const secondaryProjectId = secondaryProject._id;
+
+    let portalClient = await ctx.db
+      .query("clients")
+      .withIndex("by_organization_email", (q) =>
+        q.eq("organizationId", orgId).eq("email", "portal-screenshots@nixelo.test"),
+      )
+      .first();
+
+    if (!portalClient) {
+      const portalClientId = await ctx.db.insert("clients", {
+        organizationId: orgId,
+        name: "Northstar Labs",
+        email: "portal-screenshots@nixelo.test",
+        company: "Northstar Labs",
+        address: "18 Market Street, Chicago, IL",
+        hourlyRate: 185,
+        createdBy: userId,
+        updatedAt: now,
+      });
+      portalClient = await ctx.db.get(portalClientId);
+    } else {
+      await ctx.db.patch(portalClient._id, {
+        name: "Northstar Labs",
+        company: "Northstar Labs",
+        address: "18 Market Street, Chicago, IL",
+        hourlyRate: 185,
+        updatedAt: now,
+      });
+      portalClient = await ctx.db.get(portalClient._id);
+    }
+
+    if (!portalClient) {
+      return { success: false, error: "Failed to create portal client" };
+    }
+
+    const existingPortalTokens = await ctx.db
+      .query("clientPortalTokens")
+      .withIndex("by_client", (q) => q.eq("clientId", portalClient._id))
+      .collect();
+
+    for (const token of existingPortalTokens) {
+      await ctx.db.delete(token._id);
+    }
+
+    const portalToken = `${crypto.randomUUID().replace(/-/g, "")}${crypto
+      .randomUUID()
+      .replace(/-/g, "")}`;
+
+    await ctx.db.insert("clientPortalTokens", {
+      organizationId: orgId,
+      clientId: portalClient._id,
+      token: portalToken,
+      projectIds: [projectId, secondaryProjectId],
+      permissions: {
+        viewIssues: true,
+        viewDocuments: true,
+        viewTimeline: true,
+        addComments: false,
+      },
+      expiresAt: now + 30 * DAY,
+      lastAccessedAt: undefined,
+      isRevoked: false,
+      revokedAt: undefined,
+      createdBy: userId,
+      updatedAt: now,
+    });
 
     // Normalize OPS project membership: remove stale members from previous runs
     // (autoLogin recreates the screenshot user, so old membership rows accumulate)
@@ -3920,6 +3988,8 @@ export const seedScreenshotDataInternal = internalMutation({
       issueKeys: createdIssueKeys,
       workspaceSlug: "product",
       teamSlug: "engineering",
+      portalToken,
+      portalProjectId: projectId,
     };
   },
 });

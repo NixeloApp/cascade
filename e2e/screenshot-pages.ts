@@ -890,6 +890,38 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
       .waitFor({ state: "visible", timeout: 12000 })
       .catch(() => {});
     await waitForScreenshotReady(page);
+    return;
+  }
+
+  if (name === "portal") {
+    await page
+      .getByRole("heading", { name: /client portal/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByText(/portal token received/i)
+      .or(page.getByText(/no projects are available for this portal token/i))
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await waitForScreenshotReady(page);
+    return;
+  }
+
+  if (name === "portal-project") {
+    await page
+      .getByRole("heading", { name: /project view/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByText(/^issues$/i)
+      .or(page.getByText(/no visible issues for this project/i))
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await waitForScreenshotReady(page);
   }
 }
 
@@ -2023,7 +2055,7 @@ async function autoLogin(page: Page): Promise<string | null> {
 // Screenshot passes
 // ---------------------------------------------------------------------------
 
-async function screenshotPublicPages(page: Page): Promise<void> {
+async function screenshotPublicPages(page: Page, seed: SeedScreenshotResult): Promise<void> {
   const publicNames = [
     "landing",
     "signin",
@@ -2031,6 +2063,8 @@ async function screenshotPublicPages(page: Page): Promise<void> {
     "forgot-password",
     "verify-2fa",
     "invite-invalid",
+    "portal",
+    "portal-project",
   ];
   if (!shouldCaptureAny("public", publicNames)) {
     return;
@@ -2043,6 +2077,18 @@ async function screenshotPublicPages(page: Page): Promise<void> {
   await takeScreenshot(page, "public", "forgot-password", ROUTES.forgotPassword.build());
   await takeScreenshot(page, "public", "verify-2fa", ROUTES.verify2FA.build());
   await takeScreenshot(page, "public", "invite-invalid", "/invite/screenshot-test-token");
+
+  if (seed.portalToken) {
+    await takeScreenshot(page, "public", "portal", ROUTES.portal.entry.build(seed.portalToken));
+    if (seed.portalProjectId) {
+      await takeScreenshot(
+        page,
+        "public",
+        "portal-project",
+        ROUTES.portal.project.build(seed.portalToken, seed.portalProjectId),
+      );
+    }
+  }
 }
 
 async function screenshotEmptyStates(page: Page, orgSlug: string): Promise<void> {
@@ -3206,7 +3252,7 @@ async function captureForConfig(
   const page = await context.newPage();
 
   // Public pages (no auth needed)
-  await screenshotPublicPages(page);
+  await screenshotPublicPages(page, seedResult);
 
   // Inject auth tokens
   await page.goto(`${BASE_URL}${ROUTES.signin.build()}`, { waitUntil: "domcontentloaded" });
@@ -3259,6 +3305,8 @@ const DRY_RUN_PAGES = [
   "public-forgot-password",
   "public-verify-2fa",
   "public-invite-invalid",
+  "public-portal",
+  "public-portal-project",
   // Empty states
   "empty-dashboard",
   "empty-projects",

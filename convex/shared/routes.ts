@@ -24,6 +24,16 @@ export const ROUTES = {
     path: "/invite/$token" as const,
     build: (token: string) => `/invite/${token}`,
   },
+  portal: {
+    entry: {
+      path: "/portal/$token" as const,
+      build: (token: string) => `/portal/${token}`,
+    },
+    project: {
+      path: "/portal/$token/projects/$projectId" as const,
+      build: (token: string, projectId: string) => `/portal/${token}/projects/${projectId}`,
+    },
+  },
   terms: {
     path: "/terms" as const,
     build: () => "/terms",

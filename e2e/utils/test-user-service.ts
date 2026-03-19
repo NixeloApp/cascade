@@ -38,6 +38,8 @@ export interface SeedScreenshotResult {
   issueKeys?: string[];
   workspaceSlug?: string;
   teamSlug?: string;
+  portalToken?: string;
+  portalProjectId?: string;
   error?: string;
 }
 

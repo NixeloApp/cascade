@@ -8,8 +8,8 @@
  *      directory contains the expected baseline captures.
  *
  * Informational only — does not block CI. Some routes legitimately cannot be
- * captured (onboarding, portal, verify-email, etc.), and some spec folders are
- * still maintained incrementally.
+ * captured (onboarding, verify-email, etc.), and some spec folders are still
+ * maintained incrementally.
  */
 
 import fs from "node:fs";
