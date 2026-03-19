@@ -135,6 +135,19 @@ const MARKDOWN_IMPORT_PREVIEW = `# Imported Product Brief
 export const launchReady = true;
 \`\`\`
 `;
+const MARKDOWN_RICH_CONTENT = `# Release Readiness
+
+Use this document to confirm the final handoff details before launch.
+
+| Milestone | Owner | Status |
+| --- | --- | --- |
+| QA signoff | Maya | Ready |
+| Launch copy | Eli | Review |
+
+\`\`\`ts
+export const shipWindow = "2026-03-25";
+\`\`\`
+`;
 
 /** Inject Convex auth tokens into the page's localStorage. */
 async function injectAuthTokens(
@@ -252,6 +265,9 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-document-editor$/, "10-editor", ""],
   [/^filled-document-editor-move-dialog$/, "10-editor", "-move-dialog"],
   [/^filled-document-editor-markdown-preview-modal$/, "10-editor", "-markdown-preview-modal"],
+  [/^filled-document-editor-favorite$/, "10-editor", "-favorite"],
+  [/^filled-document-editor-locked$/, "10-editor", "-locked"],
+  [/^filled-document-editor-rich-blocks$/, "10-editor", "-rich-blocks"],
   [/^filled-document-editor-slash-menu$/, "10-editor", "-slash-menu"],
   [/^filled-document-editor-floating-toolbar$/, "10-editor", "-floating-toolbar"],
   [/^filled-document-editor-mention-popover$/, "10-editor", "-mention-popover"],
@@ -2219,6 +2235,48 @@ async function discoverDocumentId(page: Page, orgSlug: string): Promise<string |
   return null;
 }
 
+async function openDocumentEditorForCapture(page: Page, docUrl: string): Promise<void> {
+  await page
+    .goto(`${BASE_URL}${docUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+    .catch(() => {});
+  await waitForExpectedContent(page, docUrl, "document-editor");
+  await waitForScreenshotReady(page);
+}
+
+async function openMarkdownImportPreviewDialog(
+  page: Page,
+  markdown: string,
+  filename: string,
+): Promise<Locator> {
+  await dismissAllDialogs(page);
+  const trigger = page.getByRole("button", { name: /import from markdown/i }).first();
+  await trigger.waitFor({ state: "visible", timeout: 8000 });
+  const fileChooserPromise = page.waitForEvent("filechooser");
+  await trigger.click();
+  const fileChooser = await fileChooserPromise;
+  await fileChooser.setFiles({
+    name: filename,
+    mimeType: "text/markdown",
+    buffer: Buffer.from(markdown, "utf8"),
+  });
+  const dialog = await waitForDialogOpen(page);
+  await page
+    .getByRole("dialog", { name: /preview markdown import/i })
+    .waitFor({ state: "visible", timeout: 5000 });
+  return dialog;
+}
+
+async function importMarkdownIntoEditor(
+  page: Page,
+  markdown: string,
+  filename: string,
+): Promise<void> {
+  const dialog = await openMarkdownImportPreviewDialog(page, markdown, filename);
+  await page.getByRole("button", { name: /import & replace content/i }).click();
+  await dismissIfOpen(page, dialog);
+  await waitForScreenshotReady(page);
+}
+
 // ---------------------------------------------------------------------------
 // Authentication
 // ---------------------------------------------------------------------------
@@ -2830,6 +2888,9 @@ async function screenshotFilledStates(
     "document-editor",
     "document-editor-move-dialog",
     "document-editor-markdown-preview-modal",
+    "document-editor-favorite",
+    "document-editor-locked",
+    "document-editor-rich-blocks",
     "document-editor-slash-menu",
     "document-editor-floating-toolbar",
     "document-editor-mention-popover",
@@ -2843,11 +2904,7 @@ async function screenshotFilledStates(
       // Document editor interactive states
       if (shouldCapture(p, "document-editor-move-dialog")) {
         await runCaptureStep("document move dialog", async () => {
-          await page
-            .goto(`${BASE_URL}${docUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-            .catch(() => {});
-          await waitForExpectedContent(page, docUrl, "document-editor");
-          await waitForScreenshotReady(page);
+          await openDocumentEditorForCapture(page, docUrl);
           const trigger = page.getByRole("button", { name: /move to another project/i }).first();
           await trigger.waitFor({ state: "visible", timeout: 8000 });
           await trigger.click();
@@ -2862,29 +2919,72 @@ async function screenshotFilledStates(
 
       if (shouldCapture(p, "document-editor-markdown-preview-modal")) {
         await runCaptureStep("document markdown preview modal", async () => {
-          await page
-            .goto(`${BASE_URL}${docUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-            .catch(() => {});
-          await waitForExpectedContent(page, docUrl, "document-editor");
-          await waitForScreenshotReady(page);
-          await dismissAllDialogs(page);
-          const trigger = page.getByRole("button", { name: /import from markdown/i }).first();
-          await trigger.waitFor({ state: "visible", timeout: 8000 });
-          const fileChooserPromise = page.waitForEvent("filechooser");
-          await trigger.click();
-          const fileChooser = await fileChooserPromise;
-          await fileChooser.setFiles({
-            name: "import.md",
-            mimeType: "text/markdown",
-            buffer: Buffer.from(MARKDOWN_IMPORT_PREVIEW, "utf8"),
-          });
-          const dialog = await waitForDialogOpen(page);
-          await page
-            .getByRole("dialog", { name: /preview markdown import/i })
-            .waitFor({ state: "visible", timeout: 5000 });
+          await openDocumentEditorForCapture(page, docUrl);
+          const dialog = await openMarkdownImportPreviewDialog(
+            page,
+            MARKDOWN_IMPORT_PREVIEW,
+            "import.md",
+          );
           await waitForScreenshotReady(page);
           await captureCurrentView(page, p, "document-editor-markdown-preview-modal");
           await dismissIfOpen(page, dialog);
+        });
+      }
+
+      if (shouldCapture(p, "document-editor-favorite")) {
+        await runCaptureStep("document favorite state", async () => {
+          await openDocumentEditorForCapture(page, docUrl);
+          const toggle = page.getByRole("button", { name: /add to favorites/i }).first();
+          await toggle.waitFor({ state: "visible", timeout: 8000 });
+          await toggle.click();
+          const activeToggle = page.getByRole("button", { name: /remove from favorites/i }).first();
+          await activeToggle.waitFor({ state: "visible", timeout: 5000 });
+          await waitForScreenshotReady(page);
+          await captureCurrentView(page, p, "document-editor-favorite");
+          await activeToggle.click();
+          await toggle.waitFor({ state: "visible", timeout: 5000 });
+        });
+      }
+
+      if (shouldCapture(p, "document-editor-locked")) {
+        await runCaptureStep("document locked state", async () => {
+          await openDocumentEditorForCapture(page, docUrl);
+          const toggle = page.getByRole("button", { name: /^lock document$/i }).first();
+          await toggle.waitFor({ state: "visible", timeout: 8000 });
+          await toggle.click();
+          await page
+            .getByRole("alert")
+            .filter({ hasText: /document locked/i })
+            .first()
+            .waitFor({ state: "visible", timeout: 5000 });
+          await waitForScreenshotReady(page);
+          await captureCurrentView(page, p, "document-editor-locked");
+          const unlockToggle = page.getByRole("button", { name: /^unlock document$/i }).first();
+          await unlockToggle.waitFor({ state: "visible", timeout: 5000 });
+          await unlockToggle.click();
+          await page
+            .getByRole("alert")
+            .filter({ hasText: /document locked/i })
+            .first()
+            .waitFor({ state: "hidden", timeout: 5000 })
+            .catch(() => {});
+        });
+      }
+
+      if (shouldCapture(p, "document-editor-rich-blocks")) {
+        await runCaptureStep("document rich blocks", async () => {
+          await openDocumentEditorForCapture(page, docUrl);
+          await importMarkdownIntoEditor(page, MARKDOWN_RICH_CONTENT, "release-readiness.md");
+          await page
+            .getByText(/qa signoff/i)
+            .first()
+            .waitFor({ state: "visible", timeout: 5000 });
+          await page
+            .getByText(/export const shipWindow = "2026-03-25";/i)
+            .first()
+            .waitFor({ state: "visible", timeout: 5000 });
+          await waitForScreenshotReady(page);
+          await captureCurrentView(page, p, "document-editor-rich-blocks");
         });
       }
 
@@ -3802,6 +3902,9 @@ const DRY_RUN_PAGES = [
   "filled-document-editor",
   "filled-document-editor-move-dialog",
   "filled-document-editor-markdown-preview-modal",
+  "filled-document-editor-favorite",
+  "filled-document-editor-locked",
+  "filled-document-editor-rich-blocks",
   "filled-document-editor-slash-menu",
   "filled-document-editor-floating-toolbar",
   "filled-document-editor-mention-popover",
