@@ -19,7 +19,7 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { useListNavigation } from "@/hooks/useListNavigation";
 import { formatDate } from "@/lib/dates";
 import { CalendarDays, LinkIcon } from "@/lib/icons";
-import { getPriorityColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
+import { getPriorityColor, getStatusColor, ISSUE_TYPE_ICONS } from "@/lib/issue-utils";
 import { cn } from "@/lib/utils";
 import { IssueDetailViewer } from "./IssueDetailViewer";
 import { Card, getCardRecipeClassName } from "./ui/Card";
@@ -40,8 +40,11 @@ interface RoadmapViewProps {
   canEdit?: boolean;
 }
 
+type RoadmapIssue = FunctionReturnType<typeof api.issues.listRoadmapIssues>[number];
+
 /** Timeline span options in months */
 type TimelineSpan = 1 | 3 | 6 | 12;
+type GroupBy = "none" | "status" | "assignee" | "priority";
 
 const TIMELINE_SPANS: { value: TimelineSpan; label: string }[] = [
   { value: 1, label: "1 Month" },
@@ -49,6 +52,21 @@ const TIMELINE_SPANS: { value: TimelineSpan; label: string }[] = [
   { value: 6, label: "6 Months" },
   { value: 12, label: "1 Year" },
 ];
+
+const GROUP_BY_OPTIONS: { label: string; value: GroupBy }[] = [
+  { label: "No grouping", value: "none" },
+  { label: "Status", value: "status" },
+  { label: "Assignee", value: "assignee" },
+  { label: "Priority", value: "priority" },
+];
+
+const PRIORITY_SORT_ORDER: Record<string, number> = {
+  highest: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
+  lowest: 4,
+};
 /** Dependency line data for rendering SVG arrows */
 interface DependencyLine {
   fromX: number;
@@ -61,8 +79,11 @@ interface DependencyLine {
 
 interface RoadmapTimelineIssue {
   _id: Id<"issues">;
+  assignee?: { name?: string | null } | null;
   startDate?: number;
   dueDate?: number;
+  priority: string;
+  status: string;
 }
 
 interface ResizeState {
@@ -101,8 +122,8 @@ interface TimelineGeometryArgs {
 }
 
 interface DependencyLineBuildArgs {
-  issueIndexMap: Map<string, number>;
-  issues: RoadmapTimelineIssue[];
+  issueById: Map<string, RoadmapTimelineIssue>;
+  issueRowIndexMap: Map<string, number>;
   link: {
     fromIssueId: string;
     toIssueId: string;
@@ -147,6 +168,24 @@ interface TimelineHeaderCell {
   key: string;
   label: string;
 }
+
+interface TimelineGroup {
+  count: number;
+  kind: Exclude<GroupBy, "none">;
+  key: string;
+  label: string;
+  value: string;
+}
+
+type TimelineRow =
+  | {
+      type: "group";
+      group: TimelineGroup;
+    }
+  | {
+      type: "issue";
+      issue: RoadmapIssue;
+    };
 
 function getBarWidth(
   startDate: number | undefined,
@@ -259,21 +298,21 @@ function buildDragPatch({ dragging, clientX, containerWidth, totalDays }: DragCo
 }
 
 function buildDependencyLine({
-  issueIndexMap,
-  issues,
+  issueById,
+  issueRowIndexMap,
   link,
   rowHeight,
   getPositionOnTimeline,
 }: DependencyLineBuildArgs): DependencyLine | null {
-  const fromIndex = issueIndexMap.get(link.fromIssueId);
-  const toIndex = issueIndexMap.get(link.toIssueId);
+  const fromIndex = issueRowIndexMap.get(link.fromIssueId);
+  const toIndex = issueRowIndexMap.get(link.toIssueId);
 
   if (fromIndex === undefined || toIndex === undefined) {
     return null;
   }
 
-  const fromIssue = issues[fromIndex];
-  const toIssue = issues[toIndex];
+  const fromIssue = issueById.get(link.fromIssueId);
+  const toIssue = issueById.get(link.toIssueId);
   if (!fromIssue || !toIssue) {
     return null;
   }
@@ -330,6 +369,117 @@ function buildWeekHeaderCells(startDate: Date, endDate: Date): TimelineHeaderCel
   }
 
   return weekCells;
+}
+
+function getPriorityLabel(priority: string) {
+  return priority.charAt(0).toUpperCase() + priority.slice(1);
+}
+
+function getGroupDescriptor(issue: RoadmapIssue, groupBy: Exclude<GroupBy, "none">): TimelineGroup {
+  switch (groupBy) {
+    case "assignee": {
+      const assigneeName = issue.assignee?.name?.trim() || "Unassigned";
+      return {
+        count: 0,
+        kind: groupBy,
+        key: `assignee:${assigneeName.toLowerCase()}`,
+        label: assigneeName,
+        value: assigneeName,
+      };
+    }
+    case "priority":
+      return {
+        count: 0,
+        kind: groupBy,
+        key: `priority:${issue.priority}`,
+        label: getPriorityLabel(issue.priority),
+        value: issue.priority,
+      };
+    case "status":
+      return {
+        count: 0,
+        kind: groupBy,
+        key: `status:${issue.status.toLowerCase()}`,
+        label: issue.status,
+        value: issue.status,
+      };
+  }
+}
+
+function compareTimelineGroups(a: TimelineGroup, b: TimelineGroup) {
+  if (a.kind === "priority" && b.kind === "priority") {
+    return (
+      (PRIORITY_SORT_ORDER[a.value] ?? Number.MAX_SAFE_INTEGER) -
+        (PRIORITY_SORT_ORDER[b.value] ?? Number.MAX_SAFE_INTEGER) || a.label.localeCompare(b.label)
+    );
+  }
+
+  if (a.kind === "assignee" && b.kind === "assignee") {
+    if (a.value === "Unassigned") return 1;
+    if (b.value === "Unassigned") return -1;
+  }
+
+  return a.label.localeCompare(b.label, undefined, { sensitivity: "base" });
+}
+
+function buildTimelineRows(
+  issues: FunctionReturnType<typeof api.issues.listRoadmapIssues> | undefined,
+  groupBy: GroupBy,
+): TimelineRow[] {
+  if (!issues || issues.length === 0) {
+    return [];
+  }
+
+  if (groupBy === "none") {
+    return issues.map((issue) => ({ type: "issue", issue }));
+  }
+
+  const groupedIssues = new Map<string, { group: TimelineGroup; issues: typeof issues }>();
+
+  for (const issue of issues) {
+    const group = getGroupDescriptor(issue, groupBy);
+    const existingGroup = groupedIssues.get(group.key);
+    if (existingGroup) {
+      existingGroup.group.count += 1;
+      existingGroup.issues.push(issue);
+      continue;
+    }
+
+    groupedIssues.set(group.key, {
+      group: { ...group, count: 1 },
+      issues: [issue],
+    });
+  }
+
+  return [...groupedIssues.values()]
+    .sort((left, right) => compareTimelineGroups(left.group, right.group))
+    .flatMap(({ group, issues: groupedRows }) => [
+      { type: "group" as const, group },
+      ...groupedRows.map((issue) => ({ type: "issue" as const, issue })),
+    ]);
+}
+
+function getTimelineGroupLabel(group: TimelineGroup) {
+  switch (group.kind) {
+    case "assignee":
+      return "Assignee";
+    case "priority":
+      return "Priority";
+    case "status":
+      return "Status";
+  }
+}
+
+function getTimelineGroupBadgeClassName(group: TimelineGroup) {
+  if (group.kind === "priority") {
+    return getPriorityColor(group.value, "badge");
+  }
+
+  if (group.kind === "status") {
+    return getStatusColor(group.value);
+  }
+
+  return "bg-ui-bg-tertiary text-ui-text-secondary";
 }
 
 function RoadmapTimelineBar({
@@ -411,12 +561,147 @@ function RoadmapTimelineBar({
   );
 }
 
-/** Build a map of issue ID to array index for O(1) lookups */
-function buildIssueIndexMap(issues: RoadmapTimelineIssue[] | undefined) {
-  if (!issues) return new Map<string, number>();
+interface RoadmapGroupRowProps {
+  group: TimelineGroup;
+  style: React.CSSProperties;
+}
+
+function RoadmapGroupRow({ group, style }: RoadmapGroupRowProps) {
+  return (
+    <div
+      style={style}
+      className="border-b border-ui-border bg-ui-bg-secondary/60 px-4"
+      data-testid={`roadmap-group-${group.key}`}
+    >
+      <Flex align="center" justify="between" className="h-full">
+        <Flex align="center" gap="sm">
+          <Typography variant="label" color="secondary">
+            {getTimelineGroupLabel(group)}
+          </Typography>
+          <span
+            className={cn(
+              "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium",
+              getTimelineGroupBadgeClassName(group),
+            )}
+          >
+            {group.label}
+          </span>
+        </Flex>
+        <Typography variant="caption" color="secondary">
+          {group.count} {group.count === 1 ? "issue" : "issues"}
+        </Typography>
+      </Flex>
+    </div>
+  );
+}
+
+interface RoadmapIssueRowProps {
+  canEdit: boolean;
+  draggingIssueId?: Id<"issues">;
+  getPositionOnTimeline: (date: number) => number;
+  issue: RoadmapIssue;
+  onBarDragStart: (
+    e: React.MouseEvent,
+    issueId: Id<"issues">,
+    startDate: number | undefined,
+    dueDate: number | undefined,
+  ) => void;
+  onOpenIssue: (issueId: Id<"issues">) => void;
+  onResizeStart: (
+    e: React.MouseEvent,
+    issueId: Id<"issues">,
+    edge: "left" | "right",
+    startDate: number | undefined,
+    dueDate: number | undefined,
+  ) => void;
+  resizingIssueId?: Id<"issues">;
+  selected: boolean;
+  style: React.CSSProperties;
+  timelineRef: React.RefObject<HTMLDivElement | null>;
+}
+
+function RoadmapIssueRow({
+  canEdit,
+  draggingIssueId,
+  getPositionOnTimeline,
+  issue,
+  onBarDragStart,
+  onOpenIssue,
+  onResizeStart,
+  resizingIssueId,
+  selected,
+  style,
+  timelineRef,
+}: RoadmapIssueRowProps) {
+  return (
+    <Card
+      recipe={selected ? "roadmapRowSelected" : "roadmapRow"}
+      style={style}
+      className={cn("transition-colors", selected && "z-10")}
+    >
+      <Flex align="center">
+        <FlexItem shrink={false} className="w-64 pr-4">
+          <Flex align="center" gap="sm" className="mb-1">
+            <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" />
+            <Button
+              variant="unstyled"
+              onClick={() => onOpenIssue(issue._id)}
+              className={cn(
+                "h-auto truncate p-0 text-left text-sm font-medium",
+                selected ? "text-brand-hover" : "text-ui-text",
+              )}
+            >
+              {issue.key}
+            </Button>
+          </Flex>
+          <Typography variant="caption">{issue.title}</Typography>
+        </FlexItem>
+
+        <FlexItem flex="1" className="relative h-8" ref={timelineRef}>
+          {issue.dueDate ? (
+            <RoadmapTimelineBar
+              canEdit={canEdit}
+              draggingIssueId={draggingIssueId}
+              getPositionOnTimeline={getPositionOnTimeline}
+              issue={{
+                _id: issue._id,
+                assignee: issue.assignee ?? undefined,
+                dueDate: issue.dueDate,
+                key: issue.key,
+                priority: issue.priority,
+                startDate: issue.startDate,
+                title: issue.title,
+              }}
+              onBarDragStart={onBarDragStart}
+              onOpenIssue={onOpenIssue}
+              onResizeStart={onResizeStart}
+              resizingIssueId={resizingIssueId}
+            />
+          ) : null}
+
+          <div
+            className="absolute top-0 bottom-0 z-10 w-0.5 bg-status-error"
+            style={{ left: `${getPositionOnTimeline(Date.now())}%` }}
+            title="Today"
+          />
+        </FlexItem>
+      </Flex>
+    </Card>
+  );
+}
+
+/** Build a map of issue ID to issue for O(1) lookups */
+function buildIssueLookupMap(issues: RoadmapTimelineIssue[] | undefined) {
+  if (!issues) return new Map<string, RoadmapTimelineIssue>();
+  return new Map(issues.map((issue) => [issue._id, issue]));
+}
+
+function buildIssueRowIndexMap(rows: TimelineRow[]) {
   const map = new Map<string, number>();
-  issues.forEach((issue, index) => {
-    map.set(issue._id, index);
+  rows.forEach((row, index) => {
+    if (row.type === "issue") {
+      map.set(row.issue._id, index);
+    }
   });
   return map;
 }
@@ -425,17 +710,17 @@ function buildIssueIndexMap(issues: RoadmapTimelineIssue[] | undefined) {
 function computeDependencyLines({
   showDependencies,
   issueLinks,
-  filteredIssues,
-  issueIndexMap,
+  issueById,
+  issueRowIndexMap,
   getPositionOnTimeline,
 }: {
   showDependencies: boolean;
   issueLinks: FunctionReturnType<typeof api.issueLinks.getForProject> | undefined;
-  filteredIssues: RoadmapTimelineIssue[] | undefined;
-  issueIndexMap: Map<string, number>;
+  issueById: Map<string, RoadmapTimelineIssue>;
+  issueRowIndexMap: Map<string, number>;
   getPositionOnTimeline: (date: number) => number;
 }): DependencyLine[] {
-  if (!showDependencies || !issueLinks?.links || !filteredIssues) return [];
+  if (!showDependencies || !issueLinks?.links || issueById.size === 0) return [];
 
   const rowHeight = 56;
 
@@ -443,8 +728,8 @@ function computeDependencyLines({
     .filter((link) => link.linkType === "blocks")
     .map((link) =>
       buildDependencyLine({
-        issueIndexMap,
-        issues: filteredIssues,
+        issueById,
+        issueRowIndexMap,
         link,
         rowHeight,
         getPositionOnTimeline,
@@ -457,6 +742,7 @@ function computeDependencyLines({
 export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapViewProps) {
   const [selectedIssue, setSelectedIssue] = useState<Id<"issues"> | null>(null);
   const [viewMode, setViewMode] = useState<"months" | "weeks">("months");
+  const [groupBy, setGroupBy] = useState<GroupBy>("none");
   const [filterEpic, setFilterEpic] = useState<Id<"issues"> | "all">("all");
   const [timelineSpan, setTimelineSpan] = useState<TimelineSpan>(6);
   const [showDependencies, setShowDependencies] = useState(true);
@@ -484,7 +770,6 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
 
   const project = useAuthenticatedQuery(api.projects.getProject, { id: projectId });
 
-  type RoadmapIssue = FunctionReturnType<typeof api.issues.listRoadmapIssues>[number];
   type Epic = NonNullable<FunctionReturnType<typeof api.issues.listEpics>>[number];
 
   const today = new Date();
@@ -498,6 +783,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     viewMode === "weeks"
       ? buildWeekHeaderCells(startOfMonth, endOfTimespan)
       : buildMonthHeaderCells(startOfMonth, timelineSpan);
+  const timelineRows = buildTimelineRows(filteredIssues, groupBy);
 
   const getPositionOnTimeline = (date: number) => {
     const issueDate = new Date(date);
@@ -620,102 +906,67 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     items: filteredIssues ?? [],
     onSelect: (issue: RoadmapIssue) => setSelectedIssue(issue._id),
   });
+  const selectedIssueId =
+    selectedIndex >= 0 ? (filteredIssues?.[selectedIndex]?._id ?? null) : null;
+  const issueById = buildIssueLookupMap(filteredIssues);
+  const issueRowIndexMap = buildIssueRowIndexMap(timelineRows);
 
   // Sync keyboard selection with scroll
   useEffect(() => {
-    if (selectedIndex >= 0 && listRef.current) {
-      listRef.current.scrollToRow({ index: selectedIndex });
+    if (!selectedIssueId || !listRef.current) {
+      return;
     }
-  }, [selectedIndex]);
-
-  // Create issue index map for dependency line rendering
-  const issueIndexMap = buildIssueIndexMap(filteredIssues);
+    const selectedRowIndex = issueRowIndexMap.get(selectedIssueId);
+    if (selectedRowIndex !== undefined) {
+      listRef.current.scrollToRow({ index: selectedRowIndex });
+    }
+  }, [issueRowIndexMap, selectedIssueId]);
 
   // Calculate dependency lines for "blocks" relationships
   const dependencyLines = computeDependencyLines({
     showDependencies,
     issueLinks,
-    filteredIssues,
-    issueIndexMap,
+    issueById,
+    issueRowIndexMap,
     getPositionOnTimeline,
   });
 
   // Row renderer for virtualization
   type RowData = {
-    issues: typeof filteredIssues;
-    selectedIndex: number;
+    rows: TimelineRow[];
+    selectedIssueId: Id<"issues"> | null;
   };
 
   function Row({
-    issues,
-    selectedIndex,
+    rows,
+    selectedIssueId,
     index,
     style,
   }: RowData & {
     index: number;
     style: React.CSSProperties;
   }) {
-    if (!issues) return null;
-    const issue = issues[index];
-    const isSelected = index === selectedIndex;
+    const row = rows[index];
+    if (!row) return null;
+
+    if (row.type === "group") {
+      return <RoadmapGroupRow group={row.group} style={style} />;
+    }
 
     return (
-      <Card
-        recipe={isSelected ? "roadmapRowSelected" : "roadmapRow"}
+      <RoadmapIssueRow
+        canEdit={canEdit}
+        draggingIssueId={dragging?.issueId}
+        getPositionOnTimeline={getPositionOnTimeline}
+        issue={row.issue}
+        onBarDragStart={handleBarDragStart}
+        onOpenIssue={(issueId) => setSelectedIssue(issueId)}
+        onResizeStart={handleResizeStart}
+        resizingIssueId={resizing?.issueId}
+        selected={row.issue._id === selectedIssueId}
         style={style}
-        className={cn("transition-colors", isSelected && "z-10")}
-      >
-        <Flex align="center">
-          {/* Issue Info */}
-          <FlexItem shrink={false} className="w-64 pr-4">
-            <Flex align="center" gap="sm" className="mb-1">
-              <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" />
-              <Button
-                variant="unstyled"
-                onClick={() => setSelectedIssue(issue._id)}
-                className={cn(
-                  "h-auto truncate p-0 text-left text-sm font-medium",
-                  isSelected ? "text-brand-hover" : "text-ui-text",
-                )}
-              >
-                {issue.key}
-              </Button>
-            </Flex>
-            <Typography variant="caption">{issue.title}</Typography>
-          </FlexItem>
-
-          {/* Timeline Bar */}
-          <FlexItem flex="1" className="relative h-8" ref={timelineRef}>
-            {issue.dueDate ? (
-              <RoadmapTimelineBar
-                canEdit={canEdit}
-                draggingIssueId={dragging?.issueId}
-                getPositionOnTimeline={getPositionOnTimeline}
-                issue={{
-                  _id: issue._id,
-                  assignee: issue.assignee ?? undefined,
-                  dueDate: issue.dueDate,
-                  key: issue.key,
-                  priority: issue.priority,
-                  startDate: issue.startDate,
-                  title: issue.title,
-                }}
-                onBarDragStart={handleBarDragStart}
-                onOpenIssue={(issueId) => setSelectedIssue(issueId)}
-                onResizeStart={handleResizeStart}
-                resizingIssueId={resizing?.issueId}
-              />
-            ) : null}
-
-            {/* Today Indicator */}
-            <div
-              className="absolute top-0 bottom-0 z-10 w-0.5 bg-status-error"
-              style={{ left: `${getPositionOnTimeline(Date.now())}%` }}
-              title="Today"
-            />
-          </FlexItem>
-        </Flex>
-      </Card>
+        timelineRef={timelineRef}
+      />
     );
   }
 
@@ -840,6 +1091,19 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                 </SelectContent>
               </Select>
 
+              <Select value={groupBy} onValueChange={(value) => setGroupBy(value as GroupBy)}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {GROUP_BY_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
               {/* View Mode Toggle */}
               <SegmentedControl
                 value={viewMode}
@@ -905,9 +1169,9 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                 <List<RowData>
                   listRef={listRef}
                   style={{ height: 600, width: "100%" }}
-                  rowCount={filteredIssues.length}
+                  rowCount={timelineRows.length}
                   rowHeight={56}
-                  rowProps={{ issues: filteredIssues, selectedIndex }}
+                  rowProps={{ rows: timelineRows, selectedIssueId }}
                   rowComponent={Row}
                 />
 

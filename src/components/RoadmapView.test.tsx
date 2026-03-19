@@ -115,12 +115,12 @@ vi.mock("react-window", () => ({
     rowComponent: React.ComponentType<{
       index: number;
       style: React.CSSProperties;
-      issues: RoadmapIssue[];
-      selectedIndex: number;
+      rows: Array<{ _id?: Id<"issues"> }>;
+      selectedIssueId: Id<"issues"> | null;
     }>;
     rowProps: {
-      issues: RoadmapIssue[];
-      selectedIndex: number;
+      rows: Array<{ _id?: Id<"issues"> }>;
+      selectedIssueId: Id<"issues"> | null;
     };
     listRef: { current: { scrollToRow: (options: { index: number }) => void } | null };
     style?: React.CSSProperties;
@@ -130,7 +130,7 @@ vi.mock("react-window", () => ({
       <div data-testid="roadmap-list" style={style}>
         {Array.from({ length: rowCount }, (_, index) => (
           <Row
-            key={rowProps.issues[index]?._id ?? "roadmap-row"}
+            key={rowProps.rows[index]?._id ?? `roadmap-row-${index}`}
             index={index}
             style={{}}
             {...rowProps}
@@ -166,6 +166,7 @@ type RoadmapIssue = {
   _id: Id<"issues">;
   key: string;
   title: string;
+  status: string;
   startDate?: number;
   dueDate?: number;
   type: IssueType;
@@ -249,6 +250,7 @@ describe("RoadmapView", () => {
         _id: issue1Id,
         key: "PROJ-1",
         title: "Plan onboarding",
+        status: "todo",
         startDate: Date.UTC(2026, 2, 10),
         dueDate: Date.UTC(2026, 2, 20),
         type: "task",
@@ -259,6 +261,7 @@ describe("RoadmapView", () => {
         _id: issue2Id,
         key: "PROJ-2",
         title: "Ship migration",
+        status: "in progress",
         startDate: Date.UTC(2026, 2, 18),
         dueDate: Date.UTC(2026, 2, 28),
         type: "story",
@@ -294,6 +297,7 @@ describe("RoadmapView", () => {
           _id: issue1Id,
           key: "PROJ-1",
           title: "Plan onboarding",
+          status: "todo",
           startDate: Date.UTC(2026, 2, 10),
           dueDate: Date.UTC(2026, 2, 20),
           type: "task",
@@ -304,6 +308,7 @@ describe("RoadmapView", () => {
           _id: issue2Id,
           key: "PROJ-2",
           title: "Ship migration",
+          status: "in progress",
           startDate: Date.UTC(2026, 2, 18),
           dueDate: Date.UTC(2026, 2, 28),
           type: "story",
@@ -330,6 +335,7 @@ describe("RoadmapView", () => {
           _id: issue1Id,
           key: "PROJ-1",
           title: "Plan onboarding",
+          status: "todo",
           startDate: Date.UTC(2026, 2, 10),
           dueDate: Date.UTC(2026, 2, 20),
           type: "task",
@@ -353,6 +359,44 @@ describe("RoadmapView", () => {
     expect(screen.getByText("Mar 2026")).toBeInTheDocument();
   });
 
+  it("groups roadmap rows by assignee", () => {
+    mockRoadmapQueries({
+      issues: [
+        {
+          _id: issue1Id,
+          key: "PROJ-1",
+          title: "Plan onboarding",
+          status: "todo",
+          startDate: Date.UTC(2026, 2, 10),
+          dueDate: Date.UTC(2026, 2, 20),
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Alex Rivera" },
+        },
+        {
+          _id: issue2Id,
+          key: "PROJ-2",
+          title: "Ship migration",
+          status: "in progress",
+          startDate: Date.UTC(2026, 2, 18),
+          dueDate: Date.UTC(2026, 2, 28),
+          type: "story",
+          priority: "high",
+        },
+      ],
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Assignee" }));
+
+    expect(screen.getByTestId("roadmap-group-assignee:alex rivera")).toHaveTextContent(
+      "Alex Rivera",
+    );
+    expect(screen.getByTestId("roadmap-group-assignee:unassigned")).toHaveTextContent("Unassigned");
+    expect(screen.getAllByText("1 issue")).toHaveLength(2);
+  });
+
   it("shifts an issue date range when its roadmap bar is dragged", async () => {
     mockRoadmapQueries({
       issues: [
@@ -360,6 +404,7 @@ describe("RoadmapView", () => {
           _id: issue1Id,
           key: "PROJ-1",
           title: "Plan onboarding",
+          status: "todo",
           startDate: Date.UTC(2026, 2, 10),
           dueDate: Date.UTC(2026, 2, 20),
           type: "task",
@@ -416,6 +461,7 @@ describe("RoadmapView", () => {
           _id: issue1Id,
           key: "PROJ-1",
           title: "Plan onboarding",
+          status: "todo",
           startDate: Date.UTC(2026, 2, 10),
           dueDate: Date.UTC(2026, 2, 20),
           type: "task",
