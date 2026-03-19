@@ -60,6 +60,9 @@ const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
   "public-signin": "02-signin",
   "public-signup": "03-signup",
   "public-forgot-password": "04-forgot-password",
+  "public-verify-email": "14-verify-email",
+  "public-invite": "15-invite",
+  "public-unsubscribe": "16-unsubscribe",
 
   // Workspace-level pages (empty states)
   "empty-dashboard": "04-dashboard",
@@ -383,7 +386,7 @@ function matchesSpecFilters(target: CaptureTarget): boolean {
     target.modalSpecSlug?.toLowerCase(),
     target.modalSpecSlug ? "modals" : null,
     target.modalSpecSlug ? `modals/${target.modalSpecSlug.toLowerCase()}` : null,
-  ].filter((value): value is string => value !== null);
+  ].filter((value): value is string => typeof value === "string");
 
   return cliOptions.specFilters.some((filter) =>
     candidates.some((candidate) => candidate.includes(filter)),
@@ -427,6 +430,21 @@ function shouldCapture(prefix: string, name: string): boolean {
 
 function shouldCaptureAny(prefix: string, names: string[]): boolean {
   return names.some((name) => shouldCapture(prefix, name));
+}
+
+function getCurrentConfigUnsubscribeToken(seed: SeedScreenshotResult): string | undefined {
+  switch (currentConfigPrefix) {
+    case "desktop-dark":
+      return seed.unsubscribeTokens?.desktopDark;
+    case "desktop-light":
+      return seed.unsubscribeTokens?.desktopLight;
+    case "tablet-light":
+      return seed.unsubscribeTokens?.tabletLight;
+    case "mobile-light":
+      return seed.unsubscribeTokens?.mobileLight;
+    default:
+      return undefined;
+  }
 }
 
 function getFinalScreenshotPaths(prefix: string, name: string): string[] {
@@ -938,6 +956,53 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
   if (["signin", "signup", "forgot-password", "invite-invalid"].includes(name)) {
     await page
       .getByText(/secure account access/i)
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await waitForScreenshotReady(page);
+    return;
+  }
+
+  if (name === "verify-email") {
+    await page
+      .getByRole("heading", { name: /check your email/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByTestId(TEST_IDS.AUTH.VERIFICATION_CODE_INPUT)
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await waitForScreenshotReady(page);
+    return;
+  }
+
+  if (name === "invite") {
+    await page
+      .getByRole("heading", { name: /you're invited/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByText(/has invited you to join/i)
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await waitForScreenshotReady(page);
+    return;
+  }
+
+  if (name === "unsubscribe") {
+    await page
+      .getByRole("heading", { name: /unsubscribed/i })
+      .or(page.getByRole("heading", { name: /invalid link/i }))
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByText(/you've been unsubscribed from email notifications/i)
+      .or(page.getByText(/this unsubscribe link is invalid or has expired/i))
       .first()
       .waitFor({ state: "visible", timeout: 12000 })
       .catch(() => {});
@@ -2113,8 +2178,11 @@ async function screenshotPublicPages(page: Page, seed: SeedScreenshotResult): Pr
     "signin",
     "signup",
     "forgot-password",
+    "verify-email",
     "verify-2fa",
+    "invite",
     "invite-invalid",
+    "unsubscribe",
     "portal",
     "portal-project",
   ];
@@ -2127,8 +2195,21 @@ async function screenshotPublicPages(page: Page, seed: SeedScreenshotResult): Pr
   await takeScreenshot(page, "public", "signin", ROUTES.signin.build());
   await takeScreenshot(page, "public", "signup", ROUTES.signup.build());
   await takeScreenshot(page, "public", "forgot-password", ROUTES.forgotPassword.build());
+  await takeScreenshot(
+    page,
+    "public",
+    "verify-email",
+    ROUTES.verifyEmail.build("screenshots@inbox.mailtrap.io"),
+  );
   await takeScreenshot(page, "public", "verify-2fa", ROUTES.verify2FA.build());
+  if (seed.inviteToken) {
+    await takeScreenshot(page, "public", "invite", ROUTES.invite.build(seed.inviteToken));
+  }
   await takeScreenshot(page, "public", "invite-invalid", "/invite/screenshot-test-token");
+  const unsubscribeToken = getCurrentConfigUnsubscribeToken(seed);
+  if (unsubscribeToken) {
+    await takeScreenshot(page, "public", "unsubscribe", ROUTES.unsubscribe.build(unsubscribeToken));
+  }
 
   if (seed.portalToken) {
     await takeScreenshot(page, "public", "portal", ROUTES.portal.entry.build(seed.portalToken));
@@ -3355,8 +3436,11 @@ const DRY_RUN_PAGES = [
   "public-signin",
   "public-signup",
   "public-forgot-password",
+  "public-verify-email",
   "public-verify-2fa",
+  "public-invite",
   "public-invite-invalid",
+  "public-unsubscribe",
   "public-portal",
   "public-portal-project",
   // Empty states

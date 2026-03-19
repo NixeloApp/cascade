@@ -38,8 +38,15 @@ export interface SeedScreenshotResult {
   issueKeys?: string[];
   workspaceSlug?: string;
   teamSlug?: string;
+  inviteToken?: string;
   portalToken?: string;
   portalProjectId?: string;
+  unsubscribeTokens?: {
+    desktopDark?: string;
+    desktopLight?: string;
+    tabletLight?: string;
+    mobileLight?: string;
+  };
   error?: string;
 }
 

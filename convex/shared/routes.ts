@@ -20,6 +20,16 @@ export const ROUTES = {
     path: "/forgot-password" as const,
     build: () => "/forgot-password",
   },
+  verifyEmail: {
+    path: "/verify-email" as const,
+    build: (email?: string) =>
+      email ? `/verify-email?email=${encodeURIComponent(email)}` : "/verify-email",
+  },
+  unsubscribe: {
+    path: "/unsubscribe" as const,
+    build: (token?: string) =>
+      token ? `/unsubscribe?token=${encodeURIComponent(token)}` : "/unsubscribe",
+  },
   invite: {
     path: "/invite/$token" as const,
     build: (token: string) => `/invite/${token}`,

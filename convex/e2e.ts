@@ -123,6 +123,18 @@ function isTestEmail(email: string): boolean {
   return email.endsWith("@inbox.mailtrap.io");
 }
 
+function generateUnsubscribePreviewToken(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function generateInvitePreviewToken(): string {
+  const timestamp = Date.now().toString(36);
+  const randomPart = crypto.randomUUID().replace(/-/g, "");
+  return `invite_${timestamp}_${randomPart}`;
+}
+
 /**
  * Validate E2E API key from request headers
  * Returns error Response if invalid, null if valid
@@ -2710,8 +2722,17 @@ export const seedScreenshotDataInternal = internalMutation({
     issueKeys: v.optional(v.array(v.string())),
     workspaceSlug: v.optional(v.string()),
     teamSlug: v.optional(v.string()),
+    inviteToken: v.optional(v.string()),
     portalToken: v.optional(v.string()),
     portalProjectId: v.optional(v.string()),
+    unsubscribeTokens: v.optional(
+      v.object({
+        desktopDark: v.string(),
+        desktopLight: v.string(),
+        tabletLight: v.string(),
+        mobileLight: v.string(),
+      }),
+    ),
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
@@ -3201,6 +3222,54 @@ export const seedScreenshotDataInternal = internalMutation({
     }
 
     const secondaryProjectId = secondaryProject._id;
+
+    const screenshotInviteEmail = "invite-screenshots@nixelo.test";
+    const existingScreenshotInvites = await ctx.db
+      .query("invites")
+      .withIndex("by_email", (q) => q.eq("email", screenshotInviteEmail))
+      .collect();
+
+    for (const invite of existingScreenshotInvites) {
+      await ctx.db.delete(invite._id);
+    }
+
+    const inviteToken = generateInvitePreviewToken();
+    await ctx.db.insert("invites", {
+      email: screenshotInviteEmail,
+      role: "user",
+      organizationId: orgId,
+      projectId,
+      projectRole: "editor",
+      invitedBy: userId,
+      token: inviteToken,
+      expiresAt: now + WEEK,
+      status: "pending",
+      updatedAt: now,
+    });
+
+    const existingUnsubscribeTokens = await ctx.db
+      .query("unsubscribeTokens")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    for (const token of existingUnsubscribeTokens) {
+      await ctx.db.delete(token._id);
+    }
+
+    const unsubscribeTokens = {
+      desktopDark: generateUnsubscribePreviewToken(),
+      desktopLight: generateUnsubscribePreviewToken(),
+      tabletLight: generateUnsubscribePreviewToken(),
+      mobileLight: generateUnsubscribePreviewToken(),
+    };
+
+    for (const token of Object.values(unsubscribeTokens)) {
+      await ctx.db.insert("unsubscribeTokens", {
+        userId,
+        token,
+        usedAt: undefined,
+      });
+    }
 
     let portalClient = await ctx.db
       .query("clients")
@@ -3988,8 +4057,10 @@ export const seedScreenshotDataInternal = internalMutation({
       issueKeys: createdIssueKeys,
       workspaceSlug: "product",
       teamSlug: "engineering",
+      inviteToken,
       portalToken,
       portalProjectId: projectId,
+      unsubscribeTokens,
     };
   },
 });

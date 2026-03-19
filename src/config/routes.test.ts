@@ -17,6 +17,12 @@ describe("ROUTES configuration", () => {
 
       expect(ROUTES.forgotPassword.path).toBe("/forgot-password");
       expect(ROUTES.forgotPassword.build()).toBe("/forgot-password");
+
+      expect(ROUTES.verifyEmail.path).toBe("/verify-email");
+      expect(ROUTES.verifyEmail.build()).toBe("/verify-email");
+
+      expect(ROUTES.unsubscribe.path).toBe("/unsubscribe");
+      expect(ROUTES.unsubscribe.build()).toBe("/unsubscribe");
     });
 
     it("should have correct legal routes", () => {
@@ -43,6 +49,19 @@ describe("ROUTES configuration", () => {
       expect(ROUTES.invite.path).toBe("/invite/$token");
       expect(ROUTES.invite.build("abc123")).toBe("/invite/abc123");
       expect(ROUTES.invite.build("special-token-xyz")).toBe("/invite/special-token-xyz");
+    });
+
+    it("should build verify-email route with email query", () => {
+      expect(ROUTES.verifyEmail.build("test@example.com")).toBe(
+        "/verify-email?email=test%40example.com",
+      );
+    });
+
+    it("should build unsubscribe route with token query", () => {
+      expect(ROUTES.unsubscribe.build("abc123")).toBe("/unsubscribe?token=abc123");
+      expect(ROUTES.unsubscribe.build("token/with spaces")).toBe(
+        "/unsubscribe?token=token%2Fwith%20spaces",
+      );
     });
 
     it("should build portal routes with token and projectId", () => {
@@ -271,6 +290,8 @@ describe("ROUTES configuration", () => {
       // All build outputs should start with /
       expect(ROUTES.home.build()).toMatch(/^\//);
       expect(ROUTES.dashboard.build("test")).toMatch(/^\//);
+      expect(ROUTES.verifyEmail.build("test@example.com")).toMatch(/^\//);
+      expect(ROUTES.unsubscribe.build("token")).toMatch(/^\//);
       expect(ROUTES.portal.entry.build("token")).toMatch(/^\//);
       expect(ROUTES.projects.board.build("org", "key")).toMatch(/^\//);
       expect(ROUTES.workspaces.teams.detail.build("org", "ws", "team")).toMatch(/^\//);
@@ -279,6 +300,8 @@ describe("ROUTES configuration", () => {
     it("build functions should not have trailing slashes", () => {
       expect(ROUTES.home.build()).toBe("/");
       expect(ROUTES.dashboard.build("test")).not.toMatch(/\/$/);
+      expect(ROUTES.verifyEmail.build("test@example.com")).not.toMatch(/\/$/);
+      expect(ROUTES.unsubscribe.build("token")).not.toMatch(/\/$/);
       expect(ROUTES.projects.board.build("org", "key")).not.toMatch(/\/$/);
     });
 
