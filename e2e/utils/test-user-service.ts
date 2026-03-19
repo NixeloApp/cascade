@@ -56,6 +56,14 @@ export interface UpdateProjectWorkflowStateResult {
   error?: string;
 }
 
+export interface E2EWorkflowState {
+  id: string;
+  name: string;
+  category: "todo" | "inprogress" | "done";
+  order: number;
+  wipLimit?: number;
+}
+
 export interface GoogleOAuthLoginResult {
   success: boolean;
   email?: string;
@@ -407,6 +415,27 @@ export class TestUserService {
         `  ⚠️ Failed to update workflow state ${stateId} for ${projectKey} in ${orgSlug}:`,
         error,
       );
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Replace a seeded project's workflow states for interactive screenshot capture.
+   */
+  async replaceProjectWorkflowStates(
+    orgSlug: string,
+    projectKey: string,
+    workflowStates: E2EWorkflowState[],
+  ): Promise<UpdateProjectWorkflowStateResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.replaceProjectWorkflowStates, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, projectKey, workflowStates }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(`  ⚠️ Failed to replace workflow states for ${projectKey} in ${orgSlug}:`, error);
       return { success: false, error: String(error) };
     }
   }

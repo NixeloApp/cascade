@@ -49,4 +49,44 @@ describe("e2e workflow state updates", () => {
     expect(cleared.success).toBe(true);
     expect(cleared.workflowStates?.find((state) => state.id === "todo")?.wipLimit).toBeUndefined();
   });
+
+  it("replaces workflow states for seeded-style projects in E2E orgs", async () => {
+    const t = convexTest(schema, modules);
+    const { organizationId, workspaceId, teamId, asUser } = await createTestContext(t, {
+      email: "screenshots-workflow-replace@inbox.mailtrap.io",
+    });
+
+    const orgSlug = "nixelo-e2e-workflow-replace";
+    await t.run(async (ctx) => {
+      await ctx.db.patch(organizationId, { slug: orgSlug });
+    });
+
+    const { projectId } = await asUser.mutation(api.projects.createProject, {
+      name: "Demo Project",
+      key: "DEMO",
+      description: "Demo project for screenshot visual review",
+      isPublic: false,
+      boardType: "kanban",
+      organizationId,
+      workspaceId,
+      teamId,
+    });
+
+    const replacementWorkflowStates = [
+      { id: "triage", name: "Triage", category: "todo" as const, order: 0 },
+      { id: "todo", name: "To Do", category: "todo" as const, order: 1 },
+      { id: "in-progress", name: "In Progress", category: "inprogress" as const, order: 2 },
+      { id: "done", name: "Done", category: "done" as const, order: 3 },
+    ];
+
+    const replaced = await t.mutation(internal.e2e.updateProjectWorkflowStatesInternal, {
+      orgSlug,
+      projectKey: "DEMO",
+      workflowStates: replacementWorkflowStates,
+    });
+
+    expect(replaced.success).toBe(true);
+    expect(replaced.projectId).toBe(projectId);
+    expect(replaced.workflowStates).toEqual(replacementWorkflowStates);
+  });
 });

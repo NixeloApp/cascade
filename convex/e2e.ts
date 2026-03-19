@@ -1861,6 +1861,131 @@ export const updateProjectWorkflowStateInternal = internalMutation({
 });
 
 /**
+ * Replace a seeded project's workflow states for interactive screenshot capture.
+ * POST /e2e/replace-project-workflow-states
+ * Body: {
+ *   orgSlug: string,
+ *   projectKey: string,
+ *   workflowStates: WorkflowState[],
+ * }
+ */
+export const replaceProjectWorkflowStatesEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, projectKey, workflowStates } = body;
+
+    if (!(orgSlug && projectKey)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug or projectKey" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!Array.isArray(workflowStates) || workflowStates.length === 0) {
+      return new Response(JSON.stringify({ error: "workflowStates must be a non-empty array" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateProjectWorkflowStatesInternal, {
+      orgSlug,
+      projectKey,
+      workflowStates,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const updateProjectWorkflowStatesInternal = internalMutation({
+  args: {
+    orgSlug: v.string(),
+    projectKey: v.string(),
+    workflowStates: v.array(
+      v.object({
+        id: v.string(),
+        name: v.string(),
+        category: workflowCategories,
+        order: v.number(),
+        wipLimit: v.optional(v.number()),
+      }),
+    ),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    projectId: v.optional(v.id("projects")),
+    workflowStates: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          name: v.string(),
+          category: workflowCategories,
+          order: v.number(),
+          wipLimit: v.optional(v.number()),
+        }),
+      ),
+    ),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), args.projectKey)))
+      .first();
+
+    if (!project) {
+      return {
+        success: false,
+        error: `project not found: ${args.projectKey} in ${args.orgSlug}`,
+      };
+    }
+
+    await ctx.db.patch(project._id, {
+      workflowStates: args.workflowStates,
+      updatedAt: Date.now(),
+    });
+
+    return {
+      success: true,
+      projectId: project._id,
+      workflowStates: args.workflowStates,
+    };
+  },
+});
+
+/**
  * Verify a test user's email directly (bypassing email verification flow)
  * POST /e2e/verify-test-user
  * Body: { email: string }

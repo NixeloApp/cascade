@@ -23,6 +23,7 @@ import {
   nukeAllE2EWorkspacesEndpoint,
   nukeAllTestUsersEndpoint,
   nukeTimersEndpoint,
+  replaceProjectWorkflowStatesEndpoint,
   requestPasswordResetEndpoint,
   resetOnboardingEndpoint,
   resetTestWorkspaceEndpoint,
@@ -228,6 +229,13 @@ http.route({
   path: "/e2e/update-project-workflow-state",
   method: "POST",
   handler: updateProjectWorkflowStateEndpoint,
+});
+
+// Replace a seeded project's workflow states for interactive screenshot capture
+http.route({
+  path: "/e2e/replace-project-workflow-states",
+  method: "POST",
+  handler: replaceProjectWorkflowStatesEndpoint,
 });
 
 // Seed built-in project templates

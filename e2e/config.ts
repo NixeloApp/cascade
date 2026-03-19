@@ -255,6 +255,8 @@ export const E2E_ENDPOINTS = {
   seedScreenshotData: `${CONVEX_SITE_URL}/e2e/seed-screenshot-data`,
   // Update a seeded project's workflow state for interactive screenshot capture
   updateProjectWorkflowState: `${CONVEX_SITE_URL}/e2e/update-project-workflow-state`,
+  // Replace a seeded project's workflow states for interactive screenshot capture
+  replaceProjectWorkflowStates: `${CONVEX_SITE_URL}/e2e/replace-project-workflow-states`,
   // Google OAuth login via refresh token (bypasses browser OAuth flow)
   googleOAuthLogin: `${CONVEX_SITE_URL}/e2e/google-oauth-login`,
 };
