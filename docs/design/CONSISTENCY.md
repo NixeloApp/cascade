@@ -35,7 +35,7 @@ This is the bridge between the vision docs and the validator suite. If `DIRECTOR
 - Every meaningful visual change should go through the screenshot workflow
 - Missing screenshot coverage is not invisible debt; it should stay visible in validation or `/todos`
 
-## Enforced Today
+## Enforcement Map
 
 These are already backed by validators or review workflow:
 
@@ -45,9 +45,46 @@ These are already backed by validators or review workflow:
 - `check-surface-shells.js` and `check-recipe-drift.js` — repeated shell enforcement
 - `check-layout-prop-usage.js` and `check-page-layout.js` — layout consistency
 - `check-nested-cards.js` and `check-border-radius.js` — surface/chrome cohesion
-- `check-screenshot-coverage.js` — route coverage and canonical screenshot variant audit
+- `check-screenshot-coverage.js` — route coverage, page-spec completeness, canonical page screenshot variants, and modal screenshot gaps
 - `check-typography-drift.js` — advisory audit for `Typography` components restyled with raw size/weight/tracking classes
+- `check-control-chrome-drift.js` — advisory audit for feature code that restyles `Button`, `Badge`, `Input`, `Textarea`, and `TabsTrigger` with raw chrome/state classes
+- `check-shared-shape-drift.js` — advisory audit for repeated inline entity-summary object shapes that should become shared aliases
 - `pnpm screenshots:diff` — screenshot drift against the approved baseline
+
+## Coverage By Layer
+
+### Visual primitives
+
+- colors/tokens: enforced
+- radius/shadow/shell reuse: enforced
+- typography semantics: partly enforced, partly advisory
+- icon sizing and stroke rhythm: still mostly human review
+
+### Composition patterns
+
+- page shells and layout wrappers: enforced
+- nested-card / shell misuse: enforced
+- dialog and auth-page composition: partly enforced
+- repeated feature-local control chrome: advisory audit
+
+### Interaction patterns
+
+- focus/disabled timing basics: enforced by existing Tailwind and UI-pattern validators
+- state cohesion across dialog, sheet, dropdown, tabs, and dashboard surfaces: still partially manual
+- motion timing and transition family cohesion: still manual
+
+### Documentation and screenshot coverage
+
+- page specs must stay complete: enforced
+- page canonical screenshots: advisory audit
+- spec'd modal screenshots: advisory audit
+- component visual reference coverage: still mostly manual
+
+### Code consistency
+
+- canonical type imports: enforced
+- repeated inline entity summary shapes: advisory audit
+- repeated visual drift in feature code: partly enforced, partly advisory
 
 ## Review Loop
 
@@ -83,8 +120,10 @@ These are still only partially automated and need human review:
 
 - motion/animation consistency across page families
 - density and hierarchy consistency inside large complex surfaces
-- feature-local `Typography` overrides that are intentional but should probably become real variants
+- icon sizing / stroke-weight rhythm across mixed surfaces
+- feature-local `Typography` and control overrides that are intentional but should probably become real variants
 - screenshot coverage for deep modal and interaction states that are not yet captured
+- component visual baselines that are documented but not screenshot-backed
 
 ## Escalation Rule
 

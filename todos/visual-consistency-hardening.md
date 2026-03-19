@@ -11,7 +11,7 @@ Make the product more visually cohesive and more enforceable in code, using the 
 ## New Guardrails Already Added
 
 - [x] `docs/design/CONSISTENCY.md` defines the practical consistency contract
-- [x] `pnpm run validate` now includes a `Visual consistency` audit
+- [x] `pnpm run validate` now includes advisory audits for typography drift, control chrome drift, shared shape drift, and richer screenshot/spec coverage
 - [x] Screenshot validation docs are linked to the design/testing review loop
 
 ## Remaining Cleanup
@@ -21,9 +21,20 @@ Make the product more visually cohesive and more enforceable in code, using the 
 - [ ] Remove or absorb the 94 current `Typography` className size/weight/tracking overrides surfaced by `check-typography-drift.js`
 - [ ] Where the same override pattern repeats, add a real `Typography` variant or supporting primitive instead of continuing one-off className fixes
 
+### Owned-control drift
+
+- [ ] Remove or absorb the 49 current control-chrome overrides surfaced by `check-control-chrome-drift.js`
+- [ ] Promote repeated `Button` / `Badge` / `Input` / `Textarea` / `TabsTrigger` restyling into owned variants instead of feature-local className patches
+
+### Shared type-shape drift
+
+- [ ] Replace the 2 repeated inline entity-summary shape groups surfaced by `check-shared-shape-drift.js` with shared aliases
+- [ ] Start with assignee/reporter/member/user summary props in high-churn feature surfaces
+
 ### Screenshot review residue
 
 - [ ] Keep screenshot coverage and screenshot drift approval in sync with visual changes
+- [ ] Capture canonical screenshots for spec'd modals in `docs/design/specs/modals/screenshots/`
 - [ ] Do not let modal/interaction-state screenshot gaps hide consistency regressions
 
 ### Human-review blind spots
@@ -33,6 +44,7 @@ These are still only partially automated and need explicit cleanup/review:
 - [ ] motion / animation consistency
 - [ ] density and hierarchy consistency inside large complex surfaces
 - [ ] component-state cohesion across dialogs, sheets, popovers, tabs, and dashboard cards
+- [ ] icon sizing / stroke-weight rhythm across mixed surfaces
 - [ ] remaining raw Tailwind baseline shrink as touched files are cleaned up
 
 ## Done When

@@ -18,6 +18,8 @@ We already have three useful inputs:
 
 What is still missing is a tighter “this is how the product works today” layer with user stories, permissions, happy paths, failure cases, and acceptance criteria.
 
+The validator-backed gap is now explicit: 21 page-spec folders already have screenshot directories but still do not have the full `CURRENT.md` / `IMPLEMENTATION.md` / `TARGET.md` triplet.
+
 ## Deliverables
 
 ### 1. Define a shared feature-doc structure
@@ -32,6 +34,17 @@ What is still missing is a tighter “this is how the product works today” lay
   - linked routes / components / backend functions
   - screenshots / design-spec references
   - acceptance criteria
+
+### 1.5. Close the page-spec doc triplet gap first
+
+- [ ] Backfill the 21 page spec folders currently missing `CURRENT.md`, `IMPLEMENTATION.md`, and `TARGET.md`
+- [ ] Start with the highest-signal missing folders:
+  - `22-time-tracking`
+  - `26-clients`
+  - `28-workspace-detail`
+  - `35-roadmap`
+  - `37-billing`
+- [ ] Keep screenshot folders linked as the visual baseline for each new triplet
 
 ### 2. Expand the highest-value current surfaces first
 

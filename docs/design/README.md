@@ -16,6 +16,7 @@ Detailed page and component breakdowns with ASCII wireframes:
 
 - [specs/pages/](./specs/pages/) - Page-by-page analysis
 - [specs/components/](./specs/components/) - Component deep-dives
+- [specs/modals/](./specs/modals/) - Modal and overlay specs
 
 ## Research
 
@@ -53,3 +54,5 @@ Visual work should also run:
 pnpm screenshots
 pnpm screenshots:diff
 ```
+
+Use [CONSISTENCY.md](./CONSISTENCY.md) for the enforcement map: what is hard-failed by validators, what is advisory inventory, and what still requires human screenshot review.

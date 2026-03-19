@@ -74,9 +74,10 @@ pnpm screenshots:diff
 
 Rules:
 
-- `pnpm run validate` includes an informational screenshot audit for uncovered routes and missing canonical spec screenshot variants.
-- `pnpm run validate` also includes a `Typography drift` audit for `Typography` override drift outside owned primitives.
+- `pnpm run validate` includes informational audits for uncovered routes, missing page-spec docs, missing canonical page screenshot variants, and missing canonical screenshots for spec'd modals.
+- `pnpm run validate` also includes advisory consistency audits for `Typography` drift, owned-control chrome drift, and repeated inline entity-summary shapes.
 - `pnpm screenshots` writes captures into `docs/design/specs/pages/*/screenshots` for spec-owned pages and `e2e/screenshots/` for fallback pages.
+- Spec'd modal captures belong in `docs/design/specs/modals/screenshots/` using `<modal-slug>-desktop-dark.png`, `<modal-slug>-desktop-light.png`, `<modal-slug>-tablet-light.png`, and `<modal-slug>-mobile-light.png`.
 - `pnpm screenshots:diff` must be clean before treating a visual baseline as unchanged.
 - If screenshot drift is intentional, run `pnpm screenshots:approve` in the same change set that updates the UI.
 

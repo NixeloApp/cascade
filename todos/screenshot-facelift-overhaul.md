@@ -2,7 +2,7 @@
 
 > **Priority:** P1
 > **Status:** Partial
-> **Last Updated:** 2026-03-18
+> **Last Updated:** 2026-03-19
 
 Core visual facelift work is done. Only the unfinished screenshot and validation residue stays here.
 
@@ -20,6 +20,12 @@ Core visual facelift work is done. Only the unfinished screenshot and validation
 ### Routes / Flows Still Not Captured
 
 - [ ] Portal page (`/portal/$token`)
+
+### Canonical Modal Screenshot Variants Missing
+
+- [ ] `create-issue` — missing `create-issue-desktop-dark.png`, `create-issue-desktop-light.png`, `create-issue-tablet-light.png`, `create-issue-mobile-light.png`
+- [ ] `create-event` — missing `create-event-desktop-dark.png`, `create-event-desktop-light.png`, `create-event-tablet-light.png`, `create-event-mobile-light.png`
+- [ ] `command-palette` — missing `command-palette-desktop-dark.png`, `command-palette-desktop-light.png`, `command-palette-tablet-light.png`, `command-palette-mobile-light.png`
 
 ### Modals Still Not Captured
 
