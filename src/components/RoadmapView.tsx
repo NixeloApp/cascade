@@ -497,10 +497,15 @@ function getTodayMarkerOffsetPx(
   return ISSUE_INFO_COLUMN_WIDTH + (daysSinceStart / totalDays) * timelineWidth;
 }
 
-function shiftTimelineAnchorDate(anchorDate: Date, direction: -1 | 1) {
+function shiftTimelineAnchorDate(anchorDate: Date, direction: -1 | 1, timelineSpan: TimelineSpan) {
   const nextAnchor = new Date(anchorDate);
-  nextAnchor.setMonth(nextAnchor.getMonth() + direction);
+  nextAnchor.setMonth(nextAnchor.getMonth() + direction * timelineSpan);
   return nextAnchor;
+}
+
+function getTimelineWindowStepLabel(direction: "previous" | "next", timelineSpan: TimelineSpan) {
+  const spanLabel = timelineSpan === 1 ? "1-month window" : `${timelineSpan}-month window`;
+  return `${direction === "previous" ? "Previous" : "Next"} ${spanLabel}`;
 }
 
 function getTimelineMonthsCovered(startDate: Date, endDate: Date) {
@@ -1555,6 +1560,8 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
     endOfTimespan,
     timelineLayoutWidth,
   );
+  const previousWindowLabel = getTimelineWindowStepLabel("previous", timelineSpan);
+  const nextWindowLabel = getTimelineWindowStepLabel("next", timelineSpan);
 
   const getPositionOnTimeline = (date: number) => {
     const issueDate = new Date(date);
@@ -1863,10 +1870,12 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                   variant="ghost"
                   size="icon"
                   onClick={() =>
-                    setTimelineAnchorDate((currentDate) => shiftTimelineAnchorDate(currentDate, -1))
+                    setTimelineAnchorDate((currentDate) =>
+                      shiftTimelineAnchorDate(currentDate, -1, timelineSpan),
+                    )
                   }
-                  aria-label="Previous timeline window"
-                  title="Previous timeline window"
+                  aria-label={previousWindowLabel}
+                  title={previousWindowLabel}
                 >
                   <Icon icon={ChevronLeft} size="sm" />
                 </Button>
@@ -1896,10 +1905,12 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                   variant="ghost"
                   size="icon"
                   onClick={() =>
-                    setTimelineAnchorDate((currentDate) => shiftTimelineAnchorDate(currentDate, 1))
+                    setTimelineAnchorDate((currentDate) =>
+                      shiftTimelineAnchorDate(currentDate, 1, timelineSpan),
+                    )
                   }
-                  aria-label="Next timeline window"
-                  title="Next timeline window"
+                  aria-label={nextWindowLabel}
+                  title={nextWindowLabel}
                 >
                   <Icon icon={ChevronRight} size="sm" />
                 </Button>

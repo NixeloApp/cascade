@@ -606,7 +606,7 @@ describe("RoadmapView", () => {
     expect(screen.getByText("March 2026")).toBeInTheDocument();
     expect(screen.getByText("Mar 2026")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Next timeline window" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next 1-month window" }));
 
     expect(screen.getByText("April 2026")).toBeInTheDocument();
     expect(screen.getByText("Apr 2026")).toBeInTheDocument();
@@ -616,6 +616,40 @@ describe("RoadmapView", () => {
 
     expect(screen.getByText("March 2026")).toBeInTheDocument();
     expect(screen.getByText("Mar 2026")).toBeInTheDocument();
+  });
+
+  it("moves the timeline by the active visible span", () => {
+    mockRoadmapQueries({
+      issues: [
+        {
+          _id: issue1Id,
+          key: "PROJ-1",
+          title: "Plan onboarding",
+          status: "todo",
+          startDate: Date.UTC(2026, 2, 10),
+          dueDate: Date.UTC(2026, 2, 20),
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Alex Rivera" },
+        },
+      ],
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "3 Months" }));
+
+    expect(screen.getByText("Mar 2026 - May 2026")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Next 3-month window" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Next 3-month window" }));
+
+    expect(screen.getByText("Jun 2026 - Aug 2026")).toBeInTheDocument();
+    expect(screen.queryByText("Mar 2026 - May 2026")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Previous 3-month window" }));
+
+    expect(screen.getByText("Mar 2026 - May 2026")).toBeInTheDocument();
   });
 
   it("fits the timeline window to the visible issues", () => {
@@ -741,7 +775,7 @@ describe("RoadmapView", () => {
     expect(screen.getByTestId(TEST_IDS.ROADMAP.TODAY_MARKER_HEADER)).toBeInTheDocument();
     expect(screen.getByTestId(TEST_IDS.ROADMAP.TODAY_MARKER_BODY)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Next timeline window" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next 1-month window" }));
 
     expect(screen.queryByTestId(TEST_IDS.ROADMAP.TODAY_MARKER_HEADER)).not.toBeInTheDocument();
     expect(screen.queryByTestId(TEST_IDS.ROADMAP.TODAY_MARKER_BODY)).not.toBeInTheDocument();
