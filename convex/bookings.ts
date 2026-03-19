@@ -15,10 +15,7 @@ import { batchFetchBookingPages } from "./lib/batchHelpers";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { validate, validateEmail } from "./lib/constrainedValidators";
 import { conflict, notFound, rateLimited, requireOwned, validation } from "./lib/errors";
-import {
-  getActiveOutOfOfficeDelegateUserId,
-  getOutOfOfficeDelegateForRange,
-} from "./lib/outOfOffice";
+import { getOutOfOfficeDelegateForRange } from "./lib/outOfOffice";
 import { DAY, HOUR, MINUTE } from "./lib/timeUtils";
 import { getUserWorkspaceContext } from "./lib/workspaceAccess";
 import { bookerAnswers } from "./validators";
@@ -313,32 +310,34 @@ export const getAvailableSlots = query({
     >();
     const bookingsByHost = new Map<string, Array<{ startTime: number; endTime: number }>>();
 
-    for (const hostId of hostIds) {
-      const availability = await ctx.db
-        .query("availabilitySlots")
-        .withIndex("by_user_day", (q) =>
-          q.eq("userId", hostId as Id<"users">).eq("dayOfWeek", dayOfWeek),
-        )
-        .first();
+    await Promise.all(
+      [...hostIds].map(async (hostId) => {
+        const [availability, bookings] = await Promise.all([
+          ctx.db
+            .query("availabilitySlots")
+            .withIndex("by_user_day", (q) =>
+              q.eq("userId", hostId as Id<"users">).eq("dayOfWeek", dayOfWeek),
+            )
+            .first(),
+          ctx.db
+            .query("bookings")
+            .withIndex("by_host", (q) => q.eq("hostId", hostId as Id<"users">))
+            .filter((q) =>
+              q.and(
+                q.or(q.eq(q.field("status"), "pending"), q.eq(q.field("status"), "confirmed")),
+                q.gte(q.field("startTime"), dayStart),
+                q.lt(q.field("startTime"), dayEnd),
+              ),
+            )
+            .take(BOUNDED_LIST_LIMIT),
+        ]);
 
-      if (availability?.isActive) {
-        availabilityByHost.set(hostId, availability);
-      }
-
-      const bookings = await ctx.db
-        .query("bookings")
-        .withIndex("by_host", (q) => q.eq("hostId", hostId as Id<"users">))
-        .filter((q) =>
-          q.and(
-            q.or(q.eq(q.field("status"), "pending"), q.eq(q.field("status"), "confirmed")),
-            q.gte(q.field("startTime"), dayStart),
-            q.lt(q.field("startTime"), dayEnd),
-          ),
-        )
-        .take(BOUNDED_LIST_LIMIT);
-
-      bookingsByHost.set(hostId, bookings);
-    }
+        if (availability?.isActive) {
+          availabilityByHost.set(hostId, availability);
+        }
+        bookingsByHost.set(hostId, bookings);
+      }),
+    );
 
     // If the primary host (non-OOO case) has no availability at all, bail early
     // unless a delegate covers part of the day
