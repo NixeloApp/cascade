@@ -429,6 +429,39 @@ describe("RoadmapView", () => {
     expect(screen.queryByText("Subtask of PROJ-1")).not.toBeInTheDocument();
   });
 
+  it("renders a parent rollup bar when only subtasks have roadmap dates", () => {
+    mockRoadmapQueries({
+      issues: [
+        {
+          _id: issue2Id,
+          key: "PROJ-2",
+          title: "Ship migration slice",
+          status: "in progress",
+          startDate: Date.UTC(2026, 2, 14),
+          dueDate: Date.UTC(2026, 2, 16),
+          parentId: issue1Id,
+          type: "subtask",
+          priority: "high",
+          assignee: { name: "Sam Lee" },
+        },
+        {
+          _id: issue1Id,
+          key: "PROJ-1",
+          title: "Ship migration",
+          status: "todo",
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Alex Rivera" },
+        },
+      ],
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    expect(screen.getByTitle("Task rollup for PROJ-1")).toBeInTheDocument();
+    expect(screen.queryByTestId(`roadmap-bar-${issue1Id}`)).not.toBeInTheDocument();
+  });
+
   it("hides dependency lines when the toggle is clicked", async () => {
     mockRoadmapQueries({
       issues: [

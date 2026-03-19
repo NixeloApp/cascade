@@ -225,6 +225,8 @@ type TimelineRow =
       type: "issue";
       issue: RoadmapIssue;
       parentIssueId?: Id<"issues">;
+      summaryDueDate?: number;
+      summaryStartDate?: number;
     };
 
 interface HierarchyIssueRow {
@@ -234,6 +236,8 @@ interface HierarchyIssueRow {
   hasChildren: boolean;
   issue: RoadmapIssue;
   parentIssueId?: Id<"issues">;
+  summaryDueDate?: number;
+  summaryStartDate?: number;
 }
 
 function getBarWidth(
@@ -657,6 +661,7 @@ function buildIssueHierarchyRows(
   return sortIssues(rootIssues).flatMap((issue) => {
     const childIssues = sortIssues(childIssuesByParent.get(issue._id.toString()) ?? []);
     const childrenCollapsed = collapsedParentIssueIds.includes(issue._id.toString());
+    const childSummary = childIssues.length > 0 ? getTimelineGroupSummary(childIssues) : {};
 
     return [
       {
@@ -665,6 +670,8 @@ function buildIssueHierarchyRows(
         depth: 0 as const,
         hasChildren: childIssues.length > 0,
         issue,
+        summaryDueDate: childSummary.dueDate,
+        summaryStartDate: childSummary.startDate,
       },
       ...(childrenCollapsed
         ? []
@@ -675,6 +682,8 @@ function buildIssueHierarchyRows(
             hasChildren: false,
             issue: childIssue,
             parentIssueId: issue._id,
+            summaryDueDate: undefined,
+            summaryStartDate: undefined,
           }))),
     ];
   });
@@ -1028,6 +1037,8 @@ interface RoadmapIssueRowProps {
   ) => void;
   resizingIssueId?: Id<"issues">;
   selected: boolean;
+  summaryDueDate?: number;
+  summaryStartDate?: number;
   style: React.CSSProperties;
   timelineRef: React.RefObject<HTMLDivElement | null>;
   parentIssue: Pick<RoadmapIssue, "_id" | "key" | "title"> | null;
@@ -1131,6 +1142,40 @@ function RoadmapIssueIdentity({
   );
 }
 
+interface RoadmapSummaryBarProps {
+  dueDate: number;
+  getPositionOnTimeline: (date: number) => number;
+  issueKey: string;
+  startDate?: number;
+}
+
+function RoadmapSummaryBar({
+  dueDate,
+  getPositionOnTimeline,
+  issueKey,
+  startDate,
+}: RoadmapSummaryBarProps) {
+  return (
+    <div
+      className={cn(
+        getCardRecipeClassName("roadmapTimelineBar"),
+        "absolute top-2 h-4 border border-accent-border bg-accent-subtle text-accent-active opacity-90",
+      )}
+      style={{
+        left: `${getBarLeft(startDate, dueDate, getPositionOnTimeline)}%`,
+        width: `${getBarWidth(startDate, dueDate, getPositionOnTimeline)}%`,
+      }}
+      title={`Task rollup for ${issueKey}`}
+    >
+      <Flex align="center" justify="center" className="h-full px-2">
+        <Typography variant="caption" className="truncate">
+          Rollup
+        </Typography>
+      </Flex>
+    </div>
+  );
+}
+
 function RoadmapIssueRow({
   childCount,
   canEdit,
@@ -1146,11 +1191,15 @@ function RoadmapIssueRow({
   onResizeStart,
   resizingIssueId,
   selected,
+  summaryDueDate,
+  summaryStartDate,
   style,
   timelineRef,
   parentIssue,
 }: RoadmapIssueRowProps) {
   const isNestedSubtask = depth === 1 && parentIssue !== null;
+  const shouldRenderSummaryBar =
+    issue.dueDate === undefined && hasChildren && summaryDueDate !== undefined;
 
   return (
     <Card
@@ -1196,6 +1245,13 @@ function RoadmapIssueRow({
               onOpenIssue={onOpenIssue}
               onResizeStart={onResizeStart}
               resizingIssueId={resizingIssueId}
+            />
+          ) : shouldRenderSummaryBar ? (
+            <RoadmapSummaryBar
+              dueDate={summaryDueDate}
+              getPositionOnTimeline={getPositionOnTimeline}
+              issueKey={issue.key}
+              startDate={summaryStartDate}
             />
           ) : null}
         </FlexItem>
@@ -1529,6 +1585,8 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
         onResizeStart={handleResizeStart}
         resizingIssueId={resizing?.issueId}
         selected={row.issue._id === selectedIssueId}
+        summaryDueDate={row.summaryDueDate}
+        summaryStartDate={row.summaryStartDate}
         style={style}
         timelineRef={timelineRef}
         parentIssue={
