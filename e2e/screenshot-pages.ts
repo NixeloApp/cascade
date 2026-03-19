@@ -239,6 +239,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-project-.+-create-issue-validation$/, "06-board", "-create-issue-validation"],
   // Document editor: filled-document-editor → 10-editor
   [/^filled-document-editor$/, "10-editor", ""],
+  [/^filled-document-editor-move-dialog$/, "10-editor", "-move-dialog"],
   [/^filled-document-editor-slash-menu$/, "10-editor", "-slash-menu"],
   [/^filled-document-editor-floating-toolbar$/, "10-editor", "-floating-toolbar"],
   [/^filled-document-editor-mention-popover$/, "10-editor", "-mention-popover"],
@@ -285,6 +286,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
 const MODAL_SPEC_PATTERNS: Array<[RegExp, string]> = [
   [/^filled-dashboard-omnibox$/, "command-palette"],
   [/^filled-dashboard-customize-modal$/, "dashboard-customize"],
+  [/^filled-document-editor-move-dialog$/, "move-document"],
   [/^filled-project-.+-create-issue-modal$/, "create-issue"],
   [/^filled-calendar-create-event-modal$/, "create-event"],
 ];
@@ -2674,6 +2676,7 @@ async function screenshotFilledStates(
   // Document editor
   const editorTargets = [
     "document-editor",
+    "document-editor-move-dialog",
     "document-editor-slash-menu",
     "document-editor-floating-toolbar",
     "document-editor-mention-popover",
@@ -2685,6 +2688,25 @@ async function screenshotFilledStates(
       await takeScreenshot(page, p, "document-editor", docUrl);
 
       // Document editor interactive states
+      if (shouldCapture(p, "document-editor-move-dialog")) {
+        await runCaptureStep("document move dialog", async () => {
+          await page
+            .goto(`${BASE_URL}${docUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+            .catch(() => {});
+          await waitForExpectedContent(page, docUrl, "document-editor");
+          await waitForScreenshotReady(page);
+          const trigger = page.getByRole("button", { name: /move to another project/i }).first();
+          await trigger.waitFor({ state: "visible", timeout: 8000 });
+          await trigger.click();
+          await page
+            .getByRole("dialog", { name: /move document/i })
+            .waitFor({ state: "visible", timeout: 5000 });
+          await waitForScreenshotReady(page);
+          await captureCurrentView(page, p, "document-editor-move-dialog");
+          await page.keyboard.press("Escape");
+        });
+      }
+
       // Slash menu — type "/" at end of content
       if (shouldCapture(p, "document-editor-slash-menu")) {
         await runCaptureStep("document slash menu", async () => {
@@ -3593,6 +3615,7 @@ const DRY_RUN_PAGES = [
   "filled-issue-PROJ-1",
   // Filled states — document editor
   "filled-document-editor",
+  "filled-document-editor-move-dialog",
   "filled-document-editor-slash-menu",
   "filled-document-editor-floating-toolbar",
   "filled-document-editor-mention-popover",

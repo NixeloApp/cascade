@@ -14,7 +14,6 @@ Core visual facelift work is done. Only the unfinished screenshot and validation
 
 ### Modals Still Not Captured
 
-- [ ] Move document dialog
 - [ ] Avatar / cover upload modals
 - [ ] Confirm dialog
 - [ ] Alert dialog
