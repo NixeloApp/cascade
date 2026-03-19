@@ -258,11 +258,39 @@ export const getAvailableSlots = query({
       .first();
 
     if (!page?.isActive) return [];
+    const pageUserId = page.userId;
 
-    const effectiveHostId =
-      (await getActiveOutOfOfficeDelegateUserId(ctx, page.userId, args.date)) ?? page.userId;
+    // Pre-fetch the host user and delegate user once to avoid per-slot DB lookups.
+    // OOO is resolved per-slot using in-memory timestamp checks.
+    const hostUser = await ctx.db.get(pageUserId);
+    const hostOOO = hostUser?.outOfOffice;
+    let delegateUser: typeof hostUser = null;
+    if (hostOOO?.delegateUserId && hostOOO.delegateUserId !== pageUserId) {
+      delegateUser = await ctx.db.get(hostOOO.delegateUserId);
+    }
 
-    // Get host's availability for this day of week
+    /**
+     * Resolve the effective host for a given slot timestamp.
+     * If the host is OOO at that moment and has a valid delegate, use the delegate.
+     */
+    function resolveHostForSlot(slotTime: number): Id<"users"> {
+      if (hostOOO && delegateUser && hostOOO.startsAt <= slotTime && hostOOO.endsAt >= slotTime) {
+        return delegateUser._id;
+      }
+      return pageUserId;
+    }
+
+    // Determine which hosts are relevant for the day (host, delegate, or both)
+    const dayStart = args.date;
+    const dayEnd = dayStart + DAY;
+    const hostIds = new Set<string>();
+    // Check a few sample points across the day to find which hosts appear
+    for (let t = dayStart; t < dayEnd; t += HOUR) {
+      hostIds.add(resolveHostForSlot(t));
+    }
+    hostIds.add(resolveHostForSlot(dayEnd - 1));
+
+    // Pre-fetch availability and bookings for all relevant hosts
     const date = new Date(args.date);
     const dayNames = [
       "sunday",
@@ -275,54 +303,95 @@ export const getAvailableSlots = query({
     ] as const;
     const dayOfWeek = dayNames[date.getDay()];
 
-    const availability = await ctx.db
-      .query("availabilitySlots")
-      .withIndex("by_user_day", (q) => q.eq("userId", effectiveHostId).eq("dayOfWeek", dayOfWeek))
-      .first();
+    const availabilityByHost = new Map<
+      string,
+      { startTime: string; endTime: string; isActive: boolean }
+    >();
+    const bookingsByHost = new Map<string, Array<{ startTime: number; endTime: number }>>();
 
-    if (!availability?.isActive) return [];
+    for (const hostId of hostIds) {
+      const availability = await ctx.db
+        .query("availabilitySlots")
+        .withIndex("by_user_day", (q) =>
+          q.eq("userId", hostId as Id<"users">).eq("dayOfWeek", dayOfWeek),
+        )
+        .first();
 
-    // Get existing bookings for this day
-    const dayStart = args.date;
-    const dayEnd = dayStart + DAY;
+      if (availability?.isActive) {
+        availabilityByHost.set(hostId, availability);
+      }
 
-    const existingBookings = await ctx.db
-      .query("bookings")
-      .withIndex("by_host", (q) => q.eq("hostId", effectiveHostId))
-      .filter((q) =>
-        q.and(
-          q.or(q.eq(q.field("status"), "pending"), q.eq(q.field("status"), "confirmed")),
-          q.gte(q.field("startTime"), dayStart),
-          q.lt(q.field("startTime"), dayEnd),
-        ),
-      )
-      .take(BOUNDED_LIST_LIMIT);
+      const bookings = await ctx.db
+        .query("bookings")
+        .withIndex("by_host", (q) => q.eq("hostId", hostId as Id<"users">))
+        .filter((q) =>
+          q.and(
+            q.or(q.eq(q.field("status"), "pending"), q.eq(q.field("status"), "confirmed")),
+            q.gte(q.field("startTime"), dayStart),
+            q.lt(q.field("startTime"), dayEnd),
+          ),
+        )
+        .take(BOUNDED_LIST_LIMIT);
+
+      bookingsByHost.set(hostId, bookings);
+    }
+
+    // If the primary host (non-OOO case) has no availability at all, bail early
+    // unless a delegate covers part of the day
+    if (availabilityByHost.size === 0) return [];
+
+    // Find the widest availability window across all hosts to iterate slots
+    let earliestStart = 24 * 60;
+    let latestEnd = 0;
+    for (const avail of availabilityByHost.values()) {
+      const [sh, sm] = avail.startTime.split(":").map(Number);
+      const [eh, em] = avail.endTime.split(":").map(Number);
+      earliestStart = Math.min(earliestStart, sh * 60 + sm);
+      latestEnd = Math.max(latestEnd, eh * 60 + em);
+    }
 
     // Generate available slots
     const slots: number[] = [];
     const slotDuration = page.duration; // minutes
 
-    // Parse start and end times
-    const [startHour, startMinute] = availability.startTime.split(":").map(Number);
-    const [endHour, endMinute] = availability.endTime.split(":").map(Number);
-
     const currentTime = new Date(args.date);
-    currentTime.setHours(startHour, startMinute, 0, 0);
+    currentTime.setHours(Math.floor(earliestStart / 60), earliestStart % 60, 0, 0);
 
     const endTime = new Date(args.date);
-    endTime.setHours(endHour, endMinute, 0, 0);
+    endTime.setHours(Math.floor(latestEnd / 60), latestEnd % 60, 0, 0);
 
-    // Generate all possible slots
     while (currentTime.getTime() + slotDuration * MINUTE <= endTime.getTime()) {
       const slotStart = currentTime.getTime();
       const slotEnd = slotStart + slotDuration * MINUTE;
 
-      // Check if slot conflicts with existing bookings
-      const hasConflict = existingBookings.some((booking) => {
-        // Add buffer time
+      // Resolve which host owns this slot based on OOO status at slot time
+      const effectiveHostId = resolveHostForSlot(slotStart);
+      const hostAvailability = availabilityByHost.get(effectiveHostId);
+
+      // Skip if this host has no availability on this day
+      if (!hostAvailability) {
+        currentTime.setMinutes(currentTime.getMinutes() + 15);
+        continue;
+      }
+
+      // Check slot is within this host's availability window
+      const [aStartH, aStartM] = hostAvailability.startTime.split(":").map(Number);
+      const [aEndH, aEndM] = hostAvailability.endTime.split(":").map(Number);
+      const availStart = new Date(args.date);
+      availStart.setHours(aStartH, aStartM, 0, 0);
+      const availEnd = new Date(args.date);
+      availEnd.setHours(aEndH, aEndM, 0, 0);
+
+      if (slotStart < availStart.getTime() || slotEnd > availEnd.getTime()) {
+        currentTime.setMinutes(currentTime.getMinutes() + 15);
+        continue;
+      }
+
+      // Check if slot conflicts with existing bookings for the effective host
+      const hostBookings = bookingsByHost.get(effectiveHostId) ?? [];
+      const hasConflict = hostBookings.some((booking) => {
         const bufferedStart = booking.startTime - page.bufferTimeBefore * MINUTE;
         const bufferedEnd = booking.endTime + page.bufferTimeAfter * MINUTE;
-
         return slotStart < bufferedEnd && slotEnd > bufferedStart;
       });
 
