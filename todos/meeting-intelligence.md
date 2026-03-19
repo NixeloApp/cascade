@@ -1,0 +1,101 @@
+# Meeting Intelligence / Read AI Feature Restart
+
+> **Priority:** P1
+> **Status:** New
+> **Last Updated:** 2026-03-19
+> **Source:** Repo audit of current meeting bot implementation + March 2026 market refresh in `docs/research/competitors/meeting-ai/market-refresh-2026-03.md`
+
+## High Priority
+
+### First-Class Meetings Surface
+
+The backend exists, but the feature is still mostly hidden inside the calendar event modal.
+
+- [ ] **Add a dedicated Meetings page** — Org-level route and sidebar entry for recordings, summaries, and action items.
+- [ ] **Keep calendar entry point** — Meetings should still be accessible from event details, but not only from there.
+- [ ] **Show all recording states in one place** — Scheduled, joining, recording, processing, completed, failed, cancelled.
+- [ ] **Add a useful empty state** — Explain what the feature does and how to start from calendar or direct meeting URL.
+
+### Recording Detail Productization
+
+The schema and Convex queries are richer than the current UI.
+
+- [ ] **Promote recording details into a real view** — Current experience lives in `MeetingRecordingSection.tsx`; it should become a dedicated detail surface.
+- [ ] **Expose participants** — Backend stores participants, but current UI does not show them in the main experience.
+- [ ] **Expose topics** — Backend stores topic summaries, but current UI ignores them.
+- [ ] **Expose open questions** — Summary schema supports them; current UI does not.
+- [ ] **Expose sentiment** — Summary schema supports it; current UI does not.
+- [ ] **Improve transcript UX** — Search, chunking, and better readability instead of a simple collapsible block.
+
+### Workflow Differentiation
+
+This is the main Nixelo-specific opportunity versus Read AI / Fireflies / Otter.
+
+- [ ] **Expose action-item to issue creation in UI** — Convex supports `createIssueFromActionItem`, but it is not surfaced as a first-class frontend workflow.
+- [ ] **Show issue linkage state** — Once an action item becomes an issue, reflect it directly in meeting results.
+- [ ] **Turn meetings into project artifacts** — Link meeting outputs to issues, docs, and project context instead of leaving them as standalone notes.
+
+## Medium Priority
+
+### Cross-Meeting Memory
+
+The market has moved beyond single-meeting summaries.
+
+- [ ] **Add transcript search across meetings** — Use the existing transcript search index as the base.
+- [ ] **Add filters for platform / status / date / project** — Needed for a useful meetings archive.
+- [ ] **Add reusable memory views** — "Recent decisions", "Open questions", "Unresolved action items", "Meetings by project".
+
+### Capture Strategy Clarity
+
+The codebase and docs were out of sync before the March 2026 refresh.
+
+- [ ] **Document current runtime reality in product docs** — Custom bot-service, Google Meet-first execution, richer backend than current UI.
+- [ ] **Choose whether capture stays custom or gets bought** — Explicit decision needed instead of implicit drift.
+- [ ] **If staying custom, scope v1 honestly** — Google Meet-first until Zoom / Teams / desktop capture are deliberate work items.
+
+### Platform Breadth
+
+- [ ] **Close schema/runtime mismatch** — Zoom and Teams exist in types and scheduling flow, but runtime execution is still effectively Google Meet-first.
+- [ ] **Evaluate desktop capture path** — Market is moving beyond visible bot-only models.
+
+## OSS Evaluation Track
+
+These should be treated as experiments that support the product roadmap, not as the critical path.
+
+- [ ] **Benchmark `faster-whisper`** — Compare quality/cost against current provider path.
+- [ ] **Benchmark `WhisperX`** — Evaluate timestamps and diarization quality for better transcript UX.
+- [ ] **Benchmark `pyannote.audio`** — Evaluate speaker attribution quality for participant-aware summaries.
+- [ ] **Evaluate `whisper.cpp` for local/offline paths** — Only if lightweight or self-hosted deployment matters.
+- [ ] **Study `LiveKit Agents` for future voice-agent features** — Useful for later interactive agent work, not for meeting joining itself.
+
+## Explicit Gaps vs Current Market
+
+- [ ] **No first-class meetings hub** — Competitors now have archive/search/memory surfaces; Nixelo does not.
+- [ ] **No cross-meeting memory product** — Current UI is meeting-by-meeting only.
+- [ ] **No agent-facing meeting layer** — MCP/agent access is becoming common in the category.
+- [ ] **No desktop capture mode** — Bot-only capture is increasingly incomplete.
+- [ ] **No enterprise-ready multi-platform capture story yet** — Current implementation is narrower than the market leaders.
+
+## Non-Goals For First Pass
+
+- [ ] **Do not rebuild the backend from scratch** — Existing scheduling, recording, transcript, summary, and participant foundations are worth keeping.
+- [ ] **Do not chase every competitor feature immediately** — First fix discoverability, detail UX, workflow conversion, and transcript retrieval.
+
+## Reference Files
+
+### Existing implementation
+
+- `src/components/MeetingRecordingSection.tsx`
+- `src/components/Calendar/EventDetailsModal.tsx`
+- `convex/meetingBot.ts`
+- `convex/schema.ts`
+- `bot-service/src/bot/manager.ts`
+- `bot-service/src/bot/google-meet.ts`
+- `bot-service/src/services/transcription.ts`
+- `bot-service/src/services/summary.ts`
+
+### Research
+
+- `docs/research/competitors/meeting-ai/market-refresh-2026-03.md`
+- `docs/research/comparisons/meeting-landscape.md`
+- `docs/research/competitors/meeting-ai/read-ai.md`
