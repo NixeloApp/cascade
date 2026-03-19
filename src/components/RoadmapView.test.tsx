@@ -184,6 +184,7 @@ const projectId = "project_1" as Id<"projects">;
 const epicId = "epic_1" as Id<"issues">;
 const issue1Id = "issue_1" as Id<"issues">;
 const issue2Id = "issue_2" as Id<"issues">;
+const issue3Id = "issue_3" as Id<"issues">;
 const now = Date.UTC(2026, 2, 14);
 const updateIssueDates = vi.fn();
 
@@ -445,6 +446,18 @@ describe("RoadmapView", () => {
           assignee: { name: "Sam Lee" },
         },
         {
+          _id: issue3Id,
+          key: "PROJ-3",
+          title: "Finish rollout checks",
+          status: "done",
+          startDate: Date.UTC(2026, 2, 16),
+          dueDate: Date.UTC(2026, 2, 18),
+          parentId: issue1Id,
+          type: "subtask",
+          priority: "medium",
+          assignee: { name: "Sam Lee" },
+        },
+        {
           _id: issue1Id,
           key: "PROJ-1",
           title: "Ship migration",
@@ -458,7 +471,7 @@ describe("RoadmapView", () => {
 
     render(<RoadmapView projectId={projectId} />);
 
-    expect(screen.getByTitle("Task rollup for PROJ-1")).toBeInTheDocument();
+    expect(screen.getByTitle("Task rollup for PROJ-1 · 1 of 2 complete")).toHaveTextContent("50%");
     expect(screen.queryByTestId(`roadmap-bar-${issue1Id}`)).not.toBeInTheDocument();
   });
 
@@ -691,7 +704,7 @@ describe("RoadmapView", () => {
       "Alex Rivera",
     );
     expect(screen.getByTestId("roadmap-group-assignee:unassigned")).toHaveTextContent("Unassigned");
-    expect(screen.getAllByText("1 issue")).toHaveLength(2);
+    expect(screen.getAllByText(/1 issue/)).toHaveLength(2);
   });
 
   it("groups roadmap rows by epic", () => {
@@ -701,7 +714,7 @@ describe("RoadmapView", () => {
           _id: issue1Id,
           key: "PROJ-1",
           title: "Plan onboarding",
-          status: "todo",
+          status: "done",
           startDate: Date.UTC(2026, 2, 10),
           dueDate: Date.UTC(2026, 2, 20),
           type: "task",
@@ -728,9 +741,11 @@ describe("RoadmapView", () => {
 
     expect(screen.getByTestId(`roadmap-group-epic:${epicId}`)).toHaveTextContent("Growth");
     expect(screen.getByTestId("roadmap-group-epic:none")).toHaveTextContent("No epic");
-    expect(screen.getByTitle("Epic summary for Growth")).toBeInTheDocument();
+    expect(screen.getByTitle("Epic summary for Growth · 1 of 1 complete")).toHaveTextContent(
+      "100%",
+    );
     expect(screen.queryByTitle("Epic summary for No epic")).not.toBeInTheDocument();
-    expect(screen.getAllByText("1 issue")).toHaveLength(2);
+    expect(screen.getAllByText(/1 issue/)).toHaveLength(2);
   });
 
   it("collapses grouped roadmap sections and hides dependency lines for hidden rows", () => {

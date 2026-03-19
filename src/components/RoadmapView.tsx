@@ -203,6 +203,7 @@ interface RoadmapTodayMarkerProps {
 
 interface TimelineGroup {
   collapsed: boolean;
+  completedCount: number;
   count: number;
   dueDate?: number;
   kind: Exclude<GroupBy, "none">;
@@ -222,6 +223,7 @@ type TimelineRow =
       childrenCollapsed: boolean;
       depth: 0 | 1;
       hasChildren: boolean;
+      summaryCompletedCount: number;
       type: "issue";
       issue: RoadmapIssue;
       parentIssueId?: Id<"issues">;
@@ -236,6 +238,7 @@ interface HierarchyIssueRow {
   hasChildren: boolean;
   issue: RoadmapIssue;
   parentIssueId?: Id<"issues">;
+  summaryCompletedCount: number;
   summaryDueDate?: number;
   summaryStartDate?: number;
 }
@@ -262,6 +265,23 @@ function getBarLeft(
     return getPositionOnTimeline(startDate);
   }
   return getPositionOnTimeline(dueDate) - 2.5;
+}
+
+function isRoadmapIssueCompleted(status: string) {
+  const normalizedStatus = status.trim().toLowerCase();
+  return normalizedStatus === "done" || normalizedStatus === "completed";
+}
+
+function getSummaryCompletionLabel(completedCount: number, totalCount: number) {
+  return `${completedCount} of ${totalCount} complete`;
+}
+
+function getSummaryCompletionPercentage(completedCount: number, totalCount: number) {
+  if (totalCount === 0) {
+    return 0;
+  }
+
+  return Math.round((completedCount / totalCount) * 100);
 }
 
 function getTimelineGeometry({ issue, getPositionOnTimeline }: TimelineGeometryArgs) {
@@ -493,6 +513,7 @@ function getGroupDescriptor(issue: RoadmapIssue, groupBy: Exclude<GroupBy, "none
       const assigneeName = issue.assignee?.name?.trim() || "Unassigned";
       return {
         collapsed: false,
+        completedCount: 0,
         count: 0,
         kind: groupBy,
         key: `assignee:${assigneeName.toLowerCase()}`,
@@ -503,6 +524,7 @@ function getGroupDescriptor(issue: RoadmapIssue, groupBy: Exclude<GroupBy, "none
     case "priority":
       return {
         collapsed: false,
+        completedCount: 0,
         count: 0,
         kind: groupBy,
         key: `priority:${issue.priority}`,
@@ -514,6 +536,7 @@ function getGroupDescriptor(issue: RoadmapIssue, groupBy: Exclude<GroupBy, "none
       const epicKey = issue.epic?._id ?? "none";
       return {
         collapsed: false,
+        completedCount: 0,
         count: 0,
         kind: groupBy,
         key: `epic:${epicKey}`,
@@ -524,6 +547,7 @@ function getGroupDescriptor(issue: RoadmapIssue, groupBy: Exclude<GroupBy, "none
     case "status":
       return {
         collapsed: false,
+        completedCount: 0,
         count: 0,
         kind: groupBy,
         key: `status:${issue.status.toLowerCase()}`,
@@ -576,10 +600,11 @@ function compareTimelineGroups(a: TimelineGroup, b: TimelineGroup) {
 
 function getTimelineGroupSummary(
   issues: FunctionReturnType<typeof api.issues.listRoadmapIssues>,
-): Pick<TimelineGroup, "dueDate" | "startDate"> {
+): Pick<TimelineGroup, "completedCount" | "dueDate" | "startDate"> {
   const issuesWithDueDate = issues.filter((issue) => issue.dueDate !== undefined);
+  const completedCount = issues.filter((issue) => isRoadmapIssueCompleted(issue.status)).length;
   if (issuesWithDueDate.length === 0) {
-    return {};
+    return { completedCount };
   }
 
   let earliestStartDate = Number.POSITIVE_INFINITY;
@@ -594,6 +619,7 @@ function getTimelineGroupSummary(
   }
 
   return {
+    completedCount,
     startDate: Number.isFinite(earliestStartDate) ? earliestStartDate : undefined,
     dueDate: Number.isFinite(latestDueDate) ? latestDueDate : undefined,
   };
@@ -661,7 +687,7 @@ function buildIssueHierarchyRows(
   return sortIssues(rootIssues).flatMap((issue) => {
     const childIssues = sortIssues(childIssuesByParent.get(issue._id.toString()) ?? []);
     const childrenCollapsed = collapsedParentIssueIds.includes(issue._id.toString());
-    const childSummary = childIssues.length > 0 ? getTimelineGroupSummary(childIssues) : {};
+    const childSummary = getTimelineGroupSummary(childIssues);
 
     return [
       {
@@ -670,6 +696,7 @@ function buildIssueHierarchyRows(
         depth: 0 as const,
         hasChildren: childIssues.length > 0,
         issue,
+        summaryCompletedCount: childSummary.completedCount ?? 0,
         summaryDueDate: childSummary.dueDate,
         summaryStartDate: childSummary.startDate,
       },
@@ -682,6 +709,7 @@ function buildIssueHierarchyRows(
             hasChildren: false,
             issue: childIssue,
             parentIssueId: issue._id,
+            summaryCompletedCount: 0,
             summaryDueDate: undefined,
             summaryStartDate: undefined,
           }))),
@@ -712,13 +740,18 @@ function buildTimelineRows(
     const group = getGroupDescriptor(issue, groupBy);
     const existingGroup = groupedIssues.get(group.key);
     if (existingGroup) {
+      existingGroup.group.completedCount += isRoadmapIssueCompleted(issue.status) ? 1 : 0;
       existingGroup.group.count += 1;
       existingGroup.issues.push(issue);
       continue;
     }
 
     groupedIssues.set(group.key, {
-      group: { ...group, count: 1 },
+      group: {
+        ...group,
+        completedCount: isRoadmapIssueCompleted(issue.status) ? 1 : 0,
+        count: 1,
+      },
       issues: [issue],
     });
   }
@@ -943,6 +976,11 @@ function shouldRenderEpicSummaryBar(group: TimelineGroup) {
 
 function RoadmapGroupRow({ getPositionOnTimeline, group, onToggle, style }: RoadmapGroupRowProps) {
   const epicSummaryDueDate = shouldRenderEpicSummaryBar(group) ? group.dueDate : undefined;
+  const epicCompletionLabel = getSummaryCompletionLabel(group.completedCount, group.count);
+  const epicCompletionPercentage = getSummaryCompletionPercentage(
+    group.completedCount,
+    group.count,
+  );
 
   return (
     <Button
@@ -980,7 +1018,7 @@ function RoadmapGroupRow({ getPositionOnTimeline, group, onToggle, style }: Road
               </span>
             </Flex>
             <Typography variant="caption" color="secondary">
-              {group.count} {group.count === 1 ? "issue" : "issues"}
+              {group.count} {group.count === 1 ? "issue" : "issues"} · {epicCompletionPercentage}%
             </Typography>
           </Flex>
         </FlexItem>
@@ -996,11 +1034,18 @@ function RoadmapGroupRow({ getPositionOnTimeline, group, onToggle, style }: Road
                 left: `${getBarLeft(group.startDate, epicSummaryDueDate, getPositionOnTimeline)}%`,
                 width: `${getBarWidth(group.startDate, epicSummaryDueDate, getPositionOnTimeline)}%`,
               }}
-              title={`Epic summary for ${group.label}`}
+              title={`Epic summary for ${group.label} · ${epicCompletionLabel}`}
             >
+              <div
+                className="absolute inset-y-0 left-0 rounded-full bg-accent-active/20"
+                style={{ width: `${epicCompletionPercentage}%` }}
+              />
               <Flex align="center" justify="center" className="h-full px-2">
-                <Typography variant="caption" className="truncate">
+                <Typography variant="caption" className="relative truncate">
                   {group.value}
+                </Typography>
+                <Typography variant="caption" className="relative shrink-0">
+                  {epicCompletionPercentage}%
                 </Typography>
               </Flex>
             </div>
@@ -1037,6 +1082,7 @@ interface RoadmapIssueRowProps {
   ) => void;
   resizingIssueId?: Id<"issues">;
   selected: boolean;
+  summaryCompletedCount: number;
   summaryDueDate?: number;
   summaryStartDate?: number;
   style: React.CSSProperties;
@@ -1143,18 +1189,25 @@ function RoadmapIssueIdentity({
 }
 
 interface RoadmapSummaryBarProps {
+  completedCount: number;
   dueDate: number;
   getPositionOnTimeline: (date: number) => number;
   issueKey: string;
+  totalCount: number;
   startDate?: number;
 }
 
 function RoadmapSummaryBar({
+  completedCount,
   dueDate,
   getPositionOnTimeline,
   issueKey,
+  totalCount,
   startDate,
 }: RoadmapSummaryBarProps) {
+  const completionLabel = getSummaryCompletionLabel(completedCount, totalCount);
+  const completionPercentage = getSummaryCompletionPercentage(completedCount, totalCount);
+
   return (
     <div
       className={cn(
@@ -1165,11 +1218,18 @@ function RoadmapSummaryBar({
         left: `${getBarLeft(startDate, dueDate, getPositionOnTimeline)}%`,
         width: `${getBarWidth(startDate, dueDate, getPositionOnTimeline)}%`,
       }}
-      title={`Task rollup for ${issueKey}`}
+      title={`Task rollup for ${issueKey} · ${completionLabel}`}
     >
+      <div
+        className="absolute inset-y-0 left-0 rounded-full bg-accent-active/20"
+        style={{ width: `${completionPercentage}%` }}
+      />
       <Flex align="center" justify="center" className="h-full px-2">
-        <Typography variant="caption" className="truncate">
+        <Typography variant="caption" className="relative truncate">
           Rollup
+        </Typography>
+        <Typography variant="caption" className="relative shrink-0">
+          {completionPercentage}%
         </Typography>
       </Flex>
     </div>
@@ -1191,6 +1251,7 @@ function RoadmapIssueRow({
   onResizeStart,
   resizingIssueId,
   selected,
+  summaryCompletedCount,
   summaryDueDate,
   summaryStartDate,
   style,
@@ -1248,9 +1309,11 @@ function RoadmapIssueRow({
             />
           ) : shouldRenderSummaryBar ? (
             <RoadmapSummaryBar
+              completedCount={summaryCompletedCount}
               dueDate={summaryDueDate}
               getPositionOnTimeline={getPositionOnTimeline}
               issueKey={issue.key}
+              totalCount={childCount}
               startDate={summaryStartDate}
             />
           ) : null}
@@ -1585,6 +1648,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
         onResizeStart={handleResizeStart}
         resizingIssueId={resizing?.issueId}
         selected={row.issue._id === selectedIssueId}
+        summaryCompletedCount={row.summaryCompletedCount}
         summaryDueDate={row.summaryDueDate}
         summaryStartDate={row.summaryStartDate}
         style={style}
