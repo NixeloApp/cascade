@@ -228,6 +228,10 @@ export const TEST_IDS = {
     ISSUE_HEADER: "roadmap-issue-header",
     /** @see src/components/RoadmapView.tsx */
     ISSUE_COLUMN: "roadmap-issue-column",
+    /** @see src/components/RoadmapView.tsx */
+    TODAY_MARKER_HEADER: "roadmap-today-marker-header",
+    /** @see src/components/RoadmapView.tsx */
+    TODAY_MARKER_BODY: "roadmap-today-marker-body",
   },
 
   // ============================================================

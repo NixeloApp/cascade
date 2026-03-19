@@ -23,6 +23,7 @@ import { getPriorityColor, getStatusColor, ISSUE_TYPE_ICONS } from "@/lib/issue-
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { IssueDetailViewer } from "./IssueDetailViewer";
+import { Badge } from "./ui/Badge";
 import { Card, getCardRecipeClassName } from "./ui/Card";
 import { EmptyState } from "./ui/EmptyState";
 import { Grid } from "./ui/Grid";
@@ -192,6 +193,11 @@ interface RoadmapTimelineBarProps {
 interface TimelineHeaderCell {
   key: string;
   label: string;
+}
+
+interface RoadmapTodayMarkerProps {
+  offsetPx: number;
+  variant: "body" | "header";
 }
 
 interface TimelineGroup {
@@ -425,6 +431,23 @@ function getTimelineRangeLabel(startDate: Date, endDate: Date) {
   })}`;
 }
 
+function getTodayMarkerOffsetPx(
+  date: number,
+  startDate: Date,
+  endDate: Date,
+  timelineLayoutWidth: number,
+) {
+  if (date < startDate.getTime() || date > endDate.getTime()) {
+    return null;
+  }
+
+  const totalDays = Math.max(1, Math.floor((endDate.getTime() - startDate.getTime()) / DAY));
+  const daysSinceStart = Math.floor((date - startDate.getTime()) / DAY);
+  const timelineWidth = timelineLayoutWidth - ISSUE_INFO_COLUMN_WIDTH;
+
+  return ISSUE_INFO_COLUMN_WIDTH + (daysSinceStart / totalDays) * timelineWidth;
+}
+
 function shiftTimelineAnchorDate(anchorDate: Date, direction: -1 | 1) {
   const nextAnchor = new Date(anchorDate);
   nextAnchor.setMonth(nextAnchor.getMonth() + direction);
@@ -554,6 +577,46 @@ function getStickyIssueColumnClassName(selected: boolean) {
     "sticky left-0 z-20 w-64 shrink-0 border-r border-ui-border/70 pr-4",
     selected ? "bg-brand-subtle/50" : "bg-ui-bg group-hover:bg-ui-bg-secondary",
   );
+}
+
+function RoadmapTodayMarker({ offsetPx, variant }: RoadmapTodayMarkerProps) {
+  const markerTestId =
+    variant === "header"
+      ? TEST_IDS.ROADMAP.TODAY_MARKER_HEADER
+      : TEST_IDS.ROADMAP.TODAY_MARKER_BODY;
+
+  return (
+    <div
+      data-testid={markerTestId}
+      className="pointer-events-none absolute top-0 bottom-0 z-20 w-0"
+      style={{ left: `${offsetPx}px` }}
+      aria-hidden="true"
+    >
+      {variant === "header" ? (
+        <Badge
+          variant="alertCount"
+          shape="pill"
+          className="absolute top-2 left-0 -translate-x-1/2 shadow-sm"
+        >
+          Today
+        </Badge>
+      ) : null}
+      <div
+        className={cn(
+          "absolute left-0 -translate-x-1/2 bg-status-error/80",
+          variant === "header" ? "top-0 bottom-0 w-px" : "top-0 bottom-0 w-px",
+        )}
+      />
+    </div>
+  );
+}
+
+function renderRoadmapTodayMarker(offsetPx: number | null, variant: "body" | "header") {
+  if (offsetPx === null) {
+    return null;
+  }
+
+  return <RoadmapTodayMarker offsetPx={offsetPx} variant={variant} />;
 }
 
 function RoadmapTimelineBar({
@@ -767,12 +830,6 @@ function RoadmapIssueRow({
               resizingIssueId={resizingIssueId}
             />
           ) : null}
-
-          <div
-            className="absolute top-0 bottom-0 z-10 w-0.5 bg-status-error"
-            style={{ left: `${getPositionOnTimeline(Date.now())}%` }}
-            title="Today"
-          />
         </FlexItem>
       </Flex>
     </Card>
@@ -884,6 +941,12 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   );
   const timelineBucketWidth = TIMELINE_BUCKET_WIDTH[viewMode][timelineZoom];
   const timelineRows = buildTimelineRows(filteredIssues, groupBy, collapsedGroupKeys);
+  const todayMarkerOffsetPx = getTodayMarkerOffsetPx(
+    Date.now(),
+    startOfMonth,
+    endOfTimespan,
+    timelineLayoutWidth,
+  );
 
   const getPositionOnTimeline = (date: number) => {
     const issueDate = new Date(date);
@@ -1312,36 +1375,40 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                 >
                   {/* Timeline Header (Fixed) */}
                   <div className="border-b border-ui-border bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78 p-4">
-                    <Flex>
-                      <FlexItem
-                        shrink={false}
-                        className="sticky left-0 z-30 w-64 shrink-0 border-r border-ui-border/70 bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78 pr-4"
-                        data-testid={TEST_IDS.ROADMAP.ISSUE_HEADER}
-                      >
-                        <Typography variant="label">Issue</Typography>
-                      </FlexItem>
-                      <FlexItem flex="1">
-                        <Grid
-                          gap="none"
-                          templateColumns={`repeat(${timelineHeaderCells.length}, minmax(${timelineBucketWidth}px, 1fr))`}
+                    <div className="relative">
+                      {renderRoadmapTodayMarker(todayMarkerOffsetPx, "header")}
+                      <Flex>
+                        <FlexItem
+                          shrink={false}
+                          className="sticky left-0 z-30 w-64 shrink-0 border-r border-ui-border/70 bg-linear-to-b from-ui-bg-soft/94 via-ui-bg-elevated/96 to-ui-bg-secondary/78 pr-4"
+                          data-testid={TEST_IDS.ROADMAP.ISSUE_HEADER}
                         >
-                          {timelineHeaderCells.map((headerCell) => (
-                            <div
-                              key={headerCell.key}
-                              className={getCardRecipeClassName("roadmapMonthHeaderCell")}
-                            >
-                              <Typography variant="label" className="text-center">
-                                {headerCell.label}
-                              </Typography>
-                            </div>
-                          ))}
-                        </Grid>
-                      </FlexItem>
-                    </Flex>
+                          <Typography variant="label">Issue</Typography>
+                        </FlexItem>
+                        <FlexItem flex="1">
+                          <Grid
+                            gap="none"
+                            templateColumns={`repeat(${timelineHeaderCells.length}, minmax(${timelineBucketWidth}px, 1fr))`}
+                          >
+                            {timelineHeaderCells.map((headerCell) => (
+                              <div
+                                key={headerCell.key}
+                                className={getCardRecipeClassName("roadmapMonthHeaderCell")}
+                              >
+                                <Typography variant="label" className="text-center">
+                                  {headerCell.label}
+                                </Typography>
+                              </div>
+                            ))}
+                          </Grid>
+                        </FlexItem>
+                      </Flex>
+                    </div>
                   </div>
 
                   {/* Timeline Body (Virtualized) */}
                   <div className="relative">
+                    {renderRoadmapTodayMarker(todayMarkerOffsetPx, "body")}
                     <List<RowData>
                       listRef={listRef}
                       style={{ height: 600, width: "100%" }}

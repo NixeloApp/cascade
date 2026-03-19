@@ -455,6 +455,36 @@ describe("RoadmapView", () => {
     expect(screen.getAllByTestId(TEST_IDS.ROADMAP.ISSUE_COLUMN)[0]).toHaveClass("sticky", "left-0");
   });
 
+  it("shows a unified today marker only when the visible timeline includes today", () => {
+    mockRoadmapQueries({
+      issues: [
+        {
+          _id: issue1Id,
+          key: "PROJ-1",
+          title: "Plan onboarding",
+          status: "todo",
+          startDate: Date.UTC(2026, 2, 10),
+          dueDate: Date.UTC(2026, 2, 20),
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Alex Rivera" },
+        },
+      ],
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "1 Month" }));
+
+    expect(screen.getByTestId(TEST_IDS.ROADMAP.TODAY_MARKER_HEADER)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.ROADMAP.TODAY_MARKER_BODY)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Next timeline window" }));
+
+    expect(screen.queryByTestId(TEST_IDS.ROADMAP.TODAY_MARKER_HEADER)).not.toBeInTheDocument();
+    expect(screen.queryByTestId(TEST_IDS.ROADMAP.TODAY_MARKER_BODY)).not.toBeInTheDocument();
+  });
+
   it("groups roadmap rows by assignee", () => {
     mockRoadmapQueries({
       issues: [
