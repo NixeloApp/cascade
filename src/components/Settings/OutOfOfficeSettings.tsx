@@ -8,6 +8,7 @@ import { Input, Select, Textarea } from "@/components/ui/form";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { formatDateForInput } from "@/lib/formatting";
 import {
   formatOutOfOfficeDateRange,
   getOutOfOfficeReasonLabel,
@@ -23,6 +24,7 @@ function parseEndDate(value: string): number {
   return new Date(`${value}T23:59:59.999`).getTime();
 }
 
+/** Settings card for creating, updating, and clearing the current user's out-of-office window. */
 export function OutOfOfficeSettings() {
   const status = useAuthenticatedQuery(api.outOfOffice.getCurrent, {});
   const { mutate: saveOutOfOffice } = useAuthenticatedMutation(api.outOfOffice.upsert);
@@ -42,8 +44,8 @@ export function OutOfOfficeSettings() {
       return;
     }
 
-    setStartDate(new Date(status.startsAt).toISOString().split("T")[0] ?? "");
-    setEndDate(new Date(status.endsAt).toISOString().split("T")[0] ?? "");
+    setStartDate(formatDateForInput(status.startsAt));
+    setEndDate(formatDateForInput(status.endsAt));
     setReason(status.reason);
     setNote(status.note ?? "");
   }, [status]);

@@ -151,17 +151,17 @@ function AssigneeOption({
   return (
     <Flex align="center" gap="sm">
       <Avatar name={name} src={image} size="xs" />
-      <div className="min-w-0">
+      <FlexItem flex="1">
         <Flex align="center" gap="xs">
-          <span>{name}</span>
+          <Typography variant="small">{name}</Typography>
           {outOfOffice ? <Badge variant="warning">OOO</Badge> : null}
         </Flex>
         {outOfOffice ? (
-          <span className="text-xs text-ui-text-tertiary">
+          <Typography variant="caption" color="secondary">
             {formatOutOfOfficeUntil(outOfOffice)}
-          </span>
+          </Typography>
         ) : null}
-      </div>
+      </FlexItem>
     </Flex>
   );
 }

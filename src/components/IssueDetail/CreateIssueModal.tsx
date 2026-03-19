@@ -1134,13 +1134,13 @@ export function CreateIssueModal({
                     <Avatar name={member.name} src={member.image} size="xs" className="h-5 w-5" />
                     <div className="min-w-0">
                       <Flex align="center" gap="xs">
-                        <span>{member.name}</span>
+                        <Typography variant="small">{member.name}</Typography>
                         {member.outOfOffice ? <Badge variant="warning">OOO</Badge> : null}
                       </Flex>
                       {member.outOfOffice ? (
-                        <span className="text-xs text-ui-text-tertiary">
+                        <Typography variant="caption" color="secondary">
                           {formatOutOfOfficeUntil(member.outOfOffice)}
-                        </span>
+                        </Typography>
                       ) : null}
                     </div>
                   </Flex>

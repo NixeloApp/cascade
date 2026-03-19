@@ -18,10 +18,16 @@ export interface OutOfOfficeStatusSummary {
   isActive?: boolean;
 }
 
+/**
+ * Map an out-of-office reason enum to the user-facing label.
+ */
 export function getOutOfOfficeReasonLabel(reason: OutOfOfficeReason): string {
   return OUT_OF_OFFICE_REASON_LABELS[reason];
 }
 
+/**
+ * Format the full out-of-office date window for settings and detail views.
+ */
 export function formatOutOfOfficeDateRange(status: OutOfOfficeStatusSummary): string {
   const start = formatDate(status.startsAt);
   const end = formatDate(status.endsAt);
@@ -29,6 +35,9 @@ export function formatOutOfOfficeDateRange(status: OutOfOfficeStatusSummary): st
   return start === end ? start : `${start} - ${end}`;
 }
 
+/**
+ * Format the return label shown in assignee surfaces while a user is away.
+ */
 export function formatOutOfOfficeUntil(status: OutOfOfficeStatusSummary): string {
   return `Until ${formatDate(status.endsAt)}`;
 }
