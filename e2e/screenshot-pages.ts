@@ -294,6 +294,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   ],
   [/^filled-project-.+-create-issue-create-another$/, "06-board", "-create-issue-create-another"],
   [/^filled-project-.+-create-issue-validation$/, "06-board", "-create-issue-validation"],
+  [/^filled-project-.+-create-issue-success-toast$/, "06-board", "-create-issue-success-toast"],
   // Document editor: filled-document-editor → 10-editor
   [/^filled-document-editor$/, "10-editor", ""],
   [/^filled-document-editor-move-dialog$/, "10-editor", "-move-dialog"],
@@ -2827,6 +2828,42 @@ async function screenshotFilledStates(
       });
     }
 
+    if (shouldCapture(p, `project-${normalizedProjectKey}-create-issue-success-toast`)) {
+      await runCaptureStep("create issue success toast", async () => {
+        const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
+        const issueTitle = "Screenshot toast issue";
+        await page
+          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+          .catch(() => {});
+        await waitForExpectedContent(page, boardUrl, "board");
+        await waitForScreenshotReady(page);
+        const projectsPage = new ProjectsPage(page, orgSlug);
+        await dismissAllDialogs(page);
+        await projectsPage.openCreateIssueModal();
+        await waitForScreenshotReady(page);
+        const modal = await waitForDialogOpen(page);
+        const titleInput = modal
+          .getByPlaceholder(/title|issue.*title/i)
+          .or(modal.getByRole("textbox", { name: /title/i }))
+          .first();
+        const submitButton = modal.getByRole("button", { name: /^create issue$/i }).last();
+        await titleInput.fill(issueTitle);
+        await submitButton.click();
+        await modal.waitFor({ state: "hidden", timeout: 8000 });
+        const successToast = page
+          .locator("[data-sonner-toast][data-type='success']")
+          .filter({ hasText: /issue created successfully/i })
+          .first();
+        await successToast.waitFor({ state: "visible", timeout: 8000 });
+        await waitForScreenshotReady(page);
+        await captureCurrentView(
+          page,
+          p,
+          `project-${normalizedProjectKey}-create-issue-success-toast`,
+        );
+      });
+    }
+
     if (shouldCapture(p, `project-${normalizedProjectKey}-create-issue-duplicate-detection`)) {
       await runCaptureStep("create issue duplicate detection", async () => {
         const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
@@ -4666,6 +4703,7 @@ const DRY_RUN_PAGES = [
   "filled-project-PROJ-create-issue-duplicate-detection",
   "filled-project-PROJ-create-issue-create-another",
   "filled-project-PROJ-create-issue-validation",
+  "filled-project-PROJ-create-issue-success-toast",
   // Filled states — sprint interactive states
   "filled-project-PROJ-sprints-burndown",
   "filled-project-PROJ-sprints-burnup",

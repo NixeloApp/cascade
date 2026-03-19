@@ -2,6 +2,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
 import { useAction, useConvexAuth, useMutation, useQuery } from "convex/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { showSuccess } from "@/lib/toast";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { CreateIssueModal } from "./CreateIssueModal";
 
@@ -43,6 +44,7 @@ vi.mock("@/lib/array-utils", () => ({
 describe("CreateIssueModal", () => {
   const mockCreateIssue = vi.fn();
   const mockOnOpenChange = vi.fn();
+  const mockShowSuccess = vi.mocked(showSuccess);
   const mockProjectId = "project-123" as Id<"projects">;
   const _mockSprintId = "sprint-456" as Id<"sprints">;
 
@@ -149,6 +151,9 @@ describe("CreateIssueModal", () => {
         }),
       );
     });
+
+    expect(mockShowSuccess).toHaveBeenCalledWith("Issue created successfully");
+    expect(mockOnOpenChange).toHaveBeenCalledWith(false);
   });
 
   it("should have accessible labels with aria-pressed state", async () => {
