@@ -9,8 +9,6 @@ This documentation analyzes how features are implemented across three codebases 
 - Where Nixelo can improve
 - UI/UX patterns to adopt
 
-This folder is reference material, not the active MVP backlog. The old competitor-gap todo files in `/todos` are now archived snapshots.
-
 ## Repository Paths
 
 | App | Path | Focus |

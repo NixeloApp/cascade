@@ -1,28 +1,46 @@
-# Cal.com v6.3 Feature Snapshot
+# Cal.com v6.3 Features To Evaluate
 
-> **Priority:** Archived
-> **Status:** Historical reference only
+> **Priority:** P2
+> **Status:** Partial
 > **Last Updated:** 2026-03-18
 > **Source:** Cal.com changelog v6.3 + repo at `github.com/calcom/cal.com` (pulled 2026-03-18)
 
-This file is no longer an active todo list. It remains here as a compact reference for what was reviewed against Cal.com during MVP parity work.
+Only unfinished items remain here. OOO work is complete and intentionally removed from this file.
 
-## Shipped From This Review
+## High Priority
 
-- Out of office status and visibility
-- OOO delegation / redirect behavior
-- Booking-page delegation while the owner is OOO
-- Internal calendar blocking for OOO windows
+### AI Agents & Skills
 
-## Not Tracked As Active MVP Work
+- [ ] **Evaluate agent architecture** — `agents/` and `agents/skills/` show a lightweight skill-based pattern that could inform our AI surface.
+- [ ] **Scheduling via chat** — Cal.com supports scheduling/rescheduling from chat channels; our Pumble integration could grow into this.
+- [ ] **MCP Server implementation** — Our MCP Server page is still a placeholder.
 
-- AI agents / chat scheduling / MCP expansion
-- Cancellation reasons
-- Workflow auto-translation
-- Custom domains and SMTP
-- Branding / whitelabel controls
+### Cancellation Reason Requirement
 
-If any of these reopen later, treat them as new scoped work in `todos-post-mvp/` or feature-comparison docs instead of reviving this file as an active backlog.
+- [ ] **Evaluate cancellation reasons for calendar events** — Our events can be cancelled but do not persist a structured reason.
+
+## Medium Priority
+
+### Workflow Auto-Translation
+
+- [ ] **Evaluate workflow translation for emails/notifications** — Our messaging remains English-only.
+
+### Custom Domain & SMTP
+
+- [ ] **Custom domain for client portal** — `/portal/$token` is still app-domain only.
+- [ ] **Custom SMTP** — We still only expose the current provider path rather than enterprise SMTP configuration.
+
+### Branding Control
+
+- [ ] **Whitelabel option** — Client portal and emails still carry Nixelo branding.
+
+## Already Shipped From This Review
+
+- [x] Out of office profile status
+- [x] OOO assignee visibility
+- [x] OOO delegation / redirect behavior
+- [x] Booking-page delegation while the owner is OOO
+- [x] Internal calendar blocking for OOO windows
 
 ## Reference Paths
 

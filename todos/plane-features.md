@@ -1,42 +1,66 @@
-# Plane Feature Snapshot
+# Plane Features To Evaluate
 
-> **Priority:** Archived
-> **Status:** Historical reference only
+> **Priority:** P2
+> **Status:** Partial
 > **Last Updated:** 2026-03-18
-> **Source:** Plane preview repo at `github.com/makeplane/plane` (pulled 2026-03-18)
+> **Source:** Plane repo at `github.com/makeplane/plane` (pulled 2026-03-18)
 
-This file is no longer an active todo list. It preserves the Plane benchmark that informed the roadmap/Gantt and PM-surface work completed during MVP.
+Only unfinished items remain here. Completed roadmap/Gantt slices and org analytics are kept as shipped notes, not as open backlog.
 
-## Shipped From This Review
+## High Priority
 
-- Roadmap evolved into a real Gantt-style planning surface:
-  - draggable range bars
-  - resize handles
-  - milestone markers
-  - month/week buckets
-  - range-aware timeline navigation
-  - fit-to-issues and zoom controls
-  - sticky metadata sidebar
-  - today marker
-  - epic/status/assignee/priority grouping
-  - collapsible swimlanes
-  - collapsible parent/subtask tree
-  - epic summary bars and parent rollups with progress
-  - interactive dependency highlighting and inline dependency management groundwork
-- Org-level analytics shipped
+### Gantt Chart / Timeline View
 
-## Not Tracked As Active MVP Work
+- [ ] **Finish the dedicated Gantt polish** — The roadmap has shipped core Gantt behavior, but it still needs the remaining deeper timeline-management and dedicated-Gantt polish.
 
-- Intake / triage system expansion
-- Deploy boards / richer public sharing
-- Stickies / quick notes
-- Advanced analytics beyond current shipped dashboards
-- Scheduled automation / auto-archive
-- Multi-provider AI admin controls
-- Document/page version history
-- Remaining non-essential Gantt polish beyond current shipped roadmap experience
+### Intake / Triage System
 
-If any of these reopen later, move them into `todos-post-mvp/` or a dedicated feature doc instead of using this file as a live queue again.
+- [ ] **Evaluate intake vs our inbox** — Our project inbox is still skeletal next to Plane’s triage workflow.
+- [ ] **External request capture** — Client-submitted requests still need a first-class triage path before backlog entry.
+
+### Deploy Boards (Public Sharing)
+
+- [ ] **Enhance client portal permissions** — Our token portal is still much simpler than Plane’s deploy-board model.
+- [ ] **Public issue boards** — We still do not expose a shareable public board surface.
+
+### Stickies / Quick Notes
+
+- [ ] **Evaluate dashboard stickies** — Quick-capture notes are still missing.
+
+## Medium Priority
+
+### Advanced Analytics
+
+- [ ] **Enhance project analytics** — Org analytics shipped, but Plane-style trend/insight depth is still open at the project level.
+
+### Automation Workflows
+
+- [ ] **Enhance automation scheduling** — `AutomationRulesManager.tsx` still lacks Plane-style scheduled workflows.
+- [ ] **Auto-archive stale issues** — Done-state cleanup automation is still open.
+
+### Multi-Provider AI
+
+- [ ] **Add provider selection** — Admin-configurable model/provider choice is still missing.
+- [ ] **Model fallbacks** — Resilience/fallback behavior remains open.
+
+### Page Version Control
+
+- [ ] **Version history for documents/pages** — Real restoreable version history is still not a confirmed shipped surface.
+
+## Low Priority
+
+### Rich Filters
+
+- [ ] **Compare with Plane’s richer filtering model** — Our filter surface is still simpler.
+
+### Home Dashboard Widgets
+
+- [ ] **Evaluate customizable dashboard widgets** — Current dashboard is fixed-layout, not Plane-style widgetized.
+
+## Already Shipped From This Review
+
+- [x] Roadmap/Gantt core upgrade across drag, resize, milestones, zoom, navigation, grouping, hierarchy, progress rollups, sticky sidebar, and dependency interaction
+- [x] Org-level analytics
 
 ## Reference Paths
 

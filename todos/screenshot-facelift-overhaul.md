@@ -1,31 +1,62 @@
-# Visual Facelift & Screenshot Validation
+# Screenshot Validation & Visual Residue
 
-> **Priority:** Archived
-> **Status:** Complete
+> **Priority:** P1
+> **Status:** Partial
 > **Last Updated:** 2026-03-18
 
-The visual facelift work is done. This file now exists only as a summary of what shipped and how visual maintenance is enforced going forward.
+Core visual facelift work is done. Only the unfinished screenshot and validation residue stays here.
 
-## Landed Work
+## Remaining Screenshot Coverage
 
-- Page layout wrapper consistency cleanup
-- Notification popover cleanup
-- Workspace card cleanup
-- Assistant page layout cleanup
-- Validator hardening for layout/raw-tailwind drift
-- Full-page screenshot audit across the product
-- Visual cleanup of the previously weakest pages and empty states
+### Canonical Spec Screenshot Variants Missing
 
-## Ongoing Maintenance Workflow
+- [ ] `14-verify-email` — missing `desktop-dark.png`, `desktop-light.png`, `tablet-light.png`, `mobile-light.png`
+- [ ] `15-invite` — missing `desktop-dark.png`, `desktop-light.png`, `tablet-light.png`, `mobile-light.png`
+- [ ] `16-unsubscribe` — missing `desktop-dark.png`, `desktop-light.png`, `tablet-light.png`, `mobile-light.png`
+- [ ] `17-members` — missing `desktop-dark.png`, `desktop-light.png`, `tablet-light.png`, `mobile-light.png`
+- [ ] `22-time-tracking` — missing `desktop-light.png`, `tablet-light.png`, `mobile-light.png`
+- [ ] `28-workspace-detail` — missing `desktop-dark.png`, `desktop-light.png`, `tablet-light.png`, `mobile-light.png`
 
-Visual quality is no longer tracked here as an active todo list. It is maintained through the normal validation loop:
+### Routes / Flows Still Not Captured
 
-- `pnpm screenshots` captures the current visual state
-- `pnpm run validate` audits screenshot route coverage and canonical spec screenshot variants
-- `pnpm screenshots:diff` detects screenshot drift against `.screenshot-hashes.json`
-- `pnpm screenshots:approve` updates the approved screenshot baseline after intentional visual changes
+- [ ] Portal page (`/portal/$token`)
 
-## Residual Maintenance Notes
+### Modals Still Not Captured
 
-- Raw Tailwind baseline remains at 148 files and should continue to shrink opportunistically as touched files are cleaned up
-- Screenshot spec coverage is maintained incrementally; the validator now reports missing canonical spec variants instead of keeping an open todo list here
+- [ ] Dashboard customize modal
+- [ ] Move document dialog
+- [ ] Avatar / cover upload modals
+- [ ] Confirm dialog
+- [ ] Alert dialog
+- [ ] Markdown preview modal
+
+### Interactive States Still Not Captured
+
+- [ ] Board: column empty, WIP limit warning
+- [ ] Issues: draft restoration, duplicate detection, inline editing, side panel
+- [ ] Documents: locked, table/code blocks, color picker, favorites
+- [ ] Calendar: drag-and-drop, quick-add
+- [ ] Sprints: completion modal, date overlap warning
+- [ ] Notifications: snooze popover
+- [ ] Settings: profile with avatar/cover, 2FA setup, workspace/project settings
+- [ ] Navigation: sidebar favorites, project tree, mobile hamburger
+- [ ] Error: permission denied, loading skeletons, toasts, form validation
+
+### CI Integration
+
+- [ ] CI screenshot manifest check — still blocked until screenshots are committed to git or generated in CI.
+
+## Already Done
+
+- [x] Page layout wrapper consistency cleanup
+- [x] Notification popover cleanup
+- [x] Workspace card cleanup
+- [x] Assistant page cleanup
+- [x] Validator hardening for layout/raw-tailwind drift
+- [x] Route screenshot coverage audit
+- [x] Canonical spec screenshot audit in `pnpm run validate`
+- [x] Screenshot diff workflow via `pnpm screenshots:diff` and `pnpm screenshots:approve`
+
+## Ongoing Maintenance
+
+- [ ] Raw Tailwind baseline remains at 148 files and should continue shrinking as touched files are cleaned up
