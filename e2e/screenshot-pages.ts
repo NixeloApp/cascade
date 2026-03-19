@@ -232,6 +232,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-dashboard-shortcuts-modal$/, "04-dashboard", "-shortcuts-modal"],
   [/^filled-dashboard-time-entry-modal$/, "04-dashboard", "-time-entry-modal"],
   [/^filled-projects-create-project-modal$/, "05-projects", "-create-project-modal"],
+  [/^filled-issues-side-panel$/, "19-issues", "-side-panel"],
   // Workspace modals
   [/^filled-workspaces-create-workspace-modal$/, "27-workspaces", "-create-workspace-modal"],
   [/^filled-workspace-create-team-modal$/, "28-workspace-detail", "-create-team-modal"],
@@ -2728,6 +2729,10 @@ async function screenshotFilledStates(
       await screenshotSprintInteractiveStates(page, orgSlug, projectKey, p);
     }
 
+    if (shouldCaptureAny(p, ["issues-side-panel"])) {
+      await screenshotIssueInteractiveStates(page, orgSlug, p);
+    }
+
     // Calendar view modes
     if (
       shouldCaptureAny(p, [
@@ -3749,6 +3754,50 @@ async function screenshotSprintInteractiveStates(
   }
 }
 
+async function screenshotIssueInteractiveStates(
+  page: Page,
+  orgSlug: string,
+  prefix: string,
+): Promise<void> {
+  if (!shouldCapture(prefix, "issues-side-panel")) {
+    return;
+  }
+
+  const issuesUrl = ROUTES.issues.list.build(orgSlug);
+
+  await runCaptureStep("issues side panel", async () => {
+    await page
+      .goto(`${BASE_URL}${issuesUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+      .catch(() => {});
+    await waitForExpectedContent(page, issuesUrl, "issues", prefix);
+    await waitForScreenshotReady(page);
+
+    const toggleBtn = page.getByRole("button", { name: /switch to side panel view/i }).first();
+    await toggleBtn.waitFor({ state: "visible", timeout: 8000 });
+    await toggleBtn.click();
+    await waitForScreenshotReady(page);
+
+    const issueCard = page.getByTestId(TEST_IDS.ISSUE.CARD).first();
+    await issueCard.waitFor({ state: "visible", timeout: 5000 });
+    await issueCard.click();
+
+    const issueDetailPanel = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
+    await issueDetailPanel.waitFor({ state: "visible", timeout: 5000 });
+    await issueDetailPanel
+      .getByText(/[A-Z][A-Z0-9]+-\d+/)
+      .first()
+      .waitFor({ timeout: 5000 });
+    await waitForScreenshotReady(page);
+    await captureCurrentView(page, prefix, "issues-side-panel");
+
+    await dismissIfOpen(page, issueDetailPanel);
+    const resetBtn = page.getByRole("button", { name: /switch to modal view/i }).first();
+    if (await resetBtn.isVisible().catch(() => false)) {
+      await resetBtn.click();
+    }
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Main capture function for a single viewport/theme combination
 // ---------------------------------------------------------------------------
@@ -3877,6 +3926,7 @@ const DRY_RUN_PAGES = [
   "filled-settings-profile-cover-upload-modal",
   // Filled states — projects modals
   "filled-projects-create-project-modal",
+  "filled-issues-side-panel",
   // Filled states — workspace modals
   "filled-workspaces-create-workspace-modal",
   "filled-workspace-create-team-modal",
