@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showSuccess } from "@/lib/toast";
 import { fireEvent, render, screen, waitFor } from "@/test/custom-render";
-import { MeetingsWorkspace } from "./MeetingsWorkspace";
+import { filterMeetingRecordings, MeetingsWorkspace } from "./MeetingsWorkspace";
 
 vi.mock("@/hooks/useConvexHelpers", () => ({
   useAuthenticatedQuery: vi.fn(),
@@ -270,5 +270,36 @@ describe("MeetingsWorkspace", () => {
     expect(
       screen.getByText("Matched discussion about scope and rollout timing."),
     ).toBeInTheDocument();
+  });
+
+  it("filters recordings by status, project, and date window", () => {
+    const recentFailedRecording = buildListItem({
+      _id: "recording_2" as Id<"meetingRecordings">,
+      title: "Customer Follow-up",
+      status: "failed",
+      projectId: "project_2" as Id<"projects">,
+      createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
+      scheduledStartTime: Date.now() - 2 * 24 * 60 * 60 * 1000,
+    });
+    const oldFailedRecording = buildListItem({
+      _id: "recording_3" as Id<"meetingRecordings">,
+      title: "Quarterly Review",
+      status: "failed",
+      projectId: "project_2" as Id<"projects">,
+      createdAt: Date.now() - 120 * 24 * 60 * 60 * 1000,
+      scheduledStartTime: Date.now() - 120 * 24 * 60 * 60 * 1000,
+    });
+
+    const filteredRecordings = filterMeetingRecordings(
+      [buildListItem(), recentFailedRecording, oldFailedRecording],
+      {
+        status: "failed",
+        platform: "all",
+        projectId: "project_2" as Id<"projects">,
+        timeWindow: "30d",
+      },
+    );
+
+    expect(filteredRecordings).toEqual([recentFailedRecording]);
   });
 });

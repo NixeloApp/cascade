@@ -39,6 +39,12 @@ type MeetingDetail = FunctionReturnType<typeof api.meetingBot.getRecording>;
 type MeetingSummary = NonNullable<NonNullable<MeetingDetail>["summary"]>;
 type MeetingParticipants = NonNullable<NonNullable<MeetingDetail>["participants"]>;
 type ProjectOption = FunctionReturnType<typeof api.dashboard.getMyProjects>[number];
+type MeetingStatus = MeetingOverview["status"];
+type MeetingPlatform = MeetingOverview["meetingPlatform"];
+type StatusFilter = "all" | MeetingStatus;
+type PlatformFilter = "all" | MeetingPlatform;
+type ProjectFilter = "all" | Id<"projects">;
+type TimeWindowFilter = "all" | "7d" | "30d" | "90d";
 
 function getSelectedActionItemProjects(
   summary: MeetingSummary,
@@ -91,6 +97,63 @@ const STATUS_CLASSNAMES: Record<string, string> = {
   cancelled: "bg-ui-bg-tertiary text-ui-text-secondary",
   failed: "bg-status-error-bg text-status-error",
 };
+
+const STATUS_FILTER_OPTIONS: Array<{ value: StatusFilter; label: string }> = [
+  { value: "all", label: "All statuses" },
+  { value: "scheduled", label: "Scheduled" },
+  { value: "joining", label: "Joining" },
+  { value: "recording", label: "Recording" },
+  { value: "processing", label: "Processing" },
+  { value: "transcribing", label: "Transcribing" },
+  { value: "summarizing", label: "Summarizing" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "failed", label: "Failed" },
+];
+
+const PLATFORM_FILTER_OPTIONS: Array<{ value: PlatformFilter; label: string }> = [
+  { value: "all", label: "All platforms" },
+  { value: "google_meet", label: "Google Meet" },
+  { value: "zoom", label: "Zoom" },
+  { value: "teams", label: "Microsoft Teams" },
+  { value: "other", label: "Other" },
+];
+
+const TIME_WINDOW_OPTIONS: Array<{ value: TimeWindowFilter; label: string }> = [
+  { value: "all", label: "All dates" },
+  { value: "7d", label: "Last 7 days" },
+  { value: "30d", label: "Last 30 days" },
+  { value: "90d", label: "Last 90 days" },
+];
+
+function matchesTimeWindow(recording: MeetingOverview, timeWindow: TimeWindowFilter) {
+  if (timeWindow === "all") return true;
+
+  const now = Date.now();
+  const ageMs = now - (recording.scheduledStartTime ?? recording.createdAt);
+  const dayCount = timeWindow === "7d" ? 7 : timeWindow === "30d" ? 30 : 90;
+  return ageMs <= dayCount * 24 * 60 * 60 * 1000;
+}
+
+export function filterMeetingRecordings(
+  recordings: MeetingOverview[] | undefined,
+  filters: {
+    status: StatusFilter;
+    platform: PlatformFilter;
+    projectId: ProjectFilter;
+    timeWindow: TimeWindowFilter;
+  },
+) {
+  if (!recordings) return recordings;
+
+  return recordings.filter((recording) => {
+    if (filters.status !== "all" && recording.status !== filters.status) return false;
+    if (filters.platform !== "all" && recording.meetingPlatform !== filters.platform) return false;
+    if (filters.projectId !== "all" && recording.projectId !== filters.projectId) return false;
+    if (!matchesTimeWindow(recording, filters.timeWindow)) return false;
+    return true;
+  });
+}
 
 function formatMeetingPlatform(platform: MeetingListItem["meetingPlatform"]): string {
   switch (platform) {
@@ -334,9 +397,14 @@ function ParticipantsSection({ participants }: { participants: MeetingParticipan
   );
 }
 
-function SummarySections({ recording }: { recording: NonNullable<MeetingDetail> }) {
+function SummarySections({
+  recording,
+  projects,
+}: {
+  recording: NonNullable<MeetingDetail>;
+  projects: ProjectOption[] | undefined;
+}) {
   const { summary, transcript } = recording;
-  const projects = useAuthenticatedQuery(api.dashboard.getMyProjects, {});
 
   if (!summary) {
     return (
@@ -444,7 +512,13 @@ function SummarySections({ recording }: { recording: NonNullable<MeetingDetail> 
   );
 }
 
-function RecordingDetailPanel({ recording }: { recording: MeetingDetail | undefined }) {
+function RecordingDetailPanel({
+  recording,
+  projects,
+}: {
+  recording: MeetingDetail | undefined;
+  projects: ProjectOption[] | undefined;
+}) {
   if (recording === undefined) {
     return (
       <Card variant="soft" padding="xl">
@@ -500,7 +574,7 @@ function RecordingDetailPanel({ recording }: { recording: MeetingDetail | undefi
         </Stack>
       </Card>
 
-      <SummarySections recording={recording} />
+      <SummarySections recording={recording} projects={projects} />
       <ParticipantsSection participants={recording.participants} />
     </Stack>
   );
@@ -508,7 +582,12 @@ function RecordingDetailPanel({ recording }: { recording: MeetingDetail | undefi
 
 export function MeetingsWorkspace() {
   const recordings = useAuthenticatedQuery(api.meetingBot.listRecordings, { limit: 50 });
+  const projects = useAuthenticatedQuery(api.dashboard.getMyProjects, {});
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [platformFilter, setPlatformFilter] = useState<PlatformFilter>("all");
+  const [projectFilter, setProjectFilter] = useState<ProjectFilter>("all");
+  const [timeWindowFilter, setTimeWindowFilter] = useState<TimeWindowFilter>("all");
   const deferredSearchQuery = useDeferredValue(searchQuery.trim());
   const searchedRecordings = useAuthenticatedQuery(
     api.meetingBot.searchRecordings,
@@ -518,22 +597,28 @@ export function MeetingsWorkspace() {
     null,
   );
   const displayedRecordings = deferredSearchQuery.length >= 2 ? searchedRecordings : recordings;
+  const filteredRecordings = filterMeetingRecordings(displayedRecordings, {
+    status: statusFilter,
+    platform: platformFilter,
+    projectId: projectFilter,
+    timeWindow: timeWindowFilter,
+  });
 
   useEffect(() => {
-    if (!displayedRecordings) return;
+    if (!filteredRecordings) return;
 
-    if (displayedRecordings.length === 0) {
+    if (filteredRecordings.length === 0) {
       setSelectedRecordingId(null);
       return;
     }
 
     setSelectedRecordingId((current) => {
-      if (current && displayedRecordings.some((recording) => recording._id === current)) {
+      if (current && filteredRecordings.some((recording) => recording._id === current)) {
         return current;
       }
-      return displayedRecordings[0]._id;
+      return filteredRecordings[0]._id;
     });
-  }, [displayedRecordings]);
+  }, [filteredRecordings]);
 
   const selectedRecording = useAuthenticatedQuery(
     api.meetingBot.getRecording,
@@ -569,22 +654,96 @@ export function MeetingsWorkspace() {
               aria-label="Search meetings"
             />
 
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+              <Select
+                value={statusFilter}
+                onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+              >
+                <SelectTrigger aria-label="Filter by status">
+                  <SelectValue placeholder="All statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_FILTER_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={platformFilter}
+                onValueChange={(value) => setPlatformFilter(value as PlatformFilter)}
+              >
+                <SelectTrigger aria-label="Filter by platform">
+                  <SelectValue placeholder="All platforms" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PLATFORM_FILTER_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={projectFilter}
+                onValueChange={(value) => setProjectFilter(value as ProjectFilter)}
+              >
+                <SelectTrigger aria-label="Filter by project">
+                  <SelectValue placeholder="All projects" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All projects</SelectItem>
+                  {projects?.map((project) => (
+                    <SelectItem key={project._id} value={project._id}>
+                      {project.key} - {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={timeWindowFilter}
+                onValueChange={(value) => setTimeWindowFilter(value as TimeWindowFilter)}
+              >
+                <SelectTrigger aria-label="Filter by date">
+                  <SelectValue placeholder="All dates" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIME_WINDOW_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {filteredRecordings !== undefined && (
+              <Typography variant="caption" color="secondary">
+                {filteredRecordings.length} meeting{filteredRecordings.length === 1 ? "" : "s"}{" "}
+                shown
+              </Typography>
+            )}
+
             {deferredSearchQuery.length >= 2 && (
               <Typography variant="caption" color="secondary">
                 Searching transcript content for "{deferredSearchQuery}".
               </Typography>
             )}
 
-            {displayedRecordings !== undefined && displayedRecordings.length === 0 ? (
+            {filteredRecordings !== undefined && filteredRecordings.length === 0 ? (
               <EmptyState
                 icon={FileText}
                 size="compact"
-                title="No meetings match this search"
-                description="Try a different keyword or open a recent meeting from the full list."
+                title="No meetings match these filters"
+                description="Adjust the search or filters, or open calendar to schedule a new meeting recording."
               />
             ) : (
               <Stack as="ul" gap="sm" className="list-none">
-                {displayedRecordings?.map((recording) => (
+                {filteredRecordings?.map((recording) => (
                   <li key={recording._id}>
                     <RecordingListItem
                       recording={recording}
@@ -604,7 +763,7 @@ export function MeetingsWorkspace() {
           gap="sm"
         >
           {selectedRecordingId ? (
-            <RecordingDetailPanel recording={selectedRecording} />
+            <RecordingDetailPanel recording={selectedRecording} projects={projects} />
           ) : (
             <EmptyState
               icon={FileText}

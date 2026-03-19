@@ -12,7 +12,8 @@
 The backend exists, but the feature is still mostly hidden inside the calendar event modal.
 
 - [ ] **Add a dedicated Meetings page** — Org-level route and sidebar entry for recordings, summaries, and action items.
-- [ ] **Keep calendar entry point** — Meetings should still be accessible from event details, but not only from there.
+- [x] **Add a dedicated Meetings page** — Org-level route and sidebar entry for recordings, summaries, and action items.
+- [x] **Keep calendar entry point** — Meetings should still be accessible from event details, but not only from there.
 - [ ] **Show all recording states in one place** — Scheduled, joining, recording, processing, completed, failed, cancelled.
 - [ ] **Add a useful empty state** — Explain what the feature does and how to start from calendar or direct meeting URL.
 
@@ -21,17 +22,17 @@ The backend exists, but the feature is still mostly hidden inside the calendar e
 The schema and Convex queries are richer than the current UI.
 
 - [ ] **Promote recording details into a real view** — Current experience lives in `MeetingRecordingSection.tsx`; it should become a dedicated detail surface.
-- [ ] **Expose participants** — Backend stores participants, but current UI does not show them in the main experience.
-- [ ] **Expose topics** — Backend stores topic summaries, but current UI ignores them.
-- [ ] **Expose open questions** — Summary schema supports them; current UI does not.
-- [ ] **Expose sentiment** — Summary schema supports it; current UI does not.
+- [x] **Expose participants** — Backend stores participants, but current UI does not show them in the main experience.
+- [x] **Expose topics** — Backend stores topic summaries, but current UI ignores them.
+- [x] **Expose open questions** — Summary schema supports them; current UI does not.
+- [x] **Expose sentiment** — Summary schema supports it; current UI does not.
 - [ ] **Improve transcript UX** — Search, chunking, and better readability instead of a simple collapsible block.
 
 ### Workflow Differentiation
 
 This is the main Nixelo-specific opportunity versus Read AI / Fireflies / Otter.
 
-- [ ] **Expose action-item to issue creation in UI** — Convex supports `createIssueFromActionItem`, but it is not surfaced as a first-class frontend workflow.
+- [x] **Expose action-item to issue creation in UI** — Convex supports `createIssueFromActionItem`, but it is not surfaced as a first-class frontend workflow.
 - [ ] **Show issue linkage state** — Once an action item becomes an issue, reflect it directly in meeting results.
 - [ ] **Turn meetings into project artifacts** — Link meeting outputs to issues, docs, and project context instead of leaving them as standalone notes.
 
@@ -41,8 +42,8 @@ This is the main Nixelo-specific opportunity versus Read AI / Fireflies / Otter.
 
 The market has moved beyond single-meeting summaries.
 
-- [ ] **Add transcript search across meetings** — Use the existing transcript search index as the base.
-- [ ] **Add filters for platform / status / date / project** — Needed for a useful meetings archive.
+- [x] **Add transcript search across meetings** — Use the existing transcript search index as the base.
+- [x] **Add filters for platform / status / date / project** — Needed for a useful meetings archive.
 - [ ] **Add reusable memory views** — "Recent decisions", "Open questions", "Unresolved action items", "Meetings by project".
 
 ### Capture Strategy Clarity
