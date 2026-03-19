@@ -17,12 +17,6 @@ Core visual facelift work is done. Only the unfinished screenshot and validation
 - [ ] `22-time-tracking` — missing `desktop-light.png`, `tablet-light.png`, `mobile-light.png`
 - [ ] `28-workspace-detail` — missing `desktop-dark.png`, `desktop-light.png`, `tablet-light.png`, `mobile-light.png`
 
-### Canonical Modal Screenshot Variants Missing
-
-- [ ] `create-issue` — missing `create-issue-desktop-dark.png`, `create-issue-desktop-light.png`, `create-issue-tablet-light.png`, `create-issue-mobile-light.png`
-- [ ] `create-event` — missing `create-event-desktop-dark.png`, `create-event-desktop-light.png`, `create-event-tablet-light.png`, `create-event-mobile-light.png`
-- [ ] `command-palette` — missing `command-palette-desktop-dark.png`, `command-palette-desktop-light.png`, `command-palette-tablet-light.png`, `command-palette-mobile-light.png`
-
 ### Modals Still Not Captured
 
 - [ ] Dashboard customize modal
@@ -57,6 +51,7 @@ Core visual facelift work is done. Only the unfinished screenshot and validation
 - [x] Validator hardening for layout/raw-tailwind drift
 - [x] Route screenshot coverage audit
 - [x] Canonical spec screenshot audit in `pnpm run validate`
+- [x] Canonical screenshots for spec'd modals in `docs/design/specs/modals/screenshots/`
 - [x] Screenshot diff workflow via `pnpm screenshots:diff` and `pnpm screenshots:approve`
 
 ## Ongoing Maintenance

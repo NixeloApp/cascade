@@ -23,6 +23,7 @@ const MANIFEST_PATH = path.join(ROOT, ".screenshot-hashes.json");
 // Directories that contain screenshots
 const SCREENSHOT_DIRS = [
   path.join(ROOT, "docs", "design", "specs", "pages"),
+  path.join(ROOT, "docs", "design", "specs", "modals", "screenshots"),
   path.join(ROOT, "e2e", "screenshots"),
 ];
 

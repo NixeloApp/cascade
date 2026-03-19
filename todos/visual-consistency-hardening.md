@@ -29,7 +29,6 @@ Make the product more visually cohesive and more enforceable in code, using the 
 ### Screenshot review residue
 
 - [ ] Keep screenshot coverage and screenshot drift approval in sync with visual changes
-- [ ] Capture canonical screenshots for spec'd modals in `docs/design/specs/modals/screenshots/`
 - [ ] Do not let modal/interaction-state screenshot gaps hide consistency regressions
 
 ### Human-review blind spots

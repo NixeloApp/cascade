@@ -40,6 +40,14 @@ import { type SeedScreenshotResult, testUserService } from "./utils/test-user-se
 const BASE_URL = process.env.BASE_URL || "http://localhost:5555";
 const CONVEX_URL = process.env.VITE_CONVEX_URL || "";
 const SPECS_BASE_DIR = path.join(process.cwd(), "docs", "design", "specs", "pages");
+const MODAL_SPECS_BASE_DIR = path.join(
+  process.cwd(),
+  "docs",
+  "design",
+  "specs",
+  "modals",
+  "screenshots",
+);
 const FALLBACK_SCREENSHOT_DIR = path.join(process.cwd(), "e2e", "screenshots");
 const SCREENSHOT_STAGING_BASE_DIR = path.join(process.cwd(), ".tmp", "screenshot-staging");
 
@@ -152,6 +160,7 @@ interface CaptureTarget {
   pageId: string;
   specFolder: string | null;
   filenameSuffix: string;
+  modalSpecSlug: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -266,6 +275,12 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-project-.+-inbox$/, "39-project-inbox", ""],
 ];
 
+const MODAL_SPEC_PATTERNS: Array<[RegExp, string]> = [
+  [/^filled-dashboard-omnibox$/, "command-palette"],
+  [/^filled-project-.+-create-issue-modal$/, "create-issue"],
+  [/^filled-calendar-create-event-modal$/, "create-event"],
+];
+
 function parseCsvValues(rawValues: string[]): string[] {
   return rawValues
     .flatMap((value) => value.split(","))
@@ -347,20 +362,32 @@ function resolveCaptureTarget(prefix: string, name: string): CaptureTarget {
     }
   }
 
-  return { pageId, specFolder, filenameSuffix };
+  let modalSpecSlug: string | null = null;
+  for (const [pattern, slug] of MODAL_SPEC_PATTERNS) {
+    if (pattern.test(pageId)) {
+      modalSpecSlug = slug;
+      break;
+    }
+  }
+
+  return { pageId, specFolder, filenameSuffix, modalSpecSlug };
 }
 
-function matchesSpecFilters(specFolder: string | null): boolean {
+function matchesSpecFilters(target: CaptureTarget): boolean {
   if (cliOptions.specFilters.length === 0) {
     return true;
   }
 
-  if (!specFolder) {
-    return false;
-  }
+  const candidates = [
+    target.specFolder?.toLowerCase(),
+    target.modalSpecSlug?.toLowerCase(),
+    target.modalSpecSlug ? "modals" : null,
+    target.modalSpecSlug ? `modals/${target.modalSpecSlug.toLowerCase()}` : null,
+  ].filter((value): value is string => value !== null);
 
-  const normalizedFolder = specFolder.toLowerCase();
-  return cliOptions.specFilters.some((filter) => normalizedFolder.includes(filter));
+  return cliOptions.specFilters.some((filter) =>
+    candidates.some((candidate) => candidate.includes(filter)),
+  );
 }
 
 function matchesMatchFilters(prefix: string, name: string, target: CaptureTarget): boolean {
@@ -368,9 +395,13 @@ function matchesMatchFilters(prefix: string, name: string, target: CaptureTarget
     return true;
   }
 
-  const haystacks = [prefix, name, target.pageId, target.specFolder ?? ""].map((value) =>
-    value.toLowerCase(),
-  );
+  const haystacks = [
+    prefix,
+    name,
+    target.pageId,
+    target.specFolder ?? "",
+    target.modalSpecSlug ?? "",
+  ].map((value) => value.toLowerCase());
 
   return cliOptions.matchFilters.some((filter) =>
     haystacks.some((candidate) => candidate.includes(filter)),
@@ -391,15 +422,16 @@ function shouldCapture(prefix: string, name: string): boolean {
   }
 
   const target = resolveCaptureTarget(prefix, name);
-  return matchesSpecFilters(target.specFolder) && matchesMatchFilters(prefix, name, target);
+  return matchesSpecFilters(target) && matchesMatchFilters(prefix, name, target);
 }
 
 function shouldCaptureAny(prefix: string, names: string[]): boolean {
   return names.some((name) => shouldCapture(prefix, name));
 }
 
-function getFinalScreenshotPath(prefix: string, name: string): string {
+function getFinalScreenshotPaths(prefix: string, name: string): string[] {
   const target = resolveCaptureTarget(prefix, name);
+  const finalPaths: string[] = [];
 
   // Filename: viewport-theme.png or viewport-theme-suffix.png
   const filename = target.filenameSuffix
@@ -412,15 +444,26 @@ function getFinalScreenshotPath(prefix: string, name: string): string {
     if (!fs.existsSync(specScreenshotDir)) {
       fs.mkdirSync(specScreenshotDir, { recursive: true });
     }
-    return path.join(specScreenshotDir, filename);
+    finalPaths.push(path.join(specScreenshotDir, filename));
+  } else {
+    // No spec folder - use fallback with full naming
+    const fallbackFilename = `${currentConfigPrefix}-${prefix}-${name}.png`;
+    if (!fs.existsSync(FALLBACK_SCREENSHOT_DIR)) {
+      fs.mkdirSync(FALLBACK_SCREENSHOT_DIR, { recursive: true });
+    }
+    finalPaths.push(path.join(FALLBACK_SCREENSHOT_DIR, fallbackFilename));
   }
 
-  // No spec folder - use fallback with full naming
-  const fallbackFilename = `${currentConfigPrefix}-${prefix}-${name}.png`;
-  if (!fs.existsSync(FALLBACK_SCREENSHOT_DIR)) {
-    fs.mkdirSync(FALLBACK_SCREENSHOT_DIR, { recursive: true });
+  if (target.modalSpecSlug) {
+    if (!fs.existsSync(MODAL_SPECS_BASE_DIR)) {
+      fs.mkdirSync(MODAL_SPECS_BASE_DIR, { recursive: true });
+    }
+    finalPaths.push(
+      path.join(MODAL_SPECS_BASE_DIR, `${target.modalSpecSlug}-${currentConfigPrefix}.png`),
+    );
   }
-  return path.join(FALLBACK_SCREENSHOT_DIR, fallbackFilename);
+
+  return [...new Set(finalPaths)];
 }
 
 function ensureStagingRoot(): string {
@@ -449,6 +492,7 @@ function getGeneratedSpecFolders(): string[] {
 function getStagedOutputSummary(): Map<string, number> {
   const summary = new Map<string, number>();
   const specsPrefix = path.join("docs", "design", "specs", "pages") + path.sep;
+  const modalSpecsPrefix = path.join("docs", "design", "specs", "modals", "screenshots") + path.sep;
   const fallbackPrefix = path.join("e2e", "screenshots") + path.sep;
 
   for (const stagedFile of collectFilesRecursively(ensureStagingRoot())) {
@@ -461,6 +505,8 @@ function getStagedOutputSummary(): Map<string, number> {
       if (specFolder && screenshotsFolder === "screenshots") {
         bucket = path.join("docs/design/specs/pages", specFolder, "screenshots");
       }
+    } else if (relativePath.startsWith(modalSpecsPrefix)) {
+      bucket = "docs/design/specs/modals/screenshots";
     } else if (relativePath.startsWith(fallbackPrefix)) {
       bucket = "e2e/screenshots";
     }
@@ -547,17 +593,17 @@ async function takeScreenshot(
 
   const n = nextIndex(prefix);
   const num = String(n).padStart(2, "0");
-  const finalPath = getFinalScreenshotPath(prefix, name);
-  const relativePath = path.relative(process.cwd(), finalPath);
+  const finalPaths = getFinalScreenshotPaths(prefix, name);
+  const relativePaths = finalPaths.map((finalPath) => path.relative(process.cwd(), finalPath));
+  const relativePathLabel = relativePaths.join(" + ");
 
   if (cliOptions.dryRun) {
     totalScreenshots++;
-    console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}`);
+    console.log(`    ${num}  [${prefix}] ${name} → ${relativePathLabel}`);
     return;
   }
 
   const startTime = performance.now();
-  const screenshotPath = getStagedScreenshotPath(finalPath);
 
   try {
     await page.goto(`${BASE_URL}${url}`, { waitUntil: "domcontentloaded", timeout: 15000 });
@@ -567,11 +613,14 @@ async function takeScreenshot(
   await waitForScreenshotReady(page);
   await waitForExpectedContent(page, url, name, prefix);
   await waitForScreenshotReady(page);
-  await page.screenshot({ path: screenshotPath });
+  const screenshot = await page.screenshot();
+  for (const finalPath of finalPaths) {
+    fs.writeFileSync(getStagedScreenshotPath(finalPath), screenshot);
+  }
   totalScreenshots++;
 
   const elapsed = Math.round(performance.now() - startTime);
-  console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}  (${elapsed}ms)`);
+  console.log(`    ${num}  [${prefix}] ${name} → ${relativePathLabel}  (${elapsed}ms)`);
 }
 
 async function captureCurrentView(page: Page, prefix: string, name: string): Promise<void> {
@@ -581,24 +630,27 @@ async function captureCurrentView(page: Page, prefix: string, name: string): Pro
 
   const n = nextIndex(prefix);
   const num = String(n).padStart(2, "0");
-  const finalPath = getFinalScreenshotPath(prefix, name);
-  const relativePath = path.relative(process.cwd(), finalPath);
+  const finalPaths = getFinalScreenshotPaths(prefix, name);
+  const relativePaths = finalPaths.map((finalPath) => path.relative(process.cwd(), finalPath));
+  const relativePathLabel = relativePaths.join(" + ");
 
   if (cliOptions.dryRun) {
     totalScreenshots++;
-    console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}`);
+    console.log(`    ${num}  [${prefix}] ${name} → ${relativePathLabel}`);
     return;
   }
 
   const startTime = performance.now();
-  const screenshotPath = getStagedScreenshotPath(finalPath);
 
   await waitForScreenshotReady(page);
-  await page.screenshot({ path: screenshotPath });
+  const screenshot = await page.screenshot();
+  for (const finalPath of finalPaths) {
+    fs.writeFileSync(getStagedScreenshotPath(finalPath), screenshot);
+  }
   totalScreenshots++;
 
   const elapsed = Math.round(performance.now() - startTime);
-  console.log(`    ${num}  [${prefix}] ${name} → ${relativePath}  (${elapsed}ms)`);
+  console.log(`    ${num}  [${prefix}] ${name} → ${relativePathLabel}  (${elapsed}ms)`);
 }
 
 let captureSkips = 0;
