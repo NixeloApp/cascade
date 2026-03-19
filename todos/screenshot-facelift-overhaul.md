@@ -18,7 +18,6 @@ Core visual facelift work is done. Only the unfinished screenshot and validation
 
 - [ ] Board: column empty, WIP limit warning
 - [ ] Issues: draft restoration, duplicate detection, inline editing, side panel
-- [ ] Documents: color picker
 - [ ] Calendar: drag-and-drop, quick-add
 - [ ] Sprints: completion modal, date overlap warning
 - [ ] Notifications: snooze popover

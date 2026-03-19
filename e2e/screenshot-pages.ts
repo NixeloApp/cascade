@@ -268,6 +268,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-document-editor-favorite$/, "10-editor", "-favorite"],
   [/^filled-document-editor-locked$/, "10-editor", "-locked"],
   [/^filled-document-editor-rich-blocks$/, "10-editor", "-rich-blocks"],
+  [/^filled-document-editor-color-picker$/, "10-editor", "-color-picker"],
   [/^filled-document-editor-slash-menu$/, "10-editor", "-slash-menu"],
   [/^filled-document-editor-floating-toolbar$/, "10-editor", "-floating-toolbar"],
   [/^filled-document-editor-mention-popover$/, "10-editor", "-mention-popover"],
@@ -2891,6 +2892,7 @@ async function screenshotFilledStates(
     "document-editor-favorite",
     "document-editor-locked",
     "document-editor-rich-blocks",
+    "document-editor-color-picker",
     "document-editor-slash-menu",
     "document-editor-floating-toolbar",
     "document-editor-mention-popover",
@@ -2985,6 +2987,30 @@ async function screenshotFilledStates(
             .waitFor({ state: "visible", timeout: 5000 });
           await waitForScreenshotReady(page);
           await captureCurrentView(page, p, "document-editor-rich-blocks");
+        });
+      }
+
+      if (shouldCapture(p, "document-editor-color-picker")) {
+        await runCaptureStep("document color picker", async () => {
+          await openDocumentEditorForCapture(page, docUrl);
+          await importMarkdownIntoEditor(page, MARKDOWN_RICH_CONTENT, "release-readiness.md");
+          const editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
+          await editor.waitFor({ state: "visible", timeout: 8000 });
+          await editor.click();
+          await page.keyboard.press("Home").catch(() => {});
+          await page.keyboard.down("Shift");
+          for (let step = 0; step < 10; step++) {
+            await page.keyboard.press("ArrowRight");
+          }
+          await page.keyboard.up("Shift");
+          const colorButton = page.getByRole("button", { name: /^text color$/i }).first();
+          await colorButton.waitFor({ state: "visible", timeout: 5000 });
+          await colorButton.click();
+          await page.getByTitle("Red").waitFor({ state: "visible", timeout: 5000 });
+          await waitForScreenshotReady(page);
+          await captureCurrentView(page, p, "document-editor-color-picker");
+          await page.keyboard.press("Escape");
+          await page.mouse.click(10, 10);
         });
       }
 
@@ -3905,6 +3931,7 @@ const DRY_RUN_PAGES = [
   "filled-document-editor-favorite",
   "filled-document-editor-locked",
   "filled-document-editor-rich-blocks",
+  "filled-document-editor-color-picker",
   "filled-document-editor-slash-menu",
   "filled-document-editor-floating-toolbar",
   "filled-document-editor-mention-popover",
