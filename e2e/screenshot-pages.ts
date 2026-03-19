@@ -79,6 +79,7 @@ const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
   "filled-dashboard": "04-dashboard",
   "filled-projects": "05-projects",
   "filled-documents": "09-documents",
+  "filled-workspaces": "27-workspaces",
   "filled-settings": "12-settings",
   "filled-issues": "19-issues",
   "filled-notifications": "21-notifications",
@@ -257,8 +258,8 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-workspace-.+-dependencies$/, "28-workspace-detail", "-dependencies"],
   [/^filled-workspace-.+-wiki$/, "28-workspace-detail", "-wiki"],
   [/^filled-workspace-.+-settings$/, "28-workspace-detail", "-settings"],
-  // Bare workspace (catch-all, must come after suffixed patterns)
-  [/^filled-workspace-.+$/, "27-workspaces", ""],
+  // Bare workspace detail (catch-all, must come after suffixed patterns)
+  [/^filled-workspace-.+$/, "28-workspace-detail", ""],
   // Team pages: filled-team-xxx-{tab} → 29-team-detail (specific patterns first)
   [/^filled-team-.+-board$/, "29-team-detail", "-board"],
   [/^filled-team-.+-calendar$/, "29-team-detail", "-calendar"],

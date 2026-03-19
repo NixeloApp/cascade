@@ -11,7 +11,6 @@ Core visual facelift work is done. Only the unfinished screenshot and validation
 ### Canonical Spec Screenshot Variants Missing
 
 - [ ] `17-members` — missing `desktop-dark.png`, `desktop-light.png`, `tablet-light.png`, `mobile-light.png`
-- [ ] `28-workspace-detail` — missing `desktop-dark.png`, `desktop-light.png`, `tablet-light.png`, `mobile-light.png`
 
 ### Modals Still Not Captured
 
