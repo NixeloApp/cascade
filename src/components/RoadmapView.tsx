@@ -376,7 +376,15 @@ function getDependencyPath(line: DependencyLine) {
 }
 
 function getRoadmapBarTitle(issue: RoadmapBarIssue, canEdit: boolean): string {
+  if (!issue.startDate) {
+    return `${issue.title}${canEdit ? " - Drag to move milestone" : ""} - Due: ${formatDate(issue.dueDate)}`;
+  }
+
   return `${issue.title}${canEdit ? " - Drag to move date range" : ""}${issue.startDate ? ` - Start: ${formatDate(issue.startDate)}` : ""} - Due: ${formatDate(issue.dueDate)}`;
+}
+
+function isRoadmapMilestone(issue: Pick<RoadmapBarIssue, "startDate">) {
+  return issue.startDate === undefined;
 }
 
 function buildMonthHeaderCells(startDate: Date, timelineSpan: TimelineSpan): TimelineHeaderCell[] {
@@ -702,6 +710,40 @@ function RoadmapTimelineBar({
   }
 
   const isActive = resizingIssueId === issue._id || draggingIssueId === issue._id;
+  const isMilestone = isRoadmapMilestone(issue);
+  const left = getBarLeft(issue.startDate, issue.dueDate, getPositionOnTimeline);
+  const width = getBarWidth(issue.startDate, issue.dueDate, getPositionOnTimeline);
+
+  if (isMilestone) {
+    return (
+      <div
+        className="absolute h-6"
+        style={{
+          left: `${left}%`,
+          width: `${width}%`,
+        }}
+      >
+        <Button
+          variant="unstyled"
+          data-testid={`roadmap-milestone-${issue._id}`}
+          className="relative h-full w-full p-0"
+          onMouseDown={(e) => onBarDragStart(e, issue._id, issue.startDate, issue.dueDate)}
+          onClick={() => onOpenIssue(issue._id)}
+          title={getRoadmapBarTitle(issue, canEdit)}
+          aria-label={`View milestone ${issue.key}`}
+        >
+          <div
+            className={cn(
+              getCardRecipeClassName(isActive ? "roadmapTimelineBarActive" : "roadmapTimelineBar"),
+              "absolute top-1/2 left-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-sm transition-transform",
+              getPriorityColor(issue.priority, "bg"),
+              isActive && "scale-110",
+            )}
+          />
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -711,8 +753,8 @@ function RoadmapTimelineBar({
         getPriorityColor(issue.priority, "bg"),
       )}
       style={{
-        left: `${getBarLeft(issue.startDate, issue.dueDate, getPositionOnTimeline)}%`,
-        width: `${getBarWidth(issue.startDate, issue.dueDate, getPositionOnTimeline)}%`,
+        left: `${left}%`,
+        width: `${width}%`,
       }}
     >
       <Flex align="center" className="h-full">

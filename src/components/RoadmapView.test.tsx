@@ -292,6 +292,63 @@ describe("RoadmapView", () => {
     expect(screen.queryByTestId("issue-detail-viewer")).not.toBeInTheDocument();
   });
 
+  it("renders due-date-only issues as milestone markers and drags them by due date", async () => {
+    mockRoadmapQueries({
+      issues: [
+        {
+          _id: issue1Id,
+          key: "PROJ-1",
+          title: "Launch checkpoint",
+          status: "todo",
+          dueDate: Date.UTC(2026, 2, 20),
+          type: "task",
+          priority: "high",
+          assignee: { name: "Alex Rivera" },
+        },
+      ],
+    });
+
+    const getBoundingClientRectSpy = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect");
+    getBoundingClientRectSpy.mockReturnValue({
+      x: 0,
+      y: 0,
+      width: 300,
+      height: 32,
+      top: 0,
+      right: 300,
+      bottom: 32,
+      left: 0,
+      toJSON: () => ({}),
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "1 Month" }));
+
+    expect(screen.getByTestId(`roadmap-milestone-${issue1Id}`)).toBeInTheDocument();
+    expect(screen.queryByTestId(`roadmap-bar-${issue1Id}`)).not.toBeInTheDocument();
+
+    const milestoneMarker = screen.getByTestId(`roadmap-milestone-${issue1Id}`);
+    const expectedDueDate = new Date(Date.UTC(2026, 2, 20) + 3 * DAY);
+    expectedDueDate.setHours(23, 59, 59, 999);
+
+    await act(async () => {
+      fireEvent.mouseDown(milestoneMarker, { clientX: 100 });
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      fireEvent.mouseUp(document, { clientX: 130 });
+      await Promise.resolve();
+    });
+
+    expect(updateIssueDates).toHaveBeenCalledWith({
+      issueId: issue1Id,
+      startDate: undefined,
+      dueDate: expectedDueDate.getTime(),
+    });
+  });
+
   it("hides dependency lines when the toggle is clicked", async () => {
     mockRoadmapQueries({
       issues: [
