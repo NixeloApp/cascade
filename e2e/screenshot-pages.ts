@@ -263,6 +263,7 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-project-.+-sprints$/, "18-sprints", ""],
   [/^filled-project-.+-sprints-burndown$/, "18-sprints", "-burndown"],
   [/^filled-project-.+-sprints-burnup$/, "18-sprints", "-burnup"],
+  [/^filled-project-.+-sprints-completion-modal$/, "18-sprints", "-completion-modal"],
   [/^filled-project-.+-sprints-workload$/, "18-sprints", "-workload"],
   // Issue detail: filled-issue-xxx → 08-issue
   [/^filled-issue-/, "08-issue", ""],
@@ -2987,6 +2988,7 @@ async function screenshotFilledStates(
       shouldCaptureAny(p, [
         `project-${normalizedProjectKey}-sprints-burndown`,
         `project-${normalizedProjectKey}-sprints-burnup`,
+        `project-${normalizedProjectKey}-sprints-completion-modal`,
         `project-${normalizedProjectKey}-sprints-workload`,
       ])
     ) {
@@ -4236,6 +4238,29 @@ async function screenshotSprintInteractiveStates(
       await page.keyboard.press("Escape");
     });
   }
+
+  // Complete sprint modal
+  if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-completion-modal`)) {
+    await runCaptureStep("sprint completion modal", async () => {
+      const completeSprintButton = page.getByRole("button", { name: /^complete sprint$/i }).first();
+      await completeSprintButton.waitFor({ state: "visible", timeout: 5000 });
+      await completeSprintButton.click();
+
+      const dialog = page.getByRole("dialog", { name: /^complete sprint$/i });
+      await dialog.waitFor({ state: "visible", timeout: 5000 });
+      await dialog
+        .getByText(/issues? not completed\. choose what to do with them\./i)
+        .waitFor({ state: "visible", timeout: 5000 })
+        .catch(() => {});
+      await waitForScreenshotReady(page);
+      await captureCurrentView(
+        page,
+        prefix,
+        `project-${normalizedProjectKey}-sprints-completion-modal`,
+      );
+      await dismissIfOpen(page, dialog);
+    });
+  }
 }
 
 async function screenshotIssueInteractiveStates(
@@ -4452,6 +4477,7 @@ const DRY_RUN_PAGES = [
   // Filled states — sprint interactive states
   "filled-project-PROJ-sprints-burndown",
   "filled-project-PROJ-sprints-burnup",
+  "filled-project-PROJ-sprints-completion-modal",
   "filled-project-PROJ-sprints-workload",
   // Filled states — calendar modes
   "filled-calendar-day",
