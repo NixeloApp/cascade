@@ -118,11 +118,11 @@ vi.mock("react-window", () => ({
       index: number;
       style: React.CSSProperties;
       rows: Array<{ _id?: Id<"issues"> }>;
-      selectedIssueId: Id<"issues"> | null;
+      activeIssueId: Id<"issues"> | null;
     }>;
     rowProps: {
       rows: Array<{ _id?: Id<"issues"> }>;
-      selectedIssueId: Id<"issues"> | null;
+      activeIssueId: Id<"issues"> | null;
     };
     listRef: { current: { scrollToRow: (options: { index: number }) => void } | null };
     style?: React.CSSProperties;
@@ -186,6 +186,7 @@ const epicId = "epic_1" as Id<"issues">;
 const issue1Id = "issue_1" as Id<"issues">;
 const issue2Id = "issue_2" as Id<"issues">;
 const issue3Id = "issue_3" as Id<"issues">;
+const issue4Id = "issue_4" as Id<"issues">;
 const now = Date.UTC(2026, 2, 14);
 const updateIssueDates = vi.fn();
 
@@ -549,6 +550,92 @@ describe("RoadmapView", () => {
     fireEvent.click(screen.getByTitle("Hide dependency lines"));
 
     expect(screen.queryByLabelText("Issue dependency lines")).not.toBeInTheDocument();
+  });
+
+  it("highlights only the selected issue dependencies", () => {
+    mockRoadmapQueries({
+      issues: [
+        {
+          _id: issue1Id,
+          key: "PROJ-1",
+          title: "Plan onboarding",
+          status: "todo",
+          startDate: Date.UTC(2026, 2, 10),
+          dueDate: Date.UTC(2026, 2, 20),
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Alex Rivera" },
+        },
+        {
+          _id: issue2Id,
+          key: "PROJ-2",
+          title: "Ship migration",
+          status: "in progress",
+          startDate: Date.UTC(2026, 2, 18),
+          dueDate: Date.UTC(2026, 2, 28),
+          type: "story",
+          priority: "high",
+          assignee: { name: "Sam Lee" },
+        },
+        {
+          _id: issue3Id,
+          key: "PROJ-3",
+          title: "Review launch",
+          status: "todo",
+          startDate: Date.UTC(2026, 2, 8),
+          dueDate: Date.UTC(2026, 2, 14),
+          type: "task",
+          priority: "medium",
+          assignee: { name: "Terry Jones" },
+        },
+        {
+          _id: issue4Id,
+          key: "PROJ-4",
+          title: "Publish release notes",
+          status: "backlog",
+          startDate: Date.UTC(2026, 2, 22),
+          dueDate: Date.UTC(2026, 2, 25),
+          type: "task",
+          priority: "low",
+          assignee: { name: "Morgan Diaz" },
+        },
+      ],
+      links: [
+        { fromIssueId: issue1Id, toIssueId: issue2Id, linkType: "blocks" },
+        { fromIssueId: issue3Id, toIssueId: issue4Id, linkType: "blocks" },
+      ],
+    });
+
+    render(<RoadmapView projectId={projectId} />);
+
+    const dependencyLines = screen
+      .getByLabelText("Issue dependency lines")
+      .querySelectorAll("path");
+    expect(dependencyLines).toHaveLength(2);
+    expect(dependencyLines[0]).toHaveAttribute("stroke-width", "2");
+    expect(dependencyLines[0]).toHaveAttribute("opacity", "0.7");
+    expect(dependencyLines[1]).toHaveAttribute("stroke-width", "2");
+    expect(dependencyLines[1]).toHaveAttribute("opacity", "0.7");
+
+    fireEvent.click(screen.getByRole("button", { name: "PROJ-1" }));
+
+    const focusedDependencyLines = screen
+      .getByLabelText("Issue dependency lines")
+      .querySelectorAll("path");
+    expect(focusedDependencyLines[0]).toHaveAttribute("stroke-width", "3");
+    expect(focusedDependencyLines[0]).toHaveAttribute("opacity", "1");
+    expect(focusedDependencyLines[1]).toHaveAttribute("stroke-width", "1.5");
+    expect(focusedDependencyLines[1]).toHaveAttribute("opacity", "0.18");
+
+    fireEvent.click(screen.getByRole("button", { name: "Close detail" }));
+
+    const resetDependencyLines = screen
+      .getByLabelText("Issue dependency lines")
+      .querySelectorAll("path");
+    expect(resetDependencyLines[0]).toHaveAttribute("stroke-width", "2");
+    expect(resetDependencyLines[0]).toHaveAttribute("opacity", "0.7");
+    expect(resetDependencyLines[1]).toHaveAttribute("stroke-width", "2");
+    expect(resetDependencyLines[1]).toHaveAttribute("opacity", "0.7");
   });
 
   it("switches the roadmap header between month and week buckets", () => {

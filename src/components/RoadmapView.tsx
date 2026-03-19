@@ -104,6 +104,13 @@ interface DependencyLine {
   toIssueId: string;
 }
 
+const ACTIVE_DEPENDENCY_STROKE_WIDTH = 3;
+const DEFAULT_DEPENDENCY_STROKE_WIDTH = 2;
+const DIMMED_DEPENDENCY_STROKE_WIDTH = 1.5;
+const ACTIVE_DEPENDENCY_OPACITY = 1;
+const DEFAULT_DEPENDENCY_OPACITY = 0.7;
+const DIMMED_DEPENDENCY_OPACITY = 0.18;
+
 interface RoadmapTimelineIssue {
   _id: Id<"issues">;
   assignee?: { name?: string | null } | null;
@@ -1457,6 +1464,48 @@ function buildIssueRowIndexMap(rows: TimelineRow[]) {
   return map;
 }
 
+function isDependencyLineFocused(line: DependencyLine, activeIssueId: string | null) {
+  if (activeIssueId === null) {
+    return false;
+  }
+
+  return line.fromIssueId === activeIssueId || line.toIssueId === activeIssueId;
+}
+
+function getDependencyLineStrokeWidth(hasActiveIssue: boolean, dependencyFocused: boolean) {
+  if (dependencyFocused) {
+    return ACTIVE_DEPENDENCY_STROKE_WIDTH;
+  }
+
+  return hasActiveIssue ? DIMMED_DEPENDENCY_STROKE_WIDTH : DEFAULT_DEPENDENCY_STROKE_WIDTH;
+}
+
+function getDependencyLineOpacity(hasActiveIssue: boolean, dependencyFocused: boolean) {
+  if (dependencyFocused) {
+    return ACTIVE_DEPENDENCY_OPACITY;
+  }
+
+  return hasActiveIssue ? DIMMED_DEPENDENCY_OPACITY : DEFAULT_DEPENDENCY_OPACITY;
+}
+
+function renderDependencyLine(line: DependencyLine, activeIssueId: string | null) {
+  const dependencyFocused = isDependencyLineFocused(line, activeIssueId);
+  const hasActiveIssue = activeIssueId !== null;
+
+  return (
+    <path
+      key={`${line.fromIssueId}-${line.toIssueId}`}
+      d={getDependencyPath(line)}
+      fill="none"
+      stroke="var(--color-status-warning)"
+      strokeWidth={getDependencyLineStrokeWidth(hasActiveIssue, dependencyFocused)}
+      strokeDasharray="4 2"
+      markerEnd="url(#arrowhead)"
+      opacity={getDependencyLineOpacity(hasActiveIssue, dependencyFocused)}
+    />
+  );
+}
+
 /** Compute dependency lines from issue links */
 function computeDependencyLines({
   showDependencies,
@@ -1686,6 +1735,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   });
   const selectedIssueId =
     selectedIndex >= 0 ? (filteredIssues?.[selectedIndex]?._id ?? null) : null;
+  const activeRoadmapIssueId = selectedIssue ?? selectedIssueId;
   const issueById = buildIssueLookupMap(filteredIssues);
   const roadmapIssueById = new Map(
     (filteredIssues ?? []).map((issue) => [issue._id.toString(), issue]),
@@ -1715,12 +1765,12 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
   // Row renderer for virtualization
   type RowData = {
     rows: TimelineRow[];
-    selectedIssueId: Id<"issues"> | null;
+    activeIssueId: Id<"issues"> | null;
   };
 
   function Row({
     rows,
-    selectedIssueId,
+    activeIssueId,
     index,
     style,
   }: RowData & {
@@ -1768,7 +1818,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
         }
         onResizeStart={handleResizeStart}
         resizingIssueId={resizing?.issueId}
-        selected={row.issue._id === selectedIssueId}
+        selected={row.issue._id === activeIssueId}
         summaryCompletedCount={row.summaryCompletedCount}
         summaryDueDate={row.summaryDueDate}
         summaryStartDate={row.summaryStartDate}
@@ -2069,7 +2119,7 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                       style={{ height: 600, width: "100%" }}
                       rowCount={timelineRows.length}
                       rowHeight={ROADMAP_ROW_HEIGHT}
-                      rowProps={{ rows: timelineRows, selectedIssueId }}
+                      rowProps={{ rows: timelineRows, activeIssueId: activeRoadmapIssueId }}
                       rowComponent={Row}
                     />
 
@@ -2097,21 +2147,9 @@ export function RoadmapView({ projectId, sprintId, canEdit = true }: RoadmapView
                             <polygon points="0 0, 6 2, 0 4" fill="var(--color-status-warning)" />
                           </marker>
                         </defs>
-                        {dependencyLines.map((line) => {
-                          if (!line) return null;
-                          return (
-                            <path
-                              key={`${line.fromIssueId}-${line.toIssueId}`}
-                              d={getDependencyPath(line)}
-                              fill="none"
-                              stroke="var(--color-status-warning)"
-                              strokeWidth="2"
-                              strokeDasharray="4 2"
-                              markerEnd="url(#arrowhead)"
-                              opacity="0.7"
-                            />
-                          );
-                        })}
+                        {dependencyLines.map((line) =>
+                          renderDependencyLine(line, activeRoadmapIssueId?.toString() ?? null),
+                        )}
                       </svg>
                     )}
                   </div>
