@@ -30,7 +30,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 **Fix:**
 - [ ] Audit and remove unnecessary `.catch(() => {})` calls (198 total) -- let failures propagate or handle them explicitly
 - [x] Make `waitForDialogOpen` fail loudly when dialog content doesn't appear -- extracted to `e2e/utils/wait-helpers.ts` and reused by `screenshot-pages.ts`
-- [ ] Add a post-capture hash check that flags loading-state hashes
+- [x] Add a post-capture hash check that flags loading-state hashes
 - [ ] Re-capture the 37 failed screenshots with proper wait logic
 - [ ] Add `animations: 'disabled'` to `page.screenshot()` calls
 

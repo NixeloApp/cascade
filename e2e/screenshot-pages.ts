@@ -32,6 +32,10 @@ import { TEST_USERS } from "./config";
 import { E2E_TIMEZONE } from "./constants";
 import { ProjectsPage } from "./pages";
 import {
+  assertScreenshotHashIsNotLoadingState,
+  getScreenshotHash,
+} from "./utils/screenshot-hash-guards";
+import {
   type E2EWorkflowState,
   type SeedScreenshotResult,
   testUserService,
@@ -734,6 +738,8 @@ async function takeScreenshot(
   await waitForExpectedContent(page, url, name, prefix);
   await waitForScreenshotReady(page);
   const screenshot = await page.screenshot();
+  const screenshotHash = getScreenshotHash(screenshot);
+  assertScreenshotHashIsNotLoadingState(screenshotHash, relativePathLabel);
   for (const finalPath of finalPaths) {
     fs.writeFileSync(getStagedScreenshotPath(finalPath), screenshot);
   }
@@ -764,6 +770,8 @@ async function captureCurrentView(page: Page, prefix: string, name: string): Pro
 
   await waitForScreenshotReady(page);
   const screenshot = await page.screenshot();
+  const screenshotHash = getScreenshotHash(screenshot);
+  assertScreenshotHashIsNotLoadingState(screenshotHash, relativePathLabel);
   for (const finalPath of finalPaths) {
     fs.writeFileSync(getStagedScreenshotPath(finalPath), screenshot);
   }
