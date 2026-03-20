@@ -78,7 +78,7 @@ function IssuePageContent({
             hasCopied={detail.hasCopied}
             onCopyKey={detail.handleCopyKey}
             breadcrumb={
-              <Button asChild variant="ghost" size="sm" className="p-0 h-auto hover:bg-transparent">
+              <Button asChild variant="ghostLink" size="content">
                 <Link to={ROUTES.projects.board.path} params={{ orgSlug, key: projectKey }}>
                   <ChevronLeft className="w-4 h-4 mr-1" />
                   {projectKey}

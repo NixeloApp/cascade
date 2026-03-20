@@ -141,10 +141,9 @@ function OnboardingPage() {
         </Flex>
         {step !== "invited" && (
           <Button
-            variant="ghost"
+            variant="ghostTertiary"
             size="sm"
             onClick={handleSkip}
-            className="text-ui-text-secondary hover:text-ui-text hover:bg-ui-bg-tertiary transition-all"
             data-testid={TEST_IDS.ONBOARDING.SKIP_BUTTON}
           >
             Skip for now

@@ -27,8 +27,8 @@ Make the product more visually cohesive and more enforceable in code, using the 
 ### Owned-control drift
 
 - [x] Absorb the shared compact button sizing patterns into owned `Button` sizes / chrome sizes
-- [ ] Remove or absorb the 17 current control-chrome overrides surfaced by `check-control-chrome-drift.js`
-- [ ] Promote repeated `Button` / `Badge` / `Input` / `Textarea` / `TabsTrigger` restyling into owned variants instead of feature-local className patches
+- [x] Remove or absorb the 17 current control-chrome overrides surfaced by `check-control-chrome-drift.js`
+- [x] Promote repeated `Button` / `Badge` / `Input` / `Textarea` / `TabsTrigger` restyling into owned variants instead of feature-local className patches
 
 ### Screenshot review residue
 

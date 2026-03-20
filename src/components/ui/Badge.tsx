@@ -53,6 +53,7 @@ const badgeVariants = cva("inline-flex items-center font-medium transition-color
       sm: "text-xs px-2 py-0.5",
       md: "text-xs px-2 py-1",
       emphasis: "text-xs px-2 py-0.5 font-bold",
+      fabAlertCount: "min-h-6 min-w-6 justify-center px-1.5 text-xs",
       calendarHeaderCount: "px-1.5 py-0.5 text-xs",
       calendarDay: "h-6 w-6 justify-center px-0 text-xs sm:h-7 sm:w-7 sm:text-sm",
     },

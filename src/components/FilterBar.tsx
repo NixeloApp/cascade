@@ -407,10 +407,9 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
           type="text"
           placeholder="Search"
           variant="filter"
-          inputSize="filterPill"
+          inputSize="filterSearchPill"
           value={filters.query ?? ""}
           onChange={handleSearchChange}
-          className="w-20 pr-2 sm:w-64 sm:pr-3"
           aria-label="Search issues"
         />
 

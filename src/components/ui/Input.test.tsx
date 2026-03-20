@@ -56,4 +56,12 @@ describe("Input", () => {
     // Should use the provided ID as base
     expect(errorMessage.id).toBe("my-input-error");
   });
+
+  it("applies filterSearchPill sizing", () => {
+    render(<Input variant="filter" inputSize="filterSearchPill" data-testid="input" />);
+    const input = screen.getByTestId("input");
+    expect(input.className).toContain("w-20");
+    expect(input.className).toContain("sm:w-64");
+    expect(input.className).toContain("pr-2");
+  });
 });

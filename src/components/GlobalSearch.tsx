@@ -500,14 +500,13 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
     <>
       <Button
         chrome="framed"
-        chromeSize="pill"
+        chromeSize="searchTrigger"
         onClick={() => {
           setShouldOpenAdvancedSearch(false); // Reset handoff flag to prevent stale state
           setIsOpen(true);
         }}
         aria-label="Open search and commands"
         data-testid={TEST_IDS.HEADER.SEARCH_BUTTON}
-        className="w-full min-w-0 justify-center gap-2 px-2.5 sm:justify-between sm:px-3"
       >
         <Flex align="center" gap="sm" className="min-w-0">
           <Card
