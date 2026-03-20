@@ -739,7 +739,7 @@ async function takeScreenshot(
   await waitForScreenshotReady(page);
   await waitForExpectedContent(page, url, name, prefix);
   await waitForScreenshotReady(page);
-  const screenshot = await page.screenshot();
+  const screenshot = await captureScreenshotBuffer(page);
   const screenshotHash = getScreenshotHash(screenshot);
   assertScreenshotHashIsNotLoadingState(screenshotHash, relativePathLabel);
   for (const finalPath of finalPaths) {
@@ -771,7 +771,7 @@ async function captureCurrentView(page: Page, prefix: string, name: string): Pro
   const startTime = performance.now();
 
   await waitForScreenshotReady(page);
-  const screenshot = await page.screenshot();
+  const screenshot = await captureScreenshotBuffer(page);
   const screenshotHash = getScreenshotHash(screenshot);
   assertScreenshotHashIsNotLoadingState(screenshotHash, relativePathLabel);
   for (const finalPath of finalPaths) {
@@ -781,6 +781,21 @@ async function captureCurrentView(page: Page, prefix: string, name: string): Pro
 
   const elapsed = Math.round(performance.now() - startTime);
   console.log(`    ${num}  [${prefix}] ${name} → ${relativePathLabel}  (${elapsed}ms)`);
+}
+
+async function captureScreenshotBuffer(page: Page): Promise<Buffer> {
+  return page.screenshot({ animations: "disabled" });
+}
+
+async function captureScreenshotToPath(
+  page: Page,
+  finalPath: string,
+  relativePathLabel: string,
+): Promise<void> {
+  const screenshot = await captureScreenshotBuffer(page);
+  const screenshotHash = getScreenshotHash(screenshot);
+  assertScreenshotHashIsNotLoadingState(screenshotHash, relativePathLabel);
+  fs.writeFileSync(getStagedScreenshotPath(finalPath), screenshot);
 }
 
 let captureSkips = 0;
@@ -2878,10 +2893,9 @@ async function screenshotFilledStates(
           const n = nextIndex(p);
           const num = String(n).padStart(2, "0");
           const finalPath = getFinalScreenshotPath(p, `calendar-${mode}`);
-          const screenshotPath = getStagedScreenshotPath(finalPath);
-          await page.screenshot({ path: screenshotPath });
-          totalScreenshots++;
           const relativePath = path.relative(process.cwd(), finalPath);
+          await captureScreenshotToPath(page, finalPath, relativePath);
+          totalScreenshots++;
           console.log(`    ${num}  [${p}] calendar-${mode} → ${relativePath}`);
         }
 

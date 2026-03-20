@@ -38,7 +38,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [x] Recover the settings avatar-upload and cover-upload baselines across all four canonical configs after replacing brittle dropzone-copy waits
 - [x] Recover the members confirm-dialog baselines across all four canonical configs after fixing alert-dialog open waits and section-scroll alignment
 - [x] Recover the final desktop-dark notifications filter baseline after strengthening notifications route and filter-content readiness waits
-- [ ] Add `animations: 'disabled'` to `page.screenshot()` calls
+- [x] Add `animations: 'disabled'` to `page.screenshot()` calls
 
 ### 2. Anti-patterns that should use proper Playwright/E2E conventions
 
