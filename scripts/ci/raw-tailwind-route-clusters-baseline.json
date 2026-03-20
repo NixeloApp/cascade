@@ -1,7 +1,6 @@
 {
   "minOccurrences": 3,
   "clusters": {
-    "border border-ui-border-secondary/70 bg-ui-bg-soft/90 p-3": 4,
     "min-h-screen bg-ui-bg-secondary p-6": 4,
     "px-1 py-3 border-b-2 border-transparent hover:border-ui-border-secondary text-ui-text-secondary hover:text-ui-text": 3
   }

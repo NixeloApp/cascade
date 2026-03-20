@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { IconCircle } from "@/components/ui/IconCircle";
+import { InsetPanel } from "@/components/ui/InsetPanel";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
@@ -106,12 +107,7 @@ function DocumentsListPage() {
                     </Flex>
                   </Flex>
 
-                  <Flex
-                    align="center"
-                    justify="between"
-                    gap="md"
-                    className="border border-ui-border-secondary/70 bg-ui-bg-soft/90 px-3 py-2"
-                  >
+                  <InsetPanel size="compact">
                     <Metadata size="sm">
                       <MetadataItem>
                         {doc.isPublic ? "Collaborator visible" : "Internal only"}
@@ -121,7 +117,7 @@ function DocumentsListPage() {
                     <Badge variant="outline" shape="pill" className="shrink-0">
                       Open doc
                     </Badge>
-                  </Flex>
+                  </InsetPanel>
                 </Flex>
               </Card>
             </Link>
