@@ -130,6 +130,12 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
         "border-transparent bg-transparent text-ui-text-secondary shadow-none hover:bg-ui-bg-hover hover:text-ui-text",
       calendarMonthOverflow:
         "border-transparent bg-transparent text-ui-text-tertiary shadow-none hover:text-brand",
+      documentTreeSection:
+        "border-transparent bg-transparent text-ui-text-secondary shadow-none hover:bg-ui-bg-hover",
+      documentTreeSectionMuted:
+        "border-transparent bg-transparent text-ui-text-tertiary shadow-none hover:bg-ui-bg-hover",
+      documentTreeToggle:
+        "border-transparent bg-transparent text-ui-text-tertiary shadow-none hover:bg-ui-bg-hover hover:text-ui-text",
       backdrop:
         "border-transparent bg-ui-bg-overlay text-transparent shadow-none hover:bg-ui-bg-overlay",
     },
@@ -157,6 +163,8 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
       calendarHeaderAdd: "h-6 w-6 rounded-full p-0 sm:h-9 sm:w-auto sm:rounded-xl sm:px-3",
       calendarSidebarEvent: "h-auto w-full justify-start rounded-lg px-2 py-1.5 text-left text-sm",
       calendarMonthOverflow: "h-auto rounded-none p-0 text-xs font-medium",
+      documentTreeSection: "h-auto w-full justify-start rounded-none px-2 py-1.5 text-left",
+      documentTreeToggle: "h-5 w-5 rounded-sm p-0.5",
       sprintPreset: "h-auto rounded-lg px-3 py-3 text-sm",
       swimlaneHeader: "h-auto w-full justify-start rounded-xl px-4 py-2 text-left text-sm",
       sectionToggle: "w-full justify-between min-h-0 rounded-none",

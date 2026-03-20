@@ -23,7 +23,7 @@ Make the product more visually cohesive and more enforceable in code, using the 
 
 ### Owned-control drift
 
-- [ ] Remove or absorb the 31 current control-chrome overrides surfaced by `check-control-chrome-drift.js`
+- [ ] Remove or absorb the 28 current control-chrome overrides surfaced by `check-control-chrome-drift.js`
 - [ ] Promote repeated `Button` / `Badge` / `Input` / `Textarea` / `TabsTrigger` restyling into owned variants instead of feature-local className patches
 
 ### Screenshot review residue

@@ -114,6 +114,23 @@ describe("Button", () => {
       expect(btn.className).toContain("rounded-full");
       expect(btn.className).not.toContain("bg-linear-to-r");
     });
+
+    it("applies document tree section chrome styling", () => {
+      render(
+        <Button
+          chrome="documentTreeSectionMuted"
+          chromeSize="documentTreeSection"
+          data-testid="btn"
+        >
+          Archived
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("text-ui-text-tertiary");
+      expect(btn.className).toContain("w-full");
+      expect(btn.className).toContain("justify-start");
+      expect(btn.className).toContain("px-2");
+    });
   });
 
   describe("sizes", () => {
@@ -167,6 +184,18 @@ describe("Button", () => {
       expect(btn.className).toContain("h-9");
       expect(btn.className).toContain("w-9");
       expect(btn.className).not.toContain("h-10");
+    });
+
+    it("applies document tree toggle sizing", () => {
+      render(
+        <Button chrome="documentTreeToggle" chromeSize="documentTreeToggle" data-testid="btn">
+          <Plus />
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("h-5");
+      expect(btn.className).toContain("w-5");
+      expect(btn.className).toContain("p-0.5");
     });
   });
 
