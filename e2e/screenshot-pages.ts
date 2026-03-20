@@ -1194,9 +1194,7 @@ async function waitForCalendarReady(page: Page): Promise<boolean> {
       return true;
     } catch {
       if (attempt === 0) {
-        await page
-          .goto(page.url(), { waitUntil: "domcontentloaded", timeout: 15000 })
-          .catch(() => {});
+        await page.goto(page.url(), { waitUntil: "domcontentloaded", timeout: 15000 });
         await waitForScreenshotReady(page);
       }
     }
@@ -1223,7 +1221,7 @@ async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<bool
 
     for (let step = 0; step < steps; step++) {
       if (isExpired()) return false;
-      await button.click().catch(() => {});
+      await button.click();
       await waitForCalendarState();
       if (await hasEvents()) return true;
     }
@@ -1235,10 +1233,7 @@ async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<bool
   if (await hasEvents()) return true;
 
   // Try clicking "today" button
-  await page
-    .getByRole("button", { name: /^today$/i })
-    .click()
-    .catch(() => {});
+  await page.getByRole("button", { name: /^today$/i }).click();
   await waitForCalendarState();
   if (await hasEvents()) return true;
 
@@ -1333,9 +1328,7 @@ async function waitForBoardReady(page: Page): Promise<boolean> {
       return true;
     } catch {
       if (attempt === 0) {
-        await page
-          .goto(page.url(), { waitUntil: "domcontentloaded", timeout: 15000 })
-          .catch(() => {});
+        await page.goto(page.url(), { waitUntil: "domcontentloaded", timeout: 15000 });
         await waitForScreenshotReady(page);
       }
     }
@@ -1678,28 +1671,26 @@ async function scrollSectionNearViewportTop(
   page: Page,
   offset = 24,
 ): Promise<void> {
-  await locator.scrollIntoViewIfNeeded().catch(() => {});
-  await locator
-    .evaluate(
-      (element, topOffset) =>
-        new Promise<void>((resolve) => {
-          const targetTop = element.getBoundingClientRect().top + window.scrollY - topOffset;
-          window.scrollTo({ top: Math.max(0, targetTop), behavior: "auto" });
+  await locator.scrollIntoViewIfNeeded();
+  await locator.evaluate(
+    (element, topOffset) =>
+      new Promise<void>((resolve) => {
+        const targetTop = element.getBoundingClientRect().top + window.scrollY - topOffset;
+        window.scrollTo({ top: Math.max(0, targetTop), behavior: "auto" });
 
-          const waitForScroll = () => {
-            const distanceFromOffset = Math.abs(element.getBoundingClientRect().top - topOffset);
-            if (distanceFromOffset <= 2) {
-              resolve();
-              return;
-            }
-            requestAnimationFrame(waitForScroll);
-          };
-
+        const waitForScroll = () => {
+          const distanceFromOffset = Math.abs(element.getBoundingClientRect().top - topOffset);
+          if (distanceFromOffset <= 2) {
+            resolve();
+            return;
+          }
           requestAnimationFrame(waitForScroll);
-        }),
-      offset,
-    )
-    .catch(() => {});
+        };
+
+        requestAnimationFrame(waitForScroll);
+      }),
+    offset,
+  );
   await waitForAnimation(page);
 }
 
@@ -2074,9 +2065,7 @@ async function discoverIssueKey(
   ];
 
   for (const pathName of candidatePaths) {
-    await page
-      .goto(`${BASE_URL}${pathName}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-      .catch(() => {});
+    await page.goto(`${BASE_URL}${pathName}`, { waitUntil: "domcontentloaded", timeout: 15000 });
     await waitForExpectedContent(page, pathName, "issues");
     await waitForScreenshotReady(page);
 
@@ -2090,12 +2079,10 @@ async function discoverIssueKey(
 }
 
 async function discoverDocumentId(page: Page, orgSlug: string): Promise<string | null> {
-  await page
-    .goto(`${BASE_URL}${ROUTES.documents.list.build(orgSlug)}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
-    })
-    .catch(() => {});
+  await page.goto(`${BASE_URL}${ROUTES.documents.list.build(orgSlug)}`, {
+    waitUntil: "domcontentloaded",
+    timeout: 15000,
+  });
   await waitForExpectedContent(page, ROUTES.documents.list.build(orgSlug), "documents");
   await waitForScreenshotReady(page);
 
@@ -2116,9 +2103,7 @@ async function discoverDocumentId(page: Page, orgSlug: string): Promise<string |
 }
 
 async function openDocumentEditorForCapture(page: Page, docUrl: string): Promise<void> {
-  await page
-    .goto(`${BASE_URL}${docUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-    .catch(() => {});
+  await page.goto(`${BASE_URL}${docUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
   await waitForExpectedContent(page, docUrl, "document-editor");
   await waitForScreenshotReady(page);
 }
