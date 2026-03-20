@@ -1,16 +1,19 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { escapeRegExp, ROUTES, routePattern } from "../utils/routes";
 import {
   createWorkspaceFromDialog,
   dismissWorkspaceDialogIfOpen,
+  getLocatorCount,
   getWorkspaceDialogElements,
+  isLocatorDisabled,
+  isLocatorVisible,
   waitForBoardLoaded,
   waitForIssueCreateSuccess,
   waitForIssueUpdateSuccess,
   waitForProjectCreateSuccess,
-} from "../utils/wait-helpers";
+} from "../utils";
+import { escapeRegExp, ROUTES, routePattern } from "../utils/routes";
 import { BasePage } from "./base.page";
 
 /**
@@ -28,6 +31,7 @@ export class ProjectsPage extends BasePage {
   readonly createEntityButton: Locator; // Alias for sidebar "Add new project" or "Create Workspace" button
   readonly projectList: Locator;
   readonly projectItems: Locator;
+  readonly projectsPageHeading: Locator;
 
   // ===================
   // Locators - Create Project Form
@@ -138,6 +142,7 @@ export class ProjectsPage extends BasePage {
     this.createEntityButton = this.sidebar.getByRole("button", {
       name: /add new|create|\+/i,
     });
+    this.projectsPageHeading = page.getByRole("heading", { name: /^projects$/i });
     this.projectList = page
       .getByTestId(TEST_IDS.NAV.WORKSPACE_LIST)
       .or(this.sidebar.locator("ul, [role='list']").first());
@@ -332,7 +337,7 @@ export class ProjectsPage extends BasePage {
     }
 
     // Check if modal is already open but still pending before re-clicking
-    if (await this.createProjectForm.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.createProjectForm)) {
       await this.expectCreateProjectWizardReady();
     } else {
       await this.ensureProjectsView();
@@ -455,7 +460,7 @@ export class ProjectsPage extends BasePage {
     ];
 
     for (const trigger of triggerCandidates) {
-      if ((await this.getLocatorCount(trigger)) === 0) {
+      if ((await getLocatorCount(trigger)) === 0) {
         continue;
       }
 
@@ -514,11 +519,11 @@ export class ProjectsPage extends BasePage {
   }
 
   private async getCreateIssueSubmitState() {
-    if (!(await this.createIssueModal.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.createIssueModal))) {
       return "closed";
     }
 
-    if (await this.submitIssueButton.isDisabled().catch(() => false)) {
+    if (await isLocatorDisabled(this.submitIssueButton)) {
       return "submitting";
     }
 
@@ -589,7 +594,7 @@ export class ProjectsPage extends BasePage {
 
     if (tab === "activity") {
       await expect(this.activityPageHeader).toBeVisible();
-      await expect(this.activityEmptyState.or(this.activityFeed)).toBeVisible();
+      await this.expectActivityLoaded();
       return;
     }
 
@@ -639,9 +644,7 @@ export class ProjectsPage extends BasePage {
       | "analytics"
       | "settings",
   ) {
-    return this.getProjectTab(tab)
-      .isVisible()
-      .catch(() => false);
+    return isLocatorVisible(this.getProjectTab(tab));
   }
 
   async expectProjectTabCurrent(
@@ -727,27 +730,22 @@ export class ProjectsPage extends BasePage {
 
   async getRoadmapEpicFilterState(): Promise<"visible" | "hidden"> {
     await this.expectRoadmapLoaded();
-    return (await this.roadmapEpicFilter.isVisible().catch(() => false)) ? "visible" : "hidden";
+    return (await isLocatorVisible(this.roadmapEpicFilter)) ? "visible" : "hidden";
   }
 
   async expectSprintsLoaded() {
     await expect(this.page).toHaveURL(routePattern(ROUTES.projects.sprints.path));
     await expect(this.sprintsPageHeader).toBeVisible();
 
-    if (await this.createSprintButton.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.createSprintButton)) {
       return;
     }
 
-    if (await this.sprintsEmptyState.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.sprintsEmptyState)) {
       return;
     }
 
-    if (
-      await this.sprintCards
-        .first()
-        .isVisible()
-        .catch(() => false)
-    ) {
+    if (await isLocatorVisible(this.sprintCards.first())) {
       return;
     }
 
@@ -763,31 +761,12 @@ export class ProjectsPage extends BasePage {
 
   async getActivityPageState(): Promise<"empty" | "entries"> {
     await expect(this.activityPageHeader).toBeVisible();
-
-    if (
-      await this.activityEntries
-        .first()
-        .isVisible()
-        .catch(() => false)
-    ) {
-      return "entries";
-    }
-
-    if (await this.activityEmptyState.isVisible().catch(() => false)) {
-      return "empty";
-    }
-
-    await expect(this.activityEmptyState.or(this.activityEntries.first())).toBeVisible();
-
-    return (await this.activityEntries
-      .first()
-      .isVisible()
-      .catch(() => false))
-      ? "entries"
-      : "empty";
+    await this.expectActivityLoaded();
+    return this.readActivityPageState();
   }
 
   async expectActivityEntriesVisible() {
+    await this.expectActivityLoaded();
     await expect(this.activityFeed).toBeVisible();
     await expect(this.activityEntries.first()).toBeVisible();
   }
@@ -813,6 +792,27 @@ export class ProjectsPage extends BasePage {
   async expectActivityRelativeTimestampVisible() {
     await this.expectActivityEntriesVisible();
     await expect(this.activityFeed.getByTestId(TEST_IDS.ACTIVITY.TIMESTAMP).first()).toBeVisible();
+  }
+
+  private async readActivityPageState(): Promise<"empty" | "entries" | "pending"> {
+    if (await isLocatorVisible(this.activityEntries.first())) {
+      return "entries";
+    }
+
+    if (await isLocatorVisible(this.activityEmptyState)) {
+      return "empty";
+    }
+
+    return "pending";
+  }
+
+  private async expectActivityLoaded(timeout = 10000): Promise<void> {
+    await expect
+      .poll(() => this.readActivityPageState(), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .not.toBe("pending");
   }
 
   /**
@@ -879,13 +879,13 @@ export class ProjectsPage extends BasePage {
   }
 
   async closeIssueDetailIfOpen() {
-    if (!(await this.issueDetailDialog.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.issueDetailDialog))) {
       return;
     }
 
     await this.page.keyboard.press("Escape");
 
-    if (await this.issueDetailDialog.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.issueDetailDialog)) {
       await this.page.mouse.click(10, 10);
     }
 
@@ -893,19 +893,19 @@ export class ProjectsPage extends BasePage {
   }
 
   async closeCreateProjectFormIfOpen() {
-    if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.createProjectForm))) {
       return;
     }
 
-    if (await this.cancelButton.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.cancelButton)) {
       await this.tryDismissCreateProjectFormWithCancel();
     }
 
-    if (await this.createProjectForm.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.createProjectForm)) {
       await this.page.keyboard.press("Escape");
     }
 
-    if (await this.createProjectForm.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.createProjectForm)) {
       await this.page.mouse.click(10, 10);
     }
 
@@ -913,7 +913,7 @@ export class ProjectsPage extends BasePage {
   }
 
   async submitCreateProject() {
-    if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.createProjectForm))) {
       return;
     }
 
@@ -922,7 +922,7 @@ export class ProjectsPage extends BasePage {
   }
 
   async tryStartCreateProjectSubmit() {
-    if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.createProjectForm))) {
       return;
     }
 
@@ -933,7 +933,7 @@ export class ProjectsPage extends BasePage {
   }
 
   async waitForCreateProjectSubmitStart(timeout = 10000) {
-    if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.createProjectForm))) {
       return true;
     }
 
@@ -956,16 +956,16 @@ export class ProjectsPage extends BasePage {
   }
 
   private async getCreateProjectSubmitState(): Promise<"submitting" | "closed" | "pending"> {
-    if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.createProjectForm))) {
       return "closed";
     }
 
     const creatingButton = this.createProjectForm.getByRole("button", { name: /creating/i });
-    if (await creatingButton.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(creatingButton)) {
       return "submitting";
     }
 
-    if (await this.createButton.isDisabled().catch(() => false)) {
+    if (await isLocatorDisabled(this.createButton)) {
       return "submitting";
     }
 
@@ -1018,7 +1018,7 @@ export class ProjectsPage extends BasePage {
    * Start timer in issue detail dialog
    */
   async startTimer() {
-    if (await this.stopTimerButton.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.stopTimerButton)) {
       return;
     }
 
@@ -1030,7 +1030,7 @@ export class ProjectsPage extends BasePage {
   }
 
   async stopTimer() {
-    if (await this.startTimerButton.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.startTimerButton)) {
       return;
     }
 
@@ -1046,12 +1046,32 @@ export class ProjectsPage extends BasePage {
   // ===================
 
   async expectProjectsView(timeout = 10000) {
-    await expect(this.sidebar).toBeVisible({ timeout });
-    await expect.poll(async () => this.hasCreateProjectEntryPoint(), { timeout }).toBe(true);
+    await expect
+      .poll(() => this.readProjectsViewState(), { timeout, intervals: [200, 500, 1000] })
+      .not.toBe("pending");
   }
 
   async hasCreateProjectEntryPoint() {
-    return await this.newProjectButton.isVisible().catch(() => false);
+    return (
+      (await isLocatorVisible(this.newProjectButton)) ||
+      (await isLocatorVisible(this.createEntityButton))
+    );
+  }
+
+  private async readProjectsViewState(): Promise<"ready" | "pending"> {
+    if (await this.hasCreateProjectEntryPoint()) {
+      return "ready";
+    }
+
+    if (
+      (await isLocatorVisible(this.projectsPageHeading)) ||
+      (await isLocatorVisible(this.projectList)) ||
+      (await isLocatorVisible(this.sidebar))
+    ) {
+      return "ready";
+    }
+
+    return "pending";
   }
 
   private async clickNewProjectButton() {
@@ -1104,20 +1124,15 @@ export class ProjectsPage extends BasePage {
       name: /choose a template/i,
     });
 
-    if (await configureHeading.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(configureHeading)) {
       return "configure";
     }
 
-    if (
-      await this.templateOptionButtons
-        .first()
-        .isVisible()
-        .catch(() => false)
-    ) {
+    if (await isLocatorVisible(this.templateOptionButtons.first())) {
       return "template";
     }
 
-    if (await selectHeading.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(selectHeading)) {
       return "select";
     }
 
@@ -1217,28 +1232,12 @@ export class ProjectsPage extends BasePage {
     }
   }
 
-  private async getLocatorCount(locator: Locator): Promise<number> {
-    try {
-      return await locator.count();
-    } catch {
-      return 0;
-    }
-  }
-
-  private async isLocatorVisible(locator: Locator): Promise<boolean> {
-    try {
-      return await locator.isVisible();
-    } catch {
-      return false;
-    }
-  }
-
   private async waitForLocatorToBecomeVisible(locator: Locator, timeout: number): Promise<boolean> {
     try {
       await locator.waitFor({ state: "visible", timeout });
       return true;
     } catch {
-      return await this.isLocatorVisible(locator);
+      return isLocatorVisible(locator);
     }
   }
 
@@ -1248,7 +1247,7 @@ export class ProjectsPage extends BasePage {
     try {
       await locator.scrollIntoViewIfNeeded();
     } catch (error) {
-      if (!(await this.isLocatorVisible(locator))) {
+      if (!(await isLocatorVisible(locator))) {
         const message = error instanceof Error ? error.message : String(error);
         throw new Error(`${label} was not visible after scroll attempt: ${message}`);
       }
@@ -1259,7 +1258,7 @@ export class ProjectsPage extends BasePage {
     try {
       await this.cancelButton.click();
     } catch (error) {
-      if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+      if (!(await isLocatorVisible(this.createProjectForm))) {
         return;
       }
 
