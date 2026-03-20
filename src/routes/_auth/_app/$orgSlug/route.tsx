@@ -64,7 +64,7 @@ function OrgError({ title, message }: { title: string; message: string }) {
   return (
     <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary p-4">
       <div className="text-center">
-        <Typography variant="h2" className="text-xl font-medium mb-2">
+        <Typography variant="authStatusTitle" className="mb-2">
           {title}
         </Typography>
         <Typography variant="p" color="secondary">

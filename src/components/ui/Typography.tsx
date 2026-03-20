@@ -62,6 +62,8 @@ const typographyVariants = cva("", {
       dashboardHeroTitle: "text-4xl font-extrabold tracking-tight text-ui-text md:text-5xl",
       dashboardStatValue: "text-display-sm font-semibold tracking-tight text-ui-text",
       dashboardStatValueStrong: "text-3xl font-extrabold tracking-tight text-ui-text",
+      errorCodeDisplay: "text-8xl font-bold tracking-tightest text-ui-text",
+      authStatusTitle: "text-xl font-medium text-ui-text",
       landingSectionTitle: "text-4xl font-semibold tracking-tight text-ui-text md:text-5xl",
       landingShowcaseTitle: "text-2xl font-semibold tracking-tight text-ui-text sm:text-3xl",
       landingMetricValue: "text-3xl font-bold tracking-tight text-ui-text sm:text-4xl",
@@ -140,6 +142,7 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
   switch (variant) {
     case "h1":
     case "dashboardHeroTitle":
+    case "errorCodeDisplay":
       return "h1";
     case "h2":
     case "authTitle":
@@ -167,6 +170,7 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
     case "eyebrowWide":
     case "pageHeaderEyebrow":
     case "authBody":
+    case "authStatusTitle":
     case "dashboardStatValue":
     case "dashboardStatValueStrong":
     case "landingMetricValue":

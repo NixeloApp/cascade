@@ -63,9 +63,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </IconCircle>
 
               {/* Large error code with tight tracking */}
-              <Typography variant="h1" className="text-display tracking-tightest">
-                500
-              </Typography>
+              <Typography variant="errorCodeDisplay">500</Typography>
 
               {/* Message with secondary text styling */}
               <Stack gap="sm" align="center">

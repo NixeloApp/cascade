@@ -87,18 +87,13 @@ function RootComponent() {
                 </IconCircle>
 
                 {/* Large error code with tight tracking */}
-                <Typography
-                  variant="h1"
-                  className="text-8xl font-bold tracking-tightest text-ui-text"
-                >
-                  503
-                </Typography>
+                <Typography variant="errorCodeDisplay">503</Typography>
 
                 {/* Message with secondary text styling */}
-                <Typography className="mt-4 text-lg text-ui-text-secondary">
+                <Typography variant="large" color="secondary" className="mt-4">
                   Service Unavailable
                 </Typography>
-                <Typography className="mt-2 text-ui-text-tertiary">
+                <Typography color="tertiary" className="mt-2">
                   The application could not connect to the backend services. Please try again later.
                 </Typography>
 

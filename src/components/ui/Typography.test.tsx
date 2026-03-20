@@ -78,6 +78,30 @@ describe("Typography", () => {
     expect(value.className).toContain("font-bold");
   });
 
+  it("maps errorCodeDisplay to a shared error-code heading", () => {
+    render(
+      <Typography variant="errorCodeDisplay" data-testid="error-code">
+        404
+      </Typography>,
+    );
+    const code = screen.getByTestId("error-code");
+    expect(code.tagName).toBe("H1");
+    expect(code.className).toContain("text-8xl");
+    expect(code.className).toContain("tracking-tightest");
+  });
+
+  it("maps authStatusTitle to a paragraph with medium title styling", () => {
+    render(
+      <Typography variant="authStatusTitle" data-testid="auth-status-title">
+        Account Error
+      </Typography>,
+    );
+    const title = screen.getByTestId("auth-status-title");
+    expect(title.tagName).toBe("P");
+    expect(title.className).toContain("text-xl");
+    expect(title.className).toContain("font-medium");
+  });
+
   it("maps sidebarOrgInitial to a span", () => {
     render(
       <Typography variant="sidebarOrgInitial" data-testid="initials">

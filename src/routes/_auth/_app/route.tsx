@@ -147,7 +147,7 @@ function AppLayout() {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
         <div className="text-center">
-          <Typography variant="h2" className="text-xl font-medium mb-2 text-status-error">
+          <Typography variant="authStatusTitle" color="error" className="mb-2">
             Account Error
           </Typography>
           <Typography variant="p" color="secondary" className="mb-4">
@@ -214,7 +214,7 @@ function InitializeOrganization() {
     return (
       <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary">
         <div className="text-center">
-          <Typography variant="h2" className="text-xl font-medium mb-2 text-status-error">
+          <Typography variant="authStatusTitle" color="error" className="mb-2">
             Error
           </Typography>
           <Typography variant="p" color="secondary">

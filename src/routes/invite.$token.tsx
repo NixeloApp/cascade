@@ -182,7 +182,7 @@ function InviteRoute() {
       <header className="p-6 flex items-center justify-center">
         <Flex align="center" gap="sm">
           <Flex align="center" justify="center" className="h-8 w-8 rounded-lg bg-brand-main">
-            <Typography variant="small" className="font-bold text-ui-bg">
+            <Typography as="span" variant="label" className="text-ui-bg">
               N
             </Typography>
           </Flex>
@@ -274,7 +274,7 @@ function InviteRoute() {
                       "Accept Invitation"
                     )}
                   </Button>
-                  <Typography className="text-xs text-center text-ui-text-tertiary">
+                  <Typography variant="caption" className="text-center">
                     By accepting, you'll join the team and can start collaborating
                   </Typography>
                 </div>
@@ -285,7 +285,7 @@ function InviteRoute() {
               <Unauthenticated>
                 {/* User is not logged in - show sign up/in form */}
                 <div className="space-y-4">
-                  <Typography className="text-sm text-center text-ui-text-secondary mb-4">
+                  <Typography variant="small" color="secondary" className="mb-4 text-center">
                     Sign in or create an account with{" "}
                     <Typography as="strong" variant="strong" className="text-ui-text">
                       {invite.email}
