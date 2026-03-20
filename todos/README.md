@@ -20,12 +20,13 @@ Only unfinished work stays in `/todos`. Completed slices should be removed from 
 
 | Priority | File | Remaining work |
 |----------|------|----------------|
-| P1 | [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Broader consistency system is in place; cleanup remains for 43 Typography drift points, 16 control-chrome drift points, and residual screenshot/state cohesion gaps |
-| P2 | [screenshot-tooling-cleanup.md](./screenshot-tooling-cleanup.md) | Fix failed captures (12% of manifest are loading spinners), replace hardcoded timeouts with proper waits, extract shared helpers, use TEST_IDS |
-| P2 | [feature-docs-expansion.md](./feature-docs-expansion.md) | Expand current feature/design docs into concrete user-story-grade product specs for shipped behavior, starting with the 21 page spec folders still missing CURRENT / IMPLEMENTATION / TARGET docs |
-| P2 | [plane-features.md](./plane-features.md) | Remaining Plane-inspired gaps: dedicated Gantt polish, intake/triage, deploy boards, stickies, analytics enhancements, automation, multi-provider AI, page versions |
-| P2 | [cal-com-features.md](./cal-com-features.md) | Remaining Cal.com-inspired gaps: AI agents/MCP, cancellation reasons, workflow translation, custom domain/SMTP, branding |
-| P3 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export for billing reports |
+| P1 | [meeting-intelligence.md](./meeting-intelligence.md) | Core meetings workspace shipped; remaining: document editor persistence (blocks meeting-to-doc), capture strategy decisions, platform breadth, OSS evaluation, MeetingsWorkspace code quality (55 validator violations) |
+| P1 | [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Consistency system in place; cleanup remains for 43 Typography drift points, 17 control-chrome drift points, and residual screenshot/state cohesion gaps |
+| P2 | [screenshot-tooling-cleanup.md](./screenshot-tooling-cleanup.md) | 37 loading-spinner captures (16.4% of manifest), 198 silent `.catch(() => {})` calls, 201 `.first()` calls, 7 hardcoded timeouts, 33 raw selectors |
+| P2 | [feature-docs-expansion.md](./feature-docs-expansion.md) | 21 page spec folders missing CURRENT / IMPLEMENTATION / TARGET docs |
+| P2 | [plane-features.md](./plane-features.md) | Remaining: dedicated Gantt polish, intake/triage, deploy boards, stickies, analytics enhancements, automation, multi-provider AI, page versions |
+| P2 | [cal-com-features.md](./cal-com-features.md) | Remaining: AI agents/MCP, cancellation reasons (backend done, no frontend UI), workflow translation, custom domain/SMTP, branding |
+| P3 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export (CSV shipped, no PDF library) |
 
 ---
 

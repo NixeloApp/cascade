@@ -6,54 +6,63 @@
 
 ## Problem
 
-The screenshot capture tool (`e2e/screenshot-pages.ts`) has two categories of issues:
+The screenshot capture tool (`e2e/screenshot-pages.ts`, 5039 lines) has two categories of issues:
 
 ### 1. Failed captures producing loading-spinner screenshots
 
-The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 unique hashes. 28 entries across 11 groups are identical loading-spinner captures — completely unrelated features (avatar upload, dashboard customize, command palette, notifications, time tracking, workspaces) share the same hash because the modal never rendered.
+The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 unique hashes. **37 entries across 10 groups** are identical loading-spinner captures -- completely unrelated features share the same hash because the modal never rendered.
 
-**Root cause:** `waitForDialogOpen()` (line ~868) uses `.catch(() => {})` on both the overlay wait and dialog content wait. When the modal fails to open (timeout), the error is silently swallowed and `captureCurrentView` screenshots whatever is on screen — the loading spinner. `waitForScreenshotReady()` (line ~2265) has the same `.catch(() => {})` pattern on its spinner visibility check.
+**Affected features (confirmed visually):**
+- Avatar upload modal (all 4 viewports)
+- Command palette (tablet-light, desktop-light)
+- Cover image upload (all 4 viewports)
+- Create issue modal (desktop-dark)
+- Dashboard customize modal (mobile-light)
+- Members confirm dialog (mobile-light)
+- Notifications popover/filter (desktop-light, desktop-dark, tablet-light, mobile-light)
+- Time tracking manual entry modal (all 4 viewports)
+- Workspace create modal (mobile-light, tablet-light, desktop-light)
 
-**Impact:** 12% of the screenshot manifest is useless — visual regressions in those modals would go completely undetected.
+**Root cause:** **198 `.catch(() => {})` calls** silently swallow errors throughout the file. `waitForDialogOpen()` catches overlay and dialog content wait failures. `waitForScreenshotReady()` catches spinner visibility checks. When anything fails, the tool proceeds to screenshot the loading state instead of the modal.
+
+**Impact:** 16.4% of the screenshot manifest is useless -- visual regressions in those modals go undetected.
 
 **Fix:**
-- [ ] Make `waitForDialogOpen` fail loudly when dialog content doesn't appear instead of silently proceeding
-- [ ] Add a post-capture hash check that flags when a screenshot matches known loading-state hashes
-- [ ] Re-capture the 28 failed screenshots with proper modal wait logic
-- [ ] Consider adding `animations: 'disabled'` to `page.screenshot()` calls to handle CSS animation settling without timeouts
+- [ ] Audit and remove unnecessary `.catch(() => {})` calls (198 total) -- let failures propagate or handle them explicitly
+- [ ] Make `waitForDialogOpen` fail loudly when dialog content doesn't appear
+- [ ] Add a post-capture hash check that flags loading-state hashes
+- [ ] Re-capture the 37 failed screenshots with proper wait logic
+- [ ] Add `animations: 'disabled'` to `page.screenshot()` calls
 
 ### 2. Anti-patterns that should use proper Playwright/E2E conventions
 
-The project validators (`check-e2e-quality.js`, `check-e2e-hard-rules.js`) explicitly skip `screenshot-pages.ts` with the rationale that it's "capture tooling, not a spec test." While the file doesn't need spec-level assertion rigor, it should still follow better practices where existing E2E helpers already solve the same problems.
-
-**Current anti-patterns:**
-
 | Pattern | Count | Issue |
 |---------|-------|-------|
-| `.first()` on broad selectors | ~200 | Masks over-broad selectors; many are on elements that should be unique |
-| `page.waitForTimeout()` | 7 | Hardcoded animation waits; `animations: 'disabled'` or `waitForAnimation()` from `e2e/utils/wait-helpers.ts` would be better |
+| `.catch(() => {})` silent swallows | **198** | Biggest issue -- hides all failures, root cause of spinner captures |
+| `.first()` on broad selectors | 201 | Masks over-broad selectors; many are on elements that should be unique |
+| `page.waitForTimeout()` | 7 | Hardcoded animation waits; use `animations: 'disabled'` or `waitForAnimation()` |
+| Raw `data-` attribute selectors | ~33 | Should use TEST_IDS constants (52 TEST_IDS refs already exist, partial migration) |
 | `setTimeout` in polling loop | 1 | Legitimate for server-side polling but could use `expect.poll()` |
-| Raw CSS/data selectors | ~10 | `[data-calendar]`, `[data-loading-skeleton]` etc. should use TEST_IDS constants |
 
-**Existing E2E helpers that could be reused:**
-
-The project already has proper implementations in `e2e/utils/wait-helpers.ts`:
-- `waitForAnimation()` — CSS animation completion via `getAnimations()`
-- `waitForModal()` — Modal open + animation complete
-- `waitForDashboardReady()` — Full dashboard shell readiness
-- `waitForBoardLoaded()` — Project board readiness
-- `dismissAllToasts()` — Toast removal with retry
+**Existing E2E helpers that could be reused** (`e2e/utils/wait-helpers.ts`):
+- `waitForAnimation()` -- CSS animation completion via `getAnimations()`
+- `waitForModal()` -- Modal open + animation complete
+- `waitForDashboardReady()` -- Full dashboard shell readiness
+- `waitForBoardLoaded()` -- Project board readiness
+- `dismissAllToasts()` -- Toast removal with retry
 
 **Fix:**
-- [ ] Replace `waitForTimeout` calls with `animations: 'disabled'` on screenshot calls or `waitForAnimation()` from shared helpers
+- [ ] Replace `.catch(() => {})` with explicit error handling or let errors propagate
+- [ ] Replace `waitForTimeout` calls with `animations: 'disabled'` or `waitForAnimation()`
 - [ ] Replace raw data-attribute selectors with TEST_IDS constants
-- [ ] Reduce `.first()` usage by scoping selectors or using test IDs for unique elements
-- [ ] Extract `dismissAllDialogs()`, `waitForDialogOpen()`, and `waitForScreenshotReady()` to `e2e/utils/` so both screenshot tool and E2E tests can share them
-- [ ] Update the validator skip comment in `check-e2e-quality.js` to reference this TODO
+- [ ] Reduce `.first()` usage by scoping selectors or using test IDs
+- [ ] Extract `dismissAllDialogs()`, `waitForDialogOpen()`, `waitForScreenshotReady()` to `e2e/utils/`
+- [ ] Update validator skip in `check-e2e-quality.js` (done -- references this TODO)
 
 ## Done When
 
-- [ ] Zero loading-spinner screenshots in the manifest (all captures show real content)
-- [ ] No `waitForTimeout` calls — replaced with proper wait mechanisms
-- [ ] Shared helpers extracted to `e2e/utils/` and reused by both screenshot tool and E2E specs
-- [ ] Raw selector count reduced to near-zero via TEST_IDS constants
+- [ ] Zero loading-spinner screenshots in the manifest
+- [ ] `.catch(() => {})` count reduced from 198 to only intentional cases with comments
+- [ ] No `waitForTimeout` calls
+- [ ] Shared helpers extracted to `e2e/utils/`
+- [ ] Raw selector count near-zero via TEST_IDS constants
