@@ -96,6 +96,12 @@ describe("Avatar", () => {
       const root = document.querySelector('[class*="w-12"]');
       expect(root).toBeInTheDocument();
     });
+
+    it("applies xxl size", () => {
+      render(<Avatar name="JD" size="xxl" />);
+      const root = document.querySelector('[class*="w-32"]');
+      expect(root).toBeInTheDocument();
+    });
   });
 
   describe("variants", () => {

@@ -148,8 +148,6 @@ const BASELINE_FILES = new Set([
   "src/components/RoadmapView.tsx",
   "src/components/Settings.tsx",
   "src/components/Settings/ApiKeysManager.tsx",
-  "src/components/Settings/AvatarUploadModal.tsx",
-  "src/components/Settings/CoverImageUploadModal.tsx",
   "src/components/Settings/GitHubIntegration.tsx",
   "src/components/Settings/LinkedRepositories.tsx",
   "src/components/Settings/NotificationsTab.tsx",

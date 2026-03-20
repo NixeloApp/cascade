@@ -9,13 +9,17 @@ import { Camera, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { Dialog } from "@/components/ui/Dialog";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
 import { ImageUploadDropzone } from "@/components/ui/ImageUploadDropzone";
+import {
+  MediaPreviewAction,
+  MediaPreviewFileCard,
+  MediaPreviewFrame,
+} from "@/components/ui/MediaPreview";
 import { Stack } from "@/components/ui/Stack";
-import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
 
@@ -167,26 +171,21 @@ export function AvatarUploadModal({
       <Stack gap="lg">
         {/* Preview */}
         <Flex justify="center">
-          <Card padding="none" variant="ghost" className="relative">
-            <Avatar
-              name={userName}
-              email={userEmail}
-              src={displayImage}
-              size="xl"
-              className="w-32 h-32"
-            />
+          <MediaPreviewFrame surface="avatar">
+            <Avatar name={userName} email={userEmail} src={displayImage} size="xxl" />
             {displayImage && (
-              <IconButton
-                variant="solid"
-                size="sm"
-                className="absolute -bottom-1 -right-1"
-                onClick={() => fileInputRef.current?.click()}
-                tooltip="Choose another avatar"
-              >
-                <Camera className="h-4 w-4" />
-              </IconButton>
+              <MediaPreviewAction placement="avatarUpload">
+                <IconButton
+                  variant="solid"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  tooltip="Choose another avatar"
+                >
+                  <Icon icon={Camera} size="sm" />
+                </IconButton>
+              </MediaPreviewAction>
             )}
-          </Card>
+          </MediaPreviewFrame>
         </Flex>
 
         <ImageUploadDropzone
@@ -202,18 +201,7 @@ export function AvatarUploadModal({
         />
 
         {/* Selected file info */}
-        {selectedFile && (
-          <Card padding="sm" variant="flat">
-            <Flex align="center" justify="between" gap="sm">
-              <Typography variant="small" className="truncate">
-                {selectedFile.name}
-              </Typography>
-              <Typography variant="caption" color="secondary">
-                {(selectedFile.size / 1024).toFixed(0)} KB
-              </Typography>
-            </Flex>
-          </Card>
-        )}
+        {selectedFile && <MediaPreviewFileCard file={selectedFile} />}
 
         {/* Actions */}
         <Flex gap="sm" justify="end">
@@ -222,7 +210,7 @@ export function AvatarUploadModal({
               variant="ghostDanger"
               onClick={handleRemove}
               disabled={isUploading}
-              leftIcon={<Trash2 className="h-4 w-4" />}
+              leftIcon={<Icon icon={Trash2} size="sm" />}
             >
               Remove
             </Button>

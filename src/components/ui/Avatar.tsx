@@ -24,6 +24,7 @@ const avatarVariants = cva(
         md: "w-8 h-8",
         lg: "w-10 h-10",
         xl: "w-12 h-12",
+        xxl: "w-32 h-32",
       },
       treatment: {
         default: "ring-1 ring-ui-border/50",
@@ -48,6 +49,7 @@ const fallbackVariants = cva(
         md: "text-sm",
         lg: "text-base",
         xl: "text-lg",
+        xxl: "text-2xl",
       },
       variant: {
         brand: "bg-brand/10 text-brand",
@@ -204,6 +206,7 @@ export function AvatarGroup({
     md: "-ml-2.5",
     lg: "-ml-3",
     xl: "-ml-3.5",
+    xxl: "-ml-4",
   };
 
   const overflowNode = (
@@ -222,6 +225,7 @@ export function AvatarGroup({
         size === "md" && "w-8 h-8 text-xs",
         size === "lg" && "w-10 h-10 text-sm",
         size === "xl" && "w-12 h-12 text-sm",
+        size === "xxl" && "w-32 h-32 text-base",
       )}
     >
       +{overflow}

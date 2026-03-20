@@ -8,11 +8,18 @@ import { api } from "@convex/_generated/api";
 import { Camera, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { Dialog } from "@/components/ui/Dialog";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
 import { ImageUploadDropzone } from "@/components/ui/ImageUploadDropzone";
+import {
+  MediaPreviewAction,
+  MediaPreviewEmptyState,
+  MediaPreviewFileCard,
+  MediaPreviewFrame,
+  MediaPreviewImage,
+} from "@/components/ui/MediaPreview";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
@@ -161,35 +168,34 @@ export function CoverImageUploadModal({
     >
       <Stack gap="lg">
         {/* Preview */}
-        <Card
+        <MediaPreviewFrame
           padding="none"
           radius="md"
+          surface="cover"
           variant={displayImage ? "flat" : "outline"}
-          className="relative h-32 overflow-hidden border-dashed"
         >
-          <div className="h-full w-full">
-            {displayImage ? (
-              <img src={displayImage} alt="Cover preview" className="w-full h-full object-cover" />
-            ) : (
-              <Flex align="center" justify="center" className="h-full">
-                <Typography variant="caption" color="tertiary">
-                  No cover image
-                </Typography>
-              </Flex>
-            )}
-          </div>
-          {displayImage && (
-            <IconButton
-              variant="solid"
-              size="sm"
-              className="absolute bottom-2 right-2 backdrop-blur-sm"
-              onClick={() => fileInputRef.current?.click()}
-              tooltip="Choose another cover image"
-            >
-              <Camera className="h-4 w-4" />
-            </IconButton>
+          {displayImage ? (
+            <MediaPreviewImage alt="Cover preview" src={displayImage} />
+          ) : (
+            <MediaPreviewEmptyState>
+              <Typography variant="caption" color="tertiary">
+                No cover image
+              </Typography>
+            </MediaPreviewEmptyState>
           )}
-        </Card>
+          {displayImage && (
+            <MediaPreviewAction placement="coverCorner">
+              <IconButton
+                variant="solid"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                tooltip="Choose another cover image"
+              >
+                <Icon icon={Camera} size="sm" />
+              </IconButton>
+            </MediaPreviewAction>
+          )}
+        </MediaPreviewFrame>
 
         <ImageUploadDropzone
           acceptedTypes={ACCEPTED_TYPES}
@@ -204,18 +210,7 @@ export function CoverImageUploadModal({
         />
 
         {/* Selected file info */}
-        {selectedFile && (
-          <Card padding="sm" variant="flat">
-            <Flex align="center" justify="between" gap="sm">
-              <Typography variant="small" className="truncate">
-                {selectedFile.name}
-              </Typography>
-              <Typography variant="caption" color="secondary">
-                {(selectedFile.size / 1024).toFixed(0)} KB
-              </Typography>
-            </Flex>
-          </Card>
-        )}
+        {selectedFile && <MediaPreviewFileCard file={selectedFile} />}
 
         {/* Actions */}
         <Flex gap="sm" justify="end">
@@ -224,7 +219,7 @@ export function CoverImageUploadModal({
               variant="ghostDanger"
               onClick={handleRemove}
               disabled={isUploading}
-              leftIcon={<Trash2 className="h-4 w-4" />}
+              leftIcon={<Icon icon={Trash2} size="sm" />}
             >
               Remove
             </Button>
