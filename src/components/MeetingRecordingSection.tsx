@@ -23,7 +23,9 @@ import { Collapsible, CollapsibleContent, CollapsibleHeader } from "./ui/Collaps
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Flex } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
+import { List } from "./ui/List";
 import { Metadata, MetadataItem } from "./ui/Metadata";
+import { ScrollArea } from "./ui/ScrollArea";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
@@ -358,15 +360,11 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
       {summary && summary.keyPoints.length > 0 && (
         <Stack gap="sm">
           <Typography variant="label">Key Points</Typography>
-          <Stack
-            as="ul"
-            gap="xs"
-            className="list-disc list-inside text-ui-text-secondary marker:text-brand"
-          >
+          <List gap="xs" variant="bulleted">
             {summary.keyPoints.map((point: string) => (
               <li key={point}>{point}</li>
             ))}
-          </Stack>
+          </List>
         </Stack>
       )}
 
@@ -404,16 +402,16 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
       {summary && summary.decisions.length > 0 && (
         <Stack gap="sm">
           <Typography variant="label">Decisions Made</Typography>
-          <Stack as="ul" gap="xs">
+          <List gap="xs">
             {summary.decisions.map((decision: string) => (
               <Flex as="li" key={decision} align="start" gap="sm">
-                <CheckCircle className="w-4 h-4 text-status-success shrink-0 mt-0.5" />
+                <Icon icon={CheckCircle} size="sm" tone="success" className="shrink-0 mt-0.5" />
                 <Typography variant="caption" color="secondary">
                   {decision}
                 </Typography>
               </Flex>
             ))}
-          </Stack>
+          </List>
         </Stack>
       )}
 
@@ -424,10 +422,12 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
             {showTranscript ? "Hide Transcript" : "Show Full Transcript"}
           </CollapsibleHeader>
           <CollapsibleContent>
-            <Card variant="soft" padding="md" className="max-h-96 overflow-y-auto">
-              <Typography as="pre" variant="mono" color="secondary" className="whitespace-pre-wrap">
-                {transcript.fullText}
-              </Typography>
+            <Card variant="soft" padding="md">
+              <ScrollArea size="contentLg">
+                <Typography as="pre" variant="monoBlock">
+                  {transcript.fullText}
+                </Typography>
+              </ScrollArea>
             </Card>
           </CollapsibleContent>
         </Collapsible>
