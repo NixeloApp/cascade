@@ -1456,9 +1456,17 @@ export function MeetingsWorkspace() {
   const [platformFilter, setPlatformFilter] = useState<PlatformFilter>("all");
   const [timeWindowFilter, setTimeWindowFilter] = useState<TimeWindowFilter>("all");
   const deferredSearchQuery = useDeferredValue(searchQuery.trim());
+  const searchQueryArgs =
+    deferredSearchQuery.length >= 2
+      ? {
+          query: deferredSearchQuery,
+          limit: 50,
+          ...(projectFilter !== "all" ? { projectId: projectFilter as Id<"projects"> } : {}),
+        }
+      : "skip";
   const searchedRecordings = useAuthenticatedQuery(
     api.meetingBot.searchRecordings,
-    deferredSearchQuery.length >= 2 ? { query: deferredSearchQuery, limit: 50 } : "skip",
+    searchQueryArgs,
   );
   const [selectedRecordingId, setSelectedRecordingId] = useState<Id<"meetingRecordings"> | null>(
     null,
@@ -1498,7 +1506,15 @@ export function MeetingsWorkspace() {
         recordings === undefined ||
         (deferredSearchQuery.length >= 2 && searchedRecordings === undefined)
       }
-      isEmpty={recordings !== undefined && recordings.length === 0}
+      isEmpty={
+        recordings !== undefined &&
+        recordings.length === 0 &&
+        projectFilter === "all" &&
+        statusFilter === "all" &&
+        platformFilter === "all" &&
+        timeWindowFilter === "all" &&
+        deferredSearchQuery.length < 2
+      }
       emptyState={{
         icon: Mic,
         title: "No meeting recordings yet",

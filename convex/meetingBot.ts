@@ -333,6 +333,7 @@ export const listRecordings = authenticatedQuery({
 export const searchRecordings = authenticatedQuery({
   args: {
     query: v.string(),
+    projectId: v.optional(v.id("projects")),
     limit: v.optional(v.number()),
   },
   returns: v.array(
@@ -396,6 +397,8 @@ export const searchRecordings = authenticatedQuery({
     for (const transcript of transcripts) {
       const recording = recordingMap.get(transcript.recordingId);
       if (!recording || seenRecordingIds.has(recording._id)) continue;
+
+      if (args.projectId && recording.projectId !== args.projectId) continue;
 
       const hasAccess = await canAccessRecording(ctx, recording);
       if (!hasAccess) continue;
