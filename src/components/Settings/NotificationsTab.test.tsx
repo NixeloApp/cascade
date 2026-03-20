@@ -193,6 +193,28 @@ describe("NotificationsTab", () => {
     expect(screen.queryByRole("button", { name: "Enable" })).not.toBeInTheDocument();
   });
 
+  it("renders a persistent warning when browser notification permission is denied", () => {
+    mockUseWebPush.mockReturnValue({
+      isSupported: true,
+      isSubscribed: false,
+      isLoading: false,
+      permission: "denied",
+      subscribe: mockSubscribe,
+      unsubscribe: mockUnsubscribe,
+    });
+
+    render(<NotificationsTab />);
+
+    expect(screen.getByText("Browser notifications blocked")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Notification permission is denied for this site. Re-enable notifications in your browser settings to receive push alerts.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Blocked" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Enable" })).not.toBeInTheDocument();
+  });
+
   it("updates email and quiet-hours preferences", async () => {
     const user = userEvent.setup();
     mockUpdatePreferences.mockResolvedValue(undefined);

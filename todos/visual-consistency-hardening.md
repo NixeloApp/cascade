@@ -18,23 +18,17 @@ Make the product more visually cohesive and more enforceable in code, using the 
 
 ### Typography override drift
 
-- [ ] Remove or absorb the 94 current `Typography` className size/weight/tracking overrides surfaced by `check-typography-drift.js`
+- [ ] Remove or absorb the 43 current `Typography` className size/weight/tracking overrides surfaced by `check-typography-drift.js`
 - [ ] Where the same override pattern repeats, add a real `Typography` variant or supporting primitive instead of continuing one-off className fixes
 
 ### Owned-control drift
 
-- [ ] Remove or absorb the 49 current control-chrome overrides surfaced by `check-control-chrome-drift.js`
+- [ ] Remove or absorb the 16 current control-chrome overrides surfaced by `check-control-chrome-drift.js`
 - [ ] Promote repeated `Button` / `Badge` / `Input` / `Textarea` / `TabsTrigger` restyling into owned variants instead of feature-local className patches
-
-### Shared type-shape drift
-
-- [ ] Replace the 2 repeated inline entity-summary shape groups surfaced by `check-shared-shape-drift.js` with shared aliases
-- [ ] Start with assignee/reporter/member/user summary props in high-churn feature surfaces
 
 ### Screenshot review residue
 
 - [ ] Keep screenshot coverage and screenshot drift approval in sync with visual changes
-- [ ] Capture canonical screenshots for spec'd modals in `docs/design/specs/modals/screenshots/`
 - [ ] Do not let modal/interaction-state screenshot gaps hide consistency regressions
 
 ### Human-review blind spots

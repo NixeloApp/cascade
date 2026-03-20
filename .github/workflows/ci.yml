@@ -72,6 +72,9 @@ jobs:
       - name: Architectural Checks
         run: pnpm run validate
 
+      - name: Screenshot Manifest
+        run: pnpm run screenshots:check
+
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
@@ -326,4 +329,3 @@ jobs:
           name: playwright-blob-shard-${{ matrix.shardIndex }}
           path: blob-report/
           retention-days: 7
-

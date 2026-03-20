@@ -67,10 +67,10 @@ export function ResetPasswordForm({ email, onSuccess, onRetry }: ResetPasswordFo
 
   return (
     <div className="w-full">
-      <Typography variant="h2" className="text-xl font-semibold mb-4">
+      <Typography variant="authTitle" className="mb-4">
         Enter reset code
       </Typography>
-      <Typography variant="p" color="secondary" className="mb-4 text-sm">
+      <Typography variant="authBody" className="mb-4">
         We sent a code to{" "}
         <Typography as="strong" variant="strong">
           {email}

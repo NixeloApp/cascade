@@ -63,12 +63,18 @@ const tabsTriggerVariants = cva(
         pill: "min-h-8 rounded-xl px-3 py-1.5 text-sm text-ui-text-secondary hover:bg-ui-bg-hover hover:text-ui-text data-[state=active]:bg-ui-bg data-[state=active]:text-ui-text data-[state=active]:shadow-soft data-[state=active]:ring-1 data-[state=active]:ring-ui-border-secondary/70",
         /** Underline style - border-bottom indicator */
         underline:
-          "rounded-none border-b-2 border-transparent px-1 py-3 text-sm bg-transparent shadow-none text-ui-text-secondary hover:text-ui-text data-[state=active]:border-brand data-[state=active]:bg-transparent data-[state=active]:text-ui-text data-[state=active]:shadow-none",
+          "rounded-none border-b-2 border-transparent px-1 py-3 text-sm bg-transparent shadow-none text-ui-text-secondary hover:text-ui-text data-[state=active]:bg-transparent data-[state=active]:shadow-none",
       },
       size: {
         default: "",
         compact:
           "min-h-8 rounded-full px-2 py-1 text-xs leading-tight sm:min-h-8 sm:px-2.5 sm:py-1 sm:text-xs lg:px-3 lg:text-sm",
+        eyebrow: "px-1 py-3 text-xs font-bold uppercase tracking-widest text-ui-text-tertiary",
+        underlineCompact: "px-1 pb-3 pt-3 text-xs font-medium sm:text-sm",
+      },
+      tone: {
+        default: "",
+        indigo: "",
       },
       width: {
         default: "",
@@ -76,9 +82,23 @@ const tabsTriggerVariants = cva(
         fill: "flex-1",
       },
     },
+    compoundVariants: [
+      {
+        variant: "underline",
+        tone: "default",
+        className: "data-[state=active]:border-brand data-[state=active]:text-ui-text",
+      },
+      {
+        variant: "underline",
+        tone: "indigo",
+        className:
+          "data-[state=active]:border-brand-indigo-border data-[state=active]:text-brand-indigo-text",
+      },
+    ],
     defaultVariants: {
       variant: "pill",
       size: "default",
+      tone: "default",
       width: "default",
     },
   },
@@ -91,10 +111,10 @@ interface TabsTriggerProps
 const TabsTrigger = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
   TabsTriggerProps
->(({ className, size, variant, width, ...props }, ref) => (
+>(({ className, size, tone, variant, width, ...props }, ref) => (
   <TabsPrimitive.Trigger
     ref={ref}
-    className={cn(tabsTriggerVariants({ size, variant, width }), className)}
+    className={cn(tabsTriggerVariants({ size, tone, variant, width }), className)}
     {...props}
   />
 ));

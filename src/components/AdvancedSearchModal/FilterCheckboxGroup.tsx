@@ -28,7 +28,7 @@ export function FilterCheckboxGroup<T extends string>({
   return (
     <Card recipe="commandSection" padding="md">
       <Stack gap="sm">
-        <Typography variant="label" className="uppercase tracking-wider text-ui-text-tertiary">
+        <Typography variant="eyebrow" color="tertiary">
           {label}
         </Typography>
         <Stack gap="sm" className={cn(maxHeight)}>

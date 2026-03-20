@@ -5,6 +5,7 @@ import { usePaginatedQuery } from "convex/react";
 import { useState } from "react";
 import { CreateIssueModal, IssueCard } from "@/components/IssueDetail";
 import { IssueDetailViewer } from "@/components/IssueDetailViewer";
+import { ViewModeToggle } from "@/components/Kanban/ViewModeToggle";
 import { PageContent, PageHeader, PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -26,7 +27,7 @@ export const Route = createFileRoute("/_auth/_app/$orgSlug/issues/")({
   component: AllIssuesPage,
 });
 
-function AllIssuesPage() {
+export function AllIssuesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedIssueId, setSelectedIssueId] = useState<Id<"issues"> | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
@@ -73,9 +74,15 @@ function AllIssuesPage() {
         title="Issues"
         description="All issues across your organization"
         actions={
-          <Button onClick={() => setShowCreateModal(true)} leftIcon={<Plus className="w-4 h-4" />}>
-            Create Issue
-          </Button>
+          <Flex align="center" gap="sm">
+            <ViewModeToggle />
+            <Button
+              onClick={() => setShowCreateModal(true)}
+              leftIcon={<Plus className="w-4 h-4" />}
+            >
+              Create Issue
+            </Button>
+          </Flex>
         }
       />
 

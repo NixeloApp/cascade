@@ -55,11 +55,10 @@ const BROAD_CLASS_PATTERNS = [
 const SKIP_FILES = new Set([
   "e2e/global-setup.ts", // Setup scaffolding, not a test
   "e2e/fixtures.ts", // Test fixture definitions
-  // screenshot-pages.ts is a capture utility, not a spec test. It intentionally
-  // uses broad selectors (page.locator("a")), force:true clicks, and .first()
-  // calls because it navigates the live app to take screenshots, not to assert
-  // behavior. Applying spec-level rules here would require rewriting the tool
-  // for no test-quality benefit.
+  // screenshot-pages.ts is a capture utility, not a spec test. It is currently
+  // skipped because it uses broad selectors, .first(), and hardcoded timeouts.
+  // TODO: Remove this skip — the tool should use TEST_IDS, shared wait helpers,
+  // and animations:'disabled' instead. See todos/screenshot-tooling-cleanup.md.
   "e2e/screenshot-pages.ts",
 ]);
 

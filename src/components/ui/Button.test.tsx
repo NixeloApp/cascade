@@ -51,6 +51,18 @@ describe("Button", () => {
       expect(btn.className).toContain("bg-ui-bg");
     });
 
+    it("applies brandSolid variant", () => {
+      render(
+        <Button variant="brandSolid" data-testid="btn">
+          Upgrade
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("bg-brand");
+      expect(btn.className).toContain("shadow-brand/20");
+      expect(btn.className).toContain("hover:bg-brand-hover");
+    });
+
     it("applies ghost variant", () => {
       render(
         <Button variant="ghost" data-testid="btn">
@@ -114,6 +126,36 @@ describe("Button", () => {
       expect(btn.className).toContain("rounded-full");
       expect(btn.className).not.toContain("bg-linear-to-r");
     });
+
+    it("applies document tree section chrome styling", () => {
+      render(
+        <Button
+          chrome="documentTreeSectionMuted"
+          chromeSize="documentTreeSection"
+          data-testid="btn"
+        >
+          Archived
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("text-ui-text-tertiary");
+      expect(btn.className).toContain("w-full");
+      expect(btn.className).toContain("justify-start");
+      expect(btn.className).toContain("px-2");
+    });
+
+    it("applies roadmap chrome styling", () => {
+      render(
+        <Button chrome="roadmapGroupRow" chromeSize="roadmapGroupRow" data-testid="btn">
+          Group
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("bg-ui-bg-secondary/60");
+      expect(btn.className).toContain("border-ui-border");
+      expect(btn.className).toContain("w-full");
+      expect(btn.className).toContain("text-left");
+    });
   });
 
   describe("sizes", () => {
@@ -157,6 +199,18 @@ describe("Button", () => {
       expect(btn.className).toContain("w-10");
     });
 
+    it("applies workspace icon size", () => {
+      render(
+        <Button size="workspaceIcon" data-testid="btn">
+          🏢
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("h-10");
+      expect(btn.className).toContain("w-10");
+      expect(btn.className).toContain("text-lg");
+    });
+
     it("applies chrome icon size without inheriting default button sizing", () => {
       render(
         <Button chrome="quiet" chromeSize="icon" data-testid="btn">
@@ -167,6 +221,31 @@ describe("Button", () => {
       expect(btn.className).toContain("h-9");
       expect(btn.className).toContain("w-9");
       expect(btn.className).not.toContain("h-10");
+    });
+
+    it("applies document tree toggle sizing", () => {
+      render(
+        <Button chrome="documentTreeToggle" chromeSize="documentTreeToggle" data-testid="btn">
+          <Plus />
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("h-5");
+      expect(btn.className).toContain("w-5");
+      expect(btn.className).toContain("p-0.5");
+    });
+
+    it("applies roadmap resize handle sizing", () => {
+      render(
+        <Button chrome="roadmapResizeHandle" chromeSize="roadmapResizeLeft" data-testid="btn">
+          Handle
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("absolute");
+      expect(btn.className).toContain("left-0");
+      expect(btn.className).toContain("w-2");
+      expect(btn.className).toContain("cursor-ew-resize");
     });
   });
 

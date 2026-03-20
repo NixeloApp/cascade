@@ -59,10 +59,7 @@ export function RecentActivity({ activities }: { activities: Activity[] | undefi
                       </>
                     )}
                     {activity.issueKey && (
-                      <Badge
-                        variant="neutral"
-                        className="font-mono text-caption bg-ui-bg-tertiary/50 border-ui-border"
-                      >
+                      <Badge variant="issueKey" size="sm">
                         {activity.issueKey}
                       </Badge>
                     )}

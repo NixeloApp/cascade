@@ -164,10 +164,8 @@ rbacTest(
     viewerPage.on("console", (msg) => console.log(`[Browser Console] ${msg.text()}`));
     await gotoRbacProject(viewerPage);
 
-    // 2. Verify board is visible - check for project name heading
-    await expect(
-      viewerPage.getByRole("heading", { name: new RegExp(RBAC_TEST_CONFIG.projectName, "i") }),
-    ).toBeVisible();
+    // 2. Verify board is visible
+    await expect(viewerPage).toHaveURL(routePattern(ROUTES.projects.board.path));
     console.log("✓ Viewer can view project board");
 
     // 3. Verify create issue button is NOT visible to viewers

@@ -20,7 +20,7 @@ import { Card } from "@/components/ui/Card";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import type { OutOfOfficeStatusSummary } from "@/lib/outOfOffice";
+import type { UserSummary, UserSummaryWithOutOfOffice } from "@/lib/entitySummaries";
 import { showError } from "@/lib/toast";
 
 interface IssueDetailSidebarProps {
@@ -29,13 +29,8 @@ interface IssueDetailSidebarProps {
   status: string;
   type: IssueTypeWithSubtask;
   priority: IssuePriority;
-  assignee?: {
-    _id: Id<"users">;
-    name: string;
-    image?: string;
-    outOfOffice?: OutOfOfficeStatusSummary;
-  } | null;
-  reporter?: { _id: Id<"users">; name: string; image?: string } | null;
+  assignee?: UserSummaryWithOutOfOffice | null;
+  reporter?: UserSummary | null;
   storyPoints?: number;
   labels: LabelInfo[];
   estimatedHours?: number;
@@ -48,9 +43,7 @@ function SidebarSection({ title, children }: { title: string; children: ReactNod
   return (
     <section className="pb-6 border-b border-ui-border/30 last:border-b-0 last:pb-0">
       <Stack gap="md">
-        <Typography variant="caption" color="tertiary" className="uppercase tracking-widest">
-          {title}
-        </Typography>
+        <Typography variant="eyebrowWide">{title}</Typography>
         {children}
       </Stack>
     </section>

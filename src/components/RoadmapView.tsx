@@ -903,9 +903,9 @@ function RoadmapTodayMarker({ offsetPx, variant }: RoadmapTodayMarkerProps) {
     >
       {variant === "header" ? (
         <Badge
-          variant="alertCount"
+          variant="roadmapToday"
           shape="pill"
-          className="absolute top-2 left-0 -translate-x-1/2 shadow-sm"
+          className="absolute top-2 left-0 -translate-x-1/2"
         >
           Today
         </Badge>
@@ -957,9 +957,9 @@ function RoadmapTimelineBar({
         }}
       >
         <Button
-          variant="unstyled"
+          chrome="roadmapTimelineHitArea"
+          chromeSize="roadmapTimelineFill"
           data-testid={`roadmap-milestone-${issue._id}`}
-          className="relative h-full w-full p-0"
           onMouseDown={(e) => onBarDragStart(e, issue._id, issue.startDate, issue.dueDate)}
           onClick={() => onOpenIssue(issue._id)}
           title={getRoadmapBarTitle(issue, canEdit)}
@@ -993,11 +993,9 @@ function RoadmapTimelineBar({
       <Flex align="center" className="h-full">
         {canEdit && issue.startDate ? (
           <Button
-            variant="unstyled"
-            size="none"
             chrome="roadmapResizeHandle"
+            chromeSize="roadmapResizeLeft"
             reveal={true}
-            className="absolute top-0 bottom-0 left-0 w-2 cursor-ew-resize rounded-l-full"
             onMouseDown={(e) => onResizeStart(e, issue._id, "left", issue.startDate, issue.dueDate)}
             title="Drag to change start date"
           >
@@ -1006,9 +1004,9 @@ function RoadmapTimelineBar({
         ) : null}
 
         <Button
-          variant="unstyled"
+          chrome="roadmapTimelineHitArea"
+          chromeSize="roadmapTimelineLabel"
           data-testid={`roadmap-bar-${issue._id}`}
-          className="h-full w-full px-2"
           onMouseDown={(e) => onBarDragStart(e, issue._id, issue.startDate, issue.dueDate)}
           onClick={() => onOpenIssue(issue._id)}
           title={getRoadmapBarTitle(issue, canEdit)}
@@ -1023,11 +1021,9 @@ function RoadmapTimelineBar({
 
         {canEdit ? (
           <Button
-            variant="unstyled"
-            size="none"
             chrome="roadmapResizeHandle"
+            chromeSize="roadmapResizeRight"
             reveal={true}
-            className="absolute top-0 right-0 bottom-0 w-2 cursor-ew-resize rounded-r-full"
             onMouseDown={(e) =>
               onResizeStart(e, issue._id, "right", issue.startDate, issue.dueDate)
             }
@@ -1068,12 +1064,12 @@ function RoadmapGroupRow({ getPositionOnTimeline, group, onToggle, style }: Road
   return (
     <Button
       type="button"
-      variant="unstyled"
+      chrome="roadmapGroupRow"
+      chromeSize="roadmapGroupRow"
       onClick={() => onToggle(group.key)}
       aria-expanded={!group.collapsed}
       aria-label={`Toggle ${group.label} group`}
       style={style}
-      className="w-full border-b border-ui-border bg-ui-bg-secondary/60 px-4 text-left"
       data-testid={`roadmap-group-${group.key}`}
     >
       <Flex align="center">
@@ -1091,14 +1087,14 @@ function RoadmapGroupRow({ getPositionOnTimeline, group, onToggle, style }: Road
               <Typography variant="label" color="secondary">
                 {getTimelineGroupLabel(group)}
               </Typography>
-              <span
-                className={cn(
-                  "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium",
-                  getTimelineGroupBadgeClassName(group),
-                )}
+              <Badge
+                variant="roadmapGroup"
+                size="md"
+                shape="pill"
+                className={getTimelineGroupBadgeClassName(group)}
               >
                 {group.label}
-              </span>
+              </Badge>
             </Flex>
             <Typography variant="caption" color="secondary">
               {group.count} {group.count === 1 ? "issue" : "issues"} · {epicCompletionPercentage}%
@@ -1271,8 +1267,8 @@ function RoadmapIssueIdentity({
           {hasChildren ? (
             <Button
               type="button"
-              variant="unstyled"
-              className="flex h-4 w-4 items-center justify-center p-0 text-ui-text-tertiary"
+              chrome="roadmapSubtaskToggle"
+              chromeSize="roadmapSubtaskToggle"
               onClick={() => onToggleChildren(issue._id)}
               aria-expanded={!childrenCollapsed}
               aria-label={childToggleLabel}
@@ -1284,12 +1280,10 @@ function RoadmapIssueIdentity({
           )}
           {hasChildren ? <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="sm" /> : null}
           <Button
-            variant="unstyled"
+            chrome={selected ? "roadmapIssueKeyActive" : "roadmapIssueKey"}
+            chromeSize="roadmapIssueKey"
             onClick={() => onOpenIssue(issue._id)}
-            className={cn(
-              "h-auto truncate p-0 text-left text-sm font-medium",
-              selected ? "text-brand-hover" : "text-ui-text",
-            )}
+            className="truncate"
           >
             {issue.key}
           </Button>

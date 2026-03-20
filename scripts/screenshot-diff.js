@@ -13,6 +13,7 @@
  *   1 — changes detected (new, removed, or modified screenshots)
  */
 
+import { execSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -23,6 +24,7 @@ const MANIFEST_PATH = path.join(ROOT, ".screenshot-hashes.json");
 // Directories that contain screenshots
 const SCREENSHOT_DIRS = [
   path.join(ROOT, "docs", "design", "specs", "pages"),
+  path.join(ROOT, "docs", "design", "specs", "modals", "screenshots"),
   path.join(ROOT, "e2e", "screenshots"),
 ];
 
@@ -50,11 +52,31 @@ function hashFile(filePath) {
   return createHash("sha256").update(content).digest("hex");
 }
 
+/** Returns the set of screenshot paths (relative to ROOT) tracked by git. */
+function getGitTrackedScreenshots() {
+  const patterns = SCREENSHOT_DIRS.map((d) => {
+    const rel = path.relative(ROOT, d);
+    // For flat dirs use *.png, for nested (pages) use **/
+    return fs.existsSync(d) &&
+      fs.readdirSync(d).some((e) => fs.statSync(path.join(d, e)).isDirectory())
+      ? `${rel}/**/*.png`
+      : `${rel}/*.png`;
+  });
+  const out = execSync(`git ls-files -- ${patterns.map((p) => `'${p}'`).join(" ")}`, {
+    cwd: ROOT,
+    encoding: "utf8",
+  });
+  return new Set(out.trim().split("\n").filter(Boolean));
+}
+
 function buildCurrentManifest() {
+  const tracked = getGitTrackedScreenshots();
   const manifest = {};
   for (const dir of SCREENSHOT_DIRS) {
     for (const filePath of collectPngFiles(dir)) {
       const relPath = path.relative(ROOT, filePath);
+      // Only include files committed to git so CI and local stay in sync
+      if (!tracked.has(relPath)) continue;
       manifest[relPath] = hashFile(filePath);
     }
   }

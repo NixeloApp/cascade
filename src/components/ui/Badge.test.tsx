@@ -78,6 +78,84 @@ describe("Badge", () => {
       const badge = screen.getByTestId("badge");
       expect(badge.className).toContain("bg-ui-bg-soft");
     });
+
+    it("applies dashboardTag variant", () => {
+      render(
+        <Badge variant="dashboardTag" data-testid="badge">
+          Tag
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge");
+      expect(badge.className).toContain("bg-ui-bg-tertiary/60");
+      expect(badge.className).toContain("uppercase");
+    });
+
+    it("applies commandCenter variant", () => {
+      render(
+        <Badge variant="commandCenter" data-testid="badge">
+          Command
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge");
+      expect(badge.className).toContain("backdrop-blur-sm");
+      expect(badge.className).toContain("shadow-soft");
+    });
+
+    it("applies issueKey variant", () => {
+      render(
+        <Badge variant="issueKey" data-testid="badge">
+          KEY-1
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge");
+      expect(badge.className).toContain("font-mono");
+      expect(badge.className).toContain("bg-ui-bg-tertiary/60");
+    });
+
+    it("applies sidebarSection variant", () => {
+      render(
+        <Badge variant="sidebarSection" data-testid="badge">
+          Section
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge");
+      expect(badge.className).toContain("bg-ui-bg-elevated/80");
+      expect(badge.className).toContain("tracking-wider");
+    });
+
+    it("applies roadmapToday variant", () => {
+      render(
+        <Badge variant="roadmapToday" data-testid="badge">
+          Today
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge");
+      expect(badge.className).toContain("bg-status-error");
+      expect(badge.className).toContain("shadow-sm");
+    });
+
+    it("applies roadmapGroup variant", () => {
+      render(
+        <Badge variant="roadmapGroup" data-testid="badge">
+          Group
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge");
+      expect(badge.className).toContain("bg-ui-bg-tertiary");
+      expect(badge.className).toContain("font-medium");
+    });
+
+    it("applies projectHeaderKey variant", () => {
+      render(
+        <Badge variant="projectHeaderKey" data-testid="badge">
+          PROJ
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge");
+      expect(badge.className).toContain("bg-ui-bg-soft");
+      expect(badge.className).toContain("uppercase");
+      expect(badge.className).toContain("tracking-wider");
+    });
   });
 
   describe("sizes", () => {
@@ -96,6 +174,16 @@ describe("Badge", () => {
       );
       const badge = screen.getByTestId("badge");
       expect(badge.className).toContain("py-1");
+    });
+
+    it("applies emphasis size", () => {
+      render(
+        <Badge size="emphasis" data-testid="badge">
+          Strong
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge");
+      expect(badge.className).toContain("font-bold");
     });
   });
 

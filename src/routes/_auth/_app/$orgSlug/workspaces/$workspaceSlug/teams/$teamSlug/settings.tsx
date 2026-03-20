@@ -38,9 +38,7 @@ function TeamSettings() {
                 />
               </svg>
             </IconCircle>
-            <Typography variant="large" className="font-semibold tracking-tight mb-2">
-              Coming Soon
-            </Typography>
+            <Typography variant="placeholderTitle">Coming Soon</Typography>
             <Typography variant="p" color="secondary" className="max-w-sm mx-auto">
               Team settings including member management, roles, and permissions will be available
               here.

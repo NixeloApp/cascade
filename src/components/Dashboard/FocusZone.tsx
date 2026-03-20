@@ -40,10 +40,8 @@ export function FocusZone({ task }: FocusZoneProps) {
   return (
     <Stack gap="sm">
       <Flex align="center" justify="between" gap="md">
-        <Typography variant="label" color="tertiary" className="uppercase tracking-widest">
-          Focus Item
-        </Typography>
-        <Badge variant="neutral" shape="pill" className="bg-ui-bg-soft text-ui-text-secondary">
+        <Typography variant="eyebrowWide">Focus Item</Typography>
+        <Badge variant="neutral" shape="pill">
           Highest-impact next step
         </Badge>
       </Flex>
@@ -63,7 +61,7 @@ export function FocusZone({ task }: FocusZoneProps) {
                 <Badge variant="primary" className="w-fit">
                   {task.priority.toUpperCase()}
                 </Badge>
-                <Typography variant="h3" className="max-w-xl text-2xl tracking-tight">
+                <Typography variant="h3" className="max-w-xl">
                   {task.title}
                 </Typography>
               </Stack>
@@ -73,7 +71,7 @@ export function FocusZone({ task }: FocusZoneProps) {
             </Flex>
 
             <Flex align="center" gap="sm" wrap>
-              <Badge variant="neutral" shape="pill" className="bg-ui-bg-soft/80">
+              <Badge variant="neutral" shape="pill">
                 {task.status}
               </Badge>
               <Typography variant="small" color="secondary">

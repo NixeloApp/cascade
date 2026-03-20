@@ -8,6 +8,13 @@ describe("Input", () => {
     expect(screen.getByPlaceholderText("Enter text")).toBeInTheDocument();
   });
 
+  it("applies surface variant styling", () => {
+    render(<Input variant="surface" data-testid="input" />);
+    const input = screen.getByTestId("input");
+    expect(input.className).toContain("bg-ui-bg");
+    expect(input.className).toContain("border-ui-border");
+  });
+
   it("renders error message", () => {
     render(<Input error="Invalid input" />);
     expect(screen.getByText("Invalid input")).toBeInTheDocument();

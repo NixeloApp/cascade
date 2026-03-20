@@ -203,11 +203,7 @@ function TimeTrackingControls({
           className="border-b border-ui-border"
         >
           <TabsList variant="underline" className="gap-6">
-            <TabsTrigger
-              value="entries"
-              variant="underline"
-              className="pb-3 px-1 data-[state=active]:border-brand-indigo-border data-[state=active]:text-brand-indigo-text"
-            >
+            <TabsTrigger value="entries" variant="underline" size="underlineCompact" tone="indigo">
               Time Entries
             </TabsTrigger>
             {canSeeSensitiveTabs && (
@@ -215,14 +211,16 @@ function TimeTrackingControls({
                 <TabsTrigger
                   value="burn-rate"
                   variant="underline"
-                  className="pb-3 px-1 data-[state=active]:border-brand-indigo-border data-[state=active]:text-brand-indigo-text"
+                  size="underlineCompact"
+                  tone="indigo"
                 >
                   Burn Rate & Costs
                 </TabsTrigger>
                 <TabsTrigger
                   value="rates"
                   variant="underline"
-                  className="pb-3 px-1 data-[state=active]:border-brand-indigo-border data-[state=active]:text-brand-indigo-text"
+                  size="underlineCompact"
+                  tone="indigo"
                 >
                   Hourly Rates
                 </TabsTrigger>

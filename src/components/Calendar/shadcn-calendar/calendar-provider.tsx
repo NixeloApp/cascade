@@ -10,6 +10,7 @@ export function CalendarProvider({
   setDate,
   calendarIconIsToday = true,
   onAddEvent,
+  onEventMove,
   onEventClick,
   children,
 }: {
@@ -20,6 +21,7 @@ export function CalendarProvider({
   setDate: (date: Date) => void;
   calendarIconIsToday?: boolean;
   onAddEvent: (date?: Date) => void;
+  onEventMove: (event: CalendarEvent, date: Date) => Promise<void> | void;
   onEventClick: (event: CalendarEvent) => void;
   children: React.ReactNode;
 }): React.ReactElement {
@@ -33,6 +35,7 @@ export function CalendarProvider({
         setDate,
         calendarIconIsToday,
         onAddEvent,
+        onEventMove,
         onEventClick,
       }}
     >

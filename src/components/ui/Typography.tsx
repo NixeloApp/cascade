@@ -50,9 +50,18 @@ const typographyVariants = cva("", {
       caption: "text-xs text-ui-text-secondary", // descriptions, helper text
       label: "text-sm font-medium text-ui-text", // form labels
       strong: "font-semibold", // inline emphasis, inherits parent size
+      listTitle: "text-sm font-medium tracking-tight text-ui-text",
+      cardTitle: "text-base font-semibold tracking-tight text-ui-text",
+      sidebarOrgInitial: "text-sm font-semibold text-current",
       eyebrow: "text-xs font-semibold uppercase tracking-wider text-ui-text-secondary", // section labels, overlines
+      eyebrowWide: "text-xs font-semibold uppercase tracking-widest text-ui-text-tertiary",
       pageHeaderEyebrow:
         "text-xs font-semibold uppercase tracking-[0.18em] text-ui-text-tertiary sm:tracking-[0.22em]",
+      authTitle: "text-xl font-semibold tracking-tight text-ui-text",
+      authBody: "text-sm text-ui-text-secondary",
+      dashboardHeroTitle: "text-4xl font-extrabold tracking-tight text-ui-text md:text-5xl",
+      dashboardStatValue: "text-display-sm font-semibold tracking-tight text-ui-text",
+      dashboardStatValueStrong: "text-3xl font-extrabold tracking-tight text-ui-text",
       mono: "text-xs font-mono text-ui-text-secondary tracking-tight", // issue keys, codes
       calendarHeaderDate: "text-xs font-medium text-ui-text sm:text-base",
       calendarHeaderTitle: "text-sm font-semibold tracking-tight text-ui-text sm:text-lg",
@@ -67,6 +76,10 @@ const typographyVariants = cva("", {
         "-ml-2 cursor-pointer rounded px-2 py-1 text-2xl leading-tight transition-default hover:bg-ui-bg-hover sm:text-3xl lg:text-4xl",
       pageHeaderTitle: "text-xl leading-tight text-ui-text sm:text-2xl lg:text-3xl",
       pageHeaderDescription: "max-w-3xl text-xs leading-5 text-ui-text-tertiary sm:text-sm",
+      projectHeaderTitle: "truncate text-sm font-semibold tracking-tight text-ui-text sm:text-2xl",
+      placeholderTitle: "mb-2 text-lg font-semibold tracking-tight text-ui-text",
+      wikiCardTitle: "line-clamp-1 text-2xl font-semibold tracking-tight text-ui-text",
+      metricLabel: "text-xs font-medium uppercase tracking-wide text-ui-text-secondary",
 
       // Special
       blockquote: "mt-6 border-l-2 border-ui-border-secondary pl-6 italic text-ui-text",
@@ -122,10 +135,13 @@ Typography.displayName = "Typography";
 function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType {
   switch (variant) {
     case "h1":
+    case "dashboardHeroTitle":
       return "h1";
     case "h2":
+    case "authTitle":
       return "h2";
     case "h3":
+    case "wikiCardTitle":
       return "h3";
     case "h4":
       return "h4";
@@ -139,8 +155,17 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
     case "meta":
     case "caption":
     case "label":
+    case "listTitle":
+    case "cardTitle":
     case "eyebrow":
+    case "eyebrowWide":
     case "pageHeaderEyebrow":
+    case "authBody":
+    case "dashboardStatValue":
+    case "dashboardStatValueStrong":
+    case "projectHeaderTitle":
+    case "placeholderTitle":
+    case "metricLabel":
       return "p";
     case "mono":
     case "calendarHeaderDate":
@@ -151,6 +176,7 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
     case "calendarEventTitle":
     case "calendarEventTitleMonth":
     case "calendarEventTime":
+    case "sidebarOrgInitial":
       return "span";
     case "blockquote":
       return "blockquote";

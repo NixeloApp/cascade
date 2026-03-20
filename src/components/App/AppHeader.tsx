@@ -65,13 +65,10 @@ export function AppHeader({ commands, onShowShortcutsHelp }: AppHeaderProps) {
             >
               <Dot size="md" halo />
               <div className="min-w-0">
-                <Typography
-                  variant="caption"
-                  className="block uppercase tracking-widest text-ui-text-muted"
-                >
+                <Typography variant="pageHeaderEyebrow" className="block">
                   Workspace cockpit
                 </Typography>
-                <Typography variant="small" className="block max-w-48 truncate font-medium">
+                <Typography variant="label" className="block max-w-48 truncate">
                   Search, track, and act from one surface
                 </Typography>
               </div>

@@ -237,7 +237,7 @@ Run this after UI changes. Target: 0 errors.
 
 ## E2E Testing Rules
 
-**NEVER use hardcoded timeouts** (`page.waitForTimeout()`, `setTimeout`, etc.) in E2E tests. Hardcoded waits:
+**NEVER use hardcoded timeouts** (`page.waitForTimeout()`, `setTimeout`, etc.) in E2E tests or screenshot capture tooling. Hardcoded waits:
 - Hide real performance issues and inefficiencies
 - Make tests flaky (too short = failures, too long = slow CI)
 - Don't adapt to varying system load
@@ -264,6 +264,8 @@ await new Promise(resolve => setTimeout(resolve, 500));
 **Use `expect().toPass()` for retry logic** when an action may need multiple attempts (e.g., clicking a button that triggers a React state transition). The intervals provide built-in waits between retries.
 
 If a test needs a timeout to pass, the underlying code likely has a performance or loading state issue that should be fixed.
+
+**Screenshot capture tooling** (`e2e/screenshot-pages.ts`) must also follow these rules. Use `animations: 'disabled'` on `page.screenshot()` calls for animation settling, and reuse shared helpers from `e2e/utils/wait-helpers.ts` (`waitForAnimation()`, `waitForModal()`, etc.) instead of hardcoded waits. See `todos/screenshot-tooling-cleanup.md` for the full cleanup plan.
 
 ## Resources
 

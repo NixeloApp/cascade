@@ -28,6 +28,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { type CardDisplayOptions, DEFAULT_CARD_DISPLAY } from "@/lib/card-display-utils";
+import type { UserSummary } from "@/lib/entitySummaries";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
 import {
   getIssueAccessibleLabel,
@@ -48,11 +49,7 @@ interface Issue {
   type: IssueType;
   priority: IssuePriority;
   order: number;
-  assignee?: {
-    _id: Id<"users">;
-    name: string;
-    image?: string;
-  } | null;
+  assignee?: UserSummary | null;
   labels: { name: string; color: string; description?: string }[];
   storyPoints?: number;
   updatedAt: number;

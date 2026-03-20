@@ -18,6 +18,8 @@ const textareaVariants = cva(
       variant: {
         default: "border-ui-border focus-visible:border-brand",
         error: "border-status-error focus-visible:border-status-error",
+        surfaceMono:
+          "min-h-textarea border-ui-border bg-ui-bg font-mono focus-visible:border-brand",
         chatComposer:
           "min-h-0 resize-none overflow-hidden border-ui-border bg-ui-bg px-3 py-2 text-ui-text focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand-ring sm:px-4 sm:py-3 sm:text-base",
       },

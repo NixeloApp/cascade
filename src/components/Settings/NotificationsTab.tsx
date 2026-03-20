@@ -26,6 +26,7 @@ import {
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { getVapidPublicKey, useWebPush } from "@/lib/webPush";
+import { Alert, AlertDescription, AlertTitle } from "../ui/Alert";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
@@ -139,6 +140,7 @@ function PushNotificationsCard({
   vapidKey,
   isSubscribed,
   isPushLoading,
+  permission,
   pushPreferences,
   isSaving,
   onSubscribe,
@@ -149,6 +151,7 @@ function PushNotificationsCard({
   vapidKey: string | undefined;
   isSubscribed: boolean;
   isPushLoading: boolean;
+  permission: NotificationPermission;
   pushPreferences:
     | {
         pushMentions: boolean;
@@ -187,6 +190,25 @@ function PushNotificationsCard({
             </Typography>
           </Flex>
         </div>
+      );
+    }
+
+    if (permission === "denied" && !isSubscribed) {
+      return (
+        <Alert variant="warning">
+          <AlertTitle>Browser notifications blocked</AlertTitle>
+          <AlertDescription>
+            <Typography variant="small">
+              Notification permission is denied for this site. Re-enable notifications in your
+              browser settings to receive push alerts.
+            </Typography>
+            <div className="mt-3">
+              <Button variant="secondary" size="sm" disabled>
+                Blocked
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
       );
     }
 
@@ -293,6 +315,7 @@ export function NotificationsTab() {
     isSupported,
     isSubscribed,
     isLoading: isPushLoading,
+    permission,
     subscribe,
     unsubscribe,
   } = useWebPush();
@@ -376,6 +399,7 @@ export function NotificationsTab() {
         vapidKey={vapidKey}
         isSubscribed={isSubscribed}
         isPushLoading={isPushLoading}
+        permission={permission}
         pushPreferences={pushPreferences}
         isSaving={isSaving}
         onSubscribe={subscribe}

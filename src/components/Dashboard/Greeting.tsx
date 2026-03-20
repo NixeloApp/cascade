@@ -20,19 +20,13 @@ export function Greeting({ userName, completedCount = 0 }: GreetingProps) {
 
   return (
     <Stack gap="sm" className="mb-8">
-      <Badge
-        variant="neutral"
-        shape="pill"
-        className="w-fit px-3 py-1 text-ui-text-tertiary shadow-soft backdrop-blur-sm"
-      >
+      <Badge variant="commandCenter" size="md" shape="pill" className="w-fit">
         <Flex align="center" gap="sm">
           <Dot />
-          <Typography variant="caption" className="uppercase tracking-widest text-ui-text-tertiary">
-            Command Center
-          </Typography>
+          <Typography variant="eyebrowWide">Command Center</Typography>
         </Flex>
       </Badge>
-      <Typography variant="h1" className="max-w-4xl text-4xl tracking-tight md:text-5xl">
+      <Typography variant="dashboardHeroTitle" className="max-w-4xl">
         {greeting}, <span className="text-brand">{firstName}</span>.
       </Typography>
       <Typography variant="lead" color="secondary" className="max-w-3xl text-balance">
