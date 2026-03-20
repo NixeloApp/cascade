@@ -216,27 +216,19 @@ export class OnboardingPage {
     await this.waitForTourToAppear();
 
     // Keep clicking next until we can't anymore
-    let hasNext = true;
-    while (hasNext) {
-      try {
-        await expect(this.tourNextButton).toBeVisible();
-        await this.tourNextButton.click();
-        // Wait for animation to complete using Web Animations API
-        await this.tourPopover
-          .evaluate((el) => {
-            return new Promise<void>((resolve) => {
-              const animations = el.getAnimations();
-              if (!animations.length) {
-                resolve();
-                return;
-              }
-              Promise.all(animations.map((a) => a.finished)).then(() => resolve());
-            });
-          })
-          .catch(() => {});
-      } catch {
-        hasNext = false;
-      }
+    while (await this.canAdvanceTour()) {
+      await expect(this.tourNextButton).toBeVisible();
+      await this.tourNextButton.click();
+      await waitForAnimation(this.page);
+    }
+  }
+
+  private async canAdvanceTour(): Promise<boolean> {
+    try {
+      await expect(this.tourNextButton).toBeVisible({ timeout: 1000 });
+      return true;
+    } catch {
+      return false;
     }
   }
 
