@@ -2691,14 +2691,17 @@ async function screenshotFilledStates(
         await waitForScreenshotReady(page);
         await dismissAllDialogs(page);
         const trigger = page.getByRole("button", { name: /^change avatar$/i }).first();
-        await trigger.waitFor({ state: "visible", timeout: 8000 });
-        await trigger.click();
-        const dialog = await waitForDialogOpen(page);
-        await page
-          .getByRole("heading", { name: /^upload avatar$/i })
-          .first()
-          .waitFor({ state: "visible", timeout: 5000 });
-        await waitForScreenshotReady(page);
+        const dialog = await openStableDialog(
+          page,
+          trigger,
+          page.getByRole("dialog", { name: /^upload avatar$/i }),
+          page
+            .getByRole("dialog", { name: /^upload avatar$/i })
+            .getByText("JPG, PNG, GIF or WebP.", {
+              exact: true,
+            }),
+          "avatar upload",
+        );
         await captureCurrentView(page, p, "settings-profile-avatar-upload-modal");
         await dismissIfOpen(page, dialog);
       });
@@ -2716,14 +2719,17 @@ async function screenshotFilledStates(
         await waitForScreenshotReady(page);
         await dismissAllDialogs(page);
         const trigger = page.getByRole("button", { name: /^(add|change) cover$/i }).first();
-        await trigger.waitFor({ state: "visible", timeout: 8000 });
-        await trigger.click();
-        const dialog = await waitForDialogOpen(page);
-        await page
-          .getByRole("heading", { name: /^upload cover image$/i })
-          .first()
-          .waitFor({ state: "visible", timeout: 5000 });
-        await waitForScreenshotReady(page);
+        const dialog = await openStableDialog(
+          page,
+          trigger,
+          page.getByRole("dialog", { name: /^upload cover image$/i }),
+          page
+            .getByRole("dialog", { name: /^upload cover image$/i })
+            .getByText("JPG, PNG, GIF or WebP. Recommended: 1500x500px.", {
+              exact: true,
+            }),
+          "cover image upload",
+        );
         await captureCurrentView(page, p, "settings-profile-cover-upload-modal");
         await dismissIfOpen(page, dialog);
       });
@@ -2812,10 +2818,15 @@ async function screenshotFilledStates(
 
         if (shouldCapture(p, `project-${normalizedProjectKey}-members-confirm-dialog`)) {
           const removeButton = page.getByRole("button", { name: /^remove$/i }).first();
-          await removeButton.waitFor({ state: "visible", timeout: 5000 });
-          await removeButton.click();
-          const dialog = await waitForDialogOpen(page);
-          await waitForScreenshotReady(page);
+          const dialog = await openStableDialog(
+            page,
+            removeButton,
+            page.getByRole("alertdialog", { name: /^remove member$/i }),
+            page
+              .getByRole("alertdialog", { name: /^remove member$/i })
+              .getByText(/lose access to all project resources\./i),
+            "remove member",
+          );
           await captureCurrentView(
             page,
             p,
@@ -3640,10 +3651,13 @@ async function screenshotFilledStates(
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
       const trigger = page.getByText("Create Workspace").first();
-      await trigger.waitFor({ state: "visible", timeout: 10000 });
-      await trigger.click();
-      const dialog = await waitForDialogOpen(page);
-      await waitForScreenshotReady(page);
+      const dialog = await openStableDialog(
+        page,
+        trigger,
+        page.getByRole("dialog", { name: /^create workspace$/i }),
+        page.getByRole("dialog", { name: /^create workspace$/i }).getByLabel(/^workspace name$/i),
+        "create workspace",
+      );
       await captureCurrentView(page, p, "workspaces-create-workspace-modal");
       await dismissIfOpen(page, dialog);
     });
