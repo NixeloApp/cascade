@@ -83,9 +83,7 @@ function TeamWikiPage() {
                   >
                     <FileText size={20} />
                   </IconCircle>
-                  <Typography variant="h3" className="tracking-tight line-clamp-1">
-                    {doc.title || "Untitled"}
-                  </Typography>
+                  <Typography variant="wikiCardTitle">{doc.title || "Untitled"}</Typography>
                 </Flex>
                 <Flex
                   align="center"

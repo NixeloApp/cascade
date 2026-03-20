@@ -77,6 +77,8 @@ const typographyVariants = cva("", {
       pageHeaderTitle: "text-xl leading-tight text-ui-text sm:text-2xl lg:text-3xl",
       pageHeaderDescription: "max-w-3xl text-xs leading-5 text-ui-text-tertiary sm:text-sm",
       projectHeaderTitle: "truncate text-sm font-semibold tracking-tight text-ui-text sm:text-2xl",
+      placeholderTitle: "mb-2 text-lg font-semibold tracking-tight text-ui-text",
+      wikiCardTitle: "line-clamp-1 text-2xl font-semibold tracking-tight text-ui-text",
 
       // Special
       blockquote: "mt-6 border-l-2 border-ui-border-secondary pl-6 italic text-ui-text",
@@ -138,6 +140,7 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
     case "authTitle":
       return "h2";
     case "h3":
+    case "wikiCardTitle":
       return "h3";
     case "h4":
       return "h4";
@@ -160,6 +163,7 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
     case "dashboardStatValue":
     case "dashboardStatValueStrong":
     case "projectHeaderTitle":
+    case "placeholderTitle":
       return "p";
     case "mono":
     case "calendarHeaderDate":
