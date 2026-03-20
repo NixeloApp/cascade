@@ -310,14 +310,14 @@ Preferred default unless code proves otherwise:
 
 ## Phase 4: Make The UI Honest
 
-- [ ] Audit `src/components/Settings/OfflineTab.tsx` against the verified implementation.
-- [ ] Remove or reword claims that are not actually shipped.
-- [ ] Show whether the queue shown is:
+- [x] Audit `src/components/Settings/OfflineTab.tsx` against the verified implementation.
+- [x] Remove or reword claims that are not actually shipped.
+- [x] Show whether the queue shown is:
   - local only
   - server only
   - merged
 - [ ] Show failed vs pending vs syncing counts if those states are real.
-- [ ] Wire the "Sync Now" button to actual sync logic instead of a toast-only placeholder.
+- [x] Replace the toast-only queue button with truthful local queue refresh behavior.
 - [ ] Decide whether users can delete or retry queue items manually.
 - [ ] Surface last successful sync time if it is trustworthy.
 - [ ] Surface browser capability limits when background sync is unsupported.

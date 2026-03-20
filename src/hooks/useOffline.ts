@@ -28,6 +28,17 @@ export function useOfflineSyncStatus() {
   const [pending, setPending] = useState<OfflineMutation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const refresh = async () => {
+    try {
+      const mutations = await offlineDB.getPendingMutations();
+      setPending(mutations);
+    } catch (error) {
+      logOfflineError("load pending sync mutations failed", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
 
@@ -62,6 +73,7 @@ export function useOfflineSyncStatus() {
     pending,
     count: pending.length,
     isLoading,
+    refresh,
   };
 }
 

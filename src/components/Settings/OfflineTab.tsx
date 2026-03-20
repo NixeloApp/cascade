@@ -10,6 +10,7 @@ import { Check, RefreshCw, Wifi, WifiOff, X } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showInfo } from "@/lib/toast";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 import { useOfflineSyncStatus, useOnlineStatus } from "../../hooks/useOffline";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -26,7 +27,24 @@ import { Typography } from "../ui/Typography";
  */
 export function OfflineTab() {
   const isOnline = useOnlineStatus();
-  const { pending, count, isLoading } = useOfflineSyncStatus();
+  const { pending, count, isLoading, refresh } = useOfflineSyncStatus();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const hasServiceWorkerSupport =
+    typeof navigator !== "undefined" && "serviceWorker" in navigator;
+  const hasBackgroundSyncSupport =
+    typeof ServiceWorkerRegistration !== "undefined" &&
+    hasServiceWorkerSupport &&
+    "sync" in ServiceWorkerRegistration.prototype;
+
+  const handleRefreshQueue = async () => {
+    setIsRefreshing(true);
+    try {
+      await refresh();
+      showInfo("Local offline queue refreshed");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   return (
     <Flex direction="column" gap="xl">
@@ -45,9 +63,10 @@ export function OfflineTab() {
               <Typography variant="h3">Connection Status</Typography>
               <Typography
                 variant="small"
+                as="span"
                 className={isOnline ? "text-status-success" : "text-status-error"}
               >
-                <Flex align="center" gap="xs">
+                <Flex as="span" align="center" gap="xs">
                   {isOnline ? <Icon icon={Check} size="sm" /> : <Icon icon={X} size="sm" />}
                   {isOnline ? "You are online" : "You are offline"}
                 </Flex>
@@ -70,7 +89,7 @@ export function OfflineTab() {
                   <Typography variant="small" color="secondary">
                     Sync Status
                   </Typography>
-                  <Typography variant="h2">{isOnline ? "Ready" : "Paused"}</Typography>
+                  <Typography variant="h2">{isOnline ? "Local only" : "Offline"}</Typography>
                 </Stack>
               </div>
               <div className="p-4 bg-ui-bg-secondary">
@@ -86,44 +105,77 @@ export function OfflineTab() {
         </Stack>
       </Card>
 
-      {/* Offline Features */}
+      <Card padding="lg">
+        <Stack gap="sm">
+          <Typography variant="h3">Offline Status</Typography>
+          <Typography variant="small" color="secondary">
+            This screen currently reports the local IndexedDB queue and browser connectivity only.
+            End-to-end replay, install prompts, and service-worker ownership are still under audit.
+          </Typography>
+          <Grid cols={1} colsSm={2} gap="md">
+            <div className="p-4 bg-ui-bg-secondary">
+              <Stack gap="xs">
+                <Typography variant="small" color="secondary">
+                  Service Worker Support
+                </Typography>
+                <Typography variant="label">
+                  {hasServiceWorkerSupport ? "Detected" : "Unavailable"}
+                </Typography>
+              </Stack>
+            </div>
+            <div className="p-4 bg-ui-bg-secondary">
+              <Stack gap="xs">
+                <Typography variant="small" color="secondary">
+                  Background Sync Support
+                </Typography>
+                <Typography variant="label">
+                  {hasBackgroundSyncSupport ? "Detected" : "Unavailable"}
+                </Typography>
+              </Stack>
+            </div>
+          </Grid>
+        </Stack>
+      </Card>
+
+      {/* Verified local capabilities */}
       <Card padding="lg">
         <Stack gap="lg">
-          <Typography variant="h3">Offline Features</Typography>
+          <Typography variant="h3">Current Verified Capabilities</Typography>
           <Stack gap="lg">
             <Flex gap="md" align="start">
               <Icon icon={Check} size="sm" className="mt-0.5 text-status-success" />
               <Stack gap="xs">
-                <Typography variant="label">View Cached Content</Typography>
+                <Typography variant="label">Connectivity Tracking</Typography>
                 <Typography variant="small" color="secondary">
-                  Access recently viewed projects and issues while offline
+                  The app tracks browser online and offline state in the client.
                 </Typography>
               </Stack>
             </Flex>
             <Flex gap="md" align="start">
               <Icon icon={Check} size="sm" className="mt-0.5 text-status-success" />
               <Stack gap="xs">
-                <Typography variant="label">Offline Edits</Typography>
+                <Typography variant="label">Local Queue Visibility</Typography>
                 <Typography variant="small" color="secondary">
-                  Make changes offline - they'll sync automatically when you're back online
+                  Pending local offline items are stored in IndexedDB and listed below when present.
                 </Typography>
               </Stack>
             </Flex>
             <Flex gap="md" align="start">
               <Icon icon={Check} size="sm" className="mt-0.5 text-status-success" />
               <Stack gap="xs">
-                <Typography variant="label">Background Sync</Typography>
+                <Typography variant="label">Fallback Offline Page</Typography>
                 <Typography variant="small" color="secondary">
-                  Changes sync automatically in the background when connection is restored
+                  The shipped service worker includes an offline fallback page for navigation failures.
                 </Typography>
               </Stack>
             </Flex>
             <Flex gap="md" align="start">
-              <Icon icon={Check} size="sm" className="mt-0.5 text-status-success" />
+              <Icon icon={X} size="sm" className="mt-0.5 text-status-error" />
               <Stack gap="xs">
-                <Typography variant="label">Install as App</Typography>
+                <Typography variant="label">Replay And Install Flow</Typography>
                 <Typography variant="small" color="secondary">
-                  Install Nixelo as a standalone app on your device
+                  Automatic replay, install prompting, and worker ownership are not yet verified as
+                  a single coherent runtime path.
                 </Typography>
               </Stack>
             </Flex>
@@ -136,14 +188,20 @@ export function OfflineTab() {
         <Card padding="lg">
           <Stack gap="md">
             <Flex justify="between" align="center">
-              <Typography variant="h3">Pending Sync Queue</Typography>
+              <Stack gap="xs">
+                <Typography variant="h3">Local Offline Queue</Typography>
+                <Typography variant="small" color="secondary">
+                  This list reflects local IndexedDB entries, not confirmed server-side sync state.
+                </Typography>
+              </Stack>
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => showInfo("Manual sync triggered")}
+                onClick={handleRefreshQueue}
+                isLoading={isRefreshing}
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Sync Now
+                Refresh Queue
               </Button>
             </Flex>
             <Stack gap="sm">
