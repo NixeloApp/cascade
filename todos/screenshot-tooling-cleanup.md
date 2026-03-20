@@ -1,7 +1,7 @@
 # Screenshot Tooling Cleanup
 
 > **Priority:** P2
-> **Status:** New
+> **Status:** Completed
 > **Last Updated:** 2026-03-20
 
 ## Problem
@@ -28,7 +28,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 **Impact:** 16.4% of the screenshot manifest is useless -- visual regressions in those modals go undetected.
 
 **Fix:**
-- [ ] Audit and remove unnecessary `.catch(() => {})` calls (198 total) -- let failures propagate or handle them explicitly
+- [x] Audit and remove unnecessary `.catch(() => {})` calls (198 total) -- let failures propagate or handle them explicitly; only the intentional `run().catch(console.error)` CLI entrypoint remains in `e2e/screenshot-pages.ts`
 - [x] Make `waitForDialogOpen` fail loudly when dialog content doesn't appear -- extracted to `e2e/utils/wait-helpers.ts` and reused by `screenshot-pages.ts`
 - [x] Add a post-capture hash check that flags loading-state hashes
 - [x] Re-capture the 37 failed screenshots with proper wait logic
@@ -58,7 +58,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - `dismissAllToasts()` -- Toast removal with retry
 
 **Fix:**
-- [ ] Replace `.catch(() => {})` with explicit error handling or let errors propagate
+- [x] Replace `.catch(() => {})` with explicit error handling or let errors propagate
 - [x] Replace `SettingsPage` swallow paths for invite-modal cancel dismissal and organization-settings success-toast reset with explicit helper behavior
 - [x] Replace `CalendarPage` swallow paths for today-navigation alignment and event scroll preparation with explicit helper behavior
 - [x] Replace `DocumentsPage` swallow path for error-boundary diagnostics expansion with explicit helper behavior
@@ -123,15 +123,15 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [x] Replace the remaining live E2E `data-state` checks in calendar/dashboard helpers with accessible pressed/selected state assertions
 - [x] Remove the dead loading-skeleton, board-column, and notification-row raw marker attrs now that the harness uses owned `TEST_IDS`
 - [x] Remove the remaining route-nav `data-active` state contract and rely on `aria-current` for active styling
-- [ ] Replace raw data-attribute selectors with TEST_IDS constants
+- [x] Replace raw data-attribute selectors with TEST_IDS constants
 - [x] Reduce shared helper/page-readiness `.first()` usage so unique route sentinels rely on scoped locator semantics
 - [x] Extract `dismissAllDialogs()`, `waitForDialogOpen()`, `waitForScreenshotReady()` to `e2e/utils/`
-- [ ] Update validator skip in `check-e2e-quality.js` (done -- references this TODO)
+- [x] Update validator skip in `check-e2e-quality.js`
 
 ## Done When
 
 - [x] Zero loading-spinner screenshots in the manifest
 - [x] `.catch(() => {})` count reduced from 198 to only intentional cases with comments
 - [x] No `waitForTimeout` calls
-- [ ] Shared helpers extracted to `e2e/utils/`
-- [ ] Raw selector count near-zero via TEST_IDS constants
+- [x] Shared helpers extracted to `e2e/utils/`
+- [x] Raw selector count near-zero via TEST_IDS constants
