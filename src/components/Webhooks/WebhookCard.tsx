@@ -4,6 +4,7 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
@@ -27,7 +28,7 @@ interface WebhookCardProps {
 export function WebhookCard({ webhook, onEdit, onDelete }: WebhookCardProps) {
   return (
     <Card padding="md" variant="flat" hoverable>
-      <Flex justify="between" align="start">
+      <Flex justify="between" align="start" gap="lg">
         <FlexItem flex="1">
           <Stack gap="sm">
             <Flex gap="sm" align="center">
@@ -36,9 +37,7 @@ export function WebhookCard({ webhook, onEdit, onDelete }: WebhookCardProps) {
                 {webhook.isActive ? "Active" : "Inactive"}
               </Badge>
             </Flex>
-            <Typography variant="mono" color="secondary" className="break-all">
-              {webhook.url}
-            </Typography>
+            <Typography variant="monoWrap">{webhook.url}</Typography>
             <Flex wrap gap="xs">
               {webhook.events.map((event) => (
                 <Badge key={event} variant="brand" size="sm">
@@ -54,12 +53,12 @@ export function WebhookCard({ webhook, onEdit, onDelete }: WebhookCardProps) {
           </Stack>
         </FlexItem>
 
-        <Flex gap="sm" className="ml-4">
+        <Flex gap="sm">
           <Button
             variant="ghost"
             size="sm"
             onClick={onEdit}
-            leftIcon={<Pencil className="w-4 h-4" />}
+            leftIcon={<Icon icon={Pencil} size="sm" />}
           >
             Edit
           </Button>
@@ -67,7 +66,7 @@ export function WebhookCard({ webhook, onEdit, onDelete }: WebhookCardProps) {
             variant="ghost"
             size="sm"
             onClick={onDelete}
-            leftIcon={<Trash className="w-4 h-4" />}
+            leftIcon={<Icon icon={Trash} size="sm" />}
           >
             Delete
           </Button>

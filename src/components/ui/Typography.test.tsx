@@ -105,6 +105,19 @@ describe("Typography", () => {
     expect(block.className).toContain("text-xs");
   });
 
+  it("maps monoWrap to a paragraph with break-all mono styling", () => {
+    render(
+      <Typography variant="monoWrap" data-testid="mono-wrap">
+        https://example.com/hooks/issues
+      </Typography>,
+    );
+    const block = screen.getByTestId("mono-wrap");
+    expect(block.tagName).toBe("P");
+    expect(block.className).toContain("font-mono");
+    expect(block.className).toContain("break-all");
+    expect(block.className).toContain("text-xs");
+  });
+
   it("maps metricLabelWide to a paragraph with wide uppercase metric styling", () => {
     render(
       <Typography variant="metricLabelWide" data-testid="metric-label-wide">

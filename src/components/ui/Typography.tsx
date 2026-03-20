@@ -76,6 +76,7 @@ const typographyVariants = cva("", {
       searchTriggerLabel: "hidden truncate text-xs text-ui-text-secondary sm:block sm:text-sm",
       issueKeyMono: "text-sm font-mono tracking-tight text-ui-text-secondary",
       monoBlock: "text-xs font-mono tracking-tight text-ui-text-secondary whitespace-pre-wrap",
+      monoWrap: "text-xs font-mono tracking-tight text-ui-text-secondary break-all",
       metricLabelWide: "text-xs uppercase tracking-widest text-ui-text-secondary",
       mono: "text-xs font-mono text-ui-text-secondary tracking-tight", // issue keys, codes
       calendarHeaderDate: "text-xs font-medium text-ui-text sm:text-base",
@@ -194,6 +195,7 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
     case "searchTriggerLabel":
     case "issueKeyMono":
     case "monoBlock":
+    case "monoWrap":
     case "metricLabelWide":
       return "p";
     case "mono":
