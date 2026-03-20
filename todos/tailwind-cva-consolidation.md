@@ -36,6 +36,7 @@ Target the 148 files with raw TW violations. For each repeated pattern:
 - [ ] Run `node scripts/validate/check-raw-tailwind.js --audit` and group violations by pattern (same class cluster = same missing abstraction)
 - [ ] For each cluster of 3+ identical class sets, extract a component or add a CVA variant
 - [x] Absorb the repeated route inset panel cluster (`border border-ui-border-secondary/70 bg-ui-bg-soft/90 ...`) into owned `Card` recipes and ratchet the route-cluster baseline
+- [x] Absorb the repeated invite fullscreen state shell cluster into a local `InviteStateScreen` abstraction and ratchet the route-cluster baseline
 
 ## Phase 2: Consolidate CVA Sprawl
 
