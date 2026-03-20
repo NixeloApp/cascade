@@ -1,4 +1,5 @@
 import type { Page, TestInfo } from "@playwright/test";
+import { isLocatorVisible } from "./locator-state";
 import { getToastLocator } from "./toast-locators";
 
 /**
@@ -112,7 +113,7 @@ export async function dismissAllToasts(page: Page, maxAttempts = 10): Promise<vo
     try {
       await firstToast.waitFor({ state: "hidden" });
     } catch (error) {
-      const stillVisible = await firstToast.isVisible().catch(() => false);
+      const stillVisible = await isLocatorVisible(firstToast);
       if (stillVisible) {
         const message = error instanceof Error ? error.message : String(error);
         throw new Error(`Toast remained visible after dismiss attempt: ${message}`);
