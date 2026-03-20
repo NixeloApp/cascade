@@ -157,7 +157,7 @@ function matchesTimeWindow(recording: MeetingOverview, timeWindow: TimeWindowFil
   const now = Date.now();
   const ageMs = now - (recording.scheduledStartTime ?? recording.createdAt);
   const dayCount = timeWindow === "7d" ? 7 : timeWindow === "30d" ? 30 : 90;
-  return ageMs <= dayCount * 24 * 60 * 60 * 1000;
+  return ageMs >= 0 && ageMs <= dayCount * 24 * 60 * 60 * 1000;
 }
 
 export function filterMeetingRecordings(
@@ -790,7 +790,7 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
                     segmentRefs.current[segmentKey] = element;
                   }}
                 >
-                  <Card variant="soft" padding="sm" className="border border-ui-border">
+                  <div className="p-2 border border-ui-border bg-ui-bg-secondary rounded-md">
                     <Stack gap="xs">
                       <Flex justify="between" align="start" gap="sm" className="flex-wrap">
                         <Flex gap="xs" className="flex-wrap">
@@ -806,7 +806,7 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
                         {segment.text}
                       </Typography>
                     </Stack>
-                  </Card>
+                  </div>
                 </li>
               );
             })}
@@ -1092,12 +1092,19 @@ function SummarySections({
 
   if (!summary) {
     return (
-      <EmptyState
-        icon={Mic}
-        size="compact"
-        title="Meeting processing is still in progress"
-        description="This recording exists, but the summary has not been generated yet."
-      />
+      <Stack gap="lg">
+        <EmptyState
+          icon={Mic}
+          size="compact"
+          title="Summary is still being generated"
+          description="The transcript is available below while the summary is processing."
+        />
+        {transcript && (
+          <Section title="Transcript" gap="sm">
+            <TranscriptSegmentList transcript={transcript} />
+          </Section>
+        )}
+      </Stack>
     );
   }
 
@@ -1199,7 +1206,7 @@ function RecordingDetailPanel({
   recording: MeetingDetail | undefined;
   projects: ProjectOption[] | undefined;
 }) {
-  if (recording === undefined) {
+  if (recording == null) {
     return (
       <Card variant="soft" padding="xl">
         <Flex justify="center">
@@ -1242,14 +1249,14 @@ function RecordingDetailPanel({
           </Metadata>
 
           {recording.errorMessage && (
-            <Card variant="soft" padding="sm" className="border-status-error/30 bg-status-error-bg">
+            <div className="p-2 border border-status-error/30 bg-status-error-bg rounded-md">
               <Flex gap="sm" align="start">
                 <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-status-error" />
                 <Typography variant="caption" color="secondary">
                   {recording.errorMessage}
                 </Typography>
               </Flex>
-            </Card>
+            </div>
           )}
         </Stack>
       </Card>

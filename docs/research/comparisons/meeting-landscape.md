@@ -6,7 +6,7 @@
 >
 > **Important:** The older sections in this file are still useful for orientation, but the
 > current market refresh lives in
-> [market-refresh-2026-03.md](/C:/Users/mikes/Desktop/cascade/docs/research/competitors/meeting-ai/market-refresh-2026-03.md).
+> [market-refresh-2026-03.md](../competitors/meeting-ai/market-refresh-2026-03.md).
 > Use that doc for the latest read on market direction, build-vs-buy choices, and reusable
 > open-source components.
 
@@ -48,7 +48,7 @@ For Nixelo, this changes the question from "can we transcribe meetings?" to:
 
 See the dedicated refresh doc for the full current-state analysis:
 
-- [market-refresh-2026-03.md](/C:/Users/mikes/Desktop/cascade/docs/research/competitors/meeting-ai/market-refresh-2026-03.md)
+- [market-refresh-2026-03.md](../competitors/meeting-ai/market-refresh-2026-03.md)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -445,7 +445,7 @@ curl -X POST https://us-east-1.recall.ai/api/v1/bot \
 > **Current note:** The strongest OSS reuse opportunities are now in transcription,
 > diarization, and speaker-aware post-processing rather than enterprise-grade bot joining.
 > See
-> [market-refresh-2026-03.md](/C:/Users/mikes/Desktop/cascade/docs/research/competitors/meeting-ai/market-refresh-2026-03.md)
+> [market-refresh-2026-03.md](../competitors/meeting-ai/market-refresh-2026-03.md)
 > for the current shortlist: `faster-whisper`, `whisper.cpp`, `WhisperX`,
 > `pyannote.audio`, `joinly`, and `LiveKit Agents`.
 

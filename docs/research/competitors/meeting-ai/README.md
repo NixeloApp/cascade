@@ -8,7 +8,7 @@ pretending every claim is verified.
 For the latest repo-level view of where the market moved after the older competitor
 notes, see:
 
-- [market-refresh-2026-03.md](/C:/Users/mikes/Desktop/cascade/docs/research/competitors/meeting-ai/market-refresh-2026-03.md)
+- [market-refresh-2026-03.md](./market-refresh-2026-03.md)
 
 That refresh covers:
 

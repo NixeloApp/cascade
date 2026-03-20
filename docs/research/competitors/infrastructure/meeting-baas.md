@@ -6,7 +6,7 @@
 > **Website:** [https://www.meetingbaas.com](https://www.meetingbaas.com)
 
 > **Refresh Note (2026-03-19):** This doc predates the March 2026 market refresh. Use
-> [market-refresh-2026-03.md](/C:/Users/mikes/Desktop/cascade/docs/research/competitors/meeting-ai/market-refresh-2026-03.md)
+> [market-refresh-2026-03.md](../meeting-ai/market-refresh-2026-03.md)
 > for the current market read. If this doc conflicts with the current repo implementation,
 > the repo and refresh doc win.
 

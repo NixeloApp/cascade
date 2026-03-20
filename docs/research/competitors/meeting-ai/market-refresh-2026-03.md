@@ -119,7 +119,7 @@ For Nixelo, this means the current backend foundation is still useful, but the p
 - Meeting BaaS
 
 **Current Nixelo state:**
-- The repo already has a real custom pipeline in [meetingBot.ts](/C:/Users/mikes/Desktop/cascade/convex/meetingBot.ts), [manager.ts](/C:/Users/mikes/Desktop/cascade/bot-service/src/bot/manager.ts), and [google-meet.ts](/C:/Users/mikes/Desktop/cascade/bot-service/src/bot/google-meet.ts)
+- The repo already has a real custom pipeline in [meetingBot.ts](../../../../convex/meetingBot.ts), [manager.ts](../../../../bot-service/src/bot/manager.ts), and [google-meet.ts](../../../../bot-service/src/bot/google-meet.ts)
 - Runtime execution is still effectively Google Meet-first
 
 ### Layer 2: Transcription
@@ -127,7 +127,7 @@ For Nixelo, this means the current backend foundation is still useful, but the p
 **Recommendation:** `Keep flexible`
 
 - This is one of the strongest layers for OSS and vendor swapping.
-- Nixelo already has provider rotation in [transcription.ts](/C:/Users/mikes/Desktop/cascade/bot-service/src/services/transcription.ts)
+- Nixelo already has provider rotation in [transcription.ts](../../../../bot-service/src/services/transcription.ts)
 
 **Good path:**
 - Keep the abstraction
@@ -225,7 +225,7 @@ Current repo shape:
 - **Strong:** scheduling, recording lifecycle, transcript storage, summary storage, participant capture, action-item-to-issue flow
 - **Weak:** first-class recordings inbox, cross-meeting memory UX, transcript search product surface, agent layer, broader capture-mode support
 
-The current in-app surface is still mostly [MeetingRecordingSection.tsx](/C:/Users/mikes/Desktop/cascade/src/components/MeetingRecordingSection.tsx) inside [EventDetailsModal.tsx](/C:/Users/mikes/Desktop/cascade/src/components/Calendar/EventDetailsModal.tsx), which is too narrow for where the market is now.
+The current in-app surface is still mostly [MeetingRecordingSection.tsx](../../../../src/components/MeetingRecordingSection.tsx) inside [EventDetailsModal.tsx](../../../../src/components/Calendar/EventDetailsModal.tsx), which is too narrow for where the market is now.
 
 ---
 

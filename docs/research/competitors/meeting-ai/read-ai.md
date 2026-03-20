@@ -253,7 +253,7 @@ but route that intelligence into execution. Read AI tells teams how a meeting we
 should tell teams what changed in the work because the meeting happened.
 
 **See also:** the broader current-state market update in
-[market-refresh-2026-03.md](/C:/Users/mikes/Desktop/cascade/docs/research/competitors/meeting-ai/market-refresh-2026-03.md).
+[market-refresh-2026-03.md](./market-refresh-2026-03.md).
 
 ---
 
