@@ -32,6 +32,7 @@ The pipeline is: **less raw Tailwind -> convert to CVA -> merge CVAs together if
 Target the 148 files with raw TW violations. For each repeated pattern:
 
 - [ ] Audit the 30 raw TW violations in `MeetingsWorkspace.tsx` and convert to design system components
+- [x] Absorb the repeated meetings list-shell cluster (`list-none`, branded bullet lists) into an owned `List` primitive and swap `MeetingsWorkspace.tsx` to it
 - [ ] Audit raw TW in route files -- repeated spacing/shell/state patterns should become components or CVA variants
 - [ ] Run `node scripts/validate/check-raw-tailwind.js --audit` and group violations by pattern (same class cluster = same missing abstraction)
 - [ ] For each cluster of 3+ identical class sets, extract a component or add a CVA variant

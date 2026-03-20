@@ -22,6 +22,7 @@ import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { List } from "@/components/ui/List";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Metadata, MetadataItem } from "@/components/ui/Metadata";
 import { Section } from "@/components/ui/Section";
@@ -523,7 +524,7 @@ function MeetingMemorySection({
               Completed meetings will surface key decisions here.
             </Typography>
           ) : (
-            <Stack as="ul" gap="sm" className="list-none">
+            <List gap="sm">
               {filteredMemory.recentDecisions.map((item) => (
                 <li key={`${item.recordingId}-${item.decision}`}>
                   <Card variant="soft" padding="sm">
@@ -538,7 +539,7 @@ function MeetingMemorySection({
                   </Card>
                 </li>
               ))}
-            </Stack>
+            </List>
           )}
         </MemoryCard>
 
@@ -552,7 +553,7 @@ function MeetingMemorySection({
               Outstanding questions from summaries will appear here.
             </Typography>
           ) : (
-            <Stack as="ul" gap="sm" className="list-none">
+            <List gap="sm">
               {filteredMemory.openQuestions.map((item) => (
                 <li key={`${item.recordingId}-${item.question}`}>
                   <Card variant="soft" padding="sm">
@@ -567,7 +568,7 @@ function MeetingMemorySection({
                   </Card>
                 </li>
               ))}
-            </Stack>
+            </List>
           )}
         </MemoryCard>
 
@@ -581,7 +582,7 @@ function MeetingMemorySection({
               Pending follow-ups will appear here until they are linked into project work.
             </Typography>
           ) : (
-            <Stack as="ul" gap="sm" className="list-none">
+            <List gap="sm">
               {filteredMemory.unresolvedActionItems.map((item) => (
                 <li key={`${item.recordingId}-${item.description}`}>
                   <Card variant="soft" padding="sm">
@@ -601,7 +602,7 @@ function MeetingMemorySection({
                   </Card>
                 </li>
               ))}
-            </Stack>
+            </List>
           )}
         </MemoryCard>
       </Grid>
@@ -786,7 +787,7 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
             description="Try a different phrase or speaker name."
           />
         ) : (
-          <Stack as="ol" gap="sm" className="list-none">
+          <List as="ol" gap="sm">
             {filteredSegments.map((segment, index) => {
               const segmentKey = getTranscriptSegmentKey(segment, index);
 
@@ -817,7 +818,7 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
                 </li>
               );
             })}
-          </Stack>
+          </List>
         )}
       </Card>
 
@@ -1026,7 +1027,7 @@ function ActionItemsSection({
 
   return (
     <Section title="Action Items" gap="sm">
-      <Stack as="ul" gap="sm" className="list-none">
+      <List gap="sm">
         {summary.actionItems.map((item, index) => (
           <li key={`${item.description}-${item.assignee ?? ""}-${item.dueDate ?? ""}`}>
             <ActionItemCard
@@ -1047,7 +1048,7 @@ function ActionItemsSection({
             />
           </li>
         ))}
-      </Stack>
+      </List>
     </Section>
   );
 }
@@ -1057,7 +1058,7 @@ function ParticipantsSection({ participants }: { participants: MeetingParticipan
 
   return (
     <Section title="Participants" gap="sm">
-      <Stack as="ul" gap="sm" className="list-none">
+      <List gap="sm">
         {participants.map((participant) => (
           <li key={participant._id}>
             <Card variant="soft" padding="sm">
@@ -1080,7 +1081,7 @@ function ParticipantsSection({ participants }: { participants: MeetingParticipan
             </Card>
           </li>
         ))}
-      </Stack>
+      </List>
     </Section>
   );
 }
@@ -1128,15 +1129,11 @@ function SummarySections({
 
       {summary.keyPoints.length > 0 && (
         <Section title="Key Points" gap="sm">
-          <Stack
-            as="ul"
-            gap="xs"
-            className="list-disc list-inside text-ui-text-secondary marker:text-brand"
-          >
+          <List gap="xs" variant="bulleted">
             {summary.keyPoints.map((point) => (
               <li key={point}>{point}</li>
             ))}
-          </Stack>
+          </List>
         </Section>
       )}
 
@@ -1148,7 +1145,7 @@ function SummarySections({
 
       {summary.decisions.length > 0 && (
         <Section title="Decisions" gap="sm">
-          <Stack as="ul" gap="xs" className="list-none">
+          <List gap="xs">
             {summary.decisions.map((decision) => (
               <Flex as="li" key={decision} align="start" gap="sm">
                 <CheckCircle size={16} className="text-status-success" />
@@ -1157,28 +1154,24 @@ function SummarySections({
                 </Typography>
               </Flex>
             ))}
-          </Stack>
+          </List>
         </Section>
       )}
 
       {summary.openQuestions.length > 0 && (
         <Section title="Open Questions" gap="sm">
-          <Stack
-            as="ul"
-            gap="xs"
-            className="list-disc list-inside text-ui-text-secondary marker:text-brand"
-          >
+          <List gap="xs" variant="bulleted">
             {summary.openQuestions.map((question) => (
               <li key={question}>{question}</li>
             ))}
-          </Stack>
+          </List>
         </Section>
       )}
 
       {summary.topics.length > 0 && (
         <Section title="Topics" gap="sm">
-          <Stack as="ul" gap="sm" className="list-none">
-            {summary.topics.map((topic, index) => (
+          <List gap="sm">
+            {summary.topics.map((topic) => (
               <li key={`topic-${topic.title}-${topic.summary}`}>
                 <Card variant="soft" padding="sm">
                   <Stack gap="xs">
@@ -1190,7 +1183,7 @@ function SummarySections({
                 </Card>
               </li>
             ))}
-          </Stack>
+          </List>
         </Section>
       )}
 
@@ -1651,7 +1644,7 @@ export function MeetingsWorkspace() {
                   description="Adjust the search or filters, or open calendar to schedule a new meeting recording."
                 />
               ) : (
-                <Stack as="ul" gap="sm" className="list-none">
+                <List gap="sm">
                   {filteredRecordings?.map((recording) => (
                     <li key={recording._id}>
                       <RecordingListItem
@@ -1661,7 +1654,7 @@ export function MeetingsWorkspace() {
                       />
                     </li>
                   ))}
-                </Stack>
+                </List>
               )}
             </Stack>
           </Section>
