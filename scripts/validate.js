@@ -24,7 +24,7 @@
  *  20. Component naming        — PascalCase components, {Component}Props interfaces
  *  21. Component props         — consistent prop naming across component definitions
  *  22. Duplicate components    — detect components with same name in different directories
- *  23. CVA boundaries          — ban importing exported CVA recipes and ratchet feature-local cva() outside shared ui primitives
+ *  23. CVA boundaries          — ban importing exported CVA recipes and ratchet feature-local cva() plus degenerate single-use helpers outside shared ui primitives
  *  24. Control ownership       — block low-level ToggleGroup in app code; use semantic primitives
  *  25. Interactive Tailwind    — hover:/focus: should be in CVA components, not scattered
  *  26. Tailwind consistency    — duration tokens, focus rings, disabled states, z-index, group-hover

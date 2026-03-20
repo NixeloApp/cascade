@@ -11,11 +11,13 @@
  * - Imports inside `src/components/ui/` (shared primitives composing other primitives)
  * - Existing baselined feature-local CVA definitions while cleanup is in flight
  * - Existing baselined base-only feature-local CVA definitions while cleanup is in flight
+ * - Existing baselined single-use variant-bearing feature-local CVA helpers while cleanup is in flight
  *
  * Blocked:
  * - `buttonVariants`, `tabsTriggerVariants`, `cardRecipeVariants`, etc. in routes/components pages
  * - New or increased `cva()` definitions outside `src/components/ui/`
  * - New or increased base-only `cva()` definitions outside `src/components/ui/`
+ * - New or increased single-use variant-bearing feature-local `cva()` helpers outside `src/components/ui/`
  */
 
 import fs from "node:fs";
@@ -26,7 +28,6 @@ import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 const IMPORT_RE = /import\s*\{([\s\S]*?)\}\s*from\s*["'][^"']+["']/g;
 const CVA_HELPER_RE = /\b[A-Za-z0-9_]*(?:Variants|Style)\b/;
-const CVA_CALL_RE = /\bcva\s*\(/g;
 const FEATURE_CVA_BASELINE_PATH = path.join(
   ROOT,
   "scripts",
@@ -38,6 +39,12 @@ const FEATURE_CVA_BASE_ONLY_BASELINE_PATH = path.join(
   "scripts",
   "ci",
   "feature-cva-base-only-baseline.json",
+);
+const FEATURE_CVA_SINGLE_USE_BASELINE_PATH = path.join(
+  ROOT,
+  "scripts",
+  "ci",
+  "feature-cva-single-use-baseline.json",
 );
 
 function getLineNumber(content, index) {
@@ -52,6 +59,16 @@ function parseImportedNames(rawSpecifiers) {
     .map((part) => part.replace(/^type\s+/, ""))
     .map((part) => part.split(/\s+as\s+/)[0]?.trim() ?? "")
     .filter(Boolean);
+}
+
+function createSourceFile(filePath, content) {
+  return ts.createSourceFile(
+    filePath,
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    filePath.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  );
 }
 
 function isCvaCallExpression(node, sourceFile) {
@@ -82,27 +99,121 @@ function hasNonEmptyVariantsConfig(node, sourceFile) {
   return false;
 }
 
-function collectBaseOnlyCvaLines(filePath, content) {
-  const sourceFile = ts.createSourceFile(
-    filePath,
-    content,
-    ts.ScriptTarget.Latest,
-    true,
-    filePath.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
-  );
-  const lines = [];
-
-  function visit(node) {
-    if (isCvaCallExpression(node, sourceFile) && !hasNonEmptyVariantsConfig(node, sourceFile)) {
-      const pos = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
-      lines.push(pos.line + 1);
-    }
-
-    ts.forEachChild(node, visit);
+function getPropertyNameText(nameNode) {
+  if (ts.isIdentifier(nameNode) || ts.isStringLiteral(nameNode) || ts.isNumericLiteral(nameNode)) {
+    return nameNode.text;
   }
 
-  visit(sourceFile);
-  return lines;
+  if (
+    ts.isComputedPropertyName(nameNode) &&
+    (ts.isStringLiteral(nameNode.expression) || ts.isNumericLiteral(nameNode.expression))
+  ) {
+    return nameNode.expression.text;
+  }
+
+  return null;
+}
+
+function collectFeatureCvaMetadata(filePath, content) {
+  const sourceFile = createSourceFile(filePath, content);
+  const cvaLines = [];
+  const baseOnlyLines = [];
+  const directHelpers = new Map();
+  const objectHelpers = new Map();
+
+  function registerHelper(helperName, node, hasVariants, store) {
+    const pos = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+    const line = pos.line + 1;
+    const helper = { name: helperName, line, callCount: 0, hasVariants };
+    cvaLines.push(line);
+    if (!hasVariants) {
+      baseOnlyLines.push(line);
+    }
+    store.set(helperName, helper);
+  }
+
+  function visitDefinitions(node) {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
+      if (isCvaCallExpression(node.initializer, sourceFile)) {
+        registerHelper(
+          node.name.text,
+          node.initializer,
+          hasNonEmptyVariantsConfig(node.initializer, sourceFile),
+          directHelpers,
+        );
+      } else if (ts.isObjectLiteralExpression(node.initializer)) {
+        for (const property of node.initializer.properties) {
+          if (
+            !ts.isPropertyAssignment(property) ||
+            !isCvaCallExpression(property.initializer, sourceFile)
+          ) {
+            continue;
+          }
+
+          const propertyName = getPropertyNameText(property.name);
+          if (!propertyName) continue;
+
+          registerHelper(
+            `${node.name.text}.${propertyName}`,
+            property.initializer,
+            hasNonEmptyVariantsConfig(property.initializer, sourceFile),
+            objectHelpers,
+          );
+        }
+      }
+    }
+
+    ts.forEachChild(node, visitDefinitions);
+  }
+
+  function visitCalls(node) {
+    if (ts.isCallExpression(node)) {
+      if (ts.isIdentifier(node.expression)) {
+        const helper = directHelpers.get(node.expression.text);
+        if (helper) {
+          helper.callCount += 1;
+        }
+      } else if (
+        ts.isPropertyAccessExpression(node.expression) &&
+        ts.isIdentifier(node.expression.expression)
+      ) {
+        const helper = objectHelpers.get(
+          `${node.expression.expression.text}.${node.expression.name.text}`,
+        );
+        if (helper) {
+          helper.callCount += 1;
+        }
+      } else if (
+        ts.isElementAccessExpression(node.expression) &&
+        ts.isIdentifier(node.expression.expression) &&
+        node.expression.argumentExpression &&
+        (ts.isStringLiteral(node.expression.argumentExpression) ||
+          ts.isNumericLiteral(node.expression.argumentExpression))
+      ) {
+        const helper = objectHelpers.get(
+          `${node.expression.expression.text}.${node.expression.argumentExpression.text}`,
+        );
+        if (helper) {
+          helper.callCount += 1;
+        }
+      }
+    }
+
+    ts.forEachChild(node, visitCalls);
+  }
+
+  visitDefinitions(sourceFile);
+  visitCalls(sourceFile);
+
+  const singleUseVariantHelpers = [...directHelpers.values(), ...objectHelpers.values()]
+    .filter((helper) => helper.hasVariants && helper.callCount <= 1)
+    .sort((a, b) => a.line - b.line || a.name.localeCompare(b.name));
+
+  return {
+    cvaLines: cvaLines.sort((a, b) => a - b),
+    baseOnlyLines: baseOnlyLines.sort((a, b) => a - b),
+    singleUseVariantHelpers,
+  };
 }
 
 export function run() {
@@ -113,10 +224,15 @@ export function run() {
     FEATURE_CVA_BASE_ONLY_BASELINE_PATH,
     "baseOnlyCvaDefinitionsByFile",
   );
+  const singleUseVariantBaselineByFile = loadCountBaseline(
+    FEATURE_CVA_SINGLE_USE_BASELINE_PATH,
+    "singleUseVariantCvaDefinitionsByFile",
+  );
 
   const importViolations = [];
   const cvaLinesByFile = {};
   const baseOnlyCvaLinesByFile = {};
+  const singleUseVariantHelpersByFile = {};
   const errors = [];
 
   for (const filePath of files) {
@@ -127,13 +243,18 @@ export function run() {
     const content = fs.readFileSync(filePath, "utf8");
 
     if (!rel.startsWith("src/components/ui/")) {
-      const cvaMatches = [...content.matchAll(CVA_CALL_RE)];
-      if (cvaMatches.length > 0) {
-        cvaLinesByFile[rel] = cvaMatches.map((match) => getLineNumber(content, match.index ?? 0));
+      const { cvaLines, baseOnlyLines, singleUseVariantHelpers } = collectFeatureCvaMetadata(
+        filePath,
+        content,
+      );
+      if (cvaLines.length > 0) {
+        cvaLinesByFile[rel] = cvaLines;
       }
-      const baseOnlyLines = collectBaseOnlyCvaLines(filePath, content);
       if (baseOnlyLines.length > 0) {
         baseOnlyCvaLinesByFile[rel] = baseOnlyLines;
+      }
+      if (singleUseVariantHelpers.length > 0) {
+        singleUseVariantHelpersByFile[rel] = singleUseVariantHelpers;
       }
     }
 
@@ -171,6 +292,18 @@ export function run() {
       baselineCount: overage.baselineCount,
       currentCount: overage.currentCount,
       lineNumbers: baseOnlyCvaLinesByFile[file] ?? [],
+    }))
+    .sort((a, b) => a.file.localeCompare(b.file));
+  const singleUseVariantRatchet = analyzeCountRatchet(
+    singleUseVariantHelpersByFile,
+    singleUseVariantBaselineByFile,
+  );
+  const singleUseVariantOverages = Object.entries(singleUseVariantRatchet.overagesByKey)
+    .map(([file, overage]) => ({
+      file,
+      baselineCount: overage.baselineCount,
+      currentCount: overage.currentCount,
+      helpers: overage.overageItems,
     }))
     .sort((a, b) => a.file.localeCompare(b.file));
 
@@ -214,10 +347,36 @@ export function run() {
     }
   }
 
-  const failureCount = importViolations.length + cvaOverages.length + baseOnlyOverages.length;
+  if (singleUseVariantOverages.length > 0) {
+    errors.push(
+      `  ${c.red}ERROR${c.reset} Single-use variant-bearing feature-local \`cva()\` helpers are ratcheted outside \`src/components/ui/\`. Inline the styles, use a plain component with props, or move the shared API into an owned primitive.`,
+    );
+
+    for (const overage of singleUseVariantOverages) {
+      errors.push(
+        `  ${c.bold}${overage.file}${c.reset} baseline ${overage.baselineCount} → current ${overage.currentCount}`,
+      );
+      const helperPreview = overage.helpers
+        .map(
+          (helper) =>
+            `${helper.name} (line ${helper.line}, ${helper.callCount} call${helper.callCount === 1 ? "" : "s"})`,
+        )
+        .join(", ");
+      if (helperPreview.length > 0) {
+        errors.push(`    ${c.dim}${helperPreview}${c.reset}`);
+      }
+    }
+  }
+
+  const failureCount =
+    importViolations.length +
+    cvaOverages.length +
+    baseOnlyOverages.length +
+    singleUseVariantOverages.length;
   const passDetail = [
     `${ratchet.totalCurrent} baselined feature-local cva definition(s) across ${ratchet.activeKeyCount} file(s)`,
     `${baseOnlyRatchet.totalCurrent} baselined base-only feature-local cva definition(s) across ${baseOnlyRatchet.activeKeyCount} file(s)`,
+    `${singleUseVariantRatchet.totalCurrent} baselined single-use variant-bearing feature-local cva helper(s) across ${singleUseVariantRatchet.activeKeyCount} file(s)`,
   ].join("; ");
 
   return {
