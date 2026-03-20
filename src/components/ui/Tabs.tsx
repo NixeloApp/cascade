@@ -69,6 +69,7 @@ const tabsTriggerVariants = cva(
         default: "",
         compact:
           "min-h-8 rounded-full px-2 py-1 text-xs leading-tight sm:min-h-8 sm:px-2.5 sm:py-1 sm:text-xs lg:px-3 lg:text-sm",
+        eyebrow: "px-1 py-3 text-xs font-bold uppercase tracking-widest text-ui-text-tertiary",
       },
       width: {
         default: "",

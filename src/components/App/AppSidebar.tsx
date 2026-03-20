@@ -554,7 +554,9 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
       {isMobileOpen && (
         <Button
           variant="unstyled"
-          className="fixed inset-0 bg-ui-bg-overlay z-40 lg:hidden cursor-default"
+          chrome="backdrop"
+          chromeSize="backdrop"
+          className="z-40 lg:hidden cursor-default"
           onClick={closeMobile}
           onKeyDown={(e) => e.key === "Escape" && closeMobile()}
           aria-label="Close sidebar"
@@ -590,7 +592,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                             )}
                           >
                             <Flex align="center" justify="center" className="h-full">
-                              <Typography variant="small" className="font-semibold text-current">
+                              <Typography variant="sidebarOrgInitial">
                                 {organizationName.charAt(0).toUpperCase()}
                               </Typography>
                             </Flex>
@@ -710,11 +712,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                   {!showCollapsed && (
                     <li className="list-none">
                       <div className="p-1 mb-3 mt-5">
-                        <Badge
-                          variant="outline"
-                          shape="pill"
-                          className="bg-ui-bg-elevated/80 font-semibold uppercase tracking-wider shadow-soft"
-                        >
+                        <Badge variant="sidebarSection" shape="pill">
                           Products
                         </Badge>
                       </div>

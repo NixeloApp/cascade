@@ -130,6 +130,8 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
         "border-transparent bg-transparent text-ui-text-secondary shadow-none hover:bg-ui-bg-hover hover:text-ui-text",
       calendarMonthOverflow:
         "border-transparent bg-transparent text-ui-text-tertiary shadow-none hover:text-brand",
+      backdrop:
+        "border-transparent bg-ui-bg-overlay text-transparent shadow-none hover:bg-ui-bg-overlay",
     },
     chromeSize: {
       footerLink: "h-auto rounded-none px-0 py-0 text-sm",
@@ -158,6 +160,7 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
       sprintPreset: "h-auto rounded-lg px-3 py-3 text-sm",
       swimlaneHeader: "h-auto w-full justify-start rounded-xl px-4 py-2 text-left text-sm",
       sectionToggle: "w-full justify-between min-h-0 rounded-none",
+      backdrop: "fixed inset-0 h-auto w-auto rounded-none p-0",
     },
   },
 });

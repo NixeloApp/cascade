@@ -78,6 +78,28 @@ describe("Badge", () => {
       const badge = screen.getByTestId("badge");
       expect(badge.className).toContain("bg-ui-bg-soft");
     });
+
+    it("applies dashboardTag variant", () => {
+      render(
+        <Badge variant="dashboardTag" data-testid="badge">
+          Tag
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge");
+      expect(badge.className).toContain("bg-ui-bg-tertiary/60");
+      expect(badge.className).toContain("uppercase");
+    });
+
+    it("applies sidebarSection variant", () => {
+      render(
+        <Badge variant="sidebarSection" data-testid="badge">
+          Section
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge");
+      expect(badge.className).toContain("bg-ui-bg-elevated/80");
+      expect(badge.className).toContain("tracking-wider");
+    });
   });
 
   describe("sizes", () => {
@@ -96,6 +118,16 @@ describe("Badge", () => {
       );
       const badge = screen.getByTestId("badge");
       expect(badge.className).toContain("py-1");
+    });
+
+    it("applies emphasis size", () => {
+      render(
+        <Badge size="emphasis" data-testid="badge">
+          Strong
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge");
+      expect(badge.className).toContain("font-bold");
     });
   });
 

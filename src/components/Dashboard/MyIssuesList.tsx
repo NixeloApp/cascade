@@ -102,7 +102,7 @@ export function MyIssuesList({
               between views.
             </Typography>
           </Stack>
-          <Badge variant="neutral" shape="pill" className="bg-ui-bg-soft text-ui-text-secondary">
+          <Badge variant="neutral" shape="pill">
             Live queue
           </Badge>
         </Flex>
@@ -113,21 +113,13 @@ export function MyIssuesList({
         className="border-b border-ui-border/50 bg-ui-bg/20"
       >
         <TabsList variant="underline" className="gap-6 px-4">
-          <TabsTrigger
-            value="assigned"
-            variant="underline"
-            className="px-1 py-3 font-bold text-xs uppercase tracking-widest text-ui-text-tertiary"
-          >
+          <TabsTrigger value="assigned" variant="underline" size="eyebrow">
             Assigned
             <Typography variant="label" as="span" className="ml-1.5 opacity-60">
               ({myIssues?.length || 0})
             </Typography>
           </TabsTrigger>
-          <TabsTrigger
-            value="created"
-            variant="underline"
-            className="px-1 py-3 font-bold text-xs uppercase tracking-widest text-ui-text-tertiary"
-          >
+          <TabsTrigger value="created" variant="underline" size="eyebrow">
             Created
             <Typography variant="label" as="span" className="ml-1.5 opacity-60">
               ({myCreatedIssues?.length || 0})
@@ -177,14 +169,11 @@ export function MyIssuesList({
                             <Typography variant="inlineCode" color="tertiary">
                               {issue.key}
                             </Typography>
-                            <Badge
-                              variant="neutral"
-                              className="bg-ui-bg-tertiary/60 text-xs uppercase font-bold"
-                            >
+                            <Badge variant="dashboardTag" size="emphasis">
                               {issue.priority}
                             </Badge>
                           </Flex>
-                          <Typography variant="label" className="mb-2 text-base">
+                          <Typography variant="cardTitle" className="mb-2">
                             {issue.title}
                           </Typography>
                           <Metadata size="xs" gap="xs" className="uppercase tracking-widest">

@@ -50,6 +50,9 @@ const typographyVariants = cva("", {
       caption: "text-xs text-ui-text-secondary", // descriptions, helper text
       label: "text-sm font-medium text-ui-text", // form labels
       strong: "font-semibold", // inline emphasis, inherits parent size
+      listTitle: "text-sm font-medium tracking-tight text-ui-text",
+      cardTitle: "text-base font-semibold tracking-tight text-ui-text",
+      sidebarOrgInitial: "text-sm font-semibold text-current",
       eyebrow: "text-xs font-semibold uppercase tracking-wider text-ui-text-secondary", // section labels, overlines
       eyebrowWide: "text-xs font-semibold uppercase tracking-widest text-ui-text-tertiary",
       pageHeaderEyebrow:
@@ -147,6 +150,8 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
     case "meta":
     case "caption":
     case "label":
+    case "listTitle":
+    case "cardTitle":
     case "eyebrow":
     case "eyebrowWide":
     case "pageHeaderEyebrow":
@@ -163,6 +168,7 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
     case "calendarEventTitle":
     case "calendarEventTitleMonth":
     case "calendarEventTime":
+    case "sidebarOrgInitial":
       return "span";
     case "blockquote":
       return "blockquote";

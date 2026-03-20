@@ -41,7 +41,7 @@ export function FocusZone({ task }: FocusZoneProps) {
     <Stack gap="sm">
       <Flex align="center" justify="between" gap="md">
         <Typography variant="eyebrowWide">Focus Item</Typography>
-        <Badge variant="neutral" shape="pill" className="bg-ui-bg-soft text-ui-text-secondary">
+        <Badge variant="neutral" shape="pill">
           Highest-impact next step
         </Badge>
       </Flex>
@@ -71,7 +71,7 @@ export function FocusZone({ task }: FocusZoneProps) {
             </Flex>
 
             <Flex align="center" gap="sm" wrap>
-              <Badge variant="neutral" shape="pill" className="bg-ui-bg-soft/80">
+              <Badge variant="neutral" shape="pill">
                 {task.status}
               </Badge>
               <Typography variant="small" color="secondary">
