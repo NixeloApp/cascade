@@ -4,32 +4,9 @@
 > **Status:** In Progress
 > **Last Updated:** 2026-03-20
 
-## Shipped
-
-First-class Meetings workspace, recording detail view, participant/topic/sentiment display, transcript UX with search/jump, action-item to issue creation, cross-meeting memory rail with project lens, and transcript filtering are all shipped.
-
-## Remaining Work
-
 ### Screenshots & Visual QA
 
-- [x] Add spec folder `docs/design/specs/pages/30-meetings/` with page docs
-- [x] Add meetings page to `e2e/screenshot-pages.ts` capture specs (empty state + seeded workspace route coverage)
-- [x] Expand meetings screenshot coverage with detail/transcript-focused captures if the base route shot is not sufficient
-- [x] Capture baselines across all 4 viewport/theme combos (desktop-dark, desktop-light, tablet-light, mobile-light)
-- [x] Update `.screenshot-hashes.json` manifest with new captures
 - [ ] Visual review of captured screenshots for quality (no spinners, real content)
-
-### E2E Tests
-
-- [x] Add meetings page to page objects (`e2e/pages/`)
-- [x] Add `e2e/meetings.spec.ts` covering: empty state, recording list/detail, transcript search, and memory rail filtering
-- [x] Extend meetings E2E coverage to action-item to issue creation
-
-### MeetingsWorkspace Code Quality
-
-- [x] Fix 55 validator violations in `MeetingsWorkspace.tsx` (7 standards, 30 raw TW, 2 surface shells, 16 layout prop)
-- [x] Fix type errors in `MeetingsWorkspace.test.tsx` (summary nullability, mock shapes)
-- [x] Replace raw HTML/Tailwind patterns with design system components (Flex, Typography, Card, etc.)
 
 ### Document Editor Dependency (blocks meeting-to-doc)
 
