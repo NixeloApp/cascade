@@ -1244,39 +1244,55 @@ async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<bool
 
 async function waitForCalendarMonthReady(page: Page): Promise<void> {
   const monthToggle = page.getByTestId(TEST_IDS.CALENDAR.MODE_MONTH).first();
-  await monthToggle.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
-  if ((await monthToggle.count().catch(() => 0)) > 0) {
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const isSelected = (await monthToggle.getAttribute("data-state").catch(() => null)) === "on";
-      if (isSelected) {
-        break;
-      }
+  const waitForMonthToggleSelected = async (timeout: number) => {
+    await page.waitForFunction(
+      (monthToggleTestId) =>
+        document
+          .querySelector(`[data-testid="${monthToggleTestId}"]`)
+          ?.getAttribute("data-state") === "on",
+      TEST_IDS.CALENDAR.MODE_MONTH,
+      { timeout },
+    );
+  };
 
-      await monthToggle.scrollIntoViewIfNeeded().catch(() => {});
-      await monthToggle.click().catch(() => {});
-      await page.waitForTimeout(150);
+  await monthToggle.waitFor({ state: "visible", timeout: 5000 });
 
-      const selectedAfterClick =
-        (await monthToggle.getAttribute("data-state").catch(() => null)) === "on";
-      if (selectedAfterClick) {
-        break;
-      }
+  let lastError: Error | null = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const isSelected = (await monthToggle.getAttribute("data-state")) === "on";
+    if (isSelected) {
+      break;
+    }
 
+    try {
+      await monthToggle.scrollIntoViewIfNeeded();
+      await monthToggle.click();
+      await waitForMonthToggleSelected(1000);
+      break;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+    }
+
+    try {
       await monthToggle.evaluate((element) => {
         if (element instanceof HTMLButtonElement) {
           element.click();
         }
       });
-      await page.waitForTimeout(150);
+      await waitForMonthToggleSelected(1000);
+      break;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+    }
+
+    if (attempt === 2) {
+      throw new Error(
+        `Calendar month toggle did not activate: ${lastError?.message ?? "unknown error"}`,
+      );
     }
   }
-  await page.waitForFunction(
-    (monthToggleTestId) =>
-      document.querySelector(`[data-testid="${monthToggleTestId}"]`)?.getAttribute("data-state") ===
-      "on",
-    TEST_IDS.CALENDAR.MODE_MONTH,
-    { timeout: 5000 },
-  );
+
+  await waitForMonthToggleSelected(5000);
   await waitForScreenshotReady(page);
   await waitForCalendarReady(page);
   await page
@@ -4676,11 +4692,10 @@ async function screenshotSprintInteractiveStates(
       const dialog = page.getByRole("dialog", { name: /^start sprint$/i });
       await dialog.waitFor({ state: "visible", timeout: 5000 });
       await waitForScreenshotReady(page);
-      await page.waitForTimeout(300);
       const overlapWarning = dialog.getByText(/these dates overlap with:/i).first();
-      if ((await overlapWarning.count()) > 0) {
-        await overlapWarning.scrollIntoViewIfNeeded().catch(() => {});
-      }
+      await overlapWarning.waitFor({ state: "visible", timeout: 5000 });
+      await waitForAnimation(page);
+      await overlapWarning.scrollIntoViewIfNeeded();
       await waitForScreenshotReady(page);
       await captureCurrentView(
         page,
