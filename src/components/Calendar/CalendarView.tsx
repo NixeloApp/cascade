@@ -176,7 +176,7 @@ export function CalendarView({
   }
 
   return (
-    <Flex direction="column" className="h-full" data-calendar data-testid={TEST_IDS.CALENDAR.ROOT}>
+    <Flex direction="column" className="h-full" data-testid={TEST_IDS.CALENDAR.ROOT}>
       <ShadcnCalendar
         events={events}
         mode={mode}

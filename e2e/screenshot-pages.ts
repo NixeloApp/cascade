@@ -2953,7 +2953,7 @@ async function screenshotFilledStates(
             const quickAddButton = page.getByTestId(TEST_IDS.CALENDAR.QUICK_ADD_DAY).first();
             if ((await quickAddButton.count()) > 0) {
               if (!(await quickAddButton.isVisible())) {
-                const firstDayCell = page.locator("[data-calendar] .group").first();
+                const firstDayCell = page.getByTestId(TEST_IDS.CALENDAR.DAY_CELL).first();
                 if ((await firstDayCell.count()) > 0) {
                   await firstDayCell.hover();
                 }
