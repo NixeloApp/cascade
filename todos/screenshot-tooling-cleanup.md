@@ -86,6 +86,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [x] Replace the shared sidebar/document/workspace-list screenshot selectors with owned `TEST_IDS` constants
 - [x] Replace the shared toast/auth helper screenshot selectors with owned toast `TEST_IDS` constants
 - [x] Replace the shared settings-page section selectors with owned `TEST_IDS` constants
+- [x] Replace the shared dashboard nav and loading-spinner selectors with owned `TEST_IDS` constants
 - [ ] Replace raw data-attribute selectors with TEST_IDS constants
 - [x] Reduce shared helper/page-readiness `.first()` usage so unique route sentinels rely on scoped locator semantics
 - [x] Extract `dismissAllDialogs()`, `waitForDialogOpen()`, `waitForScreenshotReady()` to `e2e/utils/`

@@ -71,6 +71,18 @@ export const TEST_IDS = {
     /** @see src/components/Sidebar.tsx */
     SIDEBAR: "sidebar",
     /** @see src/components/App/AppSidebar.tsx */
+    DASHBOARD_LINK: "sidebar-dashboard-link",
+    /** @see src/components/App/AppSidebar.tsx */
+    DOCUMENTS_LINK: "sidebar-documents-link",
+    /** @see src/components/App/AppSidebar.tsx */
+    WORKSPACES_LINK: "sidebar-workspaces-link",
+    /** @see src/components/App/AppSidebar.tsx */
+    TIMESHEET_LINK: "sidebar-timesheet-link",
+    /** @see src/components/App/AppSidebar.tsx */
+    CALENDAR_LINK: "sidebar-calendar-link",
+    /** @see src/components/App/AppSidebar.tsx */
+    SETTINGS_LINK: "sidebar-settings-link",
+    /** @see src/components/App/AppSidebar.tsx */
     DOCUMENT_LIST: "sidebar-document-list",
     /** @see src/components/App/AppSidebar.tsx */
     DOCUMENT_ITEM: "sidebar-document-item",
@@ -297,6 +309,8 @@ export const TEST_IDS = {
   // ============================================================
 
   LOADING: {
+    /** @see src/components/ui/LoadingSpinner.tsx */
+    SPINNER: "loading-spinner",
     /** @see src/components/ui/Skeleton.tsx */
     SKELETON: "loading-skeleton",
   },

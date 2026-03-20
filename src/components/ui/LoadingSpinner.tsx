@@ -7,6 +7,7 @@
  */
 
 import { cva, type VariantProps } from "class-variance-authority";
+import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Flex } from "./Flex";
 import { Typography } from "./Typography";
@@ -75,7 +76,14 @@ export function LoadingSpinner({
   message,
 }: LoadingSpinnerProps) {
   return (
-    <Flex direction="column" align="center" justify="center" gap="md" role="status">
+    <Flex
+      direction="column"
+      align="center"
+      justify="center"
+      gap="md"
+      role="status"
+      data-testid={TEST_IDS.LOADING.SPINNER}
+    >
       <InlineSpinner size={size} variant={variant} animation={animation} className={className} />
       {!message && <span className="sr-only">Loading...</span>}
       {message && (

@@ -291,7 +291,7 @@ export async function dismissAllDialogs(page: Page): Promise<void> {
 export async function waitForScreenshotReady(page: Page, timeout = 5000): Promise<void> {
   await page.waitForLoadState("domcontentloaded");
 
-  const loadingSpinner = page.getByLabel("Loading").or(page.locator("[data-loading-spinner]"));
+  const loadingSpinner = page.getByLabel("Loading").or(page.getByTestId(TEST_IDS.LOADING.SPINNER));
   await loadingSpinner.first().waitFor({ state: "hidden", timeout });
   await waitForLoadingSkeletonsToClear(page, timeout);
 
@@ -353,7 +353,7 @@ export async function waitForDashboardReady(page: Page): Promise<void> {
         const searchButton = page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON);
         const loadingSpinner = page
           .getByLabel("Loading")
-          .or(page.locator("[data-loading-spinner]"));
+          .or(page.getByTestId(TEST_IDS.LOADING.SPINNER));
 
         const mainVisible = await main.isVisible().catch(() => false);
         const searchVisible = await searchButton.isVisible().catch(() => false);
@@ -375,7 +375,7 @@ export async function waitForDashboardReady(page: Page): Promise<void> {
 
   await expect(page.getByRole("main").last()).toBeVisible();
   await expect(page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON)).toBeVisible();
-  const loadingSpinner = page.getByLabel("Loading").or(page.locator("[data-loading-spinner]"));
+  const loadingSpinner = page.getByLabel("Loading").or(page.getByTestId(TEST_IDS.LOADING.SPINNER));
   await expect(loadingSpinner).not.toBeVisible();
 }
 

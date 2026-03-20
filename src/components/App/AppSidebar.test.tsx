@@ -158,6 +158,33 @@ describe("AppSidebar Accessibility", () => {
     expect(documentsLink).toHaveAttribute("aria-current", "page");
   });
 
+  it("exposes owned TEST_IDS for shared dashboard navigation links", () => {
+    (useLocation as any).mockReturnValue({ pathname: "/demo-org/dashboard" });
+
+    render(<AppSidebar />);
+
+    expect(screen.getByTestId(TEST_IDS.NAV.DASHBOARD_LINK)).toHaveAttribute(
+      "href",
+      "/$orgSlug/dashboard",
+    );
+    expect(screen.getByTestId(TEST_IDS.NAV.DOCUMENTS_LINK)).toHaveAttribute(
+      "href",
+      "/$orgSlug/documents",
+    );
+    expect(screen.getByTestId(TEST_IDS.NAV.WORKSPACES_LINK)).toHaveAttribute(
+      "href",
+      "/$orgSlug/workspaces",
+    );
+    expect(screen.getByTestId(TEST_IDS.NAV.CALENDAR_LINK)).toHaveAttribute(
+      "href",
+      "/$orgSlug/calendar",
+    );
+    expect(screen.getByTestId(TEST_IDS.NAV.SETTINGS_LINK)).toHaveAttribute(
+      "href",
+      "/$orgSlug/settings/profile",
+    );
+  });
+
   it("renders organization name with a tooltip", async () => {
     const user = userEvent.setup();
     render(<AppSidebar />);

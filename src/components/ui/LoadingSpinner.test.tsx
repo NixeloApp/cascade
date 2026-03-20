@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { LoadingOverlay, LoadingSpinner } from "./LoadingSpinner";
 
@@ -9,6 +10,7 @@ describe("LoadingSpinner", () => {
 
       const status = screen.getByRole("status");
       expect(status).toBeInTheDocument();
+      expect(screen.getByTestId(TEST_IDS.LOADING.SPINNER)).toBe(status);
       // No redundant aria-label on the container
       expect(status).not.toHaveAttribute("aria-label");
     });

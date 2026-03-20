@@ -679,6 +679,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     isActive={isActive(ROUTES.dashboard.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
+                    data-testid={TEST_IDS.NAV.DASHBOARD_LINK}
                     data-tour="nav-dashboard"
                   />
                   {/* Issues */}
@@ -727,6 +728,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     isActive={isActive(ROUTES.calendar.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
+                    data-testid={TEST_IDS.NAV.CALENDAR_LINK}
                     data-tour="nav-calendar"
                   />
 
@@ -807,6 +809,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     to={ROUTES.documents.list.path}
                     params={{ orgSlug }}
                     onClick={handleNavClick}
+                    data-testid={TEST_IDS.NAV.DOCUMENTS_LINK}
                     data-tour="nav-documents"
                     childrenTestId={TEST_IDS.NAV.DOCUMENT_LIST}
                   >
@@ -834,6 +837,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     to={ROUTES.workspaces.list.path}
                     params={{ orgSlug }}
                     onClick={handleNavClick}
+                    data-testid={TEST_IDS.NAV.WORKSPACES_LINK}
                     data-tour="nav-projects"
                     childrenTestId={TEST_IDS.NAV.WORKSPACE_LIST}
                   >
@@ -866,6 +870,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                       isActive={isActive(ROUTES.timeTracking.path.replace("/$orgSlug", ""))}
                       isCollapsed={showCollapsed}
                       onClick={handleNavClick}
+                      data-testid={TEST_IDS.NAV.TIMESHEET_LINK}
                       data-tour="nav-timesheet"
                     />
                   )}
@@ -884,6 +889,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                   isActive={isActive("/settings")}
                   isCollapsed={showCollapsed}
                   onClick={handleNavClick}
+                  data-testid={TEST_IDS.NAV.SETTINGS_LINK}
                   data-tour="nav-settings"
                 />
               </ul>
@@ -909,6 +915,7 @@ type NavItemProps = Omit<LinkProps, "to"> & {
   label: string;
   isActive: boolean;
   isCollapsed: boolean;
+  "data-testid"?: string;
   "data-tour"?: string;
   onClick?: (event: React.MouseEvent) => void;
 };
@@ -918,6 +925,7 @@ function NavItem({
   label,
   isActive,
   isCollapsed,
+  "data-testid": dataTestId,
   "data-tour": dataTour,
   to,
   params,
@@ -939,6 +947,7 @@ function NavItem({
         search={search}
         onClick={onClick}
         {...props}
+        data-testid={dataTestId}
         data-tour={dataTour}
         aria-label={isCollapsed ? label : undefined}
       >
@@ -983,6 +992,7 @@ type CollapsibleSectionProps = {
   onClick?: (event: React.MouseEvent) => void;
   children: React.ReactNode;
   childrenTestId?: string;
+  "data-testid"?: string;
   "data-tour"?: string;
 } & (
   | (Omit<LinkProps, "to"> & { to: LinkProps["to"] })
@@ -999,6 +1009,7 @@ function CollapsibleSection({
   onAdd,
   children,
   childrenTestId,
+  "data-testid": dataTestId,
   "data-tour": dataTour,
   ...props
 }: CollapsibleSectionProps) {
@@ -1022,6 +1033,7 @@ function CollapsibleSection({
                 to={props.to}
                 params={props.params}
                 search={props.search}
+                data-testid={dataTestId}
                 data-tour={dataTour}
               >
                 <Icon className="w-5 h-5" />
@@ -1056,6 +1068,7 @@ function CollapsibleSection({
             to={props.to}
             params={props.params}
             search={props.search}
+            data-testid={dataTestId}
             aria-current={isActive ? "page" : undefined}
             className="min-w-0 grow"
           >

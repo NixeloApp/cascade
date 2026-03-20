@@ -112,23 +112,23 @@ export class DashboardPage extends BasePage {
     // Use navigation landmark to scope to the correct sidebar
     const navSidebar = page.getByRole("navigation");
     this.dashboardTab = page
-      .locator("[data-tour='nav-dashboard']")
+      .getByTestId(TEST_IDS.NAV.DASHBOARD_LINK)
       .or(navSidebar.getByRole("link", { name: /^dashboard$/i }));
     this.documentsTab = page
-      .locator("[data-tour='nav-documents']")
+      .getByTestId(TEST_IDS.NAV.DOCUMENTS_LINK)
       .or(navSidebar.getByRole("link", { name: /^documents$/i }));
     // Workspaces navigation tab
     this.workspacesTab = page
-      .locator("[data-tour='nav-workspaces']")
+      .getByTestId(TEST_IDS.NAV.WORKSPACES_LINK)
       .or(navSidebar.getByRole("link", { name: /^workspaces$/i }));
     this.timesheetTab = page
-      .locator("[data-tour='nav-timesheet']")
+      .getByTestId(TEST_IDS.NAV.TIMESHEET_LINK)
       .or(navSidebar.getByRole("link", { name: /time tracking/i }));
     this.calendarTab = page
-      .locator("[data-tour='nav-calendar']")
-      .or(navSidebar.getByRole("link", { name: /^calendar$/i }));
+      .getByTestId(TEST_IDS.NAV.CALENDAR_LINK)
+      .or(navSidebar.getByRole("link", { name: /^general$/i }));
     this.settingsTab = page
-      .locator("[data-tour='nav-settings']")
+      .getByTestId(TEST_IDS.NAV.SETTINGS_LINK)
       .or(navSidebar.getByRole("link", { name: /^settings$/i }));
 
     // Header actions - using aria-labels for accessibility
@@ -158,7 +158,7 @@ export class DashboardPage extends BasePage {
     this.mainContent = page.getByRole("main").last();
     this.sidebar = page.getByTestId(TEST_IDS.NAV.SIDEBAR).or(page.getByRole("complementary"));
     // Use aria-label="Loading" to target actual loading spinners, not empty states
-    this.loadingSpinner = page.getByLabel("Loading").or(page.locator("[data-loading-spinner]"));
+    this.loadingSpinner = page.getByLabel("Loading").or(page.getByTestId(TEST_IDS.LOADING.SPINNER));
 
     // Dashboard specific content - match actual UI headings
     this.myIssuesSection = page.getByRole("heading", { name: /feed/i }).first();
