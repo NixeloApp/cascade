@@ -57,7 +57,7 @@ export class WorkspacesPage extends BasePage {
     const loadingSpinner = this.page
       .locator(".loading-spinner")
       .or(this.page.getByText(/loading/i));
-    await loadingSpinner.waitFor({ state: "hidden" }).catch(() => {});
+    await this.waitForOptionalLoadingSpinnerToClear(loadingSpinner);
   }
 
   async goto() {
@@ -237,18 +237,59 @@ export class WorkspacesPage extends BasePage {
 
   private async clickNewWorkspaceButton() {
     const createButton = this.newWorkspaceButton.first();
-    await expect(createButton).toBeVisible();
+    await this.prepareLocatorForInteraction(createButton, "create workspace button");
     await expect(createButton).toBeEnabled();
-    await createButton.scrollIntoViewIfNeeded().catch(() => {});
 
     try {
       await createButton.click({ timeout: 3000 });
       return;
     } catch {
-      await expect(createButton).toBeVisible();
+      await this.prepareLocatorForInteraction(createButton, "create workspace button retry");
       await expect(createButton).toBeEnabled();
-      await createButton.scrollIntoViewIfNeeded().catch(() => {});
       await createButton.click({ timeout: 3000 });
+    }
+  }
+
+  private async waitForOptionalLoadingSpinnerToClear(
+    loadingSpinner: Locator,
+    timeout = 5000,
+  ): Promise<void> {
+    const spinnerVisible = await loadingSpinner.isVisible().catch(() => false);
+    if (!spinnerVisible) {
+      return;
+    }
+
+    try {
+      await loadingSpinner.waitFor({ state: "hidden", timeout });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Workspace page loading spinner did not clear: ${message}`);
+    }
+  }
+
+  private async prepareLocatorForInteraction(locator: Locator, label: string): Promise<void> {
+    await expect(locator, `${label} should be visible before interaction`).toBeVisible();
+
+    try {
+      await locator.scrollIntoViewIfNeeded();
+    } catch (error) {
+      try {
+        await expect(
+          locator,
+          `${label} should remain visible after a transient re-render`,
+        ).toBeVisible();
+        return;
+      } catch {
+        // Fall through to the explicit visibility check and error below.
+      }
+
+      const stillVisible = await locator.isVisible().catch(() => false);
+      if (stillVisible) {
+        return;
+      }
+
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`${label} was not visible after scroll attempt: ${message}`);
     }
   }
 }
