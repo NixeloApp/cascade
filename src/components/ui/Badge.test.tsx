@@ -90,6 +90,28 @@ describe("Badge", () => {
       expect(badge.className).toContain("uppercase");
     });
 
+    it("applies commandCenter variant", () => {
+      render(
+        <Badge variant="commandCenter" data-testid="badge">
+          Command
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge");
+      expect(badge.className).toContain("backdrop-blur-sm");
+      expect(badge.className).toContain("shadow-soft");
+    });
+
+    it("applies issueKey variant", () => {
+      render(
+        <Badge variant="issueKey" data-testid="badge">
+          KEY-1
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge");
+      expect(badge.className).toContain("font-mono");
+      expect(badge.className).toContain("bg-ui-bg-tertiary/60");
+    });
+
     it("applies sidebarSection variant", () => {
       render(
         <Badge variant="sidebarSection" data-testid="badge">

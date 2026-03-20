@@ -20,11 +20,7 @@ export function Greeting({ userName, completedCount = 0 }: GreetingProps) {
 
   return (
     <Stack gap="sm" className="mb-8">
-      <Badge
-        variant="neutral"
-        shape="pill"
-        className="w-fit px-3 py-1 text-ui-text-tertiary shadow-soft backdrop-blur-sm"
-      >
+      <Badge variant="commandCenter" size="md" shape="pill" className="w-fit">
         <Flex align="center" gap="sm">
           <Dot />
           <Typography variant="eyebrowWide">Command Center</Typography>
