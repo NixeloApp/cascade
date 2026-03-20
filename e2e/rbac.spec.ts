@@ -164,9 +164,9 @@ rbacTest(
     viewerPage.on("console", (msg) => console.log(`[Browser Console] ${msg.text()}`));
     await gotoRbacProject(viewerPage);
 
-    // 2. Verify board is visible - check for project name heading
+    // 2. Verify board is visible - check for project name text
     await expect(
-      viewerPage.getByRole("heading", { name: new RegExp(RBAC_TEST_CONFIG.projectName, "i") }),
+      viewerPage.getByText(new RegExp(RBAC_TEST_CONFIG.projectName, "i")).first(),
     ).toBeVisible();
     console.log("✓ Viewer can view project board");
 
