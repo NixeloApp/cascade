@@ -438,7 +438,12 @@ describe("MeetingsWorkspace", () => {
           speakerCount: 3,
         },
         summary: {
-          ...buildDetail().summary!,
+          ...(buildDetail().summary ?? {}),
+          _id: summaryId,
+          _creationTime: 1_710_000_000_000,
+          recordingId,
+          transcriptId: "transcript_1" as Id<"meetingTranscripts">,
+          executiveSummary: "",
           keyPoints: [],
           actionItems: [],
           decisions: [],
@@ -502,7 +507,16 @@ describe("MeetingsWorkspace", () => {
       },
       detail: buildDetail({
         summary: {
-          ...buildDetail().summary!,
+          ...(buildDetail().summary ?? {}),
+          _id: summaryId,
+          _creationTime: 1_710_000_000_000,
+          recordingId,
+          transcriptId: "transcript_1" as Id<"meetingTranscripts">,
+          executiveSummary: "The team aligned on delivery scope.",
+          keyPoints: ["Finalize scope", "Start implementation"],
+          decisions: [],
+          openQuestions: [],
+          topics: [],
           actionItems: [
             {
               description: "Update the spec",
@@ -594,13 +608,16 @@ describe("MeetingsWorkspace", () => {
     const filteredMemory = filterMeetingMemory(memory, secondProjectId);
     const projectLenses = getMeetingMemoryProjectLenses(memory, projects);
 
-    expect(filteredMemory!.recentDecisions).toEqual([
-      expect.objectContaining({ decision: "Start the phased rollout on Monday" }),
-    ]);
-    expect(filteredMemory!.openQuestions).toEqual([
-      expect.objectContaining({ question: "Which customers need white-glove onboarding?" }),
-    ]);
-    expect(filteredMemory!.unresolvedActionItems).toEqual([]);
+    expect(filteredMemory).toBeDefined();
+    if (filteredMemory) {
+      expect(filteredMemory.recentDecisions).toEqual([
+        expect.objectContaining({ decision: "Start the phased rollout on Monday" }),
+      ]);
+      expect(filteredMemory.openQuestions).toEqual([
+        expect.objectContaining({ question: "Which customers need white-glove onboarding?" }),
+      ]);
+      expect(filteredMemory.unresolvedActionItems).toEqual([]);
+    }
     expect(projectLenses).toEqual([
       expect.objectContaining({ projectId, projectKey: "CORE", totalItems: 3 }),
       expect.objectContaining({ projectId: secondProjectId, projectKey: "OPS", totalItems: 2 }),
