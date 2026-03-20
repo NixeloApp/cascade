@@ -97,6 +97,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [x] Replace `AuthPage` readiness, submit-state, and app-shell recovery catch chains with shared locator-state helpers
 - [x] Replace the remaining `ProjectsPage` create-project, issue-detail, sprint/activity, roadmap, and timer state catch chains with shared locator-state helpers
 - [x] Replace the remaining notifications screenshot readiness and Mentions-filter catch chains with shared locator-state helpers
+- [x] Replace the remaining omnibox/calendar/sidebar/board/sprint/issue screenshot catch probes with shared locator-state helpers
 - [x] Replace the project create-issue trigger and modal selectors with owned `TEST_IDS` constants
 - [x] Replace the orphaned onboarding tour command-palette/dashboard/board/sidebar selectors with owned `TEST_IDS` constants
 - [x] Replace the onboarding create-project tour selector with the owned `TEST_IDS.ONBOARDING.CREATE_PROJECT_BUTTON` contract

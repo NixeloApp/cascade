@@ -64,3 +64,12 @@ export async function isLocatorVisible(locator: Locator): Promise<boolean> {
     return false;
   }
 }
+
+export async function waitForLocatorVisible(locator: Locator, timeout: number): Promise<boolean> {
+  try {
+    await locator.waitFor({ state: "visible", timeout });
+    return true;
+  } catch {
+    return false;
+  }
+}

@@ -31,7 +31,12 @@ import { TEST_IDS } from "../src/lib/test-ids";
 import { TEST_USERS } from "./config";
 import { E2E_TIMEZONE } from "./constants";
 import { ProjectsPage } from "./pages";
-import { getLocatorAttribute, getLocatorCount, isLocatorVisible } from "./utils/locator-state";
+import {
+  getLocatorAttribute,
+  getLocatorCount,
+  isLocatorVisible,
+  waitForLocatorVisible,
+} from "./utils/locator-state";
 import {
   assertScreenshotHashIsNotLoadingState,
   getScreenshotHash,
@@ -849,7 +854,7 @@ function isCrashLikeError(message: string): boolean {
 async function openOmnibox(page: Page, trigger: Locator, dialog: Locator): Promise<void> {
   await dismissAllDialogs(page);
 
-  if (await trigger.isVisible().catch(() => false)) {
+  if (await isLocatorVisible(trigger)) {
     await trigger.click();
   } else {
     await page.keyboard.press(SEARCH_SHORTCUT);
@@ -1237,7 +1242,7 @@ async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<bool
   const nextButton = page.getByRole("button", { name: /^next month$/i });
 
   const isExpired = () => Date.now() > deadline;
-  const hasEvents = async () => (await eventItems.count().catch(() => 0)) > 0;
+  const hasEvents = async () => (await getLocatorCount(eventItems)) > 0;
 
   const waitForCalendarState = async () => {
     await waitForScreenshotReady(page);
@@ -3479,7 +3484,7 @@ async function screenshotFilledStates(
       await captureCurrentView(page, p, "sidebar-collapsed");
       // Expand back
       const expandBtn = page.getByLabel("Expand sidebar");
-      if (await expandBtn.isVisible().catch(() => false)) {
+      if (await isLocatorVisible(expandBtn)) {
         await expandBtn.click();
         await waitForScreenshotReady(page);
       }
@@ -3514,7 +3519,7 @@ async function screenshotFilledStates(
         .locator('button[aria-label="Close sidebar"]')
         .filter({ has: page.locator("svg") })
         .last();
-      if (await closeButton.isVisible().catch(() => false)) {
+      if (await isLocatorVisible(closeButton)) {
         await closeButton.click();
         await waitForScreenshotReady(page);
       }
@@ -3987,10 +3992,7 @@ async function screenshotBoardModals(
       await issueCard.scrollIntoViewIfNeeded();
       const issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
       await issueCard.click();
-      const dialogOpened = await issueDetailDialog
-        .waitFor({ state: "visible", timeout: 3000 })
-        .then(() => true)
-        .catch(() => false);
+      const dialogOpened = await waitForLocatorVisible(issueDetailDialog, 3000);
       if (!dialogOpened) {
         await waitForScreenshotReady(page);
         await issueCard.click();
@@ -4198,7 +4200,7 @@ async function screenshotBoardInteractiveStates(
       );
       // Expand it back
       const expandButton = page.getByLabel(/expand/i).first();
-      if (await expandButton.isVisible().catch(() => false)) {
+      if (await isLocatorVisible(expandButton)) {
         await expandButton.click();
         await waitForScreenshotReady(page);
       }
@@ -4340,7 +4342,7 @@ async function screenshotBoardInteractiveStates(
       // Close panel and reset to modal view
       await page.keyboard.press("Escape");
       const resetBtn = page.getByLabel(/switch to modal view/i).first();
-      if (await resetBtn.isVisible().catch(() => false)) {
+      if (await isLocatorVisible(resetBtn)) {
         await resetBtn.click();
       }
     });
@@ -4365,7 +4367,7 @@ async function screenshotSprintInteractiveStates(
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-burndown`)) {
     await runCaptureStep("sprint burndown chart", async () => {
       const burndownBtn = page.getByRole("button", { name: /^burndown$/i }).first();
-      if (await burndownBtn.isVisible().catch(() => false)) {
+      if (await isLocatorVisible(burndownBtn)) {
         await burndownBtn.click();
         await waitForScreenshotReady(page);
       }
@@ -4383,7 +4385,7 @@ async function screenshotSprintInteractiveStates(
       await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-sprints-burnup`);
       // Switch back to burndown
       const burndownBtn = page.getByRole("button", { name: /^burndown$/i }).first();
-      if (await burndownBtn.isVisible().catch(() => false)) {
+      if (await isLocatorVisible(burndownBtn)) {
         await burndownBtn.click();
       }
     });
@@ -4412,7 +4414,7 @@ async function screenshotSprintInteractiveStates(
     await runCaptureStep("sprint date overlap warning", async () => {
       let startSprintButton = page.getByRole("button", { name: /^start sprint$/i }).first();
 
-      if (!(await startSprintButton.isVisible().catch(() => false))) {
+      if (!(await isLocatorVisible(startSprintButton))) {
         const createSprintButton = page
           .getByRole("button", { name: /create sprint|\+\s*sprint/i })
           .first();
@@ -4512,7 +4514,7 @@ async function screenshotIssueInteractiveStates(
 
     await dismissIfOpen(page, issueDetailPanel);
     const resetBtn = page.getByRole("button", { name: /switch to modal view/i }).first();
-    if (await resetBtn.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(resetBtn)) {
       await resetBtn.click();
     }
   });
