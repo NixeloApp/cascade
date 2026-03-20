@@ -41,7 +41,7 @@ export function AIFeatureDemo() {
           <Badge variant="outline" shape="pill" className="mb-4">
             AI-native workflows
           </Badge>
-          <Typography variant="h2" className="text-4xl md:text-5xl">
+          <Typography variant="landingSectionTitle">
             Intelligent assistance across every handoff
           </Typography>
           <Typography variant="lead" className="mx-auto mt-4 max-w-3xl">
@@ -113,7 +113,7 @@ export function AIFeatureDemo() {
                 {answerSteps.map((step, index) => (
                   <Flex key={step} align="start" gap="sm">
                     <FlexItem shrink={false} className={aiFeatureDemoVariants.stepBadge()}>
-                      <Typography variant="small" className="font-semibold text-ui-text">
+                      <Typography as="span" variant="label">
                         {index + 1}
                       </Typography>
                     </FlexItem>

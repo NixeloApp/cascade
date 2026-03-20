@@ -34,7 +34,7 @@ export function FinalCTASection() {
             <Badge variant="outline" shape="pill" className="mb-5">
               Built for teams that need one system, not another tab
             </Badge>
-            <Typography variant="h2" className="text-4xl md:text-5xl">
+            <Typography variant="landingSectionTitle">
               Make product work easier to run and easier to trust
             </Typography>
             <Typography variant="lead" className="mt-4">

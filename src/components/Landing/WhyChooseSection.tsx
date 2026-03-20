@@ -42,7 +42,7 @@ export function WhyChooseSection() {
           <Badge variant="outline" shape="pill" className="mb-4">
             Why teams move
           </Badge>
-          <Typography variant="h2" className="text-4xl md:text-5xl">
+          <Typography variant="landingSectionTitle">
             Better product ops usually starts with fewer disconnected surfaces
           </Typography>
           <Typography variant="lead" className="mx-auto mt-4 max-w-3xl">
@@ -63,9 +63,7 @@ export function WhyChooseSection() {
                 </Badge>
               </Flex>
 
-              <Typography variant="h3" className="text-2xl">
-                {story.title}
-              </Typography>
+              <Typography variant="h3">{story.title}</Typography>
               <Typography variant="small" color="secondary" className="mt-3 leading-7">
                 {story.body}
               </Typography>

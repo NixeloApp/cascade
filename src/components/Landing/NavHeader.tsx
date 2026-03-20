@@ -38,9 +38,7 @@ export function NavHeader() {
             >
               <Link to={ROUTES.home.path}>
                 <NixeloLogo />
-                <Typography variant="h3" className="tracking-tight text-ui-text">
-                  Nixelo
-                </Typography>
+                <Typography variant="h3">Nixelo</Typography>
               </Link>
             </Button>
 

@@ -52,6 +52,32 @@ describe("Typography", () => {
     expect(label.className).toContain("tracking-wide");
   });
 
+  it("maps landingSectionTitle to an h2 with landing hero sizing", () => {
+    render(
+      <Typography variant="landingSectionTitle" data-testid="landing-section-title">
+        Run calmer delivery
+      </Typography>,
+    );
+    const title = screen.getByTestId("landing-section-title");
+    expect(title.tagName).toBe("H2");
+    expect(title.className).toContain("text-4xl");
+    expect(title.className).toContain("md:text-5xl");
+    expect(title.className).toContain("tracking-tight");
+  });
+
+  it("maps landingMetricValue to a paragraph with responsive emphasis", () => {
+    render(
+      <Typography variant="landingMetricValue" data-testid="landing-metric-value">
+        18
+      </Typography>,
+    );
+    const value = screen.getByTestId("landing-metric-value");
+    expect(value.tagName).toBe("P");
+    expect(value.className).toContain("text-3xl");
+    expect(value.className).toContain("sm:text-4xl");
+    expect(value.className).toContain("font-bold");
+  });
+
   it("maps sidebarOrgInitial to a span", () => {
     render(
       <Typography variant="sidebarOrgInitial" data-testid="initials">

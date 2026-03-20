@@ -2,7 +2,7 @@
 
 > **Priority:** P1
 > **Status:** New
-> **Last Updated:** 2026-03-19
+> **Last Updated:** 2026-03-20
 
 ## Goal
 
@@ -18,6 +18,7 @@ Make the product more visually cohesive and more enforceable in code, using the 
 
 ### Typography override drift
 
+- [x] Absorb the repeated landing-page hero/showcase/metric typography patterns into owned `Typography` variants
 - [ ] Remove or absorb the 43 current `Typography` className size/weight/tracking overrides surfaced by `check-typography-drift.js`
 - [ ] Where the same override pattern repeats, add a real `Typography` variant or supporting primitive instead of continuing one-off className fixes
 
