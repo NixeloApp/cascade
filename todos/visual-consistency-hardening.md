@@ -18,12 +18,12 @@ Make the product more visually cohesive and more enforceable in code, using the 
 
 ### Typography override drift
 
-- [ ] Remove or absorb the 52 current `Typography` className size/weight/tracking overrides surfaced by `check-typography-drift.js`
+- [ ] Remove or absorb the 50 current `Typography` className size/weight/tracking overrides surfaced by `check-typography-drift.js`
 - [ ] Where the same override pattern repeats, add a real `Typography` variant or supporting primitive instead of continuing one-off className fixes
 
 ### Owned-control drift
 
-- [ ] Remove or absorb the 17 current control-chrome overrides surfaced by `check-control-chrome-drift.js`
+- [ ] Remove or absorb the 16 current control-chrome overrides surfaced by `check-control-chrome-drift.js`
 - [ ] Promote repeated `Button` / `Badge` / `Input` / `Textarea` / `TabsTrigger` restyling into owned variants instead of feature-local className patches
 
 ### Screenshot review residue

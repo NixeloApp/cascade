@@ -199,6 +199,18 @@ describe("Button", () => {
       expect(btn.className).toContain("w-10");
     });
 
+    it("applies workspace icon size", () => {
+      render(
+        <Button size="workspaceIcon" data-testid="btn">
+          🏢
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("h-10");
+      expect(btn.className).toContain("w-10");
+      expect(btn.className).toContain("text-lg");
+    });
+
     it("applies chrome icon size without inheriting default button sizing", () => {
       render(
         <Button chrome="quiet" chromeSize="icon" data-testid="btn">

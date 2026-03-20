@@ -54,6 +54,7 @@ const buttonVariants = cva(
         md: "h-10 px-4 text-sm",
         lg: "h-11 px-6 text-base",
         icon: "h-10 w-10",
+        workspaceIcon: "h-10 w-10 text-lg",
       },
       /** Show only on parent hover/focus-within (use inside group containers) */
       reveal: {
