@@ -55,6 +55,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [ ] Replace `.catch(() => {})` with explicit error handling or let errors propagate
 - [x] Replace swallowed alert-dialog stabilization in `openStableAlertDialog()` with explicit retries + animation waits
 - [x] Replace swallowed omnibox and advanced-search modal stabilization with explicit readiness waits
+- [x] Replace swallowed notification panel and snooze-popover stabilization with explicit retries + animation waits
 - [ ] Replace `waitForTimeout` calls with `animations: 'disabled'` or `waitForAnimation()`
 - [ ] Replace raw data-attribute selectors with TEST_IDS constants
 - [ ] Reduce `.first()` usage by scoping selectors or using test IDs

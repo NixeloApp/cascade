@@ -3835,22 +3835,32 @@ async function screenshotFilledStates(
   async function openNotificationPanel(): Promise<Locator> {
     const bellButton = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_BUTTON);
     const panel = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_PANEL);
+    let lastError: Error | null = null;
 
     await bellButton.waitFor({ state: "visible", timeout: 5000 });
 
-    if (await panel.isVisible().catch(() => false)) {
+    if (await panel.isVisible()) {
       return panel;
     }
 
-    await bellButton.click();
-    try {
-      await panel.waitFor({ state: "visible", timeout: 2500 });
-      return panel;
-    } catch {
-      await bellButton.click();
-      await panel.waitFor({ state: "visible", timeout: 5000 });
-      return panel;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        await bellButton.click();
+        await panel.waitFor({ state: "visible", timeout: 5000 });
+        await panel.getByRole("heading", { name: /^notifications$/i }).waitFor({
+          state: "visible",
+          timeout: 5000,
+        });
+        await waitForAnimation(page);
+        return panel;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        await page.keyboard.press("Escape");
+        await panel.waitFor({ state: "hidden", timeout: 2000 });
+      }
     }
+
+    throw new Error(`Notification panel did not open: ${lastError?.message ?? "unknown error"}`);
   }
 
   // Notification popover (bell icon in header)
@@ -3888,14 +3898,15 @@ async function screenshotFilledStates(
 
       const firstNotification = page.locator("[data-notification-item]").first();
       await firstNotification.waitFor({ state: "visible", timeout: 5000 });
-      await page.waitForTimeout(300);
       await firstNotification.hover();
+      await waitForAnimation(page);
 
       const snoozeButton = firstNotification.getByRole("button", { name: /snooze notification/i });
       await snoozeButton.waitFor({ state: "visible", timeout: 5000 });
       await snoozeButton.click();
 
       await page.getByText(/snooze until/i).waitFor({ state: "visible", timeout: 5000 });
+      await waitForAnimation(page);
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "notification-snooze-popover");
       await page.keyboard.press("Escape");
