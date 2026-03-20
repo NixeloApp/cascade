@@ -37,6 +37,18 @@ export async function getOptionalLocatorText(locator: Locator): Promise<string |
   }
 }
 
+export async function getLocatorAttribute(
+  locator: Locator,
+  name: string,
+  fallback: string | null = null,
+): Promise<string | null> {
+  try {
+    return (await locator.getAttribute(name)) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export async function isLocatorDisabled(locator: Locator, fallback = false): Promise<boolean> {
   try {
     return await locator.isDisabled();

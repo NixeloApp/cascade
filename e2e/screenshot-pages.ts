@@ -31,6 +31,7 @@ import { TEST_IDS } from "../src/lib/test-ids";
 import { TEST_USERS } from "./config";
 import { E2E_TIMEZONE } from "./constants";
 import { ProjectsPage } from "./pages";
+import { getLocatorAttribute, getLocatorCount, isLocatorVisible } from "./utils/locator-state";
 import {
   assertScreenshotHashIsNotLoadingState,
   getScreenshotHash,
@@ -2009,8 +2010,7 @@ async function waitForExpectedContent(
     await expect
       .poll(
         async () =>
-          (await notificationsHeading.isVisible().catch(() => false)) ||
-          (await inboxTab.isVisible().catch(() => false)),
+          (await isLocatorVisible(notificationsHeading)) || (await isLocatorVisible(inboxTab)),
         {
           timeout: 12000,
           message: "Expected notifications page heading or inbox tab to become visible",
@@ -2021,9 +2021,9 @@ async function waitForExpectedContent(
     await expect
       .poll(
         async () => {
-          const mentionsVisible = await mentionsFilter.isVisible().catch(() => false);
-          const itemCount = await notificationItems.count().catch(() => 0);
-          const emptyVisible = await emptyState.isVisible().catch(() => false);
+          const mentionsVisible = await isLocatorVisible(mentionsFilter);
+          const itemCount = await getLocatorCount(notificationItems);
+          const emptyVisible = await isLocatorVisible(emptyState);
 
           return mentionsVisible && (itemCount > 0 || emptyVisible) ? "ready" : "pending";
         },
@@ -3649,9 +3649,9 @@ async function screenshotFilledStates(
     await expect
       .poll(
         async () => {
-          const mentionsVisible = await mentionsFilter.isVisible().catch(() => false);
-          const itemCount = await notificationItems.count().catch(() => 0);
-          const emptyVisible = await emptyState.isVisible().catch(() => false);
+          const mentionsVisible = await isLocatorVisible(mentionsFilter);
+          const itemCount = await getLocatorCount(notificationItems);
+          const emptyVisible = await isLocatorVisible(emptyState);
 
           return mentionsVisible && (itemCount > 0 || emptyVisible) ? "ready" : "pending";
         },
@@ -3671,10 +3671,10 @@ async function screenshotFilledStates(
     await expect
       .poll(
         async () => {
-          const classes = (await mentionsFilter.getAttribute("class").catch(() => "")) ?? "";
+          const classes = (await getLocatorAttribute(mentionsFilter, "class", "")) ?? "";
           const filterActive = classes.includes("bg-ui-bg-secondary");
-          const mentionVisible = await mentionNotification.isVisible().catch(() => false);
-          const emptyVisible = await emptyState.isVisible().catch(() => false);
+          const mentionVisible = await isLocatorVisible(mentionNotification);
+          const emptyVisible = await isLocatorVisible(emptyState);
 
           return filterActive && (mentionVisible || emptyVisible) ? "ready" : "pending";
         },
