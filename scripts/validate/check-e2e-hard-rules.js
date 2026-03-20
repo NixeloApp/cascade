@@ -18,6 +18,7 @@ import { c, ROOT, relPath } from "./utils.js";
 
 const E2E_DIR = path.join(ROOT, "e2e");
 const BASELINE_PATH = path.join(ROOT, "scripts", "ci", "e2e-hard-rules-baseline.json");
+const SCREENSHOT_HARNESS_PATH = path.join(E2E_DIR, "screenshot-pages.ts");
 const TARGET_EXTENSIONS = new Set([".ts", ".tsx"]);
 const PROMISE_SLEEP_PATTERN =
   /new\s+Promise\s*\(\s*(?:\(\s*[_$a-zA-Z][\w$]*\s*\)|[_$a-zA-Z][\w$]*|\(\s*\))\s*=>\s*setTimeout\s*\(/gms;
@@ -158,12 +159,56 @@ export function run() {
   if (fs.existsSync(BASELINE_PATH)) {
     baseline = JSON.parse(fs.readFileSync(BASELINE_PATH, "utf8"));
   }
+  const timeoutBaselineByFile = baseline.timeoutByFile ?? {};
+  const promiseSleepBaselineByFile = baseline.promiseSleepByFile ?? {};
   const known = new Set(
     (baseline.selectorAntiPatterns ?? []).map((e) => `${e.file}:${e.line}:${e.type}`),
   );
   const newAntiPatterns = violations.selectorAntiPattern.filter(
     (e) => !known.has(`${e.file}:${e.line}:${e.type}`),
   );
+
+  const harnessTimeoutViolations = [];
+  const harnessPromiseSleepViolations = [];
+  const baselinedHarnessCounts = {
+    timeout: 0,
+    promiseSleep: 0,
+  };
+
+  if (fs.existsSync(SCREENSHOT_HARNESS_PATH)) {
+    const source = fs.readFileSync(SCREENSHOT_HARNESS_PATH, "utf8");
+    const file = relPath(SCREENSHOT_HARNESS_PATH);
+    const lines = source.split("\n");
+    const timeoutMatches = [];
+
+    lines.forEach((line, index) => {
+      if (line.includes("waitForTimeout(")) {
+        timeoutMatches.push({ file, line: index + 1, text: line.trim() });
+      }
+    });
+
+    const promiseSleepMatches = [...source.matchAll(PROMISE_SLEEP_PATTERN)].map((match) => ({
+      file,
+      line: lineFromIndex(source, match.index ?? 0),
+      text: match[0].replace(/\s+/g, " ").trim(),
+    }));
+
+    const timeoutBaseline = timeoutBaselineByFile[file] ?? 0;
+    const promiseSleepBaseline = promiseSleepBaselineByFile[file] ?? 0;
+    baselinedHarnessCounts.timeout = Math.min(timeoutMatches.length, timeoutBaseline);
+    baselinedHarnessCounts.promiseSleep = Math.min(
+      promiseSleepMatches.length,
+      promiseSleepBaseline,
+    );
+
+    if (timeoutMatches.length > timeoutBaseline) {
+      harnessTimeoutViolations.push(...timeoutMatches.slice(timeoutBaseline));
+    }
+
+    if (promiseSleepMatches.length > promiseSleepBaseline) {
+      harnessPromiseSleepViolations.push(...promiseSleepMatches.slice(promiseSleepBaseline));
+    }
+  }
 
   // Report violations
   for (const v of violations.timeout) {
@@ -187,6 +232,16 @@ export function run() {
   for (const v of newAntiPatterns) {
     messages.push(`  ${c.red}ERROR${c.reset} [selector:${v.type}] ${v.file}:${v.line} - ${v.text}`);
   }
+  for (const v of harnessTimeoutViolations) {
+    messages.push(
+      `  ${c.red}ERROR${c.reset} [waitForTimeout:harness] ${v.file}:${v.line} - ${v.text}`,
+    );
+  }
+  for (const v of harnessPromiseSleepViolations) {
+    messages.push(
+      `  ${c.red}ERROR${c.reset} [Promise sleep:harness] ${v.file}:${v.line} - ${v.text}`,
+    );
+  }
 
   const errorCount =
     violations.timeout.length +
@@ -195,12 +250,29 @@ export function run() {
     violations.querySelector.length +
     violations.forcedAction.length +
     violations.xpath.length +
-    newAntiPatterns.length;
+    newAntiPatterns.length +
+    harnessTimeoutViolations.length +
+    harnessPromiseSleepViolations.length;
+
+  const baselineSummaryParts = [];
+  if (baselinedHarnessCounts.timeout > 0) {
+    baselineSummaryParts.push(`${baselinedHarnessCounts.timeout} harness waitForTimeout baseline`);
+  }
+  if (baselinedHarnessCounts.promiseSleep > 0) {
+    baselineSummaryParts.push(
+      `${baselinedHarnessCounts.promiseSleep} harness Promise sleep baseline`,
+    );
+  }
+  const baselineSummary =
+    baselineSummaryParts.length > 0 ? ` (${baselineSummaryParts.join(", ")})` : "";
 
   return {
     passed: errorCount === 0,
     errors: errorCount,
-    detail: errorCount > 0 ? `${errorCount} violation(s)` : `${specFiles.length} specs checked`,
+    detail:
+      errorCount > 0
+        ? `${errorCount} violation(s)`
+        : `${specFiles.length} specs checked${baselineSummary}`,
     messages: messages.length > 0 ? messages : undefined,
   };
 }
