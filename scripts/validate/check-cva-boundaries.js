@@ -12,12 +12,14 @@
  * - Existing baselined feature-local CVA definitions while cleanup is in flight
  * - Existing baselined base-only feature-local CVA definitions while cleanup is in flight
  * - Existing baselined single-use variant-bearing feature-local CVA helpers while cleanup is in flight
+ * - Existing baselined oversized variant axes while shared primitive cleanup is in flight
  *
  * Blocked:
  * - `buttonVariants`, `tabsTriggerVariants`, `cardRecipeVariants`, etc. in routes/components pages
  * - New or increased `cva()` definitions outside `src/components/ui/`
  * - New or increased base-only `cva()` definitions outside `src/components/ui/`
  * - New or increased single-use variant-bearing feature-local `cva()` helpers outside `src/components/ui/`
+ * - New or increased oversized CVA variant axes with more than 10 options
  */
 
 import fs from "node:fs";
@@ -46,6 +48,13 @@ const FEATURE_CVA_SINGLE_USE_BASELINE_PATH = path.join(
   "ci",
   "feature-cva-single-use-baseline.json",
 );
+const OVERSIZED_CVA_VARIANT_AXIS_BASELINE_PATH = path.join(
+  ROOT,
+  "scripts",
+  "ci",
+  "oversized-cva-variant-axis-baseline.json",
+);
+const MAX_VARIANT_OPTIONS_PER_AXIS = 10;
 
 function getLineNumber(content, index) {
   return content.slice(0, index).split("\n").length;
@@ -76,27 +85,7 @@ function isCvaCallExpression(node, sourceFile) {
 }
 
 function hasNonEmptyVariantsConfig(node, sourceFile) {
-  if (!isCvaCallExpression(node, sourceFile) || !node.arguments[1]) {
-    return false;
-  }
-
-  const config = node.arguments[1];
-  if (!ts.isObjectLiteralExpression(config)) {
-    return false;
-  }
-
-  for (const property of config.properties) {
-    if (
-      ts.isPropertyAssignment(property) &&
-      property.name.getText(sourceFile) === "variants" &&
-      ts.isObjectLiteralExpression(property.initializer) &&
-      property.initializer.properties.length > 0
-    ) {
-      return true;
-    }
-  }
-
-  return false;
+  return getVariantAxes(node, sourceFile).length > 0;
 }
 
 function getPropertyNameText(nameNode) {
@@ -112,6 +101,75 @@ function getPropertyNameText(nameNode) {
   }
 
   return null;
+}
+
+function getVariantAxes(node, sourceFile) {
+  if (!isCvaCallExpression(node, sourceFile) || !node.arguments[1]) {
+    return [];
+  }
+
+  const config = node.arguments[1];
+  if (!ts.isObjectLiteralExpression(config)) {
+    return [];
+  }
+
+  for (const property of config.properties) {
+    if (
+      !ts.isPropertyAssignment(property) ||
+      property.name.getText(sourceFile) !== "variants" ||
+      !ts.isObjectLiteralExpression(property.initializer)
+    ) {
+      continue;
+    }
+
+    return property.initializer.properties
+      .flatMap((axisProperty) => {
+        if (
+          !ts.isPropertyAssignment(axisProperty) ||
+          !ts.isObjectLiteralExpression(axisProperty.initializer)
+        ) {
+          return [];
+        }
+
+        const axisName = getPropertyNameText(axisProperty.name);
+        if (!axisName) {
+          return [];
+        }
+
+        const axisPos = sourceFile.getLineAndCharacterOfPosition(axisProperty.getStart(sourceFile));
+        const optionEntries = axisProperty.initializer.properties
+          .flatMap((optionProperty) => {
+            if (
+              !ts.isPropertyAssignment(optionProperty) &&
+              !ts.isShorthandPropertyAssignment(optionProperty)
+            ) {
+              return [];
+            }
+
+            const optionName = getPropertyNameText(optionProperty.name);
+            if (!optionName) {
+              return [];
+            }
+
+            const optionPos = sourceFile.getLineAndCharacterOfPosition(
+              optionProperty.getStart(sourceFile),
+            );
+            return [{ name: optionName, line: optionPos.line + 1 }];
+          })
+          .sort((left, right) => left.name.localeCompare(right.name) || left.line - right.line);
+
+        return [
+          {
+            name: axisName,
+            line: axisPos.line + 1,
+            optionEntries,
+          },
+        ];
+      })
+      .sort((left, right) => left.line - right.line || left.name.localeCompare(right.name));
+  }
+
+  return [];
 }
 
 function collectFeatureCvaMetadata(filePath, content) {
@@ -216,6 +274,63 @@ function collectFeatureCvaMetadata(filePath, content) {
   };
 }
 
+function collectOversizedVariantAxes(filePath, content) {
+  const sourceFile = createSourceFile(filePath, content);
+  const rel = relPath(filePath);
+  const oversizedAxes = [];
+
+  function registerOversizedAxes(helperName, node) {
+    const variantAxes = getVariantAxes(node, sourceFile);
+    for (const axis of variantAxes) {
+      if (axis.optionEntries.length <= MAX_VARIANT_OPTIONS_PER_AXIS) {
+        continue;
+      }
+
+      oversizedAxes.push({
+        key: `${rel}#${helperName}.${axis.name}`,
+        file: rel,
+        helperName,
+        axisName: axis.name,
+        line: axis.line,
+        optionEntries: axis.optionEntries,
+      });
+    }
+  }
+
+  function visit(node) {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
+      if (isCvaCallExpression(node.initializer, sourceFile)) {
+        registerOversizedAxes(node.name.text, node.initializer);
+      } else if (ts.isObjectLiteralExpression(node.initializer)) {
+        for (const property of node.initializer.properties) {
+          if (
+            !ts.isPropertyAssignment(property) ||
+            !isCvaCallExpression(property.initializer, sourceFile)
+          ) {
+            continue;
+          }
+
+          const propertyName = getPropertyNameText(property.name);
+          if (!propertyName) continue;
+
+          registerOversizedAxes(`${node.name.text}.${propertyName}`, property.initializer);
+        }
+      }
+    }
+
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return oversizedAxes.sort(
+    (left, right) =>
+      left.file.localeCompare(right.file) ||
+      left.line - right.line ||
+      left.helperName.localeCompare(right.helperName) ||
+      left.axisName.localeCompare(right.axisName),
+  );
+}
+
 export function run() {
   const SRC_DIR = path.join(ROOT, "src");
   const files = walkDir(SRC_DIR, { extensions: new Set([".ts", ".tsx"]) });
@@ -228,11 +343,17 @@ export function run() {
     FEATURE_CVA_SINGLE_USE_BASELINE_PATH,
     "singleUseVariantCvaDefinitionsByFile",
   );
+  const oversizedVariantAxisBaselineByKey = loadCountBaseline(
+    OVERSIZED_CVA_VARIANT_AXIS_BASELINE_PATH,
+    "variantOptionsByAxis",
+  );
 
   const importViolations = [];
   const cvaLinesByFile = {};
   const baseOnlyCvaLinesByFile = {};
   const singleUseVariantHelpersByFile = {};
+  const oversizedVariantAxisOptionsByKey = {};
+  const oversizedVariantAxisMetadataByKey = {};
   const errors = [];
 
   for (const filePath of files) {
@@ -241,6 +362,11 @@ export function run() {
     if (rel.includes(".test.") || rel.includes(".spec.") || rel.includes(".stories.")) continue;
 
     const content = fs.readFileSync(filePath, "utf8");
+    const oversizedVariantAxes = collectOversizedVariantAxes(filePath, content);
+    for (const axis of oversizedVariantAxes) {
+      oversizedVariantAxisOptionsByKey[axis.key] = axis.optionEntries;
+      oversizedVariantAxisMetadataByKey[axis.key] = axis;
+    }
 
     if (!rel.startsWith("src/components/ui/")) {
       const { cvaLines, baseOnlyLines, singleUseVariantHelpers } = collectFeatureCvaMetadata(
@@ -306,6 +432,24 @@ export function run() {
       helpers: overage.overageItems,
     }))
     .sort((a, b) => a.file.localeCompare(b.file));
+  const oversizedVariantAxisRatchet = analyzeCountRatchet(
+    oversizedVariantAxisOptionsByKey,
+    oversizedVariantAxisBaselineByKey,
+  );
+  const oversizedVariantAxisOverages = Object.entries(oversizedVariantAxisRatchet.overagesByKey)
+    .map(([key, overage]) => ({
+      ...oversizedVariantAxisMetadataByKey[key],
+      baselineCount: overage.baselineCount,
+      currentCount: overage.currentCount,
+      newOptions: overage.overageItems,
+    }))
+    .sort(
+      (left, right) =>
+        left.file.localeCompare(right.file) ||
+        left.line - right.line ||
+        left.helperName.localeCompare(right.helperName) ||
+        left.axisName.localeCompare(right.axisName),
+    );
 
   errors.push(...importViolations);
 
@@ -368,15 +512,39 @@ export function run() {
     }
   }
 
+  if (oversizedVariantAxisOverages.length > 0) {
+    errors.push(
+      `  ${c.red}ERROR${c.reset} Oversized CVA variant axes are ratcheted at ${MAX_VARIANT_OPTIONS_PER_AXIS} options per axis. Split the helper, extract a semantic primitive, or shrink the axis instead of extending an already-bloated enum.`,
+    );
+
+    for (const overage of oversizedVariantAxisOverages) {
+      errors.push(
+        `  ${c.bold}${overage.file}${c.reset} ${overage.helperName}.${overage.axisName} (line ${overage.line}) baseline ${overage.baselineCount} → current ${overage.currentCount}`,
+      );
+      const optionPreview = overage.newOptions
+        .slice(0, 8)
+        .map((option) => `${option.name} (line ${option.line})`)
+        .join(", ");
+      if (optionPreview.length > 0) {
+        errors.push(`    ${c.dim}${optionPreview}${c.reset}`);
+      }
+      if (overage.newOptions.length > 8) {
+        errors.push(`    ${c.dim}... and ${overage.newOptions.length - 8} more${c.reset}`);
+      }
+    }
+  }
+
   const failureCount =
     importViolations.length +
     cvaOverages.length +
     baseOnlyOverages.length +
-    singleUseVariantOverages.length;
+    singleUseVariantOverages.length +
+    oversizedVariantAxisOverages.length;
   const passDetail = [
     `${ratchet.totalCurrent} baselined feature-local cva definition(s) across ${ratchet.activeKeyCount} file(s)`,
     `${baseOnlyRatchet.totalCurrent} baselined base-only feature-local cva definition(s) across ${baseOnlyRatchet.activeKeyCount} file(s)`,
     `${singleUseVariantRatchet.totalCurrent} baselined single-use variant-bearing feature-local cva helper(s) across ${singleUseVariantRatchet.activeKeyCount} file(s)`,
+    `${oversizedVariantAxisRatchet.totalCurrent} baselined oversized cva variant option(s) across ${oversizedVariantAxisRatchet.activeKeyCount} axis/axes`,
   ].join("; ");
 
   return {
