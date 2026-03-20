@@ -59,6 +59,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [x] Replace shortcuts and time-entry modal stabilization with explicit dialog-content readiness waits
 - [x] Replace calendar month-toggle and sprint overlap hard waits with state-based readiness waits
 - [x] Replace `waitForTimeout` calls with `animations: 'disabled'` or `waitForAnimation()`
+- [x] Replace swallowed dashboard-customize and create-issue modal content waits with explicit readiness checks
 - [ ] Replace raw data-attribute selectors with TEST_IDS constants
 - [ ] Reduce `.first()` usage by scoping selectors or using test IDs
 - [x] Extract `dismissAllDialogs()`, `waitForDialogOpen()`, `waitForScreenshotReady()` to `e2e/utils/`

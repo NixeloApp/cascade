@@ -903,6 +903,34 @@ async function openStableDialog(
   );
 }
 
+async function waitForDashboardCustomizeDialogReady(page: Page): Promise<Locator> {
+  const dialog = page.getByRole("dialog", { name: /dashboard customization/i });
+  await dialog.waitFor({ state: "visible", timeout: 5000 });
+  await dialog
+    .getByText("Quick Stats", { exact: true })
+    .waitFor({ state: "visible", timeout: 5000 });
+  await dialog
+    .getByText("Recent Activity", { exact: true })
+    .waitFor({ state: "visible", timeout: 5000 });
+  await dialog
+    .getByText("My Workspaces", { exact: true })
+    .waitFor({ state: "visible", timeout: 5000 });
+  await waitForAnimation(page);
+  await waitForScreenshotReady(page);
+  return dialog;
+}
+
+async function waitForCreateIssueModalScreenshotReady(
+  page: Page,
+  projectsPage: ProjectsPage,
+): Promise<void> {
+  await projectsPage.createIssueModal.waitFor({ state: "visible", timeout: 5000 });
+  await projectsPage.issueTitleInput.waitFor({ state: "visible", timeout: 5000 });
+  await page.getByLabel(/create another/i).waitFor({ state: "visible", timeout: 5000 });
+  await waitForAnimation(page);
+  await waitForScreenshotReady(page);
+}
+
 function isProjectBoardUrl(url: string): boolean {
   return /\/projects\/[^/]+\/board$/.test(url);
 }
@@ -2844,7 +2872,7 @@ async function screenshotFilledStates(
         const projectsPage = new ProjectsPage(page, orgSlug);
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
-        await waitForScreenshotReady(page);
+        await waitForCreateIssueModalScreenshotReady(page, projectsPage);
         // Toggle "Create another" switch
         const toggle = page.getByLabel(/create another/i);
         await toggle.waitFor({ state: "visible", timeout: 5000 });
@@ -2871,7 +2899,7 @@ async function screenshotFilledStates(
         const projectsPage = new ProjectsPage(page, orgSlug);
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
-        await waitForScreenshotReady(page);
+        await waitForCreateIssueModalScreenshotReady(page, projectsPage);
         // Wait for dialog, then find submit button
         const modal = await waitForDialogOpen(page);
         const submitBtn = modal.getByRole("button", { name: /create issue/i }).last();
@@ -2881,8 +2909,7 @@ async function screenshotFilledStates(
         await page
           .getByText(/required|title is required|cannot be empty/i)
           .first()
-          .waitFor({ state: "visible", timeout: 3000 })
-          .catch(() => {});
+          .waitFor({ state: "visible", timeout: 3000 });
         await waitForScreenshotReady(page);
         await captureCurrentView(
           page,
@@ -2905,7 +2932,7 @@ async function screenshotFilledStates(
         const projectsPage = new ProjectsPage(page, orgSlug);
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
-        await waitForScreenshotReady(page);
+        await waitForCreateIssueModalScreenshotReady(page, projectsPage);
         const modal = await waitForDialogOpen(page);
         const titleInput = modal
           .getByPlaceholder(/title|issue.*title/i)
@@ -2942,9 +2969,7 @@ async function screenshotFilledStates(
         const projectsPage = new ProjectsPage(page, orgSlug);
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
-        await waitForAnimation(page);
-        await projectsPage.issueTitleInput.waitFor({ state: "visible", timeout: 5000 });
-        await waitForScreenshotReady(page);
+        await waitForCreateIssueModalScreenshotReady(page, projectsPage);
         await projectsPage.issueTitleInput.fill(duplicateQuery);
         const duplicateBanner = page.getByText("Potential duplicates found", { exact: true });
         await duplicateBanner.waitFor({ state: "visible", timeout: 20000 });
@@ -2980,6 +3005,7 @@ async function screenshotFilledStates(
 
         const projectsPage = new ProjectsPage(page, orgSlug);
         await projectsPage.openCreateIssueModal();
+        await waitForCreateIssueModalScreenshotReady(page, projectsPage);
         await page
           .getByText(/you have an unsaved draft/i)
           .first()
@@ -3574,8 +3600,7 @@ async function screenshotFilledStates(
       const trigger = page.getByRole("button", { name: /^customize$/i }).first();
       await trigger.waitFor({ state: "visible", timeout: 10000 });
       await trigger.click();
-      const dialog = await waitForDialogOpen(page);
-      await waitForScreenshotReady(page);
+      const dialog = await waitForDashboardCustomizeDialogReady(page);
       await captureCurrentView(page, p, "dashboard-customize-modal");
       await dismissIfOpen(page, dialog);
     });
