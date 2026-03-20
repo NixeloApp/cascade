@@ -144,6 +144,18 @@ describe("Badge", () => {
       expect(badge.className).toContain("bg-ui-bg-tertiary");
       expect(badge.className).toContain("font-medium");
     });
+
+    it("applies projectHeaderKey variant", () => {
+      render(
+        <Badge variant="projectHeaderKey" data-testid="badge">
+          PROJ
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge");
+      expect(badge.className).toContain("bg-ui-bg-soft");
+      expect(badge.className).toContain("uppercase");
+      expect(badge.className).toContain("tracking-wider");
+    });
   });
 
   describe("sizes", () => {

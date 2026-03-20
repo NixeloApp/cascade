@@ -39,6 +39,8 @@ const badgeVariants = cva("inline-flex items-center font-medium transition-color
       roadmapToday: "bg-status-error text-brand-foreground border border-status-error/20 shadow-sm",
       roadmapGroup:
         "bg-ui-bg-tertiary text-ui-text-secondary border border-transparent font-medium",
+      projectHeaderKey:
+        "bg-ui-bg-soft text-ui-text-secondary border border-ui-border uppercase tracking-wider",
       calendarDayCurrent: "bg-transparent text-ui-text border border-transparent",
       calendarDayMuted: "bg-transparent text-ui-text-tertiary border border-transparent",
       calendarDayToday: "bg-brand text-brand-foreground border border-transparent shadow-sm",

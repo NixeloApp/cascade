@@ -175,30 +175,20 @@ function ProjectLayout() {
                 variant="brand"
                 className="h-6 w-6 ring-1 ring-brand/18 sm:h-10 sm:w-10"
               >
-                <Typography variant="small" className="font-semibold text-current">
+                <Typography variant="sidebarOrgInitial">
                   {project.key.slice(0, 2).toUpperCase()}
                 </Typography>
               </IconCircle>
               <div className="min-w-0">
                 <Flex align="center" gap="xs" className="min-w-0">
-                  <Typography variant="h4" className="truncate text-sm tracking-tight sm:text-2xl">
-                    {project.name}
-                  </Typography>
+                  <Typography variant="projectHeaderTitle">{project.name}</Typography>
                 </Flex>
-                <Typography
-                  variant="caption"
-                  color="tertiary"
-                  className="mt-0.5 hidden uppercase tracking-wider sm:block"
-                >
+                <Typography variant="pageHeaderEyebrow" className="mt-0.5 hidden sm:block">
                   {isScrum ? "Scrum project" : "Kanban project"}
                 </Typography>
               </div>
             </Flex>
-            <Badge
-              variant="outline"
-              shape="pill"
-              className="hidden bg-ui-bg-soft uppercase tracking-wider sm:inline-flex"
-            >
+            <Badge variant="projectHeaderKey" shape="pill" className="hidden sm:inline-flex">
               {project.key}
             </Badge>
           </Flex>
