@@ -3052,12 +3052,9 @@ async function screenshotFilledStates(
             await sourceEvent.dispatchEvent("dragstart", { dataTransfer });
             await targetCell.dispatchEvent("dragenter", { dataTransfer });
             await targetCell.dispatchEvent("dragover", { dataTransfer });
-            await expect
-              .poll(() => targetCell.getAttribute("data-drop-target"), {
-                timeout: 5000,
-                intervals: [100, 200, 500],
-              })
-              .toBe("true");
+            await targetCell
+              .getByTestId(TEST_IDS.CALENDAR.DAY_CELL_DROP_TARGET)
+              .waitFor({ state: "attached", timeout: 5000 });
             await waitForScreenshotReady(page);
             await captureCurrentView(page, p, "calendar-drag-and-drop");
 

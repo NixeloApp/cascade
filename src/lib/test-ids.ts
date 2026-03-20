@@ -233,6 +233,8 @@ export const TEST_IDS = {
     EVENT_ITEM: "calendar-event-item",
     /** @see src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx */
     DAY_CELL: "calendar-day-cell",
+    /** @see src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx */
+    DAY_CELL_DROP_TARGET: "calendar-day-cell-drop-target",
     /** @see src/components/Calendar/EventDetailsModal.tsx */
     EVENT_DETAILS_MODAL: "calendar-event-details-modal",
     /** @see src/components/Calendar/EventDetailsModal.tsx */
