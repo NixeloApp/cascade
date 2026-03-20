@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { isLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
 
@@ -226,7 +227,7 @@ export class CalendarPage extends BasePage {
     await this.scrollCalendarToHour(8);
 
     const event = this.eventItems.filter({ hasText: title }).first();
-    if (!(await event.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(event))) {
       const fallbackEvent = this.calendar.getByText(title).first();
       await expect(fallbackEvent).toBeVisible();
       await fallbackEvent.click();
@@ -242,7 +243,7 @@ export class CalendarPage extends BasePage {
   private async scrollCalendarToHour(hour: number) {
     const scrollContainer = this.calendar.locator(".overflow-y-auto").first();
 
-    if (!(await scrollContainer.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(scrollContainer))) {
       return;
     }
 
@@ -252,7 +253,7 @@ export class CalendarPage extends BasePage {
   }
 
   private async alignCalendarToToday(): Promise<void> {
-    const todayButtonVisible = await this.todayButton.isVisible().catch(() => false);
+    const todayButtonVisible = await isLocatorVisible(this.todayButton);
     if (!todayButtonVisible) {
       return;
     }
@@ -260,7 +261,7 @@ export class CalendarPage extends BasePage {
     try {
       await this.goToToday();
     } catch (error) {
-      const buttonStillVisible = await this.todayButton.isVisible().catch(() => false);
+      const buttonStillVisible = await isLocatorVisible(this.todayButton);
       if (!buttonStillVisible) {
         return;
       }
@@ -276,7 +277,7 @@ export class CalendarPage extends BasePage {
     try {
       await event.scrollIntoViewIfNeeded();
     } catch (error) {
-      const stillVisible = await event.isVisible().catch(() => false);
+      const stillVisible = await isLocatorVisible(event);
       if (stillVisible) {
         return;
       }
