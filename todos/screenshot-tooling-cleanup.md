@@ -99,6 +99,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [x] Remove the dead sidebar `nav-*` tour markers and `data-tour` prop plumbing now that no E2E flow consumes them
 - [x] Replace the document outline raw `data-block-id` lookup with an owned heading-anchor contract shared by the Plate heading renderer and sidebar
 - [x] Replace the calendar month-view drag-state `data-drop-target` / `data-date` selectors with owned `TEST_IDS` contracts
+- [x] Replace the remaining live E2E `data-state` checks in calendar/dashboard helpers with accessible pressed/selected state assertions
 - [ ] Replace raw data-attribute selectors with TEST_IDS constants
 - [x] Reduce shared helper/page-readiness `.first()` usage so unique route sentinels rely on scoped locator semantics
 - [x] Extract `dismissAllDialogs()`, `waitForDialogOpen()`, `waitForScreenshotReady()` to `e2e/utils/`

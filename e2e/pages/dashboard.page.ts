@@ -902,7 +902,7 @@ export class DashboardPage extends BasePage {
 
     await expect(tabs[tab]).toBeVisible();
     await tabs[tab].click();
-    await expect(tabs[tab]).toHaveAttribute("data-state", "active");
+    await expect(tabs[tab]).toHaveAttribute("aria-selected", "true");
     await this.waitForSearchSettled();
   }
 
@@ -981,9 +981,7 @@ export class DashboardPage extends BasePage {
     await expect(tabs[filter]).toBeEnabled();
     await tabs[filter].click();
 
-    const ariaSelected = await tabs[filter].getAttribute("aria-selected");
-    const dataState = await tabs[filter].getAttribute("data-state");
-    expect(ariaSelected === "true" || dataState === "active").toBe(true);
+    await expect(tabs[filter]).toHaveAttribute("aria-selected", "true");
   }
 
   // ===================

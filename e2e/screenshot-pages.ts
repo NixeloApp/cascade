@@ -1277,21 +1277,14 @@ async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<bool
 async function waitForCalendarMonthReady(page: Page): Promise<void> {
   const monthToggle = page.getByTestId(TEST_IDS.CALENDAR.MODE_MONTH);
   const waitForMonthToggleSelected = async (timeout: number) => {
-    await page.waitForFunction(
-      (monthToggleTestId) =>
-        document
-          .querySelector(`[data-testid="${monthToggleTestId}"]`)
-          ?.getAttribute("data-state") === "on",
-      TEST_IDS.CALENDAR.MODE_MONTH,
-      { timeout },
-    );
+    await expect(monthToggle).toHaveAttribute("aria-checked", "true", { timeout });
   };
 
   await monthToggle.waitFor({ state: "visible", timeout: 5000 });
 
   let lastError: Error | null = null;
   for (let attempt = 0; attempt < 3; attempt++) {
-    const isSelected = (await monthToggle.getAttribute("data-state")) === "on";
+    const isSelected = (await monthToggle.getAttribute("aria-checked")) === "true";
     if (isSelected) {
       break;
     }
