@@ -10,6 +10,12 @@ describe("Icon", () => {
     expect(screen.getByTestId("icon")).toHaveClass("w-4", "h-4");
   });
 
+  it("supports the compact chevron size preset", () => {
+    render(<Icon icon={CheckCircle} size="xsPlus" data-testid="icon" />);
+
+    expect(screen.getByTestId("icon")).toHaveClass("w-3.5", "h-3.5");
+  });
+
   it("applies the configured semantic tone class", () => {
     render(<Icon icon={CheckCircle} tone="success" data-testid="icon" />);
 

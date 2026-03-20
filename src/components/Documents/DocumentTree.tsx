@@ -57,6 +57,10 @@ interface TreeNode {
   hasChildren: boolean;
 }
 
+function TreeChevronIcon({ isExpanded }: { isExpanded: boolean }) {
+  return <Icon icon={isExpanded ? ChevronDown : ChevronRight} size="xsPlus" />;
+}
+
 /** Hierarchical tree view of documents with favorites, archived, and folder sections. */
 export function DocumentTree({
   organizationId,
@@ -141,11 +145,7 @@ export function DocumentTree({
             aria-expanded={favoritesExpanded}
             aria-controls="favorites-documents-list"
           >
-            {favoritesExpanded ? (
-              <ChevronDown className="w-3.5 h-3.5 mr-1" />
-            ) : (
-              <ChevronRight className="w-3.5 h-3.5 mr-1" />
-            )}
+            <TreeChevronIcon isExpanded={favoritesExpanded} />
             <Icon icon={Star} size="sm" tone="warning" fill="currentColor" />
             <Typography variant="small">Favorites</Typography>
           </Button>
@@ -210,11 +210,7 @@ export function DocumentTree({
             aria-expanded={archivedExpanded}
             aria-controls="archived-documents-list"
           >
-            {archivedExpanded ? (
-              <ChevronDown className="w-3.5 h-3.5 mr-1" />
-            ) : (
-              <ChevronRight className="w-3.5 h-3.5 mr-1" />
-            )}
+            <TreeChevronIcon isExpanded={archivedExpanded} />
             <Icon icon={Archive} size="sm" />
             <Typography variant="small">Archived</Typography>
             <Typography variant="small" className="ml-auto text-ui-text-tertiary">
@@ -294,11 +290,7 @@ function ExpandToggle({
       aria-label={`${isExpanded ? "Collapse" : "Expand"} ${title}`}
       aria-expanded={isExpanded}
     >
-      {isExpanded ? (
-        <ChevronDown className="w-3.5 h-3.5" />
-      ) : (
-        <ChevronRight className="w-3.5 h-3.5" />
-      )}
+      <TreeChevronIcon isExpanded={isExpanded} />
     </Button>
   );
 }
