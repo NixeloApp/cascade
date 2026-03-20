@@ -82,7 +82,7 @@ function DocumentsListPage() {
                       <div className="min-w-0">
                         <Typography
                           variant="h4"
-                          className="line-clamp-1 tracking-tight transition-colors group-hover:text-brand"
+                          className="line-clamp-1 transition-colors group-hover:text-brand"
                         >
                           {doc.title || "Untitled"}
                         </Typography>

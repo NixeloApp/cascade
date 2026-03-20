@@ -78,6 +78,32 @@ describe("Typography", () => {
     expect(value.className).toContain("font-bold");
   });
 
+  it("maps boardSurfaceTitle to an h2 with compact toolbar sizing", () => {
+    render(
+      <Typography variant="boardSurfaceTitle" data-testid="board-surface-title">
+        Sprint Board
+      </Typography>,
+    );
+    const title = screen.getByTestId("board-surface-title");
+    expect(title.tagName).toBe("H2");
+    expect(title.className).toContain("text-xs");
+    expect(title.className).toContain("sm:text-lg");
+    expect(title.className).toContain("tracking-tight");
+  });
+
+  it("maps boardColumnTitleCompact to a paragraph with responsive truncation", () => {
+    render(
+      <Typography variant="boardColumnTitleCompact" data-testid="board-column-title-compact">
+        In Progress
+      </Typography>,
+    );
+    const title = screen.getByTestId("board-column-title-compact");
+    expect(title.tagName).toBe("P");
+    expect(title.className).toContain("truncate");
+    expect(title.className).toContain("text-xs");
+    expect(title.className).toContain("sm:text-sm");
+  });
+
   it("maps errorCodeDisplay to a shared error-code heading", () => {
     render(
       <Typography variant="errorCodeDisplay" data-testid="error-code">
@@ -100,6 +126,19 @@ describe("Typography", () => {
     expect(title.tagName).toBe("P");
     expect(title.className).toContain("text-xl");
     expect(title.className).toContain("font-medium");
+  });
+
+  it("maps boardColumnTitle to a paragraph with secondary board styling", () => {
+    render(
+      <Typography variant="boardColumnTitle" data-testid="board-column-title">
+        To Do
+      </Typography>,
+    );
+    const title = screen.getByTestId("board-column-title");
+    expect(title.tagName).toBe("P");
+    expect(title.className).toContain("text-sm");
+    expect(title.className).toContain("font-medium");
+    expect(title.className).toContain("text-ui-text-secondary");
   });
 
   it("maps sidebarOrgInitial to a span", () => {

@@ -177,11 +177,7 @@ function CollapsedColumn({
             </IconButton>
           </Tooltip>
           <Flex flex="1" align="center" justify="center" style={{ writingMode: "vertical-lr" }}>
-            <Typography
-              variant="h3"
-              className="text-sm font-medium tracking-tight text-ui-text-secondary"
-              style={{ transform: "rotate(180deg)" }}
-            >
+            <Typography variant="boardColumnTitle" style={{ transform: "rotate(180deg)" }}>
               {state.name}
             </Typography>
           </Flex>
@@ -231,12 +227,7 @@ function ColumnHeader({
     >
       <Flex align="center" justify="between" gap="xs">
         <Flex align="center" gap="xs" className="min-w-0">
-          <Typography
-            variant="h3"
-            className="truncate text-xs font-medium tracking-tight text-ui-text-secondary sm:text-sm"
-          >
-            {state.name}
-          </Typography>
+          <Typography variant="boardColumnTitleCompact">{state.name}</Typography>
           <Badge
             data-testid={TEST_IDS.BOARD.COLUMN_COUNT}
             variant={isOverWipLimit ? "error" : isAtWipLimit ? "warning" : "neutral"}

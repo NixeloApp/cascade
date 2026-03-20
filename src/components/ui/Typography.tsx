@@ -68,6 +68,10 @@ const typographyVariants = cva("", {
       landingShowcaseTitle: "text-2xl font-semibold tracking-tight text-ui-text sm:text-3xl",
       landingMetricValue: "text-3xl font-bold tracking-tight text-ui-text sm:text-4xl",
       landingPriceValue: "text-3xl font-bold tracking-tight text-ui-text",
+      boardSurfaceTitle: "text-xs font-semibold tracking-tight text-ui-text sm:text-lg",
+      boardColumnTitle: "text-sm font-medium tracking-tight text-ui-text-secondary",
+      boardColumnTitleCompact:
+        "truncate text-xs font-medium tracking-tight text-ui-text-secondary sm:text-sm",
       mono: "text-xs font-mono text-ui-text-secondary tracking-tight", // issue keys, codes
       calendarHeaderDate: "text-xs font-medium text-ui-text sm:text-base",
       calendarHeaderTitle: "text-sm font-semibold tracking-tight text-ui-text sm:text-lg",
@@ -146,6 +150,7 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
       return "h1";
     case "h2":
     case "authTitle":
+    case "boardSurfaceTitle":
     case "landingSectionTitle":
       return "h2";
     case "h3":
@@ -175,6 +180,8 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
     case "dashboardStatValueStrong":
     case "landingMetricValue":
     case "landingPriceValue":
+    case "boardColumnTitle":
+    case "boardColumnTitleCompact":
     case "projectHeaderTitle":
     case "placeholderTitle":
     case "metricLabel":

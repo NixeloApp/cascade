@@ -60,10 +60,8 @@ export function UnifiedCalendarView({ projectId }: UnifiedCalendarViewProps) {
         ) : (
           <Flex justify="center" align="center" className="h-full text-ui-text-secondary">
             <div className="text-center">
-              <Typography variant="p" className="text-lg font-medium mb-2">
-                No Project Selected
-              </Typography>
-              <Typography variant="p" className="text-sm">
+              <Typography variant="placeholderTitle">No Project Selected</Typography>
+              <Typography variant="muted">
                 Select a project from the sidebar to view the roadmap
               </Typography>
             </div>

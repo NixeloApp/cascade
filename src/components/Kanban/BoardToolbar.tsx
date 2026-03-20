@@ -65,7 +65,7 @@ export function BoardToolbar({
     >
       <Flex align="center" justify="between" gap="xs" gapSm="sm">
         <div className="hidden sm:block">
-          <Typography variant="h2" className="text-xs font-semibold tracking-tight sm:text-lg">
+          <Typography variant="boardSurfaceTitle">
             <span className="sm:hidden">{sprintId ? "Sprint" : "Board"}</span>
             <span className="hidden sm:inline">{sprintId ? "Sprint Board" : "Kanban Board"}</span>
           </Typography>

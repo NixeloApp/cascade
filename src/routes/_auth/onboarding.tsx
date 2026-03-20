@@ -215,7 +215,7 @@ function OnboardingPage() {
 
       {/* Footer */}
       <footer className="p-6 text-center">
-        <Typography className="text-sm text-ui-text-tertiary">
+        <Typography variant="muted">
           Need help?{" "}
           <a href="mailto:support@nixelo.com" className="text-brand hover:underline">
             Contact support

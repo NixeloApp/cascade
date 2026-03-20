@@ -255,13 +255,7 @@ export function NotificationCenter() {
                     <div key={group} className="animate-fade-in">
                       {/* Group Header */}
                       <Card recipe="notificationPanelSectionHeader" padding="sm" radius="none">
-                        <Typography
-                          variant="caption"
-                          color="secondary"
-                          className="uppercase tracking-wide"
-                        >
-                          {DATE_GROUP_LABELS[group]}
-                        </Typography>
+                        <Typography variant="eyebrow">{DATE_GROUP_LABELS[group]}</Typography>
                       </Card>
                       {/* Group Items */}
                       <div className="divide-y divide-ui-border">

@@ -236,9 +236,7 @@ export function NotificationsPage() {
           return (
             <div key={group}>
               <div className="px-4 py-2 bg-ui-bg-secondary border-b border-ui-border sticky top-0 z-10">
-                <Typography variant="caption" color="secondary" className="uppercase tracking-wide">
-                  {DATE_GROUP_LABELS[group]}
-                </Typography>
+                <Typography variant="eyebrow">{DATE_GROUP_LABELS[group]}</Typography>
               </div>
               <div className="divide-y divide-ui-border">
                 {groupNotifs.map((notification) => (

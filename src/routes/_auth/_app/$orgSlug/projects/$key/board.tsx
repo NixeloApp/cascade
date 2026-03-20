@@ -116,9 +116,7 @@ function BoardPage() {
           <Flex align="center" justify="between" gap="md" wrap>
             <Flex align="center" gap="sm" wrap className="min-w-0">
               <div>
-                <Typography variant="h4" className="tracking-tight">
-                  Delivery board
-                </Typography>
+                <Typography variant="h4">Delivery board</Typography>
                 <Typography variant="caption" className="mt-1">
                   Filter issues, switch sprints, and move work without leaving the board.
                 </Typography>
