@@ -82,6 +82,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [x] Replace swallowed dashboard/projects/board/meetings/sprints/issues navigation and interaction waits so those captures fail on broken loads and missing interactive content
 - [x] Replace swallowed calendar/board retry helpers, scroll helpers, and issue/document discovery helpers so shared screenshot plumbing fails loudly
 - [x] Replace strict loading-skeleton waits and cancelled animation promise failures in shared screenshot readiness helpers
+- [x] Replace the shared board/calendar/loading/notification screenshot selectors with owned `TEST_IDS` constants
 - [ ] Replace raw data-attribute selectors with TEST_IDS constants
 - [x] Reduce shared helper/page-readiness `.first()` usage so unique route sentinels rely on scoped locator semantics
 - [x] Extract `dismissAllDialogs()`, `waitForDialogOpen()`, `waitForScreenshotReady()` to `e2e/utils/`

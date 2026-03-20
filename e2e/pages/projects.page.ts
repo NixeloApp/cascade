@@ -172,7 +172,7 @@ export class ProjectsPage extends BasePage {
 
     // Project board - look for Kanban Board heading or board container
     this.projectBoard = page
-      .locator("[data-project-board]")
+      .getByTestId(TEST_IDS.BOARD.ROOT)
       .or(page.getByRole("heading", { name: /kanban board|scrum board/i }));
     this.boardColumns = page.getByTestId(TEST_IDS.BOARD.COLUMN);
     this.issueCards = page.getByTestId(TEST_IDS.ISSUE.CARD);

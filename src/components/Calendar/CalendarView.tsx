@@ -13,6 +13,7 @@ import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatDate } from "@/lib/formatting";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { CreateEventModal } from "./CreateEventModal";
 import { type EventColor, PALETTE_COLORS } from "./calendar-colors";
@@ -175,7 +176,7 @@ export function CalendarView({
   }
 
   return (
-    <Flex direction="column" className="h-full" data-calendar>
+    <Flex direction="column" className="h-full" data-calendar data-testid={TEST_IDS.CALENDAR.ROOT}>
       <ShadcnCalendar
         events={events}
         mode={mode}

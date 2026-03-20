@@ -204,7 +204,7 @@ export class DashboardPage extends BasePage {
     // Notifications panel
     this.notificationPanel = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_PANEL);
     this.markAllReadButton = page.getByRole("button", { name: /mark all read/i });
-    this.notificationItems = page.locator("[data-notification-item]");
+    this.notificationItems = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
 
     // Documents sidebar
     this.documentSearchInput = page.getByPlaceholder(/search.*document/i);

@@ -40,6 +40,8 @@ export const TEST_IDS = {
   },
 
   BOARD: {
+    /** @see src/components/KanbanBoard.tsx */
+    ROOT: "project-board",
     /** @see src/components/Kanban/KanbanColumn.tsx */
     COLUMN: "board-column",
     /** @see src/components/Kanban/KanbanColumn.tsx */
@@ -176,6 +178,8 @@ export const TEST_IDS = {
   // ============================================================
 
   CALENDAR: {
+    /** @see src/components/Calendar/CalendarView.tsx */
+    ROOT: "calendar-root",
     /** @see src/components/Calendar/shadcn-calendar/calendar-event.tsx */
     EVENT_ITEM: "calendar-event-item",
     /** @see src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx */
@@ -265,6 +269,24 @@ export const TEST_IDS = {
   GLOBAL_SEARCH: {
     /** @see src/components/GlobalSearch.tsx */
     NO_RESULTS: "search-no-results",
+  },
+
+  // ============================================================
+  // Loading States
+  // ============================================================
+
+  LOADING: {
+    /** @see src/components/ui/Skeleton.tsx */
+    SKELETON: "loading-skeleton",
+  },
+
+  // ============================================================
+  // Notifications
+  // ============================================================
+
+  NOTIFICATION: {
+    /** @see src/components/Notifications/NotificationItem.tsx */
+    ITEM: "notification-item",
   },
 
   // ============================================================

@@ -1215,7 +1215,7 @@ async function waitForCalendarReady(page: Page): Promise<boolean> {
         state: "visible",
         timeout: 8000,
       });
-      await page.locator("[data-calendar]").waitFor({
+      await page.getByTestId(TEST_IDS.CALENDAR.ROOT).waitFor({
         state: "visible",
         timeout: 4000,
       });
@@ -2000,7 +2000,7 @@ async function waitForExpectedContent(
     await waitForDashboardReady(page);
     const notificationsHeading = page.getByRole("heading", { name: /^notifications$/i });
     const inboxTab = page.getByRole("tab", { name: /inbox/i });
-    const notificationItems = page.locator("[data-notification-item]");
+    const notificationItems = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
     const emptyState = page.getByText(/no notifications/i);
     const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
     await expect
@@ -3646,7 +3646,7 @@ async function screenshotFilledStates(
   }
 
   async function waitForNotificationsContentReady(): Promise<void> {
-    const notificationItems = page.locator("[data-notification-item]");
+    const notificationItems = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
     const emptyState = page.getByText(/no notifications/i);
     const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
 
@@ -3721,7 +3721,7 @@ async function screenshotFilledStates(
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
 
-      const firstNotification = page.locator("[data-notification-item]").first();
+      const firstNotification = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM).first();
       await firstNotification.waitFor({ state: "visible", timeout: 5000 });
       await firstNotification.hover();
       await waitForAnimation(page);
@@ -3896,11 +3896,11 @@ async function screenshotDashboardLoadingState(
         .getByRole("heading", { name: /^dashboard$/i })
         .first()
         .waitFor({ state: "visible", timeout: 12000 });
-      await loadingPage.waitForFunction(
-        () => document.querySelectorAll("[data-loading-skeleton]").length >= 6,
-        undefined,
-        { timeout: 12000 },
-      );
+      await expect
+        .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
+          timeout: 12000,
+        })
+        .toBeGreaterThanOrEqual(6);
       await waitForScreenshotReady(loadingPage);
       await captureCurrentView(loadingPage, prefix, "dashboard-loading-skeletons");
     } finally {

@@ -191,7 +191,7 @@ export async function waitForDialogOpen(page: Page, timeout = 8000): Promise<Loc
  */
 export async function waitForLoadingSkeletonsToClear(page: Page, timeout = 5000): Promise<void> {
   await expect
-    .poll(() => page.locator("[data-loading-skeleton]:visible").count(), {
+    .poll(() => page.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
       timeout,
       intervals: [100, 200, 500],
     })
@@ -527,7 +527,7 @@ export async function ensureAuthenticatedDashboardReady(
 export async function waitForBoardLoaded(page: Page): Promise<void> {
   await expect(page).toHaveURL(routePattern(ROUTES.projects.board.path));
   const projectBoard = page
-    .locator("[data-project-board]")
+    .getByTestId(TEST_IDS.BOARD.ROOT)
     .or(page.getByRole("heading", { name: /kanban board|scrum board/i }));
   const createIssueButton = page.getByRole("button", { name: /add issue/i }).first();
   await expect(projectBoard).toBeVisible();

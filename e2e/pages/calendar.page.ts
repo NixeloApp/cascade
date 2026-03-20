@@ -61,7 +61,7 @@ export class CalendarPage extends BasePage {
 
     // Calendar view
     this.calendar = page
-      .locator("[data-calendar]")
+      .getByTestId(TEST_IDS.CALENDAR.ROOT)
       .or(page.locator(".calendar, [role='grid']").first());
     this.calendarGrid = page
       .locator("[data-calendar-grid]")
