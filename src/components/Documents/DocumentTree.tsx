@@ -103,8 +103,12 @@ export function DocumentTree({
             No documents yet
           </Typography>
           {onCreateDocument && (
-            <Button variant="ghost" size="sm" onClick={() => onCreateDocument()}>
-              <Plus className="w-4 h-4 mr-1" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onCreateDocument()}
+              leftIcon={<Icon icon={Plus} size="sm" />}
+            >
               New Document
             </Button>
           )}
@@ -121,8 +125,8 @@ export function DocumentTree({
           size="sm"
           className="mx-2 mb-2 justify-start"
           onClick={() => onCreateDocument()}
+          leftIcon={<Icon icon={Plus} size="sm" />}
         >
-          <Plus className="w-4 h-4 mr-2" />
           New Document
         </Button>
       )}
@@ -142,7 +146,7 @@ export function DocumentTree({
             ) : (
               <ChevronRight className="w-3.5 h-3.5 mr-1" />
             )}
-            <Star className="w-4 h-4 mr-2 text-status-warning fill-status-warning" />
+            <Icon icon={Star} size="sm" tone="warning" fill="currentColor" />
             <Typography variant="small">Favorites</Typography>
           </Button>
 
@@ -211,7 +215,7 @@ export function DocumentTree({
             ) : (
               <ChevronRight className="w-3.5 h-3.5 mr-1" />
             )}
-            <Archive className="w-4 h-4 mr-2" />
+            <Icon icon={Archive} size="sm" />
             <Typography variant="small">Archived</Typography>
             <Typography variant="small" className="ml-auto text-ui-text-tertiary">
               {archived.length}
@@ -386,8 +390,8 @@ function TreeNodeItem({
                       e.preventDefault();
                       onCreateDocument(node._id);
                     }}
+                    icon={<Icon icon={Plus} size="sm" />}
                   >
-                    <Plus className="w-4 h-4 mr-2" />
                     Add subpage
                   </DropdownMenuItem>
                 )}

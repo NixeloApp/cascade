@@ -9,7 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { usePaginatedQuery } from "convex/react";
-import { Loader2, MessageCircle, Paperclip, X } from "lucide-react";
+import { MessageCircle, Paperclip, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -329,18 +329,10 @@ export function IssueComments({ issueId, projectId }: IssueCommentsProps) {
             size="sm"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploadingAttachment}
+            isLoading={isUploadingAttachment}
+            leftIcon={!isUploadingAttachment ? <Icon icon={Paperclip} size="sm" /> : undefined}
           >
-            {isUploadingAttachment ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              <>
-                <Paperclip className="w-4 h-4 mr-2" />
-                Attach File
-              </>
-            )}
+            {isUploadingAttachment ? "Uploading..." : "Attach File"}
           </Button>
           <Button
             onClick={handleSubmit}

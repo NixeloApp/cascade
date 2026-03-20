@@ -4,6 +4,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { IssueDetailHeader, IssueDetailLayout, useIssueDetail } from "@/components/IssueDetail";
 import { PageContent, PageError } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/components/ui/Icon";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { useOrganization } from "@/hooks/useOrgContext";
@@ -80,7 +81,7 @@ function IssuePageContent({
             breadcrumb={
               <Button asChild variant="ghostLink" size="content">
                 <Link to={ROUTES.projects.board.path} params={{ orgSlug, key: projectKey }}>
-                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  <Icon icon={ChevronLeft} size="sm" />
                   {projectKey}
                 </Link>
               </Button>

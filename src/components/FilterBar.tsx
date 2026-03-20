@@ -186,8 +186,13 @@ function DateRangeDropdown({ label, shortLabel, value, onChange }: DateRangeDrop
               onChange={(e) => handleToChange(e.target.value)}
             />
             {isActive && (
-              <Button variant="ghost" size="sm" onClick={handleClear} className="w-full">
-                <X className="w-4 h-4 mr-1" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClear}
+                className="w-full"
+                leftIcon={<Icon icon={X} size="sm" />}
+              >
                 Clear
               </Button>
             )}
@@ -524,8 +529,12 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
 
         {/* Clear Filters */}
         {hasActiveFilters && (
-          <Button chrome="filter" chromeSize="filterPill" onClick={handleClearFilters}>
-            <X className="w-4 h-4 mr-1" />
+          <Button
+            chrome="filter"
+            chromeSize="filterPill"
+            onClick={handleClearFilters}
+            leftIcon={<Icon icon={X} size="sm" />}
+          >
             Clear ({activeFilterCount})
           </Button>
         )}

@@ -228,18 +228,11 @@ function PushNotificationsCard({
             onClick={isSubscribed ? onUnsubscribe : onSubscribe}
             isLoading={isPushLoading}
             className="ml-4"
+            leftIcon={
+              !isPushLoading ? <Icon icon={isSubscribed ? BellOff : Bell} size="sm" /> : undefined
+            }
           >
-            {isSubscribed ? (
-              <>
-                <BellOff className="w-4 h-4 mr-1" />
-                Disable
-              </>
-            ) : (
-              <>
-                <Bell className="w-4 h-4 mr-1" />
-                Enable
-              </>
-            )}
+            {isSubscribed ? "Disable" : "Enable"}
           </Button>
         </Flex>
 
