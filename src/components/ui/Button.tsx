@@ -130,6 +130,16 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
         "border-transparent bg-transparent text-ui-text-secondary shadow-none hover:bg-ui-bg-hover hover:text-ui-text",
       calendarMonthOverflow:
         "border-transparent bg-transparent text-ui-text-tertiary shadow-none hover:text-brand",
+      roadmapTimelineHitArea:
+        "border-transparent bg-transparent text-ui-text shadow-none hover:bg-transparent",
+      roadmapGroupRow:
+        "border-ui-border bg-ui-bg-secondary/60 text-ui-text shadow-none hover:bg-ui-bg-secondary/80",
+      roadmapSubtaskToggle:
+        "border-transparent bg-transparent text-ui-text-tertiary shadow-none hover:text-ui-text",
+      roadmapIssueKey:
+        "border-transparent bg-transparent text-ui-text shadow-none hover:text-brand-hover",
+      roadmapIssueKeyActive:
+        "border-transparent bg-transparent text-brand-hover shadow-none hover:text-brand-hover",
       documentTreeSection:
         "border-transparent bg-transparent text-ui-text-secondary shadow-none hover:bg-ui-bg-hover",
       documentTreeSectionMuted:
@@ -163,6 +173,13 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
       calendarHeaderAdd: "h-6 w-6 rounded-full p-0 sm:h-9 sm:w-auto sm:rounded-xl sm:px-3",
       calendarSidebarEvent: "h-auto w-full justify-start rounded-lg px-2 py-1.5 text-left text-sm",
       calendarMonthOverflow: "h-auto rounded-none p-0 text-xs font-medium",
+      roadmapTimelineFill: "relative h-full w-full rounded-none p-0",
+      roadmapTimelineLabel: "h-full w-full rounded-none px-2",
+      roadmapResizeLeft: "absolute inset-y-0 left-0 w-2 cursor-ew-resize rounded-l-full p-0",
+      roadmapResizeRight: "absolute inset-y-0 right-0 w-2 cursor-ew-resize rounded-r-full p-0",
+      roadmapGroupRow: "h-auto w-full rounded-none px-4 text-left",
+      roadmapSubtaskToggle: "h-4 w-4 rounded-none p-0",
+      roadmapIssueKey: "h-auto rounded-none p-0 text-left text-sm font-medium",
       documentTreeSection: "h-auto w-full justify-start rounded-none px-2 py-1.5 text-left",
       documentTreeToggle: "h-5 w-5 rounded-sm p-0.5",
       sprintPreset: "h-auto rounded-lg px-3 py-3 text-sm",

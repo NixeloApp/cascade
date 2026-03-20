@@ -131,6 +131,19 @@ describe("Button", () => {
       expect(btn.className).toContain("justify-start");
       expect(btn.className).toContain("px-2");
     });
+
+    it("applies roadmap chrome styling", () => {
+      render(
+        <Button chrome="roadmapGroupRow" chromeSize="roadmapGroupRow" data-testid="btn">
+          Group
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("bg-ui-bg-secondary/60");
+      expect(btn.className).toContain("border-ui-border");
+      expect(btn.className).toContain("w-full");
+      expect(btn.className).toContain("text-left");
+    });
   });
 
   describe("sizes", () => {
@@ -196,6 +209,19 @@ describe("Button", () => {
       expect(btn.className).toContain("h-5");
       expect(btn.className).toContain("w-5");
       expect(btn.className).toContain("p-0.5");
+    });
+
+    it("applies roadmap resize handle sizing", () => {
+      render(
+        <Button chrome="roadmapResizeHandle" chromeSize="roadmapResizeLeft" data-testid="btn">
+          Handle
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("absolute");
+      expect(btn.className).toContain("left-0");
+      expect(btn.className).toContain("w-2");
+      expect(btn.className).toContain("cursor-ew-resize");
     });
   });
 

@@ -36,6 +36,9 @@ const badgeVariants = cva("inline-flex items-center font-medium transition-color
       issueKey: "bg-ui-bg-tertiary/60 text-ui-text-secondary border border-ui-border/50 font-mono",
       sidebarSection:
         "bg-ui-bg-elevated/80 text-ui-text-secondary border border-ui-border/60 shadow-soft uppercase tracking-wider font-semibold",
+      roadmapToday: "bg-status-error text-brand-foreground border border-status-error/20 shadow-sm",
+      roadmapGroup:
+        "bg-ui-bg-tertiary text-ui-text-secondary border border-transparent font-medium",
       calendarDayCurrent: "bg-transparent text-ui-text border border-transparent",
       calendarDayMuted: "bg-transparent text-ui-text-tertiary border border-transparent",
       calendarDayToday: "bg-brand text-brand-foreground border border-transparent shadow-sm",

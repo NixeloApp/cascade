@@ -122,6 +122,28 @@ describe("Badge", () => {
       expect(badge.className).toContain("bg-ui-bg-elevated/80");
       expect(badge.className).toContain("tracking-wider");
     });
+
+    it("applies roadmapToday variant", () => {
+      render(
+        <Badge variant="roadmapToday" data-testid="badge">
+          Today
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge");
+      expect(badge.className).toContain("bg-status-error");
+      expect(badge.className).toContain("shadow-sm");
+    });
+
+    it("applies roadmapGroup variant", () => {
+      render(
+        <Badge variant="roadmapGroup" data-testid="badge">
+          Group
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge");
+      expect(badge.className).toContain("bg-ui-bg-tertiary");
+      expect(badge.className).toContain("font-medium");
+    });
   });
 
   describe("sizes", () => {
