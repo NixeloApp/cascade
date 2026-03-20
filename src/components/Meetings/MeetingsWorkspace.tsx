@@ -61,6 +61,15 @@ type StatusFilter = "all" | MeetingStatus;
 type PlatformFilter = "all" | MeetingPlatform;
 type ProjectFilter = "all" | Id<"projects">;
 type TimeWindowFilter = "all" | "7d" | "30d" | "90d";
+type MemoryProjectLens = {
+  projectId: Id<"projects">;
+  projectKey: string;
+  projectName: string;
+  totalItems: number;
+  recentDecisions: number;
+  openQuestions: number;
+  unresolvedActionItems: number;
+};
 
 function getSelectedActionItemProjects(
   summary: MeetingSummary,
@@ -219,6 +228,90 @@ function formatTranscriptTimestamp(seconds: number) {
   return `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
 }
 
+function filterMemoryItemsByProject<T extends { projectId?: Id<"projects"> }>(
+  items: T[],
+  projectId: ProjectFilter,
+) {
+  if (projectId === "all") {
+    return items;
+  }
+
+  return items.filter((item) => item.projectId === projectId);
+}
+
+export function filterMeetingMemory(memory: MeetingMemory | undefined, projectId: ProjectFilter) {
+  if (!memory) {
+    return memory;
+  }
+
+  return {
+    recentDecisions: filterMemoryItemsByProject(memory.recentDecisions, projectId),
+    openQuestions: filterMemoryItemsByProject(memory.openQuestions, projectId),
+    unresolvedActionItems: filterMemoryItemsByProject(memory.unresolvedActionItems, projectId),
+  };
+}
+
+export function getMeetingMemoryProjectLenses(
+  memory: MeetingMemory | undefined,
+  projects: ProjectOption[] | undefined,
+) {
+  if (!memory || !projects) {
+    return [] as MemoryProjectLens[];
+  }
+
+  const lensMap = new Map<Id<"projects">, MemoryProjectLens>();
+
+  const upsertLens = (
+    projectId: Id<"projects">,
+    section: keyof Omit<
+      MemoryProjectLens,
+      "projectId" | "projectKey" | "projectName" | "totalItems"
+    >,
+  ) => {
+    const project = projects.find((candidate) => candidate._id === projectId);
+    if (!project) {
+      return;
+    }
+
+    const existingLens = lensMap.get(projectId);
+    if (existingLens) {
+      existingLens[section] += 1;
+      existingLens.totalItems += 1;
+      return;
+    }
+
+    lensMap.set(projectId, {
+      projectId,
+      projectKey: project.key,
+      projectName: project.name,
+      totalItems: 1,
+      recentDecisions: section === "recentDecisions" ? 1 : 0,
+      openQuestions: section === "openQuestions" ? 1 : 0,
+      unresolvedActionItems: section === "unresolvedActionItems" ? 1 : 0,
+    });
+  };
+
+  for (const item of memory.recentDecisions) {
+    if (item.projectId) {
+      upsertLens(item.projectId, "recentDecisions");
+    }
+  }
+
+  for (const item of memory.openQuestions) {
+    if (item.projectId) {
+      upsertLens(item.projectId, "openQuestions");
+    }
+  }
+
+  for (const item of memory.unresolvedActionItems) {
+    if (item.projectId) {
+      upsertLens(item.projectId, "unresolvedActionItems");
+    }
+  }
+
+  return [...lensMap.values()].sort((left, right) => right.totalItems - left.totalItems);
+}
+
 function hasTranscriptSegments(
   segments: MeetingTranscript["segments"],
 ): segments is [MeetingTranscriptSegment, ...MeetingTranscriptSegment[]] {
@@ -348,14 +441,30 @@ function MemoryItemMeta({
   );
 }
 
-function MeetingMemorySection({ memory }: { memory: MeetingMemory | undefined }) {
+function MeetingMemorySection({
+  memory,
+  projectFilter,
+  projects,
+  onProjectSelect,
+}: {
+  memory: MeetingMemory | undefined;
+  projectFilter: ProjectFilter;
+  projects: ProjectOption[] | undefined;
+  onProjectSelect: (projectId: ProjectFilter) => void;
+}) {
+  const filteredMemory = filterMeetingMemory(memory, projectFilter);
+  const projectLenses = getMeetingMemoryProjectLenses(memory, projects);
+  const selectedProject =
+    projectFilter === "all"
+      ? undefined
+      : projects?.find((project) => project._id === projectFilter);
+  const description = selectedProject
+    ? `Cross-meeting decisions, open questions, and follow-ups for ${selectedProject.key} - ${selectedProject.name}.`
+    : "Recent decisions, open questions, and follow-ups across completed meetings.";
+
   if (memory === undefined) {
     return (
-      <Section
-        title="Meeting Memory"
-        description="Recent decisions, open questions, and follow-ups across completed meetings."
-        gap="sm"
-      >
+      <Section title="Meeting Memory" description={description} gap="sm">
         <Card variant="soft" padding="lg">
           <Flex justify="center">
             <LoadingSpinner size="lg" />
@@ -366,24 +475,45 @@ function MeetingMemorySection({ memory }: { memory: MeetingMemory | undefined })
   }
 
   return (
-    <Section
-      title="Meeting Memory"
-      description="Recent decisions, open questions, and follow-ups across completed meetings."
-      gap="sm"
-    >
+    <Section title="Meeting Memory" description={description} gap="sm">
+      {projectLenses.length > 0 && (
+        <Flex gap="xs" className="flex-wrap">
+          <Button
+            variant={projectFilter === "all" ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => onProjectSelect("all")}
+          >
+            All meetings
+          </Button>
+          {projectLenses.map((lens) => (
+            <Button
+              key={lens.projectId}
+              variant={projectFilter === lens.projectId ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => onProjectSelect(lens.projectId)}
+            >
+              <Flex gap="xs" align="center">
+                <span>{lens.projectKey}</span>
+                <Badge size="sm">{lens.totalItems}</Badge>
+              </Flex>
+            </Button>
+          ))}
+        </Flex>
+      )}
+
       <div className="grid gap-4 xl:grid-cols-3">
         <MemoryCard
           title="Recent Decisions"
           description="Latest calls and commitments from completed meetings."
-          itemCount={memory.recentDecisions.length}
+          itemCount={filteredMemory.recentDecisions.length}
         >
-          {memory.recentDecisions.length === 0 ? (
+          {filteredMemory.recentDecisions.length === 0 ? (
             <Typography variant="caption" color="secondary">
               Completed meetings will surface key decisions here.
             </Typography>
           ) : (
             <Stack as="ul" gap="sm" className="list-none">
-              {memory.recentDecisions.map((item) => (
+              {filteredMemory.recentDecisions.map((item) => (
                 <li key={`${item.recordingId}-${item.decision}`}>
                   <Card variant="soft" padding="sm">
                     <Stack gap="xs">
@@ -404,15 +534,15 @@ function MeetingMemorySection({ memory }: { memory: MeetingMemory | undefined })
         <MemoryCard
           title="Open Questions"
           description="Unresolved questions still worth tracking after the meeting ends."
-          itemCount={memory.openQuestions.length}
+          itemCount={filteredMemory.openQuestions.length}
         >
-          {memory.openQuestions.length === 0 ? (
+          {filteredMemory.openQuestions.length === 0 ? (
             <Typography variant="caption" color="secondary">
               Outstanding questions from summaries will appear here.
             </Typography>
           ) : (
             <Stack as="ul" gap="sm" className="list-none">
-              {memory.openQuestions.map((item) => (
+              {filteredMemory.openQuestions.map((item) => (
                 <li key={`${item.recordingId}-${item.question}`}>
                   <Card variant="soft" padding="sm">
                     <Stack gap="xs">
@@ -433,15 +563,15 @@ function MeetingMemorySection({ memory }: { memory: MeetingMemory | undefined })
         <MemoryCard
           title="Unresolved Action Items"
           description="Follow-ups that have not been converted into linked issues yet."
-          itemCount={memory.unresolvedActionItems.length}
+          itemCount={filteredMemory.unresolvedActionItems.length}
         >
-          {memory.unresolvedActionItems.length === 0 ? (
+          {filteredMemory.unresolvedActionItems.length === 0 ? (
             <Typography variant="caption" color="secondary">
               Pending follow-ups will appear here until they are linked into project work.
             </Typography>
           ) : (
             <Stack as="ul" gap="sm" className="list-none">
-              {memory.unresolvedActionItems.map((item) => (
+              {filteredMemory.unresolvedActionItems.map((item) => (
                 <li key={`${item.recordingId}-${item.description}`}>
                   <Card variant="soft" padding="sm">
                     <Stack gap="xs">
@@ -1362,7 +1492,12 @@ export function MeetingsWorkspace() {
       }}
     >
       <Stack gap="lg">
-        <MeetingMemorySection memory={memory} />
+        <MeetingMemorySection
+          memory={memory}
+          projectFilter={projectFilter}
+          projects={projects}
+          onProjectSelect={setProjectFilter}
+        />
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
           <Section

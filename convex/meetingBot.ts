@@ -109,6 +109,7 @@ function getTranscriptExcerpt(fullText: string, query: string) {
 
 type MeetingMemoryDecision = {
   recordingId: Id<"meetingRecordings">;
+  projectId?: Id<"projects">;
   recordingTitle: string;
   meetingPlatform: Doc<"meetingRecordings">["meetingPlatform"];
   createdAt: number;
@@ -117,6 +118,7 @@ type MeetingMemoryDecision = {
 
 type MeetingMemoryQuestion = {
   recordingId: Id<"meetingRecordings">;
+  projectId?: Id<"projects">;
   recordingTitle: string;
   meetingPlatform: Doc<"meetingRecordings">["meetingPlatform"];
   createdAt: number;
@@ -125,6 +127,7 @@ type MeetingMemoryQuestion = {
 
 type MeetingMemoryActionItem = {
   recordingId: Id<"meetingRecordings">;
+  projectId?: Id<"projects">;
   recordingTitle: string;
   meetingPlatform: Doc<"meetingRecordings">["meetingPlatform"];
   createdAt: number;
@@ -154,6 +157,7 @@ function collectSummaryMemory(
     if (memory.recentDecisions.length >= sectionLimit) break;
     memory.recentDecisions.push({
       recordingId: recording._id,
+      projectId: recording.projectId,
       recordingTitle: recording.title,
       meetingPlatform: recording.meetingPlatform,
       createdAt,
@@ -165,6 +169,7 @@ function collectSummaryMemory(
     if (memory.openQuestions.length >= sectionLimit) break;
     memory.openQuestions.push({
       recordingId: recording._id,
+      projectId: recording.projectId,
       recordingTitle: recording.title,
       meetingPlatform: recording.meetingPlatform,
       createdAt,
@@ -178,6 +183,7 @@ function collectSummaryMemory(
 
     memory.unresolvedActionItems.push({
       recordingId: recording._id,
+      projectId: recording.projectId,
       recordingTitle: recording.title,
       meetingPlatform: recording.meetingPlatform,
       createdAt,
@@ -431,6 +437,7 @@ export const listMemoryItems = authenticatedQuery({
     recentDecisions: v.array(
       v.object({
         recordingId: v.id("meetingRecordings"),
+        projectId: v.optional(v.id("projects")),
         recordingTitle: v.string(),
         meetingPlatform: meetingPlatforms,
         createdAt: v.number(),
@@ -440,6 +447,7 @@ export const listMemoryItems = authenticatedQuery({
     openQuestions: v.array(
       v.object({
         recordingId: v.id("meetingRecordings"),
+        projectId: v.optional(v.id("projects")),
         recordingTitle: v.string(),
         meetingPlatform: meetingPlatforms,
         createdAt: v.number(),
@@ -449,6 +457,7 @@ export const listMemoryItems = authenticatedQuery({
     unresolvedActionItems: v.array(
       v.object({
         recordingId: v.id("meetingRecordings"),
+        projectId: v.optional(v.id("projects")),
         recordingTitle: v.string(),
         meetingPlatform: meetingPlatforms,
         createdAt: v.number(),

@@ -47,7 +47,7 @@ The market has moved beyond single-meeting summaries.
 - [x] **Add transcript search across meetings** — Use the existing transcript search index as the base.
 - [x] **Add filters for platform / status / date / project** — Needed for a useful meetings archive.
 - [x] **Add reusable memory views** — Recent decisions, open questions, and unresolved action items now surface across completed meetings.
-- [ ] **Add meetings-by-project memory lens** — Group cross-meeting insights by project when the archive starts getting dense.
+- [x] **Add meetings-by-project memory lens** — The memory rail now scopes decisions, questions, and follow-ups by project so the archive stays usable as meeting volume grows.
 
 ### Capture Strategy Clarity
 

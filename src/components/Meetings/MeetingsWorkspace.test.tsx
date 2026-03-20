@@ -7,7 +7,12 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { OrgContext, type OrgContextType } from "@/hooks/useOrgContext";
 import { showSuccess } from "@/lib/toast";
 import { fireEvent, render, screen, waitFor } from "@/test/custom-render";
-import { filterMeetingRecordings, MeetingsWorkspace } from "./MeetingsWorkspace";
+import {
+  filterMeetingMemory,
+  filterMeetingRecordings,
+  getMeetingMemoryProjectLenses,
+  MeetingsWorkspace,
+} from "./MeetingsWorkspace";
 
 vi.mock("@tanstack/react-router", async () => {
   const actual = await vi.importActual("@tanstack/react-router");
@@ -194,6 +199,7 @@ function buildMemory(overrides: Partial<MeetingMemory> = {}): MeetingMemory {
     recentDecisions: [
       {
         recordingId,
+        projectId,
         recordingTitle: "Weekly Product Review",
         meetingPlatform: "google_meet",
         createdAt: 1_710_000_000_000,
@@ -203,6 +209,7 @@ function buildMemory(overrides: Partial<MeetingMemory> = {}): MeetingMemory {
     openQuestions: [
       {
         recordingId,
+        projectId,
         recordingTitle: "Weekly Product Review",
         meetingPlatform: "google_meet",
         createdAt: 1_710_000_000_000,
@@ -212,6 +219,7 @@ function buildMemory(overrides: Partial<MeetingMemory> = {}): MeetingMemory {
     unresolvedActionItems: [
       {
         recordingId,
+        projectId,
         recordingTitle: "Weekly Product Review",
         meetingPlatform: "google_meet",
         createdAt: 1_710_000_000_000,
@@ -549,6 +557,108 @@ describe("MeetingsWorkspace", () => {
     );
 
     expect(filteredRecordings).toEqual([recentFailedRecording]);
+  });
+
+  it("scopes meeting memory by project lens", () => {
+    const secondProjectId = "project_2" as Id<"projects">;
+    const secondRecordingId = "recording_2" as Id<"meetingRecordings">;
+    const projects = [
+      buildProjectItem(),
+      buildProjectItem({
+        _id: secondProjectId,
+        key: "OPS",
+        name: "Ops Rollout",
+      }),
+    ];
+    const memory = buildMemory({
+      recentDecisions: [
+        ...buildMemory().recentDecisions,
+        {
+          recordingId: secondRecordingId,
+          projectId: secondProjectId,
+          recordingTitle: "Rollout Sync",
+          meetingPlatform: "google_meet",
+          createdAt: 1_710_000_500_000,
+          decision: "Start the phased rollout on Monday",
+        },
+      ],
+      openQuestions: [
+        ...buildMemory().openQuestions,
+        {
+          recordingId: secondRecordingId,
+          projectId: secondProjectId,
+          recordingTitle: "Rollout Sync",
+          meetingPlatform: "google_meet",
+          createdAt: 1_710_000_500_000,
+          question: "Which customers need white-glove onboarding?",
+        },
+      ],
+    });
+
+    const filteredMemory = filterMeetingMemory(memory, secondProjectId);
+    const projectLenses = getMeetingMemoryProjectLenses(memory, projects);
+
+    expect(filteredMemory.recentDecisions).toEqual([
+      expect.objectContaining({ decision: "Start the phased rollout on Monday" }),
+    ]);
+    expect(filteredMemory.openQuestions).toEqual([
+      expect.objectContaining({ question: "Which customers need white-glove onboarding?" }),
+    ]);
+    expect(filteredMemory.unresolvedActionItems).toEqual([]);
+    expect(projectLenses).toEqual([
+      expect.objectContaining({ projectId, projectKey: "CORE", totalItems: 3 }),
+      expect.objectContaining({ projectId: secondProjectId, projectKey: "OPS", totalItems: 2 }),
+    ]);
+  });
+
+  it("updates the meeting memory rail when a project lens is selected", () => {
+    const secondProjectId = "project_2" as Id<"projects">;
+    const secondRecordingId = "recording_2" as Id<"meetingRecordings">;
+
+    installMeetingQueryMock({
+      projects: [
+        buildProjectItem(),
+        buildProjectItem({
+          _id: secondProjectId,
+          key: "OPS",
+          name: "Ops Rollout",
+        }),
+      ],
+      listRecordings: [
+        buildListItem(),
+        buildListItem({
+          _id: secondRecordingId,
+          title: "Rollout Sync",
+          projectId: secondProjectId,
+        }),
+      ],
+      memory: buildMemory({
+        recentDecisions: [
+          ...buildMemory().recentDecisions,
+          {
+            recordingId: secondRecordingId,
+            projectId: secondProjectId,
+            recordingTitle: "Rollout Sync",
+            meetingPlatform: "google_meet",
+            createdAt: 1_710_000_500_000,
+            decision: "Start the phased rollout on Monday",
+          },
+        ],
+      }),
+    });
+
+    renderMeetingsWorkspace();
+
+    expect(screen.getByRole("button", { name: /OPS/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /OPS/i }));
+
+    expect(
+      screen.getByText(
+        "Cross-meeting decisions, open questions, and follow-ups for OPS - Ops Rollout.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Start the phased rollout on Monday")).toBeInTheDocument();
+    expect(screen.queryByText("Ship the narrower first iteration")).not.toBeInTheDocument();
   });
 
   it("schedules a recording from the meetings page", async () => {
