@@ -73,7 +73,7 @@ export function WelcomeTour({ onComplete, onSkip }: WelcomeTourProps) {
           },
         },
         {
-          element: "[data-tour='command-palette']",
+          element: `[data-testid="${TEST_IDS.HEADER.SEARCH_BUTTON}"]`,
           popover: {
             title: "⌘K Command Palette",
             description:
@@ -93,7 +93,7 @@ export function WelcomeTour({ onComplete, onSkip }: WelcomeTourProps) {
           },
         },
         {
-          element: "[data-tour='dashboard']",
+          element: `[data-testid="${TEST_IDS.NAV.DASHBOARD_LINK}"]`,
           popover: {
             title: "Your Dashboard",
             description:
@@ -103,7 +103,7 @@ export function WelcomeTour({ onComplete, onSkip }: WelcomeTourProps) {
           },
         },
         {
-          element: "[data-tour='kanban-board']",
+          element: `[data-testid="${TEST_IDS.BOARD.ROOT}"]`,
           popover: {
             title: "Kanban Board",
             description:
@@ -123,7 +123,7 @@ export function WelcomeTour({ onComplete, onSkip }: WelcomeTourProps) {
           },
         },
         {
-          element: "[data-tour='sidebar']",
+          element: `[data-testid="${TEST_IDS.NAV.SIDEBAR}"]`,
           popover: {
             title: "Document Sidebar",
             description:

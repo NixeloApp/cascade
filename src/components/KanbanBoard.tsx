@@ -361,12 +361,7 @@ export function KanbanBoard({
   const canEdit = isProjectMode ? project?.userRole !== "viewer" : true;
 
   return (
-    <FlexItem
-      flex="1"
-      className="relative overflow-x-auto"
-      data-testid={TEST_IDS.BOARD.ROOT}
-      data-tour="kanban-board"
-    >
+    <FlexItem flex="1" className="relative overflow-x-auto" data-testid={TEST_IDS.BOARD.ROOT}>
       <BoardToolbar
         sprintId={sprintId}
         selectionMode={selectionMode}
