@@ -52,6 +52,9 @@ It is also structurally isolated:
 - Registration is gated to production and skipped for E2E when `window.__convex_test_client` exists.
 - The app uses `vite-plugin-pwa` in `vite.config.ts`.
 - The app also manually registers `/service-worker.js` in `src/lib/serviceWorker.ts`.
+- The production build injects `registerSW.js`, which registers `/sw.js` from `vite-plugin-pwa`.
+- The production build also still ships `/service-worker.js` from `public/service-worker.js`.
+- That means the current build produces two different service worker scripts for the same app scope.
 
 ### Custom service worker implementation
 
@@ -64,6 +67,7 @@ It is also structurally isolated:
   - offline navigation fallback to `/offline.html`
   - background sync listener for `"sync-mutations"`
   - client message handling for `SKIP_WAITING` and `SYNC_QUEUE`
+- Current Phase 0 verification indicates this file is not part of the shipped build pipeline.
 
 ### Client-side offline queue
 
@@ -101,11 +105,40 @@ It is also structurally isolated:
 
 - `src/lib/webPush.tsx` depends on service worker readiness.
 - `convex/pushNotifications.ts` manages subscription state server-side.
+- `src/lib/webPush.tsx` uses `navigator.serviceWorker.ready`, so push attaches to whichever service worker owns the app scope at runtime.
 
 ### Docs
 
 - `docs/setup/PWA.md` exists, but parts of it are stale.
 - It still references `/public/service-worker.js` and `src/main.tsx`, which do not match the current implementation.
+
+## Phase 0 Findings Verified
+
+### Build artifact reality
+
+- Running `pnpm build` emitted `dist/client/service-worker.js`, `dist/client/sw.js`, `dist/client/registerSW.js`, `dist/client/manifest.json`, and `dist/client/manifest.webmanifest`.
+- `dist/client/service-worker.js` is copied from `public/service-worker.js`.
+- `dist/client/sw.js` is the generated `vite-plugin-pwa` worker.
+- `dist/client/registerSW.js` registers `/sw.js`.
+- `dist/client/index.html` includes both:
+  - the original manifest link for `/manifest.json`
+  - an injected manifest link for `/manifest.webmanifest`
+  - an injected script tag for `/registerSW.js`
+
+### What this proves
+
+- `vite-plugin-pwa` is active and generating its own worker.
+- The app code is separately registering a different worker from `public/service-worker.js`.
+- `src/service-worker.ts` is not the worker currently being emitted or registered by the build.
+- `public/manifest.json` is still shipped, but the PWA plugin also emits `manifest.webmanifest`, so manifest ownership is currently split.
+- `promptInstall()` and `clearCache()` currently have no active call sites outside their defining module.
+
+### Build blocker found while verifying
+
+- `pnpm build` does not currently complete cleanly.
+- The build reaches PWA artifact emission, then fails because Vite cannot resolve `babel-plugin-react-compiler`.
+- This is not specific to the offline lane, but it affects how reliably we can verify production behavior.
+- `vite.config.ts` now sets `injectRegister: false` to stop auto-registering the plugin worker, but a fresh clean emitted-build verification is still blocked by that build failure.
 
 ## Confirmed Gaps And Risk Areas
 
@@ -116,12 +149,17 @@ The repo has all of these at once:
 - manual registration of `/service-worker.js`
 - a custom Workbox service worker in `src/service-worker.ts`
 
-What is not yet proven:
-- whether the built output actually ships the custom `src/service-worker.ts`
-- whether `vite-plugin-pwa` is generating a different worker than the one being manually registered
-- whether the current registration path is pointing at the right built asset
+What Phase 0 already proved:
+- the built output does not ship `src/service-worker.ts`
+- `vite-plugin-pwa` generates `/sw.js`
+- the app also ships and manually registers `/service-worker.js`
+- the current runtime has competing service-worker ownership
 
-This is the first thing to verify before broad feature work.
+What is still not proven:
+- which registration wins in the browser at runtime on first load
+- whether push, caching, and update behavior all land on the same active worker
+
+This is no longer a hypothetical problem; it is a confirmed architecture conflict.
 
 ### 2. The offline write path looks incomplete
 
@@ -211,11 +249,11 @@ Non-goals for this lane:
 
 ## Phase 0: Establish The Truth
 
-- [ ] Build production locally and inspect the actual emitted service worker artifact.
-- [ ] Verify which worker file is served at `/service-worker.js`.
-- [ ] Verify whether `vite-plugin-pwa` is generating the worker, augmenting it, or being bypassed.
-- [ ] Document the real build/runtime flow in this file once confirmed.
-- [ ] Confirm whether `public/manifest.json` or the Vite PWA manifest is the source of truth at build time.
+- [x] Build production locally far enough to inspect emitted PWA artifacts. The build still fails afterward because Vite cannot resolve `babel-plugin-react-compiler`.
+- [x] Verify which worker file is served at `/service-worker.js`. It is the copied `public/service-worker.js`.
+- [x] Verify whether `vite-plugin-pwa` is generating the worker, augmenting it, or being bypassed. It is generating a separate `/sw.js` plus `/registerSW.js`.
+- [x] Document the real build/runtime flow in this file once confirmed.
+- [x] Confirm whether `public/manifest.json` or the Vite PWA manifest is the source of truth at build time. Current answer: both are emitted and linked, so ownership is split and needs cleanup.
 - [ ] Confirm whether install prompts are ever shown in production.
 - [ ] Confirm whether push subscription depends on the same service worker that handles offline caching.
 

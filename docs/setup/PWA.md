@@ -1,6 +1,27 @@
 # PWA (Progressive Web App) Setup
 
-Nixelo is now configured as a Progressive Web App! This allows users to install the application on their devices and use it offline.
+Nixelo has partial PWA infrastructure, but this document is currently under audit.
+
+## Current Status
+
+As of 2026-03-20, the repo does not have a single clean PWA ownership path yet.
+
+What is true right now:
+
+- Service worker registration is triggered from `src/routes/__root.tsx`.
+- The app manually registers `/service-worker.js` via `src/lib/serviceWorker.ts`.
+- `public/service-worker.js` is still shipped in production as `/service-worker.js`.
+- `vite-plugin-pwa` is also enabled in `vite.config.ts`.
+- The last verified emitted build produced a separate `/sw.js` plus `/registerSW.js`.
+- `vite.config.ts` now sets `injectRegister: false` to stop that auto-registration path, but a fresh clean emitted-build verification is currently blocked by a separate build failure.
+- `src/service-worker.ts` exists, but current build verification indicates it is not the worker that production emits.
+- `promptInstall()` exists in `src/lib/serviceWorker.ts`, but is not currently wired to an active call site.
+
+Implication:
+
+- this document should be treated as implementation guidance in progress, not as a verified description of shipped behavior
+
+Nixelo is intended to support installability, caching, and offline behavior, but the exact worker/manifest ownership is still being cleaned up.
 
 ## Features Included
 
@@ -44,12 +65,15 @@ convert -size 512x512 xc:#3b82f6 -font Arial -pointsize 192 \
 
 ### 2. Service Worker Configuration
 
-The service worker is automatically registered in production builds. Key files:
+The current service worker setup is split. Relevant files:
 
-- `/public/service-worker.js` - Main service worker file
+- `/src/routes/__root.tsx` - Current registration entry point
+- `/src/lib/serviceWorker.ts` - Manual registration and install/update helpers
+- `/public/service-worker.js` - Worker currently shipped at `/service-worker.js`
+- `/src/service-worker.ts` - Unused custom Workbox worker candidate under audit
 - `/public/offline.html` - Offline fallback page
 - `/public/manifest.json` - PWA manifest configuration
-- `/src/lib/serviceWorker.ts` - Registration and update utilities
+- `/vite.config.ts` - `vite-plugin-pwa` configuration that also emits `/sw.js` and `/manifest.webmanifest`
 
 ### 3. Testing Locally
 
@@ -155,7 +179,12 @@ The app will show an install prompt banner automatically when:
 The service worker only registers in production builds to avoid caching issues during development.
 
 **Vite Configuration:**
-The service worker is served from `/public/service-worker.js` and automatically copied to the build output.
+The repo currently ships:
+
+- `/service-worker.js` from `public/service-worker.js`
+- `/sw.js` from `vite-plugin-pwa`
+
+That split should be treated as a cleanup target, not an intentional final architecture.
 
 **Deployment Checklist:**
 - ✅ Icons created and placed in `/public/`
@@ -210,11 +239,10 @@ The service worker is served from `/public/service-worker.js` and automatically 
 
 To disable PWA features:
 
-1. Remove service worker registration from `/src/main.tsx`:
+1. Remove service worker registration from `/src/routes/__root.tsx`:
    ```ts
    // Comment out or remove these lines:
    // registerServiceWorker();
-   // promptInstall();
    ```
 
 2. Unregister existing service workers:
