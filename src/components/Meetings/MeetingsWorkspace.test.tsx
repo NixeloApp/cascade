@@ -1,5 +1,6 @@
 import type { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import { DAY } from "@convex/lib/timeUtils";
 import type { FunctionReturnType } from "convex/server";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -544,16 +545,16 @@ describe("MeetingsWorkspace", () => {
       title: "Customer Follow-up",
       status: "failed",
       projectId: "project_2" as Id<"projects">,
-      createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
-      scheduledStartTime: Date.now() - 2 * 24 * 60 * 60 * 1000,
+      createdAt: Date.now() - 2 * DAY,
+      scheduledStartTime: Date.now() - 2 * DAY,
     });
     const oldFailedRecording = buildListItem({
       _id: "recording_3" as Id<"meetingRecordings">,
       title: "Quarterly Review",
       status: "failed",
       projectId: "project_2" as Id<"projects">,
-      createdAt: Date.now() - 120 * 24 * 60 * 60 * 1000,
-      scheduledStartTime: Date.now() - 120 * 24 * 60 * 60 * 1000,
+      createdAt: Date.now() - 120 * DAY,
+      scheduledStartTime: Date.now() - 120 * DAY,
     });
 
     const filteredRecordings = filterMeetingRecordings(
@@ -608,16 +609,15 @@ describe("MeetingsWorkspace", () => {
     const filteredMemory = filterMeetingMemory(memory, secondProjectId);
     const projectLenses = getMeetingMemoryProjectLenses(memory, projects);
 
-    expect(filteredMemory).toBeDefined();
-    if (filteredMemory) {
-      expect(filteredMemory.recentDecisions).toEqual([
+    expect(filteredMemory).toEqual({
+      recentDecisions: [
         expect.objectContaining({ decision: "Start the phased rollout on Monday" }),
-      ]);
-      expect(filteredMemory.openQuestions).toEqual([
+      ],
+      openQuestions: [
         expect.objectContaining({ question: "Which customers need white-glove onboarding?" }),
-      ]);
-      expect(filteredMemory.unresolvedActionItems).toEqual([]);
-    }
+      ],
+      unresolvedActionItems: [],
+    });
     expect(projectLenses).toEqual([
       expect.objectContaining({ projectId, projectKey: "CORE", totalItems: 3 }),
       expect.objectContaining({ projectId: secondProjectId, projectKey: "OPS", totalItems: 2 }),
