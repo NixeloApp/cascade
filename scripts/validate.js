@@ -50,6 +50,7 @@
  *  46. Shared shape drift      — blocks repeated inline entity summary shapes
  *  47. Page layout             — route wrappers should use PageLayout, not ad-hoc max-width shells
  *  48. Raw Date formatting     — use shared date helpers instead of ad-hoc formatting
+ *  49. E2E catch swallows      — ratchets silent .catch(() => {}) usage in e2e and screenshot tooling
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -298,6 +299,10 @@ const checks = [
   {
     name: "Raw Date formatting",
     modulePath: new URL("./validate/check-raw-dates.js", import.meta.url).href,
+  },
+  {
+    name: "E2E catch swallows",
+    modulePath: new URL("./validate/check-e2e-catch-swallows.js", import.meta.url).href,
   },
 ];
 

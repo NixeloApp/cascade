@@ -1,0 +1,14 @@
+{
+  "silentCatchSwallowsByFile": {
+    "e2e/pages/calendar.page.ts": 2,
+    "e2e/pages/dashboard.page.ts": 3,
+    "e2e/pages/documents.page.ts": 1,
+    "e2e/pages/onboarding.page.ts": 1,
+    "e2e/pages/projects.page.ts": 7,
+    "e2e/pages/settings.page.ts": 2,
+    "e2e/pages/workspaces.page.ts": 3,
+    "e2e/screenshot-pages.ts": 202,
+    "e2e/utils/auth-helpers.ts": 3,
+    "e2e/utils/test-helpers.ts": 1
+  }
+}
