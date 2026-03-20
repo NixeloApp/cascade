@@ -476,7 +476,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
   const showWorkspaceSearch = allWorkspaces.length > WORKSPACE_DISPLAY_LIMIT;
 
   // Auto-expand the workspace tree when navigating into a workspace route.
-  // Only seeds on transition (inactive → active), so the user can still collapse manually.
+  // Only seeds on transition (inactive -> active), so the user can still collapse manually.
   const prevActiveWorkspaceRef = useRef<string | null>(null);
   useEffect(() => {
     const activeSlug = allWorkspaces.find((ws) => {
