@@ -213,18 +213,27 @@ export function getMovedEventTimes(
     return null;
   }
 
-  const nextStart = new Date(requestedDate);
-  nextStart.setHours(
-    event.start.getHours(),
-    event.start.getMinutes(),
-    event.start.getSeconds(),
-    event.start.getMilliseconds(),
+  // Compute calendar-day delta to preserve local wall-clock times across DST boundaries
+  const requestedDay = Date.UTC(
+    requestedDate.getFullYear(),
+    requestedDate.getMonth(),
+    requestedDate.getDate(),
   );
+  const currentDay = Date.UTC(
+    event.start.getFullYear(),
+    event.start.getMonth(),
+    event.start.getDate(),
+  );
+  const dayDelta = Math.round((requestedDay - currentDay) / 86_400_000);
 
-  const durationMs = event.end.getTime() - event.start.getTime();
+  const nextStart = new Date(event.start);
+  nextStart.setDate(nextStart.getDate() + dayDelta);
+  const nextEnd = new Date(event.end);
+  nextEnd.setDate(nextEnd.getDate() + dayDelta);
+
   return {
     startTime: nextStart.getTime(),
-    endTime: nextStart.getTime() + durationMs,
+    endTime: nextEnd.getTime(),
   };
 }
 
