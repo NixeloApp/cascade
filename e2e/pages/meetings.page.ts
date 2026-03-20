@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { isLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import { waitForDashboardReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
@@ -47,11 +48,11 @@ export class MeetingsPage extends BasePage {
     await expect
       .poll(
         async () => {
-          if (await this.emptyStateTitle.isVisible().catch(() => false)) {
+          if (await isLocatorVisible(this.emptyStateTitle)) {
             return "empty";
           }
 
-          if (await this.meetingsSearchInput.isVisible().catch(() => false)) {
+          if (await isLocatorVisible(this.meetingsSearchInput)) {
             return "workspace";
           }
 
