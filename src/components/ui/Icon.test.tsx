@@ -15,4 +15,10 @@ describe("Icon", () => {
 
     expect(screen.getByTestId("icon")).toHaveClass("text-status-success");
   });
+
+  it("applies the configured animation class", () => {
+    render(<Icon icon={CheckCircle} animation="pulse" data-testid="icon" />);
+
+    expect(screen.getByTestId("icon")).toHaveClass("animate-pulse");
+  });
 });

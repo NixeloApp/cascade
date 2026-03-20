@@ -31,10 +31,16 @@ const iconVariants = cva("", {
       info: "text-status-info",
       accent: "text-accent",
     },
+    animation: {
+      none: "",
+      pulse: "animate-pulse",
+      spin: "animate-spin",
+    },
   },
   defaultVariants: {
     size: "md",
     tone: "default",
+    animation: "none",
   },
 });
 
@@ -61,9 +67,13 @@ interface IconProps
  * ```
  */
 export const Icon = forwardRef<SVGSVGElement, IconProps>(
-  ({ icon: IconComponent, size, tone, className, ...props }, ref) => {
+  ({ icon: IconComponent, size, tone, animation, className, ...props }, ref) => {
     return (
-      <IconComponent ref={ref} className={cn(iconVariants({ size, tone }), className)} {...props} />
+      <IconComponent
+        ref={ref}
+        className={cn(iconVariants({ size, tone, animation }), className)}
+        {...props}
+      />
     );
   },
 );

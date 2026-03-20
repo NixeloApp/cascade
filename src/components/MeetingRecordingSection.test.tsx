@@ -20,8 +20,9 @@ vi.mock("@/lib/toast", () => ({
   showSuccess: vi.fn(),
 }));
 
-vi.mock("@/components/ui/LoadingSpinner", () => ({
+vi.mock("./ui/LoadingSpinner", () => ({
   LoadingSpinner: () => <div>loading-spinner</div>,
+  InlineSpinner: () => <div>inline-spinner</div>,
 }));
 
 vi.mock("./ui/Badge", () => ({
@@ -106,6 +107,10 @@ vi.mock("./ui/Metadata", () => ({
 
 vi.mock("./ui/ScrollArea", () => ({
   ScrollArea: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+}));
+
+vi.mock("./ui/Separator", () => ({
+  Separator: () => <div />,
 }));
 
 vi.mock("./ui/Stack", () => ({

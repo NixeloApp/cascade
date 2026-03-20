@@ -39,6 +39,7 @@ Target the 148 files with raw TW violations. For each repeated pattern:
 - [x] Absorb the mirrored `MeetingRecordingSection.tsx` status-badge cluster into owned `Badge` variants and `Icon` tones
 - [x] Absorb the mirrored `MeetingRecordingSection.tsx` results/transcript cluster into owned `List`, `Icon`, `ScrollArea`, and `Typography` contracts
 - [x] Absorb the mirrored `MeetingRecordingSection.tsx` state-shell cluster into shared `Card` status recipes and owned `Icon`/layout contracts
+- [x] Absorb the mirrored `MeetingRecordingSection.tsx` status-indicator/divider cluster into owned `Icon`, `InlineSpinner`, and `Separator` contracts so the file drops out of the raw-Tailwind baseline
 - [ ] Audit raw TW in route files -- repeated spacing/shell/state patterns should become components or CVA variants
 - [ ] Run `node scripts/validate/check-raw-tailwind.js --audit` and group violations by pattern (same class cluster = same missing abstraction)
 - [ ] For each cluster of 3+ identical class sets, extract a component or add a CVA variant

@@ -11,7 +11,6 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import type { BadgeProps } from "@/components/ui/Badge";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { CheckCircle, Clock, FileText, Mic, MicOff, Play, XCircle } from "@/lib/icons";
@@ -24,8 +23,10 @@ import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Flex, FlexItem } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
 import { List } from "./ui/List";
+import { InlineSpinner, LoadingSpinner } from "./ui/LoadingSpinner";
 import { Metadata, MetadataItem } from "./ui/Metadata";
 import { ScrollArea } from "./ui/ScrollArea";
+import { Separator } from "./ui/Separator";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
@@ -43,27 +44,27 @@ const STATUS_BADGE_CONFIG: Record<string, StatusBadgeConfig> = {
     variant: "brand",
   },
   joining: {
-    icon: <StatusBadgeIcon icon={Play} tone="warning" className="animate-pulse" />,
+    icon: <StatusBadgeIcon icon={Play} tone="warning" animation="pulse" />,
     label: "Joining...",
     variant: "warning",
   },
   recording: {
-    icon: <StatusBadgeIcon icon={Mic} tone="error" className="animate-pulse" />,
+    icon: <StatusBadgeIcon icon={Mic} tone="error" animation="pulse" />,
     label: "Recording",
     variant: "error",
   },
   processing: {
-    icon: <LoadingSpinner size="xs" className="mr-1" />,
+    icon: <InlineSpinner size="xs" variant="inherit" />,
     label: "Processing...",
     variant: "accent",
   },
   transcribing: {
-    icon: <LoadingSpinner size="xs" className="mr-1" />,
+    icon: <InlineSpinner size="xs" variant="inherit" />,
     label: "Processing...",
     variant: "accent",
   },
   summarizing: {
-    icon: <LoadingSpinner size="xs" className="mr-1" />,
+    icon: <InlineSpinner size="xs" variant="inherit" />,
     label: "Processing...",
     variant: "accent",
   },
@@ -82,15 +83,13 @@ const STATUS_BADGE_CONFIG: Record<string, StatusBadgeConfig> = {
 function StatusBadgeIcon({
   icon,
   tone,
-  className,
+  animation,
 }: {
   icon: typeof Clock;
   tone?: "warning" | "error" | "success";
-  className?: string;
+  animation?: "pulse";
 }) {
-  return (
-    <Icon icon={icon} size="xs" tone={tone} className={className ? `mr-1 ${className}` : "mr-1"} />
-  );
+  return <Icon icon={icon} size="xs" tone={tone} animation={animation} />;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -99,8 +98,10 @@ function StatusBadge({ status }: { status: string }) {
 
   return (
     <Badge size="sm" variant={config.variant}>
-      {config.icon}
-      {config.label}
+      <Flex as="span" align="center" gap="xs">
+        {config.icon}
+        <span>{config.label}</span>
+      </Flex>
     </Badge>
   );
 }
@@ -304,10 +305,11 @@ export function MeetingRecordingSection({
   };
 
   return (
-    <div className="border-t border-ui-border pt-4">
+    <Stack gap="lg">
+      <Separator />
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
         <CollapsibleHeader
-          icon={<Mic className="w-5 h-5" />}
+          icon={<Icon icon={Mic} size="md" />}
           badge={recording && <StatusBadge status={recording.status} />}
         >
           AI Meeting Notes
@@ -335,7 +337,7 @@ export function MeetingRecordingSection({
         variant={dialogState.variant}
         isLoading={isConfirming}
       />
-    </div>
+    </Stack>
   );
 }
 
@@ -407,7 +409,7 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
           <List gap="xs">
             {summary.decisions.map((decision: string) => (
               <Flex as="li" key={decision} align="start" gap="sm">
-                <Icon icon={CheckCircle} size="sm" tone="success" className="shrink-0 mt-0.5" />
+                <Icon icon={CheckCircle} size="xs" tone="success" />
                 <Typography variant="caption" color="secondary">
                   {decision}
                 </Typography>
@@ -420,7 +422,7 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
       {/* Transcript Toggle */}
       {transcript && (
         <Collapsible open={showTranscript} onOpenChange={setShowTranscript}>
-          <CollapsibleHeader icon={<FileText className="w-4 h-4" />}>
+          <CollapsibleHeader icon={<Icon icon={FileText} size="sm" />}>
             {showTranscript ? "Hide Transcript" : "Show Full Transcript"}
           </CollapsibleHeader>
           <CollapsibleContent>
