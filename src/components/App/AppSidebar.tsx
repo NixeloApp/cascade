@@ -680,7 +680,6 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
                     data-testid={TEST_IDS.NAV.DASHBOARD_LINK}
-                    data-tour="nav-dashboard"
                   />
                   {/* Issues */}
                   <NavItem
@@ -691,7 +690,6 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     isActive={isActive(ROUTES.issues.list.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
-                    data-tour="nav-issues"
                   />
                   <NavItem
                     to={ROUTES.myIssues.path}
@@ -729,7 +727,6 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
                     data-testid={TEST_IDS.NAV.CALENDAR_LINK}
-                    data-tour="nav-calendar"
                   />
 
                   {/* Products Section */}
@@ -810,7 +807,6 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     params={{ orgSlug }}
                     onClick={handleNavClick}
                     data-testid={TEST_IDS.NAV.DOCUMENTS_LINK}
-                    data-tour="nav-documents"
                     childrenTestId={TEST_IDS.NAV.DOCUMENT_LIST}
                   >
                     <DocumentsSectionContent
@@ -838,7 +834,6 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     params={{ orgSlug }}
                     onClick={handleNavClick}
                     data-testid={TEST_IDS.NAV.WORKSPACES_LINK}
-                    data-tour="nav-projects"
                     childrenTestId={TEST_IDS.NAV.WORKSPACE_LIST}
                   >
                     <WorkspacesSectionContent
@@ -871,7 +866,6 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                       isCollapsed={showCollapsed}
                       onClick={handleNavClick}
                       data-testid={TEST_IDS.NAV.TIMESHEET_LINK}
-                      data-tour="nav-timesheet"
                     />
                   )}
                 </Stack>
@@ -890,7 +884,6 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                   isCollapsed={showCollapsed}
                   onClick={handleNavClick}
                   data-testid={TEST_IDS.NAV.SETTINGS_LINK}
-                  data-tour="nav-settings"
                 />
               </ul>
             </div>
@@ -916,7 +909,6 @@ type NavItemProps = Omit<LinkProps, "to"> & {
   isActive: boolean;
   isCollapsed: boolean;
   "data-testid"?: string;
-  "data-tour"?: string;
   onClick?: (event: React.MouseEvent) => void;
 };
 
@@ -926,7 +918,6 @@ function NavItem({
   isActive,
   isCollapsed,
   "data-testid": dataTestId,
-  "data-tour": dataTour,
   to,
   params,
   search,
@@ -948,7 +939,6 @@ function NavItem({
         onClick={onClick}
         {...props}
         data-testid={dataTestId}
-        data-tour={dataTour}
         aria-label={isCollapsed ? label : undefined}
       >
         <Card
@@ -993,7 +983,6 @@ type CollapsibleSectionProps = {
   children: React.ReactNode;
   childrenTestId?: string;
   "data-testid"?: string;
-  "data-tour"?: string;
 } & (
   | (Omit<LinkProps, "to"> & { to: LinkProps["to"] })
   | { to?: never; params?: never; search?: never }
@@ -1010,7 +999,6 @@ function CollapsibleSection({
   children,
   childrenTestId,
   "data-testid": dataTestId,
-  "data-tour": dataTour,
   ...props
 }: CollapsibleSectionProps) {
   // Safe type narrowing check
@@ -1034,7 +1022,6 @@ function CollapsibleSection({
                 params={props.params}
                 search={props.search}
                 data-testid={dataTestId}
-                data-tour={dataTour}
               >
                 <Icon className="w-5 h-5" />
               </Link>
