@@ -57,6 +57,14 @@ export async function isLocatorDisabled(locator: Locator, fallback = false): Pro
   }
 }
 
+export async function isLocatorEditable(locator: Locator, fallback = false): Promise<boolean> {
+  try {
+    return await locator.isEditable();
+  } catch {
+    return fallback;
+  }
+}
+
 export async function isLocatorVisible(locator: Locator): Promise<boolean> {
   try {
     return await locator.isVisible();

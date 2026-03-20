@@ -1,5 +1,11 @@
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import {
+  getLocatorInputValue,
+  isLocatorDisabled,
+  isLocatorEditable,
+  isLocatorVisible,
+} from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
 
@@ -206,25 +212,29 @@ export class SettingsPage extends BasePage {
       await this.integrationsTab.first().waitFor({ state: "visible" });
     } catch (e) {
       const currentUrl = this.page.url();
-      const bodyText = await this.page
-        .evaluate(() => document.body.innerText)
-        .catch(() => "Could not get body text");
+      const bodyText = await this.getDebugValue(
+        () => this.page.evaluate(() => document.body.innerText),
+        "Could not get body text",
+      );
       console.log(`[DEBUG] SettingsPage.goto failed`);
       console.log(`[DEBUG] Target URL: ${url}`);
       console.log(`[DEBUG] Current URL: ${currentUrl}`);
-      const localStorage = await this.page
-        .evaluate(() => JSON.stringify(localStorage))
-        .catch(() => "Could not get localStorage");
-      const convexClientState = await this.page
-        .evaluate(() => {
-          const client = (window as Record<string, unknown>).__convex_test_client as
-            | { authenticationToken?: unknown }
-            | undefined;
-          return client
-            ? `Found client. Auth token set: ${!!client.authenticationToken}`
-            : "Client not found on window";
-        })
-        .catch(() => "Error getting client state");
+      const localStorage = await this.getDebugValue(
+        () => this.page.evaluate(() => JSON.stringify(localStorage)),
+        "Could not get localStorage",
+      );
+      const convexClientState = await this.getDebugValue(
+        () =>
+          this.page.evaluate(() => {
+            const client = (window as Record<string, unknown>).__convex_test_client as
+              | { authenticationToken?: unknown }
+              | undefined;
+            return client
+              ? `Found client. Auth token set: ${!!client.authenticationToken}`
+              : "Client not found on window";
+          }),
+        "Error getting client state",
+      );
       console.log(`[DEBUG] LocalStorage: ${localStorage}`);
       console.log(`[DEBUG] ConvexClient: ${convexClientState}`);
       console.log(`[DEBUG] Body Text: ${bodyText.substring(0, 1000)}`);
@@ -335,7 +345,7 @@ export class SettingsPage extends BasePage {
     }
 
     // Only re-click if the form is not visible (avoid double-clicking an open form)
-    if (await this.inviteUserForm.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.inviteUserForm)) {
       await this.expectInviteFormReady();
     } else {
       await inviteBtn.click();
@@ -344,15 +354,15 @@ export class SettingsPage extends BasePage {
   }
 
   async closeInviteUserModalIfOpen() {
-    if (!(await this.inviteUserForm.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.inviteUserForm))) {
       return;
     }
 
-    if (await this.cancelInviteButton.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.cancelInviteButton)) {
       await this.dismissInviteUserModalWithCancel();
     }
 
-    if (await this.inviteUserForm.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.inviteUserForm)) {
       await this.page.keyboard.press("Escape");
     }
 
@@ -384,7 +394,7 @@ export class SettingsPage extends BasePage {
     }
 
     const inviteRow = this.getInviteRow(email);
-    if (await inviteRow.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(inviteRow)) {
       return;
     }
 
@@ -456,7 +466,7 @@ export class SettingsPage extends BasePage {
       return false;
     }
 
-    const currentValue = await this.inviteEmailInput.inputValue().catch(() => null);
+    const currentValue = await getLocatorInputValue(this.inviteEmailInput);
     return currentValue === email;
   }
 
@@ -496,11 +506,11 @@ export class SettingsPage extends BasePage {
   }
 
   private async getInviteManagementState(): Promise<"table" | "empty" | "loading"> {
-    if (await this.inviteTable.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.inviteTable)) {
       return "table";
     }
 
-    if (await this.inviteEmptyState.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.inviteEmptyState)) {
       return "empty";
     }
 
@@ -509,17 +519,17 @@ export class SettingsPage extends BasePage {
 
   private async getInviteFormState(): Promise<"ready" | "open" | "closed"> {
     if (
-      (await this.inviteEmailInput.isVisible().catch(() => false)) &&
-      (await this.inviteEmailInput.isEditable().catch(() => false)) &&
-      (await this.sendInviteButton.isVisible().catch(() => false))
+      (await isLocatorVisible(this.inviteEmailInput)) &&
+      (await isLocatorEditable(this.inviteEmailInput)) &&
+      (await isLocatorVisible(this.sendInviteButton))
     ) {
       return "ready";
     }
 
     if (
-      (await this.inviteUserModal.isVisible().catch(() => false)) ||
-      (await this.inviteUserForm.isVisible().catch(() => false)) ||
-      (await this.sendInviteButton.isVisible().catch(() => false))
+      (await isLocatorVisible(this.inviteUserModal)) ||
+      (await isLocatorVisible(this.inviteUserForm)) ||
+      (await isLocatorVisible(this.sendInviteButton))
     ) {
       return "open";
     }
@@ -573,7 +583,7 @@ export class SettingsPage extends BasePage {
   }
 
   async isAdminTabVisible() {
-    return this.adminTab.isVisible().catch(() => false);
+    return isLocatorVisible(this.adminTab);
   }
 
   async expectAdminTabHidden() {
@@ -697,7 +707,7 @@ export class SettingsPage extends BasePage {
 
   private async waitForSettingsSuccessToastReset() {
     const successToast = this.page.getByText(/organization settings updated/i).first();
-    const toastVisible = await successToast.isVisible().catch(() => false);
+    const toastVisible = await isLocatorVisible(successToast);
     if (!toastVisible) {
       return;
     }
@@ -705,7 +715,7 @@ export class SettingsPage extends BasePage {
     try {
       await successToast.waitFor({ state: "hidden", timeout: 1000 });
     } catch (error) {
-      const stillVisible = await successToast.isVisible().catch(() => false);
+      const stillVisible = await isLocatorVisible(successToast);
       if (!stillVisible) {
         return;
       }
@@ -724,7 +734,7 @@ export class SettingsPage extends BasePage {
     try {
       await this.cancelInviteButton.click();
     } catch (error) {
-      if (!(await this.inviteUserForm.isVisible().catch(() => false))) {
+      if (!(await isLocatorVisible(this.inviteUserForm))) {
         return;
       }
 
@@ -741,7 +751,7 @@ export class SettingsPage extends BasePage {
       return true;
     } catch {
       await this.saveSettingsButton.waitFor({ state: "visible" });
-      if (await this.saveSettingsButton.isDisabled().catch(() => true)) {
+      if (await isLocatorDisabled(this.saveSettingsButton, true)) {
         return false;
       }
       try {
@@ -767,5 +777,13 @@ export class SettingsPage extends BasePage {
       "aria-checked",
       enabled ? "true" : "false",
     );
+  }
+
+  private async getDebugValue(read: () => Promise<string>, fallback: string) {
+    try {
+      return await read();
+    } catch {
+      return fallback;
+    }
   }
 }
