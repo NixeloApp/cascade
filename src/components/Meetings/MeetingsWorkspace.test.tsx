@@ -438,11 +438,11 @@ describe("MeetingsWorkspace", () => {
           speakerCount: 3,
         },
         summary: {
-          ...(buildDetail().summary ?? {}),
           _id: summaryId,
           _creationTime: 1_710_000_000_000,
           recordingId,
           transcriptId: "transcript_1" as Id<"meetingTranscripts">,
+          modelUsed: "test-model",
           executiveSummary: "",
           keyPoints: [],
           actionItems: [],
@@ -507,11 +507,11 @@ describe("MeetingsWorkspace", () => {
       },
       detail: buildDetail({
         summary: {
-          ...(buildDetail().summary ?? {}),
           _id: summaryId,
           _creationTime: 1_710_000_000_000,
           recordingId,
           transcriptId: "transcript_1" as Id<"meetingTranscripts">,
+          modelUsed: "test-model",
           executiveSummary: "The team aligned on delivery scope.",
           keyPoints: ["Finalize scope", "Start implementation"],
           decisions: [],

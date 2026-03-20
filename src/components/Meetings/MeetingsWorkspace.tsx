@@ -1024,7 +1024,7 @@ function ActionItemsSection({
     <Section title="Action Items" gap="sm">
       <Stack as="ul" gap="sm" className="list-none">
         {summary.actionItems.map((item, index) => (
-          <li key={`${item.description}-${item.assignee ?? ""}-${index}`}>
+          <li key={`${item.description}-${item.assignee ?? ""}-${item.dueDate ?? ""}`}>
             <ActionItemCard
               actionItem={item}
               index={index}
@@ -1168,7 +1168,7 @@ function SummarySections({
         <Section title="Topics" gap="sm">
           <Stack as="ul" gap="sm" className="list-none">
             {summary.topics.map((topic, index) => (
-              <li key={`${topic.title}-${index}`}>
+              <li key={`topic-${topic.title}-${topic.summary}`}>
                 <Card variant="soft" padding="sm">
                   <Stack gap="xs">
                     <Typography variant="label">{topic.title}</Typography>
