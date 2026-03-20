@@ -3620,6 +3620,7 @@ export const seedScreenshotDataInternal = internalMutation({
     const existingScreenshotInvites = await ctx.db
       .query("invites")
       .withIndex("by_email", (q) => q.eq("email", screenshotInviteEmail))
+      .filter((q) => q.eq(q.field("organizationId"), orgId))
       .collect();
 
     for (const invite of existingScreenshotInvites) {
