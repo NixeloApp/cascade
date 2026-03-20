@@ -2,7 +2,7 @@
 
 > **Priority:** P2
 > **Status:** New
-> **Last Updated:** 2026-03-19
+> **Last Updated:** 2026-03-20
 
 ## Problem
 
@@ -33,6 +33,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [x] Add a post-capture hash check that flags loading-state hashes
 - [ ] Re-capture the 37 failed screenshots with proper wait logic
 - [x] Recover the time-entry modal baselines plus the command-palette tablet and dashboard-customize mobile baselines after readiness hardening
+- [x] Recover the remaining desktop-light command-palette baseline after the shared omnibox readiness fixes landed
 - [x] Recover the missing desktop-dark create-issue modal baseline
 - [x] Recover the settings avatar-upload and cover-upload baselines across all four canonical configs after replacing brittle dropzone-copy waits
 - [x] Recover the members confirm-dialog baselines across all four canonical configs after fixing alert-dialog open waits and section-scroll alignment
