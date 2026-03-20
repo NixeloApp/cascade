@@ -391,7 +391,7 @@ export class DashboardPage extends BasePage {
 
   async closeShortcutsHelpIfOpen() {
     await this.dismissModalIfOpen(this.shortcutsModal, async () => {
-      await this.mainContent.click({ position: { x: 10, y: 10 } }).catch(() => {});
+      await this.dismissModalViaMainContent("keyboard shortcuts help");
     });
   }
 
@@ -584,7 +584,7 @@ export class DashboardPage extends BasePage {
 
     const detailsVisible = await this.appErrorDetailsMessage.isVisible().catch(() => false);
     if (!detailsVisible) {
-      await this.appErrorDetailsSummary.click().catch(() => {});
+      await this.expandAppErrorDetailsIfAvailable();
     }
 
     const errorDetails = (
@@ -683,7 +683,7 @@ export class DashboardPage extends BasePage {
 
   async closeAdvancedSearchIfOpen() {
     await this.dismissModalIfOpen(this.advancedSearchModal, async () => {
-      await this.mainContent.click({ position: { x: 10, y: 10 } }).catch(() => {});
+      await this.dismissModalViaMainContent("advanced search");
     });
   }
 
@@ -730,6 +730,39 @@ export class DashboardPage extends BasePage {
     }
 
     await expect(modal).not.toBeVisible();
+  }
+
+  private async dismissModalViaMainContent(modalLabel: string): Promise<void> {
+    await expect(
+      this.mainContent,
+      `${modalLabel} fallback dismissal requires visible main content`,
+    ).toBeVisible();
+
+    try {
+      await this.mainContent.click({ position: { x: 10, y: 10 } });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to dismiss ${modalLabel} via main content click: ${message}`);
+    }
+  }
+
+  private async expandAppErrorDetailsIfAvailable(): Promise<void> {
+    const summaryVisible = await this.appErrorDetailsSummary.isVisible().catch(() => false);
+    if (!summaryVisible) {
+      return;
+    }
+
+    try {
+      await this.appErrorDetailsSummary.click();
+    } catch (error) {
+      const detailsVisible = await this.appErrorDetailsMessage.isVisible().catch(() => false);
+      if (detailsVisible) {
+        return;
+      }
+
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`App error details could not be expanded: ${message}`);
+    }
   }
 
   private async waitForModalHidden(modal: Locator, timeout = 1000) {
