@@ -18,6 +18,7 @@ vi.mock("@/lib/toast", () => ({
 }));
 
 type MeetingListItem = FunctionReturnType<typeof api.meetingBot.listRecordings>[number];
+type MeetingMemory = FunctionReturnType<typeof api.meetingBot.listMemoryItems>;
 type MeetingSearchItem = FunctionReturnType<typeof api.meetingBot.searchRecordings>[number];
 type MeetingDetail = NonNullable<FunctionReturnType<typeof api.meetingBot.getRecording>>;
 type ProjectItem = FunctionReturnType<typeof api.dashboard.getMyProjects>[number];
@@ -140,8 +141,48 @@ function buildDetail(overrides: Partial<MeetingDetail> = {}): MeetingDetail {
   };
 }
 
+function buildMemory(overrides: Partial<MeetingMemory> = {}): MeetingMemory {
+  return {
+    recentDecisions: [
+      {
+        recordingId,
+        recordingTitle: "Weekly Product Review",
+        meetingPlatform: "google_meet",
+        createdAt: 1_710_000_000_000,
+        decision: "Ship the narrower first iteration",
+      },
+    ],
+    openQuestions: [
+      {
+        recordingId,
+        recordingTitle: "Weekly Product Review",
+        meetingPlatform: "google_meet",
+        createdAt: 1_710_000_000_000,
+        question: "Do we need Zoom support in v1?",
+      },
+    ],
+    unresolvedActionItems: [
+      {
+        recordingId,
+        recordingTitle: "Weekly Product Review",
+        meetingPlatform: "google_meet",
+        createdAt: 1_710_000_000_000,
+        description: "Update the spec",
+        assignee: "Alex",
+        dueDate: "2026-03-20",
+        priority: "high",
+      },
+    ],
+    ...overrides,
+  };
+}
+
 function isObjectArg(args: unknown): args is Record<string, unknown> {
   return typeof args === "object" && args !== null;
+}
+
+function matchesMemoryArgs(args: Record<string, unknown>) {
+  return "sectionLimit" in args;
 }
 
 function matchesSearchArgs(args: Record<string, unknown>) {
@@ -170,6 +211,7 @@ function resolveMeetingQueryResult(
     listRecordings: MeetingListItem[];
     detail: MeetingDetail | undefined;
     projects: ProjectItem[];
+    memory: MeetingMemory;
     searchQuery?: string;
     searchResults: MeetingSearchItem[];
     linkedIssue?: {
@@ -181,6 +223,7 @@ function resolveMeetingQueryResult(
   },
 ) {
   if (!isObjectArg(args)) return undefined;
+  if (matchesMemoryArgs(args)) return config.memory;
   if (matchesSearchArgs(args)) return args.query === config.searchQuery ? config.searchResults : [];
   if (matchesListArgs(args)) return config.listRecordings;
   if (matchesProjectArgs(args)) return config.projects;
@@ -193,6 +236,7 @@ function installMeetingQueryMock({
   listRecordings = [buildListItem()],
   detail = buildDetail(),
   projects = [buildProjectItem()],
+  memory = buildMemory(),
   searchQuery,
   searchResults = [],
   linkedIssue = null,
@@ -200,6 +244,7 @@ function installMeetingQueryMock({
   listRecordings?: MeetingListItem[];
   detail?: MeetingDetail | undefined;
   projects?: ProjectItem[];
+  memory?: MeetingMemory;
   searchQuery?: string;
   searchResults?: MeetingSearchItem[];
   linkedIssue?: {
@@ -214,6 +259,7 @@ function installMeetingQueryMock({
       listRecordings,
       detail,
       projects,
+      memory,
       searchQuery,
       searchResults,
       linkedIssue,
@@ -260,11 +306,18 @@ describe("MeetingsWorkspace", () => {
 
     render(<MeetingsWorkspace />);
 
-    expect(screen.getAllByText("Weekly Product Review")).toHaveLength(2);
+    expect(screen.getByText("Meeting Memory")).toBeInTheDocument();
+    expect(screen.getByText("Recent Decisions")).toBeInTheDocument();
+    expect(screen.getAllByText("Open Questions")).toHaveLength(2);
+    expect(screen.getByText("Unresolved Action Items")).toBeInTheDocument();
+    expect(screen.getAllByText("Ship the narrower first iteration").length).toBeGreaterThanOrEqual(
+      2,
+    );
+    expect(screen.getAllByText("Weekly Product Review").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText("The team aligned on delivery scope.")).toBeInTheDocument();
-    expect(screen.getByText("Update the spec")).toBeInTheDocument();
-    expect(screen.getByText("Do we need Zoom support in v1?")).toBeInTheDocument();
-    expect(screen.getAllByText("Alex")).toHaveLength(2);
+    expect(screen.getAllByText("Update the spec").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("Do we need Zoom support in v1?").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("Alex").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText("Full transcript text")).toBeInTheDocument();
   });
 

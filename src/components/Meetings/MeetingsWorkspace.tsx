@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Link } from "@tanstack/react-router";
 import type { FunctionReturnType } from "convex/server";
-import { type FormEvent, useDeferredValue, useEffect, useState } from "react";
+import { type FormEvent, type ReactNode, useDeferredValue, useEffect, useState } from "react";
 import { PageContent } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -42,6 +42,7 @@ type MeetingListItem = FunctionReturnType<typeof api.meetingBot.listRecordings>[
 type MeetingSearchItem = FunctionReturnType<typeof api.meetingBot.searchRecordings>[number];
 type MeetingOverview = MeetingListItem | MeetingSearchItem;
 type MeetingDetail = FunctionReturnType<typeof api.meetingBot.getRecording>;
+type MeetingMemory = FunctionReturnType<typeof api.meetingBot.listMemoryItems>;
 type MeetingSummary = NonNullable<NonNullable<MeetingDetail>["summary"]>;
 type MeetingParticipants = NonNullable<NonNullable<MeetingDetail>["participants"]>;
 type ProjectOption = FunctionReturnType<typeof api.dashboard.getMyProjects>[number];
@@ -256,6 +257,172 @@ function RecordingListItem({
         </Stack>
       </Card>
     </button>
+  );
+}
+
+function MemoryCard({
+  title,
+  description,
+  itemCount,
+  children,
+}: {
+  title: string;
+  description: string;
+  itemCount: number;
+  children: ReactNode;
+}) {
+  return (
+    <Card padding="md">
+      <Stack gap="sm">
+        <Flex justify="between" align="start" gap="sm">
+          <Stack gap="xs">
+            <Typography variant="label">{title}</Typography>
+            <Typography variant="caption" color="secondary">
+              {description}
+            </Typography>
+          </Stack>
+          <Badge size="sm">{itemCount}</Badge>
+        </Flex>
+        {children}
+      </Stack>
+    </Card>
+  );
+}
+
+function MemoryItemMeta({
+  recordingTitle,
+  meetingPlatform,
+  createdAt,
+}: {
+  recordingTitle: string;
+  meetingPlatform: MeetingPlatform;
+  createdAt: number;
+}) {
+  return (
+    <Typography variant="caption" color="secondary">
+      {recordingTitle} <span aria-hidden="true">•</span> {formatMeetingPlatform(meetingPlatform)}{" "}
+      <span aria-hidden="true">•</span> {formatRelativeTime(createdAt)}
+    </Typography>
+  );
+}
+
+function MeetingMemorySection({ memory }: { memory: MeetingMemory | undefined }) {
+  if (memory === undefined) {
+    return (
+      <Section
+        title="Meeting Memory"
+        description="Recent decisions, open questions, and follow-ups across completed meetings."
+        gap="sm"
+      >
+        <Card variant="soft" padding="lg">
+          <Flex justify="center">
+            <LoadingSpinner size="lg" />
+          </Flex>
+        </Card>
+      </Section>
+    );
+  }
+
+  return (
+    <Section
+      title="Meeting Memory"
+      description="Recent decisions, open questions, and follow-ups across completed meetings."
+      gap="sm"
+    >
+      <div className="grid gap-4 xl:grid-cols-3">
+        <MemoryCard
+          title="Recent Decisions"
+          description="Latest calls and commitments from completed meetings."
+          itemCount={memory.recentDecisions.length}
+        >
+          {memory.recentDecisions.length === 0 ? (
+            <Typography variant="caption" color="secondary">
+              Completed meetings will surface key decisions here.
+            </Typography>
+          ) : (
+            <Stack as="ul" gap="sm" className="list-none">
+              {memory.recentDecisions.map((item) => (
+                <li key={`${item.recordingId}-${item.decision}`}>
+                  <Card variant="soft" padding="sm">
+                    <Stack gap="xs">
+                      <Typography variant="small">{item.decision}</Typography>
+                      <MemoryItemMeta
+                        recordingTitle={item.recordingTitle}
+                        meetingPlatform={item.meetingPlatform}
+                        createdAt={item.createdAt}
+                      />
+                    </Stack>
+                  </Card>
+                </li>
+              ))}
+            </Stack>
+          )}
+        </MemoryCard>
+
+        <MemoryCard
+          title="Open Questions"
+          description="Unresolved questions still worth tracking after the meeting ends."
+          itemCount={memory.openQuestions.length}
+        >
+          {memory.openQuestions.length === 0 ? (
+            <Typography variant="caption" color="secondary">
+              Outstanding questions from summaries will appear here.
+            </Typography>
+          ) : (
+            <Stack as="ul" gap="sm" className="list-none">
+              {memory.openQuestions.map((item) => (
+                <li key={`${item.recordingId}-${item.question}`}>
+                  <Card variant="soft" padding="sm">
+                    <Stack gap="xs">
+                      <Typography variant="small">{item.question}</Typography>
+                      <MemoryItemMeta
+                        recordingTitle={item.recordingTitle}
+                        meetingPlatform={item.meetingPlatform}
+                        createdAt={item.createdAt}
+                      />
+                    </Stack>
+                  </Card>
+                </li>
+              ))}
+            </Stack>
+          )}
+        </MemoryCard>
+
+        <MemoryCard
+          title="Unresolved Action Items"
+          description="Follow-ups that have not been converted into linked issues yet."
+          itemCount={memory.unresolvedActionItems.length}
+        >
+          {memory.unresolvedActionItems.length === 0 ? (
+            <Typography variant="caption" color="secondary">
+              Pending follow-ups will appear here until they are linked into project work.
+            </Typography>
+          ) : (
+            <Stack as="ul" gap="sm" className="list-none">
+              {memory.unresolvedActionItems.map((item) => (
+                <li key={`${item.recordingId}-${item.description}`}>
+                  <Card variant="soft" padding="sm">
+                    <Stack gap="xs">
+                      <Typography variant="small">{item.description}</Typography>
+                      <Flex gap="xs" className="flex-wrap">
+                        {item.assignee && <Badge size="sm">{item.assignee}</Badge>}
+                        {item.dueDate && <Badge size="sm">Due: {item.dueDate}</Badge>}
+                        {item.priority && <Badge size="sm">Priority: {item.priority}</Badge>}
+                      </Flex>
+                      <MemoryItemMeta
+                        recordingTitle={item.recordingTitle}
+                        meetingPlatform={item.meetingPlatform}
+                        createdAt={item.createdAt}
+                      />
+                    </Stack>
+                  </Card>
+                </li>
+              ))}
+            </Stack>
+          )}
+        </MemoryCard>
+      </div>
+    </Section>
   );
 }
 
@@ -865,6 +1032,7 @@ function ScheduleRecordingDialog({
 
 export function MeetingsWorkspace() {
   const recordings = useAuthenticatedQuery(api.meetingBot.listRecordings, { limit: 50 });
+  const memory = useAuthenticatedQuery(api.meetingBot.listMemoryItems, { sectionLimit: 5 });
   const projects = useAuthenticatedQuery(api.dashboard.getMyProjects, {});
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -923,150 +1091,154 @@ export function MeetingsWorkspace() {
           "Schedule from calendar or add a direct meeting URL to start capturing transcripts, summaries, and follow-up work.",
       }}
     >
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
-        <Section
-          title="Recent Meetings"
-          description="Recordings created from calendar-linked meetings and direct bot runs."
-          gap="sm"
-        >
-          <Stack gap="sm">
-            <Flex justify="between" align="center" gap="sm" className="flex-wrap">
-              <Typography variant="caption" color="secondary">
-                Schedule from calendar or add an ad-hoc meeting URL here.
-              </Typography>
-              <Button variant="secondary" size="sm" onClick={() => setIsScheduleDialogOpen(true)}>
-                Schedule Recording
-              </Button>
-            </Flex>
+      <Stack gap="lg">
+        <MeetingMemorySection memory={memory} />
 
-            <Input
-              variant="search"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search transcript text"
-              aria-label="Search meetings"
-            />
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+          <Section
+            title="Recent Meetings"
+            description="Recordings created from calendar-linked meetings and direct bot runs."
+            gap="sm"
+          >
+            <Stack gap="sm">
+              <Flex justify="between" align="center" gap="sm" className="flex-wrap">
+                <Typography variant="caption" color="secondary">
+                  Schedule from calendar or add an ad-hoc meeting URL here.
+                </Typography>
+                <Button variant="secondary" size="sm" onClick={() => setIsScheduleDialogOpen(true)}>
+                  Schedule Recording
+                </Button>
+              </Flex>
 
-            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-              <Select
-                value={statusFilter}
-                onValueChange={(value) => setStatusFilter(value as StatusFilter)}
-              >
-                <SelectTrigger aria-label="Filter by status">
-                  <SelectValue placeholder="All statuses" />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUS_FILTER_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
+              <Input
+                variant="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search transcript text"
+                aria-label="Search meetings"
+              />
+
+              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                <Select
+                  value={statusFilter}
+                  onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+                >
+                  <SelectTrigger aria-label="Filter by status">
+                    <SelectValue placeholder="All statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_FILTER_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={platformFilter}
+                  onValueChange={(value) => setPlatformFilter(value as PlatformFilter)}
+                >
+                  <SelectTrigger aria-label="Filter by platform">
+                    <SelectValue placeholder="All platforms" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PLATFORM_FILTER_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={projectFilter}
+                  onValueChange={(value) => setProjectFilter(value as ProjectFilter)}
+                >
+                  <SelectTrigger aria-label="Filter by project">
+                    <SelectValue placeholder="All projects" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All projects</SelectItem>
+                    {projects?.map((project) => (
+                      <SelectItem key={project._id} value={project._id}>
+                        {project.key} - {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={timeWindowFilter}
+                  onValueChange={(value) => setTimeWindowFilter(value as TimeWindowFilter)}
+                >
+                  <SelectTrigger aria-label="Filter by date">
+                    <SelectValue placeholder="All dates" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIME_WINDOW_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {filteredRecordings !== undefined && (
+                <Typography variant="caption" color="secondary">
+                  {filteredRecordings.length} meeting{filteredRecordings.length === 1 ? "" : "s"}{" "}
+                  shown
+                </Typography>
+              )}
+
+              {deferredSearchQuery.length >= 2 && (
+                <Typography variant="caption" color="secondary">
+                  Searching transcript content for "{deferredSearchQuery}".
+                </Typography>
+              )}
+
+              {filteredRecordings !== undefined && filteredRecordings.length === 0 ? (
+                <EmptyState
+                  icon={FileText}
+                  size="compact"
+                  title="No meetings match these filters"
+                  description="Adjust the search or filters, or open calendar to schedule a new meeting recording."
+                />
+              ) : (
+                <Stack as="ul" gap="sm" className="list-none">
+                  {filteredRecordings?.map((recording) => (
+                    <li key={recording._id}>
+                      <RecordingListItem
+                        recording={recording}
+                        isSelected={selectedRecordingId === recording._id}
+                        onSelect={() => setSelectedRecordingId(recording._id)}
+                      />
+                    </li>
                   ))}
-                </SelectContent>
-              </Select>
+                </Stack>
+              )}
+            </Stack>
+          </Section>
 
-              <Select
-                value={platformFilter}
-                onValueChange={(value) => setPlatformFilter(value as PlatformFilter)}
-              >
-                <SelectTrigger aria-label="Filter by platform">
-                  <SelectValue placeholder="All platforms" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PLATFORM_FILTER_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={projectFilter}
-                onValueChange={(value) => setProjectFilter(value as ProjectFilter)}
-              >
-                <SelectTrigger aria-label="Filter by project">
-                  <SelectValue placeholder="All projects" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All projects</SelectItem>
-                  {projects?.map((project) => (
-                    <SelectItem key={project._id} value={project._id}>
-                      {project.key} - {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={timeWindowFilter}
-                onValueChange={(value) => setTimeWindowFilter(value as TimeWindowFilter)}
-              >
-                <SelectTrigger aria-label="Filter by date">
-                  <SelectValue placeholder="All dates" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TIME_WINDOW_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {filteredRecordings !== undefined && (
-              <Typography variant="caption" color="secondary">
-                {filteredRecordings.length} meeting{filteredRecordings.length === 1 ? "" : "s"}{" "}
-                shown
-              </Typography>
-            )}
-
-            {deferredSearchQuery.length >= 2 && (
-              <Typography variant="caption" color="secondary">
-                Searching transcript content for "{deferredSearchQuery}".
-              </Typography>
-            )}
-
-            {filteredRecordings !== undefined && filteredRecordings.length === 0 ? (
+          <Section
+            title="Meeting Detail"
+            description="Review summaries, decisions, action items, transcript, and participants."
+            gap="sm"
+          >
+            {selectedRecordingId ? (
+              <RecordingDetailPanel recording={selectedRecording} projects={projects} />
+            ) : (
               <EmptyState
                 icon={FileText}
                 size="compact"
-                title="No meetings match these filters"
-                description="Adjust the search or filters, or open calendar to schedule a new meeting recording."
+                title="Select a meeting"
+                description="Choose a recording from the list to inspect its details."
               />
-            ) : (
-              <Stack as="ul" gap="sm" className="list-none">
-                {filteredRecordings?.map((recording) => (
-                  <li key={recording._id}>
-                    <RecordingListItem
-                      recording={recording}
-                      isSelected={selectedRecordingId === recording._id}
-                      onSelect={() => setSelectedRecordingId(recording._id)}
-                    />
-                  </li>
-                ))}
-              </Stack>
             )}
-          </Stack>
-        </Section>
-
-        <Section
-          title="Meeting Detail"
-          description="Review summaries, decisions, action items, transcript, and participants."
-          gap="sm"
-        >
-          {selectedRecordingId ? (
-            <RecordingDetailPanel recording={selectedRecording} projects={projects} />
-          ) : (
-            <EmptyState
-              icon={FileText}
-              size="compact"
-              title="Select a meeting"
-              description="Choose a recording from the list to inspect its details."
-            />
-          )}
-        </Section>
-      </div>
+          </Section>
+        </div>
+      </Stack>
 
       <ScheduleRecordingDialog
         open={isScheduleDialogOpen}

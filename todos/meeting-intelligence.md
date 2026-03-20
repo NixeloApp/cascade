@@ -43,7 +43,8 @@ The market has moved beyond single-meeting summaries.
 
 - [x] **Add transcript search across meetings** — Use the existing transcript search index as the base.
 - [x] **Add filters for platform / status / date / project** — Needed for a useful meetings archive.
-- [ ] **Add reusable memory views** — "Recent decisions", "Open questions", "Unresolved action items", "Meetings by project".
+- [x] **Add reusable memory views** — Recent decisions, open questions, and unresolved action items now surface across completed meetings.
+- [ ] **Add meetings-by-project memory lens** — Group cross-meeting insights by project when the archive starts getting dense.
 
 ### Capture Strategy Clarity
 
@@ -71,7 +72,7 @@ These should be treated as experiments that support the product roadmap, not as 
 ## Explicit Gaps vs Current Market
 
 - [x] **No first-class meetings hub** — Baseline meetings archive now exists in the sidebar; the remaining gap is deeper memory and workflow reuse.
-- [ ] **No cross-meeting memory product** — Current UI is meeting-by-meeting only.
+- [x] **No cross-meeting memory product** — Baseline memory views now surface decisions, open questions, and unresolved follow-ups across meetings.
 - [ ] **No agent-facing meeting layer** — MCP/agent access is becoming common in the category.
 - [ ] **No desktop capture mode** — Bot-only capture is increasingly incomplete.
 - [ ] **No enterprise-ready multi-platform capture story yet** — Current implementation is narrower than the market leaders.
