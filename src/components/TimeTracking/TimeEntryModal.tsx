@@ -21,6 +21,7 @@ import { Dialog } from "../ui/Dialog";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox, Input, Textarea } from "../ui/form";
 import { Grid } from "../ui/Grid";
+import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/IconButton";
 import { Label } from "../ui/Label";
 import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
@@ -381,7 +382,7 @@ export function TimeEntryModal({
             variant="default"
             className="w-full flex-1 justify-center gap-2"
           >
-            <Play className="w-4 h-4" />
+            <Icon icon={Play} size="sm" />
             Start Timer
           </SegmentedControlItem>
           <SegmentedControlItem
@@ -389,7 +390,7 @@ export function TimeEntryModal({
             variant="default"
             className="w-full flex-1 justify-center gap-2"
           >
-            <Hourglass className="w-4 h-4" />
+            <Icon icon={Hourglass} size="sm" />
             Duration
           </SegmentedControlItem>
           <SegmentedControlItem
@@ -397,7 +398,7 @@ export function TimeEntryModal({
             variant="default"
             className="w-full flex-1 justify-center gap-2"
           >
-            <Clock className="w-4 h-4" />
+            <Icon icon={Clock} size="sm" />
             Time Range
           </SegmentedControlItem>
         </SegmentedControl>

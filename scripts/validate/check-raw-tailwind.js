@@ -168,7 +168,6 @@ const BASELINE_FILES = new Set([
   "src/components/TimeTracker/BillingReport.tsx",
   "src/components/TimeTracker/Timesheet.tsx",
   "src/components/TimeTracking/ManualTimeEntryModal.tsx",
-  "src/components/TimeTracking/TimeEntriesList.tsx",
   "src/components/TimeTracking/TimeEntryModal.tsx",
   "src/components/TimeTracking/TimeTrackingPage.tsx",
   "src/components/TimeTracking/UserRatesManagement.tsx",

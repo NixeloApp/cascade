@@ -17,6 +17,7 @@ import { Button } from "../ui/Button";
 import { Card, CardBody } from "../ui/Card";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
+import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Progress } from "../ui/Progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
@@ -157,7 +158,7 @@ export function BillingReport({ projectId }: BillingReportProps) {
             </SelectContent>
           </Select>
           <Button
-            leftIcon={<Download className="w-4 h-4" />}
+            leftIcon={<Icon icon={Download} size="sm" />}
             onClick={() => {
               exportBillingCsv(project.name, dateRange, billing, sortedUsers);
               showSuccess("Billing report exported");
