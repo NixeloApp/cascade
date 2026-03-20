@@ -367,7 +367,8 @@ describe("NotificationCenter", () => {
 
   it("should snooze a notification from the snooze popover", async () => {
     const user = userEvent.setup();
-    vi.spyOn(Date, "now").mockReturnValue(1_700_000_000_000);
+    const FIXED_NOW = 1_700_000_000_000;
+    const nowSpy = vi.spyOn(Date, "now").mockReturnValue(FIXED_NOW);
     const mockNotifications = [
       {
         _id: "notif-3",
@@ -397,9 +398,11 @@ describe("NotificationCenter", () => {
     await waitFor(() => {
       expect(mockSnooze).toHaveBeenCalledWith({
         id: "notif-3",
-        snoozedUntil: 1_700_000_000_000 + 3 * HOUR,
+        snoozedUntil: FIXED_NOW + 3 * HOUR,
       });
     });
+
+    nowSpy.mockRestore();
   });
 
   it("should format time correctly", async () => {

@@ -569,9 +569,13 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
   });
 
   const handleOpenMarkdownImportPreview = async () => {
-    const preview = await readMarkdownForPreview();
-    if (preview) {
-      setMarkdownImportPreview(preview);
+    try {
+      const preview = await readMarkdownForPreview();
+      if (preview) {
+        setMarkdownImportPreview(preview);
+      }
+    } catch (error) {
+      showError(error, "Failed to read markdown file");
     }
   };
 

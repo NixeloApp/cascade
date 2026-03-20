@@ -123,7 +123,7 @@ export function CalendarView({
       : organizationId
         ? organizationScopedEvents
         : userScopedEvents;
-  const events: CalendarEvent[] = (rawEvents ?? []).map((rawEvent) => {
+  const events: NixeloCalendarEvent[] = (rawEvents ?? []).map((rawEvent) => {
     const base = toCalendarEvent(rawEvent);
     const scopeId =
       colorByScope === "workspace"
@@ -142,8 +142,8 @@ export function CalendarView({
     };
   });
 
-  function handleEventClick(event: CalendarEvent): void {
-    setSelectedEventId(extractConvexId(event as NixeloCalendarEvent));
+  function handleEventClick(event: NixeloCalendarEvent): void {
+    setSelectedEventId(extractConvexId(event));
   }
 
   function handleAddEvent(requestedDate?: Date): void {
@@ -151,7 +151,7 @@ export function CalendarView({
     setShowCreateModal(true);
   }
 
-  async function handleEventMove(event: CalendarEvent, requestedDate: Date): Promise<void> {
+  async function handleEventMove(event: NixeloCalendarEvent, requestedDate: Date): Promise<void> {
     const movedTimes = getMovedEventTimes(event, requestedDate);
     if (!movedTimes) {
       return;
@@ -159,7 +159,7 @@ export function CalendarView({
 
     try {
       await updateEvent({
-        id: extractConvexId(event as NixeloCalendarEvent),
+        id: extractConvexId(event),
         startTime: movedTimes.startTime,
         endTime: movedTimes.endTime,
       });

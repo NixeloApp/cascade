@@ -2016,6 +2016,7 @@ export const checkProjectIssueDuplicatesInternal = internalQuery({
             await ctx.db
               .query("issues")
               .withIndex("by_project_updated", (q) => q.eq("projectId", project._id))
+              .order("desc")
               .filter(notDeleted)
               .take(50)
           )
