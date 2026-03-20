@@ -45,6 +45,8 @@ type MeetingDetail = FunctionReturnType<typeof api.meetingBot.getRecording>;
 type MeetingMemory = FunctionReturnType<typeof api.meetingBot.listMemoryItems>;
 type MeetingSummary = NonNullable<NonNullable<MeetingDetail>["summary"]>;
 type MeetingParticipants = NonNullable<NonNullable<MeetingDetail>["participants"]>;
+type MeetingTranscript = NonNullable<NonNullable<MeetingDetail>["transcript"]>;
+type MeetingTranscriptSegment = MeetingTranscript["segments"][number];
 type ProjectOption = FunctionReturnType<typeof api.dashboard.getMyProjects>[number];
 type MeetingStatus = MeetingOverview["status"];
 type MeetingPlatform = MeetingOverview["meetingPlatform"];
@@ -195,6 +197,35 @@ function formatMeetingPlatform(platform: MeetingListItem["meetingPlatform"]): st
     default:
       return "Other";
   }
+}
+
+function formatTranscriptTimestamp(seconds: number) {
+  const totalSeconds = Math.max(0, Math.floor(seconds));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const remainingSeconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+  }
+
+  return `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
+}
+
+function hasTranscriptSegments(
+  segments: MeetingTranscript["segments"],
+): segments is [MeetingTranscriptSegment, ...MeetingTranscriptSegment[]] {
+  return segments.some((segment) => segment.text.trim().length > 0);
+}
+
+function matchesTranscriptSegment(segment: MeetingTranscriptSegment, query: string) {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) return true;
+
+  return (
+    segment.text.toLowerCase().includes(normalizedQuery) ||
+    segment.speaker?.toLowerCase().includes(normalizedQuery) === true
+  );
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -423,6 +454,105 @@ function MeetingMemorySection({ memory }: { memory: MeetingMemory | undefined })
         </MemoryCard>
       </div>
     </Section>
+  );
+}
+
+function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }) {
+  const [query, setQuery] = useState("");
+  const normalizedQuery = query.trim();
+  const filteredSegments = transcript.segments.filter(
+    (segment) =>
+      segment.text.trim().length > 0 && matchesTranscriptSegment(segment, normalizedQuery),
+  );
+
+  if (!hasTranscriptSegments(transcript.segments)) {
+    return (
+      <Card variant="soft" padding="md">
+        <Typography as="pre" variant="mono" color="secondary" className="whitespace-pre-wrap">
+          {transcript.fullText}
+        </Typography>
+      </Card>
+    );
+  }
+
+  return (
+    <Stack gap="sm">
+      <Card padding="sm">
+        <Stack gap="sm">
+          <Flex justify="between" align="center" gap="sm" className="flex-wrap">
+            <Typography variant="caption" color="secondary">
+              Segmented transcript with timestamps.
+            </Typography>
+            <Flex gap="xs" className="flex-wrap">
+              <Badge size="sm">{transcript.segments.length} segments</Badge>
+              {transcript.speakerCount && (
+                <Badge size="sm">{transcript.speakerCount} speakers</Badge>
+              )}
+              {normalizedQuery && <Badge size="sm">{filteredSegments.length} matches</Badge>}
+            </Flex>
+          </Flex>
+
+          <Input
+            variant="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Filter transcript segments"
+            aria-label="Search transcript"
+          />
+        </Stack>
+      </Card>
+
+      <Card variant="soft" padding="md" className="max-h-96 overflow-y-auto">
+        {filteredSegments.length === 0 ? (
+          <EmptyState
+            icon={FileText}
+            size="compact"
+            title="No transcript matches"
+            description="Try a different phrase or speaker name."
+          />
+        ) : (
+          <Stack as="ol" gap="sm" className="list-none">
+            {filteredSegments.map((segment, index) => (
+              <li key={`${segment.startTime}-${segment.endTime}-${index}`}>
+                <Card variant="soft" padding="sm" className="border border-ui-border">
+                  <Stack gap="xs">
+                    <Flex justify="between" align="start" gap="sm" className="flex-wrap">
+                      <Flex gap="xs" className="flex-wrap">
+                        <Badge size="sm">{formatTranscriptTimestamp(segment.startTime)}</Badge>
+                        <Badge size="sm">
+                          {formatTranscriptTimestamp(segment.startTime)} -{" "}
+                          {formatTranscriptTimestamp(segment.endTime)}
+                        </Badge>
+                        {segment.speaker && <Badge size="sm">{segment.speaker}</Badge>}
+                      </Flex>
+                    </Flex>
+                    <Typography variant="caption" color="secondary">
+                      {segment.text}
+                    </Typography>
+                  </Stack>
+                </Card>
+              </li>
+            ))}
+          </Stack>
+        )}
+      </Card>
+
+      <Card padding="sm">
+        <Stack gap="xs">
+          <Typography variant="caption" color="secondary">
+            Raw Transcript
+          </Typography>
+          <Typography
+            as="pre"
+            variant="mono"
+            color="secondary"
+            className="max-h-40 overflow-y-auto whitespace-pre-wrap"
+          >
+            {transcript.fullText}
+          </Typography>
+        </Stack>
+      </Card>
+    </Stack>
   );
 }
 
@@ -778,11 +908,7 @@ function SummarySections({
 
       {transcript && (
         <Section title="Transcript" gap="sm">
-          <Card variant="soft" padding="md" className="max-h-96 overflow-y-auto">
-            <Typography as="pre" variant="mono" color="secondary" className="whitespace-pre-wrap">
-              {transcript.fullText}
-            </Typography>
-          </Card>
+          <TranscriptSegmentList transcript={transcript} />
         </Section>
       )}
     </Stack>

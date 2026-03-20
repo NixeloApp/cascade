@@ -102,7 +102,24 @@ function buildDetail(overrides: Partial<MeetingDetail> = {}): MeetingDetail {
       _creationTime: 1_710_000_000_000,
       recordingId,
       fullText: "Full transcript text",
-      segments: [],
+      segments: [
+        {
+          startTime: 0,
+          endTime: 12,
+          speaker: "Alex",
+          speakerUserId: undefined,
+          text: "Thanks everyone for joining the weekly product review.",
+          confidence: 0.96,
+        },
+        {
+          startTime: 12,
+          endTime: 25,
+          speaker: "Priya",
+          speakerUserId: undefined,
+          text: "We aligned on the narrower launch scope and next implementation steps.",
+          confidence: 0.93,
+        },
+      ],
       language: "en",
       modelUsed: "test-model",
       processingTime: 1000,
@@ -318,6 +335,12 @@ describe("MeetingsWorkspace", () => {
     expect(screen.getAllByText("Update the spec").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText("Do we need Zoom support in v1?").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText("Alex").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText("Segmented transcript with timestamps.")).toBeInTheDocument();
+    expect(screen.getByText("0:00 - 0:12")).toBeInTheDocument();
+    expect(
+      screen.getByText("Thanks everyone for joining the weekly product review."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Raw Transcript")).toBeInTheDocument();
     expect(screen.getByText("Full transcript text")).toBeInTheDocument();
   });
 
@@ -393,6 +416,24 @@ describe("MeetingsWorkspace", () => {
     expect(
       screen.getByText("Matched discussion about scope and rollout timing."),
     ).toBeInTheDocument();
+  });
+
+  it("filters transcript segments within the selected meeting", async () => {
+    installMeetingQueryMock({});
+
+    render(<MeetingsWorkspace />);
+
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search transcript" }), {
+      target: { value: "narrower" },
+    });
+
+    expect(
+      screen.queryByText("Thanks everyone for joining the weekly product review."),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText("We aligned on the narrower launch scope and next implementation steps."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("1 matches")).toBeInTheDocument();
   });
 
   it("shows linked issue details for action items with created issues", async () => {
