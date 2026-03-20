@@ -154,6 +154,22 @@ export async function waitForModal(page: Page, modalSelector = '[role="dialog"]'
 }
 
 /**
+ * Wait for a Radix dialog or alert dialog to open and be visually ready.
+ * Unlike older screenshot harness helpers, this fails loudly when the overlay
+ * or dialog content never appears.
+ */
+export async function waitForDialogOpen(page: Page, timeout = 8000): Promise<Locator> {
+  await page.getByTestId(TEST_IDS.DIALOG.OVERLAY).waitFor({ state: "visible", timeout });
+
+  const dialog = page
+    .locator("[role='dialog'][data-state='open'], [role='alertdialog'][data-state='open']")
+    .first();
+  await dialog.waitFor({ state: "visible", timeout });
+  await waitForAnimation(page);
+  return dialog;
+}
+
+/**
  * Wait for toast notification to appear.
  */
 export async function waitForToast(

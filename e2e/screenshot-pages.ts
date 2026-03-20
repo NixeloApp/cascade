@@ -36,6 +36,7 @@ import {
   type SeedScreenshotResult,
   testUserService,
 } from "./utils/test-user-service";
+import { waitForDialogOpen } from "./utils/wait-helpers";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -862,27 +863,6 @@ async function dismissAllDialogs(page: Page): Promise<void> {
     await page.mouse.click(10, 10).catch(() => {});
     await waitForDialogOverlaysToClear(page);
   }
-}
-
-/**
- * Wait for a Radix Dialog to open after clicking a trigger.
- * Radix renders dialogs in a portal with an overlay. The overlay appears
- * before role="dialog" is applied to the content element. We wait for
- * the overlay first, then look for [data-state="open"] content.
- */
-async function waitForDialogOpen(page: Page, timeout = 8000): Promise<Locator> {
-  // Wait for overlay to appear (proves dialog is mounting)
-  await page
-    .getByTestId(TEST_IDS.DIALOG.OVERLAY)
-    .waitFor({ state: "visible", timeout })
-    .catch(() => {});
-
-  // Wait for the dialog or alert dialog content with data-state="open"
-  const dialog = page
-    .locator("[role='dialog'][data-state='open'], [role='alertdialog'][data-state='open']")
-    .first();
-  await dialog.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
-  return dialog;
 }
 
 async function openOmnibox(page: Page, trigger: Locator, dialog: Locator): Promise<void> {
