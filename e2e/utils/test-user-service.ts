@@ -34,11 +34,42 @@ export interface RbacProjectResult {
 export interface SeedScreenshotResult {
   success: boolean;
   orgSlug?: string;
+  projectId?: string;
   projectKey?: string;
   issueKeys?: string[];
   workspaceSlug?: string;
   teamSlug?: string;
+  inviteToken?: string;
+  portalToken?: string;
+  portalProjectId?: string;
+  unsubscribeTokens?: {
+    desktopDark?: string;
+    desktopLight?: string;
+    tabletLight?: string;
+    mobileLight?: string;
+  };
   error?: string;
+}
+
+export interface UpdateProjectWorkflowStateResult {
+  success: boolean;
+  projectId?: string;
+  error?: string;
+}
+
+export interface CheckProjectIssueDuplicatesResult {
+  success: boolean;
+  matchCount?: number;
+  issueKeys?: string[];
+  error?: string;
+}
+
+export interface E2EWorkflowState {
+  id: string;
+  name: string;
+  category: "todo" | "inprogress" | "done";
+  order: number;
+  wipLimit?: number;
 }
 
 export interface GoogleOAuthLoginResult {
@@ -367,6 +398,73 @@ export class TestUserService {
       return await response.json();
     } catch (error) {
       console.warn(`  ⚠️ Failed to seed screenshot data:`, error);
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Update a seeded project's workflow state for interactive screenshot capture.
+   */
+  async updateProjectWorkflowState(
+    orgSlug: string,
+    projectKey: string,
+    stateId: string,
+    wipLimit: number | null,
+  ): Promise<UpdateProjectWorkflowStateResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.updateProjectWorkflowState, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, projectKey, stateId, wipLimit }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(
+        `  ⚠️ Failed to update workflow state ${stateId} for ${projectKey} in ${orgSlug}:`,
+        error,
+      );
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Replace a seeded project's workflow states for interactive screenshot capture.
+   */
+  async replaceProjectWorkflowStates(
+    orgSlug: string,
+    projectKey: string,
+    workflowStates: E2EWorkflowState[],
+  ): Promise<UpdateProjectWorkflowStateResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.replaceProjectWorkflowStates, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, projectKey, workflowStates }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(`  ⚠️ Failed to replace workflow states for ${projectKey} in ${orgSlug}:`, error);
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Check whether duplicate-detection search is ready for a seeded project.
+   */
+  async checkProjectIssueDuplicates(
+    orgSlug: string,
+    projectKey: string,
+    query: string,
+  ): Promise<CheckProjectIssueDuplicatesResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.checkProjectIssueDuplicates, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ orgSlug, projectKey, query }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(`  ⚠️ Failed to check duplicate matches for ${projectKey} in ${orgSlug}:`, error);
       return { success: false, error: String(error) };
     }
   }

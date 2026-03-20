@@ -1,6 +1,7 @@
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 import type * as React from "react";
 
+import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "./Button";
 import { Flex } from "./Flex";
@@ -14,6 +15,8 @@ interface AlertDialogProps {
   open: boolean;
   /** Callback when open state changes */
   onOpenChange: (open: boolean) => void;
+  /** Optional trigger element rendered as the Radix trigger */
+  trigger?: React.ReactNode;
   /** Dialog title (required for accessibility) */
   title: string;
   /** Dialog description (required for accessibility) */
@@ -32,6 +35,8 @@ interface AlertDialogProps {
   onAction: () => void;
   /** Whether action is in progress */
   isLoading?: boolean;
+  /** Whether action is disabled */
+  actionDisabled?: boolean;
   /** Test ID for the dialog */
   "data-testid"?: string;
 }
@@ -56,6 +61,7 @@ interface AlertDialogProps {
 function AlertDialog({
   open,
   onOpenChange,
+  trigger,
   title,
   description,
   children,
@@ -65,12 +71,19 @@ function AlertDialog({
   actionVariant = "primary",
   onAction,
   isLoading = false,
+  actionDisabled = false,
   "data-testid": testId,
 }: AlertDialogProps) {
   return (
     <AlertDialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+      {trigger ? (
+        <AlertDialogPrimitive.Trigger asChild>{trigger}</AlertDialogPrimitive.Trigger>
+      ) : null}
       <AlertDialogPrimitive.Portal>
-        <AlertDialogPrimitive.Overlay className="fixed inset-0 z-50 bg-ui-bg-overlay data-[state=open]:animate-fade-in data-[state=closed]:opacity-0 transition-opacity duration-fast" />
+        <AlertDialogPrimitive.Overlay
+          data-testid={TEST_IDS.DIALOG.OVERLAY}
+          className="fixed inset-0 z-50 bg-ui-bg-overlay data-[state=open]:animate-fade-in data-[state=closed]:opacity-0 transition-opacity duration-fast"
+        />
         <AlertDialogPrimitive.Content
           data-testid={testId}
           className={cn(
@@ -101,7 +114,7 @@ function AlertDialog({
             </AlertDialogPrimitive.Cancel>
             <AlertDialogPrimitive.Action
               onClick={onAction}
-              disabled={isLoading}
+              disabled={isLoading || actionDisabled}
               className={cn(
                 buttonVariants({ variant: actionVariant === "danger" ? "danger" : "primary" }),
               )}

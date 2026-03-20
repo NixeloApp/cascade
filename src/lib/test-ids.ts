@@ -178,8 +178,12 @@ export const TEST_IDS = {
   CALENDAR: {
     /** @see src/components/Calendar/shadcn-calendar/calendar-event.tsx */
     EVENT_ITEM: "calendar-event-item",
+    /** @see src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx */
+    DAY_CELL: "calendar-day-cell",
     /** @see src/components/Calendar/EventDetailsModal.tsx */
     EVENT_DETAILS_MODAL: "calendar-event-details-modal",
+    /** @see src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx */
+    QUICK_ADD_DAY: "calendar-quick-add-day",
     /** @see src/components/Calendar/shadcn-calendar/header/actions/calendar-header-actions-mode.tsx */
     MODE_DAY: "calendar-mode-day",
     MODE_WEEK: "calendar-mode-week",
@@ -219,6 +223,23 @@ export const TEST_IDS = {
     CARD: "sprint-card",
     /** @see src/components/SprintCard.tsx */
     NAME: "sprint-name",
+  },
+
+  ROADMAP: {
+    /** @see src/components/RoadmapView.tsx */
+    TIMELINE_CANVAS: "roadmap-timeline-canvas",
+    /** @see src/components/RoadmapView.tsx */
+    ISSUE_HEADER: "roadmap-issue-header",
+    /** @see src/components/RoadmapView.tsx */
+    ISSUE_COLUMN: "roadmap-issue-column",
+    /** @see src/components/RoadmapView.tsx */
+    DEPENDENCY_PANEL: "roadmap-dependency-panel",
+    /** @see src/components/RoadmapView.tsx */
+    TODAY_MARKER_HEADER: "roadmap-today-marker-header",
+    /** @see src/components/RoadmapView.tsx */
+    TODAY_MARKER_BODY: "roadmap-today-marker-body",
+    /** @see src/components/RoadmapView.tsx */
+    RANGE_LABEL: "roadmap-range-label",
   },
 
   // ============================================================

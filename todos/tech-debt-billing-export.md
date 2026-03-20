@@ -1,20 +1,17 @@
 # Tech Debt: Billing Report Export
 
 > **Priority:** P3
-> **Status:** Partial (CSV done, PDF deferred)
-> **File:** `src/components/TimeTracker/BillingReport.tsx:126`
+> **Status:** Partial
+> **File:** `src/components/TimeTracker/BillingReport.tsx`
 
-## Description
+Only the unfinished delta remains here.
 
-Implement CSV/PDF export functionality for billing reports.
+## Remaining Work
 
-```typescript
-// TODO: Implement CSV/PDF export functionality
-```
+- [ ] **Implement PDF export** — CSV export is shipped, but PDF export still needs either a `jsPDF` path or server-side generation.
 
-## Acceptance Criteria
+## Already Done
 
 - [x] Wire existing Export button to real export flows
 - [x] Implement CSV export
-- [ ] Implement PDF export (deferred — needs jsPDF or server-side generation)
-- [x] Handle large datasets gracefully (streaming CSV via Blob)
+- [x] Handle large datasets gracefully via Blob-based CSV generation

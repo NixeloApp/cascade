@@ -131,9 +131,8 @@ export function DocumentTree({
       {favorites && favorites.length > 0 && (
         <div className="mb-2">
           <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start px-2 py-1.5 text-ui-text-secondary"
+            chrome="documentTreeSection"
+            chromeSize="documentTreeSection"
             onClick={() => setFavoritesExpanded((prev) => !prev)}
             aria-expanded={favoritesExpanded}
             aria-controls="favorites-documents-list"
@@ -201,9 +200,8 @@ export function DocumentTree({
       {archived && archived.length > 0 && (
         <div className="mt-4 border-t border-ui-border">
           <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start px-2 py-1.5 text-ui-text-tertiary"
+            chrome="documentTreeSectionMuted"
+            chromeSize="documentTreeSection"
             onClick={() => setArchivedExpanded((prev) => !prev)}
             aria-expanded={archivedExpanded}
             aria-controls="archived-documents-list"
@@ -286,10 +284,9 @@ function ExpandToggle({
   }
   return (
     <Button
-      variant="ghost"
-      size="icon"
+      chrome="documentTreeToggle"
+      chromeSize="documentTreeToggle"
       onClick={onToggle}
-      className="h-5 w-5 p-0.5"
       aria-label={`${isExpanded ? "Collapse" : "Expand"} ${title}`}
       aria-expanded={isExpanded}
     >

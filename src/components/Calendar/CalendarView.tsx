@@ -1,9 +1,19 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { endOfDay, endOfMonth, endOfWeek, startOfDay, startOfMonth, startOfWeek } from "date-fns";
+import {
+  endOfDay,
+  endOfMonth,
+  endOfWeek,
+  isSameDay,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+} from "date-fns";
 import { useState } from "react";
 import { Flex } from "@/components/ui/Flex";
-import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { formatDate } from "@/lib/formatting";
+import { showError, showSuccess } from "@/lib/toast";
 import { CreateEventModal } from "./CreateEventModal";
 import { type EventColor, PALETTE_COLORS } from "./calendar-colors";
 import { EventDetailsModal } from "./EventDetailsModal";
@@ -59,7 +69,9 @@ export function CalendarView({
   const [mode, setMode] = useState<Mode>("week");
   const [date, setDate] = useState(new Date());
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createEventDate, setCreateEventDate] = useState(new Date());
   const [selectedEventId, setSelectedEventId] = useState<Id<"calendarEvents"> | null>(null);
+  const { mutate: updateEvent } = useAuthenticatedMutation(api.calendarEvents.update);
 
   const { startDate, endDate } = getDateRange(date, mode);
 
@@ -111,7 +123,7 @@ export function CalendarView({
       : organizationId
         ? organizationScopedEvents
         : userScopedEvents;
-  const events: CalendarEvent[] = (rawEvents ?? []).map((rawEvent) => {
+  const events: NixeloCalendarEvent[] = (rawEvents ?? []).map((rawEvent) => {
     const base = toCalendarEvent(rawEvent);
     const scopeId =
       colorByScope === "workspace"
@@ -134,6 +146,34 @@ export function CalendarView({
     setSelectedEventId(extractConvexId(event as NixeloCalendarEvent));
   }
 
+  function handleAddEvent(requestedDate?: Date): void {
+    setCreateEventDate(requestedDate ?? date);
+    setShowCreateModal(true);
+  }
+
+  async function handleEventMove(event: CalendarEvent, requestedDate: Date): Promise<void> {
+    const movedTimes = getMovedEventTimes(event, requestedDate);
+    if (!movedTimes) {
+      return;
+    }
+
+    try {
+      await updateEvent({
+        id: extractConvexId(event as NixeloCalendarEvent),
+        startTime: movedTimes.startTime,
+        endTime: movedTimes.endTime,
+      });
+      showSuccess(
+        `Event moved to ${formatDate(movedTimes.startTime, {
+          month: "short",
+          day: "numeric",
+        })}`,
+      );
+    } catch (error) {
+      showError(error, "Failed to move event");
+    }
+  }
+
   return (
     <Flex direction="column" className="h-full" data-calendar>
       <ShadcnCalendar
@@ -142,14 +182,15 @@ export function CalendarView({
         setMode={setMode}
         date={date}
         setDate={setDate}
-        onAddEvent={() => setShowCreateModal(true)}
+        onAddEvent={handleAddEvent}
+        onEventMove={handleEventMove}
         onEventClick={handleEventClick}
       />
 
       <CreateEventModal
         open={showCreateModal}
         onOpenChange={setShowCreateModal}
-        defaultDate={date}
+        defaultDate={createEventDate}
         projectId={projectId}
       />
 
@@ -162,6 +203,38 @@ export function CalendarView({
       )}
     </Flex>
   );
+}
+
+export function getMovedEventTimes(
+  event: CalendarEvent,
+  requestedDate: Date,
+): { startTime: number; endTime: number } | null {
+  if (isSameDay(event.start, requestedDate)) {
+    return null;
+  }
+
+  // Compute calendar-day delta to preserve local wall-clock times across DST boundaries
+  const requestedDay = Date.UTC(
+    requestedDate.getFullYear(),
+    requestedDate.getMonth(),
+    requestedDate.getDate(),
+  );
+  const currentDay = Date.UTC(
+    event.start.getFullYear(),
+    event.start.getMonth(),
+    event.start.getDate(),
+  );
+  const dayDelta = Math.round((requestedDay - currentDay) / 86_400_000);
+
+  const nextStart = new Date(event.start);
+  nextStart.setDate(nextStart.getDate() + dayDelta);
+  const nextEnd = new Date(event.end);
+  nextEnd.setDate(nextEnd.getDate() + dayDelta);
+
+  return {
+    startTime: nextStart.getTime(),
+    endTime: nextEnd.getTime(),
+  };
 }
 
 function pickScopeColor(scopeId: string): EventColor {

@@ -105,9 +105,7 @@ function WorkspaceSettings() {
         {/* General Settings */}
         <Card variant="elevated" padding="lg">
           <Stack gap="lg">
-            <Typography variant="h3" className="font-semibold">
-              General
-            </Typography>
+            <Typography variant="h3">General</Typography>
 
             {/* Workspace Icon */}
             <div>
@@ -117,9 +115,8 @@ function WorkspaceSettings() {
                   <Button
                     key={emoji}
                     variant={icon === emoji ? "primary" : "outline"}
-                    size="sm"
+                    size="workspaceIcon"
                     onClick={() => setIcon(emoji)}
-                    className="w-10 h-10 text-lg"
                     aria-label={`Select ${emoji} icon`}
                   >
                     {emoji}
@@ -158,9 +155,7 @@ function WorkspaceSettings() {
         {/* Visibility & Sharing Settings */}
         <Card variant="elevated" padding="lg">
           <Stack gap="lg">
-            <Typography variant="h3" className="font-semibold">
-              Visibility & Sharing
-            </Typography>
+            <Typography variant="h3">Visibility & Sharing</Typography>
 
             {/* Default Project Visibility */}
             <Flex align="center" justify="between">

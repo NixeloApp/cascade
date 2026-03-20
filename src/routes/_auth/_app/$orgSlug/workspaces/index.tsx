@@ -103,17 +103,13 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
             <Stack gap="sm" className="lg:col-span-5">
               <Grid cols={2} gap="sm">
                 <div className="border border-ui-border-secondary/70 bg-ui-bg-soft/90 p-3">
-                  <Typography variant="caption" className="uppercase tracking-wide">
-                    Teams
-                  </Typography>
+                  <Typography variant="metricLabel">Teams</Typography>
                   <Typography variant="h5" className="mt-2">
                     {workspace.teamCount}
                   </Typography>
                 </div>
                 <div className="border border-ui-border-secondary/70 bg-ui-bg-soft/90 p-3">
-                  <Typography variant="caption" className="uppercase tracking-wide">
-                    Projects
-                  </Typography>
+                  <Typography variant="metricLabel">Projects</Typography>
                   <Typography variant="h5" className="mt-2">
                     {workspace.projectCount}
                   </Typography>
@@ -164,17 +160,13 @@ function WorkspaceCard({ orgSlug, workspace, compact = false }: WorkspaceCardPro
 
           <Grid cols={2} gap="sm">
             <div className="border border-ui-border-secondary/70 bg-ui-bg-soft/90 p-3">
-              <Typography variant="caption" className="uppercase tracking-wide">
-                Teams
-              </Typography>
+              <Typography variant="metricLabel">Teams</Typography>
               <Typography variant="h5" className="mt-2">
                 {workspace.teamCount}
               </Typography>
             </div>
             <div className="border border-ui-border-secondary/70 bg-ui-bg-soft/90 p-3">
-              <Typography variant="caption" className="uppercase tracking-wide">
-                Projects
-              </Typography>
+              <Typography variant="metricLabel">Projects</Typography>
               <Typography variant="h5" className="mt-2">
                 {workspace.projectCount}
               </Typography>

@@ -1,15 +1,48 @@
 import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
+import type { Value } from "platejs";
+import { Plate, usePlateEditor } from "platejs/react";
 import type { PropsWithChildren } from "react";
 import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { render, screen } from "@/test/custom-render";
+import {
+  getEditorPlugins,
+  getInitialValue,
+  isEmptyValue,
+  proseMirrorSnapshotToValue,
+} from "@/lib/plate/editor";
+import { markdownToValue, readMarkdownForPreview } from "@/lib/plate/markdown";
+import { showSuccess } from "@/lib/toast";
+import { render, screen, waitFor } from "@/test/custom-render";
 import { PlateEditor } from "./PlateEditor";
 
 vi.mock("@/hooks/useConvexHelpers", () => ({
   useAuthenticatedQuery: vi.fn(),
   useAuthenticatedMutation: vi.fn(),
+}));
+
+vi.mock("platejs/react", () => ({
+  Plate: vi.fn(),
+  usePlateEditor: vi.fn(),
+}));
+
+vi.mock("@/components/ui/PlateRichTextContent", () => ({
+  PlateRichTextContent: ({ "data-testid": testId }: { "data-testid"?: string }) => (
+    <div data-testid={testId ?? "plate-rich-text-content"} />
+  ),
+}));
+
+vi.mock("@/lib/plate/editor", () => ({
+  getEditorPlugins: vi.fn(),
+  getInitialValue: vi.fn(),
+  isEmptyValue: vi.fn(),
+  proseMirrorSnapshotToValue: vi.fn(),
+}));
+
+vi.mock("@/lib/plate/markdown", () => ({
+  markdownToValue: vi.fn(),
+  readMarkdownForPreview: vi.fn(),
 }));
 
 vi.mock("@/lib/toast", () => ({
@@ -18,7 +51,11 @@ vi.mock("@/lib/toast", () => ({
 }));
 
 vi.mock("./Documents", () => ({
-  DocumentHeader: () => null,
+  DocumentHeader: ({ onImportMarkdown }: { onImportMarkdown: () => Promise<void> }) => (
+    <button type="button" onClick={() => void onImportMarkdown()}>
+      Import markdown
+    </button>
+  ),
   DocumentSidebar: () => null,
 }));
 
@@ -44,9 +81,31 @@ vi.mock("./VersionHistory", () => ({
 
 const mockUseAuthenticatedQuery = useAuthenticatedQuery as Mock;
 const mockUseAuthenticatedMutation = useAuthenticatedMutation as Mock;
+const mockPlate = vi.mocked(Plate);
+const mockUsePlateEditor = vi.mocked(usePlateEditor);
+const mockGetEditorPlugins = vi.mocked(getEditorPlugins);
+const mockGetInitialValue = vi.mocked(getInitialValue);
+const mockIsEmptyValue = vi.mocked(isEmptyValue);
+const mockProseMirrorSnapshotToValue = vi.mocked(proseMirrorSnapshotToValue);
+const mockMarkdownToValue = vi.mocked(markdownToValue);
+const mockReadMarkdownForPreview = vi.mocked(readMarkdownForPreview);
+const mockShowSuccess = vi.mocked(showSuccess);
 const mockMutate = vi.fn();
 
 const documentId = "document-1" as Id<"documents">;
+const initialValue: Value = [{ type: "p", children: [{ text: "" }] }];
+const importedValue: Value = [{ type: "p", children: [{ text: "Imported content" }] }];
+const loadedDocument = {
+  _id: documentId,
+  _creationTime: Date.now(),
+  title: "Spec",
+  updatedAt: Date.now(),
+  creatorName: "Alex",
+  isOwner: true,
+  isPublic: false,
+  projectId: "project-1",
+  organizationId: "org-1",
+} as const;
 
 function mockQueryResults(results: readonly unknown[]) {
   let index = 0;
@@ -61,6 +120,24 @@ describe("PlateEditor", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseAuthenticatedMutation.mockReturnValue({ mutate: mockMutate });
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: vi.fn().mockImplementation(() => ({
+        matches: false,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    });
+    mockPlate.mockImplementation(({ children }: PropsWithChildren) => <>{children}</>);
+    mockUsePlateEditor.mockReturnValue({ id: "mock-editor" } as NonNullable<
+      ReturnType<typeof usePlateEditor>
+    >);
+    mockGetEditorPlugins.mockReturnValue([]);
+    mockGetInitialValue.mockReturnValue(initialValue);
+    mockIsEmptyValue.mockReturnValue(false);
+    mockProseMirrorSnapshotToValue.mockReturnValue(initialValue);
+    mockMarkdownToValue.mockReturnValue(importedValue);
+    mockReadMarkdownForPreview.mockResolvedValue(null);
   });
 
   it("renders the loading state while document data is unresolved", () => {
@@ -96,5 +173,31 @@ describe("PlateEditor", () => {
     await user.click(screen.getByRole("button", { name: "Go back" }));
 
     expect(historyBackSpy).toHaveBeenCalledOnce();
+  });
+
+  it("opens the markdown import preview and applies the imported content on confirm", async () => {
+    const user = userEvent.setup();
+    const preview = {
+      markdown: "# Imported\n\n- Bullet",
+      filename: "import.md",
+    };
+    mockReadMarkdownForPreview.mockResolvedValue(preview);
+    mockQueryResults([loadedDocument, false, false, undefined, "user-1", 0, []]);
+
+    render(<PlateEditor documentId={documentId} />);
+
+    await user.click(screen.getByRole("button", { name: "Import markdown" }));
+
+    expect(await screen.findByText("Preview Markdown Import")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Import & Replace Content" }));
+
+    await waitFor(() => {
+      expect(mockMarkdownToValue).toHaveBeenCalledWith(preview.markdown);
+    });
+    expect(mockShowSuccess).toHaveBeenCalledWith("Imported import.md");
+    await waitFor(() => {
+      expect(screen.queryByText("Preview Markdown Import")).not.toBeInTheDocument();
+    });
   });
 });

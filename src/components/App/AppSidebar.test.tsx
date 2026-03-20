@@ -1,6 +1,6 @@
 import { useLocation } from "@tanstack/react-router";
 import userEvent from "@testing-library/user-event";
-import { useQuery } from "convex/react";
+import { usePaginatedQuery, useQuery } from "convex/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import { render, screen, waitFor } from "@/test/custom-render";
@@ -29,6 +29,7 @@ vi.mock("@tanstack/react-router", async () => {
 
 vi.mock("convex/react", () => ({
   useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
+  usePaginatedQuery: vi.fn(),
   useQuery: vi.fn(),
   useMutation: vi.fn(),
 }));
@@ -58,7 +59,11 @@ vi.mock("@/hooks/useSidebarState", () => ({
 vi.mock("@convex/_generated/api", () => ({
   api: {
     users: { isOrganizationAdmin: "users.isOrganizationAdmin", getCurrent: "users.getCurrent" },
-    documents: { listForSidebar: "documents.listForSidebar", create: "documents.create" },
+    documents: {
+      listForSidebar: "documents.listForSidebar",
+      listFavorites: "documents.listFavorites",
+      create: "documents.create",
+    },
     workspaces: { listForSidebar: "workspaces.listForSidebar", create: "workspaces.create" },
     teams: { listForSidebar: "teams.listForSidebar" },
     dashboard: { getMyProjects: "dashboard.getMyProjects" },
@@ -79,6 +84,8 @@ const mockUseQueryImplementation = (query: any) => {
   switch (query) {
     case "documents.listForSidebar":
       return { documents: [] };
+    case "documents.listFavorites":
+      return [];
     case "workspaces.listForSidebar":
     case "teams.listForSidebar":
     case "dashboard.getMyProjects":
@@ -96,6 +103,12 @@ describe("AppSidebar Accessibility", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (useQuery as any).mockImplementation(mockUseQueryImplementation);
+    (usePaginatedQuery as any).mockReturnValue({
+      results: [],
+      status: "Exhausted",
+      loadMore: vi.fn(),
+      isLoading: false,
+    });
     vi.mocked(useSidebarState).mockReturnValue({
       isCollapsed: false,
       isMobileOpen: false,
@@ -218,6 +231,48 @@ describe("AppSidebar Accessibility", () => {
     expect(documentsLink).toHaveAttribute("aria-label", "Documents");
   });
 
+  it("renders favorite documents ahead of recent sidebar documents without duplication", () => {
+    (useLocation as any).mockReturnValue({ pathname: "/demo-org/documents/fav-doc" });
+    (useQuery as any).mockImplementation((query: string) => {
+      if (query === "documents.listFavorites") {
+        return [
+          {
+            _id: "fav-doc",
+            title: "Project Requirements",
+            isPublic: false,
+            createdBy: "user-1",
+            updatedAt: Date.now(),
+            organizationId: "org1",
+            favoritedAt: Date.now(),
+          },
+        ];
+      }
+      if (query === "documents.listForSidebar") {
+        return {
+          documents: [
+            { _id: "fav-doc", title: "Project Requirements", isPublic: false },
+            { _id: "recent-doc", title: "Sprint Retrospective Notes", isPublic: false },
+          ],
+        };
+      }
+      if (query === "workspaces.listForSidebar" || query === "teams.listForSidebar") return [];
+      if (query === "users.isOrganizationAdmin") return false;
+      return undefined;
+    });
+
+    render(<AppSidebar />);
+
+    expect(screen.getByText("Favorites")).toBeInTheDocument();
+
+    const favoriteLink = screen.getByRole("link", { name: "Project Requirements" });
+    expect(favoriteLink).toHaveAttribute("aria-current", "page");
+
+    const recentLink = screen.getByRole("link", { name: "Sprint Retrospective Notes" });
+    expect(recentLink).toBeInTheDocument();
+
+    expect(screen.getAllByRole("link", { name: "Project Requirements" })).toHaveLength(1);
+  });
+
   it("shows document search and show-all affordance when document count exceeds sidebar cap", async () => {
     const user = userEvent.setup();
     (useLocation as any).mockReturnValue({ pathname: "/demo-org/dashboard" });
@@ -273,6 +328,43 @@ describe("AppSidebar Accessibility", () => {
     await user.type(screen.getByLabelText("Search workspaces"), "26");
 
     expect(screen.getByRole("link", { name: "Workspace 26" })).toBeInTheDocument();
+  });
+
+  it("auto-expands the active workspace and team branch to reveal the project tree", () => {
+    (useLocation as any).mockReturnValue({
+      pathname: "/demo-org/workspaces/product/teams/engineering/board",
+    });
+    (useQuery as any).mockImplementation((query: string) => {
+      if (query === "documents.listForSidebar") return { documents: [] };
+      if (query === "documents.listFavorites") return [];
+      if (query === "workspaces.listForSidebar") {
+        return [{ _id: "workspace-1", name: "Product", slug: "product" }];
+      }
+      if (query === "teams.listForSidebar") {
+        return [
+          {
+            _id: "team-1",
+            name: "Engineering",
+            slug: "engineering",
+            workspaceId: "workspace-1",
+          },
+        ];
+      }
+      if (query === "users.isOrganizationAdmin") return false;
+      return undefined;
+    });
+    (usePaginatedQuery as any).mockReturnValue({
+      results: [{ _id: "project-1", key: "DEMO", name: "Demo Project" }],
+      status: "Exhausted",
+      loadMore: vi.fn(),
+      isLoading: false,
+    });
+
+    render(<AppSidebar />);
+
+    expect(screen.getByRole("button", { name: "Collapse Product" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Collapse Engineering" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "DEMO - Demo Project" })).toBeInTheDocument();
   });
 
   describe("AppSidebar Mobile Behavior", () => {

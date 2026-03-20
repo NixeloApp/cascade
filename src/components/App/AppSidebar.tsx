@@ -11,7 +11,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { Link, type LinkProps, useLocation, useNavigate } from "@tanstack/react-router";
 import type { FunctionReturnType } from "convex/server";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CreateTeamModal } from "@/components/CreateTeamModal";
 import { SidebarTeamItem } from "@/components/Sidebar/SidebarTeamItem";
 import { Badge } from "@/components/ui/Badge";
@@ -48,6 +48,7 @@ import {
   Server,
   Settings,
   ShieldCheck,
+  Star,
   Users,
   X,
 } from "@/lib/icons";
@@ -62,6 +63,7 @@ import { cn } from "@/lib/utils";
 type SidebarWorkspace = FunctionReturnType<typeof api.workspaces.listForSidebar>[number];
 type SidebarTeam = FunctionReturnType<typeof api.teams.listForSidebar>[number];
 type SidebarDocument = FunctionReturnType<typeof api.documents.listForSidebar>["documents"][number];
+type SidebarFavoriteDocument = FunctionReturnType<typeof api.documents.listFavorites>[number];
 
 const DOCUMENT_DISPLAY_LIMIT = 10;
 const WORKSPACE_DISPLAY_LIMIT = 25;
@@ -257,6 +259,7 @@ interface WorkspaceNavItemProps {
 }
 
 interface DocumentsSectionContentProps {
+  favorites: SidebarFavoriteDocument[];
   documents: SidebarDocument[];
   totalCount: number;
   showSearch: boolean;
@@ -268,6 +271,7 @@ interface DocumentsSectionContentProps {
 }
 
 function DocumentsSectionContent({
+  favorites,
   documents,
   totalCount,
   showSearch,
@@ -290,6 +294,29 @@ function DocumentsSectionContent({
         />
       </li>
       <li className="h-px bg-ui-border my-1 mx-2 list-none" aria-hidden="true" />
+      {favorites.length > 0 && (
+        <>
+          <li className="list-none px-3 pt-1">
+            <Flex align="center" gap="xs" className="text-ui-text-tertiary">
+              <Star className="h-3.5 w-3.5 fill-status-warning text-status-warning" />
+              <Typography variant="caption">Favorites</Typography>
+            </Flex>
+          </li>
+          {favorites.map((doc) => (
+            <li key={doc._id} className="list-none">
+              <NavSubItem
+                to={ROUTES.documents.detail.path}
+                params={{ orgSlug, id: doc._id }}
+                label={doc.title || "Untitled"}
+                isActive={location.pathname.includes(`/documents/${doc._id}`)}
+                onClick={onNavClick}
+                icon={Star}
+              />
+            </li>
+          ))}
+          <li className="h-px bg-ui-border my-1 mx-2 list-none" aria-hidden="true" />
+        </>
+      )}
       {showSearch && (
         <li className="list-none">
           <Card variant="ghost" padding="xs">
@@ -341,6 +368,8 @@ function WorkspaceNavItem({
   onCreateTeam,
   location,
 }: WorkspaceNavItemProps) {
+  const shouldShowTeams = isExpanded;
+
   return (
     <li className="ml-2 group list-none">
       <Flex align="center" gap="xs">
@@ -348,10 +377,14 @@ function WorkspaceNavItem({
           variant="ghost"
           size="compact"
           onClick={() => onToggleWorkspace(workspace.slug)}
-          aria-expanded={isExpanded}
-          aria-label={isExpanded ? `Collapse ${workspace.name}` : `Expand ${workspace.name}`}
+          aria-expanded={shouldShowTeams}
+          aria-label={shouldShowTeams ? `Collapse ${workspace.name}` : `Expand ${workspace.name}`}
         >
-          {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          {shouldShowTeams ? (
+            <ChevronDown className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
         </IconButton>
         <NavSubItem
           to={ROUTES.workspaces.detail.path}
@@ -374,7 +407,7 @@ function WorkspaceNavItem({
         </IconButton>
       </Flex>
 
-      {isExpanded && (
+      {shouldShowTeams && (
         <ul className="list-none">
           {teams.map((team: SidebarTeam) => (
             <SidebarTeamItem
@@ -427,18 +460,45 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
     limit: 11,
     organizationId,
   });
+  const favoritesResult = useAuthenticatedQuery(api.documents.listFavorites, {
+    limit: 5,
+    organizationId,
+  });
   const documents = documentsResult?.documents;
+  const favorites = favoritesResult ?? [];
   const workspaces = useAuthenticatedQuery(api.workspaces.listForSidebar, { organizationId });
   const teams = useAuthenticatedQuery(api.teams.listForSidebar, { organizationId });
 
   const allDocuments = documents ?? [];
+  const favoriteDocumentIds = new Set(favorites.map((favorite) => favorite._id));
   const allWorkspaces = workspaces ?? [];
   const showDocumentSearch = allDocuments.length > DOCUMENT_DISPLAY_LIMIT;
   const showWorkspaceSearch = allWorkspaces.length > WORKSPACE_DISPLAY_LIMIT;
 
-  const filteredDocuments = showDocumentSearch
-    ? filterItems(allDocuments, documentSearch, "title")
-    : allDocuments;
+  // Auto-expand the workspace tree when navigating into a workspace route.
+  // Only seeds on transition (inactive -> active), so the user can still collapse manually.
+  const prevActiveWorkspaceRef = useRef<string | null>(null);
+  useEffect(() => {
+    const activeSlug = allWorkspaces.find((ws) => {
+      const base = ROUTES.workspaces.detail.build(orgSlug, ws.slug);
+      return location.pathname === base || location.pathname.startsWith(`${base}/`);
+    })?.slug;
+
+    if (activeSlug && prevActiveWorkspaceRef.current !== activeSlug) {
+      setExpandedWorkspaces((prev) => {
+        if (prev.has(activeSlug)) return prev;
+        const next = new Set(prev);
+        next.add(activeSlug);
+        return next;
+      });
+    }
+    prevActiveWorkspaceRef.current = activeSlug ?? null;
+  }, [location.pathname, allWorkspaces, orgSlug]);
+
+  const filteredFavorites = filterItems(favorites, documentSearch, "title");
+  const filteredDocuments = (
+    showDocumentSearch ? filterItems(allDocuments, documentSearch, "title") : allDocuments
+  ).filter((doc) => !favoriteDocumentIds.has(doc._id));
   const displayedDocuments = filteredDocuments.slice(0, DOCUMENT_DISPLAY_LIMIT);
 
   const filteredWorkspaces = showWorkspaceSearch
@@ -510,7 +570,9 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
       {isMobileOpen && (
         <Button
           variant="unstyled"
-          className="fixed inset-0 bg-ui-bg-overlay z-40 lg:hidden cursor-default"
+          chrome="backdrop"
+          chromeSize="backdrop"
+          className="z-40 lg:hidden cursor-default"
           onClick={closeMobile}
           onKeyDown={(e) => e.key === "Escape" && closeMobile()}
           aria-label="Close sidebar"
@@ -546,17 +608,13 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                             )}
                           >
                             <Flex align="center" justify="center" className="h-full">
-                              <Typography variant="small" className="font-semibold text-current">
+                              <Typography variant="sidebarOrgInitial">
                                 {organizationName.charAt(0).toUpperCase()}
                               </Typography>
                             </Flex>
                           </div>
                           <div className="min-w-0">
-                            <Typography
-                              variant="caption"
-                              color="tertiary"
-                              className="uppercase tracking-wider"
-                            >
+                            <Typography variant="eyebrow" color="tertiary">
                               Workspace
                             </Typography>
                             <Typography variant="large" className="max-w-36 truncate">
@@ -670,11 +728,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                   {!showCollapsed && (
                     <li className="list-none">
                       <div className="p-1 mb-3 mt-5">
-                        <Badge
-                          variant="outline"
-                          shape="pill"
-                          className="bg-ui-bg-elevated/80 font-semibold uppercase tracking-wider shadow-soft"
-                        >
+                        <Badge variant="sidebarSection" shape="pill">
                           Products
                         </Badge>
                       </div>
@@ -750,6 +804,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     data-tour="nav-documents"
                   >
                     <DocumentsSectionContent
+                      favorites={filteredFavorites}
                       documents={displayedDocuments}
                       totalCount={allDocuments.length}
                       showSearch={showDocumentSearch}

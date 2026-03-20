@@ -21,6 +21,7 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import type { CardDisplayOptions } from "@/lib/card-display-utils";
 import { ANIMATION } from "@/lib/constants";
+import type { UserSummary } from "@/lib/entitySummaries";
 import type { IssuePriority, IssueType } from "@/lib/issue-utils";
 import { getWorkflowCategoryColor } from "@/lib/issue-utils";
 import { createColumnData, type IssueCardData, isIssueCardData } from "@/lib/kanban-dnd";
@@ -39,11 +40,7 @@ interface Issue {
   priority: IssuePriority;
   type: IssueType;
   order: number;
-  assignee?: {
-    _id: Id<"users">;
-    name: string;
-    image?: string;
-  } | null;
+  assignee?: UserSummary | null;
   labels: LabelInfo[];
   updatedAt: number;
 }

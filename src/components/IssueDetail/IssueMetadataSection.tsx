@@ -9,6 +9,8 @@
 import type { Id } from "@convex/_generated/dataModel";
 import type { LabelInfo } from "@convex/lib/issueHelpers";
 import type { IssuePriority, IssueTypeWithSubtask } from "@convex/validators";
+import type { UserSummaryWithOutOfOffice } from "@/lib/entitySummaries";
+import { formatOutOfOfficeUntil } from "@/lib/outOfOffice";
 import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
 import { Flex } from "../ui/Flex";
@@ -23,11 +25,7 @@ import {
   PropertyRow,
 } from "./InlinePropertyEdit";
 
-interface ProjectMember {
-  _id: Id<"users">;
-  name: string;
-  image?: string;
-}
+type ProjectMember = UserSummaryWithOutOfOffice;
 
 interface WorkflowState {
   id: string;
@@ -39,7 +37,7 @@ interface IssueMetadataProps {
   status: string;
   type: IssueTypeWithSubtask;
   priority: IssuePriority;
-  assignee?: { _id: Id<"users">; name: string; image?: string } | null;
+  assignee?: UserSummaryWithOutOfOffice | null;
   reporter?: { name: string } | null;
   storyPoints?: number | null;
   labels: LabelInfo[];
@@ -108,7 +106,23 @@ function renderAssigneeContent(
   onAssigneeChange?: (assigneeId: Id<"users"> | null) => void,
 ) {
   if (!onAssigneeChange) {
-    return <Typography variant="label">{assignee?.name || "Unassigned"}</Typography>;
+    if (!assignee) {
+      return <Typography variant="label">Unassigned</Typography>;
+    }
+
+    return (
+      <Stack gap="xs">
+        <Flex align="center" gap="sm">
+          <Typography variant="label">{assignee.name}</Typography>
+          {assignee.outOfOffice ? <Badge variant="warning">OOO</Badge> : null}
+        </Flex>
+        {assignee.outOfOffice ? (
+          <Typography variant="small" color="secondary">
+            {formatOutOfOfficeUntil(assignee.outOfOffice)}
+          </Typography>
+        ) : null}
+      </Stack>
+    );
   }
 
   return (

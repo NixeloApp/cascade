@@ -4,6 +4,7 @@ import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
 import {
+  addProjectMember,
   addUserToOrganization,
   asAuthenticatedUser,
   createTestProject,
@@ -546,10 +547,31 @@ describe("Issues", () => {
     it("should bulk assign issues to a user", async () => {
       const t = convexTest(schema, modules);
       const reporterId = await createTestUser(t, { name: "Reporter" });
-      const assigneeId = await createTestUser(t, { name: "Assignee" });
+      const assigneeId = await createTestUser(t, { name: "OOO Assignee" });
+      const delegateUserId = await createTestUser(t, { name: "Delegate" });
       const projectId = await createTestProject(t, reporterId);
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+
+      if (!project) {
+        throw new Error("Project not found");
+      }
+
+      await addUserToOrganization(t, project.organizationId, assigneeId, reporterId);
+      await addUserToOrganization(t, project.organizationId, delegateUserId, reporterId);
+      await addProjectMember(t, projectId, assigneeId, "editor", reporterId);
+      await addProjectMember(t, projectId, delegateUserId, "editor", reporterId);
 
       const asReporter = asAuthenticatedUser(t, reporterId);
+      const asAssignee = asAuthenticatedUser(t, assigneeId);
+      const now = Date.now();
+
+      await asAssignee.mutation(api.outOfOffice.upsert, {
+        startsAt: now - 60_000,
+        endsAt: now + 86_400_000,
+        reason: "vacation",
+        delegateUserId,
+      });
+
       const { issueId: issue1Id } = await asReporter.mutation(api.issues.createIssue, {
         projectId,
         title: "Issue 1",
@@ -571,8 +593,8 @@ describe("Issues", () => {
       const issue1 = await asReporter.query(api.issues.getIssue, { id: issue1Id });
       const issue2 = await asReporter.query(api.issues.getIssue, { id: issue2Id });
 
-      expect(issue1?.assigneeId).toBe(assigneeId);
-      expect(issue2?.assigneeId).toBe(assigneeId);
+      expect(issue1?.assigneeId).toBe(delegateUserId);
+      expect(issue2?.assigneeId).toBe(delegateUserId);
       await t.finishInProgressScheduledFunctions();
     });
 

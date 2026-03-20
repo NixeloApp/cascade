@@ -9,10 +9,11 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
+import { AlertDialog } from "../ui/AlertDialog";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
@@ -39,6 +40,7 @@ export function DangerZone({
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const suppressNextCloseRef = useRef(false);
   const navigate = useNavigate();
 
   const { mutate: deleteProject } = useAuthenticatedMutation(api.projects.softDeleteProject);
@@ -49,14 +51,31 @@ export function DangerZone({
       return;
     }
 
+    suppressNextCloseRef.current = true;
     setIsDeleting(true);
     try {
       await deleteProject({ projectId });
       showSuccess("Project deleted successfully");
+      setShowConfirm(false);
+      setConfirmText("");
       navigate({ to: ROUTES.projects.list.path, params: { orgSlug } });
     } catch (error) {
+      suppressNextCloseRef.current = false;
       showError(error, "Failed to delete project");
       setIsDeleting(false);
+    }
+  };
+
+  const handleConfirmOpenChange = (open: boolean) => {
+    if (!open && suppressNextCloseRef.current) {
+      suppressNextCloseRef.current = false;
+      return;
+    }
+
+    setShowConfirm(open);
+
+    if (open || !isDeleting) {
+      setConfirmText("");
     }
   };
 
@@ -93,15 +112,22 @@ export function DangerZone({
                 project "{projectName}" and all its issues, sprints, and data.
               </Typography>
             </FlexItem>
-            {!showConfirm && (
-              <Button variant="danger" size="sm" onClick={() => setShowConfirm(true)}>
-                Delete Project
-              </Button>
-            )}
-          </Flex>
-
-          {showConfirm && (
-            <div className="mt-5 border-t border-status-error/15 pt-5">
+            <AlertDialog
+              open={showConfirm}
+              onOpenChange={handleConfirmOpenChange}
+              trigger={
+                <Button variant="danger" size="sm">
+                  Delete Project
+                </Button>
+              }
+              title="Delete this project?"
+              description={`This permanently deletes ${projectName}, including issues, sprints, and project data.`}
+              actionLabel="I understand, delete this project"
+              actionVariant="danger"
+              actionDisabled={confirmText !== projectKey}
+              isLoading={isDeleting}
+              onAction={handleDelete}
+            >
               <Stack gap="md">
                 <Typography variant="small" color="error">
                   To confirm, type{" "}
@@ -115,29 +141,9 @@ export function DangerZone({
                   onChange={(e) => setConfirmText(e.target.value)}
                   placeholder={`Type ${projectKey} to confirm`}
                 />
-                <Flex gap="sm">
-                  <Button
-                    variant="danger"
-                    onClick={handleDelete}
-                    disabled={confirmText !== projectKey || isDeleting}
-                    isLoading={isDeleting}
-                  >
-                    I understand, delete this project
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      setShowConfirm(false);
-                      setConfirmText("");
-                    }}
-                    disabled={isDeleting}
-                  >
-                    Cancel
-                  </Button>
-                </Flex>
               </Stack>
-            </div>
-          )}
+            </AlertDialog>
+          </Flex>
         </div>
       </Stack>
     </Card>

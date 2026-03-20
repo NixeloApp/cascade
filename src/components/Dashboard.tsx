@@ -29,15 +29,26 @@ import { Typography } from "./ui/Typography";
 
 type IssueFilter = "assigned" | "created" | "all";
 
+declare global {
+  interface Window {
+    __NIXELO_E2E_DASHBOARD_LOADING__?: boolean;
+  }
+}
+
+function isE2EDashboardLoadingOverrideEnabled(): boolean {
+  return typeof window !== "undefined" && window.__NIXELO_E2E_DASHBOARD_LOADING__ === true;
+}
+
 /** Main dashboard page with focus task, stats, issues, and activity. */
 export function Dashboard() {
   const navigate = useNavigate();
   const { orgSlug } = useOrganization();
   const { canAct } = useAuthReady();
   const [issueFilter, setIssueFilter] = useState<IssueFilter>("assigned");
+  const forceLoading = isE2EDashboardLoadingOverrideEnabled();
 
   // User and Settings
-  const user = useAuthenticatedQuery(api.users.getCurrent, {});
+  const queriedUser = useAuthenticatedQuery(api.users.getCurrent, {});
   const userSettings = useAuthenticatedQuery(api.userSettings.get, {});
   const layout = userSettings?.dashboardLayout;
   const showStats = layout?.showStats ?? true;
@@ -47,20 +58,33 @@ export function Dashboard() {
 
   // Data fetching
   const {
-    results: myIssues,
-    status: myIssuesStatus,
+    results: queriedMyIssues,
+    status: queriedMyIssuesStatus,
     loadMore: loadMoreMyIssues,
   } = usePaginatedQuery(api.dashboard.getMyIssues, canAct ? {} : "skip", {
     initialNumItems: 20,
   });
 
-  const myCreatedIssues = useAuthenticatedQuery(api.dashboard.getMyCreatedIssues, {});
-  const myProjects = useAuthenticatedQuery(api.dashboard.getMyProjects, {});
-  const recentActivity = useAuthenticatedQuery(api.dashboard.getMyRecentActivity, { limit: 10 });
-  const stats = useAuthenticatedQuery(api.dashboard.getMyStats, {});
-  const focusTask = useAuthenticatedQuery(api.dashboard.getFocusTask, {});
+  const queriedMyCreatedIssues = useAuthenticatedQuery(api.dashboard.getMyCreatedIssues, {});
+  const queriedMyProjects = useAuthenticatedQuery(api.dashboard.getMyProjects, {});
+  const queriedRecentActivity = useAuthenticatedQuery(api.dashboard.getMyRecentActivity, {
+    limit: 10,
+  });
+  const queriedStats = useAuthenticatedQuery(api.dashboard.getMyStats, {});
+  const queriedFocusTask = useAuthenticatedQuery(api.dashboard.getFocusTask, {});
 
-  const displayIssues = getDisplayIssues(issueFilter, myIssues, myCreatedIssues);
+  const user = forceLoading ? undefined : queriedUser;
+  const myIssues = forceLoading ? undefined : queriedMyIssues;
+  const myIssuesStatus = forceLoading ? "LoadingFirstPage" : queriedMyIssuesStatus;
+  const myCreatedIssues = forceLoading ? undefined : queriedMyCreatedIssues;
+  const myProjects = forceLoading ? undefined : queriedMyProjects;
+  const recentActivity = forceLoading ? undefined : queriedRecentActivity;
+  const stats = forceLoading ? undefined : queriedStats;
+  const focusTask = forceLoading ? undefined : queriedFocusTask;
+
+  const displayIssues = forceLoading
+    ? undefined
+    : getDisplayIssues(issueFilter, myIssues, myCreatedIssues);
 
   // Navigation helper for keyboard navigation callbacks
   const navigateToWorkspace = (projectKey: string) => {
@@ -72,16 +96,16 @@ export function Dashboard() {
 
   // Keyboard navigation for issue list
   const issueNavigation = useListNavigation({
-    items: displayIssues || [],
+    items: forceLoading ? [] : displayIssues || [],
     onSelect: (issue) => navigateToWorkspace(issue.projectKey),
-    enabled: !!displayIssues && displayIssues.length > 0,
+    enabled: !forceLoading && !!displayIssues && displayIssues.length > 0,
   });
 
   // Keyboard navigation for projects list
   const projectNavigation = useListNavigation({
-    items: myProjects || [],
+    items: forceLoading ? [] : myProjects || [],
     onSelect: (project) => navigateToWorkspace(project.key),
-    enabled: !!myProjects && myProjects.length > 0,
+    enabled: !forceLoading && !!myProjects && myProjects.length > 0,
   });
 
   return (

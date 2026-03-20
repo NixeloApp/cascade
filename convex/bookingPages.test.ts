@@ -4,7 +4,12 @@ import { api } from "./_generated/api";
 import { DAY, MINUTE } from "./lib/timeUtils";
 import schema from "./schema";
 import { modules } from "./testSetup.test-helper";
-import { asAuthenticatedUser, createTestUser } from "./testUtils";
+import {
+  addUserToOrganization,
+  asAuthenticatedUser,
+  createOrganizationAdmin,
+  createTestUser,
+} from "./testUtils";
 
 describe("Booking Pages", () => {
   describe("create", () => {
@@ -135,6 +140,41 @@ describe("Booking Pages", () => {
       expect(page?.title).toBe("My Meeting");
       expect(page?.hostName).toBe("Test Host");
       expect(page?.hostEmail).toBe("host@test.com");
+    });
+
+    it("should return the delegate host while the owner is actively OOO", async () => {
+      const t = convexTest(schema, modules);
+      const userId = await createTestUser(t, { name: "OOO Host", email: "host@test.com" });
+      const delegateUserId = await createTestUser(t, {
+        name: "Delegate Host",
+        email: "delegate@test.com",
+      });
+      const { organizationId } = await createOrganizationAdmin(t, userId);
+
+      await addUserToOrganization(t, organizationId, delegateUserId, userId);
+
+      const asUser = asAuthenticatedUser(t, userId);
+      const now = Date.now();
+
+      await asUser.mutation(api.bookingPages.create, {
+        slug: "delegated-page",
+        title: "Delegated Meeting",
+        duration: 30,
+        location: "zoom",
+      });
+
+      await asUser.mutation(api.outOfOffice.upsert, {
+        startsAt: now - DAY,
+        endsAt: now + DAY,
+        reason: "vacation",
+        delegateUserId,
+      });
+
+      const page = await t.query(api.bookingPages.getBySlug, { slug: "delegated-page" });
+
+      expect(page?.hostName).toBe("Delegate Host");
+      expect(page?.hostEmail).toBe("host@test.com");
+      expect(page?.effectiveHostId).toBe(delegateUserId);
     });
 
     it("should return null for inactive page", async () => {

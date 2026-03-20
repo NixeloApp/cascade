@@ -23,7 +23,7 @@ import { fetchWithTimeout } from "./lib/fetchWithTimeout";
 import { logger } from "./lib/logger";
 import { notDeleted, softDeleteFields } from "./lib/softDeleteHelpers";
 import { DAY, HOUR, MINUTE, MONTH, SECOND, WEEK } from "./lib/timeUtils";
-import { type CalendarEventColor, otpCodeTypes } from "./validators";
+import { type CalendarEventColor, otpCodeTypes, workflowCategories } from "./validators";
 
 // Test user expiration (1 hour - for garbage collection)
 const TEST_USER_EXPIRATION_MS = HOUR;
@@ -121,6 +121,18 @@ const SCREENSHOT_DOCUMENT_SNAPSHOTS: Record<
  */
 function isTestEmail(email: string): boolean {
   return email.endsWith("@inbox.mailtrap.io");
+}
+
+function generateUnsubscribePreviewToken(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function generateInvitePreviewToken(): string {
+  const timestamp = Date.now().toString(36);
+  const randomPart = crypto.randomUUID().replace(/-/g, "");
+  return `invite_${timestamp}_${randomPart}`;
 }
 
 /**
@@ -1708,6 +1720,398 @@ export const updateOrganizationSettingsInternal = internalMutation({
 });
 
 /**
+ * Update a seeded project's workflow state for interactive screenshot capture.
+ * POST /e2e/update-project-workflow-state
+ * Body: {
+ *   orgSlug: string,
+ *   projectKey: string,
+ *   stateId: string,
+ *   wipLimit: number | null,
+ * }
+ */
+export const updateProjectWorkflowStateEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, projectKey, stateId, wipLimit } = body;
+
+    if (!(orgSlug && projectKey && stateId)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug, projectKey, or stateId" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (wipLimit !== null && typeof wipLimit !== "number") {
+      return new Response(JSON.stringify({ error: "wipLimit must be a number or null" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateProjectWorkflowStateInternal, {
+      orgSlug,
+      projectKey,
+      stateId,
+      wipLimit,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const updateProjectWorkflowStateInternal = internalMutation({
+  args: {
+    orgSlug: v.string(),
+    projectKey: v.string(),
+    stateId: v.string(),
+    wipLimit: v.union(v.number(), v.null()),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    projectId: v.optional(v.id("projects")),
+    workflowStates: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          name: v.string(),
+          category: workflowCategories,
+          order: v.number(),
+          wipLimit: v.optional(v.number()),
+        }),
+      ),
+    ),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), args.projectKey)))
+      .first();
+
+    if (!project) {
+      return {
+        success: false,
+        error: `project not found: ${args.projectKey} in ${args.orgSlug}`,
+      };
+    }
+
+    const workflowStates = project.workflowStates ?? [];
+    let stateFound = false;
+    const updatedWorkflowStates = workflowStates.map((state) => {
+      if (state.id !== args.stateId) {
+        return state;
+      }
+
+      stateFound = true;
+      return {
+        ...state,
+        wipLimit: args.wipLimit ?? undefined,
+      };
+    });
+
+    if (!stateFound) {
+      return {
+        success: false,
+        error: `workflow state not found: ${args.stateId}`,
+      };
+    }
+
+    await ctx.db.patch(project._id, {
+      workflowStates: updatedWorkflowStates,
+      updatedAt: Date.now(),
+    });
+
+    return {
+      success: true,
+      projectId: project._id,
+      workflowStates: updatedWorkflowStates,
+    };
+  },
+});
+
+/**
+ * Replace a seeded project's workflow states for interactive screenshot capture.
+ * POST /e2e/replace-project-workflow-states
+ * Body: {
+ *   orgSlug: string,
+ *   projectKey: string,
+ *   workflowStates: WorkflowState[],
+ * }
+ */
+export const replaceProjectWorkflowStatesEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, projectKey, workflowStates } = body;
+
+    if (!(orgSlug && projectKey)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug or projectKey" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!Array.isArray(workflowStates) || workflowStates.length === 0) {
+      return new Response(JSON.stringify({ error: "workflowStates must be a non-empty array" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.updateProjectWorkflowStatesInternal, {
+      orgSlug,
+      projectKey,
+      workflowStates,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+/**
+ * Check whether duplicate-detection issue search is ready for a seeded project.
+ * POST /e2e/check-project-issue-duplicates
+ * Body: {
+ *   orgSlug: string,
+ *   projectKey: string,
+ *   query: string,
+ * }
+ */
+export const checkProjectIssueDuplicatesEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { orgSlug, projectKey, query } = body;
+
+    if (!(orgSlug && projectKey && query)) {
+      return new Response(JSON.stringify({ error: "Missing orgSlug, projectKey, or query" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runQuery(internal.e2e.checkProjectIssueDuplicatesInternal, {
+      orgSlug,
+      projectKey,
+      query,
+    });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const checkProjectIssueDuplicatesInternal = internalQuery({
+  args: {
+    orgSlug: v.string(),
+    projectKey: v.string(),
+    query: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    matchCount: v.optional(v.number()),
+    issueKeys: v.optional(v.array(v.string())),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to query non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), args.projectKey)))
+      .first();
+
+    if (!project) {
+      return {
+        success: false,
+        error: `project not found: ${args.projectKey} in ${args.orgSlug}`,
+      };
+    }
+
+    const matchingIssues = await ctx.db
+      .query("issues")
+      .withSearchIndex("search_title", (q) =>
+        q.search("searchContent", args.query).eq("projectId", project._id),
+      )
+      .filter(notDeleted)
+      .take(5);
+
+    const normalizedQueryTokens = args.query
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((token) => token.length > 0);
+
+    const fallbackIssues =
+      matchingIssues.length === 0 && normalizedQueryTokens.length > 0
+        ? (
+            await ctx.db
+              .query("issues")
+              .withIndex("by_project_updated", (q) => q.eq("projectId", project._id))
+              .order("desc")
+              .filter(notDeleted)
+              .take(50)
+          )
+            .filter((issue) => {
+              const normalizedTitle = issue.title.trim().toLowerCase();
+              return normalizedQueryTokens.every((token) => normalizedTitle.includes(token));
+            })
+            .slice(0, 5)
+        : matchingIssues;
+
+    return {
+      success: true,
+      matchCount: fallbackIssues.length,
+      issueKeys: fallbackIssues.map((issue) => issue.key),
+    };
+  },
+});
+
+export const updateProjectWorkflowStatesInternal = internalMutation({
+  args: {
+    orgSlug: v.string(),
+    projectKey: v.string(),
+    workflowStates: v.array(
+      v.object({
+        id: v.string(),
+        name: v.string(),
+        category: workflowCategories,
+        order: v.number(),
+        wipLimit: v.optional(v.number()),
+      }),
+    ),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    projectId: v.optional(v.id("projects")),
+    workflowStates: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          name: v.string(),
+          category: workflowCategories,
+          order: v.number(),
+          wipLimit: v.optional(v.number()),
+        }),
+      ),
+    ),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_slug", (q) => q.eq("slug", args.orgSlug))
+      .filter(notDeleted)
+      .first();
+
+    if (!organization) {
+      return { success: false, error: `organization not found: ${args.orgSlug}` };
+    }
+
+    const isE2EOrg =
+      organization.slug.startsWith("nixelo-e2e") || organization.slug.includes("-e2e-");
+    if (!isE2EOrg) {
+      return {
+        success: false,
+        error: `Refusing to modify non-E2E organization: ${organization.slug}`,
+      };
+    }
+
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_organization", (q) => q.eq("organizationId", organization._id))
+      .filter((q) => q.and(notDeleted(q), q.eq(q.field("key"), args.projectKey)))
+      .first();
+
+    if (!project) {
+      return {
+        success: false,
+        error: `project not found: ${args.projectKey} in ${args.orgSlug}`,
+      };
+    }
+
+    await ctx.db.patch(project._id, {
+      workflowStates: args.workflowStates,
+      updatedAt: Date.now(),
+    });
+
+    return {
+      success: true,
+      projectId: project._id,
+      workflowStates: args.workflowStates,
+    };
+  },
+});
+
+/**
  * Verify a test user's email directly (bypassing email verification flow)
  * POST /e2e/verify-test-user
  * Body: { email: string }
@@ -2706,10 +3110,22 @@ export const seedScreenshotDataInternal = internalMutation({
   returns: v.object({
     success: v.boolean(),
     orgSlug: v.optional(v.string()),
+    projectId: v.optional(v.string()),
     projectKey: v.optional(v.string()),
     issueKeys: v.optional(v.array(v.string())),
     workspaceSlug: v.optional(v.string()),
     teamSlug: v.optional(v.string()),
+    inviteToken: v.optional(v.string()),
+    portalToken: v.optional(v.string()),
+    portalProjectId: v.optional(v.string()),
+    unsubscribeTokens: v.optional(
+      v.object({
+        desktopDark: v.string(),
+        desktopLight: v.string(),
+        tabletLight: v.string(),
+        mobileLight: v.string(),
+      }),
+    ),
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
@@ -3199,6 +3615,121 @@ export const seedScreenshotDataInternal = internalMutation({
     }
 
     const secondaryProjectId = secondaryProject._id;
+
+    const screenshotInviteEmail = "invite-screenshots@nixelo.test";
+    const existingScreenshotInvites = await ctx.db
+      .query("invites")
+      .withIndex("by_email", (q) => q.eq("email", screenshotInviteEmail))
+      .filter((q) => q.eq(q.field("organizationId"), orgId))
+      .collect();
+
+    for (const invite of existingScreenshotInvites) {
+      await ctx.db.delete(invite._id);
+    }
+
+    const inviteToken = generateInvitePreviewToken();
+    await ctx.db.insert("invites", {
+      email: screenshotInviteEmail,
+      role: "user",
+      organizationId: orgId,
+      projectId,
+      projectRole: "editor",
+      invitedBy: userId,
+      token: inviteToken,
+      expiresAt: now + WEEK,
+      status: "pending",
+      updatedAt: now,
+    });
+
+    const existingUnsubscribeTokens = await ctx.db
+      .query("unsubscribeTokens")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    for (const token of existingUnsubscribeTokens) {
+      await ctx.db.delete(token._id);
+    }
+
+    const unsubscribeTokens = {
+      desktopDark: generateUnsubscribePreviewToken(),
+      desktopLight: generateUnsubscribePreviewToken(),
+      tabletLight: generateUnsubscribePreviewToken(),
+      mobileLight: generateUnsubscribePreviewToken(),
+    };
+
+    for (const token of Object.values(unsubscribeTokens)) {
+      await ctx.db.insert("unsubscribeTokens", {
+        userId,
+        token,
+        usedAt: undefined,
+      });
+    }
+
+    let portalClient = await ctx.db
+      .query("clients")
+      .withIndex("by_organization_email", (q) =>
+        q.eq("organizationId", orgId).eq("email", "portal-screenshots@nixelo.test"),
+      )
+      .first();
+
+    if (!portalClient) {
+      const portalClientId = await ctx.db.insert("clients", {
+        organizationId: orgId,
+        name: "Northstar Labs",
+        email: "portal-screenshots@nixelo.test",
+        company: "Northstar Labs",
+        address: "18 Market Street, Chicago, IL",
+        hourlyRate: 185,
+        createdBy: userId,
+        updatedAt: now,
+      });
+      portalClient = await ctx.db.get(portalClientId);
+    } else {
+      await ctx.db.patch(portalClient._id, {
+        name: "Northstar Labs",
+        company: "Northstar Labs",
+        address: "18 Market Street, Chicago, IL",
+        hourlyRate: 185,
+        updatedAt: now,
+      });
+      portalClient = await ctx.db.get(portalClient._id);
+    }
+
+    if (!portalClient) {
+      return { success: false, error: "Failed to create portal client" };
+    }
+
+    const existingPortalTokens = await ctx.db
+      .query("clientPortalTokens")
+      .withIndex("by_client", (q) => q.eq("clientId", portalClient._id))
+      .collect();
+
+    for (const token of existingPortalTokens) {
+      await ctx.db.delete(token._id);
+    }
+
+    const portalToken = `${crypto.randomUUID().replace(/-/g, "")}${crypto
+      .randomUUID()
+      .replace(/-/g, "")}`;
+
+    await ctx.db.insert("clientPortalTokens", {
+      organizationId: orgId,
+      clientId: portalClient._id,
+      token: portalToken,
+      projectIds: [projectId, secondaryProjectId],
+      permissions: {
+        viewIssues: true,
+        viewDocuments: true,
+        viewTimeline: true,
+        addComments: false,
+      },
+      expiresAt: now + 30 * DAY,
+      lastAccessedAt: undefined,
+      isRevoked: false,
+      revokedAt: undefined,
+      createdBy: userId,
+      updatedAt: now,
+    });
 
     // Normalize OPS project membership: remove stale members from previous runs
     // (autoLogin recreates the screenshot user, so old membership rows accumulate)
@@ -3916,10 +4447,15 @@ export const seedScreenshotDataInternal = internalMutation({
     return {
       success: true,
       orgSlug,
+      projectId,
       projectKey,
       issueKeys: createdIssueKeys,
       workspaceSlug: "product",
       teamSlug: "engineering",
+      inviteToken,
+      portalToken,
+      portalProjectId: projectId,
+      unsubscribeTokens,
     };
   },
 });

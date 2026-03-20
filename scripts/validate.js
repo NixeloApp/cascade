@@ -43,7 +43,12 @@
  *  39. Tech debt               — tracks TODO/FIXME/HACK comments
  *  40. Nested Cards            — bans Cards nested inside other Cards
  *  41. Border Radius           — enforces consistent border radius usage
- *  42. Screenshot coverage     — routes without screenshot coverage (informational)
+ *  42. Screenshot coverage     — route coverage + canonical spec screenshot audit (informational)
+ *  43. Typography drift        — advisory audit for Typography/style drift outside owned primitives
+ *  44. Control chrome drift    — advisory audit for owned controls restyled in feature code
+ *  45. Shared shape drift      — advisory audit for repeated inline entity summary shapes
+ *  46. Page layout             — route wrappers should use PageLayout, not ad-hoc max-width shells
+ *  47. Raw Date formatting     — use shared date helpers instead of ad-hoc formatting
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -268,6 +273,18 @@ const checks = [
   {
     name: "Screenshot coverage",
     modulePath: new URL("./validate/check-screenshot-coverage.js", import.meta.url).href,
+  },
+  {
+    name: "Typography drift",
+    modulePath: new URL("./validate/check-typography-drift.js", import.meta.url).href,
+  },
+  {
+    name: "Control chrome drift",
+    modulePath: new URL("./validate/check-control-chrome-drift.js", import.meta.url).href,
+  },
+  {
+    name: "Shared shape drift",
+    modulePath: new URL("./validate/check-shared-shape-drift.js", import.meta.url).href,
   },
   {
     name: "Page layout",

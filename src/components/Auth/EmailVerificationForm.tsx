@@ -91,10 +91,10 @@ export function EmailVerificationForm({ email, onVerified, onResend }: EmailVeri
           </Flex>
         </Card>
       </Flex>
-      <Typography variant="h2" className="text-xl font-semibold mb-2 tracking-tight">
+      <Typography variant="authTitle" className="mb-2">
         Verify your email
       </Typography>
-      <Typography variant="p" color="secondary" className="mb-6 text-sm">
+      <Typography variant="authBody" className="mb-6">
         We sent a verification code to{" "}
         <Typography variant="label" as="span" className="text-ui-text">
           {email}

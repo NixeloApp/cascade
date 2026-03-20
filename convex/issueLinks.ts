@@ -7,6 +7,7 @@
  */
 
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import { authenticatedMutation, authenticatedQuery } from "./customFunctions";
 import { batchFetchIssues } from "./lib/batchHelpers";
 import { conflict, notFound, validation } from "./lib/errors";
@@ -150,6 +151,7 @@ export const getForProject = authenticatedQuery({
 
     // Filter to project-internal links and format
     const allLinks: Array<{
+      linkId: Id<"issueLinks">;
       fromIssueId: string;
       toIssueId: string;
       linkType: string;
@@ -160,6 +162,7 @@ export const getForProject = authenticatedQuery({
         // Only include if target is also in this project
         if (issueIds.has(link.toIssueId)) {
           allLinks.push({
+            linkId: link._id,
             fromIssueId: link.fromIssueId,
             toIssueId: link.toIssueId,
             linkType: link.linkType,

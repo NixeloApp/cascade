@@ -136,6 +136,30 @@ describe("calendarEvents", () => {
         }),
       ).rejects.toThrow(/FORBIDDEN|access to this project|Not authorized/);
     });
+
+    it("should reject creating an event that overlaps the user's out-of-office window", async () => {
+      const t = convexTest(schema, modules);
+      const { asUser } = await setupCalendarTestContext(t);
+
+      const oooStart = Date.now() + DAY;
+      const oooEnd = oooStart + 2 * DAY;
+
+      await asUser.mutation(api.outOfOffice.upsert, {
+        startsAt: oooStart,
+        endsAt: oooEnd,
+        reason: "vacation",
+      });
+
+      await expect(
+        asUser.mutation(api.calendarEvents.create, {
+          title: "Vacation Conflict",
+          startTime: oooStart + HOUR,
+          endTime: oooStart + 2 * HOUR,
+          allDay: false,
+          eventType: "meeting",
+        }),
+      ).rejects.toThrow(/out-of-office window/i);
+    });
   });
 
   describe("get", () => {
@@ -268,6 +292,33 @@ describe("calendarEvents", () => {
           endTime: now + HOUR, // Before new start
         }),
       ).rejects.toThrow(/End time must be after start time/);
+    });
+
+    it("should reject moving an event into the user's out-of-office window", async () => {
+      const t = convexTest(schema, modules);
+      const { asUser } = await setupCalendarTestContext(t);
+
+      const { eventId } = await asUser.mutation(api.calendarEvents.create, {
+        title: "Reschedulable Event",
+        startTime: new Date("2026-03-24T15:00:00Z").getTime(),
+        endTime: new Date("2026-03-24T16:00:00Z").getTime(),
+        allDay: false,
+        eventType: "meeting",
+      });
+
+      await asUser.mutation(api.outOfOffice.upsert, {
+        startsAt: new Date("2026-03-20T00:00:00Z").getTime(),
+        endsAt: new Date("2026-03-22T23:59:59Z").getTime(),
+        reason: "travel",
+      });
+
+      await expect(
+        asUser.mutation(api.calendarEvents.update, {
+          id: eventId,
+          startTime: new Date("2026-03-21T15:00:00Z").getTime(),
+          endTime: new Date("2026-03-21T16:00:00Z").getTime(),
+        }),
+      ).rejects.toThrow(/out-of-office window/i);
     });
   });
 

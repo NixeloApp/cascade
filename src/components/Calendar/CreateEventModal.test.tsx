@@ -10,13 +10,43 @@ vi.mock("@/lib/toast", () => ({
 
 // Mock data
 let mockProjects: { page: { _id: string; name: string; key: string }[] } | undefined;
+let mockOutOfOffice: {
+  startsAt: number;
+  endsAt: number;
+  reason: "vacation" | "travel" | "sick_leave" | "public_holiday";
+  updatedAt: number;
+  isActive: boolean;
+} | null;
 const mockCreateEvent = vi.fn();
 
 // Mock Convex
 vi.mock("convex/react", () => ({
   useConvexAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
-  useQuery: vi.fn(() => mockProjects),
+  useQuery: vi.fn((query) => {
+    const queryName = query?.toString() ?? "";
+    if (queryName.includes("projects.getCurrentUserProjects")) {
+      return mockProjects;
+    }
+    if (queryName.includes("outOfOffice.getCurrent")) {
+      return mockOutOfOffice;
+    }
+    return undefined;
+  }),
   useMutation: vi.fn(() => mockCreateEvent),
+}));
+
+vi.mock("@convex/_generated/api", () => ({
+  api: {
+    calendarEvents: {
+      create: "api.calendarEvents.create",
+    },
+    outOfOffice: {
+      getCurrent: "api.outOfOffice.getCurrent",
+    },
+    projects: {
+      getCurrentUserProjects: "api.projects.getCurrentUserProjects",
+    },
+  },
 }));
 
 // Import after mocks
@@ -31,6 +61,7 @@ describe("CreateEventModal", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockProjects = { page: [] };
+    mockOutOfOffice = null;
     mockCreateEvent.mockResolvedValue({});
   });
 
@@ -200,6 +231,21 @@ describe("CreateEventModal", () => {
       expect(screen.getByRole("button", { name: /Create Event/i })).toBeInTheDocument();
     });
 
+    it("should warn and disable submit when the draft overlaps out of office", () => {
+      mockOutOfOffice = {
+        startsAt: new Date("2026-03-20T00:00:00Z").getTime(),
+        endsAt: new Date("2026-03-22T23:59:59Z").getTime(),
+        reason: "vacation",
+        updatedAt: Date.now(),
+        isActive: false,
+      };
+
+      render(<CreateEventModal {...defaultProps} defaultDate={new Date("2026-03-21T12:00:00Z")} />);
+
+      expect(screen.getByText("Out of office")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Create Event/i })).toBeDisabled();
+    });
+
     it("should call onOpenChange when Cancel is clicked", async () => {
       const user = userEvent.setup();
       const onOpenChange = vi.fn();
@@ -210,11 +256,26 @@ describe("CreateEventModal", () => {
 
       expect(onOpenChange).toHaveBeenCalledWith(false);
     });
+
+    it("should allow submit when the draft is outside the out-of-office window", () => {
+      mockOutOfOffice = {
+        startsAt: new Date("2026-03-20T00:00:00Z").getTime(),
+        endsAt: new Date("2026-03-22T23:59:59Z").getTime(),
+        reason: "vacation",
+        updatedAt: Date.now(),
+        isActive: false,
+      };
+
+      render(<CreateEventModal {...defaultProps} defaultDate={new Date("2026-03-24T12:00:00Z")} />);
+
+      expect(screen.queryByText("Out of office")).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Create Event/i })).toBeEnabled();
+    });
   });
 
   describe("Default Date", () => {
     it("should use provided default date", () => {
-      const testDate = new Date("2026-03-15");
+      const testDate = new Date(2026, 2, 15);
 
       render(<CreateEventModal {...defaultProps} defaultDate={testDate} />);
 

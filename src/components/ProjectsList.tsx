@@ -82,9 +82,7 @@ function SingleProjectHighlights({ issueCount }: { issueCount: number }) {
         {getSingleProjectHighlights(issueCount).map((item) => (
           <Card key={item.title} variant="soft" padding="md" className="h-full">
             <Flex direction="column" gap="xs">
-              <Typography variant="caption" className="uppercase tracking-widest">
-                {item.title}
-              </Typography>
+              <Typography variant="eyebrowWide">{item.title}</Typography>
               <Typography variant="h4">{item.value}</Typography>
               <Typography variant="small" color="secondary">
                 {item.description}
@@ -95,9 +93,7 @@ function SingleProjectHighlights({ issueCount }: { issueCount: number }) {
       </Grid>
       <Card variant="default" padding="md">
         <Flex direction="column" gap="sm">
-          <Typography variant="caption" className="uppercase tracking-widest">
-            Workspace rhythm
-          </Typography>
+          <Typography variant="eyebrowWide">Workspace rhythm</Typography>
           <Typography variant="h4">Keep planning and execution in one lane</Typography>
           <Typography variant="small" color="secondary">
             Use this project as the anchor for issue triage, document context, calendar planning,
@@ -139,12 +135,7 @@ function ProjectCard({
                   Board, roadmap, calendar, and delivery in one lane.
                 </Typography>
               </Flex>
-              <Typography
-                variant="caption"
-                className="uppercase tracking-widest text-ui-text-tertiary"
-              >
-                Active
-              </Typography>
+              <Typography variant="eyebrowWide">Active</Typography>
             </Flex>
           </div>
         )}
@@ -158,7 +149,7 @@ function ProjectCard({
                 </Typography>
               </Flex>
             </div>
-            <Typography variant="h3" className="tracking-tight truncate">
+            <Typography variant="h3" className="truncate">
               {project.name}
             </Typography>
           </Flex>

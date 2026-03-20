@@ -107,14 +107,10 @@ export function WorkspacesList({ projects, projectNavigation }: WorkspacesListPr
                     <Avatar name={project.name} size="md" variant="brand" hoverRing />
                     <FlexItem flex="1" className="min-w-0">
                       <Flex justify="between" align="center" gap="sm">
-                        <Typography variant="label" className="truncate tracking-tight">
+                        <Typography variant="listTitle" className="truncate">
                           {project.name}
                         </Typography>
-                        <Badge
-                          variant="neutral"
-                          size="sm"
-                          className="bg-ui-bg-tertiary/60 uppercase text-ui-text-secondary"
-                        >
+                        <Badge variant="dashboardTag" size="sm">
                           {project.role}
                         </Badge>
                       </Flex>

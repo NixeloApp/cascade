@@ -30,12 +30,12 @@ vi.mock("../ui/Switch", () => ({
 }));
 
 vi.mock("../ui/Dialog", () => ({
-  Dialog: ({ title, children }: { title: string; children: ReactNode }) => (
-    <div role="dialog" aria-label={title}>
-      {children}
-    </div>
-  ),
-  DialogTrigger: ({ children }: { children: ReactNode }) => <>{children}</>,
+  Dialog: ({ title, children, open }: { title: string; children: ReactNode; open: boolean }) =>
+    open ? (
+      <div role="dialog" aria-label={title}>
+        {children}
+      </div>
+    ) : null,
 }));
 
 const mockUseAuthenticatedMutation = vi.mocked(useAuthenticatedMutation);
@@ -55,6 +55,7 @@ describe("DashboardCustomizeModal", () => {
   });
 
   it("opens with persisted dashboard layout preferences from user settings", async () => {
+    const user = userEvent.setup();
     mockUseAuthenticatedQuery.mockReturnValue({
       dashboardLayout: {
         showStats: false,
@@ -65,8 +66,14 @@ describe("DashboardCustomizeModal", () => {
 
     render(<DashboardCustomizeModal />);
 
-    expect(screen.getByRole("dialog", { name: "Dashboard Customization" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Customize/i })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("dialog", { name: "Dashboard Customization" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Customize/i }));
+
+    expect(screen.getByRole("dialog", { name: "Dashboard Customization" })).toBeInTheDocument();
     const switches = screen.getAllByRole("switch");
     expect(switches).toHaveLength(3);
     expect(switches[0]).toHaveAttribute("aria-checked", "false");
@@ -79,6 +86,7 @@ describe("DashboardCustomizeModal", () => {
     mockUpdateSettings.mockResolvedValue(undefined);
 
     render(<DashboardCustomizeModal />);
+    await user.click(screen.getByRole("button", { name: /Customize/i }));
 
     const [showStatsSwitch] = screen.getAllByRole("switch");
     await user.click(showStatsSwitch);
@@ -99,6 +107,7 @@ describe("DashboardCustomizeModal", () => {
     mockUpdateSettings.mockRejectedValue(new Error("save failed"));
 
     render(<DashboardCustomizeModal />);
+    await user.click(screen.getByRole("button", { name: /Customize/i }));
 
     const [showStatsSwitch] = screen.getAllByRole("switch");
     expect(showStatsSwitch).toHaveAttribute("aria-checked", "true");

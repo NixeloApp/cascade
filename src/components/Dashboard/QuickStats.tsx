@@ -70,15 +70,9 @@ function StatCard({ title, value, subtitle, variant, progressValue }: StatCardPr
       />
       <div className={cn("absolute inset-x-4 top-0 h-0.5 rounded-full", styles.bg)} />
       <Stack gap="md" className="relative">
-        <Typography
-          variant="label"
-          color="tertiary"
-          className="text-caption uppercase tracking-widest"
-        >
-          {title}
-        </Typography>
+        <Typography variant="eyebrowWide">{title}</Typography>
         <Flex align="baseline" gap="sm" wrap>
-          <Typography variant="h2" className={cn("text-display-sm tracking-tight", styles.text)}>
+          <Typography variant="dashboardStatValue" className={styles.text}>
             {value || 0}
           </Typography>
           <Typography variant="small" color="secondary">
@@ -120,21 +114,15 @@ function HighPriorityCard({ count }: { count: number }) {
       />
       <Stack gap="md" className="relative">
         <Typography
-          variant="label"
-          className={cn(
-            "text-caption uppercase tracking-widest",
-            hasHighPriority ? "text-status-warning" : "text-ui-text-tertiary",
-          )}
+          variant="eyebrowWide"
+          className={hasHighPriority ? "text-status-warning" : undefined}
         >
           Attention Needed
         </Typography>
         <Flex align="baseline" gap="sm" wrap>
           <Typography
-            variant="h2"
-            className={cn(
-              "text-3xl font-extrabold tracking-tight",
-              hasHighPriority ? "text-status-warning" : "text-ui-text",
-            )}
+            variant="dashboardStatValueStrong"
+            className={hasHighPriority ? "text-status-warning" : undefined}
           >
             {count || 0}
           </Typography>

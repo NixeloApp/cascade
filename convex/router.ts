@@ -11,6 +11,7 @@ import { handler as issuesHandler } from "./api/issues";
 import { securePasswordReset, securePasswordResetPreflight } from "./authWrapper";
 import {
   batchCleanupEndpoint,
+  checkProjectIssueDuplicatesEndpoint,
   cleanupE2EWorkspacesEndpoint,
   cleanupRbacProjectEndpoint,
   cleanupTestUsersEndpoint,
@@ -23,6 +24,7 @@ import {
   nukeAllE2EWorkspacesEndpoint,
   nukeAllTestUsersEndpoint,
   nukeTimersEndpoint,
+  replaceProjectWorkflowStatesEndpoint,
   requestPasswordResetEndpoint,
   resetOnboardingEndpoint,
   resetTestWorkspaceEndpoint,
@@ -30,6 +32,7 @@ import {
   seedTemplatesEndpoint,
   setupRbacProjectEndpoint,
   updateOrganizationSettingsEndpoint,
+  updateProjectWorkflowStateEndpoint,
   verifyTestUserEndpoint,
 } from "./e2e";
 import {
@@ -220,6 +223,27 @@ http.route({
   path: "/e2e/update-organization-settings",
   method: "POST",
   handler: updateOrganizationSettingsEndpoint,
+});
+
+// Update a seeded project's workflow state for interactive screenshot capture
+http.route({
+  path: "/e2e/update-project-workflow-state",
+  method: "POST",
+  handler: updateProjectWorkflowStateEndpoint,
+});
+
+// Replace a seeded project's workflow states for interactive screenshot capture
+http.route({
+  path: "/e2e/replace-project-workflow-states",
+  method: "POST",
+  handler: replaceProjectWorkflowStatesEndpoint,
+});
+
+// Check duplicate-detection search readiness for seeded screenshot projects
+http.route({
+  path: "/e2e/check-project-issue-duplicates",
+  method: "POST",
+  handler: checkProjectIssueDuplicatesEndpoint,
 });
 
 // Seed built-in project templates

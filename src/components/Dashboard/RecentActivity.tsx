@@ -77,10 +77,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                           </Typography>{" "}
                           {activity.action}
                         </Typography>
-                        <Badge
-                          variant="neutral"
-                          className="w-fit border-ui-border/50 bg-ui-bg-tertiary/60 font-mono text-caption"
-                        >
+                        <Badge variant="issueKey" size="sm" className="w-fit">
                           {activity.issueKey}
                         </Badge>
                         <Metadata separator="|">

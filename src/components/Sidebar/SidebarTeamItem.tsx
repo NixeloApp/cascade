@@ -46,6 +46,7 @@ export function SidebarTeamItem({
   const location = useLocation();
   const teamPath = ROUTES.workspaces.teams.detail.build(orgSlug, workspaceSlug, team.slug);
   const isActive = location.pathname === teamPath || location.pathname.startsWith(`${teamPath}/`);
+  const shouldShowProjects = isExpanded || isActive;
 
   return (
     <Card recipe="sidebarTeamBranch" variant="ghost" padding="none">
@@ -54,10 +55,10 @@ export function SidebarTeamItem({
           variant="ghost"
           size="xs"
           onClick={() => onToggle(team.slug)}
-          aria-expanded={isExpanded}
-          aria-label={isExpanded ? `Collapse ${team.name}` : `Expand ${team.name}`}
+          aria-expanded={shouldShowProjects}
+          aria-label={shouldShowProjects ? `Collapse ${team.name}` : `Expand ${team.name}`}
         >
-          <Icon icon={isExpanded ? ChevronDown : ChevronRight} size="sm" />
+          <Icon icon={shouldShowProjects ? ChevronDown : ChevronRight} size="sm" />
         </IconButton>
         <FlexItem flex="1">
           <Tooltip content={team.name}>
@@ -74,7 +75,7 @@ export function SidebarTeamItem({
         </FlexItem>
       </Flex>
 
-      {isExpanded && (
+      {shouldShowProjects && (
         <SidebarTeamProjects teamId={team._id} orgSlug={orgSlug} onNavClick={onNavClick} />
       )}
     </Card>

@@ -175,6 +175,7 @@ export function NotificationItem({
       padding="md"
       radius="none"
       className="group relative animate-fade-in last:border-0"
+      data-notification-item
     >
       <Flex align="start" gap="md">
         <FlexItem shrink={false} className="mt-0.5">

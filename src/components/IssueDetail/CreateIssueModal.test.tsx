@@ -2,6 +2,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
 import { useAction, useConvexAuth, useMutation, useQuery } from "convex/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { showSuccess } from "@/lib/toast";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { CreateIssueModal } from "./CreateIssueModal";
 
@@ -18,6 +19,10 @@ vi.mock("@/hooks/useOrgContext", () => ({
     organizationId: "org-123",
     billingEnabled: false,
   })),
+}));
+
+vi.mock("@/components/DuplicateDetection", () => ({
+  DuplicateDetection: () => null,
 }));
 
 // Mock toast utilities
@@ -39,6 +44,7 @@ vi.mock("@/lib/array-utils", () => ({
 describe("CreateIssueModal", () => {
   const mockCreateIssue = vi.fn();
   const mockOnOpenChange = vi.fn();
+  const mockShowSuccess = vi.mocked(showSuccess);
   const mockProjectId = "project-123" as Id<"projects">;
   const _mockSprintId = "sprint-456" as Id<"sprints">;
 
@@ -71,6 +77,7 @@ describe("CreateIssueModal", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
     (useConvexAuth as any).mockReturnValue({ isAuthenticated: true, isLoading: false });
     (useMutation as any).mockReturnValue(mockCreateIssue);
     (useAction as any).mockReturnValue(vi.fn());
@@ -144,6 +151,9 @@ describe("CreateIssueModal", () => {
         }),
       );
     });
+
+    expect(mockShowSuccess).toHaveBeenCalledWith("Issue created successfully");
+    expect(mockOnOpenChange).toHaveBeenCalledWith(false);
   });
 
   it("should have accessible labels with aria-pressed state", async () => {
@@ -209,5 +219,41 @@ describe("CreateIssueModal", () => {
     // Verify buttons are inside the group
     const bugLabel = screen.getByRole("button", { name: /bug/i });
     expect(group).toContainElement(bugLabel);
+  });
+
+  it("restores a saved draft after remounting the modal", async () => {
+    const user = userEvent.setup();
+    let callCount = 0;
+    (useQuery as any).mockImplementation(() => {
+      callCount++;
+      const callIndex = (callCount - 1) % 4;
+      return [undefined, mockProject, mockTemplates, mockLabels][callIndex];
+    });
+    window.localStorage.setItem(
+      "cascade_draft_create-issue_project-123",
+      JSON.stringify({
+        data: {
+          title: "Recovered issue draft",
+          description: "",
+          type: "task",
+          priority: "medium",
+          assigneeId: "",
+          storyPoints: "3",
+          selectedLabels: [],
+        },
+        timestamp: Date.now(),
+      }),
+    );
+
+    render(
+      <CreateIssueModal projectId={mockProjectId} open={true} onOpenChange={mockOnOpenChange} />,
+    );
+
+    expect(screen.getByText(/You have an unsaved draft/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /^restore$/i }));
+
+    expect(screen.getByPlaceholderText(/Enter issue title/i)).toHaveValue("Recovered issue draft");
+    expect(screen.getByPlaceholderText(/Enter story points/i)).toHaveValue(3);
   });
 });
