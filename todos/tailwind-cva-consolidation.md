@@ -48,6 +48,7 @@ Target the 148 files with raw TW violations. For each repeated pattern:
 - [x] Absorb the shared time-entry modal control cluster into owned `SegmentedControl`, `Typography`, `Icon`, and `Select` contracts so `ManualTimeEntryModal.tsx` and `TimeEntryModal.tsx` drop out of the raw-tailwind baseline
 - [x] Absorb the settings image-upload preview/action cluster into owned `MediaPreview`, `Avatar`, `Icon`, and button contracts so `AvatarUploadModal.tsx` and `CoverImageUploadModal.tsx` drop out of the raw-tailwind baseline
 - [x] Absorb the settings profile shell cluster into owned `Card`, `Grid`, `Avatar`, `MediaPreview`, `Typography`, and `Icon` contracts so `ProfileContent.tsx` drops out of the raw-tailwind baseline
+- [x] Absorb the repeated landing max-width wrapper cluster into the owned `ui/Container` primitive across `NavHeader`, `LogoBar`, `AIFeatureDemo`, `FinalCTASection`, `Footer`, and `WhyChooseSection`
 - [ ] Audit raw TW in route files -- repeated spacing/shell/state patterns should become components or CVA variants
 - [ ] Run `node scripts/validate/check-raw-tailwind.js --audit` and group violations by pattern (same class cluster = same missing abstraction)
 - [ ] For each cluster of 3+ identical class sets, extract a component or add a CVA variant

@@ -3,6 +3,7 @@ import { ArrowRight, Building2, KanbanSquare, MessageSquare } from "@/lib/icons"
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { Container } from "../ui/Container";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
@@ -37,7 +38,7 @@ const whyChooseVariants = {
 export function WhyChooseSection() {
   return (
     <section className={whyChooseVariants.section()}>
-      <div className="mx-auto max-w-6xl">
+      <Container size="lg">
         <div className="mb-14 text-center">
           <Badge variant="outline" shape="pill" className="mb-4">
             Why teams move
@@ -77,7 +78,7 @@ export function WhyChooseSection() {
             </Card>
           ))}
         </Grid>
-      </div>
+      </Container>
     </section>
   );
 }

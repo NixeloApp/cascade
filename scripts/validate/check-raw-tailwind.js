@@ -121,7 +121,6 @@ const BASELINE_FILES = new Set([
   "src/components/Landing/FinalCTASection.tsx",
   "src/components/Landing/Footer.tsx",
   "src/components/Landing/HeroSection.tsx",
-  "src/components/Landing/LogoBar.tsx",
   "src/components/Landing/NavHeader.tsx",
   "src/components/Landing/PricingSection.tsx",
   "src/components/Landing/ProductShowcase.tsx",

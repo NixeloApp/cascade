@@ -5,6 +5,7 @@ import { ArrowRight, Rocket, ShieldCheck } from "@/lib/icons";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card, getCardRecipeClassName } from "../ui/Card";
+import { Container } from "../ui/Container";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
@@ -28,7 +29,7 @@ const finalCtaVariants = {
 export function FinalCTASection() {
   return (
     <section className={finalCtaVariants.section()}>
-      <div className="mx-auto max-w-6xl">
+      <Container size="lg">
         <Card className={finalCtaVariants.shell()}>
           <div className="mx-auto max-w-3xl text-center">
             <Badge variant="outline" shape="pill" className="mb-5">
@@ -92,7 +93,7 @@ export function FinalCTASection() {
             </div>
           </Grid>
         </Card>
-      </div>
+      </Container>
     </section>
   );
 }

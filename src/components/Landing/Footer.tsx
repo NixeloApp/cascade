@@ -1,6 +1,7 @@
 import { cva } from "class-variance-authority";
 import { ShieldCheck } from "@/lib/icons";
 import { Button } from "../ui/Button";
+import { Container } from "../ui/Container";
 import { Dot } from "../ui/Dot";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
@@ -40,7 +41,7 @@ const footerVariants = {
 export function Footer() {
   return (
     <footer className={footerVariants.section()}>
-      <div className="mx-auto max-w-6xl">
+      <Container size="lg">
         <Grid cols={1} colsLg={5} gap="xl" className="mb-10">
           <div className="lg:col-span-2">
             <Flex align="center" gap="sm" className="mb-4">
@@ -138,7 +139,7 @@ export function Footer() {
             </Button>
           </Flex>
         </Flex>
-      </div>
+      </Container>
     </footer>
   );
 }
