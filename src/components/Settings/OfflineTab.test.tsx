@@ -2,6 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { OfflineMutation } from "@/lib/offline";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { useOfflineSyncStatus, useOnlineStatus } from "../../hooks/useOffline";
 import { OfflineTab } from "./OfflineTab";
@@ -96,6 +97,8 @@ describe("OfflineTab", () => {
 
     await user.click(screen.getByRole("button", { name: "Sync Now" }));
 
-    expect(mockToastInfo).toHaveBeenCalledWith("Manual sync triggered");
+    expect(mockToastInfo).toHaveBeenCalledWith("Manual sync triggered", {
+      testId: TEST_IDS.TOAST.INFO,
+    });
   });
 });

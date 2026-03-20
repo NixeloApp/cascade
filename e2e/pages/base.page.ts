@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { getToastLocator } from "../utils/toast-locators";
 
 const FALLBACK_BASE_URL = process.env.BASE_URL || "http://localhost:5555";
 
@@ -111,9 +112,9 @@ export abstract class BasePage {
    */
   getToast(text?: string): Locator {
     if (text) {
-      return this.page.locator("[data-sonner-toast]").filter({ hasText: text });
+      return getToastLocator(this.page).filter({ hasText: text });
     }
-    return this.page.locator("[data-sonner-toast]");
+    return getToastLocator(this.page);
   }
 
   /**
@@ -127,7 +128,7 @@ export abstract class BasePage {
    * Dismiss all toasts
    */
   async dismissToasts() {
-    const toasts = this.page.locator("[data-sonner-toast]");
+    const toasts = getToastLocator(this.page);
     const count = await toasts.count();
     for (let i = 0; i < count; i++) {
       await toasts.nth(i).click();

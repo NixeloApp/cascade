@@ -2709,7 +2709,7 @@ async function screenshotFilledStates(
         await submitButton.click();
         await modal.waitFor({ state: "hidden", timeout: 8000 });
         const successToast = page
-          .locator("[data-sonner-toast][data-type='success']")
+          .getByTestId(TEST_IDS.TOAST.SUCCESS)
           .filter({ hasText: /issue created successfully/i })
           .first();
         await successToast.waitFor({ state: "visible", timeout: 8000 });

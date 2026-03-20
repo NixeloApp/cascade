@@ -4,6 +4,7 @@ import { TEST_IDS } from "../../src/lib/test-ids";
 import type { TestUser } from "../config";
 import { trySignInUser } from "../utils/auth-helpers";
 import { ROUTES } from "../utils/routes";
+import { getToastLocator } from "../utils/toast-locators";
 import { waitForDashboardReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
@@ -144,8 +145,8 @@ export class AuthPage extends BasePage {
     this.verifyEmailButton = page.getByTestId(TEST_IDS.AUTH.VERIFICATION_SUBMIT_BUTTON);
     this.resendCodeButton = page.getByRole("button", { name: /didn't receive|resend/i });
     this.signOutLink = page.getByRole("button", { name: /sign out|different account/i });
-    this.successToast = page.locator('[data-sonner-toast][data-type="success"]').first();
-    this.errorToast = page.locator('[data-sonner-toast][data-type="error"]').first();
+    this.successToast = getToastLocator(page, "success").first();
+    this.errorToast = getToastLocator(page, "error").first();
   }
 
   // ===================
@@ -422,7 +423,7 @@ export class AuthPage extends BasePage {
   }
 
   getSuccessToast(message: RegExp): Locator {
-    return this.page.locator("[data-sonner-toast]").filter({ hasText: message }).first();
+    return getToastLocator(this.page, "success").filter({ hasText: message }).first();
   }
 
   async waitForToastOutcome(message: RegExp): Promise<"success" | "timeout"> {

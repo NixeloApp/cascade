@@ -8,6 +8,7 @@
 import { type APIRequestContext, expect, type Locator, type Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import { escapeRegExp, ROUTES, routePattern } from "./routes";
+import { getToastLocator } from "./toast-locators";
 
 /**
  * Wait timeouts used across tests.
@@ -313,10 +314,8 @@ export async function waitForToast(
   page: Page,
   type?: "success" | "error" | "info",
 ): Promise<string | null> {
-  const selector = type ? `[data-sonner-toast][data-type="${type}"]` : "[data-sonner-toast]";
-
   try {
-    const toast = page.locator(selector).first();
+    const toast = getToastLocator(page, type).first();
     await toast.waitFor({ state: "visible" });
     return await toast.textContent();
   } catch {
@@ -552,7 +551,7 @@ export async function waitForIssueCreateSuccess(page: Page, issueTitle?: string)
   }
 
   const issueCreatedToast = page
-    .locator("[data-sonner-toast][data-type='success']")
+    .getByTestId(TEST_IDS.TOAST.SUCCESS)
     .filter({ hasText: /issue created successfully/i })
     .first();
   await expect(issueCreatedToast).toBeVisible();
@@ -564,7 +563,7 @@ export async function waitForIssueCreateSuccess(page: Page, issueTitle?: string)
  */
 export async function waitForIssueUpdateSuccess(page: Page): Promise<void> {
   const issueUpdatedToast = page
-    .locator("[data-sonner-toast][data-type='success']")
+    .getByTestId(TEST_IDS.TOAST.SUCCESS)
     .filter({ hasText: /issue updated/i })
     .first();
   await expect(issueUpdatedToast).toBeVisible();
@@ -579,7 +578,7 @@ export async function waitForProjectCreateSuccess(page: Page): Promise<void> {
     .getByRole("dialog")
     .filter({ has: page.getByTestId(TEST_IDS.PROJECT.CREATE_MODAL) });
   const projectCreatedToast = page
-    .locator("[data-sonner-toast][data-type='success']")
+    .getByTestId(TEST_IDS.TOAST.SUCCESS)
     .filter({ hasText: /project created successfully/i })
     .first();
 

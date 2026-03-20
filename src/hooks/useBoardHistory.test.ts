@@ -1,20 +1,13 @@
 import type { Id } from "@convex/_generated/dataModel";
 import type { ReactMutation } from "convex/react";
 import type { FunctionReference } from "convex/server";
-import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { DISPLAY_LIMITS } from "@/lib/constants";
-import { showError, showSuccess } from "@/lib/toast";
+import { showError, showInfo, showSuccess } from "@/lib/toast";
 import { act, fireEvent, renderHook, waitFor } from "@/test/custom-render";
 import type { BoardAction } from "./useBoardHistory";
 import { useBoardHistory } from "./useBoardHistory";
-
-vi.mock("sonner", () => ({
-  toast: {
-    info: vi.fn(),
-  },
-}));
 
 vi.mock("@/hooks/useConvexHelpers", () => ({
   useAuthenticatedMutation: vi.fn(),
@@ -22,12 +15,13 @@ vi.mock("@/hooks/useConvexHelpers", () => ({
 
 vi.mock("@/lib/toast", () => ({
   showError: vi.fn(),
+  showInfo: vi.fn(),
   showSuccess: vi.fn(),
 }));
 
-const mockToastInfo = vi.mocked(toast.info);
 const mockUseAuthenticatedMutation = vi.mocked(useAuthenticatedMutation);
 const mockShowError = vi.mocked(showError);
+const mockShowInfo = vi.mocked(showInfo);
 const mockShowSuccess = vi.mocked(showSuccess);
 
 const updateIssueStatus = vi.fn();
@@ -159,8 +153,8 @@ describe("useBoardHistory", () => {
       await result.current.handleRedo();
     });
 
-    expect(mockToastInfo).toHaveBeenNthCalledWith(FIRST_ORDER, "Nothing to undo");
-    expect(mockToastInfo).toHaveBeenNthCalledWith(SECOND_ORDER, "Nothing to redo");
+    expect(mockShowInfo).toHaveBeenNthCalledWith(FIRST_ORDER, "Nothing to undo");
+    expect(mockShowInfo).toHaveBeenNthCalledWith(SECOND_ORDER, "Nothing to redo");
     expect(updateIssueStatus).not.toHaveBeenCalled();
   });
 

@@ -1,4 +1,5 @@
 import type { Page, TestInfo } from "@playwright/test";
+import { getToastLocator } from "./toast-locators";
 
 /**
  * Test utility helpers
@@ -91,14 +92,14 @@ export async function mockApiResponse(
  * Wait for a specific toast message
  */
 export async function waitForToast(page: Page, text: string, timeout = 5000): Promise<void> {
-  await page.locator("[data-sonner-toast]").filter({ hasText: text }).waitFor({ timeout });
+  await getToastLocator(page).filter({ hasText: text }).waitFor({ timeout });
 }
 
 /**
  * Dismiss all toasts
  */
 export async function dismissAllToasts(page: Page, maxAttempts = 10): Promise<void> {
-  const toasts = page.locator("[data-sonner-toast]");
+  const toasts = getToastLocator(page);
   let attempts = 0;
 
   while (attempts < maxAttempts) {

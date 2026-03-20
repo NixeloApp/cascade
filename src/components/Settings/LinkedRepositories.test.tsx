@@ -5,11 +5,10 @@ import type { ReactMutation } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import type { ReactNode } from "react";
 import { createContext, useContext } from "react";
-import { toast } from "sonner";
 import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
-import { showError, showSuccess } from "@/lib/toast";
+import { showError, showInfo, showSuccess } from "@/lib/toast";
 import { render, screen, waitFor, within } from "@/test/custom-render";
 import { LinkedRepositories } from "./LinkedRepositories";
 
@@ -47,13 +46,8 @@ vi.mock("@/hooks/useConvexHelpers", () => ({
 
 vi.mock("@/lib/toast", () => ({
   showError: vi.fn(),
+  showInfo: vi.fn(),
   showSuccess: vi.fn(),
-}));
-
-vi.mock("sonner", () => ({
-  toast: {
-    info: vi.fn(),
-  },
 }));
 
 vi.mock("../ui/ConfirmDialog", () => ({
@@ -114,8 +108,8 @@ vi.mock("../ui/Select", () => ({
 const mockUseAuthenticatedMutation = vi.mocked(useAuthenticatedMutation);
 const mockUseAuthenticatedQuery = vi.mocked(useAuthenticatedQuery);
 const mockShowError = vi.mocked(showError);
+const mockShowInfo = vi.mocked(showInfo);
 const mockShowSuccess = vi.mocked(showSuccess);
-const mockToastInfo = vi.mocked(toast.info);
 
 const mockUnlinkRepository = Object.assign(vi.fn(), {
   withOptimisticUpdate: vi.fn().mockReturnThis(),
@@ -208,7 +202,7 @@ describe("LinkedRepositories", () => {
 
     await user.click(screen.getByRole("button", { name: "+ Link New Repository" }));
 
-    expect(mockToastInfo).toHaveBeenCalledWith("Repository linking UI coming soon");
+    expect(mockShowInfo).toHaveBeenCalledWith("Repository linking UI coming soon");
   });
 
   it("unlinks a repository after confirmation", async () => {

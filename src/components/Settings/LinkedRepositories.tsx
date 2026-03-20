@@ -1,10 +1,9 @@
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useState } from "react";
-import { toast } from "sonner";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Github, Trash2 } from "@/lib/icons";
-import { showError, showSuccess } from "@/lib/toast";
+import { showError, showInfo, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
@@ -109,7 +108,7 @@ export function LinkedRepositories() {
         <Button
           variant="secondary"
           size="sm"
-          onClick={() => toast.info("Repository linking UI coming soon")}
+          onClick={() => showInfo("Repository linking UI coming soon")}
         >
           + Link New Repository
         </Button>

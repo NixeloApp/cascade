@@ -6,8 +6,8 @@
  * Lists available offline features and capabilities.
  */
 
-import { toast } from "sonner";
 import { Check, RefreshCw, Wifi, WifiOff, X } from "@/lib/icons";
+import { showInfo } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useOfflineSyncStatus, useOnlineStatus } from "../../hooks/useOffline";
 import { Badge } from "../ui/Badge";
@@ -139,7 +139,7 @@ export function OfflineTab() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => toast.info("Manual sync triggered")}
+                onClick={() => showInfo("Manual sync triggered")}
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Sync Now
