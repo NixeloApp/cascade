@@ -421,6 +421,8 @@ export const TEST_IDS = {
     TITLE: "document-title",
     /** @see src/components/Documents/DocumentHeader.tsx */
     TITLE_INPUT: "document-title-input",
+    /** @see src/components/Plate/HeadingElement.tsx */
+    HEADING_ANCHOR: "document-heading-anchor",
   },
 
   // ============================================================

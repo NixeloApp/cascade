@@ -1,6 +1,7 @@
 import { DAY, HOUR } from "@convex/lib/timeUtils";
 import type { Value } from "platejs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { getDocumentHeadingAnchorId } from "@/lib/documents/headingAnchors";
 import { fireEvent, render, screen } from "@/test/custom-render";
 import { DocumentSidebar } from "./DocumentSidebar";
 
@@ -64,7 +65,7 @@ describe("DocumentSidebar", () => {
     const onHeadingClick = vi.fn();
     const scrollIntoView = vi.fn();
     const targetHeading = document.createElement("div");
-    targetHeading.setAttribute("data-block-id", "next-steps");
+    targetHeading.id = getDocumentHeadingAnchorId("next-steps");
     targetHeading.scrollIntoView = scrollIntoView;
     document.body.appendChild(targetHeading);
 

@@ -20,6 +20,7 @@ import { Flex } from "@/components/ui/Flex";
 import { IconButton } from "@/components/ui/IconButton";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { getDocumentHeadingAnchorId } from "@/lib/documents/headingAnchors";
 import { cn } from "@/lib/utils";
 
 interface HeadingItem {
@@ -243,9 +244,8 @@ export function DocumentSidebar({
   // Handle heading click - scroll to element
   const handleHeadingClick = (headingId: string) => {
     onHeadingClick?.(headingId);
-    // Try to scroll to the heading element
-    const element = document.querySelector(`[data-block-id="${headingId}"]`);
-    if (element) {
+    const element = document.getElementById(getDocumentHeadingAnchorId(headingId));
+    if (element instanceof HTMLElement) {
       element.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   };
