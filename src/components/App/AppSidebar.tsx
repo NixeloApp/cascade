@@ -736,15 +736,6 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                   )}
 
                   <NavItem
-                    to={ROUTES.meetings.path}
-                    params={{ orgSlug }}
-                    icon={Mic}
-                    label="Meetings"
-                    isActive={isActive(ROUTES.meetings.path.replace("/$orgSlug", ""))}
-                    isCollapsed={showCollapsed}
-                    onClick={handleNavClick}
-                  />
-                  <NavItem
                     to={ROUTES.assistant.path}
                     params={{ orgSlug }}
                     icon={Bot}
