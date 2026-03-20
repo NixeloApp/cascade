@@ -15,6 +15,13 @@ const POST_FETCH_FILTER_BASELINE_PATH = path.join(
   "ci",
   "post-fetch-js-filters-baseline.json",
 );
+const CLIENT_QUERY_FILTER_BASELINE_PATH = path.join(
+  ROOT,
+  "scripts",
+  "ci",
+  "client-query-filters-baseline.json",
+);
+const QUERY_HOOK_PATTERN = /use(?:AuthenticatedQuery|Query|PaginatedQuery|SuspenseQuery)\s*\(/;
 
 function lineFromIndex(source, index) {
   return source.slice(0, index).split("\n").length;
@@ -121,8 +128,96 @@ function collectPostFetchFilters(content, file) {
   return detections;
 }
 
+function getClientQueryVariableNames(content) {
+  const variableNames = new Set();
+  const directAssignmentPattern =
+    /const\s+([A-Za-z_$][\w$]*)\s*=\s*use(?:AuthenticatedQuery|Query|PaginatedQuery|SuspenseQuery)\s*\(/g;
+  const resultsDestructurePattern =
+    /const\s+\{\s*results\s*:\s*([A-Za-z_$][\w$]*)[^}]*\}\s*=\s*usePaginatedQuery\s*\(/g;
+
+  for (const match of content.matchAll(directAssignmentPattern)) {
+    variableNames.add(match[1]);
+  }
+
+  for (const match of content.matchAll(resultsDestructurePattern)) {
+    variableNames.add(match[1]);
+  }
+
+  return variableNames;
+}
+
+function collectClientQueryFilters(content, file) {
+  const detections = [];
+  const seenDetections = new Set();
+  const queryVariables = getClientQueryVariableNames(content);
+
+  for (const variableName of queryVariables) {
+    const assignmentPattern = new RegExp(
+      `const\\s+(?:\\{[^}]*\\bresults\\s*:\\s*${variableName}\\b[^}]*\\}|${variableName}\\b)[\\s\\S]*?${QUERY_HOOK_PATTERN.source}`,
+      "g",
+    );
+    const assignmentMatch = assignmentPattern.exec(content);
+    if (!assignmentMatch) {
+      continue;
+    }
+
+    const searchStart = (assignmentMatch.index ?? 0) + assignmentMatch[0].length;
+    const searchArea = content.slice(searchStart);
+    const filterPattern = new RegExp(`\\b${variableName}\\s*(?:\\?\\.|\\.)filter\\s*\\(`, "g");
+
+    for (const filterMatch of searchArea.matchAll(filterPattern)) {
+      const absoluteIndex = searchStart + (filterMatch.index ?? 0);
+      const line = lineFromIndex(content, absoluteIndex);
+      const statementEnd = content.indexOf(");", absoluteIndex);
+      const sliceEnd = statementEnd === -1 ? absoluteIndex + 320 : statementEnd + 2;
+      const filterStatement = content
+        .slice(absoluteIndex, Math.min(content.length, sliceEnd))
+        .replace(/\s+/g, " ")
+        .trim();
+
+      const paramMatch = filterStatement.match(/\.filter\s*\(\s*\(?\s*([A-Za-z_$][\w$]*)/);
+      const paramName = paramMatch?.[1];
+      if (!paramName) {
+        continue;
+      }
+
+      const usesParamProperty = new RegExp(`\\b${paramName}\\.`, "g").test(filterStatement);
+      const isTypeGuard =
+        filterStatement.includes(`: ${paramName} is`) || /\bis\s+[A-Z]/.test(filterStatement);
+      const isBooleanFilter = new RegExp(`=>\\s*!?${paramName}\\.[A-Za-z_$]`, "g").test(
+        filterStatement,
+      );
+      const isComparatorFilter =
+        /===|!==|>=|<=|>|<|\.includes\s*\(/.test(filterStatement) && usesParamProperty;
+
+      if (!usesParamProperty || isTypeGuard || (!isBooleanFilter && !isComparatorFilter)) {
+        continue;
+      }
+
+      const detectionKey = `${file}:${line}:${variableName}`;
+      if (seenDetections.has(detectionKey)) {
+        continue;
+      }
+      seenDetections.add(detectionKey);
+
+      detections.push({
+        file,
+        line,
+        variableName,
+        code: filterStatement,
+      });
+    }
+  }
+
+  return detections;
+}
+
 export function run() {
   const convexDir = path.join(ROOT, "convex");
+  const clientDirCandidates = [
+    path.join(ROOT, "src", "components"),
+    path.join(ROOT, "src", "routes"),
+  ];
 
   const EXCLUDED_FILES = [
     "boundedQueries.ts",
@@ -406,6 +501,7 @@ export function run() {
   const files = findTsFiles(convexDir);
   const allIssues = [];
   const postFetchFilterDetections = [];
+  const clientQueryFilterDetections = [];
 
   for (const file of files) {
     const issues = analyzeFile(file);
@@ -414,6 +510,21 @@ export function run() {
       allIssues.push(...issues.map((issue) => ({ ...issue, file: relPath(file) })));
     }
     postFetchFilterDetections.push(...collectPostFetchFilters(content, relPath(file)));
+  }
+
+  for (const dir of clientDirCandidates) {
+    if (!fs.existsSync(dir)) {
+      continue;
+    }
+
+    const clientFiles = walkDir(dir, { extensions: new Set([".ts", ".tsx"]) }).filter(
+      (filePath) => !filePath.includes(".test.") && !filePath.endsWith(".d.ts"),
+    );
+
+    for (const filePath of clientFiles) {
+      const content = fs.readFileSync(filePath, "utf-8");
+      clientQueryFilterDetections.push(...collectClientQueryFilters(content, relPath(filePath)));
+    }
   }
 
   const postFetchFilterBaseline = fs.existsSync(POST_FETCH_FILTER_BASELINE_PATH)
@@ -449,6 +560,39 @@ export function run() {
 
   allIssues.push(...ratchetViolations);
 
+  const clientQueryFilterBaseline = fs.existsSync(CLIENT_QUERY_FILTER_BASELINE_PATH)
+    ? JSON.parse(fs.readFileSync(CLIENT_QUERY_FILTER_BASELINE_PATH, "utf8"))
+    : { clientQueryFiltersByFile: {} };
+  const clientQueryBaselineByFile = clientQueryFilterBaseline.clientQueryFiltersByFile ?? {};
+  const currentClientQueryByFile = {};
+  for (const detection of clientQueryFilterDetections) {
+    currentClientQueryByFile[detection.file] = (currentClientQueryByFile[detection.file] ?? 0) + 1;
+  }
+
+  const clientQueryRatchetViolations = [];
+  for (const [file, currentCount] of Object.entries(currentClientQueryByFile).sort((a, b) =>
+    a[0].localeCompare(b[0]),
+  )) {
+    const baselineCount = clientQueryBaselineByFile[file] ?? 0;
+    if (currentCount > baselineCount) {
+      const fileDetections = clientQueryFilterDetections
+        .filter((detection) => detection.file === file)
+        .sort((a, b) => a.line - b.line);
+      clientQueryRatchetViolations.push(
+        ...fileDetections.slice(baselineCount).map((detection) => ({
+          type: "CLIENT_QUERY_FILTER",
+          file: detection.file,
+          line: detection.line,
+          code: detection.code,
+          message:
+            "Client-side filtering on query results - consider moving the filter into a query arg or backend selector",
+        })),
+      );
+    }
+  }
+
+  allIssues.push(...clientQueryRatchetViolations);
+
   const messages = [];
   if (allIssues.length > 0) {
     for (const issue of allIssues) {
@@ -460,12 +604,27 @@ export function run() {
     (sum, count) => sum + count,
     0,
   );
-  const baselineDetail =
-    baselinedPostFetchCount > 0
-      ? ` (${baselinedPostFetchCount} baselined post-fetch JS filter(s) across ${
-          Object.keys(currentPostFetchByFile).length
-        } file(s))`
-      : "";
+  const baselinedClientQueryCount = Object.values(currentClientQueryByFile).reduce(
+    (sum, count) => sum + count,
+    0,
+  );
+  const baselineSummaryParts = [];
+  if (baselinedPostFetchCount > 0) {
+    baselineSummaryParts.push(
+      `${baselinedPostFetchCount} baselined post-fetch JS filter(s) across ${
+        Object.keys(currentPostFetchByFile).length
+      } file(s)`,
+    );
+  }
+  if (baselinedClientQueryCount > 0) {
+    baselineSummaryParts.push(
+      `${baselinedClientQueryCount} baselined client query filter(s) across ${
+        Object.keys(currentClientQueryByFile).length
+      } file(s)`,
+    );
+  }
+  const combinedBaselineDetail =
+    baselineSummaryParts.length > 0 ? ` (${baselineSummaryParts.join(", ")})` : "";
 
   return {
     passed: allIssues.length === 0,
@@ -473,7 +632,7 @@ export function run() {
     detail:
       allIssues.length > 0
         ? `${allIssues.length} query issue(s)`
-        : `no blocking issues${baselineDetail}`,
+        : `no blocking issues${combinedBaselineDetail}`,
     messages,
   };
 }

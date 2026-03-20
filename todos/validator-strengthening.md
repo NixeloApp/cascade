@@ -61,7 +61,7 @@ Fetches all data then filters in the component when the filter could be a backen
 ### New validator rules to add:
 
 - [x] **Post-fetch JS filter** -- ratcheted in `check-queries.js` for backend `.take()` / `.collect()` / `safeCollect()` results followed by JS `.filter()` (41 baselined across 18 files)
-- [ ] **Client-side query filter** -- detect `useQuery(...)` result followed by `.filter()` in React components. Flag simple property checks that could be query args. Advisory level.
+- [x] **Client-side query filter** -- ratcheted in `check-queries.js` for query-hook results filtered in React components/routes (13 baselined across 11 files)
 - [ ] **Multi-filter on same result** -- detect same variable filtered 2+ times in sequence. Suggest single pass or pre-aggregation.
 
 ## New Validators to Add (Non-Query)
