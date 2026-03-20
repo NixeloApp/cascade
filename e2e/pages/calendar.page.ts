@@ -40,7 +40,6 @@ export class CalendarPage extends BasePage {
   readonly eventDescriptionInput: Locator;
   readonly eventStartDate: Locator;
   readonly eventStartTime: Locator;
-  readonly eventEndDate: Locator;
   readonly eventEndTime: Locator;
   readonly eventTypeSelect: Locator;
   readonly isRequiredCheckbox: Locator;
@@ -63,15 +62,11 @@ export class CalendarPage extends BasePage {
     this.calendar = page
       .getByTestId(TEST_IDS.CALENDAR.ROOT)
       .or(page.locator(".calendar, [role='grid']").first());
-    this.calendarGrid = page
-      .locator("[data-calendar-grid]")
-      .or(page.locator(".calendar-grid, .fc-view"));
+    this.calendarGrid = page.getByTestId(TEST_IDS.CALENDAR.GRID);
     this.todayButton = page.getByRole("button", { name: /today/i });
     this.prevButton = page.getByRole("button", { name: /prev|previous|back|←|</i });
     this.nextButton = page.getByRole("button", { name: /next|forward|→|>/i });
-    this.monthYearLabel = page
-      .locator("[data-month-year]")
-      .or(page.locator(".calendar-header h2, .fc-toolbar-title"));
+    this.monthYearLabel = page.getByTestId(TEST_IDS.CALENDAR.HEADER_DATE);
 
     // View toggles
     this.monthViewButton = page
@@ -87,7 +82,6 @@ export class CalendarPage extends BasePage {
     // Events
     this.eventItems = page
       .getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM)
-      .or(page.locator("[data-event-item]"))
       .or(page.locator(".calendar-event, .fc-event"));
     this.createEventButton = page.getByRole("button", {
       name: /create.*event|new.*event|add.*event|\+/i,
@@ -103,10 +97,9 @@ export class CalendarPage extends BasePage {
     this.eventDescriptionInput = page
       .getByPlaceholder(/description/i)
       .or(page.getByLabel(/description/i));
-    this.eventStartDate = page.getByLabel(/start.*date/i).or(page.locator("[data-start-date]"));
-    this.eventStartTime = page.getByLabel(/start.*time/i).or(page.locator("[data-start-time]"));
-    this.eventEndDate = page.getByLabel(/end.*date/i).or(page.locator("[data-end-date]"));
-    this.eventEndTime = page.getByLabel(/end.*time/i).or(page.locator("[data-end-time]"));
+    this.eventStartDate = this.createEventModal.getByLabel(/^date$/i);
+    this.eventStartTime = this.createEventModal.getByLabel(/start time/i);
+    this.eventEndTime = this.createEventModal.getByLabel(/end time/i);
     this.eventTypeSelect = page.getByRole("combobox", { name: /type/i });
     this.isRequiredCheckbox = page.getByRole("checkbox", { name: /required/i });
     this.saveEventButton = this.createEventModal.getByRole("button", {
@@ -118,7 +111,7 @@ export class CalendarPage extends BasePage {
     this.eventDetailModal = page.getByTestId(TEST_IDS.CALENDAR.EVENT_DETAILS_MODAL);
     this.editEventButton = page.getByRole("button", { name: /edit/i });
     this.deleteEventButton = page.getByRole("button", { name: /delete/i });
-    this.attendeesList = page.locator("[data-attendees]");
+    this.attendeesList = this.eventDetailModal.getByTestId(TEST_IDS.CALENDAR.ATTENDEES_LIST);
     this.markAttendanceButton = page.getByRole("button", { name: /mark.*attendance|attendance/i });
   }
 

@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { Flex } from "@/components/ui/Flex";
 import { Typography } from "@/components/ui/Typography";
+import { TEST_IDS } from "@/lib/test-ids";
 import { useCalendarContext } from "../../calendar-context";
 import { CalendarHeaderDateBadge } from "./calendar-header-date-badge";
 import { CalendarHeaderDateChevrons } from "./calendar-header-date-chevrons";
@@ -14,7 +15,7 @@ export function CalendarHeaderDate(): React.ReactElement {
       <div className="hidden sm:block">
         <CalendarHeaderDateIcon />
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0" data-testid={TEST_IDS.CALENDAR.HEADER_DATE}>
         <Flex align="center" gap="xs" gapSm="sm">
           <Typography variant="calendarHeaderTitle">
             <span className="sm:hidden">{format(date, "MMM yyyy")}</span>

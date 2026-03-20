@@ -213,14 +213,20 @@ export const TEST_IDS = {
   CALENDAR: {
     /** @see src/components/Calendar/CalendarView.tsx */
     ROOT: "calendar-root",
+    /** @see src/components/Calendar/shadcn-calendar/body/calendar-body.tsx */
+    GRID: "calendar-grid",
     /** @see src/components/Calendar/shadcn-calendar/calendar-event.tsx */
     EVENT_ITEM: "calendar-event-item",
     /** @see src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx */
     DAY_CELL: "calendar-day-cell",
     /** @see src/components/Calendar/EventDetailsModal.tsx */
     EVENT_DETAILS_MODAL: "calendar-event-details-modal",
+    /** @see src/components/Calendar/EventDetailsModal.tsx */
+    ATTENDEES_LIST: "calendar-attendees-list",
     /** @see src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx */
     QUICK_ADD_DAY: "calendar-quick-add-day",
+    /** @see src/components/Calendar/shadcn-calendar/header/date/calendar-header-date.tsx */
+    HEADER_DATE: "calendar-header-date",
     /** @see src/components/Calendar/shadcn-calendar/header/actions/calendar-header-actions-mode.tsx */
     MODE_DAY: "calendar-mode-day",
     MODE_WEEK: "calendar-mode-week",

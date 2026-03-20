@@ -78,7 +78,12 @@ export function CalendarBodyMonth(): React.ReactElement {
   }
 
   return (
-    <Flex direction="column" flex="1" className="overflow-hidden bg-ui-bg">
+    <Flex
+      direction="column"
+      flex="1"
+      className="overflow-hidden bg-ui-bg"
+      data-testid={TEST_IDS.CALENDAR.GRID}
+    >
       <Grid cols={7} className="bg-ui-bg-secondary/50">
         {WEEKDAY_NAMES.map((day) => (
           <Card key={day} recipe="calendarMonthWeekdayHeaderCell" className="text-center">

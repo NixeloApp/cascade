@@ -3,6 +3,7 @@ import { HOUR } from "@convex/lib/timeUtils";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { EventDetailsModal } from "./EventDetailsModal";
 
@@ -94,5 +95,33 @@ describe("EventDetailsModal", () => {
     render(<EventDetailsModal eventId={eventId} open onOpenChange={() => {}} />);
 
     expect(screen.getByRole("dialog", { name: "Sprint Planning" })).toBeInTheDocument();
+  });
+
+  it("renders the owned attendees list test id for required meetings", () => {
+    mockUseAuthenticatedQuery
+      .mockReturnValueOnce({
+        _id: eventId,
+        title: "Sprint Planning",
+        startTime: Date.now(),
+        endTime: Date.now() + HOUR,
+        isRequired: true,
+        eventType: "meeting",
+        status: "confirmed",
+        createdBy: "user_1",
+        organizerName: "John Doe",
+        attendeeIds: ["user_2"],
+        participants: [],
+        summary: { present: 0, absent: 0, tardy: 0 },
+      })
+      .mockReturnValueOnce({
+        attendees: [{ userId: "user_2", userName: "Jane Doe", status: "present" }],
+        markedCount: 1,
+        totalAttendees: 1,
+      });
+
+    render(<EventDetailsModal eventId={eventId} open onOpenChange={() => {}} />);
+
+    expect(screen.getByTestId(TEST_IDS.CALENDAR.ATTENDEES_LIST)).toBeInTheDocument();
+    expect(screen.getByText("Jane Doe")).toBeInTheDocument();
   });
 });
