@@ -60,7 +60,7 @@ Fetches all data then filters in the component when the filter could be a backen
 
 ### New validator rules to add:
 
-- [ ] **Post-fetch JS filter** -- detect `.take(N)` or `.collect()` result followed by `.filter((item) => item.field === value)` within 10 lines. Skip Convex filters `(q) => q.eq(...)`, `notDeleted`, and `.includes()` (can't express in Convex). Report as warning with "consider moving to query filter or index."
+- [x] **Post-fetch JS filter** -- ratcheted in `check-queries.js` for backend `.take()` / `.collect()` / `safeCollect()` results followed by JS `.filter()` (41 baselined across 18 files)
 - [ ] **Client-side query filter** -- detect `useQuery(...)` result followed by `.filter()` in React components. Flag simple property checks that could be query args. Advisory level.
 - [ ] **Multi-filter on same result** -- detect same variable filtered 2+ times in sequence. Suggest single pass or pre-aggregation.
 

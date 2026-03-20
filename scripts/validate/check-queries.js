@@ -9,6 +9,118 @@ import fs from "node:fs";
 import path from "node:path";
 import { ROOT, relPath, walkDir } from "./utils.js";
 
+const POST_FETCH_FILTER_BASELINE_PATH = path.join(
+  ROOT,
+  "scripts",
+  "ci",
+  "post-fetch-js-filters-baseline.json",
+);
+
+function lineFromIndex(source, index) {
+  return source.slice(0, index).split("\n").length;
+}
+
+function getQueryHelperNames(content) {
+  const helperNames = new Set();
+  const functionPattern =
+    /(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\([^)]*\)\s*\{([\s\S]*?)\n\}/g;
+
+  for (const match of content.matchAll(functionPattern)) {
+    const helperName = match[1];
+    const body = match[2] ?? "";
+    if (body.includes(".take(") || body.includes(".collect(") || body.includes("safeCollect(")) {
+      helperNames.add(helperName);
+    }
+  }
+
+  return helperNames;
+}
+
+function collectPostFetchFilters(content, file) {
+  const detections = [];
+  const seenDetections = new Set();
+  const helperNames = getQueryHelperNames(content);
+  const statementPattern =
+    /(?:(?:const|let)\s+([A-Za-z_$][\w$]*)|([A-Za-z_$][\w$]*))\s*=\s*await\s+([\s\S]*?);/g;
+
+  for (const match of content.matchAll(statementPattern)) {
+    const variableName = match[1] ?? match[2];
+    const expression = match[3] ?? "";
+    if (!variableName) continue;
+
+    const usesDirectFetch =
+      expression.includes(".take(") ||
+      expression.includes(".collect(") ||
+      expression.includes("safeCollect(");
+    const usesHelperFetch = [...helperNames].some((helperName) =>
+      new RegExp(`\\b${helperName}\\s*\\(`).test(expression),
+    );
+
+    if (!(usesDirectFetch || usesHelperFetch)) {
+      continue;
+    }
+
+    const assignmentIndex = match.index ?? 0;
+    const assignmentLine = lineFromIndex(content, assignmentIndex);
+    const lookAheadStart = assignmentIndex + match[0].length;
+    const lookAhead = content.slice(
+      lookAheadStart,
+      Math.min(content.length, lookAheadStart + 2400),
+    );
+    const filterPattern = new RegExp(
+      `\\b${variableName}\\s*(?:=\\s*${variableName}\\s*)?\\.filter\\s*\\(`,
+      "g",
+    );
+
+    for (const filterMatch of lookAhead.matchAll(filterPattern)) {
+      const absoluteIndex = lookAheadStart + (filterMatch.index ?? 0);
+      const line = lineFromIndex(content, absoluteIndex);
+      const lineDelta = line - assignmentLine;
+      if (lineDelta < 0 || lineDelta > 30) {
+        continue;
+      }
+
+      const statementEnd = content.indexOf(");", absoluteIndex);
+      const sliceEnd = statementEnd === -1 ? absoluteIndex + 300 : statementEnd + 2;
+      const filterStatement = content
+        .slice(absoluteIndex, Math.min(content.length, sliceEnd))
+        .replace(/\s+/g, " ")
+        .trim();
+
+      if (
+        filterStatement.includes(".includes(") ||
+        filterStatement.includes(".has(") ||
+        filterStatement.includes("notDeleted") ||
+        filterStatement.includes("onlyDeleted") ||
+        /\.filter\s*\(\s*\(?\s*q\s*\)?\s*=>/.test(filterStatement)
+      ) {
+        continue;
+      }
+
+      const paramMatch = filterStatement.match(/\.filter\s*\(\s*\(?\s*([A-Za-z_$][\w$]*)/);
+      const paramName = paramMatch?.[1];
+      if (!paramName || !new RegExp(`\\b${paramName}\\.`, "g").test(filterStatement)) {
+        continue;
+      }
+
+      const detectionKey = `${file}:${line}:${variableName}`;
+      if (seenDetections.has(detectionKey)) {
+        continue;
+      }
+      seenDetections.add(detectionKey);
+
+      detections.push({
+        file,
+        line,
+        variableName,
+        code: filterStatement,
+      });
+    }
+  }
+
+  return detections;
+}
+
 export function run() {
   const convexDir = path.join(ROOT, "convex");
 
@@ -293,13 +405,49 @@ export function run() {
 
   const files = findTsFiles(convexDir);
   const allIssues = [];
+  const postFetchFilterDetections = [];
 
   for (const file of files) {
     const issues = analyzeFile(file);
+    const content = fs.readFileSync(file, "utf-8");
     if (issues.length > 0) {
       allIssues.push(...issues.map((issue) => ({ ...issue, file: relPath(file) })));
     }
+    postFetchFilterDetections.push(...collectPostFetchFilters(content, relPath(file)));
   }
+
+  const postFetchFilterBaseline = fs.existsSync(POST_FETCH_FILTER_BASELINE_PATH)
+    ? JSON.parse(fs.readFileSync(POST_FETCH_FILTER_BASELINE_PATH, "utf8"))
+    : { postFetchJsFiltersByFile: {} };
+  const postFetchFilterBaselineByFile = postFetchFilterBaseline.postFetchJsFiltersByFile ?? {};
+  const currentPostFetchByFile = {};
+  for (const detection of postFetchFilterDetections) {
+    currentPostFetchByFile[detection.file] = (currentPostFetchByFile[detection.file] ?? 0) + 1;
+  }
+
+  const ratchetViolations = [];
+  for (const [file, currentCount] of Object.entries(currentPostFetchByFile).sort((a, b) =>
+    a[0].localeCompare(b[0]),
+  )) {
+    const baselineCount = postFetchFilterBaselineByFile[file] ?? 0;
+    if (currentCount > baselineCount) {
+      const fileDetections = postFetchFilterDetections
+        .filter((detection) => detection.file === file)
+        .sort((a, b) => a.line - b.line);
+      ratchetViolations.push(
+        ...fileDetections.slice(baselineCount).map((detection) => ({
+          type: "POST_FETCH_JS_FILTER",
+          file: detection.file,
+          line: detection.line,
+          code: detection.code,
+          message:
+            "Post-fetch JS filter after bounded query result - consider moving the filter into the query or adding an index",
+        })),
+      );
+    }
+  }
+
+  allIssues.push(...ratchetViolations);
 
   const messages = [];
   if (allIssues.length > 0) {
@@ -308,10 +456,24 @@ export function run() {
     }
   }
 
+  const baselinedPostFetchCount = Object.values(currentPostFetchByFile).reduce(
+    (sum, count) => sum + count,
+    0,
+  );
+  const baselineDetail =
+    baselinedPostFetchCount > 0
+      ? ` (${baselinedPostFetchCount} baselined post-fetch JS filter(s) across ${
+          Object.keys(currentPostFetchByFile).length
+        } file(s))`
+      : "";
+
   return {
     passed: allIssues.length === 0,
     errors: allIssues.length,
-    detail: allIssues.length > 0 ? `${allIssues.length} query issue(s)` : null,
+    detail:
+      allIssues.length > 0
+        ? `${allIssues.length} query issue(s)`
+        : `no blocking issues${baselineDetail}`,
     messages,
   };
 }

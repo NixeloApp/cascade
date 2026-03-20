@@ -1,0 +1,22 @@
+{
+  "postFetchJsFiltersByFile": {
+    "convex/ai/queries.ts": 3,
+    "convex/analytics.ts": 1,
+    "convex/apiKeys.ts": 2,
+    "convex/automationRules.ts": 1,
+    "convex/calendarEvents.ts": 3,
+    "convex/calendarEventsAttendance.ts": 1,
+    "convex/dashboard.ts": 3,
+    "convex/export.ts": 5,
+    "convex/files.ts": 1,
+    "convex/hourCompliance.ts": 7,
+    "convex/invoices.ts": 1,
+    "convex/issues/queries.ts": 7,
+    "convex/oauthHealthCheck.ts": 1,
+    "convex/offlineSync.ts": 1,
+    "convex/softDeleteCleanup.ts": 1,
+    "convex/sprints.ts": 1,
+    "convex/timeTracking.ts": 1,
+    "convex/users.ts": 1
+  }
+}
