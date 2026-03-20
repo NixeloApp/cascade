@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/Label";
 import { List } from "@/components/ui/List";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Metadata, MetadataItem } from "@/components/ui/Metadata";
+import { ScrollArea } from "@/components/ui/ScrollArea";
 import { Section } from "@/components/ui/Section";
 import {
   Select,
@@ -711,7 +712,7 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
   if (!hasTranscriptSegments(transcript.segments)) {
     return (
       <Card variant="soft" padding="md">
-        <Typography as="pre" variant="mono" color="secondary" className="whitespace-pre-wrap">
+        <Typography as="pre" variant="monoBlock">
           {transcript.fullText}
         </Typography>
       </Card>
@@ -777,48 +778,50 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
         </Stack>
       </Card>
 
-      <Card variant="soft" padding="md" className="max-h-96 overflow-y-auto">
-        {filteredSegments.length === 0 ? (
-          <EmptyState
-            icon={FileText}
-            size="compact"
-            title="No transcript matches"
-            description="Try a different phrase or speaker name."
-          />
-        ) : (
-          <List as="ol" gap="sm">
-            {filteredSegments.map((segment, index) => {
-              const segmentKey = getTranscriptSegmentKey(segment, index);
+      <Card variant="soft" padding="md">
+        <ScrollArea size="contentLg">
+          {filteredSegments.length === 0 ? (
+            <EmptyState
+              icon={FileText}
+              size="compact"
+              title="No transcript matches"
+              description="Try a different phrase or speaker name."
+            />
+          ) : (
+            <List as="ol" gap="sm">
+              {filteredSegments.map((segment, index) => {
+                const segmentKey = getTranscriptSegmentKey(segment, index);
 
-              return (
-                <li
-                  key={segmentKey}
-                  ref={(element) => {
-                    segmentRefs.current[segmentKey] = element;
-                  }}
-                >
-                  <Card variant="section" padding="sm">
-                    <Stack gap="xs">
-                      <Flex justify="between" align="start" gap="sm" wrap>
-                        <Flex gap="xs" wrap>
-                          <Badge size="sm">{formatTranscriptTimestamp(segment.startTime)}</Badge>
-                          <Badge size="sm">
-                            {formatTranscriptTimestamp(segment.startTime)} -{" "}
-                            {formatTranscriptTimestamp(segment.endTime)}
-                          </Badge>
-                          {segment.speaker && <Badge size="sm">{segment.speaker}</Badge>}
+                return (
+                  <li
+                    key={segmentKey}
+                    ref={(element) => {
+                      segmentRefs.current[segmentKey] = element;
+                    }}
+                  >
+                    <Card variant="section" padding="sm">
+                      <Stack gap="xs">
+                        <Flex justify="between" align="start" gap="sm" wrap>
+                          <Flex gap="xs" wrap>
+                            <Badge size="sm">{formatTranscriptTimestamp(segment.startTime)}</Badge>
+                            <Badge size="sm">
+                              {formatTranscriptTimestamp(segment.startTime)} -{" "}
+                              {formatTranscriptTimestamp(segment.endTime)}
+                            </Badge>
+                            {segment.speaker && <Badge size="sm">{segment.speaker}</Badge>}
+                          </Flex>
                         </Flex>
-                      </Flex>
-                      <Typography variant="caption" color="secondary">
-                        {segment.text}
-                      </Typography>
-                    </Stack>
-                  </Card>
-                </li>
-              );
-            })}
-          </List>
-        )}
+                        <Typography variant="caption" color="secondary">
+                          {segment.text}
+                        </Typography>
+                      </Stack>
+                    </Card>
+                  </li>
+                );
+              })}
+            </List>
+          )}
+        </ScrollArea>
       </Card>
 
       <Card padding="sm">
@@ -826,14 +829,11 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
           <Typography variant="caption" color="secondary">
             Raw Transcript
           </Typography>
-          <Typography
-            as="pre"
-            variant="mono"
-            color="secondary"
-            className="max-h-40 overflow-y-auto whitespace-pre-wrap"
-          >
-            {transcript.fullText}
-          </Typography>
+          <ScrollArea size="contentSm">
+            <Typography as="pre" variant="monoBlock">
+              {transcript.fullText}
+            </Typography>
+          </ScrollArea>
         </Stack>
       </Card>
     </Stack>

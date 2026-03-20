@@ -92,6 +92,19 @@ describe("Typography", () => {
     expect(label.className).toContain("tracking-tight");
   });
 
+  it("maps monoBlock to a paragraph with wrapped mono block styling", () => {
+    render(
+      <Typography variant="monoBlock" data-testid="mono-block">
+        Line one
+      </Typography>,
+    );
+    const block = screen.getByTestId("mono-block");
+    expect(block.tagName).toBe("P");
+    expect(block.className).toContain("font-mono");
+    expect(block.className).toContain("whitespace-pre-wrap");
+    expect(block.className).toContain("text-xs");
+  });
+
   it("maps metricLabelWide to a paragraph with wide uppercase metric styling", () => {
     render(
       <Typography variant="metricLabelWide" data-testid="metric-label-wide">
