@@ -171,7 +171,7 @@ export function UserManagement() {
   };
 
   return (
-    <Flex direction="column" gap="xl">
+    <Flex direction="column" gap="xl" data-testid={TEST_IDS.SETTINGS.USER_MANAGEMENT_SECTION}>
       {/* Header */}
       <Flex justify="between" align="center">
         <Stack gap="xs">

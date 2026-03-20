@@ -7,6 +7,7 @@
  */
 
 import { Check, RefreshCw, Wifi, WifiOff, X } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showInfo } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useOfflineSyncStatus, useOnlineStatus } from "../../hooks/useOffline";
@@ -30,7 +31,7 @@ export function OfflineTab() {
   return (
     <Flex direction="column" gap="xl">
       {/* Connection Status */}
-      <Card padding="lg">
+      <Card padding="lg" data-testid={TEST_IDS.SETTINGS.OFFLINE_STATUS_CARD}>
         <Stack gap="lg">
           <Flex gap="lg" align="center">
             <div className={cn("p-2", isOnline ? "bg-status-success" : "bg-status-error")}>

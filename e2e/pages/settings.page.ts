@@ -119,21 +119,17 @@ export class SettingsPage extends BasePage {
     this.themeSystemOption = page.getByRole("radio", { name: /system theme/i });
 
     // Integrations
-    this.githubIntegration = page
-      .locator("[data-integration='github']")
-      .or(page.getByText(/github/i).first());
-    this.googleCalendarIntegration = page
-      .locator("[data-integration='google-calendar']")
-      .or(page.getByText(/google.*calendar/i).first());
-    this.pumbleIntegration = page
-      .locator("[data-integration='pumble']")
-      .or(page.getByText(/pumble/i).first());
+    this.githubIntegration = page.getByTestId(TEST_IDS.SETTINGS.GITHUB_INTEGRATION);
+    this.googleCalendarIntegration = page.getByTestId(
+      TEST_IDS.SETTINGS.GOOGLE_CALENDAR_INTEGRATION,
+    );
+    this.pumbleIntegration = page.getByTestId(TEST_IDS.SETTINGS.PUMBLE_INTEGRATION);
     this.connectGithubButton = page.getByRole("button", { name: /connect.*github/i });
     this.connectGoogleButton = page.getByRole("button", { name: /connect.*google/i });
     this.connectPumbleButton = page.getByRole("button", { name: /connect.*pumble/i });
 
     // API Keys
-    this.apiKeysList = page.locator("[data-api-keys-list]");
+    this.apiKeysList = page.getByTestId(TEST_IDS.SETTINGS.API_KEYS_SECTION);
     this.generateApiKeyButton = page.getByRole("button", {
       name: /generate|create.*key|new.*key/i,
     });
@@ -146,11 +142,13 @@ export class SettingsPage extends BasePage {
     this.offlineToggle = page
       .getByRole("switch", { name: /offline/i })
       .or(page.getByRole("checkbox", { name: /offline/i }));
-    this.syncStatusIndicator = page.locator("[data-sync-status]");
+    this.syncStatusIndicator = page.getByTestId(TEST_IDS.SETTINGS.OFFLINE_STATUS_CARD);
     this.forceSyncButton = page.getByRole("button", { name: /sync|force.*sync/i });
 
     // Preferences
-    this.notificationPreferences = page.locator("[data-notification-preferences]");
+    this.notificationPreferences = page.getByTestId(
+      TEST_IDS.SETTINGS.NOTIFICATION_PREFERENCES_SECTION,
+    );
     this.emailNotificationsToggle = page
       .getByRole("switch", { name: /email/i })
       .or(page.getByRole("checkbox", { name: /email.*notification/i }));
@@ -161,13 +159,11 @@ export class SettingsPage extends BasePage {
     this.timezoneSelect = page.getByRole("combobox", { name: /timezone/i });
 
     // Admin
-    this.userManagementSection = page
-      .locator("[data-user-management]")
-      .or(page.getByText(/user.*management/i));
+    this.userManagementSection = page.getByTestId(TEST_IDS.SETTINGS.USER_MANAGEMENT_SECTION);
     this.userManagementHeading = page.getByRole("heading", { name: /user management/i });
     this.inviteUserButton = page.getByRole("button", { name: /invite.*user/i });
-    this.userTypeManager = page.locator("[data-user-type-manager]");
-    this.hourComplianceDashboard = page.locator("[data-hour-compliance]");
+    this.userTypeManager = page.getByTestId(TEST_IDS.SETTINGS.USER_TYPE_MANAGER_SECTION);
+    this.hourComplianceDashboard = page.getByTestId(TEST_IDS.SETTINGS.HOUR_COMPLIANCE_SECTION);
     this.adminUsersTab = page.getByRole("tab", { name: /^Users$/ });
     this.platformUsersTable = page.getByRole("table", { name: /platform users/i });
     this.inviteEmptyState = page.getByText(/^No invitations$/);

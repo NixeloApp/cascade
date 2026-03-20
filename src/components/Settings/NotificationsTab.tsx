@@ -23,6 +23,7 @@ import {
   Smartphone,
   User,
 } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { getVapidPublicKey, useWebPush } from "@/lib/webPush";
@@ -393,7 +394,7 @@ export function NotificationsTab() {
   };
 
   return (
-    <Stack gap="lg">
+    <Stack gap="lg" data-testid={TEST_IDS.SETTINGS.NOTIFICATION_PREFERENCES_SECTION}>
       <PushNotificationsCard
         isSupported={isSupported}
         vapidKey={vapidKey}

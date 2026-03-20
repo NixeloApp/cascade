@@ -321,6 +321,24 @@ export const TEST_IDS = {
     TIME_APPROVAL_SWITCH: "settings-time-approval-switch",
     /** @see src/components/Admin/OrganizationSettings.tsx */
     SAVE_BUTTON: "settings-save-button",
+    /** @see src/components/Settings/GitHubIntegration.tsx */
+    GITHUB_INTEGRATION: "settings-github-integration",
+    /** @see src/components/Settings/GoogleCalendarIntegration.tsx */
+    GOOGLE_CALENDAR_INTEGRATION: "settings-google-calendar-integration",
+    /** @see src/components/Settings/PumbleIntegration.tsx */
+    PUMBLE_INTEGRATION: "settings-pumble-integration",
+    /** @see src/components/Settings/ApiKeysManager.tsx */
+    API_KEYS_SECTION: "settings-api-keys-section",
+    /** @see src/components/Settings/OfflineTab.tsx */
+    OFFLINE_STATUS_CARD: "settings-offline-status-card",
+    /** @see src/components/Settings/NotificationsTab.tsx */
+    NOTIFICATION_PREFERENCES_SECTION: "settings-notification-preferences-section",
+    /** @see src/components/Admin/UserManagement.tsx */
+    USER_MANAGEMENT_SECTION: "settings-user-management-section",
+    /** @see src/components/Admin/UserTypeManager.tsx */
+    USER_TYPE_MANAGER_SECTION: "settings-user-type-manager-section",
+    /** @see src/components/Admin/HourComplianceDashboard.tsx */
+    HOUR_COMPLIANCE_SECTION: "settings-hour-compliance-section",
   },
 
   // ============================================================

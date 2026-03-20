@@ -16,6 +16,7 @@ import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { AlertTriangle, CheckCircle, Gem, TrendingUp, XCircle, Zap } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card, CardBody, CardHeader } from "../ui/Card";
@@ -151,7 +152,7 @@ export function HourComplianceDashboard() {
   };
 
   return (
-    <Flex direction="column" gap="xl">
+    <Flex direction="column" gap="xl" data-testid={TEST_IDS.SETTINGS.HOUR_COMPLIANCE_SECTION}>
       {/* Summary Stats */}
       {summary && (
         <Grid cols={2} colsMd={5} gap="lg">
