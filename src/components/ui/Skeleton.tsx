@@ -20,7 +20,6 @@ interface SkeletonProps {
 export function Skeleton({ className }: SkeletonProps) {
   return (
     <div
-      data-loading-skeleton
       data-testid={TEST_IDS.LOADING.SKELETON}
       className={cn("animate-shimmer bg-ui-bg-soft rounded-md", className)}
     />

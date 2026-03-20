@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
+import { TEST_IDS } from "@/lib/test-ids";
 import { NixeloLogo } from "../Landing/Icons";
 import { Typography } from "../ui/Typography";
 
@@ -38,7 +39,7 @@ export function AppSplashScreen({ message }: { message?: string }) {
           {/* Minimal high-end loader - Always show to indicate activity */}
           <Card recipe="authSplashLoaderRail" padding="none">
             <div
-              data-loading-skeleton
+              data-testid={TEST_IDS.LOADING.SKELETON}
               className="h-full bg-linear-to-r from-landing-accent to-landing-accent-alt w-full -translate-x-full animate-shimmer"
               style={{ animation: "shimmer 1.5s infinite linear" }}
             />

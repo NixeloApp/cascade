@@ -153,7 +153,6 @@ function CollapsedColumn({
       ref={columnRef}
       aria-label={`${state.name} column (collapsed)`}
       data-testid={TEST_IDS.BOARD.COLUMN}
-      data-board-column
       className="w-11 shrink-0 snap-start animate-slide-up"
       style={{
         animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2)}ms`,
@@ -466,7 +465,6 @@ const KanbanColumnComponent = function KanbanColumn({
       ref={columnRef}
       aria-label={`${state.name} column`}
       data-testid={TEST_IDS.BOARD.COLUMN}
-      data-board-column
       className="w-72 shrink-0 snap-start animate-slide-up lg:w-80"
       style={{
         animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2)}ms`,

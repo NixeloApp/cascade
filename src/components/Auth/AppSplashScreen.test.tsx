@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 import { AppSplashScreen } from "./AppSplashScreen";
 
@@ -16,6 +17,7 @@ describe("AppSplashScreen", () => {
     render(<AppSplashScreen />);
 
     expect(screen.getByTestId("nixelo-logo")).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.LOADING.SKELETON)).toBeInTheDocument();
   });
 
   it("renders optional message", () => {

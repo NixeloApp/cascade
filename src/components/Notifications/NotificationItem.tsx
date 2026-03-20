@@ -176,7 +176,6 @@ export function NotificationItem({
       padding="md"
       radius="none"
       className="group relative animate-fade-in last:border-0"
-      data-notification-item
       data-testid={TEST_IDS.NOTIFICATION.ITEM}
     >
       <Flex align="start" gap="md">
