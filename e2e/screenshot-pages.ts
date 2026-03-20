@@ -912,6 +912,10 @@ async function openStableDialog(
   );
 }
 
+function getUploadDialogReadyLocator(dialog: Locator): Locator {
+  return dialog.getByRole("button", { name: /^upload$/i });
+}
+
 async function waitForDashboardCustomizeDialogReady(page: Page): Promise<Locator> {
   const dialog = page.getByRole("dialog", { name: /dashboard customization/i });
   await dialog.waitFor({ state: "visible", timeout: 5000 });
@@ -2410,11 +2414,7 @@ async function screenshotFilledStates(
           page,
           trigger,
           page.getByRole("dialog", { name: /^upload avatar$/i }),
-          page
-            .getByRole("dialog", { name: /^upload avatar$/i })
-            .getByText("JPG, PNG, GIF or WebP.", {
-              exact: true,
-            }),
+          getUploadDialogReadyLocator(page.getByRole("dialog", { name: /^upload avatar$/i })),
           "avatar upload",
         );
         await captureCurrentView(page, p, "settings-profile-avatar-upload-modal");
@@ -2436,11 +2436,7 @@ async function screenshotFilledStates(
           page,
           trigger,
           page.getByRole("dialog", { name: /^upload cover image$/i }),
-          page
-            .getByRole("dialog", { name: /^upload cover image$/i })
-            .getByText("JPG, PNG, GIF or WebP. Recommended: 1500x500px.", {
-              exact: true,
-            }),
+          getUploadDialogReadyLocator(page.getByRole("dialog", { name: /^upload cover image$/i })),
           "cover image upload",
         );
         await captureCurrentView(page, p, "settings-profile-cover-upload-modal");
