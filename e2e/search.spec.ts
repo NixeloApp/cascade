@@ -125,7 +125,7 @@ test.describe("Global Search", () => {
 
     // Verify "All" tab is active by default and shows count
     await expect(dashboardPage.globalSearchAllTab).toBeVisible();
-    await expect(dashboardPage.globalSearchAllTab).toHaveAttribute("data-state", "active");
+    await expect(dashboardPage.globalSearchAllTab).toHaveAttribute("aria-selected", "true");
     console.log("✓ All tab visible");
 
     // Click on "Issues" tab

@@ -113,6 +113,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [x] Replace the remaining `InvitePage` invalid/loading readiness catch chains with shared locator-state helpers
 - [x] Replace the remaining `test-helpers` toast-dismiss catch chain with the shared locator-state helper
 - [x] Replace the remaining screenshot-harness stringly `data-testid` issue/calendar selectors with locator helpers and `TEST_IDS` constants
+- [x] Replace the remaining search-spec raw tab state assertion with the accessible `aria-selected` contract
 - [x] Replace the project create-issue trigger and modal selectors with owned `TEST_IDS` constants
 - [x] Replace the orphaned onboarding tour command-palette/dashboard/board/sidebar selectors with owned `TEST_IDS` constants
 - [x] Replace the onboarding create-project tour selector with the owned `TEST_IDS.ONBOARDING.CREATE_PROJECT_BUTTON` contract
