@@ -869,6 +869,40 @@ async function openStableAlertDialog(
   throw new Error(`Alert dialog did not remain open: ${lastError?.message ?? "unknown error"}`);
 }
 
+async function openStableDialog(
+  page: Page,
+  trigger: Locator,
+  dialog: Locator,
+  readyLocator: Locator,
+  dialogLabel: string,
+  attempts = 2,
+): Promise<Locator> {
+  let lastError: Error | null = null;
+
+  await trigger.waitFor({ state: "visible", timeout: 5000 });
+
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      await dismissAllDialogs(page);
+      await trigger.scrollIntoViewIfNeeded();
+      await trigger.click();
+      await waitForDialogOpen(page);
+      await dialog.waitFor({ state: "visible", timeout: 5000 });
+      await readyLocator.waitFor({ state: "visible", timeout: 5000 });
+      await waitForAnimation(page);
+      await waitForScreenshotReady(page);
+      return dialog;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      await dismissAllDialogs(page);
+    }
+  }
+
+  throw new Error(
+    `${dialogLabel} dialog did not become ready: ${lastError?.message ?? "unknown error"}`,
+  );
+}
+
 function isProjectBoardUrl(url: string): boolean {
   return /\/projects\/[^/]+\/board$/.test(url);
 }
@@ -3666,10 +3700,13 @@ async function screenshotFilledStates(
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
       const trigger = page.getByRole("button", { name: /add time entry/i }).first();
-      await trigger.waitFor({ state: "visible", timeout: 5000 });
-      await trigger.click();
-      const dialog = await waitForDialogOpen(page);
-      await waitForScreenshotReady(page);
+      const dialog = await openStableDialog(
+        page,
+        trigger,
+        page.getByRole("dialog", { name: /^log time$/i }),
+        page.locator("#time-entry-form"),
+        "manual time entry",
+      );
       await captureCurrentView(page, p, "time-tracking-manual-entry-modal");
       await dismissIfOpen(page, dialog);
     });
@@ -4009,17 +4046,16 @@ async function screenshotDashboardModals(
   }
 
   const shortcutsTrigger = page.getByTestId(TEST_IDS.HEADER.SHORTCUTS_BUTTON);
-  if (
-    (await shortcutsTrigger.count()) > 0 &&
-    (await shortcutsTrigger
-      .first()
-      .isVisible()
-      .catch(() => false))
-  ) {
+  if ((await shortcutsTrigger.count()) > 0) {
     await runCaptureStep("dashboard shortcuts modal", async () => {
       await dismissAllDialogs(page);
-      await shortcutsTrigger.click();
-      const shortcutsDialog = await waitForDialogOpen(page);
+      const shortcutsDialog = await openStableDialog(
+        page,
+        shortcutsTrigger.first(),
+        page.getByRole("dialog", { name: /keyboard shortcuts/i }),
+        page.getByPlaceholder("Search shortcuts..."),
+        "shortcuts help",
+      );
       await captureCurrentView(page, prefix, "dashboard-shortcuts-modal");
       await dismissIfOpen(page, shortcutsDialog);
     });
@@ -4029,8 +4065,13 @@ async function screenshotDashboardModals(
   if ((await timeEntryTrigger.count()) > 0) {
     await runCaptureStep("dashboard time-entry modal", async () => {
       await dismissAllDialogs(page);
-      await timeEntryTrigger.click();
-      const timeEntryDialog = await waitForDialogOpen(page);
+      const timeEntryDialog = await openStableDialog(
+        page,
+        timeEntryTrigger,
+        page.getByRole("dialog", { name: /^start timer$/i }),
+        page.locator("#time-entry-form"),
+        "dashboard time entry",
+      );
       await captureCurrentView(page, prefix, "dashboard-time-entry-modal");
       await dismissIfOpen(page, timeEntryDialog);
     });
