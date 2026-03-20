@@ -6,6 +6,7 @@ export { DocumentsPage } from "./documents.page";
 export { InvitePage } from "./invite.page";
 export { IssueDetailPage } from "./issue-detail.page";
 export { LandingPage } from "./landing.page";
+export { MeetingsPage } from "./meetings.page";
 export { OnboardingPage } from "./onboarding.page";
 export { ProjectsPage } from "./projects.page";
 export { SettingsPage } from "./settings.page";

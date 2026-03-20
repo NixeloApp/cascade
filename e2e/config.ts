@@ -253,6 +253,8 @@ export const E2E_ENDPOINTS = {
   nukeTestUsers: `${CONVEX_SITE_URL}/e2e/nuke-test-users`,
   // Seed screenshot data (workspace, team, project, issues, documents)
   seedScreenshotData: `${CONVEX_SITE_URL}/e2e/seed-screenshot-data`,
+  // Reset meetings data for a specific E2E user
+  resetMeetingsData: `${CONVEX_SITE_URL}/e2e/reset-meetings-data`,
   // Update a seeded project's workflow state for interactive screenshot capture
   updateProjectWorkflowState: `${CONVEX_SITE_URL}/e2e/update-project-workflow-state`,
   // Replace a seeded project's workflow states for interactive screenshot capture

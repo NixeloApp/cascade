@@ -15,7 +15,13 @@ import { v } from "convex/values";
 import { Scrypt } from "lucia";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
-import { type ActionCtx, httpAction, internalMutation, internalQuery } from "./_generated/server";
+import {
+  type ActionCtx,
+  httpAction,
+  internalMutation,
+  internalQuery,
+  type MutationCtx,
+} from "./_generated/server";
 import { constantTimeEqual } from "./lib/apiAuth";
 import { BOUNDED_LIST_LIMIT } from "./lib/boundedQueries";
 import { decryptE2EData, encryptE2EData } from "./lib/e2eCrypto";
@@ -133,6 +139,61 @@ function generateInvitePreviewToken(): string {
   const timestamp = Date.now().toString(36);
   const randomPart = crypto.randomUUID().replace(/-/g, "");
   return `invite_${timestamp}_${randomPart}`;
+}
+
+async function deleteMeetingRecordingGraph(
+  ctx: MutationCtx,
+  recordingId: Id<"meetingRecordings">,
+): Promise<void> {
+  const [transcripts, summaries, participants, jobs] = await Promise.all([
+    ctx.db
+      .query("meetingTranscripts")
+      .withIndex("by_recording", (q) => q.eq("recordingId", recordingId))
+      .collect(),
+    ctx.db
+      .query("meetingSummaries")
+      .withIndex("by_recording", (q) => q.eq("recordingId", recordingId))
+      .collect(),
+    ctx.db
+      .query("meetingParticipants")
+      .withIndex("by_recording", (q) => q.eq("recordingId", recordingId))
+      .collect(),
+    ctx.db
+      .query("meetingBotJobs")
+      .withIndex("by_recording", (q) => q.eq("recordingId", recordingId))
+      .collect(),
+  ]);
+
+  for (const transcript of transcripts) {
+    await ctx.db.delete(transcript._id);
+  }
+
+  for (const summary of summaries) {
+    await ctx.db.delete(summary._id);
+  }
+
+  for (const participant of participants) {
+    await ctx.db.delete(participant._id);
+  }
+
+  for (const job of jobs) {
+    await ctx.db.delete(job._id);
+  }
+
+  await ctx.db.delete(recordingId);
+}
+
+async function resetMeetingSeedDataForUser(ctx: MutationCtx, userId: Id<"users">): Promise<number> {
+  const recordings = await ctx.db
+    .query("meetingRecordings")
+    .withIndex("by_creator", (q) => q.eq("createdBy", userId))
+    .collect();
+
+  for (const recording of recordings) {
+    await deleteMeetingRecordingGraph(ctx, recording._id);
+  }
+
+  return recordings.length;
 }
 
 /**
@@ -848,6 +909,84 @@ export const cleanupTestUsersEndpoint = httpAction(async (ctx, request) => {
       headers: { "Content-Type": "application/json" },
     });
   }
+});
+
+/**
+ * Reset all meetings data created by a test user.
+ * POST /e2e/reset-meetings-data
+ * Body: { email: string }
+ */
+export const resetMeetingsDataEndpoint = httpAction(async (ctx, request) => {
+  const authError = validateE2EApiKey(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { email } = body;
+
+    if (!email) {
+      return new Response(JSON.stringify({ error: "Missing email" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!isTestEmail(email)) {
+      return new Response(JSON.stringify({ error: "Only test emails allowed" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await ctx.runMutation(internal.e2e.resetMeetingsDataInternal, { email });
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ success: false, error: String(e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+
+export const resetMeetingsDataInternal = internalMutation({
+  args: {
+    email: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    deletedRecordings: v.number(),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    if (!isTestEmail(args.email)) {
+      throw new Error("Only test emails allowed");
+    }
+
+    const users = await ctx.db
+      .query("users")
+      .withIndex("email", (q) => q.eq("email", args.email))
+      .collect();
+    const user = users.sort((a, b) => b._creationTime - a._creationTime)[0];
+
+    if (!user) {
+      return {
+        success: false,
+        deletedRecordings: 0,
+        error: `User not found: ${args.email}`,
+      };
+    }
+
+    const deletedRecordings = await resetMeetingSeedDataForUser(ctx, user._id);
+
+    return {
+      success: true,
+      deletedRecordings,
+    };
+  },
 });
 
 /**
@@ -4439,6 +4578,243 @@ export const seedScreenshotDataInternal = internalMutation({
           isRead: notif.hoursAgo > 12,
           projectId,
           actorId: syntheticUserIds[0],
+        });
+      }
+    }
+
+    // 10c. Create meetings workspace data with two completed recordings spanning
+    // both seeded projects so transcript and memory filters have deterministic content.
+    await resetMeetingSeedDataForUser(ctx, userId);
+    const alexUserId = syntheticUserIds[0] ?? userId;
+    const sarahUserId = syntheticUserIds[1] ?? userId;
+
+    const meetingSeedDefinitions = [
+      {
+        title: "Weekly Product Sync",
+        meetingUrl: "https://meet.google.com/product-sync-demo",
+        meetingPlatform: "google_meet" as const,
+        projectId,
+        scheduledStartTime: now - 3 * HOUR,
+        actualStartTime: now - 3 * HOUR,
+        actualEndTime: now - 135 * MINUTE,
+        duration: 45 * MINUTE,
+        fullText:
+          "Release blockers center on pricing approval and onboarding copy polish. Pricing approval still needs legal sign-off before launch.",
+        segments: [
+          {
+            startTime: 0,
+            endTime: 34,
+            speaker: "Emily Chen",
+            speakerUserId: userId,
+            text: "We cleared the dashboard bugs, but pricing approval still needs legal sign-off before launch.",
+            confidence: 0.98,
+          },
+          {
+            startTime: 35,
+            endTime: 67,
+            speaker: "Alex Rivera",
+            speakerUserId: alexUserId,
+            text: "Onboarding copy is the other blocker, and we should turn the release checklist into tracked follow-up work.",
+            confidence: 0.97,
+          },
+        ],
+        summary: {
+          executiveSummary:
+            "The team aligned on launch blockers, confirmed the release checklist owner, and flagged pricing approval as the remaining external dependency.",
+          keyPoints: [
+            "Pricing approval is still pending legal sign-off.",
+            "Onboarding copy needs one more polish pass before launch.",
+          ],
+          actionItems: [
+            {
+              description: "Turn the release checklist into tracked follow-up work",
+              assignee: "Emily Chen",
+              assigneeUserId: userId,
+              dueDate: "2026-03-24",
+              priority: "high" as const,
+            },
+          ],
+          decisions: ["The release checklist owner stays with Product Ops."],
+          openQuestions: ["Will legal clear pricing changes before Friday?"],
+          topics: [
+            {
+              title: "Launch blockers",
+              startTime: 0,
+              endTime: 67,
+              summary: "Pricing approval and onboarding copy were the only remaining blockers.",
+            },
+          ],
+          overallSentiment: "mixed" as const,
+          modelUsed: "gpt-4.1-mini",
+        },
+        participants: [
+          {
+            displayName: "Emily Chen",
+            email: args.email,
+            userId,
+            joinedAt: now - 3 * HOUR,
+            leftAt: now - 135 * MINUTE,
+            speakingTime: 18 * MINUTE,
+            speakingPercentage: 40,
+            isHost: true,
+            isExternal: false,
+          },
+          {
+            displayName: "Alex Rivera",
+            email: "alex-rivera-screenshots@inbox.mailtrap.io",
+            userId: alexUserId,
+            joinedAt: now - 3 * HOUR,
+            leftAt: now - 135 * MINUTE,
+            speakingTime: 15 * MINUTE,
+            speakingPercentage: 33,
+            isHost: false,
+            isExternal: false,
+          },
+        ],
+      },
+      {
+        title: "Client Launch Review",
+        meetingUrl: "https://zoom.us/j/client-launch-review",
+        meetingPlatform: "zoom" as const,
+        projectId: secondaryProjectId,
+        scheduledStartTime: now - 90 * MINUTE,
+        actualStartTime: now - 90 * MINUTE,
+        actualEndTime: now - 45 * MINUTE,
+        duration: 45 * MINUTE,
+        fullText:
+          "Client launch review covered support rotation, handoff timing, and portal expectations. The team agreed the Thursday go-live review stays on track.",
+        segments: [
+          {
+            startTime: 0,
+            endTime: 29,
+            speaker: "Emily Chen",
+            speakerUserId: userId,
+            text: "We agreed the Thursday go-live review stays on track, but support rotation still needs confirmation.",
+            confidence: 0.98,
+          },
+          {
+            startTime: 30,
+            endTime: 62,
+            speaker: "Sarah Kim",
+            speakerUserId: sarahUserId,
+            text: "The client also asked whether they need weekend coverage and a final handoff packet before launch.",
+            confidence: 0.97,
+          },
+        ],
+        summary: {
+          executiveSummary:
+            "The launch review confirmed the Thursday milestone, captured support coverage follow-ups, and surfaced one remaining handoff question from the client.",
+          keyPoints: [
+            "The go-live review remains scheduled for Thursday.",
+            "Support rotation and weekend coverage still need confirmation.",
+          ],
+          actionItems: [
+            {
+              description: "Confirm support rotation for go-live week",
+              assignee: "Sarah Kim",
+              assigneeUserId: sarahUserId,
+              dueDate: "2026-03-25",
+              priority: "medium" as const,
+            },
+          ],
+          decisions: ["The Thursday go-live review stays on the launch calendar."],
+          openQuestions: ["Does the client need weekend coverage during launch?"],
+          topics: [
+            {
+              title: "Client handoff",
+              startTime: 0,
+              endTime: 62,
+              summary: "The team reviewed support coverage and final handoff expectations.",
+            },
+          ],
+          overallSentiment: "positive" as const,
+          modelUsed: "gpt-4.1-mini",
+        },
+        participants: [
+          {
+            displayName: "Emily Chen",
+            email: args.email,
+            userId,
+            joinedAt: now - 90 * MINUTE,
+            leftAt: now - 45 * MINUTE,
+            speakingTime: 19 * MINUTE,
+            speakingPercentage: 42,
+            isHost: true,
+            isExternal: false,
+          },
+          {
+            displayName: "Sarah Kim",
+            email: "sarah-kim-screenshots@inbox.mailtrap.io",
+            userId: sarahUserId,
+            joinedAt: now - 90 * MINUTE,
+            leftAt: now - 45 * MINUTE,
+            speakingTime: 16 * MINUTE,
+            speakingPercentage: 35,
+            isHost: false,
+            isExternal: false,
+          },
+        ],
+      },
+    ];
+
+    for (const meeting of [...meetingSeedDefinitions].reverse()) {
+      const recordingId = await ctx.db.insert("meetingRecordings", {
+        meetingUrl: meeting.meetingUrl,
+        meetingPlatform: meeting.meetingPlatform,
+        title: meeting.title,
+        duration: meeting.duration,
+        status: "completed",
+        scheduledStartTime: meeting.scheduledStartTime,
+        actualStartTime: meeting.actualStartTime,
+        actualEndTime: meeting.actualEndTime,
+        botName: "Nixelo Notetaker",
+        botJoinedAt: meeting.actualStartTime,
+        botLeftAt: meeting.actualEndTime,
+        createdBy: userId,
+        projectId: meeting.projectId,
+        isPublic: true,
+        updatedAt: now,
+      });
+
+      const transcriptId = await ctx.db.insert("meetingTranscripts", {
+        recordingId,
+        fullText: meeting.fullText,
+        segments: meeting.segments,
+        language: "en",
+        modelUsed: "whisper-large-v3",
+        processingTime: 12 * SECOND,
+        wordCount: meeting.fullText.split(/\s+/).length,
+        speakerCount: 2,
+      });
+
+      await ctx.db.insert("meetingSummaries", {
+        recordingId,
+        transcriptId,
+        executiveSummary: meeting.summary.executiveSummary,
+        keyPoints: meeting.summary.keyPoints,
+        actionItems: meeting.summary.actionItems,
+        decisions: meeting.summary.decisions,
+        openQuestions: meeting.summary.openQuestions,
+        topics: meeting.summary.topics,
+        overallSentiment: meeting.summary.overallSentiment,
+        modelUsed: meeting.summary.modelUsed,
+        promptTokens: 420,
+        completionTokens: 188,
+        processingTime: 8 * SECOND,
+      });
+
+      for (const participant of meeting.participants) {
+        await ctx.db.insert("meetingParticipants", {
+          recordingId,
+          displayName: participant.displayName,
+          email: participant.email,
+          userId: participant.userId,
+          joinedAt: participant.joinedAt,
+          leftAt: participant.leftAt,
+          speakingTime: participant.speakingTime,
+          speakingPercentage: participant.speakingPercentage,
+          isHost: participant.isHost,
+          isExternal: participant.isExternal,
         });
       }
     }

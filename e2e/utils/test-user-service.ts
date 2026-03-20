@@ -57,6 +57,12 @@ export interface UpdateProjectWorkflowStateResult {
   error?: string;
 }
 
+export interface ResetMeetingsDataResult {
+  success: boolean;
+  deletedRecordings?: number;
+  error?: string;
+}
+
 export interface CheckProjectIssueDuplicatesResult {
   success: boolean;
   matchCount?: number;
@@ -398,6 +404,23 @@ export class TestUserService {
       return await response.json();
     } catch (error) {
       console.warn(`  ⚠️ Failed to seed screenshot data:`, error);
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Reset meetings data for a specific E2E user.
+   */
+  async resetMeetingsData(email: string): Promise<ResetMeetingsDataResult> {
+    try {
+      const response = await fetch(E2E_ENDPOINTS.resetMeetingsData, {
+        method: "POST",
+        headers: getE2EHeaders(),
+        body: JSON.stringify({ email }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.warn(`  ⚠️ Failed to reset meetings data for ${email}:`, error);
       return { success: false, error: String(error) };
     }
   }
