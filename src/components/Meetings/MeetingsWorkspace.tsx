@@ -468,6 +468,96 @@ function MeetingMemorySection({ memory }: { memory: MeetingMemory | undefined })
   );
 }
 
+function MeetingProjectContext({
+  recording,
+  projects,
+}: {
+  recording: NonNullable<MeetingDetail>;
+  projects: ProjectOption[] | undefined;
+}) {
+  const organization = useOrganizationOptional();
+  const project = recording.projectId
+    ? projects?.find((candidate) => candidate._id === recording.projectId)
+    : undefined;
+  const linkedIssueCount = recording.summary
+    ? recording.summary.actionItems.filter((item) => item.issueCreated).length
+    : 0;
+  const pendingFollowUpCount = recording.summary
+    ? recording.summary.actionItems.filter((item) => !item.issueCreated).length
+    : 0;
+
+  if (!recording.projectId) return null;
+
+  return (
+    <Section
+      title="Project Context"
+      description="Keep meeting output attached to the project where the work is actually happening."
+      gap="sm"
+    >
+      <Card padding="md">
+        <Stack gap="sm">
+          {project ? (
+            <>
+              <Flex justify="between" align="start" gap="sm" className="flex-wrap">
+                <Stack gap="xs">
+                  <Typography variant="label">
+                    {project.key} - {project.name}
+                  </Typography>
+                  {project.description && (
+                    <Typography variant="caption" color="secondary">
+                      {project.description}
+                    </Typography>
+                  )}
+                </Stack>
+                <Badge size="sm">{project.role}</Badge>
+              </Flex>
+
+              <Flex gap="xs" className="flex-wrap">
+                <Badge size="sm">{linkedIssueCount} linked issues</Badge>
+                <Badge size="sm">{pendingFollowUpCount} pending follow-ups</Badge>
+                <Badge size="sm">
+                  {recording.isPublic ? "Shared in project" : "Private to you"}
+                </Badge>
+              </Flex>
+
+              <Typography variant="caption" color="secondary">
+                Issues created from this meeting stay connected to {project.name}, and follow-up
+                work can continue from the project board or calendar.
+              </Typography>
+
+              {organization && (
+                <Flex gap="xs" className="flex-wrap">
+                  <Button asChild variant="outline" size="sm">
+                    <Link
+                      to={ROUTES.projects.board.path}
+                      params={{ orgSlug: organization.orgSlug, key: project.key }}
+                    >
+                      Open Project Board
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="sm">
+                    <Link
+                      to={ROUTES.projects.calendar.path}
+                      params={{ orgSlug: organization.orgSlug, key: project.key }}
+                    >
+                      Project Calendar
+                    </Link>
+                  </Button>
+                </Flex>
+              )}
+            </>
+          ) : (
+            <Typography variant="caption" color="secondary">
+              This meeting is linked to a project, but project navigation is not available in the
+              current workspace context.
+            </Typography>
+          )}
+        </Stack>
+      </Card>
+    </Section>
+  );
+}
+
 function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }) {
   const [query, setQuery] = useState("");
   const segmentRefs = useRef<Record<string, HTMLLIElement | null>>({});
@@ -1030,6 +1120,7 @@ function RecordingDetailPanel({
         </Stack>
       </Card>
 
+      <MeetingProjectContext recording={recording} projects={projects} />
       <SummarySections recording={recording} projects={projects} />
       <ParticipantsSection participants={recording.participants} />
     </Stack>

@@ -35,7 +35,8 @@ This is the main Nixelo-specific opportunity versus Read AI / Fireflies / Otter.
 
 - [x] **Expose action-item to issue creation in UI** — Convex supports `createIssueFromActionItem`, but it is not surfaced as a first-class frontend workflow.
 - [x] **Show issue linkage state** — Linked issues now show issue key, title, and status directly in meeting results.
-- [ ] **Turn meetings into project artifacts** — Link meeting outputs to issues, docs, and project context instead of leaving them as standalone notes.
+- [x] **Turn meetings into project artifacts** — Meetings now surface project context, linked-work counts, and direct project navigation instead of living as standalone notes.
+- [ ] **Add meeting-to-doc flow** — Create or append a project document directly from meeting results when the document workflow is ready.
 
 ## Medium Priority
 

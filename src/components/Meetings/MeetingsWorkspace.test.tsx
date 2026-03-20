@@ -1,11 +1,25 @@
 import type { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { OrgContext, type OrgContextType } from "@/hooks/useOrgContext";
 import { showSuccess } from "@/lib/toast";
 import { fireEvent, render, screen, waitFor } from "@/test/custom-render";
 import { filterMeetingRecordings, MeetingsWorkspace } from "./MeetingsWorkspace";
+
+vi.mock("@tanstack/react-router", async () => {
+  const actual = await vi.importActual("@tanstack/react-router");
+  return {
+    ...actual,
+    Link: (props: { children: ReactNode; to?: string; title?: string }) => (
+      <a href={props.to ?? "#"} title={props.title}>
+        {props.children}
+      </a>
+    ),
+  };
+});
 
 vi.mock("@/hooks/useConvexHelpers", () => ({
   useAuthenticatedQuery: vi.fn(),
@@ -31,8 +45,24 @@ const mockScrollIntoView = vi.fn();
 const recordingId = "recording_1" as Id<"meetingRecordings">;
 const summaryId = "summary_1" as Id<"meetingSummaries">;
 const projectId = "project_1" as Id<"projects">;
+const organizationId = "organization_1" as Id<"organizations">;
 const createIssueFromActionItem = vi.fn();
 const scheduleRecording = vi.fn();
+const organizationContext: OrgContextType = {
+  organizationId,
+  orgSlug: "acme",
+  organizationName: "Acme",
+  userRole: "owner",
+  billingEnabled: true,
+};
+
+function renderMeetingsWorkspace() {
+  return render(
+    <OrgContext.Provider value={organizationContext}>
+      <MeetingsWorkspace />
+    </OrgContext.Provider>,
+  );
+}
 
 function buildProjectItem(overrides: Partial<ProjectItem> = {}): ProjectItem {
   return {
@@ -315,7 +345,7 @@ describe("MeetingsWorkspace", () => {
   it("renders an empty state when there are no recordings", () => {
     installMeetingQueryMock({ listRecordings: [] });
 
-    render(<MeetingsWorkspace />);
+    renderMeetingsWorkspace();
 
     expect(screen.getByText("No meeting recordings yet")).toBeInTheDocument();
     expect(
@@ -328,12 +358,17 @@ describe("MeetingsWorkspace", () => {
   it("renders recording details for the selected meeting", () => {
     installMeetingQueryMock({});
 
-    render(<MeetingsWorkspace />);
+    renderMeetingsWorkspace();
 
     expect(screen.getByText("Meeting Memory")).toBeInTheDocument();
     expect(screen.getByText("Recent Decisions")).toBeInTheDocument();
     expect(screen.getAllByText("Open Questions")).toHaveLength(2);
     expect(screen.getByText("Unresolved Action Items")).toBeInTheDocument();
+    expect(screen.getByText("Project Context")).toBeInTheDocument();
+    expect(screen.getAllByText("CORE - Core Platform").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("0 linked issues")).toBeInTheDocument();
+    expect(screen.getByText("1 pending follow-ups")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open Project Board" })).toBeInTheDocument();
     expect(screen.getAllByText("Ship the narrower first iteration").length).toBeGreaterThanOrEqual(
       2,
     );
@@ -355,7 +390,7 @@ describe("MeetingsWorkspace", () => {
     createIssueFromActionItem.mockResolvedValue({ issueId: "issue_1" });
     installMeetingQueryMock({});
 
-    render(<MeetingsWorkspace />);
+    renderMeetingsWorkspace();
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Create issue" })).toBeEnabled();
@@ -410,7 +445,7 @@ describe("MeetingsWorkspace", () => {
       }),
     });
 
-    render(<MeetingsWorkspace />);
+    renderMeetingsWorkspace();
 
     fireEvent.change(screen.getByRole("searchbox", { name: "Search meetings" }), {
       target: { value: "scope" },
@@ -428,7 +463,7 @@ describe("MeetingsWorkspace", () => {
   it("filters transcript segments within the selected meeting", async () => {
     installMeetingQueryMock({});
 
-    render(<MeetingsWorkspace />);
+    renderMeetingsWorkspace();
 
     fireEvent.change(screen.getByRole("searchbox", { name: "Search transcript" }), {
       target: { value: "narrower" },
@@ -446,7 +481,7 @@ describe("MeetingsWorkspace", () => {
   it("jumps to transcript segments from the transcript navigation strip", () => {
     installMeetingQueryMock({});
 
-    render(<MeetingsWorkspace />);
+    renderMeetingsWorkspace();
 
     fireEvent.click(screen.getByRole("button", { name: "Jump to 0:12 Priya" }));
 
@@ -478,7 +513,7 @@ describe("MeetingsWorkspace", () => {
       }),
     });
 
-    render(<MeetingsWorkspace />);
+    renderMeetingsWorkspace();
 
     expect(screen.getByText("CORE-42")).toBeInTheDocument();
     expect(screen.getByText("Update onboarding copy")).toBeInTheDocument();
@@ -520,7 +555,7 @@ describe("MeetingsWorkspace", () => {
     scheduleRecording.mockResolvedValue({ recordingId });
     installMeetingQueryMock({});
 
-    render(<MeetingsWorkspace />);
+    renderMeetingsWorkspace();
 
     fireEvent.click(screen.getByRole("button", { name: "Schedule Recording" }));
     fireEvent.change(screen.getByLabelText("Meeting Title"), {
