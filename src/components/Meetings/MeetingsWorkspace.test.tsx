@@ -30,6 +30,7 @@ const recordingId = "recording_1" as Id<"meetingRecordings">;
 const summaryId = "summary_1" as Id<"meetingSummaries">;
 const projectId = "project_1" as Id<"projects">;
 const createIssueFromActionItem = vi.fn();
+const scheduleRecording = vi.fn();
 
 function buildProjectItem(overrides: Partial<ProjectItem> = {}): ProjectItem {
   return {
@@ -165,10 +166,21 @@ function installMeetingQueryMock({
 describe("MeetingsWorkspace", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseAuthenticatedMutation.mockReturnValue({
-      mutate: createIssueFromActionItem,
-      canAct: true,
-      isAuthLoading: false,
+    let mutationHookCallCount = 0;
+    mockUseAuthenticatedMutation.mockImplementation(() => {
+      mutationHookCallCount += 1;
+
+      return mutationHookCallCount % 2 === 1
+        ? {
+            mutate: scheduleRecording,
+            canAct: true,
+            isAuthLoading: false,
+          }
+        : {
+            mutate: createIssueFromActionItem,
+            canAct: true,
+            isAuthLoading: false,
+          };
     });
   });
 
@@ -180,7 +192,7 @@ describe("MeetingsWorkspace", () => {
     expect(screen.getByText("No meeting recordings yet")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Schedule AI Meeting Notes from a calendar event to start capturing transcripts, summaries, and follow-up work.",
+        "Schedule from calendar or add a direct meeting URL to start capturing transcripts, summaries, and follow-up work.",
       ),
     ).toBeInTheDocument();
   });
@@ -301,5 +313,36 @@ describe("MeetingsWorkspace", () => {
     );
 
     expect(filteredRecordings).toEqual([recentFailedRecording]);
+  });
+
+  it("schedules a recording from the meetings page", async () => {
+    scheduleRecording.mockResolvedValue({ recordingId });
+    installMeetingQueryMock({});
+
+    render(<MeetingsWorkspace />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Schedule Recording" }));
+    fireEvent.change(screen.getByLabelText("Meeting Title"), {
+      target: { value: "Customer rollout review" },
+    });
+    fireEvent.change(screen.getByLabelText("Meeting URL"), {
+      target: { value: "https://meet.google.com/abc-defg-hij" },
+    });
+    fireEvent.change(screen.getByLabelText("Scheduled Time"), {
+      target: { value: "2026-03-19T18:30" },
+    });
+
+    fireEvent.submit(document.getElementById("schedule-recording-form") as HTMLFormElement);
+
+    await waitFor(() => {
+      expect(scheduleRecording).toHaveBeenCalledWith({
+        title: "Customer rollout review",
+        meetingUrl: "https://meet.google.com/abc-defg-hij",
+        meetingPlatform: "google_meet",
+        scheduledStartTime: new Date("2026-03-19T18:30").getTime(),
+        projectId: undefined,
+        isPublic: false,
+      });
+    });
   });
 });

@@ -15,7 +15,7 @@ The backend exists, but the feature is still mostly hidden inside the calendar e
 - [x] **Add a dedicated Meetings page** — Org-level route and sidebar entry for recordings, summaries, and action items.
 - [x] **Keep calendar entry point** — Meetings should still be accessible from event details, but not only from there.
 - [ ] **Show all recording states in one place** — Scheduled, joining, recording, processing, completed, failed, cancelled.
-- [ ] **Add a useful empty state** — Explain what the feature does and how to start from calendar or direct meeting URL.
+- [x] **Add a useful empty state** — Explain what the feature does and how to start from calendar or direct meeting URL.
 
 ### Recording Detail Productization
 

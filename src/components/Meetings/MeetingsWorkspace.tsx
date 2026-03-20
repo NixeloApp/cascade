@@ -1,14 +1,17 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
-import { useDeferredValue, useEffect, useState } from "react";
+import { type FormEvent, useDeferredValue, useEffect, useState } from "react";
 import { PageContent } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { Dialog } from "@/components/ui/Dialog";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Metadata, MetadataItem } from "@/components/ui/Metadata";
 import { Section } from "@/components/ui/Section";
@@ -153,6 +156,28 @@ export function filterMeetingRecordings(
     if (!matchesTimeWindow(recording, filters.timeWindow)) return false;
     return true;
   });
+}
+
+function detectMeetingPlatform(url: string): MeetingPlatform {
+  if (url.includes("meet.google.com")) return "google_meet";
+  if (url.includes("zoom.us")) return "zoom";
+  if (url.includes("teams.microsoft.com")) return "teams";
+  return "other";
+}
+
+function formatDateTimeLocalValue(timestamp: number) {
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function getDefaultScheduledTimeValue() {
+  const fiveMinutesFromNow = Date.now() + 5 * 60 * 1000;
+  return formatDateTimeLocalValue(fiveMinutesFromNow);
 }
 
 function formatMeetingPlatform(platform: MeetingListItem["meetingPlatform"]): string {
@@ -580,9 +605,183 @@ function RecordingDetailPanel({
   );
 }
 
+function ScheduleRecordingDialog({
+  open,
+  onOpenChange,
+  projects,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  projects: ProjectOption[] | undefined;
+}) {
+  const { mutate: scheduleRecording, canAct } = useAuthenticatedMutation(
+    api.meetingBot.scheduleRecording,
+  );
+  const [title, setTitle] = useState("");
+  const [meetingUrl, setMeetingUrl] = useState("");
+  const [scheduledTimeValue, setScheduledTimeValue] = useState(getDefaultScheduledTimeValue());
+  const [projectId, setProjectId] = useState<ProjectFilter>("all");
+  const [shareInProject, setShareInProject] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const resetForm = () => {
+    setTitle("");
+    setMeetingUrl("");
+    setScheduledTimeValue(getDefaultScheduledTimeValue());
+    setProjectId("all");
+    setShareInProject(false);
+  };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    onOpenChange(nextOpen);
+    if (!nextOpen) resetForm();
+  };
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+
+    if (!title.trim()) {
+      showError("Meeting title is required");
+      return;
+    }
+
+    if (!meetingUrl.trim()) {
+      showError("Meeting URL is required");
+      return;
+    }
+
+    const scheduledStartTime = new Date(scheduledTimeValue).getTime();
+    if (Number.isNaN(scheduledStartTime)) {
+      showError("Choose a valid meeting time");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await scheduleRecording({
+        title: title.trim(),
+        meetingUrl: meetingUrl.trim(),
+        meetingPlatform: detectMeetingPlatform(meetingUrl.trim()),
+        scheduledStartTime,
+        projectId: projectId === "all" ? undefined : projectId,
+        isPublic: projectId === "all" ? false : shareInProject,
+      });
+      showSuccess("Recording scheduled");
+      handleOpenChange(false);
+    } catch (error) {
+      showError(error, "Failed to schedule recording");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={handleOpenChange}
+      title="Schedule Recording"
+      description="Create an ad-hoc meeting recording from a direct meeting URL."
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleOpenChange(false)}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            form="schedule-recording-form"
+            isLoading={isSubmitting}
+            disabled={!canAct}
+          >
+            Schedule Recording
+          </Button>
+        </>
+      }
+    >
+      <form id="schedule-recording-form" onSubmit={handleSubmit}>
+        <Stack gap="md">
+          <Stack gap="xs">
+            <Label htmlFor="meeting-recording-title">Meeting Title</Label>
+            <Input
+              id="meeting-recording-title"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="e.g. Customer rollout review"
+              autoFocus
+              required
+            />
+          </Stack>
+
+          <Stack gap="xs">
+            <Label htmlFor="meeting-recording-url">Meeting URL</Label>
+            <Input
+              id="meeting-recording-url"
+              value={meetingUrl}
+              onChange={(event) => setMeetingUrl(event.target.value)}
+              placeholder="https://meet.google.com/..."
+              type="url"
+              required
+            />
+          </Stack>
+
+          <Stack gap="xs">
+            <Label htmlFor="meeting-recording-time">Scheduled Time</Label>
+            <Input
+              id="meeting-recording-time"
+              value={scheduledTimeValue}
+              onChange={(event) => setScheduledTimeValue(event.target.value)}
+              type="datetime-local"
+              required
+            />
+          </Stack>
+
+          <Stack gap="xs">
+            <Label htmlFor="meeting-recording-project" color="secondary">
+              Project (Optional)
+            </Label>
+            <Select
+              value={projectId}
+              onValueChange={(value) => setProjectId(value as ProjectFilter)}
+            >
+              <SelectTrigger id="meeting-recording-project" aria-label="Recording project">
+                <SelectValue placeholder="No project" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">No project</SelectItem>
+                {projects?.map((project) => (
+                  <SelectItem key={project._id} value={project._id}>
+                    {project.key} - {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Stack>
+
+          <Checkbox
+            checked={projectId === "all" ? false : shareInProject}
+            onCheckedChange={(checked) => setShareInProject(checked === true)}
+            disabled={projectId === "all"}
+            label="Share in selected project"
+            description={
+              projectId === "all"
+                ? "Choose a project first to make the meeting visible to that project."
+                : "Project members can review the transcript, summary, and follow-up items."
+            }
+          />
+        </Stack>
+      </form>
+    </Dialog>
+  );
+}
+
 export function MeetingsWorkspace() {
   const recordings = useAuthenticatedQuery(api.meetingBot.listRecordings, { limit: 50 });
   const projects = useAuthenticatedQuery(api.dashboard.getMyProjects, {});
+  const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [platformFilter, setPlatformFilter] = useState<PlatformFilter>("all");
@@ -636,7 +835,7 @@ export function MeetingsWorkspace() {
         icon: Mic,
         title: "No meeting recordings yet",
         description:
-          "Schedule AI Meeting Notes from a calendar event to start capturing transcripts, summaries, and follow-up work.",
+          "Schedule from calendar or add a direct meeting URL to start capturing transcripts, summaries, and follow-up work.",
       }}
     >
       <div className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
@@ -646,6 +845,15 @@ export function MeetingsWorkspace() {
           gap="sm"
         >
           <Stack gap="sm">
+            <Flex justify="between" align="center" gap="sm" className="flex-wrap">
+              <Typography variant="caption" color="secondary">
+                Schedule from calendar or add an ad-hoc meeting URL here.
+              </Typography>
+              <Button variant="secondary" size="sm" onClick={() => setIsScheduleDialogOpen(true)}>
+                Schedule Recording
+              </Button>
+            </Flex>
+
             <Input
               variant="search"
               value={searchQuery}
@@ -774,6 +982,12 @@ export function MeetingsWorkspace() {
           )}
         </Section>
       </div>
+
+      <ScheduleRecordingDialog
+        open={isScheduleDialogOpen}
+        onOpenChange={setIsScheduleDialogOpen}
+        projects={projects}
+      />
     </PageContent>
   );
 }
