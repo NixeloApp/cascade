@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { isLocatorVisible } from "../utils/locator-state";
 import { escapeRegExp, ROUTES, routePattern } from "../utils/routes";
 import { waitForIssueUpdateSuccess } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
@@ -98,15 +99,15 @@ export class IssueDetailPage extends BasePage {
 
   async isInEditMode() {
     return (
-      (await this.issueTitleInput.isVisible().catch(() => false)) ||
-      (await this.issueDescriptionEditor.isVisible().catch(() => false))
+      (await isLocatorVisible(this.issueTitleInput)) ||
+      (await isLocatorVisible(this.issueDescriptionEditor))
     );
   }
 
   private async getEditModeState(): Promise<"edit" | "pending"> {
     if (
-      (await this.issueTitleInput.isVisible().catch(() => false)) ||
-      (await this.issueDescriptionEditor.isVisible().catch(() => false))
+      (await isLocatorVisible(this.issueTitleInput)) ||
+      (await isLocatorVisible(this.issueDescriptionEditor))
     ) {
       return "edit";
     }
