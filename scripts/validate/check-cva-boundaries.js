@@ -10,14 +10,17 @@
  * Allowed:
  * - Imports inside `src/components/ui/` (shared primitives composing other primitives)
  * - Existing baselined feature-local CVA definitions while cleanup is in flight
+ * - Existing baselined base-only feature-local CVA definitions while cleanup is in flight
  *
  * Blocked:
  * - `buttonVariants`, `tabsTriggerVariants`, `cardRecipeVariants`, etc. in routes/components pages
  * - New or increased `cva()` definitions outside `src/components/ui/`
+ * - New or increased base-only `cva()` definitions outside `src/components/ui/`
  */
 
 import fs from "node:fs";
 import path from "node:path";
+import ts from "typescript";
 import { analyzeCountRatchet, loadCountBaseline } from "./ratchet-utils.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
@@ -29,6 +32,12 @@ const FEATURE_CVA_BASELINE_PATH = path.join(
   "scripts",
   "ci",
   "feature-cva-definitions-baseline.json",
+);
+const FEATURE_CVA_BASE_ONLY_BASELINE_PATH = path.join(
+  ROOT,
+  "scripts",
+  "ci",
+  "feature-cva-base-only-baseline.json",
 );
 
 function getLineNumber(content, index) {
@@ -45,13 +54,69 @@ function parseImportedNames(rawSpecifiers) {
     .filter(Boolean);
 }
 
+function isCvaCallExpression(node, sourceFile) {
+  return ts.isCallExpression(node) && node.expression.getText(sourceFile) === "cva";
+}
+
+function hasNonEmptyVariantsConfig(node, sourceFile) {
+  if (!isCvaCallExpression(node, sourceFile) || !node.arguments[1]) {
+    return false;
+  }
+
+  const config = node.arguments[1];
+  if (!ts.isObjectLiteralExpression(config)) {
+    return false;
+  }
+
+  for (const property of config.properties) {
+    if (
+      ts.isPropertyAssignment(property) &&
+      property.name.getText(sourceFile) === "variants" &&
+      ts.isObjectLiteralExpression(property.initializer) &&
+      property.initializer.properties.length > 0
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function collectBaseOnlyCvaLines(filePath, content) {
+  const sourceFile = ts.createSourceFile(
+    filePath,
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    filePath.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  );
+  const lines = [];
+
+  function visit(node) {
+    if (isCvaCallExpression(node, sourceFile) && !hasNonEmptyVariantsConfig(node, sourceFile)) {
+      const pos = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+      lines.push(pos.line + 1);
+    }
+
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return lines;
+}
+
 export function run() {
   const SRC_DIR = path.join(ROOT, "src");
   const files = walkDir(SRC_DIR, { extensions: new Set([".ts", ".tsx"]) });
   const baselineByFile = loadCountBaseline(FEATURE_CVA_BASELINE_PATH, "cvaDefinitionsByFile");
+  const baseOnlyBaselineByFile = loadCountBaseline(
+    FEATURE_CVA_BASE_ONLY_BASELINE_PATH,
+    "baseOnlyCvaDefinitionsByFile",
+  );
 
   const importViolations = [];
   const cvaLinesByFile = {};
+  const baseOnlyCvaLinesByFile = {};
   const errors = [];
 
   for (const filePath of files) {
@@ -65,6 +130,10 @@ export function run() {
       const cvaMatches = [...content.matchAll(CVA_CALL_RE)];
       if (cvaMatches.length > 0) {
         cvaLinesByFile[rel] = cvaMatches.map((match) => getLineNumber(content, match.index ?? 0));
+      }
+      const baseOnlyLines = collectBaseOnlyCvaLines(filePath, content);
+      if (baseOnlyLines.length > 0) {
+        baseOnlyCvaLinesByFile[rel] = baseOnlyLines;
       }
     }
 
@@ -95,6 +164,15 @@ export function run() {
       lineNumbers: cvaLinesByFile[file] ?? [],
     }))
     .sort((a, b) => a.file.localeCompare(b.file));
+  const baseOnlyRatchet = analyzeCountRatchet(baseOnlyCvaLinesByFile, baseOnlyBaselineByFile);
+  const baseOnlyOverages = Object.entries(baseOnlyRatchet.overagesByKey)
+    .map(([file, overage]) => ({
+      file,
+      baselineCount: overage.baselineCount,
+      currentCount: overage.currentCount,
+      lineNumbers: baseOnlyCvaLinesByFile[file] ?? [],
+    }))
+    .sort((a, b) => a.file.localeCompare(b.file));
 
   errors.push(...importViolations);
 
@@ -117,8 +195,30 @@ export function run() {
     }
   }
 
-  const failureCount = importViolations.length + cvaOverages.length;
-  const passDetail = `${ratchet.totalCurrent} baselined feature-local cva definition(s) across ${ratchet.activeKeyCount} file(s)`;
+  if (baseOnlyOverages.length > 0) {
+    errors.push(
+      `  ${c.red}ERROR${c.reset} Base-only feature-local \`cva()\` definitions are ratcheted outside \`src/components/ui/\`. If a helper has no variants, use a plain component, \`cn()\`, or move the shared API into an owned primitive.`,
+    );
+
+    for (const overage of baseOnlyOverages) {
+      const linePreview = overage.lineNumbers.slice(0, 12).join(", ");
+      const remaining = overage.lineNumbers.length - Math.min(overage.lineNumbers.length, 12);
+      errors.push(
+        `  ${c.bold}${overage.file}${c.reset} baseline ${overage.baselineCount} → current ${overage.currentCount}`,
+      );
+      if (linePreview.length > 0) {
+        errors.push(
+          `    ${c.dim}lines ${linePreview}${remaining > 0 ? `, ... +${remaining} more` : ""}${c.reset}`,
+        );
+      }
+    }
+  }
+
+  const failureCount = importViolations.length + cvaOverages.length + baseOnlyOverages.length;
+  const passDetail = [
+    `${ratchet.totalCurrent} baselined feature-local cva definition(s) across ${ratchet.activeKeyCount} file(s)`,
+    `${baseOnlyRatchet.totalCurrent} baselined base-only feature-local cva definition(s) across ${baseOnlyRatchet.activeKeyCount} file(s)`,
+  ].join("; ");
 
   return {
     passed: failureCount === 0,
