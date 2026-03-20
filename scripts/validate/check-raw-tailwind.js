@@ -28,6 +28,12 @@ const ROUTE_CLUSTER_BASELINE_PATH = path.join(
   "ci",
   "raw-tailwind-route-clusters-baseline.json",
 );
+const CROSS_FILE_CLUSTER_BASELINE_PATH = path.join(
+  ROOT,
+  "scripts",
+  "ci",
+  "raw-tailwind-cross-file-clusters-baseline.json",
+);
 const FILE_VIOLATIONS_BASELINE_PATH = path.join(
   ROOT,
   "scripts",
@@ -36,6 +42,7 @@ const FILE_VIOLATIONS_BASELINE_PATH = path.join(
 );
 const ROUTE_CLUSTER_MIN_REUSE_COUNT = 3;
 const ROUTE_CLUSTER_MIN_TOKEN_COUNT = 3;
+const CROSS_FILE_CLUSTER_MIN_FILE_COUNT = 2;
 
 /**
  * Escape hatches for raw Tailwind check.
@@ -84,13 +91,30 @@ function loadRouteClusterBaseline() {
   return new Map(Object.entries(parsed.clusters ?? {}));
 }
 
-function collectRouteClusterGroups() {
-  const routesDir = path.join(ROOT, "src/routes");
-  const files = walkDir(routesDir, { extensions: new Set([".tsx"]) });
+function loadCrossFileClusterBaseline() {
+  if (!fs.existsSync(CROSS_FILE_CLUSTER_BASELINE_PATH)) {
+    return new Map();
+  }
+
+  const parsed = JSON.parse(fs.readFileSync(CROSS_FILE_CLUSTER_BASELINE_PATH, "utf-8"));
+  return new Map(Object.entries(parsed.clusters ?? {}));
+}
+
+function collectLiteralRawTailwindClusterGroups(scanDir, options = {}) {
+  const {
+    extensions = new Set([".tsx"]),
+    includeComponentsOnly = false,
+    minReuseCount = ROUTE_CLUSTER_MIN_REUSE_COUNT,
+    minFileCount = 1,
+  } = options;
+  const files = walkDir(scanDir, { extensions });
   const groups = new Map();
 
   for (const filePath of files) {
     const rel = relPath(filePath);
+    if (includeComponentsOnly && isRawTailwindBoundary(rel)) {
+      continue;
+    }
     const lines = fs.readFileSync(filePath, "utf-8").split("\n");
 
     for (let index = 0; index < lines.length; index++) {
@@ -123,12 +147,32 @@ function collectRouteClusterGroups() {
   }
 
   return [...groups.entries()]
-    .filter(([, locations]) => locations.length >= ROUTE_CLUSTER_MIN_REUSE_COUNT)
-    .map(([cluster, locations]) => ({ cluster, locations }))
+    .map(([cluster, locations]) => ({
+      cluster,
+      locations: locations.sort(
+        (left, right) => left.file.localeCompare(right.file) || left.line - right.line,
+      ),
+      fileCount: new Set(locations.map((location) => location.file)).size,
+    }))
+    .filter((group) => group.locations.length >= minReuseCount && group.fileCount >= minFileCount)
     .sort(
       (left, right) =>
         right.locations.length - left.locations.length || left.cluster.localeCompare(right.cluster),
     );
+}
+
+function collectRouteClusterGroups() {
+  return collectLiteralRawTailwindClusterGroups(path.join(ROOT, "src/routes"), {
+    minReuseCount: ROUTE_CLUSTER_MIN_REUSE_COUNT,
+  });
+}
+
+function collectCrossFileClusterGroups() {
+  return collectLiteralRawTailwindClusterGroups(path.join(ROOT, "src/components"), {
+    includeComponentsOnly: true,
+    minReuseCount: ROUTE_CLUSTER_MIN_REUSE_COUNT,
+    minFileCount: CROSS_FILE_CLUSTER_MIN_FILE_COUNT,
+  });
 }
 
 export function run() {
@@ -139,6 +183,9 @@ export function run() {
     "rawTailwindViolationsByFile",
   );
   const violationsByFile = {};
+  const crossFileClusterBaseline = loadCrossFileClusterBaseline();
+  const crossFileClusterViolations = [];
+  const baselinedCrossFileClusters = [];
   const routeClusterBaseline = loadRouteClusterBaseline();
   const routeClusterViolations = [];
   const baselinedRouteClusters = [];
@@ -185,6 +232,16 @@ export function run() {
     }
   }
 
+  for (const group of collectCrossFileClusterGroups()) {
+    const baselineCount = crossFileClusterBaseline.get(group.cluster) ?? 0;
+    if (group.locations.length > baselineCount) {
+      crossFileClusterViolations.push({ ...group, baselineCount });
+      continue;
+    }
+
+    baselinedCrossFileClusters.push(group);
+  }
+
   for (const group of collectRouteClusterGroups()) {
     const baselineCount = routeClusterBaseline.get(group.cluster) ?? 0;
     if (group.locations.length > baselineCount) {
@@ -225,6 +282,25 @@ export function run() {
     }
   }
 
+  if (crossFileClusterViolations.length > 0) {
+    messages.push(`${c.red}Repeated raw Tailwind clusters across component files:${c.reset}`);
+    for (const item of crossFileClusterViolations) {
+      messages.push(
+        `  ${c.bold}${item.locations.length}x across ${item.fileCount} file(s)${c.reset} ${item.cluster}`,
+      );
+      for (const location of item.locations.slice(0, 4)) {
+        messages.push(`    ${c.dim}${location.file}:L${location.line}${c.reset}`);
+      }
+      if (item.locations.length > 4) {
+        messages.push(`    ${c.dim}... and ${item.locations.length - 4} more${c.reset}`);
+      }
+      if (item.baselineCount > 0) {
+        messages.push(`    ${c.dim}baseline ${item.baselineCount}x${c.reset}`);
+      }
+      messages.push(`    ${c.dim}extract a shared component or owned variant${c.reset}`);
+    }
+  }
+
   if (routeClusterViolations.length > 0) {
     messages.push(`${c.red}Repeated raw Tailwind route clusters:${c.reset}`);
     for (const item of routeClusterViolations) {
@@ -249,6 +325,9 @@ export function run() {
       `${fileViolationRatchet.totalCurrent} baselined in ${fileViolationRatchet.activeKeyCount} files`,
     );
   }
+  if (baselinedCrossFileClusters.length > 0) {
+    baselineDetails.push(`${baselinedCrossFileClusters.length} baselined cross-file clusters`);
+  }
   if (baselinedRouteClusters.length > 0) {
     baselineDetails.push(`${baselinedRouteClusters.length} baselined route clusters`);
   }
@@ -263,13 +342,24 @@ export function run() {
     }));
 
   return {
-    passed: rawTailwindOverages.length === 0 && routeClusterViolations.length === 0,
-    errors: rawTailwindOverages.length + routeClusterViolations.length,
+    passed:
+      rawTailwindOverages.length === 0 &&
+      crossFileClusterViolations.length === 0 &&
+      routeClusterViolations.length === 0,
+    errors:
+      rawTailwindOverages.length +
+      crossFileClusterViolations.length +
+      routeClusterViolations.length,
     detail:
-      rawTailwindOverages.length > 0 || routeClusterViolations.length > 0
+      rawTailwindOverages.length > 0 ||
+      crossFileClusterViolations.length > 0 ||
+      routeClusterViolations.length > 0
         ? [
             rawTailwindOverages.length > 0
               ? `${rawTailwindOverages.length} file(s) exceed raw Tailwind baseline`
+              : null,
+            crossFileClusterViolations.length > 0
+              ? `${crossFileClusterViolations.length} repeated cross-file class cluster(s)`
               : null,
             routeClusterViolations.length > 0
               ? `${routeClusterViolations.length} repeated route class cluster(s)`
