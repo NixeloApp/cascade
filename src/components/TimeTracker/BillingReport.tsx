@@ -9,6 +9,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { MONTH, WEEK } from "@convex/lib/timeUtils";
+import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Clock, DollarSign, Download, TrendingUp, Users } from "@/lib/icons";
@@ -21,6 +22,7 @@ import { Icon } from "../ui/Icon";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Progress } from "../ui/Progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
 // Pure functions - no need to be inside component
@@ -47,6 +49,47 @@ interface BillingStats {
 
 interface BillingReportProps {
   projectId: Id<"projects">;
+}
+
+interface SummaryMetricCardProps {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  supportingText?: string;
+  valueColor: "success" | "brand" | "accent" | "warning";
+  recipe?: "metricTile" | "metricTileSuccess" | "metricTileAccent" | "metricTileWarning";
+}
+
+function SummaryMetricCard({
+  icon,
+  label,
+  value,
+  supportingText,
+  valueColor,
+  recipe = "metricTile",
+}: SummaryMetricCardProps) {
+  return (
+    <Card recipe={recipe}>
+      <CardBody>
+        <Stack gap="sm">
+          <Flex align="center" gap="sm">
+            <Icon icon={icon} size="sm" tone="tertiary" />
+            <Typography variant="small" color="tertiary">
+              {label}
+            </Typography>
+          </Flex>
+          <Typography variant="h2" color={valueColor}>
+            {value}
+          </Typography>
+          {supportingText && (
+            <Typography variant="caption" color="tertiary">
+              {supportingText}
+            </Typography>
+          )}
+        </Stack>
+      </CardBody>
+    </Card>
+  );
 }
 
 /** Calculate date range params for billing query */
@@ -171,83 +214,52 @@ export function BillingReport({ projectId }: BillingReportProps) {
 
       {/* Summary Cards */}
       <Grid cols={1} colsMd={2} colsLg={4} gap="lg" className="mb-6">
-        <Card>
-          <CardBody>
-            <Flex align="center" gap="sm" className="mb-2">
-              <DollarSign className="w-4 h-4 text-ui-text-tertiary" />
-              <Typography variant="small" color="tertiary">
-                Total Revenue
-              </Typography>
-            </Flex>
-            <Typography variant="h2" color="success">
-              {formatCurrency(billing.totalRevenue)}
-            </Typography>
-            {project.budget && (
-              <Typography variant="caption" color="tertiary" className="mt-1">
-                of {formatCurrency(project.budget)} budget (
-                {((billing.totalRevenue / project.budget) * 100).toFixed(0)}%)
-              </Typography>
-            )}
-          </CardBody>
-        </Card>
+        <SummaryMetricCard
+          icon={DollarSign}
+          label="Total Revenue"
+          value={formatCurrency(billing.totalRevenue)}
+          valueColor="success"
+          recipe="metricTileSuccess"
+          supportingText={
+            project.budget
+              ? `of ${formatCurrency(project.budget)} budget (${((billing.totalRevenue / project.budget) * 100).toFixed(0)}%)`
+              : undefined
+          }
+        />
 
-        <Card>
-          <CardBody>
-            <Flex align="center" gap="sm" className="mb-2">
-              <Clock className="w-4 h-4 text-ui-text-tertiary" />
-              <Typography variant="small" color="tertiary">
-                Billable Hours
-              </Typography>
-            </Flex>
-            <Typography variant="h2" color="brand">
-              {formatHours(billing.billableHours)}
-            </Typography>
-            <Typography variant="caption" color="tertiary" className="mt-1">
-              of {formatHours(billing.totalHours)} total hours
-            </Typography>
-          </CardBody>
-        </Card>
+        <SummaryMetricCard
+          icon={Clock}
+          label="Billable Hours"
+          value={formatHours(billing.billableHours)}
+          valueColor="brand"
+          recipe="metricTile"
+          supportingText={`of ${formatHours(billing.totalHours)} total hours`}
+        />
 
-        <Card>
-          <CardBody>
-            <Flex align="center" gap="sm" className="mb-2">
-              <TrendingUp className="w-4 h-4 text-ui-text-tertiary" />
-              <Typography variant="small" color="tertiary">
-                Utilization Rate
-              </Typography>
-            </Flex>
-            <Typography variant="h2" color="accent">
-              {utilizationRate.toFixed(0)}%
-            </Typography>
-            <Typography variant="caption" color="tertiary" className="mt-1">
-              {billing.nonBillableHours.toFixed(2)}h non-billable
-            </Typography>
-          </CardBody>
-        </Card>
+        <SummaryMetricCard
+          icon={TrendingUp}
+          label="Utilization Rate"
+          value={`${utilizationRate.toFixed(0)}%`}
+          valueColor="accent"
+          recipe="metricTileAccent"
+          supportingText={`${billing.nonBillableHours.toFixed(2)}h non-billable`}
+        />
 
-        <Card>
-          <CardBody>
-            <Flex align="center" gap="sm" className="mb-2">
-              <DollarSign className="w-4 h-4 text-ui-text-tertiary" />
-              <Typography variant="small" color="tertiary">
-                Avg Hourly Rate
-              </Typography>
-            </Flex>
-            <Typography variant="h2" color="warning">
-              {formatCurrency(averageRate)}
-            </Typography>
-            <Typography variant="caption" color="tertiary" className="mt-1">
-              per billable hour
-            </Typography>
-          </CardBody>
-        </Card>
+        <SummaryMetricCard
+          icon={DollarSign}
+          label="Avg Hourly Rate"
+          value={formatCurrency(averageRate)}
+          valueColor="warning"
+          recipe="metricTileWarning"
+          supportingText="per billable hour"
+        />
       </Grid>
 
       {/* Team Breakdown */}
       <Card>
         <CardBody>
           <Flex align="center" gap="sm" className="mb-4">
-            <Users className="w-5 h-5 text-ui-text-tertiary" />
+            <Icon icon={Users} size="md" tone="tertiary" />
             <Typography variant="h3">Team Breakdown</Typography>
           </Flex>
 
