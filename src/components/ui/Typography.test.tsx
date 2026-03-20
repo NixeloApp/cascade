@@ -40,6 +40,18 @@ describe("Typography", () => {
     expect(title.className).toContain("text-lg");
   });
 
+  it("maps metricLabel to a paragraph with uppercase tracking", () => {
+    render(
+      <Typography variant="metricLabel" data-testid="metric-label">
+        Teams
+      </Typography>,
+    );
+    const label = screen.getByTestId("metric-label");
+    expect(label.tagName).toBe("P");
+    expect(label.className).toContain("uppercase");
+    expect(label.className).toContain("tracking-wide");
+  });
+
   it("maps sidebarOrgInitial to a span", () => {
     render(
       <Typography variant="sidebarOrgInitial" data-testid="initials">

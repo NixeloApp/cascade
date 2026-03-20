@@ -79,6 +79,7 @@ const typographyVariants = cva("", {
       projectHeaderTitle: "truncate text-sm font-semibold tracking-tight text-ui-text sm:text-2xl",
       placeholderTitle: "mb-2 text-lg font-semibold tracking-tight text-ui-text",
       wikiCardTitle: "line-clamp-1 text-2xl font-semibold tracking-tight text-ui-text",
+      metricLabel: "text-xs font-medium uppercase tracking-wide text-ui-text-secondary",
 
       // Special
       blockquote: "mt-6 border-l-2 border-ui-border-secondary pl-6 italic text-ui-text",
@@ -164,6 +165,7 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
     case "dashboardStatValueStrong":
     case "projectHeaderTitle":
     case "placeholderTitle":
+    case "metricLabel":
       return "p";
     case "mono":
     case "calendarHeaderDate":

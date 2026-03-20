@@ -18,7 +18,7 @@ Make the product more visually cohesive and more enforceable in code, using the 
 
 ### Typography override drift
 
-- [ ] Remove or absorb the 47 current `Typography` className size/weight/tracking overrides surfaced by `check-typography-drift.js`
+- [ ] Remove or absorb the 43 current `Typography` className size/weight/tracking overrides surfaced by `check-typography-drift.js`
 - [ ] Where the same override pattern repeats, add a real `Typography` variant or supporting primitive instead of continuing one-off className fixes
 
 ### Owned-control drift
