@@ -937,6 +937,7 @@ export const findSimilarIssues = authenticatedQuery({
       const fallbackIssues = await ctx.db
         .query("issues")
         .withIndex("by_project_updated", (q) => q.eq("projectId", args.projectId))
+        .order("desc")
         .filter(notDeleted)
         .take(50);
 
