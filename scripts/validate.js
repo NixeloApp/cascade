@@ -46,7 +46,7 @@
  *  42. Screenshot coverage     — route coverage + canonical spec screenshot audit (informational)
  *  43. Screenshot manifest     — blocks repeated screenshot hashes beyond legit dual-write
  *  44. Typography drift        — blocks Typography/style drift outside owned primitives
- *  45. Control chrome drift    — blocks owned controls restyled in feature code
+ *  45. Control chrome drift    — blocks owned controls restyled in feature code, including helper-backed Badge color overrides
  *  46. Shared shape drift      — blocks repeated inline entity summary shapes
  *  47. Page layout             — route wrappers should use PageLayout, not ad-hoc max-width shells
  *  48. Raw Date formatting     — use shared date helpers instead of ad-hoc formatting

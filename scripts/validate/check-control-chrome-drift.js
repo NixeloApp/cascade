@@ -13,6 +13,8 @@ import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 const SRC_DIR = path.join(ROOT, "src");
 const TARGET_COMPONENTS = new Set(["Button", "Badge", "Input", "Textarea", "TabsTrigger"]);
+const BADGE_COLOR_HELPER_PATTERN =
+  /getPriorityColor\s*\([^)]*["']badge["'][^)]*\)|getStatusColor\s*\(|CATEGORY_COLORS\s*\[/;
 const CHROME_OVERRIDE_PATTERN =
   /\b(?:rounded(?:-[^\s"'`}]*)?|shadow(?:-[^\s"'`}]*)?|border(?:-[^\s"'`}]*)?|ring(?:-[^\s"'`}]*)?|outline(?:-[^\s"'`}]*)?|bg-[^\s"'`}]*)\b|\b(?:text-(?:xs|sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl|8xl|9xl)|font-(?:thin|extralight|light|normal|medium|semibold|bold|extrabold|black)|(?:h|min-h|px|py|pl|pr|pt|pb)-[^\s"'`}]*)\b/;
 
@@ -67,6 +69,18 @@ function getClassNameText(node) {
   return null;
 }
 
+function getClassNameExpressionText(node) {
+  const attr = node.attributes.properties.find(
+    (property) => ts.isJsxAttribute(property) && property.name.getText() === "className",
+  );
+
+  if (!attr?.initializer || !ts.isJsxExpression(attr.initializer) || !attr.initializer.expression) {
+    return null;
+  }
+
+  return attr.initializer.expression.getText();
+}
+
 export function run() {
   const findings = [];
   const files = walkDir(SRC_DIR, { extensions: new Set([".ts", ".tsx", ".js", ".jsx"]) });
@@ -83,13 +97,20 @@ export function run() {
         const componentName = node.tagName.getText();
         if (TARGET_COMPONENTS.has(componentName)) {
           const classNameText = getClassNameText(node);
-          if (classNameText && CHROME_OVERRIDE_PATTERN.test(classNameText)) {
+          const classNameExpressionText = getClassNameExpressionText(node);
+          const hasRawChromeOverride = classNameText && CHROME_OVERRIDE_PATTERN.test(classNameText);
+          const hasHelperBackedBadgeColorOverride =
+            componentName === "Badge" &&
+            classNameExpressionText &&
+            BADGE_COLOR_HELPER_PATTERN.test(classNameExpressionText);
+
+          if (hasRawChromeOverride || hasHelperBackedBadgeColorOverride) {
             const pos = sourceFile.getLineAndCharacterOfPosition(node.getStart());
             findings.push({
               componentName,
               file: rel,
               line: pos.line + 1,
-              className: classNameText,
+              className: classNameText ?? classNameExpressionText ?? "",
             });
           }
         }
@@ -104,7 +125,7 @@ export function run() {
   const messages = [];
   if (findings.length > 0) {
     messages.push(
-      `${c.yellow}Owned controls restyled with raw chrome/state classes (${findings.length}):${c.reset}`,
+      `${c.yellow}Owned controls restyled with raw chrome/state classes or helper-backed badge color maps (${findings.length}):${c.reset}`,
     );
     for (const finding of findings.slice(0, 40)) {
       messages.push(

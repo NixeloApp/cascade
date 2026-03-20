@@ -17,6 +17,7 @@ import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatDate, formatTime } from "@/lib/formatting";
 import { Calendar, Check, Clock, LinkIcon, MapPin, Trash2, X } from "@/lib/icons";
+import { getStatusBadgeTone } from "@/lib/issue-utils";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -107,19 +108,6 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
     return getEventBadgeClass(eventType, event.color);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "confirmed":
-        return "bg-status-success-bg text-status-success";
-      case "tentative":
-        return "bg-status-warning-bg text-status-warning";
-      case "cancelled":
-        return "bg-status-error-bg text-status-error";
-      default:
-        return "bg-ui-bg-tertiary text-ui-text-secondary";
-    }
-  };
-
   return (
     <Dialog
       open={open}
@@ -148,7 +136,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
           <Badge size="md" className={cn("capitalize", getEventTypeColor(event.eventType))}>
             {event.eventType}
           </Badge>
-          <Badge size="md" className={cn("capitalize", getStatusColor(event.status))}>
+          <Badge size="md" statusTone={getStatusBadgeTone(event.status)} className="capitalize">
             {event.status}
           </Badge>
         </Flex>
