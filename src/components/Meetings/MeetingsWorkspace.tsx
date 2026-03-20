@@ -1435,14 +1435,18 @@ function ScheduleRecordingDialog({
 }
 
 export function MeetingsWorkspace() {
-  const recordings = useAuthenticatedQuery(api.meetingBot.listRecordings, { limit: 50 });
+  const [projectFilter, setProjectFilter] = useState<ProjectFilter>("all");
+  const recordingQueryArgs =
+    projectFilter === "all"
+      ? { limit: 50 }
+      : { limit: 50, projectId: projectFilter as Id<"projects"> };
+  const recordings = useAuthenticatedQuery(api.meetingBot.listRecordings, recordingQueryArgs);
   const memory = useAuthenticatedQuery(api.meetingBot.listMemoryItems, { sectionLimit: 5 });
   const projects = useAuthenticatedQuery(api.dashboard.getMyProjects, {});
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [platformFilter, setPlatformFilter] = useState<PlatformFilter>("all");
-  const [projectFilter, setProjectFilter] = useState<ProjectFilter>("all");
   const [timeWindowFilter, setTimeWindowFilter] = useState<TimeWindowFilter>("all");
   const deferredSearchQuery = useDeferredValue(searchQuery.trim());
   const searchedRecordings = useAuthenticatedQuery(

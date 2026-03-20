@@ -372,10 +372,13 @@ export const searchRecordings = authenticatedQuery({
     if (query.length < 2) return [];
 
     const limit = Math.min(args.limit ?? 20, BOUNDED_LIST_LIMIT);
+    // Fetch enough candidates to survive access filtering in multi-tenant data.
+    // Search indexes don't support pre-filtering by user, so we over-fetch and
+    // filter in the loop below, breaking early once we have enough results.
     const transcripts = await ctx.db
       .query("meetingTranscripts")
       .withSearchIndex("search_transcript", (q) => q.search("fullText", query))
-      .take(Math.min(limit * 5, BOUNDED_LIST_LIMIT));
+      .take(BOUNDED_LIST_LIMIT);
 
     if (transcripts.length === 0) return [];
 
@@ -472,10 +475,9 @@ export const listMemoryItems = authenticatedQuery({
     const sectionLimit = Math.min(args.sectionLimit ?? 5, 10);
     if (sectionLimit <= 0) return emptyMeetingMemory();
 
-    const summaries = await ctx.db
-      .query("meetingSummaries")
-      .order("desc")
-      .take(Math.min(sectionLimit * 12, BOUNDED_LIST_LIMIT));
+    // Fetch enough summaries to survive access filtering — the user may not
+    // have access to many recent recordings in a shared organization.
+    const summaries = await ctx.db.query("meetingSummaries").order("desc").take(BOUNDED_LIST_LIMIT);
 
     if (summaries.length === 0) return emptyMeetingMemory();
 
