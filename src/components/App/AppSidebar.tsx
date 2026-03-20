@@ -11,7 +11,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { Link, type LinkProps, useLocation, useNavigate } from "@tanstack/react-router";
 import type { FunctionReturnType } from "convex/server";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CreateTeamModal } from "@/components/CreateTeamModal";
 import { SidebarTeamItem } from "@/components/Sidebar/SidebarTeamItem";
 import { Badge } from "@/components/ui/Badge";
@@ -368,11 +368,7 @@ function WorkspaceNavItem({
   onCreateTeam,
   location,
 }: WorkspaceNavItemProps) {
-  const workspaceBasePath = ROUTES.workspaces.detail.build(orgSlug, workspace.slug);
-  const isWorkspaceRouteActive =
-    location.pathname === workspaceBasePath ||
-    location.pathname.startsWith(`${workspaceBasePath}/`);
-  const shouldShowTeams = isExpanded || isWorkspaceRouteActive;
+  const shouldShowTeams = isExpanded;
 
   return (
     <li className="ml-2 group list-none">
@@ -478,6 +474,26 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
   const allWorkspaces = workspaces ?? [];
   const showDocumentSearch = allDocuments.length > DOCUMENT_DISPLAY_LIMIT;
   const showWorkspaceSearch = allWorkspaces.length > WORKSPACE_DISPLAY_LIMIT;
+
+  // Auto-expand the workspace tree when navigating into a workspace route.
+  // Only seeds on transition (inactive → active), so the user can still collapse manually.
+  const prevActiveWorkspaceRef = useRef<string | null>(null);
+  useEffect(() => {
+    const activeSlug = allWorkspaces.find((ws) => {
+      const base = ROUTES.workspaces.detail.build(orgSlug, ws.slug);
+      return location.pathname === base || location.pathname.startsWith(`${base}/`);
+    })?.slug;
+
+    if (activeSlug && prevActiveWorkspaceRef.current !== activeSlug) {
+      setExpandedWorkspaces((prev) => {
+        if (prev.has(activeSlug)) return prev;
+        const next = new Set(prev);
+        next.add(activeSlug);
+        return next;
+      });
+    }
+    prevActiveWorkspaceRef.current = activeSlug ?? null;
+  }, [location.pathname, allWorkspaces, orgSlug]);
 
   const filteredFavorites = filterItems(favorites, documentSearch, "title");
   const filteredDocuments = (
