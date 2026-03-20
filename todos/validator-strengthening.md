@@ -74,7 +74,7 @@ Fetches all data then filters in the component when the filter could be a backen
 ## Existing Validator Improvements
 
 - [ ] **Raw Tailwind validator** -- currently allows raw TW in route files; tighten to flag repeated patterns (same class cluster used 3+ times should become a component/variant)
-- [ ] **E2E quality validator** -- remove the `screenshot-pages.ts` skip (tracked in screenshot-tooling-cleanup.md, but validator should enforce once cleanup is done)
+- [x] **E2E quality validator** -- removed the `screenshot-pages.ts` skip and ratcheted its current quality debt in `check-e2e-quality.js` (58 baselined harness issues)
 - [x] **Screenshot coverage validator** -- meetings added to the required page-spec list in `check-screenshot-coverage.js`
 - [ ] **Standards validator** -- ensure new pages like MeetingsWorkspace are caught immediately (currently it does, but violations persist -- need to fix the source)
 
