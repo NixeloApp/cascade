@@ -10,6 +10,25 @@ First-class Meetings workspace, recording detail view, participant/topic/sentime
 
 ## Remaining Work
 
+### Screenshots & Visual QA
+
+- [ ] Add spec folder `docs/design/specs/pages/NN-meetings/` with README
+- [ ] Add meetings page to `e2e/screenshot-pages.ts` capture specs (empty state, recordings list, recording detail, memory rail, transcript view)
+- [ ] Capture baselines across all 4 viewport/theme combos (desktop-dark, desktop-light, tablet-light, mobile-light)
+- [ ] Update `.screenshot-hashes.json` manifest with new captures
+- [ ] Visual review of captured screenshots for quality (no spinners, real content)
+
+### E2E Tests
+
+- [ ] Add `e2e/meetings.spec.ts` covering: empty state, recording list, recording detail, transcript search, action-item to issue creation, memory rail filtering
+- [ ] Add meetings page to page objects (`e2e/pages/`)
+
+### MeetingsWorkspace Code Quality
+
+- [ ] Fix 55 validator violations in `MeetingsWorkspace.tsx` (7 standards, 30 raw TW, 2 surface shells, 16 layout prop)
+- [ ] Fix type errors in `MeetingsWorkspace.test.tsx` (summary nullability, mock shapes)
+- [ ] Replace raw HTML/Tailwind patterns with design system components (Flex, Typography, Card, etc.)
+
 ### Document Editor Dependency (blocks meeting-to-doc)
 
 - [ ] Wire Plate editor to an explicit save/sync path -- the frontend save wiring to `api.prosemirror.*` is not closed
@@ -43,8 +62,3 @@ First-class Meetings workspace, recording detail view, participant/topic/sentime
 - [ ] Benchmark `pyannote.audio` for speaker attribution
 - [ ] Evaluate `whisper.cpp` for local/offline
 - [ ] Study `LiveKit Agents` for future voice-agent features
-
-### MeetingsWorkspace Code Quality
-
-- [ ] Fix 55 validator violations in `MeetingsWorkspace.tsx` (7 standards, 30 raw TW, 2 surface shells, 16 layout prop)
-- [ ] Fix type errors in `MeetingsWorkspace.test.tsx` (summary nullability, mock shapes)

@@ -20,8 +20,9 @@ Only unfinished work stays in `/todos`. Completed slices should be removed from 
 
 | Priority | File | Remaining work |
 |----------|------|----------------|
-| P1 | [meeting-intelligence.md](./meeting-intelligence.md) | Core meetings workspace shipped; remaining: document editor persistence (blocks meeting-to-doc), capture strategy decisions, platform breadth, OSS evaluation, MeetingsWorkspace code quality (55 validator violations) |
+| P1 | [meeting-intelligence.md](./meeting-intelligence.md) | Core shipped; missing: screenshots/spec folder, E2E tests, 55 validator violations in MeetingsWorkspace, editor persistence (blocks meeting-to-doc), capture strategy, platform breadth, OSS eval |
 | P1 | [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Consistency system in place; cleanup remains for 43 Typography drift points, 17 control-chrome drift points, and residual screenshot/state cohesion gaps |
+| P2 | [validator-strengthening.md](./validator-strengthening.md) | 9 validators failing (55 violations from MeetingsWorkspace alone), 3 advisory validators should block or ratchet, need new validators for manifest integrity and catch-swallow audit |
 | P2 | [screenshot-tooling-cleanup.md](./screenshot-tooling-cleanup.md) | 37 loading-spinner captures (16.4% of manifest), 198 silent `.catch(() => {})` calls, 201 `.first()` calls, 7 hardcoded timeouts, 33 raw selectors |
 | P2 | [feature-docs-expansion.md](./feature-docs-expansion.md) | 21 page spec folders missing CURRENT / IMPLEMENTATION / TARGET docs |
 | P2 | [plane-features.md](./plane-features.md) | Remaining: dedicated Gantt polish, intake/triage, deploy boards, stickies, analytics enhancements, automation, multi-provider AI, page versions |
