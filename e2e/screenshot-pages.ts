@@ -1807,12 +1807,27 @@ async function scrollSectionNearViewportTop(
 ): Promise<void> {
   await locator.scrollIntoViewIfNeeded().catch(() => {});
   await locator
-    .evaluate((element, topOffset) => {
-      const targetTop = element.getBoundingClientRect().top + window.scrollY - topOffset;
-      window.scrollTo({ top: Math.max(0, targetTop), behavior: "auto" });
-    }, offset)
+    .evaluate(
+      (element, topOffset) =>
+        new Promise<void>((resolve) => {
+          const targetTop = element.getBoundingClientRect().top + window.scrollY - topOffset;
+          window.scrollTo({ top: Math.max(0, targetTop), behavior: "auto" });
+
+          const waitForScroll = () => {
+            const distanceFromOffset = Math.abs(element.getBoundingClientRect().top - topOffset);
+            if (distanceFromOffset <= 2) {
+              resolve();
+              return;
+            }
+            requestAnimationFrame(waitForScroll);
+          };
+
+          requestAnimationFrame(waitForScroll);
+        }),
+      offset,
+    )
     .catch(() => {});
-  await page.waitForTimeout(100);
+  await waitForAnimation(page);
 }
 
 async function waitForRoadmapReady(page: Page): Promise<void> {
@@ -2927,64 +2942,10 @@ async function screenshotFilledStates(
         const projectsPage = new ProjectsPage(page, orgSlug);
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
-        await page.waitForTimeout(1000);
+        await waitForAnimation(page);
+        await projectsPage.issueTitleInput.waitFor({ state: "visible", timeout: 5000 });
         await waitForScreenshotReady(page);
-        const titleUpdated = await page.evaluate((value) => {
-          const submitButton = Array.from(document.querySelectorAll("button")).find((button) => {
-            if (!(button instanceof HTMLElement)) {
-              return false;
-            }
-            const style = window.getComputedStyle(button);
-            const visible =
-              style.display !== "none" &&
-              style.visibility !== "hidden" &&
-              button.offsetParent !== null;
-            const label = button.textContent?.trim().toLowerCase() ?? "";
-            return visible && label === "create issue";
-          });
-
-          const modal =
-            submitButton?.closest<HTMLElement>("[role='dialog'], [role='alertdialog']") ?? null;
-          const visibleInputs = Array.from(
-            modal?.querySelectorAll<HTMLInputElement>('input:not([type="hidden"])') ?? [],
-          ).filter((input) => {
-            const style = window.getComputedStyle(input);
-            return (
-              style.display !== "none" &&
-              style.visibility !== "hidden" &&
-              input.offsetParent !== null
-            );
-          });
-
-          const titleInput =
-            visibleInputs.find((input) => {
-              const placeholder = input.getAttribute("placeholder")?.toLowerCase() ?? "";
-              return placeholder.includes("enter issue title");
-            }) ??
-            visibleInputs.find((input) => input.getAttribute("name") === "title") ??
-            visibleInputs.find((input) => {
-              const type = input.getAttribute("type")?.toLowerCase() ?? "text";
-              return type === "text" || type === "search";
-            }) ??
-            null;
-
-          if (!(titleInput instanceof HTMLInputElement)) {
-            return false;
-          }
-
-          titleInput.focus();
-          const descriptor = Object.getOwnPropertyDescriptor(
-            window.HTMLInputElement.prototype,
-            "value",
-          );
-          descriptor?.set?.call(titleInput, value);
-          titleInput.dispatchEvent(new Event("input", { bubbles: true }));
-          titleInput.dispatchEvent(new Event("change", { bubbles: true }));
-          return true;
-        }, duplicateQuery);
-        if (!titleUpdated) {
-          throw new Error("Create issue title input not found");
-        }
+        await projectsPage.issueTitleInput.fill(duplicateQuery);
         const duplicateBanner = page.getByText("Potential duplicates found", { exact: true });
         await duplicateBanner.waitFor({ state: "visible", timeout: 20000 });
         await page

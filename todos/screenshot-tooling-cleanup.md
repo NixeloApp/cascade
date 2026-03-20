@@ -58,7 +58,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [x] Replace swallowed notification panel and snooze-popover stabilization with explicit retries + animation waits
 - [x] Replace shortcuts and time-entry modal stabilization with explicit dialog-content readiness waits
 - [x] Replace calendar month-toggle and sprint overlap hard waits with state-based readiness waits
-- [ ] Replace `waitForTimeout` calls with `animations: 'disabled'` or `waitForAnimation()`
+- [x] Replace `waitForTimeout` calls with `animations: 'disabled'` or `waitForAnimation()`
 - [ ] Replace raw data-attribute selectors with TEST_IDS constants
 - [ ] Reduce `.first()` usage by scoping selectors or using test IDs
 - [x] Extract `dismissAllDialogs()`, `waitForDialogOpen()`, `waitForScreenshotReady()` to `e2e/utils/`
@@ -68,6 +68,6 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 
 - [ ] Zero loading-spinner screenshots in the manifest
 - [ ] `.catch(() => {})` count reduced from 198 to only intentional cases with comments
-- [ ] No `waitForTimeout` calls
+- [x] No `waitForTimeout` calls
 - [ ] Shared helpers extracted to `e2e/utils/`
 - [ ] Raw selector count near-zero via TEST_IDS constants
