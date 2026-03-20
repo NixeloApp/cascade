@@ -10,6 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import type { BadgeProps } from "@/components/ui/Badge";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -21,6 +22,7 @@ import { Card } from "./ui/Card";
 import { Collapsible, CollapsibleContent, CollapsibleHeader } from "./ui/Collapsible";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { Flex } from "./ui/Flex";
+import { Icon } from "./ui/Icon";
 import { Metadata, MetadataItem } from "./ui/Metadata";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
@@ -29,58 +31,72 @@ import { Typography } from "./ui/Typography";
 interface StatusBadgeConfig {
   icon: ReactNode;
   label: string;
-  className: string;
+  variant: BadgeProps["variant"];
 }
 
 const STATUS_BADGE_CONFIG: Record<string, StatusBadgeConfig> = {
   scheduled: {
-    icon: <Clock className="w-3 h-3 mr-1" />,
+    icon: <StatusBadgeIcon icon={Clock} />,
     label: "Scheduled",
-    className: "bg-brand-subtle text-brand-active",
+    variant: "brand",
   },
   joining: {
-    icon: <Play className="w-3 h-3 mr-1 animate-pulse" />,
+    icon: <StatusBadgeIcon icon={Play} tone="warning" className="animate-pulse" />,
     label: "Joining...",
-    className: "bg-status-warning-bg text-status-warning",
+    variant: "warning",
   },
   recording: {
-    icon: <Mic className="w-3 h-3 mr-1 animate-pulse" />,
+    icon: <StatusBadgeIcon icon={Mic} tone="error" className="animate-pulse" />,
     label: "Recording",
-    className: "bg-status-error-bg text-status-error",
+    variant: "error",
   },
   processing: {
     icon: <LoadingSpinner size="xs" className="mr-1" />,
     label: "Processing...",
-    className: "bg-accent-subtle text-accent-active",
+    variant: "accent",
   },
   transcribing: {
     icon: <LoadingSpinner size="xs" className="mr-1" />,
     label: "Processing...",
-    className: "bg-accent-subtle text-accent-active",
+    variant: "accent",
   },
   summarizing: {
     icon: <LoadingSpinner size="xs" className="mr-1" />,
     label: "Processing...",
-    className: "bg-accent-subtle text-accent-active",
+    variant: "accent",
   },
   completed: {
-    icon: <CheckCircle className="w-3 h-3 mr-1" />,
+    icon: <StatusBadgeIcon icon={CheckCircle} tone="success" />,
     label: "Completed",
-    className: "bg-status-success-bg text-status-success",
+    variant: "success",
   },
   failed: {
-    icon: <XCircle className="w-3 h-3 mr-1" />,
+    icon: <StatusBadgeIcon icon={XCircle} tone="error" />,
     label: "Failed",
-    className: "bg-status-error-bg text-status-error",
+    variant: "error",
   },
 };
+
+function StatusBadgeIcon({
+  icon,
+  tone,
+  className,
+}: {
+  icon: typeof Clock;
+  tone?: "warning" | "error" | "success";
+  className?: string;
+}) {
+  return (
+    <Icon icon={icon} size="xs" tone={tone} className={className ? `mr-1 ${className}` : "mr-1"} />
+  );
+}
 
 function StatusBadge({ status }: { status: string }) {
   const config = STATUS_BADGE_CONFIG[status];
   if (!config) return null;
 
   return (
-    <Badge size="sm" className={config.className}>
+    <Badge size="sm" variant={config.variant}>
       {config.icon}
       {config.label}
     </Badge>
