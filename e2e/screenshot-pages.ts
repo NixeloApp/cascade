@@ -830,12 +830,12 @@ async function openOmnibox(page: Page, trigger: Locator, dialog: Locator): Promi
   }
 
   await dialog.waitFor({ state: "visible", timeout: 5000 });
+  await page.getByRole("heading", { name: /search and commands/i }).waitFor({
+    state: "visible",
+    timeout: 5000,
+  });
   await page.getByTestId(TEST_IDS.SEARCH.INPUT).waitFor({ state: "visible", timeout: 5000 });
-  await dialog
-    .getByText(/jump faster across your workspace/i)
-    .first()
-    .waitFor({ state: "visible", timeout: 5000 })
-    .catch(() => {});
+  await waitForAnimation(page);
   await waitForScreenshotReady(page);
 }
 
@@ -3984,9 +3984,11 @@ async function screenshotDashboardModals(
         });
         await advancedSearchButton.waitFor({ state: "visible", timeout: 5000 });
         await advancedSearchButton.click();
-        await omniboxDialog.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
+        await omniboxDialog.waitFor({ state: "hidden", timeout: 5000 });
         const advancedSearchDialog = page.getByTestId(TEST_IDS.SEARCH.ADVANCED_MODAL);
         await advancedSearchDialog.waitFor({ state: "visible", timeout: 5000 });
+        await waitForAnimation(page);
+        await waitForScreenshotReady(page);
         await captureCurrentView(page, prefix, "dashboard-advanced-search-modal");
         await dismissIfOpen(page, advancedSearchDialog);
       } finally {
