@@ -2,13 +2,14 @@ import { cva } from "class-variance-authority";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-type MaxWidth = "sm" | "md" | "lg" | "xl" | "2xl" | "full";
+type MaxWidth = "sm" | "md" | "5xl" | "lg" | "xl" | "2xl" | "full";
 
 const pageLayoutVariants = cva("mx-auto w-full animate-fade-in px-4 py-5 sm:px-6 sm:py-6 lg:px-8", {
   variants: {
     maxWidth: {
       sm: "max-w-3xl",
       md: "max-w-4xl",
+      "5xl": "max-w-5xl",
       lg: "max-w-6xl",
       xl: "max-w-7xl",
       "2xl": "max-w-screen-2xl",

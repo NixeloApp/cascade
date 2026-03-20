@@ -39,4 +39,15 @@ describe("PageLayout", () => {
       "custom-shell",
     );
   });
+
+  it("supports the owned 5xl page width token", () => {
+    const { container } = render(
+      <PageLayout maxWidth="5xl">
+        <div>Wide Panel</div>
+      </PageLayout>,
+    );
+
+    expect(screen.getByText("Wide Panel")).toBeInTheDocument();
+    expect(container.firstChild).toHaveClass("max-w-5xl");
+  });
 });
