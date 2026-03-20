@@ -1,5 +1,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import { Link } from "@tanstack/react-router";
 import type { FunctionReturnType } from "convex/server";
 import { type FormEvent, useDeferredValue, useEffect, useState } from "react";
 import { PageContent } from "@/components/layout";
@@ -24,7 +25,9 @@ import {
 } from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
 import { Typography } from "@/components/ui/Typography";
+import { ROUTES } from "@/config/routes";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import {
   formatDateTime,
   formatDurationHuman,
@@ -256,6 +259,146 @@ function RecordingListItem({
   );
 }
 
+function LinkedIssueDetails({ issueId }: { issueId: Id<"issues"> }) {
+  const issue = useAuthenticatedQuery(api.issues.getIssue, { id: issueId });
+  const organization = useOrganizationOptional();
+
+  if (issue === undefined) {
+    return (
+      <Typography variant="caption" color="secondary">
+        Loading linked issue...
+      </Typography>
+    );
+  }
+
+  if (issue === null) {
+    return (
+      <Typography variant="caption" color="secondary">
+        Linked issue is unavailable.
+      </Typography>
+    );
+  }
+
+  return (
+    <div className="rounded-lg border border-brand-border bg-brand-subtle/60 p-3">
+      <Stack gap="xs">
+        <Flex justify="between" align="start" gap="sm" className="flex-wrap">
+          <Badge size="sm">Issue linked</Badge>
+          <Badge size="sm">{issue.status}</Badge>
+        </Flex>
+        <Typography variant="caption" color="secondary">
+          <span className="font-medium text-ui-text">{issue.key}</span> {issue.title}
+        </Typography>
+        {organization && (
+          <Button asChild variant="ghost" size="sm" className="w-fit px-0">
+            <Link
+              to={ROUTES.issues.detail.path}
+              params={{ orgSlug: organization.orgSlug, key: issue.key }}
+            >
+              Open issue
+            </Link>
+          </Button>
+        )}
+      </Stack>
+    </div>
+  );
+}
+
+function ActionItemCard({
+  actionItem,
+  index,
+  summaryId,
+  availableProjects,
+  selectedProjectId,
+  canCreateIssue,
+  isCreating,
+  onProjectChange,
+  onCreateIssue,
+}: {
+  actionItem: MeetingSummary["actionItems"][number];
+  index: number;
+  summaryId: Id<"meetingSummaries">;
+  availableProjects: ProjectOption[] | undefined;
+  selectedProjectId: Id<"projects"> | null | undefined;
+  canCreateIssue: boolean;
+  isCreating: boolean;
+  onProjectChange: (projectId: Id<"projects">) => void;
+  onCreateIssue: (actionItemIndex: number) => void;
+}) {
+  return (
+    <Card variant="soft" padding="sm">
+      <Stack gap="xs">
+        <Flex justify="between" align="start" gap="sm">
+          <Typography variant="small">{actionItem.description}</Typography>
+          {actionItem.assignee && (
+            <Badge size="sm" className="shrink-0">
+              {actionItem.assignee}
+            </Badge>
+          )}
+        </Flex>
+        <Flex gap="xs" className="flex-wrap">
+          {actionItem.dueDate && <Badge size="sm">Due: {actionItem.dueDate}</Badge>}
+          {actionItem.priority && <Badge size="sm">Priority: {actionItem.priority}</Badge>}
+        </Flex>
+
+        {actionItem.issueCreated ? (
+          <LinkedIssueDetails issueId={actionItem.issueCreated} />
+        ) : (
+          <div className="rounded-lg border border-ui-border bg-ui-bg-elevated p-3">
+            <Stack gap="xs">
+              <Typography variant="caption" color="secondary">
+                Turn this follow-up into a tracked issue.
+              </Typography>
+
+              {availableProjects === undefined ? (
+                <Typography variant="caption" color="secondary">
+                  Loading available projects...
+                </Typography>
+              ) : availableProjects.length === 0 ? (
+                <Typography variant="caption" color="secondary">
+                  Join a project to create issues from meeting action items.
+                </Typography>
+              ) : (
+                <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                  <Select
+                    key={`${summaryId}-${index}-${selectedProjectId ?? "none"}`}
+                    defaultValue={selectedProjectId ?? undefined}
+                    onValueChange={(value) => onProjectChange(value as Id<"projects">)}
+                  >
+                    <SelectTrigger
+                      aria-label={`Project for action item ${index + 1}`}
+                      className="w-full"
+                    >
+                      <SelectValue placeholder="Choose project" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableProjects.map((project) => (
+                        <SelectItem key={project._id} value={project._id}>
+                          {project.key} - {project.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    isLoading={isCreating}
+                    disabled={!canCreateIssue || !selectedProjectId}
+                    onClick={() => onCreateIssue(index)}
+                  >
+                    Create issue
+                  </Button>
+                </div>
+              )}
+            </Stack>
+          </div>
+        )}
+      </Stack>
+    </Card>
+  );
+}
+
 function ActionItemsSection({
   summary,
   defaultProjectId,
@@ -308,80 +451,22 @@ function ActionItemsSection({
       <Stack as="ul" gap="sm" className="list-none">
         {summary.actionItems.map((item, index) => (
           <li key={`${item.description}-${item.assignee ?? ""}-${index}`}>
-            <Card variant="soft" padding="sm">
-              <Stack gap="xs">
-                <Flex justify="between" align="start" gap="sm">
-                  <Typography variant="small">{item.description}</Typography>
-                  {item.assignee && (
-                    <Badge size="sm" className="shrink-0">
-                      {item.assignee}
-                    </Badge>
-                  )}
-                </Flex>
-                <Flex gap="xs" className="flex-wrap">
-                  {item.dueDate && <Badge size="sm">Due: {item.dueDate}</Badge>}
-                  {item.priority && <Badge size="sm">Priority: {item.priority}</Badge>}
-                  {item.issueCreated && <Badge size="sm">Issue linked</Badge>}
-                </Flex>
-
-                {!item.issueCreated && (
-                  <div className="rounded-lg border border-ui-border bg-ui-bg-elevated p-3">
-                    <Stack gap="xs">
-                      <Typography variant="caption" color="secondary">
-                        Turn this follow-up into a tracked issue.
-                      </Typography>
-
-                      {projects === undefined ? (
-                        <Typography variant="caption" color="secondary">
-                          Loading available projects...
-                        </Typography>
-                      ) : projects.length === 0 ? (
-                        <Typography variant="caption" color="secondary">
-                          Join a project to create issues from meeting action items.
-                        </Typography>
-                      ) : (
-                        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-                          <Select
-                            key={`${summary._id}-${index}-${selectedProjectIds[index] ?? "none"}`}
-                            defaultValue={selectedProjectIds[index] ?? undefined}
-                            onValueChange={(value) =>
-                              setSelectedProjectIds((current) => ({
-                                ...current,
-                                [index]: value as Id<"projects">,
-                              }))
-                            }
-                          >
-                            <SelectTrigger
-                              aria-label={`Project for action item ${index + 1}`}
-                              className="w-full"
-                            >
-                              <SelectValue placeholder="Choose project" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {projects.map((project) => (
-                                <SelectItem key={project._id} value={project._id}>
-                                  {project.key} - {project.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            isLoading={creatingIndex === index}
-                            disabled={!canAct || !selectedProjectIds[index]}
-                            onClick={() => void handleCreateIssue(index)}
-                          >
-                            Create issue
-                          </Button>
-                        </div>
-                      )}
-                    </Stack>
-                  </div>
-                )}
-              </Stack>
-            </Card>
+            <ActionItemCard
+              actionItem={item}
+              index={index}
+              summaryId={summary._id}
+              availableProjects={projects}
+              selectedProjectId={selectedProjectIds[index]}
+              canCreateIssue={canAct}
+              isCreating={creatingIndex === index}
+              onProjectChange={(projectId) =>
+                setSelectedProjectIds((current) => ({
+                  ...current,
+                  [index]: projectId,
+                }))
+              }
+              onCreateIssue={(actionItemIndex) => void handleCreateIssue(actionItemIndex)}
+            />
           </li>
         ))}
       </Stack>

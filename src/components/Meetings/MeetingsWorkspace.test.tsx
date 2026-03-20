@@ -140,27 +140,85 @@ function buildDetail(overrides: Partial<MeetingDetail> = {}): MeetingDetail {
   };
 }
 
+function isObjectArg(args: unknown): args is Record<string, unknown> {
+  return typeof args === "object" && args !== null;
+}
+
+function matchesSearchArgs(args: Record<string, unknown>) {
+  return "query" in args;
+}
+
+function matchesListArgs(args: Record<string, unknown>) {
+  return "limit" in args;
+}
+
+function matchesIssueArgs(args: Record<string, unknown>) {
+  return "id" in args;
+}
+
+function matchesRecordingArgs(args: Record<string, unknown>) {
+  return "recordingId" in args && args.recordingId === recordingId;
+}
+
+function matchesProjectArgs(args: Record<string, unknown>) {
+  return Object.keys(args).length === 0;
+}
+
+function resolveMeetingQueryResult(
+  args: unknown,
+  config: {
+    listRecordings: MeetingListItem[];
+    detail: MeetingDetail | undefined;
+    projects: ProjectItem[];
+    searchQuery?: string;
+    searchResults: MeetingSearchItem[];
+    linkedIssue?: {
+      _id: Id<"issues">;
+      key: string;
+      title: string;
+      status: string;
+    } | null;
+  },
+) {
+  if (!isObjectArg(args)) return undefined;
+  if (matchesSearchArgs(args)) return args.query === config.searchQuery ? config.searchResults : [];
+  if (matchesListArgs(args)) return config.listRecordings;
+  if (matchesProjectArgs(args)) return config.projects;
+  if (matchesIssueArgs(args)) return config.linkedIssue ?? null;
+  if (matchesRecordingArgs(args)) return config.detail;
+  return undefined;
+}
+
 function installMeetingQueryMock({
   listRecordings = [buildListItem()],
   detail = buildDetail(),
   projects = [buildProjectItem()],
   searchQuery,
   searchResults = [],
+  linkedIssue = null,
 }: {
   listRecordings?: MeetingListItem[];
   detail?: MeetingDetail | undefined;
   projects?: ProjectItem[];
   searchQuery?: string;
   searchResults?: MeetingSearchItem[];
+  linkedIssue?: {
+    _id: Id<"issues">;
+    key: string;
+    title: string;
+    status: string;
+  } | null;
 }) {
-  mockUseAuthenticatedQuery.mockImplementation((_query, args) => {
-    if (typeof args !== "object" || !args) return undefined;
-    if ("query" in args) return args.query === searchQuery ? searchResults : [];
-    if ("limit" in args) return listRecordings;
-    if (Object.keys(args).length === 0) return projects;
-    if ("recordingId" in args && args.recordingId === recordingId) return detail;
-    return undefined;
-  });
+  mockUseAuthenticatedQuery.mockImplementation((_query, args) =>
+    resolveMeetingQueryResult(args, {
+      listRecordings,
+      detail,
+      projects,
+      searchQuery,
+      searchResults,
+      linkedIssue,
+    }),
+  );
 }
 
 describe("MeetingsWorkspace", () => {
@@ -282,6 +340,38 @@ describe("MeetingsWorkspace", () => {
     expect(
       screen.getByText("Matched discussion about scope and rollout timing."),
     ).toBeInTheDocument();
+  });
+
+  it("shows linked issue details for action items with created issues", async () => {
+    installMeetingQueryMock({
+      linkedIssue: {
+        _id: "issue_1" as Id<"issues">,
+        key: "CORE-42",
+        title: "Update onboarding copy",
+        status: "todo",
+      },
+      detail: buildDetail({
+        summary: {
+          ...buildDetail().summary,
+          actionItems: [
+            {
+              description: "Update the spec",
+              assignee: "Alex",
+              assigneeUserId: undefined,
+              dueDate: "2026-03-20",
+              priority: "high",
+              issueCreated: "issue_1" as Id<"issues">,
+            },
+          ],
+        },
+      }),
+    });
+
+    render(<MeetingsWorkspace />);
+
+    expect(screen.getByText("CORE-42")).toBeInTheDocument();
+    expect(screen.getByText("Update onboarding copy")).toBeInTheDocument();
+    expect(screen.getByText("todo")).toBeInTheDocument();
   });
 
   it("filters recordings by status, project, and date window", () => {

@@ -1,7 +1,7 @@
 # Meeting Intelligence / Read AI Feature Restart
 
 > **Priority:** P1
-> **Status:** New
+> **Status:** In Progress
 > **Last Updated:** 2026-03-19
 > **Source:** Repo audit of current meeting bot implementation + March 2026 market refresh in `docs/research/competitors/meeting-ai/market-refresh-2026-03.md`
 
@@ -11,17 +11,16 @@
 
 The backend exists, but the feature is still mostly hidden inside the calendar event modal.
 
-- [ ] **Add a dedicated Meetings page** — Org-level route and sidebar entry for recordings, summaries, and action items.
 - [x] **Add a dedicated Meetings page** — Org-level route and sidebar entry for recordings, summaries, and action items.
 - [x] **Keep calendar entry point** — Meetings should still be accessible from event details, but not only from there.
-- [ ] **Show all recording states in one place** — Scheduled, joining, recording, processing, completed, failed, cancelled.
+- [x] **Show all recording states in one place** — Scheduled, joining, recording, processing, completed, failed, cancelled.
 - [x] **Add a useful empty state** — Explain what the feature does and how to start from calendar or direct meeting URL.
 
 ### Recording Detail Productization
 
 The schema and Convex queries are richer than the current UI.
 
-- [ ] **Promote recording details into a real view** — Current experience lives in `MeetingRecordingSection.tsx`; it should become a dedicated detail surface.
+- [x] **Promote recording details into a real view** — Current experience now has a first-class detail surface in the Meetings workspace instead of only living inside the calendar modal.
 - [x] **Expose participants** — Backend stores participants, but current UI does not show them in the main experience.
 - [x] **Expose topics** — Backend stores topic summaries, but current UI ignores them.
 - [x] **Expose open questions** — Summary schema supports them; current UI does not.
@@ -33,7 +32,7 @@ The schema and Convex queries are richer than the current UI.
 This is the main Nixelo-specific opportunity versus Read AI / Fireflies / Otter.
 
 - [x] **Expose action-item to issue creation in UI** — Convex supports `createIssueFromActionItem`, but it is not surfaced as a first-class frontend workflow.
-- [ ] **Show issue linkage state** — Once an action item becomes an issue, reflect it directly in meeting results.
+- [x] **Show issue linkage state** — Linked issues now show issue key, title, and status directly in meeting results.
 - [ ] **Turn meetings into project artifacts** — Link meeting outputs to issues, docs, and project context instead of leaving them as standalone notes.
 
 ## Medium Priority
@@ -71,7 +70,7 @@ These should be treated as experiments that support the product roadmap, not as 
 
 ## Explicit Gaps vs Current Market
 
-- [ ] **No first-class meetings hub** — Competitors now have archive/search/memory surfaces; Nixelo does not.
+- [x] **No first-class meetings hub** — Baseline meetings archive now exists in the sidebar; the remaining gap is deeper memory and workflow reuse.
 - [ ] **No cross-meeting memory product** — Current UI is meeting-by-meeting only.
 - [ ] **No agent-facing meeting layer** — MCP/agent access is becoming common in the category.
 - [ ] **No desktop capture mode** — Bot-only capture is increasingly incomplete.
