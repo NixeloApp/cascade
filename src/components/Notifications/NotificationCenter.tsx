@@ -230,9 +230,9 @@ export function NotificationCenter() {
                   <Button
                     key={key}
                     chrome={filter === key ? "active" : "quiet"}
-                    chromeSize="compactPill"
+                    chromeSize="compactPillSm"
                     onClick={() => setFilter(key)}
-                    className="h-7 shrink-0"
+                    className="shrink-0"
                   >
                     {label}
                   </Button>

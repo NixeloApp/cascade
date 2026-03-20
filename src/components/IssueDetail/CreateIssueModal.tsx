@@ -296,13 +296,7 @@ function CreateIssueLabelsSection({
         })}
         <Popover open={showCreateLabel} onOpenChange={onCreateOpenChange}>
           <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-7 px-2"
-              aria-label="Create new label"
-            >
+            <Button type="button" variant="outline" size="xs" aria-label="Create new label">
               <Icon icon={Plus} size="sm" />
               <span className="ml-1">New</span>
             </Button>

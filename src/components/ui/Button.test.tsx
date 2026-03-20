@@ -177,6 +177,17 @@ describe("Button", () => {
       expect(btn.className).toContain("px-3");
     });
 
+    it("applies xs size", () => {
+      render(
+        <Button size="xs" data-testid="btn">
+          Compact
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("h-7");
+      expect(btn.className).toContain("px-2");
+    });
+
     it("applies lg size", () => {
       render(
         <Button size="lg" data-testid="btn">
@@ -197,6 +208,18 @@ describe("Button", () => {
       const btn = screen.getByTestId("btn");
       expect(btn.className).toContain("h-10");
       expect(btn.className).toContain("w-10");
+    });
+
+    it("applies iconXs size", () => {
+      render(
+        <Button size="iconXs" data-testid="btn">
+          <Plus />
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("h-6");
+      expect(btn.className).toContain("w-6");
+      expect(btn.className).toContain("p-1");
     });
 
     it("applies workspace icon size", () => {
@@ -246,6 +269,18 @@ describe("Button", () => {
       expect(btn.className).toContain("left-0");
       expect(btn.className).toContain("w-2");
       expect(btn.className).toContain("cursor-ew-resize");
+    });
+
+    it("applies compact chrome pill sizing", () => {
+      render(
+        <Button chrome="quiet" chromeSize="compactPillSm" data-testid="btn">
+          Mentions
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("h-7");
+      expect(btn.className).toContain("rounded-full");
+      expect(btn.className).toContain("px-3");
     });
   });
 

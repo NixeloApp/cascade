@@ -175,19 +175,17 @@ export function WorkflowSettings({ projectId, workflowStates }: WorkflowSettings
                   <Flex gap="xs" direction="column">
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="iconXs"
                       onClick={() => handleMoveState(index, "up")}
                       disabled={index === 0}
-                      className="p-1 h-6"
                     >
                       <Icon icon={ChevronUp} size="sm" />
                     </Button>
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="iconXs"
                       onClick={() => handleMoveState(index, "down")}
                       disabled={index === states.length - 1}
-                      className="p-1 h-6"
                     >
                       <Icon icon={ChevronDown} size="sm" />
                     </Button>
