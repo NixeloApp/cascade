@@ -1092,13 +1092,11 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
     await page
       .getByRole("heading", { name: /replace scattered project tools/i })
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByText(/product control tower/i)
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
   }
@@ -1107,8 +1105,7 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
     await page
       .getByText(/secure account access/i)
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
   }
@@ -1117,13 +1114,11 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
     await page
       .getByRole("heading", { name: /check your email/i })
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByTestId(TEST_IDS.AUTH.VERIFICATION_CODE_INPUT)
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
   }
@@ -1132,13 +1127,11 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
     await page
       .getByRole("heading", { name: /you're invited/i })
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByText(/has invited you to join/i)
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
   }
@@ -1148,14 +1141,12 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
       .getByRole("heading", { name: /unsubscribed/i })
       .or(page.getByRole("heading", { name: /invalid link/i }))
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByText(/you've been unsubscribed from email notifications/i)
       .or(page.getByText(/this unsubscribe link is invalid or has expired/i))
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
   }
@@ -1164,14 +1155,12 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
     await page
       .getByRole("heading", { name: /client portal/i })
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByText(/portal token received/i)
       .or(page.getByText(/no projects are available for this portal token/i))
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
   }
@@ -1180,14 +1169,12 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
     await page
       .getByRole("heading", { name: /project view/i })
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByText(/^issues$/i)
       .or(page.getByText(/no visible issues for this project/i))
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
   }
 }
@@ -1206,8 +1193,7 @@ async function waitForCalendarReady(page: Page): Promise<boolean> {
       await page
         .locator("[data-loading-skeleton]")
         .first()
-        .waitFor({ state: "hidden", timeout: 4000 })
-        .catch(() => {});
+        .waitFor({ state: "hidden", timeout: 4000 });
       return true;
     } catch {
       if (attempt === 0) {
@@ -1323,18 +1309,16 @@ async function waitForCalendarMonthReady(page: Page): Promise<void> {
   await waitForMonthToggleSelected(5000);
   await waitForScreenshotReady(page);
   await waitForCalendarReady(page);
-  await page
-    .waitForFunction(
-      ({ dayCellTestId, quickAddTestId }) =>
-        document.querySelectorAll(`[data-testid="${dayCellTestId}"]`).length >= 28 &&
-        document.querySelectorAll(`[data-testid="${quickAddTestId}"]`).length >= 28,
-      {
-        dayCellTestId: TEST_IDS.CALENDAR.DAY_CELL,
-        quickAddTestId: TEST_IDS.CALENDAR.QUICK_ADD_DAY,
-      },
-      { timeout: 5000 },
-    )
-    .catch(() => {});
+  await page.waitForFunction(
+    ({ dayCellTestId, quickAddTestId }) =>
+      document.querySelectorAll(`[data-testid="${dayCellTestId}"]`).length >= 28 &&
+      document.querySelectorAll(`[data-testid="${quickAddTestId}"]`).length >= 28,
+    {
+      dayCellTestId: TEST_IDS.CALENDAR.DAY_CELL,
+      quickAddTestId: TEST_IDS.CALENDAR.QUICK_ADD_DAY,
+    },
+    { timeout: 5000 },
+  );
 }
 
 async function waitForBoardReady(page: Page): Promise<boolean> {
@@ -1347,18 +1331,12 @@ async function waitForBoardReady(page: Page): Promise<boolean> {
       await page
         .getByText(/delivery board|kanban board|sprint board/i)
         .first()
-        .waitFor({ state: "visible", timeout: 6000 })
-        .catch(() => {});
+        .waitFor({ state: "visible", timeout: 6000 });
       await page
         .locator("[data-loading-skeleton]")
         .first()
-        .waitFor({ state: "hidden", timeout: 4000 })
-        .catch(() => {});
-      await page
-        .getByRole("status")
-        .first()
-        .waitFor({ state: "hidden", timeout: 4000 })
-        .catch(() => {});
+        .waitFor({ state: "hidden", timeout: 4000 });
+      await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 4000 });
       return true;
     } catch {
       if (attempt === 0) {
@@ -1377,203 +1355,156 @@ async function waitForProjectsReady(page: Page, prefix?: string): Promise<void> 
   await page
     .getByRole("heading", { name: /^projects$/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
   await page
     .getByRole("button", { name: /create project/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
-  await page
-    .waitForFunction(
-      (capturePrefix) => {
-        const text = document.body.innerText || "";
-        if (capturePrefix === "empty") {
-          return text.includes("No projects yet");
-        }
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
+  await page.waitForFunction(
+    (capturePrefix) => {
+      const text = document.body.innerText || "";
+      if (capturePrefix === "empty") {
+        return text.includes("No projects yet");
+      }
 
-        if (text.includes("Client Operations Hub")) {
-          return true;
-        }
+      if (text.includes("Client Operations Hub")) {
+        return true;
+      }
 
-        return Array.from(document.querySelectorAll("a[href]")).some((link) => {
-          const href = link.getAttribute("href") || "";
-          return /\/projects\/[^/]+\/board$/.test(href);
-        });
-      },
-      prefix,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
+      return Array.from(document.querySelectorAll("a[href]")).some((link) => {
+        const href = link.getAttribute("href") || "";
+        return /\/projects\/[^/]+\/board$/.test(href);
+      });
+    },
+    prefix,
+    { timeout: 12000 },
+  );
 }
 
 async function waitForIssuesReady(page: Page, prefix?: string): Promise<void> {
   await page
     .getByRole("heading", { name: /^issues$/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
   await page
     .getByRole("button", { name: /create issue/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .waitForFunction(
-      (capturePrefix) => {
-        const text = document.body.innerText || "";
-        if (capturePrefix === "empty") {
-          return text.includes("No issues found");
-        }
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.waitForFunction(
+    (capturePrefix) => {
+      const text = document.body.innerText || "";
+      if (capturePrefix === "empty") {
+        return text.includes("No issues found");
+      }
 
-        return (
-          document.querySelector("[data-testid='issue-card']") !== null ||
-          text.includes("No issues found")
-        );
-      },
-      prefix,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+      return (
+        document.querySelector("[data-testid='issue-card']") !== null ||
+        text.includes("No issues found")
+      );
+    },
+    prefix,
+    { timeout: 12000 },
+  );
+  await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForWorkspacesReady(page: Page, prefix?: string): Promise<void> {
   await page
     .getByRole("heading", { name: /^workspaces$/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
   await page
     .getByRole("button", { name: /create workspace/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .waitForFunction(
-      (capturePrefix) => {
-        const text = document.body.innerText || "";
-        if (capturePrefix === "empty") {
-          return text.includes("No workspaces yet");
-        }
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.waitForFunction(
+    (capturePrefix) => {
+      const text = document.body.innerText || "";
+      if (capturePrefix === "empty") {
+        return text.includes("No workspaces yet");
+      }
 
-        return (
-          text.includes("Workspace map") ||
-          text.includes("Operating structure") ||
-          Array.from(document.querySelectorAll("a[href]")).some((link) => {
-            const href = link.getAttribute("href") || "";
-            return /\/workspaces\/[^/]+/.test(href);
-          })
-        );
-      },
-      prefix,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+      return (
+        text.includes("Workspace map") ||
+        text.includes("Operating structure") ||
+        Array.from(document.querySelectorAll("a[href]")).some((link) => {
+          const href = link.getAttribute("href") || "";
+          return /\/workspaces\/[^/]+/.test(href);
+        })
+      );
+    },
+    prefix,
+    { timeout: 12000 },
+  );
+  await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForTimeTrackingReady(page: Page): Promise<void> {
   await page
     .getByRole("heading", { name: /^time tracking$/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
   await page
     .getByRole("tab", { name: /time entries/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .waitForFunction(
-      () => {
-        const text = document.body.innerText || "";
-        return (
-          text.includes("Track time with enough context to understand cost") ||
-          text.includes("Select a project to continue.") ||
-          text.includes("Choose a project to view burn rate and cost analysis")
-        );
-      },
-      undefined,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.waitForFunction(
+    () => {
+      const text = document.body.innerText || "";
+      return (
+        text.includes("Track time with enough context to understand cost") ||
+        text.includes("Select a project to continue.") ||
+        text.includes("Choose a project to view burn rate and cost analysis")
+      );
+    },
+    undefined,
+    { timeout: 12000 },
+  );
+  await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForWorkspaceDetailReady(page: Page): Promise<void> {
   await page
     .getByRole("navigation", { name: /workspace sections/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
   await page
     .getByRole("heading", { name: /^teams$/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
   await page
     .getByRole("button", { name: /create team/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .waitForFunction(
-      () => {
-        const text = document.body.innerText || "";
-        return (
-          text.includes("Organize your workspace into focused teams") &&
-          (text.includes("No teams yet") ||
-            Array.from(document.querySelectorAll("a[href]")).some((link) => {
-              const href = link.getAttribute("href") || "";
-              return /\/teams\/[^/]+$/.test(href);
-            }))
-        );
-      },
-      undefined,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.waitForFunction(
+    () => {
+      const text = document.body.innerText || "";
+      return (
+        text.includes("Organize your workspace into focused teams") &&
+        (text.includes("No teams yet") ||
+          Array.from(document.querySelectorAll("a[href]")).some((link) => {
+            const href = link.getAttribute("href") || "";
+            return /\/teams\/[^/]+$/.test(href);
+          }))
+      );
+    },
+    undefined,
+    { timeout: 12000 },
+  );
+  await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForWorkspaceSettingsReady(page: Page): Promise<void> {
   await page
     .getByRole("heading", { name: /workspace settings/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
   await page
     .getByRole("button", { name: /save changes/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForWorkspaceBacklogReady(page: Page): Promise<void> {
@@ -1582,50 +1513,37 @@ async function waitForWorkspaceBacklogReady(page: Page): Promise<void> {
     .getByText(/backlog is empty/i)
     .or(page.getByTestId(TEST_IDS.BOARD.COLUMN).first())
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForTeamDetailReady(page: Page): Promise<void> {
   await waitForBoardReady(page);
-  await page
-    .waitForFunction(
-      () => {
-        const text = document.body.innerText || "";
-        return (
-          text.includes("Projects") &&
-          (text.includes("Delivery board") ||
-            text.includes("Kanban board") ||
-            text.includes("Sprint board"))
-        );
-      },
-      undefined,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
+  await page.waitForFunction(
+    () => {
+      const text = document.body.innerText || "";
+      return (
+        text.includes("Projects") &&
+        (text.includes("Delivery board") ||
+          text.includes("Kanban board") ||
+          text.includes("Sprint board"))
+      );
+    },
+    undefined,
+    { timeout: 12000 },
+  );
 }
 
 async function waitForTeamSettingsReady(page: Page): Promise<void> {
   await page
     .getByRole("heading", { name: /team settings/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
   await page
     .getByText(/coming soon|manage team members and preferences/i)
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForIssueDetailReady(page: Page): Promise<void> {
@@ -1633,199 +1551,138 @@ async function waitForIssueDetailReady(page: Page): Promise<void> {
     .getByTestId(TEST_IDS.ISSUE.DESCRIPTION_CONTENT)
     .or(page.getByTestId(TEST_IDS.ISSUE.DESCRIPTION_EDITOR))
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForDocumentsReady(page: Page): Promise<void> {
-  await page
-    .waitForFunction(
-      () => {
-        const text = document.body.innerText || "";
-        if (!/documents/i.test(text)) {
-          return false;
-        }
+  await page.waitForFunction(
+    () => {
+      const text = document.body.innerText || "";
+      if (!/documents/i.test(text)) {
+        return false;
+      }
 
-        return Array.from(document.querySelectorAll("a[href]")).some((link) => {
-          const href = link.getAttribute("href") || "";
-          return /\/documents\/[^/?#]+$/.test(href) && !href.endsWith("/templates");
-        });
-      },
-      undefined,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+      return Array.from(document.querySelectorAll("a[href]")).some((link) => {
+        const href = link.getAttribute("href") || "";
+        return /\/documents\/[^/?#]+$/.test(href) && !href.endsWith("/templates");
+      });
+    },
+    undefined,
+    { timeout: 12000 },
+  );
+  await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForDocumentEditorReady(page: Page): Promise<void> {
   await page
     .getByRole("heading", { name: /project requirements|sprint retrospective notes/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .waitForFunction(
-      () => {
-        const text = document.body.innerText || "";
-        return (
-          text.includes("The team closed the auth refresh") ||
-          text.includes("Teams can move from specs to execution") ||
-          text.includes("Hydrate the editor from saved document versions") ||
-          document.querySelector("[contenteditable='true']") !== null
-        );
-      },
-      undefined,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.waitForFunction(
+    () => {
+      const text = document.body.innerText || "";
+      return (
+        text.includes("The team closed the auth refresh") ||
+        text.includes("Teams can move from specs to execution") ||
+        text.includes("Hydrate the editor from saved document versions") ||
+        document.querySelector("[contenteditable='true']") !== null
+      );
+    },
+    undefined,
+    { timeout: 12000 },
+  );
+  await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForDocumentTemplatesReady(page: Page): Promise<void> {
   await page
     .getByRole("heading", { name: /document templates/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
   await page
     .getByRole("button", { name: /new template/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .waitForFunction(
-      () => {
-        const text = document.body.innerText || "";
-        return (
-          text.includes("Built-in Templates") ||
-          text.includes("Custom Templates") ||
-          text.includes("No templates yet")
-        );
-      },
-      undefined,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.waitForFunction(
+    () => {
+      const text = document.body.innerText || "";
+      return (
+        text.includes("Built-in Templates") ||
+        text.includes("Custom Templates") ||
+        text.includes("No templates yet")
+      );
+    },
+    undefined,
+    { timeout: 12000 },
+  );
+  await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForActivityReady(page: Page): Promise<void> {
   await page
     .getByRole("heading", { name: /project activity/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
   await page
     .getByTestId(TEST_IDS.ACTIVITY.FEED)
     .or(page.getByTestId(TEST_IDS.ACTIVITY.EMPTY_STATE))
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForAnalyticsReady(page: Page): Promise<void> {
   await page
     .getByRole("heading", { name: /analytics dashboard/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
   await page
     .getByTestId(TEST_IDS.ANALYTICS.METRIC_TOTAL_ISSUES)
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
-  await page
-    .locator("[data-loading-skeleton]")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
+  await page.locator("[data-loading-skeleton]").first().waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForTimesheetReady(page: Page): Promise<void> {
   await page
     .getByRole("tab", { name: /time entries/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
   await page
     .getByText(/track time with enough context to understand cost/i)
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForSprintsReady(page: Page): Promise<void> {
   await page
     .getByText(/sprint management/i)
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
   await page
     .getByRole("button", { name: /create sprint|\+ sprint/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForProjectMembersReady(page: Page): Promise<void> {
   await page
     .getByRole("heading", { name: /^project settings$/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
   await page
     .getByRole("heading", { name: /^members$/i })
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
   await page
     .getByText(/members? with access/i)
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function scrollSectionNearViewportTop(
@@ -1862,50 +1719,36 @@ async function waitForRoadmapReady(page: Page): Promise<void> {
   await page
     .getByText(/^roadmap$/i)
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .waitForFunction(
-      () => {
-        const text = document.body.innerText || "";
-        return (
-          text.includes("Roadmap is ready for planning") ||
-          text.includes("Timeline") ||
-          text.includes("No issues with target dates")
-        );
-      },
-      undefined,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.waitForFunction(
+    () => {
+      const text = document.body.innerText || "";
+      return (
+        text.includes("Roadmap is ready for planning") ||
+        text.includes("Timeline") ||
+        text.includes("No issues with target dates")
+      );
+    },
+    undefined,
+    { timeout: 12000 },
+  );
+  await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForBillingReady(page: Page): Promise<void> {
   await page
     .getByText(/billing report/i)
     .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .waitForFunction(
-      () => {
-        const text = document.body.innerText || "";
-        return text.includes("Billable Hours") || text.includes("Revenue") || text.includes("Rate");
-      },
-      undefined,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.waitForFunction(
+    () => {
+      const text = document.body.innerText || "";
+      return text.includes("Billable Hours") || text.includes("Revenue") || text.includes("Rate");
+    },
+    undefined,
+    { timeout: 12000 },
+  );
+  await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForExpectedContent(
@@ -1925,41 +1768,32 @@ async function waitForExpectedContent(
     await page
       .getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON)
       .first()
-      .waitFor({ state: "visible", timeout: 30000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 30000 });
     // Wait for dashboard heading (confirms route rendered)
     await page
       .getByRole("heading", { name: /^dashboard$/i })
       .first()
-      .waitFor({ state: "visible", timeout: 15000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 15000 });
     // Wait for actual dashboard content to appear
-    await page
-      .waitForFunction(
-        () => {
-          const text = document.body.innerText || "";
-          return (
-            text.includes("DEMO-") ||
-            text.includes("My Issues") ||
-            text.includes("Recent Activity") ||
-            text.includes("Explore Projects") ||
-            text.includes("No projects yet")
-          );
-        },
-        undefined,
-        { timeout: 20000 },
-      )
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+    await page.waitForFunction(
+      () => {
+        const text = document.body.innerText || "";
+        return (
+          text.includes("DEMO-") ||
+          text.includes("My Issues") ||
+          text.includes("Recent Activity") ||
+          text.includes("Explore Projects") ||
+          text.includes("No projects yet")
+        );
+      },
+      undefined,
+      { timeout: 20000 },
+    );
+    await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
     await page
       .locator("[data-loading-skeleton]")
       .first()
-      .waitFor({ state: "hidden", timeout: 4000 })
-      .catch(() => {});
+      .waitFor({ state: "hidden", timeout: 4000 });
     return;
   }
 
@@ -1969,14 +1803,10 @@ async function waitForExpectedContent(
   }
 
   if (isProjectSettingsUrl(url)) {
-    await page
-      .getByRole("heading", { name: "Project Settings" })
-      .first()
-      .waitFor({
-        state: "visible",
-        timeout: 12000,
-      })
-      .catch(() => {});
+    await page.getByRole("heading", { name: "Project Settings" }).first().waitFor({
+      state: "visible",
+      timeout: 12000,
+    });
     if (/^project-[^-]+-members$/.test(name)) {
       await waitForProjectMembersReady(page);
     }
@@ -1984,34 +1814,25 @@ async function waitForExpectedContent(
   }
 
   if (isSettingsUrl(url) || name === "settings" || name === "settings-profile") {
-    await page
-      .waitForURL(
-        (currentUrl) => /\/[^/]+\/settings\/profile$/.test(new URL(currentUrl).pathname),
-        {
-          timeout: 12000,
-        },
-      )
-      .catch(() => {});
+    await page.waitForURL(
+      (currentUrl) => /\/[^/]+\/settings\/profile$/.test(new URL(currentUrl).pathname),
+      {
+        timeout: 12000,
+      },
+    );
     await page
       .getByRole("heading", { name: /^settings$/i })
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByRole("tab", { name: /^profile$/i })
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByText(/manage your account, integrations, and preferences/i)
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
@@ -2019,13 +1840,8 @@ async function waitForExpectedContent(
     await page
       .getByRole("heading", { name: /^authentication$/i })
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
@@ -2033,8 +1849,7 @@ async function waitForExpectedContent(
     await page
       .getByRole("heading", { name: /^add-ons$/i })
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     return;
   }
 
@@ -2042,13 +1857,8 @@ async function waitForExpectedContent(
     await page
       .getByRole("heading", { name: /assistant/i })
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
@@ -2056,8 +1866,7 @@ async function waitForExpectedContent(
     await page
       .getByRole("heading", { name: /^mcp server$/i })
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     return;
   }
 
@@ -2106,13 +1915,8 @@ async function waitForExpectedContent(
       .getByRole("heading", { name: /dependencies/i })
       .or(page.getByText(/no dependencies/i))
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
@@ -2121,13 +1925,8 @@ async function waitForExpectedContent(
       .getByRole("heading", { name: /wiki/i })
       .or(page.getByText(/no pages/i))
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
@@ -2146,13 +1945,8 @@ async function waitForExpectedContent(
       .getByRole("heading", { name: /wiki/i })
       .or(page.getByText(/no pages/i))
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
@@ -2211,13 +2005,8 @@ async function waitForExpectedContent(
       .getByRole("heading", { name: /inbox/i })
       .or(page.getByText(/no items in inbox/i))
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
@@ -2226,13 +2015,8 @@ async function waitForExpectedContent(
       .getByRole("heading", { name: /^notifications$/i })
       .or(page.getByRole("tab", { name: /inbox/i }))
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
@@ -2241,19 +2025,14 @@ async function waitForExpectedContent(
       .getByRole("heading", { name: /my issues/i })
       .or(page.getByText(/no issues assigned/i))
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
   if (isOrgCalendarUrl(url) || name === "org-calendar") {
     await waitForCalendarReady(page);
-    await waitForCalendarEvents(page, 5000).catch(() => {});
+    await waitForCalendarEvents(page, 5000);
     return;
   }
 
@@ -2262,18 +2041,13 @@ async function waitForExpectedContent(
       .getByRole("heading", { name: /invoices/i })
       .or(page.getByText(/no invoices/i))
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
   if (name === "org-analytics") {
-    await waitForAnalyticsReady(page).catch(() => {});
+    await waitForAnalyticsReady(page);
     return;
   }
 
@@ -2282,13 +2056,8 @@ async function waitForExpectedContent(
       .getByRole("heading", { name: /clients/i })
       .or(page.getByText(/no clients/i))
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
@@ -2296,19 +2065,13 @@ async function waitForExpectedContent(
     await page
       .getByRole("heading", { name: /^meetings$/i })
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByText(/meeting memory/i)
       .or(page.getByText(/no meeting recordings yet/i))
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").first().waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
@@ -2320,7 +2083,7 @@ async function waitForExpectedContent(
     /^calendar-(day|week|month)$/.test(name)
   ) {
     await waitForCalendarReady(page);
-    await waitForCalendarEvents(page, 5000).catch(() => {});
+    await waitForCalendarEvents(page, 5000);
   }
 }
 

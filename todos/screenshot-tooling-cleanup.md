@@ -61,6 +61,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [x] Replace `waitForTimeout` calls with `animations: 'disabled'` or `waitForAnimation()`
 - [x] Replace swallowed dashboard-customize and create-issue modal content waits with explicit readiness checks
 - [x] Replace swallowed avatar upload, cover upload, workspace-create, and members-confirm dialog waits with explicit content readiness checks
+- [x] Replace swallowed shared page-readiness waits so public/app route captures fail loudly on missing content
 - [ ] Replace raw data-attribute selectors with TEST_IDS constants
 - [ ] Reduce `.first()` usage by scoping selectors or using test IDs
 - [x] Extract `dismissAllDialogs()`, `waitForDialogOpen()`, `waitForScreenshotReady()` to `e2e/utils/`
