@@ -2404,12 +2404,10 @@ async function screenshotFilledStates(
 
     if (shouldCapture(p, "settings-profile-avatar-upload-modal")) {
       await runCaptureStep("settings profile avatar upload modal", async () => {
-        await page
-          .goto(`${BASE_URL}${settingsUrl}`, {
-            waitUntil: "domcontentloaded",
-            timeout: 15000,
-          })
-          .catch(() => {});
+        await page.goto(`${BASE_URL}${settingsUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
         await waitForExpectedContent(page, settingsUrl, "settings-profile", p);
         await waitForScreenshotReady(page);
         await dismissAllDialogs(page);
@@ -2432,12 +2430,10 @@ async function screenshotFilledStates(
 
     if (shouldCapture(p, "settings-profile-cover-upload-modal")) {
       await runCaptureStep("settings profile cover upload modal", async () => {
-        await page
-          .goto(`${BASE_URL}${settingsUrl}`, {
-            waitUntil: "domcontentloaded",
-            timeout: 15000,
-          })
-          .catch(() => {});
+        await page.goto(`${BASE_URL}${settingsUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
         await waitForExpectedContent(page, settingsUrl, "settings-profile", p);
         await waitForScreenshotReady(page);
         await dismissAllDialogs(page);
@@ -2469,18 +2465,15 @@ async function screenshotFilledStates(
           });
 
           const notificationsSettingsUrl = `${settingsUrl}?tab=notifications`;
-          await permissionPage
-            .goto(`${BASE_URL}${notificationsSettingsUrl}`, {
-              waitUntil: "domcontentloaded",
-              timeout: 15000,
-            })
-            .catch(() => {});
+          await permissionPage.goto(`${BASE_URL}${notificationsSettingsUrl}`, {
+            waitUntil: "domcontentloaded",
+            timeout: 15000,
+          });
           await waitForExpectedContent(permissionPage, settingsUrl, "settings-profile", p);
           await permissionPage
             .getByText(/browser notifications blocked/i)
             .first()
-            .waitFor({ state: "visible", timeout: 5000 })
-            .catch(() => {});
+            .waitFor({ state: "visible", timeout: 5000 });
           await permissionPage
             .getByRole("button", { name: /^blocked$/i })
             .first()
@@ -2488,7 +2481,9 @@ async function screenshotFilledStates(
           await waitForScreenshotReady(permissionPage);
           await captureCurrentView(permissionPage, p, "settings-notifications-permission-denied");
         } finally {
-          await permissionPage.close().catch(() => {});
+          if (!permissionPage.isClosed()) {
+            await permissionPage.close();
+          }
         }
       });
     }
@@ -3322,12 +3317,10 @@ async function screenshotFilledStates(
   // Dashboard customize modal
   if (shouldCapture(p, "dashboard-customize-modal")) {
     await runCaptureStep("dashboard customize modal", async () => {
-      await page
-        .goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
@@ -3343,12 +3336,10 @@ async function screenshotFilledStates(
   // Create event modal (from calendar)
   if (projectKey && shouldCapture(p, "calendar-create-event-modal")) {
     await runCaptureStep("calendar create-event modal", async () => {
-      await page
-        .goto(`${BASE_URL}${ROUTES.projects.calendar.build(orgSlug, projectKey)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${ROUTES.projects.calendar.build(orgSlug, projectKey)}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForScreenshotReady(page);
       await waitForCalendarReady(page);
       const trigger = page.getByRole("button", { name: /add event/i }).first();
@@ -3364,12 +3355,10 @@ async function screenshotFilledStates(
   // Create workspace modal
   if (shouldCapture(p, "workspaces-create-workspace-modal")) {
     await runCaptureStep("create workspace modal", async () => {
-      await page
-        .goto(`${BASE_URL}${ROUTES.workspaces.list.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${ROUTES.workspaces.list.build(orgSlug)}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, ROUTES.workspaces.list.build(orgSlug), "workspaces", p);
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
@@ -3390,9 +3379,7 @@ async function screenshotFilledStates(
   if (wsSlug && shouldCapture(p, "workspace-create-team-modal")) {
     await runCaptureStep("create team modal", async () => {
       const wsBase = ROUTES.workspaces.detail.build(orgSlug, wsSlug);
-      await page
-        .goto(`${BASE_URL}${wsBase}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${wsBase}`, { waitUntil: "domcontentloaded", timeout: 15000 });
       await waitForExpectedContent(page, wsBase, `workspace-${wsSlug}`);
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
@@ -3410,9 +3397,7 @@ async function screenshotFilledStates(
   if (projectKey && shouldCapture(p, `project-${normalizedProjectKey}-import-export-modal`)) {
     await runCaptureStep("import/export modal", async () => {
       const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
-      await page
-        .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
       await waitForExpectedContent(page, boardUrl, "board");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
@@ -3429,12 +3414,10 @@ async function screenshotFilledStates(
   // Manual time entry modal
   if (shouldCapture(p, "time-tracking-manual-entry-modal")) {
     await runCaptureStep("manual time entry modal", async () => {
-      await page
-        .goto(`${BASE_URL}${ROUTES.timeTracking.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${ROUTES.timeTracking.build(orgSlug)}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, ROUTES.timeTracking.build(orgSlug), "time-tracking");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
@@ -3456,12 +3439,10 @@ async function screenshotFilledStates(
   // Sidebar collapsed
   if (shouldCapture(p, "sidebar-collapsed")) {
     await runCaptureStep("sidebar collapsed", async () => {
-      await page
-        .goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
       await waitForScreenshotReady(page);
       const collapseBtn = page.getByLabel("Collapse sidebar");
@@ -3484,12 +3465,10 @@ async function screenshotFilledStates(
   ) {
     await runCaptureStep("mobile hamburger", async () => {
       const dashboardUrl = ROUTES.dashboard.build(orgSlug);
-      await page
-        .goto(`${BASE_URL}${dashboardUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${dashboardUrl}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, dashboardUrl, "dashboard");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
@@ -3522,12 +3501,10 @@ async function screenshotFilledStates(
         seed.workspaceSlug ?? "product",
         seed.teamSlug ?? "engineering",
       );
-      await page
-        .goto(`${BASE_URL}${teamBoardUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${teamBoardUrl}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, teamBoardUrl, "team");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
@@ -3555,19 +3532,16 @@ async function screenshotFilledStates(
   // 404 page (navigate to bogus URL while authenticated)
   if (shouldCapture(p, "404-page")) {
     await runCaptureStep("404 page", async () => {
-      await page
-        .goto(`${BASE_URL}/${orgSlug}/nonexistent-page-screenshot-test`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}/${orgSlug}/nonexistent-page-screenshot-test`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForScreenshotReady(page);
       // Wait for the 404 content to render
       await page
         .getByText(/not found|page.*not.*found|404/i)
         .first()
-        .waitFor({ state: "visible", timeout: 8000 })
-        .catch(() => {});
+        .waitFor({ state: "visible", timeout: 8000 });
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "404-page");
     });
@@ -3578,9 +3552,10 @@ async function screenshotFilledStates(
   if (projectKey && shouldCapture(p, `project-${normalizedProjectKey}-roadmap-timeline-selector`)) {
     await runCaptureStep("roadmap timeline selector", async () => {
       const roadmapUrl = ROUTES.projects.roadmap.build(orgSlug, projectKey);
-      await page
-        .goto(`${BASE_URL}${roadmapUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${roadmapUrl}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, roadmapUrl, "roadmap");
       await waitForScreenshotReady(page);
       // Click the timeline span select trigger (shows "3 Months" by default)
@@ -3643,12 +3618,10 @@ async function screenshotFilledStates(
   if (shouldCapture(p, "notification-popover")) {
     await runCaptureStep("notification popover", async () => {
       // Navigate to dashboard to have a clean header
-      await page
-        .goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
@@ -3662,12 +3635,10 @@ async function screenshotFilledStates(
 
   if (shouldCapture(p, "notification-snooze-popover")) {
     await runCaptureStep("notification snooze popover", async () => {
-      await page
-        .goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
@@ -3692,12 +3663,10 @@ async function screenshotFilledStates(
   // Notifications page — archived tab
   if (shouldCapture(p, "notifications-archived")) {
     await runCaptureStep("notifications archived tab", async () => {
-      await page
-        .goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
       await waitForScreenshotReady(page);
       const archivedTab = page.getByRole("tab", { name: /archived/i });
@@ -3711,12 +3680,10 @@ async function screenshotFilledStates(
   // Notifications page — filter active (Mentions filter)
   if (shouldCapture(p, "notifications-filter-active")) {
     await runCaptureStep("notifications filter active", async () => {
-      await page
-        .goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
       await waitForScreenshotReady(page);
       // Click the Mentions filter button
@@ -3835,27 +3802,24 @@ async function screenshotDashboardLoadingState(
       });
 
       const dashboardUrl = ROUTES.dashboard.build(orgSlug);
-      await loadingPage
-        .goto(`${BASE_URL}${dashboardUrl}`, {
-          waitUntil: "domcontentloaded",
+      await loadingPage.goto(`${BASE_URL}${dashboardUrl}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
+      await loadingPage.waitForURL(
+        (currentUrl) => /\/[^/]+\/dashboard$/.test(new URL(currentUrl).pathname),
+        {
           timeout: 15000,
-        })
-        .catch(() => {});
-      await loadingPage
-        .waitForURL((currentUrl) => /\/[^/]+\/dashboard$/.test(new URL(currentUrl).pathname), {
-          timeout: 15000,
-        })
-        .catch(() => {});
+        },
+      );
       await loadingPage
         .getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON)
         .first()
-        .waitFor({ state: "visible", timeout: 15000 })
-        .catch(() => {});
+        .waitFor({ state: "visible", timeout: 15000 });
       await loadingPage
         .getByRole("heading", { name: /^dashboard$/i })
         .first()
-        .waitFor({ state: "visible", timeout: 12000 })
-        .catch(() => {});
+        .waitFor({ state: "visible", timeout: 12000 });
       await loadingPage.waitForFunction(
         () => document.querySelectorAll("[data-loading-skeleton]").length >= 6,
         undefined,
@@ -3864,7 +3828,9 @@ async function screenshotDashboardLoadingState(
       await waitForScreenshotReady(loadingPage);
       await captureCurrentView(loadingPage, prefix, "dashboard-loading-skeletons");
     } finally {
-      await loadingPage.close().catch(() => {});
+      if (!loadingPage.isClosed()) {
+        await loadingPage.close();
+      }
     }
   });
 }

@@ -62,6 +62,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [x] Replace swallowed dashboard-customize and create-issue modal content waits with explicit readiness checks
 - [x] Replace swallowed avatar upload, cover upload, workspace-create, and members-confirm dialog waits with explicit content readiness checks
 - [x] Replace swallowed shared page-readiness waits so public/app route captures fail loudly on missing content
+- [x] Replace swallowed route-entry and temp-page setup waits in settings/dashboard/workspace/notification captures so modal screenshots fail on broken navigation
 - [ ] Replace raw data-attribute selectors with TEST_IDS constants
 - [x] Reduce shared helper/page-readiness `.first()` usage so unique route sentinels rely on scoped locator semantics
 - [x] Extract `dismissAllDialogs()`, `waitForDialogOpen()`, `waitForScreenshotReady()` to `e2e/utils/`
