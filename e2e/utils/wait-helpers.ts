@@ -159,11 +159,27 @@ export async function waitForModal(page: Page, modalSelector = '[role="dialog"]'
  * or dialog content never appears.
  */
 export async function waitForDialogOpen(page: Page, timeout = 8000): Promise<Locator> {
-  await page.getByTestId(TEST_IDS.DIALOG.OVERLAY).waitFor({ state: "visible", timeout });
-
   const dialog = page
     .locator("[role='dialog'][data-state='open'], [role='alertdialog'][data-state='open']")
     .first();
+  await expect
+    .poll(
+      async () => {
+        const overlayVisible = await page
+          .getByTestId(TEST_IDS.DIALOG.OVERLAY)
+          .isVisible()
+          .catch(() => false);
+        if (overlayVisible) {
+          return true;
+        }
+        return dialog.isVisible().catch(() => false);
+      },
+      {
+        timeout,
+        intervals: [100, 200, 500],
+      },
+    )
+    .toBe(true);
   await dialog.waitFor({ state: "visible", timeout });
   await waitForAnimation(page);
   return dialog;

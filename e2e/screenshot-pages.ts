@@ -1685,24 +1685,24 @@ async function scrollSectionNearViewportTop(
   offset = 24,
 ): Promise<void> {
   await locator.scrollIntoViewIfNeeded();
-  await locator.evaluate(
-    (element, topOffset) =>
-      new Promise<void>((resolve) => {
-        const targetTop = element.getBoundingClientRect().top + window.scrollY - topOffset;
-        window.scrollTo({ top: Math.max(0, targetTop), behavior: "auto" });
-
-        const waitForScroll = () => {
-          const distanceFromOffset = Math.abs(element.getBoundingClientRect().top - topOffset);
-          if (distanceFromOffset <= 2) {
-            resolve();
-            return;
-          }
-          requestAnimationFrame(waitForScroll);
-        };
-
-        requestAnimationFrame(waitForScroll);
-      }),
-    offset,
+  const handle = await locator.elementHandle();
+  if (!handle) {
+    throw new Error("Could not acquire element handle for section scroll alignment");
+  }
+  const targetScrollTop = await page.evaluate(
+    ({ element, topOffset }) => {
+      const unclampedTargetTop = element.getBoundingClientRect().top + window.scrollY - topOffset;
+      const maxScrollTop = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      const clampedTargetTop = Math.min(Math.max(0, unclampedTargetTop), maxScrollTop);
+      window.scrollTo({ top: clampedTargetTop, behavior: "auto" });
+      return clampedTargetTop;
+    },
+    { element: handle, topOffset: offset },
+  );
+  await page.waitForFunction(
+    (expectedScrollTop) => Math.abs(window.scrollY - expectedScrollTop) <= 2,
+    targetScrollTop,
+    { timeout: 5000 },
   );
   await waitForAnimation(page);
 }

@@ -35,6 +35,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [x] Recover the time-entry modal baselines plus the command-palette tablet and dashboard-customize mobile baselines after readiness hardening
 - [x] Recover the missing desktop-dark create-issue modal baseline
 - [x] Recover the settings avatar-upload and cover-upload baselines across all four canonical configs after replacing brittle dropzone-copy waits
+- [x] Recover the members confirm-dialog baselines across all four canonical configs after fixing alert-dialog open waits and section-scroll alignment
 - [ ] Add `animations: 'disabled'` to `page.screenshot()` calls
 
 ### 2. Anti-patterns that should use proper Playwright/E2E conventions
