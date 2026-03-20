@@ -21,8 +21,8 @@ Make the product more visually cohesive and more enforceable in code, using the 
 - [x] Absorb the repeated landing-page hero/showcase/metric typography patterns into owned `Typography` variants
 - [x] Absorb the shared app/auth/error typography treatments into owned `Typography` variants
 - [x] Absorb the shared board/panel/secondary-surface heading and label treatments into owned `Typography` variants
-- [ ] Remove or absorb the 43 current `Typography` className size/weight/tracking overrides surfaced by `check-typography-drift.js`
-- [ ] Where the same override pattern repeats, add a real `Typography` variant or supporting primitive instead of continuing one-off className fixes
+- [x] Remove or absorb the 43 current `Typography` className size/weight/tracking overrides surfaced by `check-typography-drift.js`
+- [x] Where the same override pattern repeats, add a real `Typography` variant or supporting primitive instead of continuing one-off className fixes
 
 ### Owned-control drift
 

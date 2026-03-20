@@ -516,13 +516,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
           >
             <Search className="h-4 w-4" />
           </Card>
-          <Typography
-            variant="small"
-            color="secondary"
-            className="hidden truncate text-xs sm:block sm:text-sm"
-          >
-            Search, jump, or create...
-          </Typography>
+          <Typography variant="searchTriggerLabel">Search, jump, or create...</Typography>
         </Flex>
         <FlexItem shrink={false} className="hidden sm:block">
           <KeyboardShortcut shortcut="⌘+K" />

@@ -245,9 +245,7 @@ export function CustomFieldValues({ issueId, projectId }: CustomFieldValuesProps
 
   return (
     <Stack gap="md">
-      <Typography variant="label" className="uppercase tracking-wide">
-        Custom Fields
-      </Typography>
+      <Typography variant="fieldSectionLabel">Custom Fields</Typography>
 
       {customFields.map((field: Doc<"customFields">) => {
         const fieldValue = getFieldValue(field._id);

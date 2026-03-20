@@ -52,6 +52,59 @@ describe("Typography", () => {
     expect(label.className).toContain("tracking-wide");
   });
 
+  it("maps fieldSectionLabel to a paragraph with uppercase form-label styling", () => {
+    render(
+      <Typography variant="fieldSectionLabel" data-testid="field-section-label">
+        Custom Fields
+      </Typography>,
+    );
+    const label = screen.getByTestId("field-section-label");
+    expect(label.tagName).toBe("P");
+    expect(label.className).toContain("text-sm");
+    expect(label.className).toContain("uppercase");
+    expect(label.className).toContain("tracking-wide");
+  });
+
+  it("maps searchTriggerLabel to a paragraph with responsive search-hint sizing", () => {
+    render(
+      <Typography variant="searchTriggerLabel" data-testid="search-trigger-label">
+        Search, jump, or create...
+      </Typography>,
+    );
+    const label = screen.getByTestId("search-trigger-label");
+    expect(label.tagName).toBe("P");
+    expect(label.className).toContain("hidden");
+    expect(label.className).toContain("truncate");
+    expect(label.className).toContain("text-xs");
+    expect(label.className).toContain("sm:text-sm");
+  });
+
+  it("maps issueKeyMono to a paragraph with compact mono issue-key styling", () => {
+    render(
+      <Typography variant="issueKeyMono" data-testid="issue-key-mono">
+        DEMO-1
+      </Typography>,
+    );
+    const label = screen.getByTestId("issue-key-mono");
+    expect(label.tagName).toBe("P");
+    expect(label.className).toContain("text-sm");
+    expect(label.className).toContain("font-mono");
+    expect(label.className).toContain("tracking-tight");
+  });
+
+  it("maps metricLabelWide to a paragraph with wide uppercase metric styling", () => {
+    render(
+      <Typography variant="metricLabelWide" data-testid="metric-label-wide">
+        Projects
+      </Typography>,
+    );
+    const label = screen.getByTestId("metric-label-wide");
+    expect(label.tagName).toBe("P");
+    expect(label.className).toContain("text-xs");
+    expect(label.className).toContain("uppercase");
+    expect(label.className).toContain("tracking-widest");
+  });
+
   it("maps landingSectionTitle to an h2 with landing hero sizing", () => {
     render(
       <Typography variant="landingSectionTitle" data-testid="landing-section-title">

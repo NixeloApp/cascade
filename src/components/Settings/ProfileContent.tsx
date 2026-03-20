@@ -77,9 +77,7 @@ export function UserStatsCards({ stats }: { stats: UserStats }) {
             <Typography variant="h2" color="brand">
               {stats[item.key]}
             </Typography>
-            <Typography variant="caption" className="uppercase tracking-widest">
-              {item.label}
-            </Typography>
+            <Typography variant="metricLabelWide">{item.label}</Typography>
           </Stack>
         </Card>
       ))}

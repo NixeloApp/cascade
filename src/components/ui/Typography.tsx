@@ -72,6 +72,10 @@ const typographyVariants = cva("", {
       boardColumnTitle: "text-sm font-medium tracking-tight text-ui-text-secondary",
       boardColumnTitleCompact:
         "truncate text-xs font-medium tracking-tight text-ui-text-secondary sm:text-sm",
+      fieldSectionLabel: "text-sm font-medium uppercase tracking-wide text-ui-text",
+      searchTriggerLabel: "hidden truncate text-xs text-ui-text-secondary sm:block sm:text-sm",
+      issueKeyMono: "text-sm font-mono tracking-tight text-ui-text-secondary",
+      metricLabelWide: "text-xs uppercase tracking-widest text-ui-text-secondary",
       mono: "text-xs font-mono text-ui-text-secondary tracking-tight", // issue keys, codes
       calendarHeaderDate: "text-xs font-medium text-ui-text sm:text-base",
       calendarHeaderTitle: "text-sm font-semibold tracking-tight text-ui-text sm:text-lg",
@@ -185,6 +189,10 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
     case "projectHeaderTitle":
     case "placeholderTitle":
     case "metricLabel":
+    case "fieldSectionLabel":
+    case "searchTriggerLabel":
+    case "issueKeyMono":
+    case "metricLabelWide":
       return "p";
     case "mono":
     case "calendarHeaderDate":
