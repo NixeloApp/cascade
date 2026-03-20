@@ -156,9 +156,8 @@ export async function waitForModal(page: Page, modalSelector = '[role="dialog"]'
  * or dialog content never appears.
  */
 export async function waitForDialogOpen(page: Page, timeout = 8000): Promise<Locator> {
-  const dialog = page
-    .locator("[role='dialog'][data-state='open'], [role='alertdialog'][data-state='open']")
-    .first();
+  const dialog = page.getByRole("dialog").first();
+  const alertDialog = page.getByRole("alertdialog").first();
   await expect
     .poll(
       async () => {
@@ -166,10 +165,9 @@ export async function waitForDialogOpen(page: Page, timeout = 8000): Promise<Loc
           .getByTestId(TEST_IDS.DIALOG.OVERLAY)
           .isVisible()
           .catch(() => false);
-        if (overlayVisible) {
-          return true;
-        }
-        return dialog.isVisible().catch(() => false);
+        const dialogVisible = await dialog.isVisible().catch(() => false);
+        const alertDialogVisible = await alertDialog.isVisible().catch(() => false);
+        return overlayVisible && (dialogVisible || alertDialogVisible);
       },
       {
         timeout,
@@ -177,9 +175,10 @@ export async function waitForDialogOpen(page: Page, timeout = 8000): Promise<Loc
       },
     )
     .toBe(true);
-  await dialog.waitFor({ state: "visible", timeout });
+  const activeDialog = (await alertDialog.isVisible().catch(() => false)) ? alertDialog : dialog;
+  await activeDialog.waitFor({ state: "visible", timeout });
   await waitForAnimation(page);
-  return dialog;
+  return activeDialog;
 }
 
 /**

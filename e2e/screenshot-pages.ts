@@ -870,9 +870,7 @@ async function openStableAlertDialog(
   readyLocator: Locator,
   attempts = 3,
 ): Promise<Locator> {
-  let dialog = page
-    .locator("[role='dialog'][data-state='open'], [role='alertdialog'][data-state='open']")
-    .first();
+  let dialog = page.getByRole("alertdialog").first();
   let lastError: Error | null = null;
 
   for (let attempt = 0; attempt < attempts; attempt++) {
@@ -4171,14 +4169,10 @@ async function screenshotBoardInteractiveStates(
       const swimlaneButton = page.getByText("Swimlanes", { exact: true }).first();
       await swimlaneButton.waitFor({ state: "visible", timeout: 8000 });
       await swimlaneButton.click();
-      // Select the mode from the dropdown — scope to menuitemcheckbox to avoid
-      // matching hidden mobile text or other page elements with the same label
+      // Select the mode via menuitemcheckbox to avoid matching hidden mobile
+      // text or other page elements with the same label.
       const modeLabel = mode[0].toUpperCase() + mode.slice(1);
-      const dropdown = page.locator("[role='menu'], [data-radix-menu-content]").first();
-      await dropdown.waitFor({ state: "visible", timeout: 5000 });
-      // Navigate to the option and click it. The dropdown scopes the text
-      // match to avoid hitting hidden mobile elements.
-      const option = dropdown.getByText(modeLabel, { exact: true }).first();
+      const option = page.getByRole("menuitemcheckbox", { name: modeLabel, exact: true });
       await option.waitFor({ state: "visible", timeout: 3000 });
       // Radix DropdownMenuCheckboxItem may detach on check. Use scrollIntoView
       // + click in quick succession to minimize the race window.
