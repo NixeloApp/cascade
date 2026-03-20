@@ -1,4 +1,5 @@
 import { expect, authenticatedTest as test } from "./fixtures";
+import { isLocatorVisible } from "./utils/locator-state";
 import { escapeRegExp } from "./utils/routes";
 import { createTestNamespace } from "./utils/test-helpers";
 import { testUserService } from "./utils/test-user-service";
@@ -159,8 +160,8 @@ test.describe("Board Drag-Drop", () => {
     const settledState = await expect
       .poll(
         async () => {
-          const inTarget = await issueButtonInTargetColumn.isVisible().catch(() => false);
-          const inSource = await issueButtonInSourceColumn.isVisible().catch(() => false);
+          const inTarget = await isLocatorVisible(issueButtonInTargetColumn);
+          const inSource = await isLocatorVisible(issueButtonInSourceColumn);
 
           if (inTarget && !inSource) return "target";
           if (inSource && !inTarget) return "source";
@@ -174,7 +175,7 @@ test.describe("Board Drag-Drop", () => {
     // Assert based on the settled state
     if (settledState === "target" || settledState === "visible") {
       // Re-check if moved to target using retrying assertion
-      const movedToTarget = await issueButtonInTargetColumn.isVisible().catch(() => false);
+      const movedToTarget = await isLocatorVisible(issueButtonInTargetColumn);
       if (movedToTarget) {
         await expect(issueButtonInSourceColumn).toHaveCount(0);
       } else {
