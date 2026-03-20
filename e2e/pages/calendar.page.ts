@@ -224,7 +224,7 @@ export class CalendarPage extends BasePage {
   }
 
   async openEventDetailsByTitle(title: string) {
-    await this.goToToday().catch(() => {});
+    await this.alignCalendarToToday();
 
     if ((await this.dayViewButton.count()) > 0) {
       await this.switchToDayView();
@@ -241,7 +241,7 @@ export class CalendarPage extends BasePage {
       return;
     }
 
-    await event.scrollIntoViewIfNeeded().catch(() => {});
+    await this.prepareEventForInteraction(event, `calendar event "${title}"`);
     await event.click();
     await expect(this.eventDetailModal).toBeVisible();
   }
@@ -256,6 +256,41 @@ export class CalendarPage extends BasePage {
     await scrollContainer.evaluate((element, targetHour) => {
       element.scrollTop = Math.max(0, targetHour * 128 - 96);
     }, hour);
+  }
+
+  private async alignCalendarToToday(): Promise<void> {
+    const todayButtonVisible = await this.todayButton.isVisible().catch(() => false);
+    if (!todayButtonVisible) {
+      return;
+    }
+
+    try {
+      await this.goToToday();
+    } catch (error) {
+      const buttonStillVisible = await this.todayButton.isVisible().catch(() => false);
+      if (!buttonStillVisible) {
+        return;
+      }
+
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Calendar today navigation failed before opening event details: ${message}`);
+    }
+  }
+
+  private async prepareEventForInteraction(event: Locator, label: string): Promise<void> {
+    await expect(event, `${label} should be visible before interaction`).toBeVisible();
+
+    try {
+      await event.scrollIntoViewIfNeeded();
+    } catch (error) {
+      const stillVisible = await event.isVisible().catch(() => false);
+      if (stillVisible) {
+        return;
+      }
+
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`${label} was not visible after scroll attempt: ${message}`);
+    }
   }
 
   // ===================
