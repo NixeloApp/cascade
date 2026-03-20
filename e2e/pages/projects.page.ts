@@ -127,7 +127,7 @@ export class ProjectsPage extends BasePage {
     super(page, orgSlug);
 
     // Sidebar
-    this.sidebar = page.locator("[data-tour='sidebar']").or(page.getByRole("complementary"));
+    this.sidebar = page.getByTestId(TEST_IDS.NAV.SIDEBAR).or(page.getByRole("complementary"));
     // Scope to main content area and take first match (header action or empty-state action)
     // Both trigger the same create-project modal, so either is valid
     this.newProjectButton = page
@@ -139,10 +139,10 @@ export class ProjectsPage extends BasePage {
       name: /add new|create|\+/i,
     });
     this.projectList = page
-      .locator("[data-project-list]")
+      .getByTestId(TEST_IDS.NAV.WORKSPACE_LIST)
       .or(this.sidebar.locator("ul, [role='list']").first());
     this.projectItems = page
-      .locator("[data-project-item]")
+      .getByTestId(TEST_IDS.NAV.WORKSPACE_ITEM)
       .or(this.sidebar.getByRole("button").filter({ hasNotText: /new|add/i }));
 
     // Create project form - look for dialog content

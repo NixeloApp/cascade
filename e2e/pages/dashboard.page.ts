@@ -156,7 +156,7 @@ export class DashboardPage extends BasePage {
 
     // Content areas - use last() to get innermost main element (nested layout)
     this.mainContent = page.getByRole("main").last();
-    this.sidebar = page.locator("[data-tour='sidebar']");
+    this.sidebar = page.getByTestId(TEST_IDS.NAV.SIDEBAR).or(page.getByRole("complementary"));
     // Use aria-label="Loading" to target actual loading spinners, not empty states
     this.loadingSpinner = page.getByLabel("Loading").or(page.locator("[data-loading-spinner]"));
 
@@ -210,13 +210,13 @@ export class DashboardPage extends BasePage {
     this.documentSearchInput = page.getByPlaceholder(/search.*document/i);
     this.newDocumentButton = page.getByRole("button", { name: /new.*document|\+ new/i });
     this.templateButton = page.getByRole("button", { name: /template|📄/i });
-    this.documentList = page.locator("[data-document-list]");
+    this.documentList = page.getByTestId(TEST_IDS.NAV.DOCUMENT_LIST);
 
     // Projects sidebar
     this.newProjectButton = page.getByRole("button", {
       name: /new.*project|\+ new/i,
     });
-    this.projectList = page.locator("[data-project-list]");
+    this.projectList = page.getByTestId(TEST_IDS.NAV.WORKSPACE_LIST);
   }
 
   // ===================

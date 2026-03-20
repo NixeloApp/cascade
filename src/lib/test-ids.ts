@@ -70,6 +70,14 @@ export const TEST_IDS = {
     BRAND_LOGO: "brand-logo",
     /** @see src/components/Sidebar.tsx */
     SIDEBAR: "sidebar",
+    /** @see src/components/App/AppSidebar.tsx */
+    DOCUMENT_LIST: "sidebar-document-list",
+    /** @see src/components/App/AppSidebar.tsx */
+    DOCUMENT_ITEM: "sidebar-document-item",
+    /** @see src/components/App/AppSidebar.tsx */
+    WORKSPACE_LIST: "sidebar-workspace-list",
+    /** @see src/components/App/AppSidebar.tsx */
+    WORKSPACE_ITEM: "sidebar-workspace-item",
     /** @see src/routes/__root.tsx */
     MAIN_CONTENT: "main-content",
   },

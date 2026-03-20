@@ -49,17 +49,17 @@ export class DocumentsPage extends BasePage {
     super(page, orgSlug);
 
     // Sidebar
-    this.sidebar = page.locator("[data-tour='sidebar']").or(page.getByRole("complementary"));
+    this.sidebar = page.getByTestId(TEST_IDS.NAV.SIDEBAR).or(page.getByRole("complementary"));
     this.searchInput = page.getByPlaceholder(/search.*document/i);
     this.newDocumentButton = page
       .getByRole("button", { name: /new.*document|\+ new|add/i })
       .first();
     this.templateButton = page.getByRole("button", { name: /template|📄/i });
     this.documentList = page
-      .locator("[data-document-list]")
+      .getByTestId(TEST_IDS.NAV.DOCUMENT_LIST)
       .or(this.sidebar.locator("ul, [role='list']").first());
     this.documentItems = page
-      .locator("[data-document-item]")
+      .getByTestId(TEST_IDS.NAV.DOCUMENT_ITEM)
       .or(this.sidebar.getByRole("button").filter({ hasNotText: /new|template|search/i }));
 
     // Template modal
