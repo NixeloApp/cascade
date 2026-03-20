@@ -5,7 +5,7 @@
  * Used by both global-setup.ts and auth.fixture.ts to avoid duplication.
  */
 
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import type { ConvexReactClient } from "convex/react";
 import type { TestUser } from "../config";
 import {
@@ -25,6 +25,36 @@ import {
   waitForDashboardReady,
   waitForFormReady,
 } from "./wait-helpers";
+
+async function isLocatorVisible(locator: Locator): Promise<boolean> {
+  try {
+    return await locator.isVisible();
+  } catch {
+    return false;
+  }
+}
+
+async function waitForLocatorVisible(locator: Locator, timeout: number): Promise<boolean> {
+  try {
+    await locator.waitFor({ state: "visible", timeout });
+    return true;
+  } catch {
+    return isLocatorVisible(locator);
+  }
+}
+
+async function captureDebugScreenshot(
+  page: Page,
+  path: string,
+  contextLabel: string,
+): Promise<void> {
+  try {
+    await page.screenshot({ path });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.log(`  ⚠️ Failed to capture ${contextLabel} debug screenshot: ${message}`);
+  }
+}
 
 /**
  * Complete email verification with OTP from Mock Backend
@@ -396,8 +426,7 @@ export async function clickContinueWithEmail(page: Page): Promise<boolean> {
     return true;
   }
 
-  await locators.continueWithEmailButton.waitFor({ state: "visible" }).catch(() => {});
-  if (!(await locators.continueWithEmailButton.isVisible().catch(() => false))) {
+  if (!(await waitForLocatorVisible(locators.continueWithEmailButton, 1500))) {
     console.log("❌ Form did not expand and continue button disappeared");
     return false;
   }
@@ -428,7 +457,7 @@ async function waitForSignInSurface(page: Page, timeout = 30000): Promise<void> 
     console.log("  ✓ Sign-in page loaded");
     return;
   } catch (error) {
-    await page.screenshot({ path: "e2e/.auth/signin-timeout-debug.png" }).catch(() => {});
+    await captureDebugScreenshot(page, "e2e/.auth/signin-timeout-debug.png", "sign-in timeout");
     const bodyText =
       (await page
         .locator("body")
@@ -999,9 +1028,7 @@ export async function signUpUserViaUI(
     }
 
     const locators = authFormLocators(page);
-    await locators.signUpHeading.waitFor({ state: "visible" }).catch(() => {});
-
-    if (!(await locators.signUpHeading.isVisible().catch(() => false))) {
+    if (!(await waitForLocatorVisible(locators.signUpHeading, 1500))) {
       return (await getPostAuthDestinationState(page)) === "dashboard";
     }
 
