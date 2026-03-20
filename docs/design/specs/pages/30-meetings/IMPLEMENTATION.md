@@ -28,11 +28,14 @@
 
 ## Phase 3: Deeper Visual States
 
-- Add targeted meetings captures if the base page screenshot does not reliably show:
-  - the selected recording detail
+- Add explicit meetings subcaptures in `e2e/screenshot-pages.ts` for:
+  - selected recording detail
   - transcript search/results
-  - memory rail with seeded content
-- Keep these as explicit named captures instead of overloading the base route screenshot.
+  - project-lens filtered memory rail
+- Keep these as named captures instead of overloading the base route screenshot:
+  - `filled-meetings-detail`
+  - `filled-meetings-transcript-search`
+  - `filled-meetings-memory-lens`
 
 ---
 
@@ -46,3 +49,4 @@
   - memory rail filtering by project lens
 - Add meetings page objects under `e2e/pages/` once the interaction coverage lands.
 
+These E2E steps are now implemented; remaining work is baseline generation, manifest approval, and visual review.

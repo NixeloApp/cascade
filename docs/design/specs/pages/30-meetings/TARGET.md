@@ -29,9 +29,6 @@
 
 ## Follow-On Capture Targets
 
-- Recording detail focused screenshot
-- Transcript search/result screenshot
-- Memory lens filtered screenshot
 - Schedule recording dialog screenshot
 
-These should be added only if the base seeded route capture does not make those states legible in the canonical layouts.
+The detail, transcript-search, and memory-lens captures are now explicit screenshot states. The remaining optional follow-on is the schedule dialog if the base and deep-state captures still miss that workflow.

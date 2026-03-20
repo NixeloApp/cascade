@@ -258,6 +258,9 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-notification-snooze-popover$/, "21-notifications", "-snooze-popover"],
   [/^filled-notifications-archived$/, "21-notifications", "-archived"],
   [/^filled-notifications-filter-active$/, "21-notifications", "-filter-active"],
+  [/^filled-meetings-detail$/, "30-meetings", "-detail"],
+  [/^filled-meetings-transcript-search$/, "30-meetings", "-transcript-search"],
+  [/^filled-meetings-memory-lens$/, "30-meetings", "-memory-lens"],
   [/^filled-project-tree$/, "29-team-detail", "-project-tree"],
   [/^filled-mobile-hamburger$/, "04-dashboard", "-mobile-hamburger"],
   // Project board: filled-project-xxx-board → 06-board
@@ -2651,6 +2654,12 @@ async function screenshotFilledStates(
   }
 
   if (
+    shouldCaptureAny(p, ["meetings-detail", "meetings-transcript-search", "meetings-memory-lens"])
+  ) {
+    await screenshotMeetingsStates(page, orgSlug, p);
+  }
+
+  if (
     shouldCaptureAny(p, [
       "settings-profile-avatar-upload-modal",
       "settings-profile-cover-upload-modal",
@@ -4270,6 +4279,92 @@ async function screenshotBoardModals(
   }
 }
 
+async function screenshotMeetingsStates(
+  page: Page,
+  orgSlug: string,
+  prefix: string,
+): Promise<void> {
+  const meetingsDetailName = "meetings-detail";
+  const transcriptSearchName = "meetings-transcript-search";
+  const memoryLensName = "meetings-memory-lens";
+
+  if (!shouldCaptureAny(prefix, [meetingsDetailName, transcriptSearchName, memoryLensName])) {
+    return;
+  }
+
+  const meetingsUrl = ROUTES.meetings.build(orgSlug);
+  const meetingMemorySection = page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: /^meeting memory$/i }) })
+    .first();
+
+  const openMeetingsForCapture = async () => {
+    await page
+      .goto(`${BASE_URL}${meetingsUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
+      .catch(() => {});
+    await waitForExpectedContent(page, meetingsUrl, "meetings");
+    await waitForScreenshotReady(page);
+  };
+
+  if (shouldCapture(prefix, meetingsDetailName)) {
+    await runCaptureStep("meetings detail", async () => {
+      await openMeetingsForCapture();
+      await page
+        .getByRole("button", { name: /client launch review/i })
+        .first()
+        .click();
+      await page
+        .getByRole("heading", { name: /^client launch review$/i })
+        .first()
+        .waitFor({ state: "visible", timeout: 5000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, meetingsDetailName);
+    });
+  }
+
+  if (shouldCapture(prefix, transcriptSearchName)) {
+    await runCaptureStep("meetings transcript search", async () => {
+      await openMeetingsForCapture();
+      await page
+        .getByRole("button", { name: /weekly product sync/i })
+        .first()
+        .click();
+      await page
+        .getByRole("heading", { name: /^weekly product sync$/i })
+        .first()
+        .waitFor({ state: "visible", timeout: 5000 });
+
+      const transcriptSearch = page.getByRole("searchbox", { name: "Search transcript" });
+      await transcriptSearch.fill("pricing");
+      await page
+        .getByText(
+          "We cleared the dashboard bugs, but pricing approval still needs legal sign-off before launch.",
+        )
+        .waitFor({ state: "visible", timeout: 5000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, transcriptSearchName);
+    });
+  }
+
+  if (shouldCapture(prefix, memoryLensName)) {
+    await runCaptureStep("meetings memory lens", async () => {
+      await openMeetingsForCapture();
+      await meetingMemorySection
+        .getByRole("button")
+        .filter({ hasText: /\bOPS\b/ })
+        .first()
+        .click();
+      await page
+        .getByText(
+          "Cross-meeting decisions, open questions, and follow-ups for OPS - Client Operations Hub.",
+        )
+        .waitFor({ state: "visible", timeout: 5000 });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, memoryLensName);
+    });
+  }
+}
+
 async function screenshotBoardInteractiveStates(
   page: Page,
   orgSlug: string,
@@ -4775,6 +4870,9 @@ const DRY_RUN_PAGES = [
   "filled-invoices",
   "filled-clients",
   "filled-meetings",
+  "filled-meetings-detail",
+  "filled-meetings-transcript-search",
+  "filled-meetings-memory-lens",
   "filled-settings",
   "filled-settings-profile",
   "filled-authentication",

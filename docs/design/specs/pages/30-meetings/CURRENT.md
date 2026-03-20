@@ -1,8 +1,8 @@
 # Meetings Page - Current State
 
 > **Route**: `/:slug/meetings`
-> **Status**: 🟡 Functional baseline, now wired into screenshot coverage
-> **Last Updated**: 2026-03-19
+> **Status**: 🟡 Functional baseline with route and deep-state screenshot coverage
+> **Last Updated**: 2026-03-20
 
 ---
 
@@ -20,6 +20,9 @@
 
 - `empty-meetings` captures the no-recordings state.
 - `filled-meetings` captures the seeded workspace state under the canonical screenshot harness.
+- `filled-meetings-detail` captures the alternate selected-recording detail state.
+- `filled-meetings-transcript-search` captures transcript filtering on seeded content.
+- `filled-meetings-memory-lens` captures the project-lens filtered memory rail.
 - Meetings now use a dedicated readiness check in `e2e/screenshot-pages.ts` so captures wait for real page content instead of the app shell alone.
 
 ---
@@ -39,6 +42,5 @@
 | Gap | Impact |
 |-----|--------|
 | Baseline screenshots not captured yet | Spec folder exists, but image baselines still need generation |
-| No transcript/detail-focused subcaptures yet | Canonical route coverage exists, but deeper visual states are not isolated |
-| No dedicated meetings E2E spec | Interaction regressions still rely on manual checks |
-
+| Screenshot hashes not updated yet | New meetings capture states still need manifest approval |
+| Visual review still pending | Captures need human review for composition and legibility across configs |
