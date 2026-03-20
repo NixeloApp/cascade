@@ -27,7 +27,7 @@ The schema and Convex queries are richer than the current UI.
 - [x] **Expose sentiment** — Summary schema supports it; current UI does not.
 - [x] **Improve transcript UX** — Transcript detail now uses timestamped chunks with a raw-text fallback instead of a single unreadable block.
 - [x] **Add transcript-level filtering** — Selected meetings now support local transcript segment filtering by phrase or speaker.
-- [ ] **Add transcript jump navigation** — Layer faster in-transcript navigation on top of the segmented view.
+- [x] **Add transcript jump navigation** — Transcript detail now includes segment jump controls tied to the timestamped chunk view.
 
 ### Workflow Differentiation
 

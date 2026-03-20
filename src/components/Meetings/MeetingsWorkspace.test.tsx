@@ -26,6 +26,7 @@ type ProjectItem = FunctionReturnType<typeof api.dashboard.getMyProjects>[number
 const mockUseAuthenticatedQuery = vi.mocked(useAuthenticatedQuery);
 const mockUseAuthenticatedMutation = vi.mocked(useAuthenticatedMutation);
 const mockShowSuccess = vi.mocked(showSuccess);
+const mockScrollIntoView = vi.fn();
 
 const recordingId = "recording_1" as Id<"meetingRecordings">;
 const summaryId = "summary_1" as Id<"meetingSummaries">;
@@ -287,6 +288,12 @@ function installMeetingQueryMock({
 describe("MeetingsWorkspace", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      value: mockScrollIntoView,
+      configurable: true,
+      writable: true,
+    });
+
     let mutationHookCallCount = 0;
     mockUseAuthenticatedMutation.mockImplementation(() => {
       mutationHookCallCount += 1;
@@ -434,6 +441,16 @@ describe("MeetingsWorkspace", () => {
       screen.getByText("We aligned on the narrower launch scope and next implementation steps."),
     ).toBeInTheDocument();
     expect(screen.getByText("1 matches")).toBeInTheDocument();
+  });
+
+  it("jumps to transcript segments from the transcript navigation strip", () => {
+    installMeetingQueryMock({});
+
+    render(<MeetingsWorkspace />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Jump to 0:12 Priya" }));
+
+    expect(mockScrollIntoView).toHaveBeenCalled();
   });
 
   it("shows linked issue details for action items with created issues", async () => {

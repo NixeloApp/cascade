@@ -2,7 +2,14 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Link } from "@tanstack/react-router";
 import type { FunctionReturnType } from "convex/server";
-import { type FormEvent, type ReactNode, useDeferredValue, useEffect, useState } from "react";
+import {
+  type FormEvent,
+  type ReactNode,
+  useDeferredValue,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { PageContent } from "@/components/layout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -226,6 +233,10 @@ function matchesTranscriptSegment(segment: MeetingTranscriptSegment, query: stri
     segment.text.toLowerCase().includes(normalizedQuery) ||
     segment.speaker?.toLowerCase().includes(normalizedQuery) === true
   );
+}
+
+function getTranscriptSegmentKey(segment: MeetingTranscriptSegment, index: number) {
+  return `${segment.startTime}-${segment.endTime}-${segment.speaker ?? "speaker"}-${index}`;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -459,6 +470,7 @@ function MeetingMemorySection({ memory }: { memory: MeetingMemory | undefined })
 
 function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }) {
   const [query, setQuery] = useState("");
+  const segmentRefs = useRef<Record<string, HTMLLIElement | null>>({});
   const normalizedQuery = query.trim();
   const filteredSegments = transcript.segments.filter(
     (segment) =>
@@ -499,6 +511,38 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
             placeholder="Filter transcript segments"
             aria-label="Search transcript"
           />
+
+          <Stack gap="xs">
+            <Typography variant="caption" color="secondary">
+              Jump to segment
+            </Typography>
+            <Flex gap="xs" className="flex-wrap">
+              {filteredSegments.map((segment, index) => {
+                const segmentKey = getTranscriptSegmentKey(segment, index);
+                const segmentLabel = `${formatTranscriptTimestamp(segment.startTime)}${
+                  segment.speaker ? ` ${segment.speaker}` : ""
+                }`;
+
+                return (
+                  <Button
+                    key={segmentKey}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      segmentRefs.current[segmentKey]?.scrollIntoView({
+                        block: "center",
+                        behavior: "smooth",
+                      })
+                    }
+                    aria-label={`Jump to ${segmentLabel}`}
+                  >
+                    {segmentLabel}
+                  </Button>
+                );
+              })}
+            </Flex>
+          </Stack>
         </Stack>
       </Card>
 
@@ -512,27 +556,36 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
           />
         ) : (
           <Stack as="ol" gap="sm" className="list-none">
-            {filteredSegments.map((segment, index) => (
-              <li key={`${segment.startTime}-${segment.endTime}-${index}`}>
-                <Card variant="soft" padding="sm" className="border border-ui-border">
-                  <Stack gap="xs">
-                    <Flex justify="between" align="start" gap="sm" className="flex-wrap">
-                      <Flex gap="xs" className="flex-wrap">
-                        <Badge size="sm">{formatTranscriptTimestamp(segment.startTime)}</Badge>
-                        <Badge size="sm">
-                          {formatTranscriptTimestamp(segment.startTime)} -{" "}
-                          {formatTranscriptTimestamp(segment.endTime)}
-                        </Badge>
-                        {segment.speaker && <Badge size="sm">{segment.speaker}</Badge>}
+            {filteredSegments.map((segment, index) => {
+              const segmentKey = getTranscriptSegmentKey(segment, index);
+
+              return (
+                <li
+                  key={segmentKey}
+                  ref={(element) => {
+                    segmentRefs.current[segmentKey] = element;
+                  }}
+                >
+                  <Card variant="soft" padding="sm" className="border border-ui-border">
+                    <Stack gap="xs">
+                      <Flex justify="between" align="start" gap="sm" className="flex-wrap">
+                        <Flex gap="xs" className="flex-wrap">
+                          <Badge size="sm">{formatTranscriptTimestamp(segment.startTime)}</Badge>
+                          <Badge size="sm">
+                            {formatTranscriptTimestamp(segment.startTime)} -{" "}
+                            {formatTranscriptTimestamp(segment.endTime)}
+                          </Badge>
+                          {segment.speaker && <Badge size="sm">{segment.speaker}</Badge>}
+                        </Flex>
                       </Flex>
-                    </Flex>
-                    <Typography variant="caption" color="secondary">
-                      {segment.text}
-                    </Typography>
-                  </Stack>
-                </Card>
-              </li>
-            ))}
+                      <Typography variant="caption" color="secondary">
+                        {segment.text}
+                      </Typography>
+                    </Stack>
+                  </Card>
+                </li>
+              );
+            })}
           </Stack>
         )}
       </Card>
