@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { getOptionalLocatorText, isLocatorVisible } from "../utils/locator-state";
 import { escapeRegExp, ROUTES } from "../utils/routes";
 import { waitForDashboardReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
@@ -237,7 +238,7 @@ export class DashboardPage extends BasePage {
     const isInAuthenticatedAppShell =
       currentUrl.includes(`/${this.orgSlug}/`) &&
       !currentUrl.includes(ROUTES.signin.build()) &&
-      (await this.dashboardTab.isVisible().catch(() => false));
+      (await isLocatorVisible(this.dashboardTab));
 
     if (isInAuthenticatedAppShell) {
       await this.dashboardTab.click();
@@ -531,18 +532,14 @@ export class DashboardPage extends BasePage {
   }
 
   private async isSignedOutDestinationVisible(): Promise<boolean> {
-    const landingCtaVisible = await this.page
-      .getByRole("link", { name: /get started free/i })
-      .isVisible()
-      .catch(() => false);
+    const landingCtaVisible = await isLocatorVisible(
+      this.page.getByRole("link", { name: /get started free/i }),
+    );
     if (landingCtaVisible) {
       return true;
     }
 
-    return this.page
-      .getByRole("heading", { name: /sign in to nixelo/i })
-      .isVisible()
-      .catch(() => false);
+    return isLocatorVisible(this.page.getByRole("heading", { name: /sign in to nixelo/i }));
   }
 
   async openGlobalSearch() {
@@ -578,26 +575,31 @@ export class DashboardPage extends BasePage {
   }
 
   private async throwIfAppErrorVisible() {
-    if (!(await this.appErrorHeading.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.appErrorHeading))) {
       return;
     }
 
-    const detailsVisible = await this.appErrorDetailsMessage.isVisible().catch(() => false);
+    const detailsVisible = await isLocatorVisible(this.appErrorDetailsMessage);
     if (!detailsVisible) {
       await this.expandAppErrorDetailsIfAvailable();
     }
 
-    const errorDetails = (
-      await this.appErrorDetailsMessage.textContent().catch(() => null)
-    )?.trim();
+    const errorDetails = (await getOptionalLocatorText(this.appErrorDetailsMessage))?.trim();
     const suffix = errorDetails ? `: ${errorDetails}` : "";
     const diagnostics = await this.getAppErrorDiagnostics();
     throw new Error(`App error boundary visible${suffix}${diagnostics}`);
   }
 
   private async getAppErrorDiagnostics(): Promise<string> {
-    const diagnostics = await this.page
-      .evaluate(() => {
+    let diagnostics: {
+      url: string;
+      hydrated: boolean;
+      authKeys: string[];
+      connectionState: unknown;
+    } | null = null;
+
+    try {
+      diagnostics = await this.page.evaluate(() => {
         const authKeys = Object.keys(localStorage)
           .filter((key) => key.includes("convexAuth"))
           .sort();
@@ -613,8 +615,10 @@ export class DashboardPage extends BasePage {
           authKeys,
           connectionState: convexClient?.connectionState() ?? null,
         };
-      })
-      .catch(() => null);
+      });
+    } catch {
+      diagnostics = null;
+    }
 
     if (!diagnostics) {
       return "";
@@ -715,7 +719,7 @@ export class DashboardPage extends BasePage {
   }
 
   private async dismissModalIfOpen(modal: Locator, fallbackDismiss?: () => Promise<void>) {
-    if (!(await modal.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(modal))) {
       return;
     }
 
@@ -747,7 +751,7 @@ export class DashboardPage extends BasePage {
   }
 
   private async expandAppErrorDetailsIfAvailable(): Promise<void> {
-    const summaryVisible = await this.appErrorDetailsSummary.isVisible().catch(() => false);
+    const summaryVisible = await isLocatorVisible(this.appErrorDetailsSummary);
     if (!summaryVisible) {
       return;
     }
@@ -755,7 +759,7 @@ export class DashboardPage extends BasePage {
     try {
       await this.appErrorDetailsSummary.click();
     } catch (error) {
-      const detailsVisible = await this.appErrorDetailsMessage.isVisible().catch(() => false);
+      const detailsVisible = await isLocatorVisible(this.appErrorDetailsMessage);
       if (detailsVisible) {
         return;
       }
@@ -817,11 +821,11 @@ export class DashboardPage extends BasePage {
   }
 
   private async getTimeEntryBillingState(): Promise<"billable" | "non-billable" | "pending"> {
-    if (!(await this.timeEntryModal.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.timeEntryModal))) {
       return "pending";
     }
 
-    if (await this.timeEntryBillableCheckbox.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.timeEntryBillableCheckbox)) {
       return "billable";
     }
 
@@ -948,20 +952,15 @@ export class DashboardPage extends BasePage {
   async getGlobalSearchResultsState(): Promise<"loading" | "results" | "empty" | "settling"> {
     await this.throwIfAppErrorVisible();
 
-    if (await this.globalSearchLoadingState.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.globalSearchLoadingState)) {
       return "loading";
     }
 
-    if (
-      await this.globalSearchResultItems
-        .first()
-        .isVisible()
-        .catch(() => false)
-    ) {
+    if (await isLocatorVisible(this.globalSearchResultItems.first())) {
       return "results";
     }
 
-    if (await this.globalSearchNoResults.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.globalSearchNoResults)) {
       return "empty";
     }
 
