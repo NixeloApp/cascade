@@ -1,5 +1,3 @@
 {
-  "silentCatchSwallowsByFile": {
-    "e2e/utils/test-helpers.ts": 1
-  }
+  "silentCatchSwallowsByFile": {}
 }

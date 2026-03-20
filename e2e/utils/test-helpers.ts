@@ -107,8 +107,16 @@ export async function dismissAllToasts(page: Page, maxAttempts = 10): Promise<vo
 
     const firstToast = toasts.nth(0);
     await firstToast.click();
-    // Wait for toast to disappear after clicking
-    await firstToast.waitFor({ state: "hidden" }).catch(() => {});
+    // Wait for toast to disappear after clicking.
+    try {
+      await firstToast.waitFor({ state: "hidden" });
+    } catch (error) {
+      const stillVisible = await firstToast.isVisible().catch(() => false);
+      if (stillVisible) {
+        const message = error instanceof Error ? error.message : String(error);
+        throw new Error(`Toast remained visible after dismiss attempt: ${message}`);
+      }
+    }
     attempts++;
   }
 }
