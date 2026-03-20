@@ -101,6 +101,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [x] Replace the calendar month-view drag-state `data-drop-target` / `data-date` selectors with owned `TEST_IDS` contracts
 - [x] Replace the remaining live E2E `data-state` checks in calendar/dashboard helpers with accessible pressed/selected state assertions
 - [x] Remove the dead loading-skeleton, board-column, and notification-row raw marker attrs now that the harness uses owned `TEST_IDS`
+- [x] Remove the remaining route-nav `data-active` state contract and rely on `aria-current` for active styling
 - [ ] Replace raw data-attribute selectors with TEST_IDS constants
 - [x] Reduce shared helper/page-readiness `.first()` usage so unique route sentinels rely on scoped locator semantics
 - [x] Extract `dismissAllDialogs()`, `waitForDialogOpen()`, `waitForScreenshotReady()` to `e2e/utils/`

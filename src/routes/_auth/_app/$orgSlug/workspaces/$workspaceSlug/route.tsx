@@ -55,7 +55,7 @@ function WorkspaceLayout() {
             to={ROUTES.workspaces.detail.path}
             params={{ orgSlug, workspaceSlug }}
             activeOptions={{ exact: true }}
-            activeProps={{ "aria-current": "page", "data-active": "true" }}
+            activeProps={{ "aria-current": "page" }}
           >
             Teams
           </Link>
@@ -64,7 +64,7 @@ function WorkspaceLayout() {
           <Link
             to={ROUTES.workspaces.backlog.path}
             params={{ orgSlug, workspaceSlug }}
-            activeProps={{ "aria-current": "page", "data-active": "true" }}
+            activeProps={{ "aria-current": "page" }}
           >
             Backlog
           </Link>
@@ -73,7 +73,7 @@ function WorkspaceLayout() {
           <Link
             to={ROUTES.workspaces.sprints.path}
             params={{ orgSlug, workspaceSlug }}
-            activeProps={{ "aria-current": "page", "data-active": "true" }}
+            activeProps={{ "aria-current": "page" }}
           >
             Sprints
           </Link>
@@ -82,7 +82,7 @@ function WorkspaceLayout() {
           <Link
             to={ROUTES.workspaces.dependencies.path}
             params={{ orgSlug, workspaceSlug }}
-            activeProps={{ "aria-current": "page", "data-active": "true" }}
+            activeProps={{ "aria-current": "page" }}
           >
             Dependencies
           </Link>
@@ -91,7 +91,7 @@ function WorkspaceLayout() {
           <Link
             to={ROUTES.workspaces.calendar.path}
             params={{ orgSlug, workspaceSlug }}
-            activeProps={{ "aria-current": "page", "data-active": "true" }}
+            activeProps={{ "aria-current": "page" }}
           >
             Calendar
           </Link>
@@ -100,7 +100,7 @@ function WorkspaceLayout() {
           <Link
             to={ROUTES.workspaces.wiki.path}
             params={{ orgSlug, workspaceSlug }}
-            activeProps={{ "aria-current": "page", "data-active": "true" }}
+            activeProps={{ "aria-current": "page" }}
           >
             Wiki
           </Link>
@@ -109,7 +109,7 @@ function WorkspaceLayout() {
           <Link
             to={ROUTES.workspaces.settings.path}
             params={{ orgSlug, workspaceSlug }}
-            activeProps={{ "aria-current": "page", "data-active": "true" }}
+            activeProps={{ "aria-current": "page" }}
           >
             Settings
           </Link>
