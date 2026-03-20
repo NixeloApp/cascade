@@ -45,6 +45,25 @@ function getClassNameText(node) {
     return attr.initializer.expression.text;
   }
 
+  if (ts.isJsxExpression(attr.initializer) && attr.initializer.expression) {
+    const expression = attr.initializer.expression;
+
+    if (ts.isStringLiteral(expression) || ts.isNoSubstitutionTemplateLiteral(expression)) {
+      return expression.text;
+    }
+
+    if (
+      ts.isCallExpression(expression) &&
+      ts.isIdentifier(expression.expression) &&
+      expression.expression.text === "cn"
+    ) {
+      return expression.arguments
+        .filter((arg) => ts.isStringLiteral(arg) || ts.isNoSubstitutionTemplateLiteral(arg))
+        .map((arg) => arg.text)
+        .join(" ");
+    }
+  }
+
   return null;
 }
 

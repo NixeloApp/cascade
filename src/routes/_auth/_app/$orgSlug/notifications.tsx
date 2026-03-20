@@ -31,7 +31,6 @@ import {
 import { useOrganizationOptional } from "@/hooks/useOrgContext";
 import { Inbox } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_auth/_app/$orgSlug/notifications")({
   component: NotificationsPage,
 });
@@ -333,15 +332,10 @@ export function NotificationsPage() {
                 ).map(({ key, label }) => (
                   <Button
                     key={key}
-                    variant="ghost"
-                    size="sm"
+                    variant="unstyled"
+                    chrome={filter === key ? "filterActive" : "filter"}
+                    chromeSize="compactPillSm"
                     onClick={() => setFilter(key)}
-                    className={cn(
-                      "px-3 h-7",
-                      filter === key
-                        ? "bg-ui-bg-secondary text-ui-text"
-                        : "text-ui-text-secondary hover:text-ui-text",
-                    )}
                   >
                     {label}
                   </Button>
