@@ -60,6 +60,7 @@ export function DangerZone({
       setConfirmText("");
       navigate({ to: ROUTES.projects.list.path, params: { orgSlug } });
     } catch (error) {
+      suppressNextCloseRef.current = false;
       showError(error, "Failed to delete project");
       setIsDeleting(false);
     }
