@@ -25,7 +25,7 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { type Browser, chromium, type Locator, type Page } from "@playwright/test";
+import { type Browser, chromium, expect, type Locator, type Page } from "@playwright/test";
 import { ROUTES } from "../convex/shared/routes";
 import { TEST_IDS } from "../src/lib/test-ids";
 import { TEST_USERS } from "./config";
@@ -44,6 +44,7 @@ import {
   dismissAllDialogs,
   dismissIfOpen,
   waitForAnimation,
+  waitForDashboardReady,
   waitForDialogOpen,
   waitForLoadingSkeletonsToClear,
   waitForScreenshotReady,
@@ -1981,11 +1982,39 @@ async function waitForExpectedContent(
   }
 
   if (isNotificationsUrl(url) || name === "notifications") {
-    await page
-      .getByRole("heading", { name: /^notifications$/i })
-      .or(page.getByRole("tab", { name: /inbox/i }))
-      .waitFor({ state: "visible", timeout: 12000 });
+    await waitForDashboardReady(page);
+    const notificationsHeading = page.getByRole("heading", { name: /^notifications$/i });
+    const inboxTab = page.getByRole("tab", { name: /inbox/i });
+    const notificationItems = page.locator("[data-notification-item]");
+    const emptyState = page.getByText(/no notifications/i);
+    const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
+    await expect
+      .poll(
+        async () =>
+          (await notificationsHeading.isVisible().catch(() => false)) ||
+          (await inboxTab.isVisible().catch(() => false)),
+        {
+          timeout: 12000,
+          message: "Expected notifications page heading or inbox tab to become visible",
+        },
+      )
+      .toBe(true);
     await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+    await expect
+      .poll(
+        async () => {
+          const mentionsVisible = await mentionsFilter.isVisible().catch(() => false);
+          const itemCount = await notificationItems.count().catch(() => 0);
+          const emptyVisible = await emptyState.isVisible().catch(() => false);
+
+          return mentionsVisible && (itemCount > 0 || emptyVisible) ? "ready" : "pending";
+        },
+        {
+          timeout: 10000,
+          message: "Expected notifications content or empty state to become visible",
+        },
+      )
+      .toBe("ready");
     return;
   }
 
@@ -3602,6 +3631,53 @@ async function screenshotFilledStates(
     throw new Error(`Notification panel did not open: ${lastError?.message ?? "unknown error"}`);
   }
 
+  async function waitForNotificationsContentReady(): Promise<void> {
+    const notificationItems = page.locator("[data-notification-item]");
+    const emptyState = page.getByText(/no notifications/i);
+    const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
+
+    await expect
+      .poll(
+        async () => {
+          const mentionsVisible = await mentionsFilter.isVisible().catch(() => false);
+          const itemCount = await notificationItems.count().catch(() => 0);
+          const emptyVisible = await emptyState.isVisible().catch(() => false);
+
+          return mentionsVisible && (itemCount > 0 || emptyVisible) ? "ready" : "pending";
+        },
+        {
+          timeout: 10000,
+          message: "Expected notifications content or empty state to become visible",
+        },
+      )
+      .toBe("ready");
+  }
+
+  async function waitForMentionsFilterState(): Promise<void> {
+    const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
+    const mentionNotification = page.getByText(/you were mentioned/i);
+    const emptyState = page.getByText(/no notifications/i);
+
+    await expect
+      .poll(
+        async () => {
+          const classes = (await mentionsFilter.getAttribute("class").catch(() => "")) ?? "";
+          const filterActive = classes.includes("bg-ui-bg-secondary");
+          const mentionVisible = await mentionNotification.isVisible().catch(() => false);
+          const emptyVisible = await emptyState.isVisible().catch(() => false);
+
+          return filterActive && (mentionVisible || emptyVisible) ? "ready" : "pending";
+        },
+        {
+          timeout: 10000,
+          message: "Expected Mentions filter results to finish rendering",
+        },
+      )
+      .toBe("ready");
+
+    await waitForAnimation(page);
+  }
+
   // Notification popover (bell icon in header)
   if (shouldCapture(p, "notification-popover")) {
     await runCaptureStep("notification popover", async () => {
@@ -3673,12 +3749,12 @@ async function screenshotFilledStates(
         timeout: 15000,
       });
       await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
-      await waitForScreenshotReady(page);
+      await waitForNotificationsContentReady();
       // Click the Mentions filter button
       const mentionsFilter = page.getByRole("button", { name: /^mentions$/i }).first();
       await mentionsFilter.waitFor({ state: "visible", timeout: 5000 });
       await mentionsFilter.click();
-      await waitForScreenshotReady(page);
+      await waitForMentionsFilterState();
       await captureCurrentView(page, p, "notifications-filter-active");
     });
   }

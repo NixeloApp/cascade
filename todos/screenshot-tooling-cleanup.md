@@ -31,12 +31,13 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [ ] Audit and remove unnecessary `.catch(() => {})` calls (198 total) -- let failures propagate or handle them explicitly
 - [x] Make `waitForDialogOpen` fail loudly when dialog content doesn't appear -- extracted to `e2e/utils/wait-helpers.ts` and reused by `screenshot-pages.ts`
 - [x] Add a post-capture hash check that flags loading-state hashes
-- [ ] Re-capture the 37 failed screenshots with proper wait logic
+- [x] Re-capture the 37 failed screenshots with proper wait logic
 - [x] Recover the time-entry modal baselines plus the command-palette tablet and dashboard-customize mobile baselines after readiness hardening
 - [x] Recover the remaining desktop-light command-palette baseline after the shared omnibox readiness fixes landed
 - [x] Recover the missing desktop-dark create-issue modal baseline
 - [x] Recover the settings avatar-upload and cover-upload baselines across all four canonical configs after replacing brittle dropzone-copy waits
 - [x] Recover the members confirm-dialog baselines across all four canonical configs after fixing alert-dialog open waits and section-scroll alignment
+- [x] Recover the final desktop-dark notifications filter baseline after strengthening notifications route and filter-content readiness waits
 - [ ] Add `animations: 'disabled'` to `page.screenshot()` calls
 
 ### 2. Anti-patterns that should use proper Playwright/E2E conventions
@@ -79,7 +80,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 
 ## Done When
 
-- [ ] Zero loading-spinner screenshots in the manifest
+- [x] Zero loading-spinner screenshots in the manifest
 - [ ] `.catch(() => {})` count reduced from 198 to only intentional cases with comments
 - [x] No `waitForTimeout` calls
 - [ ] Shared helpers extracted to `e2e/utils/`
