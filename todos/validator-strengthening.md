@@ -32,7 +32,39 @@ These 3 validators report real issues (43 + 17 + N) but pass anyway:
 - [ ] **Control chrome drift** (17 drift points) -- same: promote to blocking or ratchet
 - [ ] **Shared shape drift** -- promote or ratchet
 
-## New Validators to Add
+## Query/Filter Validator Gaps
+
+The current `check-queries.js` catches 6 patterns (unbounded collect, N+1, take-before-filter, missing index, large take, sequential await) but misses **14 instances** of preventable anti-patterns:
+
+### Backend: `.take()`/`.collect()` then JS `.filter()` (11 instances)
+
+Filter logic that could be a Convex query filter or index but is applied in JS after fetching:
+
+| File | Pattern | Fix |
+|------|---------|-----|
+| `convex/hourCompliance.ts:502-522` | `.take(1000)` then `.filter()` 5 times for counting | Use status index or pre-aggregate |
+| `convex/hourCompliance.ts:462-466` | `.take(50)` then date range filter | Use `by_user_period` index |
+| `convex/calendarEvents.ts:359` | `.take()` then filter by `projectId` | Extend index |
+| `convex/calendarEvents.ts:518,652` | `.take()` then filter `status !== 'cancelled'` | Add query-level status filter |
+| `convex/export.ts:312-322` | `.collect()` then filter by `sprintId` and `status` | Add to index |
+
+### Client-side: React components filtering query results (3 instances)
+
+Fetches all data then filters in the component when the filter could be a backend query arg:
+
+| File | Pattern | Fix |
+|------|---------|-----|
+| `src/components/MentionInput.tsx:61-62` | `members?.filter(m => name.includes(search))` | Add `searchQuery` arg to backend |
+| `src/components/Settings/OutOfOfficeSettings.tsx:70` | `users?.filter(u => u._id !== currentUser)` | Add `excludeUserId` arg |
+| `src/components/Documents/DocumentTemplatesManager.tsx:208-209` | `templates?.filter(t => t.isBuiltIn)` split into two groups | Add `isBuiltIn` filter arg |
+
+### New validator rules to add:
+
+- [ ] **Post-fetch JS filter** -- detect `.take(N)` or `.collect()` result followed by `.filter((item) => item.field === value)` within 10 lines. Skip Convex filters `(q) => q.eq(...)`, `notDeleted`, and `.includes()` (can't express in Convex). Report as warning with "consider moving to query filter or index."
+- [ ] **Client-side query filter** -- detect `useQuery(...)` result followed by `.filter()` in React components. Flag simple property checks that could be query args. Advisory level.
+- [ ] **Multi-filter on same result** -- detect same variable filtered 2+ times in sequence. Suggest single pass or pre-aggregation.
+
+## New Validators to Add (Non-Query)
 
 - [ ] **Screenshot manifest integrity** -- fail if any hash appears more than 2 times (legitimate dual-write is max 2; 3+ means spinner capture)
 - [ ] **`.catch(() => {})` audit** -- flag silent catch swallows in E2E and screenshot tooling (198 currently)
@@ -56,7 +88,8 @@ For advisory validators, implement a ratchet:
 
 ## Done When
 
-- [ ] All 47 validators pass with zero violations
+- [ ] All 47+ validators pass with zero violations
 - [ ] Advisory validators either block or use ratchet
-- [ ] New validators for manifest integrity, catch swallows, and timeout audit
+- [ ] New validators for manifest integrity, catch swallows, timeout audit, and query/filter gaps
+- [ ] Query filter validator catches backend post-fetch filtering and client-side filtering
 - [ ] No validator skips without explicit TODO references
