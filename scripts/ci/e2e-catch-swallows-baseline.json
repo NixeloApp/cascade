@@ -7,7 +7,7 @@
     "e2e/pages/projects.page.ts": 7,
     "e2e/pages/settings.page.ts": 2,
     "e2e/pages/workspaces.page.ts": 3,
-    "e2e/screenshot-pages.ts": 19,
+    "e2e/screenshot-pages.ts": 9,
     "e2e/utils/auth-helpers.ts": 3,
     "e2e/utils/test-helpers.ts": 1
   }

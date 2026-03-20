@@ -3710,12 +3710,10 @@ async function screenshotDashboardModals(
     return;
   }
 
-  await page
-    .goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
-    })
-    .catch(() => {});
+  await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
+    waitUntil: "domcontentloaded",
+    timeout: 15000,
+  });
   await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
   await waitForScreenshotReady(page);
 
@@ -3838,12 +3836,10 @@ async function screenshotProjectsModal(page: Page, orgSlug: string, prefix: stri
     return;
   }
 
-  await page
-    .goto(`${BASE_URL}${ROUTES.projects.list.build(orgSlug)}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
-    })
-    .catch(() => {});
+  await page.goto(`${BASE_URL}${ROUTES.projects.list.build(orgSlug)}`, {
+    waitUntil: "domcontentloaded",
+    timeout: 15000,
+  });
   await waitForScreenshotReady(page);
 
   const projectsPage = new ProjectsPage(page, orgSlug);
@@ -3878,9 +3874,7 @@ async function screenshotBoardModals(
   }
 
   const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
-  await page
-    .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-    .catch(() => {});
+  await page.goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
   await waitForExpectedContent(page, boardUrl, "board");
   await waitForScreenshotReady(page);
 
@@ -3914,7 +3908,7 @@ async function screenshotBoardModals(
     (await issueCard.count()) > 0
   ) {
     await runCaptureStep("board issue-detail modal", async () => {
-      await issueCard.scrollIntoViewIfNeeded().catch(() => {});
+      await issueCard.scrollIntoViewIfNeeded();
       const issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
       await issueCard.click();
       const dialogOpened = await issueDetailDialog
@@ -3983,9 +3977,7 @@ async function screenshotMeetingsStates(
     .first();
 
   const openMeetingsForCapture = async () => {
-    await page
-      .goto(`${BASE_URL}${meetingsUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-      .catch(() => {});
+    await page.goto(`${BASE_URL}${meetingsUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
     await waitForExpectedContent(page, meetingsUrl, "meetings");
     await waitForScreenshotReady(page);
   };
@@ -4082,9 +4074,7 @@ async function screenshotBoardInteractiveStates(
 
   // Helper: navigate to board and wait for toolbar
   const loadBoard = async () => {
-    await page
-      .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 30000 })
-      .catch(() => {});
+    await page.goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 30000 });
     await waitForBoardReady(page);
     await waitForScreenshotReady(page);
   };
@@ -4112,7 +4102,7 @@ async function screenshotBoardInteractiveStates(
       await option.waitFor({ state: "visible", timeout: 3000 });
       // Radix DropdownMenuCheckboxItem may detach on check. Use scrollIntoView
       // + click in quick succession to minimize the race window.
-      await option.scrollIntoViewIfNeeded().catch(() => {});
+      await option.scrollIntoViewIfNeeded();
       await option.click();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, captureName);
@@ -4295,9 +4285,7 @@ async function screenshotSprintInteractiveStates(
   const sprintsUrl = ROUTES.projects.sprints.build(orgSlug, projectKey);
 
   // Navigate to sprints page
-  await page
-    .goto(`${BASE_URL}${sprintsUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-    .catch(() => {});
+  await page.goto(`${BASE_URL}${sprintsUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
   await waitForExpectedContent(page, sprintsUrl, "sprints");
   await waitForScreenshotReady(page);
 
@@ -4404,8 +4392,7 @@ async function screenshotSprintInteractiveStates(
       await dialog.waitFor({ state: "visible", timeout: 5000 });
       await dialog
         .getByText(/issues? not completed\. choose what to do with them\./i)
-        .waitFor({ state: "visible", timeout: 5000 })
-        .catch(() => {});
+        .waitFor({ state: "visible", timeout: 5000 });
       await waitForScreenshotReady(page);
       await captureCurrentView(
         page,
@@ -4429,9 +4416,7 @@ async function screenshotIssueInteractiveStates(
   const issuesUrl = ROUTES.issues.list.build(orgSlug);
 
   await runCaptureStep("issues side panel", async () => {
-    await page
-      .goto(`${BASE_URL}${issuesUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-      .catch(() => {});
+    await page.goto(`${BASE_URL}${issuesUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
     await waitForExpectedContent(page, issuesUrl, "issues", prefix);
     await waitForScreenshotReady(page);
 
