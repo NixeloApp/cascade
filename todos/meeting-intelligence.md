@@ -23,7 +23,7 @@ First-class Meetings workspace, recording detail view, participant/topic/sentime
 
 - [x] Add meetings page to page objects (`e2e/pages/`)
 - [x] Add `e2e/meetings.spec.ts` covering: empty state, recording list/detail, transcript search, and memory rail filtering
-- [ ] Extend meetings E2E coverage to action-item to issue creation
+- [x] Extend meetings E2E coverage to action-item to issue creation
 
 ### MeetingsWorkspace Code Quality
 

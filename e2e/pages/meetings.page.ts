@@ -14,6 +14,7 @@ export class MeetingsPage extends BasePage {
   readonly emptyStateDescription: Locator;
   readonly meetingsSearchInput: Locator;
   readonly transcriptSearchInput: Locator;
+  readonly actionItemsSection: Locator;
 
   constructor(page: Page, orgSlug: string) {
     super(page, orgSlug);
@@ -28,6 +29,10 @@ export class MeetingsPage extends BasePage {
     );
     this.meetingsSearchInput = page.getByRole("searchbox", { name: "Search meetings" });
     this.transcriptSearchInput = page.getByRole("searchbox", { name: "Search transcript" });
+    this.actionItemsSection = page
+      .locator("section")
+      .filter({ has: page.getByRole("heading", { name: /^action items$/i }) })
+      .first();
   }
 
   async goto() {
@@ -99,5 +104,39 @@ export class MeetingsPage extends BasePage {
 
   async expectMemoryItemVisible(text: string) {
     await expect(this.page.getByText(text).first()).toBeVisible();
+  }
+
+  private getActionItem(description: string) {
+    return this.actionItemsSection
+      .getByText(description, { exact: true })
+      .locator("xpath=ancestor::li[1]")
+      .first();
+  }
+
+  async expectActionItemCreateIssueEnabled(description: string) {
+    await expect(
+      this.getActionItem(description).getByRole("button", { name: /^create issue$/i }),
+    ).toBeEnabled();
+  }
+
+  async createIssueFromActionItem(description: string) {
+    await this.getActionItem(description)
+      .getByRole("button", { name: /^create issue$/i })
+      .click();
+    await this.expectToast("Issue created from action item");
+  }
+
+  async expectLinkedIssue(description: string, issueKey: string, issueTitle: string) {
+    const actionItem = this.getActionItem(description);
+    await expect(actionItem.getByText("Issue linked")).toBeVisible();
+    await expect(actionItem.getByText(issueKey, { exact: false })).toBeVisible();
+    await expect(actionItem.getByText(issueTitle, { exact: true })).toBeVisible();
+    await expect(actionItem.getByRole("link", { name: /open issue/i })).toBeVisible();
+  }
+
+  async openLinkedIssue(description: string) {
+    await this.getActionItem(description)
+      .getByRole("link", { name: /open issue/i })
+      .click();
   }
 }
