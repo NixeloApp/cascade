@@ -211,14 +211,32 @@ async function waitForLocatorToHide(locator: Locator, timeout: number): Promise<
   }
 }
 
-async function getOpenDialogOverlayCount(page: Page): Promise<number> {
-  return page.locator(`[data-testid="${TEST_IDS.DIALOG.OVERLAY}"][data-state="open"]`).count();
+async function countVisibleLocators(locator: Locator): Promise<number> {
+  const count = await locator.count();
+  let visibleCount = 0;
+  for (let index = 0; index < count; index += 1) {
+    if (
+      await locator
+        .nth(index)
+        .isVisible()
+        .catch(() => false)
+    ) {
+      visibleCount += 1;
+    }
+  }
+  return visibleCount;
 }
 
-async function waitForDialogOverlaysToClear(page: Page, timeout: number): Promise<boolean> {
+async function getVisibleOpenDialogCount(page: Page): Promise<number> {
+  const dialogCount = await countVisibleLocators(page.getByRole("dialog"));
+  const alertDialogCount = await countVisibleLocators(page.getByRole("alertdialog"));
+  return dialogCount + alertDialogCount;
+}
+
+async function waitForDialogsToClear(page: Page, timeout: number): Promise<boolean> {
   try {
     await expect
-      .poll(() => getOpenDialogOverlayCount(page), {
+      .poll(() => getVisibleOpenDialogCount(page), {
         timeout,
         intervals: [100, 200, 500],
       })
@@ -254,29 +272,29 @@ export async function dismissIfOpen(page: Page, locator: Locator): Promise<void>
 }
 
 /**
- * Dismiss any open Radix dialog overlays. This retries Escape first, then an
- * outside click, and fails if overlays remain after the retry budget.
+ * Dismiss any open dialogs. This retries Escape first, then an outside click,
+ * and fails if visible dialogs remain after the retry budget.
  */
 export async function dismissAllDialogs(page: Page): Promise<void> {
   for (let attempt = 0; attempt < 3; attempt++) {
-    const openOverlays = await getOpenDialogOverlayCount(page);
-    if (openOverlays === 0) {
+    const openDialogs = await getVisibleOpenDialogCount(page);
+    if (openDialogs === 0) {
       return;
     }
 
     await page.keyboard.press("Escape");
-    if (await waitForDialogOverlaysToClear(page, 1500)) {
+    if (await waitForDialogsToClear(page, 1500)) {
       return;
     }
 
     await page.mouse.click(10, 10);
-    if (await waitForDialogOverlaysToClear(page, 1500)) {
+    if (await waitForDialogsToClear(page, 1500)) {
       return;
     }
   }
 
-  const remainingOverlays = await getOpenDialogOverlayCount(page);
-  throw new Error(`Failed to dismiss ${remainingOverlays} open dialog overlay(s)`);
+  const remainingDialogs = await getVisibleOpenDialogCount(page);
+  throw new Error(`Failed to dismiss ${remainingDialogs} open dialog(s)`);
 }
 
 /**

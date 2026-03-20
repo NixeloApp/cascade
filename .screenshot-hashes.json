@@ -1,6 +1,6 @@
 {
   "docs/design/specs/modals/screenshots/alert-dialog-desktop-dark.png": "7ea803dc676776e2c15b127a6daf529def3c7ba0ee14d0a504f6d59e92fb0f22",
-  "docs/design/specs/modals/screenshots/alert-dialog-desktop-light.png": "b067462616e8643568fa995159e983720451d05a780ceb4061a674347aa44a15",
+  "docs/design/specs/modals/screenshots/alert-dialog-desktop-light.png": "37c4ad3cf5530af5cf760d55710b704ca7b8e8dc59c2fffbf753b444bfaf8b57",
   "docs/design/specs/modals/screenshots/alert-dialog-mobile-light.png": "2bf03fa48e0c8d8c539eba5a936b2b7631df3cbdb33a158a03b007ed1865f1d7",
   "docs/design/specs/modals/screenshots/alert-dialog-tablet-light.png": "2f73c1d532cd6704528a22ed4ba80910574587067f9dc1a4e4838e0e68e88ba7",
   "docs/design/specs/modals/screenshots/avatar-upload-desktop-dark.png": "cc854545c1d2edbfe0256eedc5037397e216abcd997398de6a683ce346b7cfd5",
@@ -118,7 +118,7 @@
   "docs/design/specs/pages/12-settings/screenshots/desktop-light-notifications-permission-denied.png": "1f18acd6af59128feb3517229b48aebc574e0ac1b4d9aacf99c267558f7a561f",
   "docs/design/specs/pages/12-settings/screenshots/desktop-light-profile-avatar-upload-modal.png": "217a2d63374840e733e23389dd9a578ff920496cab0b904aa80fde3a8f1c79d4",
   "docs/design/specs/pages/12-settings/screenshots/desktop-light-profile-cover-upload-modal.png": "d38e98cd87433f333f83d5735b94a8e99d0a6ae1c4863bbcbc6504fc8c0bde16",
-  "docs/design/specs/pages/12-settings/screenshots/desktop-light-project-delete-alert-dialog.png": "b067462616e8643568fa995159e983720451d05a780ceb4061a674347aa44a15",
+  "docs/design/specs/pages/12-settings/screenshots/desktop-light-project-delete-alert-dialog.png": "37c4ad3cf5530af5cf760d55710b704ca7b8e8dc59c2fffbf753b444bfaf8b57",
   "docs/design/specs/pages/12-settings/screenshots/mobile-light-notifications-permission-denied.png": "fd70a4599d3bb14a99fd304ac80244f6d2152f5d067e5d67aada7af127763d0a",
   "docs/design/specs/pages/12-settings/screenshots/mobile-light-profile-avatar-upload-modal.png": "e5e11a1a5cb2a9dd681169ee004a93f777f3c1fc51320517bd1470e1bea75204",
   "docs/design/specs/pages/12-settings/screenshots/mobile-light-profile-cover-upload-modal.png": "6e62e670fc9e121796494d329e63c0e156d8b6757af7a43f5a4a89b5af1548de",
