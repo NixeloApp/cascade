@@ -50,7 +50,7 @@ interface TimeEntryModalProps {
 function DurationSummary({ durationSeconds }: { durationSeconds: number }) {
   return (
     <Card recipe="timeSummary" padding="sm">
-      <Typography variant="mono" className="text-brand-active">
+      <Typography variant="mono" color="brandActive">
         Duration: {formatDurationHuman(durationSeconds)}
       </Typography>
     </Card>
@@ -106,7 +106,7 @@ function TagsInput({
                   onClick={() => onRemoveTag(tag)}
                   aria-label={`Remove tag ${tag}`}
                 >
-                  <X className="h-3 w-3" />
+                  <Icon icon={X} size="xs" />
                 </IconButton>
               </Flex>
             </Badge>
@@ -350,7 +350,7 @@ export function TimeEntryModal({
             form="time-entry-form"
             variant="primary"
             disabled={!shouldLoadData || (!computed.isTimerMode && computed.effectiveDuration <= 0)}
-            leftIcon={computed.isTimerMode ? <Play className="h-4 w-4" /> : undefined}
+            leftIcon={computed.isTimerMode ? <Icon icon={Play} size="sm" /> : undefined}
           >
             {computed.isTimerMode ? "Start Timer" : "Log Time"}
           </Button>
@@ -369,35 +369,25 @@ export function TimeEntryModal({
         {/* Mode Toggle */}
         <SegmentedControl
           value={state.entryMode}
+          iconSpacing
+          layout="stackOnMobile"
           variant="default"
+          width="fill"
           onValueChange={(value: string) => {
             if (value === "timer" || value === "duration" || value === "timeRange") {
               actions.setEntryMode(value);
             }
           }}
-          className="flex w-full flex-col sm:flex-row"
         >
-          <SegmentedControlItem
-            value="timer"
-            variant="default"
-            className="w-full flex-1 justify-center gap-2"
-          >
+          <SegmentedControlItem value="timer" variant="default" width="fill">
             <Icon icon={Play} size="sm" />
             Start Timer
           </SegmentedControlItem>
-          <SegmentedControlItem
-            value="duration"
-            variant="default"
-            className="w-full flex-1 justify-center gap-2"
-          >
+          <SegmentedControlItem value="duration" variant="default" width="fill">
             <Icon icon={Hourglass} size="sm" />
             Duration
           </SegmentedControlItem>
-          <SegmentedControlItem
-            value="timeRange"
-            variant="default"
-            className="w-full flex-1 justify-center gap-2"
-          >
+          <SegmentedControlItem value="timeRange" variant="default" width="fill">
             <Icon icon={Clock} size="sm" />
             Time Range
           </SegmentedControlItem>
@@ -413,7 +403,7 @@ export function TimeEntryModal({
               actions.setIssueId(undefined);
             }}
           >
-            <SelectTrigger id="time-entry-project" className="w-full">
+            <SelectTrigger id="time-entry-project">
               <SelectValue placeholder="Select project..." />
             </SelectTrigger>
             <SelectContent>
@@ -437,7 +427,7 @@ export function TimeEntryModal({
                 actions.setIssueId(value === "none" ? undefined : (value as Id<"issues">))
               }
             >
-              <SelectTrigger id="time-entry-issue" className="w-full">
+              <SelectTrigger id="time-entry-issue">
                 <SelectValue placeholder="Select issue..." />
               </SelectTrigger>
               <SelectContent>
@@ -470,7 +460,7 @@ export function TimeEntryModal({
             value={state.activity || "none"}
             onValueChange={(value) => actions.setActivity(value === "none" ? "" : value)}
           >
-            <SelectTrigger id="time-entry-activity" className="w-full">
+            <SelectTrigger id="time-entry-activity">
               <SelectValue placeholder="Select activity..." />
             </SelectTrigger>
             <SelectContent>

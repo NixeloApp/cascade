@@ -45,6 +45,7 @@ Target the 148 files with raw TW violations. For each repeated pattern:
 - [x] Absorb the `BillingReport.tsx` summary metric card cluster into an owned helper on top of `Icon`, `Stack`, and metric card recipes
 - [x] Absorb the remaining `BillingReport.tsx` team-breakdown and quick-stats shell cluster into owned `Card`, `Stack`, and `Flex` contracts so the file no longer carries inline raw class shells
 - [x] Absorb the `WebhookCard.tsx` URL/action-control cluster into owned `Typography`, `Icon`, and layout contracts and ratchet the clean raw-tailwind baseline entries
+- [x] Absorb the shared time-entry modal control cluster into owned `SegmentedControl`, `Typography`, `Icon`, and `Select` contracts so `ManualTimeEntryModal.tsx` and `TimeEntryModal.tsx` drop out of the raw-tailwind baseline
 - [ ] Audit raw TW in route files -- repeated spacing/shell/state patterns should become components or CVA variants
 - [ ] Run `node scripts/validate/check-raw-tailwind.js --audit` and group violations by pattern (same class cluster = same missing abstraction)
 - [ ] For each cluster of 3+ identical class sets, extract a component or add a CVA variant

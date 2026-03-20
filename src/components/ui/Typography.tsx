@@ -109,6 +109,7 @@ const typographyVariants = cva("", {
       secondary: "text-ui-text-secondary",
       tertiary: "text-ui-text-tertiary",
       brand: "text-brand",
+      brandActive: "text-brand-active",
       error: "text-status-error",
       success: "text-status-success",
       warning: "text-status-warning",

@@ -118,6 +118,16 @@ describe("Typography", () => {
     expect(block.className).toContain("text-xs");
   });
 
+  it("supports the brandActive color override", () => {
+    render(
+      <Typography variant="mono" color="brandActive" data-testid="mono-brand-active">
+        2h 15m
+      </Typography>,
+    );
+    const block = screen.getByTestId("mono-brand-active");
+    expect(block.className).toContain("text-brand-active");
+  });
+
   it("maps metricLabelWide to a paragraph with wide uppercase metric styling", () => {
     render(
       <Typography variant="metricLabelWide" data-testid="metric-label-wide">
