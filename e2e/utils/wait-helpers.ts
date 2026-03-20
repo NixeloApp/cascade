@@ -114,7 +114,7 @@ export async function waitForAnimation(page: Page): Promise<void> {
       return timing && timing.duration !== Infinity && timing.iterations !== Infinity;
     });
     if (!animations.length) return Promise.resolve();
-    return Promise.all(animations.map((a) => a.finished));
+    return Promise.allSettled(animations.map((a) => a.finished));
   });
 }
 
@@ -167,6 +167,19 @@ export async function waitForDialogOpen(page: Page, timeout = 8000): Promise<Loc
   await dialog.waitFor({ state: "visible", timeout });
   await waitForAnimation(page);
   return dialog;
+}
+
+/**
+ * Wait for all visible loading skeletons to disappear without relying on
+ * strict single-element locator semantics.
+ */
+export async function waitForLoadingSkeletonsToClear(page: Page, timeout = 5000): Promise<void> {
+  await expect
+    .poll(() => page.locator("[data-loading-skeleton]:visible").count(), {
+      timeout,
+      intervals: [100, 200, 500],
+    })
+    .toBe(0);
 }
 
 async function isLocatorVisible(locator: Locator): Promise<boolean> {
@@ -263,6 +276,7 @@ export async function waitForScreenshotReady(page: Page, timeout = 5000): Promis
 
   const loadingSpinner = page.getByLabel("Loading").or(page.locator("[data-loading-spinner]"));
   await loadingSpinner.first().waitFor({ state: "hidden", timeout });
+  await waitForLoadingSkeletonsToClear(page, timeout);
 
   await waitForAnimation(page);
 

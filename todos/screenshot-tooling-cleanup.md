@@ -32,6 +32,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [x] Make `waitForDialogOpen` fail loudly when dialog content doesn't appear -- extracted to `e2e/utils/wait-helpers.ts` and reused by `screenshot-pages.ts`
 - [x] Add a post-capture hash check that flags loading-state hashes
 - [ ] Re-capture the 37 failed screenshots with proper wait logic
+- [x] Recover the time-entry modal baselines plus the command-palette tablet and dashboard-customize mobile baselines after readiness hardening
 - [ ] Add `animations: 'disabled'` to `page.screenshot()` calls
 
 ### 2. Anti-patterns that should use proper Playwright/E2E conventions
@@ -66,6 +67,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [x] Replace swallowed create-issue, calendar interaction, and document-editor interaction waits so project content captures fail on broken navigation and missing interactive state
 - [x] Replace swallowed dashboard/projects/board/meetings/sprints/issues navigation and interaction waits so those captures fail on broken loads and missing interactive content
 - [x] Replace swallowed calendar/board retry helpers, scroll helpers, and issue/document discovery helpers so shared screenshot plumbing fails loudly
+- [x] Replace strict loading-skeleton waits and cancelled animation promise failures in shared screenshot readiness helpers
 - [ ] Replace raw data-attribute selectors with TEST_IDS constants
 - [x] Reduce shared helper/page-readiness `.first()` usage so unique route sentinels rely on scoped locator semantics
 - [x] Extract `dismissAllDialogs()`, `waitForDialogOpen()`, `waitForScreenshotReady()` to `e2e/utils/`

@@ -45,6 +45,7 @@ import {
   dismissIfOpen,
   waitForAnimation,
   waitForDialogOpen,
+  waitForLoadingSkeletonsToClear,
   waitForScreenshotReady,
 } from "./utils/wait-helpers";
 
@@ -1198,7 +1199,7 @@ async function waitForCalendarReady(page: Page): Promise<boolean> {
         state: "visible",
         timeout: 4000,
       });
-      await page.locator("[data-loading-skeleton]").waitFor({ state: "hidden", timeout: 4000 });
+      await waitForLoadingSkeletonsToClear(page, 4000);
       return true;
     } catch {
       if (attempt === 0) {
@@ -1331,7 +1332,7 @@ async function waitForBoardReady(page: Page): Promise<boolean> {
         state: "visible",
         timeout: 6000,
       });
-      await page.locator("[data-loading-skeleton]").waitFor({ state: "hidden", timeout: 4000 });
+      await waitForLoadingSkeletonsToClear(page, 4000);
       await page.getByRole("status").waitFor({ state: "hidden", timeout: 4000 });
       return true;
     } catch {
@@ -1637,7 +1638,7 @@ async function waitForAnalyticsReady(page: Page): Promise<void> {
     timeout: 12000,
   });
   await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
-  await page.locator("[data-loading-skeleton]").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForLoadingSkeletonsToClear(page, 5000);
 }
 
 async function waitForTimesheetReady(page: Page): Promise<void> {
@@ -1769,7 +1770,7 @@ async function waitForExpectedContent(
       { timeout: 20000 },
     );
     await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
-    await page.locator("[data-loading-skeleton]").waitFor({ state: "hidden", timeout: 4000 });
+    await waitForLoadingSkeletonsToClear(page, 4000);
     return;
   }
 
