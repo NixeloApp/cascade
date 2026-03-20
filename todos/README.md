@@ -6,28 +6,69 @@
 
 | Metric | Value |
 |--------|-------|
-| Validators | 47/47 pass |
+| Validators | 38/47 pass (9 failing, all from MeetingsWorkspace + minor) |
 | Bundle | 337KB gzip |
-| Screenshots | 300+ across 4 viewport/theme combos, 0 uncovered routes |
-| Screenshot validation | Route coverage audit + page/modal screenshot audit + hash diff workflow |
-| Raw TW baseline | 148 files (run `node scripts/validate/check-raw-tailwind.js --audit` to inspect) |
+| Screenshots | 226 in manifest, 37 are loading spinners (16.4% broken) |
+| Raw TW baseline | 148 files with violations |
+| CVA definitions | 48 files (38 in ui/, 10 in features) |
 
 ---
 
-## What Is Still Open
+## Execution Order
 
-Only unfinished work stays in `/todos`. Completed slices should be removed from these files instead of lingering as historical backlog.
+Work is ordered as a pipeline -- each phase unblocks the next. AI will fix these in order.
 
-| Priority | File | Remaining work |
-|----------|------|----------------|
-| P1 | [meeting-intelligence.md](./meeting-intelligence.md) | Core shipped; missing: screenshots/spec folder, E2E tests, 55 validator violations in MeetingsWorkspace, editor persistence (blocks meeting-to-doc), capture strategy, platform breadth, OSS eval |
-| P1 | [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Consistency system in place; cleanup remains for 43 Typography drift points, 17 control-chrome drift points, and residual screenshot/state cohesion gaps |
-| P2 | [validator-strengthening.md](./validator-strengthening.md) | 9 validators failing (55 violations from MeetingsWorkspace alone), 3 advisory validators should block or ratchet, need new validators for manifest integrity and catch-swallow audit |
-| P2 | [screenshot-tooling-cleanup.md](./screenshot-tooling-cleanup.md) | 37 loading-spinner captures (16.4% of manifest), 198 silent `.catch(() => {})` calls, 201 `.first()` calls, 7 hardcoded timeouts, 33 raw selectors |
-| P2 | [feature-docs-expansion.md](./feature-docs-expansion.md) | 21 page spec folders missing CURRENT / IMPLEMENTATION / TARGET docs |
-| P2 | [plane-features.md](./plane-features.md) | Remaining: dedicated Gantt polish, intake/triage, deploy boards, stickies, analytics enhancements, automation, multi-provider AI, page versions |
-| P2 | [cal-com-features.md](./cal-com-features.md) | Remaining: AI agents/MCP, cancellation reasons (backend done, no frontend UI), workflow translation, custom domain/SMTP, branding |
-| P3 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export (CSV shipped, no PDF library) |
+### Phase 1: Fix Current Failures
+
+Get validators back to green. Fix the code, not the validators.
+
+| Order | File | What |
+|-------|------|------|
+| 1.1 | [meeting-intelligence.md](./meeting-intelligence.md) | Fix 55 validator violations in MeetingsWorkspace.tsx, add screenshots/spec folder, add E2E tests |
+| 1.2 | [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Absorb 43 Typography drift + 17 control-chrome drift points |
+
+### Phase 2: Strengthen Validators
+
+Make it impossible to ship slop. Advisory validators become blocking. New validators catch patterns we missed.
+
+| Order | File | What |
+|-------|------|------|
+| 2.1 | [validator-strengthening.md](./validator-strengthening.md) | Promote 3 advisory validators to blocking/ratchet, add manifest integrity + catch-swallow + timeout validators |
+
+### Phase 3: Fix Screenshot Tooling
+
+Fix the capture infra so screenshots are real content, not loading spinners.
+
+| Order | File | What |
+|-------|------|------|
+| 3.1 | [screenshot-tooling-cleanup.md](./screenshot-tooling-cleanup.md) | Kill 198 `.catch(() => {})`, fix 37 spinner captures, replace hardcoded timeouts, use TEST_IDS |
+
+### Phase 4: Tailwind / CVA Consolidation
+
+Reduce raw Tailwind, consolidate CVA sprawl, add validators to prevent regression.
+
+| Order | File | What |
+|-------|------|------|
+| 4.1 | [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) | Reduce 148 raw TW files, consolidate 48 CVA files, merge overlapping variants, add validators for CVA sprawl and class cluster repetition |
+
+### Phase 5: Feature & Docs Expansion
+
+Lower priority -- features and documentation that don't block quality.
+
+| Order | File | What |
+|-------|------|------|
+| 5.1 | [feature-docs-expansion.md](./feature-docs-expansion.md) | 21 page spec folders missing CURRENT / IMPLEMENTATION / TARGET docs |
+| 5.2 | [plane-features.md](./plane-features.md) | Gantt polish, intake/triage, deploy boards, stickies, analytics, automation, multi-provider AI, page versions |
+| 5.3 | [cal-com-features.md](./cal-com-features.md) | AI agents/MCP, cancellation reasons (backend done, no UI), workflow translation, custom domain/SMTP, branding |
+| 5.4 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export (CSV shipped, no PDF library) |
+
+### Meeting Intelligence (parallel track)
+
+Non-code-quality items from meetings that run alongside the pipeline.
+
+| File | What |
+|------|------|
+| [meeting-intelligence.md](./meeting-intelligence.md) | Editor persistence (blocks meeting-to-doc), capture strategy decisions, platform breadth, OSS evaluation, agent layer |
 
 ---
 
@@ -37,13 +78,13 @@ Based on Cal.com v6.3 and Plane preview (both repos updated 2026-03-18):
 
 | Feature | Cal.com | Plane | Nixelo | Impact |
 |---------|---------|-------|--------|--------|
-| **Gantt chart** | — | ✅ Full | ⚠️ Roadmap is substantially upgraded, but still has remaining dedicated Gantt polish and deeper timeline-management work | High — standard PM expectation |
-| **OOO status** | ✅ Full API | — | ✅ Shipped | Done |
-| **AI agents** | ✅ Multi-channel | — | ❌ MCP placeholder | Medium — differentiator |
-| **Intake/triage** | — | ✅ Full system | ❌ Skeleton inbox | Medium — external request capture |
-| **Auto-archive** | — | ✅ Scheduled | ❌ Basic automation | Medium — reduces clutter |
-| **Deploy boards** | — | ✅ Per-entity | ⚠️ Token portal only | Medium — public sharing |
-| **Billing PDF export** | — | — | ❌ CSV only | Low — focused tech debt |
+| **Gantt chart** | -- | Full | Roadmap upgraded, dedicated Gantt polish remaining | High |
+| **OOO status** | Full API | -- | Shipped | Done |
+| **AI agents** | Multi-channel | -- | MCP placeholder | Medium |
+| **Intake/triage** | -- | Full system | Skeleton inbox | Medium |
+| **Auto-archive** | -- | Scheduled | Basic automation | Medium |
+| **Deploy boards** | -- | Per-entity | Token portal only | Medium |
+| **Billing PDF export** | -- | -- | CSV only | Low |
 
 ---
 
@@ -53,10 +94,6 @@ Based on Cal.com v6.3 and Plane preview (both repos updated 2026-03-18):
 - Audit route/spec screenshot coverage with `pnpm run validate`
 - Detect screenshot drift with `pnpm screenshots:diff`
 - Approve intentional visual changes with `pnpm screenshots:approve`
-
-## Maintenance
-
-- Raw Tailwind baseline: 148 files with violations. Shrink opportunistically as touched files are cleaned up.
 
 ## Reference Repos
 
@@ -68,6 +105,3 @@ Based on Cal.com v6.3 and Plane preview (both repos updated 2026-03-18):
 ## Post-MVP
 
 See [../todos-post-mvp/README.md](../todos-post-mvp/README.md) for blocked and post-MVP items.
-
-## P2 Backlog
-- [x] `convex/bookings.ts:263` — Per-slot OOO delegate resolution. ✅ Fixed: resolves per-slot using cached user data.
