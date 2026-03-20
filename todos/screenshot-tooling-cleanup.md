@@ -56,7 +56,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [ ] Replace `waitForTimeout` calls with `animations: 'disabled'` or `waitForAnimation()`
 - [ ] Replace raw data-attribute selectors with TEST_IDS constants
 - [ ] Reduce `.first()` usage by scoping selectors or using test IDs
-- [ ] Extract `dismissAllDialogs()`, `waitForDialogOpen()`, `waitForScreenshotReady()` to `e2e/utils/`
+- [x] Extract `dismissAllDialogs()`, `waitForDialogOpen()`, `waitForScreenshotReady()` to `e2e/utils/`
 - [ ] Update validator skip in `check-e2e-quality.js` (done -- references this TODO)
 
 ## Done When

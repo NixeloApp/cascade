@@ -36,7 +36,12 @@ import {
   type SeedScreenshotResult,
   testUserService,
 } from "./utils/test-user-service";
-import { waitForDialogOpen } from "./utils/wait-helpers";
+import {
+  dismissAllDialogs,
+  dismissIfOpen,
+  waitForDialogOpen,
+  waitForScreenshotReady,
+} from "./utils/wait-helpers";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -812,57 +817,6 @@ function isCrashLikeError(message: string): boolean {
     message.includes("Page crashed") ||
     message.includes("Browser has been closed")
   );
-}
-
-async function dismissIfOpen(page: Page, locator: Locator): Promise<void> {
-  if (!(await locator.isVisible().catch(() => false))) {
-    return;
-  }
-
-  await page.keyboard.press("Escape").catch(() => {});
-
-  if (await locator.isVisible().catch(() => false)) {
-    await page.mouse.click(10, 10).catch(() => {});
-  }
-
-  await locator.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
-}
-
-async function waitForDialogOverlaysToClear(page: Page): Promise<void> {
-  await page
-    .waitForFunction(
-      () =>
-        document.querySelectorAll("[data-testid='dialog-overlay'][data-state='open']").length === 0,
-      undefined,
-      { timeout: 5000 },
-    )
-    .catch(() => {});
-}
-
-async function dismissAllDialogs(page: Page): Promise<void> {
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const openOverlays = await page
-      .getByTestId(TEST_IDS.DIALOG.OVERLAY)
-      .count()
-      .catch(() => 0);
-    if (openOverlays === 0) {
-      break;
-    }
-
-    await page.keyboard.press("Escape").catch(() => {});
-    await waitForDialogOverlaysToClear(page);
-
-    const remainingOverlays = await page
-      .getByTestId(TEST_IDS.DIALOG.OVERLAY)
-      .count()
-      .catch(() => 0);
-    if (remainingOverlays === 0) {
-      break;
-    }
-
-    await page.mouse.click(10, 10).catch(() => {});
-    await waitForDialogOverlaysToClear(page);
-  }
 }
 
 async function openOmnibox(page: Page, trigger: Locator, dialog: Locator): Promise<void> {
@@ -2269,28 +2223,6 @@ async function waitForExpectedContent(
     await waitForCalendarReady(page);
     await waitForCalendarEvents(page, 5000).catch(() => {});
   }
-}
-
-async function waitForScreenshotReady(page: Page): Promise<void> {
-  await page.waitForLoadState("domcontentloaded").catch(() => {});
-
-  // App shell loading indicator may appear during route/query transitions.
-  const loadingSpinner = page
-    .getByLabel("Loading")
-    .or(page.getByRole("status").filter({ has: page.getByRole("status") }))
-    .or(page.locator("[data-loading-spinner]"))
-    .first();
-  await loadingSpinner.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
-
-  // Wait two animation frames so paint/layout settles before screenshot.
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve) => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => resolve());
-        });
-      }),
-  );
 }
 
 async function discoverFirstHref(page: Page, pattern: RegExp): Promise<string | null> {

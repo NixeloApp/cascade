@@ -169,6 +169,113 @@ export async function waitForDialogOpen(page: Page, timeout = 8000): Promise<Loc
   return dialog;
 }
 
+async function isLocatorVisible(locator: Locator): Promise<boolean> {
+  try {
+    return await locator.isVisible();
+  } catch {
+    return false;
+  }
+}
+
+async function waitForLocatorToHide(locator: Locator, timeout: number): Promise<boolean> {
+  try {
+    await expect(locator).toBeHidden({ timeout });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function getOpenDialogOverlayCount(page: Page): Promise<number> {
+  return page.locator(`[data-testid="${TEST_IDS.DIALOG.OVERLAY}"][data-state="open"]`).count();
+}
+
+async function waitForDialogOverlaysToClear(page: Page, timeout: number): Promise<boolean> {
+  try {
+    await expect
+      .poll(() => getOpenDialogOverlayCount(page), {
+        timeout,
+        intervals: [100, 200, 500],
+      })
+      .toBe(0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Dismiss a dialog if it is open. Fail if the dialog remains visible after
+ * Escape and outside-click fallback dismissal attempts.
+ */
+export async function dismissIfOpen(page: Page, locator: Locator): Promise<void> {
+  if (!(await isLocatorVisible(locator))) {
+    return;
+  }
+
+  await page.keyboard.press("Escape");
+
+  if (await waitForLocatorToHide(locator, 1000)) {
+    return;
+  }
+
+  await page.mouse.click(10, 10);
+
+  if (await waitForLocatorToHide(locator, 4000)) {
+    return;
+  }
+
+  throw new Error("Dialog remained open after Escape and outside-click dismissal attempts");
+}
+
+/**
+ * Dismiss any open Radix dialog overlays. This retries Escape first, then an
+ * outside click, and fails if overlays remain after the retry budget.
+ */
+export async function dismissAllDialogs(page: Page): Promise<void> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const openOverlays = await getOpenDialogOverlayCount(page);
+    if (openOverlays === 0) {
+      return;
+    }
+
+    await page.keyboard.press("Escape");
+    if (await waitForDialogOverlaysToClear(page, 1500)) {
+      return;
+    }
+
+    await page.mouse.click(10, 10);
+    if (await waitForDialogOverlaysToClear(page, 1500)) {
+      return;
+    }
+  }
+
+  const remainingOverlays = await getOpenDialogOverlayCount(page);
+  throw new Error(`Failed to dismiss ${remainingOverlays} open dialog overlay(s)`);
+}
+
+/**
+ * Wait for route/query loading indicators to clear before taking a screenshot.
+ * This fails when app-shell loading never settles instead of capturing spinners.
+ */
+export async function waitForScreenshotReady(page: Page, timeout = 5000): Promise<void> {
+  await page.waitForLoadState("domcontentloaded");
+
+  const loadingSpinner = page.getByLabel("Loading").or(page.locator("[data-loading-spinner]"));
+  await loadingSpinner.first().waitFor({ state: "hidden", timeout });
+
+  await waitForAnimation(page);
+
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => resolve());
+        });
+      }),
+  );
+}
+
 /**
  * Wait for toast notification to appear.
  */
