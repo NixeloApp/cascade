@@ -1415,22 +1415,66 @@ async function waitForIssuesReady(page: Page, prefix?: string): Promise<void> {
     state: "visible",
     timeout: 12000,
   });
-  await page.waitForFunction(
-    (capturePrefix) => {
-      const text = document.body.innerText || "";
-      if (capturePrefix === "empty") {
-        return text.includes("No issues found");
-      }
+  await expect
+    .poll(
+      async () => {
+        const text = (await page.locator("body").textContent()) || "";
+        if (prefix === "empty") {
+          return text.includes("No issues found") ? "empty" : "pending";
+        }
 
-      return (
-        document.querySelector("[data-testid='issue-card']") !== null ||
-        text.includes("No issues found")
-      );
-    },
-    prefix,
-    { timeout: 12000 },
-  );
+        const issueCardCount = await getLocatorCount(page.getByTestId(TEST_IDS.ISSUE.CARD));
+        if (issueCardCount > 0) {
+          return "ready";
+        }
+
+        return text.includes("No issues found") ? "empty" : "pending";
+      },
+      { timeout: 12000 },
+    )
+    .not.toBe("pending");
   await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+}
+
+type CalendarDragState = {
+  sourceIndex: number | null;
+  targetIndex: number | null;
+  dayCellCount: number;
+  eventItemCount: number;
+};
+
+async function getCalendarDragState(page: Page): Promise<CalendarDragState> {
+  const dayCells = page.getByTestId(TEST_IDS.CALENDAR.DAY_CELL);
+  const dayCellCount = await getLocatorCount(dayCells);
+  const eventItemCount = await getLocatorCount(page.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM));
+
+  let sourceIndex: number | null = null;
+  for (let index = 0; index < dayCellCount; index += 1) {
+    const cellEventCount = await getLocatorCount(
+      dayCells.nth(index).getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM),
+    );
+    if (cellEventCount > 0) {
+      sourceIndex = index;
+      break;
+    }
+  }
+
+  if (sourceIndex == null) {
+    return {
+      sourceIndex: null,
+      targetIndex: null,
+      dayCellCount,
+      eventItemCount,
+    };
+  }
+
+  const targetIndex = sourceIndex + 1 < dayCellCount ? sourceIndex + 1 : null;
+  return {
+    sourceIndex,
+    targetIndex,
+    dayCellCount,
+    eventItemCount,
+  };
 }
 
 async function waitForWorkspacesReady(page: Page, prefix?: string): Promise<void> {
@@ -2996,41 +3040,7 @@ async function screenshotFilledStates(
             await waitForCalendarMonthReady(page);
             await waitForCalendarEvents(page);
 
-            const dragState = await page.evaluate(
-              ({ dayCellTestId, eventItemTestId }) => {
-                const dayCells = Array.from(
-                  document.querySelectorAll<HTMLElement>(`[data-testid="${dayCellTestId}"]`),
-                );
-                const sourceIndex = dayCells.findIndex((cell) =>
-                  cell.querySelector(`[data-testid="${eventItemTestId}"]`),
-                );
-                const targetIndex = sourceIndex >= 0 ? sourceIndex + 1 : -1;
-                const sourceCell = sourceIndex >= 0 ? dayCells[sourceIndex] : null;
-                const targetCell = targetIndex >= 0 ? dayCells[targetIndex] : null;
-
-                if (!(sourceCell && targetCell instanceof HTMLElement)) {
-                  return {
-                    sourceIndex: null,
-                    targetIndex: null,
-                    dayCellCount: dayCells.length,
-                    eventItemCount: document.querySelectorAll(`[data-testid="${eventItemTestId}"]`)
-                      .length,
-                  };
-                }
-
-                return {
-                  sourceIndex,
-                  targetIndex,
-                  dayCellCount: dayCells.length,
-                  eventItemCount: document.querySelectorAll(`[data-testid="${eventItemTestId}"]`)
-                    .length,
-                };
-              },
-              {
-                dayCellTestId: TEST_IDS.CALENDAR.DAY_CELL,
-                eventItemTestId: TEST_IDS.CALENDAR.EVENT_ITEM,
-              },
-            );
+            const dragState = await getCalendarDragState(page);
 
             if (dragState?.sourceIndex == null || dragState.targetIndex == null) {
               throw new Error(
