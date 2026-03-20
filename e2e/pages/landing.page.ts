@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { isLocatorVisible } from "../utils/locator-state";
 import { BasePage } from "./base.page";
 
 /**
@@ -203,8 +204,8 @@ export class LandingPage extends BasePage {
     await expect
       .poll(
         async () => {
-          const isOnSignIn = await this.signInHeading.isVisible().catch(() => false);
-          const isOnLanding = await this.heroHeadline.isVisible().catch(() => false);
+          const isOnSignIn = await isLocatorVisible(this.signInHeading);
+          const isOnLanding = await isLocatorVisible(this.heroHeadline);
           return isOnSignIn || isOnLanding;
         },
         { timeout: 30000, intervals: [250, 500, 1000] },

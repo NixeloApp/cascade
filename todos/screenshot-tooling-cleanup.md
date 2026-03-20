@@ -104,6 +104,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [x] Replace the remaining `board-drag-drop.spec.ts` drag-settling visibility catch chains with shared locator-state helpers
 - [x] Replace the remaining `BasePage` load-readiness catch chains with shared locator-state helpers
 - [x] Replace the remaining `MeetingsPage` load-state visibility catch chains with shared locator-state helpers
+- [x] Replace the remaining `LandingPage` landing-or-sign-in readiness catch chains with shared locator-state helpers
 - [x] Replace the remaining `ProjectsPage` create-project, issue-detail, sprint/activity, roadmap, and timer state catch chains with shared locator-state helpers
 - [x] Replace the remaining notifications screenshot readiness and Mentions-filter catch chains with shared locator-state helpers
 - [x] Replace the remaining omnibox/calendar/sidebar/board/sprint/issue screenshot catch probes with shared locator-state helpers
