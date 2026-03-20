@@ -2593,9 +2593,10 @@ async function screenshotFilledStates(
     if (shouldCapture(p, `project-${normalizedProjectKey}-create-issue-create-another`)) {
       await runCaptureStep("create issue create-another toggle", async () => {
         const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
-        await page
-          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-          .catch(() => {});
+        await page.goto(`${BASE_URL}${boardUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
         await waitForExpectedContent(page, boardUrl, "board");
         await waitForScreenshotReady(page);
         const projectsPage = new ProjectsPage(page, orgSlug);
@@ -2620,9 +2621,10 @@ async function screenshotFilledStates(
     if (shouldCapture(p, `project-${normalizedProjectKey}-create-issue-validation`)) {
       await runCaptureStep("create issue validation errors", async () => {
         const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
-        await page
-          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-          .catch(() => {});
+        await page.goto(`${BASE_URL}${boardUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
         await waitForExpectedContent(page, boardUrl, "board");
         await waitForScreenshotReady(page);
         const projectsPage = new ProjectsPage(page, orgSlug);
@@ -2653,9 +2655,10 @@ async function screenshotFilledStates(
       await runCaptureStep("create issue success toast", async () => {
         const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
         const issueTitle = "Screenshot toast issue";
-        await page
-          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-          .catch(() => {});
+        await page.goto(`${BASE_URL}${boardUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
         await waitForExpectedContent(page, boardUrl, "board");
         await waitForScreenshotReady(page);
         const projectsPage = new ProjectsPage(page, orgSlug);
@@ -2690,9 +2693,10 @@ async function screenshotFilledStates(
         const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
         const duplicateQuery = "login timeout";
         await waitForDuplicateDetectionSearchReady(orgSlug, projectKey, duplicateQuery);
-        await page
-          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-          .catch(() => {});
+        await page.goto(`${BASE_URL}${boardUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
         await waitForExpectedContent(page, boardUrl, "board");
         await waitForScreenshotReady(page);
         const projectsPage = new ProjectsPage(page, orgSlug);
@@ -2723,9 +2727,10 @@ async function screenshotFilledStates(
           throw new Error("Screenshot seed did not return projectId");
         }
 
-        await page
-          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-          .catch(() => {});
+        await page.goto(`${BASE_URL}${boardUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
         await waitForExpectedContent(page, boardUrl, "board");
         await waitForScreenshotReady(page);
         await dismissAllDialogs(page);
@@ -2754,9 +2759,10 @@ async function screenshotFilledStates(
     if (shouldCapture(p, `project-${normalizedProjectKey}-board-sprint-selector`)) {
       await runCaptureStep("board sprint selector", async () => {
         const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
-        await page
-          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-          .catch(() => {});
+        await page.goto(`${BASE_URL}${boardUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
         await waitForExpectedContent(page, boardUrl, "board");
         await waitForScreenshotReady(page);
         const sprintSelect = page
@@ -2820,12 +2826,10 @@ async function screenshotFilledStates(
       ])
     ) {
       const calendarUrl = ROUTES.projects.calendar.build(orgSlug, projectKey);
-      try {
-        await page.goto(`${BASE_URL}${calendarUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-      } catch {}
+      await page.goto(`${BASE_URL}${calendarUrl}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForScreenshotReady(page);
       const isCalendarReady = await waitForCalendarReady(page);
       if (!isCalendarReady) {
@@ -2842,10 +2846,7 @@ async function screenshotFilledStates(
             continue;
           }
           const toggleItem = page.getByTestId(calendarModeTestIds[mode]);
-          await toggleItem
-            .first()
-            .waitFor({ state: "visible", timeout: 5000 })
-            .catch(() => {});
+          await toggleItem.first().waitFor({ state: "visible", timeout: 5000 });
           if ((await toggleItem.count()) === 0) {
             throw new Error(`[${p}] calendar-${mode} toggle not found after retries`);
           }
@@ -2880,15 +2881,13 @@ async function screenshotFilledStates(
 
             let eventItem = locateEvent();
             if (typeof seed.workspaceSlug === "string") {
-              await page
-                .goto(
-                  `${BASE_URL}${ROUTES.workspaces.calendar.build(orgSlug, seed.workspaceSlug)}`,
-                  {
-                    waitUntil: "domcontentloaded",
-                    timeout: 15000,
-                  },
-                )
-                .catch(() => {});
+              await page.goto(
+                `${BASE_URL}${ROUTES.workspaces.calendar.build(orgSlug, seed.workspaceSlug)}`,
+                {
+                  waitUntil: "domcontentloaded",
+                  timeout: 15000,
+                },
+              );
               await waitForScreenshotReady(page);
               const workspaceCalendarReady = await waitForCalendarReady(page);
               if (workspaceCalendarReady) {
@@ -2905,7 +2904,7 @@ async function screenshotFilledStates(
             }
 
             eventItem = locateEvent();
-            await eventItem.scrollIntoViewIfNeeded().catch(() => {});
+            await eventItem.scrollIntoViewIfNeeded();
             await eventItem.click();
             const dialog = page.getByTestId(TEST_IDS.CALENDAR.EVENT_DETAILS_MODAL);
             await dialog.waitFor({ state: "visible", timeout: 5000 });
@@ -2923,7 +2922,7 @@ async function screenshotFilledStates(
               if (!(await quickAddButton.isVisible())) {
                 const firstDayCell = page.locator("[data-calendar] .group").first();
                 if ((await firstDayCell.count()) > 0) {
-                  await firstDayCell.hover().catch(() => {});
+                  await firstDayCell.hover();
                 }
               }
             }
@@ -2946,12 +2945,10 @@ async function screenshotFilledStates(
         if (shouldCapture(p, "calendar-drag-and-drop")) {
           await runCaptureStep("calendar drag-and-drop", async () => {
             const orgCalendarUrl = ROUTES.calendar.build(orgSlug);
-            await page
-              .goto(`${BASE_URL}${orgCalendarUrl}`, {
-                waitUntil: "domcontentloaded",
-                timeout: 15000,
-              })
-              .catch(() => {});
+            await page.goto(`${BASE_URL}${orgCalendarUrl}`, {
+              waitUntil: "domcontentloaded",
+              timeout: 15000,
+            });
             await waitForExpectedContent(page, orgCalendarUrl, "org-calendar");
             await waitForScreenshotReady(page);
             await waitForCalendarMonthReady(page);
@@ -3005,9 +3002,9 @@ async function screenshotFilledStates(
             const sourceEvent = sourceCell.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM).first();
             const dataTransfer = await page.evaluateHandle(() => new DataTransfer());
 
-            await sourceEvent.scrollIntoViewIfNeeded().catch(() => {});
+            await sourceEvent.scrollIntoViewIfNeeded();
             await targetCell.waitFor({ state: "visible", timeout: 5000 });
-            await targetCell.scrollIntoViewIfNeeded().catch(() => {});
+            await targetCell.scrollIntoViewIfNeeded();
             await sourceEvent.dispatchEvent("dragstart", { dataTransfer });
             await targetCell.dispatchEvent("dragenter", { dataTransfer });
             await targetCell.dispatchEvent("dragover", { dataTransfer });
@@ -3185,8 +3182,7 @@ async function screenshotFilledStates(
             .getByRole("alert")
             .filter({ hasText: /document locked/i })
             .first()
-            .waitFor({ state: "hidden", timeout: 5000 })
-            .catch(() => {});
+            .waitFor({ state: "hidden", timeout: 5000 });
         });
       }
 
@@ -3214,7 +3210,7 @@ async function screenshotFilledStates(
           const editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
           await editor.waitFor({ state: "visible", timeout: 8000 });
           await editor.click();
-          await page.keyboard.press("Home").catch(() => {});
+          await page.keyboard.press("Home");
           await page.keyboard.down("Shift");
           for (let step = 0; step < 10; step++) {
             await page.keyboard.press("ArrowRight");
@@ -3259,9 +3255,10 @@ async function screenshotFilledStates(
       if (shouldCapture(p, "document-editor-floating-toolbar")) {
         await runCaptureStep("document floating toolbar", async () => {
           // Reload to get clean state
-          await page
-            .goto(`${BASE_URL}${docUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-            .catch(() => {});
+          await page.goto(`${BASE_URL}${docUrl}`, {
+            waitUntil: "domcontentloaded",
+            timeout: 15000,
+          });
           await waitForExpectedContent(page, docUrl, "document-editor");
           await waitForScreenshotReady(page);
           const editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
@@ -3284,9 +3281,10 @@ async function screenshotFilledStates(
       if (shouldCapture(p, "document-editor-mention-popover")) {
         await runCaptureStep("document mention popover", async () => {
           // Reload to get clean state
-          await page
-            .goto(`${BASE_URL}${docUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-            .catch(() => {});
+          await page.goto(`${BASE_URL}${docUrl}`, {
+            waitUntil: "domcontentloaded",
+            timeout: 15000,
+          });
           await waitForExpectedContent(page, docUrl, "document-editor");
           await waitForScreenshotReady(page);
           const editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
