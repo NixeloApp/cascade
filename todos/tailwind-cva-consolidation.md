@@ -31,7 +31,7 @@ The pipeline is: **less raw Tailwind -> convert to CVA -> merge CVAs together if
 
 Target the 148 files with raw TW violations. For each repeated pattern:
 
-- [ ] Audit the 30 raw TW violations in `MeetingsWorkspace.tsx` and convert to design system components
+- [x] Audit the 30 raw TW violations in `MeetingsWorkspace.tsx` and convert to design system components
 - [x] Absorb the repeated meetings list-shell cluster (`list-none`, branded bullet lists) into an owned `List` primitive and swap `MeetingsWorkspace.tsx` to it
 - [x] Absorb the meetings status-chip color map into owned `Badge` variants instead of local raw Tailwind state classes
 - [x] Absorb the meetings transcript scroll/pre-wrap cluster into owned `ScrollArea` sizing and `Typography` mono-block styling

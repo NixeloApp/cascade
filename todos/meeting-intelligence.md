@@ -27,9 +27,9 @@ First-class Meetings workspace, recording detail view, participant/topic/sentime
 
 ### MeetingsWorkspace Code Quality
 
-- [ ] Fix 55 validator violations in `MeetingsWorkspace.tsx` (7 standards, 30 raw TW, 2 surface shells, 16 layout prop)
-- [ ] Fix type errors in `MeetingsWorkspace.test.tsx` (summary nullability, mock shapes)
-- [ ] Replace raw HTML/Tailwind patterns with design system components (Flex, Typography, Card, etc.)
+- [x] Fix 55 validator violations in `MeetingsWorkspace.tsx` (7 standards, 30 raw TW, 2 surface shells, 16 layout prop)
+- [x] Fix type errors in `MeetingsWorkspace.test.tsx` (summary nullability, mock shapes)
+- [x] Replace raw HTML/Tailwind patterns with design system components (Flex, Typography, Card, etc.)
 
 ### Document Editor Dependency (blocks meeting-to-doc)
 
