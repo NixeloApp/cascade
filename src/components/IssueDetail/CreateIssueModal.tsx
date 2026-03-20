@@ -48,6 +48,7 @@ import {
   PRIORITY_ICONS,
 } from "@/lib/issue-utils";
 import { formatOutOfOfficeUntil } from "@/lib/outOfOffice";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 
 // =============================================================================
@@ -1007,6 +1008,7 @@ export function CreateIssueModal({
     >
       <Stack
         as="form"
+        data-testid={TEST_IDS.ISSUE.CREATE_MODAL}
         onSubmit={(e: React.FormEvent) => {
           e.preventDefault();
           form.handleSubmit();
@@ -1044,7 +1046,13 @@ export function CreateIssueModal({
 
         <form.Field name="title">
           {(field) => (
-            <FormInput field={field} label="Title" placeholder="Enter issue title..." required />
+            <FormInput
+              field={field}
+              label="Title"
+              placeholder="Enter issue title..."
+              required
+              data-testid={TEST_IDS.ISSUE.CREATE_TITLE_INPUT}
+            />
           )}
         </form.Field>
 
@@ -1072,6 +1080,7 @@ export function CreateIssueModal({
                 onChange={(value) => field.handleChange(value)}
                 placeholder="Enter issue description..."
                 minHeight={150}
+                testId={TEST_IDS.ISSUE.CREATE_DESCRIPTION_EDITOR}
               />
             </Stack>
           )}

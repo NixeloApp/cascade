@@ -263,7 +263,7 @@ function ColumnHeader({
                 onClick={onCreateIssue}
                 aria-label={`Add issue to ${state.name}`}
                 size="xs"
-                {...(columnIndex === 0 ? { "data-tour": "create-issue" } : {})}
+                data-testid={columnIndex === 0 ? TEST_IDS.ISSUE.CREATE_TRIGGER : undefined}
               >
                 <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </IconButton>

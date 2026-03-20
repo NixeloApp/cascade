@@ -10,6 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { driver as driverFunction } from "driver.js";
 import { useEffect, useState } from "react";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
+import { TEST_IDS } from "@/lib/test-ids";
 
 interface WelcomeTourProps {
   onComplete?: () => void;
@@ -112,7 +113,7 @@ export function WelcomeTour({ onComplete, onSkip }: WelcomeTourProps) {
           },
         },
         {
-          element: "[data-tour='create-issue']",
+          element: `[data-testid="${TEST_IDS.ISSUE.CREATE_TRIGGER}"]`,
           popover: {
             title: "Create Issues",
             description:

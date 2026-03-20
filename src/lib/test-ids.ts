@@ -21,6 +21,14 @@ export const TEST_IDS = {
   ISSUE: {
     /** @see src/components/IssueCard.tsx */
     CARD: "issue-card",
+    /** @see src/components/Kanban/KanbanColumn.tsx */
+    CREATE_TRIGGER: "issue-create-trigger",
+    /** @see src/components/IssueDetail/CreateIssueModal.tsx */
+    CREATE_MODAL: "issue-create-modal",
+    /** @see src/components/IssueDetail/CreateIssueModal.tsx */
+    CREATE_TITLE_INPUT: "issue-create-title-input",
+    /** @see src/components/IssueDetail/CreateIssueModal.tsx */
+    CREATE_DESCRIPTION_EDITOR: "issue-create-description-editor",
     /** @see src/components/IssueCard.tsx */
     DRAG_HANDLE: "issue-drag-handle",
     /** @see src/components/IssueCard.tsx */

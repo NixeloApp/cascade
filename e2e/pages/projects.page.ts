@@ -179,22 +179,18 @@ export class ProjectsPage extends BasePage {
     // Create issue - prefer the stable first-column trigger used by the tour,
     // fall back to "Add issue" or empty-state "Add first issue" button.
     this.createIssueButton = page
-      .locator("[data-tour='create-issue']")
+      .getByTestId(TEST_IDS.ISSUE.CREATE_TRIGGER)
       .or(page.getByRole("button", { name: /add (first )?issue/i }))
       .first();
 
     // Create issue modal
     this.createIssueModal = page
       .getByRole("dialog")
-      .filter({ hasText: /create.*issue|new.*issue/i });
-    this.issueTitleInput = this.createIssueModal
-      .getByPlaceholder(/title|issue.*title/i)
-      .or(this.createIssueModal.getByRole("textbox", { name: /title/i }))
-      .first();
-    this.issueDescriptionInput = this.createIssueModal
-      .getByPlaceholder(/description/i)
-      .or(this.createIssueModal.locator("[data-issue-description]"))
-      .first();
+      .filter({ has: page.getByTestId(TEST_IDS.ISSUE.CREATE_MODAL) });
+    this.issueTitleInput = this.createIssueModal.getByTestId(TEST_IDS.ISSUE.CREATE_TITLE_INPUT);
+    this.issueDescriptionInput = this.createIssueModal.getByTestId(
+      TEST_IDS.ISSUE.CREATE_DESCRIPTION_EDITOR,
+    );
     this.issueTypeSelect = this.createIssueModal.getByRole("combobox", { name: /type/i }).first();
     this.issuePrioritySelect = this.createIssueModal
       .getByRole("combobox", { name: /priority/i })
@@ -454,7 +450,7 @@ export class ProjectsPage extends BasePage {
   private async findVisibleCreateIssueTrigger(timeout = 2000): Promise<Locator | null> {
     const triggerCandidates = [
       this.page.getByRole("button", { name: /add first issue/i }).first(),
-      this.page.locator("[data-tour='create-issue']").first(),
+      this.page.getByTestId(TEST_IDS.ISSUE.CREATE_TRIGGER).first(),
       this.page.getByRole("button", { name: /add issue/i }).first(),
     ];
 

@@ -521,11 +521,19 @@ export async function ensureAuthenticatedDashboardReady(
  */
 export async function waitForBoardLoaded(page: Page): Promise<void> {
   await expect(page).toHaveURL(routePattern(ROUTES.projects.board.path));
-  const projectBoard = page
-    .getByTestId(TEST_IDS.BOARD.ROOT)
-    .or(page.getByRole("heading", { name: /kanban board|scrum board/i }));
-  const createIssueButton = page.getByRole("button", { name: /add issue/i }).first();
-  await expect(projectBoard).toBeVisible();
+  const projectBoard = page.getByTestId(TEST_IDS.BOARD.ROOT);
+  const projectBoardHeading = page.getByRole("heading", { name: /kanban board|scrum board/i });
+  const createIssueButton = page
+    .getByTestId(TEST_IDS.ISSUE.CREATE_TRIGGER)
+    .or(page.getByRole("button", { name: /add issue/i }))
+    .first();
+
+  if ((await projectBoard.count()) > 0) {
+    await expect(projectBoard).toBeVisible();
+  } else {
+    await expect(projectBoardHeading).toBeVisible();
+  }
+
   await expect(createIssueButton).toBeVisible();
   await expect(createIssueButton).toBeEnabled();
 }
@@ -538,7 +546,7 @@ export async function waitForBoardLoaded(page: Page): Promise<void> {
 export async function waitForIssueCreateSuccess(page: Page, issueTitle?: string): Promise<void> {
   const createIssueModal = page
     .getByRole("dialog")
-    .filter({ hasText: /create.*issue|new.*issue/i });
+    .filter({ has: page.getByTestId(TEST_IDS.ISSUE.CREATE_MODAL) });
   await expect(createIssueModal).not.toBeVisible();
 
   if (issueTitle) {
