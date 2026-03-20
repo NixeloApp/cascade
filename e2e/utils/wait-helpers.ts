@@ -32,10 +32,13 @@ export const WAIT_TIMEOUTS = {
 /**
  * Wait for auth form to be ready for submission.
  * The SignInForm/SignUpForm have a 350ms delay before formReady=true.
- * This waits for the data-form-ready attribute to be "true".
+ * This waits for the owned auth readiness markers and visible inputs.
  */
 export async function waitForFormReady(page: Page, timeout = 5000): Promise<boolean> {
   const form = page.getByTestId(TEST_IDS.AUTH.FORM);
+  const emailForm = form.getByTestId(TEST_IDS.AUTH.EMAIL_FORM);
+  const formReadyMarker = form.getByTestId(TEST_IDS.AUTH.FORM_READY);
+  const hydratedMarker = form.getByTestId(TEST_IDS.AUTH.FORM_HYDRATED);
   const emailInput = page.getByTestId(TEST_IDS.AUTH.EMAIL_INPUT);
   const passwordInput = page.getByTestId(TEST_IDS.AUTH.PASSWORD_INPUT);
   const submitButton = page.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
@@ -47,21 +50,21 @@ export async function waitForFormReady(page: Page, timeout = 5000): Promise<bool
           return "pending";
         }
 
-        const formReady = await form.getAttribute("data-form-ready").catch(() => null);
-        if (formReady === "true") {
+        const formReady = (await formReadyMarker.count().catch(() => 0)) > 0;
+        if (formReady) {
           return "marker-ready";
         }
 
-        const expanded = await form.getAttribute("data-expanded").catch(() => null);
-        const hydrated = await form.getAttribute("data-hydrated").catch(() => null);
+        const expanded = (await emailForm.count().catch(() => 0)) > 0;
+        const hydrated = (await hydratedMarker.count().catch(() => 0)) > 0;
         const emailVisible = await emailInput.isVisible().catch(() => false);
         const passwordVisible = await passwordInput.isVisible().catch(() => false);
         const submitVisible = await submitButton.isVisible().catch(() => false);
         const submitEnabled = submitVisible && !(await submitButton.isDisabled().catch(() => true));
 
         if (
-          expanded === "true" &&
-          hydrated !== "false" &&
+          expanded &&
+          hydrated &&
           emailVisible &&
           passwordVisible &&
           submitVisible &&
@@ -80,27 +83,20 @@ export async function waitForFormReady(page: Page, timeout = 5000): Promise<bool
     .not.toBe("pending");
 
   // Check if form is ready via marker OR via fallback conditions
-  const formReadyAttr = await form.getAttribute("data-form-ready").catch(() => null);
-  if (formReadyAttr === "true") {
+  const formReady = (await formReadyMarker.count().catch(() => 0)) > 0;
+  if (formReady) {
     return true;
   }
 
   // Re-check fallback conditions if marker not set
-  const expanded = await form.getAttribute("data-expanded").catch(() => null);
-  const hydrated = await form.getAttribute("data-hydrated").catch(() => null);
+  const expanded = (await emailForm.count().catch(() => 0)) > 0;
+  const hydrated = (await hydratedMarker.count().catch(() => 0)) > 0;
   const emailVisible = await emailInput.isVisible().catch(() => false);
   const passwordVisible = await passwordInput.isVisible().catch(() => false);
   const submitVisible = await submitButton.isVisible().catch(() => false);
   const submitEnabled = submitVisible && !(await submitButton.isDisabled().catch(() => true));
 
-  return (
-    expanded === "true" &&
-    hydrated !== "false" &&
-    emailVisible &&
-    passwordVisible &&
-    submitVisible &&
-    submitEnabled
-  );
+  return expanded && hydrated && emailVisible && passwordVisible && submitVisible && submitEnabled;
 }
 
 /**

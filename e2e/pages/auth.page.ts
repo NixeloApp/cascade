@@ -37,6 +37,9 @@ export class AuthPage extends BasePage {
   // ===================
   readonly continueWithEmailButton: Locator;
   readonly authForm: Locator;
+  readonly emailForm: Locator;
+  readonly authFormReadyMarker: Locator;
+  readonly authFormHydratedMarker: Locator;
   readonly emailInput: Locator;
   readonly passwordInput: Locator;
   readonly signInButton: Locator;
@@ -116,6 +119,9 @@ export class AuthPage extends BasePage {
     // Sign In / Sign Up form - two-step flow
     this.continueWithEmailButton = page.getByRole("button", { name: /continue with email/i });
     this.authForm = page.getByTestId(TEST_IDS.AUTH.FORM);
+    this.emailForm = page.getByTestId(TEST_IDS.AUTH.EMAIL_FORM);
+    this.authFormReadyMarker = page.getByTestId(TEST_IDS.AUTH.FORM_READY);
+    this.authFormHydratedMarker = page.getByTestId(TEST_IDS.AUTH.FORM_HYDRATED);
     this.emailInput = page.getByTestId(TEST_IDS.AUTH.EMAIL_INPUT);
     this.passwordInput = page.getByTestId(TEST_IDS.AUTH.PASSWORD_INPUT);
     // Submit button reuses the same DOM node across expanded states; bind by stable test id.
@@ -169,7 +175,7 @@ export class AuthPage extends BasePage {
     await this.waitForAuthFormHydrated();
     // Expand form using robust click logic
     await this.expandEmailForm("signin");
-    // Verify form is expanded using data-expanded attribute
+    // Verify form is expanded using owned auth markers plus visible inputs.
     await this.waitForFormExpanded("signin");
   }
 
@@ -188,7 +194,7 @@ export class AuthPage extends BasePage {
     await this.waitForAuthFormHydrated();
     // Expand form using robust click logic
     await this.expandEmailForm("signup");
-    // Verify form is expanded using data-expanded attribute
+    // Verify form is expanded using owned auth markers plus visible inputs.
     await this.waitForFormExpanded("signup");
   }
 
@@ -313,14 +319,14 @@ export class AuthPage extends BasePage {
   async switchToSignUp() {
     await this.navigateToSignUp();
     await this.expandEmailForm("signup");
-    // Verify form is expanded using data-expanded attribute
+    // Verify form is expanded using owned auth markers plus visible inputs.
     await this.waitForFormExpanded("signup");
   }
 
   async switchToSignIn() {
     await this.navigateToSignIn();
     await this.expandEmailForm("signin");
-    // Verify form is expanded using data-expanded attribute
+    // Verify form is expanded using owned auth markers plus visible inputs.
     await this.waitForFormExpanded("signin");
   }
 
@@ -536,7 +542,7 @@ export class AuthPage extends BasePage {
 
   /**
    * Wait for form to be expanded (email/password fields visible)
-   * Uses data-expanded attribute set by React component
+   * Uses owned auth markers plus visible inputs set by the auth form components.
    */
   async waitForFormExpanded(mode?: "signin" | "signup") {
     const expectedMode = mode ?? (await this.getCurrentAuthRoute());
@@ -613,8 +619,7 @@ export class AuthPage extends BasePage {
 
   /**
    * Wait for form to be fully ready (formReady state)
-   * The form sets formReady=true after expansion which enables required attributes
-   * Uses data-form-ready attribute instead of arbitrary timeout
+   * The form sets a readiness marker after expansion which enables required attributes.
    * This is a best-effort wait - it won't throw if the form doesn't have this attribute
    */
   async waitForFormReady(mode?: "signin" | "signup") {
@@ -628,7 +633,7 @@ export class AuthPage extends BasePage {
   }
 
   private async waitForAuthFormHydrated(timeout = 15000) {
-    await expect(this.authForm).toHaveAttribute("data-hydrated", "true", { timeout });
+    await expect(this.authFormHydratedMarker).toHaveCount(1, { timeout });
   }
 
   private async waitForAuthLanding(mode: "signin" | "signup", timeout = 15000) {
@@ -695,25 +700,25 @@ export class AuthPage extends BasePage {
       return "pending";
     }
 
-    const hydrated = await this.authForm.getAttribute("data-hydrated").catch(() => null);
-    if (hydrated !== "true") {
+    const hydrated = (await this.authFormHydratedMarker.count().catch(() => 0)) > 0;
+    if (!hydrated) {
       return "pending";
     }
 
     const buttonText =
       (await this.submitButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
-    const expanded = await this.authForm.getAttribute("data-expanded").catch(() => null);
+    const expanded = (await this.emailForm.count().catch(() => 0)) > 0;
 
     if (route === "signin") {
       if (
-        expanded === "true" &&
+        expanded &&
         /sign in|signing in/.test(buttonText) &&
         (await this.emailInput.isVisible().catch(() => false))
       ) {
         return "signin-expanded";
       }
 
-      if (expanded === "false" && /continue with email/.test(buttonText)) {
+      if (!expanded && /continue with email/.test(buttonText)) {
         return "signin-landing";
       }
 
@@ -721,14 +726,14 @@ export class AuthPage extends BasePage {
     }
 
     if (
-      expanded === "true" &&
+      expanded &&
       /create account|creating account/.test(buttonText) &&
       (await this.emailInput.isVisible().catch(() => false))
     ) {
       return "signup-expanded";
     }
 
-    if (expanded === "false" && /continue with email/.test(buttonText)) {
+    if (!expanded && /continue with email/.test(buttonText)) {
       return "signup-landing";
     }
 

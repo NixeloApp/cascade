@@ -31,7 +31,9 @@ export const authFormLocators = (page: Page) => ({
   submitButton: page.getByRole("button", { name: /^(sign in|create account)$/i }),
 
   // Form state
-  formReady: page.locator(`[data-testid="${TEST_IDS.AUTH.FORM}"][data-form-ready="true"]`),
+  emailForm: page.getByTestId(TEST_IDS.AUTH.EMAIL_FORM),
+  formReady: page.getByTestId(TEST_IDS.AUTH.FORM_READY),
+  formHydrated: page.getByTestId(TEST_IDS.AUTH.FORM_HYDRATED),
 
   // Links
   forgotPasswordLink: page.getByRole("button", { name: /forgot password/i }),

@@ -127,15 +127,16 @@ export function SignUpForm() {
         </Typography>
         <hr className="grow border-ui-border" />
       </Flex>
-      <form
-        onSubmit={handleSubmit}
-        data-form-ready={formReady}
-        data-hydrated={hydrated}
-        data-expanded={showEmailForm}
-        data-testid={TEST_IDS.AUTH.FORM}
-      >
+      <form onSubmit={handleSubmit} data-testid={TEST_IDS.AUTH.FORM}>
+        {hydrated ? (
+          <span data-testid={TEST_IDS.AUTH.FORM_HYDRATED} hidden aria-hidden="true" />
+        ) : null}
+        {formReady ? (
+          <span data-testid={TEST_IDS.AUTH.FORM_READY} hidden aria-hidden="true" />
+        ) : null}
         <Flex direction="column">
           <div
+            data-testid={showEmailForm ? TEST_IDS.AUTH.EMAIL_FORM : undefined}
             className={cn(
               "overflow-hidden transition-all duration-medium ease-out",
               showEmailForm ? "mb-3 max-h-64 opacity-100" : "max-h-0 opacity-0",

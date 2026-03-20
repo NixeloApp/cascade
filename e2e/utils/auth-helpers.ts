@@ -327,11 +327,16 @@ async function getSharedAuthFormState(page: Page): Promise<SharedAuthFormState> 
   }
 
   const locators = authFormLocators(page);
-  const expanded = await form.getAttribute("data-expanded").catch(() => null);
+  const hydrated = (await locators.formHydrated.count().catch(() => 0)) > 0;
+  if (!hydrated) {
+    return "pending";
+  }
+
+  const expanded = (await locators.emailForm.count().catch(() => 0)) > 0;
   const emailVisible = await locators.emailInput.isVisible().catch(() => false);
 
   // For landing state, check the "Continue with email" button
-  if (expanded === "false") {
+  if (!expanded) {
     const continueButtonVisible = await locators.continueWithEmailButton
       .isVisible()
       .catch(() => false);
@@ -346,7 +351,7 @@ async function getSharedAuthFormState(page: Page): Promise<SharedAuthFormState> 
 
   if (route === "signin") {
     if (
-      expanded === "true" &&
+      expanded &&
       /sign in|signing in/.test(submitButtonText) &&
       emailVisible &&
       (await locators.forgotPasswordLink.isVisible().catch(() => false))
@@ -357,11 +362,7 @@ async function getSharedAuthFormState(page: Page): Promise<SharedAuthFormState> 
     return "pending";
   }
 
-  if (
-    expanded === "true" &&
-    /create account|creating account/.test(submitButtonText) &&
-    emailVisible
-  ) {
+  if (expanded && /create account|creating account/.test(submitButtonText) && emailVisible) {
     return "signup-expanded";
   }
 

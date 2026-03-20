@@ -173,14 +173,20 @@ export const TEST_IDS = {
   // ============================================================
 
   AUTH: {
-    /** @see src/components/auth/SignInForm.tsx */
+    /** @see src/components/Auth/SignInForm.tsx */
     EMAIL_INPUT: "auth-email-input",
-    /** @see src/components/auth/SignInForm.tsx */
+    /** @see src/components/Auth/SignInForm.tsx */
     PASSWORD_INPUT: "auth-password-input",
-    /** @see src/components/auth/SignInForm.tsx */
+    /** @see src/components/Auth/SignInForm.tsx */
     SUBMIT_BUTTON: "auth-submit-button",
-    /** @see src/components/auth/SignInForm.tsx - form element with data-expanded attribute */
+    /** @see src/components/Auth/SignInForm.tsx */
     FORM: "auth-form",
+    /** @see src/components/Auth/SignInForm.tsx */
+    EMAIL_FORM: "auth-email-form",
+    /** @see src/components/Auth/SignInForm.tsx */
+    FORM_READY: "auth-form-ready",
+    /** @see src/components/Auth/SignInForm.tsx */
+    FORM_HYDRATED: "auth-form-hydrated",
     /** @see src/components/auth/GoogleAuthButton.tsx */
     GOOGLE_BUTTON: "auth-google-button",
     /** @see src/components/Auth/EmailVerificationForm.tsx */
