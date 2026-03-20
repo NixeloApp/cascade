@@ -106,11 +106,14 @@ function FilterDropdown<T>({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button chrome={isActive ? "filterActive" : "filter"} chromeSize="filterPill">
+        <Button
+          chrome={isActive ? "filterActive" : "filter"}
+          chromeSize="filterPill"
+          rightIcon={<Icon icon={ChevronDown} size="sm" />}
+        >
           <span className="sm:hidden">{shortLabel ?? label}</span>
           <span className="hidden sm:inline">{label}</span>
           {isActive && ` (${activeCount})`}
-          <ChevronDown className="ml-1 w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className={cn(scrollable && "max-h-64 overflow-y-auto")}>
@@ -163,11 +166,14 @@ function DateRangeDropdown({ label, shortLabel, value, onChange }: DateRangeDrop
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button chrome={isActive ? "filterActive" : "filter"} chromeSize="filterPill">
+        <Button
+          chrome={isActive ? "filterActive" : "filter"}
+          chromeSize="filterPill"
+          rightIcon={<Icon icon={ChevronDown} size="sm" />}
+        >
           <span className="sm:hidden">{shortLabel ?? label}</span>
           <span className="hidden sm:inline">{label}</span>
           {isActive && " (1)"}
-          <ChevronDown className="ml-1 w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-56">
@@ -221,10 +227,13 @@ function SavedFiltersDropdown({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button chrome="filter" chromeSize="filterPill">
+        <Button
+          chrome="filter"
+          chromeSize="filterPill"
+          rightIcon={<Icon icon={ChevronDown} size="sm" />}
+        >
           <span className="sm:hidden">Saved</span>
           <span className="hidden sm:inline">Saved Filters</span> ({savedFilters.length})
-          <ChevronDown className="ml-1 w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="max-h-64 overflow-y-auto min-w-48">

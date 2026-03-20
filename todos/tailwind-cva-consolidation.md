@@ -51,6 +51,7 @@ Target the 148 files with raw TW violations. For each repeated pattern:
 - [x] Absorb the repeated landing max-width wrapper cluster into the owned `ui/Container` primitive across `NavHeader`, `LogoBar`, `AIFeatureDemo`, `FinalCTASection`, `Footer`, and `WhyChooseSection`
 - [x] Absorb the repeated left-icon action-control cluster into owned `Button` left-icon and `DropdownMenuItem` icon contracts across filters, notifications, issue actions, document actions, and the issue breadcrumb
 - [x] Absorb the repeated `DocumentTree.tsx` chevron-size cluster into owned `Icon` sizing so section toggles and tree expand controls stop carrying local `w-3.5 h-3.5` classes
+- [x] Absorb the repeated `FilterBar.tsx` dropdown-chevron cluster into owned `Button` `rightIcon` and `Icon` contracts so filter pills stop carrying local `ml-1 w-4 h-4` chevrons
 - [ ] Audit raw TW in route files -- repeated spacing/shell/state patterns should become components or CVA variants
 - [ ] Run `node scripts/validate/check-raw-tailwind.js --audit` and group violations by pattern (same class cluster = same missing abstraction)
 - [ ] For each cluster of 3+ identical class sets, extract a component or add a CVA variant
