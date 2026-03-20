@@ -39,6 +39,7 @@ import {
 import {
   dismissAllDialogs,
   dismissIfOpen,
+  waitForAnimation,
   waitForDialogOpen,
   waitForScreenshotReady,
 } from "./utils/wait-helpers";
@@ -847,20 +848,25 @@ async function openStableAlertDialog(
   let dialog = page
     .locator("[role='dialog'][data-state='open'], [role='alertdialog'][data-state='open']")
     .first();
+  let lastError: Error | null = null;
 
   for (let attempt = 0; attempt < attempts; attempt++) {
-    await dismissAllDialogs(page);
-    await trigger.scrollIntoViewIfNeeded().catch(() => {});
-    await trigger.click();
-    dialog = await waitForDialogOpen(page);
-    await readyLocator.waitFor({ state: "visible", timeout: 3000 }).catch(() => {});
-    await page.waitForTimeout(350);
-    if (await readyLocator.isVisible().catch(() => false)) {
+    try {
+      await dismissAllDialogs(page);
+      await trigger.scrollIntoViewIfNeeded();
+      await trigger.click();
+      dialog = await waitForDialogOpen(page);
+      await readyLocator.waitFor({ state: "visible", timeout: 3000 });
+      await waitForAnimation(page);
+      await readyLocator.waitFor({ state: "visible", timeout: 1000 });
       return dialog;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      await dismissAllDialogs(page);
     }
   }
 
-  throw new Error("Alert dialog did not remain open");
+  throw new Error(`Alert dialog did not remain open: ${lastError?.message ?? "unknown error"}`);
 }
 
 function isProjectBoardUrl(url: string): boolean {
