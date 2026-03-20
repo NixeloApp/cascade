@@ -266,14 +266,14 @@ const cardRecipeVariants = cva("", {
         "rounded-none border-x-0 border-t-0 bg-ui-bg shadow-none hover:bg-ui-bg-secondary focus-within:bg-ui-bg-secondary",
       notificationRowUnread:
         "rounded-none border-x-0 border-t-0 bg-brand-subtle/10 shadow-none hover:bg-ui-bg-secondary focus-within:bg-ui-bg-secondary",
-      inboxStatusWarning:
+      statusBrand: "rounded border-transparent bg-brand-subtle text-brand shadow-none",
+      statusWarning:
         "rounded border-transparent bg-status-warning-bg text-status-warning-text shadow-none",
-      inboxStatusSuccess:
+      statusSuccess:
         "rounded border-transparent bg-status-success-bg text-status-success-text shadow-none",
-      inboxStatusError:
+      statusError:
         "rounded border-transparent bg-status-error-bg text-status-error-text shadow-none",
-      inboxStatusNeutral:
-        "rounded border-transparent bg-ui-bg-soft text-ui-text-secondary shadow-none",
+      statusNeutral: "rounded border-transparent bg-ui-bg-soft text-ui-text-secondary shadow-none",
       bulkActionContent:
         "mx-auto max-w-7xl rounded-none border-transparent bg-transparent px-4 py-3 shadow-none",
       bulkActionDetails:

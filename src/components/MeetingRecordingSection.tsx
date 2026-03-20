@@ -21,7 +21,7 @@ import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Collapsible, CollapsibleContent, CollapsibleHeader } from "./ui/Collapsible";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
-import { Flex } from "./ui/Flex";
+import { Flex, FlexItem } from "./ui/Flex";
 import { Icon } from "./ui/Icon";
 import { List } from "./ui/List";
 import { Metadata, MetadataItem } from "./ui/Metadata";
@@ -130,24 +130,26 @@ function NoRecordingState({
 }) {
   return (
     <Card variant="soft" padding="md">
-      <Typography variant="muted" className="mb-3">
-        Schedule a bot to join this meeting and automatically generate transcripts and summaries.
-      </Typography>
-      <Button
-        onClick={onSchedule}
-        isLoading={isScheduling}
-        leftIcon={<Mic className="w-4 h-4" />}
-        size="sm"
-      >
-        {isScheduling ? "Scheduling..." : "Enable AI Notes"}
-      </Button>
+      <Stack gap="sm" align="start">
+        <Typography variant="muted">
+          Schedule a bot to join this meeting and automatically generate transcripts and summaries.
+        </Typography>
+        <Button
+          onClick={onSchedule}
+          isLoading={isScheduling}
+          leftIcon={<Icon icon={Mic} size="sm" />}
+          size="sm"
+        >
+          {isScheduling ? "Scheduling..." : "Enable AI Notes"}
+        </Button>
+      </Stack>
     </Card>
   );
 }
 
 function ScheduledState({ onCancel }: { onCancel: () => void }) {
   return (
-    <Card padding="md" className="bg-brand-subtle">
+    <Card recipe="statusBrand" padding="md">
       <Flex justify="between" align="center">
         <Stack gap="xs">
           <Typography variant="label">Bot scheduled to join</Typography>
@@ -155,8 +157,12 @@ function ScheduledState({ onCancel }: { onCancel: () => void }) {
             "Nixelo Notetaker" will join when the meeting starts
           </Typography>
         </Stack>
-        <Button onClick={onCancel} variant="ghost" size="sm">
-          <MicOff className="w-4 h-4 mr-1" />
+        <Button
+          onClick={onCancel}
+          variant="ghost"
+          size="sm"
+          leftIcon={<Icon icon={MicOff} size="sm" />}
+        >
           Cancel
         </Button>
       </Flex>
@@ -166,7 +172,7 @@ function ScheduledState({ onCancel }: { onCancel: () => void }) {
 
 function FailedState({ errorMessage, onRetry }: { errorMessage?: string; onRetry: () => void }) {
   return (
-    <Card padding="md" className="bg-status-error-bg">
+    <Card recipe="statusError" padding="md">
       <Stack gap="sm">
         <Typography variant="label" color="error">
           Recording failed
@@ -349,10 +355,10 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
       {/* Executive Summary */}
       {summary && (
         <Card variant="soft" padding="md">
-          <Typography variant="label" className="mb-2">
-            Summary
-          </Typography>
-          <Typography variant="muted">{summary.executiveSummary}</Typography>
+          <Stack gap="sm">
+            <Typography variant="label">Summary</Typography>
+            <Typography variant="muted">{summary.executiveSummary}</Typography>
+          </Stack>
         </Card>
       )}
 
@@ -376,20 +382,16 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
             {summary.actionItems.map(
               (item: { description: string; assignee?: string; dueDate?: string }) => (
                 <li key={`${item.description}-${item.assignee ?? ""}-${item.dueDate ?? ""}`}>
-                  <Card padding="sm" className="bg-status-warning-bg">
-                    <Flex justify="between" align="start">
-                      <Typography variant="small">{item.description}</Typography>
-                      {item.assignee && (
-                        <Badge size="sm" className="ml-2 shrink-0">
-                          {item.assignee}
-                        </Badge>
-                      )}
-                    </Flex>
-                    {item.dueDate && (
-                      <Typography variant="meta" className="mt-1 block">
-                        Due: {item.dueDate}
-                      </Typography>
-                    )}
+                  <Card recipe="statusWarning" padding="sm">
+                    <Stack gap="xs">
+                      <Flex justify="between" align="start" gap="sm">
+                        <FlexItem flex="1">
+                          <Typography variant="small">{item.description}</Typography>
+                        </FlexItem>
+                        {item.assignee && <Badge size="sm">{item.assignee}</Badge>}
+                      </Flex>
+                      {item.dueDate && <Typography variant="meta">Due: {item.dueDate}</Typography>}
+                    </Stack>
                   </Card>
                 </li>
               ),

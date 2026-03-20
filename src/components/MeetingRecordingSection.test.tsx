@@ -86,6 +86,7 @@ vi.mock("./ui/ConfirmDialog", () => ({
 
 vi.mock("./ui/Flex", () => ({
   Flex: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  FlexItem: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
 vi.mock("./ui/Icon", () => ({
