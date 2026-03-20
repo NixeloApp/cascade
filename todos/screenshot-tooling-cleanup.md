@@ -59,6 +59,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 
 **Fix:**
 - [ ] Replace `.catch(() => {})` with explicit error handling or let errors propagate
+- [x] Replace the `ProjectsPage` create-project and create-issue modal swallows with explicit interaction helpers and fallback handling
 - [x] Replace swallowed alert-dialog stabilization in `openStableAlertDialog()` with explicit retries + animation waits
 - [x] Replace swallowed omnibox and advanced-search modal stabilization with explicit readiness waits
 - [x] Replace swallowed notification panel and snooze-popover stabilization with explicit retries + animation waits

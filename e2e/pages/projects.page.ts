@@ -459,12 +459,11 @@ export class ProjectsPage extends BasePage {
     ];
 
     for (const trigger of triggerCandidates) {
-      if ((await trigger.count().catch(() => 0)) === 0) {
+      if ((await this.getLocatorCount(trigger)) === 0) {
         continue;
       }
 
-      await trigger.waitFor({ state: "visible", timeout }).catch(() => {});
-      if (await trigger.isVisible().catch(() => false)) {
+      if (await this.waitForLocatorToBecomeVisible(trigger, timeout)) {
         return trigger;
       }
     }
@@ -478,7 +477,7 @@ export class ProjectsPage extends BasePage {
       return false;
     }
 
-    await trigger.scrollIntoViewIfNeeded().catch(() => {});
+    await this.prepareLocatorForInteraction(trigger, "create issue trigger");
     await trigger.click();
     return this.waitForCreateIssueModalReady(readyTimeout);
   }
@@ -502,7 +501,7 @@ export class ProjectsPage extends BasePage {
   private async submitCreateIssue() {
     await expect(this.submitIssueButton).toBeVisible();
     await expect(this.submitIssueButton).toBeEnabled();
-    await this.submitIssueButton.scrollIntoViewIfNeeded().catch(() => {});
+    await this.prepareLocatorForInteraction(this.submitIssueButton, "create issue submit button");
     await this.submitIssueButton.click();
 
     // Don't retry non-idempotent issue creation - wait longer for submit state instead
@@ -903,7 +902,7 @@ export class ProjectsPage extends BasePage {
     }
 
     if (await this.cancelButton.isVisible().catch(() => false)) {
-      await this.cancelButton.click().catch(() => {});
+      await this.tryDismissCreateProjectFormWithCancel();
     }
 
     if (await this.createProjectForm.isVisible().catch(() => false)) {
@@ -933,7 +932,7 @@ export class ProjectsPage extends BasePage {
 
     // Don't use bounded retry for non-idempotent project creation
     await expect(this.createButton).toBeVisible();
-    await this.createButton.scrollIntoViewIfNeeded().catch(() => {});
+    await this.prepareLocatorForInteraction(this.createButton, "create project submit button");
     await this.createButton.click();
   }
 
@@ -1209,7 +1208,7 @@ export class ProjectsPage extends BasePage {
 
   private async clickWithBoundedSecondAttempt(locator: Locator, timeout = 3000) {
     await expect(locator).toBeVisible();
-    await locator.scrollIntoViewIfNeeded().catch(() => {});
+    await this.prepareLocatorForInteraction(locator, "click target");
 
     try {
       await locator.click({ timeout });
@@ -1217,8 +1216,59 @@ export class ProjectsPage extends BasePage {
     } catch {
       await expect(locator).toBeVisible();
       await expect(locator).toBeEnabled();
-      await locator.scrollIntoViewIfNeeded().catch(() => {});
+      await this.prepareLocatorForInteraction(locator, "click retry target");
       await locator.click({ timeout });
+    }
+  }
+
+  private async getLocatorCount(locator: Locator): Promise<number> {
+    try {
+      return await locator.count();
+    } catch {
+      return 0;
+    }
+  }
+
+  private async isLocatorVisible(locator: Locator): Promise<boolean> {
+    try {
+      return await locator.isVisible();
+    } catch {
+      return false;
+    }
+  }
+
+  private async waitForLocatorToBecomeVisible(locator: Locator, timeout: number): Promise<boolean> {
+    try {
+      await locator.waitFor({ state: "visible", timeout });
+      return true;
+    } catch {
+      return await this.isLocatorVisible(locator);
+    }
+  }
+
+  private async prepareLocatorForInteraction(locator: Locator, label: string): Promise<void> {
+    await expect(locator, `${label} should be visible before interaction`).toBeVisible();
+
+    try {
+      await locator.scrollIntoViewIfNeeded();
+    } catch (error) {
+      if (!(await this.isLocatorVisible(locator))) {
+        const message = error instanceof Error ? error.message : String(error);
+        throw new Error(`${label} was not visible after scroll attempt: ${message}`);
+      }
+    }
+  }
+
+  private async tryDismissCreateProjectFormWithCancel(): Promise<void> {
+    try {
+      await this.cancelButton.click();
+    } catch (error) {
+      if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+        return;
+      }
+
+      const message = error instanceof Error ? error.message : String(error);
+      console.log(`Cancel button click failed, falling back to keyboard dismissal: ${message}`);
     }
   }
 
