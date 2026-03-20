@@ -389,6 +389,11 @@ describe("MeetingsWorkspace", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Raw Transcript")).toBeInTheDocument();
     expect(screen.getByText("Full transcript text")).toBeInTheDocument();
+    const completedBadges = screen.getAllByText("Completed");
+    expect(completedBadges.length).toBeGreaterThan(0);
+    for (const badge of completedBadges) {
+      expect(badge).toHaveClass("bg-status-success-bg");
+    }
   });
 
   it("creates an issue from an action item", async () => {

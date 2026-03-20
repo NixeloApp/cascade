@@ -12,7 +12,7 @@ import {
   useState,
 } from "react";
 import { PageContent } from "@/components/layout";
-import { Badge } from "@/components/ui/Badge";
+import { Badge, type BadgeProps } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Checkbox } from "@/components/ui/Checkbox";
@@ -46,7 +46,6 @@ import {
 } from "@/lib/formatting";
 import { Calendar, CheckCircle, FileText, Mic, XCircle } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 
 type MeetingListItem = FunctionReturnType<typeof api.meetingBot.listRecordings>[number];
 type MeetingSearchItem = FunctionReturnType<typeof api.meetingBot.searchRecordings>[number];
@@ -114,16 +113,16 @@ const STATUS_LABELS: Record<string, string> = {
   failed: "Failed",
 };
 
-const STATUS_CLASSNAMES: Record<string, string> = {
-  scheduled: "bg-brand-subtle text-brand-active",
-  joining: "bg-status-warning-bg text-status-warning",
-  recording: "bg-status-error-bg text-status-error",
-  processing: "bg-accent-subtle text-accent-active",
-  transcribing: "bg-accent-subtle text-accent-active",
-  summarizing: "bg-accent-subtle text-accent-active",
-  completed: "bg-status-success-bg text-status-success",
-  cancelled: "bg-ui-bg-tertiary text-ui-text-secondary",
-  failed: "bg-status-error-bg text-status-error",
+const STATUS_BADGE_VARIANTS: Record<string, BadgeProps["variant"]> = {
+  scheduled: "brand",
+  joining: "warning",
+  recording: "error",
+  processing: "accent",
+  transcribing: "accent",
+  summarizing: "accent",
+  completed: "success",
+  cancelled: "secondary",
+  failed: "error",
 };
 
 const STATUS_FILTER_OPTIONS: Array<{ value: StatusFilter; label: string }> = [
@@ -346,7 +345,7 @@ function getTranscriptSegmentKey(segment: MeetingTranscriptSegment, index: numbe
 
 function StatusBadge({ status }: { status: string }) {
   return (
-    <Badge size="sm" className={cn(STATUS_CLASSNAMES[status] ?? STATUS_CLASSNAMES.processing)}>
+    <Badge size="sm" variant={STATUS_BADGE_VARIANTS[status] ?? "accent"}>
       {STATUS_LABELS[status] ?? "Unknown"}
     </Badge>
   );
