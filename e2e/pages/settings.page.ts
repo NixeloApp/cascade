@@ -353,7 +353,7 @@ export class SettingsPage extends BasePage {
     }
 
     if (await this.cancelInviteButton.isVisible().catch(() => false)) {
-      await this.cancelInviteButton.click().catch(() => {});
+      await this.dismissInviteUserModalWithCancel();
     }
 
     if (await this.inviteUserForm.isVisible().catch(() => false)) {
@@ -700,11 +700,41 @@ export class SettingsPage extends BasePage {
   }
 
   private async waitForSettingsSuccessToastReset() {
-    await this.page
-      .getByText(/organization settings updated/i)
-      .first()
-      .waitFor({ state: "hidden", timeout: 1000 })
-      .catch(() => {});
+    const successToast = this.page.getByText(/organization settings updated/i).first();
+    const toastVisible = await successToast.isVisible().catch(() => false);
+    if (!toastVisible) {
+      return;
+    }
+
+    try {
+      await successToast.waitFor({ state: "hidden", timeout: 1000 });
+    } catch (error) {
+      const stillVisible = await successToast.isVisible().catch(() => false);
+      if (!stillVisible) {
+        return;
+      }
+
+      const saveReady = await this.waitForSettingsSaveReady(250);
+      if (saveReady) {
+        return;
+      }
+
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Organization settings success toast did not clear before retry: ${message}`);
+    }
+  }
+
+  private async dismissInviteUserModalWithCancel(): Promise<void> {
+    try {
+      await this.cancelInviteButton.click();
+    } catch (error) {
+      if (!(await this.inviteUserForm.isVisible().catch(() => false))) {
+        return;
+      }
+
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Invite user modal cancel button failed: ${message}`);
+    }
   }
 
   private async tryClickSaveSettingsButton() {
