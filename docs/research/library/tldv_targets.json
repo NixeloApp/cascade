@@ -1,90 +1,51 @@
 [
   {
-    "url": "https://tldv.io/account",
+    "url": "https://tldv.io/",
     "competitor": "tldv",
-    "page": "account",
-    "score": 0,
-    "reason": "Priority: /account/",
-    "selectionReason": "Priority: /account/"
+    "page": "home",
+    "score": 1,
+    "selectionReason": "Critical Page"
   },
   {
-    "url": "https://tldv.io/author-sitemap.xml",
+    "url": "https://tldv.io/ai-agents-for-meetings",
     "competitor": "tldv",
-    "page": "author-sitemap.xml",
-    "score": 0,
-    "reason": "Priority: /auth/",
-    "selectionReason": "Priority: /auth/"
+    "page": "ai-agents-for-meetings",
+    "score": 1,
+    "selectionReason": "Priority: PRODUCT"
   },
   {
-    "url": "https://tldv.io/billing",
+    "url": "https://tldv.io/ai-agents-for-sales",
     "competitor": "tldv",
-    "page": "billing",
-    "score": 0,
-    "reason": "Priority: /billing/",
-    "selectionReason": "Priority: /billing/"
+    "page": "ai-agents-for-sales",
+    "score": 1,
+    "selectionReason": "Priority: PRODUCT"
   },
   {
-    "url": "https://tldv.io/dashboard",
+    "url": "https://tldv.io/features/conversational-intelligence/",
     "competitor": "tldv",
-    "page": "dashboard",
-    "score": 0,
-    "reason": "Priority: /dashboard/",
-    "selectionReason": "Priority: /dashboard/"
+    "page": "multi-meeting-ai-insights",
+    "score": 1,
+    "selectionReason": "Priority: FEATURE"
   },
   {
-    "url": "https://tldv.io/profile",
+    "url": "https://tldv.io/integrations/",
     "competitor": "tldv",
-    "page": "profile",
-    "score": 0,
-    "reason": "Priority: /profile/",
-    "selectionReason": "Priority: /profile/"
+    "page": "integrations",
+    "score": 1,
+    "selectionReason": "Sample: INTEGRATIONS"
   },
   {
-    "url": "https://tldv.io/projects",
+    "url": "https://tldv.io/features/security-commitment/",
     "competitor": "tldv",
-    "page": "projects",
-    "score": 0,
-    "reason": "Priority: /projects/",
-    "selectionReason": "Priority: /projects/"
+    "page": "security",
+    "score": 1,
+    "selectionReason": "Sample: SECURITY"
   },
   {
-    "url": "https://tldv.io/settings",
+    "url": "https://tldv.io/features/languages/",
     "competitor": "tldv",
-    "page": "settings",
-    "score": 0,
-    "reason": "Priority: /settings/",
-    "selectionReason": "Priority: /settings/"
-  },
-  {
-    "url": "https://tldv.io/settings/billing",
-    "competitor": "tldv",
-    "page": "billing",
-    "score": 0,
-    "reason": "Priority: /settings/",
-    "selectionReason": "Priority: /settings/"
-  },
-  {
-    "url": "https://tldv.io/settings/profile",
-    "competitor": "tldv",
-    "page": "profile",
-    "score": 0,
-    "reason": "Priority: /settings/",
-    "selectionReason": "Priority: /settings/"
-  },
-  {
-    "url": "https://tldv.io/settings/team",
-    "competitor": "tldv",
-    "page": "team",
-    "score": 0,
-    "reason": "Priority: /settings/",
-    "selectionReason": "Priority: /settings/"
-  },
-  {
-    "url": "https://tldv.io/settings/workspace",
-    "competitor": "tldv",
-    "page": "workspace",
-    "score": 0,
-    "reason": "Priority: /settings/",
-    "selectionReason": "Priority: /settings/"
+    "page": "languages",
+    "score": 1,
+    "selectionReason": "Priority: FEATURE"
   }
 ]

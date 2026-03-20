@@ -2,7 +2,13 @@
 
 > Comprehensive analysis of competitors, open source alternatives, and infrastructure options for Nixelo's meeting intelligence + project management platform.
 >
-> **Last Updated:** 2026-01-20
+> **Last Updated:** 2026-03-19
+>
+> **Important:** The older sections in this file are still useful for orientation, but the
+> current market refresh lives in
+> [market-refresh-2026-03.md](../competitors/meeting-ai/market-refresh-2026-03.md).
+> Use that doc for the latest read on market direction, build-vs-buy choices, and reusable
+> open-source components.
 
 ---
 
@@ -22,6 +28,27 @@
 ---
 
 ## Market Positioning
+
+### March 2026 Refresh
+
+The category has moved beyond "AI meeting notes" as the primary wedge.
+
+The current leaders are converging on:
+
+- meeting capture across bots and desktop capture
+- cross-meeting memory and search
+- AI chat / MCP / agent surfaces
+- workflow automation and enterprise governance
+
+For Nixelo, this changes the question from "can we transcribe meetings?" to:
+
+- should we own meeting capture or buy it
+- where should we use OSS vs vendors
+- how do we turn meeting data into a first-class product surface instead of a calendar subfeature
+
+See the dedicated refresh doc for the full current-state analysis:
+
+- [market-refresh-2026-03.md](../competitors/meeting-ai/market-refresh-2026-03.md)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -207,9 +234,13 @@ curl -X POST https://us-east-1.recall.ai/api/v1/bot \
 
 ## End-User Products
 
+> **Evidence Note:** Where competitor-specific docs use `[inference]`, `[speculation]`, or
+> `[conflict]`, this summary should be read with the same confidence level. The detailed
+> competitor docs are the canonical place for nuance.
+
 ### Read AI
 
-> **What it is:** AI meeting assistant with cross-platform search. Primary competitor for meeting intelligence.
+> **What it is:** AI meeting assistant with coaching, search, and meeting-quality features.
 
 | Attribute | Details |
 |-----------|---------|
@@ -218,33 +249,31 @@ curl -X POST https://us-east-1.recall.ai/api/v1/bot \
 | **Platforms** | Google Meet, Zoom, Microsoft Teams |
 
 **Features:**
-- Meeting transcription & recording
-- AI-generated summaries
-- Action item extraction
-- Real-time notes during meetings
-- Speaker analytics ("Speaker Coach")
-- Email summaries
-- Cross-platform search (meetings + emails + chats)
-- Chrome extension
-- Desktop apps (Windows, macOS)
-- Mobile apps (iOS, Android)
-- Integrations: Slack, Notion, Salesforce, HubSpot, 20+ others
+- Meeting transcription, summaries, uploads, and playback
+- Speaker Coach and engagement-oriented meeting analysis
+- Search Copilot / cross-workflow search
+- Messaging and email product areas
+- Workspaces and admin controls
+- Desktop, mobile, and Chrome-extension surface
 
 **Pricing:**
-- Free: 5 meetings/month
-- Pro: ~$20/user/month (estimated)
-- Enterprise: Custom
+- Free / Pro / Enterprise / Enterprise+
+- Free: `$0`, `5 meeting transcripts per month`
+- Pro: `$19.75/user/mo` monthly or `$15/user/mo` annual
+- Enterprise: `$29.75/user/mo` monthly or `$22.50/user/mo` annual
+- Enterprise+: `$39.75/user/mo` monthly or `$29.75/user/mo` annual
+- [conflict] Older repo notes referenced `Pro+`, but the current mirrored pricing page does not
 
 **Pros:**
-- Polished consumer product
-- Multi-platform (web, desktop, mobile)
-- Strong integrations ecosystem
-- Speaker analytics unique feature
+- Clearer differentiation than plain transcript tools
+- Strong coaching / engagement story
+- Broader product ambition across meetings, search, email, and messaging
+- Verified workspace and pricing structure
 
 **Cons:**
-- Standalone tool - doesn't integrate with PM workflows
-- No project management features
-- Data lives in their cloud
+- Still a standalone intelligence layer, not a PM system
+- People-scoring can create privacy / culture risk
+- Older repo notes overstated implementation certainty
 
 **Nixelo Advantage:** Native PM integration - action items become issues automatically.
 
@@ -252,7 +281,8 @@ curl -X POST https://us-east-1.recall.ai/api/v1/bot \
 
 ### Fireflies.ai
 
-> **What it is:** Meeting transcription with extensive integrations and conversational search.
+> **What it is:** Meeting assistant focused on transcription, AI notes, and workflow
+> integrations.
 
 | Attribute | Details |
 |-----------|---------|
@@ -262,37 +292,37 @@ curl -X POST https://us-east-1.recall.ai/api/v1/bot \
 
 **Features:**
 - Auto-join meetings from calendar
-- Transcription in 69 languages
-- "AskFred" AI search (query transcripts conversationally)
-- Topic tracking
-- Conversation intelligence
-- API access for custom workflows
-- CRM integrations (Salesforce, HubSpot)
+- 100+ languages
+- "AskFred" AI assistant
+- API and integrations
+- CRM / dialer workflows
+- Team analytics and conversation intelligence
+- Security / trust / admin packaging
 
 **Pricing:**
 | Tier | Cost | Features |
 |------|------|----------|
-| Free | $0 | Limited transcription credits |
-| Pro | $10/user/mo | Unlimited transcription |
-| Business | $19/user/mo | + Analytics, integrations |
-| Enterprise | Custom | + SSO, admin controls |
+| Free | $0 | 800 min storage/seat, limited AI summaries |
+| Pro | $10/user/mo annual (`$18` monthly) | 8,000 min storage, AskFred, unlimited integrations |
+| Business | $19/user/mo annual (`$29` monthly) | Unlimited storage, video recording, team analytics |
+| Enterprise | $39/user/mo | SSO, SCIM, HIPAA, private storage, retention controls |
 
 **Pros:**
-- Mature product with large user base
-- 69 language support
-- Strong API for developers
-- Affordable pricing
+- Very clear public packaging
+- Aggressive annual pricing
+- Strong integration-first story
+- Mature enterprise controls in higher tiers
 
 **Cons:**
-- Would be a competitor, not a tool to use
-- No PM features
-- Standalone product
+- Still a sidecar product
+- AI credits complicate the simple seat-price story
+- Lacks native PM execution context
 
 ---
 
 ### Otter.ai
 
-> **What it is:** Pioneer in real-time meeting transcription.
+> **What it is:** Transcription-first meeting assistant with strong live-capture UX.
 
 | Attribute | Details |
 |-----------|---------|
@@ -304,33 +334,36 @@ curl -X POST https://us-east-1.recall.ai/api/v1/bot \
 - Real-time transcription visible during meeting
 - OtterPilot (auto-join bot)
 - Live collaboration on transcripts
-- Action item detection
-- Meeting summaries
-- Search across all meetings
+- AI Chat
+- MCP server integration for AI assistants
+- File imports and searchable meeting archive
+- Enterprise admin controls
 
 **Pricing:**
 | Tier | Cost | Transcription |
 |------|------|---------------|
-| Basic | Free | 300 mins/mo |
-| Pro | $8.33/user/mo | 1200 mins/mo |
-| Business | $20/user/mo | 6000 mins/mo |
-| Enterprise | Custom | Unlimited |
+| Basic | Free | 300 mins/mo, 30 min per conversation |
+| Pro | `$8.33/user/mo` annual (`$16.99` monthly) | 1,200 mins/mo |
+| Business | `$19.99/user/mo` annual (`$24` promo / `$30` list monthly) | Unlimited meeting transcription, 4 hours per meeting |
+| Enterprise | Custom | SSO, HIPAA, enterprise controls |
 
 **Pros:**
-- Established brand, large user base
-- Real-time collaboration unique feature
-- Competitive pricing
+- Strongest live-transcription identity in the set
+- Explicit pricing and quota details
+- Mature enterprise packaging
+- Queryable archive is becoming more agent-friendly
 
 **Cons:**
-- No PM integration
-- Standalone meeting tool
-- Limited customization
+- Still behaves like a destination app
+- Lower tiers stay constrained
+- PM actioning remains shallow
 
 ---
 
 ### tl;dv
 
-> **What it is:** Meeting recorder with unlimited free recordings.
+> **What it is:** Recorder-first meeting product with simple adoption messaging and newer AI
+> insight layers.
 
 | Attribute | Details |
 |-----------|---------|
@@ -339,28 +372,32 @@ curl -X POST https://us-east-1.recall.ai/api/v1/bot \
 | **Platforms** | Zoom, Google Meet, Microsoft Teams |
 
 **Features:**
-- Unlimited free recordings
-- AI transcripts and summaries
-- Clip and share meeting highlights
-- CRM integrations
-- Slack integration
+- Free Forever positioning
+- AI recorder for Zoom, Google Meet, and Microsoft Teams
+- AI notes and summaries
+- AI Agents for Meetings / AI Agents for Sales
+- Multi-Meeting AI Insights
+- 30+ languages
+- 6000+ tool integrations
 
 **Pricing:**
 | Tier | Cost | Features |
 |------|------|----------|
-| Free | $0 | Unlimited recordings, 10 AI transcripts/mo |
-| Pro | $20/user/mo | Unlimited AI features |
-| Enterprise | Custom | + SSO, admin |
+| Free | Verified | Free Forever tier is confirmed from homepage capture |
+| Pro | [conflict] Exists in older notes | Exact current price not locally verified |
+| Business | [conflict] Exists in older notes | Exact current price not locally verified |
+| Enterprise | [inference] Sales-led | Security / enterprise packaging is implied, but exact pricing is not mirrored locally |
 
 **Pros:**
-- Generous free tier
-- Good for teams starting out
-- Simple UX
+- Very clear top-of-funnel story
+- Approachable recorder-first product surface
+- Broader AI story than older notes suggested
+- Strong integration and platform messaging
 
 **Cons:**
-- Limited AI features on free
-- No PM integration
-- Smaller than Otter/Fireflies
+- Exact paid pricing remains unresolved in this repo
+- Still a sidecar recorder, not a work system
+- Older growth and roadmap notes are mostly speculative locally
 
 ---
 
@@ -377,29 +414,40 @@ curl -X POST https://us-east-1.recall.ai/api/v1/bot \
 **Features:**
 - Meeting recording & transcription
 - Deal intelligence
-- Pipeline analytics
-- Coaching recommendations
-- Competitive intelligence
-- Forecasting
+- Pipeline / forecast intelligence
+- Gong Engage
+- Gong Forecast
+- Gong Revenue Graph
+- Gong AI and Gong AI Agents
 
 **Pricing:**
-- ~$1,500/user/year
-- ~$5,000 platform fee
-- Enterprise sales process
+- Licenses are priced per user
+- Platform fee depends on number of users supported
+- Existing tech stack can be integrated for free
+- Enterprise sales process / customized proposal flow
+- [conflict] Older repo notes had exact dollar figures, but the current mirrored pricing page does not
 
 **Pros:**
-- Industry leader for sales teams
-- Deep analytics
-- Enterprise features
+- Strongest strategic product identity in the set
+- Category-leading revenue-intelligence framing
+- Clear enterprise platform family
+- 5,000+ customers shown on pricing page
 
 **Cons:**
-- Massive overkill for general meeting notes
-- Expensive
-- Sales-focused, not general purpose
+- Not a general-purpose meeting tool
+- Quote-only pricing is hard to compare quickly
+- Poor fit for engineering / PM workflows
 
 ---
 
 ## Open Source Solutions
+
+> **Current note:** The strongest OSS reuse opportunities are now in transcription,
+> diarization, and speaker-aware post-processing rather than enterprise-grade bot joining.
+> See
+> [market-refresh-2026-03.md](../competitors/meeting-ai/market-refresh-2026-03.md)
+> for the current shortlist: `faster-whisper`, `whisper.cpp`, `WhisperX`,
+> `pyannote.audio`, `joinly`, and `LiveKit Agents`.
 
 ### Meetily (meeting-minutes)
 

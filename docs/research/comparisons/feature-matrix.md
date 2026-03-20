@@ -674,7 +674,11 @@
 | **Real-time Transcript**  | ✅ Yes         | ❌ Post-call | ✅ Yes    | ❌ Post-call    | ❌ Post-call |
 | **Audio Upload**          | ✅ Yes         | ✅ Yes       | ✅ Yes    | ✅ Yes          | ✅ Yes       |
 | **Bot Joining**           | ✅ Agent       | ✅ Agent     | ✅ Agent  | ✅ Agent        | ✅ Agent     |
-| **Price**                 | Included       | ~$20/mo      | ~$20/mo   | ~$19/mo         | ~$100+/mo    |
+| **Price**                 | Included (simple for now) | Free / Pro / Enterprise / Enterprise+ | Basic to Business is roughly free to `$19.99-$24/user/mo`, Enterprise custom | Free / Pro / Business / Enterprise | Quote-based; per-user + platform fee |
 
 **Insight:**
 Nixelo is the **only tool** that natively bridges the gap between _meeting data_ and _project execution_. Competitors create "data islands" where meeting notes live separately from the work.
+
+**Note:** Use the competitor-specific docs in `docs/research/competitors/meeting-ai/` as
+the canonical source when this matrix compresses plan details. tl;dv paid pricing remains
+unverified locally, so the matrix intentionally avoids exact dollar figures there.

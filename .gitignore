@@ -68,18 +68,21 @@ secrets.json
 .secrets.*
 
 
-# Competitor Mirror Assets (Large, regenerable)
-docs/research/library/*/assets/
-docs/research/library/*/*.html
-docs/research/library/*/*.webp
-docs/research/library/*/*_manifest.json
-docs/research/library/*/*_network.json
-docs/research/library/*/*_deep.json
-docs/research/library/*/manifest.json
-docs/research/library/*/network.json
-docs/research/library/*/deep_data.json
-# Keep: *_tech.json (summaries)
-*.webm
+# Competitor mirror outputs: mostly regenerable, often large
+# Ignore generated media and raw page captures recursively under the research library.
+docs/research/library/**/assets/
+docs/research/library/**/*.html
+docs/research/library/**/*.webp
+docs/research/library/**/*.png
+docs/research/library/**/*.jpg
+docs/research/library/**/*.jpeg
+docs/research/library/**/*.gif
+docs/research/library/**/*.avif
+docs/research/library/**/*.webm
+docs/research/library/**/*.json
+
+# Keep curated target definitions
+!docs/research/library/**/*_targets.json
 
 # EXCEPTIONS (Track these)
 !docs/research/library/mintlify/

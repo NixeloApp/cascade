@@ -80,6 +80,10 @@ export const ROUTES = {
     path: "/$orgSlug/calendar" as const,
     build: (orgSlug: string) => `/${orgSlug}/calendar`,
   },
+  meetings: {
+    path: "/$orgSlug/meetings" as const,
+    build: (orgSlug: string) => `/${orgSlug}/meetings`,
+  },
   team: {
     path: "/$orgSlug/team" as const,
     build: (orgSlug: string) => `/${orgSlug}/team`,

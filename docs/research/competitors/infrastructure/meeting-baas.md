@@ -5,6 +5,11 @@
 > **Type:** Paid API + Self-Hosted Option (BSL License)
 > **Website:** [https://www.meetingbaas.com](https://www.meetingbaas.com)
 
+> **Refresh Note (2026-03-19):** This doc predates the March 2026 market refresh. Use
+> [market-refresh-2026-03.md](../meeting-ai/market-refresh-2026-03.md)
+> for the current market read. If this doc conflicts with the current repo implementation,
+> the repo and refresh doc win.
+
 ---
 
 ## Overview
@@ -164,9 +169,9 @@ Meeting BaaS sits in the middle of the meeting bot API market. At $0.69/hour for
 | Dimension | Nixelo | Meeting BaaS |
 |-----------|--------|--------------|
 | **Primary Function** | Project management + Voice AI | Meeting bot infrastructure |
-| **Relationship** | Consumer of bot APIs | Provider of bot APIs |
+| **Relationship** | Potential customer / secondary provider candidate | Provider of bot APIs |
 | **Self-Hosting** | Potential future tier | Core offering |
-| **Meeting Platforms** | Via bot-service (Recall.ai) | Zoom, Meet, Teams |
+| **Meeting Platforms** | Custom Google Meet-first bot today | Zoom, Meet, Teams |
 | **Calendar Integration** | Google Calendar sync | Google + Microsoft Calendar |
 | **AI Features** | Text AI, Voice AI, action items | Speaking bots, transcription |
 | **Pricing Model** | Platform subscription | Pay-per-bot-hour |
@@ -191,16 +196,17 @@ Meeting BaaS sits in the middle of the meeting bot API market. At $0.69/hour for
 
 ## Nixelo Integration Strategy
 
-Meeting BaaS is a strong candidate for Nixelo's **self-hosted Voice AI tier**, allowing users to run their own meeting bots without paying monthly fees to a third party. The integration approach should be:
+Meeting BaaS is still a strong candidate if Nixelo wants a lower-cost or self-hosted capture
+path. The integration approach should be:
 
-1. **Current State:** Nixelo's bot-service currently uses Recall.ai for cloud-hosted bot deployment.
-2. **Dual-Provider Strategy:** Add Meeting BaaS as an alternative backend, especially for the self-hosted deployment scenario.
-3. **Self-Hosted Tier:** Package Meeting BaaS's on-premises option ($0.066/hr) as Nixelo's "Self-Hosted Voice AI" tier for cost-sensitive and privacy-conscious customers.
-4. **Speaking Bot Potential:** Leverage Meeting BaaS's Pipecat-based speaking bots to build agentic meeting features (e.g., Nixelo AI actively participating in standup meetings).
-5. **Calendar Sync:** Meeting BaaS's calendar integration complements Nixelo's existing Google Calendar sync; evaluate for Microsoft Calendar coverage.
+1. **Current State:** The repo currently shows a custom bot-service rather than a standardized Recall-or-Meeting-BaaS provider strategy.
+2. **Dual-Path Strategy:** Evaluate Meeting BaaS as the lower-cost path while Recall remains the stronger managed enterprise path.
+3. **Self-Hosted Tier:** Its on-premises option is still the strongest argument for a privacy-first or cost-sensitive Voice AI tier.
+4. **Speaking Bot Potential:** Pipecat-based speaking bots remain strategically interesting if Nixelo wants more active in-meeting AI later.
+5. **Calendar Sync:** Google + Microsoft calendar support still makes it worth evaluating for broader scheduling flows.
 
 ---
 
 ## Verdict
 
-Meeting BaaS occupies a unique position as the only meeting bot API provider offering genuine self-hosting with open-source components. For Nixelo, it represents the best path to offering a cost-effective, privacy-first Voice AI tier. The $0.066/hour on-premises cost makes high-volume meeting intelligence economically viable for teams that cannot justify Recall.ai's pricing. However, the lack of enterprise compliance certifications and limited transcription provider support mean it is not yet a full replacement for Recall.ai in the cloud tier. **Recommendation:** Integrate as secondary provider for self-hosted deployments; keep Recall.ai for cloud/enterprise tier until Meeting BaaS matures its compliance posture.
+Meeting BaaS remains one of the most interesting lower-cost capture options in the category because it combines hosted usage, self-hosting, and an open-source-adjacent ecosystem. For Nixelo, it is best read as a strong candidate for a hybrid or self-hosted path, not as a settled direction. **Recommendation:** Keep it as a serious evaluation target if Nixelo wants capture ownership or a lower-cost tier, but do not assume it solves enterprise trust and compliance as cleanly as Recall.

@@ -81,6 +81,131 @@ async function validateAssigneeMembership(
   }
 }
 
+async function canAccessRecording(
+  ctx: QueryCtx & { userId: Id<"users"> },
+  recording: Doc<"meetingRecordings">,
+) {
+  try {
+    await assertRecordingAccess(ctx, recording);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function getTranscriptExcerpt(fullText: string, query: string) {
+  const normalizedText = fullText.toLowerCase();
+  const normalizedQuery = query.toLowerCase();
+  const matchIndex = normalizedText.indexOf(normalizedQuery);
+
+  if (matchIndex < 0) return undefined;
+
+  const excerptStart = Math.max(0, matchIndex - 80);
+  const excerptEnd = Math.min(fullText.length, matchIndex + query.length + 80);
+  const excerpt = fullText.slice(excerptStart, excerptEnd).replace(/\s+/g, " ").trim();
+
+  return `${excerptStart > 0 ? "..." : ""}${excerpt}${excerptEnd < fullText.length ? "..." : ""}`;
+}
+
+type MeetingMemoryDecision = {
+  recordingId: Id<"meetingRecordings">;
+  projectId?: Id<"projects">;
+  recordingTitle: string;
+  meetingPlatform: Doc<"meetingRecordings">["meetingPlatform"];
+  createdAt: number;
+  decision: string;
+};
+
+type MeetingMemoryQuestion = {
+  recordingId: Id<"meetingRecordings">;
+  projectId?: Id<"projects">;
+  recordingTitle: string;
+  meetingPlatform: Doc<"meetingRecordings">["meetingPlatform"];
+  createdAt: number;
+  question: string;
+};
+
+type MeetingMemoryActionItem = {
+  recordingId: Id<"meetingRecordings">;
+  projectId?: Id<"projects">;
+  recordingTitle: string;
+  meetingPlatform: Doc<"meetingRecordings">["meetingPlatform"];
+  createdAt: number;
+  description: string;
+  assignee?: string;
+  dueDate?: string;
+  priority?: Doc<"meetingSummaries">["actionItems"][number]["priority"];
+};
+
+function emptyMeetingMemory() {
+  return {
+    recentDecisions: [] as MeetingMemoryDecision[],
+    openQuestions: [] as MeetingMemoryQuestion[],
+    unresolvedActionItems: [] as MeetingMemoryActionItem[],
+  };
+}
+
+function collectSummaryMemory(
+  summary: Doc<"meetingSummaries">,
+  recording: Doc<"meetingRecordings">,
+  memory: ReturnType<typeof emptyMeetingMemory>,
+  sectionLimit: number,
+) {
+  const createdAt = recording.scheduledStartTime ?? recording._creationTime;
+
+  for (const decision of summary.decisions) {
+    if (memory.recentDecisions.length >= sectionLimit) break;
+    memory.recentDecisions.push({
+      recordingId: recording._id,
+      projectId: recording.projectId,
+      recordingTitle: recording.title,
+      meetingPlatform: recording.meetingPlatform,
+      createdAt,
+      decision,
+    });
+  }
+
+  for (const question of summary.openQuestions) {
+    if (memory.openQuestions.length >= sectionLimit) break;
+    memory.openQuestions.push({
+      recordingId: recording._id,
+      projectId: recording.projectId,
+      recordingTitle: recording.title,
+      meetingPlatform: recording.meetingPlatform,
+      createdAt,
+      question,
+    });
+  }
+
+  for (const actionItem of summary.actionItems) {
+    if (memory.unresolvedActionItems.length >= sectionLimit) break;
+    if (actionItem.issueCreated) continue;
+
+    memory.unresolvedActionItems.push({
+      recordingId: recording._id,
+      projectId: recording.projectId,
+      recordingTitle: recording.title,
+      meetingPlatform: recording.meetingPlatform,
+      createdAt,
+      description: actionItem.description,
+      assignee: actionItem.assignee,
+      dueDate: actionItem.dueDate,
+      priority: actionItem.priority,
+    });
+  }
+}
+
+function hasFilledMeetingMemory(
+  memory: ReturnType<typeof emptyMeetingMemory>,
+  sectionLimit: number,
+) {
+  return (
+    memory.recentDecisions.length >= sectionLimit &&
+    memory.openQuestions.length >= sectionLimit &&
+    memory.unresolvedActionItems.length >= sectionLimit
+  );
+}
+
 // ===========================================
 // Queries
 // ===========================================
@@ -202,6 +327,182 @@ export const listRecordings = authenticatedQuery({
         hasSummary,
       };
     });
+  },
+});
+
+export const searchRecordings = authenticatedQuery({
+  args: {
+    query: v.string(),
+    projectId: v.optional(v.id("projects")),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id("meetingRecordings"),
+      _creationTime: v.number(),
+      calendarEventId: v.optional(v.id("calendarEvents")),
+      meetingUrl: v.optional(v.string()),
+      meetingPlatform: meetingPlatforms,
+      title: v.string(),
+      recordingFileId: v.optional(v.id("_storage")),
+      recordingUrl: v.optional(v.string()),
+      duration: v.optional(v.number()),
+      fileSize: v.optional(v.number()),
+      status: meetingStatuses,
+      errorMessage: v.optional(v.string()),
+      scheduledStartTime: v.optional(v.number()),
+      actualStartTime: v.optional(v.number()),
+      actualEndTime: v.optional(v.number()),
+      botJoinedAt: v.optional(v.number()),
+      botLeftAt: v.optional(v.number()),
+      botName: v.string(),
+      createdBy: v.id("users"),
+      projectId: v.optional(v.id("projects")),
+      isPublic: v.boolean(),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+      /** Google Calendar event - external API structure. v.any() is intentional. */
+      calendarEvent: v.union(v.any(), v.null()),
+      hasTranscript: v.boolean(),
+      hasSummary: v.boolean(),
+      matchExcerpt: v.optional(v.string()),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const query = args.query.trim();
+    if (query.length < 2) return [];
+
+    const limit = Math.min(args.limit ?? 20, BOUNDED_LIST_LIMIT);
+    // Fetch enough candidates to survive access filtering in multi-tenant data.
+    // Search indexes don't support pre-filtering by user, so we over-fetch and
+    // filter in the loop below, breaking early once we have enough results.
+    const transcripts = await ctx.db
+      .query("meetingTranscripts")
+      .withSearchIndex("search_transcript", (q) => q.search("fullText", query))
+      .take(BOUNDED_LIST_LIMIT);
+
+    if (transcripts.length === 0) return [];
+
+    const recordingMap = await batchFetchRecordings(
+      ctx,
+      transcripts.map((transcript) => transcript.recordingId),
+    );
+
+    const accessibleMatches: Array<{
+      recording: Doc<"meetingRecordings">;
+      matchExcerpt: string | undefined;
+    }> = [];
+    const seenRecordingIds = new Set<Id<"meetingRecordings">>();
+
+    for (const transcript of transcripts) {
+      const recording = recordingMap.get(transcript.recordingId);
+      if (!recording || seenRecordingIds.has(recording._id)) continue;
+
+      if (args.projectId && recording.projectId !== args.projectId) continue;
+
+      const hasAccess = await canAccessRecording(ctx, recording);
+      if (!hasAccess) continue;
+
+      accessibleMatches.push({
+        recording,
+        matchExcerpt: getTranscriptExcerpt(transcript.fullText, query),
+      });
+      seenRecordingIds.add(recording._id);
+
+      if (accessibleMatches.length >= limit) break;
+    }
+
+    const calendarEventMap = await batchFetchCalendarEvents(
+      ctx,
+      accessibleMatches.map(({ recording }) => recording.calendarEventId),
+    );
+
+    return accessibleMatches.map(({ recording, matchExcerpt }) => {
+      const hasTranscript = recording.status === "summarizing" || recording.status === "completed";
+      const hasSummary = recording.status === "completed";
+
+      return {
+        ...recording,
+        createdAt: recording._creationTime,
+        calendarEvent: recording.calendarEventId
+          ? (calendarEventMap.get(recording.calendarEventId) ?? null)
+          : null,
+        hasTranscript,
+        hasSummary,
+        matchExcerpt,
+      };
+    });
+  },
+});
+
+export const listMemoryItems = authenticatedQuery({
+  args: {
+    sectionLimit: v.optional(v.number()),
+  },
+  returns: v.object({
+    recentDecisions: v.array(
+      v.object({
+        recordingId: v.id("meetingRecordings"),
+        projectId: v.optional(v.id("projects")),
+        recordingTitle: v.string(),
+        meetingPlatform: meetingPlatforms,
+        createdAt: v.number(),
+        decision: v.string(),
+      }),
+    ),
+    openQuestions: v.array(
+      v.object({
+        recordingId: v.id("meetingRecordings"),
+        projectId: v.optional(v.id("projects")),
+        recordingTitle: v.string(),
+        meetingPlatform: meetingPlatforms,
+        createdAt: v.number(),
+        question: v.string(),
+      }),
+    ),
+    unresolvedActionItems: v.array(
+      v.object({
+        recordingId: v.id("meetingRecordings"),
+        projectId: v.optional(v.id("projects")),
+        recordingTitle: v.string(),
+        meetingPlatform: meetingPlatforms,
+        createdAt: v.number(),
+        description: v.string(),
+        assignee: v.optional(v.string()),
+        dueDate: v.optional(v.string()),
+        priority: v.optional(simplePriorities),
+      }),
+    ),
+  }),
+  handler: async (ctx, args) => {
+    const sectionLimit = Math.min(args.sectionLimit ?? 5, 10);
+    if (sectionLimit <= 0) return emptyMeetingMemory();
+
+    // Fetch enough summaries to survive access filtering — the user may not
+    // have access to many recent recordings in a shared organization.
+    const summaries = await ctx.db.query("meetingSummaries").order("desc").take(BOUNDED_LIST_LIMIT);
+
+    if (summaries.length === 0) return emptyMeetingMemory();
+
+    const recordingMap = await batchFetchRecordings(
+      ctx,
+      summaries.map((summary) => summary.recordingId),
+    );
+    const memory = emptyMeetingMemory();
+
+    for (const summary of summaries) {
+      if (hasFilledMeetingMemory(memory, sectionLimit)) break;
+
+      const recording = recordingMap.get(summary.recordingId);
+      if (!recording) continue;
+
+      const hasAccess = await canAccessRecording(ctx, recording);
+      if (!hasAccess) continue;
+
+      collectSummaryMemory(summary, recording, memory, sectionLimit);
+    }
+
+    return memory;
   },
 });
 
