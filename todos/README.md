@@ -8,30 +8,31 @@
 
 Work is ordered as a pipeline -- each phase unblocks the next. AI will fix these in order.
 
-### Phase 1: Close Remaining Quality Gaps
+### Phase 1: Tighten Styling Rules
 
-Finish the highest-priority product and review gaps that the last commit did not close.
+Make CVA usage and raw Tailwind rules stricter first, so the next cleanup passes do not reintroduce slop.
 
 | Order | File | What |
 |-------|------|------|
-| 1.1 | [meeting-intelligence.md](./meeting-intelligence.md) | Finish meetings visual QA and unblock meeting-to-doc via editor persistence/save wiring |
-| 1.2 | [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Close remaining screenshot-review gaps and human-review consistency blind spots |
+| 1.1 | [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) | Tighten CVA boundaries, tighten raw Tailwind rules, and reduce remaining styling escape hatches |
+| 1.2 | [validator-strengthening.md](./validator-strengthening.md) | Make the stricter styling rules enforceable so new slop cannot land |
 
-### Phase 2: Finish Validator Paydown
+### Phase 2: Screenshot-Driven Cleanup
+
+Use screenshots as the review surface, fix obviously broken states, and turn visual weirdness into explicit cleanup items.
+
+| Order | File | What |
+|-------|------|------|
+| 2.1 | [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Fix screenshot-exposed inconsistencies, broken states, and cross-surface visual drift |
+| 2.2 | [meeting-intelligence.md](./meeting-intelligence.md) | Finish meetings visual QA and unblock meeting-to-doc via editor persistence/save wiring |
+
+### Phase 3: Finish Validator Paydown
 
 Keep the stricter validator regime, but pay off the remaining debt so ratchets and baselines can be removed.
 
 | Order | File | What |
 |-------|------|------|
-| 2.1 | [validator-strengthening.md](./validator-strengthening.md) | Retire temporary ratchets as debt hits zero and close the remaining standards/query-filter cleanup |
-
-### Phase 3: Tailwind / CVA Consolidation
-
-Reduce raw Tailwind, consolidate CVA sprawl, add validators to prevent regression.
-
-| Order | File | What |
-|-------|------|------|
-| 3.1 | [tailwind-cva-consolidation.md](./tailwind-cva-consolidation.md) | Audit remaining raw TW clusters, consolidate overlapping CVAs, and add anti-sprawl validators |
+| 3.1 | [validator-strengthening.md](./validator-strengthening.md) | Retire temporary ratchets as debt hits zero and close the remaining standards/query-filter cleanup |
 
 ### Phase 4: Feature & Docs Expansion
 

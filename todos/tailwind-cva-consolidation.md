@@ -21,6 +21,8 @@ Target the remaining raw Tailwind violations by grouping repeated class clusters
 - [ ] Audit raw TW in route files -- repeated spacing/shell/state patterns should become components or CVA variants
 - [ ] Run `node scripts/validate/check-raw-tailwind.js --audit` and group violations by pattern (same class cluster = same missing abstraction)
 - [ ] For each cluster of 3+ identical class sets, extract a component or add a CVA variant
+- [ ] Tighten raw Tailwind rules on app surfaces -- colors, radius, spacing, and shell treatments should come from owned primitives or explicit variants, not feature-local class clusters
+- [ ] Audit `className` escape-hatch usage on owned primitives -- recurring size/chrome/spacing overrides should become variants instead of one-off patches
 
 ## Phase 2: Consolidate CVA Sprawl
 
@@ -29,6 +31,8 @@ Target the remaining raw Tailwind violations by grouping repeated class clusters
 - [ ] Badge: audit 10+ variants for overlap -- some may be duplicating each other with minor differences
 - [ ] Card: audit 8+ variants -- ensure no feature-local Card recipes exist that should be a variant
 - [ ] Look for CVA definitions in the same file that could be a single CVA with compound variants
+- [ ] Delete or demote one-off CVAs that are only wrapping a base class or a single call site -- those should become plain components or existing primitive variants
+- [ ] Audit primitive variant APIs for gaps that force local CVAs or local raw Tailwind -- fill the primitive first, then delete the feature-local workaround
 
 ## Phase 3: Make It Impossible to Slop
 
@@ -36,6 +40,8 @@ Target the remaining raw Tailwind violations by grouping repeated class clusters
 - [ ] Add a validator that flags CVA files with >10 variants (sign of sprawl -- should split or rethink)
 - [ ] Add a validator that flags raw Tailwind class clusters appearing 3+ times across files (should be a component)
 - [ ] Tighten the raw TW validator from advisory to blocking with a ratchet (current baseline: 148 files, fail on increase)
+- [ ] Add a validator that flags repeated primitive `className` overrides for size/chrome/radius/color when an owned variant should exist
+- [ ] Add a validator that flags feature-local CVAs with only base styles or a single live call site
 
 ## Anti-patterns to Watch
 
@@ -54,3 +60,4 @@ Target the remaining raw Tailwind violations by grouping repeated class clusters
 - [ ] No CVA definition with 0 variants (just base styles)
 - [ ] Validator blocks new raw TW cluster repetition and unjustified feature CVAs
 - [ ] Typography/Badge/Card variant counts reviewed and consolidated where overlapping
+- [ ] Owned primitives cover the common styling needs without widespread `className` restyling escape hatches

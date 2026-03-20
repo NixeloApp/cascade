@@ -37,6 +37,9 @@ Fetches all data then filters in the component when the filter could be a backen
 ## Existing Validator Improvements
 
 - [ ] Ensure the standards validator keeps catching new page-level violations early, without relying on follow-up todo cleanup
+- [ ] Add validator coverage for primitive restyling drift -- repeated size/radius/chrome/color overrides on owned controls should be treated as missing variants or misuse
+- [ ] Add validator coverage for degenerate CVAs -- base-only CVAs, single-use feature CVAs, and local variant wrappers that should be plain components or shared primitives
+- [ ] Ratchet raw Tailwind downward, not just flat -- the baseline should shrink as cleanup lands instead of only blocking regressions
 
 ## Ratchet Strategy
 
@@ -48,3 +51,4 @@ For advisory validators, keep the ratchet only as long as cleanup is still in fl
 - [ ] All 47+ validators pass with zero violations
 - [ ] Baselined query/filter debt is removed from product code so the ratchets can be deleted
 - [ ] No validator skips without explicit TODO references
+- [ ] Styling/CVA validators are strict enough that screenshot-driven cleanup does not regress on the next pass
