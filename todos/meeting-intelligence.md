@@ -36,7 +36,8 @@ This is the main Nixelo-specific opportunity versus Read AI / Fireflies / Otter.
 - [x] **Expose action-item to issue creation in UI** — Convex supports `createIssueFromActionItem`, but it is not surfaced as a first-class frontend workflow.
 - [x] **Show issue linkage state** — Linked issues now show issue key, title, and status directly in meeting results.
 - [x] **Turn meetings into project artifacts** — Meetings now surface project context, linked-work counts, and direct project navigation instead of living as standalone notes.
-- [ ] **Add meeting-to-doc flow** — Create or append a project document directly from meeting results when the document workflow is ready.
+- [ ] **Fix document-editor persistence path before meeting-to-doc** — Current Plate document surface reads version snapshots, but the frontend save/sync wiring to `api.prosemirror.*` is not clearly closed yet.
+- [ ] **Add meeting-to-doc flow** — Create or append a project document directly from meeting results once the document create + seed + save path is trustworthy.
 
 ## Medium Priority
 
@@ -79,6 +80,14 @@ These should be treated as experiments that support the product roadmap, not as 
 - [ ] **No agent-facing meeting layer** — MCP/agent access is becoming common in the category.
 - [ ] **No desktop capture mode** — Bot-only capture is increasingly incomplete.
 - [ ] **No enterprise-ready multi-platform capture story yet** — Current implementation is narrower than the market leaders.
+
+## Document Dependency Notes
+
+The next major workflow win is meeting-to-doc, but the current document stack needs one focused pass first.
+
+- [ ] **Wire Plate editor to an explicit save/sync path** — Verify or fix how document edits reach `api.prosemirror.submitSnapshot` / `submitSteps` from the current Plate UI.
+- [ ] **Clarify template/document seeding** — `createDocumentFromTemplate` returns `templateContent`, but the current Plate workflow does not show a clean end-to-end initialization path.
+- [ ] **Separate real collaboration from stubs** — `ConvexYjsProvider` and awareness utilities currently describe themselves as stub implementations and should not be treated as shipped collaboration.
 
 ## Non-Goals For First Pass
 

@@ -17,7 +17,7 @@
 
 | Priority | File | What | Open items |
 |----------|------|------|------------|
-| P1 | [meeting-intelligence.md](./meeting-intelligence.md) | Productize the existing Read AI style backend into a first-class Meetings feature | 20+ items: meetings hub, detail UX, action-item workflows, transcript search, capture strategy |
+| P1 | [meeting-intelligence.md](./meeting-intelligence.md) | Turn the shipped Meetings workspace into a full meeting-intelligence workflow | Remaining items: meeting-to-doc, document-editor reliability, capture strategy, OSS evaluation |
 | P2 | [cal-com-features.md](./cal-com-features.md) | Port features from Cal.com v6.3 | 8 items: AI agents, OOO status, cancellation reasons, workflow translation, custom domain/SMTP, branding |
 | P2 | [plane-features.md](./plane-features.md) | Port features from Plane | 12 items: Gantt chart, intake/triage, deploy boards, stickies, analytics, auto-archive, multi-provider AI, page versions |
 | P3 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export for billing reports | 1 item: needs jsPDF or server-side generation |
@@ -36,9 +36,9 @@ Based on Cal.com v6.3 and Plane preview (both repos updated 2026-03-18):
 
 | Feature | Cal.com | Plane | Nixelo | Impact |
 |---------|---------|-------|--------|--------|
-| **Meeting intelligence hub** | ⚠️ AI scheduling adjacencies | — | ❌ Hidden in calendar modal | High — current backend is stronger than current product surface |
-| **Cross-meeting memory/search** | ⚠️ Agent-oriented adjacencies | — | ❌ Missing as product surface | High — category is moving beyond one-meeting summaries |
-| **Action-item execution from meetings** | — | — | ⚠️ Backend exists, UI weak | High — core Nixelo differentiation opportunity |
+| **Meeting intelligence hub** | ⚠️ AI scheduling adjacencies | — | ⚠️ Sidebar workspace exists; docs/platform breadth still incomplete | High — product surface is now real, but not yet end-to-end |
+| **Cross-meeting memory/search** | ⚠️ Agent-oriented adjacencies | — | ⚠️ Search and memory rail exist; no agent layer yet | High — category is moving beyond one-meeting summaries |
+| **Action-item execution from meetings** | — | — | ⚠️ Issue flow exists; document flow missing | High — core Nixelo differentiation opportunity |
 | **Gantt chart** | — | ✅ Full | ❌ Simple roadmap only | High — standard PM expectation |
 | **OOO status** | ✅ Full API | — | ❌ Missing | High — affects calendar, assignments, notifications |
 | **Org analytics** | — | ✅ Trends, insights | ✅ Metrics + charts | ~~High~~ Done |
