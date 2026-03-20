@@ -1,6 +1,5 @@
 {
   "silentCatchSwallowsByFile": {
-    "e2e/pages/documents.page.ts": 1,
     "e2e/pages/onboarding.page.ts": 1,
     "e2e/utils/test-helpers.ts": 1
   }

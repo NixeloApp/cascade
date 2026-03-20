@@ -61,6 +61,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [ ] Replace `.catch(() => {})` with explicit error handling or let errors propagate
 - [x] Replace `SettingsPage` swallow paths for invite-modal cancel dismissal and organization-settings success-toast reset with explicit helper behavior
 - [x] Replace `CalendarPage` swallow paths for today-navigation alignment and event scroll preparation with explicit helper behavior
+- [x] Replace `DocumentsPage` swallow path for error-boundary diagnostics expansion with explicit helper behavior
 - [x] Replace `WorkspacesPage` swallow paths for optional loading waits and create-button interaction retries with explicit helper behavior
 - [x] Replace `DashboardPage` swallow paths for modal backdrop dismissal and app-error detail expansion with explicit helper behavior
 - [x] Replace shared auth-helper swallows for email-form expansion, sign-up heading waits, and sign-in timeout screenshots with explicit helper behavior

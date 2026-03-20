@@ -227,7 +227,7 @@ export class DocumentsPage extends BasePage {
 
     const detailsVisible = await this.appErrorDetailsMessage.isVisible().catch(() => false);
     if (!detailsVisible) {
-      await this.appErrorDetailsSummary.click().catch(() => {});
+      await this.expandAppErrorDetailsIfAvailable();
     }
 
     const errorDetails = (
@@ -236,6 +236,26 @@ export class DocumentsPage extends BasePage {
     const suffix = errorDetails ? `: ${errorDetails}` : "";
     const diagnostics = await this.getAppErrorDiagnostics();
     throw new Error(`React error boundary displayed${suffix}${diagnostics}`);
+  }
+
+  private async expandAppErrorDetailsIfAvailable(): Promise<void> {
+    const summaryVisible = await this.appErrorDetailsSummary.isVisible().catch(() => false);
+    if (!summaryVisible) {
+      return;
+    }
+
+    try {
+      await this.appErrorDetailsSummary.click();
+      await expect(this.appErrorDetailsMessage).toBeVisible({ timeout: 2000 });
+    } catch (error) {
+      const detailsVisible = await this.appErrorDetailsMessage.isVisible().catch(() => false);
+      if (detailsVisible) {
+        return;
+      }
+
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Document error boundary details did not open: ${message}`);
+    }
   }
 
   private async getAppErrorDiagnostics(): Promise<string> {
