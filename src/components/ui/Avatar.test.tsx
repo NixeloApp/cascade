@@ -102,6 +102,12 @@ describe("Avatar", () => {
       const root = document.querySelector('[class*="w-32"]');
       expect(root).toBeInTheDocument();
     });
+
+    it("applies profile size", () => {
+      render(<Avatar name="JD" size="profile" />);
+      const root = document.querySelector('[class*="h-20"]');
+      expect(root).toBeInTheDocument();
+    });
   });
 
   describe("variants", () => {

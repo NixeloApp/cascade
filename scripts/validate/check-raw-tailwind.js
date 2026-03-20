@@ -153,7 +153,6 @@ const BASELINE_FILES = new Set([
   "src/components/Settings/NotificationsTab.tsx",
   "src/components/Settings/OfflineTab.tsx",
   "src/components/Settings/PreferencesTab.tsx",
-  "src/components/Settings/ProfileContent.tsx",
   "src/components/Settings/PumbleIntegration.tsx",
   "src/components/Settings/SSOSettings.tsx",
   "src/components/Settings/SlackIntegration.tsx",

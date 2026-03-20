@@ -77,8 +77,11 @@ const typographyVariants = cva("", {
       issueKeyMono: "text-sm font-mono tracking-tight text-ui-text-secondary",
       monoBlock: "text-xs font-mono tracking-tight text-ui-text-secondary whitespace-pre-wrap",
       monoWrap: "text-xs font-mono tracking-tight text-ui-text-secondary break-all",
+      monoWrapConstrained:
+        "block max-w-full break-all text-xs font-mono tracking-tight text-ui-text-secondary sm:max-w-40",
       metricLabelWide: "text-xs uppercase tracking-widest text-ui-text-secondary",
       mono: "text-xs font-mono text-ui-text-secondary tracking-tight", // issue keys, codes
+      profileEmail: "max-w-lg text-xs text-ui-text-secondary",
       calendarHeaderDate: "text-xs font-medium text-ui-text sm:text-base",
       calendarHeaderTitle: "text-sm font-semibold tracking-tight text-ui-text sm:text-lg",
       calendarHeaderMonth: "text-center text-xs font-semibold text-brand-foreground uppercase",
@@ -197,7 +200,9 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
     case "issueKeyMono":
     case "monoBlock":
     case "monoWrap":
+    case "monoWrapConstrained":
     case "metricLabelWide":
+    case "profileEmail":
       return "p";
     case "mono":
     case "calendarHeaderDate":

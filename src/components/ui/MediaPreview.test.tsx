@@ -20,6 +20,20 @@ describe("MediaPreview", () => {
     expect(screen.getByAltText("Preview").className).toContain("object-cover");
   });
 
+  it("renders the profile cover shell with the owned empty gradient tone", () => {
+    render(
+      <MediaPreviewFrame
+        surface="profileCover"
+        tone="profileEmpty"
+        data-testid="profile-cover-frame"
+      >
+        <span>Empty cover</span>
+      </MediaPreviewFrame>,
+    );
+
+    expect(screen.getByTestId("profile-cover-frame").className).toContain("from-brand/18");
+  });
+
   it("renders file metadata through the shared summary card", () => {
     const file = new File(["image"], "avatar.png", { type: "image/png" });
 

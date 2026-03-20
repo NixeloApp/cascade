@@ -10,10 +10,17 @@ const mediaPreviewFrameVariants = cva("", {
     surface: {
       avatar: "relative",
       cover: "relative h-32 overflow-hidden border-dashed",
+      profileCover:
+        "relative h-8 w-full overflow-hidden border-b border-ui-border-secondary/60 sm:h-12",
+    },
+    tone: {
+      default: "",
+      profileEmpty: "bg-linear-to-r from-brand/18 via-brand-subtle/80 to-accent/14",
     },
   },
   defaultVariants: {
     surface: "cover",
+    tone: "default",
   },
 });
 
@@ -22,6 +29,7 @@ const mediaPreviewContentVariants = cva("", {
     surface: {
       avatar: "",
       cover: "h-full w-full",
+      profileCover: "h-full w-full",
     },
   },
   defaultVariants: {
@@ -33,6 +41,7 @@ const mediaPreviewImageVariants = cva("", {
   variants: {
     surface: {
       cover: "h-full w-full object-cover",
+      profileCover: "h-full w-full object-cover",
     },
   },
   defaultVariants: {
@@ -67,13 +76,18 @@ export function MediaPreviewFrame({
   padding = "none",
   radius = "md",
   surface = "cover",
+  tone = "default",
   variant = "outline",
   ...divProps
 }: MediaPreviewFrameProps) {
-  if (surface === "avatar") {
+  if (surface === "avatar" || surface === "profileCover") {
     return (
-      <div className={cn(mediaPreviewFrameVariants({ surface }), className)} {...divProps}>
-        {children}
+      <div className={cn(mediaPreviewFrameVariants({ surface, tone }), className)} {...divProps}>
+        {surface === "profileCover" ? (
+          <div className={mediaPreviewContentVariants({ surface })}>{children}</div>
+        ) : (
+          children
+        )}
         {action}
       </div>
     );
@@ -81,7 +95,7 @@ export function MediaPreviewFrame({
 
   return (
     <Card
-      className={cn(mediaPreviewFrameVariants({ surface }), className)}
+      className={cn(mediaPreviewFrameVariants({ surface, tone }), className)}
       padding={padding}
       radius={radius}
       variant={variant}

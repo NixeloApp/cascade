@@ -10,18 +10,23 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { Camera, ImageIcon } from "lucide-react";
 import { useState } from "react";
-import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Flex } from "@/components/ui/Flex";
+import { Grid, GridItem } from "@/components/ui/Grid";
+import { Icon } from "@/components/ui/Icon";
+import {
+  MediaPreviewAction,
+  MediaPreviewFrame,
+  MediaPreviewImage,
+} from "@/components/ui/MediaPreview";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { formatDate } from "@/lib/formatting";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { UserActivityFeed } from "../UserActivityFeed";
 import { Avatar } from "../ui/Avatar";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Input } from "../ui/form";
-import { Grid } from "../ui/Grid";
 import { IconButton } from "../ui/IconButton";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Typography } from "../ui/Typography";
@@ -66,14 +71,8 @@ export function UserStatsCards({ stats }: { stats: UserStats }) {
   return (
     <Grid cols={2} colsMd={3} colsLg={5} gap="sm">
       {USER_STATS_ITEMS.map((item) => (
-        <Card
-          key={item.key}
-          recipe="metricTile"
-          padding="sm"
-          className="relative overflow-hidden text-center"
-        >
-          <div className="absolute inset-x-4 top-0 h-px bg-brand/60" />
-          <Stack gap="xs" align="center" className="relative">
+        <Card key={item.key} recipe="profileMetricTile" padding="sm">
+          <Stack gap="xs" align="center">
             <Typography variant="h2" color="brand">
               {stats[item.key]}
             </Typography>
@@ -88,21 +87,11 @@ export function UserStatsCards({ stats }: { stats: UserStats }) {
 /**
  * User account information section
  */
-export function AccountInfo({
-  user,
-  className,
-}: {
-  user: ProfileUser & { _creationTime: number };
-  className?: string;
-}) {
+export function AccountInfo({ user }: { user: ProfileUser & { _creationTime: number } }) {
   const rows = [
     {
       label: "User ID:",
-      value: (
-        <Typography variant="mono" className="block max-w-full break-all sm:max-w-40">
-          {user._id}
-        </Typography>
-      ),
+      value: <Typography variant="monoWrapConstrained">{user._id}</Typography>,
     },
     {
       label: "Member Since:",
@@ -115,7 +104,7 @@ export function AccountInfo({
   ];
 
   return (
-    <Card variant="default" padding="md" className={className}>
+    <Card variant="default" padding="md" style={{ height: "100%" }}>
       <Typography variant="h5">Account Information</Typography>
       <Stack gap="sm">
         {rows.map((row) => (
@@ -167,30 +156,26 @@ export function ProfileHeader({
 }) {
   return (
     <Grid cols={1} colsSm={5} gap="lg">
-      {/* Avatar */}
-      <div className="group relative">
-        <Avatar
-          src={user.image}
-          name={user.name}
-          email={user.email}
-          variant="brand"
-          className="h-20 w-20 shadow-card sm:h-24 sm:w-24"
-        />
-        {isOwnProfile && onAvatarClick && (
-          <IconButton
-            variant="solid"
-            size="sm"
-            className="absolute bottom-0 right-0"
-            onClick={onAvatarClick}
-            tooltip="Change avatar"
-          >
-            <Camera className="h-4 w-4" />
-          </IconButton>
-        )}
-      </div>
+      <GridItem colSpanSm={1}>
+        <MediaPreviewFrame surface="avatar">
+          <Avatar
+            src={user.image}
+            name={user.name}
+            email={user.email}
+            variant="brand"
+            size="profile"
+          />
+          {isOwnProfile && onAvatarClick && (
+            <MediaPreviewAction placement="avatarUpload">
+              <IconButton variant="solid" size="sm" onClick={onAvatarClick} tooltip="Change avatar">
+                <Icon icon={Camera} size="sm" />
+              </IconButton>
+            </MediaPreviewAction>
+          )}
+        </MediaPreviewFrame>
+      </GridItem>
 
-      {/* User Info */}
-      <FlexItem flex="1" className="w-full sm:col-span-4">
+      <GridItem colSpanSm={4}>
         {isEditing ? (
           <Stack gap="sm">
             <Flex gap="sm">
@@ -231,19 +216,17 @@ export function ProfileHeader({
             </Flex>
           </Stack>
         ) : (
-          <>
+          <Stack gap="sm">
             <Typography variant="h3">{user.name || "Anonymous User"}</Typography>
-            <Typography variant="caption" className="max-w-lg">
-              {user.email}
-            </Typography>
+            <Typography variant="profileEmail">{user.email}</Typography>
             {isOwnProfile && (
-              <Button onClick={onEditClick} variant="secondary" size="sm" className="mt-3">
+              <Button onClick={onEditClick} variant="secondary" size="sm">
                 Edit Profile
               </Button>
             )}
-          </>
+          </Stack>
         )}
-      </FlexItem>
+      </GridItem>
     </Grid>
   );
 }
@@ -305,30 +288,24 @@ function LoadedProfileContent({
     isOwnProfile && "_creationTime" in viewUser && typeof viewUser._creationTime === "number";
 
   return (
-    <Card variant="default" padding="none" className="overflow-hidden">
+    <Card recipe="profileShell" padding="none">
       {isOwnProfile && (
-        <div className="group relative">
-          <div
-            className={cn(
-              "h-8 w-full border-b border-ui-border-secondary/60 bg-linear-to-r from-brand/18 via-brand-subtle/80 to-accent/14 sm:h-12",
-              coverImageUrl && "bg-none",
-            )}
-          >
-            {coverImageUrl && (
-              <img src={coverImageUrl} alt="Profile cover" className="w-full h-full object-cover" />
-            )}
-          </div>
-          <Button
-            chrome="framed"
-            chromeSize="compactPill"
-            size="sm"
-            className="absolute bottom-2 right-2 backdrop-blur-sm"
-            onClick={onCoverImageClick}
-          >
-            <ImageIcon className="h-4 w-4" />
-            {coverImageUrl ? "Change" : "Add"} cover
-          </Button>
-        </div>
+        <MediaPreviewFrame surface="profileCover" tone={coverImageUrl ? "default" : "profileEmpty"}>
+          {coverImageUrl ? (
+            <MediaPreviewImage alt="Profile cover" src={coverImageUrl} surface="profileCover" />
+          ) : null}
+          <MediaPreviewAction placement="coverCorner">
+            <Button
+              chrome="framed"
+              chromeSize="compactPill"
+              size="sm"
+              onClick={onCoverImageClick}
+              leftIcon={<Icon icon={ImageIcon} size="sm" />}
+            >
+              {coverImageUrl ? "Change" : "Add"} cover
+            </Button>
+          </MediaPreviewAction>
+        </MediaPreviewFrame>
       )}
 
       <Card padding="md" radius="none" variant="section">
@@ -337,37 +314,34 @@ function LoadedProfileContent({
             cols={1}
             colsLg={showAccountInfo ? 5 : 1}
             gap="md"
-            className={cn(isOwnProfile && "-mt-2 sm:-mt-4")}
+            style={isOwnProfile ? { marginTop: "-0.5rem" } : undefined}
           >
-            <Card
-              variant="section"
-              padding="lg"
-              className={showAccountInfo ? "lg:col-span-3" : undefined}
-            >
-              <ProfileHeader
-                user={viewUser}
-                isOwnProfile={isOwnProfile}
-                isEditing={isEditing}
-                name={name}
-                firstName={firstName}
-                lastName={lastName}
-                email={email}
-                onEditClick={onEditClick}
-                onNameChange={onNameChange}
-                onFirstNameChange={onFirstNameChange}
-                onLastNameChange={onLastNameChange}
-                onEmailChange={onEmailChange}
-                onSave={onSave}
-                onCancel={onCancel}
-                onAvatarClick={onAvatarClick}
-              />
-            </Card>
+            <GridItem colSpanLg={showAccountInfo ? 3 : 5}>
+              <Card variant="section" padding="lg">
+                <ProfileHeader
+                  user={viewUser}
+                  isOwnProfile={isOwnProfile}
+                  isEditing={isEditing}
+                  name={name}
+                  firstName={firstName}
+                  lastName={lastName}
+                  email={email}
+                  onEditClick={onEditClick}
+                  onNameChange={onNameChange}
+                  onFirstNameChange={onFirstNameChange}
+                  onLastNameChange={onLastNameChange}
+                  onEmailChange={onEmailChange}
+                  onSave={onSave}
+                  onCancel={onCancel}
+                  onAvatarClick={onAvatarClick}
+                />
+              </Card>
+            </GridItem>
 
             {showAccountInfo && (
-              <AccountInfo
-                user={viewUser as ProfileUser & { _creationTime: number }}
-                className="h-full lg:col-span-2"
-              />
+              <GridItem colSpanLg={2}>
+                <AccountInfo user={viewUser as ProfileUser & { _creationTime: number }} />
+              </GridItem>
             )}
           </Grid>
 

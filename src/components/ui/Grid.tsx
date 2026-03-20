@@ -114,6 +114,22 @@ const colSpanClasses: Record<ColSpan, string> = {
   full: "col-span-full",
 };
 
+const colSpanSmClasses: Record<ColSpan, string> = {
+  1: "sm:col-span-1",
+  2: "sm:col-span-2",
+  3: "sm:col-span-3",
+  4: "sm:col-span-4",
+  5: "sm:col-span-5",
+  6: "sm:col-span-6",
+  7: "sm:col-span-7",
+  8: "sm:col-span-8",
+  9: "sm:col-span-9",
+  10: "sm:col-span-10",
+  11: "sm:col-span-11",
+  12: "sm:col-span-12",
+  full: "sm:col-span-full",
+};
+
 const colSpanLgClasses: Record<ColSpan, string> = {
   1: "lg:col-span-1",
   2: "lg:col-span-2",
@@ -224,6 +240,8 @@ Grid.displayName = "Grid";
 export interface GridItemProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Column span at the base/mobile breakpoint */
   colSpan?: ColSpan;
+  /** Column span at the sm breakpoint (640px) */
+  colSpanSm?: ColSpan;
   /** Column span at the lg breakpoint (1024px) */
   colSpanLg?: ColSpan;
   /** Render as a different element */
@@ -231,12 +249,16 @@ export interface GridItemProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export const GridItem = React.forwardRef<HTMLDivElement, GridItemProps>(
-  ({ colSpan, colSpanLg, as: Component = "div", className, children, ...props }, ref) => {
+  (
+    { colSpan, colSpanSm, colSpanLg, as: Component = "div", className, children, ...props },
+    ref,
+  ) => {
     return (
       <Component
         ref={ref}
         className={cn(
           colSpan && colSpanClasses[colSpan],
+          colSpanSm && colSpanSmClasses[colSpanSm],
           colSpanLg && colSpanLgClasses[colSpanLg],
           className,
         )}
