@@ -1,8 +1,9 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { getLocatorAttribute, isLocatorDisabled, isLocatorVisible } from "../utils/locator-state";
 import { ROUTES, routePattern } from "../utils/routes";
-import { waitForConvexConnectionReady } from "../utils/wait-helpers";
+import { waitForAnimation, waitForConvexConnectionReady } from "../utils/wait-helpers";
 
 const TRANSITION_TIMEOUT = 15000;
 const CLICK_RETRY_TIMEOUT = 3000;
@@ -118,9 +119,8 @@ export class OnboardingPage {
 
   async recoverOnboardingRouteIfNeeded() {
     const hasAppError =
-      (await this.error500Heading.isVisible().catch(() => false)) ||
-      ((await this.errorHeading.isVisible().catch(() => false)) &&
-        (await this.errorMessage.isVisible().catch(() => false)));
+      (await isLocatorVisible(this.error500Heading)) ||
+      ((await isLocatorVisible(this.errorHeading)) && (await isLocatorVisible(this.errorMessage)));
 
     if (!hasAppError) {
       return;
@@ -139,12 +139,12 @@ export class OnboardingPage {
   }
 
   async hasRoleSelectionStarted(card: Locator) {
-    const pressed = await card.getAttribute("aria-pressed").catch(() => null);
+    const pressed = await getLocatorAttribute(card, "aria-pressed");
     if (pressed === "true") {
       return true;
     }
 
-    const isEnabled = await card.isEnabled().catch(() => false);
+    const isEnabled = !(await isLocatorDisabled(card, true));
     return !isEnabled;
   }
 
@@ -348,8 +348,8 @@ export class OnboardingPage {
     }
 
     // Only retry if back button is visible AND enabled AND role selection is still not ready
-    const backVisible = await this.backButton.isVisible().catch(() => false);
-    const backEnabled = backVisible && !(await this.backButton.isDisabled().catch(() => true));
+    const backVisible = await isLocatorVisible(this.backButton);
+    const backEnabled = backVisible && !(await isLocatorDisabled(this.backButton, true));
     const roleReady = await this.waitForRoleSelectionReady(0);
 
     if (backVisible && backEnabled && !roleReady) {
@@ -458,7 +458,7 @@ export class OnboardingPage {
   }
 
   private async getVisibleSkipAction() {
-    if (await this.skipButton.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.skipButton)) {
       await expect(this.skipButton).toBeEnabled();
       return this.skipButton;
     }
@@ -496,7 +496,7 @@ export class OnboardingPage {
   private async selectRoleAndWaitForStep(card: Locator, nextStepHeading: Locator) {
     await this.waitForRoleCardsReady();
 
-    if (await nextStepHeading.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(nextStepHeading)) {
       return;
     }
 
@@ -508,7 +508,7 @@ export class OnboardingPage {
       return;
     } catch {
       // Before resetting, check if the click actually succeeded but heading was slow
-      if (await nextStepHeading.isVisible().catch(() => false)) {
+      if (await isLocatorVisible(nextStepHeading)) {
         return;
       }
       await this.recoverOnboardingRouteIfNeeded();
@@ -516,7 +516,7 @@ export class OnboardingPage {
     }
 
     // Check one more time if heading became visible during recovery
-    if (await nextStepHeading.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(nextStepHeading)) {
       return;
     }
 
@@ -560,12 +560,12 @@ export class OnboardingPage {
   }
 
   private async getProjectCreateSubmitState(): Promise<"submitting" | "complete" | "pending"> {
-    if (await this.allSetHeading.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.allSetHeading)) {
       return "complete";
     }
 
     const creatingButton = this.page.getByRole("button", { name: /creating/i });
-    if (await creatingButton.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(creatingButton)) {
       return "submitting";
     }
 
