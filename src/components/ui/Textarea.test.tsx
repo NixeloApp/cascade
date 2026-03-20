@@ -8,6 +8,14 @@ describe("Textarea", () => {
     expect(screen.getByPlaceholderText("Enter text")).toBeInTheDocument();
   });
 
+  it("applies surfaceMono variant styling", () => {
+    render(<Textarea variant="surfaceMono" data-testid="textarea" />);
+    const textarea = screen.getByTestId("textarea");
+    expect(textarea.className).toContain("min-h-textarea");
+    expect(textarea.className).toContain("font-mono");
+    expect(textarea.className).toContain("bg-ui-bg");
+  });
+
   it("renders error message", () => {
     render(<Textarea error="Invalid input" />);
     expect(screen.getByText("Invalid input")).toBeInTheDocument();

@@ -18,6 +18,7 @@ const inputVariants = cva(
     variants: {
       variant: {
         default: "bg-transparent text-ui-text border-ui-border",
+        surface: "bg-ui-bg text-ui-text border-ui-border",
         search: "bg-ui-bg-soft text-ui-text pl-9 border-ui-border",
         filter:
           "pl-7 border-ui-border/45 bg-transparent text-ui-text-secondary placeholder:text-ui-text-tertiary hover:border-ui-border/60 focus-visible:border-ui-border-secondary focus-visible:bg-ui-bg-elevated/80 sm:pl-8 sm:border-ui-border/60 sm:bg-ui-bg-soft sm:text-ui-text",

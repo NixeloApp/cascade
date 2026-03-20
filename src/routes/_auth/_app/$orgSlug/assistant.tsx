@@ -68,19 +68,13 @@ function AssistantStats() {
           <div className="absolute left-0 top-0 h-full w-1 bg-status-success" />
           <CardBody className="p-5 pl-6">
             <Flex justify="between" align="start" className="mb-2">
-              <Typography
-                variant="small"
-                color="tertiary"
-                className="text-caption uppercase tracking-wider font-bold"
-              >
+              <Typography variant="eyebrow" color="tertiary">
                 {stat.label}
               </Typography>
               <stat.icon className="w-4 h-4 text-ui-text-tertiary" />
             </Flex>
             <Flex align="baseline" gap="xs">
-              <Typography variant="h2" className="text-3xl font-extrabold text-ui-text">
-                {stat.value}
-              </Typography>
+              <Typography variant="dashboardStatValueStrong">{stat.value}</Typography>
               {stat.trend && (
                 <Badge variant="success" size="sm" className="ml-2">
                   {stat.trend}
@@ -88,7 +82,7 @@ function AssistantStats() {
               )}
             </Flex>
             {stat.sub && (
-              <Typography variant="small" color="secondary" className="text-xs mt-1">
+              <Typography variant="meta" className="mt-1">
                 {stat.sub}
               </Typography>
             )}
@@ -168,19 +162,17 @@ function AssistantConfig() {
               {/* System Prompt */}
               <div className="space-y-3">
                 <Flex justify="between">
-                  <Typography variant="small" className="font-medium">
-                    System Prompt
-                  </Typography>
-                  <Typography variant="small" color="tertiary" className="text-xs">
+                  <Typography variant="label">System Prompt</Typography>
+                  <Typography variant="meta" color="tertiary">
                     Max 2000 chars
                   </Typography>
                 </Flex>
                 <Textarea
+                  variant="surfaceMono"
                   placeholder="You are a helpful assistant for..."
-                  className="min-h-textarea font-mono text-sm bg-ui-bg"
                   defaultValue="You are a helpful documentation assistant. Answer questions based on the provided context."
                 />
-                <Typography variant="small" color="tertiary" className="text-xs">
+                <Typography variant="meta" color="tertiary">
                   Instructions for how the assistant should behave and answer questions.
                 </Typography>
               </div>
@@ -188,9 +180,7 @@ function AssistantConfig() {
               <Grid cols={1} colsMd={2} gap="xl">
                 {/* Model Selection */}
                 <div className="space-y-3">
-                  <Typography variant="small" className="font-medium">
-                    Model
-                  </Typography>
+                  <Typography variant="label">Model</Typography>
                   <Select value={model} onValueChange={setModel}>
                     <SelectTrigger className="bg-ui-bg">
                       <SelectValue placeholder="Select model" />
@@ -206,10 +196,8 @@ function AssistantConfig() {
 
                 {/* Support Email */}
                 <div className="space-y-3">
-                  <Typography variant="small" className="font-medium">
-                    Support Email
-                  </Typography>
-                  <Input type="email" placeholder="support@example.com" className="bg-ui-bg" />
+                  <Typography variant="label">Support Email</Typography>
+                  <Input variant="surface" type="email" placeholder="support@example.com" />
                 </div>
               </Grid>
 
@@ -220,10 +208,8 @@ function AssistantConfig() {
                 className="pt-4 border-t border-ui-border-secondary"
               >
                 <div className="space-y-1">
-                  <Typography variant="small" className="font-medium">
-                    Show Help Button
-                  </Typography>
-                  <Typography variant="small" color="tertiary" className="text-xs">
+                  <Typography variant="label">Show Help Button</Typography>
+                  <Typography variant="meta" color="tertiary">
                     Display a floating help button on your documentation pages.
                   </Typography>
                 </div>
@@ -248,12 +234,7 @@ function AssistantConfig() {
                     Get access to advanced models (GPT-4o), custom system prompts, and higher usage
                     limits.
                   </Typography>
-                  <Button
-                    variant="primary"
-                    className="bg-brand hover:bg-brand-hover text-white border-none shadow-lg shadow-brand/20"
-                  >
-                    Upgrade Plan
-                  </Button>
+                  <Button variant="brandSolid">Upgrade Plan</Button>
                 </div>
               </Flex>
             </CardBody>

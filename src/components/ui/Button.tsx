@@ -19,6 +19,8 @@ const buttonVariants = cva(
       variant: {
         primary:
           "bg-linear-to-r from-landing-accent to-landing-accent-teal text-brand-foreground shadow-sm hover:shadow-md hover:brightness-105 focus-visible:ring-brand-ring",
+        brandSolid:
+          "bg-brand text-brand-foreground shadow-lg shadow-brand/20 hover:bg-brand-hover focus-visible:ring-brand-ring",
         landingPrimary:
           "rounded-full bg-linear-to-r from-brand to-landing-accent px-4 py-2 text-sm font-medium whitespace-nowrap text-brand-foreground shadow-soft hover:-translate-y-px hover:bg-brand-hover hover:shadow-card sm:px-5 sm:py-2.5 focus-visible:ring-brand-ring",
         authLink:
