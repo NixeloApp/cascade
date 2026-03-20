@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { isLocatorVisible } from "../utils/locator-state";
 import { ROUTES, routePattern } from "../utils/routes";
 import {
   createWorkspaceFromDialog,
@@ -114,7 +115,7 @@ export class WorkspacesPage extends BasePage {
   }
 
   async isWorkspaceSettingsTabVisible() {
-    return this.workspaceSettingsTab.isVisible().catch(() => false);
+    return isLocatorVisible(this.workspaceSettingsTab);
   }
 
   async openWorkspace(name: string) {
@@ -122,10 +123,9 @@ export class WorkspacesPage extends BasePage {
     const onWorkspaceRoute = routePattern(ROUTES.workspaces.detail.path).test(this.page.url());
     if (onWorkspaceRoute) {
       // PageHeader renders workspace name as h2
-      const headingVisible = await this.page
-        .getByRole("heading", { name, level: 2 })
-        .isVisible()
-        .catch(() => false);
+      const headingVisible = await isLocatorVisible(
+        this.page.getByRole("heading", { name, level: 2 }),
+      );
       if (headingVisible) return;
     }
 
@@ -159,26 +159,16 @@ export class WorkspacesPage extends BasePage {
   async getTeamsPageState(): Promise<"empty" | "teams"> {
     await this.expectTeamsLoaded();
 
-    if (
-      await this.teamCards
-        .first()
-        .isVisible()
-        .catch(() => false)
-    ) {
+    if (await isLocatorVisible(this.teamCards.first())) {
       return "teams";
     }
 
-    if (await this.teamsEmptyStateHeading.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.teamsEmptyStateHeading)) {
       return "empty";
     }
 
     await expect(this.teamsEmptyStateHeading.or(this.teamCards.first())).toBeVisible();
-    return (await this.teamCards
-      .first()
-      .isVisible()
-      .catch(() => false))
-      ? "teams"
-      : "empty";
+    return (await isLocatorVisible(this.teamCards.first())) ? "teams" : "empty";
   }
 
   async expectWorkspaceSettingsLoaded() {
@@ -254,7 +244,7 @@ export class WorkspacesPage extends BasePage {
     loadingSpinner: Locator,
     timeout = 5000,
   ): Promise<void> {
-    const spinnerVisible = await loadingSpinner.isVisible().catch(() => false);
+    const spinnerVisible = await isLocatorVisible(loadingSpinner);
     if (!spinnerVisible) {
       return;
     }
@@ -283,7 +273,7 @@ export class WorkspacesPage extends BasePage {
         // Fall through to the explicit visibility check and error below.
       }
 
-      const stillVisible = await locator.isVisible().catch(() => false);
+      const stillVisible = await isLocatorVisible(locator);
       if (stillVisible) {
         return;
       }
