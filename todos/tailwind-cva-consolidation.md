@@ -35,6 +35,7 @@ Target the 148 files with raw TW violations. For each repeated pattern:
 - [x] Absorb the repeated meetings list-shell cluster (`list-none`, branded bullet lists) into an owned `List` primitive and swap `MeetingsWorkspace.tsx` to it
 - [x] Absorb the meetings status-chip color map into owned `Badge` variants instead of local raw Tailwind state classes
 - [x] Absorb the meetings transcript scroll/pre-wrap cluster into owned `ScrollArea` sizing and `Typography` mono-block styling
+- [x] Absorb the remaining meetings status-icon tone pair into owned `Icon` semantic tones
 - [ ] Audit raw TW in route files -- repeated spacing/shell/state patterns should become components or CVA variants
 - [ ] Run `node scripts/validate/check-raw-tailwind.js --audit` and group violations by pattern (same class cluster = same missing abstraction)
 - [ ] For each cluster of 3+ identical class sets, extract a component or add a CVA variant

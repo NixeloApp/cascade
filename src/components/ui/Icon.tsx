@@ -20,9 +20,21 @@ const iconVariants = cva("", {
       lg: "w-6 h-6",
       xl: "w-8 h-8",
     },
+    tone: {
+      default: "",
+      secondary: "text-ui-text-secondary",
+      tertiary: "text-ui-text-tertiary",
+      brand: "text-brand",
+      success: "text-status-success",
+      warning: "text-status-warning",
+      error: "text-status-error",
+      info: "text-status-info",
+      accent: "text-accent",
+    },
   },
   defaultVariants: {
     size: "md",
+    tone: "default",
   },
 });
 
@@ -49,8 +61,10 @@ interface IconProps
  * ```
  */
 export const Icon = forwardRef<SVGSVGElement, IconProps>(
-  ({ icon: IconComponent, size, className, ...props }, ref) => {
-    return <IconComponent ref={ref} className={cn(iconVariants({ size }), className)} {...props} />;
+  ({ icon: IconComponent, size, tone, className, ...props }, ref) => {
+    return (
+      <IconComponent ref={ref} className={cn(iconVariants({ size, tone }), className)} {...props} />
+    );
   },
 );
 Icon.displayName = "Icon";

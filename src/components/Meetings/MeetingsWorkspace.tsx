@@ -20,6 +20,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Grid } from "@/components/ui/Grid";
+import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { List } from "@/components/ui/List";
@@ -1147,7 +1148,7 @@ function SummarySections({
           <List gap="xs">
             {summary.decisions.map((decision) => (
               <Flex as="li" key={decision} align="start" gap="sm">
-                <CheckCircle size={16} className="text-status-success" />
+                <Icon icon={CheckCircle} size="sm" tone="success" />
                 <Typography variant="caption" color="secondary">
                   {decision}
                 </Typography>
@@ -1249,7 +1250,7 @@ function RecordingDetailPanel({
           {recording.errorMessage && (
             <Card variant="section" padding="sm">
               <Flex gap="sm" align="start">
-                <XCircle size={16} className="text-status-error" />
+                <Icon icon={XCircle} size="sm" tone="error" />
                 <Typography variant="caption" color="secondary">
                   {recording.errorMessage}
                 </Typography>
