@@ -97,6 +97,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [x] Replace `AuthPage` readiness, submit-state, and app-shell recovery catch chains with shared locator-state helpers
 - [x] Replace the remaining `DashboardPage` auth-redirect, app-error, modal-dismissal, timer-state, and global-search catch chains with shared locator-state helpers
 - [x] Replace the remaining `OnboardingPage` app-error recovery, role-card state, back-navigation, skip-action, and project-submit catch chains with shared locator-state helpers
+- [x] Replace the remaining `DocumentsPage` editor-readiness and app-error diagnostics catch chains with shared locator-state helpers
 - [x] Replace the remaining `ProjectsPage` create-project, issue-detail, sprint/activity, roadmap, and timer state catch chains with shared locator-state helpers
 - [x] Replace the remaining notifications screenshot readiness and Mentions-filter catch chains with shared locator-state helpers
 - [x] Replace the remaining omnibox/calendar/sidebar/board/sprint/issue screenshot catch probes with shared locator-state helpers

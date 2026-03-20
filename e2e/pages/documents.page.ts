@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { getOptionalLocatorText, isLocatorVisible } from "../utils/locator-state";
 import { ROUTES, routePattern } from "../utils/routes";
 import { BasePage } from "./base.page";
 
@@ -204,16 +205,16 @@ export class DocumentsPage extends BasePage {
   }
 
   private async getEditorReadyState(): Promise<"editor" | "initializer" | "error" | "pending"> {
-    if (await this.appErrorHeading.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.appErrorHeading)) {
       return "error";
     }
 
     const initButton = this.page.getByRole("button", { name: /initialize.*document/i });
-    if (await initButton.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(initButton)) {
       return "initializer";
     }
 
-    if (await this.editor.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.editor)) {
       return "editor";
     }
 
@@ -221,25 +222,23 @@ export class DocumentsPage extends BasePage {
   }
 
   private async throwIfAppErrorVisible() {
-    if (!(await this.appErrorHeading.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.appErrorHeading))) {
       return;
     }
 
-    const detailsVisible = await this.appErrorDetailsMessage.isVisible().catch(() => false);
+    const detailsVisible = await isLocatorVisible(this.appErrorDetailsMessage);
     if (!detailsVisible) {
       await this.expandAppErrorDetailsIfAvailable();
     }
 
-    const errorDetails = (
-      await this.appErrorDetailsMessage.textContent().catch(() => null)
-    )?.trim();
+    const errorDetails = (await getOptionalLocatorText(this.appErrorDetailsMessage))?.trim();
     const suffix = errorDetails ? `: ${errorDetails}` : "";
     const diagnostics = await this.getAppErrorDiagnostics();
     throw new Error(`React error boundary displayed${suffix}${diagnostics}`);
   }
 
   private async expandAppErrorDetailsIfAvailable(): Promise<void> {
-    const summaryVisible = await this.appErrorDetailsSummary.isVisible().catch(() => false);
+    const summaryVisible = await isLocatorVisible(this.appErrorDetailsSummary);
     if (!summaryVisible) {
       return;
     }
@@ -248,7 +247,7 @@ export class DocumentsPage extends BasePage {
       await this.appErrorDetailsSummary.click();
       await expect(this.appErrorDetailsMessage).toBeVisible({ timeout: 2000 });
     } catch (error) {
-      const detailsVisible = await this.appErrorDetailsMessage.isVisible().catch(() => false);
+      const detailsVisible = await isLocatorVisible(this.appErrorDetailsMessage);
       if (detailsVisible) {
         return;
       }
@@ -259,8 +258,15 @@ export class DocumentsPage extends BasePage {
   }
 
   private async getAppErrorDiagnostics(): Promise<string> {
-    const diagnostics = await this.page
-      .evaluate(() => {
+    let diagnostics: {
+      url: string;
+      hydrated: boolean;
+      authKeys: string[];
+      connectionState: unknown;
+    } | null = null;
+
+    try {
+      diagnostics = await this.page.evaluate(() => {
         const authKeys = Object.keys(localStorage)
           .filter((key) => key.includes("convexAuth"))
           .sort();
@@ -276,8 +282,10 @@ export class DocumentsPage extends BasePage {
           authKeys,
           connectionState: convexClient?.connectionState() ?? null,
         };
-      })
-      .catch(() => null);
+      });
+    } catch {
+      diagnostics = null;
+    }
 
     if (!diagnostics) {
       return "";
