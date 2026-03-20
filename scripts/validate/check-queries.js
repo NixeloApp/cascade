@@ -21,6 +21,12 @@ const CLIENT_QUERY_FILTER_BASELINE_PATH = path.join(
   "ci",
   "client-query-filters-baseline.json",
 );
+const MULTI_FILTER_BASELINE_PATH = path.join(
+  ROOT,
+  "scripts",
+  "ci",
+  "multi-filter-query-results-baseline.json",
+);
 const QUERY_HOOK_PATTERN = /use(?:AuthenticatedQuery|Query|PaginatedQuery|SuspenseQuery)\s*\(/;
 
 function lineFromIndex(source, index) {
@@ -120,6 +126,7 @@ function collectPostFetchFilters(content, file) {
         file,
         line,
         variableName,
+        originLine: assignmentLine,
         code: filterStatement,
       });
     }
@@ -161,6 +168,7 @@ function collectClientQueryFilters(content, file) {
       continue;
     }
 
+    const assignmentLine = lineFromIndex(content, assignmentMatch.index ?? 0);
     const searchStart = (assignmentMatch.index ?? 0) + assignmentMatch[0].length;
     const searchArea = content.slice(searchStart);
     const filterPattern = new RegExp(`\\b${variableName}\\s*(?:\\?\\.|\\.)filter\\s*\\(`, "g");
@@ -204,12 +212,43 @@ function collectClientQueryFilters(content, file) {
         file,
         line,
         variableName,
+        originLine: assignmentLine,
         code: filterStatement,
       });
     }
   }
 
   return detections;
+}
+
+function collectMultiFilterGroups(detections) {
+  const groupedDetections = new Map();
+
+  for (const detection of detections) {
+    const groupKey = `${detection.file}:${detection.variableName}:${detection.originLine ?? detection.line}`;
+    const existingGroup = groupedDetections.get(groupKey);
+
+    if (existingGroup) {
+      existingGroup.filters.push(detection);
+      continue;
+    }
+
+    groupedDetections.set(groupKey, {
+      file: detection.file,
+      variableName: detection.variableName,
+      originLine: detection.originLine ?? detection.line,
+      filters: [detection],
+    });
+  }
+
+  return [...groupedDetections.values()]
+    .filter((group) => group.filters.length >= 2)
+    .sort((a, b) => {
+      if (a.file !== b.file) {
+        return a.file.localeCompare(b.file);
+      }
+      return a.originLine - b.originLine;
+    });
 }
 
 export function run() {
@@ -502,6 +541,7 @@ export function run() {
   const allIssues = [];
   const postFetchFilterDetections = [];
   const clientQueryFilterDetections = [];
+  const multiFilterDetections = [];
 
   for (const file of files) {
     const issues = analyzeFile(file);
@@ -509,7 +549,9 @@ export function run() {
     if (issues.length > 0) {
       allIssues.push(...issues.map((issue) => ({ ...issue, file: relPath(file) })));
     }
-    postFetchFilterDetections.push(...collectPostFetchFilters(content, relPath(file)));
+    const filePostFetchDetections = collectPostFetchFilters(content, relPath(file));
+    postFetchFilterDetections.push(...filePostFetchDetections);
+    multiFilterDetections.push(...filePostFetchDetections);
   }
 
   for (const dir of clientDirCandidates) {
@@ -523,7 +565,9 @@ export function run() {
 
     for (const filePath of clientFiles) {
       const content = fs.readFileSync(filePath, "utf-8");
-      clientQueryFilterDetections.push(...collectClientQueryFilters(content, relPath(filePath)));
+      const fileClientQueryDetections = collectClientQueryFilters(content, relPath(filePath));
+      clientQueryFilterDetections.push(...fileClientQueryDetections);
+      multiFilterDetections.push(...fileClientQueryDetections);
     }
   }
 
@@ -593,6 +637,39 @@ export function run() {
 
   allIssues.push(...clientQueryRatchetViolations);
 
+  const multiFilterBaseline = fs.existsSync(MULTI_FILTER_BASELINE_PATH)
+    ? JSON.parse(fs.readFileSync(MULTI_FILTER_BASELINE_PATH, "utf8"))
+    : { multiFilterQueryResultsByFile: {} };
+  const multiFilterBaselineByFile = multiFilterBaseline.multiFilterQueryResultsByFile ?? {};
+  const multiFilterGroups = collectMultiFilterGroups(multiFilterDetections);
+  const currentMultiFilterByFile = {};
+  for (const group of multiFilterGroups) {
+    currentMultiFilterByFile[group.file] = (currentMultiFilterByFile[group.file] ?? 0) + 1;
+  }
+
+  const multiFilterRatchetViolations = [];
+  for (const [file, currentCount] of Object.entries(currentMultiFilterByFile).sort((a, b) =>
+    a[0].localeCompare(b[0]),
+  )) {
+    const baselineCount = multiFilterBaselineByFile[file] ?? 0;
+    if (currentCount > baselineCount) {
+      const fileGroups = multiFilterGroups
+        .filter((group) => group.file === file)
+        .sort((a, b) => a.originLine - b.originLine);
+      multiFilterRatchetViolations.push(
+        ...fileGroups.slice(baselineCount).map((group) => ({
+          type: "MULTI_FILTER_QUERY_RESULT",
+          file: group.file,
+          line: group.originLine,
+          code: group.filters.map((filter) => filter.code).join(" | "),
+          message: `${group.variableName} is filtered ${group.filters.length} times after fetch/query result - combine passes or pre-aggregate`,
+        })),
+      );
+    }
+  }
+
+  allIssues.push(...multiFilterRatchetViolations);
+
   const messages = [];
   if (allIssues.length > 0) {
     for (const issue of allIssues) {
@@ -608,6 +685,10 @@ export function run() {
     (sum, count) => sum + count,
     0,
   );
+  const baselinedMultiFilterCount = Object.values(currentMultiFilterByFile).reduce(
+    (sum, count) => sum + count,
+    0,
+  );
   const baselineSummaryParts = [];
   if (baselinedPostFetchCount > 0) {
     baselineSummaryParts.push(
@@ -620,6 +701,13 @@ export function run() {
     baselineSummaryParts.push(
       `${baselinedClientQueryCount} baselined client query filter(s) across ${
         Object.keys(currentClientQueryByFile).length
+      } file(s)`,
+    );
+  }
+  if (baselinedMultiFilterCount > 0) {
+    baselineSummaryParts.push(
+      `${baselinedMultiFilterCount} baselined multi-filter query result group(s) across ${
+        Object.keys(currentMultiFilterByFile).length
       } file(s)`,
     );
   }

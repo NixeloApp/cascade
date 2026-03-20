@@ -62,7 +62,7 @@ Fetches all data then filters in the component when the filter could be a backen
 
 - [x] **Post-fetch JS filter** -- ratcheted in `check-queries.js` for backend `.take()` / `.collect()` / `safeCollect()` results followed by JS `.filter()` (41 baselined across 18 files)
 - [x] **Client-side query filter** -- ratcheted in `check-queries.js` for query-hook results filtered in React components/routes (13 baselined across 11 files)
-- [ ] **Multi-filter on same result** -- detect same variable filtered 2+ times in sequence. Suggest single pass or pre-aggregation.
+- [x] **Multi-filter on same result** -- ratcheted in `check-queries.js` for repeated `.filter()` passes on the same fetched/query result variable (9 baselined groups across 8 files)
 
 ## New Validators to Add (Non-Query)
 
