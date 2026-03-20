@@ -26,11 +26,11 @@ All caused by `MeetingsWorkspace.tsx` (55 of 75 violations) plus a handful elsew
 
 ## Advisory Validators That Should Block
 
-These 3 validators report real issues (43 + 17 + N) but pass anyway:
+These 3 validators reported real issues and have now been promoted after cleanup:
 
-- [ ] **Typography drift** (43 drift points) -- promote from advisory to blocking, or set a baseline threshold that blocks on increase
-- [ ] **Control chrome drift** (17 drift points) -- same: promote to blocking or ratchet
-- [ ] **Shared shape drift** -- promote or ratchet
+- [x] **Typography drift** (0 drift points) -- promoted from advisory to blocking
+- [x] **Control chrome drift** (0 drift points) -- promoted from advisory to blocking
+- [x] **Shared shape drift** (0 repeated shape groups) -- promoted from advisory to blocking
 
 ## Query/Filter Validator Gaps
 

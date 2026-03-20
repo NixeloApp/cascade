@@ -44,9 +44,9 @@
  *  40. Nested Cards            — bans Cards nested inside other Cards
  *  41. Border Radius           — enforces consistent border radius usage
  *  42. Screenshot coverage     — route coverage + canonical spec screenshot audit (informational)
- *  43. Typography drift        — advisory audit for Typography/style drift outside owned primitives
- *  44. Control chrome drift    — advisory audit for owned controls restyled in feature code
- *  45. Shared shape drift      — advisory audit for repeated inline entity summary shapes
+ *  43. Typography drift        — blocks Typography/style drift outside owned primitives
+ *  44. Control chrome drift    — blocks owned controls restyled in feature code
+ *  45. Shared shape drift      — blocks repeated inline entity summary shapes
  *  46. Page layout             — route wrappers should use PageLayout, not ad-hoc max-width shells
  *  47. Raw Date formatting     — use shared date helpers instead of ad-hoc formatting
  *
