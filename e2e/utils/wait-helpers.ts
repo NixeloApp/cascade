@@ -7,6 +7,13 @@
 
 import { type APIRequestContext, expect, type Locator, type Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import {
+  getLocatorCount,
+  getLocatorInputValue,
+  getOptionalLocatorText,
+  isLocatorDisabled,
+  isLocatorVisible,
+} from "./locator-state";
 import { escapeRegExp, ROUTES, routePattern } from "./routes";
 import { getToastLocator } from "./toast-locators";
 
@@ -46,21 +53,21 @@ export async function waitForFormReady(page: Page, timeout = 5000): Promise<bool
   await expect
     .poll(
       async () => {
-        if (!(await form.isVisible().catch(() => false))) {
+        if (!(await isLocatorVisible(form))) {
           return "pending";
         }
 
-        const formReady = (await formReadyMarker.count().catch(() => 0)) > 0;
+        const formReady = (await getLocatorCount(formReadyMarker)) > 0;
         if (formReady) {
           return "marker-ready";
         }
 
-        const expanded = (await emailForm.count().catch(() => 0)) > 0;
-        const hydrated = (await hydratedMarker.count().catch(() => 0)) > 0;
-        const emailVisible = await emailInput.isVisible().catch(() => false);
-        const passwordVisible = await passwordInput.isVisible().catch(() => false);
-        const submitVisible = await submitButton.isVisible().catch(() => false);
-        const submitEnabled = submitVisible && !(await submitButton.isDisabled().catch(() => true));
+        const expanded = (await getLocatorCount(emailForm)) > 0;
+        const hydrated = (await getLocatorCount(hydratedMarker)) > 0;
+        const emailVisible = await isLocatorVisible(emailInput);
+        const passwordVisible = await isLocatorVisible(passwordInput);
+        const submitVisible = await isLocatorVisible(submitButton);
+        const submitEnabled = submitVisible && !(await isLocatorDisabled(submitButton, true));
 
         if (
           expanded &&
@@ -83,18 +90,18 @@ export async function waitForFormReady(page: Page, timeout = 5000): Promise<bool
     .not.toBe("pending");
 
   // Check if form is ready via marker OR via fallback conditions
-  const formReady = (await formReadyMarker.count().catch(() => 0)) > 0;
+  const formReady = (await getLocatorCount(formReadyMarker)) > 0;
   if (formReady) {
     return true;
   }
 
   // Re-check fallback conditions if marker not set
-  const expanded = (await emailForm.count().catch(() => 0)) > 0;
-  const hydrated = (await hydratedMarker.count().catch(() => 0)) > 0;
-  const emailVisible = await emailInput.isVisible().catch(() => false);
-  const passwordVisible = await passwordInput.isVisible().catch(() => false);
-  const submitVisible = await submitButton.isVisible().catch(() => false);
-  const submitEnabled = submitVisible && !(await submitButton.isDisabled().catch(() => true));
+  const expanded = (await getLocatorCount(emailForm)) > 0;
+  const hydrated = (await getLocatorCount(hydratedMarker)) > 0;
+  const emailVisible = await isLocatorVisible(emailInput);
+  const passwordVisible = await isLocatorVisible(passwordInput);
+  const submitVisible = await isLocatorVisible(submitButton);
+  const submitEnabled = submitVisible && !(await isLocatorDisabled(submitButton, true));
 
   return expanded && hydrated && emailVisible && passwordVisible && submitVisible && submitEnabled;
 }
@@ -161,12 +168,9 @@ export async function waitForDialogOpen(page: Page, timeout = 8000): Promise<Loc
   await expect
     .poll(
       async () => {
-        const overlayVisible = await page
-          .getByTestId(TEST_IDS.DIALOG.OVERLAY)
-          .isVisible()
-          .catch(() => false);
-        const dialogVisible = await dialog.isVisible().catch(() => false);
-        const alertDialogVisible = await alertDialog.isVisible().catch(() => false);
+        const overlayVisible = await isLocatorVisible(page.getByTestId(TEST_IDS.DIALOG.OVERLAY));
+        const dialogVisible = await isLocatorVisible(dialog);
+        const alertDialogVisible = await isLocatorVisible(alertDialog);
         return overlayVisible && (dialogVisible || alertDialogVisible);
       },
       {
@@ -175,7 +179,7 @@ export async function waitForDialogOpen(page: Page, timeout = 8000): Promise<Loc
       },
     )
     .toBe(true);
-  const activeDialog = (await alertDialog.isVisible().catch(() => false)) ? alertDialog : dialog;
+  const activeDialog = (await isLocatorVisible(alertDialog)) ? alertDialog : dialog;
   await activeDialog.waitFor({ state: "visible", timeout });
   await waitForAnimation(page);
   return activeDialog;
@@ -194,14 +198,6 @@ export async function waitForLoadingSkeletonsToClear(page: Page, timeout = 5000)
     .toBe(0);
 }
 
-async function isLocatorVisible(locator: Locator): Promise<boolean> {
-  try {
-    return await locator.isVisible();
-  } catch {
-    return false;
-  }
-}
-
 async function waitForLocatorToHide(locator: Locator, timeout: number): Promise<boolean> {
   try {
     await expect(locator).toBeHidden({ timeout });
@@ -215,12 +211,7 @@ async function countVisibleLocators(locator: Locator): Promise<number> {
   const count = await locator.count();
   let visibleCount = 0;
   for (let index = 0; index < count; index += 1) {
-    if (
-      await locator
-        .nth(index)
-        .isVisible()
-        .catch(() => false)
-    ) {
+    if (await isLocatorVisible(locator.nth(index))) {
       visibleCount += 1;
     }
   }
@@ -368,10 +359,10 @@ export async function waitForDashboardReady(page: Page): Promise<void> {
           .getByLabel("Loading")
           .or(page.getByTestId(TEST_IDS.LOADING.SPINNER));
 
-        const mainVisible = await main.isVisible().catch(() => false);
-        const searchVisible = await searchButton.isVisible().catch(() => false);
-        const searchEnabled = searchVisible && !(await searchButton.isDisabled().catch(() => true));
-        const spinnerVisible = await loadingSpinner.isVisible().catch(() => false);
+        const mainVisible = await isLocatorVisible(main);
+        const searchVisible = await isLocatorVisible(searchButton);
+        const searchEnabled = searchVisible && !(await isLocatorDisabled(searchButton, true));
+        const spinnerVisible = await isLocatorVisible(loadingSpinner);
 
         if (mainVisible && searchVisible && searchEnabled && !spinnerVisible) {
           return "ready";
@@ -441,8 +432,8 @@ export async function waitForConvexConnectionReady(
 }
 
 export async function getConvexConnectionInfo(page: Page): Promise<ConvexConnectionInfo> {
-  return page
-    .evaluate(() => {
+  try {
+    return await page.evaluate(() => {
       const convex = (
         window as Window & {
           __convex_test_client?: { connectionState: () => { isWebSocketConnected: boolean } };
@@ -458,8 +449,10 @@ export async function getConvexConnectionInfo(page: Page): Promise<ConvexConnect
             state: "No Client" as const,
             hydrated: document.body.classList.contains("app-hydrated"),
           };
-    })
-    .catch(() => ({ state: "Unavailable" as const }));
+    });
+  } catch {
+    return { state: "Unavailable" as const };
+  }
 }
 
 /**
@@ -480,7 +473,7 @@ export async function ensureAuthenticatedDashboardReady(
     await expect(page).toHaveURL(dashboardUrl, { timeout });
     await page.waitForLoadState("domcontentloaded");
 
-    if (await appErrorHeading.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(appErrorHeading)) {
       throw new Error("App error boundary displayed during authenticated dashboard bootstrap");
     }
 
@@ -525,7 +518,7 @@ export async function ensureAuthenticatedDashboardReady(
     await expectAuthenticatedDashboardReady();
   } catch (error) {
     const lastError = error instanceof Error ? error : new Error(String(error));
-    const errorDetails = (await appErrorDetails.textContent().catch(() => null))?.trim();
+    const errorDetails = (await getOptionalLocatorText(appErrorDetails))?.trim();
     const suffix = errorDetails ? `: ${errorDetails}` : "";
     throw new Error(
       `Failed to bootstrap authenticated dashboard for ${orgSlug}: ${lastError.message}${suffix}`,
@@ -645,7 +638,7 @@ export function getWorkspaceDialogElements(page: Page): WorkspaceDialogElements 
 export async function dismissWorkspaceDialogIfOpen(page: Page, dialog: Locator): Promise<void> {
   await page.keyboard.press("Escape");
 
-  if (!(await dialog.isVisible().catch(() => false))) {
+  if (!(await isLocatorVisible(dialog))) {
     return;
   }
 
@@ -751,7 +744,7 @@ async function tryFillWorkspaceDialogField(input: Locator, value: string) {
     return false;
   }
 
-  const currentValue = await input.inputValue().catch(() => null);
+  const currentValue = await getLocatorInputValue(input);
   return currentValue === value;
 }
 
@@ -781,7 +774,7 @@ async function tryStartWorkspaceDialogSubmit(options: {
 }) {
   const { dialog, submitButton } = options;
 
-  if (!(await dialog.isVisible().catch(() => false))) {
+  if (!(await isLocatorVisible(dialog))) {
     return;
   }
 
@@ -827,11 +820,11 @@ async function waitForWorkspaceDialogHidden(dialog: Locator, timeout = 1000) {
 }
 
 async function getWorkspaceDialogSubmitState(dialog: Locator, submitButton: Locator) {
-  if (!(await dialog.isVisible().catch(() => false))) {
+  if (!(await isLocatorVisible(dialog))) {
     return "closed";
   }
 
-  if (await submitButton.isDisabled().catch(() => false)) {
+  if (await isLocatorDisabled(submitButton)) {
     return "submitting";
   }
 

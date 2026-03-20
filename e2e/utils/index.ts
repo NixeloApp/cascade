@@ -4,8 +4,11 @@
 
 // Auth UI helpers
 export * from "./auth-helpers";
+
 // Mailtrap utilities
 
+// Shared locator-state helpers for resilient E2E polling/recovery
+export * from "./locator-state";
 // Test helpers
 export * from "./test-helpers";
 // Test user API service

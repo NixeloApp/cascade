@@ -16,6 +16,12 @@ import {
   toastLocators,
   urlPatterns,
 } from "../locators";
+import {
+  getLocatorCount,
+  getLocatorText,
+  getOptionalLocatorText,
+  isLocatorVisible,
+} from "./locator-state";
 import { waitForMockOTP } from "./otp-helpers";
 import { ROUTES } from "./routes";
 import { testUserService } from "./test-user-service";
@@ -25,14 +31,6 @@ import {
   waitForDashboardReady,
   waitForFormReady,
 } from "./wait-helpers";
-
-async function isLocatorVisible(locator: Locator): Promise<boolean> {
-  try {
-    return await locator.isVisible();
-  } catch {
-    return false;
-  }
-}
 
 async function waitForLocatorVisible(locator: Locator, timeout: number): Promise<boolean> {
   try {
@@ -85,10 +83,7 @@ export async function completeEmailVerification(page: Page, email: string): Prom
 
     const outcome = await waitForEmailVerificationOutcome(page);
     if (outcome === "error") {
-      const errorText = await toastLocators(page)
-        .error.first()
-        .textContent()
-        .catch(() => "");
+      const errorText = await getLocatorText(toastLocators(page).error.first());
       console.error(`  ❌ Email verification reached error state for ${email}: ${errorText}`);
       return false;
     }
@@ -120,17 +115,14 @@ type PostAuthDestinationState = "dashboard" | "onboarding" | "pending";
 
 async function getPostAuthDestinationState(page: Page): Promise<PostAuthDestinationState> {
   const dashboard = dashboardLocators(page);
-  if (
-    urlPatterns.dashboard.test(page.url()) ||
-    (await dashboard.myWorkHeading.isVisible().catch(() => false))
-  ) {
+  if (urlPatterns.dashboard.test(page.url()) || (await isLocatorVisible(dashboard.myWorkHeading))) {
     return "dashboard";
   }
 
   const onboarding = onboardingLocators(page);
   if (
     urlPatterns.onboarding.test(page.url()) ||
-    (await onboarding.welcomeHeading.isVisible().catch(() => false))
+    (await isLocatorVisible(onboarding.welcomeHeading))
   ) {
     return "onboarding";
   }
@@ -166,26 +158,15 @@ async function getEmailVerificationSubmitState(
     return "redirect";
   }
 
-  if (
-    await toastLocators(page)
-      .success.first()
-      .isVisible()
-      .catch(() => false)
-  ) {
+  if (await isLocatorVisible(toastLocators(page).success.first())) {
     return "success";
   }
 
-  if (
-    await toastLocators(page)
-      .error.first()
-      .isVisible()
-      .catch(() => false)
-  ) {
+  if (await isLocatorVisible(toastLocators(page).error.first())) {
     return "error";
   }
 
-  const buttonText =
-    (await locators.verifyEmailButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
+  const buttonText = (await getLocatorText(locators.verifyEmailButton)).trim().toLowerCase();
   if (/verifying/.test(buttonText)) {
     return "submitting";
   }
@@ -279,7 +260,7 @@ export async function isOnOnboarding(page: Page): Promise<boolean> {
     return true;
   }
   const locators = onboardingLocators(page);
-  if (await locators.welcomeHeading.isVisible().catch(() => false)) {
+  if (await isLocatorVisible(locators.welcomeHeading)) {
     return true;
   }
   return false;
@@ -305,10 +286,10 @@ async function getCurrentAuthRoute(page: Page): Promise<SharedAuthRoute | null> 
   } catch {}
 
   const locators = authFormLocators(page);
-  if (await locators.signInHeading.isVisible().catch(() => false)) {
+  if (await isLocatorVisible(locators.signInHeading)) {
     return "signin";
   }
-  if (await locators.signUpHeading.isVisible().catch(() => false)) {
+  if (await isLocatorVisible(locators.signUpHeading)) {
     return "signup";
   }
 
@@ -322,39 +303,36 @@ async function getSharedAuthFormState(page: Page): Promise<SharedAuthFormState> 
   }
 
   const form = page.getByTestId(TEST_IDS.AUTH.FORM);
-  if (!(await form.isVisible().catch(() => false))) {
+  if (!(await isLocatorVisible(form))) {
     return "pending";
   }
 
   const locators = authFormLocators(page);
-  const hydrated = (await locators.formHydrated.count().catch(() => 0)) > 0;
+  const hydrated = (await getLocatorCount(locators.formHydrated)) > 0;
   if (!hydrated) {
     return "pending";
   }
 
-  const expanded = (await locators.emailForm.count().catch(() => 0)) > 0;
-  const emailVisible = await locators.emailInput.isVisible().catch(() => false);
+  const expanded = (await getLocatorCount(locators.emailForm)) > 0;
+  const emailVisible = await isLocatorVisible(locators.emailInput);
 
   // For landing state, check the "Continue with email" button
   if (!expanded) {
-    const continueButtonVisible = await locators.continueWithEmailButton
-      .isVisible()
-      .catch(() => false);
+    const continueButtonVisible = await isLocatorVisible(locators.continueWithEmailButton);
     if (continueButtonVisible) {
       return route === "signin" ? "signin-landing" : "signup-landing";
     }
   }
 
   // For expanded state, check the submit button text
-  const submitButtonText =
-    (await locators.submitButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
+  const submitButtonText = (await getLocatorText(locators.submitButton)).trim().toLowerCase();
 
   if (route === "signin") {
     if (
       expanded &&
       /sign in|signing in/.test(submitButtonText) &&
       emailVisible &&
-      (await locators.forgotPasswordLink.isVisible().catch(() => false))
+      (await isLocatorVisible(locators.forgotPasswordLink))
     ) {
       return "signin-expanded";
     }
@@ -459,21 +437,15 @@ async function waitForSignInSurface(page: Page, timeout = 30000): Promise<void> 
     return;
   } catch (error) {
     await captureDebugScreenshot(page, "e2e/.auth/signin-timeout-debug.png", "sign-in timeout");
-    const bodyText =
-      (await page
-        .locator("body")
-        .textContent()
-        .catch(() => "")) || "";
-    const headingVisible = await locators.signInHeading.isVisible().catch(() => false);
-    const formVisible = await page
-      .getByTestId(TEST_IDS.AUTH.FORM)
-      .isVisible()
-      .catch(() => false);
+    const bodyText = await getLocatorText(page.locator("body"));
+    const headingVisible = await isLocatorVisible(locators.signInHeading);
+    const formVisible = await isLocatorVisible(page.getByTestId(TEST_IDS.AUTH.FORM));
+    const surfaceState = await getSharedAuthFormState(page);
     throw new Error(
       [
         `Sign-in surface did not load within ${timeout}ms`,
         `URL: ${page.url()}`,
-        `surfaceState: ${await getSharedAuthFormState(page).catch(() => "pending")}`,
+        `surfaceState: ${surfaceState}`,
         `headingVisible: ${headingVisible}`,
         `formVisible: ${formVisible}`,
         `body: ${bodyText.slice(0, 200)}`,
@@ -508,7 +480,7 @@ async function ensureSignInPage(page: Page, baseURL: string, timeout = 15000): P
   };
 
   const signInLink = page.getByRole("link", { name: /^sign in$/i }).first();
-  if (await signInLink.isVisible().catch(() => false)) {
+  if (await isLocatorVisible(signInLink)) {
     console.log("  ↩️ Recovering sign-in route from public shell...");
     await signInLink.click();
     if (await waitForSignInRoute(timeout)) {
@@ -535,17 +507,12 @@ async function waitForUiSignInSubmitStart(page: Page, timeout = 5000): Promise<b
             return "redirect";
           }
 
-          const submitText = (await locators.signInButton.textContent().catch(() => "")) ?? "";
+          const submitText = await getLocatorText(locators.signInButton);
           if (submitText.toLowerCase().includes("signing in")) {
             return "submitting";
           }
 
-          if (
-            await toastLocators(page)
-              .error.first()
-              .isVisible()
-              .catch(() => false)
-          ) {
+          if (await isLocatorVisible(toastLocators(page).error.first())) {
             return "error";
           }
 
@@ -581,15 +548,15 @@ type OnboardingSkipControlState = "button" | "link" | "text" | "pending";
 
 async function getOnboardingSkipControlState(page: Page): Promise<OnboardingSkipControlState> {
   const locators = onboardingLocators(page);
-  if (await locators.skipButton.isVisible().catch(() => false)) {
+  if (await isLocatorVisible(locators.skipButton)) {
     return "button";
   }
 
-  if (await locators.skipLink.isVisible().catch(() => false)) {
+  if (await isLocatorVisible(locators.skipLink)) {
     return "link";
   }
 
-  if (await locators.skipText.isVisible().catch(() => false)) {
+  if (await isLocatorVisible(locators.skipText)) {
     return "text";
   }
 
@@ -645,8 +612,7 @@ async function skipOnboardingToDashboard(page: Page): Promise<boolean> {
     return false;
   }
 
-  const controlLabel =
-    (await skipControl.textContent().catch(() => null))?.trim() || "skip control";
+  const controlLabel = (await getOptionalLocatorText(skipControl))?.trim() || "skip control";
   console.log(`✓ Onboarding skip control ready: ${controlLabel}`);
   await skipControl.click();
   if (await waitForDashboardShell(page, 5000)) {
@@ -787,23 +753,12 @@ export async function trySignInUser(
       console.log("  ✓ Redirected to:", page.url());
       return await handleOnboardingOrDashboard(page, autoCompleteOnboarding);
     } catch {
-      const errorText = await page
-        .locator('[role="alert"], .text-red-500, .error')
-        .textContent()
-        .catch(() => null);
-      const toastError = await toastLocators(page)
-        .error.textContent()
-        .catch(() => null);
-      const pageText =
-        (await page
-          .locator("body")
-          .textContent()
-          .catch(() => "")) || "";
-      const buttonText =
-        (await page
-          .locator('button[type="submit"]')
-          .textContent()
-          .catch(() => "")) || "";
+      const errorText = await getOptionalLocatorText(
+        page.locator('[role="alert"], .text-red-500, .error'),
+      );
+      const toastError = await getOptionalLocatorText(toastLocators(page).error);
+      const pageText = await getLocatorText(page.locator("body"));
+      const buttonText = await getLocatorText(page.locator('button[type="submit"]'));
 
       console.log(`  📍 Current URL: ${page.url()}`);
       console.log(`  🔘 Submit button text: "${buttonText}"`);
@@ -970,7 +925,7 @@ async function getSignUpResultState(
 ): Promise<"verification" | "redirect" | "error" | "pending"> {
   const locators = authFormLocators(page);
 
-  if (await locators.verifyEmailHeading.isVisible().catch(() => false)) {
+  if (await isLocatorVisible(locators.verifyEmailHeading)) {
     return "verification";
   }
 
@@ -978,12 +933,7 @@ async function getSignUpResultState(
     return "redirect";
   }
 
-  if (
-    await toastLocators(page)
-      .error.first()
-      .isVisible()
-      .catch(() => false)
-  ) {
+  if (await isLocatorVisible(toastLocators(page).error.first())) {
     return "error";
   }
 
@@ -1051,10 +1001,7 @@ export async function signUpUserViaUI(
       const emailVerified = await completeEmailVerification(page, user.email);
       if (!emailVerified) return false;
     } else if (signUpResult === "error") {
-      const errorText = await toastLocators(page)
-        .error.first()
-        .textContent()
-        .catch(() => "");
+      const errorText = await getLocatorText(toastLocators(page).error.first());
       console.log(`  ❌ Sign-up reached error state: ${errorText || "unknown error toast"}`);
       return false;
     } else if (signUpResult === null) {

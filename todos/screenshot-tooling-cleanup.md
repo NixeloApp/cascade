@@ -93,6 +93,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [x] Replace the shared dialog overlay open-state raw selector with visible role-based dialog counting in `wait-helpers.ts`
 - [x] Replace the shared dialog open-state and dropdown-menu content raw selectors with role-based locators plus the owned dialog overlay contract
 - [x] Replace the shared auth readiness `data-expanded` / `data-form-ready` / `data-hydrated` selectors with owned `TEST_IDS` constants
+- [x] Extract shared locator-state fallback helpers and rewire auth/dashboard readiness helpers away from inline catch chains
 - [x] Replace the project create-issue trigger and modal selectors with owned `TEST_IDS` constants
 - [x] Replace the orphaned onboarding tour command-palette/dashboard/board/sidebar selectors with owned `TEST_IDS` constants
 - [x] Replace the onboarding create-project tour selector with the owned `TEST_IDS.ONBOARDING.CREATE_PROJECT_BUTTON` contract
