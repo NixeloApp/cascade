@@ -12,8 +12,9 @@ First-class Meetings workspace, recording detail view, participant/topic/sentime
 
 ### Screenshots & Visual QA
 
-- [ ] Add spec folder `docs/design/specs/pages/NN-meetings/` with README
-- [ ] Add meetings page to `e2e/screenshot-pages.ts` capture specs (empty state, recordings list, recording detail, memory rail, transcript view)
+- [x] Add spec folder `docs/design/specs/pages/30-meetings/` with page docs
+- [x] Add meetings page to `e2e/screenshot-pages.ts` capture specs (empty state + seeded workspace route coverage)
+- [ ] Expand meetings screenshot coverage with detail/transcript-focused captures if the base route shot is not sufficient
 - [ ] Capture baselines across all 4 viewport/theme combos (desktop-dark, desktop-light, tablet-light, mobile-light)
 - [ ] Update `.screenshot-hashes.json` manifest with new captures
 - [ ] Visual review of captured screenshots for quality (no spinners, real content)

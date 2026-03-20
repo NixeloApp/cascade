@@ -78,6 +78,7 @@ const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
   "empty-my-issues": "20-my-issues",
   "empty-invoices": "25-invoices",
   "empty-clients": "26-clients",
+  "empty-meetings": "30-meetings",
 
   // Workspace-level pages (filled states)
   "filled-dashboard": "04-dashboard",
@@ -92,6 +93,7 @@ const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
   "filled-org-analytics": "24-org-analytics",
   "filled-invoices": "25-invoices",
   "filled-clients": "26-clients",
+  "filled-meetings": "30-meetings",
   "filled-time-tracking": "22-time-tracking",
   "filled-sidebar-collapsed": "04-dashboard",
   "filled-404-page": "40-error",
@@ -1010,6 +1012,10 @@ function isInvoicesUrl(url: string): boolean {
 
 function isClientsUrl(url: string): boolean {
   return /\/[^/]+\/clients\/?$/.test(url);
+}
+
+function isMeetingsUrl(url: string): boolean {
+  return /\/[^/]+\/meetings\/?$/.test(url);
 }
 
 function isProjectInboxUrl(url: string): boolean {
@@ -2250,6 +2256,26 @@ async function waitForExpectedContent(
     return;
   }
 
+  if (isMeetingsUrl(url) || name === "meetings") {
+    await page
+      .getByRole("heading", { name: /^meetings$/i })
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByText(/meeting memory/i)
+      .or(page.getByText(/no meeting recordings yet/i))
+      .first()
+      .waitFor({ state: "visible", timeout: 12000 })
+      .catch(() => {});
+    await page
+      .getByRole("status")
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    return;
+  }
+
   if (
     isProjectCalendarUrl(url) ||
     isWorkspaceCalendarUrl(url) ||
@@ -2548,6 +2574,7 @@ async function screenshotEmptyStates(page: Page, orgSlug: string): Promise<void>
     "my-issues",
     "invoices",
     "clients",
+    "meetings",
     "settings",
     "settings-profile",
   ];
@@ -2568,6 +2595,7 @@ async function screenshotEmptyStates(page: Page, orgSlug: string): Promise<void>
   await takeScreenshot(page, p, "my-issues", ROUTES.myIssues.build(orgSlug));
   await takeScreenshot(page, p, "invoices", ROUTES.invoices.list.build(orgSlug));
   await takeScreenshot(page, p, "clients", ROUTES.clients.list.build(orgSlug));
+  await takeScreenshot(page, p, "meetings", ROUTES.meetings.build(orgSlug));
   await takeScreenshot(page, p, "settings", ROUTES.settings.profile.build(orgSlug));
   await takeScreenshot(page, p, "settings-profile", ROUTES.settings.profile.build(orgSlug));
 }
@@ -2598,6 +2626,7 @@ async function screenshotFilledStates(
   await takeScreenshot(page, p, "org-analytics", ROUTES.analytics.build(orgSlug));
   await takeScreenshot(page, p, "invoices", ROUTES.invoices.list.build(orgSlug));
   await takeScreenshot(page, p, "clients", ROUTES.clients.list.build(orgSlug));
+  await takeScreenshot(page, p, "meetings", ROUTES.meetings.build(orgSlug));
   await takeScreenshot(page, p, "settings", ROUTES.settings.profile.build(orgSlug));
   await takeScreenshot(page, p, "settings-profile", ROUTES.settings.profile.build(orgSlug));
   await takeScreenshot(page, p, "authentication", ROUTES.authentication.build(orgSlug));
@@ -4728,6 +4757,7 @@ const DRY_RUN_PAGES = [
   "empty-my-issues",
   "empty-invoices",
   "empty-clients",
+  "empty-meetings",
   "empty-settings",
   "empty-settings-profile",
   // Filled states — top-level
@@ -4744,6 +4774,7 @@ const DRY_RUN_PAGES = [
   "filled-org-analytics",
   "filled-invoices",
   "filled-clients",
+  "filled-meetings",
   "filled-settings",
   "filled-settings-profile",
   "filled-authentication",
