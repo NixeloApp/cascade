@@ -11,6 +11,7 @@
  * - Imports inside `src/components/ui/` (shared primitives composing other primitives)
  * - Existing baselined feature-local CVA definitions while cleanup is in flight
  * - Existing baselined base-only feature-local CVA definitions while cleanup is in flight
+ * - Existing baselined feature-local CVA style bundles while cleanup is in flight
  * - Existing baselined single-use variant-bearing feature-local CVA helpers while cleanup is in flight
  * - Existing baselined oversized variant axes while shared primitive cleanup is in flight
  *
@@ -18,6 +19,7 @@
  * - `buttonVariants`, `tabsTriggerVariants`, `cardRecipeVariants`, etc. in routes/components pages
  * - New or increased `cva()` definitions outside `src/components/ui/`
  * - New or increased base-only `cva()` definitions outside `src/components/ui/`
+ * - New or increased feature-local object bundles that expose multiple `cva()` helpers as a local styling API
  * - New or increased single-use variant-bearing feature-local `cva()` helpers outside `src/components/ui/`
  * - New or increased oversized CVA variant axes with more than 10 options
  */
@@ -41,6 +43,12 @@ const FEATURE_CVA_BASE_ONLY_BASELINE_PATH = path.join(
   "scripts",
   "ci",
   "feature-cva-base-only-baseline.json",
+);
+const FEATURE_CVA_STYLE_BUNDLES_BASELINE_PATH = path.join(
+  ROOT,
+  "scripts",
+  "ci",
+  "feature-cva-style-bundles-baseline.json",
 );
 const FEATURE_CVA_SINGLE_USE_BASELINE_PATH = path.join(
   ROOT,
@@ -178,6 +186,7 @@ function collectFeatureCvaMetadata(filePath, content) {
   const baseOnlyLines = [];
   const directHelpers = new Map();
   const objectHelpers = new Map();
+  const styleBundles = [];
 
   function registerHelper(helperName, node, hasVariants, store) {
     const pos = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
@@ -200,6 +209,7 @@ function collectFeatureCvaMetadata(filePath, content) {
           directHelpers,
         );
       } else if (ts.isObjectLiteralExpression(node.initializer)) {
+        const styleBundleHelpers = [];
         for (const property of node.initializer.properties) {
           if (
             !ts.isPropertyAssignment(property) ||
@@ -217,6 +227,27 @@ function collectFeatureCvaMetadata(filePath, content) {
             hasNonEmptyVariantsConfig(property.initializer, sourceFile),
             objectHelpers,
           );
+          styleBundleHelpers.push({
+            name: propertyName,
+            hasVariants: hasNonEmptyVariantsConfig(property.initializer, sourceFile),
+          });
+        }
+
+        if (styleBundleHelpers.length >= 2) {
+          const pos = sourceFile.getLineAndCharacterOfPosition(
+            node.initializer.getStart(sourceFile),
+          );
+          styleBundles.push({
+            name: node.name.text,
+            line: pos.line + 1,
+            helperCount: styleBundleHelpers.length,
+            variantBearingHelperCount: styleBundleHelpers.filter((helper) => helper.hasVariants)
+              .length,
+            baseOnlyHelperCount: styleBundleHelpers.filter((helper) => !helper.hasVariants).length,
+            helperNames: styleBundleHelpers
+              .map((helper) => helper.name)
+              .sort((a, b) => a.localeCompare(b)),
+          });
         }
       }
     }
@@ -270,6 +301,7 @@ function collectFeatureCvaMetadata(filePath, content) {
   return {
     cvaLines: cvaLines.sort((a, b) => a - b),
     baseOnlyLines: baseOnlyLines.sort((a, b) => a - b),
+    styleBundles: styleBundles.sort((a, b) => a.line - b.line || a.name.localeCompare(b.name)),
     singleUseVariantHelpers,
   };
 }
@@ -339,6 +371,10 @@ export function run() {
     FEATURE_CVA_BASE_ONLY_BASELINE_PATH,
     "baseOnlyCvaDefinitionsByFile",
   );
+  const styleBundlesBaselineByFile = loadCountBaseline(
+    FEATURE_CVA_STYLE_BUNDLES_BASELINE_PATH,
+    "featureCvaStyleBundlesByFile",
+  );
   const singleUseVariantBaselineByFile = loadCountBaseline(
     FEATURE_CVA_SINGLE_USE_BASELINE_PATH,
     "singleUseVariantCvaDefinitionsByFile",
@@ -351,6 +387,7 @@ export function run() {
   const importViolations = [];
   const cvaLinesByFile = {};
   const baseOnlyCvaLinesByFile = {};
+  const styleBundlesByFile = {};
   const singleUseVariantHelpersByFile = {};
   const oversizedVariantAxisOptionsByKey = {};
   const oversizedVariantAxisMetadataByKey = {};
@@ -369,15 +406,16 @@ export function run() {
     }
 
     if (!rel.startsWith("src/components/ui/")) {
-      const { cvaLines, baseOnlyLines, singleUseVariantHelpers } = collectFeatureCvaMetadata(
-        filePath,
-        content,
-      );
+      const { cvaLines, baseOnlyLines, styleBundles, singleUseVariantHelpers } =
+        collectFeatureCvaMetadata(filePath, content);
       if (cvaLines.length > 0) {
         cvaLinesByFile[rel] = cvaLines;
       }
       if (baseOnlyLines.length > 0) {
         baseOnlyCvaLinesByFile[rel] = baseOnlyLines;
+      }
+      if (styleBundles.length > 0) {
+        styleBundlesByFile[rel] = styleBundles;
       }
       if (singleUseVariantHelpers.length > 0) {
         singleUseVariantHelpersByFile[rel] = singleUseVariantHelpers;
@@ -418,6 +456,15 @@ export function run() {
       baselineCount: overage.baselineCount,
       currentCount: overage.currentCount,
       lineNumbers: baseOnlyCvaLinesByFile[file] ?? [],
+    }))
+    .sort((a, b) => a.file.localeCompare(b.file));
+  const styleBundlesRatchet = analyzeCountRatchet(styleBundlesByFile, styleBundlesBaselineByFile);
+  const styleBundleOverages = Object.entries(styleBundlesRatchet.overagesByKey)
+    .map(([file, overage]) => ({
+      file,
+      baselineCount: overage.baselineCount,
+      currentCount: overage.currentCount,
+      bundles: overage.overageItems,
     }))
     .sort((a, b) => a.file.localeCompare(b.file));
   const singleUseVariantRatchet = analyzeCountRatchet(
@@ -491,6 +538,28 @@ export function run() {
     }
   }
 
+  if (styleBundleOverages.length > 0) {
+    errors.push(
+      `  ${c.red}ERROR${c.reset} Feature-local object bundles that expose multiple \`cva()\` helpers are ratcheted outside \`src/components/ui/\`. These style maps become a shadow design system; use plain strings/\`cn()\`, a real component, or move the shared API into an owned primitive.`,
+    );
+
+    for (const overage of styleBundleOverages) {
+      errors.push(
+        `  ${c.bold}${overage.file}${c.reset} baseline ${overage.baselineCount} → current ${overage.currentCount}`,
+      );
+      const bundlePreview = overage.bundles
+        .map((bundle) => {
+          const helperPreview = bundle.helperNames.slice(0, 6).join(", ");
+          const remaining = bundle.helperNames.length - Math.min(bundle.helperNames.length, 6);
+          return `${bundle.name} (line ${bundle.line}, ${bundle.helperCount} helpers, ${bundle.variantBearingHelperCount} variant-bearing, ${bundle.baseOnlyHelperCount} base-only${helperPreview.length > 0 ? `: ${helperPreview}${remaining > 0 ? `, ... +${remaining} more` : ""}` : ""})`;
+        })
+        .join("; ");
+      if (bundlePreview.length > 0) {
+        errors.push(`    ${c.dim}${bundlePreview}${c.reset}`);
+      }
+    }
+  }
+
   if (singleUseVariantOverages.length > 0) {
     errors.push(
       `  ${c.red}ERROR${c.reset} Single-use variant-bearing feature-local \`cva()\` helpers are ratcheted outside \`src/components/ui/\`. Inline the styles, use a plain component with props, or move the shared API into an owned primitive.`,
@@ -538,11 +607,13 @@ export function run() {
     importViolations.length +
     cvaOverages.length +
     baseOnlyOverages.length +
+    styleBundleOverages.length +
     singleUseVariantOverages.length +
     oversizedVariantAxisOverages.length;
   const passDetail = [
     `${ratchet.totalCurrent} baselined feature-local cva definition(s) across ${ratchet.activeKeyCount} file(s)`,
     `${baseOnlyRatchet.totalCurrent} baselined base-only feature-local cva definition(s) across ${baseOnlyRatchet.activeKeyCount} file(s)`,
+    `${styleBundlesRatchet.totalCurrent} baselined feature-local cva style bundle(s) across ${styleBundlesRatchet.activeKeyCount} file(s)`,
     `${singleUseVariantRatchet.totalCurrent} baselined single-use variant-bearing feature-local cva helper(s) across ${singleUseVariantRatchet.activeKeyCount} file(s)`,
     `${oversizedVariantAxisRatchet.totalCurrent} baselined oversized cva variant option(s) across ${oversizedVariantAxisRatchet.activeKeyCount} axis/axes`,
   ].join("; ");
