@@ -92,6 +92,61 @@ function SummaryMetricCard({
   );
 }
 
+interface QuickStatCardProps {
+  label: string;
+  value: string | number;
+}
+
+function QuickStatCard({ label, value }: QuickStatCardProps) {
+  return (
+    <Card variant="soft">
+      <CardBody>
+        <Stack gap="xs" align="center">
+          <Typography variant="h3">{value}</Typography>
+          <Typography variant="small" color="tertiary">
+            {label}
+          </Typography>
+        </Stack>
+      </CardBody>
+    </Card>
+  );
+}
+
+interface TeamMemberBillingCardProps {
+  billingStats: BillingStats;
+}
+
+function TeamMemberBillingCard({ billingStats }: TeamMemberBillingCardProps) {
+  const userUtilization =
+    billingStats.hours > 0 ? (billingStats.billableHours / billingStats.hours) * 100 : 0;
+
+  return (
+    <Card variant="section" padding="md">
+      <Stack gap="sm">
+        <Flex justify="between" align="center">
+          <Stack gap="xs">
+            <Typography variant="label">{billingStats.name}</Typography>
+            <Typography variant="caption" color="tertiary">
+              {formatHours(billingStats.billableHours)} / {formatHours(billingStats.hours)} hours (
+              {userUtilization.toFixed(0)}% billable)
+            </Typography>
+          </Stack>
+          <Stack gap="xs" align="end">
+            <Typography variant="h4" color="success">
+              {formatCurrency(billingStats.revenue)}
+            </Typography>
+            <Typography variant="caption" color="tertiary">
+              revenue
+            </Typography>
+          </Stack>
+        </Flex>
+
+        <Progress value={userUtilization} />
+      </Stack>
+    </Card>
+  );
+}
+
 /** Calculate date range params for billing query */
 function getDateRangeParams(dateRange: "week" | "month" | "all") {
   const now = Date.now();
@@ -173,9 +228,9 @@ export function BillingReport({ projectId }: BillingReportProps) {
   }
 
   return (
-    <div>
+    <Stack gap="xl">
       {/* Header */}
-      <Flex justify="between" align="center" className="mb-6">
+      <Flex justify="between" align="center">
         <div>
           <Typography variant="h2">Billing Report</Typography>
           <Typography variant="small" color="tertiary">
@@ -213,7 +268,7 @@ export function BillingReport({ projectId }: BillingReportProps) {
       </Flex>
 
       {/* Summary Cards */}
-      <Grid cols={1} colsMd={2} colsLg={4} gap="lg" className="mb-6">
+      <Grid cols={1} colsMd={2} colsLg={4} gap="lg">
         <SummaryMetricCard
           icon={DollarSign}
           label="Total Revenue"
@@ -258,84 +313,36 @@ export function BillingReport({ projectId }: BillingReportProps) {
       {/* Team Breakdown */}
       <Card>
         <CardBody>
-          <Flex align="center" gap="sm" className="mb-4">
-            <Icon icon={Users} size="md" tone="tertiary" />
-            <Typography variant="h3">Team Breakdown</Typography>
-          </Flex>
-
-          {sortedUsers.length === 0 ? (
-            <Typography color="tertiary" className="text-center">
-              No time entries recorded yet
-            </Typography>
-          ) : (
-            <Flex direction="column" gap="md">
-              {sortedUsers.map(([userId, stats]) => {
-                const billingStats = stats as BillingStats;
-                const userUtilization =
-                  billingStats.hours > 0
-                    ? (billingStats.billableHours / billingStats.hours) * 100
-                    : 0;
-
-                return (
-                  <div key={userId} className="rounded bg-ui-bg-soft p-4">
-                    <Flex justify="between" align="center" className="mb-2">
-                      <div>
-                        <Typography variant="label">{billingStats.name}</Typography>
-                        <Typography variant="caption" color="tertiary">
-                          {formatHours(billingStats.billableHours)} /{" "}
-                          {formatHours(billingStats.hours)} hours ({userUtilization.toFixed(0)}%
-                          billable)
-                        </Typography>
-                      </div>
-                      <div className="text-right">
-                        <Typography variant="h4" color="success">
-                          {formatCurrency(billingStats.revenue)}
-                        </Typography>
-                        <Typography variant="caption" color="tertiary">
-                          revenue
-                        </Typography>
-                      </div>
-                    </Flex>
-
-                    {/* Progress bar */}
-                    <Progress value={userUtilization} />
-                  </div>
-                );
-              })}
+          <Stack gap="lg">
+            <Flex align="center" gap="sm">
+              <Icon icon={Users} size="md" tone="tertiary" />
+              <Typography variant="h3">Team Breakdown</Typography>
             </Flex>
-          )}
+
+            {sortedUsers.length === 0 ? (
+              <Flex justify="center">
+                <Typography color="tertiary">No time entries recorded yet</Typography>
+              </Flex>
+            ) : (
+              <Stack gap="md">
+                {sortedUsers.map(([userId, stats]) => (
+                  <TeamMemberBillingCard key={userId} billingStats={stats} />
+                ))}
+              </Stack>
+            )}
+          </Stack>
         </CardBody>
       </Card>
 
       {/* Quick Stats */}
-      <Grid cols={3} gap="lg" className="mt-6 text-center">
-        <Card variant="soft" className="text-center">
-          <CardBody>
-            <Typography variant="h3">{billing.entries}</Typography>
-            <Typography variant="small" color="tertiary">
-              Time Entries
-            </Typography>
-          </CardBody>
-        </Card>
-        <Card variant="soft" className="text-center">
-          <CardBody>
-            <Typography variant="h3">{Object.keys(billing.byUser).length}</Typography>
-            <Typography variant="small" color="tertiary">
-              Team Members
-            </Typography>
-          </CardBody>
-        </Card>
-        <Card variant="soft" className="text-center">
-          <CardBody>
-            <Typography variant="h3">
-              {averageRate > 0 ? formatCurrency(averageRate) : "N/A"}
-            </Typography>
-            <Typography variant="small" color="tertiary">
-              Blended Rate
-            </Typography>
-          </CardBody>
-        </Card>
+      <Grid cols={3} gap="lg">
+        <QuickStatCard label="Time Entries" value={billing.entries} />
+        <QuickStatCard label="Team Members" value={Object.keys(billing.byUser).length} />
+        <QuickStatCard
+          label="Blended Rate"
+          value={averageRate > 0 ? formatCurrency(averageRate) : "N/A"}
+        />
       </Grid>
-    </div>
+    </Stack>
   );
 }
