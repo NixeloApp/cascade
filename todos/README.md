@@ -20,7 +20,7 @@ Only unfinished work stays in `/todos`. Completed slices should be removed from 
 
 | Priority | File | Remaining work |
 |----------|------|----------------|
-| P1 | [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Broader consistency system is in place; cleanup remains for 65 Typography drift points, 37 control-chrome drift points, and residual screenshot/state cohesion gaps |
+| P1 | [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Broader consistency system is in place; cleanup remains for 65 Typography drift points, 31 control-chrome drift points, and residual screenshot/state cohesion gaps |
 | P2 | [feature-docs-expansion.md](./feature-docs-expansion.md) | Expand current feature/design docs into concrete user-story-grade product specs for shipped behavior, starting with the 21 page spec folders still missing CURRENT / IMPLEMENTATION / TARGET docs |
 | P2 | [plane-features.md](./plane-features.md) | Remaining Plane-inspired gaps: dedicated Gantt polish, intake/triage, deploy boards, stickies, analytics enhancements, automation, multi-provider AI, page versions |
 | P2 | [cal-com-features.md](./cal-com-features.md) | Remaining Cal.com-inspired gaps: AI agents/MCP, cancellation reasons, workflow translation, custom domain/SMTP, branding |

@@ -565,7 +565,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
                   <TabsTrigger
                     value="all"
                     variant="underline"
-                    className="px-1 pb-3 text-xs font-medium sm:text-sm"
+                    size="underlineCompact"
                     data-testid={TEST_IDS.SEARCH.TAB_ALL}
                   >
                     All ({issueTotal + documentTotal})
@@ -573,7 +573,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
                   <TabsTrigger
                     value="issues"
                     variant="underline"
-                    className="px-1 pb-3 text-xs font-medium sm:text-sm"
+                    size="underlineCompact"
                     data-testid={TEST_IDS.SEARCH.TAB_ISSUES}
                   >
                     Issues ({issueTotal})
@@ -581,7 +581,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
                   <TabsTrigger
                     value="documents"
                     variant="underline"
-                    className="px-1 pb-3 text-xs font-medium sm:text-sm"
+                    size="underlineCompact"
                     data-testid={TEST_IDS.SEARCH.TAB_DOCUMENTS}
                   >
                     Documents ({documentTotal})
