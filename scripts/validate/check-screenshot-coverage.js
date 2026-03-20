@@ -43,6 +43,14 @@ const EXPECTED_MODAL_SPEC_SCREENSHOTS = [
   "tablet-light",
   "mobile-light",
 ];
+const REQUIRED_PAGE_SPECS = [
+  {
+    folder: "30-meetings",
+    label: "meetings",
+    requireDocs: true,
+    requireScreenshots: true,
+  },
+];
 
 /**
  * Extract all dotted route keys from convex/shared/routes.ts.
@@ -212,6 +220,59 @@ function collectPageSpecDocGaps() {
   return gaps.sort((a, b) => a.pageFolder.localeCompare(b.pageFolder));
 }
 
+function collectRequiredPageSpecGaps() {
+  const specsBaseDir = path.join(ROOT, "docs", "design", "specs", "pages");
+  if (!fs.existsSync(specsBaseDir)) {
+    return REQUIRED_PAGE_SPECS.map((spec) => ({
+      ...spec,
+      missingFolder: true,
+      missingDocs: spec.requireDocs ? ["CURRENT.md", "IMPLEMENTATION.md", "TARGET.md"] : [],
+      missingScreenshotsDir: spec.requireScreenshots,
+      missingScreenshotFiles: spec.requireScreenshots ? [...EXPECTED_PAGE_SPEC_SCREENSHOTS] : [],
+    }));
+  }
+
+  const requiredDocs = ["CURRENT.md", "IMPLEMENTATION.md", "TARGET.md"];
+  const gaps = [];
+
+  for (const spec of REQUIRED_PAGE_SPECS) {
+    const pageDir = path.join(specsBaseDir, spec.folder);
+    const screenshotDir = path.join(pageDir, "screenshots");
+    const pageExists = fs.existsSync(pageDir);
+    const screenshotsExist = fs.existsSync(screenshotDir);
+    const screenshotFiles = screenshotsExist ? new Set(fs.readdirSync(screenshotDir)) : new Set();
+    const missingDocs =
+      spec.requireDocs && pageExists
+        ? requiredDocs.filter((file) => !fs.existsSync(path.join(pageDir, file)))
+        : spec.requireDocs
+          ? [...requiredDocs]
+          : [];
+    const missingScreenshotFiles =
+      spec.requireScreenshots && screenshotsExist
+        ? EXPECTED_PAGE_SPEC_SCREENSHOTS.filter((file) => !screenshotFiles.has(file))
+        : spec.requireScreenshots
+          ? [...EXPECTED_PAGE_SPEC_SCREENSHOTS]
+          : [];
+
+    if (
+      !pageExists ||
+      missingDocs.length > 0 ||
+      !screenshotsExist ||
+      missingScreenshotFiles.length > 0
+    ) {
+      gaps.push({
+        ...spec,
+        missingFolder: !pageExists,
+        missingDocs,
+        missingScreenshotsDir: spec.requireScreenshots && !screenshotsExist,
+        missingScreenshotFiles,
+      });
+    }
+  }
+
+  return gaps.sort((a, b) => a.folder.localeCompare(b.folder));
+}
+
 function collectModalScreenshotCoverageGaps() {
   const modalsReadme = path.join(ROOT, "docs", "design", "specs", "modals", "README.md");
   const modalsScreenshotDir = path.join(ROOT, "docs", "design", "specs", "modals", "screenshots");
@@ -257,6 +318,7 @@ export function run() {
   const capturedRefs = extractScreenshotRouteRefs(screenshotContent);
   const missingSpecVariants = collectSpecScreenshotCoverageGaps();
   const missingPageSpecDocs = collectPageSpecDocGaps();
+  const missingRequiredPageSpecs = collectRequiredPageSpecGaps();
   const missingModalSpecVariants = collectModalScreenshotCoverageGaps();
 
   const uncovered = [];
@@ -310,6 +372,30 @@ export function run() {
     }
   }
 
+  if (missingRequiredPageSpecs.length > 0) {
+    messages.push(
+      `${c.yellow}Required page specs missing coverage assets (${missingRequiredPageSpecs.length}):${c.reset}`,
+    );
+    for (const gap of missingRequiredPageSpecs) {
+      const missingParts = [];
+      if (gap.missingFolder) {
+        missingParts.push("folder");
+      }
+      if (gap.missingDocs.length > 0) {
+        missingParts.push(gap.missingDocs.join(", "));
+      }
+      if (gap.missingScreenshotsDir) {
+        missingParts.push("screenshots/");
+      }
+      if (gap.missingScreenshotFiles.length > 0 && !gap.missingScreenshotsDir) {
+        missingParts.push(gap.missingScreenshotFiles.join(", "));
+      }
+      messages.push(
+        `  ${c.dim}docs/design/specs/pages/${gap.folder}${c.reset} (${gap.label}) missing ${missingParts.join("; ")}`,
+      );
+    }
+  }
+
   if (missingModalSpecVariants.length > 0) {
     messages.push(
       `${c.yellow}Modal specs missing canonical screenshots (${missingModalSpecVariants.length}):${c.reset}`,
@@ -341,11 +427,13 @@ export function run() {
       uncovered.length > 0 ||
       missingSpecVariants.length > 0 ||
       missingPageSpecDocs.length > 0 ||
+      missingRequiredPageSpecs.length > 0 ||
       missingModalSpecVariants.length > 0,
     detail:
       uncovered.length > 0 ||
       missingSpecVariants.length > 0 ||
       missingPageSpecDocs.length > 0 ||
+      missingRequiredPageSpecs.length > 0 ||
       missingModalSpecVariants.length > 0
         ? `${allRouteKeys.length - uncovered.length}/${allRouteKeys.length} routes covered, ${specsWithCanonicalVariants}/${completeSpecFolders} page spec folders have canonical screenshots, ${missingModalSpecVariants.length === 0 ? "all" : "not all"} spec'd modals have canonical screenshots`
         : `all ${allRouteKeys.length} routes covered, all ${completeSpecFolders} page spec folders have canonical screenshots, all spec'd modals have canonical screenshots`,

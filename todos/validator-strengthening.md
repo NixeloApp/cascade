@@ -69,13 +69,13 @@ Fetches all data then filters in the component when the filter could be a backen
 - [x] **Screenshot manifest integrity** -- fail if any hash appears more than 2 times (legitimate dual-write is max 2; 3+ means spinner capture)
 - [x] **`.catch(() => {})` audit** -- ratcheted for E2E and screenshot tooling (225 baselined across 10 files)
 - [x] **Hardcoded timeout audit** -- extend `check-e2e-hard-rules.js` to ratchet `screenshot-pages.ts` timeout debt (7 `waitForTimeout`, 1 Promise sleep baselined) while keeping spec-file timeouts fully blocking
-- [ ] **Meeting page coverage** -- verify meetings spec folder exists with screenshots (part of screenshot coverage validator)
+- [x] **Meeting page coverage** -- `check-screenshot-coverage.js` now requires the meetings spec folder and canonical screenshots
 
 ## Existing Validator Improvements
 
 - [ ] **Raw Tailwind validator** -- currently allows raw TW in route files; tighten to flag repeated patterns (same class cluster used 3+ times should become a component/variant)
 - [ ] **E2E quality validator** -- remove the `screenshot-pages.ts` skip (tracked in screenshot-tooling-cleanup.md, but validator should enforce once cleanup is done)
-- [ ] **Screenshot coverage validator** -- add meetings page to required spec list
+- [x] **Screenshot coverage validator** -- meetings added to the required page-spec list in `check-screenshot-coverage.js`
 - [ ] **Standards validator** -- ensure new pages like MeetingsWorkspace are caught immediately (currently it does, but violations persist -- need to fix the source)
 
 ## Ratchet Strategy
