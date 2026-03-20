@@ -1327,16 +1327,28 @@ async function waitForCalendarMonthReady(page: Page): Promise<void> {
   await waitForMonthToggleSelected(5000);
   await waitForScreenshotReady(page);
   await waitForCalendarReady(page);
-  await page.waitForFunction(
-    ({ dayCellTestId, quickAddTestId }) =>
-      document.querySelectorAll(`[data-testid="${dayCellTestId}"]`).length >= 28 &&
-      document.querySelectorAll(`[data-testid="${quickAddTestId}"]`).length >= 28,
-    {
-      dayCellTestId: TEST_IDS.CALENDAR.DAY_CELL,
-      quickAddTestId: TEST_IDS.CALENDAR.QUICK_ADD_DAY,
-    },
-    { timeout: 5000 },
-  );
+  await waitForCalendarMonthGrid(page);
+}
+
+async function waitForCalendarMonthGrid(
+  page: Page,
+  options?: { requireQuickAddButtons?: boolean },
+): Promise<void> {
+  await expect
+    .poll(() => page.getByTestId(TEST_IDS.CALENDAR.DAY_CELL).count(), {
+      timeout: 5000,
+      intervals: [100, 200, 500],
+    })
+    .toBeGreaterThanOrEqual(28);
+
+  if (options?.requireQuickAddButtons) {
+    await expect
+      .poll(() => page.getByTestId(TEST_IDS.CALENDAR.QUICK_ADD_DAY).count(), {
+        timeout: 5000,
+        intervals: [100, 200, 500],
+      })
+      .toBeGreaterThanOrEqual(28);
+  }
 }
 
 async function waitForBoardReady(page: Page): Promise<boolean> {
@@ -2947,6 +2959,7 @@ async function screenshotFilledStates(
         if (shouldCapture(p, "calendar-quick-add")) {
           await runCaptureStep("calendar quick-add", async () => {
             await waitForCalendarMonthReady(page);
+            await waitForCalendarMonthGrid(page, { requireQuickAddButtons: true });
 
             const quickAddButton = page.getByTestId(TEST_IDS.CALENDAR.QUICK_ADD_DAY).first();
             if ((await quickAddButton.count()) > 0) {
@@ -2987,27 +3000,30 @@ async function screenshotFilledStates(
 
             const dragState = await page.evaluate(
               ({ dayCellTestId, eventItemTestId }) => {
-                const sourceCell = Array.from(
+                const dayCells = Array.from(
                   document.querySelectorAll<HTMLElement>(`[data-testid="${dayCellTestId}"]`),
-                ).find((cell) => cell.querySelector(`[data-testid="${eventItemTestId}"]`));
-                const targetCell = sourceCell?.nextElementSibling;
+                );
+                const sourceIndex = dayCells.findIndex((cell) =>
+                  cell.querySelector(`[data-testid="${eventItemTestId}"]`),
+                );
+                const targetIndex = sourceIndex >= 0 ? sourceIndex + 1 : -1;
+                const sourceCell = sourceIndex >= 0 ? dayCells[sourceIndex] : null;
+                const targetCell = targetIndex >= 0 ? dayCells[targetIndex] : null;
 
                 if (!(sourceCell && targetCell instanceof HTMLElement)) {
                   return {
-                    sourceDate: null,
-                    targetDate: null,
-                    dayCellCount: document.querySelectorAll(`[data-testid="${dayCellTestId}"]`)
-                      .length,
+                    sourceIndex: null,
+                    targetIndex: null,
+                    dayCellCount: dayCells.length,
                     eventItemCount: document.querySelectorAll(`[data-testid="${eventItemTestId}"]`)
                       .length,
                   };
                 }
 
                 return {
-                  sourceDate: sourceCell.dataset.date ?? null,
-                  targetDate: targetCell.dataset.date ?? null,
-                  dayCellCount: document.querySelectorAll(`[data-testid="${dayCellTestId}"]`)
-                    .length,
+                  sourceIndex,
+                  targetIndex,
+                  dayCellCount: dayCells.length,
                   eventItemCount: document.querySelectorAll(`[data-testid="${eventItemTestId}"]`)
                     .length,
                 };
@@ -3018,18 +3034,15 @@ async function screenshotFilledStates(
               },
             );
 
-            if (!(dragState?.targetDate && dragState.sourceDate)) {
+            if (dragState?.sourceIndex == null || dragState.targetIndex == null) {
               throw new Error(
                 `[${p}] Unable to establish calendar drag state (day cells=${dragState?.dayCellCount ?? 0}, events=${dragState?.eventItemCount ?? 0})`,
               );
             }
 
-            const targetCell = page.locator(
-              `[data-testid="${TEST_IDS.CALENDAR.DAY_CELL}"][data-date="${dragState.targetDate}"]`,
-            );
-            const sourceCell = page.locator(
-              `[data-testid="${TEST_IDS.CALENDAR.DAY_CELL}"][data-date="${dragState.sourceDate}"]`,
-            );
+            const dayCells = page.getByTestId(TEST_IDS.CALENDAR.DAY_CELL);
+            const targetCell = dayCells.nth(dragState.targetIndex);
+            const sourceCell = dayCells.nth(dragState.sourceIndex);
             const sourceEvent = sourceCell.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM).first();
             const dataTransfer = await page.evaluateHandle(() => new DataTransfer());
 
@@ -3039,17 +3052,12 @@ async function screenshotFilledStates(
             await sourceEvent.dispatchEvent("dragstart", { dataTransfer });
             await targetCell.dispatchEvent("dragenter", { dataTransfer });
             await targetCell.dispatchEvent("dragover", { dataTransfer });
-            await page.waitForFunction(
-              ({ dayCellTestId, targetDate }) =>
-                document
-                  .querySelector(`[data-testid="${dayCellTestId}"][data-date="${targetDate}"]`)
-                  ?.getAttribute("data-drop-target") === "true",
-              {
-                dayCellTestId: TEST_IDS.CALENDAR.DAY_CELL,
-                targetDate: dragState.targetDate,
-              },
-              { timeout: 5000 },
-            );
+            await expect
+              .poll(() => targetCell.getAttribute("data-drop-target"), {
+                timeout: 5000,
+                intervals: [100, 200, 500],
+              })
+              .toBe("true");
             await waitForScreenshotReady(page);
             await captureCurrentView(page, p, "calendar-drag-and-drop");
 
