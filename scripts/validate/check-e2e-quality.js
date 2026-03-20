@@ -15,7 +15,16 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { analyzeCountRatchet, loadCountBaseline } from "./ratchet-utils.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
+
+const SCREENSHOT_HARNESS_REL_PATH = "e2e/screenshot-pages.ts";
+const SCREENSHOT_HARNESS_BASELINE_PATH = path.join(
+  ROOT,
+  "scripts",
+  "ci",
+  "e2e-quality-screenshot-pages-baseline.json",
+);
 
 // ── Broad tag selectors that should never appear unscoped on `page` ──
 const BROAD_TAG_SELECTORS = new Set([
@@ -55,11 +64,6 @@ const BROAD_CLASS_PATTERNS = [
 const SKIP_FILES = new Set([
   "e2e/global-setup.ts", // Setup scaffolding, not a test
   "e2e/fixtures.ts", // Test fixture definitions
-  // screenshot-pages.ts is a capture utility, not a spec test. It is currently
-  // skipped because it uses broad selectors, .first(), and hardcoded timeouts.
-  // TODO: Remove this skip — the tool should use TEST_IDS, shared wait helpers,
-  // and animations:'disabled' instead. See todos/screenshot-tooling-cleanup.md.
-  "e2e/screenshot-pages.ts",
 ]);
 
 // ── Directories to skip for certain checks ──
@@ -77,13 +81,15 @@ const SKIP_FIRST_CHECK_DIRS = [
 export function run() {
   const E2E_DIR = path.join(ROOT, "e2e");
 
-  let errorCount = 0;
-  const messages = [];
+  const collectedIssues = [];
 
-  function report(filePath, line, message) {
-    const rel = relPath(filePath);
-    messages.push(`  ${c.red}ERROR${c.reset} ${rel}:${line} - ${message}`);
-    errorCount++;
+  function reportIssue(filePath, line, type, message) {
+    collectedIssues.push({
+      file: relPath(filePath),
+      line,
+      type,
+      message,
+    });
   }
 
   /**
@@ -104,9 +110,10 @@ export function run() {
       // Matches: page.locator("img").first(), page.locator("aside").first()
       const tagFirstMatch = line.match(/page\.locator\(\s*["'`](\w+)["'`]\s*\)\.first\(\)/);
       if (tagFirstMatch && BROAD_TAG_SELECTORS.has(tagFirstMatch[1])) {
-        report(
+        reportIssue(
           filePath,
           lineNum,
+          "BROAD_TAG_FIRST",
           `Broad selector page.locator("${tagFirstMatch[1]}").first() matches any <${tagFirstMatch[1]}> on page. Scope to a container or use data-testid.`,
         );
       }
@@ -117,9 +124,10 @@ export function run() {
       if (classMatch) {
         const cls = classMatch[1];
         if (BROAD_CLASS_PATTERNS.some((pat) => pat.test(cls))) {
-          report(
+          reportIssue(
             filePath,
             lineNum,
+            "BROAD_CLASS_SELECTOR",
             `Generic CSS class selector page.locator("${cls}") is too broad. Use a scoped container or data-testid instead.`,
           );
         }
@@ -127,18 +135,20 @@ export function run() {
 
       // ── Rule 3: waitForSelector ──
       if (/\.waitForSelector\s*\(/.test(line)) {
-        report(
+        reportIssue(
           filePath,
           lineNum,
+          "WAIT_FOR_SELECTOR",
           `waitForSelector() is deprecated Playwright style. Use locator().waitFor() or expect(locator).toBeVisible() instead.`,
         );
       }
 
       // ── Rule 4: networkidle ──
       if (/waitForLoadState\(\s*["'`]networkidle["'`]\s*\)/.test(line)) {
-        report(
+        reportIssue(
           filePath,
           lineNum,
+          "NETWORKIDLE",
           `waitForLoadState("networkidle") is flaky. Prefer waiting for a specific element assertion.`,
         );
       }
@@ -148,9 +158,10 @@ export function run() {
       if (!SKIP_TESTID_CHECK_DIRS.some((d) => rel.includes(d))) {
         const testIdMatch = line.match(/getByTestId\(\s*["'`]([^"'`]+)["'`]\s*\)/);
         if (testIdMatch) {
-          report(
+          reportIssue(
             filePath,
             lineNum,
+            "RAW_TEST_ID",
             `Raw string getByTestId("${testIdMatch[1]}") — use TEST_IDS constant instead.`,
           );
         }
@@ -163,9 +174,10 @@ export function run() {
         if (/page\.(locator|getBy\w+)\([^)]+\)\.first\(\)/.test(line)) {
           // Already caught by Rule 1 if it's a broad tag, but catch other cases too
           if (!tagFirstMatch) {
-            report(
+            reportIssue(
               filePath,
               lineNum,
+              "UNSCOPED_FIRST",
               `Unscoped .first() on page-level locator. Scope to a container or use more specific selector.`,
             );
           }
@@ -183,10 +195,48 @@ export function run() {
     checkFile(file);
   }
 
+  const blockingIssues = collectedIssues.filter(
+    (issue) => issue.file !== SCREENSHOT_HARNESS_REL_PATH,
+  );
+  const screenshotHarnessIssues = collectedIssues
+    .filter((issue) => issue.file === SCREENSHOT_HARNESS_REL_PATH)
+    .sort((a, b) => a.line - b.line);
+  const screenshotHarnessBaselineByType = loadCountBaseline(
+    SCREENSHOT_HARNESS_BASELINE_PATH,
+    "issueCountsByType",
+  );
+  const screenshotHarnessIssuesByType = {};
+
+  for (const issue of screenshotHarnessIssues) {
+    const issuesForType = screenshotHarnessIssuesByType[issue.type] ?? [];
+    issuesForType.push(issue);
+    screenshotHarnessIssuesByType[issue.type] = issuesForType;
+  }
+
+  const screenshotHarnessRatchet = analyzeCountRatchet(
+    screenshotHarnessIssuesByType,
+    screenshotHarnessBaselineByType,
+  );
+  const screenshotHarnessRatchetIssues = Object.values(screenshotHarnessRatchet.overagesByKey)
+    .flatMap((entry) => entry.overageItems)
+    .sort((a, b) => a.line - b.line);
+
+  const finalIssues = [...blockingIssues, ...screenshotHarnessRatchetIssues];
+  const messages = finalIssues.map(
+    (issue) => `  ${c.red}ERROR${c.reset} ${issue.file}:${issue.line} - ${issue.message}`,
+  );
+  const screenshotHarnessBaselineDetail =
+    screenshotHarnessRatchet.totalCurrent > 0
+      ? ` (${screenshotHarnessRatchet.totalCurrent} baselined screenshot harness quality issue(s))`
+      : "";
+
   return {
-    passed: errorCount === 0,
-    errors: errorCount,
-    detail: errorCount > 0 ? `${errorCount} error(s)` : undefined,
+    passed: finalIssues.length === 0,
+    errors: finalIssues.length,
+    detail:
+      finalIssues.length > 0
+        ? `${finalIssues.length} error(s)`
+        : `no blocking issues${screenshotHarnessBaselineDetail}`,
     messages: messages.length > 0 ? messages : undefined,
   };
 }

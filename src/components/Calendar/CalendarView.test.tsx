@@ -1,5 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
 
 const mockCalendarMutation = vi.fn();
@@ -94,6 +95,7 @@ describe("CalendarView", () => {
   it("renders the calendar component", () => {
     render(<CalendarView />);
 
+    expect(screen.getByTestId(TEST_IDS.CALENDAR.ROOT)).toBeInTheDocument();
     expect(screen.getByTestId("mock-shadcn-calendar")).toBeInTheDocument();
     expect(screen.getByText("ShadcnCalendar")).toBeInTheDocument();
   });

@@ -125,7 +125,7 @@ test.describe("Forgot Password Form - Elements", () => {
 
   test("can go back to sign in", async ({ authPage }) => {
     await authPage.goBackToSignIn();
-    await expect(authPage.authForm).toHaveAttribute("data-expanded", "true");
+    await authPage.waitForFormExpanded("signin");
   });
 });
 

@@ -26,6 +26,7 @@ import {
   nukeTimersEndpoint,
   replaceProjectWorkflowStatesEndpoint,
   requestPasswordResetEndpoint,
+  resetMeetingsDataEndpoint,
   resetOnboardingEndpoint,
   resetTestWorkspaceEndpoint,
   seedScreenshotDataEndpoint,
@@ -279,6 +280,13 @@ http.route({
   path: "/e2e/reset-workspace",
   method: "POST",
   handler: resetTestWorkspaceEndpoint,
+});
+
+// Reset meetings data for a specific E2E user
+http.route({
+  path: "/e2e/reset-meetings-data",
+  method: "POST",
+  handler: resetMeetingsDataEndpoint,
 });
 
 // Seed screenshot data (workspace, team, project, issues, documents)

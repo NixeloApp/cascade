@@ -76,10 +76,9 @@ export function CommentReactions({ commentId, reactions, currentUserId }: Commen
               <Tooltip key={emoji} content={emoji}>
                 <Button
                   variant="ghost"
-                  size="icon"
+                  size="iconSm"
                   onClick={() => handleToggle(emoji)}
                   aria-label={`React with ${emoji}`}
-                  className="w-8 h-8"
                 >
                   {emoji}
                 </Button>

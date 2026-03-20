@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/DropdownMenu";
 import type { SwimlanGroupBy } from "@/lib/swimlane-utils";
 import { getSwimlanGroupByLabel, getSwimlanGroupByOptions } from "@/lib/swimlane-utils";
+import { Icon } from "../ui/Icon";
 
 interface SwimlanSelectorProps {
   value: SwimlanGroupBy;
@@ -32,10 +33,14 @@ export function SwimlanSelector({ value, onChange }: SwimlanSelectorProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-1.5 text-ui-text-secondary">
-          <Rows3 className="w-4 h-4" />
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-ui-text-secondary"
+          leftIcon={<Icon icon={Rows3} size="sm" />}
+          rightIcon={<Icon icon={ChevronDown} size="xs" tone="tertiary" />}
+        >
           <span className="hidden sm:inline">{value === "none" ? "Swimlanes" : currentLabel}</span>
-          <ChevronDown className="w-3 h-3 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-40">

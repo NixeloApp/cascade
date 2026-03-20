@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { isLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
 
@@ -40,7 +41,6 @@ export class CalendarPage extends BasePage {
   readonly eventDescriptionInput: Locator;
   readonly eventStartDate: Locator;
   readonly eventStartTime: Locator;
-  readonly eventEndDate: Locator;
   readonly eventEndTime: Locator;
   readonly eventTypeSelect: Locator;
   readonly isRequiredCheckbox: Locator;
@@ -61,17 +61,13 @@ export class CalendarPage extends BasePage {
 
     // Calendar view
     this.calendar = page
-      .locator("[data-calendar]")
+      .getByTestId(TEST_IDS.CALENDAR.ROOT)
       .or(page.locator(".calendar, [role='grid']").first());
-    this.calendarGrid = page
-      .locator("[data-calendar-grid]")
-      .or(page.locator(".calendar-grid, .fc-view"));
+    this.calendarGrid = page.getByTestId(TEST_IDS.CALENDAR.GRID);
     this.todayButton = page.getByRole("button", { name: /today/i });
     this.prevButton = page.getByRole("button", { name: /prev|previous|back|←|</i });
     this.nextButton = page.getByRole("button", { name: /next|forward|→|>/i });
-    this.monthYearLabel = page
-      .locator("[data-month-year]")
-      .or(page.locator(".calendar-header h2, .fc-toolbar-title"));
+    this.monthYearLabel = page.getByTestId(TEST_IDS.CALENDAR.HEADER_DATE);
 
     // View toggles
     this.monthViewButton = page
@@ -87,7 +83,6 @@ export class CalendarPage extends BasePage {
     // Events
     this.eventItems = page
       .getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM)
-      .or(page.locator("[data-event-item]"))
       .or(page.locator(".calendar-event, .fc-event"));
     this.createEventButton = page.getByRole("button", {
       name: /create.*event|new.*event|add.*event|\+/i,
@@ -103,10 +98,9 @@ export class CalendarPage extends BasePage {
     this.eventDescriptionInput = page
       .getByPlaceholder(/description/i)
       .or(page.getByLabel(/description/i));
-    this.eventStartDate = page.getByLabel(/start.*date/i).or(page.locator("[data-start-date]"));
-    this.eventStartTime = page.getByLabel(/start.*time/i).or(page.locator("[data-start-time]"));
-    this.eventEndDate = page.getByLabel(/end.*date/i).or(page.locator("[data-end-date]"));
-    this.eventEndTime = page.getByLabel(/end.*time/i).or(page.locator("[data-end-time]"));
+    this.eventStartDate = this.createEventModal.getByLabel(/^date$/i);
+    this.eventStartTime = this.createEventModal.getByLabel(/start time/i);
+    this.eventEndTime = this.createEventModal.getByLabel(/end time/i);
     this.eventTypeSelect = page.getByRole("combobox", { name: /type/i });
     this.isRequiredCheckbox = page.getByRole("checkbox", { name: /required/i });
     this.saveEventButton = this.createEventModal.getByRole("button", {
@@ -118,7 +112,7 @@ export class CalendarPage extends BasePage {
     this.eventDetailModal = page.getByTestId(TEST_IDS.CALENDAR.EVENT_DETAILS_MODAL);
     this.editEventButton = page.getByRole("button", { name: /edit/i });
     this.deleteEventButton = page.getByRole("button", { name: /delete/i });
-    this.attendeesList = page.locator("[data-attendees]");
+    this.attendeesList = this.eventDetailModal.getByTestId(TEST_IDS.CALENDAR.ATTENDEES_LIST);
     this.markAttendanceButton = page.getByRole("button", { name: /mark.*attendance|attendance/i });
   }
 
@@ -224,7 +218,7 @@ export class CalendarPage extends BasePage {
   }
 
   async openEventDetailsByTitle(title: string) {
-    await this.goToToday().catch(() => {});
+    await this.alignCalendarToToday();
 
     if ((await this.dayViewButton.count()) > 0) {
       await this.switchToDayView();
@@ -233,7 +227,7 @@ export class CalendarPage extends BasePage {
     await this.scrollCalendarToHour(8);
 
     const event = this.eventItems.filter({ hasText: title }).first();
-    if (!(await event.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(event))) {
       const fallbackEvent = this.calendar.getByText(title).first();
       await expect(fallbackEvent).toBeVisible();
       await fallbackEvent.click();
@@ -241,7 +235,7 @@ export class CalendarPage extends BasePage {
       return;
     }
 
-    await event.scrollIntoViewIfNeeded().catch(() => {});
+    await this.prepareEventForInteraction(event, `calendar event "${title}"`);
     await event.click();
     await expect(this.eventDetailModal).toBeVisible();
   }
@@ -249,13 +243,48 @@ export class CalendarPage extends BasePage {
   private async scrollCalendarToHour(hour: number) {
     const scrollContainer = this.calendar.locator(".overflow-y-auto").first();
 
-    if (!(await scrollContainer.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(scrollContainer))) {
       return;
     }
 
     await scrollContainer.evaluate((element, targetHour) => {
       element.scrollTop = Math.max(0, targetHour * 128 - 96);
     }, hour);
+  }
+
+  private async alignCalendarToToday(): Promise<void> {
+    const todayButtonVisible = await isLocatorVisible(this.todayButton);
+    if (!todayButtonVisible) {
+      return;
+    }
+
+    try {
+      await this.goToToday();
+    } catch (error) {
+      const buttonStillVisible = await isLocatorVisible(this.todayButton);
+      if (!buttonStillVisible) {
+        return;
+      }
+
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Calendar today navigation failed before opening event details: ${message}`);
+    }
+  }
+
+  private async prepareEventForInteraction(event: Locator, label: string): Promise<void> {
+    await expect(event, `${label} should be visible before interaction`).toBeVisible();
+
+    try {
+      await event.scrollIntoViewIfNeeded();
+    } catch (error) {
+      const stillVisible = await isLocatorVisible(event);
+      if (stillVisible) {
+        return;
+      }
+
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`${label} was not visible after scroll attempt: ${message}`);
+    }
   }
 
   // ===================

@@ -49,10 +49,16 @@ describe("SignInForm", () => {
   it("expands email form when Continue with email is clicked", async () => {
     render(<SignInForm />);
 
+    await waitFor(() => {
+      expect(screen.getByTestId(TEST_IDS.AUTH.FORM_HYDRATED)).toBeInTheDocument();
+    });
+
     const submitButton = screen.getByTestId(TEST_IDS.AUTH.SUBMIT_BUTTON);
     fireEvent.click(submitButton);
 
     await waitFor(() => {
+      expect(screen.getByTestId(TEST_IDS.AUTH.EMAIL_FORM)).toBeInTheDocument();
+      expect(screen.getByTestId(TEST_IDS.AUTH.FORM_READY)).toBeInTheDocument();
       expect(screen.getByTestId(TEST_IDS.AUTH.EMAIL_INPUT)).toBeInTheDocument();
       expect(screen.getByTestId(TEST_IDS.AUTH.PASSWORD_INPUT)).toBeInTheDocument();
     });
@@ -71,6 +77,7 @@ describe("SignInForm", () => {
     fireEvent.click(expandButton);
 
     await waitFor(() => {
+      expect(screen.getByTestId(TEST_IDS.AUTH.FORM_READY)).toBeInTheDocument();
       expect(screen.getByTestId(TEST_IDS.AUTH.EMAIL_INPUT)).toBeInTheDocument();
     });
 
@@ -103,6 +110,7 @@ describe("SignInForm", () => {
     fireEvent.click(expandButton);
 
     await waitFor(() => {
+      expect(screen.getByTestId(TEST_IDS.AUTH.FORM_READY)).toBeInTheDocument();
       expect(screen.getByTestId(TEST_IDS.AUTH.EMAIL_INPUT)).toBeInTheDocument();
     });
 

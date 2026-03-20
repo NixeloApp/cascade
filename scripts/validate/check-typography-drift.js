@@ -1,9 +1,8 @@
 /**
  * CHECK: Typography drift audit
  *
- * Informational audit for Typography drift that is not yet strict enough to
- * block CI. Focus: Typography components that are still being restyled with
- * raw size/weight/tracking classes in feature code.
+ * Blocking audit for Typography drift. Focus: Typography components that are
+ * still being restyled with raw size/weight/tracking classes in feature code.
  */
 
 import fs from "node:fs";
@@ -106,9 +105,8 @@ export function run() {
   }
 
   return {
-    passed: true,
-    errors: 0,
-    showMessagesOnPass: findings.length > 0,
+    passed: findings.length === 0,
+    errors: findings.length,
     detail:
       findings.length > 0
         ? `${findings.length} Typography override audit finding(s)`

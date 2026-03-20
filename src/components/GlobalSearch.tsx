@@ -500,14 +500,13 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
     <>
       <Button
         chrome="framed"
-        chromeSize="pill"
+        chromeSize="searchTrigger"
         onClick={() => {
           setShouldOpenAdvancedSearch(false); // Reset handoff flag to prevent stale state
           setIsOpen(true);
         }}
         aria-label="Open search and commands"
         data-testid={TEST_IDS.HEADER.SEARCH_BUTTON}
-        className="w-full min-w-0 justify-center gap-2 px-2.5 sm:justify-between sm:px-3"
       >
         <Flex align="center" gap="sm" className="min-w-0">
           <Card
@@ -517,13 +516,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
           >
             <Search className="h-4 w-4" />
           </Card>
-          <Typography
-            variant="small"
-            color="secondary"
-            className="hidden truncate text-xs sm:block sm:text-sm"
-          >
-            Search, jump, or create...
-          </Typography>
+          <Typography variant="searchTriggerLabel">Search, jump, or create...</Typography>
         </Flex>
         <FlexItem shrink={false} className="hidden sm:block">
           <KeyboardShortcut shortcut="⌘+K" />

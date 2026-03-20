@@ -85,7 +85,7 @@ export function ProductShowcase() {
                     <Badge variant="outline" shape="pill">
                       Product workspace
                     </Badge>
-                    <Typography variant="h3" className="mt-4 text-2xl leading-tight sm:text-3xl">
+                    <Typography variant="landingShowcaseTitle" className="mt-4">
                       Product control tower
                     </Typography>
                     <Typography variant="small" color="secondary" className="mt-3">
@@ -143,10 +143,8 @@ export function ProductShowcase() {
               {/* Metrics strip */}
               <Grid cols={1} colsSm={3} gap="md" className="lg:col-span-7">
                 <Card recipe="metricTile" variant="section" padding="md">
-                  <Typography variant="meta" className="uppercase tracking-widest">
-                    Active projects
-                  </Typography>
-                  <Typography variant="h2" className="mt-2 text-3xl sm:text-4xl">
+                  <Typography variant="eyebrowWide">Active projects</Typography>
+                  <Typography variant="landingMetricValue" className="mt-2">
                     18
                   </Typography>
                   <Typography variant="small" color="secondary" className="mt-2">
@@ -155,10 +153,8 @@ export function ProductShowcase() {
                 </Card>
 
                 <Card recipe="metricTile" variant="section" padding="md">
-                  <Typography variant="meta" className="uppercase tracking-widest">
-                    AI assists today
-                  </Typography>
-                  <Typography variant="h2" className="mt-2 text-3xl sm:text-4xl">
+                  <Typography variant="eyebrowWide">AI assists today</Typography>
+                  <Typography variant="landingMetricValue" className="mt-2">
                     142
                   </Typography>
                   <Typography variant="small" color="secondary" className="mt-2">
@@ -167,10 +163,8 @@ export function ProductShowcase() {
                 </Card>
 
                 <Card recipe="metricTile" variant="section" padding="md">
-                  <Typography variant="meta" className="uppercase tracking-widest">
-                    Time recovered
-                  </Typography>
-                  <Typography variant="h2" className="mt-2 text-3xl sm:text-4xl">
+                  <Typography variant="eyebrowWide">Time recovered</Typography>
+                  <Typography variant="landingMetricValue" className="mt-2">
                     11h
                   </Typography>
                   <Typography variant="small" color="secondary" className="mt-2">

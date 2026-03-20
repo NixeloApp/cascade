@@ -10,7 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import type { BadgeProps } from "@/components/ui/Badge";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { CheckCircle, Clock, FileText, Mic, MicOff, Play, XCircle } from "@/lib/icons";
@@ -20,8 +20,13 @@ import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Collapsible, CollapsibleContent, CollapsibleHeader } from "./ui/Collapsible";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
-import { Flex } from "./ui/Flex";
+import { Flex, FlexItem } from "./ui/Flex";
+import { Icon } from "./ui/Icon";
+import { List } from "./ui/List";
+import { InlineSpinner, LoadingSpinner } from "./ui/LoadingSpinner";
 import { Metadata, MetadataItem } from "./ui/Metadata";
+import { ScrollArea } from "./ui/ScrollArea";
+import { Separator } from "./ui/Separator";
 import { Stack } from "./ui/Stack";
 import { Typography } from "./ui/Typography";
 
@@ -29,60 +34,74 @@ import { Typography } from "./ui/Typography";
 interface StatusBadgeConfig {
   icon: ReactNode;
   label: string;
-  className: string;
+  variant: BadgeProps["variant"];
 }
 
 const STATUS_BADGE_CONFIG: Record<string, StatusBadgeConfig> = {
   scheduled: {
-    icon: <Clock className="w-3 h-3 mr-1" />,
+    icon: <StatusBadgeIcon icon={Clock} />,
     label: "Scheduled",
-    className: "bg-brand-subtle text-brand-active",
+    variant: "brand",
   },
   joining: {
-    icon: <Play className="w-3 h-3 mr-1 animate-pulse" />,
+    icon: <StatusBadgeIcon icon={Play} tone="warning" animation="pulse" />,
     label: "Joining...",
-    className: "bg-status-warning-bg text-status-warning",
+    variant: "warning",
   },
   recording: {
-    icon: <Mic className="w-3 h-3 mr-1 animate-pulse" />,
+    icon: <StatusBadgeIcon icon={Mic} tone="error" animation="pulse" />,
     label: "Recording",
-    className: "bg-status-error-bg text-status-error",
+    variant: "error",
   },
   processing: {
-    icon: <LoadingSpinner size="xs" className="mr-1" />,
+    icon: <InlineSpinner size="xs" variant="inherit" />,
     label: "Processing...",
-    className: "bg-accent-subtle text-accent-active",
+    variant: "accent",
   },
   transcribing: {
-    icon: <LoadingSpinner size="xs" className="mr-1" />,
+    icon: <InlineSpinner size="xs" variant="inherit" />,
     label: "Processing...",
-    className: "bg-accent-subtle text-accent-active",
+    variant: "accent",
   },
   summarizing: {
-    icon: <LoadingSpinner size="xs" className="mr-1" />,
+    icon: <InlineSpinner size="xs" variant="inherit" />,
     label: "Processing...",
-    className: "bg-accent-subtle text-accent-active",
+    variant: "accent",
   },
   completed: {
-    icon: <CheckCircle className="w-3 h-3 mr-1" />,
+    icon: <StatusBadgeIcon icon={CheckCircle} tone="success" />,
     label: "Completed",
-    className: "bg-status-success-bg text-status-success",
+    variant: "success",
   },
   failed: {
-    icon: <XCircle className="w-3 h-3 mr-1" />,
+    icon: <StatusBadgeIcon icon={XCircle} tone="error" />,
     label: "Failed",
-    className: "bg-status-error-bg text-status-error",
+    variant: "error",
   },
 };
+
+function StatusBadgeIcon({
+  icon,
+  tone,
+  animation,
+}: {
+  icon: typeof Clock;
+  tone?: "warning" | "error" | "success";
+  animation?: "pulse";
+}) {
+  return <Icon icon={icon} size="xs" tone={tone} animation={animation} />;
+}
 
 function StatusBadge({ status }: { status: string }) {
   const config = STATUS_BADGE_CONFIG[status];
   if (!config) return null;
 
   return (
-    <Badge size="sm" className={config.className}>
-      {config.icon}
-      {config.label}
+    <Badge size="sm" variant={config.variant}>
+      <Flex as="span" align="center" gap="xs">
+        {config.icon}
+        <span>{config.label}</span>
+      </Flex>
     </Badge>
   );
 }
@@ -112,24 +131,26 @@ function NoRecordingState({
 }) {
   return (
     <Card variant="soft" padding="md">
-      <Typography variant="muted" className="mb-3">
-        Schedule a bot to join this meeting and automatically generate transcripts and summaries.
-      </Typography>
-      <Button
-        onClick={onSchedule}
-        isLoading={isScheduling}
-        leftIcon={<Mic className="w-4 h-4" />}
-        size="sm"
-      >
-        {isScheduling ? "Scheduling..." : "Enable AI Notes"}
-      </Button>
+      <Stack gap="sm" align="start">
+        <Typography variant="muted">
+          Schedule a bot to join this meeting and automatically generate transcripts and summaries.
+        </Typography>
+        <Button
+          onClick={onSchedule}
+          isLoading={isScheduling}
+          leftIcon={<Icon icon={Mic} size="sm" />}
+          size="sm"
+        >
+          {isScheduling ? "Scheduling..." : "Enable AI Notes"}
+        </Button>
+      </Stack>
     </Card>
   );
 }
 
 function ScheduledState({ onCancel }: { onCancel: () => void }) {
   return (
-    <Card padding="md" className="bg-brand-subtle">
+    <Card recipe="statusBrand" padding="md">
       <Flex justify="between" align="center">
         <Stack gap="xs">
           <Typography variant="label">Bot scheduled to join</Typography>
@@ -137,8 +158,12 @@ function ScheduledState({ onCancel }: { onCancel: () => void }) {
             "Nixelo Notetaker" will join when the meeting starts
           </Typography>
         </Stack>
-        <Button onClick={onCancel} variant="ghost" size="sm">
-          <MicOff className="w-4 h-4 mr-1" />
+        <Button
+          onClick={onCancel}
+          variant="ghost"
+          size="sm"
+          leftIcon={<Icon icon={MicOff} size="sm" />}
+        >
           Cancel
         </Button>
       </Flex>
@@ -148,7 +173,7 @@ function ScheduledState({ onCancel }: { onCancel: () => void }) {
 
 function FailedState({ errorMessage, onRetry }: { errorMessage?: string; onRetry: () => void }) {
   return (
-    <Card padding="md" className="bg-status-error-bg">
+    <Card recipe="statusError" padding="md">
       <Stack gap="sm">
         <Typography variant="label" color="error">
           Recording failed
@@ -280,10 +305,11 @@ export function MeetingRecordingSection({
   };
 
   return (
-    <div className="border-t border-ui-border pt-4">
+    <Stack gap="lg">
+      <Separator />
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
         <CollapsibleHeader
-          icon={<Mic className="w-5 h-5" />}
+          icon={<Icon icon={Mic} size="md" />}
           badge={recording && <StatusBadge status={recording.status} />}
         >
           AI Meeting Notes
@@ -311,7 +337,7 @@ export function MeetingRecordingSection({
         variant={dialogState.variant}
         isLoading={isConfirming}
       />
-    </div>
+    </Stack>
   );
 }
 
@@ -331,10 +357,10 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
       {/* Executive Summary */}
       {summary && (
         <Card variant="soft" padding="md">
-          <Typography variant="label" className="mb-2">
-            Summary
-          </Typography>
-          <Typography variant="muted">{summary.executiveSummary}</Typography>
+          <Stack gap="sm">
+            <Typography variant="label">Summary</Typography>
+            <Typography variant="muted">{summary.executiveSummary}</Typography>
+          </Stack>
         </Card>
       )}
 
@@ -342,15 +368,11 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
       {summary && summary.keyPoints.length > 0 && (
         <Stack gap="sm">
           <Typography variant="label">Key Points</Typography>
-          <Stack
-            as="ul"
-            gap="xs"
-            className="list-disc list-inside text-ui-text-secondary marker:text-brand"
-          >
+          <List gap="xs" variant="bulleted">
             {summary.keyPoints.map((point: string) => (
               <li key={point}>{point}</li>
             ))}
-          </Stack>
+          </List>
         </Stack>
       )}
 
@@ -362,20 +384,16 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
             {summary.actionItems.map(
               (item: { description: string; assignee?: string; dueDate?: string }) => (
                 <li key={`${item.description}-${item.assignee ?? ""}-${item.dueDate ?? ""}`}>
-                  <Card padding="sm" className="bg-status-warning-bg">
-                    <Flex justify="between" align="start">
-                      <Typography variant="small">{item.description}</Typography>
-                      {item.assignee && (
-                        <Badge size="sm" className="ml-2 shrink-0">
-                          {item.assignee}
-                        </Badge>
-                      )}
-                    </Flex>
-                    {item.dueDate && (
-                      <Typography variant="meta" className="mt-1 block">
-                        Due: {item.dueDate}
-                      </Typography>
-                    )}
+                  <Card recipe="statusWarning" padding="sm">
+                    <Stack gap="xs">
+                      <Flex justify="between" align="start" gap="sm">
+                        <FlexItem flex="1">
+                          <Typography variant="small">{item.description}</Typography>
+                        </FlexItem>
+                        {item.assignee && <Badge size="sm">{item.assignee}</Badge>}
+                      </Flex>
+                      {item.dueDate && <Typography variant="meta">Due: {item.dueDate}</Typography>}
+                    </Stack>
                   </Card>
                 </li>
               ),
@@ -388,30 +406,32 @@ function RecordingResults({ recordingId }: { recordingId: Id<"meetingRecordings"
       {summary && summary.decisions.length > 0 && (
         <Stack gap="sm">
           <Typography variant="label">Decisions Made</Typography>
-          <Stack as="ul" gap="xs">
+          <List gap="xs">
             {summary.decisions.map((decision: string) => (
               <Flex as="li" key={decision} align="start" gap="sm">
-                <CheckCircle className="w-4 h-4 text-status-success shrink-0 mt-0.5" />
+                <Icon icon={CheckCircle} size="xs" tone="success" />
                 <Typography variant="caption" color="secondary">
                   {decision}
                 </Typography>
               </Flex>
             ))}
-          </Stack>
+          </List>
         </Stack>
       )}
 
       {/* Transcript Toggle */}
       {transcript && (
         <Collapsible open={showTranscript} onOpenChange={setShowTranscript}>
-          <CollapsibleHeader icon={<FileText className="w-4 h-4" />}>
+          <CollapsibleHeader icon={<Icon icon={FileText} size="sm" />}>
             {showTranscript ? "Hide Transcript" : "Show Full Transcript"}
           </CollapsibleHeader>
           <CollapsibleContent>
-            <Card variant="soft" padding="md" className="max-h-96 overflow-y-auto">
-              <Typography as="pre" variant="mono" color="secondary" className="whitespace-pre-wrap">
-                {transcript.fullText}
-              </Typography>
+            <Card variant="soft" padding="md">
+              <ScrollArea size="contentLg">
+                <Typography as="pre" variant="monoBlock">
+                  {transcript.fullText}
+                </Typography>
+              </ScrollArea>
             </Card>
           </CollapsibleContent>
         </Collapsible>

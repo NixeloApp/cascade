@@ -26,11 +26,11 @@ All caused by `MeetingsWorkspace.tsx` (55 of 75 violations) plus a handful elsew
 
 ## Advisory Validators That Should Block
 
-These 3 validators report real issues (43 + 17 + N) but pass anyway:
+These 3 validators reported real issues and have now been promoted after cleanup:
 
-- [ ] **Typography drift** (43 drift points) -- promote from advisory to blocking, or set a baseline threshold that blocks on increase
-- [ ] **Control chrome drift** (17 drift points) -- same: promote to blocking or ratchet
-- [ ] **Shared shape drift** -- promote or ratchet
+- [x] **Typography drift** (0 drift points) -- promoted from advisory to blocking
+- [x] **Control chrome drift** (0 drift points) -- promoted from advisory to blocking
+- [x] **Shared shape drift** (0 repeated shape groups) -- promoted from advisory to blocking
 
 ## Query/Filter Validator Gaps
 
@@ -60,30 +60,30 @@ Fetches all data then filters in the component when the filter could be a backen
 
 ### New validator rules to add:
 
-- [ ] **Post-fetch JS filter** -- detect `.take(N)` or `.collect()` result followed by `.filter((item) => item.field === value)` within 10 lines. Skip Convex filters `(q) => q.eq(...)`, `notDeleted`, and `.includes()` (can't express in Convex). Report as warning with "consider moving to query filter or index."
-- [ ] **Client-side query filter** -- detect `useQuery(...)` result followed by `.filter()` in React components. Flag simple property checks that could be query args. Advisory level.
-- [ ] **Multi-filter on same result** -- detect same variable filtered 2+ times in sequence. Suggest single pass or pre-aggregation.
+- [x] **Post-fetch JS filter** -- ratcheted in `check-queries.js` for backend `.take()` / `.collect()` / `safeCollect()` results followed by JS `.filter()` (41 baselined across 18 files)
+- [x] **Client-side query filter** -- ratcheted in `check-queries.js` for query-hook results filtered in React components/routes (13 baselined across 11 files)
+- [x] **Multi-filter on same result** -- ratcheted in `check-queries.js` for repeated `.filter()` passes on the same fetched/query result variable (9 baselined groups across 8 files)
 
 ## New Validators to Add (Non-Query)
 
-- [ ] **Screenshot manifest integrity** -- fail if any hash appears more than 2 times (legitimate dual-write is max 2; 3+ means spinner capture)
-- [ ] **`.catch(() => {})` audit** -- flag silent catch swallows in E2E and screenshot tooling (198 currently)
-- [ ] **Hardcoded timeout audit** -- extend `check-e2e-hard-rules.js` to also scan `screenshot-pages.ts` for `waitForTimeout` and `setTimeout`
-- [ ] **Meeting page coverage** -- verify meetings spec folder exists with screenshots (part of screenshot coverage validator)
+- [x] **Screenshot manifest integrity** -- fail if any hash appears more than 2 times (legitimate dual-write is max 2; 3+ means spinner capture)
+- [x] **`.catch(() => {})` audit** -- ratcheted for E2E and screenshot tooling (225 baselined across 10 files)
+- [x] **Hardcoded timeout audit** -- extend `check-e2e-hard-rules.js` to ratchet `screenshot-pages.ts` timeout debt (7 `waitForTimeout`, 1 Promise sleep baselined) while keeping spec-file timeouts fully blocking
+- [x] **Meeting page coverage** -- `check-screenshot-coverage.js` now requires the meetings spec folder and canonical screenshots
 
 ## Existing Validator Improvements
 
-- [ ] **Raw Tailwind validator** -- currently allows raw TW in route files; tighten to flag repeated patterns (same class cluster used 3+ times should become a component/variant)
-- [ ] **E2E quality validator** -- remove the `screenshot-pages.ts` skip (tracked in screenshot-tooling-cleanup.md, but validator should enforce once cleanup is done)
-- [ ] **Screenshot coverage validator** -- add meetings page to required spec list
+- [x] **Raw Tailwind validator** -- now ratchets repeated raw route-level `className` clusters in `check-raw-tailwind.js` (3 baselined route clusters at `3x+` reuse)
+- [x] **E2E quality validator** -- removed the `screenshot-pages.ts` skip and ratcheted its current quality debt in `check-e2e-quality.js` (58 baselined harness issues)
+- [x] **Screenshot coverage validator** -- meetings added to the required page-spec list in `check-screenshot-coverage.js`
 - [ ] **Standards validator** -- ensure new pages like MeetingsWorkspace are caught immediately (currently it does, but violations persist -- need to fix the source)
 
 ## Ratchet Strategy
 
 For advisory validators, implement a ratchet:
-- [ ] Store current baseline counts in a config file
-- [ ] Fail if count increases (new violations)
-- [ ] Pass if count stays same or decreases (cleanup in progress)
+- [x] Store current baseline counts in a config file -- ratcheted validators now read baseline JSON from `scripts/ci/`
+- [x] Fail if count increases (new violations) -- shared ratchet helper now enforces count overages deterministically
+- [x] Pass if count stays same or decreases (cleanup in progress) -- shared ratchet helper preserves cleanup-in-progress behavior across count-based validators
 - [ ] Remove ratchet once count hits zero
 
 ## Done When

@@ -9,10 +9,9 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { DISPLAY_LIMITS } from "@/lib/constants";
-import { showError, showSuccess } from "@/lib/toast";
+import { showError, showInfo, showSuccess } from "@/lib/toast";
 
 export interface BoardAction {
   issueId: Id<"issues">;
@@ -42,7 +41,7 @@ export function useBoardHistory() {
   const handleUndo = async () => {
     const { historyStack: stack, updateIssueStatus: update } = stateRef.current;
     if (stack.length === 0) {
-      toast.info("Nothing to undo");
+      showInfo("Nothing to undo");
       return;
     }
 
@@ -69,7 +68,7 @@ export function useBoardHistory() {
   const handleRedo = async () => {
     const { redoStack: stack, updateIssueStatus: update } = stateRef.current;
     if (stack.length === 0) {
-      toast.info("Nothing to redo");
+      showInfo("Nothing to redo");
       return;
     }
 

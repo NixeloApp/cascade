@@ -57,6 +57,10 @@ interface TreeNode {
   hasChildren: boolean;
 }
 
+function TreeChevronIcon({ isExpanded }: { isExpanded: boolean }) {
+  return <Icon icon={isExpanded ? ChevronDown : ChevronRight} size="xsPlus" />;
+}
+
 /** Hierarchical tree view of documents with favorites, archived, and folder sections. */
 export function DocumentTree({
   organizationId,
@@ -103,8 +107,12 @@ export function DocumentTree({
             No documents yet
           </Typography>
           {onCreateDocument && (
-            <Button variant="ghost" size="sm" onClick={() => onCreateDocument()}>
-              <Plus className="w-4 h-4 mr-1" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onCreateDocument()}
+              leftIcon={<Icon icon={Plus} size="sm" />}
+            >
               New Document
             </Button>
           )}
@@ -121,8 +129,8 @@ export function DocumentTree({
           size="sm"
           className="mx-2 mb-2 justify-start"
           onClick={() => onCreateDocument()}
+          leftIcon={<Icon icon={Plus} size="sm" />}
         >
-          <Plus className="w-4 h-4 mr-2" />
           New Document
         </Button>
       )}
@@ -137,12 +145,8 @@ export function DocumentTree({
             aria-expanded={favoritesExpanded}
             aria-controls="favorites-documents-list"
           >
-            {favoritesExpanded ? (
-              <ChevronDown className="w-3.5 h-3.5 mr-1" />
-            ) : (
-              <ChevronRight className="w-3.5 h-3.5 mr-1" />
-            )}
-            <Star className="w-4 h-4 mr-2 text-status-warning fill-status-warning" />
+            <TreeChevronIcon isExpanded={favoritesExpanded} />
+            <Icon icon={Star} size="sm" tone="warning" fill="currentColor" />
             <Typography variant="small">Favorites</Typography>
           </Button>
 
@@ -206,12 +210,8 @@ export function DocumentTree({
             aria-expanded={archivedExpanded}
             aria-controls="archived-documents-list"
           >
-            {archivedExpanded ? (
-              <ChevronDown className="w-3.5 h-3.5 mr-1" />
-            ) : (
-              <ChevronRight className="w-3.5 h-3.5 mr-1" />
-            )}
-            <Archive className="w-4 h-4 mr-2" />
+            <TreeChevronIcon isExpanded={archivedExpanded} />
+            <Icon icon={Archive} size="sm" />
             <Typography variant="small">Archived</Typography>
             <Typography variant="small" className="ml-auto text-ui-text-tertiary">
               {archived.length}
@@ -290,11 +290,7 @@ function ExpandToggle({
       aria-label={`${isExpanded ? "Collapse" : "Expand"} ${title}`}
       aria-expanded={isExpanded}
     >
-      {isExpanded ? (
-        <ChevronDown className="w-3.5 h-3.5" />
-      ) : (
-        <ChevronRight className="w-3.5 h-3.5" />
-      )}
+      <TreeChevronIcon isExpanded={isExpanded} />
     </Button>
   );
 }
@@ -386,8 +382,8 @@ function TreeNodeItem({
                       e.preventDefault();
                       onCreateDocument(node._id);
                     }}
+                    icon={<Icon icon={Plus} size="sm" />}
                   >
-                    <Plus className="w-4 h-4 mr-2" />
                     Add subpage
                   </DropdownMenuItem>
                 )}

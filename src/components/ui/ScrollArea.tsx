@@ -7,19 +7,35 @@
  */
 
 import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
+import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+const scrollAreaVariants = cva("relative overflow-hidden", {
+  variants: {
+    size: {
+      none: "",
+      contentSm: "max-h-40",
+      contentLg: "max-h-96",
+    },
+  },
+  defaultVariants: {
+    size: "none",
+  },
+});
+
 function ScrollArea({
   className,
   children,
+  size,
   ...props
-}: React.ComponentProps<typeof ScrollAreaPrimitive.Root>) {
+}: React.ComponentProps<typeof ScrollAreaPrimitive.Root> &
+  VariantProps<typeof scrollAreaVariants>) {
   return (
     <ScrollAreaPrimitive.Root
       data-slot="scroll-area"
-      className={cn("relative overflow-hidden", className)}
+      className={cn(scrollAreaVariants({ size }), className)}
       {...props}
     >
       <ScrollAreaPrimitive.Viewport

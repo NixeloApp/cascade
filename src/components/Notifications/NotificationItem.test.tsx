@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { TEST_IDS } from "@/lib/test-ids";
 import { HOUR } from "@/lib/time";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { NotificationItem } from "./NotificationItem";
@@ -50,7 +51,12 @@ vi.mock("@/components/ui/Button", () => ({
 }));
 
 vi.mock("@/components/ui/Card", () => ({
-  Card: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Card: ({
+    children,
+    ...props
+  }: {
+    children: ReactNode;
+  } & React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
 }));
 
 vi.mock("@/components/ui/Flex", () => ({
@@ -151,6 +157,9 @@ describe("NotificationItem", () => {
     expect(screen.getByText("Assigned to CORE-42")).toBeInTheDocument();
     expect(screen.getByText("You were assigned the issue")).toBeInTheDocument();
     expect(screen.getByText("Alex")).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.NOTIFICATION.ITEM)).not.toHaveAttribute(
+      "data-notification-item",
+    );
 
     await user.click(screen.getByRole("link", { name: /Assigned to CORE-42/i }));
 

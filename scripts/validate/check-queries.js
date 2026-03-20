@@ -7,10 +7,257 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { analyzeCountRatchet, loadCountBaseline } from "./ratchet-utils.js";
 import { ROOT, relPath, walkDir } from "./utils.js";
+
+const POST_FETCH_FILTER_BASELINE_PATH = path.join(
+  ROOT,
+  "scripts",
+  "ci",
+  "post-fetch-js-filters-baseline.json",
+);
+const CLIENT_QUERY_FILTER_BASELINE_PATH = path.join(
+  ROOT,
+  "scripts",
+  "ci",
+  "client-query-filters-baseline.json",
+);
+const MULTI_FILTER_BASELINE_PATH = path.join(
+  ROOT,
+  "scripts",
+  "ci",
+  "multi-filter-query-results-baseline.json",
+);
+const QUERY_HOOK_PATTERN = /use(?:AuthenticatedQuery|Query|PaginatedQuery|SuspenseQuery)\s*\(/;
+
+function lineFromIndex(source, index) {
+  return source.slice(0, index).split("\n").length;
+}
+
+function getQueryHelperNames(content) {
+  const helperNames = new Set();
+  const functionPattern =
+    /(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\([^)]*\)\s*\{([\s\S]*?)\n\}/g;
+
+  for (const match of content.matchAll(functionPattern)) {
+    const helperName = match[1];
+    const body = match[2] ?? "";
+    if (body.includes(".take(") || body.includes(".collect(") || body.includes("safeCollect(")) {
+      helperNames.add(helperName);
+    }
+  }
+
+  return helperNames;
+}
+
+function collectPostFetchFilters(content, file) {
+  const detections = [];
+  const seenDetections = new Set();
+  const helperNames = getQueryHelperNames(content);
+  const statementPattern =
+    /(?:(?:const|let)\s+([A-Za-z_$][\w$]*)|([A-Za-z_$][\w$]*))\s*=\s*await\s+([\s\S]*?);/g;
+
+  for (const match of content.matchAll(statementPattern)) {
+    const variableName = match[1] ?? match[2];
+    const expression = match[3] ?? "";
+    if (!variableName) continue;
+
+    const usesDirectFetch =
+      expression.includes(".take(") ||
+      expression.includes(".collect(") ||
+      expression.includes("safeCollect(");
+    const usesHelperFetch = [...helperNames].some((helperName) =>
+      new RegExp(`\\b${helperName}\\s*\\(`).test(expression),
+    );
+
+    if (!(usesDirectFetch || usesHelperFetch)) {
+      continue;
+    }
+
+    const assignmentIndex = match.index ?? 0;
+    const assignmentLine = lineFromIndex(content, assignmentIndex);
+    const lookAheadStart = assignmentIndex + match[0].length;
+    const lookAhead = content.slice(
+      lookAheadStart,
+      Math.min(content.length, lookAheadStart + 2400),
+    );
+    const filterPattern = new RegExp(
+      `\\b${variableName}\\s*(?:=\\s*${variableName}\\s*)?\\.filter\\s*\\(`,
+      "g",
+    );
+
+    for (const filterMatch of lookAhead.matchAll(filterPattern)) {
+      const absoluteIndex = lookAheadStart + (filterMatch.index ?? 0);
+      const line = lineFromIndex(content, absoluteIndex);
+      const lineDelta = line - assignmentLine;
+      if (lineDelta < 0 || lineDelta > 30) {
+        continue;
+      }
+
+      const statementEnd = content.indexOf(");", absoluteIndex);
+      const sliceEnd = statementEnd === -1 ? absoluteIndex + 300 : statementEnd + 2;
+      const filterStatement = content
+        .slice(absoluteIndex, Math.min(content.length, sliceEnd))
+        .replace(/\s+/g, " ")
+        .trim();
+
+      if (
+        filterStatement.includes(".includes(") ||
+        filterStatement.includes(".has(") ||
+        filterStatement.includes("notDeleted") ||
+        filterStatement.includes("onlyDeleted") ||
+        /\.filter\s*\(\s*\(?\s*q\s*\)?\s*=>/.test(filterStatement)
+      ) {
+        continue;
+      }
+
+      const paramMatch = filterStatement.match(/\.filter\s*\(\s*\(?\s*([A-Za-z_$][\w$]*)/);
+      const paramName = paramMatch?.[1];
+      if (!paramName || !new RegExp(`\\b${paramName}\\.`, "g").test(filterStatement)) {
+        continue;
+      }
+
+      const detectionKey = `${file}:${line}:${variableName}`;
+      if (seenDetections.has(detectionKey)) {
+        continue;
+      }
+      seenDetections.add(detectionKey);
+
+      detections.push({
+        file,
+        line,
+        variableName,
+        originLine: assignmentLine,
+        code: filterStatement,
+      });
+    }
+  }
+
+  return detections;
+}
+
+function getClientQueryVariableNames(content) {
+  const variableNames = new Set();
+  const directAssignmentPattern =
+    /const\s+([A-Za-z_$][\w$]*)\s*=\s*use(?:AuthenticatedQuery|Query|PaginatedQuery|SuspenseQuery)\s*\(/g;
+  const resultsDestructurePattern =
+    /const\s+\{\s*results\s*:\s*([A-Za-z_$][\w$]*)[^}]*\}\s*=\s*usePaginatedQuery\s*\(/g;
+
+  for (const match of content.matchAll(directAssignmentPattern)) {
+    variableNames.add(match[1]);
+  }
+
+  for (const match of content.matchAll(resultsDestructurePattern)) {
+    variableNames.add(match[1]);
+  }
+
+  return variableNames;
+}
+
+function collectClientQueryFilters(content, file) {
+  const detections = [];
+  const seenDetections = new Set();
+  const queryVariables = getClientQueryVariableNames(content);
+
+  for (const variableName of queryVariables) {
+    const assignmentPattern = new RegExp(
+      `const\\s+(?:\\{[^}]*\\bresults\\s*:\\s*${variableName}\\b[^}]*\\}|${variableName}\\b)[\\s\\S]*?${QUERY_HOOK_PATTERN.source}`,
+      "g",
+    );
+    const assignmentMatch = assignmentPattern.exec(content);
+    if (!assignmentMatch) {
+      continue;
+    }
+
+    const assignmentLine = lineFromIndex(content, assignmentMatch.index ?? 0);
+    const searchStart = (assignmentMatch.index ?? 0) + assignmentMatch[0].length;
+    const searchArea = content.slice(searchStart);
+    const filterPattern = new RegExp(`\\b${variableName}\\s*(?:\\?\\.|\\.)filter\\s*\\(`, "g");
+
+    for (const filterMatch of searchArea.matchAll(filterPattern)) {
+      const absoluteIndex = searchStart + (filterMatch.index ?? 0);
+      const line = lineFromIndex(content, absoluteIndex);
+      const statementEnd = content.indexOf(");", absoluteIndex);
+      const sliceEnd = statementEnd === -1 ? absoluteIndex + 320 : statementEnd + 2;
+      const filterStatement = content
+        .slice(absoluteIndex, Math.min(content.length, sliceEnd))
+        .replace(/\s+/g, " ")
+        .trim();
+
+      const paramMatch = filterStatement.match(/\.filter\s*\(\s*\(?\s*([A-Za-z_$][\w$]*)/);
+      const paramName = paramMatch?.[1];
+      if (!paramName) {
+        continue;
+      }
+
+      const usesParamProperty = new RegExp(`\\b${paramName}\\.`, "g").test(filterStatement);
+      const isTypeGuard =
+        filterStatement.includes(`: ${paramName} is`) || /\bis\s+[A-Z]/.test(filterStatement);
+      const isBooleanFilter = new RegExp(`=>\\s*!?${paramName}\\.[A-Za-z_$]`, "g").test(
+        filterStatement,
+      );
+      const isComparatorFilter =
+        /===|!==|>=|<=|>|<|\.includes\s*\(/.test(filterStatement) && usesParamProperty;
+
+      if (!usesParamProperty || isTypeGuard || (!isBooleanFilter && !isComparatorFilter)) {
+        continue;
+      }
+
+      const detectionKey = `${file}:${line}:${variableName}`;
+      if (seenDetections.has(detectionKey)) {
+        continue;
+      }
+      seenDetections.add(detectionKey);
+
+      detections.push({
+        file,
+        line,
+        variableName,
+        originLine: assignmentLine,
+        code: filterStatement,
+      });
+    }
+  }
+
+  return detections;
+}
+
+function collectMultiFilterGroups(detections) {
+  const groupedDetections = new Map();
+
+  for (const detection of detections) {
+    const groupKey = `${detection.file}:${detection.variableName}:${detection.originLine ?? detection.line}`;
+    const existingGroup = groupedDetections.get(groupKey);
+
+    if (existingGroup) {
+      existingGroup.filters.push(detection);
+      continue;
+    }
+
+    groupedDetections.set(groupKey, {
+      file: detection.file,
+      variableName: detection.variableName,
+      originLine: detection.originLine ?? detection.line,
+      filters: [detection],
+    });
+  }
+
+  return [...groupedDetections.values()]
+    .filter((group) => group.filters.length >= 2)
+    .sort((a, b) => {
+      if (a.file !== b.file) {
+        return a.file.localeCompare(b.file);
+      }
+      return a.originLine - b.originLine;
+    });
+}
 
 export function run() {
   const convexDir = path.join(ROOT, "convex");
+  const clientDirCandidates = [
+    path.join(ROOT, "src", "components"),
+    path.join(ROOT, "src", "routes"),
+  ];
 
   const EXCLUDED_FILES = [
     "boundedQueries.ts",
@@ -293,13 +540,132 @@ export function run() {
 
   const files = findTsFiles(convexDir);
   const allIssues = [];
+  const postFetchFilterDetections = [];
+  const clientQueryFilterDetections = [];
+  const multiFilterDetections = [];
 
   for (const file of files) {
     const issues = analyzeFile(file);
+    const content = fs.readFileSync(file, "utf-8");
     if (issues.length > 0) {
       allIssues.push(...issues.map((issue) => ({ ...issue, file: relPath(file) })));
     }
+    const filePostFetchDetections = collectPostFetchFilters(content, relPath(file));
+    postFetchFilterDetections.push(...filePostFetchDetections);
+    multiFilterDetections.push(...filePostFetchDetections);
   }
+
+  for (const dir of clientDirCandidates) {
+    if (!fs.existsSync(dir)) {
+      continue;
+    }
+
+    const clientFiles = walkDir(dir, { extensions: new Set([".ts", ".tsx"]) }).filter(
+      (filePath) => !filePath.includes(".test.") && !filePath.endsWith(".d.ts"),
+    );
+
+    for (const filePath of clientFiles) {
+      const content = fs.readFileSync(filePath, "utf-8");
+      const fileClientQueryDetections = collectClientQueryFilters(content, relPath(filePath));
+      clientQueryFilterDetections.push(...fileClientQueryDetections);
+      multiFilterDetections.push(...fileClientQueryDetections);
+    }
+  }
+
+  const postFetchFilterBaselineByFile = loadCountBaseline(
+    POST_FETCH_FILTER_BASELINE_PATH,
+    "postFetchJsFiltersByFile",
+  );
+  const postFetchDetectionsByFile = {};
+  for (const detection of postFetchFilterDetections) {
+    const detectionsForFile = postFetchDetectionsByFile[detection.file] ?? [];
+    detectionsForFile.push(detection);
+    postFetchDetectionsByFile[detection.file] = detectionsForFile;
+  }
+
+  for (const detections of Object.values(postFetchDetectionsByFile)) {
+    detections.sort((a, b) => a.line - b.line);
+  }
+  const postFetchRatchet = analyzeCountRatchet(
+    postFetchDetectionsByFile,
+    postFetchFilterBaselineByFile,
+  );
+  const ratchetViolations = Object.values(postFetchRatchet.overagesByKey).flatMap((entry) =>
+    entry.overageItems.map((detection) => ({
+      type: "POST_FETCH_JS_FILTER",
+      file: detection.file,
+      line: detection.line,
+      code: detection.code,
+      message:
+        "Post-fetch JS filter after bounded query result - consider moving the filter into the query or adding an index",
+    })),
+  );
+
+  allIssues.push(...ratchetViolations);
+
+  const clientQueryBaselineByFile = loadCountBaseline(
+    CLIENT_QUERY_FILTER_BASELINE_PATH,
+    "clientQueryFiltersByFile",
+  );
+  const clientQueryDetectionsByFile = {};
+  for (const detection of clientQueryFilterDetections) {
+    const detectionsForFile = clientQueryDetectionsByFile[detection.file] ?? [];
+    detectionsForFile.push(detection);
+    clientQueryDetectionsByFile[detection.file] = detectionsForFile;
+  }
+
+  for (const detections of Object.values(clientQueryDetectionsByFile)) {
+    detections.sort((a, b) => a.line - b.line);
+  }
+  const clientQueryRatchet = analyzeCountRatchet(
+    clientQueryDetectionsByFile,
+    clientQueryBaselineByFile,
+  );
+  const clientQueryRatchetViolations = Object.values(clientQueryRatchet.overagesByKey).flatMap(
+    (entry) =>
+      entry.overageItems.map((detection) => ({
+        type: "CLIENT_QUERY_FILTER",
+        file: detection.file,
+        line: detection.line,
+        code: detection.code,
+        message:
+          "Client-side filtering on query results - consider moving the filter into a query arg or backend selector",
+      })),
+  );
+
+  allIssues.push(...clientQueryRatchetViolations);
+
+  const multiFilterBaselineByFile = loadCountBaseline(
+    MULTI_FILTER_BASELINE_PATH,
+    "multiFilterQueryResultsByFile",
+  );
+  const multiFilterGroups = collectMultiFilterGroups(multiFilterDetections);
+  const multiFilterGroupsByFile = {};
+  for (const group of multiFilterGroups) {
+    const groupsForFile = multiFilterGroupsByFile[group.file] ?? [];
+    groupsForFile.push(group);
+    multiFilterGroupsByFile[group.file] = groupsForFile;
+  }
+
+  for (const groups of Object.values(multiFilterGroupsByFile)) {
+    groups.sort((a, b) => a.originLine - b.originLine);
+  }
+  const multiFilterRatchet = analyzeCountRatchet(
+    multiFilterGroupsByFile,
+    multiFilterBaselineByFile,
+  );
+  const multiFilterRatchetViolations = Object.values(multiFilterRatchet.overagesByKey).flatMap(
+    (entry) =>
+      entry.overageItems.map((group) => ({
+        type: "MULTI_FILTER_QUERY_RESULT",
+        file: group.file,
+        line: group.originLine,
+        code: group.filters.map((filter) => filter.code).join(" | "),
+        message: `${group.variableName} is filtered ${group.filters.length} times after fetch/query result - combine passes or pre-aggregate`,
+      })),
+  );
+
+  allIssues.push(...multiFilterRatchetViolations);
 
   const messages = [];
   if (allIssues.length > 0) {
@@ -308,10 +674,32 @@ export function run() {
     }
   }
 
+  const baselineSummaryParts = [];
+  if (postFetchRatchet.totalCurrent > 0) {
+    baselineSummaryParts.push(
+      `${postFetchRatchet.totalCurrent} baselined post-fetch JS filter(s) across ${postFetchRatchet.activeKeyCount} file(s)`,
+    );
+  }
+  if (clientQueryRatchet.totalCurrent > 0) {
+    baselineSummaryParts.push(
+      `${clientQueryRatchet.totalCurrent} baselined client query filter(s) across ${clientQueryRatchet.activeKeyCount} file(s)`,
+    );
+  }
+  if (multiFilterRatchet.totalCurrent > 0) {
+    baselineSummaryParts.push(
+      `${multiFilterRatchet.totalCurrent} baselined multi-filter query result group(s) across ${multiFilterRatchet.activeKeyCount} file(s)`,
+    );
+  }
+  const combinedBaselineDetail =
+    baselineSummaryParts.length > 0 ? ` (${baselineSummaryParts.join(", ")})` : "";
+
   return {
     passed: allIssues.length === 0,
     errors: allIssues.length,
-    detail: allIssues.length > 0 ? `${allIssues.length} query issue(s)` : null,
+    detail:
+      allIssues.length > 0
+        ? `${allIssues.length} query issue(s)`
+        : `no blocking issues${combinedBaselineDetail}`,
     messages,
   };
 }

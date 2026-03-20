@@ -12,6 +12,7 @@ import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Copy, Key, Plus, Trash2, TrendingUp } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Alert, AlertDescription, AlertTitle } from "../ui/Alert";
 import { Badge } from "../ui/Badge";
@@ -53,7 +54,7 @@ export function ApiKeysManager() {
   const [selectedKeyId, setSelectedKeyId] = useState<Id<"apiKeys"> | null>(null);
 
   return (
-    <Card padding="lg">
+    <Card padding="lg" data-testid={TEST_IDS.SETTINGS.API_KEYS_SECTION}>
       <Stack gap="lg">
         <CardHeader
           action={

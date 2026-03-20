@@ -76,9 +76,7 @@ export function IssueDetailModal({
         <Flex align="center" gap="sm">
           <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="lg" />
           <Flex align="center" gap="xs">
-            <Typography variant="small" className="font-mono tracking-tight text-ui-text-secondary">
-              {issue.key}
-            </Typography>
+            <Typography variant="issueKeyMono">{issue.key}</Typography>
             <Tooltip content={detail.hasCopied ? "Copied!" : "Copy issue key"}>
               <Button
                 variant="ghost"

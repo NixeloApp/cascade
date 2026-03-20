@@ -31,10 +31,33 @@ The pipeline is: **less raw Tailwind -> convert to CVA -> merge CVAs together if
 
 Target the 148 files with raw TW violations. For each repeated pattern:
 
-- [ ] Audit the 30 raw TW violations in `MeetingsWorkspace.tsx` and convert to design system components
+- [x] Audit the 30 raw TW violations in `MeetingsWorkspace.tsx` and convert to design system components
+- [x] Absorb the repeated meetings list-shell cluster (`list-none`, branded bullet lists) into an owned `List` primitive and swap `MeetingsWorkspace.tsx` to it
+- [x] Absorb the meetings status-chip color map into owned `Badge` variants instead of local raw Tailwind state classes
+- [x] Absorb the meetings transcript scroll/pre-wrap cluster into owned `ScrollArea` sizing and `Typography` mono-block styling
+- [x] Absorb the remaining meetings status-icon tone pair into owned `Icon` semantic tones
+- [x] Absorb the mirrored `MeetingRecordingSection.tsx` status-badge cluster into owned `Badge` variants and `Icon` tones
+- [x] Absorb the mirrored `MeetingRecordingSection.tsx` results/transcript cluster into owned `List`, `Icon`, `ScrollArea`, and `Typography` contracts
+- [x] Absorb the mirrored `MeetingRecordingSection.tsx` state-shell cluster into shared `Card` status recipes and owned `Icon`/layout contracts
+- [x] Absorb the mirrored `MeetingRecordingSection.tsx` status-indicator/divider cluster into owned `Icon`, `InlineSpinner`, and `Separator` contracts so the file drops out of the raw-Tailwind baseline
+- [x] Absorb the Kanban toolbar selector/toggle icon-size cluster into owned `Icon` and button icon-slot contracts
+- [x] Absorb the time-tracking action-icon cluster into owned `Icon` and button icon-slot contracts across billing export, entry-mode toggles, and entry actions
+- [x] Absorb the `BillingReport.tsx` summary metric card cluster into an owned helper on top of `Icon`, `Stack`, and metric card recipes
+- [x] Absorb the remaining `BillingReport.tsx` team-breakdown and quick-stats shell cluster into owned `Card`, `Stack`, and `Flex` contracts so the file no longer carries inline raw class shells
+- [x] Absorb the `WebhookCard.tsx` URL/action-control cluster into owned `Typography`, `Icon`, and layout contracts and ratchet the clean raw-tailwind baseline entries
+- [x] Absorb the shared time-entry modal control cluster into owned `SegmentedControl`, `Typography`, `Icon`, and `Select` contracts so `ManualTimeEntryModal.tsx` and `TimeEntryModal.tsx` drop out of the raw-tailwind baseline
+- [x] Absorb the settings image-upload preview/action cluster into owned `MediaPreview`, `Avatar`, `Icon`, and button contracts so `AvatarUploadModal.tsx` and `CoverImageUploadModal.tsx` drop out of the raw-tailwind baseline
+- [x] Absorb the settings profile shell cluster into owned `Card`, `Grid`, `Avatar`, `MediaPreview`, `Typography`, and `Icon` contracts so `ProfileContent.tsx` drops out of the raw-tailwind baseline
+- [x] Absorb the repeated landing max-width wrapper cluster into the owned `ui/Container` primitive across `NavHeader`, `LogoBar`, `AIFeatureDemo`, `FinalCTASection`, `Footer`, and `WhyChooseSection`
+- [x] Absorb the repeated left-icon action-control cluster into owned `Button` left-icon and `DropdownMenuItem` icon contracts across filters, notifications, issue actions, document actions, and the issue breadcrumb
+- [x] Absorb the repeated `DocumentTree.tsx` chevron-size cluster into owned `Icon` sizing so section toggles and tree expand controls stop carrying local `w-3.5 h-3.5` classes
+- [x] Absorb the repeated `FilterBar.tsx` dropdown-chevron cluster into owned `Button` `rightIcon` and `Icon` contracts so filter pills stop carrying local `ml-1 w-4 h-4` chevrons
 - [ ] Audit raw TW in route files -- repeated spacing/shell/state patterns should become components or CVA variants
 - [ ] Run `node scripts/validate/check-raw-tailwind.js --audit` and group violations by pattern (same class cluster = same missing abstraction)
 - [ ] For each cluster of 3+ identical class sets, extract a component or add a CVA variant
+- [x] Absorb the repeated route inset panel cluster (`border border-ui-border-secondary/70 bg-ui-bg-soft/90 ...`) into owned `Card` recipes and ratchet the route-cluster baseline
+- [x] Absorb the repeated invite fullscreen state shell cluster into a local `InviteStateScreen` abstraction and ratchet the route-cluster baseline
+- [x] Absorb the repeated team-detail tab-link cluster into owned `RouteNav` / `RouteNavItem` usage and ratchet the route-cluster baseline to zero
 
 ## Phase 2: Consolidate CVA Sprawl
 

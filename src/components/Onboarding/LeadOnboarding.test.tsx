@@ -107,7 +107,10 @@ describe("LeadOnboarding", () => {
       screen.getByPlaceholderText("e.g., Acme Corp, My Startup, Design Team"),
       "  Acme Platform  ",
     );
-    await user.click(screen.getByRole("button", { name: "Create Project" }));
+    expect(screen.getByTestId(TEST_IDS.ONBOARDING.CREATE_PROJECT_BUTTON)).toHaveTextContent(
+      "Create Project",
+    );
+    await user.click(screen.getByTestId(TEST_IDS.ONBOARDING.CREATE_PROJECT_BUTTON));
 
     await waitFor(() =>
       expect(createOrganization).toHaveBeenCalledWith({
@@ -144,7 +147,7 @@ describe("LeadOnboarding", () => {
       screen.getByPlaceholderText("e.g., Acme Corp, My Startup, Design Team"),
       "Delivery Hub",
     );
-    await user.click(screen.getByRole("button", { name: "Create Project" }));
+    await user.click(screen.getByTestId(TEST_IDS.ONBOARDING.CREATE_PROJECT_BUTTON));
 
     await waitFor(() =>
       expect(screen.getByRole("heading", { name: "Start Your First Project" })).toBeInTheDocument(),

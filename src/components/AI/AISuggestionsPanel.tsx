@@ -59,10 +59,9 @@ export function AISuggestionsPanel({ projectId }: AISuggestionsPanelProps) {
       >
         <Button
           variant="accentGradient"
-          size="md"
+          size="touchWide"
           onClick={handleGenerateInsights}
           disabled={isGenerating}
-          className="w-full sm:h-11 touch-manipulation"
         >
           <Flex align="center" justify="center" gap="sm">
             {isGenerating ? (

@@ -1,7 +1,7 @@
 /**
  * CHECK: Shared shape drift audit
  *
- * Informational audit for repeated inline object shapes that should probably be
+ * Blocking audit for repeated inline object shapes that should probably be
  * promoted into shared aliases. Focuses on common user/entity summary props.
  */
 
@@ -150,9 +150,8 @@ export function run() {
   }
 
   return {
-    passed: true,
-    errors: 0,
-    showMessagesOnPass: repeated.length > 0,
+    passed: repeated.length === 0,
+    errors: repeated.length,
     detail:
       repeated.length > 0
         ? `${repeated.length} repeated inline shape group(s)`

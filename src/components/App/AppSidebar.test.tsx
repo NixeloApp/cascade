@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { usePaginatedQuery, useQuery } from "convex/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useSidebarState } from "@/hooks/useSidebarState";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { AppSidebar } from "./AppSidebar";
 
@@ -155,6 +156,33 @@ describe("AppSidebar Accessibility", () => {
     // Documents section header link
     const documentsLink = screen.getByRole("link", { name: /documents/i });
     expect(documentsLink).toHaveAttribute("aria-current", "page");
+  });
+
+  it("exposes owned TEST_IDS for shared dashboard navigation links", () => {
+    (useLocation as any).mockReturnValue({ pathname: "/demo-org/dashboard" });
+
+    render(<AppSidebar />);
+
+    expect(screen.getByTestId(TEST_IDS.NAV.DASHBOARD_LINK)).toHaveAttribute(
+      "href",
+      "/$orgSlug/dashboard",
+    );
+    expect(screen.getByTestId(TEST_IDS.NAV.DOCUMENTS_LINK)).toHaveAttribute(
+      "href",
+      "/$orgSlug/documents",
+    );
+    expect(screen.getByTestId(TEST_IDS.NAV.WORKSPACES_LINK)).toHaveAttribute(
+      "href",
+      "/$orgSlug/workspaces",
+    );
+    expect(screen.getByTestId(TEST_IDS.NAV.CALENDAR_LINK)).toHaveAttribute(
+      "href",
+      "/$orgSlug/calendar",
+    );
+    expect(screen.getByTestId(TEST_IDS.NAV.SETTINGS_LINK)).toHaveAttribute(
+      "href",
+      "/$orgSlug/settings/profile",
+    );
   });
 
   it("renders organization name with a tooltip", async () => {
@@ -365,6 +393,16 @@ describe("AppSidebar Accessibility", () => {
     expect(screen.getByRole("button", { name: "Collapse Product" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Collapse Engineering" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "DEMO - Demo Project" })).toBeInTheDocument();
+  });
+
+  it("renders owned sidebar test ids for shared E2E selectors", () => {
+    (useLocation as any).mockReturnValue({ pathname: "/demo-org/dashboard" });
+
+    render(<AppSidebar />);
+
+    expect(screen.getByTestId(TEST_IDS.NAV.SIDEBAR)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.NAV.DOCUMENT_LIST)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.NAV.WORKSPACE_LIST)).toBeInTheDocument();
   });
 
   describe("AppSidebar Mobile Behavior", () => {

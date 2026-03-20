@@ -230,9 +230,9 @@ export function NotificationCenter() {
                   <Button
                     key={key}
                     chrome={filter === key ? "active" : "quiet"}
-                    chromeSize="compactPill"
+                    chromeSize="compactPillSm"
                     onClick={() => setFilter(key)}
-                    className="h-7 shrink-0"
+                    className="shrink-0"
                   >
                     {label}
                   </Button>
@@ -255,13 +255,7 @@ export function NotificationCenter() {
                     <div key={group} className="animate-fade-in">
                       {/* Group Header */}
                       <Card recipe="notificationPanelSectionHeader" padding="sm" radius="none">
-                        <Typography
-                          variant="caption"
-                          color="secondary"
-                          className="uppercase tracking-wide"
-                        >
-                          {DATE_GROUP_LABELS[group]}
-                        </Typography>
+                        <Typography variant="eyebrow">{DATE_GROUP_LABELS[group]}</Typography>
                       </Card>
                       {/* Group Items */}
                       <div className="divide-y divide-ui-border">

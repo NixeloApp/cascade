@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { useMutation, useQuery } from "convex/react";
 import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { type BoardFilters, FilterBar } from "./FilterBar";
 
@@ -243,7 +244,9 @@ describe("FilterBar", () => {
       const saveButton = screen.getByRole("button", { name: /^save$/i });
       await user.click(saveButton);
 
-      expect(toast.error).toHaveBeenCalledWith("Please enter a filter name");
+      expect(toast.error).toHaveBeenCalledWith("Please enter a filter name", {
+        testId: TEST_IDS.TOAST.ERROR,
+      });
       expect(mockCreateFilter).not.toHaveBeenCalled();
     });
 
@@ -285,7 +288,9 @@ describe("FilterBar", () => {
           isPublic: true,
         });
       });
-      expect(toast.success).toHaveBeenCalledWith("Filter saved");
+      expect(toast.success).toHaveBeenCalledWith("Filter saved", {
+        testId: TEST_IDS.TOAST.SUCCESS,
+      });
     });
 
     it("should handle save filter error", async () => {
@@ -313,7 +318,9 @@ describe("FilterBar", () => {
       await user.click(saveButton);
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith("Save failed");
+        expect(toast.error).toHaveBeenCalledWith("Save failed", {
+          testId: TEST_IDS.TOAST.ERROR,
+        });
       });
     });
   });
@@ -349,7 +356,9 @@ describe("FilterBar", () => {
       await user.click(filterItem);
 
       expect(mockOnFilterChange).toHaveBeenCalledWith({ priority: ["high"], type: ["bug"] });
-      expect(toast.success).toHaveBeenCalledWith("Filter applied");
+      expect(toast.success).toHaveBeenCalledWith("Filter applied", {
+        testId: TEST_IDS.TOAST.SUCCESS,
+      });
     });
   });
 });

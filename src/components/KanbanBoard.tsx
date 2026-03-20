@@ -27,6 +27,7 @@ import {
   getSwimlanConfigs,
   groupIssuesBySwimlane,
 } from "@/lib/swimlane-utils";
+import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { BulkOperationsBar } from "./BulkOperationsBar";
 import type { BoardFilters, DateRangeFilter } from "./FilterBar";
@@ -360,7 +361,7 @@ export function KanbanBoard({
   const canEdit = isProjectMode ? project?.userRole !== "viewer" : true;
 
   return (
-    <FlexItem flex="1" className="relative overflow-x-auto" data-tour="kanban-board">
+    <FlexItem flex="1" className="relative overflow-x-auto" data-testid={TEST_IDS.BOARD.ROOT}>
       <BoardToolbar
         sprintId={sprintId}
         selectionMode={selectionMode}

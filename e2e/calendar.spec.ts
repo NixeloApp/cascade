@@ -1,4 +1,5 @@
 import { authenticatedTest as test } from "./fixtures";
+import { isLocatorVisible } from "./utils/locator-state";
 
 /**
  * Calendar E2E Tests
@@ -64,9 +65,9 @@ test.describe("Calendar", () => {
       await calendarPage.expectCalendarView();
 
       // Check which view buttons are available
-      const monthViewVisible = await calendarPage.monthViewButton.isVisible().catch(() => false);
-      const weekViewVisible = await calendarPage.weekViewButton.isVisible().catch(() => false);
-      const dayViewVisible = await calendarPage.dayViewButton.isVisible().catch(() => false);
+      const monthViewVisible = await isLocatorVisible(calendarPage.monthViewButton);
+      const weekViewVisible = await isLocatorVisible(calendarPage.weekViewButton);
+      const dayViewVisible = await isLocatorVisible(calendarPage.dayViewButton);
 
       // Track if at least one view switch succeeded
       let switchedViews = 0;

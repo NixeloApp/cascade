@@ -48,6 +48,7 @@ import {
   PRIORITY_ICONS,
 } from "@/lib/issue-utils";
 import { formatOutOfOfficeUntil } from "@/lib/outOfOffice";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 
 // =============================================================================
@@ -296,13 +297,7 @@ function CreateIssueLabelsSection({
         })}
         <Popover open={showCreateLabel} onOpenChange={onCreateOpenChange}>
           <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-7 px-2"
-              aria-label="Create new label"
-            >
+            <Button type="button" variant="outline" size="xs" aria-label="Create new label">
               <Icon icon={Plus} size="sm" />
               <span className="ml-1">New</span>
             </Button>
@@ -1013,6 +1008,7 @@ export function CreateIssueModal({
     >
       <Stack
         as="form"
+        data-testid={TEST_IDS.ISSUE.CREATE_MODAL}
         onSubmit={(e: React.FormEvent) => {
           e.preventDefault();
           form.handleSubmit();
@@ -1050,7 +1046,13 @@ export function CreateIssueModal({
 
         <form.Field name="title">
           {(field) => (
-            <FormInput field={field} label="Title" placeholder="Enter issue title..." required />
+            <FormInput
+              field={field}
+              label="Title"
+              placeholder="Enter issue title..."
+              required
+              data-testid={TEST_IDS.ISSUE.CREATE_TITLE_INPUT}
+            />
           )}
         </form.Field>
 
@@ -1078,6 +1080,7 @@ export function CreateIssueModal({
                 onChange={(value) => field.handleChange(value)}
                 placeholder="Enter issue description..."
                 minHeight={150}
+                testId={TEST_IDS.ISSUE.CREATE_DESCRIPTION_EDITOR}
               />
             </Stack>
           )}

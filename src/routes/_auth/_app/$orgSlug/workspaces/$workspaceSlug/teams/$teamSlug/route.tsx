@@ -3,6 +3,7 @@ import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { PageHeader, PageLayout } from "@/components/layout";
 import { Flex } from "@/components/ui/Flex";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { RouteNav, RouteNavItem } from "@/components/ui/RouteNav";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -61,38 +62,45 @@ function TeamLayout() {
       />
 
       {/* Tabs */}
-      <div className="border-b border-ui-border mb-6">
-        <nav className="flex gap-6">
+      <RouteNav className="mb-6" aria-label="Team sections">
+        <RouteNavItem asChild>
           <Link
             to={ROUTES.workspaces.teams.detail.path}
             params={{ orgSlug, workspaceSlug, teamSlug }}
-            className="px-1 py-3 border-b-2 border-brand font-medium text-brand"
+            activeOptions={{ exact: true }}
+            activeProps={{ "aria-current": "page" }}
           >
             Projects
           </Link>
+        </RouteNavItem>
+        <RouteNavItem asChild>
           <Link
             to={ROUTES.workspaces.teams.calendar.path}
             params={{ orgSlug, workspaceSlug, teamSlug }}
-            className="px-1 py-3 border-b-2 border-transparent hover:border-ui-border-secondary text-ui-text-secondary hover:text-ui-text"
+            activeProps={{ "aria-current": "page" }}
           >
             Calendar
           </Link>
+        </RouteNavItem>
+        <RouteNavItem asChild>
           <Link
             to={ROUTES.workspaces.teams.wiki.path}
             params={{ orgSlug, workspaceSlug, teamSlug }}
-            className="px-1 py-3 border-b-2 border-transparent hover:border-ui-border-secondary text-ui-text-secondary hover:text-ui-text"
+            activeProps={{ "aria-current": "page" }}
           >
             Wiki
           </Link>
+        </RouteNavItem>
+        <RouteNavItem asChild>
           <Link
             to={ROUTES.workspaces.teams.settings.path}
             params={{ orgSlug, workspaceSlug, teamSlug }}
-            className="px-1 py-3 border-b-2 border-transparent hover:border-ui-border-secondary text-ui-text-secondary hover:text-ui-text"
+            activeProps={{ "aria-current": "page" }}
           >
             Settings
           </Link>
-        </nav>
-      </div>
+        </RouteNavItem>
+      </RouteNav>
 
       {/* Content */}
       <Outlet />

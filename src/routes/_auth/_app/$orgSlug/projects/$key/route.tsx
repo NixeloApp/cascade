@@ -201,11 +201,7 @@ function ProjectLayout() {
           >
             {mobilePrimaryTabs.map((tab) => (
               <RouteNavItem key={tab.name} asChild variant="pill" size="sm">
-                <Link
-                  to={tab.to}
-                  params={tab.params}
-                  activeProps={{ "aria-current": "page", "data-active": "true" }}
-                >
+                <Link to={tab.to} params={tab.params} activeProps={{ "aria-current": "page" }}>
                   {tab.mobileName ?? tab.name}
                 </Link>
               </RouteNavItem>
@@ -245,11 +241,7 @@ function ProjectLayout() {
           >
             {tabs.map((tab) => (
               <RouteNavItem key={tab.name} asChild variant="pill">
-                <Link
-                  to={tab.to}
-                  params={tab.params}
-                  activeProps={{ "aria-current": "page", "data-active": "true" }}
-                >
+                <Link to={tab.to} params={tab.params} activeProps={{ "aria-current": "page" }}>
                   {tab.name}
                 </Link>
               </RouteNavItem>

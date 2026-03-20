@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { getOptionalLocatorText, isLocatorVisible } from "../utils/locator-state";
 import { escapeRegExp, ROUTES } from "../utils/routes";
 import { waitForDashboardReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
@@ -112,23 +113,23 @@ export class DashboardPage extends BasePage {
     // Use navigation landmark to scope to the correct sidebar
     const navSidebar = page.getByRole("navigation");
     this.dashboardTab = page
-      .locator("[data-tour='nav-dashboard']")
+      .getByTestId(TEST_IDS.NAV.DASHBOARD_LINK)
       .or(navSidebar.getByRole("link", { name: /^dashboard$/i }));
     this.documentsTab = page
-      .locator("[data-tour='nav-documents']")
+      .getByTestId(TEST_IDS.NAV.DOCUMENTS_LINK)
       .or(navSidebar.getByRole("link", { name: /^documents$/i }));
     // Workspaces navigation tab
     this.workspacesTab = page
-      .locator("[data-tour='nav-workspaces']")
+      .getByTestId(TEST_IDS.NAV.WORKSPACES_LINK)
       .or(navSidebar.getByRole("link", { name: /^workspaces$/i }));
     this.timesheetTab = page
-      .locator("[data-tour='nav-timesheet']")
+      .getByTestId(TEST_IDS.NAV.TIMESHEET_LINK)
       .or(navSidebar.getByRole("link", { name: /time tracking/i }));
     this.calendarTab = page
-      .locator("[data-tour='nav-calendar']")
-      .or(navSidebar.getByRole("link", { name: /^calendar$/i }));
+      .getByTestId(TEST_IDS.NAV.CALENDAR_LINK)
+      .or(navSidebar.getByRole("link", { name: /^general$/i }));
     this.settingsTab = page
-      .locator("[data-tour='nav-settings']")
+      .getByTestId(TEST_IDS.NAV.SETTINGS_LINK)
       .or(navSidebar.getByRole("link", { name: /^settings$/i }));
 
     // Header actions - using aria-labels for accessibility
@@ -156,9 +157,9 @@ export class DashboardPage extends BasePage {
 
     // Content areas - use last() to get innermost main element (nested layout)
     this.mainContent = page.getByRole("main").last();
-    this.sidebar = page.locator("[data-tour='sidebar']");
+    this.sidebar = page.getByTestId(TEST_IDS.NAV.SIDEBAR).or(page.getByRole("complementary"));
     // Use aria-label="Loading" to target actual loading spinners, not empty states
-    this.loadingSpinner = page.getByLabel("Loading").or(page.locator("[data-loading-spinner]"));
+    this.loadingSpinner = page.getByLabel("Loading").or(page.getByTestId(TEST_IDS.LOADING.SPINNER));
 
     // Dashboard specific content - match actual UI headings
     this.myIssuesSection = page.getByRole("heading", { name: /feed/i }).first();
@@ -204,19 +205,19 @@ export class DashboardPage extends BasePage {
     // Notifications panel
     this.notificationPanel = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_PANEL);
     this.markAllReadButton = page.getByRole("button", { name: /mark all read/i });
-    this.notificationItems = page.locator("[data-notification-item]");
+    this.notificationItems = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
 
     // Documents sidebar
     this.documentSearchInput = page.getByPlaceholder(/search.*document/i);
     this.newDocumentButton = page.getByRole("button", { name: /new.*document|\+ new/i });
     this.templateButton = page.getByRole("button", { name: /template|📄/i });
-    this.documentList = page.locator("[data-document-list]");
+    this.documentList = page.getByTestId(TEST_IDS.NAV.DOCUMENT_LIST);
 
     // Projects sidebar
     this.newProjectButton = page.getByRole("button", {
       name: /new.*project|\+ new/i,
     });
-    this.projectList = page.locator("[data-project-list]");
+    this.projectList = page.getByTestId(TEST_IDS.NAV.WORKSPACE_LIST);
   }
 
   // ===================
@@ -237,7 +238,7 @@ export class DashboardPage extends BasePage {
     const isInAuthenticatedAppShell =
       currentUrl.includes(`/${this.orgSlug}/`) &&
       !currentUrl.includes(ROUTES.signin.build()) &&
-      (await this.dashboardTab.isVisible().catch(() => false));
+      (await isLocatorVisible(this.dashboardTab));
 
     if (isInAuthenticatedAppShell) {
       await this.dashboardTab.click();
@@ -391,7 +392,7 @@ export class DashboardPage extends BasePage {
 
   async closeShortcutsHelpIfOpen() {
     await this.dismissModalIfOpen(this.shortcutsModal, async () => {
-      await this.mainContent.click({ position: { x: 10, y: 10 } }).catch(() => {});
+      await this.dismissModalViaMainContent("keyboard shortcuts help");
     });
   }
 
@@ -531,18 +532,14 @@ export class DashboardPage extends BasePage {
   }
 
   private async isSignedOutDestinationVisible(): Promise<boolean> {
-    const landingCtaVisible = await this.page
-      .getByRole("link", { name: /get started free/i })
-      .isVisible()
-      .catch(() => false);
+    const landingCtaVisible = await isLocatorVisible(
+      this.page.getByRole("link", { name: /get started free/i }),
+    );
     if (landingCtaVisible) {
       return true;
     }
 
-    return this.page
-      .getByRole("heading", { name: /sign in to nixelo/i })
-      .isVisible()
-      .catch(() => false);
+    return isLocatorVisible(this.page.getByRole("heading", { name: /sign in to nixelo/i }));
   }
 
   async openGlobalSearch() {
@@ -578,26 +575,31 @@ export class DashboardPage extends BasePage {
   }
 
   private async throwIfAppErrorVisible() {
-    if (!(await this.appErrorHeading.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.appErrorHeading))) {
       return;
     }
 
-    const detailsVisible = await this.appErrorDetailsMessage.isVisible().catch(() => false);
+    const detailsVisible = await isLocatorVisible(this.appErrorDetailsMessage);
     if (!detailsVisible) {
-      await this.appErrorDetailsSummary.click().catch(() => {});
+      await this.expandAppErrorDetailsIfAvailable();
     }
 
-    const errorDetails = (
-      await this.appErrorDetailsMessage.textContent().catch(() => null)
-    )?.trim();
+    const errorDetails = (await getOptionalLocatorText(this.appErrorDetailsMessage))?.trim();
     const suffix = errorDetails ? `: ${errorDetails}` : "";
     const diagnostics = await this.getAppErrorDiagnostics();
     throw new Error(`App error boundary visible${suffix}${diagnostics}`);
   }
 
   private async getAppErrorDiagnostics(): Promise<string> {
-    const diagnostics = await this.page
-      .evaluate(() => {
+    let diagnostics: {
+      url: string;
+      hydrated: boolean;
+      authKeys: string[];
+      connectionState: unknown;
+    } | null = null;
+
+    try {
+      diagnostics = await this.page.evaluate(() => {
         const authKeys = Object.keys(localStorage)
           .filter((key) => key.includes("convexAuth"))
           .sort();
@@ -613,8 +615,10 @@ export class DashboardPage extends BasePage {
           authKeys,
           connectionState: convexClient?.connectionState() ?? null,
         };
-      })
-      .catch(() => null);
+      });
+    } catch {
+      diagnostics = null;
+    }
 
     if (!diagnostics) {
       return "";
@@ -683,7 +687,7 @@ export class DashboardPage extends BasePage {
 
   async closeAdvancedSearchIfOpen() {
     await this.dismissModalIfOpen(this.advancedSearchModal, async () => {
-      await this.mainContent.click({ position: { x: 10, y: 10 } }).catch(() => {});
+      await this.dismissModalViaMainContent("advanced search");
     });
   }
 
@@ -715,7 +719,7 @@ export class DashboardPage extends BasePage {
   }
 
   private async dismissModalIfOpen(modal: Locator, fallbackDismiss?: () => Promise<void>) {
-    if (!(await modal.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(modal))) {
       return;
     }
 
@@ -730,6 +734,39 @@ export class DashboardPage extends BasePage {
     }
 
     await expect(modal).not.toBeVisible();
+  }
+
+  private async dismissModalViaMainContent(modalLabel: string): Promise<void> {
+    await expect(
+      this.mainContent,
+      `${modalLabel} fallback dismissal requires visible main content`,
+    ).toBeVisible();
+
+    try {
+      await this.mainContent.click({ position: { x: 10, y: 10 } });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to dismiss ${modalLabel} via main content click: ${message}`);
+    }
+  }
+
+  private async expandAppErrorDetailsIfAvailable(): Promise<void> {
+    const summaryVisible = await isLocatorVisible(this.appErrorDetailsSummary);
+    if (!summaryVisible) {
+      return;
+    }
+
+    try {
+      await this.appErrorDetailsSummary.click();
+    } catch (error) {
+      const detailsVisible = await isLocatorVisible(this.appErrorDetailsMessage);
+      if (detailsVisible) {
+        return;
+      }
+
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`App error details could not be expanded: ${message}`);
+    }
   }
 
   private async waitForModalHidden(modal: Locator, timeout = 1000) {
@@ -784,11 +821,11 @@ export class DashboardPage extends BasePage {
   }
 
   private async getTimeEntryBillingState(): Promise<"billable" | "non-billable" | "pending"> {
-    if (!(await this.timeEntryModal.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.timeEntryModal))) {
       return "pending";
     }
 
-    if (await this.timeEntryBillableCheckbox.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.timeEntryBillableCheckbox)) {
       return "billable";
     }
 
@@ -869,7 +906,7 @@ export class DashboardPage extends BasePage {
 
     await expect(tabs[tab]).toBeVisible();
     await tabs[tab].click();
-    await expect(tabs[tab]).toHaveAttribute("data-state", "active");
+    await expect(tabs[tab]).toHaveAttribute("aria-selected", "true");
     await this.waitForSearchSettled();
   }
 
@@ -915,20 +952,15 @@ export class DashboardPage extends BasePage {
   async getGlobalSearchResultsState(): Promise<"loading" | "results" | "empty" | "settling"> {
     await this.throwIfAppErrorVisible();
 
-    if (await this.globalSearchLoadingState.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.globalSearchLoadingState)) {
       return "loading";
     }
 
-    if (
-      await this.globalSearchResultItems
-        .first()
-        .isVisible()
-        .catch(() => false)
-    ) {
+    if (await isLocatorVisible(this.globalSearchResultItems.first())) {
       return "results";
     }
 
-    if (await this.globalSearchNoResults.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.globalSearchNoResults)) {
       return "empty";
     }
 
@@ -948,9 +980,7 @@ export class DashboardPage extends BasePage {
     await expect(tabs[filter]).toBeEnabled();
     await tabs[filter].click();
 
-    const ariaSelected = await tabs[filter].getAttribute("aria-selected");
-    const dataState = await tabs[filter].getAttribute("data-state");
-    expect(ariaSelected === "true" || dataState === "active").toBe(true);
+    await expect(tabs[filter]).toHaveAttribute("aria-selected", "true");
   }
 
   // ===================

@@ -3,7 +3,14 @@ import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
 import type { TestUser } from "../config";
 import { trySignInUser } from "../utils/auth-helpers";
+import {
+  getLocatorCount,
+  getLocatorInputValue,
+  getLocatorText,
+  isLocatorVisible,
+} from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
+import { getToastLocator } from "../utils/toast-locators";
 import { waitForDashboardReady } from "../utils/wait-helpers";
 import { BasePage } from "./base.page";
 
@@ -36,6 +43,9 @@ export class AuthPage extends BasePage {
   // ===================
   readonly continueWithEmailButton: Locator;
   readonly authForm: Locator;
+  readonly emailForm: Locator;
+  readonly authFormReadyMarker: Locator;
+  readonly authFormHydratedMarker: Locator;
   readonly emailInput: Locator;
   readonly passwordInput: Locator;
   readonly signInButton: Locator;
@@ -115,6 +125,9 @@ export class AuthPage extends BasePage {
     // Sign In / Sign Up form - two-step flow
     this.continueWithEmailButton = page.getByRole("button", { name: /continue with email/i });
     this.authForm = page.getByTestId(TEST_IDS.AUTH.FORM);
+    this.emailForm = page.getByTestId(TEST_IDS.AUTH.EMAIL_FORM);
+    this.authFormReadyMarker = page.getByTestId(TEST_IDS.AUTH.FORM_READY);
+    this.authFormHydratedMarker = page.getByTestId(TEST_IDS.AUTH.FORM_HYDRATED);
     this.emailInput = page.getByTestId(TEST_IDS.AUTH.EMAIL_INPUT);
     this.passwordInput = page.getByTestId(TEST_IDS.AUTH.PASSWORD_INPUT);
     // Submit button reuses the same DOM node across expanded states; bind by stable test id.
@@ -144,8 +157,8 @@ export class AuthPage extends BasePage {
     this.verifyEmailButton = page.getByTestId(TEST_IDS.AUTH.VERIFICATION_SUBMIT_BUTTON);
     this.resendCodeButton = page.getByRole("button", { name: /didn't receive|resend/i });
     this.signOutLink = page.getByRole("button", { name: /sign out|different account/i });
-    this.successToast = page.locator('[data-sonner-toast][data-type="success"]').first();
-    this.errorToast = page.locator('[data-sonner-toast][data-type="error"]').first();
+    this.successToast = getToastLocator(page, "success").first();
+    this.errorToast = getToastLocator(page, "error").first();
   }
 
   // ===================
@@ -168,7 +181,7 @@ export class AuthPage extends BasePage {
     await this.waitForAuthFormHydrated();
     // Expand form using robust click logic
     await this.expandEmailForm("signin");
-    // Verify form is expanded using data-expanded attribute
+    // Verify form is expanded using owned auth markers plus visible inputs.
     await this.waitForFormExpanded("signin");
   }
 
@@ -187,7 +200,7 @@ export class AuthPage extends BasePage {
     await this.waitForAuthFormHydrated();
     // Expand form using robust click logic
     await this.expandEmailForm("signup");
-    // Verify form is expanded using data-expanded attribute
+    // Verify form is expanded using owned auth markers plus visible inputs.
     await this.waitForFormExpanded("signup");
   }
 
@@ -274,9 +287,13 @@ export class AuthPage extends BasePage {
   ) {
     await this.signIn(email, password);
 
-    const shellVisible = await this.expectAuthenticatedApp({ recoverFromLanding: true })
-      .then(() => true)
-      .catch(() => false);
+    let shellVisible = false;
+    try {
+      await this.expectAuthenticatedApp({ recoverFromLanding: true });
+      shellVisible = true;
+    } catch {
+      shellVisible = false;
+    }
 
     if (!shellVisible && options?.baseURL && options.fallbackUser) {
       await trySignInUser(
@@ -312,14 +329,14 @@ export class AuthPage extends BasePage {
   async switchToSignUp() {
     await this.navigateToSignUp();
     await this.expandEmailForm("signup");
-    // Verify form is expanded using data-expanded attribute
+    // Verify form is expanded using owned auth markers plus visible inputs.
     await this.waitForFormExpanded("signup");
   }
 
   async switchToSignIn() {
     await this.navigateToSignIn();
     await this.expandEmailForm("signin");
-    // Verify form is expanded using data-expanded attribute
+    // Verify form is expanded using owned auth markers plus visible inputs.
     await this.waitForFormExpanded("signin");
   }
 
@@ -422,18 +439,22 @@ export class AuthPage extends BasePage {
   }
 
   getSuccessToast(message: RegExp): Locator {
-    return this.page.locator("[data-sonner-toast]").filter({ hasText: message }).first();
+    return getToastLocator(this.page, "success").filter({ hasText: message }).first();
   }
 
   async waitForToastOutcome(message: RegExp): Promise<"success" | "timeout"> {
-    const result = await expect
-      .poll(() => this.getToastOutcomeState(message), {
-        timeout: 10000,
-        intervals: [200, 500, 1000],
-      })
-      .not.toBe("pending")
-      .then(async () => this.getToastOutcomeState(message))
-      .catch(() => "timeout" as const);
+    let result: "success" | "error" | "pending" | "timeout" = "timeout";
+    try {
+      await expect
+        .poll(() => this.getToastOutcomeState(message), {
+          timeout: 10000,
+          intervals: [200, 500, 1000],
+        })
+        .not.toBe("pending");
+      result = await this.getToastOutcomeState(message);
+    } catch {
+      result = "timeout";
+    }
 
     if (result === "error") {
       const errorText = await this.errorToast.textContent();
@@ -460,7 +481,7 @@ export class AuthPage extends BasePage {
     const getVisibleOnboardingCandidate = async () => {
       for (const candidate of onboardingCandidates) {
         const locator = candidate.first();
-        if (await locator.isVisible().catch(() => false)) {
+        if (await isLocatorVisible(locator)) {
           return locator;
         }
       }
@@ -468,14 +489,18 @@ export class AuthPage extends BasePage {
     };
 
     if (options?.recoverFromLanding) {
-      const leftLanding = await expect
-        .poll(() => !isLandingOrSignIn(), {
-          timeout: 5000,
-          intervals: [250, 500, 1000],
-        })
-        .toBe(true)
-        .then(() => true)
-        .catch(() => false);
+      let leftLanding = false;
+      try {
+        await expect
+          .poll(() => !isLandingOrSignIn(), {
+            timeout: 5000,
+            intervals: [250, 500, 1000],
+          })
+          .toBe(true);
+        leftLanding = true;
+      } catch {
+        leftLanding = false;
+      }
 
       if (!leftLanding && isLandingOrSignIn()) {
         await this.page.goto("/app", { waitUntil: "domcontentloaded" });
@@ -495,10 +520,9 @@ export class AuthPage extends BasePage {
           }
 
           if (/^\/[^/]+\/dashboard\/?$/.test(currentPath)) {
-            const hasDashboardSearch = await this.page
-              .getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON)
-              .isVisible()
-              .catch(() => false);
+            const hasDashboardSearch = await isLocatorVisible(
+              this.page.getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON),
+            );
             return hasDashboardSearch ? "dashboard" : null;
           }
 
@@ -535,7 +559,7 @@ export class AuthPage extends BasePage {
 
   /**
    * Wait for form to be expanded (email/password fields visible)
-   * Uses data-expanded attribute set by React component
+   * Uses owned auth markers plus visible inputs set by the auth form components.
    */
   async waitForFormExpanded(mode?: "signin" | "signup") {
     const expectedMode = mode ?? (await this.getCurrentAuthRoute());
@@ -587,8 +611,7 @@ export class AuthPage extends BasePage {
         async () => {
           const state = await this.getAuthFormState();
           const signInReady =
-            expectedMode !== "signin" ||
-            (await this.forgotPasswordLink.isVisible().catch(() => false));
+            expectedMode !== "signin" || (await isLocatorVisible(this.forgotPasswordLink));
           const expandedAndReady = state === targetState && signInReady;
 
           if (!expandedAndReady) {
@@ -612,8 +635,7 @@ export class AuthPage extends BasePage {
 
   /**
    * Wait for form to be fully ready (formReady state)
-   * The form sets formReady=true after expansion which enables required attributes
-   * Uses data-form-ready attribute instead of arbitrary timeout
+   * The form sets a readiness marker after expansion which enables required attributes.
    * This is a best-effort wait - it won't throw if the form doesn't have this attribute
    */
   async waitForFormReady(mode?: "signin" | "signup") {
@@ -627,7 +649,7 @@ export class AuthPage extends BasePage {
   }
 
   private async waitForAuthFormHydrated(timeout = 15000) {
-    await expect(this.authForm).toHaveAttribute("data-hydrated", "true", { timeout });
+    await expect(this.authFormHydratedMarker).toHaveCount(1, { timeout });
   }
 
   private async waitForAuthLanding(mode: "signin" | "signup", timeout = 15000) {
@@ -655,22 +677,22 @@ export class AuthPage extends BasePage {
   }
 
   private async getCurrentAuthRoute(): Promise<"signin" | "signup"> {
-    if (await this.signInHeading.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.signInHeading)) {
       return "signin";
     }
 
-    if (await this.signUpHeading.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.signUpHeading)) {
       return "signup";
     }
 
     await expect
       .poll(
         async () => {
-          if (await this.signInHeading.isVisible().catch(() => false)) {
+          if (await isLocatorVisible(this.signInHeading)) {
             return "signin";
           }
 
-          if (await this.signUpHeading.isVisible().catch(() => false)) {
+          if (await isLocatorVisible(this.signUpHeading)) {
             return "signup";
           }
 
@@ -683,36 +705,40 @@ export class AuthPage extends BasePage {
       )
       .not.toBe("pending");
 
-    return (await this.signInHeading.isVisible().catch(() => false)) ? "signin" : "signup";
+    return (await isLocatorVisible(this.signInHeading)) ? "signin" : "signup";
   }
 
   private async getAuthFormState(): Promise<
     "signin-landing" | "signin-expanded" | "signup-landing" | "signup-expanded" | "pending"
   > {
-    const route = await this.getCurrentAuthRoute().catch(() => null);
+    let route: "signin" | "signup" | null = null;
+    try {
+      route = await this.getCurrentAuthRoute();
+    } catch {
+      route = null;
+    }
     if (!route) {
       return "pending";
     }
 
-    const hydrated = await this.authForm.getAttribute("data-hydrated").catch(() => null);
-    if (hydrated !== "true") {
+    const hydrated = (await getLocatorCount(this.authFormHydratedMarker)) > 0;
+    if (!hydrated) {
       return "pending";
     }
 
-    const buttonText =
-      (await this.submitButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
-    const expanded = await this.authForm.getAttribute("data-expanded").catch(() => null);
+    const buttonText = (await getLocatorText(this.submitButton)).trim().toLowerCase();
+    const expanded = (await getLocatorCount(this.emailForm)) > 0;
 
     if (route === "signin") {
       if (
-        expanded === "true" &&
+        expanded &&
         /sign in|signing in/.test(buttonText) &&
-        (await this.emailInput.isVisible().catch(() => false))
+        (await isLocatorVisible(this.emailInput))
       ) {
         return "signin-expanded";
       }
 
-      if (expanded === "false" && /continue with email/.test(buttonText)) {
+      if (!expanded && /continue with email/.test(buttonText)) {
         return "signin-landing";
       }
 
@@ -720,14 +746,14 @@ export class AuthPage extends BasePage {
     }
 
     if (
-      expanded === "true" &&
+      expanded &&
       /create account|creating account/.test(buttonText) &&
-      (await this.emailInput.isVisible().catch(() => false))
+      (await isLocatorVisible(this.emailInput))
     ) {
       return "signup-expanded";
     }
 
-    if (expanded === "false" && /continue with email/.test(buttonText)) {
+    if (!expanded && /continue with email/.test(buttonText)) {
       return "signup-landing";
     }
 
@@ -816,11 +842,11 @@ export class AuthPage extends BasePage {
       return "signin";
     }
 
-    if (await this.authAlert.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.authAlert)) {
       return "alert";
     }
 
-    if (await this.errorToast.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.errorToast)) {
       return "toast";
     }
 
@@ -828,11 +854,11 @@ export class AuthPage extends BasePage {
   }
 
   async getSignUpVerificationState(): Promise<"verify" | "toast" | "pending"> {
-    if (await this.verifyHeading.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.verifyHeading)) {
       return "verify";
     }
 
-    if (await this.successToast.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.successToast)) {
       return "toast";
     }
 
@@ -841,14 +867,14 @@ export class AuthPage extends BasePage {
 
   private async getSignUpVerificationFormState(): Promise<"verify" | "error" | "pending"> {
     if (
-      (await this.verifyHeading.isVisible().catch(() => false)) &&
-      (await this.verifyCodeInput.isVisible().catch(() => false)) &&
-      (await this.verifyEmailButton.isVisible().catch(() => false))
+      (await isLocatorVisible(this.verifyHeading)) &&
+      (await isLocatorVisible(this.verifyCodeInput)) &&
+      (await isLocatorVisible(this.verifyEmailButton))
     ) {
       return "verify";
     }
 
-    if (await this.errorToast.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.errorToast)) {
       return "error";
     }
 
@@ -929,15 +955,11 @@ export class AuthPage extends BasePage {
   }
 
   private async getToastOutcomeState(message: RegExp): Promise<"success" | "error" | "pending"> {
-    if (
-      await this.getSuccessToast(message)
-        .isVisible()
-        .catch(() => false)
-    ) {
+    if (await isLocatorVisible(this.getSuccessToast(message))) {
       return "success";
     }
 
-    if (await this.errorToast.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.errorToast)) {
       return "error";
     }
 
@@ -951,16 +973,15 @@ export class AuthPage extends BasePage {
       return "redirect";
     }
 
-    if (await this.successToast.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.successToast)) {
       return "success";
     }
 
-    if (await this.errorToast.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.errorToast)) {
       return "error";
     }
 
-    const buttonText =
-      (await this.verifyEmailButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
+    const buttonText = (await getLocatorText(this.verifyEmailButton)).trim().toLowerCase();
     if (/verifying/.test(buttonText)) {
       return "submitting";
     }
@@ -979,16 +1000,15 @@ export class AuthPage extends BasePage {
       return "redirect";
     }
 
-    if (await this.successToast.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.successToast)) {
       return "success";
     }
 
-    if (await this.errorToast.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.errorToast)) {
       return "error";
     }
 
-    const buttonText =
-      (await this.resetPasswordButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
+    const buttonText = (await getLocatorText(this.resetPasswordButton)).trim().toLowerCase();
     if (/resetting/.test(buttonText)) {
       return "submitting";
     }
@@ -1001,12 +1021,11 @@ export class AuthPage extends BasePage {
       return "redirect";
     }
 
-    if (await this.errorToast.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.errorToast)) {
       return "error";
     }
 
-    const buttonText =
-      (await this.signInButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
+    const buttonText = (await getLocatorText(this.signInButton)).trim().toLowerCase();
     if (/signing in/.test(buttonText)) {
       return "submitting";
     }
@@ -1019,12 +1038,11 @@ export class AuthPage extends BasePage {
       return "verify";
     }
 
-    if (await this.errorToast.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.errorToast)) {
       return "error";
     }
 
-    const buttonText =
-      (await this.signUpButton.textContent().catch(() => ""))?.trim().toLowerCase() ?? "";
+    const buttonText = (await getLocatorText(this.signUpButton)).trim().toLowerCase();
     if (/creating account/.test(buttonText)) {
       return "submitting";
     }
@@ -1033,15 +1051,15 @@ export class AuthPage extends BasePage {
   }
 
   async getPasswordResetEntryState(): Promise<"forgot" | "check-email" | "code" | "pending"> {
-    if (await this.codeInput.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.codeInput)) {
       return "code";
     }
 
-    if (await this.forgotPasswordHeading.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.forgotPasswordHeading)) {
       return "forgot";
     }
 
-    if (await this.checkEmailHeading.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.checkEmailHeading)) {
       return "check-email";
     }
 
@@ -1051,15 +1069,15 @@ export class AuthPage extends BasePage {
   async getPasswordResetCodeStepState(): Promise<
     "check-email" | "reset-heading" | "code" | "pending"
   > {
-    if (await this.codeInput.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.codeInput)) {
       return "code";
     }
 
-    if (await this.resetPasswordHeading.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.resetPasswordHeading)) {
       return "reset-heading";
     }
 
-    if (await this.checkEmailHeading.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.checkEmailHeading)) {
       return "check-email";
     }
 
@@ -1215,20 +1233,20 @@ export class AuthPage extends BasePage {
       return "pending";
     }
 
-    if (!(await this.emailInput.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.emailInput))) {
       return "pending";
     }
 
-    if (!(await this.passwordInput.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.passwordInput))) {
       return "pending";
     }
 
-    const currentEmail = await this.emailInput.inputValue().catch(() => null);
+    const currentEmail = await getLocatorInputValue(this.emailInput);
     if (currentEmail !== email) {
       return "pending";
     }
 
-    const currentPassword = await this.passwordInput.inputValue().catch(() => null);
+    const currentPassword = await getLocatorInputValue(this.passwordInput);
     if (currentPassword !== password) {
       return "pending";
     }

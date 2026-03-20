@@ -83,6 +83,29 @@ describe("Button", () => {
       expect(btn.className).toContain("bg-status-error");
     });
 
+    it("applies ghostLink variant", () => {
+      render(
+        <Button variant="ghostLink" size="content" data-testid="btn">
+          Back
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("text-ui-text-secondary");
+      expect(btn.className).toContain("hover:bg-transparent");
+      expect(btn.className).toContain("h-auto");
+    });
+
+    it("applies ghostTertiary variant", () => {
+      render(
+        <Button variant="ghostTertiary" data-testid="btn">
+          Skip
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("hover:bg-ui-bg-tertiary");
+      expect(btn.className).toContain("hover:text-ui-text");
+    });
+
     it("applies success variant", () => {
       render(
         <Button variant="success" data-testid="btn">
@@ -177,6 +200,41 @@ describe("Button", () => {
       expect(btn.className).toContain("px-3");
     });
 
+    it("applies xs size", () => {
+      render(
+        <Button size="xs" data-testid="btn">
+          Compact
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("h-7");
+      expect(btn.className).toContain("px-2");
+    });
+
+    it("applies contentStart size", () => {
+      render(
+        <Button variant="unstyled" size="contentStart" data-testid="btn">
+          Row
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("h-auto");
+      expect(btn.className).toContain("text-left");
+      expect(btn.className).toContain("px-0");
+    });
+
+    it("applies card size", () => {
+      render(
+        <Button variant="unstyled" size="card" data-testid="btn">
+          Card
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("group");
+      expect(btn.className).toContain("w-full");
+      expect(btn.className).toContain("overflow-hidden");
+    });
+
     it("applies lg size", () => {
       render(
         <Button size="lg" data-testid="btn">
@@ -197,6 +255,29 @@ describe("Button", () => {
       const btn = screen.getByTestId("btn");
       expect(btn.className).toContain("h-10");
       expect(btn.className).toContain("w-10");
+    });
+
+    it("applies iconXs size", () => {
+      render(
+        <Button size="iconXs" data-testid="btn">
+          <Plus />
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("h-6");
+      expect(btn.className).toContain("w-6");
+      expect(btn.className).toContain("p-1");
+    });
+
+    it("applies iconSm size", () => {
+      render(
+        <Button size="iconSm" data-testid="btn">
+          <Plus />
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("h-8");
+      expect(btn.className).toContain("w-8");
     });
 
     it("applies workspace icon size", () => {
@@ -235,6 +316,18 @@ describe("Button", () => {
       expect(btn.className).toContain("p-0.5");
     });
 
+    it("applies searchTrigger chrome sizing", () => {
+      render(
+        <Button chrome="framed" chromeSize="searchTrigger" data-testid="btn">
+          Search
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("w-full");
+      expect(btn.className).toContain("min-w-0");
+      expect(btn.className).toContain("sm:justify-between");
+    });
+
     it("applies roadmap resize handle sizing", () => {
       render(
         <Button chrome="roadmapResizeHandle" chromeSize="roadmapResizeLeft" data-testid="btn">
@@ -246,6 +339,18 @@ describe("Button", () => {
       expect(btn.className).toContain("left-0");
       expect(btn.className).toContain("w-2");
       expect(btn.className).toContain("cursor-ew-resize");
+    });
+
+    it("applies compact chrome pill sizing", () => {
+      render(
+        <Button chrome="quiet" chromeSize="compactPillSm" data-testid="btn">
+          Mentions
+        </Button>,
+      );
+      const btn = screen.getByTestId("btn");
+      expect(btn.className).toContain("h-7");
+      expect(btn.className).toContain("rounded-full");
+      expect(btn.className).toContain("px-3");
     });
   });
 

@@ -21,6 +21,14 @@ export const TEST_IDS = {
   ISSUE: {
     /** @see src/components/IssueCard.tsx */
     CARD: "issue-card",
+    /** @see src/components/Kanban/KanbanColumn.tsx */
+    CREATE_TRIGGER: "issue-create-trigger",
+    /** @see src/components/IssueDetail/CreateIssueModal.tsx */
+    CREATE_MODAL: "issue-create-modal",
+    /** @see src/components/IssueDetail/CreateIssueModal.tsx */
+    CREATE_TITLE_INPUT: "issue-create-title-input",
+    /** @see src/components/IssueDetail/CreateIssueModal.tsx */
+    CREATE_DESCRIPTION_EDITOR: "issue-create-description-editor",
     /** @see src/components/IssueCard.tsx */
     DRAG_HANDLE: "issue-drag-handle",
     /** @see src/components/IssueCard.tsx */
@@ -40,6 +48,8 @@ export const TEST_IDS = {
   },
 
   BOARD: {
+    /** @see src/components/KanbanBoard.tsx */
+    ROOT: "project-board",
     /** @see src/components/Kanban/KanbanColumn.tsx */
     COLUMN: "board-column",
     /** @see src/components/Kanban/KanbanColumn.tsx */
@@ -68,6 +78,26 @@ export const TEST_IDS = {
     BRAND_LOGO: "brand-logo",
     /** @see src/components/Sidebar.tsx */
     SIDEBAR: "sidebar",
+    /** @see src/components/App/AppSidebar.tsx */
+    DASHBOARD_LINK: "sidebar-dashboard-link",
+    /** @see src/components/App/AppSidebar.tsx */
+    DOCUMENTS_LINK: "sidebar-documents-link",
+    /** @see src/components/App/AppSidebar.tsx */
+    WORKSPACES_LINK: "sidebar-workspaces-link",
+    /** @see src/components/App/AppSidebar.tsx */
+    TIMESHEET_LINK: "sidebar-timesheet-link",
+    /** @see src/components/App/AppSidebar.tsx */
+    CALENDAR_LINK: "sidebar-calendar-link",
+    /** @see src/components/App/AppSidebar.tsx */
+    SETTINGS_LINK: "sidebar-settings-link",
+    /** @see src/components/App/AppSidebar.tsx */
+    DOCUMENT_LIST: "sidebar-document-list",
+    /** @see src/components/App/AppSidebar.tsx */
+    DOCUMENT_ITEM: "sidebar-document-item",
+    /** @see src/components/App/AppSidebar.tsx */
+    WORKSPACE_LIST: "sidebar-workspace-list",
+    /** @see src/components/App/AppSidebar.tsx */
+    WORKSPACE_ITEM: "sidebar-workspace-item",
     /** @see src/routes/__root.tsx */
     MAIN_CONTENT: "main-content",
   },
@@ -89,6 +119,19 @@ export const TEST_IDS = {
     SHORTCUTS_BUTTON: "header-shortcuts-button",
     /** @see src/components/UserMenu.tsx */
     USER_MENU_BUTTON: "header-user-menu-button",
+  },
+
+  // ============================================================
+  // Toasts & Feedback
+  // ============================================================
+
+  TOAST: {
+    /** @see src/lib/toast.ts */
+    SUCCESS: "toast-success",
+    /** @see src/lib/toast.ts */
+    ERROR: "toast-error",
+    /** @see src/lib/toast.ts */
+    INFO: "toast-info",
   },
 
   // ============================================================
@@ -138,14 +181,20 @@ export const TEST_IDS = {
   // ============================================================
 
   AUTH: {
-    /** @see src/components/auth/SignInForm.tsx */
+    /** @see src/components/Auth/SignInForm.tsx */
     EMAIL_INPUT: "auth-email-input",
-    /** @see src/components/auth/SignInForm.tsx */
+    /** @see src/components/Auth/SignInForm.tsx */
     PASSWORD_INPUT: "auth-password-input",
-    /** @see src/components/auth/SignInForm.tsx */
+    /** @see src/components/Auth/SignInForm.tsx */
     SUBMIT_BUTTON: "auth-submit-button",
-    /** @see src/components/auth/SignInForm.tsx - form element with data-expanded attribute */
+    /** @see src/components/Auth/SignInForm.tsx */
     FORM: "auth-form",
+    /** @see src/components/Auth/SignInForm.tsx */
+    EMAIL_FORM: "auth-email-form",
+    /** @see src/components/Auth/SignInForm.tsx */
+    FORM_READY: "auth-form-ready",
+    /** @see src/components/Auth/SignInForm.tsx */
+    FORM_HYDRATED: "auth-form-hydrated",
     /** @see src/components/auth/GoogleAuthButton.tsx */
     GOOGLE_BUTTON: "auth-google-button",
     /** @see src/components/Auth/EmailVerificationForm.tsx */
@@ -176,14 +225,24 @@ export const TEST_IDS = {
   // ============================================================
 
   CALENDAR: {
+    /** @see src/components/Calendar/CalendarView.tsx */
+    ROOT: "calendar-root",
+    /** @see src/components/Calendar/shadcn-calendar/body/calendar-body.tsx */
+    GRID: "calendar-grid",
     /** @see src/components/Calendar/shadcn-calendar/calendar-event.tsx */
     EVENT_ITEM: "calendar-event-item",
     /** @see src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx */
     DAY_CELL: "calendar-day-cell",
+    /** @see src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx */
+    DAY_CELL_DROP_TARGET: "calendar-day-cell-drop-target",
     /** @see src/components/Calendar/EventDetailsModal.tsx */
     EVENT_DETAILS_MODAL: "calendar-event-details-modal",
+    /** @see src/components/Calendar/EventDetailsModal.tsx */
+    ATTENDEES_LIST: "calendar-attendees-list",
     /** @see src/components/Calendar/shadcn-calendar/body/month/calendar-body-month.tsx */
     QUICK_ADD_DAY: "calendar-quick-add-day",
+    /** @see src/components/Calendar/shadcn-calendar/header/date/calendar-header-date.tsx */
+    HEADER_DATE: "calendar-header-date",
     /** @see src/components/Calendar/shadcn-calendar/header/actions/calendar-header-actions-mode.tsx */
     MODE_DAY: "calendar-mode-day",
     MODE_WEEK: "calendar-mode-week",
@@ -268,6 +327,26 @@ export const TEST_IDS = {
   },
 
   // ============================================================
+  // Loading States
+  // ============================================================
+
+  LOADING: {
+    /** @see src/components/ui/LoadingSpinner.tsx */
+    SPINNER: "loading-spinner",
+    /** @see src/components/ui/Skeleton.tsx */
+    SKELETON: "loading-skeleton",
+  },
+
+  // ============================================================
+  // Notifications
+  // ============================================================
+
+  NOTIFICATION: {
+    /** @see src/components/Notifications/NotificationItem.tsx */
+    ITEM: "notification-item",
+  },
+
+  // ============================================================
   // Settings
   // ============================================================
 
@@ -278,6 +357,24 @@ export const TEST_IDS = {
     TIME_APPROVAL_SWITCH: "settings-time-approval-switch",
     /** @see src/components/Admin/OrganizationSettings.tsx */
     SAVE_BUTTON: "settings-save-button",
+    /** @see src/components/Settings/GitHubIntegration.tsx */
+    GITHUB_INTEGRATION: "settings-github-integration",
+    /** @see src/components/Settings/GoogleCalendarIntegration.tsx */
+    GOOGLE_CALENDAR_INTEGRATION: "settings-google-calendar-integration",
+    /** @see src/components/Settings/PumbleIntegration.tsx */
+    PUMBLE_INTEGRATION: "settings-pumble-integration",
+    /** @see src/components/Settings/ApiKeysManager.tsx */
+    API_KEYS_SECTION: "settings-api-keys-section",
+    /** @see src/components/Settings/OfflineTab.tsx */
+    OFFLINE_STATUS_CARD: "settings-offline-status-card",
+    /** @see src/components/Settings/NotificationsTab.tsx */
+    NOTIFICATION_PREFERENCES_SECTION: "settings-notification-preferences-section",
+    /** @see src/components/Admin/UserManagement.tsx */
+    USER_MANAGEMENT_SECTION: "settings-user-management-section",
+    /** @see src/components/Admin/UserTypeManager.tsx */
+    USER_TYPE_MANAGER_SECTION: "settings-user-type-manager-section",
+    /** @see src/components/Admin/HourComplianceDashboard.tsx */
+    HOUR_COMPLIANCE_SECTION: "settings-hour-compliance-section",
   },
 
   // ============================================================
@@ -326,6 +423,8 @@ export const TEST_IDS = {
     TITLE: "document-title",
     /** @see src/components/Documents/DocumentHeader.tsx */
     TITLE_INPUT: "document-title-input",
+    /** @see src/components/Plate/HeadingElement.tsx */
+    HEADING_ANCHOR: "document-heading-anchor",
   },
 
   // ============================================================

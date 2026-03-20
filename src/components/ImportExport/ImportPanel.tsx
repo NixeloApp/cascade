@@ -149,9 +149,9 @@ export function ImportPanel({ projectId, onImportComplete }: ImportPanelProps) {
         <Input
           label="Select File"
           type="file"
+          variant="filePicker"
           accept={importFormat === "csv" ? ".csv" : ".json"}
           onChange={handleFileChange}
-          className="cursor-pointer bg-ui-bg-secondary"
         />
         {importFile && (
           <Typography variant="muted" className="mt-2">

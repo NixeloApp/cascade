@@ -1,5 +1,11 @@
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import {
+  getLocatorInputValue,
+  isLocatorDisabled,
+  isLocatorEditable,
+  isLocatorVisible,
+} from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 import { BasePage } from "./base.page";
 
@@ -119,21 +125,17 @@ export class SettingsPage extends BasePage {
     this.themeSystemOption = page.getByRole("radio", { name: /system theme/i });
 
     // Integrations
-    this.githubIntegration = page
-      .locator("[data-integration='github']")
-      .or(page.getByText(/github/i).first());
-    this.googleCalendarIntegration = page
-      .locator("[data-integration='google-calendar']")
-      .or(page.getByText(/google.*calendar/i).first());
-    this.pumbleIntegration = page
-      .locator("[data-integration='pumble']")
-      .or(page.getByText(/pumble/i).first());
+    this.githubIntegration = page.getByTestId(TEST_IDS.SETTINGS.GITHUB_INTEGRATION);
+    this.googleCalendarIntegration = page.getByTestId(
+      TEST_IDS.SETTINGS.GOOGLE_CALENDAR_INTEGRATION,
+    );
+    this.pumbleIntegration = page.getByTestId(TEST_IDS.SETTINGS.PUMBLE_INTEGRATION);
     this.connectGithubButton = page.getByRole("button", { name: /connect.*github/i });
     this.connectGoogleButton = page.getByRole("button", { name: /connect.*google/i });
     this.connectPumbleButton = page.getByRole("button", { name: /connect.*pumble/i });
 
     // API Keys
-    this.apiKeysList = page.locator("[data-api-keys-list]");
+    this.apiKeysList = page.getByTestId(TEST_IDS.SETTINGS.API_KEYS_SECTION);
     this.generateApiKeyButton = page.getByRole("button", {
       name: /generate|create.*key|new.*key/i,
     });
@@ -146,11 +148,13 @@ export class SettingsPage extends BasePage {
     this.offlineToggle = page
       .getByRole("switch", { name: /offline/i })
       .or(page.getByRole("checkbox", { name: /offline/i }));
-    this.syncStatusIndicator = page.locator("[data-sync-status]");
+    this.syncStatusIndicator = page.getByTestId(TEST_IDS.SETTINGS.OFFLINE_STATUS_CARD);
     this.forceSyncButton = page.getByRole("button", { name: /sync|force.*sync/i });
 
     // Preferences
-    this.notificationPreferences = page.locator("[data-notification-preferences]");
+    this.notificationPreferences = page.getByTestId(
+      TEST_IDS.SETTINGS.NOTIFICATION_PREFERENCES_SECTION,
+    );
     this.emailNotificationsToggle = page
       .getByRole("switch", { name: /email/i })
       .or(page.getByRole("checkbox", { name: /email.*notification/i }));
@@ -161,13 +165,11 @@ export class SettingsPage extends BasePage {
     this.timezoneSelect = page.getByRole("combobox", { name: /timezone/i });
 
     // Admin
-    this.userManagementSection = page
-      .locator("[data-user-management]")
-      .or(page.getByText(/user.*management/i));
+    this.userManagementSection = page.getByTestId(TEST_IDS.SETTINGS.USER_MANAGEMENT_SECTION);
     this.userManagementHeading = page.getByRole("heading", { name: /user management/i });
     this.inviteUserButton = page.getByRole("button", { name: /invite.*user/i });
-    this.userTypeManager = page.locator("[data-user-type-manager]");
-    this.hourComplianceDashboard = page.locator("[data-hour-compliance]");
+    this.userTypeManager = page.getByTestId(TEST_IDS.SETTINGS.USER_TYPE_MANAGER_SECTION);
+    this.hourComplianceDashboard = page.getByTestId(TEST_IDS.SETTINGS.HOUR_COMPLIANCE_SECTION);
     this.adminUsersTab = page.getByRole("tab", { name: /^Users$/ });
     this.platformUsersTable = page.getByRole("table", { name: /platform users/i });
     this.inviteEmptyState = page.getByText(/^No invitations$/);
@@ -210,25 +212,29 @@ export class SettingsPage extends BasePage {
       await this.integrationsTab.first().waitFor({ state: "visible" });
     } catch (e) {
       const currentUrl = this.page.url();
-      const bodyText = await this.page
-        .evaluate(() => document.body.innerText)
-        .catch(() => "Could not get body text");
+      const bodyText = await this.getDebugValue(
+        () => this.page.evaluate(() => document.body.innerText),
+        "Could not get body text",
+      );
       console.log(`[DEBUG] SettingsPage.goto failed`);
       console.log(`[DEBUG] Target URL: ${url}`);
       console.log(`[DEBUG] Current URL: ${currentUrl}`);
-      const localStorage = await this.page
-        .evaluate(() => JSON.stringify(localStorage))
-        .catch(() => "Could not get localStorage");
-      const convexClientState = await this.page
-        .evaluate(() => {
-          const client = (window as Record<string, unknown>).__convex_test_client as
-            | { authenticationToken?: unknown }
-            | undefined;
-          return client
-            ? `Found client. Auth token set: ${!!client.authenticationToken}`
-            : "Client not found on window";
-        })
-        .catch(() => "Error getting client state");
+      const localStorage = await this.getDebugValue(
+        () => this.page.evaluate(() => JSON.stringify(localStorage)),
+        "Could not get localStorage",
+      );
+      const convexClientState = await this.getDebugValue(
+        () =>
+          this.page.evaluate(() => {
+            const client = (window as Record<string, unknown>).__convex_test_client as
+              | { authenticationToken?: unknown }
+              | undefined;
+            return client
+              ? `Found client. Auth token set: ${!!client.authenticationToken}`
+              : "Client not found on window";
+          }),
+        "Error getting client state",
+      );
       console.log(`[DEBUG] LocalStorage: ${localStorage}`);
       console.log(`[DEBUG] ConvexClient: ${convexClientState}`);
       console.log(`[DEBUG] Body Text: ${bodyText.substring(0, 1000)}`);
@@ -339,7 +345,7 @@ export class SettingsPage extends BasePage {
     }
 
     // Only re-click if the form is not visible (avoid double-clicking an open form)
-    if (await this.inviteUserForm.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.inviteUserForm)) {
       await this.expectInviteFormReady();
     } else {
       await inviteBtn.click();
@@ -348,15 +354,15 @@ export class SettingsPage extends BasePage {
   }
 
   async closeInviteUserModalIfOpen() {
-    if (!(await this.inviteUserForm.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.inviteUserForm))) {
       return;
     }
 
-    if (await this.cancelInviteButton.isVisible().catch(() => false)) {
-      await this.cancelInviteButton.click().catch(() => {});
+    if (await isLocatorVisible(this.cancelInviteButton)) {
+      await this.dismissInviteUserModalWithCancel();
     }
 
-    if (await this.inviteUserForm.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.inviteUserForm)) {
       await this.page.keyboard.press("Escape");
     }
 
@@ -388,7 +394,7 @@ export class SettingsPage extends BasePage {
     }
 
     const inviteRow = this.getInviteRow(email);
-    if (await inviteRow.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(inviteRow)) {
       return;
     }
 
@@ -460,7 +466,7 @@ export class SettingsPage extends BasePage {
       return false;
     }
 
-    const currentValue = await this.inviteEmailInput.inputValue().catch(() => null);
+    const currentValue = await getLocatorInputValue(this.inviteEmailInput);
     return currentValue === email;
   }
 
@@ -500,11 +506,11 @@ export class SettingsPage extends BasePage {
   }
 
   private async getInviteManagementState(): Promise<"table" | "empty" | "loading"> {
-    if (await this.inviteTable.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.inviteTable)) {
       return "table";
     }
 
-    if (await this.inviteEmptyState.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.inviteEmptyState)) {
       return "empty";
     }
 
@@ -513,17 +519,17 @@ export class SettingsPage extends BasePage {
 
   private async getInviteFormState(): Promise<"ready" | "open" | "closed"> {
     if (
-      (await this.inviteEmailInput.isVisible().catch(() => false)) &&
-      (await this.inviteEmailInput.isEditable().catch(() => false)) &&
-      (await this.sendInviteButton.isVisible().catch(() => false))
+      (await isLocatorVisible(this.inviteEmailInput)) &&
+      (await isLocatorEditable(this.inviteEmailInput)) &&
+      (await isLocatorVisible(this.sendInviteButton))
     ) {
       return "ready";
     }
 
     if (
-      (await this.inviteUserModal.isVisible().catch(() => false)) ||
-      (await this.inviteUserForm.isVisible().catch(() => false)) ||
-      (await this.sendInviteButton.isVisible().catch(() => false))
+      (await isLocatorVisible(this.inviteUserModal)) ||
+      (await isLocatorVisible(this.inviteUserForm)) ||
+      (await isLocatorVisible(this.sendInviteButton))
     ) {
       return "open";
     }
@@ -577,7 +583,7 @@ export class SettingsPage extends BasePage {
   }
 
   async isAdminTabVisible() {
-    return this.adminTab.isVisible().catch(() => false);
+    return isLocatorVisible(this.adminTab);
   }
 
   async expectAdminTabHidden() {
@@ -700,11 +706,41 @@ export class SettingsPage extends BasePage {
   }
 
   private async waitForSettingsSuccessToastReset() {
-    await this.page
-      .getByText(/organization settings updated/i)
-      .first()
-      .waitFor({ state: "hidden", timeout: 1000 })
-      .catch(() => {});
+    const successToast = this.page.getByText(/organization settings updated/i).first();
+    const toastVisible = await isLocatorVisible(successToast);
+    if (!toastVisible) {
+      return;
+    }
+
+    try {
+      await successToast.waitFor({ state: "hidden", timeout: 1000 });
+    } catch (error) {
+      const stillVisible = await isLocatorVisible(successToast);
+      if (!stillVisible) {
+        return;
+      }
+
+      const saveReady = await this.waitForSettingsSaveReady(250);
+      if (saveReady) {
+        return;
+      }
+
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Organization settings success toast did not clear before retry: ${message}`);
+    }
+  }
+
+  private async dismissInviteUserModalWithCancel(): Promise<void> {
+    try {
+      await this.cancelInviteButton.click();
+    } catch (error) {
+      if (!(await isLocatorVisible(this.inviteUserForm))) {
+        return;
+      }
+
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Invite user modal cancel button failed: ${message}`);
+    }
   }
 
   private async tryClickSaveSettingsButton() {
@@ -715,7 +751,7 @@ export class SettingsPage extends BasePage {
       return true;
     } catch {
       await this.saveSettingsButton.waitFor({ state: "visible" });
-      if (await this.saveSettingsButton.isDisabled().catch(() => true)) {
+      if (await isLocatorDisabled(this.saveSettingsButton, true)) {
         return false;
       }
       try {
@@ -741,5 +777,13 @@ export class SettingsPage extends BasePage {
       "aria-checked",
       enabled ? "true" : "false",
     );
+  }
+
+  private async getDebugValue(read: () => Promise<string>, fallback: string) {
+    try {
+      return await read();
+    } catch {
+      return fallback;
+    }
   }
 }

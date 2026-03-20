@@ -23,6 +23,7 @@ import {
   Smartphone,
   User,
 } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { getVapidPublicKey, useWebPush } from "@/lib/webPush";
@@ -227,18 +228,11 @@ function PushNotificationsCard({
             onClick={isSubscribed ? onUnsubscribe : onSubscribe}
             isLoading={isPushLoading}
             className="ml-4"
+            leftIcon={
+              !isPushLoading ? <Icon icon={isSubscribed ? BellOff : Bell} size="sm" /> : undefined
+            }
           >
-            {isSubscribed ? (
-              <>
-                <BellOff className="w-4 h-4 mr-1" />
-                Disable
-              </>
-            ) : (
-              <>
-                <Bell className="w-4 h-4 mr-1" />
-                Enable
-              </>
-            )}
+            {isSubscribed ? "Disable" : "Enable"}
           </Button>
         </Flex>
 
@@ -393,7 +387,7 @@ export function NotificationsTab() {
   };
 
   return (
-    <Stack gap="lg">
+    <Stack gap="lg" data-testid={TEST_IDS.SETTINGS.NOTIFICATION_PREFERENCES_SECTION}>
       <PushNotificationsCard
         isSupported={isSupported}
         vapidKey={vapidKey}

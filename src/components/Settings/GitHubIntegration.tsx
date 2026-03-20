@@ -10,6 +10,7 @@ import { api } from "@convex/_generated/api";
 import { useEffect, useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Check, Github } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
@@ -99,7 +100,7 @@ export function GitHubIntegration() {
   };
 
   return (
-    <Card padding="lg">
+    <Card padding="lg" data-testid={TEST_IDS.SETTINGS.GITHUB_INTEGRATION}>
       <Flex justify="between" align="start">
         <Flex gap="lg" align="center">
           <div className="rounded bg-ui-bg-tertiary p-2">

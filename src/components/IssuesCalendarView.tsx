@@ -335,12 +335,7 @@ export function IssuesCalendarView({
               </IconButton>
             </Tooltip>
 
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setCurrentDate(new Date())}
-              className="min-h-11 min-w-11 sm:min-h-0 sm:min-w-0"
-            >
+            <Button variant="secondary" size="touchSm" onClick={() => setCurrentDate(new Date())}>
               Today
             </Button>
           </Flex>

@@ -25,6 +25,7 @@ import { Dialog } from "../ui/Dialog";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox, Input } from "../ui/form";
 import { Grid } from "../ui/Grid";
+import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/IconButton";
 import { Label } from "../ui/Label";
 import { SegmentedControl, SegmentedControlItem } from "../ui/SegmentedControl";
@@ -84,7 +85,7 @@ function addTagToList(tags: string[], newTag: string): string[] {
 function DurationSummary({ durationSeconds }: { durationSeconds: number }) {
   return (
     <Card recipe="timeSummary" padding="sm">
-      <Typography variant="mono" className="text-brand-active">
+      <Typography variant="mono" color="brandActive">
         Duration: {formatDurationHuman(durationSeconds)}
       </Typography>
     </Card>
@@ -234,28 +235,22 @@ export function ManualTimeEntryModal({
         {/* Mode Toggle */}
         <SegmentedControl
           value={entryMode}
+          iconSpacing
+          layout="stackOnMobile"
           variant="default"
+          width="fill"
           onValueChange={(value: string) => {
             if (value === "duration" || value === "timeRange") {
               setEntryMode(value);
             }
           }}
-          className="flex w-full flex-col sm:flex-row"
         >
-          <SegmentedControlItem
-            value="duration"
-            variant="default"
-            className="w-full flex-1 justify-center gap-2"
-          >
-            <Hourglass className="w-4 h-4" />
+          <SegmentedControlItem value="duration" variant="default" width="fill">
+            <Icon icon={Hourglass} size="sm" />
             Duration
           </SegmentedControlItem>
-          <SegmentedControlItem
-            value="timeRange"
-            variant="default"
-            className="w-full flex-1 justify-center gap-2"
-          >
-            <Clock className="w-4 h-4" />
+          <SegmentedControlItem value="timeRange" variant="default" width="fill">
+            <Icon icon={Clock} size="sm" />
             Start/End Time
           </SegmentedControlItem>
         </SegmentedControl>
@@ -388,7 +383,7 @@ export function ManualTimeEntryModal({
               setIssueId(undefined);
             }}
           >
-            <SelectTrigger id="time-entry-project" className="w-full">
+            <SelectTrigger id="time-entry-project">
               <SelectValue placeholder="Select project..." />
             </SelectTrigger>
             <SelectContent>
@@ -412,7 +407,7 @@ export function ManualTimeEntryModal({
                 setIssueId(value === "none" ? undefined : (value as Id<"issues">))
               }
             >
-              <SelectTrigger id="time-entry-issue" className="w-full">
+              <SelectTrigger id="time-entry-issue">
                 <SelectValue placeholder="Select issue..." />
               </SelectTrigger>
               <SelectContent>
@@ -448,7 +443,7 @@ export function ManualTimeEntryModal({
                 value={field.state.value || "none"}
                 onValueChange={(value) => field.handleChange(value === "none" ? "" : value)}
               >
-                <SelectTrigger id="time-entry-activity" className="w-full">
+                <SelectTrigger id="time-entry-activity">
                   <SelectValue placeholder="Select activity..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -500,7 +495,7 @@ export function ManualTimeEntryModal({
                       type="button"
                       aria-label={`Remove tag ${tag}`}
                     >
-                      <X className="h-3 w-3" />
+                      <Icon icon={X} size="xs" />
                     </IconButton>
                   </Flex>
                 </Badge>

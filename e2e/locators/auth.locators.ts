@@ -10,6 +10,7 @@
 
 import type { Page } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
+import { getToastLocator } from "../utils/toast-locators";
 
 /**
  * Auth form locators - for sign in/sign up forms
@@ -30,7 +31,9 @@ export const authFormLocators = (page: Page) => ({
   submitButton: page.getByRole("button", { name: /^(sign in|create account)$/i }),
 
   // Form state
-  formReady: page.locator(`[data-testid="${TEST_IDS.AUTH.FORM}"][data-form-ready="true"]`),
+  emailForm: page.getByTestId(TEST_IDS.AUTH.EMAIL_FORM),
+  formReady: page.getByTestId(TEST_IDS.AUTH.FORM_READY),
+  formHydrated: page.getByTestId(TEST_IDS.AUTH.FORM_HYDRATED),
 
   // Links
   forgotPasswordLink: page.getByRole("button", { name: /forgot password/i }),
@@ -60,10 +63,10 @@ export const onboardingLocators = (page: Page) => ({
  * Toast/notification locators
  */
 export const toastLocators = (page: Page) => ({
-  any: page.locator("[data-sonner-toast]"),
-  success: page.locator('[data-sonner-toast][data-type="success"]'),
-  error: page.locator('[data-sonner-toast][data-type="error"]'),
-  info: page.locator('[data-sonner-toast][data-type="info"]'),
+  any: getToastLocator(page),
+  success: getToastLocator(page, "success"),
+  error: getToastLocator(page, "error"),
+  info: getToastLocator(page, "info"),
 });
 
 /**

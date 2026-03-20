@@ -20,8 +20,9 @@ vi.mock("@/lib/toast", () => ({
   showSuccess: vi.fn(),
 }));
 
-vi.mock("@/components/ui/LoadingSpinner", () => ({
+vi.mock("./ui/LoadingSpinner", () => ({
   LoadingSpinner: () => <div>loading-spinner</div>,
+  InlineSpinner: () => <div>inline-spinner</div>,
 }));
 
 vi.mock("./ui/Badge", () => ({
@@ -86,11 +87,30 @@ vi.mock("./ui/ConfirmDialog", () => ({
 
 vi.mock("./ui/Flex", () => ({
   Flex: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  FlexItem: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+}));
+
+vi.mock("./ui/Icon", () => ({
+  Icon: ({ children, className }: { children?: ReactNode; className?: string }) => (
+    <span className={className}>{children ?? "icon"}</span>
+  ),
+}));
+
+vi.mock("./ui/List", () => ({
+  List: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
 vi.mock("./ui/Metadata", () => ({
   Metadata: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   MetadataItem: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+}));
+
+vi.mock("./ui/ScrollArea", () => ({
+  ScrollArea: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+}));
+
+vi.mock("./ui/Separator", () => ({
+  Separator: () => <div />,
 }));
 
 vi.mock("./ui/Stack", () => ({
@@ -321,6 +341,7 @@ describe("MeetingRecordingSection", () => {
     expect(screen.getByText("Decisions Made")).toBeInTheDocument();
     expect(screen.getByText("Launch to the beta cohort first")).toBeInTheDocument();
     expect(screen.getByText("Show Full Transcript")).toBeInTheDocument();
+    expect(screen.getByText("Full transcript text")).toBeInTheDocument();
     expect(screen.getByText("1,234 words")).toBeInTheDocument();
     expect(screen.getByText("30 min")).toBeInTheDocument();
     expect(screen.getByText("3 speakers")).toBeInTheDocument();

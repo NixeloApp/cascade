@@ -25,17 +25,36 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { type Browser, chromium, type Locator, type Page } from "@playwright/test";
+import { type Browser, chromium, expect, type Locator, type Page } from "@playwright/test";
 import { ROUTES } from "../convex/shared/routes";
 import { TEST_IDS } from "../src/lib/test-ids";
 import { TEST_USERS } from "./config";
 import { E2E_TIMEZONE } from "./constants";
 import { ProjectsPage } from "./pages";
 import {
+  getLocatorAttribute,
+  getLocatorCount,
+  isLocatorVisible,
+  waitForLocatorVisible,
+} from "./utils/locator-state";
+import {
+  assertScreenshotHashIsNotLoadingState,
+  getScreenshotHash,
+} from "./utils/screenshot-hash-guards";
+import {
   type E2EWorkflowState,
   type SeedScreenshotResult,
   testUserService,
 } from "./utils/test-user-service";
+import {
+  dismissAllDialogs,
+  dismissIfOpen,
+  waitForAnimation,
+  waitForDashboardReady,
+  waitForDialogOpen,
+  waitForLoadingSkeletonsToClear,
+  waitForScreenshotReady,
+} from "./utils/wait-helpers";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -78,6 +97,7 @@ const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
   "empty-my-issues": "20-my-issues",
   "empty-invoices": "25-invoices",
   "empty-clients": "26-clients",
+  "empty-meetings": "30-meetings",
 
   // Workspace-level pages (filled states)
   "filled-dashboard": "04-dashboard",
@@ -92,6 +112,7 @@ const PAGE_TO_SPEC_FOLDER: Record<string, string> = {
   "filled-org-analytics": "24-org-analytics",
   "filled-invoices": "25-invoices",
   "filled-clients": "26-clients",
+  "filled-meetings": "30-meetings",
   "filled-time-tracking": "22-time-tracking",
   "filled-sidebar-collapsed": "04-dashboard",
   "filled-404-page": "40-error",
@@ -256,6 +277,9 @@ const DYNAMIC_PAGE_PATTERNS: Array<[RegExp, string, string]> = [
   [/^filled-notification-snooze-popover$/, "21-notifications", "-snooze-popover"],
   [/^filled-notifications-archived$/, "21-notifications", "-archived"],
   [/^filled-notifications-filter-active$/, "21-notifications", "-filter-active"],
+  [/^filled-meetings-detail$/, "30-meetings", "-detail"],
+  [/^filled-meetings-transcript-search$/, "30-meetings", "-transcript-search"],
+  [/^filled-meetings-memory-lens$/, "30-meetings", "-memory-lens"],
   [/^filled-project-tree$/, "29-team-detail", "-project-tree"],
   [/^filled-mobile-hamburger$/, "04-dashboard", "-mobile-hamburger"],
   // Project board: filled-project-xxx-board → 06-board
@@ -721,7 +745,9 @@ async function takeScreenshot(
   await waitForScreenshotReady(page);
   await waitForExpectedContent(page, url, name, prefix);
   await waitForScreenshotReady(page);
-  const screenshot = await page.screenshot();
+  const screenshot = await captureScreenshotBuffer(page);
+  const screenshotHash = getScreenshotHash(screenshot);
+  assertScreenshotHashIsNotLoadingState(screenshotHash, relativePathLabel);
   for (const finalPath of finalPaths) {
     fs.writeFileSync(getStagedScreenshotPath(finalPath), screenshot);
   }
@@ -751,7 +777,9 @@ async function captureCurrentView(page: Page, prefix: string, name: string): Pro
   const startTime = performance.now();
 
   await waitForScreenshotReady(page);
-  const screenshot = await page.screenshot();
+  const screenshot = await captureScreenshotBuffer(page);
+  const screenshotHash = getScreenshotHash(screenshot);
+  assertScreenshotHashIsNotLoadingState(screenshotHash, relativePathLabel);
   for (const finalPath of finalPaths) {
     fs.writeFileSync(getStagedScreenshotPath(finalPath), screenshot);
   }
@@ -759,6 +787,21 @@ async function captureCurrentView(page: Page, prefix: string, name: string): Pro
 
   const elapsed = Math.round(performance.now() - startTime);
   console.log(`    ${num}  [${prefix}] ${name} → ${relativePathLabel}  (${elapsed}ms)`);
+}
+
+async function captureScreenshotBuffer(page: Page): Promise<Buffer> {
+  return page.screenshot({ animations: "disabled" });
+}
+
+async function captureScreenshotToPath(
+  page: Page,
+  finalPath: string,
+  relativePathLabel: string,
+): Promise<void> {
+  const screenshot = await captureScreenshotBuffer(page);
+  const screenshotHash = getScreenshotHash(screenshot);
+  assertScreenshotHashIsNotLoadingState(screenshotHash, relativePathLabel);
+  fs.writeFileSync(getStagedScreenshotPath(finalPath), screenshot);
 }
 
 let captureSkips = 0;
@@ -808,94 +851,22 @@ function isCrashLikeError(message: string): boolean {
   );
 }
 
-async function dismissIfOpen(page: Page, locator: Locator): Promise<void> {
-  if (!(await locator.isVisible().catch(() => false))) {
-    return;
-  }
-
-  await page.keyboard.press("Escape").catch(() => {});
-
-  if (await locator.isVisible().catch(() => false)) {
-    await page.mouse.click(10, 10).catch(() => {});
-  }
-
-  await locator.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
-}
-
-async function waitForDialogOverlaysToClear(page: Page): Promise<void> {
-  await page
-    .waitForFunction(
-      () =>
-        document.querySelectorAll("[data-testid='dialog-overlay'][data-state='open']").length === 0,
-      undefined,
-      { timeout: 5000 },
-    )
-    .catch(() => {});
-}
-
-async function dismissAllDialogs(page: Page): Promise<void> {
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const openOverlays = await page
-      .getByTestId(TEST_IDS.DIALOG.OVERLAY)
-      .count()
-      .catch(() => 0);
-    if (openOverlays === 0) {
-      break;
-    }
-
-    await page.keyboard.press("Escape").catch(() => {});
-    await waitForDialogOverlaysToClear(page);
-
-    const remainingOverlays = await page
-      .getByTestId(TEST_IDS.DIALOG.OVERLAY)
-      .count()
-      .catch(() => 0);
-    if (remainingOverlays === 0) {
-      break;
-    }
-
-    await page.mouse.click(10, 10).catch(() => {});
-    await waitForDialogOverlaysToClear(page);
-  }
-}
-
-/**
- * Wait for a Radix Dialog to open after clicking a trigger.
- * Radix renders dialogs in a portal with an overlay. The overlay appears
- * before role="dialog" is applied to the content element. We wait for
- * the overlay first, then look for [data-state="open"] content.
- */
-async function waitForDialogOpen(page: Page, timeout = 8000): Promise<Locator> {
-  // Wait for overlay to appear (proves dialog is mounting)
-  await page
-    .getByTestId(TEST_IDS.DIALOG.OVERLAY)
-    .waitFor({ state: "visible", timeout })
-    .catch(() => {});
-
-  // Wait for the dialog or alert dialog content with data-state="open"
-  const dialog = page
-    .locator("[role='dialog'][data-state='open'], [role='alertdialog'][data-state='open']")
-    .first();
-  await dialog.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
-  return dialog;
-}
-
 async function openOmnibox(page: Page, trigger: Locator, dialog: Locator): Promise<void> {
   await dismissAllDialogs(page);
 
-  if (await trigger.isVisible().catch(() => false)) {
+  if (await isLocatorVisible(trigger)) {
     await trigger.click();
   } else {
     await page.keyboard.press(SEARCH_SHORTCUT);
   }
 
   await dialog.waitFor({ state: "visible", timeout: 5000 });
+  await page.getByRole("heading", { name: /search and commands/i }).waitFor({
+    state: "visible",
+    timeout: 5000,
+  });
   await page.getByTestId(TEST_IDS.SEARCH.INPUT).waitFor({ state: "visible", timeout: 5000 });
-  await dialog
-    .getByText(/jump faster across your workspace/i)
-    .first()
-    .waitFor({ state: "visible", timeout: 5000 })
-    .catch(() => {});
+  await waitForAnimation(page);
   await waitForScreenshotReady(page);
 }
 
@@ -905,23 +876,92 @@ async function openStableAlertDialog(
   readyLocator: Locator,
   attempts = 3,
 ): Promise<Locator> {
-  let dialog = page
-    .locator("[role='dialog'][data-state='open'], [role='alertdialog'][data-state='open']")
-    .first();
+  let dialog = page.getByRole("alertdialog").first();
+  let lastError: Error | null = null;
 
   for (let attempt = 0; attempt < attempts; attempt++) {
-    await dismissAllDialogs(page);
-    await trigger.scrollIntoViewIfNeeded().catch(() => {});
-    await trigger.click();
-    dialog = await waitForDialogOpen(page);
-    await readyLocator.waitFor({ state: "visible", timeout: 3000 }).catch(() => {});
-    await page.waitForTimeout(350);
-    if (await readyLocator.isVisible().catch(() => false)) {
+    try {
+      await dismissAllDialogs(page);
+      await trigger.scrollIntoViewIfNeeded();
+      await trigger.click();
+      dialog = await waitForDialogOpen(page);
+      await readyLocator.waitFor({ state: "visible", timeout: 3000 });
+      await waitForAnimation(page);
+      await readyLocator.waitFor({ state: "visible", timeout: 1000 });
       return dialog;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      await dismissAllDialogs(page);
     }
   }
 
-  throw new Error("Alert dialog did not remain open");
+  throw new Error(`Alert dialog did not remain open: ${lastError?.message ?? "unknown error"}`);
+}
+
+async function openStableDialog(
+  page: Page,
+  trigger: Locator,
+  dialog: Locator,
+  readyLocator: Locator,
+  dialogLabel: string,
+  attempts = 2,
+): Promise<Locator> {
+  let lastError: Error | null = null;
+
+  await trigger.waitFor({ state: "visible", timeout: 5000 });
+
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      await dismissAllDialogs(page);
+      await trigger.scrollIntoViewIfNeeded();
+      await trigger.click();
+      await waitForDialogOpen(page);
+      await dialog.waitFor({ state: "visible", timeout: 5000 });
+      await readyLocator.waitFor({ state: "visible", timeout: 5000 });
+      await waitForAnimation(page);
+      await waitForScreenshotReady(page);
+      return dialog;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      await dismissAllDialogs(page);
+    }
+  }
+
+  throw new Error(
+    `${dialogLabel} dialog did not become ready: ${lastError?.message ?? "unknown error"}`,
+  );
+}
+
+function getUploadDialogReadyLocator(dialog: Locator): Locator {
+  return dialog.getByRole("button", { name: /^upload$/i });
+}
+
+async function waitForDashboardCustomizeDialogReady(page: Page): Promise<Locator> {
+  const dialog = page.getByRole("dialog", { name: /dashboard customization/i });
+  await dialog.waitFor({ state: "visible", timeout: 5000 });
+  await dialog
+    .getByText("Quick Stats", { exact: true })
+    .waitFor({ state: "visible", timeout: 5000 });
+  await dialog
+    .getByText("Recent Activity", { exact: true })
+    .waitFor({ state: "visible", timeout: 5000 });
+  await dialog
+    .getByText("My Workspaces", { exact: true })
+    .waitFor({ state: "visible", timeout: 5000 });
+  await waitForAnimation(page);
+  await waitForScreenshotReady(page);
+  return dialog;
+}
+
+async function waitForCreateIssueModalScreenshotReady(
+  page: Page,
+  projectsPage: ProjectsPage,
+): Promise<void> {
+  await projectsPage.createIssueModal.waitFor({ state: "visible", timeout: 5000 });
+  await projectsPage.issueTitleInput.waitFor({ state: "visible", timeout: 5000 });
+  await page.getByLabel(/create another/i).waitFor({ state: "visible", timeout: 5000 });
+  await waitForAnimation(page);
+  await waitForScreenshotReady(page);
 }
 
 function isProjectBoardUrl(url: string): boolean {
@@ -1012,6 +1052,10 @@ function isClientsUrl(url: string): boolean {
   return /\/[^/]+\/clients\/?$/.test(url);
 }
 
+function isMeetingsUrl(url: string): boolean {
+  return /\/[^/]+\/meetings\/?$/.test(url);
+}
+
 function isProjectInboxUrl(url: string): boolean {
   return /\/projects\/[^/]+\/inbox$/.test(url);
 }
@@ -1081,13 +1125,11 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
     await page
       .getByRole("heading", { name: /replace scattered project tools/i })
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByText(/product control tower/i)
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
   }
@@ -1096,8 +1138,7 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
     await page
       .getByText(/secure account access/i)
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
   }
@@ -1106,13 +1147,11 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
     await page
       .getByRole("heading", { name: /check your email/i })
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByTestId(TEST_IDS.AUTH.VERIFICATION_CODE_INPUT)
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
   }
@@ -1121,13 +1160,11 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
     await page
       .getByRole("heading", { name: /you're invited/i })
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByText(/has invited you to join/i)
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
   }
@@ -1137,14 +1174,12 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
       .getByRole("heading", { name: /unsubscribed/i })
       .or(page.getByRole("heading", { name: /invalid link/i }))
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByText(/you've been unsubscribed from email notifications/i)
       .or(page.getByText(/this unsubscribe link is invalid or has expired/i))
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
   }
@@ -1153,14 +1188,12 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
     await page
       .getByRole("heading", { name: /client portal/i })
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByText(/portal token received/i)
       .or(page.getByText(/no projects are available for this portal token/i))
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
     return;
   }
@@ -1169,14 +1202,12 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
     await page
       .getByRole("heading", { name: /project view/i })
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByText(/^issues$/i)
       .or(page.getByText(/no visible issues for this project/i))
       .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await waitForScreenshotReady(page);
   }
 }
@@ -1184,25 +1215,19 @@ async function waitForPublicPageReady(page: Page, name: string): Promise<void> {
 async function waitForCalendarReady(page: Page): Promise<boolean> {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      await page.getByTestId(TEST_IDS.CALENDAR.MODE_WEEK).first().waitFor({
+      await page.getByTestId(TEST_IDS.CALENDAR.MODE_WEEK).waitFor({
         state: "visible",
         timeout: 8000,
       });
-      await page.locator("[data-calendar]").first().waitFor({
+      await page.getByTestId(TEST_IDS.CALENDAR.ROOT).waitFor({
         state: "visible",
         timeout: 4000,
       });
-      await page
-        .locator("[data-loading-skeleton]")
-        .first()
-        .waitFor({ state: "hidden", timeout: 4000 })
-        .catch(() => {});
+      await waitForLoadingSkeletonsToClear(page, 4000);
       return true;
     } catch {
       if (attempt === 0) {
-        await page
-          .goto(page.url(), { waitUntil: "domcontentloaded", timeout: 15000 })
-          .catch(() => {});
+        await page.goto(page.url(), { waitUntil: "domcontentloaded", timeout: 15000 });
         await waitForScreenshotReady(page);
       }
     }
@@ -1213,11 +1238,11 @@ async function waitForCalendarReady(page: Page): Promise<boolean> {
 async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<boolean> {
   const deadline = Date.now() + timeoutMs;
   const eventItems = page.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM);
-  const previousButton = page.getByRole("button", { name: /^previous month$/i }).first();
-  const nextButton = page.getByRole("button", { name: /^next month$/i }).first();
+  const previousButton = page.getByRole("button", { name: /^previous month$/i });
+  const nextButton = page.getByRole("button", { name: /^next month$/i });
 
   const isExpired = () => Date.now() > deadline;
-  const hasEvents = async () => (await eventItems.count().catch(() => 0)) > 0;
+  const hasEvents = async () => (await getLocatorCount(eventItems)) > 0;
 
   const waitForCalendarState = async () => {
     await waitForScreenshotReady(page);
@@ -1229,7 +1254,7 @@ async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<bool
 
     for (let step = 0; step < steps; step++) {
       if (isExpired()) return false;
-      await button.click().catch(() => {});
+      await button.click();
       await waitForCalendarState();
       if (await hasEvents()) return true;
     }
@@ -1241,11 +1266,7 @@ async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<bool
   if (await hasEvents()) return true;
 
   // Try clicking "today" button
-  await page
-    .getByRole("button", { name: /^today$/i })
-    .first()
-    .click()
-    .catch(() => {});
+  await page.getByRole("button", { name: /^today$/i }).click();
   await waitForCalendarState();
   if (await hasEvents()) return true;
 
@@ -1260,84 +1281,92 @@ async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<bool
 }
 
 async function waitForCalendarMonthReady(page: Page): Promise<void> {
-  const monthToggle = page.getByTestId(TEST_IDS.CALENDAR.MODE_MONTH).first();
-  await monthToggle.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
-  if ((await monthToggle.count().catch(() => 0)) > 0) {
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const isSelected = (await monthToggle.getAttribute("data-state").catch(() => null)) === "on";
-      if (isSelected) {
-        break;
-      }
+  const monthToggle = page.getByTestId(TEST_IDS.CALENDAR.MODE_MONTH);
+  const waitForMonthToggleSelected = async (timeout: number) => {
+    await expect(monthToggle).toHaveAttribute("aria-checked", "true", { timeout });
+  };
 
-      await monthToggle.scrollIntoViewIfNeeded().catch(() => {});
-      await monthToggle.click().catch(() => {});
-      await page.waitForTimeout(150);
+  await monthToggle.waitFor({ state: "visible", timeout: 5000 });
 
-      const selectedAfterClick =
-        (await monthToggle.getAttribute("data-state").catch(() => null)) === "on";
-      if (selectedAfterClick) {
-        break;
-      }
+  let lastError: Error | null = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const isSelected = (await monthToggle.getAttribute("aria-checked")) === "true";
+    if (isSelected) {
+      break;
+    }
 
+    try {
+      await monthToggle.scrollIntoViewIfNeeded();
+      await monthToggle.click();
+      await waitForMonthToggleSelected(1000);
+      break;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+    }
+
+    try {
       await monthToggle.evaluate((element) => {
         if (element instanceof HTMLButtonElement) {
           element.click();
         }
       });
-      await page.waitForTimeout(150);
+      await waitForMonthToggleSelected(1000);
+      break;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+    }
+
+    if (attempt === 2) {
+      throw new Error(
+        `Calendar month toggle did not activate: ${lastError?.message ?? "unknown error"}`,
+      );
     }
   }
-  await page.waitForFunction(
-    (monthToggleTestId) =>
-      document.querySelector(`[data-testid="${monthToggleTestId}"]`)?.getAttribute("data-state") ===
-      "on",
-    TEST_IDS.CALENDAR.MODE_MONTH,
-    { timeout: 5000 },
-  );
+
+  await waitForMonthToggleSelected(5000);
   await waitForScreenshotReady(page);
   await waitForCalendarReady(page);
-  await page
-    .waitForFunction(
-      ({ dayCellTestId, quickAddTestId }) =>
-        document.querySelectorAll(`[data-testid="${dayCellTestId}"]`).length >= 28 &&
-        document.querySelectorAll(`[data-testid="${quickAddTestId}"]`).length >= 28,
-      {
-        dayCellTestId: TEST_IDS.CALENDAR.DAY_CELL,
-        quickAddTestId: TEST_IDS.CALENDAR.QUICK_ADD_DAY,
-      },
-      { timeout: 5000 },
-    )
-    .catch(() => {});
+  await waitForCalendarMonthGrid(page);
+}
+
+async function waitForCalendarMonthGrid(
+  page: Page,
+  options?: { requireQuickAddButtons?: boolean },
+): Promise<void> {
+  await expect
+    .poll(() => page.getByTestId(TEST_IDS.CALENDAR.DAY_CELL).count(), {
+      timeout: 5000,
+      intervals: [100, 200, 500],
+    })
+    .toBeGreaterThanOrEqual(28);
+
+  if (options?.requireQuickAddButtons) {
+    await expect
+      .poll(() => page.getByTestId(TEST_IDS.CALENDAR.QUICK_ADD_DAY).count(), {
+        timeout: 5000,
+        intervals: [100, 200, 500],
+      })
+      .toBeGreaterThanOrEqual(28);
+  }
 }
 
 async function waitForBoardReady(page: Page): Promise<boolean> {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      await page.getByTestId(TEST_IDS.BOARD.COLUMN).first().waitFor({
+      await page.getByTestId(TEST_IDS.BOARD.COLUMN).waitFor({
         state: "visible",
         timeout: 10000,
       });
-      await page
-        .getByText(/delivery board|kanban board|sprint board/i)
-        .first()
-        .waitFor({ state: "visible", timeout: 6000 })
-        .catch(() => {});
-      await page
-        .locator("[data-loading-skeleton]")
-        .first()
-        .waitFor({ state: "hidden", timeout: 4000 })
-        .catch(() => {});
-      await page
-        .getByRole("status")
-        .first()
-        .waitFor({ state: "hidden", timeout: 4000 })
-        .catch(() => {});
+      await page.getByText(/delivery board|kanban board|sprint board/i).waitFor({
+        state: "visible",
+        timeout: 6000,
+      });
+      await waitForLoadingSkeletonsToClear(page, 4000);
+      await page.getByRole("status").waitFor({ state: "hidden", timeout: 4000 });
       return true;
     } catch {
       if (attempt === 0) {
-        await page
-          .goto(page.url(), { waitUntil: "domcontentloaded", timeout: 15000 })
-          .catch(() => {});
+        await page.goto(page.url(), { waitUntil: "domcontentloaded", timeout: 15000 });
         await waitForScreenshotReady(page);
       }
     }
@@ -1347,458 +1376,376 @@ async function waitForBoardReady(page: Page): Promise<boolean> {
 }
 
 async function waitForProjectsReady(page: Page, prefix?: string): Promise<void> {
-  await page
-    .getByRole("heading", { name: /^projects$/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("button", { name: /create project/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
-  await page
-    .waitForFunction(
-      (capturePrefix) => {
-        const text = document.body.innerText || "";
-        if (capturePrefix === "empty") {
-          return text.includes("No projects yet");
-        }
+  await page.getByRole("heading", { name: /^projects$/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.getByRole("button", { name: /create project/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await page.waitForFunction(
+    (capturePrefix) => {
+      const text = document.body.innerText || "";
+      if (capturePrefix === "empty") {
+        return text.includes("No projects yet");
+      }
 
-        if (text.includes("Client Operations Hub")) {
-          return true;
-        }
+      if (text.includes("Client Operations Hub")) {
+        return true;
+      }
 
-        return Array.from(document.querySelectorAll("a[href]")).some((link) => {
-          const href = link.getAttribute("href") || "";
-          return /\/projects\/[^/]+\/board$/.test(href);
-        });
-      },
-      prefix,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
+      return Array.from(document.querySelectorAll("a[href]")).some((link) => {
+        const href = link.getAttribute("href") || "";
+        return /\/projects\/[^/]+\/board$/.test(href);
+      });
+    },
+    prefix,
+    { timeout: 12000 },
+  );
 }
 
 async function waitForIssuesReady(page: Page, prefix?: string): Promise<void> {
-  await page
-    .getByRole("heading", { name: /^issues$/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("button", { name: /create issue/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .waitForFunction(
-      (capturePrefix) => {
-        const text = document.body.innerText || "";
-        if (capturePrefix === "empty") {
-          return text.includes("No issues found");
+  await page.getByRole("heading", { name: /^issues$/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.getByRole("button", { name: /create issue/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await expect
+    .poll(
+      async () => {
+        const text = (await page.locator("body").textContent()) || "";
+        if (prefix === "empty") {
+          return text.includes("No issues found") ? "empty" : "pending";
         }
 
-        return (
-          document.querySelector("[data-testid='issue-card']") !== null ||
-          text.includes("No issues found")
-        );
+        const issueCardCount = await getLocatorCount(page.getByTestId(TEST_IDS.ISSUE.CARD));
+        if (issueCardCount > 0) {
+          return "ready";
+        }
+
+        return text.includes("No issues found") ? "empty" : "pending";
       },
-      prefix,
       { timeout: 12000 },
     )
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+    .not.toBe("pending");
+  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+}
+
+type CalendarDragState = {
+  sourceIndex: number | null;
+  targetIndex: number | null;
+  dayCellCount: number;
+  eventItemCount: number;
+};
+
+async function getCalendarDragState(page: Page): Promise<CalendarDragState> {
+  const dayCells = page.getByTestId(TEST_IDS.CALENDAR.DAY_CELL);
+  const dayCellCount = await getLocatorCount(dayCells);
+  const eventItemCount = await getLocatorCount(page.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM));
+
+  let sourceIndex: number | null = null;
+  for (let index = 0; index < dayCellCount; index += 1) {
+    const cellEventCount = await getLocatorCount(
+      dayCells.nth(index).getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM),
+    );
+    if (cellEventCount > 0) {
+      sourceIndex = index;
+      break;
+    }
+  }
+
+  if (sourceIndex == null) {
+    return {
+      sourceIndex: null,
+      targetIndex: null,
+      dayCellCount,
+      eventItemCount,
+    };
+  }
+
+  const targetIndex = sourceIndex + 1 < dayCellCount ? sourceIndex + 1 : null;
+  return {
+    sourceIndex,
+    targetIndex,
+    dayCellCount,
+    eventItemCount,
+  };
 }
 
 async function waitForWorkspacesReady(page: Page, prefix?: string): Promise<void> {
-  await page
-    .getByRole("heading", { name: /^workspaces$/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("button", { name: /create workspace/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .waitForFunction(
-      (capturePrefix) => {
-        const text = document.body.innerText || "";
-        if (capturePrefix === "empty") {
-          return text.includes("No workspaces yet");
-        }
+  await page.getByRole("heading", { name: /^workspaces$/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.getByRole("button", { name: /create workspace/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.waitForFunction(
+    (capturePrefix) => {
+      const text = document.body.innerText || "";
+      if (capturePrefix === "empty") {
+        return text.includes("No workspaces yet");
+      }
 
-        return (
-          text.includes("Workspace map") ||
-          text.includes("Operating structure") ||
-          Array.from(document.querySelectorAll("a[href]")).some((link) => {
-            const href = link.getAttribute("href") || "";
-            return /\/workspaces\/[^/]+/.test(href);
-          })
-        );
-      },
-      prefix,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+      return (
+        text.includes("Workspace map") ||
+        text.includes("Operating structure") ||
+        Array.from(document.querySelectorAll("a[href]")).some((link) => {
+          const href = link.getAttribute("href") || "";
+          return /\/workspaces\/[^/]+/.test(href);
+        })
+      );
+    },
+    prefix,
+    { timeout: 12000 },
+  );
+  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForTimeTrackingReady(page: Page): Promise<void> {
-  await page
-    .getByRole("heading", { name: /^time tracking$/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("tab", { name: /time entries/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .waitForFunction(
-      () => {
-        const text = document.body.innerText || "";
-        return (
-          text.includes("Track time with enough context to understand cost") ||
-          text.includes("Select a project to continue.") ||
-          text.includes("Choose a project to view burn rate and cost analysis")
-        );
-      },
-      undefined,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+  await page.getByRole("heading", { name: /^time tracking$/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.getByRole("tab", { name: /time entries/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.waitForFunction(
+    () => {
+      const text = document.body.innerText || "";
+      return (
+        text.includes("Track time with enough context to understand cost") ||
+        text.includes("Select a project to continue.") ||
+        text.includes("Choose a project to view burn rate and cost analysis")
+      );
+    },
+    undefined,
+    { timeout: 12000 },
+  );
+  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForWorkspaceDetailReady(page: Page): Promise<void> {
-  await page
-    .getByRole("navigation", { name: /workspace sections/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("heading", { name: /^teams$/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("button", { name: /create team/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .waitForFunction(
-      () => {
-        const text = document.body.innerText || "";
-        return (
-          text.includes("Organize your workspace into focused teams") &&
-          (text.includes("No teams yet") ||
-            Array.from(document.querySelectorAll("a[href]")).some((link) => {
-              const href = link.getAttribute("href") || "";
-              return /\/teams\/[^/]+$/.test(href);
-            }))
-        );
-      },
-      undefined,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+  await page.getByRole("navigation", { name: /workspace sections/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.getByRole("heading", { name: /^teams$/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.getByRole("button", { name: /create team/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.waitForFunction(
+    () => {
+      const text = document.body.innerText || "";
+      return (
+        text.includes("Organize your workspace into focused teams") &&
+        (text.includes("No teams yet") ||
+          Array.from(document.querySelectorAll("a[href]")).some((link) => {
+            const href = link.getAttribute("href") || "";
+            return /\/teams\/[^/]+$/.test(href);
+          }))
+      );
+    },
+    undefined,
+    { timeout: 12000 },
+  );
+  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForWorkspaceSettingsReady(page: Page): Promise<void> {
-  await page
-    .getByRole("heading", { name: /workspace settings/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("button", { name: /save changes/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+  await page.getByRole("heading", { name: /workspace settings/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.getByRole("button", { name: /save changes/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForWorkspaceBacklogReady(page: Page): Promise<void> {
   // Wait for actual backlog content - empty state text OR board column (issues present)
   await page
     .getByText(/backlog is empty/i)
-    .or(page.getByTestId(TEST_IDS.BOARD.COLUMN).first())
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+    .or(page.getByTestId(TEST_IDS.BOARD.COLUMN))
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForTeamDetailReady(page: Page): Promise<void> {
   await waitForBoardReady(page);
-  await page
-    .waitForFunction(
-      () => {
-        const text = document.body.innerText || "";
-        return (
-          text.includes("Projects") &&
-          (text.includes("Delivery board") ||
-            text.includes("Kanban board") ||
-            text.includes("Sprint board"))
-        );
-      },
-      undefined,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
+  await page.waitForFunction(
+    () => {
+      const text = document.body.innerText || "";
+      return (
+        text.includes("Projects") &&
+        (text.includes("Delivery board") ||
+          text.includes("Kanban board") ||
+          text.includes("Sprint board"))
+      );
+    },
+    undefined,
+    { timeout: 12000 },
+  );
 }
 
 async function waitForTeamSettingsReady(page: Page): Promise<void> {
-  await page
-    .getByRole("heading", { name: /team settings/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByText(/coming soon|manage team members and preferences/i)
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+  await page.getByRole("heading", { name: /team settings/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.getByText(/coming soon|manage team members and preferences/i).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForIssueDetailReady(page: Page): Promise<void> {
   await page
     .getByTestId(TEST_IDS.ISSUE.DESCRIPTION_CONTENT)
     .or(page.getByTestId(TEST_IDS.ISSUE.DESCRIPTION_EDITOR))
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForDocumentsReady(page: Page): Promise<void> {
-  await page
-    .waitForFunction(
-      () => {
-        const text = document.body.innerText || "";
-        if (!/documents/i.test(text)) {
-          return false;
-        }
+  await page.waitForFunction(
+    () => {
+      const text = document.body.innerText || "";
+      if (!/documents/i.test(text)) {
+        return false;
+      }
 
-        return Array.from(document.querySelectorAll("a[href]")).some((link) => {
-          const href = link.getAttribute("href") || "";
-          return /\/documents\/[^/?#]+$/.test(href) && !href.endsWith("/templates");
-        });
-      },
-      undefined,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+      return Array.from(document.querySelectorAll("a[href]")).some((link) => {
+        const href = link.getAttribute("href") || "";
+        return /\/documents\/[^/?#]+$/.test(href) && !href.endsWith("/templates");
+      });
+    },
+    undefined,
+    { timeout: 12000 },
+  );
+  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForDocumentEditorReady(page: Page): Promise<void> {
   await page
-    .getByRole("heading", { name: /project requirements|sprint retrospective notes/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .waitForFunction(
-      () => {
-        const text = document.body.innerText || "";
-        return (
-          text.includes("The team closed the auth refresh") ||
-          text.includes("Teams can move from specs to execution") ||
-          text.includes("Hydrate the editor from saved document versions") ||
-          document.querySelector("[contenteditable='true']") !== null
-        );
-      },
-      undefined,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+    .getByRole("heading", {
+      name: /project requirements|sprint retrospective notes/i,
+    })
+    .waitFor({
+      state: "visible",
+      timeout: 12000,
+    });
+  await page.waitForFunction(
+    () => {
+      const text = document.body.innerText || "";
+      return (
+        text.includes("The team closed the auth refresh") ||
+        text.includes("Teams can move from specs to execution") ||
+        text.includes("Hydrate the editor from saved document versions") ||
+        document.querySelector("[contenteditable='true']") !== null
+      );
+    },
+    undefined,
+    { timeout: 12000 },
+  );
+  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForDocumentTemplatesReady(page: Page): Promise<void> {
-  await page
-    .getByRole("heading", { name: /document templates/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("button", { name: /new template/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .waitForFunction(
-      () => {
-        const text = document.body.innerText || "";
-        return (
-          text.includes("Built-in Templates") ||
-          text.includes("Custom Templates") ||
-          text.includes("No templates yet")
-        );
-      },
-      undefined,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+  await page.getByRole("heading", { name: /document templates/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.getByRole("button", { name: /new template/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.waitForFunction(
+    () => {
+      const text = document.body.innerText || "";
+      return (
+        text.includes("Built-in Templates") ||
+        text.includes("Custom Templates") ||
+        text.includes("No templates yet")
+      );
+    },
+    undefined,
+    { timeout: 12000 },
+  );
+  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForActivityReady(page: Page): Promise<void> {
-  await page
-    .getByRole("heading", { name: /project activity/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
+  await page.getByRole("heading", { name: /project activity/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
   await page
     .getByTestId(TEST_IDS.ACTIVITY.FEED)
     .or(page.getByTestId(TEST_IDS.ACTIVITY.EMPTY_STATE))
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+    .waitFor({ state: "visible", timeout: 12000 });
+  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForAnalyticsReady(page: Page): Promise<void> {
-  await page
-    .getByRole("heading", { name: /analytics dashboard/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByTestId(TEST_IDS.ANALYTICS.METRIC_TOTAL_ISSUES)
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
-  await page
-    .locator("[data-loading-skeleton]")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+  await page.getByRole("heading", { name: /analytics dashboard/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.getByTestId(TEST_IDS.ANALYTICS.METRIC_TOTAL_ISSUES).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+  await waitForLoadingSkeletonsToClear(page, 5000);
 }
 
 async function waitForTimesheetReady(page: Page): Promise<void> {
-  await page
-    .getByRole("tab", { name: /time entries/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByText(/track time with enough context to understand cost/i)
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+  await page.getByRole("tab", { name: /time entries/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.getByText(/track time with enough context to understand cost/i).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForSprintsReady(page: Page): Promise<void> {
-  await page
-    .getByText(/sprint management/i)
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("button", { name: /create sprint|\+ sprint/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+  await page.getByText(/sprint management/i).waitFor({ state: "visible", timeout: 12000 });
+  await page.getByRole("button", { name: /create sprint|\+ sprint/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForProjectMembersReady(page: Page): Promise<void> {
-  await page
-    .getByRole("heading", { name: /^project settings$/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("heading", { name: /^members$/i })
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByText(/members? with access/i)
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+  await page.getByRole("heading", { name: /^project settings$/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.getByRole("heading", { name: /^members$/i }).waitFor({
+    state: "visible",
+    timeout: 12000,
+  });
+  await page.getByText(/members? with access/i).waitFor({ state: "visible", timeout: 12000 });
+  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function scrollSectionNearViewportTop(
@@ -1806,64 +1753,57 @@ async function scrollSectionNearViewportTop(
   page: Page,
   offset = 24,
 ): Promise<void> {
-  await locator.scrollIntoViewIfNeeded().catch(() => {});
-  await locator
-    .evaluate((element, topOffset) => {
-      const targetTop = element.getBoundingClientRect().top + window.scrollY - topOffset;
-      window.scrollTo({ top: Math.max(0, targetTop), behavior: "auto" });
-    }, offset)
-    .catch(() => {});
-  await page.waitForTimeout(100);
+  await locator.scrollIntoViewIfNeeded();
+  const handle = await locator.elementHandle();
+  if (!handle) {
+    throw new Error("Could not acquire element handle for section scroll alignment");
+  }
+  const targetScrollTop = await page.evaluate(
+    ({ element, topOffset }) => {
+      const unclampedTargetTop = element.getBoundingClientRect().top + window.scrollY - topOffset;
+      const maxScrollTop = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      const clampedTargetTop = Math.min(Math.max(0, unclampedTargetTop), maxScrollTop);
+      window.scrollTo({ top: clampedTargetTop, behavior: "auto" });
+      return clampedTargetTop;
+    },
+    { element: handle, topOffset: offset },
+  );
+  await page.waitForFunction(
+    (expectedScrollTop) => Math.abs(window.scrollY - expectedScrollTop) <= 2,
+    targetScrollTop,
+    { timeout: 5000 },
+  );
+  await waitForAnimation(page);
 }
 
 async function waitForRoadmapReady(page: Page): Promise<void> {
-  await page
-    .getByText(/^roadmap$/i)
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .waitForFunction(
-      () => {
-        const text = document.body.innerText || "";
-        return (
-          text.includes("Roadmap is ready for planning") ||
-          text.includes("Timeline") ||
-          text.includes("No issues with target dates")
-        );
-      },
-      undefined,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+  await page.getByText(/^roadmap$/i).waitFor({ state: "visible", timeout: 12000 });
+  await page.waitForFunction(
+    () => {
+      const text = document.body.innerText || "";
+      return (
+        text.includes("Roadmap is ready for planning") ||
+        text.includes("Timeline") ||
+        text.includes("No issues with target dates")
+      );
+    },
+    undefined,
+    { timeout: 12000 },
+  );
+  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForBillingReady(page: Page): Promise<void> {
-  await page
-    .getByText(/billing report/i)
-    .first()
-    .waitFor({ state: "visible", timeout: 12000 })
-    .catch(() => {});
-  await page
-    .waitForFunction(
-      () => {
-        const text = document.body.innerText || "";
-        return text.includes("Billable Hours") || text.includes("Revenue") || text.includes("Rate");
-      },
-      undefined,
-      { timeout: 12000 },
-    )
-    .catch(() => {});
-  await page
-    .getByRole("status")
-    .first()
-    .waitFor({ state: "hidden", timeout: 5000 })
-    .catch(() => {});
+  await page.getByText(/billing report/i).waitFor({ state: "visible", timeout: 12000 });
+  await page.waitForFunction(
+    () => {
+      const text = document.body.innerText || "";
+      return text.includes("Billable Hours") || text.includes("Revenue") || text.includes("Rate");
+    },
+    undefined,
+    { timeout: 12000 },
+  );
+  await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
 }
 
 async function waitForExpectedContent(
@@ -1882,42 +1822,28 @@ async function waitForExpectedContent(
     // has completed (splash screen is gone, org context loaded).
     await page
       .getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON)
-      .first()
-      .waitFor({ state: "visible", timeout: 30000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 30000 });
     // Wait for dashboard heading (confirms route rendered)
     await page
       .getByRole("heading", { name: /^dashboard$/i })
-      .first()
-      .waitFor({ state: "visible", timeout: 15000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 15000 });
     // Wait for actual dashboard content to appear
-    await page
-      .waitForFunction(
-        () => {
-          const text = document.body.innerText || "";
-          return (
-            text.includes("DEMO-") ||
-            text.includes("My Issues") ||
-            text.includes("Recent Activity") ||
-            text.includes("Explore Projects") ||
-            text.includes("No projects yet")
-          );
-        },
-        undefined,
-        { timeout: 20000 },
-      )
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
-    await page
-      .locator("[data-loading-skeleton]")
-      .first()
-      .waitFor({ state: "hidden", timeout: 4000 })
-      .catch(() => {});
+    await page.waitForFunction(
+      () => {
+        const text = document.body.innerText || "";
+        return (
+          text.includes("DEMO-") ||
+          text.includes("My Issues") ||
+          text.includes("Recent Activity") ||
+          text.includes("Explore Projects") ||
+          text.includes("No projects yet")
+        );
+      },
+      undefined,
+      { timeout: 20000 },
+    );
+    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+    await waitForLoadingSkeletonsToClear(page, 4000);
     return;
   }
 
@@ -1927,14 +1853,10 @@ async function waitForExpectedContent(
   }
 
   if (isProjectSettingsUrl(url)) {
-    await page
-      .getByRole("heading", { name: "Project Settings" })
-      .first()
-      .waitFor({
-        state: "visible",
-        timeout: 12000,
-      })
-      .catch(() => {});
+    await page.getByRole("heading", { name: "Project Settings" }).waitFor({
+      state: "visible",
+      timeout: 12000,
+    });
     if (/^project-[^-]+-members$/.test(name)) {
       await waitForProjectMembersReady(page);
     }
@@ -1942,80 +1864,52 @@ async function waitForExpectedContent(
   }
 
   if (isSettingsUrl(url) || name === "settings" || name === "settings-profile") {
-    await page
-      .waitForURL(
-        (currentUrl) => /\/[^/]+\/settings\/profile$/.test(new URL(currentUrl).pathname),
-        {
-          timeout: 12000,
-        },
-      )
-      .catch(() => {});
+    await page.waitForURL(
+      (currentUrl) => /\/[^/]+\/settings\/profile$/.test(new URL(currentUrl).pathname),
+      {
+        timeout: 12000,
+      },
+    );
     await page
       .getByRole("heading", { name: /^settings$/i })
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByRole("tab", { name: /^profile$/i })
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     await page
       .getByText(/manage your account, integrations, and preferences/i)
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
   if (name === "authentication" || /\/authentication\/?$/.test(url)) {
     await page
       .getByRole("heading", { name: /^authentication$/i })
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
   if (name === "add-ons" || /\/add-ons\/?$/.test(url)) {
     await page
       .getByRole("heading", { name: /^add-ons$/i })
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     return;
   }
 
   if (name === "assistant" || /\/assistant\/?$/.test(url)) {
     await page
       .getByRole("heading", { name: /assistant/i })
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
   if (name === "mcp-server" || /\/mcp-server\/?$/.test(url)) {
     await page
       .getByRole("heading", { name: /^mcp server$/i })
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
     return;
   }
 
@@ -2063,14 +1957,8 @@ async function waitForExpectedContent(
     await page
       .getByRole("heading", { name: /dependencies/i })
       .or(page.getByText(/no dependencies/i))
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
@@ -2078,14 +1966,8 @@ async function waitForExpectedContent(
     await page
       .getByRole("heading", { name: /wiki/i })
       .or(page.getByText(/no pages/i))
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
@@ -2103,14 +1985,8 @@ async function waitForExpectedContent(
     await page
       .getByRole("heading", { name: /wiki/i })
       .or(page.getByText(/no pages/i))
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
@@ -2168,29 +2044,44 @@ async function waitForExpectedContent(
     await page
       .getByRole("heading", { name: /inbox/i })
       .or(page.getByText(/no items in inbox/i))
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
   if (isNotificationsUrl(url) || name === "notifications") {
-    await page
-      .getByRole("heading", { name: /^notifications$/i })
-      .or(page.getByRole("tab", { name: /inbox/i }))
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+    await waitForDashboardReady(page);
+    const notificationsHeading = page.getByRole("heading", { name: /^notifications$/i });
+    const inboxTab = page.getByRole("tab", { name: /inbox/i });
+    const notificationItems = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
+    const emptyState = page.getByText(/no notifications/i);
+    const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
+    await expect
+      .poll(
+        async () =>
+          (await isLocatorVisible(notificationsHeading)) || (await isLocatorVisible(inboxTab)),
+        {
+          timeout: 12000,
+          message: "Expected notifications page heading or inbox tab to become visible",
+        },
+      )
+      .toBe(true);
+    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+    await expect
+      .poll(
+        async () => {
+          const mentionsVisible = await isLocatorVisible(mentionsFilter);
+          const itemCount = await getLocatorCount(notificationItems);
+          const emptyVisible = await isLocatorVisible(emptyState);
+
+          return mentionsVisible && (itemCount > 0 || emptyVisible) ? "ready" : "pending";
+        },
+        {
+          timeout: 10000,
+          message: "Expected notifications content or empty state to become visible",
+        },
+      )
+      .toBe("ready");
     return;
   }
 
@@ -2198,20 +2089,14 @@ async function waitForExpectedContent(
     await page
       .getByRole("heading", { name: /my issues/i })
       .or(page.getByText(/no issues assigned/i))
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
   if (isOrgCalendarUrl(url) || name === "org-calendar") {
     await waitForCalendarReady(page);
-    await waitForCalendarEvents(page, 5000).catch(() => {});
+    await waitForCalendarEvents(page, 5000);
     return;
   }
 
@@ -2219,19 +2104,13 @@ async function waitForExpectedContent(
     await page
       .getByRole("heading", { name: /invoices/i })
       .or(page.getByText(/no invoices/i))
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
-    await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
   if (name === "org-analytics") {
-    await waitForAnalyticsReady(page).catch(() => {});
+    await waitForAnalyticsReady(page);
     return;
   }
 
@@ -2239,14 +2118,20 @@ async function waitForExpectedContent(
     await page
       .getByRole("heading", { name: /clients/i })
       .or(page.getByText(/no clients/i))
-      .first()
-      .waitFor({ state: "visible", timeout: 12000 })
-      .catch(() => {});
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
+    return;
+  }
+
+  if (isMeetingsUrl(url) || name === "meetings") {
     await page
-      .getByRole("status")
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 })
-      .catch(() => {});
+      .getByRole("heading", { name: /^meetings$/i })
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page
+      .getByText(/meeting memory/i)
+      .or(page.getByText(/no meeting recordings yet/i))
+      .waitFor({ state: "visible", timeout: 12000 });
+    await page.getByRole("status").waitFor({ state: "hidden", timeout: 5000 });
     return;
   }
 
@@ -2258,30 +2143,8 @@ async function waitForExpectedContent(
     /^calendar-(day|week|month)$/.test(name)
   ) {
     await waitForCalendarReady(page);
-    await waitForCalendarEvents(page, 5000).catch(() => {});
+    await waitForCalendarEvents(page, 5000);
   }
-}
-
-async function waitForScreenshotReady(page: Page): Promise<void> {
-  await page.waitForLoadState("domcontentloaded").catch(() => {});
-
-  // App shell loading indicator may appear during route/query transitions.
-  const loadingSpinner = page
-    .getByLabel("Loading")
-    .or(page.getByRole("status").filter({ has: page.getByRole("status") }))
-    .or(page.locator("[data-loading-spinner]"))
-    .first();
-  await loadingSpinner.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
-
-  // Wait two animation frames so paint/layout settles before screenshot.
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve) => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => resolve());
-        });
-      }),
-  );
 }
 
 async function discoverFirstHref(page: Page, pattern: RegExp): Promise<string | null> {
@@ -2311,9 +2174,7 @@ async function discoverIssueKey(
   ];
 
   for (const pathName of candidatePaths) {
-    await page
-      .goto(`${BASE_URL}${pathName}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-      .catch(() => {});
+    await page.goto(`${BASE_URL}${pathName}`, { waitUntil: "domcontentloaded", timeout: 15000 });
     await waitForExpectedContent(page, pathName, "issues");
     await waitForScreenshotReady(page);
 
@@ -2327,12 +2188,10 @@ async function discoverIssueKey(
 }
 
 async function discoverDocumentId(page: Page, orgSlug: string): Promise<string | null> {
-  await page
-    .goto(`${BASE_URL}${ROUTES.documents.list.build(orgSlug)}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
-    })
-    .catch(() => {});
+  await page.goto(`${BASE_URL}${ROUTES.documents.list.build(orgSlug)}`, {
+    waitUntil: "domcontentloaded",
+    timeout: 15000,
+  });
   await waitForExpectedContent(page, ROUTES.documents.list.build(orgSlug), "documents");
   await waitForScreenshotReady(page);
 
@@ -2353,9 +2212,7 @@ async function discoverDocumentId(page: Page, orgSlug: string): Promise<string |
 }
 
 async function openDocumentEditorForCapture(page: Page, docUrl: string): Promise<void> {
-  await page
-    .goto(`${BASE_URL}${docUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-    .catch(() => {});
+  await page.goto(`${BASE_URL}${docUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
   await waitForExpectedContent(page, docUrl, "document-editor");
   await waitForScreenshotReady(page);
 }
@@ -2366,7 +2223,7 @@ async function openMarkdownImportPreviewDialog(
   filename: string,
 ): Promise<Locator> {
   await dismissAllDialogs(page);
-  const trigger = page.getByRole("button", { name: /import from markdown/i }).first();
+  const trigger = page.getByRole("button", { name: /import from markdown/i });
   await trigger.waitFor({ state: "visible", timeout: 8000 });
   const fileChooserPromise = page.waitForEvent("filechooser");
   await trigger.click();
@@ -2548,6 +2405,7 @@ async function screenshotEmptyStates(page: Page, orgSlug: string): Promise<void>
     "my-issues",
     "invoices",
     "clients",
+    "meetings",
     "settings",
     "settings-profile",
   ];
@@ -2568,6 +2426,7 @@ async function screenshotEmptyStates(page: Page, orgSlug: string): Promise<void>
   await takeScreenshot(page, p, "my-issues", ROUTES.myIssues.build(orgSlug));
   await takeScreenshot(page, p, "invoices", ROUTES.invoices.list.build(orgSlug));
   await takeScreenshot(page, p, "clients", ROUTES.clients.list.build(orgSlug));
+  await takeScreenshot(page, p, "meetings", ROUTES.meetings.build(orgSlug));
   await takeScreenshot(page, p, "settings", ROUTES.settings.profile.build(orgSlug));
   await takeScreenshot(page, p, "settings-profile", ROUTES.settings.profile.build(orgSlug));
 }
@@ -2598,6 +2457,7 @@ async function screenshotFilledStates(
   await takeScreenshot(page, p, "org-analytics", ROUTES.analytics.build(orgSlug));
   await takeScreenshot(page, p, "invoices", ROUTES.invoices.list.build(orgSlug));
   await takeScreenshot(page, p, "clients", ROUTES.clients.list.build(orgSlug));
+  await takeScreenshot(page, p, "meetings", ROUTES.meetings.build(orgSlug));
   await takeScreenshot(page, p, "settings", ROUTES.settings.profile.build(orgSlug));
   await takeScreenshot(page, p, "settings-profile", ROUTES.settings.profile.build(orgSlug));
   await takeScreenshot(page, p, "authentication", ROUTES.authentication.build(orgSlug));
@@ -2622,6 +2482,12 @@ async function screenshotFilledStates(
   }
 
   if (
+    shouldCaptureAny(p, ["meetings-detail", "meetings-transcript-search", "meetings-memory-lens"])
+  ) {
+    await screenshotMeetingsStates(page, orgSlug, p);
+  }
+
+  if (
     shouldCaptureAny(p, [
       "settings-profile-avatar-upload-modal",
       "settings-profile-cover-upload-modal",
@@ -2632,24 +2498,21 @@ async function screenshotFilledStates(
 
     if (shouldCapture(p, "settings-profile-avatar-upload-modal")) {
       await runCaptureStep("settings profile avatar upload modal", async () => {
-        await page
-          .goto(`${BASE_URL}${settingsUrl}`, {
-            waitUntil: "domcontentloaded",
-            timeout: 15000,
-          })
-          .catch(() => {});
+        await page.goto(`${BASE_URL}${settingsUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
         await waitForExpectedContent(page, settingsUrl, "settings-profile", p);
         await waitForScreenshotReady(page);
         await dismissAllDialogs(page);
         const trigger = page.getByRole("button", { name: /^change avatar$/i }).first();
-        await trigger.waitFor({ state: "visible", timeout: 8000 });
-        await trigger.click();
-        const dialog = await waitForDialogOpen(page);
-        await page
-          .getByRole("heading", { name: /^upload avatar$/i })
-          .first()
-          .waitFor({ state: "visible", timeout: 5000 });
-        await waitForScreenshotReady(page);
+        const dialog = await openStableDialog(
+          page,
+          trigger,
+          page.getByRole("dialog", { name: /^upload avatar$/i }),
+          getUploadDialogReadyLocator(page.getByRole("dialog", { name: /^upload avatar$/i })),
+          "avatar upload",
+        );
         await captureCurrentView(page, p, "settings-profile-avatar-upload-modal");
         await dismissIfOpen(page, dialog);
       });
@@ -2657,24 +2520,21 @@ async function screenshotFilledStates(
 
     if (shouldCapture(p, "settings-profile-cover-upload-modal")) {
       await runCaptureStep("settings profile cover upload modal", async () => {
-        await page
-          .goto(`${BASE_URL}${settingsUrl}`, {
-            waitUntil: "domcontentloaded",
-            timeout: 15000,
-          })
-          .catch(() => {});
+        await page.goto(`${BASE_URL}${settingsUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
         await waitForExpectedContent(page, settingsUrl, "settings-profile", p);
         await waitForScreenshotReady(page);
         await dismissAllDialogs(page);
         const trigger = page.getByRole("button", { name: /^(add|change) cover$/i }).first();
-        await trigger.waitFor({ state: "visible", timeout: 8000 });
-        await trigger.click();
-        const dialog = await waitForDialogOpen(page);
-        await page
-          .getByRole("heading", { name: /^upload cover image$/i })
-          .first()
-          .waitFor({ state: "visible", timeout: 5000 });
-        await waitForScreenshotReady(page);
+        const dialog = await openStableDialog(
+          page,
+          trigger,
+          page.getByRole("dialog", { name: /^upload cover image$/i }),
+          getUploadDialogReadyLocator(page.getByRole("dialog", { name: /^upload cover image$/i })),
+          "cover image upload",
+        );
         await captureCurrentView(page, p, "settings-profile-cover-upload-modal");
         await dismissIfOpen(page, dialog);
       });
@@ -2691,18 +2551,15 @@ async function screenshotFilledStates(
           });
 
           const notificationsSettingsUrl = `${settingsUrl}?tab=notifications`;
-          await permissionPage
-            .goto(`${BASE_URL}${notificationsSettingsUrl}`, {
-              waitUntil: "domcontentloaded",
-              timeout: 15000,
-            })
-            .catch(() => {});
+          await permissionPage.goto(`${BASE_URL}${notificationsSettingsUrl}`, {
+            waitUntil: "domcontentloaded",
+            timeout: 15000,
+          });
           await waitForExpectedContent(permissionPage, settingsUrl, "settings-profile", p);
           await permissionPage
             .getByText(/browser notifications blocked/i)
             .first()
-            .waitFor({ state: "visible", timeout: 5000 })
-            .catch(() => {});
+            .waitFor({ state: "visible", timeout: 5000 });
           await permissionPage
             .getByRole("button", { name: /^blocked$/i })
             .first()
@@ -2710,7 +2567,9 @@ async function screenshotFilledStates(
           await waitForScreenshotReady(permissionPage);
           await captureCurrentView(permissionPage, p, "settings-notifications-permission-denied");
         } finally {
-          await permissionPage.close().catch(() => {});
+          if (!permissionPage.isClosed()) {
+            await permissionPage.close();
+          }
         }
       });
     }
@@ -2763,10 +2622,15 @@ async function screenshotFilledStates(
 
         if (shouldCapture(p, `project-${normalizedProjectKey}-members-confirm-dialog`)) {
           const removeButton = page.getByRole("button", { name: /^remove$/i }).first();
-          await removeButton.waitFor({ state: "visible", timeout: 5000 });
-          await removeButton.click();
-          const dialog = await waitForDialogOpen(page);
-          await waitForScreenshotReady(page);
+          const dialog = await openStableDialog(
+            page,
+            removeButton,
+            page.getByRole("alertdialog", { name: /^remove member$/i }),
+            page
+              .getByRole("alertdialog", { name: /^remove member$/i })
+              .getByText(/lose access to all project resources\./i),
+            "remove member",
+          );
           await captureCurrentView(
             page,
             p,
@@ -2815,15 +2679,16 @@ async function screenshotFilledStates(
     if (shouldCapture(p, `project-${normalizedProjectKey}-create-issue-create-another`)) {
       await runCaptureStep("create issue create-another toggle", async () => {
         const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
-        await page
-          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-          .catch(() => {});
+        await page.goto(`${BASE_URL}${boardUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
         await waitForExpectedContent(page, boardUrl, "board");
         await waitForScreenshotReady(page);
         const projectsPage = new ProjectsPage(page, orgSlug);
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
-        await waitForScreenshotReady(page);
+        await waitForCreateIssueModalScreenshotReady(page, projectsPage);
         // Toggle "Create another" switch
         const toggle = page.getByLabel(/create another/i);
         await toggle.waitFor({ state: "visible", timeout: 5000 });
@@ -2842,15 +2707,16 @@ async function screenshotFilledStates(
     if (shouldCapture(p, `project-${normalizedProjectKey}-create-issue-validation`)) {
       await runCaptureStep("create issue validation errors", async () => {
         const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
-        await page
-          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-          .catch(() => {});
+        await page.goto(`${BASE_URL}${boardUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
         await waitForExpectedContent(page, boardUrl, "board");
         await waitForScreenshotReady(page);
         const projectsPage = new ProjectsPage(page, orgSlug);
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
-        await waitForScreenshotReady(page);
+        await waitForCreateIssueModalScreenshotReady(page, projectsPage);
         // Wait for dialog, then find submit button
         const modal = await waitForDialogOpen(page);
         const submitBtn = modal.getByRole("button", { name: /create issue/i }).last();
@@ -2860,8 +2726,7 @@ async function screenshotFilledStates(
         await page
           .getByText(/required|title is required|cannot be empty/i)
           .first()
-          .waitFor({ state: "visible", timeout: 3000 })
-          .catch(() => {});
+          .waitFor({ state: "visible", timeout: 3000 });
         await waitForScreenshotReady(page);
         await captureCurrentView(
           page,
@@ -2876,15 +2741,16 @@ async function screenshotFilledStates(
       await runCaptureStep("create issue success toast", async () => {
         const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
         const issueTitle = "Screenshot toast issue";
-        await page
-          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-          .catch(() => {});
+        await page.goto(`${BASE_URL}${boardUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
         await waitForExpectedContent(page, boardUrl, "board");
         await waitForScreenshotReady(page);
         const projectsPage = new ProjectsPage(page, orgSlug);
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
-        await waitForScreenshotReady(page);
+        await waitForCreateIssueModalScreenshotReady(page, projectsPage);
         const modal = await waitForDialogOpen(page);
         const titleInput = modal
           .getByPlaceholder(/title|issue.*title/i)
@@ -2895,7 +2761,7 @@ async function screenshotFilledStates(
         await submitButton.click();
         await modal.waitFor({ state: "hidden", timeout: 8000 });
         const successToast = page
-          .locator("[data-sonner-toast][data-type='success']")
+          .getByTestId(TEST_IDS.TOAST.SUCCESS)
           .filter({ hasText: /issue created successfully/i })
           .first();
         await successToast.waitFor({ state: "visible", timeout: 8000 });
@@ -2913,72 +2779,17 @@ async function screenshotFilledStates(
         const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
         const duplicateQuery = "login timeout";
         await waitForDuplicateDetectionSearchReady(orgSlug, projectKey, duplicateQuery);
-        await page
-          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-          .catch(() => {});
+        await page.goto(`${BASE_URL}${boardUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
         await waitForExpectedContent(page, boardUrl, "board");
         await waitForScreenshotReady(page);
         const projectsPage = new ProjectsPage(page, orgSlug);
         await dismissAllDialogs(page);
         await projectsPage.openCreateIssueModal();
-        await page.waitForTimeout(1000);
-        await waitForScreenshotReady(page);
-        const titleUpdated = await page.evaluate((value) => {
-          const submitButton = Array.from(document.querySelectorAll("button")).find((button) => {
-            if (!(button instanceof HTMLElement)) {
-              return false;
-            }
-            const style = window.getComputedStyle(button);
-            const visible =
-              style.display !== "none" &&
-              style.visibility !== "hidden" &&
-              button.offsetParent !== null;
-            const label = button.textContent?.trim().toLowerCase() ?? "";
-            return visible && label === "create issue";
-          });
-
-          const modal =
-            submitButton?.closest<HTMLElement>("[role='dialog'], [role='alertdialog']") ?? null;
-          const visibleInputs = Array.from(
-            modal?.querySelectorAll<HTMLInputElement>('input:not([type="hidden"])') ?? [],
-          ).filter((input) => {
-            const style = window.getComputedStyle(input);
-            return (
-              style.display !== "none" &&
-              style.visibility !== "hidden" &&
-              input.offsetParent !== null
-            );
-          });
-
-          const titleInput =
-            visibleInputs.find((input) => {
-              const placeholder = input.getAttribute("placeholder")?.toLowerCase() ?? "";
-              return placeholder.includes("enter issue title");
-            }) ??
-            visibleInputs.find((input) => input.getAttribute("name") === "title") ??
-            visibleInputs.find((input) => {
-              const type = input.getAttribute("type")?.toLowerCase() ?? "text";
-              return type === "text" || type === "search";
-            }) ??
-            null;
-
-          if (!(titleInput instanceof HTMLInputElement)) {
-            return false;
-          }
-
-          titleInput.focus();
-          const descriptor = Object.getOwnPropertyDescriptor(
-            window.HTMLInputElement.prototype,
-            "value",
-          );
-          descriptor?.set?.call(titleInput, value);
-          titleInput.dispatchEvent(new Event("input", { bubbles: true }));
-          titleInput.dispatchEvent(new Event("change", { bubbles: true }));
-          return true;
-        }, duplicateQuery);
-        if (!titleUpdated) {
-          throw new Error("Create issue title input not found");
-        }
+        await waitForCreateIssueModalScreenshotReady(page, projectsPage);
+        await projectsPage.issueTitleInput.fill(duplicateQuery);
         const duplicateBanner = page.getByText("Potential duplicates found", { exact: true });
         await duplicateBanner.waitFor({ state: "visible", timeout: 20000 });
         await page
@@ -3002,9 +2813,10 @@ async function screenshotFilledStates(
           throw new Error("Screenshot seed did not return projectId");
         }
 
-        await page
-          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-          .catch(() => {});
+        await page.goto(`${BASE_URL}${boardUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
         await waitForExpectedContent(page, boardUrl, "board");
         await waitForScreenshotReady(page);
         await dismissAllDialogs(page);
@@ -3013,6 +2825,7 @@ async function screenshotFilledStates(
 
         const projectsPage = new ProjectsPage(page, orgSlug);
         await projectsPage.openCreateIssueModal();
+        await waitForCreateIssueModalScreenshotReady(page, projectsPage);
         await page
           .getByText(/you have an unsaved draft/i)
           .first()
@@ -3032,9 +2845,10 @@ async function screenshotFilledStates(
     if (shouldCapture(p, `project-${normalizedProjectKey}-board-sprint-selector`)) {
       await runCaptureStep("board sprint selector", async () => {
         const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
-        await page
-          .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-          .catch(() => {});
+        await page.goto(`${BASE_URL}${boardUrl}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000,
+        });
         await waitForExpectedContent(page, boardUrl, "board");
         await waitForScreenshotReady(page);
         const sprintSelect = page
@@ -3098,12 +2912,10 @@ async function screenshotFilledStates(
       ])
     ) {
       const calendarUrl = ROUTES.projects.calendar.build(orgSlug, projectKey);
-      try {
-        await page.goto(`${BASE_URL}${calendarUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        });
-      } catch {}
+      await page.goto(`${BASE_URL}${calendarUrl}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForScreenshotReady(page);
       const isCalendarReady = await waitForCalendarReady(page);
       if (!isCalendarReady) {
@@ -3120,10 +2932,7 @@ async function screenshotFilledStates(
             continue;
           }
           const toggleItem = page.getByTestId(calendarModeTestIds[mode]);
-          await toggleItem
-            .first()
-            .waitFor({ state: "visible", timeout: 5000 })
-            .catch(() => {});
+          await toggleItem.first().waitFor({ state: "visible", timeout: 5000 });
           if ((await toggleItem.count()) === 0) {
             throw new Error(`[${p}] calendar-${mode} toggle not found after retries`);
           }
@@ -3136,10 +2945,9 @@ async function screenshotFilledStates(
           const n = nextIndex(p);
           const num = String(n).padStart(2, "0");
           const finalPath = getFinalScreenshotPath(p, `calendar-${mode}`);
-          const screenshotPath = getStagedScreenshotPath(finalPath);
-          await page.screenshot({ path: screenshotPath });
-          totalScreenshots++;
           const relativePath = path.relative(process.cwd(), finalPath);
+          await captureScreenshotToPath(page, finalPath, relativePath);
+          totalScreenshots++;
           console.log(`    ${num}  [${p}] calendar-${mode} → ${relativePath}`);
         }
 
@@ -3158,15 +2966,13 @@ async function screenshotFilledStates(
 
             let eventItem = locateEvent();
             if (typeof seed.workspaceSlug === "string") {
-              await page
-                .goto(
-                  `${BASE_URL}${ROUTES.workspaces.calendar.build(orgSlug, seed.workspaceSlug)}`,
-                  {
-                    waitUntil: "domcontentloaded",
-                    timeout: 15000,
-                  },
-                )
-                .catch(() => {});
+              await page.goto(
+                `${BASE_URL}${ROUTES.workspaces.calendar.build(orgSlug, seed.workspaceSlug)}`,
+                {
+                  waitUntil: "domcontentloaded",
+                  timeout: 15000,
+                },
+              );
               await waitForScreenshotReady(page);
               const workspaceCalendarReady = await waitForCalendarReady(page);
               if (workspaceCalendarReady) {
@@ -3183,7 +2989,7 @@ async function screenshotFilledStates(
             }
 
             eventItem = locateEvent();
-            await eventItem.scrollIntoViewIfNeeded().catch(() => {});
+            await eventItem.scrollIntoViewIfNeeded();
             await eventItem.click();
             const dialog = page.getByTestId(TEST_IDS.CALENDAR.EVENT_DETAILS_MODAL);
             await dialog.waitFor({ state: "visible", timeout: 5000 });
@@ -3195,13 +3001,14 @@ async function screenshotFilledStates(
         if (shouldCapture(p, "calendar-quick-add")) {
           await runCaptureStep("calendar quick-add", async () => {
             await waitForCalendarMonthReady(page);
+            await waitForCalendarMonthGrid(page, { requireQuickAddButtons: true });
 
             const quickAddButton = page.getByTestId(TEST_IDS.CALENDAR.QUICK_ADD_DAY).first();
             if ((await quickAddButton.count()) > 0) {
               if (!(await quickAddButton.isVisible())) {
-                const firstDayCell = page.locator("[data-calendar] .group").first();
+                const firstDayCell = page.getByTestId(TEST_IDS.CALENDAR.DAY_CELL).first();
                 if ((await firstDayCell.count()) > 0) {
-                  await firstDayCell.hover().catch(() => {});
+                  await firstDayCell.hover();
                 }
               }
             }
@@ -3224,82 +3031,38 @@ async function screenshotFilledStates(
         if (shouldCapture(p, "calendar-drag-and-drop")) {
           await runCaptureStep("calendar drag-and-drop", async () => {
             const orgCalendarUrl = ROUTES.calendar.build(orgSlug);
-            await page
-              .goto(`${BASE_URL}${orgCalendarUrl}`, {
-                waitUntil: "domcontentloaded",
-                timeout: 15000,
-              })
-              .catch(() => {});
+            await page.goto(`${BASE_URL}${orgCalendarUrl}`, {
+              waitUntil: "domcontentloaded",
+              timeout: 15000,
+            });
             await waitForExpectedContent(page, orgCalendarUrl, "org-calendar");
             await waitForScreenshotReady(page);
             await waitForCalendarMonthReady(page);
             await waitForCalendarEvents(page);
 
-            const dragState = await page.evaluate(
-              ({ dayCellTestId, eventItemTestId }) => {
-                const sourceCell = Array.from(
-                  document.querySelectorAll<HTMLElement>(`[data-testid="${dayCellTestId}"]`),
-                ).find((cell) => cell.querySelector(`[data-testid="${eventItemTestId}"]`));
-                const targetCell = sourceCell?.nextElementSibling;
+            const dragState = await getCalendarDragState(page);
 
-                if (!(sourceCell && targetCell instanceof HTMLElement)) {
-                  return {
-                    sourceDate: null,
-                    targetDate: null,
-                    dayCellCount: document.querySelectorAll(`[data-testid="${dayCellTestId}"]`)
-                      .length,
-                    eventItemCount: document.querySelectorAll(`[data-testid="${eventItemTestId}"]`)
-                      .length,
-                  };
-                }
-
-                return {
-                  sourceDate: sourceCell.dataset.date ?? null,
-                  targetDate: targetCell.dataset.date ?? null,
-                  dayCellCount: document.querySelectorAll(`[data-testid="${dayCellTestId}"]`)
-                    .length,
-                  eventItemCount: document.querySelectorAll(`[data-testid="${eventItemTestId}"]`)
-                    .length,
-                };
-              },
-              {
-                dayCellTestId: TEST_IDS.CALENDAR.DAY_CELL,
-                eventItemTestId: TEST_IDS.CALENDAR.EVENT_ITEM,
-              },
-            );
-
-            if (!(dragState?.targetDate && dragState.sourceDate)) {
+            if (dragState?.sourceIndex == null || dragState.targetIndex == null) {
               throw new Error(
                 `[${p}] Unable to establish calendar drag state (day cells=${dragState?.dayCellCount ?? 0}, events=${dragState?.eventItemCount ?? 0})`,
               );
             }
 
-            const targetCell = page.locator(
-              `[data-testid="${TEST_IDS.CALENDAR.DAY_CELL}"][data-date="${dragState.targetDate}"]`,
-            );
-            const sourceCell = page.locator(
-              `[data-testid="${TEST_IDS.CALENDAR.DAY_CELL}"][data-date="${dragState.sourceDate}"]`,
-            );
+            const dayCells = page.getByTestId(TEST_IDS.CALENDAR.DAY_CELL);
+            const targetCell = dayCells.nth(dragState.targetIndex);
+            const sourceCell = dayCells.nth(dragState.sourceIndex);
             const sourceEvent = sourceCell.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM).first();
             const dataTransfer = await page.evaluateHandle(() => new DataTransfer());
 
-            await sourceEvent.scrollIntoViewIfNeeded().catch(() => {});
+            await sourceEvent.scrollIntoViewIfNeeded();
             await targetCell.waitFor({ state: "visible", timeout: 5000 });
-            await targetCell.scrollIntoViewIfNeeded().catch(() => {});
+            await targetCell.scrollIntoViewIfNeeded();
             await sourceEvent.dispatchEvent("dragstart", { dataTransfer });
             await targetCell.dispatchEvent("dragenter", { dataTransfer });
             await targetCell.dispatchEvent("dragover", { dataTransfer });
-            await page.waitForFunction(
-              ({ dayCellTestId, targetDate }) =>
-                document
-                  .querySelector(`[data-testid="${dayCellTestId}"][data-date="${targetDate}"]`)
-                  ?.getAttribute("data-drop-target") === "true",
-              {
-                dayCellTestId: TEST_IDS.CALENDAR.DAY_CELL,
-                targetDate: dragState.targetDate,
-              },
-              { timeout: 5000 },
-            );
+            await targetCell
+              .getByTestId(TEST_IDS.CALENDAR.DAY_CELL_DROP_TARGET)
+              .waitFor({ state: "attached", timeout: 5000 });
             await waitForScreenshotReady(page);
             await captureCurrentView(page, p, "calendar-drag-and-drop");
 
@@ -3463,8 +3226,7 @@ async function screenshotFilledStates(
             .getByRole("alert")
             .filter({ hasText: /document locked/i })
             .first()
-            .waitFor({ state: "hidden", timeout: 5000 })
-            .catch(() => {});
+            .waitFor({ state: "hidden", timeout: 5000 });
         });
       }
 
@@ -3492,7 +3254,7 @@ async function screenshotFilledStates(
           const editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
           await editor.waitFor({ state: "visible", timeout: 8000 });
           await editor.click();
-          await page.keyboard.press("Home").catch(() => {});
+          await page.keyboard.press("Home");
           await page.keyboard.down("Shift");
           for (let step = 0; step < 10; step++) {
             await page.keyboard.press("ArrowRight");
@@ -3537,9 +3299,10 @@ async function screenshotFilledStates(
       if (shouldCapture(p, "document-editor-floating-toolbar")) {
         await runCaptureStep("document floating toolbar", async () => {
           // Reload to get clean state
-          await page
-            .goto(`${BASE_URL}${docUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-            .catch(() => {});
+          await page.goto(`${BASE_URL}${docUrl}`, {
+            waitUntil: "domcontentloaded",
+            timeout: 15000,
+          });
           await waitForExpectedContent(page, docUrl, "document-editor");
           await waitForScreenshotReady(page);
           const editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
@@ -3562,9 +3325,10 @@ async function screenshotFilledStates(
       if (shouldCapture(p, "document-editor-mention-popover")) {
         await runCaptureStep("document mention popover", async () => {
           // Reload to get clean state
-          await page
-            .goto(`${BASE_URL}${docUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-            .catch(() => {});
+          await page.goto(`${BASE_URL}${docUrl}`, {
+            waitUntil: "domcontentloaded",
+            timeout: 15000,
+          });
           await waitForExpectedContent(page, docUrl, "document-editor");
           await waitForScreenshotReady(page);
           const editor = page.getByTestId(TEST_IDS.EDITOR.PLATE);
@@ -3595,20 +3359,17 @@ async function screenshotFilledStates(
   // Dashboard customize modal
   if (shouldCapture(p, "dashboard-customize-modal")) {
     await runCaptureStep("dashboard customize modal", async () => {
-      await page
-        .goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
       const trigger = page.getByRole("button", { name: /^customize$/i }).first();
       await trigger.waitFor({ state: "visible", timeout: 10000 });
       await trigger.click();
-      const dialog = await waitForDialogOpen(page);
-      await waitForScreenshotReady(page);
+      const dialog = await waitForDashboardCustomizeDialogReady(page);
       await captureCurrentView(page, p, "dashboard-customize-modal");
       await dismissIfOpen(page, dialog);
     });
@@ -3617,12 +3378,10 @@ async function screenshotFilledStates(
   // Create event modal (from calendar)
   if (projectKey && shouldCapture(p, "calendar-create-event-modal")) {
     await runCaptureStep("calendar create-event modal", async () => {
-      await page
-        .goto(`${BASE_URL}${ROUTES.projects.calendar.build(orgSlug, projectKey)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${ROUTES.projects.calendar.build(orgSlug, projectKey)}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForScreenshotReady(page);
       await waitForCalendarReady(page);
       const trigger = page.getByRole("button", { name: /add event/i }).first();
@@ -3638,20 +3397,21 @@ async function screenshotFilledStates(
   // Create workspace modal
   if (shouldCapture(p, "workspaces-create-workspace-modal")) {
     await runCaptureStep("create workspace modal", async () => {
-      await page
-        .goto(`${BASE_URL}${ROUTES.workspaces.list.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${ROUTES.workspaces.list.build(orgSlug)}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, ROUTES.workspaces.list.build(orgSlug), "workspaces", p);
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
       const trigger = page.getByText("Create Workspace").first();
-      await trigger.waitFor({ state: "visible", timeout: 10000 });
-      await trigger.click();
-      const dialog = await waitForDialogOpen(page);
-      await waitForScreenshotReady(page);
+      const dialog = await openStableDialog(
+        page,
+        trigger,
+        page.getByRole("dialog", { name: /^create workspace$/i }),
+        page.getByRole("dialog", { name: /^create workspace$/i }).getByLabel(/^workspace name$/i),
+        "create workspace",
+      );
       await captureCurrentView(page, p, "workspaces-create-workspace-modal");
       await dismissIfOpen(page, dialog);
     });
@@ -3661,9 +3421,7 @@ async function screenshotFilledStates(
   if (wsSlug && shouldCapture(p, "workspace-create-team-modal")) {
     await runCaptureStep("create team modal", async () => {
       const wsBase = ROUTES.workspaces.detail.build(orgSlug, wsSlug);
-      await page
-        .goto(`${BASE_URL}${wsBase}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${wsBase}`, { waitUntil: "domcontentloaded", timeout: 15000 });
       await waitForExpectedContent(page, wsBase, `workspace-${wsSlug}`);
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
@@ -3681,9 +3439,7 @@ async function screenshotFilledStates(
   if (projectKey && shouldCapture(p, `project-${normalizedProjectKey}-import-export-modal`)) {
     await runCaptureStep("import/export modal", async () => {
       const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
-      await page
-        .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
       await waitForExpectedContent(page, boardUrl, "board");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
@@ -3700,20 +3456,21 @@ async function screenshotFilledStates(
   // Manual time entry modal
   if (shouldCapture(p, "time-tracking-manual-entry-modal")) {
     await runCaptureStep("manual time entry modal", async () => {
-      await page
-        .goto(`${BASE_URL}${ROUTES.timeTracking.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${ROUTES.timeTracking.build(orgSlug)}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, ROUTES.timeTracking.build(orgSlug), "time-tracking");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
       const trigger = page.getByRole("button", { name: /add time entry/i }).first();
-      await trigger.waitFor({ state: "visible", timeout: 5000 });
-      await trigger.click();
-      const dialog = await waitForDialogOpen(page);
-      await waitForScreenshotReady(page);
+      const dialog = await openStableDialog(
+        page,
+        trigger,
+        page.getByRole("dialog", { name: /^log time$/i }),
+        page.locator("#time-entry-form"),
+        "manual time entry",
+      );
       await captureCurrentView(page, p, "time-tracking-manual-entry-modal");
       await dismissIfOpen(page, dialog);
     });
@@ -3724,12 +3481,10 @@ async function screenshotFilledStates(
   // Sidebar collapsed
   if (shouldCapture(p, "sidebar-collapsed")) {
     await runCaptureStep("sidebar collapsed", async () => {
-      await page
-        .goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
       await waitForScreenshotReady(page);
       const collapseBtn = page.getByLabel("Collapse sidebar");
@@ -3739,7 +3494,7 @@ async function screenshotFilledStates(
       await captureCurrentView(page, p, "sidebar-collapsed");
       // Expand back
       const expandBtn = page.getByLabel("Expand sidebar");
-      if (await expandBtn.isVisible().catch(() => false)) {
+      if (await isLocatorVisible(expandBtn)) {
         await expandBtn.click();
         await waitForScreenshotReady(page);
       }
@@ -3752,12 +3507,10 @@ async function screenshotFilledStates(
   ) {
     await runCaptureStep("mobile hamburger", async () => {
       const dashboardUrl = ROUTES.dashboard.build(orgSlug);
-      await page
-        .goto(`${BASE_URL}${dashboardUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${dashboardUrl}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, dashboardUrl, "dashboard");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
@@ -3776,7 +3529,7 @@ async function screenshotFilledStates(
         .locator('button[aria-label="Close sidebar"]')
         .filter({ has: page.locator("svg") })
         .last();
-      if (await closeButton.isVisible().catch(() => false)) {
+      if (await isLocatorVisible(closeButton)) {
         await closeButton.click();
         await waitForScreenshotReady(page);
       }
@@ -3790,12 +3543,10 @@ async function screenshotFilledStates(
         seed.workspaceSlug ?? "product",
         seed.teamSlug ?? "engineering",
       );
-      await page
-        .goto(`${BASE_URL}${teamBoardUrl}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${teamBoardUrl}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, teamBoardUrl, "team");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
@@ -3823,19 +3574,16 @@ async function screenshotFilledStates(
   // 404 page (navigate to bogus URL while authenticated)
   if (shouldCapture(p, "404-page")) {
     await runCaptureStep("404 page", async () => {
-      await page
-        .goto(`${BASE_URL}/${orgSlug}/nonexistent-page-screenshot-test`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}/${orgSlug}/nonexistent-page-screenshot-test`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForScreenshotReady(page);
       // Wait for the 404 content to render
       await page
         .getByText(/not found|page.*not.*found|404/i)
         .first()
-        .waitFor({ state: "visible", timeout: 8000 })
-        .catch(() => {});
+        .waitFor({ state: "visible", timeout: 8000 });
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "404-page");
     });
@@ -3846,9 +3594,10 @@ async function screenshotFilledStates(
   if (projectKey && shouldCapture(p, `project-${normalizedProjectKey}-roadmap-timeline-selector`)) {
     await runCaptureStep("roadmap timeline selector", async () => {
       const roadmapUrl = ROUTES.projects.roadmap.build(orgSlug, projectKey);
-      await page
-        .goto(`${BASE_URL}${roadmapUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${roadmapUrl}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, roadmapUrl, "roadmap");
       await waitForScreenshotReady(page);
       // Click the timeline span select trigger (shows "3 Months" by default)
@@ -3879,34 +3628,89 @@ async function screenshotFilledStates(
   async function openNotificationPanel(): Promise<Locator> {
     const bellButton = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_BUTTON);
     const panel = page.getByTestId(TEST_IDS.HEADER.NOTIFICATION_PANEL);
+    let lastError: Error | null = null;
 
     await bellButton.waitFor({ state: "visible", timeout: 5000 });
 
-    if (await panel.isVisible().catch(() => false)) {
+    if (await panel.isVisible()) {
       return panel;
     }
 
-    await bellButton.click();
-    try {
-      await panel.waitFor({ state: "visible", timeout: 2500 });
-      return panel;
-    } catch {
-      await bellButton.click();
-      await panel.waitFor({ state: "visible", timeout: 5000 });
-      return panel;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        await bellButton.click();
+        await panel.waitFor({ state: "visible", timeout: 5000 });
+        await panel.getByRole("heading", { name: /^notifications$/i }).waitFor({
+          state: "visible",
+          timeout: 5000,
+        });
+        await waitForAnimation(page);
+        return panel;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        await page.keyboard.press("Escape");
+        await panel.waitFor({ state: "hidden", timeout: 2000 });
+      }
     }
+
+    throw new Error(`Notification panel did not open: ${lastError?.message ?? "unknown error"}`);
+  }
+
+  async function waitForNotificationsContentReady(): Promise<void> {
+    const notificationItems = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM);
+    const emptyState = page.getByText(/no notifications/i);
+    const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
+
+    await expect
+      .poll(
+        async () => {
+          const mentionsVisible = await isLocatorVisible(mentionsFilter);
+          const itemCount = await getLocatorCount(notificationItems);
+          const emptyVisible = await isLocatorVisible(emptyState);
+
+          return mentionsVisible && (itemCount > 0 || emptyVisible) ? "ready" : "pending";
+        },
+        {
+          timeout: 10000,
+          message: "Expected notifications content or empty state to become visible",
+        },
+      )
+      .toBe("ready");
+  }
+
+  async function waitForMentionsFilterState(): Promise<void> {
+    const mentionsFilter = page.getByRole("button", { name: /^mentions$/i });
+    const mentionNotification = page.getByText(/you were mentioned/i);
+    const emptyState = page.getByText(/no notifications/i);
+
+    await expect
+      .poll(
+        async () => {
+          const classes = (await getLocatorAttribute(mentionsFilter, "class", "")) ?? "";
+          const filterActive = classes.includes("bg-ui-bg-secondary");
+          const mentionVisible = await isLocatorVisible(mentionNotification);
+          const emptyVisible = await isLocatorVisible(emptyState);
+
+          return filterActive && (mentionVisible || emptyVisible) ? "ready" : "pending";
+        },
+        {
+          timeout: 10000,
+          message: "Expected Mentions filter results to finish rendering",
+        },
+      )
+      .toBe("ready");
+
+    await waitForAnimation(page);
   }
 
   // Notification popover (bell icon in header)
   if (shouldCapture(p, "notification-popover")) {
     await runCaptureStep("notification popover", async () => {
       // Navigate to dashboard to have a clean header
-      await page
-        .goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
@@ -3920,26 +3724,25 @@ async function screenshotFilledStates(
 
   if (shouldCapture(p, "notification-snooze-popover")) {
     await runCaptureStep("notification snooze popover", async () => {
-      await page
-        .goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
       await waitForScreenshotReady(page);
       await dismissAllDialogs(page);
 
-      const firstNotification = page.locator("[data-notification-item]").first();
+      const firstNotification = page.getByTestId(TEST_IDS.NOTIFICATION.ITEM).first();
       await firstNotification.waitFor({ state: "visible", timeout: 5000 });
-      await page.waitForTimeout(300);
       await firstNotification.hover();
+      await waitForAnimation(page);
 
       const snoozeButton = firstNotification.getByRole("button", { name: /snooze notification/i });
       await snoozeButton.waitFor({ state: "visible", timeout: 5000 });
       await snoozeButton.click();
 
       await page.getByText(/snooze until/i).waitFor({ state: "visible", timeout: 5000 });
+      await waitForAnimation(page);
       await waitForScreenshotReady(page);
       await captureCurrentView(page, p, "notification-snooze-popover");
       await page.keyboard.press("Escape");
@@ -3949,12 +3752,10 @@ async function screenshotFilledStates(
   // Notifications page — archived tab
   if (shouldCapture(p, "notifications-archived")) {
     await runCaptureStep("notifications archived tab", async () => {
-      await page
-        .goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
       await waitForScreenshotReady(page);
       const archivedTab = page.getByRole("tab", { name: /archived/i });
@@ -3968,19 +3769,17 @@ async function screenshotFilledStates(
   // Notifications page — filter active (Mentions filter)
   if (shouldCapture(p, "notifications-filter-active")) {
     await runCaptureStep("notifications filter active", async () => {
-      await page
-        .goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000,
-        })
-        .catch(() => {});
+      await page.goto(`${BASE_URL}${ROUTES.notifications.build(orgSlug)}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
       await waitForExpectedContent(page, ROUTES.notifications.build(orgSlug), "notifications");
-      await waitForScreenshotReady(page);
+      await waitForNotificationsContentReady();
       // Click the Mentions filter button
       const mentionsFilter = page.getByRole("button", { name: /^mentions$/i }).first();
       await mentionsFilter.waitFor({ state: "visible", timeout: 5000 });
       await mentionsFilter.click();
-      await waitForScreenshotReady(page);
+      await waitForMentionsFilterState();
       await captureCurrentView(page, p, "notifications-filter-active");
     });
   }
@@ -4002,12 +3801,10 @@ async function screenshotDashboardModals(
     return;
   }
 
-  await page
-    .goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
-    })
-    .catch(() => {});
+  await page.goto(`${BASE_URL}${ROUTES.dashboard.build(orgSlug)}`, {
+    waitUntil: "domcontentloaded",
+    timeout: 15000,
+  });
   await waitForExpectedContent(page, ROUTES.dashboard.build(orgSlug), "dashboard");
   await waitForScreenshotReady(page);
 
@@ -4028,9 +3825,11 @@ async function screenshotDashboardModals(
         });
         await advancedSearchButton.waitFor({ state: "visible", timeout: 5000 });
         await advancedSearchButton.click();
-        await omniboxDialog.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
+        await omniboxDialog.waitFor({ state: "hidden", timeout: 5000 });
         const advancedSearchDialog = page.getByTestId(TEST_IDS.SEARCH.ADVANCED_MODAL);
         await advancedSearchDialog.waitFor({ state: "visible", timeout: 5000 });
+        await waitForAnimation(page);
+        await waitForScreenshotReady(page);
         await captureCurrentView(page, prefix, "dashboard-advanced-search-modal");
         await dismissIfOpen(page, advancedSearchDialog);
       } finally {
@@ -4040,17 +3839,16 @@ async function screenshotDashboardModals(
   }
 
   const shortcutsTrigger = page.getByTestId(TEST_IDS.HEADER.SHORTCUTS_BUTTON);
-  if (
-    (await shortcutsTrigger.count()) > 0 &&
-    (await shortcutsTrigger
-      .first()
-      .isVisible()
-      .catch(() => false))
-  ) {
+  if ((await shortcutsTrigger.count()) > 0) {
     await runCaptureStep("dashboard shortcuts modal", async () => {
       await dismissAllDialogs(page);
-      await shortcutsTrigger.click();
-      const shortcutsDialog = await waitForDialogOpen(page);
+      const shortcutsDialog = await openStableDialog(
+        page,
+        shortcutsTrigger.first(),
+        page.getByRole("dialog", { name: /keyboard shortcuts/i }),
+        page.getByPlaceholder("Search shortcuts..."),
+        "shortcuts help",
+      );
       await captureCurrentView(page, prefix, "dashboard-shortcuts-modal");
       await dismissIfOpen(page, shortcutsDialog);
     });
@@ -4060,8 +3858,13 @@ async function screenshotDashboardModals(
   if ((await timeEntryTrigger.count()) > 0) {
     await runCaptureStep("dashboard time-entry modal", async () => {
       await dismissAllDialogs(page);
-      await timeEntryTrigger.click();
-      const timeEntryDialog = await waitForDialogOpen(page);
+      const timeEntryDialog = await openStableDialog(
+        page,
+        timeEntryTrigger,
+        page.getByRole("dialog", { name: /^start timer$/i }),
+        page.locator("#time-entry-form"),
+        "dashboard time entry",
+      );
       await captureCurrentView(page, prefix, "dashboard-time-entry-modal");
       await dismissIfOpen(page, timeEntryDialog);
     });
@@ -4086,36 +3889,35 @@ async function screenshotDashboardLoadingState(
       });
 
       const dashboardUrl = ROUTES.dashboard.build(orgSlug);
-      await loadingPage
-        .goto(`${BASE_URL}${dashboardUrl}`, {
-          waitUntil: "domcontentloaded",
+      await loadingPage.goto(`${BASE_URL}${dashboardUrl}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
+      await loadingPage.waitForURL(
+        (currentUrl) => /\/[^/]+\/dashboard$/.test(new URL(currentUrl).pathname),
+        {
           timeout: 15000,
-        })
-        .catch(() => {});
-      await loadingPage
-        .waitForURL((currentUrl) => /\/[^/]+\/dashboard$/.test(new URL(currentUrl).pathname), {
-          timeout: 15000,
-        })
-        .catch(() => {});
+        },
+      );
       await loadingPage
         .getByTestId(TEST_IDS.HEADER.SEARCH_BUTTON)
         .first()
-        .waitFor({ state: "visible", timeout: 15000 })
-        .catch(() => {});
+        .waitFor({ state: "visible", timeout: 15000 });
       await loadingPage
         .getByRole("heading", { name: /^dashboard$/i })
         .first()
-        .waitFor({ state: "visible", timeout: 12000 })
-        .catch(() => {});
-      await loadingPage.waitForFunction(
-        () => document.querySelectorAll("[data-loading-skeleton]").length >= 6,
-        undefined,
-        { timeout: 12000 },
-      );
+        .waitFor({ state: "visible", timeout: 12000 });
+      await expect
+        .poll(() => loadingPage.getByTestId(TEST_IDS.LOADING.SKELETON).count(), {
+          timeout: 12000,
+        })
+        .toBeGreaterThanOrEqual(6);
       await waitForScreenshotReady(loadingPage);
       await captureCurrentView(loadingPage, prefix, "dashboard-loading-skeletons");
     } finally {
-      await loadingPage.close().catch(() => {});
+      if (!loadingPage.isClosed()) {
+        await loadingPage.close();
+      }
     }
   });
 }
@@ -4125,12 +3927,10 @@ async function screenshotProjectsModal(page: Page, orgSlug: string, prefix: stri
     return;
   }
 
-  await page
-    .goto(`${BASE_URL}${ROUTES.projects.list.build(orgSlug)}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 15000,
-    })
-    .catch(() => {});
+  await page.goto(`${BASE_URL}${ROUTES.projects.list.build(orgSlug)}`, {
+    waitUntil: "domcontentloaded",
+    timeout: 15000,
+  });
   await waitForScreenshotReady(page);
 
   const projectsPage = new ProjectsPage(page, orgSlug);
@@ -4165,9 +3965,7 @@ async function screenshotBoardModals(
   }
 
   const boardUrl = ROUTES.projects.board.build(orgSlug, projectKey);
-  await page
-    .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-    .catch(() => {});
+  await page.goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
   await waitForExpectedContent(page, boardUrl, "board");
   await waitForScreenshotReady(page);
 
@@ -4201,13 +3999,10 @@ async function screenshotBoardModals(
     (await issueCard.count()) > 0
   ) {
     await runCaptureStep("board issue-detail modal", async () => {
-      await issueCard.scrollIntoViewIfNeeded().catch(() => {});
+      await issueCard.scrollIntoViewIfNeeded();
       const issueDetailDialog = page.getByTestId(TEST_IDS.ISSUE.DETAIL_MODAL);
       await issueCard.click();
-      const dialogOpened = await issueDetailDialog
-        .waitFor({ state: "visible", timeout: 3000 })
-        .then(() => true)
-        .catch(() => false);
+      const dialogOpened = await waitForLocatorVisible(issueDetailDialog, 3000);
       if (!dialogOpened) {
         await waitForScreenshotReady(page);
         await issueCard.click();
@@ -4241,6 +4036,121 @@ async function screenshotBoardModals(
   }
 }
 
+async function screenshotMeetingsStates(
+  page: Page,
+  orgSlug: string,
+  prefix: string,
+): Promise<void> {
+  const meetingsDetailName = "meetings-detail";
+  const transcriptSearchName = "meetings-transcript-search";
+  const memoryLensName = "meetings-memory-lens";
+  const detailTimeoutMs = 15000;
+
+  if (!shouldCaptureAny(prefix, [meetingsDetailName, transcriptSearchName, memoryLensName])) {
+    return;
+  }
+
+  const meetingsUrl = ROUTES.meetings.build(orgSlug);
+  const recentMeetingsSection = page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: /^recent meetings$/i }) })
+    .first();
+  const meetingDetailSection = page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: /^meeting detail$/i }) })
+    .first();
+  const meetingMemorySection = page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: /^meeting memory$/i }) })
+    .first();
+
+  const openMeetingsForCapture = async () => {
+    await page.goto(`${BASE_URL}${meetingsUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
+    await waitForExpectedContent(page, meetingsUrl, "meetings");
+    await waitForScreenshotReady(page);
+  };
+
+  if (shouldCapture(prefix, meetingsDetailName)) {
+    await runCaptureStep("meetings detail", async () => {
+      await openMeetingsForCapture();
+      const clientLaunchReviewCard = recentMeetingsSection
+        .locator("[role='button']")
+        .filter({ hasText: /Client Launch Review/i })
+        .first();
+      await clientLaunchReviewCard.waitFor({ state: "visible", timeout: detailTimeoutMs });
+      await clientLaunchReviewCard.evaluate((element) => {
+        if (element instanceof HTMLElement) {
+          element.click();
+        }
+      });
+      await meetingDetailSection
+        .getByText("Client Launch Review", { exact: true })
+        .waitFor({ state: "visible", timeout: detailTimeoutMs });
+      await meetingDetailSection
+        .getByText(
+          "The client also asked whether they need weekend coverage and a final handoff packet before launch.",
+        )
+        .waitFor({ state: "visible", timeout: detailTimeoutMs });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, meetingsDetailName);
+    });
+  }
+
+  if (shouldCapture(prefix, transcriptSearchName)) {
+    await runCaptureStep("meetings transcript search", async () => {
+      await openMeetingsForCapture();
+      const weeklyProductSyncCard = recentMeetingsSection
+        .locator("[role='button']")
+        .filter({ hasText: /Weekly Product Sync/i })
+        .first();
+      await weeklyProductSyncCard.waitFor({ state: "visible", timeout: detailTimeoutMs });
+      await weeklyProductSyncCard.evaluate((element) => {
+        if (element instanceof HTMLElement) {
+          element.click();
+        }
+      });
+      await meetingDetailSection
+        .getByText("Weekly Product Sync", { exact: true })
+        .waitFor({ state: "visible", timeout: detailTimeoutMs });
+
+      const transcriptSearch = meetingDetailSection.getByRole("searchbox", {
+        name: "Search transcript",
+      });
+      await transcriptSearch.fill("pricing");
+      await meetingDetailSection
+        .getByText(
+          "We cleared the dashboard bugs, but pricing approval still needs legal sign-off before launch.",
+        )
+        .waitFor({ state: "visible", timeout: detailTimeoutMs });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, transcriptSearchName);
+    });
+  }
+
+  if (shouldCapture(prefix, memoryLensName)) {
+    await runCaptureStep("meetings memory lens", async () => {
+      await openMeetingsForCapture();
+      const opsLensButton = meetingMemorySection
+        .locator("button")
+        .filter({ hasText: /OPS/i })
+        .first();
+      await opsLensButton.waitFor({ state: "visible", timeout: detailTimeoutMs });
+      await opsLensButton.evaluate((element) => {
+        if (element instanceof HTMLElement) {
+          element.click();
+        }
+      });
+      await meetingMemorySection
+        .getByText(
+          "Cross-meeting decisions, open questions, and follow-ups for OPS - Client Operations Hub.",
+        )
+        .waitFor({ state: "visible", timeout: detailTimeoutMs });
+      await waitForScreenshotReady(page);
+      await captureCurrentView(page, prefix, memoryLensName);
+    });
+  }
+}
+
 async function screenshotBoardInteractiveStates(
   page: Page,
   orgSlug: string,
@@ -4252,9 +4162,7 @@ async function screenshotBoardInteractiveStates(
 
   // Helper: navigate to board and wait for toolbar
   const loadBoard = async () => {
-    await page
-      .goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 30000 })
-      .catch(() => {});
+    await page.goto(`${BASE_URL}${boardUrl}`, { waitUntil: "domcontentloaded", timeout: 30000 });
     await waitForBoardReady(page);
     await waitForScreenshotReady(page);
   };
@@ -4271,18 +4179,14 @@ async function screenshotBoardInteractiveStates(
       const swimlaneButton = page.getByText("Swimlanes", { exact: true }).first();
       await swimlaneButton.waitFor({ state: "visible", timeout: 8000 });
       await swimlaneButton.click();
-      // Select the mode from the dropdown — scope to menuitemcheckbox to avoid
-      // matching hidden mobile text or other page elements with the same label
+      // Select the mode via menuitemcheckbox to avoid matching hidden mobile
+      // text or other page elements with the same label.
       const modeLabel = mode[0].toUpperCase() + mode.slice(1);
-      const dropdown = page.locator("[role='menu'], [data-radix-menu-content]").first();
-      await dropdown.waitFor({ state: "visible", timeout: 5000 });
-      // Navigate to the option and click it. The dropdown scopes the text
-      // match to avoid hitting hidden mobile elements.
-      const option = dropdown.getByText(modeLabel, { exact: true }).first();
+      const option = page.getByRole("menuitemcheckbox", { name: modeLabel, exact: true });
       await option.waitFor({ state: "visible", timeout: 3000 });
       // Radix DropdownMenuCheckboxItem may detach on check. Use scrollIntoView
       // + click in quick succession to minimize the race window.
-      await option.scrollIntoViewIfNeeded().catch(() => {});
+      await option.scrollIntoViewIfNeeded();
       await option.click();
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, captureName);
@@ -4306,7 +4210,7 @@ async function screenshotBoardInteractiveStates(
       );
       // Expand it back
       const expandButton = page.getByLabel(/expand/i).first();
-      if (await expandButton.isVisible().catch(() => false)) {
+      if (await isLocatorVisible(expandButton)) {
         await expandButton.click();
         await waitForScreenshotReady(page);
       }
@@ -4448,7 +4352,7 @@ async function screenshotBoardInteractiveStates(
       // Close panel and reset to modal view
       await page.keyboard.press("Escape");
       const resetBtn = page.getByLabel(/switch to modal view/i).first();
-      if (await resetBtn.isVisible().catch(() => false)) {
+      if (await isLocatorVisible(resetBtn)) {
         await resetBtn.click();
       }
     });
@@ -4465,9 +4369,7 @@ async function screenshotSprintInteractiveStates(
   const sprintsUrl = ROUTES.projects.sprints.build(orgSlug, projectKey);
 
   // Navigate to sprints page
-  await page
-    .goto(`${BASE_URL}${sprintsUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-    .catch(() => {});
+  await page.goto(`${BASE_URL}${sprintsUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
   await waitForExpectedContent(page, sprintsUrl, "sprints");
   await waitForScreenshotReady(page);
 
@@ -4475,7 +4377,7 @@ async function screenshotSprintInteractiveStates(
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-burndown`)) {
     await runCaptureStep("sprint burndown chart", async () => {
       const burndownBtn = page.getByRole("button", { name: /^burndown$/i }).first();
-      if (await burndownBtn.isVisible().catch(() => false)) {
+      if (await isLocatorVisible(burndownBtn)) {
         await burndownBtn.click();
         await waitForScreenshotReady(page);
       }
@@ -4493,7 +4395,7 @@ async function screenshotSprintInteractiveStates(
       await captureCurrentView(page, prefix, `project-${normalizedProjectKey}-sprints-burnup`);
       // Switch back to burndown
       const burndownBtn = page.getByRole("button", { name: /^burndown$/i }).first();
-      if (await burndownBtn.isVisible().catch(() => false)) {
+      if (await isLocatorVisible(burndownBtn)) {
         await burndownBtn.click();
       }
     });
@@ -4522,7 +4424,7 @@ async function screenshotSprintInteractiveStates(
     await runCaptureStep("sprint date overlap warning", async () => {
       let startSprintButton = page.getByRole("button", { name: /^start sprint$/i }).first();
 
-      if (!(await startSprintButton.isVisible().catch(() => false))) {
+      if (!(await isLocatorVisible(startSprintButton))) {
         const createSprintButton = page
           .getByRole("button", { name: /create sprint|\+\s*sprint/i })
           .first();
@@ -4549,11 +4451,10 @@ async function screenshotSprintInteractiveStates(
       const dialog = page.getByRole("dialog", { name: /^start sprint$/i });
       await dialog.waitFor({ state: "visible", timeout: 5000 });
       await waitForScreenshotReady(page);
-      await page.waitForTimeout(300);
       const overlapWarning = dialog.getByText(/these dates overlap with:/i).first();
-      if ((await overlapWarning.count()) > 0) {
-        await overlapWarning.scrollIntoViewIfNeeded().catch(() => {});
-      }
+      await overlapWarning.waitFor({ state: "visible", timeout: 5000 });
+      await waitForAnimation(page);
+      await overlapWarning.scrollIntoViewIfNeeded();
       await waitForScreenshotReady(page);
       await captureCurrentView(
         page,
@@ -4575,8 +4476,7 @@ async function screenshotSprintInteractiveStates(
       await dialog.waitFor({ state: "visible", timeout: 5000 });
       await dialog
         .getByText(/issues? not completed\. choose what to do with them\./i)
-        .waitFor({ state: "visible", timeout: 5000 })
-        .catch(() => {});
+        .waitFor({ state: "visible", timeout: 5000 });
       await waitForScreenshotReady(page);
       await captureCurrentView(
         page,
@@ -4600,9 +4500,7 @@ async function screenshotIssueInteractiveStates(
   const issuesUrl = ROUTES.issues.list.build(orgSlug);
 
   await runCaptureStep("issues side panel", async () => {
-    await page
-      .goto(`${BASE_URL}${issuesUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 })
-      .catch(() => {});
+    await page.goto(`${BASE_URL}${issuesUrl}`, { waitUntil: "domcontentloaded", timeout: 15000 });
     await waitForExpectedContent(page, issuesUrl, "issues", prefix);
     await waitForScreenshotReady(page);
 
@@ -4626,7 +4524,7 @@ async function screenshotIssueInteractiveStates(
 
     await dismissIfOpen(page, issueDetailPanel);
     const resetBtn = page.getByRole("button", { name: /switch to modal view/i }).first();
-    if (await resetBtn.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(resetBtn)) {
       await resetBtn.click();
     }
   });
@@ -4728,6 +4626,7 @@ const DRY_RUN_PAGES = [
   "empty-my-issues",
   "empty-invoices",
   "empty-clients",
+  "empty-meetings",
   "empty-settings",
   "empty-settings-profile",
   // Filled states — top-level
@@ -4744,6 +4643,10 @@ const DRY_RUN_PAGES = [
   "filled-org-analytics",
   "filled-invoices",
   "filled-clients",
+  "filled-meetings",
+  "filled-meetings-detail",
+  "filled-meetings-transcript-search",
+  "filled-meetings-memory-lens",
   "filled-settings",
   "filled-settings-profile",
   "filled-authentication",

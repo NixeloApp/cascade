@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { useMutation, useQuery } from "convex/react";
 import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { BulkOperationsBar } from "./BulkOperationsBar";
 
@@ -343,7 +344,9 @@ describe("BulkOperationsBar - Component Behavior", () => {
       await user.click(confirmButton);
 
       await waitFor(() => {
-        expect(toast.success).toHaveBeenCalledWith("Deleted 1 issue(s)");
+        expect(toast.success).toHaveBeenCalledWith("Deleted 1 issue(s)", {
+          testId: TEST_IDS.TOAST.SUCCESS,
+        });
       });
     });
 
@@ -371,7 +374,9 @@ describe("BulkOperationsBar - Component Behavior", () => {
       await user.click(confirmButton);
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith("Delete failed");
+        expect(toast.error).toHaveBeenCalledWith("Delete failed", {
+          testId: TEST_IDS.TOAST.ERROR,
+        });
       });
     });
 

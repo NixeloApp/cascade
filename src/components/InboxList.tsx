@@ -76,27 +76,27 @@ const STATUS_CONFIG = {
   pending: {
     label: "Pending",
     icon: AlertTriangle,
-    recipe: "inboxStatusWarning",
+    recipe: "statusWarning",
   },
   accepted: {
     label: "Accepted",
     icon: CheckCircle2,
-    recipe: "inboxStatusSuccess",
+    recipe: "statusSuccess",
   },
   declined: {
     label: "Declined",
     icon: XCircle,
-    recipe: "inboxStatusError",
+    recipe: "statusError",
   },
   snoozed: {
     label: "Snoozed",
     icon: Clock,
-    recipe: "inboxStatusNeutral",
+    recipe: "statusNeutral",
   },
   duplicate: {
     label: "Duplicate",
     icon: Copy,
-    recipe: "inboxStatusNeutral",
+    recipe: "statusNeutral",
   },
 } as const;
 

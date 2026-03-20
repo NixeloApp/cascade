@@ -27,6 +27,10 @@ const buttonVariants = cva(
           "text-sm font-medium text-brand-ring hover:text-brand-muted hover:underline active:scale-100 focus-visible:ring-brand-ring",
         authLinkMuted:
           "text-sm text-ui-text-tertiary hover:text-ui-text-secondary hover:underline active:scale-100 focus-visible:ring-brand-ring",
+        ghostLink:
+          "text-ui-text-secondary hover:bg-transparent hover:text-ui-text active:scale-100 focus-visible:ring-brand-ring",
+        ghostTertiary:
+          "text-ui-text-secondary hover:bg-ui-bg-tertiary hover:text-ui-text focus-visible:ring-brand-ring",
         accentGradient:
           "bg-linear-to-r from-brand to-accent text-brand-foreground shadow-sm hover:from-brand-hover hover:to-accent-hover hover:shadow-md focus-visible:ring-brand-ring",
         overlay:
@@ -50,10 +54,18 @@ const buttonVariants = cva(
       },
       size: {
         none: "",
+        content: "h-auto px-0 py-0",
+        contentStart: "h-auto px-0 py-0 text-left",
+        card: "group relative h-auto w-full overflow-hidden px-0 py-0 text-left",
+        xs: "h-7 px-2 text-sm",
         sm: "h-9 px-3 text-sm",
         md: "h-10 px-4 text-sm",
         lg: "h-11 px-6 text-base",
+        touchWide: "h-10 w-full text-sm touch-manipulation sm:h-11",
+        touchSm: "h-9 min-h-11 min-w-11 px-3 text-sm sm:min-h-0 sm:min-w-0",
         icon: "h-10 w-10",
+        iconSm: "h-8 w-8",
+        iconXs: "h-6 w-6 p-1",
         workspaceIcon: "h-10 w-10 text-lg",
       },
       /** Show only on parent hover/focus-within (use inside group containers) */
@@ -160,7 +172,10 @@ const buttonChromeVariants = cva("border ring-offset-ui-bg focus-visible:ring-br
       landingThemeToggle: "h-9 w-9 rounded-full p-0 sm:h-10 sm:w-10",
       icon: "h-9 w-9 rounded-full",
       pill: "h-10 rounded-full px-4 text-sm",
+      searchTrigger:
+        "h-10 w-full min-w-0 justify-center rounded-full px-2.5 text-sm sm:justify-between sm:px-3",
       compactPill: "h-8 rounded-full px-3 text-sm",
+      compactPillSm: "h-7 rounded-full px-3 text-sm",
       reactionPill: "h-auto rounded-full px-2 py-0.5 text-xs font-medium",
       toolbarIcon: "h-7 w-7 rounded-md p-0",
       toolbarControl: "h-7 rounded-md px-1.5 text-sm",

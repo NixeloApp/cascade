@@ -33,9 +33,7 @@ export function NotFoundPage() {
           </IconCircle>
 
           {/* Large error code with tight tracking */}
-          <Typography variant="h1" className="text-display tracking-tightest">
-            404
-          </Typography>
+          <Typography variant="errorCodeDisplay">404</Typography>
 
           {/* Message with secondary text styling */}
           <Stack gap="sm" align="center">

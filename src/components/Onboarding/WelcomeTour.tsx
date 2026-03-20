@@ -10,6 +10,7 @@ import { api } from "@convex/_generated/api";
 import type { driver as driverFunction } from "driver.js";
 import { useEffect, useState } from "react";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
+import { TEST_IDS } from "@/lib/test-ids";
 
 interface WelcomeTourProps {
   onComplete?: () => void;
@@ -72,7 +73,7 @@ export function WelcomeTour({ onComplete, onSkip }: WelcomeTourProps) {
           },
         },
         {
-          element: "[data-tour='command-palette']",
+          element: `[data-testid="${TEST_IDS.HEADER.SEARCH_BUTTON}"]`,
           popover: {
             title: "⌘K Command Palette",
             description:
@@ -82,7 +83,7 @@ export function WelcomeTour({ onComplete, onSkip }: WelcomeTourProps) {
           },
         },
         {
-          element: "[data-tour='create-project']",
+          element: `[data-testid="${TEST_IDS.ONBOARDING.CREATE_PROJECT_BUTTON}"]`,
           popover: {
             title: "Create Your First Project",
             description:
@@ -92,7 +93,7 @@ export function WelcomeTour({ onComplete, onSkip }: WelcomeTourProps) {
           },
         },
         {
-          element: "[data-tour='dashboard']",
+          element: `[data-testid="${TEST_IDS.NAV.DASHBOARD_LINK}"]`,
           popover: {
             title: "Your Dashboard",
             description:
@@ -102,7 +103,7 @@ export function WelcomeTour({ onComplete, onSkip }: WelcomeTourProps) {
           },
         },
         {
-          element: "[data-tour='kanban-board']",
+          element: `[data-testid="${TEST_IDS.BOARD.ROOT}"]`,
           popover: {
             title: "Kanban Board",
             description:
@@ -112,7 +113,7 @@ export function WelcomeTour({ onComplete, onSkip }: WelcomeTourProps) {
           },
         },
         {
-          element: "[data-tour='create-issue']",
+          element: `[data-testid="${TEST_IDS.ISSUE.CREATE_TRIGGER}"]`,
           popover: {
             title: "Create Issues",
             description:
@@ -122,7 +123,7 @@ export function WelcomeTour({ onComplete, onSkip }: WelcomeTourProps) {
           },
         },
         {
-          element: "[data-tour='sidebar']",
+          element: `[data-testid="${TEST_IDS.NAV.SIDEBAR}"]`,
           popover: {
             title: "Document Sidebar",
             description:

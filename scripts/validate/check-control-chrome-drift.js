@@ -1,10 +1,9 @@
 /**
  * CHECK: Control chrome drift audit
  *
- * Informational audit for feature code that restyles owned interactive
+ * Blocking audit for feature code that restyles owned interactive
  * primitives with raw chrome classes instead of extending the primitive or
- * adding a variant. This remains advisory while the existing drift is cleaned
- * up.
+ * adding a variant.
  */
 
 import fs from "node:fs";
@@ -99,9 +98,8 @@ export function run() {
   }
 
   return {
-    passed: true,
-    errors: 0,
-    showMessagesOnPass: findings.length > 0,
+    passed: findings.length === 0,
+    errors: findings.length,
     detail:
       findings.length > 0
         ? `${findings.length} control chrome drift finding(s)`

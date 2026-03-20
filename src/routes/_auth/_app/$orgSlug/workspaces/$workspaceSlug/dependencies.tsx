@@ -121,9 +121,7 @@ function WorkspaceDependenciesPage() {
                 </Typography>
               </Flex>
               <Flex align="start" gap="sm" className="text-sm">
-                <Typography variant="small" className="font-medium">
-                  {dependency.fromIssue.key}
-                </Typography>
+                <Typography variant="label">{dependency.fromIssue.key}</Typography>
                 <Typography variant="small" color="secondary" className="line-clamp-1">
                   {dependency.fromIssue.title}
                 </Typography>
@@ -132,9 +130,7 @@ function WorkspaceDependenciesPage() {
                 <LinkIcon className="size-4" />
               </Flex>
               <Flex align="start" gap="sm" className="text-sm">
-                <Typography variant="small" className="font-medium">
-                  {dependency.toIssue.key}
-                </Typography>
+                <Typography variant="label">{dependency.toIssue.key}</Typography>
                 <Typography variant="small" color="secondary" className="line-clamp-1">
                   {dependency.toIssue.title}
                 </Typography>

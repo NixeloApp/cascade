@@ -3,6 +3,7 @@ import { Authenticated, Unauthenticated } from "convex/react";
 import { Laptop, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
+import { Container } from "@/components/ui/Container";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +24,7 @@ export function NavHeader() {
   return (
     <header className="absolute inset-x-0 top-0 z-50 transition-all duration-default">
       <Card recipe="landingNavFrame" padding="none">
-        <nav className="mx-auto max-w-6xl">
+        <Container as="nav" size="lg">
           <div
             className={cn(
               getCardRecipeClassName("landingNavShell"),
@@ -38,9 +39,7 @@ export function NavHeader() {
             >
               <Link to={ROUTES.home.path}>
                 <NixeloLogo />
-                <Typography variant="h3" className="tracking-tight text-ui-text">
-                  Nixelo
-                </Typography>
+                <Typography variant="h3">Nixelo</Typography>
               </Link>
             </Button>
 
@@ -112,7 +111,7 @@ export function NavHeader() {
               </Authenticated>
             </Flex>
           </div>
-        </nav>
+        </Container>
       </Card>
     </header>
   );

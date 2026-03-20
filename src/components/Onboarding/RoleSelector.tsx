@@ -43,11 +43,11 @@ function RoleCard({
   return (
     <Button
       variant="unstyled"
+      size="card"
       onClick={onClick}
       disabled={disabled}
       aria-pressed={selected}
       data-testid={testId}
-      className="group relative h-auto w-full overflow-hidden text-left"
     >
       <Card
         recipe={selected ? "onboardingRoleCardSelected" : "onboardingRoleCard"}

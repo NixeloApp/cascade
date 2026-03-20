@@ -2,6 +2,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
 import { useAction, useConvexAuth, useMutation, useQuery } from "convex/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showSuccess } from "@/lib/toast";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { CreateIssueModal } from "./CreateIssueModal";
@@ -97,6 +98,10 @@ describe("CreateIssueModal", () => {
     render(
       <CreateIssueModal projectId={mockProjectId} open={true} onOpenChange={mockOnOpenChange} />,
     );
+
+    expect(screen.getByTestId(TEST_IDS.ISSUE.CREATE_MODAL)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.ISSUE.CREATE_TITLE_INPUT)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_IDS.ISSUE.CREATE_DESCRIPTION_EDITOR)).toBeInTheDocument();
 
     const storyPointsInput = screen.getByPlaceholderText(/Enter story points/i);
     expect(storyPointsInput).toBeInTheDocument();

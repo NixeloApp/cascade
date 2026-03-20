@@ -44,11 +44,13 @@
  *  40. Nested Cards            — bans Cards nested inside other Cards
  *  41. Border Radius           — enforces consistent border radius usage
  *  42. Screenshot coverage     — route coverage + canonical spec screenshot audit (informational)
- *  43. Typography drift        — advisory audit for Typography/style drift outside owned primitives
- *  44. Control chrome drift    — advisory audit for owned controls restyled in feature code
- *  45. Shared shape drift      — advisory audit for repeated inline entity summary shapes
- *  46. Page layout             — route wrappers should use PageLayout, not ad-hoc max-width shells
- *  47. Raw Date formatting     — use shared date helpers instead of ad-hoc formatting
+ *  43. Screenshot manifest     — blocks repeated screenshot hashes beyond legit dual-write
+ *  44. Typography drift        — blocks Typography/style drift outside owned primitives
+ *  45. Control chrome drift    — blocks owned controls restyled in feature code
+ *  46. Shared shape drift      — blocks repeated inline entity summary shapes
+ *  47. Page layout             — route wrappers should use PageLayout, not ad-hoc max-width shells
+ *  48. Raw Date formatting     — use shared date helpers instead of ad-hoc formatting
+ *  49. E2E catch swallows      — ratchets silent .catch(() => {}) usage in e2e and screenshot tooling
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -275,6 +277,10 @@ const checks = [
     modulePath: new URL("./validate/check-screenshot-coverage.js", import.meta.url).href,
   },
   {
+    name: "Screenshot manifest",
+    modulePath: new URL("./validate/check-screenshot-manifest-integrity.js", import.meta.url).href,
+  },
+  {
     name: "Typography drift",
     modulePath: new URL("./validate/check-typography-drift.js", import.meta.url).href,
   },
@@ -293,6 +299,10 @@ const checks = [
   {
     name: "Raw Date formatting",
     modulePath: new URL("./validate/check-raw-dates.js", import.meta.url).href,
+  },
+  {
+    name: "E2E catch swallows",
+    modulePath: new URL("./validate/check-e2e-catch-swallows.js", import.meta.url).href,
   },
 ];
 

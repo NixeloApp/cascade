@@ -10,6 +10,7 @@ import { api } from "@convex/_generated/api";
 import { useEffect, useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Calendar } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -133,7 +134,7 @@ export function GoogleCalendarIntegration() {
   };
 
   return (
-    <Card padding="lg">
+    <Card padding="lg" data-testid={TEST_IDS.SETTINGS.GOOGLE_CALENDAR_INTEGRATION}>
       <Stack gap="lg">
         <CardHeader
           action={

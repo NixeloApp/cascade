@@ -36,6 +36,7 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
 import { ROUTES } from "@/config/routes";
 import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { TEST_IDS } from "@/lib/test-ids";
 import { HOUR, WEEK } from "@/lib/time";
 export interface NotificationWithActor extends Doc<"notifications"> {
   actorName?: string;
@@ -175,7 +176,7 @@ export function NotificationItem({
       padding="md"
       radius="none"
       className="group relative animate-fade-in last:border-0"
-      data-notification-item
+      data-testid={TEST_IDS.NOTIFICATION.ITEM}
     >
       <Flex align="start" gap="md">
         <FlexItem shrink={false} className="mt-0.5">

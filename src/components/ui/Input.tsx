@@ -32,6 +32,8 @@ const inputVariants = cva(
         md: "h-10 px-4 text-sm",
         lg: "h-11 px-4 text-base",
         filterPill: "h-8 rounded-full px-3 text-base sm:h-9 sm:rounded-xl sm:px-3 sm:text-sm",
+        filterSearchPill:
+          "h-8 w-20 rounded-full px-3 pr-2 text-base sm:h-9 sm:w-64 sm:rounded-xl sm:px-3 sm:pr-3 sm:text-sm",
       },
     },
     defaultVariants: {
@@ -50,7 +52,7 @@ export interface InputProps
   /** Error message to display */
   error?: string;
   /** Size variant for the input */
-  inputSize?: "sm" | "md" | "lg" | "filterPill";
+  inputSize?: "sm" | "md" | "lg" | "filterPill" | "filterSearchPill";
 }
 
 /**

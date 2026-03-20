@@ -3,6 +3,7 @@ import { Bot, Search, Sparkles } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
+import { Container } from "../ui/Container";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Stack } from "../ui/Stack";
@@ -36,12 +37,12 @@ const aiFeatureDemoVariants = {
 export function AIFeatureDemo() {
   return (
     <section className={aiFeatureDemoVariants.section()} id="resources">
-      <div className="mx-auto max-w-6xl">
+      <Container size="lg">
         <div className="mb-14 text-center">
           <Badge variant="outline" shape="pill" className="mb-4">
             AI-native workflows
           </Badge>
-          <Typography variant="h2" className="text-4xl md:text-5xl">
+          <Typography variant="landingSectionTitle">
             Intelligent assistance across every handoff
           </Typography>
           <Typography variant="lead" className="mx-auto mt-4 max-w-3xl">
@@ -113,7 +114,7 @@ export function AIFeatureDemo() {
                 {answerSteps.map((step, index) => (
                   <Flex key={step} align="start" gap="sm">
                     <FlexItem shrink={false} className={aiFeatureDemoVariants.stepBadge()}>
-                      <Typography variant="small" className="font-semibold text-ui-text">
+                      <Typography as="span" variant="label">
                         {index + 1}
                       </Typography>
                     </FlexItem>
@@ -126,7 +127,7 @@ export function AIFeatureDemo() {
             </Card>
           </Card>
         </Grid>
-      </div>
+      </Container>
     </section>
   );
 }

@@ -117,7 +117,7 @@ function Verify2FARoute() {
               }
               onKeyDown={handleKeyDown}
               placeholder={isBackupCode ? "XXXX-XXXX" : "000000"}
-              className="font-mono text-center text-xl tracking-widest"
+              variant="twoFactorCode"
               maxLength={isBackupCode ? 9 : 6}
               autoFocus
             />

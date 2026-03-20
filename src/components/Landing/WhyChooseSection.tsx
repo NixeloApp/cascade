@@ -3,6 +3,7 @@ import { ArrowRight, Building2, KanbanSquare, MessageSquare } from "@/lib/icons"
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { Container } from "../ui/Container";
 import { Flex } from "../ui/Flex";
 import { Grid } from "../ui/Grid";
 import { Typography } from "../ui/Typography";
@@ -37,12 +38,12 @@ const whyChooseVariants = {
 export function WhyChooseSection() {
   return (
     <section className={whyChooseVariants.section()}>
-      <div className="mx-auto max-w-6xl">
+      <Container size="lg">
         <div className="mb-14 text-center">
           <Badge variant="outline" shape="pill" className="mb-4">
             Why teams move
           </Badge>
-          <Typography variant="h2" className="text-4xl md:text-5xl">
+          <Typography variant="landingSectionTitle">
             Better product ops usually starts with fewer disconnected surfaces
           </Typography>
           <Typography variant="lead" className="mx-auto mt-4 max-w-3xl">
@@ -63,9 +64,7 @@ export function WhyChooseSection() {
                 </Badge>
               </Flex>
 
-              <Typography variant="h3" className="text-2xl">
-                {story.title}
-              </Typography>
+              <Typography variant="h3">{story.title}</Typography>
               <Typography variant="small" color="secondary" className="mt-3 leading-7">
                 {story.body}
               </Typography>
@@ -79,7 +78,7 @@ export function WhyChooseSection() {
             </Card>
           ))}
         </Grid>
-      </div>
+      </Container>
     </section>
   );
 }

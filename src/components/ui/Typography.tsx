@@ -62,7 +62,26 @@ const typographyVariants = cva("", {
       dashboardHeroTitle: "text-4xl font-extrabold tracking-tight text-ui-text md:text-5xl",
       dashboardStatValue: "text-display-sm font-semibold tracking-tight text-ui-text",
       dashboardStatValueStrong: "text-3xl font-extrabold tracking-tight text-ui-text",
+      errorCodeDisplay: "text-8xl font-bold tracking-tightest text-ui-text",
+      authStatusTitle: "text-xl font-medium text-ui-text",
+      landingSectionTitle: "text-4xl font-semibold tracking-tight text-ui-text md:text-5xl",
+      landingShowcaseTitle: "text-2xl font-semibold tracking-tight text-ui-text sm:text-3xl",
+      landingMetricValue: "text-3xl font-bold tracking-tight text-ui-text sm:text-4xl",
+      landingPriceValue: "text-3xl font-bold tracking-tight text-ui-text",
+      boardSurfaceTitle: "text-xs font-semibold tracking-tight text-ui-text sm:text-lg",
+      boardColumnTitle: "text-sm font-medium tracking-tight text-ui-text-secondary",
+      boardColumnTitleCompact:
+        "truncate text-xs font-medium tracking-tight text-ui-text-secondary sm:text-sm",
+      fieldSectionLabel: "text-sm font-medium uppercase tracking-wide text-ui-text",
+      searchTriggerLabel: "hidden truncate text-xs text-ui-text-secondary sm:block sm:text-sm",
+      issueKeyMono: "text-sm font-mono tracking-tight text-ui-text-secondary",
+      monoBlock: "text-xs font-mono tracking-tight text-ui-text-secondary whitespace-pre-wrap",
+      monoWrap: "text-xs font-mono tracking-tight text-ui-text-secondary break-all",
+      monoWrapConstrained:
+        "block max-w-full break-all text-xs font-mono tracking-tight text-ui-text-secondary sm:max-w-40",
+      metricLabelWide: "text-xs uppercase tracking-widest text-ui-text-secondary",
       mono: "text-xs font-mono text-ui-text-secondary tracking-tight", // issue keys, codes
+      profileEmail: "max-w-lg text-xs text-ui-text-secondary",
       calendarHeaderDate: "text-xs font-medium text-ui-text sm:text-base",
       calendarHeaderTitle: "text-sm font-semibold tracking-tight text-ui-text sm:text-lg",
       calendarHeaderMonth: "text-center text-xs font-semibold text-brand-foreground uppercase",
@@ -93,6 +112,7 @@ const typographyVariants = cva("", {
       secondary: "text-ui-text-secondary",
       tertiary: "text-ui-text-tertiary",
       brand: "text-brand",
+      brandActive: "text-brand-active",
       error: "text-status-error",
       success: "text-status-success",
       warning: "text-status-warning",
@@ -136,12 +156,16 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
   switch (variant) {
     case "h1":
     case "dashboardHeroTitle":
+    case "errorCodeDisplay":
       return "h1";
     case "h2":
     case "authTitle":
+    case "boardSurfaceTitle":
+    case "landingSectionTitle":
       return "h2";
     case "h3":
     case "wikiCardTitle":
+    case "landingShowcaseTitle":
       return "h3";
     case "h4":
       return "h4";
@@ -161,11 +185,24 @@ function mapVariantToTag(variant: TypographyProps["variant"]): React.ElementType
     case "eyebrowWide":
     case "pageHeaderEyebrow":
     case "authBody":
+    case "authStatusTitle":
     case "dashboardStatValue":
     case "dashboardStatValueStrong":
+    case "landingMetricValue":
+    case "landingPriceValue":
+    case "boardColumnTitle":
+    case "boardColumnTitleCompact":
     case "projectHeaderTitle":
     case "placeholderTitle":
     case "metricLabel":
+    case "fieldSectionLabel":
+    case "searchTriggerLabel":
+    case "issueKeyMono":
+    case "monoBlock":
+    case "monoWrap":
+    case "monoWrapConstrained":
+    case "metricLabelWide":
+    case "profileEmail":
       return "p";
     case "mono":
     case "calendarHeaderDate":

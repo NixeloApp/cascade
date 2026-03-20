@@ -1,5 +1,6 @@
 import { cva } from "class-variance-authority";
 import { getCardRecipeClassName } from "../ui/Card";
+import { Container } from "../ui/Container";
 import { Flex } from "../ui/Flex";
 import { Typography } from "../ui/Typography";
 
@@ -15,7 +16,7 @@ const logoBarVariants = {
 export function LogoBar() {
   return (
     <section className={logoBarVariants.section()}>
-      <div className="mx-auto max-w-6xl">
+      <Container size="lg">
         <Typography variant="meta" className={logoBarVariants.eyebrow()}>
           Inspired by the workflows modern product teams expect
         </Typography>
@@ -27,7 +28,7 @@ export function LogoBar() {
             </span>
           ))}
         </Flex>
-      </div>
+      </Container>
     </section>
   );
 }

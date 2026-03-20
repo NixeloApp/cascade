@@ -72,6 +72,17 @@ describe("Card", () => {
       expect(card).toHaveClass("from-ui-bg-soft/80");
       expect(card).not.toHaveClass("from-ui-bg");
     });
+
+    it("should expose shared status callout recipes", () => {
+      const { rerender } = render(<Card recipe="statusBrand">Brand</Card>);
+
+      expect(screen.getByText("Brand")).toHaveClass("bg-brand-subtle");
+      expect(screen.getByText("Brand")).toHaveClass("text-brand");
+
+      rerender(<Card recipe="statusWarning">Warning</Card>);
+      expect(screen.getByText("Warning")).toHaveClass("bg-status-warning-bg");
+      expect(screen.getByText("Warning")).toHaveClass("text-status-warning-text");
+    });
   });
 
   describe("Hoverable Variant", () => {

@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { isLocatorVisible } from "../utils/locator-state";
 import { ROUTES } from "../utils/routes";
 
 type InviteRouteState = "loading" | "invalid" | "pending";
@@ -50,11 +51,11 @@ export class InvitePage {
   }
 
   private async getInviteRouteState(): Promise<InviteRouteState> {
-    if (await this.invalidHeading.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.invalidHeading)) {
       return "invalid";
     }
 
-    if (await this.loadingMessage.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.loadingMessage)) {
       return "loading";
     }
 

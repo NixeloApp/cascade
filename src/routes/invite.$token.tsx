@@ -10,6 +10,7 @@ import { api } from "@convex/_generated/api";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Authenticated, Unauthenticated } from "convex/react";
 import { AlertCircle, CheckCircle, Clock, Loader2 } from "lucide-react";
+import type { ReactNode } from "react";
 import { useState } from "react";
 import { AuthRedirect, SignInForm } from "@/components/Auth";
 import { Button } from "@/components/ui/Button";
@@ -24,6 +25,43 @@ export const Route = createFileRoute("/invite/$token")({
   component: InviteRoute,
   ssr: false, // No SSR needed for invite page
 });
+
+interface InviteStateScreenProps {
+  actionLabel: string;
+  body: ReactNode;
+  icon: ReactNode;
+  iconVariant: "error" | "warning" | "success";
+  onAction: () => void;
+  title: string;
+}
+
+function InviteStateScreen({
+  actionLabel,
+  body,
+  icon,
+  iconVariant,
+  onAction,
+  title,
+}: InviteStateScreenProps) {
+  return (
+    <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary p-6">
+      <div className="max-w-md w-full text-center">
+        <IconCircle size="xl" variant={iconVariant} className="mx-auto mb-6">
+          {icon}
+        </IconCircle>
+        <Typography variant="h3" className="mb-3">
+          {title}
+        </Typography>
+        <Typography variant="p" color="secondary" className="mb-6">
+          {body}
+        </Typography>
+        <Button variant="primary" onClick={onAction}>
+          {actionLabel}
+        </Button>
+      </div>
+    </Flex>
+  );
+}
 
 function InviteRoute() {
   const { token } = Route.useParams();
@@ -81,94 +119,64 @@ function InviteRoute() {
   // Invalid token
   if (invite === null) {
     return (
-      <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary p-6">
-        <div className="max-w-md w-full text-center">
-          <IconCircle size="xl" variant="error" className="mx-auto mb-6">
-            <AlertCircle className="w-12 h-12 text-status-error" />
-          </IconCircle>
-          <Typography variant="h3" className="mb-3">
-            Invalid Invitation
-          </Typography>
-          <Typography variant="p" color="secondary" className="mb-6">
-            This invitation link is invalid or has been removed. Please contact the person who
-            invited you for a new link.
-          </Typography>
-          <Button variant="primary" onClick={goToHome}>
-            Go to Home
-          </Button>
-        </div>
-      </Flex>
+      <InviteStateScreen
+        actionLabel="Go to Home"
+        body="This invitation link is invalid or has been removed. Please contact the person who invited you for a new link."
+        icon={<AlertCircle className="w-12 h-12 text-status-error" />}
+        iconVariant="error"
+        onAction={goToHome}
+        title="Invalid Invitation"
+      />
     );
   }
 
   // Expired invite (isExpired is computed from status === "pending" && expiresAt < now)
   if (invite.isExpired) {
     return (
-      <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary p-6">
-        <div className="max-w-md w-full text-center">
-          <IconCircle size="xl" variant="warning" className="mx-auto mb-6">
-            <Clock className="w-12 h-12 text-status-warning-text" />
-          </IconCircle>
-          <Typography variant="h3" className="mb-3">
-            Invitation Expired
-          </Typography>
-          <Typography variant="p" color="secondary" className="mb-6">
+      <InviteStateScreen
+        actionLabel="Go to Home"
+        body={
+          <>
             This invitation has expired. Please contact{" "}
             <Typography as="strong" variant="strong">
               {invite.inviterName}
             </Typography>{" "}
             to send a new invitation.
-          </Typography>
-          <Button variant="primary" onClick={goToHome}>
-            Go to Home
-          </Button>
-        </div>
-      </Flex>
+          </>
+        }
+        icon={<Clock className="w-12 h-12 text-status-warning-text" />}
+        iconVariant="warning"
+        onAction={goToHome}
+        title="Invitation Expired"
+      />
     );
   }
 
   // Already accepted
   if (invite.status === "accepted") {
     return (
-      <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary p-6">
-        <div className="max-w-md w-full text-center">
-          <IconCircle size="xl" variant="success" className="mx-auto mb-6">
-            <CheckCircle className="w-12 h-12 text-status-success" />
-          </IconCircle>
-          <Typography variant="h3" className="mb-3">
-            Already Accepted
-          </Typography>
-          <Typography variant="p" color="secondary" className="mb-6">
-            This invitation has already been accepted. You can sign in to access your account.
-          </Typography>
-          <Button variant="primary" onClick={goToHome}>
-            Go to Dashboard
-          </Button>
-        </div>
-      </Flex>
+      <InviteStateScreen
+        actionLabel="Go to Dashboard"
+        body="This invitation has already been accepted. You can sign in to access your account."
+        icon={<CheckCircle className="w-12 h-12 text-status-success" />}
+        iconVariant="success"
+        onAction={goToHome}
+        title="Already Accepted"
+      />
     );
   }
 
   // Revoked invite
   if (invite.status === "revoked") {
     return (
-      <Flex align="center" justify="center" className="min-h-screen bg-ui-bg-secondary p-6">
-        <div className="max-w-md w-full text-center">
-          <IconCircle size="xl" variant="error" className="mx-auto mb-6">
-            <AlertCircle className="w-12 h-12 text-status-error" />
-          </IconCircle>
-          <Typography variant="h3" className="mb-3">
-            Invitation Revoked
-          </Typography>
-          <Typography variant="p" color="secondary" className="mb-6">
-            This invitation has been revoked. Please contact the team administrator if you believe
-            this is a mistake.
-          </Typography>
-          <Button variant="primary" onClick={goToHome}>
-            Go to Home
-          </Button>
-        </div>
-      </Flex>
+      <InviteStateScreen
+        actionLabel="Go to Home"
+        body="This invitation has been revoked. Please contact the team administrator if you believe this is a mistake."
+        icon={<AlertCircle className="w-12 h-12 text-status-error" />}
+        iconVariant="error"
+        onAction={goToHome}
+        title="Invitation Revoked"
+      />
     );
   }
 
@@ -182,7 +190,7 @@ function InviteRoute() {
       <header className="p-6 flex items-center justify-center">
         <Flex align="center" gap="sm">
           <Flex align="center" justify="center" className="h-8 w-8 rounded-lg bg-brand-main">
-            <Typography variant="small" className="font-bold text-ui-bg">
+            <Typography as="span" variant="label" className="text-ui-bg">
               N
             </Typography>
           </Flex>
@@ -274,7 +282,7 @@ function InviteRoute() {
                       "Accept Invitation"
                     )}
                   </Button>
-                  <Typography className="text-xs text-center text-ui-text-tertiary">
+                  <Typography variant="caption" className="text-center">
                     By accepting, you'll join the team and can start collaborating
                   </Typography>
                 </div>
@@ -285,7 +293,7 @@ function InviteRoute() {
               <Unauthenticated>
                 {/* User is not logged in - show sign up/in form */}
                 <div className="space-y-4">
-                  <Typography className="text-sm text-center text-ui-text-secondary mb-4">
+                  <Typography variant="small" color="secondary" className="mb-4 text-center">
                     Sign in or create an account with{" "}
                     <Typography as="strong" variant="strong" className="text-ui-text">
                       {invite.email}

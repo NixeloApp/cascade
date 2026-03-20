@@ -141,10 +141,9 @@ function OnboardingPage() {
         </Flex>
         {step !== "invited" && (
           <Button
-            variant="ghost"
+            variant="ghostTertiary"
             size="sm"
             onClick={handleSkip}
-            className="text-ui-text-secondary hover:text-ui-text hover:bg-ui-bg-tertiary transition-all"
             data-testid={TEST_IDS.ONBOARDING.SKIP_BUTTON}
           >
             Skip for now
@@ -215,7 +214,7 @@ function OnboardingPage() {
 
       {/* Footer */}
       <footer className="p-6 text-center">
-        <Typography className="text-sm text-ui-text-tertiary">
+        <Typography variant="muted">
           Need help?{" "}
           <a href="mailto:support@nixelo.com" className="text-brand hover:underline">
             Contact support

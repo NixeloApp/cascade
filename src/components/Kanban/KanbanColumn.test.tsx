@@ -125,7 +125,9 @@ describe("KanbanColumn", () => {
     it("should show correct test IDs for accessibility", () => {
       render(<KanbanColumn {...defaultProps} />);
 
-      expect(screen.getByTestId(TEST_IDS.BOARD.COLUMN)).toBeInTheDocument();
+      const column = screen.getByTestId(TEST_IDS.BOARD.COLUMN);
+      expect(column).toBeInTheDocument();
+      expect(column).not.toHaveAttribute("data-board-column");
       expect(screen.getByTestId(TEST_IDS.BOARD.COLUMN_HEADER)).toBeInTheDocument();
       expect(screen.getByTestId(TEST_IDS.BOARD.COLUMN_COUNT)).toBeInTheDocument();
     });

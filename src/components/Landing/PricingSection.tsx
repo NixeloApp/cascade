@@ -44,7 +44,6 @@ const plans: PlanCard[] = [
 const pricingVariants = {
   section: cva("px-6 py-24 transition-colors"),
   intro: cva("text-center mb-14"),
-  heading: cva("text-3xl md:text-4xl font-bold mb-4 text-ui-text"),
   lead: cva("text-ui-text-secondary max-w-2xl mx-auto"),
   featureList: cva("space-y-2 mb-6"),
 };
@@ -59,7 +58,7 @@ export function PricingSection() {
     <section id="pricing" className={pricingVariants.section()}>
       <div className="max-w-6xl mx-auto">
         <div className={pricingVariants.intro()}>
-          <Typography variant="h2" className={pricingVariants.heading()}>
+          <Typography variant="landingSectionTitle" className="mb-4">
             Pricing that scales with your team
           </Typography>
           <Typography variant="lead" className={pricingVariants.lead()}>
@@ -71,10 +70,8 @@ export function PricingSection() {
           {plans.map((plan) => (
             <Card key={plan.name} recipe={getPricingCardRecipe(!!plan.featured)} padding="none">
               <div className="mb-4">
-                <Typography variant="h3" className="text-xl text-ui-text">
-                  {plan.name}
-                </Typography>
-                <Typography variant="h2" className="text-3xl font-bold mt-2 text-ui-text">
+                <Typography variant="h4">{plan.name}</Typography>
+                <Typography as="h2" variant="landingPriceValue" className="mt-2">
                   {plan.price}
                 </Typography>
                 <Typography variant="small" color="secondary" className="mt-2">

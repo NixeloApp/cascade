@@ -53,6 +53,7 @@ import {
   Users,
   X,
 } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 
@@ -222,6 +223,7 @@ function WorkspacesSectionContent({
           onNavClick={onNavClick}
           onCreateTeam={onCreateTeam}
           location={location}
+          itemTestId={TEST_IDS.NAV.WORKSPACE_ITEM}
         />
       ))}
       {showSearch && filteredCount === 0 && (
@@ -257,6 +259,7 @@ interface WorkspaceNavItemProps {
   onNavClick: () => void;
   onCreateTeam: (workspace: { id: Id<"workspaces">; slug: string }) => void;
   location: { pathname: string };
+  itemTestId?: string;
 }
 
 interface DocumentsSectionContentProps {
@@ -304,7 +307,7 @@ function DocumentsSectionContent({
             </Flex>
           </li>
           {favorites.map((doc) => (
-            <li key={doc._id} className="list-none">
+            <li key={doc._id} className="list-none" data-testid={TEST_IDS.NAV.DOCUMENT_ITEM}>
               <NavSubItem
                 to={ROUTES.documents.detail.path}
                 params={{ orgSlug, id: doc._id }}
@@ -332,7 +335,7 @@ function DocumentsSectionContent({
         </li>
       )}
       {documents.map((doc: SidebarDocument) => (
-        <li key={doc._id} className="list-none">
+        <li key={doc._id} className="list-none" data-testid={TEST_IDS.NAV.DOCUMENT_ITEM}>
           <NavSubItem
             to={ROUTES.documents.detail.path}
             params={{ orgSlug, id: doc._id }}
@@ -368,11 +371,12 @@ function WorkspaceNavItem({
   onNavClick,
   onCreateTeam,
   location,
+  itemTestId,
 }: WorkspaceNavItemProps) {
   const shouldShowTeams = isExpanded;
 
   return (
-    <li className="ml-2 group list-none">
+    <li className="ml-2 group list-none" data-testid={itemTestId}>
       <Flex align="center" gap="xs">
         <IconButton
           variant="ghost"
@@ -581,6 +585,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
       )}
 
       <aside
+        data-testid={TEST_IDS.NAV.SIDEBAR}
         className={cn(
           "fixed lg:relative z-50 lg:z-auto h-screen transition-default",
           isCollapsed ? "w-64 lg:w-16" : "w-64",
@@ -674,7 +679,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     isActive={isActive(ROUTES.dashboard.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
-                    data-tour="nav-dashboard"
+                    data-testid={TEST_IDS.NAV.DASHBOARD_LINK}
                   />
                   {/* Issues */}
                   <NavItem
@@ -685,7 +690,6 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     isActive={isActive(ROUTES.issues.list.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
-                    data-tour="nav-issues"
                   />
                   <NavItem
                     to={ROUTES.myIssues.path}
@@ -722,7 +726,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     isActive={isActive(ROUTES.calendar.path.replace("/$orgSlug", ""))}
                     isCollapsed={showCollapsed}
                     onClick={handleNavClick}
-                    data-tour="nav-calendar"
+                    data-testid={TEST_IDS.NAV.CALENDAR_LINK}
                   />
 
                   {/* Products Section */}
@@ -802,7 +806,8 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     to={ROUTES.documents.list.path}
                     params={{ orgSlug }}
                     onClick={handleNavClick}
-                    data-tour="nav-documents"
+                    data-testid={TEST_IDS.NAV.DOCUMENTS_LINK}
+                    childrenTestId={TEST_IDS.NAV.DOCUMENT_LIST}
                   >
                     <DocumentsSectionContent
                       favorites={filteredFavorites}
@@ -828,7 +833,8 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                     to={ROUTES.workspaces.list.path}
                     params={{ orgSlug }}
                     onClick={handleNavClick}
-                    data-tour="nav-projects"
+                    data-testid={TEST_IDS.NAV.WORKSPACES_LINK}
+                    childrenTestId={TEST_IDS.NAV.WORKSPACE_LIST}
                   >
                     <WorkspacesSectionContent
                       workspaces={displayedWorkspaces}
@@ -859,7 +865,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                       isActive={isActive(ROUTES.timeTracking.path.replace("/$orgSlug", ""))}
                       isCollapsed={showCollapsed}
                       onClick={handleNavClick}
-                      data-tour="nav-timesheet"
+                      data-testid={TEST_IDS.NAV.TIMESHEET_LINK}
                     />
                   )}
                 </Stack>
@@ -877,7 +883,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                   isActive={isActive("/settings")}
                   isCollapsed={showCollapsed}
                   onClick={handleNavClick}
-                  data-tour="nav-settings"
+                  data-testid={TEST_IDS.NAV.SETTINGS_LINK}
                 />
               </ul>
             </div>
@@ -902,7 +908,7 @@ type NavItemProps = Omit<LinkProps, "to"> & {
   label: string;
   isActive: boolean;
   isCollapsed: boolean;
-  "data-tour"?: string;
+  "data-testid"?: string;
   onClick?: (event: React.MouseEvent) => void;
 };
 
@@ -911,7 +917,7 @@ function NavItem({
   label,
   isActive,
   isCollapsed,
-  "data-tour": dataTour,
+  "data-testid": dataTestId,
   to,
   params,
   search,
@@ -932,7 +938,7 @@ function NavItem({
         search={search}
         onClick={onClick}
         {...props}
-        data-tour={dataTour}
+        data-testid={dataTestId}
         aria-label={isCollapsed ? label : undefined}
       >
         <Card
@@ -975,7 +981,8 @@ type CollapsibleSectionProps = {
   onAdd: () => void;
   onClick?: (event: React.MouseEvent) => void;
   children: React.ReactNode;
-  "data-tour"?: string;
+  childrenTestId?: string;
+  "data-testid"?: string;
 } & (
   | (Omit<LinkProps, "to"> & { to: LinkProps["to"] })
   | { to?: never; params?: never; search?: never }
@@ -990,7 +997,8 @@ function CollapsibleSection({
   isCollapsed,
   onAdd,
   children,
-  "data-tour": dataTour,
+  childrenTestId,
+  "data-testid": dataTestId,
   ...props
 }: CollapsibleSectionProps) {
   // Safe type narrowing check
@@ -1013,7 +1021,7 @@ function CollapsibleSection({
                 to={props.to}
                 params={props.params}
                 search={props.search}
-                data-tour={dataTour}
+                data-testid={dataTestId}
               >
                 <Icon className="w-5 h-5" />
               </Link>
@@ -1047,6 +1055,7 @@ function CollapsibleSection({
             to={props.to}
             params={props.params}
             search={props.search}
+            data-testid={dataTestId}
             aria-current={isActive ? "page" : undefined}
             className="min-w-0 grow"
           >
@@ -1092,7 +1101,7 @@ function CollapsibleSection({
       {/* Section children */}
       {isExpanded && (
         <Card recipe="sidebarSectionChildren" padding="none" className="ml-5 mt-1.5 p-2">
-          <Stack as="ul" gap="xs" className="list-none">
+          <Stack as="ul" gap="xs" className="list-none" data-testid={childrenTestId}>
             {children}
           </Stack>
         </Card>

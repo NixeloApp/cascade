@@ -1,5 +1,6 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
+import { DAY, MINUTE } from "@convex/lib/timeUtils";
 import { Link } from "@tanstack/react-router";
 import type { FunctionReturnType } from "convex/server";
 import {
@@ -11,17 +12,21 @@ import {
   useState,
 } from "react";
 import { PageContent } from "@/components/layout";
-import { Badge } from "@/components/ui/Badge";
+import { Badge, type BadgeProps } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Dialog } from "@/components/ui/Dialog";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Flex } from "@/components/ui/Flex";
+import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Grid } from "@/components/ui/Grid";
+import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { List } from "@/components/ui/List";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Metadata, MetadataItem } from "@/components/ui/Metadata";
+import { ScrollArea } from "@/components/ui/ScrollArea";
 import { Section } from "@/components/ui/Section";
 import {
   Select,
@@ -43,7 +48,6 @@ import {
 } from "@/lib/formatting";
 import { Calendar, CheckCircle, FileText, Mic, XCircle } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 
 type MeetingListItem = FunctionReturnType<typeof api.meetingBot.listRecordings>[number];
 type MeetingSearchItem = FunctionReturnType<typeof api.meetingBot.searchRecordings>[number];
@@ -111,16 +115,16 @@ const STATUS_LABELS: Record<string, string> = {
   failed: "Failed",
 };
 
-const STATUS_CLASSNAMES: Record<string, string> = {
-  scheduled: "bg-brand-subtle text-brand-active",
-  joining: "bg-status-warning-bg text-status-warning",
-  recording: "bg-status-error-bg text-status-error",
-  processing: "bg-accent-subtle text-accent-active",
-  transcribing: "bg-accent-subtle text-accent-active",
-  summarizing: "bg-accent-subtle text-accent-active",
-  completed: "bg-status-success-bg text-status-success",
-  cancelled: "bg-ui-bg-tertiary text-ui-text-secondary",
-  failed: "bg-status-error-bg text-status-error",
+const STATUS_BADGE_VARIANTS: Record<string, BadgeProps["variant"]> = {
+  scheduled: "brand",
+  joining: "warning",
+  recording: "error",
+  processing: "accent",
+  transcribing: "accent",
+  summarizing: "accent",
+  completed: "success",
+  cancelled: "secondary",
+  failed: "error",
 };
 
 const STATUS_FILTER_OPTIONS: Array<{ value: StatusFilter; label: string }> = [
@@ -157,9 +161,12 @@ function matchesTimeWindow(recording: MeetingOverview, timeWindow: TimeWindowFil
   const now = Date.now();
   const ageMs = now - (recording.scheduledStartTime ?? recording.createdAt);
   const dayCount = timeWindow === "7d" ? 7 : timeWindow === "30d" ? 30 : 90;
-  return ageMs >= 0 && ageMs <= dayCount * 24 * 60 * 60 * 1000;
+  return ageMs >= 0 && ageMs <= dayCount * DAY;
 }
 
+/**
+ * Filters meeting recordings using the active status, platform, project, and date filters.
+ */
 export function filterMeetingRecordings(
   recordings: MeetingOverview[] | undefined,
   filters: {
@@ -198,7 +205,7 @@ function formatDateTimeLocalValue(timestamp: number) {
 }
 
 function getDefaultScheduledTimeValue() {
-  const fiveMinutesFromNow = Date.now() + 5 * 60 * 1000;
+  const fiveMinutesFromNow = Date.now() + 5 * MINUTE;
   return formatDateTimeLocalValue(fiveMinutesFromNow);
 }
 
@@ -239,6 +246,9 @@ function filterMemoryItemsByProject<T extends { projectId?: Id<"projects"> }>(
   return items.filter((item) => item.projectId === projectId);
 }
 
+/**
+ * Restricts the meeting memory sections to the selected project lens.
+ */
 export function filterMeetingMemory(memory: MeetingMemory | undefined, projectId: ProjectFilter) {
   if (!memory) {
     return memory;
@@ -251,6 +261,9 @@ export function filterMeetingMemory(memory: MeetingMemory | undefined, projectId
   };
 }
 
+/**
+ * Aggregates memory items into project-level rollups for the lens buttons.
+ */
 export function getMeetingMemoryProjectLenses(
   memory: MeetingMemory | undefined,
   projects: ProjectOption[] | undefined,
@@ -334,7 +347,7 @@ function getTranscriptSegmentKey(segment: MeetingTranscriptSegment, index: numbe
 
 function StatusBadge({ status }: { status: string }) {
   return (
-    <Badge size="sm" className={STATUS_CLASSNAMES[status] ?? STATUS_CLASSNAMES.processing}>
+    <Badge size="sm" variant={STATUS_BADGE_VARIANTS[status] ?? "accent"}>
       {STATUS_LABELS[status] ?? "Unknown"}
     </Badge>
   );
@@ -350,48 +363,42 @@ function RecordingListItem({
   recording: MeetingOverview;
 }) {
   return (
-    <button type="button" onClick={onSelect} className="w-full text-left">
-      <Card
-        variant={isSelected ? "outline" : "soft"}
-        padding="md"
-        className={cn("transition-default", isSelected && "border-brand-ring bg-brand-subtle/40")}
-      >
-        <Stack gap="sm">
-          <Flex justify="between" align="start" gap="sm">
-            <Stack gap="xs" className="min-w-0">
-              <Typography variant="label" className="truncate">
-                {recording.title}
-              </Typography>
+    <Card variant={isSelected ? "outline" : "soft"} padding="md" hoverable onClick={onSelect}>
+      <Stack gap="sm">
+        <Flex justify="between" align="start" gap="sm" wrap>
+          <FlexItem flex="1">
+            <Stack gap="xs">
+              <Typography variant="label">{recording.title}</Typography>
               <Typography variant="caption" color="secondary">
                 {formatMeetingPlatform(recording.meetingPlatform)} <span aria-hidden="true">•</span>{" "}
                 {formatRelativeTime(recording.createdAt)}
               </Typography>
               {"matchExcerpt" in recording && recording.matchExcerpt && (
-                <Typography variant="caption" color="secondary" className="line-clamp-2">
+                <Typography variant="caption" color="secondary">
                   {recording.matchExcerpt}
                 </Typography>
               )}
             </Stack>
-            <StatusBadge status={recording.status} />
-          </Flex>
+          </FlexItem>
+          <StatusBadge status={recording.status} />
+        </Flex>
 
-          <Metadata>
-            {recording.scheduledStartTime && (
-              <MetadataItem icon={<Calendar className="h-4 w-4" />}>
-                {formatDateTime(recording.scheduledStartTime)}
-              </MetadataItem>
-            )}
-            <MetadataItem>{recording.isPublic ? "Shared in project" : "Private"}</MetadataItem>
-          </Metadata>
+        <Metadata>
+          {recording.scheduledStartTime && (
+            <MetadataItem icon={<Calendar size={16} />}>
+              {formatDateTime(recording.scheduledStartTime)}
+            </MetadataItem>
+          )}
+          <MetadataItem>{recording.isPublic ? "Shared in project" : "Private"}</MetadataItem>
+        </Metadata>
 
-          <Flex gap="xs" className="flex-wrap">
-            {recording.hasSummary && <Badge size="sm">Summary</Badge>}
-            {recording.hasTranscript && <Badge size="sm">Transcript</Badge>}
-            {recording.calendarEventId && <Badge size="sm">Calendar-linked</Badge>}
-          </Flex>
-        </Stack>
-      </Card>
-    </button>
+        <Flex gap="xs" wrap>
+          {recording.hasSummary && <Badge size="sm">Summary</Badge>}
+          {recording.hasTranscript && <Badge size="sm">Transcript</Badge>}
+          {recording.calendarEventId && <Badge size="sm">Calendar-linked</Badge>}
+        </Flex>
+      </Stack>
+    </Card>
   );
 }
 
@@ -481,7 +488,7 @@ function MeetingMemorySection({
   return (
     <Section title="Meeting Memory" description={description} gap="sm">
       {projectLenses.length > 0 && (
-        <Flex gap="xs" className="flex-wrap">
+        <Flex gap="xs" wrap>
           <Button
             variant={projectFilter === "all" ? "secondary" : "outline"}
             size="sm"
@@ -497,7 +504,9 @@ function MeetingMemorySection({
               onClick={() => onProjectSelect(lens.projectId)}
             >
               <Flex gap="xs" align="center">
-                <span>{lens.projectKey}</span>
+                <Typography as="span" variant="strong">
+                  {lens.projectKey}
+                </Typography>
                 <Badge size="sm">{lens.totalItems}</Badge>
               </Flex>
             </Button>
@@ -505,7 +514,7 @@ function MeetingMemorySection({
         </Flex>
       )}
 
-      <div className="grid gap-4 xl:grid-cols-3">
+      <Grid cols={1} colsXl={3} gap="lg">
         <MemoryCard
           title="Recent Decisions"
           description="Latest calls and commitments from completed meetings."
@@ -516,7 +525,7 @@ function MeetingMemorySection({
               Completed meetings will surface key decisions here.
             </Typography>
           ) : (
-            <Stack as="ul" gap="sm" className="list-none">
+            <List gap="sm">
               {filteredMemory.recentDecisions.map((item) => (
                 <li key={`${item.recordingId}-${item.decision}`}>
                   <Card variant="soft" padding="sm">
@@ -531,7 +540,7 @@ function MeetingMemorySection({
                   </Card>
                 </li>
               ))}
-            </Stack>
+            </List>
           )}
         </MemoryCard>
 
@@ -545,7 +554,7 @@ function MeetingMemorySection({
               Outstanding questions from summaries will appear here.
             </Typography>
           ) : (
-            <Stack as="ul" gap="sm" className="list-none">
+            <List gap="sm">
               {filteredMemory.openQuestions.map((item) => (
                 <li key={`${item.recordingId}-${item.question}`}>
                   <Card variant="soft" padding="sm">
@@ -560,7 +569,7 @@ function MeetingMemorySection({
                   </Card>
                 </li>
               ))}
-            </Stack>
+            </List>
           )}
         </MemoryCard>
 
@@ -574,13 +583,13 @@ function MeetingMemorySection({
               Pending follow-ups will appear here until they are linked into project work.
             </Typography>
           ) : (
-            <Stack as="ul" gap="sm" className="list-none">
+            <List gap="sm">
               {filteredMemory.unresolvedActionItems.map((item) => (
                 <li key={`${item.recordingId}-${item.description}`}>
                   <Card variant="soft" padding="sm">
                     <Stack gap="xs">
                       <Typography variant="small">{item.description}</Typography>
-                      <Flex gap="xs" className="flex-wrap">
+                      <Flex gap="xs" wrap>
                         {item.assignee && <Badge size="sm">{item.assignee}</Badge>}
                         {item.dueDate && <Badge size="sm">Due: {item.dueDate}</Badge>}
                         {item.priority && <Badge size="sm">Priority: {item.priority}</Badge>}
@@ -594,10 +603,10 @@ function MeetingMemorySection({
                   </Card>
                 </li>
               ))}
-            </Stack>
+            </List>
           )}
         </MemoryCard>
-      </div>
+      </Grid>
     </Section>
   );
 }
@@ -632,7 +641,7 @@ function MeetingProjectContext({
         <Stack gap="sm">
           {project ? (
             <>
-              <Flex justify="between" align="start" gap="sm" className="flex-wrap">
+              <Flex justify="between" align="start" gap="sm" wrap>
                 <Stack gap="xs">
                   <Typography variant="label">
                     {project.key} - {project.name}
@@ -646,7 +655,7 @@ function MeetingProjectContext({
                 <Badge size="sm">{project.role}</Badge>
               </Flex>
 
-              <Flex gap="xs" className="flex-wrap">
+              <Flex gap="xs" wrap>
                 <Badge size="sm">{linkedIssueCount} linked issues</Badge>
                 <Badge size="sm">{pendingFollowUpCount} pending follow-ups</Badge>
                 <Badge size="sm">
@@ -660,7 +669,7 @@ function MeetingProjectContext({
               </Typography>
 
               {organization && (
-                <Flex gap="xs" className="flex-wrap">
+                <Flex gap="xs" wrap>
                   <Button asChild variant="outline" size="sm">
                     <Link
                       to={ROUTES.projects.board.path}
@@ -704,7 +713,7 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
   if (!hasTranscriptSegments(transcript.segments)) {
     return (
       <Card variant="soft" padding="md">
-        <Typography as="pre" variant="mono" color="secondary" className="whitespace-pre-wrap">
+        <Typography as="pre" variant="monoBlock">
           {transcript.fullText}
         </Typography>
       </Card>
@@ -715,11 +724,11 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
     <Stack gap="sm">
       <Card padding="sm">
         <Stack gap="sm">
-          <Flex justify="between" align="center" gap="sm" className="flex-wrap">
+          <Flex justify="between" align="center" gap="sm" wrap>
             <Typography variant="caption" color="secondary">
               Segmented transcript with timestamps.
             </Typography>
-            <Flex gap="xs" className="flex-wrap">
+            <Flex gap="xs" wrap>
               <Badge size="sm">{transcript.segments.length} segments</Badge>
               {transcript.speakerCount && (
                 <Badge size="sm">{transcript.speakerCount} speakers</Badge>
@@ -740,7 +749,7 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
             <Typography variant="caption" color="secondary">
               Jump to segment
             </Typography>
-            <Flex gap="xs" className="flex-wrap">
+            <Flex gap="xs" wrap>
               {filteredSegments.map((segment, index) => {
                 const segmentKey = getTranscriptSegmentKey(segment, index);
                 const segmentLabel = `${formatTranscriptTimestamp(segment.startTime)}${
@@ -770,48 +779,50 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
         </Stack>
       </Card>
 
-      <Card variant="soft" padding="md" className="max-h-96 overflow-y-auto">
-        {filteredSegments.length === 0 ? (
-          <EmptyState
-            icon={FileText}
-            size="compact"
-            title="No transcript matches"
-            description="Try a different phrase or speaker name."
-          />
-        ) : (
-          <Stack as="ol" gap="sm" className="list-none">
-            {filteredSegments.map((segment, index) => {
-              const segmentKey = getTranscriptSegmentKey(segment, index);
+      <Card variant="soft" padding="md">
+        <ScrollArea size="contentLg">
+          {filteredSegments.length === 0 ? (
+            <EmptyState
+              icon={FileText}
+              size="compact"
+              title="No transcript matches"
+              description="Try a different phrase or speaker name."
+            />
+          ) : (
+            <List as="ol" gap="sm">
+              {filteredSegments.map((segment, index) => {
+                const segmentKey = getTranscriptSegmentKey(segment, index);
 
-              return (
-                <li
-                  key={segmentKey}
-                  ref={(element) => {
-                    segmentRefs.current[segmentKey] = element;
-                  }}
-                >
-                  <div className="p-2 border border-ui-border bg-ui-bg-secondary rounded-md">
-                    <Stack gap="xs">
-                      <Flex justify="between" align="start" gap="sm" className="flex-wrap">
-                        <Flex gap="xs" className="flex-wrap">
-                          <Badge size="sm">{formatTranscriptTimestamp(segment.startTime)}</Badge>
-                          <Badge size="sm">
-                            {formatTranscriptTimestamp(segment.startTime)} -{" "}
-                            {formatTranscriptTimestamp(segment.endTime)}
-                          </Badge>
-                          {segment.speaker && <Badge size="sm">{segment.speaker}</Badge>}
+                return (
+                  <li
+                    key={segmentKey}
+                    ref={(element) => {
+                      segmentRefs.current[segmentKey] = element;
+                    }}
+                  >
+                    <Card variant="section" padding="sm">
+                      <Stack gap="xs">
+                        <Flex justify="between" align="start" gap="sm" wrap>
+                          <Flex gap="xs" wrap>
+                            <Badge size="sm">{formatTranscriptTimestamp(segment.startTime)}</Badge>
+                            <Badge size="sm">
+                              {formatTranscriptTimestamp(segment.startTime)} -{" "}
+                              {formatTranscriptTimestamp(segment.endTime)}
+                            </Badge>
+                            {segment.speaker && <Badge size="sm">{segment.speaker}</Badge>}
+                          </Flex>
                         </Flex>
-                      </Flex>
-                      <Typography variant="caption" color="secondary">
-                        {segment.text}
-                      </Typography>
-                    </Stack>
-                  </div>
-                </li>
-              );
-            })}
-          </Stack>
-        )}
+                        <Typography variant="caption" color="secondary">
+                          {segment.text}
+                        </Typography>
+                      </Stack>
+                    </Card>
+                  </li>
+                );
+              })}
+            </List>
+          )}
+        </ScrollArea>
       </Card>
 
       <Card padding="sm">
@@ -819,14 +830,11 @@ function TranscriptSegmentList({ transcript }: { transcript: MeetingTranscript }
           <Typography variant="caption" color="secondary">
             Raw Transcript
           </Typography>
-          <Typography
-            as="pre"
-            variant="mono"
-            color="secondary"
-            className="max-h-40 overflow-y-auto whitespace-pre-wrap"
-          >
-            {transcript.fullText}
-          </Typography>
+          <ScrollArea size="contentSm">
+            <Typography as="pre" variant="monoBlock">
+              {transcript.fullText}
+            </Typography>
+          </ScrollArea>
         </Stack>
       </Card>
     </Stack>
@@ -854,17 +862,20 @@ function LinkedIssueDetails({ issueId }: { issueId: Id<"issues"> }) {
   }
 
   return (
-    <div className="rounded-lg border border-brand-border bg-brand-subtle/60 p-3">
+    <Card variant="section" padding="sm">
       <Stack gap="xs">
-        <Flex justify="between" align="start" gap="sm" className="flex-wrap">
+        <Flex justify="between" align="start" gap="sm" wrap>
           <Badge size="sm">Issue linked</Badge>
           <Badge size="sm">{issue.status}</Badge>
         </Flex>
         <Typography variant="caption" color="secondary">
-          <span className="font-medium text-ui-text">{issue.key}</span> {issue.title}
+          <Typography as="span" variant="strong">
+            {issue.key}
+          </Typography>{" "}
+          {issue.title}
         </Typography>
         {organization && (
-          <Button asChild variant="ghost" size="sm" className="w-fit px-0">
+          <Button asChild variant="link" size="none">
             <Link
               to={ROUTES.issues.detail.path}
               params={{ orgSlug: organization.orgSlug, key: issue.key }}
@@ -874,7 +885,7 @@ function LinkedIssueDetails({ issueId }: { issueId: Id<"issues"> }) {
           </Button>
         )}
       </Stack>
-    </div>
+    </Card>
   );
 }
 
@@ -904,13 +915,9 @@ function ActionItemCard({
       <Stack gap="xs">
         <Flex justify="between" align="start" gap="sm">
           <Typography variant="small">{actionItem.description}</Typography>
-          {actionItem.assignee && (
-            <Badge size="sm" className="shrink-0">
-              {actionItem.assignee}
-            </Badge>
-          )}
+          {actionItem.assignee && <Badge size="sm">{actionItem.assignee}</Badge>}
         </Flex>
-        <Flex gap="xs" className="flex-wrap">
+        <Flex gap="xs" wrap>
           {actionItem.dueDate && <Badge size="sm">Due: {actionItem.dueDate}</Badge>}
           {actionItem.priority && <Badge size="sm">Priority: {actionItem.priority}</Badge>}
         </Flex>
@@ -918,7 +925,7 @@ function ActionItemCard({
         {actionItem.issueCreated ? (
           <LinkedIssueDetails issueId={actionItem.issueCreated} />
         ) : (
-          <div className="rounded-lg border border-ui-border bg-ui-bg-elevated p-3">
+          <Card variant="section" padding="sm">
             <Stack gap="xs">
               <Typography variant="caption" color="secondary">
                 Turn this follow-up into a tracked issue.
@@ -933,27 +940,25 @@ function ActionItemCard({
                   Join a project to create issues from meeting action items.
                 </Typography>
               ) : (
-                <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-                  <Select
-                    key={`${summaryId}-${index}-${selectedProjectId ?? "none"}`}
-                    defaultValue={selectedProjectId ?? undefined}
-                    onValueChange={(value) => onProjectChange(value as Id<"projects">)}
-                  >
-                    <SelectTrigger
-                      aria-label={`Project for action item ${index + 1}`}
-                      className="w-full"
+                <Flex direction="column" directionSm="row" gap="sm" alignSm="center">
+                  <FlexItem flex="1">
+                    <Select
+                      key={`${summaryId}-${index}-${selectedProjectId ?? "none"}`}
+                      defaultValue={selectedProjectId ?? undefined}
+                      onValueChange={(value) => onProjectChange(value as Id<"projects">)}
                     >
-                      <SelectValue placeholder="Choose project" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableProjects.map((project) => (
-                        <SelectItem key={project._id} value={project._id}>
-                          {project.key} - {project.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
+                      <SelectTrigger aria-label={`Project for action item ${index + 1}`}>
+                        <SelectValue placeholder="Choose project" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableProjects.map((project) => (
+                          <SelectItem key={project._id} value={project._id}>
+                            {project.key} - {project.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FlexItem>
                   <Button
                     variant="secondary"
                     size="sm"
@@ -963,10 +968,10 @@ function ActionItemCard({
                   >
                     Create issue
                   </Button>
-                </div>
+                </Flex>
               )}
             </Stack>
-          </div>
+          </Card>
         )}
       </Stack>
     </Card>
@@ -1022,7 +1027,7 @@ function ActionItemsSection({
 
   return (
     <Section title="Action Items" gap="sm">
-      <Stack as="ul" gap="sm" className="list-none">
+      <List gap="sm">
         {summary.actionItems.map((item, index) => (
           <li key={`${item.description}-${item.assignee ?? ""}-${item.dueDate ?? ""}`}>
             <ActionItemCard
@@ -1043,7 +1048,7 @@ function ActionItemsSection({
             />
           </li>
         ))}
-      </Stack>
+      </List>
     </Section>
   );
 }
@@ -1053,22 +1058,22 @@ function ParticipantsSection({ participants }: { participants: MeetingParticipan
 
   return (
     <Section title="Participants" gap="sm">
-      <Stack as="ul" gap="sm" className="list-none">
+      <List gap="sm">
         {participants.map((participant) => (
           <li key={participant._id}>
             <Card variant="soft" padding="sm">
               <Flex justify="between" align="center" gap="sm">
-                <Stack gap="xs" className="min-w-0">
-                  <Typography variant="label" className="truncate">
-                    {participant.displayName}
-                  </Typography>
-                  {participant.email && (
-                    <Typography variant="caption" color="secondary" className="truncate">
-                      {participant.email}
-                    </Typography>
-                  )}
-                </Stack>
-                <Flex gap="xs" className="shrink-0 flex-wrap justify-end">
+                <FlexItem flex="1">
+                  <Stack gap="xs">
+                    <Typography variant="label">{participant.displayName}</Typography>
+                    {participant.email && (
+                      <Typography variant="caption" color="secondary">
+                        {participant.email}
+                      </Typography>
+                    )}
+                  </Stack>
+                </FlexItem>
+                <Flex gap="xs" wrap justify="end">
                   {participant.isHost && <Badge size="sm">Host</Badge>}
                   {participant.isExternal && <Badge size="sm">External</Badge>}
                 </Flex>
@@ -1076,7 +1081,7 @@ function ParticipantsSection({ participants }: { participants: MeetingParticipan
             </Card>
           </li>
         ))}
-      </Stack>
+      </List>
     </Section>
   );
 }
@@ -1113,7 +1118,7 @@ function SummarySections({
       <Card variant="soft" padding="md">
         <Section title="Summary" gap="sm">
           <Typography variant="muted">{summary.executiveSummary}</Typography>
-          <Flex gap="xs" className="flex-wrap">
+          <Flex gap="xs" wrap>
             {summary.overallSentiment && (
               <Badge size="sm">Sentiment: {summary.overallSentiment}</Badge>
             )}
@@ -1124,15 +1129,11 @@ function SummarySections({
 
       {summary.keyPoints.length > 0 && (
         <Section title="Key Points" gap="sm">
-          <Stack
-            as="ul"
-            gap="xs"
-            className="list-disc list-inside text-ui-text-secondary marker:text-brand"
-          >
+          <List gap="xs" variant="bulleted">
             {summary.keyPoints.map((point) => (
               <li key={point}>{point}</li>
             ))}
-          </Stack>
+          </List>
         </Section>
       )}
 
@@ -1144,37 +1145,33 @@ function SummarySections({
 
       {summary.decisions.length > 0 && (
         <Section title="Decisions" gap="sm">
-          <Stack as="ul" gap="xs" className="list-none">
+          <List gap="xs">
             {summary.decisions.map((decision) => (
               <Flex as="li" key={decision} align="start" gap="sm">
-                <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-status-success" />
+                <Icon icon={CheckCircle} size="sm" tone="success" />
                 <Typography variant="caption" color="secondary">
                   {decision}
                 </Typography>
               </Flex>
             ))}
-          </Stack>
+          </List>
         </Section>
       )}
 
       {summary.openQuestions.length > 0 && (
         <Section title="Open Questions" gap="sm">
-          <Stack
-            as="ul"
-            gap="xs"
-            className="list-disc list-inside text-ui-text-secondary marker:text-brand"
-          >
+          <List gap="xs" variant="bulleted">
             {summary.openQuestions.map((question) => (
               <li key={question}>{question}</li>
             ))}
-          </Stack>
+          </List>
         </Section>
       )}
 
       {summary.topics.length > 0 && (
         <Section title="Topics" gap="sm">
-          <Stack as="ul" gap="sm" className="list-none">
-            {summary.topics.map((topic, index) => (
+          <List gap="sm">
+            {summary.topics.map((topic) => (
               <li key={`topic-${topic.title}-${topic.summary}`}>
                 <Card variant="soft" padding="sm">
                   <Stack gap="xs">
@@ -1186,7 +1183,7 @@ function SummarySections({
                 </Card>
               </li>
             ))}
-          </Stack>
+          </List>
         </Section>
       )}
 
@@ -1220,18 +1217,20 @@ function RecordingDetailPanel({
     <Stack gap="lg">
       <Card padding="md">
         <Stack gap="sm">
-          <Flex justify="between" align="start" gap="sm">
-            <Stack gap="xs" className="min-w-0">
-              <Typography variant="h4">{recording.title}</Typography>
-              <Typography variant="caption" color="secondary">
-                {formatMeetingPlatform(recording.meetingPlatform)}
-              </Typography>
-            </Stack>
+          <Flex justify="between" align="start" gap="sm" wrap>
+            <FlexItem flex="1">
+              <Stack gap="xs">
+                <Typography variant="h4">{recording.title}</Typography>
+                <Typography variant="caption" color="secondary">
+                  {formatMeetingPlatform(recording.meetingPlatform)}
+                </Typography>
+              </Stack>
+            </FlexItem>
             <StatusBadge status={recording.status} />
           </Flex>
 
           <Metadata>
-            <MetadataItem icon={<Calendar className="h-4 w-4" />}>
+            <MetadataItem icon={<Calendar size={16} />}>
               {recording.scheduledStartTime
                 ? formatDateTime(recording.scheduledStartTime)
                 : formatDateTime(recording._creationTime)}
@@ -1249,14 +1248,14 @@ function RecordingDetailPanel({
           </Metadata>
 
           {recording.errorMessage && (
-            <div className="p-2 border border-status-error/30 bg-status-error-bg rounded-md">
+            <Card variant="section" padding="sm">
               <Flex gap="sm" align="start">
-                <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-status-error" />
+                <Icon icon={XCircle} size="sm" tone="error" />
                 <Typography variant="caption" color="secondary">
                   {recording.errorMessage}
                 </Typography>
               </Flex>
-            </div>
+            </Card>
           )}
         </Stack>
       </Card>
@@ -1441,6 +1440,9 @@ function ScheduleRecordingDialog({
   );
 }
 
+/**
+ * Meetings workspace with memory rail, recording filters, and recording detail panel.
+ */
 export function MeetingsWorkspace() {
   const [projectFilter, setProjectFilter] = useState<ProjectFilter>("all");
   const recordingQueryArgs =
@@ -1530,14 +1532,14 @@ export function MeetingsWorkspace() {
           onProjectSelect={setProjectFilter}
         />
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+        <Grid cols={1} colsLg={2} gap="lg">
           <Section
             title="Recent Meetings"
             description="Recordings created from calendar-linked meetings and direct bot runs."
             gap="sm"
           >
             <Stack gap="sm">
-              <Flex justify="between" align="center" gap="sm" className="flex-wrap">
+              <Flex justify="between" align="center" gap="sm" wrap>
                 <Typography variant="caption" color="secondary">
                   Schedule from calendar or add an ad-hoc meeting URL here.
                 </Typography>
@@ -1554,7 +1556,7 @@ export function MeetingsWorkspace() {
                 aria-label="Search meetings"
               />
 
-              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+              <Grid cols={1} colsSm={2} colsXl={4} gap="sm">
                 <Select
                   value={statusFilter}
                   onValueChange={(value) => setStatusFilter(value as StatusFilter)}
@@ -1619,7 +1621,7 @@ export function MeetingsWorkspace() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </Grid>
 
               {filteredRecordings !== undefined && (
                 <Typography variant="caption" color="secondary">
@@ -1642,7 +1644,7 @@ export function MeetingsWorkspace() {
                   description="Adjust the search or filters, or open calendar to schedule a new meeting recording."
                 />
               ) : (
-                <Stack as="ul" gap="sm" className="list-none">
+                <List gap="sm">
                   {filteredRecordings?.map((recording) => (
                     <li key={recording._id}>
                       <RecordingListItem
@@ -1652,7 +1654,7 @@ export function MeetingsWorkspace() {
                       />
                     </li>
                   ))}
-                </Stack>
+                </List>
               )}
             </Stack>
           </Section>
@@ -1673,7 +1675,7 @@ export function MeetingsWorkspace() {
               />
             )}
           </Section>
-        </div>
+        </Grid>
       </Stack>
 
       <ScheduleRecordingDialog

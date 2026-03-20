@@ -72,8 +72,9 @@ export function AIAssistantButton({
       {unreadCount > 0 && (
         <Badge
           variant="alertCount"
+          size="fabAlertCount"
           shape="pill"
-          className="absolute -top-1 -right-1 flex h-6 min-w-6 items-center justify-center px-1.5 animate-pulse"
+          className="absolute -top-1 -right-1 animate-pulse"
         >
           {displayCount}
         </Badge>

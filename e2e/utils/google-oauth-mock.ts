@@ -33,6 +33,7 @@
 import type { Page, Route } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { ROUTES } from "./routes";
+import { getToastLocator } from "./toast-locators";
 
 const GOOGLE_OAUTH_HOST = "accounts.google.com";
 
@@ -164,7 +165,7 @@ export async function verifyOAuthSuccess(page: Page): Promise<void> {
   await expect(page).not.toHaveURL(new RegExp(`${ROUTES.signin.path}|${ROUTES.signup.path}`));
 
   // Should not show error toast
-  const errorToast = page.locator('[data-sonner-toast][data-type="error"]');
+  const errorToast = getToastLocator(page, "error");
   await expect(errorToast).not.toBeVisible();
 }
 
@@ -177,7 +178,7 @@ export async function verifyOAuthError(page: Page): Promise<void> {
 
   if (!onAuthPage) {
     // If not on auth page, there should be an error toast
-    const errorToast = page.locator('[data-sonner-toast][data-type="error"]');
+    const errorToast = getToastLocator(page, "error");
     await expect(errorToast).toBeVisible();
   }
 }

@@ -106,11 +106,14 @@ function FilterDropdown<T>({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button chrome={isActive ? "filterActive" : "filter"} chromeSize="filterPill">
+        <Button
+          chrome={isActive ? "filterActive" : "filter"}
+          chromeSize="filterPill"
+          rightIcon={<Icon icon={ChevronDown} size="sm" />}
+        >
           <span className="sm:hidden">{shortLabel ?? label}</span>
           <span className="hidden sm:inline">{label}</span>
           {isActive && ` (${activeCount})`}
-          <ChevronDown className="ml-1 w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className={cn(scrollable && "max-h-64 overflow-y-auto")}>
@@ -163,11 +166,14 @@ function DateRangeDropdown({ label, shortLabel, value, onChange }: DateRangeDrop
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button chrome={isActive ? "filterActive" : "filter"} chromeSize="filterPill">
+        <Button
+          chrome={isActive ? "filterActive" : "filter"}
+          chromeSize="filterPill"
+          rightIcon={<Icon icon={ChevronDown} size="sm" />}
+        >
           <span className="sm:hidden">{shortLabel ?? label}</span>
           <span className="hidden sm:inline">{label}</span>
           {isActive && " (1)"}
-          <ChevronDown className="ml-1 w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-56">
@@ -186,8 +192,13 @@ function DateRangeDropdown({ label, shortLabel, value, onChange }: DateRangeDrop
               onChange={(e) => handleToChange(e.target.value)}
             />
             {isActive && (
-              <Button variant="ghost" size="sm" onClick={handleClear} className="w-full">
-                <X className="w-4 h-4 mr-1" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClear}
+                className="w-full"
+                leftIcon={<Icon icon={X} size="sm" />}
+              >
                 Clear
               </Button>
             )}
@@ -216,10 +227,13 @@ function SavedFiltersDropdown({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button chrome="filter" chromeSize="filterPill">
+        <Button
+          chrome="filter"
+          chromeSize="filterPill"
+          rightIcon={<Icon icon={ChevronDown} size="sm" />}
+        >
           <span className="sm:hidden">Saved</span>
           <span className="hidden sm:inline">Saved Filters</span> ({savedFilters.length})
-          <ChevronDown className="ml-1 w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="max-h-64 overflow-y-auto min-w-48">
@@ -407,10 +421,9 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
           type="text"
           placeholder="Search"
           variant="filter"
-          inputSize="filterPill"
+          inputSize="filterSearchPill"
           value={filters.query ?? ""}
           onChange={handleSearchChange}
-          className="w-20 pr-2 sm:w-64 sm:pr-3"
           aria-label="Search issues"
         />
 
@@ -525,8 +538,12 @@ export function FilterBar({ projectId, filters, onFilterChange }: FilterBarProps
 
         {/* Clear Filters */}
         {hasActiveFilters && (
-          <Button chrome="filter" chromeSize="filterPill" onClick={handleClearFilters}>
-            <X className="w-4 h-4 mr-1" />
+          <Button
+            chrome="filter"
+            chromeSize="filterPill"
+            onClick={handleClearFilters}
+            leftIcon={<Icon icon={X} size="sm" />}
+          >
             Clear ({activeFilterCount})
           </Button>
         )}

@@ -1,16 +1,19 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { TEST_IDS } from "../../src/lib/test-ids";
-import { escapeRegExp, ROUTES, routePattern } from "../utils/routes";
 import {
   createWorkspaceFromDialog,
   dismissWorkspaceDialogIfOpen,
+  getLocatorCount,
   getWorkspaceDialogElements,
+  isLocatorDisabled,
+  isLocatorVisible,
   waitForBoardLoaded,
   waitForIssueCreateSuccess,
   waitForIssueUpdateSuccess,
   waitForProjectCreateSuccess,
-} from "../utils/wait-helpers";
+} from "../utils";
+import { escapeRegExp, ROUTES, routePattern } from "../utils/routes";
 import { BasePage } from "./base.page";
 
 /**
@@ -28,6 +31,7 @@ export class ProjectsPage extends BasePage {
   readonly createEntityButton: Locator; // Alias for sidebar "Add new project" or "Create Workspace" button
   readonly projectList: Locator;
   readonly projectItems: Locator;
+  readonly projectsPageHeading: Locator;
 
   // ===================
   // Locators - Create Project Form
@@ -127,7 +131,7 @@ export class ProjectsPage extends BasePage {
     super(page, orgSlug);
 
     // Sidebar
-    this.sidebar = page.locator("[data-tour='sidebar']").or(page.getByRole("complementary"));
+    this.sidebar = page.getByTestId(TEST_IDS.NAV.SIDEBAR).or(page.getByRole("complementary"));
     // Scope to main content area and take first match (header action or empty-state action)
     // Both trigger the same create-project modal, so either is valid
     this.newProjectButton = page
@@ -138,11 +142,12 @@ export class ProjectsPage extends BasePage {
     this.createEntityButton = this.sidebar.getByRole("button", {
       name: /add new|create|\+/i,
     });
+    this.projectsPageHeading = page.getByRole("heading", { name: /^projects$/i });
     this.projectList = page
-      .locator("[data-project-list]")
+      .getByTestId(TEST_IDS.NAV.WORKSPACE_LIST)
       .or(this.sidebar.locator("ul, [role='list']").first());
     this.projectItems = page
-      .locator("[data-project-item]")
+      .getByTestId(TEST_IDS.NAV.WORKSPACE_ITEM)
       .or(this.sidebar.getByRole("button").filter({ hasNotText: /new|add/i }));
 
     // Create project form - look for dialog content
@@ -172,29 +177,25 @@ export class ProjectsPage extends BasePage {
 
     // Project board - look for Kanban Board heading or board container
     this.projectBoard = page
-      .locator("[data-project-board]")
+      .getByTestId(TEST_IDS.BOARD.ROOT)
       .or(page.getByRole("heading", { name: /kanban board|scrum board/i }));
     this.boardColumns = page.getByTestId(TEST_IDS.BOARD.COLUMN);
     this.issueCards = page.getByTestId(TEST_IDS.ISSUE.CARD);
     // Create issue - prefer the stable first-column trigger used by the tour,
     // fall back to "Add issue" or empty-state "Add first issue" button.
     this.createIssueButton = page
-      .locator("[data-tour='create-issue']")
+      .getByTestId(TEST_IDS.ISSUE.CREATE_TRIGGER)
       .or(page.getByRole("button", { name: /add (first )?issue/i }))
       .first();
 
     // Create issue modal
     this.createIssueModal = page
       .getByRole("dialog")
-      .filter({ hasText: /create.*issue|new.*issue/i });
-    this.issueTitleInput = this.createIssueModal
-      .getByPlaceholder(/title|issue.*title/i)
-      .or(this.createIssueModal.getByRole("textbox", { name: /title/i }))
-      .first();
-    this.issueDescriptionInput = this.createIssueModal
-      .getByPlaceholder(/description/i)
-      .or(this.createIssueModal.locator("[data-issue-description]"))
-      .first();
+      .filter({ has: page.getByTestId(TEST_IDS.ISSUE.CREATE_MODAL) });
+    this.issueTitleInput = this.createIssueModal.getByTestId(TEST_IDS.ISSUE.CREATE_TITLE_INPUT);
+    this.issueDescriptionInput = this.createIssueModal.getByTestId(
+      TEST_IDS.ISSUE.CREATE_DESCRIPTION_EDITOR,
+    );
     this.issueTypeSelect = this.createIssueModal.getByRole("combobox", { name: /type/i }).first();
     this.issuePrioritySelect = this.createIssueModal
       .getByRole("combobox", { name: /priority/i })
@@ -336,7 +337,7 @@ export class ProjectsPage extends BasePage {
     }
 
     // Check if modal is already open but still pending before re-clicking
-    if (await this.createProjectForm.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.createProjectForm)) {
       await this.expectCreateProjectWizardReady();
     } else {
       await this.ensureProjectsView();
@@ -454,17 +455,16 @@ export class ProjectsPage extends BasePage {
   private async findVisibleCreateIssueTrigger(timeout = 2000): Promise<Locator | null> {
     const triggerCandidates = [
       this.page.getByRole("button", { name: /add first issue/i }).first(),
-      this.page.locator("[data-tour='create-issue']").first(),
+      this.page.getByTestId(TEST_IDS.ISSUE.CREATE_TRIGGER).first(),
       this.page.getByRole("button", { name: /add issue/i }).first(),
     ];
 
     for (const trigger of triggerCandidates) {
-      if ((await trigger.count().catch(() => 0)) === 0) {
+      if ((await getLocatorCount(trigger)) === 0) {
         continue;
       }
 
-      await trigger.waitFor({ state: "visible", timeout }).catch(() => {});
-      if (await trigger.isVisible().catch(() => false)) {
+      if (await this.waitForLocatorToBecomeVisible(trigger, timeout)) {
         return trigger;
       }
     }
@@ -478,7 +478,7 @@ export class ProjectsPage extends BasePage {
       return false;
     }
 
-    await trigger.scrollIntoViewIfNeeded().catch(() => {});
+    await this.prepareLocatorForInteraction(trigger, "create issue trigger");
     await trigger.click();
     return this.waitForCreateIssueModalReady(readyTimeout);
   }
@@ -502,7 +502,7 @@ export class ProjectsPage extends BasePage {
   private async submitCreateIssue() {
     await expect(this.submitIssueButton).toBeVisible();
     await expect(this.submitIssueButton).toBeEnabled();
-    await this.submitIssueButton.scrollIntoViewIfNeeded().catch(() => {});
+    await this.prepareLocatorForInteraction(this.submitIssueButton, "create issue submit button");
     await this.submitIssueButton.click();
 
     // Don't retry non-idempotent issue creation - wait longer for submit state instead
@@ -519,11 +519,11 @@ export class ProjectsPage extends BasePage {
   }
 
   private async getCreateIssueSubmitState() {
-    if (!(await this.createIssueModal.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.createIssueModal))) {
       return "closed";
     }
 
-    if (await this.submitIssueButton.isDisabled().catch(() => false)) {
+    if (await isLocatorDisabled(this.submitIssueButton)) {
       return "submitting";
     }
 
@@ -594,7 +594,7 @@ export class ProjectsPage extends BasePage {
 
     if (tab === "activity") {
       await expect(this.activityPageHeader).toBeVisible();
-      await expect(this.activityEmptyState.or(this.activityFeed)).toBeVisible();
+      await this.expectActivityLoaded();
       return;
     }
 
@@ -644,9 +644,7 @@ export class ProjectsPage extends BasePage {
       | "analytics"
       | "settings",
   ) {
-    return this.getProjectTab(tab)
-      .isVisible()
-      .catch(() => false);
+    return isLocatorVisible(this.getProjectTab(tab));
   }
 
   async expectProjectTabCurrent(
@@ -732,27 +730,22 @@ export class ProjectsPage extends BasePage {
 
   async getRoadmapEpicFilterState(): Promise<"visible" | "hidden"> {
     await this.expectRoadmapLoaded();
-    return (await this.roadmapEpicFilter.isVisible().catch(() => false)) ? "visible" : "hidden";
+    return (await isLocatorVisible(this.roadmapEpicFilter)) ? "visible" : "hidden";
   }
 
   async expectSprintsLoaded() {
     await expect(this.page).toHaveURL(routePattern(ROUTES.projects.sprints.path));
     await expect(this.sprintsPageHeader).toBeVisible();
 
-    if (await this.createSprintButton.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.createSprintButton)) {
       return;
     }
 
-    if (await this.sprintsEmptyState.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.sprintsEmptyState)) {
       return;
     }
 
-    if (
-      await this.sprintCards
-        .first()
-        .isVisible()
-        .catch(() => false)
-    ) {
+    if (await isLocatorVisible(this.sprintCards.first())) {
       return;
     }
 
@@ -768,31 +761,12 @@ export class ProjectsPage extends BasePage {
 
   async getActivityPageState(): Promise<"empty" | "entries"> {
     await expect(this.activityPageHeader).toBeVisible();
-
-    if (
-      await this.activityEntries
-        .first()
-        .isVisible()
-        .catch(() => false)
-    ) {
-      return "entries";
-    }
-
-    if (await this.activityEmptyState.isVisible().catch(() => false)) {
-      return "empty";
-    }
-
-    await expect(this.activityEmptyState.or(this.activityEntries.first())).toBeVisible();
-
-    return (await this.activityEntries
-      .first()
-      .isVisible()
-      .catch(() => false))
-      ? "entries"
-      : "empty";
+    await this.expectActivityLoaded();
+    return this.readActivityPageState();
   }
 
   async expectActivityEntriesVisible() {
+    await this.expectActivityLoaded();
     await expect(this.activityFeed).toBeVisible();
     await expect(this.activityEntries.first()).toBeVisible();
   }
@@ -818,6 +792,27 @@ export class ProjectsPage extends BasePage {
   async expectActivityRelativeTimestampVisible() {
     await this.expectActivityEntriesVisible();
     await expect(this.activityFeed.getByTestId(TEST_IDS.ACTIVITY.TIMESTAMP).first()).toBeVisible();
+  }
+
+  private async readActivityPageState(): Promise<"empty" | "entries" | "pending"> {
+    if (await isLocatorVisible(this.activityEntries.first())) {
+      return "entries";
+    }
+
+    if (await isLocatorVisible(this.activityEmptyState)) {
+      return "empty";
+    }
+
+    return "pending";
+  }
+
+  private async expectActivityLoaded(timeout = 10000): Promise<void> {
+    await expect
+      .poll(() => this.readActivityPageState(), {
+        timeout,
+        intervals: [200, 500, 1000],
+      })
+      .not.toBe("pending");
   }
 
   /**
@@ -884,13 +879,13 @@ export class ProjectsPage extends BasePage {
   }
 
   async closeIssueDetailIfOpen() {
-    if (!(await this.issueDetailDialog.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.issueDetailDialog))) {
       return;
     }
 
     await this.page.keyboard.press("Escape");
 
-    if (await this.issueDetailDialog.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.issueDetailDialog)) {
       await this.page.mouse.click(10, 10);
     }
 
@@ -898,19 +893,19 @@ export class ProjectsPage extends BasePage {
   }
 
   async closeCreateProjectFormIfOpen() {
-    if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.createProjectForm))) {
       return;
     }
 
-    if (await this.cancelButton.isVisible().catch(() => false)) {
-      await this.cancelButton.click().catch(() => {});
+    if (await isLocatorVisible(this.cancelButton)) {
+      await this.tryDismissCreateProjectFormWithCancel();
     }
 
-    if (await this.createProjectForm.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.createProjectForm)) {
       await this.page.keyboard.press("Escape");
     }
 
-    if (await this.createProjectForm.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.createProjectForm)) {
       await this.page.mouse.click(10, 10);
     }
 
@@ -918,7 +913,7 @@ export class ProjectsPage extends BasePage {
   }
 
   async submitCreateProject() {
-    if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.createProjectForm))) {
       return;
     }
 
@@ -927,18 +922,18 @@ export class ProjectsPage extends BasePage {
   }
 
   async tryStartCreateProjectSubmit() {
-    if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.createProjectForm))) {
       return;
     }
 
     // Don't use bounded retry for non-idempotent project creation
     await expect(this.createButton).toBeVisible();
-    await this.createButton.scrollIntoViewIfNeeded().catch(() => {});
+    await this.prepareLocatorForInteraction(this.createButton, "create project submit button");
     await this.createButton.click();
   }
 
   async waitForCreateProjectSubmitStart(timeout = 10000) {
-    if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.createProjectForm))) {
       return true;
     }
 
@@ -961,16 +956,16 @@ export class ProjectsPage extends BasePage {
   }
 
   private async getCreateProjectSubmitState(): Promise<"submitting" | "closed" | "pending"> {
-    if (!(await this.createProjectForm.isVisible().catch(() => false))) {
+    if (!(await isLocatorVisible(this.createProjectForm))) {
       return "closed";
     }
 
     const creatingButton = this.createProjectForm.getByRole("button", { name: /creating/i });
-    if (await creatingButton.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(creatingButton)) {
       return "submitting";
     }
 
-    if (await this.createButton.isDisabled().catch(() => false)) {
+    if (await isLocatorDisabled(this.createButton)) {
       return "submitting";
     }
 
@@ -1023,7 +1018,7 @@ export class ProjectsPage extends BasePage {
    * Start timer in issue detail dialog
    */
   async startTimer() {
-    if (await this.stopTimerButton.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.stopTimerButton)) {
       return;
     }
 
@@ -1035,7 +1030,7 @@ export class ProjectsPage extends BasePage {
   }
 
   async stopTimer() {
-    if (await this.startTimerButton.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(this.startTimerButton)) {
       return;
     }
 
@@ -1051,12 +1046,32 @@ export class ProjectsPage extends BasePage {
   // ===================
 
   async expectProjectsView(timeout = 10000) {
-    await expect(this.sidebar).toBeVisible({ timeout });
-    await expect.poll(async () => this.hasCreateProjectEntryPoint(), { timeout }).toBe(true);
+    await expect
+      .poll(() => this.readProjectsViewState(), { timeout, intervals: [200, 500, 1000] })
+      .not.toBe("pending");
   }
 
   async hasCreateProjectEntryPoint() {
-    return await this.newProjectButton.isVisible().catch(() => false);
+    return (
+      (await isLocatorVisible(this.newProjectButton)) ||
+      (await isLocatorVisible(this.createEntityButton))
+    );
+  }
+
+  private async readProjectsViewState(): Promise<"ready" | "pending"> {
+    if (await this.hasCreateProjectEntryPoint()) {
+      return "ready";
+    }
+
+    if (
+      (await isLocatorVisible(this.projectsPageHeading)) ||
+      (await isLocatorVisible(this.projectList)) ||
+      (await isLocatorVisible(this.sidebar))
+    ) {
+      return "ready";
+    }
+
+    return "pending";
   }
 
   private async clickNewProjectButton() {
@@ -1109,20 +1124,15 @@ export class ProjectsPage extends BasePage {
       name: /choose a template/i,
     });
 
-    if (await configureHeading.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(configureHeading)) {
       return "configure";
     }
 
-    if (
-      await this.templateOptionButtons
-        .first()
-        .isVisible()
-        .catch(() => false)
-    ) {
+    if (await isLocatorVisible(this.templateOptionButtons.first())) {
       return "template";
     }
 
-    if (await selectHeading.isVisible().catch(() => false)) {
+    if (await isLocatorVisible(selectHeading)) {
       return "select";
     }
 
@@ -1209,7 +1219,7 @@ export class ProjectsPage extends BasePage {
 
   private async clickWithBoundedSecondAttempt(locator: Locator, timeout = 3000) {
     await expect(locator).toBeVisible();
-    await locator.scrollIntoViewIfNeeded().catch(() => {});
+    await this.prepareLocatorForInteraction(locator, "click target");
 
     try {
       await locator.click({ timeout });
@@ -1217,8 +1227,43 @@ export class ProjectsPage extends BasePage {
     } catch {
       await expect(locator).toBeVisible();
       await expect(locator).toBeEnabled();
-      await locator.scrollIntoViewIfNeeded().catch(() => {});
+      await this.prepareLocatorForInteraction(locator, "click retry target");
       await locator.click({ timeout });
+    }
+  }
+
+  private async waitForLocatorToBecomeVisible(locator: Locator, timeout: number): Promise<boolean> {
+    try {
+      await locator.waitFor({ state: "visible", timeout });
+      return true;
+    } catch {
+      return isLocatorVisible(locator);
+    }
+  }
+
+  private async prepareLocatorForInteraction(locator: Locator, label: string): Promise<void> {
+    await expect(locator, `${label} should be visible before interaction`).toBeVisible();
+
+    try {
+      await locator.scrollIntoViewIfNeeded();
+    } catch (error) {
+      if (!(await isLocatorVisible(locator))) {
+        const message = error instanceof Error ? error.message : String(error);
+        throw new Error(`${label} was not visible after scroll attempt: ${message}`);
+      }
+    }
+  }
+
+  private async tryDismissCreateProjectFormWithCancel(): Promise<void> {
+    try {
+      await this.cancelButton.click();
+    } catch (error) {
+      if (!(await isLocatorVisible(this.createProjectForm))) {
+        return;
+      }
+
+      const message = error instanceof Error ? error.message : String(error);
+      console.log(`Cancel button click failed, falling back to keyboard dismissal: ${message}`);
     }
   }
 

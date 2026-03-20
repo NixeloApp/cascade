@@ -49,9 +49,34 @@ import {
 } from "@platejs/table/react";
 // Core
 import { BaseParagraphPlugin, createSlatePlugin } from "platejs";
+import { HeadingElement } from "@/components/Plate/HeadingElement";
 import { LinkElement } from "@/components/Plate/LinkElement";
 import { MentionElement } from "@/components/Plate/MentionElement";
 import { MentionInputElement } from "@/components/Plate/MentionInputElement";
+
+const H1ElementPlugin = H1Plugin.configure({
+  render: { node: HeadingElement },
+});
+
+const H2ElementPlugin = H2Plugin.configure({
+  render: { node: HeadingElement },
+});
+
+const H3ElementPlugin = H3Plugin.configure({
+  render: { node: HeadingElement },
+});
+
+const H4ElementPlugin = H4Plugin.configure({
+  render: { node: HeadingElement },
+});
+
+const H5ElementPlugin = H5Plugin.configure({
+  render: { node: HeadingElement },
+});
+
+const H6ElementPlugin = H6Plugin.configure({
+  render: { node: HeadingElement },
+});
 
 /**
  * All plugins for the Plate editor
@@ -86,12 +111,12 @@ export const platePlugins = [
 
   // Block elements
   BlockquotePlugin,
-  H1Plugin,
-  H2Plugin,
-  H3Plugin,
-  H4Plugin,
-  H5Plugin,
-  H6Plugin,
+  H1ElementPlugin,
+  H2ElementPlugin,
+  H3ElementPlugin,
+  H4ElementPlugin,
+  H5ElementPlugin,
+  H6ElementPlugin,
 
   // Lists
   ListPlugin,
@@ -230,7 +255,7 @@ export const issueDescriptionPlugins = [
 
   // Block elements (limited headings for structure)
   BlockquotePlugin,
-  H3Plugin,
+  H3ElementPlugin,
 
   // Lists
   ListPlugin,

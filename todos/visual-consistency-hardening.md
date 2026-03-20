@@ -2,7 +2,7 @@
 
 > **Priority:** P1
 > **Status:** New
-> **Last Updated:** 2026-03-19
+> **Last Updated:** 2026-03-20
 
 ## Goal
 
@@ -18,13 +18,17 @@ Make the product more visually cohesive and more enforceable in code, using the 
 
 ### Typography override drift
 
-- [ ] Remove or absorb the 43 current `Typography` className size/weight/tracking overrides surfaced by `check-typography-drift.js`
-- [ ] Where the same override pattern repeats, add a real `Typography` variant or supporting primitive instead of continuing one-off className fixes
+- [x] Absorb the repeated landing-page hero/showcase/metric typography patterns into owned `Typography` variants
+- [x] Absorb the shared app/auth/error typography treatments into owned `Typography` variants
+- [x] Absorb the shared board/panel/secondary-surface heading and label treatments into owned `Typography` variants
+- [x] Remove or absorb the 43 current `Typography` className size/weight/tracking overrides surfaced by `check-typography-drift.js`
+- [x] Where the same override pattern repeats, add a real `Typography` variant or supporting primitive instead of continuing one-off className fixes
 
 ### Owned-control drift
 
-- [ ] Remove or absorb the 17 current control-chrome overrides surfaced by `check-control-chrome-drift.js`
-- [ ] Promote repeated `Button` / `Badge` / `Input` / `Textarea` / `TabsTrigger` restyling into owned variants instead of feature-local className patches
+- [x] Absorb the shared compact button sizing patterns into owned `Button` sizes / chrome sizes
+- [x] Remove or absorb the 17 current control-chrome overrides surfaced by `check-control-chrome-drift.js`
+- [x] Promote repeated `Button` / `Badge` / `Input` / `Textarea` / `TabsTrigger` restyling into owned variants instead of feature-local className patches
 
 ### Screenshot review residue
 

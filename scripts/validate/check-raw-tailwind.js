@@ -21,6 +21,15 @@ import {
 } from "./tailwind-policy.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
+const ROUTE_CLUSTER_BASELINE_PATH = path.join(
+  ROOT,
+  "scripts",
+  "ci",
+  "raw-tailwind-route-clusters-baseline.json",
+);
+const ROUTE_CLUSTER_MIN_REUSE_COUNT = 3;
+const ROUTE_CLUSTER_MIN_TOKEN_COUNT = 3;
+
 // Baseline: files with existing violations that predate stricter enforcement.
 // New files must pass; existing files tracked for gradual migration.
 // Run `node scripts/validate/check-raw-tailwind.js --audit` to see all violations.
@@ -104,7 +113,6 @@ const BASELINE_FILES = new Set([
   "src/components/Kanban/KanbanColumn.tsx",
   "src/components/Kanban/SwimlanRow.tsx",
   "src/components/Kanban/SwimlanSelector.tsx",
-  "src/components/Kanban/ViewModeToggle.tsx",
   "src/components/KanbanBoard.tsx",
   "src/components/LabelsManager.tsx",
   "src/components/Landing/AIFeatureDemo.tsx",
@@ -113,12 +121,10 @@ const BASELINE_FILES = new Set([
   "src/components/Landing/FinalCTASection.tsx",
   "src/components/Landing/Footer.tsx",
   "src/components/Landing/HeroSection.tsx",
-  "src/components/Landing/LogoBar.tsx",
   "src/components/Landing/NavHeader.tsx",
   "src/components/Landing/PricingSection.tsx",
   "src/components/Landing/ProductShowcase.tsx",
   "src/components/Landing/WhyChooseSection.tsx",
-  "src/components/MeetingRecordingSection.tsx",
   "src/components/MentionInput.tsx",
   "src/components/MoveDocumentDialog.tsx",
   "src/components/NotFoundPage.tsx",
@@ -141,14 +147,11 @@ const BASELINE_FILES = new Set([
   "src/components/RoadmapView.tsx",
   "src/components/Settings.tsx",
   "src/components/Settings/ApiKeysManager.tsx",
-  "src/components/Settings/AvatarUploadModal.tsx",
-  "src/components/Settings/CoverImageUploadModal.tsx",
   "src/components/Settings/GitHubIntegration.tsx",
   "src/components/Settings/LinkedRepositories.tsx",
   "src/components/Settings/NotificationsTab.tsx",
   "src/components/Settings/OfflineTab.tsx",
   "src/components/Settings/PreferencesTab.tsx",
-  "src/components/Settings/ProfileContent.tsx",
   "src/components/Settings/PumbleIntegration.tsx",
   "src/components/Settings/SSOSettings.tsx",
   "src/components/Settings/SlackIntegration.tsx",
@@ -158,17 +161,12 @@ const BASELINE_FILES = new Set([
   "src/components/Templates/TemplateCard.tsx",
   "src/components/Templates/TemplateForm.tsx",
   "src/components/TemplatesManager.tsx",
-  "src/components/TimeTracker/BillingReport.tsx",
   "src/components/TimeTracker/Timesheet.tsx",
-  "src/components/TimeTracking/ManualTimeEntryModal.tsx",
-  "src/components/TimeTracking/TimeEntriesList.tsx",
-  "src/components/TimeTracking/TimeEntryModal.tsx",
   "src/components/TimeTracking/TimeTrackingPage.tsx",
   "src/components/TimeTracking/UserRatesManagement.tsx",
   "src/components/UserActivityFeed.tsx",
   "src/components/UserMenu.tsx",
   "src/components/VersionHistory.tsx",
-  "src/components/Webhooks/WebhookCard.tsx",
   "src/components/Webhooks/WebhookForm.tsx",
   "src/components/Webhooks/WebhookLogs.tsx",
   "src/components/WebhooksManager.tsx",
@@ -199,11 +197,84 @@ const RAW_TW_ESCAPE_HATCHES = [
   "tabsListVariants(",
 ];
 
+function normalizeClassNameLiteral(value) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function extractLiteralClassName(span) {
+  const match = span.match(/className\s*=\s*(?:"([\s\S]*?)"|'([\s\S]*?)')/);
+  if (!match) {
+    return null;
+  }
+
+  const literal = normalizeClassNameLiteral(match[1] ?? match[2] ?? "");
+  return literal.length > 0 ? literal : null;
+}
+
+function loadRouteClusterBaseline() {
+  if (!fs.existsSync(ROUTE_CLUSTER_BASELINE_PATH)) {
+    return new Map();
+  }
+
+  const parsed = JSON.parse(fs.readFileSync(ROUTE_CLUSTER_BASELINE_PATH, "utf-8"));
+  return new Map(Object.entries(parsed.clusters ?? {}));
+}
+
+function collectRouteClusterGroups() {
+  const routesDir = path.join(ROOT, "src/routes");
+  const files = walkDir(routesDir, { extensions: new Set([".tsx"]) });
+  const groups = new Map();
+
+  for (const filePath of files) {
+    const rel = relPath(filePath);
+    const lines = fs.readFileSync(filePath, "utf-8").split("\n");
+
+    for (let index = 0; index < lines.length; index++) {
+      if (!/\bclassName\s*=/.test(lines[index])) continue;
+
+      const { span, endIndex } = collectClassNameSpan(lines, index);
+      const literal = extractLiteralClassName(span);
+
+      if (!literal) {
+        index = endIndex;
+        continue;
+      }
+
+      const tokenCount = literal.split(/\s+/).filter(Boolean).length;
+      if (tokenCount < ROUTE_CLUSTER_MIN_TOKEN_COUNT) {
+        index = endIndex;
+        continue;
+      }
+
+      if (!RAW_TAILWIND_PATTERNS.some(({ pattern }) => pattern.test(literal))) {
+        index = endIndex;
+        continue;
+      }
+
+      const locations = groups.get(literal) ?? [];
+      locations.push({ file: rel, line: index + 1 });
+      groups.set(literal, locations);
+      index = endIndex;
+    }
+  }
+
+  return [...groups.entries()]
+    .filter(([, locations]) => locations.length >= ROUTE_CLUSTER_MIN_REUSE_COUNT)
+    .map(([cluster, locations]) => ({ cluster, locations }))
+    .sort(
+      (left, right) =>
+        right.locations.length - left.locations.length || left.cluster.localeCompare(right.cluster),
+    );
+}
+
 export function run() {
   const srcDir = path.join(ROOT, "src/components");
   const files = walkDir(srcDir, { extensions: new Set([".tsx"]) });
   const violations = [];
   const baselineViolations = [];
+  const routeClusterBaseline = loadRouteClusterBaseline();
+  const routeClusterViolations = [];
+  const baselinedRouteClusters = [];
 
   for (const filePath of files) {
     const rel = relPath(filePath);
@@ -252,6 +323,16 @@ export function run() {
     }
   }
 
+  for (const group of collectRouteClusterGroups()) {
+    const baselineCount = routeClusterBaseline.get(group.cluster) ?? 0;
+    if (group.locations.length > baselineCount) {
+      routeClusterViolations.push({ ...group, baselineCount });
+      continue;
+    }
+
+    baselinedRouteClusters.push(group);
+  }
+
   const messages = [];
 
   // Report new violations (blocking)
@@ -275,23 +356,50 @@ export function run() {
     }
   }
 
+  if (routeClusterViolations.length > 0) {
+    messages.push(`${c.red}Repeated raw Tailwind route clusters:${c.reset}`);
+    for (const item of routeClusterViolations) {
+      messages.push(`  ${c.bold}${item.locations.length}x${c.reset} ${item.cluster}`);
+      for (const location of item.locations.slice(0, 3)) {
+        messages.push(`    ${c.dim}${location.file}:L${location.line}${c.reset}`);
+      }
+      if (item.locations.length > 3) {
+        messages.push(`    ${c.dim}... and ${item.locations.length - 3} more${c.reset}`);
+      }
+      if (item.baselineCount > 0) {
+        messages.push(`    ${c.dim}baseline ${item.baselineCount}x${c.reset}`);
+      }
+      messages.push(`    ${c.dim}extract a route-local component or variant${c.reset}`);
+    }
+  }
+
   // Summary of baselined violations (info only)
-  const baselineDetail =
-    baselineViolations.length > 0
-      ? ` (${baselineViolations.length} baselined in ${BASELINE_FILES.size} files)`
-      : "";
+  const baselineDetails = [];
+  if (baselineViolations.length > 0) {
+    baselineDetails.push(`${baselineViolations.length} baselined in ${BASELINE_FILES.size} files`);
+  }
+  if (baselinedRouteClusters.length > 0) {
+    baselineDetails.push(`${baselinedRouteClusters.length} baselined route clusters`);
+  }
 
   // Compute which baseline files are now clean (zero violations)
   const baselineFilesWithViolations = new Set(baselineViolations.map((v) => v.file));
   const cleanBaselineFiles = [...BASELINE_FILES].filter((f) => !baselineFilesWithViolations.has(f));
 
   return {
-    passed: violations.length === 0,
-    errors: violations.length,
+    passed: violations.length === 0 && routeClusterViolations.length === 0,
+    errors: violations.length + routeClusterViolations.length,
     detail:
-      violations.length > 0
-        ? `${violations.length} raw Tailwind violations`
-        : `owned boundary${baselineDetail}`,
+      violations.length > 0 || routeClusterViolations.length > 0
+        ? [
+            violations.length > 0 ? `${violations.length} raw Tailwind violations` : null,
+            routeClusterViolations.length > 0
+              ? `${routeClusterViolations.length} repeated route class cluster(s)`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(", ")
+        : `owned boundary${baselineDetails.length > 0 ? ` (${baselineDetails.join(", ")})` : ""}`,
     messages,
     cleanBaselineFiles,
   };

@@ -269,7 +269,7 @@ export function EventDetailsModal({ eventId, open, onOpenChange }: EventDetailsM
                   </Typography>
                 </Flex>
 
-                <Stack gap="sm">
+                <Stack gap="sm" data-testid={TEST_IDS.CALENDAR.ATTENDEES_LIST}>
                   {attendance.attendees.map((attendee: AttendanceParticipant) => (
                     <div
                       key={attendee.userId}

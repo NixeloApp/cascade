@@ -3,41 +3,44 @@ import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-const segmentedControlVariants = cva(
-  "inline-flex max-w-full items-center justify-start overflow-x-auto scrollbar-subtle",
-  {
-    variants: {
-      variant: {
-        default:
-          "gap-1 rounded-2xl border border-ui-border-secondary/70 bg-ui-bg-secondary/90 p-1 shadow-soft",
-        outline:
-          "gap-0 overflow-hidden rounded-xl border border-ui-border-secondary/80 bg-ui-bg/95 shadow-soft",
-        calendarMode:
-          "gap-0 overflow-hidden rounded-md border border-ui-border shadow-soft rtl:space-x-reverse sm:rounded-container",
-      },
-      size: {
-        sm: "",
-        md: "",
-        lg: "",
-        calendarMode: "",
-      },
-      wrap: {
-        true: "flex-wrap",
-        false: "",
-      },
-      width: {
-        auto: "",
-        fill: "w-full",
-      },
+const segmentedControlVariants = cva("max-w-full justify-start overflow-x-auto scrollbar-subtle", {
+  variants: {
+    layout: {
+      inline: "inline-flex items-center",
+      stackOnMobile:
+        "flex w-full flex-col items-stretch sm:inline-flex sm:flex-row sm:items-center",
     },
-    defaultVariants: {
-      variant: "default",
-      size: "md",
-      wrap: false,
-      width: "auto",
+    variant: {
+      default:
+        "gap-1 rounded-2xl border border-ui-border-secondary/70 bg-ui-bg-secondary/90 p-1 shadow-soft",
+      outline:
+        "gap-0 overflow-hidden rounded-xl border border-ui-border-secondary/80 bg-ui-bg/95 shadow-soft",
+      calendarMode:
+        "gap-0 overflow-hidden rounded-md border border-ui-border shadow-soft rtl:space-x-reverse sm:rounded-container",
+    },
+    size: {
+      sm: "",
+      md: "",
+      lg: "",
+      calendarMode: "",
+    },
+    wrap: {
+      true: "flex-wrap",
+      false: "",
+    },
+    width: {
+      auto: "",
+      fill: "w-full",
     },
   },
-);
+  defaultVariants: {
+    layout: "inline",
+    variant: "default",
+    size: "md",
+    wrap: false,
+    width: "auto",
+  },
+});
 
 const segmentedControlItemVariants = cva(
   "inline-flex items-center justify-center whitespace-nowrap font-medium ring-offset-ui-bg transition-[background-color,color,box-shadow,border-color] duration-default ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
@@ -61,11 +64,16 @@ const segmentedControlItemVariants = cva(
         auto: "",
         fill: "flex-1",
       },
+      iconSpacing: {
+        true: "gap-2",
+        false: "",
+      },
     },
     defaultVariants: {
       variant: "default",
       size: "md",
       width: "auto",
+      iconSpacing: false,
     },
   },
 );
@@ -92,14 +100,14 @@ type SegmentedControlProps = Omit<
 const SegmentedControl = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Root>,
   SegmentedControlProps
->(({ className, children, size, variant, wrap, width, ...props }, ref) => (
+>(({ className, children, iconSpacing, layout, size, variant, wrap, width, ...props }, ref) => (
   <ToggleGroupPrimitive.Root
     ref={ref}
     type="single"
-    className={cn(segmentedControlVariants({ size, variant, wrap, width }), className)}
+    className={cn(segmentedControlVariants({ layout, size, variant, wrap, width }), className)}
     {...props}
   >
-    <SegmentedControlContext.Provider value={{ size, variant, width }}>
+    <SegmentedControlContext.Provider value={{ iconSpacing, size, variant, width }}>
       {children}
     </SegmentedControlContext.Provider>
   </ToggleGroupPrimitive.Root>
@@ -113,7 +121,7 @@ interface SegmentedControlItemProps
 const SegmentedControlItem = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Item>,
   SegmentedControlItemProps
->(({ className, size, variant, width, ...props }, ref) => {
+>(({ className, iconSpacing, size, variant, width, ...props }, ref) => {
   const context = React.useContext(SegmentedControlContext);
 
   return (
@@ -124,6 +132,7 @@ const SegmentedControlItem = React.forwardRef<
           size: size ?? context.size,
           variant: variant ?? context.variant,
           width: width ?? context.width,
+          iconSpacing: iconSpacing ?? context.iconSpacing,
         }),
         className,
       )}

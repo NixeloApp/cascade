@@ -9,6 +9,7 @@ import {
   DashboardPage,
   DocumentsPage,
   LandingPage,
+  MeetingsPage,
   OnboardingPage,
   ProjectsPage,
   SettingsPage,
@@ -21,6 +22,7 @@ import { ensureAuthenticatedDashboardReady } from "../utils/wait-helpers";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const AUTH_DIR = path.join(__dirname, "../.auth");
+const ONBOARDING_PAGE_PLACEHOLDER = "__onboarding__";
 
 function _getAuthStatePath(workerIndex = 0): string {
   return path.join(AUTH_DIR, path.basename(AUTH_PATHS.teamLead(workerIndex)));
@@ -48,6 +50,7 @@ export type AuthFixtures = {
   dashboardPage: DashboardPage;
   documentsPage: DocumentsPage;
   landingPage: LandingPage;
+  meetingsPage: MeetingsPage;
   onboardingPage: OnboardingPage;
   projectsPage: ProjectsPage;
   workspacesPage: WorkspacesPage;
@@ -142,6 +145,9 @@ export const authenticatedTest = base.extend<AuthFixtures>({
   landingPage: async ({ page, orgSlug }, use) => {
     await use(new LandingPage(page, orgSlug));
   },
+  meetingsPage: async ({ page, orgSlug }, use) => {
+    await use(new MeetingsPage(page, orgSlug));
+  },
   onboardingPage: async ({ page, orgSlug }, use) => {
     await use(new OnboardingPage(page, orgSlug));
   },
@@ -228,6 +234,9 @@ export const onboardingTest = base.extend<AuthFixtures>({
   },
   landingPage: async ({ page }, use) => {
     await use(new LandingPage(page));
+  },
+  meetingsPage: async ({ page }, use) => {
+    await use(new MeetingsPage(page, ONBOARDING_PAGE_PLACEHOLDER));
   },
   onboardingPage: async ({ page }, use) => {
     await use(new OnboardingPage(page));

@@ -17,6 +17,7 @@ import { z } from "zod";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { toggleInArray } from "@/lib/array-utils";
 import { FormInput } from "@/lib/form";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -65,7 +66,7 @@ export function PumbleIntegration() {
   const projects: Project[] = projectsResult?.page ?? [];
 
   return (
-    <Card padding="none" variant="outline">
+    <Card padding="none" variant="outline" data-testid={TEST_IDS.SETTINGS.PUMBLE_INTEGRATION}>
       {/* Header */}
       <CardHeader action={<Button onClick={() => setShowAddModal(true)}>Add Webhook</Button>}>
         <Flex gap="md" align="center">

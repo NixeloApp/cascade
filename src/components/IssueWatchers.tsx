@@ -11,6 +11,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { Eye } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { showError, showSuccess } from "@/lib/toast";
@@ -58,18 +59,9 @@ export function IssueWatchers({ issueId }: IssueWatchersProps) {
           variant={isWatching ? "secondary" : "primary"}
           size="sm"
           className="w-full sm:w-auto"
+          leftIcon={<Icon icon={Eye} size="sm" fill={isWatching ? "currentColor" : undefined} />}
         >
-          {isWatching ? (
-            <>
-              <Eye className="w-4 h-4 mr-2 fill-current" />
-              Watching
-            </>
-          ) : (
-            <>
-              <Eye className="w-4 h-4 mr-2" />
-              Watch
-            </>
-          )}
+          {isWatching ? "Watching" : "Watch"}
         </Button>
       </div>
 

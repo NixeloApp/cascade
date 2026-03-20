@@ -2,10 +2,11 @@ import type { ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { CardDisplayOptions } from "@/lib/card-display-utils";
-import { CheckSquare } from "@/lib/icons";
+import { CheckSquare, RotateCcw } from "@/lib/icons";
 import type { SwimlanGroupBy } from "@/lib/swimlane-utils";
 import { cn } from "@/lib/utils";
 import { Typography } from "../ui/Typography";
@@ -65,7 +66,7 @@ export function BoardToolbar({
     >
       <Flex align="center" justify="between" gap="xs" gapSm="sm">
         <div className="hidden sm:block">
-          <Typography variant="h2" className="text-xs font-semibold tracking-tight sm:text-lg">
+          <Typography variant="boardSurfaceTitle">
             <span className="sm:hidden">{sprintId ? "Sprint" : "Board"}</span>
             <span className="hidden sm:inline">{sprintId ? "Sprint Board" : "Kanban Board"}</span>
           </Typography>
@@ -89,20 +90,7 @@ export function BoardToolbar({
                     disabled={historyStack.length === 0}
                     aria-label="Undo (Ctrl+Z)"
                   >
-                    <svg
-                      aria-hidden="true"
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
-                      />
-                    </svg>
+                    <Icon icon={RotateCcw} size="sm" aria-hidden="true" />
                   </IconButton>
                 </Tooltip>
                 <Tooltip content="Redo (Ctrl+Shift+Z)">
@@ -160,7 +148,7 @@ export function BoardToolbar({
               aria-label={selectionMode ? "Exit selection mode" : "Enable selection mode"}
               className="sm:hidden"
             >
-              <CheckSquare className="h-3.5 w-3.5" />
+              <Icon icon={CheckSquare} size="xs" aria-hidden="true" />
             </IconButton>
             <Button
               variant={selectionMode ? "primary" : "outline"}

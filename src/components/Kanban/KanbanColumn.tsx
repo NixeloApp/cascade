@@ -153,7 +153,6 @@ function CollapsedColumn({
       ref={columnRef}
       aria-label={`${state.name} column (collapsed)`}
       data-testid={TEST_IDS.BOARD.COLUMN}
-      data-board-column
       className="w-11 shrink-0 snap-start animate-slide-up"
       style={{
         animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2)}ms`,
@@ -177,11 +176,7 @@ function CollapsedColumn({
             </IconButton>
           </Tooltip>
           <Flex flex="1" align="center" justify="center" style={{ writingMode: "vertical-lr" }}>
-            <Typography
-              variant="h3"
-              className="text-sm font-medium tracking-tight text-ui-text-secondary"
-              style={{ transform: "rotate(180deg)" }}
-            >
+            <Typography variant="boardColumnTitle" style={{ transform: "rotate(180deg)" }}>
               {state.name}
             </Typography>
           </Flex>
@@ -231,12 +226,7 @@ function ColumnHeader({
     >
       <Flex align="center" justify="between" gap="xs">
         <Flex align="center" gap="xs" className="min-w-0">
-          <Typography
-            variant="h3"
-            className="truncate text-xs font-medium tracking-tight text-ui-text-secondary sm:text-sm"
-          >
-            {state.name}
-          </Typography>
+          <Typography variant="boardColumnTitleCompact">{state.name}</Typography>
           <Badge
             data-testid={TEST_IDS.BOARD.COLUMN_COUNT}
             variant={isOverWipLimit ? "error" : isAtWipLimit ? "warning" : "neutral"}
@@ -272,7 +262,7 @@ function ColumnHeader({
                 onClick={onCreateIssue}
                 aria-label={`Add issue to ${state.name}`}
                 size="xs"
-                {...(columnIndex === 0 ? { "data-tour": "create-issue" } : {})}
+                data-testid={columnIndex === 0 ? TEST_IDS.ISSUE.CREATE_TRIGGER : undefined}
               >
                 <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </IconButton>
@@ -475,7 +465,6 @@ const KanbanColumnComponent = function KanbanColumn({
       ref={columnRef}
       aria-label={`${state.name} column`}
       data-testid={TEST_IDS.BOARD.COLUMN}
-      data-board-column
       className="w-72 shrink-0 snap-start animate-slide-up lg:w-80"
       style={{
         animationDelay: `${columnIndex * (ANIMATION.STAGGER_DELAY * 2)}ms`,

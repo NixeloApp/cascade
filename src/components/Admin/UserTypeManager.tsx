@@ -12,6 +12,7 @@ import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { Briefcase, Gem, GraduationCap, Lightbulb, Settings, Users, Wrench } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -349,7 +350,7 @@ export function UserTypeManager() {
   };
 
   return (
-    <Flex direction="column" gap="xl">
+    <Flex direction="column" gap="xl" data-testid={TEST_IDS.SETTINGS.USER_TYPE_MANAGER_SECTION}>
       {/* Employment Type Configurations */}
       <Card>
         <CardHeader

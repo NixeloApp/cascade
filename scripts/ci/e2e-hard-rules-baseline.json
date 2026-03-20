@@ -1,3 +1,9 @@
 {
-  "selectorAntiPatterns": []
+  "selectorAntiPatterns": [],
+  "timeoutByFile": {
+    "e2e/screenshot-pages.ts": 7
+  },
+  "promiseSleepByFile": {
+    "e2e/screenshot-pages.ts": 1
+  }
 }

@@ -78,7 +78,12 @@ export function CalendarBodyMonth(): React.ReactElement {
   }
 
   return (
-    <Flex direction="column" flex="1" className="overflow-hidden bg-ui-bg">
+    <Flex
+      direction="column"
+      flex="1"
+      className="overflow-hidden bg-ui-bg"
+      data-testid={TEST_IDS.CALENDAR.GRID}
+    >
       <Grid cols={7} className="bg-ui-bg-secondary/50">
         {WEEKDAY_NAMES.map((day) => (
           <Card key={day} recipe="calendarMonthWeekdayHeaderCell" className="text-center">
@@ -128,8 +133,6 @@ export function CalendarBodyMonth(): React.ReactElement {
                     recipe={dayCellRecipe}
                     padding="xs"
                     data-testid={TEST_IDS.CALENDAR.DAY_CELL}
-                    data-date={dayKey}
-                    data-drop-target={dropTargetDate === dayKey ? "true" : undefined}
                     className={cn(
                       "group",
                       dropTargetDate === dayKey && "ring-2 ring-brand bg-brand-subtle",
@@ -162,6 +165,13 @@ export function CalendarBodyMonth(): React.ReactElement {
                     }}
                     onClick={() => openDay(day)}
                   >
+                    {dropTargetDate === dayKey ? (
+                      <span
+                        data-testid={TEST_IDS.CALENDAR.DAY_CELL_DROP_TARGET}
+                        hidden
+                        aria-hidden="true"
+                      />
+                    ) : null}
                     <Flex align="start" justify="between" gap="xs">
                       <Badge variant={dayBadgeVariant} size="calendarDay" shape="pill">
                         {format(day, "d")}

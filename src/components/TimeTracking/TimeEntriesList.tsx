@@ -139,7 +139,7 @@ export function TimeEntriesList({
           onClick={() => setShowManualEntryModal(true)}
           variant="primary"
           size="sm"
-          leftIcon={<Plus className="h-4 w-4" />}
+          leftIcon={<Icon icon={Plus} size="sm" />}
         >
           Add Time Entry
         </Button>
@@ -253,7 +253,7 @@ export function TimeEntriesList({
                         size="sm"
                         aria-label="Delete entry"
                       >
-                        <Trash className="w-4 h-4" />
+                        <Icon icon={Trash} size="sm" />
                       </IconButton>
                     </ListItemActions>
                   )}
