@@ -452,7 +452,11 @@ function MeetingMemorySection({
   projects: ProjectOption[] | undefined;
   onProjectSelect: (projectId: ProjectFilter) => void;
 }) {
-  const filteredMemory = filterMeetingMemory(memory, projectFilter);
+  const filteredMemory = filterMeetingMemory(memory, projectFilter) ?? {
+    recentDecisions: [],
+    openQuestions: [],
+    unresolvedActionItems: [],
+  };
   const projectLenses = getMeetingMemoryProjectLenses(memory, projects);
   const selectedProject =
     projectFilter === "all"
@@ -1223,7 +1227,7 @@ function RecordingDetailPanel({
             <MetadataItem icon={<Calendar className="h-4 w-4" />}>
               {recording.scheduledStartTime
                 ? formatDateTime(recording.scheduledStartTime)
-                : formatDateTime(recording.createdAt)}
+                : formatDateTime(recording._creationTime)}
             </MetadataItem>
             <MetadataItem>{recording.isPublic ? "Shared in project" : "Private"}</MetadataItem>
             {recording.duration && (

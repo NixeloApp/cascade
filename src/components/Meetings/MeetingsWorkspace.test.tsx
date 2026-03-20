@@ -75,7 +75,7 @@ function buildProjectItem(overrides: Partial<ProjectItem> = {}): ProjectItem {
     name: "Core Platform",
     key: "CORE",
     description: "Main product work",
-    role: "lead",
+    role: "admin",
     totalIssues: 12,
     myIssues: 4,
     ...overrides,
@@ -336,17 +336,13 @@ describe("MeetingsWorkspace", () => {
     mockUseAuthenticatedMutation.mockImplementation(() => {
       mutationHookCallCount += 1;
 
-      return mutationHookCallCount % 2 === 1
-        ? {
-            mutate: scheduleRecording,
-            canAct: true,
-            isAuthLoading: false,
-          }
-        : {
-            mutate: createIssueFromActionItem,
-            canAct: true,
-            isAuthLoading: false,
-          };
+      const mutate =
+        mutationHookCallCount % 2 === 1 ? scheduleRecording : createIssueFromActionItem;
+      return {
+        mutate: Object.assign(mutate, { withOptimisticUpdate: vi.fn().mockReturnThis() }),
+        canAct: true,
+        isAuthLoading: false,
+      };
     });
   });
 
@@ -442,7 +438,7 @@ describe("MeetingsWorkspace", () => {
           speakerCount: 3,
         },
         summary: {
-          ...buildDetail().summary,
+          ...buildDetail().summary!,
           keyPoints: [],
           actionItems: [],
           decisions: [],
@@ -506,7 +502,7 @@ describe("MeetingsWorkspace", () => {
       },
       detail: buildDetail({
         summary: {
-          ...buildDetail().summary,
+          ...buildDetail().summary!,
           actionItems: [
             {
               description: "Update the spec",
@@ -598,13 +594,13 @@ describe("MeetingsWorkspace", () => {
     const filteredMemory = filterMeetingMemory(memory, secondProjectId);
     const projectLenses = getMeetingMemoryProjectLenses(memory, projects);
 
-    expect(filteredMemory.recentDecisions).toEqual([
+    expect(filteredMemory!.recentDecisions).toEqual([
       expect.objectContaining({ decision: "Start the phased rollout on Monday" }),
     ]);
-    expect(filteredMemory.openQuestions).toEqual([
+    expect(filteredMemory!.openQuestions).toEqual([
       expect.objectContaining({ question: "Which customers need white-glove onboarding?" }),
     ]);
-    expect(filteredMemory.unresolvedActionItems).toEqual([]);
+    expect(filteredMemory!.unresolvedActionItems).toEqual([]);
     expect(projectLenses).toEqual([
       expect.objectContaining({ projectId, projectKey: "CORE", totalItems: 3 }),
       expect.objectContaining({ projectId: secondProjectId, projectKey: "OPS", totalItems: 2 }),

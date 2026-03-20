@@ -28,6 +28,7 @@ import { Route as PortalTokenProjectsProjectIdRouteImport } from './routes/porta
 import { Route as AuthAppOrgSlugTimeTrackingRouteImport } from './routes/_auth/_app/$orgSlug/time-tracking'
 import { Route as AuthAppOrgSlugNotificationsRouteImport } from './routes/_auth/_app/$orgSlug/notifications'
 import { Route as AuthAppOrgSlugMyIssuesRouteImport } from './routes/_auth/_app/$orgSlug/my-issues'
+import { Route as AuthAppOrgSlugMeetingsRouteImport } from './routes/_auth/_app/$orgSlug/meetings'
 import { Route as AuthAppOrgSlugMcpServerRouteImport } from './routes/_auth/_app/$orgSlug/mcp-server'
 import { Route as AuthAppOrgSlugDashboardRouteImport } from './routes/_auth/_app/$orgSlug/dashboard'
 import { Route as AuthAppOrgSlugCalendarRouteImport } from './routes/_auth/_app/$orgSlug/calendar'
@@ -170,6 +171,11 @@ const AuthAppOrgSlugNotificationsRoute =
 const AuthAppOrgSlugMyIssuesRoute = AuthAppOrgSlugMyIssuesRouteImport.update({
   id: '/my-issues',
   path: '/my-issues',
+  getParentRoute: () => AuthAppOrgSlugRouteRoute,
+} as any)
+const AuthAppOrgSlugMeetingsRoute = AuthAppOrgSlugMeetingsRouteImport.update({
+  id: '/meetings',
+  path: '/meetings',
   getParentRoute: () => AuthAppOrgSlugRouteRoute,
 } as any)
 const AuthAppOrgSlugMcpServerRoute = AuthAppOrgSlugMcpServerRouteImport.update({
@@ -473,6 +479,7 @@ export interface FileRoutesByFullPath {
   '/$orgSlug/calendar': typeof AuthAppOrgSlugCalendarRoute
   '/$orgSlug/dashboard': typeof AuthAppOrgSlugDashboardRoute
   '/$orgSlug/mcp-server': typeof AuthAppOrgSlugMcpServerRoute
+  '/$orgSlug/meetings': typeof AuthAppOrgSlugMeetingsRoute
   '/$orgSlug/my-issues': typeof AuthAppOrgSlugMyIssuesRoute
   '/$orgSlug/notifications': typeof AuthAppOrgSlugNotificationsRoute
   '/$orgSlug/time-tracking': typeof AuthAppOrgSlugTimeTrackingRoute
@@ -538,6 +545,7 @@ export interface FileRoutesByTo {
   '/$orgSlug/calendar': typeof AuthAppOrgSlugCalendarRoute
   '/$orgSlug/dashboard': typeof AuthAppOrgSlugDashboardRoute
   '/$orgSlug/mcp-server': typeof AuthAppOrgSlugMcpServerRoute
+  '/$orgSlug/meetings': typeof AuthAppOrgSlugMeetingsRoute
   '/$orgSlug/my-issues': typeof AuthAppOrgSlugMyIssuesRoute
   '/$orgSlug/notifications': typeof AuthAppOrgSlugNotificationsRoute
   '/$orgSlug/time-tracking': typeof AuthAppOrgSlugTimeTrackingRoute
@@ -604,6 +612,7 @@ export interface FileRoutesById {
   '/_auth/_app/$orgSlug/calendar': typeof AuthAppOrgSlugCalendarRoute
   '/_auth/_app/$orgSlug/dashboard': typeof AuthAppOrgSlugDashboardRoute
   '/_auth/_app/$orgSlug/mcp-server': typeof AuthAppOrgSlugMcpServerRoute
+  '/_auth/_app/$orgSlug/meetings': typeof AuthAppOrgSlugMeetingsRoute
   '/_auth/_app/$orgSlug/my-issues': typeof AuthAppOrgSlugMyIssuesRoute
   '/_auth/_app/$orgSlug/notifications': typeof AuthAppOrgSlugNotificationsRoute
   '/_auth/_app/$orgSlug/time-tracking': typeof AuthAppOrgSlugTimeTrackingRoute
@@ -672,6 +681,7 @@ export interface FileRouteTypes {
     | '/$orgSlug/calendar'
     | '/$orgSlug/dashboard'
     | '/$orgSlug/mcp-server'
+    | '/$orgSlug/meetings'
     | '/$orgSlug/my-issues'
     | '/$orgSlug/notifications'
     | '/$orgSlug/time-tracking'
@@ -737,6 +747,7 @@ export interface FileRouteTypes {
     | '/$orgSlug/calendar'
     | '/$orgSlug/dashboard'
     | '/$orgSlug/mcp-server'
+    | '/$orgSlug/meetings'
     | '/$orgSlug/my-issues'
     | '/$orgSlug/notifications'
     | '/$orgSlug/time-tracking'
@@ -802,6 +813,7 @@ export interface FileRouteTypes {
     | '/_auth/_app/$orgSlug/calendar'
     | '/_auth/_app/$orgSlug/dashboard'
     | '/_auth/_app/$orgSlug/mcp-server'
+    | '/_auth/_app/$orgSlug/meetings'
     | '/_auth/_app/$orgSlug/my-issues'
     | '/_auth/_app/$orgSlug/notifications'
     | '/_auth/_app/$orgSlug/time-tracking'
@@ -995,6 +1007,13 @@ declare module '@tanstack/react-router' {
       path: '/my-issues'
       fullPath: '/$orgSlug/my-issues'
       preLoaderRoute: typeof AuthAppOrgSlugMyIssuesRouteImport
+      parentRoute: typeof AuthAppOrgSlugRouteRoute
+    }
+    '/_auth/_app/$orgSlug/meetings': {
+      id: '/_auth/_app/$orgSlug/meetings'
+      path: '/meetings'
+      fullPath: '/$orgSlug/meetings'
+      preLoaderRoute: typeof AuthAppOrgSlugMeetingsRouteImport
       parentRoute: typeof AuthAppOrgSlugRouteRoute
     }
     '/_auth/_app/$orgSlug/mcp-server': {
@@ -1448,6 +1467,7 @@ interface AuthAppOrgSlugRouteRouteChildren {
   AuthAppOrgSlugCalendarRoute: typeof AuthAppOrgSlugCalendarRoute
   AuthAppOrgSlugDashboardRoute: typeof AuthAppOrgSlugDashboardRoute
   AuthAppOrgSlugMcpServerRoute: typeof AuthAppOrgSlugMcpServerRoute
+  AuthAppOrgSlugMeetingsRoute: typeof AuthAppOrgSlugMeetingsRoute
   AuthAppOrgSlugMyIssuesRoute: typeof AuthAppOrgSlugMyIssuesRoute
   AuthAppOrgSlugNotificationsRoute: typeof AuthAppOrgSlugNotificationsRoute
   AuthAppOrgSlugTimeTrackingRoute: typeof AuthAppOrgSlugTimeTrackingRoute
@@ -1476,6 +1496,7 @@ const AuthAppOrgSlugRouteRouteChildren: AuthAppOrgSlugRouteRouteChildren = {
   AuthAppOrgSlugCalendarRoute: AuthAppOrgSlugCalendarRoute,
   AuthAppOrgSlugDashboardRoute: AuthAppOrgSlugDashboardRoute,
   AuthAppOrgSlugMcpServerRoute: AuthAppOrgSlugMcpServerRoute,
+  AuthAppOrgSlugMeetingsRoute: AuthAppOrgSlugMeetingsRoute,
   AuthAppOrgSlugMyIssuesRoute: AuthAppOrgSlugMyIssuesRoute,
   AuthAppOrgSlugNotificationsRoute: AuthAppOrgSlugNotificationsRoute,
   AuthAppOrgSlugTimeTrackingRoute: AuthAppOrgSlugTimeTrackingRoute,
