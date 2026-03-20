@@ -66,7 +66,7 @@ Fetches all data then filters in the component when the filter could be a backen
 
 ## New Validators to Add (Non-Query)
 
-- [ ] **Screenshot manifest integrity** -- fail if any hash appears more than 2 times (legitimate dual-write is max 2; 3+ means spinner capture)
+- [x] **Screenshot manifest integrity** -- fail if any hash appears more than 2 times (legitimate dual-write is max 2; 3+ means spinner capture)
 - [ ] **`.catch(() => {})` audit** -- flag silent catch swallows in E2E and screenshot tooling (198 currently)
 - [ ] **Hardcoded timeout audit** -- extend `check-e2e-hard-rules.js` to also scan `screenshot-pages.ts` for `waitForTimeout` and `setTimeout`
 - [ ] **Meeting page coverage** -- verify meetings spec folder exists with screenshots (part of screenshot coverage validator)
