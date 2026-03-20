@@ -311,6 +311,7 @@ function LeadProjectSetupStep({
           onClick={onCreateOrganization}
           disabled={isCreating || !projectName.trim()}
           className="w-full"
+          data-testid={TEST_IDS.ONBOARDING.CREATE_PROJECT_BUTTON}
         >
           {isCreating ? "Creating..." : "Create Project"}
         </Button>

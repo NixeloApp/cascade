@@ -91,6 +91,7 @@ The manifest (`.screenshot-hashes.json`) contains 226 entries but only 179 uniqu
 - [x] Replace the shared auth readiness `data-expanded` / `data-form-ready` / `data-hydrated` selectors with owned `TEST_IDS` constants
 - [x] Replace the project create-issue trigger and modal selectors with owned `TEST_IDS` constants
 - [x] Replace the orphaned onboarding tour command-palette/dashboard/board/sidebar selectors with owned `TEST_IDS` constants
+- [x] Replace the onboarding create-project tour selector with the owned `TEST_IDS.ONBOARDING.CREATE_PROJECT_BUTTON` contract
 - [ ] Replace raw data-attribute selectors with TEST_IDS constants
 - [x] Reduce shared helper/page-readiness `.first()` usage so unique route sentinels rely on scoped locator semantics
 - [x] Extract `dismissAllDialogs()`, `waitForDialogOpen()`, `waitForScreenshotReady()` to `e2e/utils/`

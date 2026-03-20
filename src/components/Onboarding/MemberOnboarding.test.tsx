@@ -70,7 +70,10 @@ describe("MemberOnboarding", () => {
       screen.getByPlaceholderText("e.g., Acme Corp, My Team, Design Studio"),
       "Design Studio",
     );
-    await user.click(screen.getByRole("button", { name: "Create Project" }));
+    expect(screen.getByTestId(TEST_IDS.ONBOARDING.CREATE_PROJECT_BUTTON)).toHaveTextContent(
+      "Create Project",
+    );
+    await user.click(screen.getByTestId(TEST_IDS.ONBOARDING.CREATE_PROJECT_BUTTON));
 
     await waitFor(() =>
       expect(screen.getByTestId(TEST_IDS.ONBOARDING.ALL_SET_HEADING)).toHaveTextContent(
@@ -109,7 +112,7 @@ describe("MemberOnboarding", () => {
       screen.getByPlaceholderText("e.g., Acme Corp, My Team, Design Studio"),
       "  Platform Ops  ",
     );
-    await user.click(screen.getByRole("button", { name: "Create Project" }));
+    await user.click(screen.getByTestId(TEST_IDS.ONBOARDING.CREATE_PROJECT_BUTTON));
 
     await waitFor(() =>
       expect(createOrganization).toHaveBeenCalledWith({
@@ -139,7 +142,7 @@ describe("MemberOnboarding", () => {
       screen.getByPlaceholderText("e.g., Acme Corp, My Team, Design Studio"),
       "Delivery Hub",
     );
-    await user.click(screen.getByRole("button", { name: "Create Project" }));
+    await user.click(screen.getByTestId(TEST_IDS.ONBOARDING.CREATE_PROJECT_BUTTON));
 
     await waitFor(() =>
       expect(screen.getByTestId(TEST_IDS.ONBOARDING.ALL_SET_HEADING)).toBeInTheDocument(),

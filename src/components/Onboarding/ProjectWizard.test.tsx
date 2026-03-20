@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { ProjectWizard } from "./ProjectWizard";
@@ -176,7 +177,10 @@ describe("ProjectWizard", () => {
     expect(screen.getByText("Building")).toBeInTheDocument();
     expect(screen.getByText("Review")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Create Project" }));
+    expect(screen.getByTestId(TEST_IDS.ONBOARDING.CREATE_PROJECT_BUTTON)).toHaveTextContent(
+      "Create Project",
+    );
+    await user.click(screen.getByTestId(TEST_IDS.ONBOARDING.CREATE_PROJECT_BUTTON));
 
     await waitFor(() =>
       expect(createProject).toHaveBeenCalledWith({

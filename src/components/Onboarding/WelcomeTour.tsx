@@ -83,7 +83,7 @@ export function WelcomeTour({ onComplete, onSkip }: WelcomeTourProps) {
           },
         },
         {
-          element: "[data-tour='create-project']",
+          element: `[data-testid="${TEST_IDS.ONBOARDING.CREATE_PROJECT_BUTTON}"]`,
           popover: {
             title: "Create Your First Project",
             description:

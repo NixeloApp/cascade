@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/Progress";
 import { Stack } from "@/components/ui/Stack";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { Check, KanbanSquare, ListTodo } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -428,7 +429,11 @@ export function ProjectWizard({
                   Next
                 </Button>
               ) : (
-                <Button onClick={handleFinish} variant="primary">
+                <Button
+                  onClick={handleFinish}
+                  variant="primary"
+                  data-testid={TEST_IDS.ONBOARDING.CREATE_PROJECT_BUTTON}
+                >
                   Create Project
                 </Button>
               )}
