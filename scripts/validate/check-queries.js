@@ -7,6 +7,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { analyzeCountRatchet, loadCountBaseline } from "./ratchet-utils.js";
 import { ROOT, relPath, walkDir } from "./utils.js";
 
 const POST_FETCH_FILTER_BASELINE_PATH = path.join(
@@ -571,102 +572,98 @@ export function run() {
     }
   }
 
-  const postFetchFilterBaseline = fs.existsSync(POST_FETCH_FILTER_BASELINE_PATH)
-    ? JSON.parse(fs.readFileSync(POST_FETCH_FILTER_BASELINE_PATH, "utf8"))
-    : { postFetchJsFiltersByFile: {} };
-  const postFetchFilterBaselineByFile = postFetchFilterBaseline.postFetchJsFiltersByFile ?? {};
-  const currentPostFetchByFile = {};
+  const postFetchFilterBaselineByFile = loadCountBaseline(
+    POST_FETCH_FILTER_BASELINE_PATH,
+    "postFetchJsFiltersByFile",
+  );
+  const postFetchDetectionsByFile = {};
   for (const detection of postFetchFilterDetections) {
-    currentPostFetchByFile[detection.file] = (currentPostFetchByFile[detection.file] ?? 0) + 1;
+    const detectionsForFile = postFetchDetectionsByFile[detection.file] ?? [];
+    detectionsForFile.push(detection);
+    postFetchDetectionsByFile[detection.file] = detectionsForFile;
   }
 
-  const ratchetViolations = [];
-  for (const [file, currentCount] of Object.entries(currentPostFetchByFile).sort((a, b) =>
-    a[0].localeCompare(b[0]),
-  )) {
-    const baselineCount = postFetchFilterBaselineByFile[file] ?? 0;
-    if (currentCount > baselineCount) {
-      const fileDetections = postFetchFilterDetections
-        .filter((detection) => detection.file === file)
-        .sort((a, b) => a.line - b.line);
-      ratchetViolations.push(
-        ...fileDetections.slice(baselineCount).map((detection) => ({
-          type: "POST_FETCH_JS_FILTER",
-          file: detection.file,
-          line: detection.line,
-          code: detection.code,
-          message:
-            "Post-fetch JS filter after bounded query result - consider moving the filter into the query or adding an index",
-        })),
-      );
-    }
+  for (const detections of Object.values(postFetchDetectionsByFile)) {
+    detections.sort((a, b) => a.line - b.line);
   }
+  const postFetchRatchet = analyzeCountRatchet(
+    postFetchDetectionsByFile,
+    postFetchFilterBaselineByFile,
+  );
+  const ratchetViolations = Object.values(postFetchRatchet.overagesByKey).flatMap((entry) =>
+    entry.overageItems.map((detection) => ({
+      type: "POST_FETCH_JS_FILTER",
+      file: detection.file,
+      line: detection.line,
+      code: detection.code,
+      message:
+        "Post-fetch JS filter after bounded query result - consider moving the filter into the query or adding an index",
+    })),
+  );
 
   allIssues.push(...ratchetViolations);
 
-  const clientQueryFilterBaseline = fs.existsSync(CLIENT_QUERY_FILTER_BASELINE_PATH)
-    ? JSON.parse(fs.readFileSync(CLIENT_QUERY_FILTER_BASELINE_PATH, "utf8"))
-    : { clientQueryFiltersByFile: {} };
-  const clientQueryBaselineByFile = clientQueryFilterBaseline.clientQueryFiltersByFile ?? {};
-  const currentClientQueryByFile = {};
+  const clientQueryBaselineByFile = loadCountBaseline(
+    CLIENT_QUERY_FILTER_BASELINE_PATH,
+    "clientQueryFiltersByFile",
+  );
+  const clientQueryDetectionsByFile = {};
   for (const detection of clientQueryFilterDetections) {
-    currentClientQueryByFile[detection.file] = (currentClientQueryByFile[detection.file] ?? 0) + 1;
+    const detectionsForFile = clientQueryDetectionsByFile[detection.file] ?? [];
+    detectionsForFile.push(detection);
+    clientQueryDetectionsByFile[detection.file] = detectionsForFile;
   }
 
-  const clientQueryRatchetViolations = [];
-  for (const [file, currentCount] of Object.entries(currentClientQueryByFile).sort((a, b) =>
-    a[0].localeCompare(b[0]),
-  )) {
-    const baselineCount = clientQueryBaselineByFile[file] ?? 0;
-    if (currentCount > baselineCount) {
-      const fileDetections = clientQueryFilterDetections
-        .filter((detection) => detection.file === file)
-        .sort((a, b) => a.line - b.line);
-      clientQueryRatchetViolations.push(
-        ...fileDetections.slice(baselineCount).map((detection) => ({
-          type: "CLIENT_QUERY_FILTER",
-          file: detection.file,
-          line: detection.line,
-          code: detection.code,
-          message:
-            "Client-side filtering on query results - consider moving the filter into a query arg or backend selector",
-        })),
-      );
-    }
+  for (const detections of Object.values(clientQueryDetectionsByFile)) {
+    detections.sort((a, b) => a.line - b.line);
   }
+  const clientQueryRatchet = analyzeCountRatchet(
+    clientQueryDetectionsByFile,
+    clientQueryBaselineByFile,
+  );
+  const clientQueryRatchetViolations = Object.values(clientQueryRatchet.overagesByKey).flatMap(
+    (entry) =>
+      entry.overageItems.map((detection) => ({
+        type: "CLIENT_QUERY_FILTER",
+        file: detection.file,
+        line: detection.line,
+        code: detection.code,
+        message:
+          "Client-side filtering on query results - consider moving the filter into a query arg or backend selector",
+      })),
+  );
 
   allIssues.push(...clientQueryRatchetViolations);
 
-  const multiFilterBaseline = fs.existsSync(MULTI_FILTER_BASELINE_PATH)
-    ? JSON.parse(fs.readFileSync(MULTI_FILTER_BASELINE_PATH, "utf8"))
-    : { multiFilterQueryResultsByFile: {} };
-  const multiFilterBaselineByFile = multiFilterBaseline.multiFilterQueryResultsByFile ?? {};
+  const multiFilterBaselineByFile = loadCountBaseline(
+    MULTI_FILTER_BASELINE_PATH,
+    "multiFilterQueryResultsByFile",
+  );
   const multiFilterGroups = collectMultiFilterGroups(multiFilterDetections);
-  const currentMultiFilterByFile = {};
+  const multiFilterGroupsByFile = {};
   for (const group of multiFilterGroups) {
-    currentMultiFilterByFile[group.file] = (currentMultiFilterByFile[group.file] ?? 0) + 1;
+    const groupsForFile = multiFilterGroupsByFile[group.file] ?? [];
+    groupsForFile.push(group);
+    multiFilterGroupsByFile[group.file] = groupsForFile;
   }
 
-  const multiFilterRatchetViolations = [];
-  for (const [file, currentCount] of Object.entries(currentMultiFilterByFile).sort((a, b) =>
-    a[0].localeCompare(b[0]),
-  )) {
-    const baselineCount = multiFilterBaselineByFile[file] ?? 0;
-    if (currentCount > baselineCount) {
-      const fileGroups = multiFilterGroups
-        .filter((group) => group.file === file)
-        .sort((a, b) => a.originLine - b.originLine);
-      multiFilterRatchetViolations.push(
-        ...fileGroups.slice(baselineCount).map((group) => ({
-          type: "MULTI_FILTER_QUERY_RESULT",
-          file: group.file,
-          line: group.originLine,
-          code: group.filters.map((filter) => filter.code).join(" | "),
-          message: `${group.variableName} is filtered ${group.filters.length} times after fetch/query result - combine passes or pre-aggregate`,
-        })),
-      );
-    }
+  for (const groups of Object.values(multiFilterGroupsByFile)) {
+    groups.sort((a, b) => a.originLine - b.originLine);
   }
+  const multiFilterRatchet = analyzeCountRatchet(
+    multiFilterGroupsByFile,
+    multiFilterBaselineByFile,
+  );
+  const multiFilterRatchetViolations = Object.values(multiFilterRatchet.overagesByKey).flatMap(
+    (entry) =>
+      entry.overageItems.map((group) => ({
+        type: "MULTI_FILTER_QUERY_RESULT",
+        file: group.file,
+        line: group.originLine,
+        code: group.filters.map((filter) => filter.code).join(" | "),
+        message: `${group.variableName} is filtered ${group.filters.length} times after fetch/query result - combine passes or pre-aggregate`,
+      })),
+  );
 
   allIssues.push(...multiFilterRatchetViolations);
 
@@ -677,38 +674,20 @@ export function run() {
     }
   }
 
-  const baselinedPostFetchCount = Object.values(currentPostFetchByFile).reduce(
-    (sum, count) => sum + count,
-    0,
-  );
-  const baselinedClientQueryCount = Object.values(currentClientQueryByFile).reduce(
-    (sum, count) => sum + count,
-    0,
-  );
-  const baselinedMultiFilterCount = Object.values(currentMultiFilterByFile).reduce(
-    (sum, count) => sum + count,
-    0,
-  );
   const baselineSummaryParts = [];
-  if (baselinedPostFetchCount > 0) {
+  if (postFetchRatchet.totalCurrent > 0) {
     baselineSummaryParts.push(
-      `${baselinedPostFetchCount} baselined post-fetch JS filter(s) across ${
-        Object.keys(currentPostFetchByFile).length
-      } file(s)`,
+      `${postFetchRatchet.totalCurrent} baselined post-fetch JS filter(s) across ${postFetchRatchet.activeKeyCount} file(s)`,
     );
   }
-  if (baselinedClientQueryCount > 0) {
+  if (clientQueryRatchet.totalCurrent > 0) {
     baselineSummaryParts.push(
-      `${baselinedClientQueryCount} baselined client query filter(s) across ${
-        Object.keys(currentClientQueryByFile).length
-      } file(s)`,
+      `${clientQueryRatchet.totalCurrent} baselined client query filter(s) across ${clientQueryRatchet.activeKeyCount} file(s)`,
     );
   }
-  if (baselinedMultiFilterCount > 0) {
+  if (multiFilterRatchet.totalCurrent > 0) {
     baselineSummaryParts.push(
-      `${baselinedMultiFilterCount} baselined multi-filter query result group(s) across ${
-        Object.keys(currentMultiFilterByFile).length
-      } file(s)`,
+      `${multiFilterRatchet.totalCurrent} baselined multi-filter query result group(s) across ${multiFilterRatchet.activeKeyCount} file(s)`,
     );
   }
   const combinedBaselineDetail =

@@ -81,9 +81,9 @@ Fetches all data then filters in the component when the filter could be a backen
 ## Ratchet Strategy
 
 For advisory validators, implement a ratchet:
-- [ ] Store current baseline counts in a config file
-- [ ] Fail if count increases (new violations)
-- [ ] Pass if count stays same or decreases (cleanup in progress)
+- [x] Store current baseline counts in a config file -- ratcheted validators now read baseline JSON from `scripts/ci/`
+- [x] Fail if count increases (new violations) -- shared ratchet helper now enforces count overages deterministically
+- [x] Pass if count stays same or decreases (cleanup in progress) -- shared ratchet helper preserves cleanup-in-progress behavior across count-based validators
 - [ ] Remove ratchet once count hits zero
 
 ## Done When

@@ -11,6 +11,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { analyzeCountRatchet, loadCountBaseline } from "./ratchet-utils.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 const E2E_DIR = path.join(ROOT, "e2e");
@@ -27,12 +28,7 @@ export function run() {
     return { passed: true, errors: 0, detail: "No e2e/ directory", messages: [] };
   }
 
-  const baseline = fs.existsSync(BASELINE_PATH)
-    ? JSON.parse(fs.readFileSync(BASELINE_PATH, "utf8"))
-    : { silentCatchSwallowsByFile: {} };
-  const baselineByFile = baseline.silentCatchSwallowsByFile ?? {};
-
-  const currentByFile = {};
+  const baselineByFile = loadCountBaseline(BASELINE_PATH, "silentCatchSwallowsByFile");
   const lineNumbersByFile = {};
   const files = walkDir(E2E_DIR, { extensions: TARGET_EXTENSIONS });
 
@@ -42,26 +38,18 @@ export function run() {
     const matches = [...source.matchAll(SILENT_CATCH_PATTERN)];
     if (matches.length === 0) continue;
 
-    currentByFile[rel] = matches.length;
     lineNumbersByFile[rel] = matches.map((match) => lineFromIndex(source, match.index ?? 0));
   }
 
-  const violations = [];
-  for (const [file, currentCount] of Object.entries(currentByFile).sort((a, b) =>
-    a[0].localeCompare(b[0]),
-  )) {
-    const baselineCount = baselineByFile[file] ?? 0;
-    if (currentCount > baselineCount) {
-      violations.push({
-        file,
-        baselineCount,
-        currentCount,
-        lineNumbers: lineNumbersByFile[file] ?? [],
-      });
-    }
-  }
-
-  const totalCurrent = Object.values(currentByFile).reduce((sum, count) => sum + count, 0);
+  const ratchet = analyzeCountRatchet(lineNumbersByFile, baselineByFile);
+  const violations = Object.entries(ratchet.overagesByKey)
+    .map(([file, overage]) => ({
+      file,
+      baselineCount: overage.baselineCount,
+      currentCount: overage.currentCount,
+      lineNumbers: lineNumbersByFile[file] ?? [],
+    }))
+    .sort((a, b) => a.file.localeCompare(b.file));
   const messages = [];
 
   if (violations.length > 0) {
@@ -89,7 +77,7 @@ export function run() {
     detail:
       violations.length > 0
         ? `${violations.length} file(s) exceed silent catch swallow baseline`
-        : `${totalCurrent} baselined swallow(s) across ${Object.keys(currentByFile).length} file(s)`,
+        : `${ratchet.totalCurrent} baselined swallow(s) across ${ratchet.activeKeyCount} file(s)`,
     messages,
   };
 }

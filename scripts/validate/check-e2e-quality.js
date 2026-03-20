@@ -15,6 +15,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { analyzeCountRatchet, loadCountBaseline } from "./ratchet-utils.js";
 import { c, ROOT, relPath, walkDir } from "./utils.js";
 
 const SCREENSHOT_HARNESS_REL_PATH = "e2e/screenshot-pages.ts";
@@ -200,39 +201,33 @@ export function run() {
   const screenshotHarnessIssues = collectedIssues
     .filter((issue) => issue.file === SCREENSHOT_HARNESS_REL_PATH)
     .sort((a, b) => a.line - b.line);
-  const screenshotHarnessBaseline = fs.existsSync(SCREENSHOT_HARNESS_BASELINE_PATH)
-    ? JSON.parse(fs.readFileSync(SCREENSHOT_HARNESS_BASELINE_PATH, "utf8"))
-    : { issueCountsByType: {} };
-  const screenshotHarnessBaselineByType = screenshotHarnessBaseline.issueCountsByType ?? {};
-  const screenshotHarnessCurrentByType = {};
+  const screenshotHarnessBaselineByType = loadCountBaseline(
+    SCREENSHOT_HARNESS_BASELINE_PATH,
+    "issueCountsByType",
+  );
+  const screenshotHarnessIssuesByType = {};
 
   for (const issue of screenshotHarnessIssues) {
-    screenshotHarnessCurrentByType[issue.type] =
-      (screenshotHarnessCurrentByType[issue.type] ?? 0) + 1;
+    const issuesForType = screenshotHarnessIssuesByType[issue.type] ?? [];
+    issuesForType.push(issue);
+    screenshotHarnessIssuesByType[issue.type] = issuesForType;
   }
 
-  const screenshotHarnessRatchetIssues = [];
-  for (const [type, currentCount] of Object.entries(screenshotHarnessCurrentByType).sort((a, b) =>
-    a[0].localeCompare(b[0]),
-  )) {
-    const baselineCount = screenshotHarnessBaselineByType[type] ?? 0;
-    if (currentCount > baselineCount) {
-      const issuesForType = screenshotHarnessIssues.filter((issue) => issue.type === type);
-      screenshotHarnessRatchetIssues.push(...issuesForType.slice(baselineCount));
-    }
-  }
+  const screenshotHarnessRatchet = analyzeCountRatchet(
+    screenshotHarnessIssuesByType,
+    screenshotHarnessBaselineByType,
+  );
+  const screenshotHarnessRatchetIssues = Object.values(screenshotHarnessRatchet.overagesByKey)
+    .flatMap((entry) => entry.overageItems)
+    .sort((a, b) => a.line - b.line);
 
   const finalIssues = [...blockingIssues, ...screenshotHarnessRatchetIssues];
   const messages = finalIssues.map(
     (issue) => `  ${c.red}ERROR${c.reset} ${issue.file}:${issue.line} - ${issue.message}`,
   );
-  const screenshotHarnessBaselineCount = Object.values(screenshotHarnessCurrentByType).reduce(
-    (sum, count) => sum + count,
-    0,
-  );
   const screenshotHarnessBaselineDetail =
-    screenshotHarnessBaselineCount > 0
-      ? ` (${screenshotHarnessBaselineCount} baselined screenshot harness quality issue(s))`
+    screenshotHarnessRatchet.totalCurrent > 0
+      ? ` (${screenshotHarnessRatchet.totalCurrent} baselined screenshot harness quality issue(s))`
       : "";
 
   return {
