@@ -4287,12 +4287,21 @@ async function screenshotMeetingsStates(
   const meetingsDetailName = "meetings-detail";
   const transcriptSearchName = "meetings-transcript-search";
   const memoryLensName = "meetings-memory-lens";
+  const detailTimeoutMs = 15000;
 
   if (!shouldCaptureAny(prefix, [meetingsDetailName, transcriptSearchName, memoryLensName])) {
     return;
   }
 
   const meetingsUrl = ROUTES.meetings.build(orgSlug);
+  const recentMeetingsSection = page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: /^recent meetings$/i }) })
+    .first();
+  const meetingDetailSection = page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: /^meeting detail$/i }) })
+    .first();
   const meetingMemorySection = page
     .locator("section")
     .filter({ has: page.getByRole("heading", { name: /^meeting memory$/i }) })
@@ -4309,14 +4318,24 @@ async function screenshotMeetingsStates(
   if (shouldCapture(prefix, meetingsDetailName)) {
     await runCaptureStep("meetings detail", async () => {
       await openMeetingsForCapture();
-      await page
-        .getByRole("button", { name: /client launch review/i })
-        .first()
-        .click();
-      await page
-        .getByRole("heading", { name: /^client launch review$/i })
-        .first()
-        .waitFor({ state: "visible", timeout: 5000 });
+      const clientLaunchReviewCard = recentMeetingsSection
+        .locator("[role='button']")
+        .filter({ hasText: /Client Launch Review/i })
+        .first();
+      await clientLaunchReviewCard.waitFor({ state: "visible", timeout: detailTimeoutMs });
+      await clientLaunchReviewCard.evaluate((element) => {
+        if (element instanceof HTMLElement) {
+          element.click();
+        }
+      });
+      await meetingDetailSection
+        .getByText("Client Launch Review", { exact: true })
+        .waitFor({ state: "visible", timeout: detailTimeoutMs });
+      await meetingDetailSection
+        .getByText(
+          "The client also asked whether they need weekend coverage and a final handoff packet before launch.",
+        )
+        .waitFor({ state: "visible", timeout: detailTimeoutMs });
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, meetingsDetailName);
     });
@@ -4325,22 +4344,29 @@ async function screenshotMeetingsStates(
   if (shouldCapture(prefix, transcriptSearchName)) {
     await runCaptureStep("meetings transcript search", async () => {
       await openMeetingsForCapture();
-      await page
-        .getByRole("button", { name: /weekly product sync/i })
-        .first()
-        .click();
-      await page
-        .getByRole("heading", { name: /^weekly product sync$/i })
-        .first()
-        .waitFor({ state: "visible", timeout: 5000 });
+      const weeklyProductSyncCard = recentMeetingsSection
+        .locator("[role='button']")
+        .filter({ hasText: /Weekly Product Sync/i })
+        .first();
+      await weeklyProductSyncCard.waitFor({ state: "visible", timeout: detailTimeoutMs });
+      await weeklyProductSyncCard.evaluate((element) => {
+        if (element instanceof HTMLElement) {
+          element.click();
+        }
+      });
+      await meetingDetailSection
+        .getByText("Weekly Product Sync", { exact: true })
+        .waitFor({ state: "visible", timeout: detailTimeoutMs });
 
-      const transcriptSearch = page.getByRole("searchbox", { name: "Search transcript" });
+      const transcriptSearch = meetingDetailSection.getByRole("searchbox", {
+        name: "Search transcript",
+      });
       await transcriptSearch.fill("pricing");
-      await page
+      await meetingDetailSection
         .getByText(
           "We cleared the dashboard bugs, but pricing approval still needs legal sign-off before launch.",
         )
-        .waitFor({ state: "visible", timeout: 5000 });
+        .waitFor({ state: "visible", timeout: detailTimeoutMs });
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, transcriptSearchName);
     });
@@ -4349,16 +4375,21 @@ async function screenshotMeetingsStates(
   if (shouldCapture(prefix, memoryLensName)) {
     await runCaptureStep("meetings memory lens", async () => {
       await openMeetingsForCapture();
+      const opsLensButton = meetingMemorySection
+        .locator("button")
+        .filter({ hasText: /OPS/i })
+        .first();
+      await opsLensButton.waitFor({ state: "visible", timeout: detailTimeoutMs });
+      await opsLensButton.evaluate((element) => {
+        if (element instanceof HTMLElement) {
+          element.click();
+        }
+      });
       await meetingMemorySection
-        .getByRole("button")
-        .filter({ hasText: /\bOPS\b/ })
-        .first()
-        .click();
-      await page
         .getByText(
           "Cross-meeting decisions, open questions, and follow-ups for OPS - Client Operations Hub.",
         )
-        .waitFor({ state: "visible", timeout: 5000 });
+        .waitFor({ state: "visible", timeout: detailTimeoutMs });
       await waitForScreenshotReady(page);
       await captureCurrentView(page, prefix, memoryLensName);
     });

@@ -2,7 +2,7 @@
 
 > **Priority:** P1
 > **Status:** In Progress
-> **Last Updated:** 2026-03-19
+> **Last Updated:** 2026-03-20
 
 ## Shipped
 
@@ -15,8 +15,8 @@ First-class Meetings workspace, recording detail view, participant/topic/sentime
 - [x] Add spec folder `docs/design/specs/pages/30-meetings/` with page docs
 - [x] Add meetings page to `e2e/screenshot-pages.ts` capture specs (empty state + seeded workspace route coverage)
 - [x] Expand meetings screenshot coverage with detail/transcript-focused captures if the base route shot is not sufficient
-- [ ] Capture baselines across all 4 viewport/theme combos (desktop-dark, desktop-light, tablet-light, mobile-light)
-- [ ] Update `.screenshot-hashes.json` manifest with new captures
+- [x] Capture baselines across all 4 viewport/theme combos (desktop-dark, desktop-light, tablet-light, mobile-light)
+- [x] Update `.screenshot-hashes.json` manifest with new captures
 - [ ] Visual review of captured screenshots for quality (no spinners, real content)
 
 ### E2E Tests

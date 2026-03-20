@@ -224,5 +224,21 @@
   "docs/design/specs/pages/29-team-detail/screenshots/desktop-dark-project-tree.png": "3baeb72fa4ae6265ebc236efd7259154e674c8afa9be290a6a33897d4d149c1f",
   "docs/design/specs/pages/29-team-detail/screenshots/desktop-light-project-tree.png": "969b4da03538e7d179b4e268fb24d22ecb84c363d88dbe4fa54a1f68f642d22a",
   "docs/design/specs/pages/29-team-detail/screenshots/mobile-light-project-tree.png": "fd11c4eb6679bc51ccad7207401dad0ad2d0182267f72e96b33e9e270057d13e",
-  "docs/design/specs/pages/29-team-detail/screenshots/tablet-light-project-tree.png": "045c447e4e0246db5a96462b7eb351b81d98dc238c62d3deb0a81f3e75460eae"
+  "docs/design/specs/pages/29-team-detail/screenshots/tablet-light-project-tree.png": "045c447e4e0246db5a96462b7eb351b81d98dc238c62d3deb0a81f3e75460eae",
+  "docs/design/specs/pages/30-meetings/screenshots/desktop-dark-detail.png": "51abb4a0bbcea849f5a743043a24afd2ac8ec9210b5d98852d19dbba77c2bfdc",
+  "docs/design/specs/pages/30-meetings/screenshots/desktop-dark-memory-lens.png": "f224634c9f15700fd4ca31a6a66d6b5dd01855c4768b185567230c295e460772",
+  "docs/design/specs/pages/30-meetings/screenshots/desktop-dark-transcript-search.png": "f1e73fff2c96758bb073ea18ef896769fa50a9fbd526d972bc8e476b87212225",
+  "docs/design/specs/pages/30-meetings/screenshots/desktop-dark.png": "38886ea03b4a5b8b30a6245d0f32b57a3d05dd026e1100475de81b195ca9d116",
+  "docs/design/specs/pages/30-meetings/screenshots/desktop-light-detail.png": "41190e6848087574fe68b2abbe4c5cbc7349bf27dda3fa54ca70e24532e7dbdc",
+  "docs/design/specs/pages/30-meetings/screenshots/desktop-light-memory-lens.png": "72fca7c11f6aaea75492e2ffabb266054079844c1b8a0f621c0406d852c36759",
+  "docs/design/specs/pages/30-meetings/screenshots/desktop-light-transcript-search.png": "96914af00fc34ed702b2f1e962c6703dcdc8a8076b93f77bc653fb0a74fdb333",
+  "docs/design/specs/pages/30-meetings/screenshots/desktop-light.png": "eb7905e18da33a4a10ef2c681c8f917bc29faaa98889a743556eef2044756c69",
+  "docs/design/specs/pages/30-meetings/screenshots/mobile-light-detail.png": "6376215732b2a29fbadc0decbd37f76ee57245b90bed46e00cdd44b7b287fb04",
+  "docs/design/specs/pages/30-meetings/screenshots/mobile-light-memory-lens.png": "8b60ccf388f8e49c3742ae47f90334a6860a44de5ceddbe58460e9af35de06f2",
+  "docs/design/specs/pages/30-meetings/screenshots/mobile-light-transcript-search.png": "c68fa818588bfb5fc4ee7c5635f526e5bb3a92cda0e062ff0d46b0ccb4e35b40",
+  "docs/design/specs/pages/30-meetings/screenshots/mobile-light.png": "6376215732b2a29fbadc0decbd37f76ee57245b90bed46e00cdd44b7b287fb04",
+  "docs/design/specs/pages/30-meetings/screenshots/tablet-light-detail.png": "c2c21bbb56ffa758273916b96c80ac25ca761b4e81b94a6941ec9bba815f6963",
+  "docs/design/specs/pages/30-meetings/screenshots/tablet-light-memory-lens.png": "531061f62f99b80e2d66aa29811ab4ce588e2f1524476a5faa6900b963e6db0b",
+  "docs/design/specs/pages/30-meetings/screenshots/tablet-light-transcript-search.png": "862a607c8d4ef65006b9a825f217908c3450d7dafa9baf6080dedfff38100c06",
+  "docs/design/specs/pages/30-meetings/screenshots/tablet-light.png": "c2c21bbb56ffa758273916b96c80ac25ca761b4e81b94a6941ec9bba815f6963"
 }
