@@ -8,6 +8,7 @@
 
 import { useIssueViewMode } from "@/contexts/IssueViewModeContext";
 import { Columns2, PanelRightOpen } from "@/lib/icons";
+import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/IconButton";
 import { Tooltip } from "../ui/Tooltip";
 
@@ -21,11 +22,11 @@ export function ViewModeToggle() {
         aria-label={viewMode === "modal" ? "Switch to side panel view" : "Switch to modal view"}
         aria-pressed={viewMode === "peek"}
       >
-        {viewMode === "modal" ? (
-          <PanelRightOpen className="w-4 h-4" aria-hidden="true" />
-        ) : (
-          <Columns2 className="w-4 h-4" aria-hidden="true" />
-        )}
+        <Icon
+          icon={viewMode === "modal" ? PanelRightOpen : Columns2}
+          size="sm"
+          aria-hidden="true"
+        />
       </IconButton>
     </Tooltip>
   );
