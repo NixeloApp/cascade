@@ -15,7 +15,7 @@ import { Typography } from "../ui/Typography";
 /** Closing CTA section for the landing page. */
 export function FinalCTASection() {
   return (
-    <section>
+    <section id="final-cta">
       <Container
         size="lg"
         style={{ paddingInline: "1.5rem", paddingTop: "6rem", paddingBottom: "6rem" }}

@@ -1,7 +1,7 @@
 # Landing Page - Current State
 
 > **Route**: `/`
-> **Status**: 🟡 Hero, proof strip, and evidence section read like the product; closing sections still need polish
+> **Status**: 🟡 Hero, proof strip, evidence section, and pricing read like the product; final CTA and responsive rhythm still need polish
 > **Last Updated**: 2026-03-21
 
 ---
@@ -63,14 +63,15 @@
 4. Feature grid
 5. AI assistance demo section
 6. Outcome/story section
-7. Pricing
+7. Pricing grounded in rollout stages and shared workspace continuity
 8. Final CTA
 9. Footer
 
 The structure is no longer generic, the hero showcase reads like a workspace shell, the proof strip
 reinforces that same product language, and the story/proof section now shows concrete operating
-evidence instead of generic outcome cards. The remaining problem is no longer the middle of the
-page. It is that the closing landing surfaces still need stronger product realism and consistency.
+evidence instead of generic outcome cards. Pricing now explains the rollout path without implying a
+different product for serious teams. The remaining problem is no longer the middle of the page. It
+is that the final CTA and responsive rhythm still need stronger product realism and consistency.
 
 ---
 
@@ -107,6 +108,7 @@ page. It is that the closing landing surfaces still need stronger product realis
 | 9 | Landing capture now waits for the hero/showcase entrance state instead of grabbing a half-faded frame | Fixed |
 | 10 | Proof strip now shows product-grounded workflow evidence instead of placeholder logo chips | Fixed |
 | 11 | Story/proof section now anchors its claims in concrete workflow evidence instead of generic outcome cards | Fixed |
+| 12 | Pricing now explains rollout stages and enterprise controls without reverting to generic SaaS plan marketing | Fixed |
 
 ---
 
@@ -114,7 +116,7 @@ page. It is that the closing landing surfaces still need stronger product realis
 
 | # | Problem | Area | Severity |
 |---|---------|------|----------|
-| 1 | Pricing and closing CTA still lean more on generic marketing structure than product-grounded evidence | lower landing closing surfaces | MEDIUM |
+| 1 | Final CTA still leans more on generic marketing structure than product-grounded evidence | lower landing closing surface | MEDIUM |
 | 2 | Tablet/mobile rhythm still needs explicit review so the product preview stays authoritative above the fold | hero / landing responsive rhythm | MEDIUM |
 
 ---
@@ -123,9 +125,9 @@ page. It is that the closing landing surfaces still need stronger product realis
 
 - The screenshot run may be valid technically while the composition is still wrong visually.
 - The hero, proof strip, and evidence section are no longer the first places to spend effort.
-- The next pass should focus on the closing landing surfaces:
-  - keep pricing and final CTA grounded in app-like surfaces instead of decorative marketing grammar
-  - turn remaining copy-only credibility claims into clearer product evidence wherever possible
+- The next pass should focus on the remaining closing and responsive debt:
+  - make the final CTA feel more like a real extension of the product surface, not polished filler
+  - turn any last copy-only credibility claims into clearer product evidence wherever possible
   - review mobile/tablet rhythm so the product preview keeps authority above the fold
 
 ---
@@ -133,6 +135,6 @@ page. It is that the closing landing surfaces still need stronger product realis
 ## Summary
 
 The landing page now has the right sections, a convincing product showcase, a product-grounded
-proof strip, and a stronger evidence section. The remaining work is broader consistency: make the
-closing surfaces feel less like polished marketing filler and more like extensions of the product
-we actually ship.
+proof strip, a stronger evidence section, and pricing that explains the actual rollout model. The
+remaining work is broader consistency: make the final CTA feel less like polished marketing filler
+and keep the responsive rhythm from undermining the product surface above the fold.
