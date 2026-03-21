@@ -51,6 +51,7 @@
  *  47. Page layout             — route wrappers should use PageLayout, not ad-hoc max-width shells
  *  48. Raw Date formatting     — use shared date helpers instead of ad-hoc formatting
  *  49. E2E catch swallows      — ratchets silent .catch(() => {}) usage in e2e and screenshot tooling
+ *  50. Wrapper default drift   — blocks shared wrappers from restating primitive defaults like Typography color="auto"
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -303,6 +304,10 @@ const checks = [
   {
     name: "E2E catch swallows",
     modulePath: new URL("./validate/check-e2e-catch-swallows.js", import.meta.url).href,
+  },
+  {
+    name: "Wrapper default drift",
+    modulePath: new URL("./validate/check-wrapper-default-drift.js", import.meta.url).href,
   },
 ];
 
