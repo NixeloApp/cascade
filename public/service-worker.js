@@ -3,7 +3,7 @@ const CACHE_NAME = "nixelo-v2"; // Bump version for push notification support
 const OFFLINE_URL = "/offline.html";
 
 // Assets to cache on install
-const STATIC_ASSETS = ["/", "/offline.html", "/manifest.json"];
+const STATIC_ASSETS = ["/", "/offline.html", "/manifest.webmanifest"];
 
 // Install event - cache static assets
 self.addEventListener("install", (event) => {

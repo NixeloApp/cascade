@@ -52,9 +52,9 @@ It is also structurally isolated:
 - Registration is gated to production and skipped for E2E when `window.__convex_test_client` exists.
 - The app uses `vite-plugin-pwa` in `vite.config.ts`.
 - The app also manually registers `/service-worker.js` in `src/lib/serviceWorker.ts`.
-- The production build injects `registerSW.js`, which registers `/sw.js` from `vite-plugin-pwa`.
-- The production build also still ships `/service-worker.js` from `public/service-worker.js`.
-- That means the current build produces two different service worker scripts for the same app scope.
+- `vite.config.ts` now sets `injectRegister: false`, so the current production build no longer injects `registerSW.js`.
+- The production build still ships `/service-worker.js` from `public/service-worker.js`.
+- The production build still emits `sw.js` from `vite-plugin-pwa`, but it is not auto-registered by built HTML.
 
 ### Custom service worker implementation
 
@@ -116,29 +116,27 @@ It is also structurally isolated:
 
 ### Build artifact reality
 
-- Running `pnpm build` emitted `dist/client/service-worker.js`, `dist/client/sw.js`, `dist/client/registerSW.js`, `dist/client/manifest.json`, and `dist/client/manifest.webmanifest`.
+- Running `pnpm build` now completes successfully.
+- The current build emits `dist/client/service-worker.js`, `dist/client/sw.js`, `dist/client/manifest.json`, and `dist/client/manifest.webmanifest`.
 - `dist/client/service-worker.js` is copied from `public/service-worker.js`.
 - `dist/client/sw.js` is the generated `vite-plugin-pwa` worker.
-- `dist/client/registerSW.js` registers `/sw.js`.
-- `dist/client/index.html` includes both:
-  - the original manifest link for `/manifest.json`
-  - an injected manifest link for `/manifest.webmanifest`
-  - an injected script tag for `/registerSW.js`
+- `dist/client/index.html` includes a single manifest link for `/manifest.webmanifest`.
+- `dist/client/index.html` no longer includes the plugin-injected `/registerSW.js` script tag.
+- The manually registered `public/service-worker.js` now caches `/manifest.webmanifest`.
 
 ### What this proves
 
-- `vite-plugin-pwa` is active and generating its own worker.
-- The app code is separately registering a different worker from `public/service-worker.js`.
+- `vite-plugin-pwa` is active and still generating its own worker and manifest.
+- The app code registers `/service-worker.js` from `public/service-worker.js`.
 - `src/service-worker.ts` is not the worker currently being emitted or registered by the build.
-- `public/manifest.json` is still shipped, but the PWA plugin also emits `manifest.webmanifest`, so manifest ownership is currently split.
+- Auto-registration conflict is reduced because built HTML no longer auto-registers `/sw.js`.
+- Manifest ownership is mostly aligned on `manifest.webmanifest`, though `public/manifest.json` is still emitted as an unused artifact.
 - `promptInstall()` and `clearCache()` currently have no active call sites outside their defining module.
 
-### Build blocker found while verifying
+### Build verification note
 
-- `pnpm build` does not currently complete cleanly.
-- The build reaches PWA artifact emission, then fails because Vite cannot resolve `babel-plugin-react-compiler`.
-- This is not specific to the offline lane, but it affects how reliably we can verify production behavior.
-- `vite.config.ts` now sets `injectRegister: false` to stop auto-registering the plugin worker, but a fresh clean emitted-build verification is still blocked by that build failure.
+- `pnpm install --frozen-lockfile` restored the missing `babel-plugin-react-compiler` package in `node_modules`.
+- Production build verification is no longer blocked by that missing dependency.
 
 ## Confirmed Gaps And Risk Areas
 
@@ -152,14 +150,15 @@ The repo has all of these at once:
 What Phase 0 already proved:
 - the built output does not ship `src/service-worker.ts`
 - `vite-plugin-pwa` generates `/sw.js`
-- the app also ships and manually registers `/service-worker.js`
-- the current runtime has competing service-worker ownership
+- the app ships and manually registers `/service-worker.js`
+- plugin auto-registration is now disabled in source config and absent from built HTML
 
 What is still not proven:
-- which registration wins in the browser at runtime on first load
-- whether push, caching, and update behavior all land on the same active worker
+- whether `sw.js` remains completely unused in the runtime after the source-side registration change
+- whether push, caching, and update behavior all land cleanly on the manually registered worker only
+- whether the unused emitted `public/manifest.json` should be removed entirely
 
-This is no longer a hypothetical problem; it is a confirmed architecture conflict.
+This is no longer a competing-registration problem in built HTML, but it is still a split-ownership problem.
 
 ### 2. The offline write path looks incomplete
 
@@ -249,11 +248,11 @@ Non-goals for this lane:
 
 ## Phase 0: Establish The Truth
 
-- [x] Build production locally far enough to inspect emitted PWA artifacts. The build still fails afterward because Vite cannot resolve `babel-plugin-react-compiler`.
+- [x] Build production locally and inspect emitted PWA artifacts.
 - [x] Verify which worker file is served at `/service-worker.js`. It is the copied `public/service-worker.js`.
-- [x] Verify whether `vite-plugin-pwa` is generating the worker, augmenting it, or being bypassed. It is generating a separate `/sw.js` plus `/registerSW.js`.
+- [x] Verify whether `vite-plugin-pwa` is generating the worker, augmenting it, or being bypassed. It is generating a separate `/sw.js`; source config now disables its auto-registration.
 - [x] Document the real build/runtime flow in this file once confirmed.
-- [x] Confirm whether `public/manifest.json` or the Vite PWA manifest is the source of truth at build time. Current answer: both are emitted and linked, so ownership is split and needs cleanup.
+- [x] Confirm whether `public/manifest.json` or the Vite PWA manifest is the source of truth at build time. Current answer: built HTML now links only `manifest.webmanifest`, and the manual worker caches that same path.
 - [ ] Confirm whether install prompts are ever shown in production.
 - [ ] Confirm whether push subscription depends on the same service worker that handles offline caching.
 

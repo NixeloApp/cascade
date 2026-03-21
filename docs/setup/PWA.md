@@ -12,8 +12,9 @@ What is true right now:
 - The app manually registers `/service-worker.js` via `src/lib/serviceWorker.ts`.
 - `public/service-worker.js` is still shipped in production as `/service-worker.js`.
 - `vite-plugin-pwa` is also enabled in `vite.config.ts`.
-- The last verified emitted build produced a separate `/sw.js` plus `/registerSW.js`.
-- `vite.config.ts` now sets `injectRegister: false` to stop that auto-registration path, but a fresh clean emitted-build verification is currently blocked by a separate build failure.
+- The current verified emitted build still produces a separate `/sw.js`, but built HTML no longer auto-registers it.
+- `vite.config.ts` sets `injectRegister: false` to keep registration owned by `src/lib/serviceWorker.ts`.
+- Built HTML now links only `/manifest.webmanifest`, and the manual service worker caches that same manifest path.
 - `src/service-worker.ts` exists, but current build verification indicates it is not the worker that production emits.
 - `promptInstall()` exists in `src/lib/serviceWorker.ts`, but is not currently wired to an active call site.
 
@@ -183,8 +184,9 @@ The repo currently ships:
 
 - `/service-worker.js` from `public/service-worker.js`
 - `/sw.js` from `vite-plugin-pwa`
+- `/manifest.webmanifest` as the linked app manifest
 
-That split should be treated as a cleanup target, not an intentional final architecture.
+The app currently registers only `/service-worker.js` from app code, and built HTML links only `/manifest.webmanifest`. The remaining cleanup target is the unused emitted `/sw.js` and any leftover legacy manifest artifact, not a competing registration path in HTML.
 
 **Deployment Checklist:**
 - ✅ Icons created and placed in `/public/`
