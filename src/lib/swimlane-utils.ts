@@ -8,7 +8,7 @@
 
 import type { Id } from "@convex/_generated/dataModel";
 import type { EnrichedIssue } from "@convex/lib/issueHelpers";
-import type { IssuePriority } from "./issue-utils";
+import { getPriorityColor } from "./issue-utils";
 
 // =============================================================================
 // Types
@@ -32,19 +32,6 @@ export type SwimlanIssues = Record<string, Record<string, EnrichedIssue[]>>;
 
 /** Collapsed state for swimlanes */
 export type CollapsedSwimlanes = Set<string>;
-
-// =============================================================================
-// Constants
-// =============================================================================
-
-/** Priority colors for swimlane headers */
-const PRIORITY_COLORS: Record<IssuePriority, string> = {
-  highest: "text-status-error",
-  high: "text-palette-orange",
-  medium: "text-status-warning",
-  low: "text-palette-blue",
-  lowest: "text-ui-text-tertiary",
-};
 
 // =============================================================================
 // Swimlane Grouping Logic
@@ -72,11 +59,11 @@ export function getSwimlanId(issue: EnrichedIssue, groupBy: SwimlanGroupBy): str
 /** Get priority swimlane configs */
 function getPrioritySwimlanes(): SwimlanConfig[] {
   return [
-    { id: "highest", name: "Highest", order: 0, color: PRIORITY_COLORS.highest },
-    { id: "high", name: "High", order: 1, color: PRIORITY_COLORS.high },
-    { id: "medium", name: "Medium", order: 2, color: PRIORITY_COLORS.medium },
-    { id: "low", name: "Low", order: 3, color: PRIORITY_COLORS.low },
-    { id: "lowest", name: "Lowest", order: 4, color: PRIORITY_COLORS.lowest },
+    { id: "highest", name: "Highest", order: 0, color: getPriorityColor("highest", "text") },
+    { id: "high", name: "High", order: 1, color: getPriorityColor("high", "text") },
+    { id: "medium", name: "Medium", order: 2, color: getPriorityColor("medium", "text") },
+    { id: "low", name: "Low", order: 3, color: getPriorityColor("low", "text") },
+    { id: "lowest", name: "Lowest", order: 4, color: getPriorityColor("lowest", "text") },
   ];
 }
 

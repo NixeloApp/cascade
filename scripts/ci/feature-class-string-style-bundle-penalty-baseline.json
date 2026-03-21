@@ -1,5 +1,3 @@
 {
-  "classStringStyleBundlePenaltyByFile": {
-    "src/lib/swimlane-utils.ts": 15
-  }
+  "classStringStyleBundlePenaltyByFile": {}
 }
