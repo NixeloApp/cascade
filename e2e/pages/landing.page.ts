@@ -101,10 +101,10 @@ export class LandingPage extends BasePage {
 
     // Proof / Pricing Section
     this.proofHeading = page.getByRole("heading", {
-      name: /better product ops usually starts with fewer disconnected surfaces/i,
+      name: /the proof is in how work survives every handoff/i,
     });
     this.pricingHeading = page.getByRole("heading", {
-      name: /pricing that scales with your team/i,
+      name: /the workspace stays the same.*control surface grows/i,
     });
     this.pricingStarterPlan = page.getByRole("heading", { name: /^starter$/i });
     this.pricingTeamPlan = page.getByRole("heading", { name: /^team$/i });

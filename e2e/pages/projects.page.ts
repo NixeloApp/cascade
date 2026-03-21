@@ -175,10 +175,8 @@ export class ProjectsPage extends BasePage {
     });
     this.cancelButton = this.createProjectForm.getByRole("button", { name: /cancel/i });
 
-    // Project board - look for Kanban Board heading or board container
-    this.projectBoard = page
-      .getByTestId(TEST_IDS.BOARD.ROOT)
-      .or(page.getByRole("heading", { name: /kanban board|scrum board/i }));
+    // Project board container
+    this.projectBoard = page.getByTestId(TEST_IDS.BOARD.ROOT);
     this.boardColumns = page.getByTestId(TEST_IDS.BOARD.COLUMN);
     this.issueCards = page.getByTestId(TEST_IDS.ISSUE.CARD);
     // Create issue - prefer the stable first-column trigger used by the tour,
@@ -234,7 +232,7 @@ export class ProjectsPage extends BasePage {
     this.activityEntries = this.activityFeed.getByTestId(TEST_IDS.ACTIVITY.ENTRY);
 
     // Analytics
-    this.analyticsPageHeader = page.getByRole("heading", { name: /analytics dashboard/i });
+    this.analyticsPageHeader = page.getByRole("heading", { name: /analytics/i });
     this.analyticsPageDescription = page.getByText(/project insights.*velocity.*metrics/i);
     this.analyticsTotalIssuesMetric = page.getByTestId(TEST_IDS.ANALYTICS.METRIC_TOTAL_ISSUES);
     this.analyticsUnassignedMetric = page.getByTestId(TEST_IDS.ANALYTICS.METRIC_UNASSIGNED);
