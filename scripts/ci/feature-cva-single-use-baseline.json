@@ -1,6 +1,5 @@
 {
   "singleUseVariantCvaDefinitionsByFile": {
-    "src/components/Landing/FeaturesSection.tsx": 2,
     "src/components/layout/PageLayout.tsx": 1
   }
 }
