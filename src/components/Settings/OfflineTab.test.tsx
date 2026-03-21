@@ -48,6 +48,7 @@ describe("OfflineTab", () => {
       pendingCount: 0,
       syncingCount: 0,
       failedCount: 0,
+      lastSuccessfulReplayAt: null,
       isLoading: false,
       refresh: vi.fn(),
       processNow: vi.fn(),
@@ -65,6 +66,8 @@ describe("OfflineTab", () => {
     expect(screen.getByText("Ready")).toBeInTheDocument();
     expect(screen.getByText("0")).toBeInTheDocument();
     expect(screen.getByText("IndexedDB")).toBeInTheDocument();
+    expect(screen.getByText("Last Successful Replay")).toBeInTheDocument();
+    expect(screen.getByText("Never")).toBeInTheDocument();
     expect(screen.getByText("Service Worker Support")).toBeInTheDocument();
     expect(screen.getAllByText("Unavailable")).toHaveLength(2);
     expect(screen.getByText("Current Verified Capabilities")).toBeInTheDocument();
@@ -79,6 +82,7 @@ describe("OfflineTab", () => {
       pendingCount: 0,
       syncingCount: 0,
       failedCount: 0,
+      lastSuccessfulReplayAt: null,
       isLoading: true,
       refresh: vi.fn(),
       processNow: vi.fn(),
@@ -107,6 +111,7 @@ describe("OfflineTab", () => {
     const processNow = vi.fn().mockResolvedValue(undefined);
     const retryMutation = vi.fn().mockResolvedValue(undefined);
     const deleteMutation = vi.fn().mockResolvedValue(undefined);
+    const lastSuccessfulReplayAt = 1_700_000_123_456;
 
     mockUseOnlineStatus.mockReturnValue(false);
     mockUseOfflineQueue.mockReturnValue({
@@ -115,6 +120,7 @@ describe("OfflineTab", () => {
       pendingCount: 4,
       syncingCount: 1,
       failedCount: 1,
+      lastSuccessfulReplayAt,
       isLoading: false,
       refresh,
       processNow,
@@ -128,6 +134,7 @@ describe("OfflineTab", () => {
     expect(screen.getByText("You are offline")).toBeInTheDocument();
     expect(screen.getByText("Needs attention")).toBeInTheDocument();
     expect(screen.getByText("Local Offline Queue")).toBeInTheDocument();
+    expect(screen.getByText(new Date(lastSuccessfulReplayAt).toLocaleString())).toBeInTheDocument();
     expect(screen.getByText("6")).toBeInTheDocument();
     expect(screen.getByText("4")).toBeInTheDocument();
     expect(screen.getAllByText("1")).toHaveLength(2);

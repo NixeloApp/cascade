@@ -49,6 +49,12 @@ function getQueueBadgeVariant(status: "pending" | "syncing" | "failed") {
   return "warning";
 }
 
+function formatLastSuccessfulReplay(lastSuccessfulReplayAt: number | null): string {
+  return lastSuccessfulReplayAt === null
+    ? "Never"
+    : new Date(lastSuccessfulReplayAt).toLocaleString();
+}
+
 /**
  * Offline mode settings tab
  * Extracted from Settings for better organization
@@ -61,6 +67,7 @@ export function OfflineTab() {
     pendingCount,
     syncingCount,
     failedCount,
+    lastSuccessfulReplayAt,
     isLoading,
     refresh,
     processNow,
@@ -149,7 +156,7 @@ export function OfflineTab() {
           </Flex>
 
           <div className="pt-6 border-t border-ui-border">
-            <Grid cols={1} colsSm={3} gap="lg">
+            <Grid cols={1} colsSm={2} colsLg={4} gap="lg">
               <div className="p-4 bg-ui-bg-secondary">
                 <Stack gap="xs">
                   <Typography variant="small" color="secondary">
@@ -165,6 +172,16 @@ export function OfflineTab() {
                   </Typography>
                   <Typography variant="h2">
                     {getQueueStatusSummary(isOnline, syncingCount, failedCount, pendingCount)}
+                  </Typography>
+                </Stack>
+              </div>
+              <div className="p-4 bg-ui-bg-secondary">
+                <Stack gap="xs">
+                  <Typography variant="small" color="secondary">
+                    Last Successful Replay
+                  </Typography>
+                  <Typography variant="label">
+                    {formatLastSuccessfulReplay(lastSuccessfulReplayAt)}
                   </Typography>
                 </Stack>
               </div>

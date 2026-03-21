@@ -292,7 +292,7 @@ Current direction:
 - [x] Show failed vs pending vs syncing counts if those states are real.
 - [x] Replace the toast-only queue button with truthful local queue refresh behavior.
 - [x] Add manual retry/remove controls for failed local queue items.
-- [ ] Surface last successful sync time if it is trustworthy.
+- [x] Surface last successful local replay time if it is trustworthy.
 - [ ] Surface browser capability limits when background sync is unsupported.
 
 ## Phase 5: Install And Update Experience

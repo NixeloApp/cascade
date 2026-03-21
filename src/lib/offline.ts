@@ -11,6 +11,7 @@ import { DAY, WEEK } from "@convex/lib/timeUtils";
 const DB_NAME = "NixeloOfflineDB";
 const DB_VERSION = 1;
 export const MAX_OFFLINE_REPLAY_ATTEMPTS = 3;
+const LAST_SUCCESSFUL_OFFLINE_REPLAY_AT_STORAGE_KEY = "nixelo-offline-last-successful-replay-at";
 
 type OfflineMutationArgs = Record<string, unknown>;
 export type OfflineReplayHandler = (args: OfflineMutationArgs) => Promise<void>;
@@ -60,6 +61,51 @@ export class UnsupportedOfflineMutationError extends Error {
 }
 
 const offlineReplayHandlers = new Map<string, OfflineReplayHandler>();
+
+function getLocalStorage(): Storage | null {
+  if (typeof window === "undefined" || !("localStorage" in window)) {
+    return null;
+  }
+
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+function recordLastSuccessfulOfflineReplayAt(timestamp: number): void {
+  const storage = getLocalStorage();
+  if (!storage) {
+    return;
+  }
+
+  try {
+    storage.setItem(LAST_SUCCESSFUL_OFFLINE_REPLAY_AT_STORAGE_KEY, String(timestamp));
+  } catch (error) {
+    console.info("[offline] Failed to persist last successful replay time", { error });
+  }
+}
+
+export function getLastSuccessfulOfflineReplayAt(): number | null {
+  const storage = getLocalStorage();
+  if (!storage) {
+    return null;
+  }
+
+  try {
+    const storedValue = storage.getItem(LAST_SUCCESSFUL_OFFLINE_REPLAY_AT_STORAGE_KEY);
+    if (!storedValue) {
+      return null;
+    }
+
+    const timestamp = Number(storedValue);
+    return Number.isFinite(timestamp) ? timestamp : null;
+  } catch (error) {
+    console.info("[offline] Failed to read last successful replay time", { error });
+    return null;
+  }
+}
 
 function applyMutationStatusUpdate(
   mutation: OfflineMutation,
@@ -482,6 +528,7 @@ async function processQueuedMutation(mutation: OfflineMutation): Promise<void> {
   const nextAttemptCount = mutation.attempts + 1;
 
   try {
+    const completedAt = Date.now();
     await offlineDB.updateMutationStatus(mutation.id, "syncing", {
       incrementAttempts: true,
       clearError: true,
@@ -492,6 +539,7 @@ async function processQueuedMutation(mutation: OfflineMutation): Promise<void> {
     await offlineDB.updateMutationStatus(mutation.id, "synced", {
       clearError: true,
     });
+    recordLastSuccessfulOfflineReplayAt(completedAt);
   } catch (error) {
     const nextStatus = getNextFailureStatus(mutation.attempts + 1);
     console.info("[offline] Failed to process queued mutation", {

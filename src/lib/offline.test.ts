@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  getLastSuccessfulOfflineReplayAt,
   MAX_OFFLINE_REPLAY_ATTEMPTS,
   type OfflineMutation,
   offlineDB,
@@ -22,6 +23,7 @@ function createQueuedMutation(overrides: Partial<OfflineMutation> = {}): Offline
 
 describe("offline replay queue", () => {
   afterEach(() => {
+    window.localStorage.clear();
     vi.restoreAllMocks();
   });
 
@@ -53,6 +55,7 @@ describe("offline replay queue", () => {
   });
 
   it("replays supported mutation types through a registered handler", async () => {
+    const completedAt = 1_700_000_999_000;
     const queuedMutation = createQueuedMutation({
       mutationType: "issues.updateTitle",
       mutationArgs: JSON.stringify({ id: "issue-1", title: "Renamed" }),
@@ -60,6 +63,7 @@ describe("offline replay queue", () => {
     const handler = vi.fn().mockResolvedValue(undefined);
     const unregisterHandler = registerOfflineReplayHandler("issues.updateTitle", handler);
     const updateSpy = vi.spyOn(offlineDB, "updateMutationStatus").mockResolvedValue();
+    vi.spyOn(Date, "now").mockReturnValue(completedAt);
 
     vi.spyOn(offlineDB, "getPendingMutations").mockResolvedValue([queuedMutation]);
 
@@ -80,6 +84,7 @@ describe("offline replay queue", () => {
     expect(updateSpy).toHaveBeenNthCalledWith(2, 1, "synced", {
       clearError: true,
     });
+    expect(getLastSuccessfulOfflineReplayAt()).toBe(completedAt);
   });
 
   it("marks a mutation failed once it reaches the maximum replay attempts", async () => {

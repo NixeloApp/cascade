@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  getLastSuccessfulOfflineReplayAt,
   type OfflineMutation,
   offlineDB,
   offlineStatus,
@@ -50,7 +51,7 @@ export function useOnlineStatus() {
  * Hook to track offline sync queue status
  */
 export function useOfflineSyncStatus() {
-  const { queue, isLoading, refresh } = useOfflineQueue();
+  const { queue, isLoading, lastSuccessfulReplayAt, refresh } = useOfflineQueue();
   const pending = queue.filter((mutation) => mutation.status === "pending");
   const syncing = queue.filter((mutation) => mutation.status === "syncing");
   const failed = queue.filter((mutation) => mutation.status === "failed");
@@ -65,6 +66,7 @@ export function useOfflineSyncStatus() {
     pendingCount: counts.pendingCount,
     syncingCount: counts.syncingCount,
     failedCount: counts.failedCount,
+    lastSuccessfulReplayAt,
     isLoading,
     refresh,
   };
@@ -75,6 +77,9 @@ export function useOfflineSyncStatus() {
  */
 export function useOfflineQueue() {
   const [queue, setQueue] = useState<OfflineMutation[]>([]);
+  const [lastSuccessfulReplayAt, setLastSuccessfulReplayAt] = useState<number | null>(() =>
+    getLastSuccessfulOfflineReplayAt(),
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const refresh = async () => {
@@ -82,6 +87,7 @@ export function useOfflineQueue() {
     try {
       const mutations = await offlineDB.getQueuedMutations();
       setQueue(mutations);
+      setLastSuccessfulReplayAt(getLastSuccessfulOfflineReplayAt());
     } catch (error) {
       logOfflineError("refresh queue failed", error);
     } finally {
@@ -112,6 +118,7 @@ export function useOfflineQueue() {
       await processOfflineQueue();
       const mutations = await offlineDB.getQueuedMutations();
       setQueue(mutations);
+      setLastSuccessfulReplayAt(getLastSuccessfulOfflineReplayAt());
     } catch (error) {
       logOfflineError("process queue failed", error);
     } finally {
@@ -128,6 +135,7 @@ export function useOfflineQueue() {
         const mutations = await offlineDB.getQueuedMutations();
         if (mounted) {
           setQueue(mutations);
+          setLastSuccessfulReplayAt(getLastSuccessfulOfflineReplayAt());
         }
       } catch (error) {
         logOfflineError("refresh queue failed", error);
@@ -156,6 +164,7 @@ export function useOfflineQueue() {
     pendingCount: counts.pendingCount,
     syncingCount: counts.syncingCount,
     failedCount: counts.failedCount,
+    lastSuccessfulReplayAt,
     isLoading,
     refresh,
     processNow,
