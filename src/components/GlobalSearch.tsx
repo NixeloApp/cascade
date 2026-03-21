@@ -150,9 +150,13 @@ function CommandActionItem({ command, onClose }: { command: CommandAction; onClo
         <Card
           recipe="controlStrip"
           padding="none"
-          className="flex h-9 w-9 shrink-0 items-center justify-center text-ui-text-tertiary"
+          className="flex size-9 shrink-0 items-center justify-center text-ui-text-tertiary"
         >
-          {command.icon ? <Icon icon={command.icon} size="md" /> : <Command className="h-4 w-4" />}
+          {command.icon ? (
+            <Icon icon={command.icon} size="md" />
+          ) : (
+            <Icon icon={Command} size="sm" />
+          )}
         </Card>
         <FlexItem flex="1" className="min-w-0">
           <Flex align="center" gap="sm" wrap>
@@ -171,7 +175,7 @@ function CommandActionItem({ command, onClose }: { command: CommandAction; onClo
             </Typography>
           ) : null}
         </FlexItem>
-        <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-ui-text-tertiary" />
+        <Icon icon={ArrowRight} size="sm" className="mt-1 shrink-0 text-ui-text-tertiary" />
       </Flex>
     </CommandItem>
   );
@@ -198,12 +202,12 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
         <Card
           recipe="controlStrip"
           padding="none"
-          className="flex h-9 w-9 shrink-0 items-center justify-center"
+          className="flex size-9 shrink-0 items-center justify-center"
         >
           {result.type === "issue" ? (
             <svg
               aria-hidden="true"
-              className="h-5 w-5 text-brand"
+              className="size-5 text-brand"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -216,7 +220,7 @@ function SearchResultItem({ result, onClose }: { result: SearchResult; onClose: 
           ) : (
             <svg
               aria-hidden="true"
-              className="h-5 w-5 text-accent"
+              className="size-5 text-accent"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -512,9 +516,9 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
           <Card
             recipe="controlStrip"
             padding="none"
-            className="flex h-8 w-8 shrink-0 items-center justify-center border-ui-border/60 text-ui-text-tertiary sm:h-7 sm:w-7"
+            className="flex size-8 shrink-0 items-center justify-center border-ui-border/60 text-ui-text-tertiary sm:size-7"
           >
-            <Search className="h-4 w-4" />
+            <Icon icon={Search} size="sm" />
           </Card>
           <Typography variant="searchTriggerLabel">Search, jump, or create...</Typography>
         </Flex>
@@ -614,7 +618,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
                     chrome="framed"
                     chromeSize="compactPill"
                     onClick={handleOpenAdvancedSearch}
-                    leftIcon={<Filter className="h-4 w-4" />}
+                    leftIcon={<Icon icon={Filter} size="sm" />}
                   >
                     Advanced Search
                   </Button>
@@ -622,7 +626,7 @@ export function GlobalSearch({ commands = [] }: { commands?: CommandAction[] }) 
                     chrome="framed"
                     chromeSize="compactPill"
                     onClick={() => setQuery("@")}
-                    leftIcon={<Plus className="h-4 w-4" />}
+                    leftIcon={<Icon icon={Plus} size="sm" />}
                   >
                     Search with filters
                   </Button>
