@@ -1,6 +1,7 @@
 import { api } from "@convex/_generated/api";
 import { useState } from "react";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { queueUserSettingsUpdate, type UserSettingsUpdateArgs } from "@/lib/offlineUserSettings";
 import { showInfo } from "@/lib/toast";
 import { useOnlineStatus } from "./useOffline";
@@ -20,9 +21,10 @@ function shouldQueueOfflineUpdate(allowOfflineQueue: boolean, isOnline: boolean)
 
 async function queueUpdateAndNotify(
   args: UserSettingsUpdateArgs,
+  userId?: string,
   queuedMessage?: string,
 ): Promise<OfflineUserSettingsUpdateResult> {
-  await queueUserSettingsUpdate(args);
+  await queueUserSettingsUpdate(args, userId);
   if (queuedMessage) {
     showInfo(queuedMessage);
   }
@@ -33,6 +35,8 @@ async function queueUpdateAndNotify(
 export function useOfflineUserSettingsUpdate() {
   const isOnline = useOnlineStatus();
   const { mutate, canAct, isAuthLoading } = useAuthenticatedMutation(api.userSettings.update);
+  const { user } = useCurrentUser();
+  const userId = user?._id;
   const [isUpdating, setIsUpdating] = useState(false);
 
   const update = async (
@@ -42,7 +46,7 @@ export function useOfflineUserSettingsUpdate() {
     const allowOfflineQueue = options.allowOfflineQueue ?? true;
 
     if (shouldQueueOfflineUpdate(allowOfflineQueue, isOnline)) {
-      return queueUpdateAndNotify(args, options.queuedMessage);
+      return queueUpdateAndNotify(args, userId, options.queuedMessage);
     }
 
     setIsUpdating(true);
@@ -54,7 +58,7 @@ export function useOfflineUserSettingsUpdate() {
       // hook's isOnline value, which was captured at render time and may be
       // stale if the network dropped mid-flight.
       if (shouldQueueOfflineUpdate(allowOfflineQueue, navigator.onLine)) {
-        return queueUpdateAndNotify(args, options.queuedMessage);
+        return queueUpdateAndNotify(args, userId, options.queuedMessage);
       }
 
       throw error;

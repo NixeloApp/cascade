@@ -16,6 +16,14 @@ vi.mock("./useOffline", () => ({
   useOnlineStatus: vi.fn(),
 }));
 
+vi.mock("@/hooks/useCurrentUser", () => ({
+  useCurrentUser: vi.fn(() => ({
+    user: { _id: "test-user-id" },
+    isLoading: false,
+    isAuthenticated: true,
+  })),
+}));
+
 vi.mock("@/lib/offlineUserSettings", () => ({
   queueUserSettingsUpdate: vi.fn(),
 }));
@@ -75,9 +83,10 @@ describe("useOfflineUserSettingsUpdate", () => {
     );
 
     expect(response).toEqual({ queued: true });
-    expect(mockQueueUserSettingsUpdate).toHaveBeenCalledWith({
-      timezone: "America/Chicago",
-    });
+    expect(mockQueueUserSettingsUpdate).toHaveBeenCalledWith(
+      { timezone: "America/Chicago" },
+      "test-user-id",
+    );
     expect(mockMutation).not.toHaveBeenCalled();
     expect(mockShowInfo).toHaveBeenCalledWith(
       "Timezone change queued for sync when you are back online",

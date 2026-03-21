@@ -35,8 +35,11 @@ function validateUserSettingsArgs(args: Record<string, unknown>): UserSettingsUp
 }
 
 /** Queues a user-settings mutation to IndexedDB for offline replay. */
-export async function queueUserSettingsUpdate(args: UserSettingsUpdateArgs): Promise<number> {
-  return queueOfflineMutation(USER_SETTINGS_OFFLINE_MUTATION_TYPE, args);
+export async function queueUserSettingsUpdate(
+  args: UserSettingsUpdateArgs,
+  userId?: string,
+): Promise<number> {
+  return queueOfflineMutation(USER_SETTINGS_OFFLINE_MUTATION_TYPE, args, userId);
 }
 
 /** Replays a queued user-settings mutation through the live Convex client. */

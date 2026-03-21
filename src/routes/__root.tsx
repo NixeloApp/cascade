@@ -9,6 +9,7 @@ import { Flex } from "@/components/ui/Flex";
 import { IconCircle } from "@/components/ui/IconCircle";
 import { Toaster } from "@/components/ui/Sonner";
 import { useAuthReady } from "@/hooks/useConvexHelpers";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { processOfflineQueue, registerOfflineReplayHandler } from "@/lib/offline";
 import {
   replayUserSettingsUpdate,
@@ -123,9 +124,11 @@ function RootComponent() {
 function OfflineReplayBootstrap() {
   const convexClient = useConvex();
   const { isAuthenticated, isAuthLoading } = useAuthReady();
+  const { user } = useCurrentUser();
+  const userId = user?._id;
 
   useEffect(() => {
-    if (isAuthLoading || !isAuthenticated) {
+    if (isAuthLoading || !isAuthenticated || !userId) {
       return;
     }
 
@@ -134,7 +137,10 @@ function OfflineReplayBootstrap() {
     );
 
     const flushQueue = () => {
-      processOfflineQueue().catch((error: unknown) => {
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        return;
+      }
+      processOfflineQueue(userId).catch((error: unknown) => {
         console.info("[offline] Failed to flush queued mutations", { error });
       });
     };
@@ -149,7 +155,7 @@ function OfflineReplayBootstrap() {
     return () => {
       window.removeEventListener("online", handleOnline);
     };
-  }, [convexClient, isAuthenticated, isAuthLoading]);
+  }, [convexClient, isAuthenticated, isAuthLoading, userId]);
 
   return null;
 }

@@ -38,6 +38,7 @@ function hasRegistrationSync(
 
 export interface OfflineMutation {
   id?: number;
+  userId?: string;
   mutationType: string;
   mutationArgs: string;
   status: "pending" | "syncing" | "synced" | "failed";
@@ -433,6 +434,7 @@ export const offlineStatus = new OfflineStatusManager();
 export async function queueOfflineMutation(
   mutationType: string,
   mutationArgs: OfflineMutationArgs,
+  userId?: string,
 ) {
   const mutation: Omit<OfflineMutation, "id"> = {
     mutationType,
@@ -440,6 +442,7 @@ export async function queueOfflineMutation(
     status: "pending",
     attempts: 0,
     timestamp: Date.now(),
+    userId,
   };
 
   const id = await offlineDB.addMutation(mutation);
@@ -450,10 +453,11 @@ export async function queueOfflineMutation(
  * Processes pending offline mutations. Attempts to sync each mutation,
  * marking as synced on success or failed after 3 retries.
  */
-export async function processOfflineQueue() {
+export async function processOfflineQueue(userId?: string) {
   const pending = await offlineDB.getPendingMutations();
+  const scoped = userId ? pending.filter((m) => !m.userId || m.userId === userId) : pending;
 
-  for (const mutation of pending) {
+  for (const mutation of scoped) {
     await processQueuedMutation(mutation);
   }
 }
