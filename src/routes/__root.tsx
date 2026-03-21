@@ -61,10 +61,13 @@ function RootComponent() {
     document.body.classList.add("app-hydrated");
   }, []);
 
-  // Register service worker for PWA (client-side only, production only)
+  // Register service worker for PWA (production only, not during automated testing)
   useEffect(() => {
-    // DO NOT register service worker in E2E tests as it can interfere with LocalStorage/Auth
-    if (import.meta.env.PROD && import.meta.env.MODE !== "e2e") {
+    // navigator.webdriver is true in Playwright/Puppeteer/Selenium-controlled browsers.
+    // This is a reliable runtime check that works regardless of Vite build mode
+    // (CI runs vite preview in production mode, so import.meta.env.MODE !== "e2e" fails).
+    const isAutomated = typeof navigator !== "undefined" && navigator.webdriver === true;
+    if (import.meta.env.PROD && !isAutomated) {
       registerServiceWorker();
       promptInstall();
     }

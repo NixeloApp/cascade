@@ -388,9 +388,9 @@ export async function queueOfflineMutation(
  */
 let isProcessingQueue = false;
 
-export async function processOfflineQueue(userId?: string) {
+export async function processOfflineQueue(userId?: string): Promise<{ processed: boolean }> {
   if (isProcessingQueue) {
-    return;
+    return { processed: false };
   }
   isProcessingQueue = true;
   try {
@@ -400,6 +400,7 @@ export async function processOfflineQueue(userId?: string) {
     for (const mutation of scoped) {
       await processQueuedMutation(mutation);
     }
+    return { processed: true };
   } finally {
     isProcessingQueue = false;
   }

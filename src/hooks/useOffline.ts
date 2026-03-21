@@ -117,11 +117,11 @@ export function useOfflineQueue() {
     if (isLoading) return { processed: false };
     setIsLoading(true);
     try {
-      await processOfflineQueue(userId);
+      const result = await processOfflineQueue(userId);
       const mutations = await offlineDB.getQueuedMutations();
       setQueue(mutations);
       setLastSuccessfulReplayAt(getLastSuccessfulOfflineReplayAt());
-      return { processed: true };
+      return result;
     } catch (error) {
       logOfflineError("process queue failed", error);
       throw error;
