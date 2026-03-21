@@ -14,7 +14,6 @@ describe("PageLayout", () => {
     expect(container.firstChild).toHaveClass(
       "mx-auto",
       "w-full",
-      "animate-fade-in",
       "px-4",
       "py-5",
       "sm:px-6",
@@ -22,6 +21,7 @@ describe("PageLayout", () => {
       "lg:px-8",
       "max-w-full",
     );
+    expect(container.firstChild).toHaveStyle({ animation: "var(--animation-fade-in)" });
   });
 
   it("applies max-width, full-height, and custom classes", () => {
