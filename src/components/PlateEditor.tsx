@@ -103,6 +103,7 @@ interface UsePlateDocumentSyncArgs {
   document: PlateEditorDocument | null | undefined;
   latestSnapshot: ReturnType<typeof useAuthenticatedQuery<typeof api.prosemirror.getSnapshot>>;
   latestVersion: ReturnType<typeof useAuthenticatedQuery<typeof api.prosemirror.latestVersion>>;
+  versions: PlateEditorVersions | undefined;
   submitSnapshot: ReturnType<
     typeof useAuthenticatedMutation<typeof api.prosemirror.submitSnapshot>
   >["mutate"];
@@ -411,6 +412,7 @@ function usePlateDocumentSync({
   document,
   latestSnapshot,
   latestVersion,
+  versions,
   submitSnapshot,
   updateTitle,
 }: UsePlateDocumentSyncArgs) {
@@ -431,8 +433,13 @@ function usePlateDocumentSync({
       return;
     }
 
-    const serializedSnapshot = latestSnapshot
-      ? serializeSnapshot(latestSnapshot)
+    // When there is no ProseMirror sync snapshot, fall back to the most
+    // recent version history snapshot so older documents aren't shown as blank.
+    const effectiveSnapshot =
+      latestSnapshot ?? (versions && versions.length > 0 ? versions[0].snapshot : null);
+
+    const serializedSnapshot = effectiveSnapshot
+      ? serializeSnapshot(effectiveSnapshot)
       : getSerializedPlateValue(getInitialValue());
 
     // After initial hydration, only reset the editor when the incoming
@@ -444,7 +451,7 @@ function usePlateDocumentSync({
       return;
     }
 
-    const nextValue = getSeedValueFromSnapshot(latestSnapshot);
+    const nextValue = getSeedValueFromSnapshot(effectiveSnapshot);
 
     currentVersionRef.current = latestVersion ?? 0;
     lastSavedContentRef.current = serializedSnapshot;
@@ -454,7 +461,7 @@ function usePlateDocumentSync({
     setEditorValue(nextValue);
     setEditorResetKey((prev) => prev + 1);
     setSyncState("ready");
-  }, [latestSnapshot, latestVersion]);
+  }, [latestSnapshot, latestVersion, versions]);
 
   useEffect(
     () => () => {
@@ -779,6 +786,7 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
     document,
     latestSnapshot,
     latestVersion,
+    versions,
     submitSnapshot,
     updateTitle,
   });
