@@ -72,6 +72,7 @@ export function deserializeValue(json: string | null | undefined): Value {
 
 interface ProseMirrorMark {
   type?: string;
+  value?: string;
 }
 
 interface ProseMirrorNodeLike {
@@ -89,8 +90,11 @@ interface ProseMirrorSnapshotLike {
 }
 
 interface PlateTextLeaf {
+  backgroundColor?: string;
   bold?: boolean;
   code?: boolean;
+  fontColor?: string;
+  highlight?: boolean;
   italic?: boolean;
   strikethrough?: boolean;
   text?: string;
@@ -116,6 +120,9 @@ function applyTextMarks(leaf: Record<string, unknown>, marks: ProseMirrorMark[] 
     if (mark.type === "underline") leaf.underline = true;
     if (mark.type === "strike") leaf.strikethrough = true;
     if (mark.type === "code") leaf.code = true;
+    if (mark.type === "highlight") leaf.highlight = true;
+    if (mark.type === "fontColor" && mark.value) leaf.fontColor = mark.value;
+    if (mark.type === "backgroundColor" && mark.value) leaf.backgroundColor = mark.value;
   }
 }
 
@@ -323,6 +330,9 @@ function leafToMarks(leaf: PlateTextLeaf) {
   if (leaf.underline) marks.push({ type: "underline" });
   if (leaf.strikethrough) marks.push({ type: "strike" });
   if (leaf.code) marks.push({ type: "code" });
+  if (leaf.highlight) marks.push({ type: "highlight" });
+  if (leaf.fontColor) marks.push({ type: "fontColor", value: leaf.fontColor });
+  if (leaf.backgroundColor) marks.push({ type: "backgroundColor", value: leaf.backgroundColor });
 
   return marks.length > 0 ? marks : undefined;
 }

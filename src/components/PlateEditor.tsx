@@ -170,6 +170,7 @@ interface MarkdownImportPreview {
 }
 
 const DOCUMENT_SAVE_DEBOUNCE_MS = 1200;
+const SAVE_RETRY_DELAY_MS = 3000;
 
 interface E2EEditorMarkdownEventDetail {
   markdown: string;
@@ -503,6 +504,16 @@ function usePlateDocumentSync({
       } catch (error) {
         setSyncState("error");
         showError(error, "Failed to save document");
+        // Schedule a retry so unsaved content is not lost after a transient failure.
+        pendingContentRef.current = content;
+        saveTimeoutRef.current = window.setTimeout(() => {
+          saveTimeoutRef.current = null;
+          const retryContent = pendingContentRef.current;
+          pendingContentRef.current = null;
+          if (retryContent && retryContent !== lastSavedContentRef.current) {
+            void persistSnapshot(retryContent);
+          }
+        }, SAVE_RETRY_DELAY_MS);
         return;
       } finally {
         isSavingRef.current = false;
