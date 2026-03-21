@@ -573,22 +573,33 @@ function usePlateDocumentSync({
 
   const handleRestoreVersion = async (snapshot: unknown, version: number, title: string) => {
     try {
+      // Cancel any pending autosave so it doesn't race with the restore
+      // and consume the version number we're about to use.
+      clearTimeoutRef(saveTimeoutRef);
+      pendingContentRef.current = null;
+
+      setSyncState("saving");
+
+      // Compute the target version right before submit to avoid races
+      // with any autosave that may have just completed.
       const restoredVersion = createRestoredVersionPayload(
         snapshot,
         version,
         currentVersionRef.current,
       );
 
-      setSyncState("saving");
-      if (document && title !== document.title) {
-        await updateTitle({ id: documentId, title });
-      }
-
       await submitSnapshot({
         id: documentId,
         version: restoredVersion.nextVersion,
         content: restoredVersion.content,
       });
+
+      // Only update title after snapshot succeeds to avoid partial restores
+      // where metadata changed but content did not.
+      if (document && title !== document.title) {
+        await updateTitle({ id: documentId, title });
+      }
+
       replaceEditorValue(restoredVersion.value, {
         savedSnapshot: snapshot,
         version: restoredVersion.nextVersion,
