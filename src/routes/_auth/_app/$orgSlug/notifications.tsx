@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Typography } from "@/components/ui/Typography";
@@ -275,7 +276,7 @@ export function NotificationsPage() {
                 onClick={handleMarkAllAsRead}
                 isLoading={bulkActionLoading === "markAll"}
                 disabled={bulkActionLoading !== null}
-                leftIcon={<CheckCheck className="h-4 w-4" />}
+                leftIcon={<Icon icon={CheckCheck} size="sm" />}
               >
                 Mark all read
               </Button>
@@ -287,7 +288,7 @@ export function NotificationsPage() {
                 onClick={handleArchiveAll}
                 isLoading={bulkActionLoading === "archiveAll"}
                 disabled={bulkActionLoading !== null}
-                leftIcon={<Archive className="h-4 w-4" />}
+                leftIcon={<Icon icon={Archive} size="sm" />}
               >
                 Archive all
               </Button>
@@ -302,7 +303,7 @@ export function NotificationsPage() {
             <TabsList>
               <TabsTrigger value="inbox">
                 <Flex align="center" gap="xs">
-                  <Bell className="h-4 w-4" />
+                  <Icon icon={Bell} size="sm" />
                   Inbox
                   {unreadCount != null && unreadCount > 0 && (
                     <Badge variant="brand" size="sm" shape="pill">
@@ -313,7 +314,7 @@ export function NotificationsPage() {
               </TabsTrigger>
               <TabsTrigger value="archived">
                 <Flex align="center" gap="xs">
-                  <Archive className="h-4 w-4" />
+                  <Icon icon={Archive} size="sm" />
                   Archived
                 </Flex>
               </TabsTrigger>
