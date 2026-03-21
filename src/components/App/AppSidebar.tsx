@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, getCardRecipeClassName } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Icon as AppIcon, type IconSize } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
 import { Input } from "@/components/ui/Input";
 import { NavItem as NavItemBase } from "@/components/ui/NavItem";
@@ -109,6 +110,35 @@ function groupTeamsByWorkspace(
   return map;
 }
 
+interface SidebarIconShellProps {
+  icon: React.ComponentType<{ className?: string }>;
+  recipe:
+    | "sidebarNavIcon"
+    | "sidebarPrimaryNavIcon"
+    | "sidebarPrimaryNavIconActive"
+    | "sidebarSectionIcon"
+    | "sidebarSectionIconActive";
+  shellSizeClass?: string;
+  iconSize?: IconSize;
+  iconClassName?: string;
+}
+
+function SidebarIconShell({
+  icon,
+  recipe,
+  shellSizeClass = "size-8",
+  iconSize = "sm",
+  iconClassName,
+}: SidebarIconShellProps) {
+  return (
+    <Card recipe={recipe} padding="none" className={cn(shellSizeClass, "shrink-0")}>
+      <Flex align="center" justify="center" className="h-full">
+        <AppIcon icon={icon} size={iconSize} className={iconClassName} />
+      </Flex>
+    </Card>
+  );
+}
+
 // Sub-item Component (defined early as it's used by other components)
 type NavSubItemProps = Omit<LinkProps, "to"> & {
   to: LinkProps["to"];
@@ -132,11 +162,13 @@ function NavSubItem({
       <NavItemBase asChild active={isActive} size="sm" className="min-h-9">
         <Link to={to} params={params} onClick={onClick} {...props}>
           {Icon && (
-            <Card recipe="sidebarNavIcon" padding="none" className="h-6 w-6 shrink-0">
-              <Flex align="center" justify="center" className="h-full">
-                <Icon className="h-3.5 w-3.5 shrink-0" />
-              </Flex>
-            </Card>
+            <SidebarIconShell
+              icon={Icon}
+              recipe="sidebarNavIcon"
+              shellSizeClass="size-6"
+              iconSize="xsPlus"
+              iconClassName="shrink-0"
+            />
           )}
           <span className="truncate">{label}</span>
         </Link>
@@ -204,7 +236,7 @@ function WorkspacesSectionContent({
             size="sm"
             chromeSize="listRow"
             onClick={onCreateProject}
-            leftIcon={<Plus className="h-4 w-4" />}
+            leftIcon={<AppIcon icon={Plus} size="sm" />}
           >
             New Project
           </Button>
@@ -302,7 +334,11 @@ function DocumentsSectionContent({
         <>
           <li className="list-none px-3 pt-1">
             <Flex align="center" gap="xs" className="text-ui-text-tertiary">
-              <Star className="h-3.5 w-3.5 fill-status-warning text-status-warning" />
+              <AppIcon
+                icon={Star}
+                size="xsPlus"
+                className="fill-status-warning text-status-warning"
+              />
               <Typography variant="caption">Favorites</Typography>
             </Flex>
           </li>
@@ -386,9 +422,9 @@ function WorkspaceNavItem({
           aria-label={shouldShowTeams ? `Collapse ${workspace.name}` : `Expand ${workspace.name}`}
         >
           {shouldShowTeams ? (
-            <ChevronDown className="h-4 w-4" />
+            <AppIcon icon={ChevronDown} size="sm" />
           ) : (
-            <ChevronRight className="h-4 w-4" />
+            <AppIcon icon={ChevronRight} size="sm" />
           )}
         </IconButton>
         <NavSubItem
@@ -408,7 +444,7 @@ function WorkspaceNavItem({
           }}
           aria-label="Create new team"
         >
-          <Plus className="h-4 w-4" />
+          <AppIcon icon={Plus} size="sm" />
         </IconButton>
       </Flex>
 
@@ -610,7 +646,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                           <div
                             className={cn(
                               getCardRecipeClassName("sidebarOrgInitial"),
-                              "h-9 w-9 shrink-0",
+                              "size-9 shrink-0",
                             )}
                           >
                             <Flex align="center" justify="center" className="h-full">
@@ -642,9 +678,9 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                   aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                 >
                   {isCollapsed ? (
-                    <PanelLeftOpen className="h-5 w-5" />
+                    <AppIcon icon={PanelLeftOpen} size="md" />
                   ) : (
-                    <PanelLeftClose className="h-5 w-5" />
+                    <AppIcon icon={PanelLeftClose} size="md" />
                   )}
                 </IconButton>
 
@@ -656,7 +692,7 @@ export function AppSidebar({ onCreateProject }: AppSidebarProps) {
                   className="lg:hidden"
                   aria-label="Close sidebar"
                 >
-                  <X className="h-5 w-5" />
+                  <AppIcon icon={X} size="md" />
                 </IconButton>
               </Flex>
             </div>
@@ -941,15 +977,11 @@ function NavItem({
         data-testid={dataTestId}
         aria-label={isCollapsed ? label : undefined}
       >
-        <Card
+        <SidebarIconShell
+          icon={Icon}
           recipe={isActive ? "sidebarPrimaryNavIconActive" : "sidebarPrimaryNavIcon"}
-          padding="none"
-          className="h-8 w-8 shrink-0"
-        >
-          <Flex align="center" justify="center" className="h-full">
-            <Icon className="h-4.5 w-4.5 shrink-0" />
-          </Flex>
-        </Card>
+          iconClassName="size-4.5 shrink-0"
+        />
         {!isCollapsed && label}
       </Link>
     </NavItemBase>
@@ -1023,12 +1055,12 @@ function CollapsibleSection({
                 search={props.search}
                 data-testid={dataTestId}
               >
-                <Icon className="w-5 h-5" />
+                <AppIcon icon={Icon} size="md" />
               </Link>
             </NavItemBase>
           ) : (
             <NavItemBase size="sm" className="justify-center">
-              <Icon className="w-5 h-5" />
+              <AppIcon icon={Icon} size="md" />
             </NavItemBase>
           )}
         </Tooltip>
@@ -1047,7 +1079,11 @@ function CollapsibleSection({
           aria-expanded={isExpanded}
           aria-label={isExpanded ? `Collapse ${label}` : `Expand ${label}`}
         >
-          {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          {isExpanded ? (
+            <AppIcon icon={ChevronDown} size="sm" />
+          ) : (
+            <AppIcon icon={ChevronRight} size="sm" />
+          )}
         </IconButton>
         {isLink ? (
           <Link
@@ -1060,26 +1096,18 @@ function CollapsibleSection({
             className="min-w-0 grow"
           >
             <Flex align="center" gap="sm" className="min-w-0">
-              <Card
+              <SidebarIconShell
+                icon={Icon}
                 recipe={isActive ? "sidebarSectionIconActive" : "sidebarSectionIcon"}
-                padding="none"
-                className="h-8 w-8 shrink-0"
-              >
-                <Flex align="center" justify="center" className="h-full">
-                  <Icon className="h-4.5 w-4.5" />
-                </Flex>
-              </Card>
+                iconClassName="size-4.5"
+              />
               <span className="truncate">{label}</span>
             </Flex>
           </Link>
         ) : (
           <FlexItem grow>
             <Flex align="center" gap="sm" className="min-w-0">
-              <Card recipe="sidebarSectionIcon" padding="none" className="h-8 w-8 shrink-0">
-                <Flex align="center" justify="center" className="h-full">
-                  <Icon className="h-4.5 w-4.5" />
-                </Flex>
-              </Card>
+              <SidebarIconShell icon={Icon} recipe="sidebarSectionIcon" iconClassName="size-4.5" />
               <span className="truncate">{label}</span>
             </Flex>
           </FlexItem>
@@ -1094,7 +1122,7 @@ function CollapsibleSection({
           }}
           aria-label={`Add new ${label.toLowerCase().slice(0, -1)}`}
         >
-          <Plus className="h-4 w-4" />
+          <AppIcon icon={Plus} size="sm" />
         </IconButton>
       </NavItemBase>
 
