@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Flex, FlexItem } from "@/components/ui/Flex";
 import { Input } from "@/components/ui/form/Input";
+import { Icon } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
 import { Metadata, MetadataItem, MetadataTimestamp } from "@/components/ui/Metadata";
 import { Stack } from "@/components/ui/Stack";
@@ -107,9 +108,9 @@ function DocumentLockAction({ lockStatus, onToggleLock }: DocumentLockActionProp
         className={cn(lockStatus?.isLocked && "text-status-warning")}
       >
         {lockStatus?.isLocked ? (
-          <Lock className="w-4 h-4" aria-hidden="true" />
+          <Icon icon={Lock} size="sm" aria-hidden="true" />
         ) : (
-          <LockOpen className="w-4 h-4" aria-hidden="true" />
+          <Icon icon={LockOpen} size="sm" aria-hidden="true" />
         )}
       </IconButton>
     </Tooltip>
@@ -140,7 +141,7 @@ function OwnerDocumentActions({
           aria-pressed={isArchived}
           className={cn(isArchived && "text-ui-text-secondary")}
         >
-          <Archive className="w-4 h-4" aria-hidden="true" />
+          <Icon icon={Archive} size="sm" aria-hidden="true" />
         </IconButton>
       </Tooltip>
 
@@ -154,7 +155,7 @@ function OwnerDocumentActions({
             onClick={onMoveToProject}
             aria-label="Move to another project"
           >
-            <FolderInput className="w-4 h-4" aria-hidden="true" />
+            <Icon icon={FolderInput} size="sm" aria-hidden="true" />
           </IconButton>
         </Tooltip>
       )}
@@ -197,7 +198,12 @@ function DocumentHeaderActions({
           aria-pressed={isFavorite}
           className={cn(isFavorite && "text-status-warning")}
         >
-          <Star className={cn("w-4 h-4", isFavorite && "fill-current")} aria-hidden="true" />
+          <Icon
+            icon={Star}
+            size="sm"
+            className={cn(isFavorite && "fill-current")}
+            aria-hidden="true"
+          />
         </IconButton>
       </Tooltip>
 
@@ -207,7 +213,7 @@ function DocumentHeaderActions({
           chrome="documentHeaderNeutral"
           chromeSize="documentHeaderAction"
           onClick={onShowVersionHistory}
-          leftIcon={<History className="w-4 h-4" aria-hidden="true" />}
+          leftIcon={<Icon icon={History} size="sm" aria-hidden="true" />}
           aria-label="Version history"
         >
           <Typography variant="small" as="span" className="hidden sm:inline">
@@ -228,7 +234,7 @@ function DocumentHeaderActions({
           chromeSize="documentHeaderAction"
           onClick={() => void onImportMarkdown()}
           disabled={!editorReady}
-          leftIcon={<Upload className="w-4 h-4" aria-hidden="true" />}
+          leftIcon={<Icon icon={Upload} size="sm" aria-hidden="true" />}
           aria-label="Import from Markdown"
         >
           <Typography variant="small" as="span" className="hidden sm:inline">
@@ -244,7 +250,7 @@ function DocumentHeaderActions({
           chromeSize="documentHeaderAction"
           onClick={() => void onExportMarkdown()}
           disabled={!editorReady}
-          leftIcon={<Download className="w-4 h-4" aria-hidden="true" />}
+          leftIcon={<Icon icon={Download} size="sm" aria-hidden="true" />}
           aria-label="Export as Markdown"
         >
           <Typography variant="small" as="span" className="hidden sm:inline">
