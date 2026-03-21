@@ -13,11 +13,12 @@ import { Typography } from "../ui/Typography";
 
 type FeatureCardRecipe = NonNullable<CardProps["recipe"]>;
 type FeatureIconVariant = NonNullable<ComponentProps<typeof IconCircle>["variant"]>;
+type FeatureIconTone = NonNullable<ComponentProps<typeof IconCircle>["tone"]>;
 
 type FeatureCardData = {
   description: string;
   icon: LucideIcon;
-  iconClassName: string;
+  iconTone: FeatureIconTone;
   iconVariant: FeatureIconVariant;
   recipe: FeatureCardRecipe;
   title: string;
@@ -26,7 +27,7 @@ type FeatureCardData = {
 const features: FeatureCardData[] = [
   {
     icon: FileText,
-    iconClassName: "text-brand",
+    iconTone: "brand",
     iconVariant: "brand",
     recipe: "landingFeatureCardCyan",
     title: "Docs and execution stay linked",
@@ -35,7 +36,7 @@ const features: FeatureCardData[] = [
   },
   {
     icon: Users,
-    iconClassName: "text-status-success-text",
+    iconTone: "successText",
     iconVariant: "success",
     recipe: "landingFeatureCardTeal",
     title: "Collaboration with less context loss",
@@ -44,7 +45,7 @@ const features: FeatureCardData[] = [
   },
   {
     icon: PanelsTopLeft,
-    iconClassName: "text-status-warning-text",
+    iconTone: "warningText",
     iconVariant: "warning",
     recipe: "landingFeatureCardAmber",
     title: "AI can act on real workspace context",
@@ -82,7 +83,7 @@ export function FeaturesSection() {
 function FeatureCard({
   description,
   icon: Icon,
-  iconClassName,
+  iconTone,
   iconVariant,
   recipe,
   title,
@@ -90,7 +91,7 @@ function FeatureCard({
   return (
     <Card recipe={recipe} padding="none">
       <Stack gap="lg">
-        <IconCircle size="md" variant={iconVariant} className={iconClassName}>
+        <IconCircle size="md" tone={iconTone} variant={iconVariant}>
           <Icon size={24} />
         </IconCircle>
 

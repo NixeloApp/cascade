@@ -29,7 +29,7 @@ export function InvitedWelcome({ inviterName, onStartTour, onSkip }: InvitedWelc
       <Flex justify="center">
         <Card recipe="onboardingInviteHero" padding="lg" className="relative size-28">
           <Flex align="center" justify="center" className="h-full w-full">
-            <Icon icon={PartyPopper} className="size-16 text-brand" />
+            <Icon icon={PartyPopper} className="size-16" />
           </Flex>
           {/* Decorative dot */}
           <div
@@ -39,7 +39,7 @@ export function InvitedWelcome({ inviterName, onStartTour, onSkip }: InvitedWelc
             )}
           >
             <Flex align="center" justify="center" className="h-full w-full">
-              <Icon icon={Check} size="xs" className="text-brand-foreground" />
+              <Icon icon={Check} size="xs" />
             </Flex>
           </div>
         </Card>

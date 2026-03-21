@@ -224,7 +224,7 @@ function AssistantConfig() {
           <Card className="card-subtle border-brand-subtle bg-brand-subtle/10 mb-6">
             <CardBody className="p-6">
               <Flex gap="md" align="start">
-                <IconCircle size="sm" variant="brand" className="text-brand">
+                <IconCircle size="sm" variant="brand">
                   <Icon icon={Sparkles} size="md" />
                 </IconCircle>
                 <div>

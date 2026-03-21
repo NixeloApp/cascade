@@ -71,7 +71,7 @@ function StoryCard({ body, icon: Icon, stat, title }: Story) {
     <Card recipe="landingStoryCard" padding="none">
       <Stack gap="lg">
         <Flex align="center" justify="between">
-          <IconCircle size="md" variant="soft" className="text-brand">
+          <IconCircle size="md" variant="soft" tone="brand">
             <Icon size={20} />
           </IconCircle>
           <Badge variant="neutral" shape="pill">

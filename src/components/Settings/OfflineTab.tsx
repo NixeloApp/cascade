@@ -34,12 +34,13 @@ export function OfflineTab() {
       <Card padding="lg" data-testid={TEST_IDS.SETTINGS.OFFLINE_STATUS_CARD}>
         <Stack gap="lg">
           <Flex gap="lg" align="center">
-            <div className={cn("p-2", isOnline ? "bg-status-success" : "bg-status-error")}>
-              {isOnline ? (
-                <Icon icon={Wifi} size="lg" className="text-brand-foreground" />
-              ) : (
-                <Icon icon={WifiOff} size="lg" className="text-brand-foreground" />
+            <div
+              className={cn(
+                "p-2 text-brand-foreground",
+                isOnline ? "bg-status-success" : "bg-status-error",
               )}
+            >
+              {isOnline ? <Icon icon={Wifi} size="lg" /> : <Icon icon={WifiOff} size="lg" />}
             </div>
             <Stack gap="xs">
               <Typography variant="h3">Connection Status</Typography>
@@ -92,7 +93,7 @@ export function OfflineTab() {
           <Typography variant="h3">Offline Features</Typography>
           <Stack gap="lg">
             <Flex gap="md" align="start">
-              <Icon icon={Check} size="sm" className="mt-0.5 text-status-success" />
+              <Icon icon={Check} size="sm" tone="success" className="mt-0.5" />
               <Stack gap="xs">
                 <Typography variant="label">View Cached Content</Typography>
                 <Typography variant="small" color="secondary">
@@ -101,7 +102,7 @@ export function OfflineTab() {
               </Stack>
             </Flex>
             <Flex gap="md" align="start">
-              <Icon icon={Check} size="sm" className="mt-0.5 text-status-success" />
+              <Icon icon={Check} size="sm" tone="success" className="mt-0.5" />
               <Stack gap="xs">
                 <Typography variant="label">Offline Edits</Typography>
                 <Typography variant="small" color="secondary">
@@ -110,7 +111,7 @@ export function OfflineTab() {
               </Stack>
             </Flex>
             <Flex gap="md" align="start">
-              <Icon icon={Check} size="sm" className="mt-0.5 text-status-success" />
+              <Icon icon={Check} size="sm" tone="success" className="mt-0.5" />
               <Stack gap="xs">
                 <Typography variant="label">Background Sync</Typography>
                 <Typography variant="small" color="secondary">
@@ -119,7 +120,7 @@ export function OfflineTab() {
               </Stack>
             </Flex>
             <Flex gap="md" align="start">
-              <Icon icon={Check} size="sm" className="mt-0.5 text-status-success" />
+              <Icon icon={Check} size="sm" tone="success" className="mt-0.5" />
               <Stack gap="xs">
                 <Typography variant="label">Install as App</Typography>
                 <Typography variant="small" color="secondary">

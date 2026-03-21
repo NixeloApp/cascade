@@ -250,7 +250,7 @@ function LeadFeaturesStep({ onContinue }: { onContinue: () => void }) {
 function LeadFeatureRow({ icon, text }: { icon: typeof UserPlus; text: string }) {
   return (
     <Flex align="start" gap="sm">
-      <Icon icon={icon} size="md" className="text-brand-ring mt-0.5 shrink-0" />
+      <Icon icon={icon} size="md" tone="brand" className="mt-0.5 shrink-0" />
       <Typography color="secondary">{text}</Typography>
     </Flex>
   );

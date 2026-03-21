@@ -33,7 +33,6 @@ Target the remaining raw Tailwind violations by grouping repeated class clusters
 - [ ] Tighten raw Tailwind rules on app surfaces -- colors, radius, spacing, and shell treatments should come from owned primitives or explicit variants, not feature-local class clusters
 - [ ] Audit `className` escape-hatch usage on owned primitives -- recurring size/chrome/spacing overrides should become variants instead of one-off patches
 - [ ] Audit icon usage specifically -- repeated icon spacing, icon color overrides, and menu/button leading-icon patterns should move onto owned `Icon`, `Button`, `DropdownMenuItem`, and related primitive APIs
-- [ ] Pay down the remaining non-semantic icon colors that still bypass `Icon.tone` (`brand-foreground`, `status-*-text`, palette-specific colors, etc.) -- either shrink them into the shared palette or keep them explicitly component-owned where they are truly exceptional
 - [ ] Audit landing/main-page files specifically for static layout that should just be Tailwind, not local CVAs or section-specific CSS
 
 ## Phase 2: Consolidate CVA Sprawl

@@ -42,7 +42,6 @@ Fetches all data then filters in the component when the filter could be a backen
 - [ ] Ratchet raw Tailwind downward, not just flat -- the baseline should shrink as cleanup lands instead of only blocking regressions
 - [ ] Add validator coverage for primitive-default ownership drift -- shared wrappers should not restate defaults already owned by the primitive they wrap
 - [ ] Add validator coverage that distinguishes real Tailwind-first layout from hidden local style systems (`SECTION_CLASSES`, class-string maps, helper bags) and penalizes the hidden style-system path harder
-- [ ] Decide how strict icon color ownership should become beyond the current semantic-tone validator -- either add owned `Icon` tones for the remaining legitimate exceptions or add follow-up checks that block repeated raw palette/text token overrides outside explicitly allowed surfaces
 
 ## Ratchet Strategy
 

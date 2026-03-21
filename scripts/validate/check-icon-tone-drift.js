@@ -1,9 +1,9 @@
 /**
  * CHECK: Icon tone drift
  *
- * Ratchets shared Icon usage toward semantic tone ownership instead of raw
- * literal text-* color classes when the Icon primitive already exposes the
- * corresponding tone.
+ * Ratchets shared Icon / IconCircle usage toward semantic tone ownership
+ * instead of raw literal text-* color classes when the shared primitive
+ * already exposes the corresponding tone.
  */
 
 import fs from "node:fs";
@@ -16,14 +16,21 @@ const SRC_DIR = path.join(ROOT, "src");
 const BASELINE_PATH = path.join(ROOT, "scripts", "ci", "icon-tone-drift-baseline.json");
 const BASELINE_KEY = "iconToneDriftByFile";
 const ICON_IMPORT_PATH = "@/components/ui/Icon";
+const ICON_CIRCLE_IMPORT_PATH = "@/components/ui/IconCircle";
 const TONE_CLASS_TO_PROP = new Map([
   ["text-ui-text-secondary", "secondary"],
   ["text-ui-text-tertiary", "tertiary"],
   ["text-brand", "brand"],
+  ["text-brand-active", "brandActive"],
+  ["text-brand-foreground", "brandForeground"],
   ["text-status-success", "success"],
+  ["text-status-success-text", "successText"],
   ["text-status-warning", "warning"],
+  ["text-status-warning-text", "warningText"],
   ["text-status-error", "error"],
+  ["text-status-error-text", "errorText"],
   ["text-status-info", "info"],
+  ["text-status-info-text", "infoText"],
   ["text-accent", "accent"],
 ]);
 
@@ -37,21 +44,23 @@ function isIgnoredFile(rel) {
   );
 }
 
-function getImportedIconLocalNames(sourceFile) {
+function getImportedPrimitiveLocalNames(sourceFile) {
   const localNames = new Set();
 
   for (const statement of sourceFile.statements) {
     if (!ts.isImportDeclaration(statement)) continue;
     if (!ts.isStringLiteral(statement.moduleSpecifier)) continue;
-    if (statement.moduleSpecifier.text !== ICON_IMPORT_PATH) continue;
+    const importPath = statement.moduleSpecifier.text;
+    if (importPath !== ICON_IMPORT_PATH && importPath !== ICON_CIRCLE_IMPORT_PATH) continue;
 
     const namedBindings = statement.importClause?.namedBindings;
     if (!namedBindings || !ts.isNamedImports(namedBindings)) continue;
 
     for (const element of namedBindings.elements) {
+      const importedName = element.propertyName?.text ?? element.name.text;
       if (
-        element.propertyName?.text === "Icon" ||
-        (!element.propertyName && element.name.text === "Icon")
+        (importPath === ICON_IMPORT_PATH && importedName === "Icon") ||
+        (importPath === ICON_CIRCLE_IMPORT_PATH && importedName === "IconCircle")
       ) {
         localNames.add(element.name.text);
       }
@@ -128,14 +137,14 @@ export function run() {
 
     const content = fs.readFileSync(filePath, "utf8");
     const sourceFile = ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest, true);
-    const iconLocalNames = getImportedIconLocalNames(sourceFile);
+    const primitiveLocalNames = getImportedPrimitiveLocalNames(sourceFile);
 
-    if (iconLocalNames.size === 0) continue;
+    if (primitiveLocalNames.size === 0) continue;
 
     function visit(node) {
       if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
         const tagName = node.tagName.getText();
-        if (!iconLocalNames.has(tagName) || hasToneProp(node)) {
+        if (!primitiveLocalNames.has(tagName) || hasToneProp(node)) {
           ts.forEachChild(node, visit);
           return;
         }
@@ -169,7 +178,7 @@ export function run() {
 
   if (overageEntries.length > 0) {
     messages.push(
-      `${c.yellow}Shared Icon color overrides should use semantic tone when available (${overageEntries.length} file(s) over baseline):${c.reset}`,
+      `${c.yellow}Shared Icon/IconCircle color overrides should use semantic tone when available (${overageEntries.length} file(s) over baseline):${c.reset}`,
     );
     for (const [file, overage] of overageEntries) {
       for (const finding of overage.overageItems) {

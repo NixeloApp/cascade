@@ -154,7 +154,7 @@ function RecentFailures({ failures }: { failures: FailureEntry[] }) {
               <Flex justify="between" align="start" gap="md">
                 <Stack gap="xs">
                   <Flex gap="xs" align="center">
-                    <Icon icon={AlertTriangle} size="sm" className="text-status-error" />
+                    <Icon icon={AlertTriangle} size="sm" tone="error" />
                     <Typography variant="small">{failure.error}</Typography>
                   </Flex>
                   <Typography variant="caption" color="secondary">

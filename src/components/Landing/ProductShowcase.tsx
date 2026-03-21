@@ -164,7 +164,7 @@ export function ProductShowcase() {
                   <Stack gap="lg">
                     <Flex align="center" justify="between">
                       <Flex align="center" gap="sm">
-                        <IconCircle size="sm" variant="brand" className="text-brand">
+                        <IconCircle size="sm" variant="brand">
                           <Sparkles size={16} />
                         </IconCircle>
                         <div>
@@ -205,7 +205,7 @@ export function ProductShowcase() {
 function ShowcaseActionRow({ children }: { children: string }) {
   return (
     <Flex align="start" gap="sm">
-      <IconCircle size="xs" variant="success" className="mt-0.5 text-status-success-text">
+      <IconCircle size="xs" variant="success" className="mt-0.5">
         <ArrowRight size={12} />
       </IconCircle>
       <Typography variant="small" color="secondary">

@@ -116,7 +116,7 @@ export function IpRestrictionsSettings() {
       <CardHeader
         title={
           <Flex align="center" gap="sm">
-            <Icon icon={Shield} className="text-ui-text-secondary" />
+            <Icon icon={Shield} tone="secondary" />
             IP Restrictions
             <Badge variant="info" size="sm">
               Enterprise

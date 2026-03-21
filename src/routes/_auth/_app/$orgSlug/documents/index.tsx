@@ -75,8 +75,9 @@ function DocumentsListPage() {
                     <Flex align="center" gap="md" className="min-w-0 flex-1">
                       <IconCircle
                         size="md"
+                        tone="secondary"
                         variant="muted"
-                        className="h-11 w-11 text-ui-text-secondary ring-1 ring-ui-border transition-colors group-hover:text-brand"
+                        className="h-11 w-11 ring-1 ring-ui-border transition-colors group-hover:text-brand"
                       >
                         <FileText size={20} />
                       </IconCircle>

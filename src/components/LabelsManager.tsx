@@ -304,13 +304,9 @@ export function LabelsManager({ projectId }: LabelsManagerProps) {
                       <Flex justify="between" align="center">
                         <Flex gap="sm" align="center">
                           {isCollapsed ? (
-                            <Icon
-                              icon={ChevronRight}
-                              size="sm"
-                              className="text-ui-text-secondary"
-                            />
+                            <Icon icon={ChevronRight} size="sm" tone="secondary" />
                           ) : (
-                            <Icon icon={ChevronDown} size="sm" className="text-ui-text-secondary" />
+                            <Icon icon={ChevronDown} size="sm" tone="secondary" />
                           )}
                           <Typography variant="label">{group.name}</Typography>
                           <Typography variant="caption" color="tertiary">

@@ -199,7 +199,7 @@ export function OnboardingChecklist() {
                     )}
                   >
                     <Flex align="center" justify="center" className="h-full w-full">
-                      <Icon icon={Check} size="sm" className="text-status-success" />
+                      <Icon icon={Check} size="sm" />
                     </Flex>
                   </div>
                   <Stack gap="xs">

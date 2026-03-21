@@ -91,7 +91,7 @@ export function FocusZone({ task }: FocusZoneProps) {
                 <Typography variant="label" className="text-brand">
                   View task
                 </Typography>
-                <Icon icon={ArrowRight} size="sm" className="text-brand" />
+                <Icon icon={ArrowRight} size="sm" tone="brand" />
               </Flex>
             </Flex>
           </Stack>

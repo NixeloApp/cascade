@@ -39,7 +39,7 @@ export function DevToolsTab() {
       {/* Info Banner */}
       <Card padding="md" className="bg-status-info-bg border-status-info">
         <Flex align="start" gap="md">
-          <Icon icon={Wrench} size="lg" className="text-status-info-text" />
+          <Icon icon={Wrench} size="lg" tone="infoText" />
           <Stack gap="xs">
             <Typography variant="h3" className="text-status-info-text">
               Test Account Tools

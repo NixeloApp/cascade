@@ -10,6 +10,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import type { LucideIcon } from "lucide-react";
 import { forwardRef, type SVGProps } from "react";
 import { cn } from "@/lib/utils";
+import { type IconTone, iconToneClasses } from "./icon-tones";
 
 const iconVariants = cva("", {
   variants: {
@@ -21,17 +22,7 @@ const iconVariants = cva("", {
       lg: "w-6 h-6",
       xl: "w-8 h-8",
     },
-    tone: {
-      default: "",
-      secondary: "text-ui-text-secondary",
-      tertiary: "text-ui-text-tertiary",
-      brand: "text-brand",
-      success: "text-status-success",
-      warning: "text-status-warning",
-      error: "text-status-error",
-      info: "text-status-info",
-      accent: "text-accent",
-    },
+    tone: iconToneClasses,
     animation: {
       none: "",
       pulse: "animate-pulse",
@@ -80,4 +71,5 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
 );
 Icon.displayName = "Icon";
 
-export { iconVariants };
+export { iconToneClasses, iconVariants };
+export type { IconTone };

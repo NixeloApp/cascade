@@ -185,7 +185,7 @@ export function MemberOnboarding({
               )}
             >
               <Flex align="center" justify="center" className="h-full w-full">
-                <Icon icon={Kanban} size="md" className="text-palette-blue" />
+                <Icon icon={Kanban} size="md" />
               </Flex>
             </div>
             <Stack gap="none">
@@ -242,7 +242,7 @@ export function MemberOnboarding({
               )}
             >
               <Flex align="center" justify="center" className="h-full w-full">
-                <Icon icon={Bell} size="md" className="text-palette-purple" />
+                <Icon icon={Bell} size="md" />
               </Flex>
             </div>
             <Stack gap="none">

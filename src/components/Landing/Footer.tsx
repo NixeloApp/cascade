@@ -50,7 +50,7 @@ export function Footer() {
 
           <Card recipe="landingStoryCard" padding="none" className="p-5 lg:col-span-3">
             <Flex align="start" gap="md">
-              <IconCircle size="sm" variant="success" className="text-status-success-text">
+              <IconCircle size="sm" variant="success">
                 <ShieldCheck className="size-5" />
               </IconCircle>
               <FlexItem flex="1">

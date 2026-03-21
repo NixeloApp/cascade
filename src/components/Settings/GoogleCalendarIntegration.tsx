@@ -156,7 +156,7 @@ export function GoogleCalendarIntegration() {
         >
           <Flex gap="lg" align="center">
             <Card padding="sm" radius="md" variant="section">
-              <Icon icon={Calendar} size="lg" color="currentColor" className="text-brand" />
+              <Icon icon={Calendar} size="lg" tone="brand" />
             </Card>
             <Stack gap="xs">
               <Typography variant="h3">Google Calendar</Typography>

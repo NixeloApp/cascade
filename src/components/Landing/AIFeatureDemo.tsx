@@ -38,7 +38,7 @@ export function AIFeatureDemo() {
             <AIFeatureShell className="lg:col-span-2">
               <Stack gap="lg">
                 <Flex align="center" gap="sm">
-                  <IconCircle size="sm" variant="soft" className="text-brand">
+                  <IconCircle size="sm" variant="soft" tone="brand">
                     <Search size={16} />
                   </IconCircle>
                   <div>
@@ -76,7 +76,7 @@ export function AIFeatureDemo() {
               <Stack gap="lg">
                 <Flex align="center" justify="between">
                   <Flex align="center" gap="sm">
-                    <IconCircle size="sm" variant="brand" className="text-brand">
+                    <IconCircle size="sm" variant="brand">
                       <Bot size={16} />
                     </IconCircle>
                     <div>

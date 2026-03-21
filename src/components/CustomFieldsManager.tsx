@@ -105,7 +105,7 @@ export function CustomFieldsManager({ projectId }: CustomFieldsManagerProps) {
         <Card>
           <CardBody>
             <Flex direction="column" align="center" justify="center" gap="md" className="min-h-32">
-              <Icon icon={ClipboardList} size="xl" className="text-ui-text-tertiary" />
+              <Icon icon={ClipboardList} size="xl" tone="tertiary" />
               <Typography variant="small" color="secondary">
                 No custom fields yet. Add your first field to get started.
               </Typography>

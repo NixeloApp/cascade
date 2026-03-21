@@ -297,7 +297,7 @@ function ExpandToggle({
 
 function DocumentIcon({ hasChildren, isExpanded }: { hasChildren: boolean; isExpanded: boolean }) {
   const IconComponent = hasChildren && isExpanded ? FolderOpen : File;
-  return <IconComponent className="w-4 h-4 shrink-0 text-ui-text-tertiary" />;
+  return <Icon icon={IconComponent} size="sm" tone="tertiary" className="shrink-0" />;
 }
 
 function TreeNodeItem({

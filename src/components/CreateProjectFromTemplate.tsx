@@ -255,19 +255,19 @@ function ProjectConfiguration({
           <Typography variant="label">What's Included:</Typography>
           <Stack gap="sm">
             <Flex align="center" gap="sm">
-              <Icon icon={CheckCircle} className="text-status-success" />
+              <Icon icon={CheckCircle} tone="success" />
               <Typography variant="small">
                 {selectedTemplate.workflowStates.length} workflow states
               </Typography>
             </Flex>
             <Flex align="center" gap="sm">
-              <Icon icon={CheckCircle} className="text-status-success" />
+              <Icon icon={CheckCircle} tone="success" />
               <Typography variant="small">
                 {selectedTemplate.defaultLabels.length} pre-configured labels
               </Typography>
             </Flex>
             <Flex align="center" gap="sm">
-              <Icon icon={CheckCircle} className="text-status-success" />
+              <Icon icon={CheckCircle} tone="success" />
               <Typography variant="small" className="capitalize">
                 {selectedTemplate.boardType} board type
               </Typography>

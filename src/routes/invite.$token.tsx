@@ -145,7 +145,7 @@ function InviteRoute() {
             to send a new invitation.
           </>
         }
-        icon={<Icon icon={Clock} size="xl" className="text-status-warning-text" />}
+        icon={<Icon icon={Clock} size="xl" />}
         iconVariant="warning"
         onAction={goToHome}
         title="Invitation Expired"
