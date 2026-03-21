@@ -40,6 +40,7 @@ Verified now:
 - production-preview browser automation confirms `/service-worker.js` is the controlling runtime worker
 - production-preview browser automation confirms the generated `/sw.js` is not taking control unexpectedly
 - production-preview browser automation confirms the runtime links `/manifest.webmanifest` and caches `/`, `/offline.html`, and `/manifest.webmanifest`
+- the shipped app now includes `public/icon-192.png`, `public/icon-512.png`, `public/apple-touch-icon.png`, and `public/badge-72.png`
 - offline fallback page shipping with the worker
 - production-preview browser automation confirms uncached offline navigation falls back to `offline.html`
 - local IndexedDB mutation queue
@@ -49,11 +50,11 @@ Verified now:
 - install/update helper wiring in the app shell
 - production-preview browser automation confirms an authenticated Settings session stays usable offline once loaded
 - production-preview browser automation confirms previously visited authenticated Settings and dashboard routes restore offline in preview
+- production-preview browser automation confirms Chromium installability checks are clean for the built app
 - production-preview browser automation confirms queued `userSettings.update` changes replay in preview and update `Last Successful Replay`
 
 Not yet verified end to end:
 
-- actual install-prompt display under browser installability rules
 - push behavior across worker replacement
 
 ## Setup Requirements
@@ -98,6 +99,7 @@ The current service worker setup is split. Relevant files:
 - `/src/lib/offlineUserSettings.ts` - First real replayable mutation mapping
 - `/public/service-worker.js` - Worker currently shipped at `/service-worker.js`
 - `/public/offline.html` - Offline fallback page
+- `/public/icon-192.png`, `/public/icon-512.png`, `/public/apple-touch-icon.png`, `/public/badge-72.png` - current install/push assets
 - `/public/manifest.json` - legacy manifest artifact still emitted during build
 - `/vite.config.ts` - `vite-plugin-pwa` configuration that also emits `/sw.js` and `/manifest.webmanifest`
 
@@ -148,6 +150,7 @@ Those checks currently cover:
 - install/update helper behavior
 - preview-runtime worker ownership (`/service-worker.js` yes, `/sw.js` no)
 - preview-runtime manifest ownership and core shell cache contents
+- preview-runtime Chromium installability checks with zero reported installability errors
 - uncached offline navigation fallback in a real production preview
 - authenticated Settings-session offline queueing and replay in a real production preview
 - previously visited authenticated Settings and dashboard route recovery in a real production preview
@@ -157,8 +160,8 @@ Those checks currently cover:
 
 These are still runtime-verification tasks, not solved by unit tests:
 
-1. Confirm install prompt actually appears in a production browser session when installability criteria are met.
-2. Confirm push subscriptions still work after worker updates or cache clears.
+1. Confirm push subscriptions still work after worker updates or cache clears.
+2. If desired, do one manual Chromium spot-check of the custom install banner; installability criteria are already clean in preview, but `beforeinstallprompt` display remains engagement- and browser-heuristic-dependent.
 
 ## Build Pipeline
 
@@ -220,6 +223,7 @@ On install, the service worker caches:
 - Main app shell (`/`)
 - Offline fallback page (`/offline.html`)
 - Manifest file (`/manifest.webmanifest`)
+- PWA icon assets (`/icon-192.png`, `/icon-512.png`, `/apple-touch-icon.png`, `/badge-72.png`)
 
 Important limitation:
 
@@ -291,7 +295,7 @@ Background Sync is not guaranteed across browsers.
 For a realistic local browser check:
 
 1. Run `pnpm build`.
-2. Run `pnpm exec playwright test -c playwright.preview.config.ts e2e/preview/pwa-runtime.spec.ts --workers=1` to prove runtime worker ownership and uncached offline fallback.
+2. Run `pnpm exec playwright test -c playwright.preview.config.ts e2e/preview/pwa-runtime.spec.ts --workers=1` to prove runtime worker ownership, cache contents, and Chromium installability checks.
 3. Run `pnpm exec playwright test -c playwright.preview.config.ts e2e/preview/offline-replay-preview.spec.ts --workers=1` to prove authenticated preview replay, manual processing, and `Last Successful Replay`.
 4. Run `pnpm preview` if you want to inspect the same behavior manually in Chromium.
 5. In DevTools → Application → Service Workers, confirm `/service-worker.js` is registered.

@@ -3,7 +3,15 @@ const CACHE_NAME = "nixelo-v2"; // Bump version for push notification support
 const OFFLINE_URL = "/offline.html";
 
 // Assets to cache on install
-const STATIC_ASSETS = ["/", "/offline.html", "/manifest.webmanifest"];
+const STATIC_ASSETS = [
+  "/",
+  "/offline.html",
+  "/manifest.webmanifest",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/apple-touch-icon.png",
+  "/badge-72.png",
+];
 
 // Install event - cache static assets
 self.addEventListener("install", (event) => {
@@ -41,8 +49,8 @@ self.addEventListener("push", async (event) => {
 
   const options = {
     body: body || "You have a new notification",
-    icon: icon || "/icons/icon-192x192.png",
-    badge: "/icons/icon-72x72.png",
+    icon: icon || "/icon-192.png",
+    badge: "/badge-72.png",
     data: data || {},
     tag: tag || `nixelo-${Date.now()}`,
     renotify: true,
