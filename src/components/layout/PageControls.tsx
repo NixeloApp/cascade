@@ -11,6 +11,11 @@ interface PageControlsProps extends Omit<CardProps, "recipe"> {
   gap?: PageControlsGap;
 }
 
+interface SectionControlsProps extends CardProps {
+  children: ReactNode;
+  gap?: PageControlsGap;
+}
+
 /**
  * Shared shell for page-level tabs, filters, search, and secondary actions that
  * sit directly below a PageHeader.
@@ -24,6 +29,26 @@ export function PageControls({
 }: PageControlsProps) {
   return (
     <Card recipe="filterBar" padding={padding} className={cn("mb-6", className)} {...props}>
+      <Stack gap={gap}>{children}</Stack>
+    </Card>
+  );
+}
+
+/**
+ * Shared non-page controls shell for section-local tabs, filters, and actions
+ * inside heavier product panels where nesting a full PageControls card would be
+ * visually too heavy.
+ */
+export function SectionControls({
+  children,
+  className,
+  gap = "md",
+  padding = "md",
+  variant = "section",
+  ...props
+}: SectionControlsProps) {
+  return (
+    <Card variant={variant} padding={padding} className={className} {...props}>
       <Stack gap={gap}>{children}</Stack>
     </Card>
   );

@@ -18,8 +18,9 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { AlertTriangle, CheckCircle, Gem, TrendingUp, XCircle, Zap } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
+import { PageControlsGroup, PageControlsRow, SectionControls } from "../layout";
 import { Button } from "../ui/Button";
-import { Card, CardBody, CardHeader } from "../ui/Card";
+import { Card, CardBody } from "../ui/Card";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Dialog } from "../ui/Dialog";
 import { EmptyState } from "../ui/EmptyState";
@@ -82,6 +83,18 @@ function getCurrentWeekRange() {
   };
 }
 
+function hasActiveFilters({
+  selectedStatus,
+  startDate,
+  endDate,
+}: {
+  selectedStatus: ComplianceStatus | "all";
+  startDate: string;
+  endDate: string;
+}) {
+  return selectedStatus !== "all" || startDate !== "" || endDate !== "";
+}
+
 /**
  * Admin dashboard for monitoring contractor hour compliance and equity requirements.
  */
@@ -113,6 +126,7 @@ export function HourComplianceDashboard() {
   const { mutate: checkAllCompliance } = useAuthenticatedMutation(
     api.hourCompliance.checkAllUsersCompliance,
   );
+  const shouldShowClearFilters = hasActiveFilters({ selectedStatus, startDate, endDate });
 
   const handleReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,8 +166,14 @@ export function HourComplianceDashboard() {
   };
 
   return (
-    <Flex direction="column" gap="xl" data-testid={TEST_IDS.SETTINGS.HOUR_COMPLIANCE_SECTION}>
-      {/* Summary Stats */}
+    <Stack gap="lg" data-testid={TEST_IDS.SETTINGS.HOUR_COMPLIANCE_SECTION}>
+      <Stack gap="xs">
+        <Typography variant="h3">Hour Compliance</Typography>
+        <Typography variant="p" color="secondary">
+          Track employee, contractor, and equity hour compliance from one review surface.
+        </Typography>
+      </Stack>
+
       {summary && (
         <Grid cols={2} colsMd={5} gap="lg">
           <SummaryStatCard
@@ -187,40 +207,56 @@ export function HourComplianceDashboard() {
         </Grid>
       )}
 
-      {/* Compliance Records */}
-      <Card>
-        <CardHeader
-          title="Hour Compliance Records"
-          description="Track employee/contractor/intern hour compliance"
-          action={
+      <SectionControls gap="lg">
+        <PageControlsRow>
+          <Stack gap="xs">
+            <Typography variant="label">Review filters</Typography>
+            <Typography variant="small" color="secondary">
+              Focus the list on specific compliance states or date ranges before reviewing records.
+            </Typography>
+          </Stack>
+
+          <PageControlsGroup className="sm:justify-end">
+            {shouldShowClearFilters ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setSelectedStatus("all");
+                  setStartDate("");
+                  setEndDate("");
+                }}
+              >
+                Clear Filters
+              </Button>
+            ) : null}
             <Button onClick={() => setCheckAllConfirmOpen(true)} size="sm">
               Check All Users (This Week)
             </Button>
-          }
+          </PageControlsGroup>
+        </PageControlsRow>
+
+        <ComplianceFilters
+          selectedStatus={selectedStatus}
+          startDate={startDate}
+          endDate={endDate}
+          onStatusChange={setSelectedStatus}
+          onStartDateChange={setStartDate}
+          onEndDateChange={setEndDate}
         />
+      </SectionControls>
 
+      <Card>
         <CardBody>
-          <Stack gap="lg">
-            <ComplianceFilters
-              selectedStatus={selectedStatus}
-              startDate={startDate}
-              endDate={endDate}
-              onStatusChange={setSelectedStatus}
-              onStartDateChange={setStartDate}
-              onEndDateChange={setEndDate}
-            />
-
-            <ComplianceRecordsList
-              records={records}
-              onReview={setReviewingRecord}
-              onCheckAll={() => setCheckAllConfirmOpen(true)}
-              formatDate={formatDate}
-            />
-          </Stack>
+          <ComplianceRecordsList
+            records={records}
+            onReview={setReviewingRecord}
+            onCheckAll={() => setCheckAllConfirmOpen(true)}
+            formatDate={formatDate}
+          />
         </CardBody>
       </Card>
 
-      {/* Review Modal */}
       <Dialog
         open={!!reviewingRecord}
         onOpenChange={(open) => {
@@ -271,7 +307,7 @@ export function HourComplianceDashboard() {
         variant="warning"
         confirmLabel="Check All"
       />
-    </Flex>
+    </Stack>
   );
 }
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@/test/custom-render";
-import { PageControls, PageControlsGroup, PageControlsRow } from "./PageControls";
+import { PageControls, PageControlsGroup, PageControlsRow, SectionControls } from "./PageControls";
 
 describe("PageControls", () => {
   it("renders the shared filter-bar shell with the default page rhythm spacing", () => {
@@ -38,5 +38,20 @@ describe("PageControls", () => {
 
     const group = screen.getByRole("button", { name: "One" }).parentElement;
     expect(group).toHaveClass("flex", "flex-wrap", "gap-2", "items-center");
+  });
+
+  it("renders the lighter section controls shell for in-panel filters and tabs", () => {
+    const { container } = render(
+      <SectionControls>
+        <div>Section controls</div>
+      </SectionControls>,
+    );
+
+    expect(screen.getByText("Section controls")).toBeInTheDocument();
+    expect(container.firstChild).toHaveClass("shadow-soft");
+    expect(container.firstChild).toHaveClass(
+      "from-ui-bg-elevated/98",
+      "border-ui-border-secondary/80",
+    );
   });
 });
