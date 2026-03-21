@@ -1436,10 +1436,23 @@ async function waitForProjectsReady(page: Page, prefix?: string): Promise<void> 
         return true;
       }
 
-      return Array.from(document.querySelectorAll("a[href]")).some((link) => {
+      if (text.includes("Primary workspace project") && text.includes("Connected surfaces")) {
+        return true;
+      }
+
+      const hasProjectLink = Array.from(document.querySelectorAll("a[href]")).some((link) => {
         const href = link.getAttribute("href") || "";
         return /\/projects\/[^/]+\/board$/.test(href);
       });
+
+      if (hasProjectLink) {
+        return true;
+      }
+
+      // The page header, primary action, and loading-status guards above already
+      // ensure the route is stable enough to capture. Do not require one specific
+      // seeded project name or card layout for authenticated projects screenshots.
+      return capturePrefix !== "empty";
     },
     prefix,
     { timeout: 12000 },
