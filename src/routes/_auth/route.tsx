@@ -37,21 +37,31 @@ function AuthLayout() {
   }, [isAuthenticated, isAuthLoading]);
 
   if (isAuthLoading) {
-    // While auth is loading, use localStorage markers only to skip the splash screen,
-    // NOT to render protected content. Show the splash screen if we have no recovery signal.
     if (!hasAuthenticatedSession.current && !canRecoverAuthenticatedSession) {
       return <AppSplashScreen />;
     }
-    // Recovery signal exists — render Outlet to avoid layout flash for likely-authenticated users
+    // Confirmed session from this page lifetime — safe to keep rendering
     if (hasAuthenticatedSession.current) {
       return <Outlet />;
     }
-    // canRecoverAuthenticatedSession is true but no confirmed session yet — show splash
-    // instead of rendering protected content based on a best-effort localStorage marker
+    // Recovery signal from localStorage but no confirmed session yet.
+    // When offline, render the cached layout since auth can't resolve —
+    // this is the graceful-degradation path for connectivity blips.
+    // When online, show splash and let auth resolve normally.
+    if (canRecoverAuthenticatedSession && typeof navigator !== "undefined" && !navigator.onLine) {
+      return <Outlet />;
+    }
     return <AppSplashScreen />;
   }
 
   if (isAuthenticated) {
+    return <Outlet />;
+  }
+
+  // When offline with a recovery signal, keep rendering instead of redirecting.
+  // Auth can't resolve without connectivity, but the user was previously authenticated
+  // and the page is served from SW cache — this is graceful degradation.
+  if (canRecoverAuthenticatedSession && typeof navigator !== "undefined" && !navigator.onLine) {
     return <Outlet />;
   }
 

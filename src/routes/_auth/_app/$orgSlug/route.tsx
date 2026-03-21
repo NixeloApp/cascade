@@ -152,10 +152,14 @@ function OrganizationLayout() {
   const { isAuthLoading, isAuthenticated } = useAuthReady();
   const canRecoverAuthenticatedSession = hasRecoverableAuthenticatedSession();
 
+  const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
+
   if (isAuthenticated) {
     hasAuthenticatedOrgSession = true;
     markAuthenticatedSession();
-  } else if (!isAuthLoading) {
+  } else if (!isAuthLoading && !isOffline) {
+    // Only clear recovery data when online — when offline, auth can't resolve
+    // but the user may still be legitimately authenticated with a cached page.
     hasAuthenticatedOrgSession = false;
     cachedOrgUserOrganizations = undefined;
     cachedOrganizationsBySlug.clear();
@@ -164,6 +168,7 @@ function OrganizationLayout() {
   }
 
   const { organization, userOrgs } = useStableOrgData(orgSlug);
+  const canRenderOffline = isOffline && canRecoverAuthenticatedSession && organization && userOrgs;
 
   if (
     (isAuthLoading &&
@@ -173,10 +178,12 @@ function OrganizationLayout() {
     organization === undefined ||
     userOrgs === undefined
   ) {
-    return <OrgLoading />;
+    if (!canRenderOffline) {
+      return <OrgLoading />;
+    }
   }
 
-  if (!(isAuthenticated || (isAuthLoading && organization))) {
+  if (!(isAuthenticated || (isAuthLoading && organization) || canRenderOffline)) {
     return <OrgLoading />;
   }
 

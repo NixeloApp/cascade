@@ -52,7 +52,8 @@ function updateAppSessionState(isAuthenticated: boolean, isAuthLoading: boolean)
     return;
   }
 
-  if (!isAuthLoading) {
+  const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
+  if (!isAuthLoading && !isOffline) {
     hasAuthenticatedAppSession = false;
     cachedRedirectPath = undefined;
     cachedUserOrganizations = undefined;
