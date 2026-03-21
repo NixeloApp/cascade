@@ -6,8 +6,14 @@ const MOBILE_HOUR_HEIGHT_PX = 96;
 const DESKTOP_HOUR_HEIGHT_PX = 128;
 const DESKTOP_BREAKPOINT_QUERY = "(min-width: 640px)";
 const DEFAULT_START_HOUR = 8;
+const MAX_SCROLL_READY_ATTEMPTS = 4;
 
-function getFocusHour(events: CalendarEvent[], date: Date, mode: "day" | "week"): number {
+/** Returns the first useful hour band to show when a timed calendar view opens. */
+export function getCalendarInitialFocusHour(
+  events: CalendarEvent[],
+  date: Date,
+  mode: "day" | "week",
+): number {
   const visibleEvents =
     mode === "day"
       ? events.filter((event) => isSameDay(event.start, date))
@@ -25,6 +31,11 @@ function getFocusHour(events: CalendarEvent[], date: Date, mode: "day" | "week")
   return Math.max(0, earliestHour - 1);
 }
 
+/** Converts a focus hour into the scroll offset used by the timed calendar grid. */
+export function getCalendarInitialScrollTop(focusHour: number, isDesktopViewport: boolean): number {
+  return focusHour * (isDesktopViewport ? DESKTOP_HOUR_HEIGHT_PX : MOBILE_HOUR_HEIGHT_PX);
+}
+
 /** Scrolls day and week calendar grids to the first meaningful working-hours band on mount/update. */
 export function useCalendarInitialScroll(
   scrollRef: RefObject<HTMLDivElement | null>,
@@ -38,19 +49,41 @@ export function useCalendarInitialScroll(
       return;
     }
 
-    const focusHour = getFocusHour(events, date, mode);
-    const hourHeight = window.matchMedia(DESKTOP_BREAKPOINT_QUERY).matches
-      ? DESKTOP_HOUR_HEIGHT_PX
-      : MOBILE_HOUR_HEIGHT_PX;
+    const focusHour = getCalendarInitialFocusHour(events, date, mode);
+    const targetScrollTop = getCalendarInitialScrollTop(
+      focusHour,
+      window.matchMedia(DESKTOP_BREAKPOINT_QUERY).matches,
+    );
 
-    const frame = window.requestAnimationFrame(() => {
-      scrollElement.scrollTo({
-        left: scrollElement.scrollLeft,
-        top: focusHour * hourHeight,
-        behavior: "auto",
+    let cancelled = false;
+    const frames = new Set<number>();
+
+    const scheduleScroll = (attempt: number) => {
+      const frame = window.requestAnimationFrame(() => {
+        frames.delete(frame);
+        if (cancelled) {
+          return;
+        }
+
+        const isScrollable = scrollElement.scrollHeight > scrollElement.clientHeight;
+        if (!isScrollable && attempt < MAX_SCROLL_READY_ATTEMPTS - 1) {
+          scheduleScroll(attempt + 1);
+          return;
+        }
+
+        scrollElement.scrollTop = targetScrollTop;
       });
-    });
 
-    return () => window.cancelAnimationFrame(frame);
+      frames.add(frame);
+    };
+
+    scheduleScroll(0);
+
+    return () => {
+      cancelled = true;
+      for (const frame of frames) {
+        window.cancelAnimationFrame(frame);
+      }
+    };
   }, [date, events, mode, scrollRef]);
 }

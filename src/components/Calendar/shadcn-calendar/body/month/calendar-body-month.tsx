@@ -83,6 +83,7 @@ export function CalendarBodyMonth(): React.ReactElement {
       flex="1"
       className="overflow-hidden bg-ui-bg"
       data-testid={TEST_IDS.CALENDAR.GRID}
+      data-calendar-view="month"
     >
       <Grid cols={7} className="bg-ui-bg-secondary/50">
         {WEEKDAY_NAMES.map((day) => (

@@ -803,17 +803,6 @@ async function captureScreenshotBuffer(page: Page): Promise<Buffer> {
   return page.screenshot({ animations: "disabled" });
 }
 
-async function captureScreenshotToPath(
-  page: Page,
-  finalPath: string,
-  relativePathLabel: string,
-): Promise<void> {
-  const screenshot = await captureScreenshotBuffer(page);
-  const screenshotHash = getScreenshotHash(screenshot);
-  assertScreenshotHashIsNotLoadingState(screenshotHash, relativePathLabel);
-  fs.writeFileSync(getStagedScreenshotPath(finalPath), screenshot);
-}
-
 let captureSkips = 0;
 
 async function runCaptureStep(label: string, fn: () => Promise<void>): Promise<void> {
@@ -1287,6 +1276,64 @@ async function waitForCalendarReady(page: Page): Promise<boolean> {
   return false;
 }
 
+async function waitForCalendarModeSelected(
+  page: Page,
+  mode: "day" | "week" | "month",
+): Promise<void> {
+  const toggle = page.getByTestId(getCalendarModeTestId(mode));
+  await expect(toggle).toHaveAttribute("aria-checked", "true", { timeout: 5000 });
+  await expect(page.getByTestId(TEST_IDS.CALENDAR.GRID)).toHaveAttribute(
+    "data-calendar-view",
+    mode,
+    {
+      timeout: 5000,
+    },
+  );
+}
+
+function getCalendarModeTestId(mode: "day" | "week" | "month"): string {
+  switch (mode) {
+    case "day":
+      return TEST_IDS.CALENDAR.MODE_DAY;
+    case "week":
+      return TEST_IDS.CALENDAR.MODE_WEEK;
+    case "month":
+      return TEST_IDS.CALENDAR.MODE_MONTH;
+  }
+}
+
+async function selectCalendarMode(page: Page, mode: "day" | "week" | "month"): Promise<void> {
+  const toggle = page.getByTestId(getCalendarModeTestId(mode));
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await toggle.scrollIntoViewIfNeeded();
+      await toggle.click();
+      await waitForCalendarModeSelected(page, mode);
+      return;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+    }
+
+    try {
+      await toggle.evaluate((element) => {
+        if (element instanceof HTMLButtonElement) {
+          element.click();
+        }
+      });
+      await waitForCalendarModeSelected(page, mode);
+      return;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+    }
+  }
+
+  throw new Error(
+    `calendar-${mode} mode did not become active: ${lastError?.message ?? "unknown error"}`,
+  );
+}
+
 async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<boolean> {
   const deadline = Date.now() + timeoutMs;
   const eventItems = page.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM);
@@ -1330,6 +1377,26 @@ async function waitForCalendarEvents(page: Page, timeoutMs = 8000): Promise<bool
   if (await navigateUntilVisible("next", 4)) return true;
 
   return false;
+}
+
+async function focusCalendarTimedContentForCapture(page: Page): Promise<void> {
+  const monthToggle = page.getByTestId(TEST_IDS.CALENDAR.MODE_MONTH);
+  const monthModeSelected = (await monthToggle.getAttribute("aria-checked")) === "true";
+  if (monthModeSelected) {
+    return;
+  }
+
+  const firstEvent = page.getByTestId(TEST_IDS.CALENDAR.EVENT_ITEM).first();
+  if ((await firstEvent.count()) === 0) {
+    return;
+  }
+
+  await firstEvent.evaluate((element) => {
+    if (element instanceof HTMLElement) {
+      element.scrollIntoView({ block: "center", inline: "nearest" });
+    }
+  });
+  await waitForScreenshotReady(page);
 }
 
 async function waitForCalendarMonthReady(page: Page): Promise<void> {
@@ -1379,6 +1446,10 @@ async function waitForCalendarMonthReady(page: Page): Promise<void> {
   await waitForScreenshotReady(page);
   await waitForCalendarReady(page);
   await waitForCalendarMonthGrid(page);
+}
+
+function supportsCalendarDragAndDropCapture(configPrefix: string): boolean {
+  return configPrefix !== "mobile-light";
 }
 
 async function waitForCalendarMonthGrid(
@@ -2264,6 +2335,7 @@ async function waitForExpectedContent(
   ) {
     await waitForCalendarReady(page);
     await waitForCalendarEvents(page, 5000);
+    await focusCalendarTimedContentForCapture(page);
   }
 }
 
@@ -3258,19 +3330,14 @@ async function screenshotFilledStates(
           if ((await toggleItem.count()) === 0) {
             throw new Error(`[${p}] calendar-${mode} toggle not found after retries`);
           }
-          await toggleItem.first().click();
+          await selectCalendarMode(page, mode);
           await waitForScreenshotReady(page);
           const modeReady = await waitForCalendarReady(page);
           if (!modeReady) {
             throw new Error(`[${p}] calendar-${mode} not ready after mode switch`);
           }
-          const n = nextIndex(p);
-          const num = String(n).padStart(2, "0");
-          const finalPath = getFinalScreenshotPath(p, `calendar-${mode}`);
-          const relativePath = path.relative(process.cwd(), finalPath);
-          await captureScreenshotToPath(page, finalPath, relativePath);
-          totalScreenshots++;
-          console.log(`    ${num}  [${p}] calendar-${mode} → ${relativePath}`);
+          await focusCalendarTimedContentForCapture(page);
+          await captureCurrentView(page, p, `calendar-${mode}`);
         }
 
         if (shouldCapture(p, "calendar-event-modal")) {
@@ -3350,7 +3417,10 @@ async function screenshotFilledStates(
           });
         }
 
-        if (shouldCapture(p, "calendar-drag-and-drop")) {
+        if (
+          shouldCapture(p, "calendar-drag-and-drop") &&
+          supportsCalendarDragAndDropCapture(currentConfigPrefix)
+        ) {
           await runCaptureStep("calendar drag-and-drop", async () => {
             const orgCalendarUrl = ROUTES.calendar.build(orgSlug);
             await page.goto(`${BASE_URL}${orgCalendarUrl}`, {
@@ -3640,10 +3710,13 @@ async function screenshotFilledStates(
       await waitForScreenshotReady(page);
       await waitForCalendarReady(page);
       const trigger = page.getByRole("button", { name: /add event/i }).first();
-      await trigger.waitFor({ state: "visible", timeout: 5000 });
-      await trigger.click();
-      const dialog = await waitForDialogOpen(page);
-      await waitForScreenshotReady(page);
+      const dialog = await openStableDialog(
+        page,
+        trigger,
+        page.getByRole("dialog", { name: /^create event$/i }),
+        page.getByLabel(/event title/i),
+        "calendar create event",
+      );
       await captureCurrentView(page, p, "calendar-create-event-modal");
       await dismissIfOpen(page, dialog);
     });
@@ -4763,7 +4836,10 @@ async function screenshotSprintInteractiveStates(
   // Complete sprint modal
   if (shouldCapture(prefix, `project-${normalizedProjectKey}-sprints-completion-modal`)) {
     await runCaptureStep("sprint completion modal", async () => {
-      const completeSprintButton = page.getByRole("button", { name: /^complete sprint$/i }).first();
+      const completeSprintButton = page
+        .getByTestId(TEST_IDS.NAV.MAIN_CONTENT)
+        .getByRole("button", { name: /^complete sprint$/i })
+        .first();
       await completeSprintButton.waitFor({ state: "visible", timeout: 5000 });
       await completeSprintButton.click();
 
