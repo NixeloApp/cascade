@@ -19,6 +19,7 @@ import { Dialog } from "../ui/Dialog";
 import { EmptyState } from "../ui/EmptyState";
 import { Flex } from "../ui/Flex";
 import { Input, Textarea } from "../ui/form";
+import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/IconButton";
 import { Label } from "../ui/Label";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
@@ -115,7 +116,7 @@ export function IpRestrictionsSettings() {
       <CardHeader
         title={
           <Flex align="center" gap="sm">
-            <Shield className="h-5 w-5 text-ui-text-secondary" />
+            <Icon icon={Shield} className="text-ui-text-secondary" />
             IP Restrictions
             <Badge variant="info" size="sm">
               Enterprise
@@ -130,9 +131,9 @@ export function IpRestrictionsSettings() {
           <Flex align="center" justify="between" className="border-b border-ui-border pb-4">
             <Flex align="center" gap="md">
               {status.enabled ? (
-                <ShieldCheck className="h-5 w-5 text-status-success" />
+                <Icon icon={ShieldCheck} tone="success" />
               ) : (
-                <ShieldAlert className="h-5 w-5 text-ui-text-tertiary" />
+                <Icon icon={ShieldAlert} tone="tertiary" />
               )}
               <Stack gap="none">
                 <Typography variant="label">
@@ -158,7 +159,7 @@ export function IpRestrictionsSettings() {
             <Flex align="center" justify="between">
               <Typography variant="h3">IP Allowlist</Typography>
               <Button variant="secondary" size="sm" onClick={() => setIsAddDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" />
+                <Icon icon={Plus} size="sm" className="mr-1" />
                 Add IP
               </Button>
               <Dialog
@@ -241,7 +242,7 @@ export function IpRestrictionsSettings() {
                           onClick={() => handleRemoveIp(entry._id)}
                           aria-label="Remove from allowlist"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Icon icon={Trash2} size="sm" />
                         </IconButton>
                       </Tooltip>
                     </Flex>
