@@ -97,7 +97,9 @@ export function useOfflineQueue() {
   };
 
   const retryMutation = async (id: number) => {
-    await offlineDB.updateMutationStatus(id, "pending");
+    await offlineDB.updateMutationStatus(id, "pending", {
+      clearError: true,
+    });
     await refresh();
   };
 

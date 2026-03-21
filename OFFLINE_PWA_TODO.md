@@ -12,7 +12,6 @@ Purpose:
 Primary ownership for this lane:
 - `src/lib/offline.ts`
 - `src/lib/serviceWorker.ts`
-- `src/service-worker.ts`
 - `src/hooks/useOffline.ts`
 - `src/components/Settings/OfflineTab.tsx`
 - `src/lib/webPush.tsx`
@@ -53,19 +52,7 @@ It is also structurally isolated:
 - `vite.config.ts` now sets `injectRegister: false`, so the current production build no longer injects `registerSW.js`.
 - The production build still ships `/service-worker.js` from `public/service-worker.js`.
 - The production build still emits `sw.js` from `vite-plugin-pwa`, but it is not auto-registered by built HTML.
-
-### Custom service worker implementation
-
-- Custom service worker logic exists in `src/service-worker.ts`.
-- It uses Workbox APIs directly.
-- It includes:
-  - precache via `precacheAndRoute(self.__WB_MANIFEST)`
-  - runtime caching for Convex origins
-  - asset caching
-  - offline navigation fallback to `/offline.html`
-  - background sync listener for `"sync-mutations"`
-  - client message handling for `SKIP_WAITING` and `SYNC_QUEUE`
-- Current Phase 0 verification indicates this file is not part of the shipped build pipeline.
+- The dead `src/service-worker.ts` worker candidate has been removed so the repo no longer suggests a second custom worker source file.
 
 ### Client-side offline queue
 
@@ -118,7 +105,7 @@ It is also structurally isolated:
 
 - `vite-plugin-pwa` is active and still generating its own worker and manifest.
 - The app code registers `/service-worker.js` from `public/service-worker.js`.
-- `src/service-worker.ts` is not the worker currently being emitted or registered by the build.
+- there is no longer a second custom worker source file in `src/` competing for ownership.
 - Auto-registration conflict is reduced because built HTML no longer auto-registers `/sw.js`.
 - Manifest ownership is mostly aligned on `manifest.webmanifest`, though `public/manifest.json` is still emitted as an unused artifact.
 - `promptInstall()` and `clearCache()` currently have no active call sites outside their defining module.
@@ -135,13 +122,12 @@ It is also structurally isolated:
 The repo has all of these at once:
 - `vite-plugin-pwa` in `vite.config.ts`
 - manual registration of `/service-worker.js`
-- a custom Workbox service worker in `src/service-worker.ts`
 
 What Phase 0 already proved:
-- the built output does not ship `src/service-worker.ts`
 - `vite-plugin-pwa` generates `/sw.js`
 - the app ships and manually registers `/service-worker.js`
 - plugin auto-registration is now disabled in source config and absent from built HTML
+- the dead `src/service-worker.ts` candidate has been removed from source
 
 What is still not proven:
 - whether `sw.js` remains completely unused in the runtime after the source-side registration change
@@ -150,30 +136,32 @@ What is still not proven:
 
 This is no longer a competing-registration problem in built HTML, but it is still a split-ownership problem.
 
-### 2. The offline write path looks incomplete
+### 2. The offline write path is now explicitly partial
 
-`src/service-worker.ts` tries to sync queued mutations by POSTing to `/api/sync`.
+The dead `/api/sync` assumption is gone with the removal of `src/service-worker.ts`.
 
-Current repo scan found:
-- no implementation of `/api/sync`
-- no other consumer of that endpoint
+Current queue behavior:
+- `processOfflineQueue()` now increments attempts intentionally
+- validates that queued payloads deserialize to JSON objects
+- routes replay only through explicitly registered handlers
+- records unsupported mutation types as queue failures instead of falsely marking them synced
 
-That means the service worker replay path is likely incomplete or dead.
+That makes the current limitation explicit, but it is still not a full backend replay implementation.
 
-### 3. Client offline replay is not executing real mutations
+### 3. Client offline replay is not executing product mutations yet
 
 `processOfflineQueue()` currently:
 - marks local items as `syncing`
-- parses stored JSON
-- marks items as `synced`
+- validates queued payloads
+- dispatches only to registered replay handlers
+- marks unsupported or corrupt entries back to `pending` or `failed` with explicit errors
 
 What it does not do:
-- call the intended mutation handler
-- map `mutationType` to a real Convex mutation
+- register any product-level replay handlers yet
 - handle server conflicts
 - persist server-generated IDs or reconciliation data
 
-So the queue shape exists, but the end-to-end replay path does not appear fully shipped.
+So the queue shape exists, and the failure semantics are now truthful, but the end-to-end replay path is still not shipped.
 
 ### 4. Install/update UX is only partially wired
 
@@ -229,7 +217,7 @@ Non-goals for this lane:
 - [x] Document the real build/runtime flow in this file once confirmed.
 - [x] Confirm whether `public/manifest.json` or the Vite PWA manifest is the source of truth at build time. Current answer: built HTML now links only `manifest.webmanifest`, and the manual worker caches that same path.
 - [ ] Confirm whether install prompts are ever shown in production.
-- [ ] Confirm whether push subscription depends on the same service worker that handles offline caching.
+- [x] Confirm code-path ownership for push readiness. `src/lib/webPush.tsx` waits on `navigator.serviceWorker.ready`, which currently resolves against the manually registered `/service-worker.js` path.
 
 ## Phase 1: Queue Architecture
 
@@ -237,7 +225,8 @@ Non-goals for this lane:
 - [ ] Write the intended queue architecture in plain language.
 - [x] Define source of truth for mutation status.
 - [x] Define whether queue visibility in Settings reflects local queue, server queue, or both.
-- [ ] Define where retry/backoff lives.
+- [x] Define where retry counting lives. It now lives in the client queue processor in `src/lib/offline.ts`.
+- [ ] Define whether real backoff exists or whether retries remain best-effort only.
 - [ ] Define where conflict resolution lives.
 - [ ] Define whether background sync is best-effort only or required behavior.
 
@@ -248,14 +237,14 @@ Current direction:
 
 ## Phase 2: Make Replay Real
 
-- [ ] Replace the fake `/api/sync` replay path with a real one.
-- [ ] Define a typed mapping from `mutationType` to allowed replay handlers.
-- [ ] Reject unsupported queued mutation types explicitly.
+- [x] Remove the fake `/api/sync` replay assumption from the source tree.
+- [x] Define a replay-handler registry for allowed `mutationType` values.
+- [x] Reject unsupported queued mutation types explicitly.
 - [ ] Ensure replay calls the actual backend mutation and captures success/failure.
 - [ ] Preserve idempotency where possible.
 - [ ] Record retryable vs permanent failure states clearly.
 - [ ] Handle deleted/archived target entities safely.
-- [ ] Add serialization guards so corrupt payloads do not poison the full queue.
+- [x] Add serialization guards so corrupt payloads do not poison the full queue.
 - [ ] Decide whether replay runs:
   - on `online`
   - via background sync
@@ -320,7 +309,7 @@ Current direction:
 ### Unit / component
 
 - [ ] Add `src/lib/serviceWorker.test.ts` for registration/update/install helpers.
-- [ ] Add `src/lib/offline.test.ts` for IndexedDB queue behavior if coverage is still missing.
+- [x] Add `src/lib/offline.test.ts` for queue replay guardrails and failure classification.
 - [ ] Extend `src/hooks/useOffline.test.ts` for real replay-trigger conditions.
 - [ ] Extend `src/components/Settings/OfflineTab.test.tsx` so the UI contract matches real queue states and manual sync behavior.
 
@@ -353,7 +342,6 @@ Important:
 
 ## Open Questions
 
-- [ ] Is the custom `src/service-worker.ts` definitely the worker that production serves?
 - [ ] Do we want one queue or two?
 - [ ] Should offline mutation replay be generic or opt-in per mutation?
 - [ ] Which product surfaces are safe to claim as offline-capable today?
@@ -364,10 +352,10 @@ Important:
 
 If we want the smallest high-value first pass:
 
-- [ ] Verify the emitted worker artifact and registration target.
-- [ ] Remove the fake `/api/sync` assumption or replace it with a real replay bridge.
-- [ ] Make Settings show only truthful offline capabilities.
-- [ ] Update `docs/setup/PWA.md` to stop pointing at stale files.
+- [x] Verify the emitted worker artifact and registration target.
+- [x] Remove the fake `/api/sync` assumption or replace it with a real replay bridge.
+- [x] Make Settings show only truthful offline capabilities.
+- [x] Update `docs/setup/PWA.md` to stop pointing at stale files.
 
 That slice alone would turn this lane from "looks shipped" into "is understandable and diagnosable."
 

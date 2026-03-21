@@ -10,6 +10,16 @@ import { DAY, WEEK } from "@convex/lib/timeUtils";
 
 const DB_NAME = "NixeloOfflineDB";
 const DB_VERSION = 1;
+export const MAX_OFFLINE_REPLAY_ATTEMPTS = 3;
+
+type OfflineMutationArgs = Record<string, unknown>;
+export type OfflineReplayHandler = (args: OfflineMutationArgs) => Promise<void>;
+
+interface UpdateMutationStatusOptions {
+  error?: string;
+  incrementAttempts?: boolean;
+  clearError?: boolean;
+}
 
 interface SyncManager {
   register(tag: string): Promise<void>;
@@ -40,6 +50,36 @@ export interface CachedData {
   key: string;
   data: unknown;
   timestamp: number;
+}
+
+export class UnsupportedOfflineMutationError extends Error {
+  constructor(mutationType: string) {
+    super(`Unsupported offline mutation type: ${mutationType}`);
+    this.name = "UnsupportedOfflineMutationError";
+  }
+}
+
+const offlineReplayHandlers = new Map<string, OfflineReplayHandler>();
+
+function applyMutationStatusUpdate(
+  mutation: OfflineMutation,
+  status: OfflineMutation["status"],
+  options: UpdateMutationStatusOptions,
+): OfflineMutation {
+  mutation.status = status;
+  if (options.incrementAttempts) {
+    mutation.attempts = (mutation.attempts || 0) + 1;
+  }
+  if (options.clearError) {
+    delete mutation.error;
+  }
+  if (options.error) {
+    mutation.error = options.error;
+  }
+  if (status === "synced") {
+    mutation.syncedAt = Date.now();
+  }
+  return mutation;
 }
 
 class OfflineDB {
@@ -152,7 +192,7 @@ class OfflineDB {
   async updateMutationStatus(
     id: number,
     status: OfflineMutation["status"],
-    error?: string,
+    options: UpdateMutationStatusOptions = {},
   ): Promise<void> {
     const db = await this.open();
     return new Promise((resolve, reject) => {
@@ -162,18 +202,15 @@ class OfflineDB {
 
       getRequest.onsuccess = () => {
         const mutation = getRequest.result as OfflineMutation;
-        if (mutation) {
-          mutation.status = status;
-          mutation.attempts = (mutation.attempts || 0) + 1;
-          if (error) mutation.error = error;
-          if (status === "synced") mutation.syncedAt = Date.now();
-
-          const putRequest = store.put(mutation);
-          putRequest.onsuccess = () => resolve();
-          putRequest.onerror = () => reject(putRequest.error);
-        } else {
+        if (!mutation) {
           resolve();
+          return;
         }
+
+        const updatedMutation = applyMutationStatusUpdate(mutation, status, options);
+        const putRequest = store.put(updatedMutation);
+        putRequest.onsuccess = () => resolve();
+        putRequest.onerror = () => reject(putRequest.error);
       };
 
       getRequest.onerror = () => reject(getRequest.error);
@@ -332,7 +369,7 @@ export const offlineStatus = new OfflineStatusManager();
  */
 export async function queueOfflineMutation(
   mutationType: string,
-  mutationArgs: Record<string, unknown>,
+  mutationArgs: OfflineMutationArgs,
 ) {
   const mutation: Omit<OfflineMutation, "id"> = {
     mutationType,
@@ -359,16 +396,41 @@ export async function processOfflineQueue() {
 }
 
 function getNextFailureStatus(attempts: number): "failed" | "pending" {
-  return attempts >= 3 ? "failed" : "pending";
+  return attempts >= MAX_OFFLINE_REPLAY_ATTEMPTS ? "failed" : "pending";
 }
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function validateQueuedMutationArgs(rawArgs: string): void {
-  // Parse stored payload to ensure queued entry is not corrupt before syncing.
-  JSON.parse(rawArgs);
+function isOfflineMutationArgs(value: unknown): value is OfflineMutationArgs {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+function validateQueuedMutationArgs(rawArgs: string): OfflineMutationArgs {
+  const parsed: unknown = JSON.parse(rawArgs);
+  if (!isOfflineMutationArgs(parsed)) {
+    throw new Error("Queued mutation args must be a JSON object");
+  }
+  return parsed;
+}
+
+function getOfflineReplayHandler(mutationType: string): OfflineReplayHandler {
+  const handler = offlineReplayHandlers.get(mutationType);
+  if (!handler) {
+    throw new UnsupportedOfflineMutationError(mutationType);
+  }
+  return handler;
+}
+
+export function registerOfflineReplayHandler(
+  mutationType: string,
+  handler: OfflineReplayHandler,
+): () => void {
+  offlineReplayHandlers.set(mutationType, handler);
+  return () => {
+    offlineReplayHandlers.delete(mutationType);
+  };
 }
 
 async function persistMutationFailureStatus(
@@ -379,7 +441,9 @@ async function persistMutationFailureStatus(
   if (!mutation.id) return;
 
   try {
-    await offlineDB.updateMutationStatus(mutation.id, nextStatus, getErrorMessage(error));
+    await offlineDB.updateMutationStatus(mutation.id, nextStatus, {
+      error: getErrorMessage(error),
+    });
   } catch (statusError) {
     console.info("[offline] Failed to persist queued mutation failure status", {
       id: mutation.id,
@@ -398,16 +462,25 @@ async function processQueuedMutation(mutation: OfflineMutation): Promise<void> {
     return;
   }
 
+  const nextAttemptCount = mutation.attempts + 1;
+
   try {
-    await offlineDB.updateMutationStatus(mutation.id, "syncing");
-    validateQueuedMutationArgs(mutation.mutationArgs);
-    await offlineDB.updateMutationStatus(mutation.id, "synced");
+    await offlineDB.updateMutationStatus(mutation.id, "syncing", {
+      incrementAttempts: true,
+      clearError: true,
+    });
+    const args = validateQueuedMutationArgs(mutation.mutationArgs);
+    const handler = getOfflineReplayHandler(mutation.mutationType);
+    await handler(args);
+    await offlineDB.updateMutationStatus(mutation.id, "synced", {
+      clearError: true,
+    });
   } catch (error) {
-    const nextStatus = getNextFailureStatus(mutation.attempts);
+    const nextStatus = getNextFailureStatus(mutation.attempts + 1);
     console.info("[offline] Failed to process queued mutation", {
       id: mutation.id,
       mutationType: mutation.mutationType,
-      attempts: mutation.attempts,
+      attempts: nextAttemptCount,
       nextStatus,
       error,
     });

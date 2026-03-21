@@ -15,8 +15,9 @@ What is true right now:
 - The current verified emitted build still produces a separate `/sw.js`, but built HTML no longer auto-registers it.
 - `vite.config.ts` sets `injectRegister: false` to keep registration owned by `src/lib/serviceWorker.ts`.
 - Built HTML now links only `/manifest.webmanifest`, and the manual service worker caches that same manifest path.
-- `src/service-worker.ts` exists, but current build verification indicates it is not the worker that production emits.
+- The dead `src/service-worker.ts` worker candidate has been removed from source because it was not part of the shipped build pipeline.
 - `promptInstall()` exists in `src/lib/serviceWorker.ts`, but is not currently wired to an active call site.
+- `processOfflineQueue()` in `src/lib/offline.ts` now rejects unsupported replay types explicitly instead of marking them synced without contacting a backend.
 
 Implication:
 
@@ -71,7 +72,6 @@ The current service worker setup is split. Relevant files:
 - `/src/routes/__root.tsx` - Current registration entry point
 - `/src/lib/serviceWorker.ts` - Manual registration and install/update helpers
 - `/public/service-worker.js` - Worker currently shipped at `/service-worker.js`
-- `/src/service-worker.ts` - Unused custom Workbox worker candidate under audit
 - `/public/offline.html` - Offline fallback page
 - `/public/manifest.json` - PWA manifest configuration
 - `/vite.config.ts` - `vite-plugin-pwa` configuration that also emits `/sw.js` and `/manifest.webmanifest`
@@ -139,7 +139,7 @@ The service worker uses a **Network First** strategy:
 On install, the service worker caches:
 - Main app shell (`/`)
 - Offline fallback page (`/offline.html`)
-- Manifest file (`/manifest.json`)
+- Manifest file (`/manifest.webmanifest`)
 
 During runtime, it automatically caches:
 - All successfully fetched resources (status 200)
@@ -269,4 +269,4 @@ For issues or questions about the PWA implementation, check:
 
 ---
 
-*Last Updated: 2025-11-27*
+*Last Updated: 2026-03-20*
