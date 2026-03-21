@@ -14,7 +14,8 @@ import type { Id } from "@convex/_generated/dataModel";
 
 import type { Value } from "platejs";
 import { Plate, usePlateEditor } from "platejs/react";
-import { useEffect, useState } from "react";
+import type { MutableRefObject } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
@@ -32,6 +33,7 @@ import {
   getEditorPlugins,
   getInitialValue,
   isEmptyValue,
+  plateValueToProseMirrorSnapshot,
   proseMirrorSnapshotToValue,
 } from "@/lib/plate/editor";
 import { markdownToValue, readMarkdownForPreview } from "@/lib/plate/markdown";
@@ -94,6 +96,19 @@ interface PlateEditorActionsArgs {
   unlockDocument: (args: { id: Id<"documents"> }) => Promise<unknown>;
 }
 
+type DocumentSyncState = "ready" | "saving" | "saved" | "error";
+
+interface UsePlateDocumentSyncArgs {
+  documentId: Id<"documents">;
+  document: PlateEditorDocument | null | undefined;
+  latestSnapshot: ReturnType<typeof useAuthenticatedQuery<typeof api.prosemirror.getSnapshot>>;
+  latestVersion: ReturnType<typeof useAuthenticatedQuery<typeof api.prosemirror.latestVersion>>;
+  submitSnapshot: ReturnType<
+    typeof useAuthenticatedMutation<typeof api.prosemirror.submitSnapshot>
+  >["mutate"];
+  updateTitle: (args: { id: Id<"documents">; title: string }) => Promise<unknown>;
+}
+
 interface UsePlateEditorUiStateArgs {
   documentId: Id<"documents">;
   document: PlateEditorDocument | null | undefined;
@@ -132,6 +147,11 @@ interface PlateEditorData {
     typeof useAuthenticatedQuery<typeof api.documentVersions.getVersionCount>
   >;
   versions: ReturnType<typeof useAuthenticatedQuery<typeof api.documentVersions.listVersions>>;
+  latestSnapshot: ReturnType<typeof useAuthenticatedQuery<typeof api.prosemirror.getSnapshot>>;
+  latestVersion: ReturnType<typeof useAuthenticatedQuery<typeof api.prosemirror.latestVersion>>;
+  submitSnapshot: ReturnType<
+    typeof useAuthenticatedMutation<typeof api.prosemirror.submitSnapshot>
+  >["mutate"];
 }
 
 interface LoadedPlateEditorProps {
@@ -147,6 +167,8 @@ interface MarkdownImportPreview {
   markdown: string;
   filename: string;
 }
+
+const DOCUMENT_SAVE_DEBOUNCE_MS = 1200;
 
 interface E2EEditorMarkdownEventDetail {
   markdown: string;
@@ -325,17 +347,11 @@ function usePlateEditorActions({
 }
 
 function usePlateEditorUiState({
-  documentId,
-  document,
   versions,
-  updateTitle,
-}: UsePlateEditorUiStateArgs) {
+}: Omit<UsePlateEditorUiStateArgs, "documentId" | "document" | "updateTitle">) {
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [editorSeedValue, setEditorSeedValue] = useState<Value>(getInitialValue());
-  const [editorResetKey, setEditorResetKey] = useState(0);
-  const [editorValue, setEditorValue] = useState<Value>(getInitialValue());
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -348,43 +364,10 @@ function usePlateEditorUiState({
   }, []);
 
   useEffect(() => {
-    if (versions === undefined) {
-      return;
+    if (versions && versions.length === 0) {
+      setShowVersionHistory(false);
     }
-
-    const latestVersion = versions[0];
-    const nextValue = latestVersion
-      ? proseMirrorSnapshotToValue(latestVersion.snapshot)
-      : getInitialValue();
-    setEditorSeedValue(nextValue);
-    setEditorValue(nextValue);
   }, [versions]);
-
-  const handleChange = (value: Value) => {
-    setEditorValue(value);
-    console.debug("Editor content changed", value.length, "nodes");
-  };
-
-  const handleRestoreVersion = async (snapshot: unknown, version: number, title: string) => {
-    void version;
-    try {
-      if (snapshot && document) {
-        if (title !== document.title) {
-          await updateTitle({ id: documentId, title });
-        }
-        showSuccess("Version restored successfully. Refreshing...");
-        window.location.reload();
-      }
-    } catch (error) {
-      showError(error, "Failed to restore version");
-    }
-  };
-
-  const replaceEditorValue = (value: Value) => {
-    setEditorSeedValue(value);
-    setEditorValue(value);
-    setEditorResetKey((prev) => prev + 1);
-  };
 
   return {
     showVersionHistory,
@@ -392,13 +375,210 @@ function usePlateEditorUiState({
     showMoveDialog,
     setShowMoveDialog,
     showSidebar,
+    toggleSidebar: () => setShowSidebar((prev) => !prev),
+  };
+}
+
+function serializeSnapshot(snapshot: unknown): string {
+  return JSON.stringify(snapshot);
+}
+
+function clearTimeoutRef(timeoutRef: MutableRefObject<number | null>) {
+  if (timeoutRef.current !== null) {
+    window.clearTimeout(timeoutRef.current);
+    timeoutRef.current = null;
+  }
+}
+
+function getSerializedPlateValue(value: Value): string {
+  return serializeSnapshot(plateValueToProseMirrorSnapshot(value));
+}
+
+function getSeedValueFromSnapshot(latestSnapshot: unknown): Value {
+  return latestSnapshot ? proseMirrorSnapshotToValue(latestSnapshot) : getInitialValue();
+}
+
+function createRestoredVersionPayload(snapshot: unknown, version: number, currentVersion: number) {
+  return {
+    content: serializeSnapshot(snapshot),
+    nextVersion: Math.max(currentVersion, version) + 1,
+    value: proseMirrorSnapshotToValue(snapshot),
+  };
+}
+
+function usePlateDocumentSync({
+  documentId,
+  document,
+  latestSnapshot,
+  latestVersion,
+  submitSnapshot,
+  updateTitle,
+}: UsePlateDocumentSyncArgs) {
+  const [editorSeedValue, setEditorSeedValue] = useState<Value>(getInitialValue());
+  const [editorResetKey, setEditorResetKey] = useState(0);
+  const [editorValue, setEditorValue] = useState<Value>(getInitialValue());
+  const [syncState, setSyncState] = useState<DocumentSyncState>("ready");
+  const saveTimeoutRef = useRef<number | null>(null);
+  const saveStateTimeoutRef = useRef<number | null>(null);
+  const isSavingRef = useRef(false);
+  const currentVersionRef = useRef(0);
+  const lastSavedContentRef = useRef(getSerializedPlateValue(getInitialValue()));
+  const pendingContentRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (latestSnapshot === undefined || latestVersion === undefined) {
+      return;
+    }
+
+    const nextValue = getSeedValueFromSnapshot(latestSnapshot);
+    const serializedSnapshot = latestSnapshot
+      ? serializeSnapshot(latestSnapshot)
+      : getSerializedPlateValue(nextValue);
+
+    currentVersionRef.current = latestVersion ?? 0;
+    lastSavedContentRef.current = serializedSnapshot;
+    pendingContentRef.current = null;
+    setEditorSeedValue(nextValue);
+    setEditorValue(nextValue);
+    setEditorResetKey((prev) => prev + 1);
+    setSyncState("ready");
+  }, [latestSnapshot, latestVersion]);
+
+  useEffect(
+    () => () => {
+      clearTimeoutRef(saveTimeoutRef);
+      clearTimeoutRef(saveStateTimeoutRef);
+    },
+    [],
+  );
+
+  const markSaved = useCallback(() => {
+    setSyncState("saved");
+    clearTimeoutRef(saveStateTimeoutRef);
+    saveStateTimeoutRef.current = window.setTimeout(() => {
+      setSyncState((current) => (current === "saved" ? "ready" : current));
+      saveStateTimeoutRef.current = null;
+    }, 1500);
+  }, []);
+
+  const persistSnapshot = useCallback(
+    async (content: string) => {
+      if (isSavingRef.current) {
+        pendingContentRef.current = content;
+        return;
+      }
+
+      isSavingRef.current = true;
+      setSyncState("saving");
+      const nextVersion = currentVersionRef.current + 1;
+
+      try {
+        await submitSnapshot({
+          id: documentId,
+          version: nextVersion,
+          content,
+        });
+        currentVersionRef.current = nextVersion;
+        lastSavedContentRef.current = content;
+        markSaved();
+      } catch (error) {
+        setSyncState("error");
+        showError(error, "Failed to save document");
+        return;
+      } finally {
+        isSavingRef.current = false;
+      }
+
+      const pendingContent = pendingContentRef.current;
+      pendingContentRef.current = null;
+      if (pendingContent && pendingContent !== lastSavedContentRef.current) {
+        void persistSnapshot(pendingContent);
+      }
+    },
+    [documentId, markSaved, submitSnapshot],
+  );
+
+  useEffect(() => {
+    if (latestSnapshot === undefined || latestVersion === undefined) {
+      return;
+    }
+
+    const nextContent = getSerializedPlateValue(editorValue);
+    if (nextContent === lastSavedContentRef.current) {
+      return;
+    }
+
+    clearTimeoutRef(saveTimeoutRef);
+
+    saveTimeoutRef.current = window.setTimeout(() => {
+      void persistSnapshot(nextContent);
+      saveTimeoutRef.current = null;
+    }, DOCUMENT_SAVE_DEBOUNCE_MS);
+
+    return () => {
+      clearTimeoutRef(saveTimeoutRef);
+    };
+  }, [editorValue, latestSnapshot, latestVersion, persistSnapshot]);
+
+  const handleChange = (value: Value) => {
+    setEditorValue(value);
+  };
+
+  const replaceEditorValue = (
+    value: Value,
+    options?: { savedSnapshot?: unknown; version?: number },
+  ) => {
+    setEditorSeedValue(value);
+    setEditorValue(value);
+    setEditorResetKey((prev) => prev + 1);
+
+    if (options?.savedSnapshot) {
+      lastSavedContentRef.current = serializeSnapshot(options.savedSnapshot);
+    }
+
+    if (typeof options?.version === "number") {
+      currentVersionRef.current = options.version;
+    }
+  };
+
+  const handleRestoreVersion = async (snapshot: unknown, version: number, title: string) => {
+    try {
+      const restoredVersion = createRestoredVersionPayload(
+        snapshot,
+        version,
+        currentVersionRef.current,
+      );
+
+      setSyncState("saving");
+      if (document && title !== document.title) {
+        await updateTitle({ id: documentId, title });
+      }
+
+      await submitSnapshot({
+        id: documentId,
+        version: restoredVersion.nextVersion,
+        content: restoredVersion.content,
+      });
+      replaceEditorValue(restoredVersion.value, {
+        savedSnapshot: snapshot,
+        version: restoredVersion.nextVersion,
+      });
+      markSaved();
+      showSuccess("Version restored successfully");
+    } catch (error) {
+      setSyncState("error");
+      showError(error, "Failed to restore version");
+    }
+  };
+
+  return {
     editorSeedValue,
     editorResetKey,
     editorValue,
     handleChange,
     replaceEditorValue,
-    toggleSidebar: () => setShowSidebar((prev) => !prev),
     handleRestoreVersion,
+    syncState,
   };
 }
 
@@ -500,12 +680,15 @@ function usePlateEditorData(documentId: Id<"documents">): PlateEditorData {
   const { mutate: unarchiveDocument } = useAuthenticatedMutation(api.documents.unarchiveDocument);
   const { mutate: lockDocument } = useAuthenticatedMutation(api.documents.lockDocument);
   const { mutate: unlockDocument } = useAuthenticatedMutation(api.documents.unlockDocument);
+  const { mutate: submitSnapshot } = useAuthenticatedMutation(api.prosemirror.submitSnapshot);
   const isFavorite = useAuthenticatedQuery(api.documents.isFavorite, { documentId });
   const isArchived = useAuthenticatedQuery(api.documents.isArchived, { documentId });
   const lockStatus = useAuthenticatedQuery(api.documents.getLockStatus, { documentId });
   const userId = useAuthenticatedQuery(api.presence.getUserId, {});
   const versionCount = useAuthenticatedQuery(api.documentVersions.getVersionCount, { documentId });
   const versions = useAuthenticatedQuery(api.documentVersions.listVersions, { documentId });
+  const latestSnapshot = useAuthenticatedQuery(api.prosemirror.getSnapshot, { id: documentId });
+  const latestVersion = useAuthenticatedQuery(api.prosemirror.latestVersion, { id: documentId });
 
   return {
     document,
@@ -522,6 +705,9 @@ function usePlateEditorData(documentId: Id<"documents">): PlateEditorData {
     userId,
     versionCount,
     versions,
+    latestSnapshot,
+    latestVersion,
+    submitSnapshot,
   };
 }
 
@@ -553,6 +739,9 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
     userId,
     versionCount,
     versions,
+    latestSnapshot,
+    latestVersion,
+    submitSnapshot,
   } = data;
 
   const {
@@ -561,17 +750,24 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
     showMoveDialog,
     setShowMoveDialog,
     showSidebar,
+    toggleSidebar,
+  } = usePlateEditorUiState({
+    versions,
+  });
+  const {
     editorSeedValue,
     editorResetKey,
     editorValue,
     handleChange,
     replaceEditorValue,
-    toggleSidebar,
     handleRestoreVersion,
-  } = usePlateEditorUiState({
+    syncState,
+  } = usePlateDocumentSync({
     documentId,
     document,
-    versions,
+    latestSnapshot,
+    latestVersion,
+    submitSnapshot,
     updateTitle,
   });
   const [markdownImportPreview, setMarkdownImportPreview] = useState<MarkdownImportPreview | null>(
@@ -683,7 +879,8 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
           showError("Markdown export not yet implemented for Plate editor");
         }}
         onShowVersionHistory={() => setShowVersionHistory(true)}
-        editorReady={true}
+        editorReady={syncState !== "saving"}
+        syncState={syncState}
       />
 
       {lockStatus?.isLocked && <LockedDocumentBanner lockStatus={lockStatus} />}
@@ -759,9 +956,15 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
  */
 export function PlateEditor({ documentId }: PlateEditorProps) {
   const data = usePlateEditorData(documentId);
-  const { document, userId, versions } = data;
+  const { document, userId, versions, latestSnapshot, latestVersion } = data;
 
-  if (document === undefined || userId === undefined || versions === undefined) {
+  if (
+    document === undefined ||
+    userId === undefined ||
+    versions === undefined ||
+    latestSnapshot === undefined ||
+    latestVersion === undefined
+  ) {
     return <PlateEditorLoadingState versionsLoaded={versions !== undefined} />;
   }
 

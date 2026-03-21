@@ -89,6 +89,22 @@ interface ProseMirrorSnapshotLike {
   type?: string;
 }
 
+interface PlateTextLeaf {
+  bold?: boolean;
+  code?: boolean;
+  italic?: boolean;
+  strikethrough?: boolean;
+  text?: string;
+  underline?: boolean;
+}
+
+interface PlateElementLike {
+  children?: Array<PlateChildLike>;
+  type?: string;
+}
+
+type PlateChildLike = PlateTextLeaf | PlateElementLike;
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object";
 }
@@ -242,6 +258,200 @@ export function proseMirrorSnapshotToValue(snapshot: unknown): Value {
   }
 
   return toPlateBlocks(parsedSnapshot.content);
+}
+
+function textToProseMirrorNodes(text: string, marks: ProseMirrorMark[] | undefined) {
+  if (text.length === 0) {
+    return [] as ProseMirrorNodeLike[];
+  }
+
+  const segments = text.split("\n");
+  const nodes: ProseMirrorNodeLike[] = [];
+
+  for (const [index, segment] of segments.entries()) {
+    if (segment.length > 0) {
+      nodes.push({
+        type: "text",
+        text: segment,
+        marks,
+      });
+    }
+
+    if (index < segments.length - 1) {
+      nodes.push({ type: "hardBreak" });
+    }
+  }
+
+  return nodes;
+}
+
+function leafToMarks(leaf: PlateTextLeaf) {
+  const marks: ProseMirrorMark[] = [];
+
+  if (leaf.bold) marks.push({ type: "bold" });
+  if (leaf.italic) marks.push({ type: "italic" });
+  if (leaf.underline) marks.push({ type: "underline" });
+  if (leaf.strikethrough) marks.push({ type: "strike" });
+  if (leaf.code) marks.push({ type: "code" });
+
+  return marks.length > 0 ? marks : undefined;
+}
+
+function plateNodeToPlainText(node: PlateChildLike): string {
+  if ("text" in node && typeof node.text === "string") {
+    return node.text;
+  }
+
+  if ("children" in node && Array.isArray(node.children)) {
+    return node.children.map(plateNodeToPlainText).join("");
+  }
+
+  return "";
+}
+
+function toInlineProseMirrorNodes(children: PlateChildLike[] | undefined): ProseMirrorNodeLike[] {
+  if (!children || children.length === 0) {
+    return [];
+  }
+
+  return children.flatMap((child) => {
+    if ("text" in child && typeof child.text === "string") {
+      return textToProseMirrorNodes(child.text, leafToMarks(child));
+    }
+
+    return textToProseMirrorNodes(plateNodeToPlainText(child), undefined);
+  });
+}
+
+function createParagraphNode(children: PlateChildLike[] | undefined): ProseMirrorNodeLike {
+  const content = toInlineProseMirrorNodes(children);
+  return content.length > 0 ? { type: "paragraph", content } : { type: "paragraph" };
+}
+
+function wrapListItemChildren(children: PlateChildLike[] | undefined): ProseMirrorNodeLike[] {
+  if (!children || children.length === 0) {
+    return [{ type: "paragraph" }];
+  }
+
+  const blockChildren = children.filter(
+    (child): child is PlateElementLike => "type" in child && typeof child.type === "string",
+  );
+
+  const nestedListNodes = blockChildren.flatMap((child) => {
+    if (child.type === "ul" || child.type === "ol") {
+      return plateElementToProseMirrorNodes(child);
+    }
+
+    return [];
+  });
+
+  const inlineChildren = children.filter(
+    (child) => !("type" in child) || (child.type !== "ul" && child.type !== "ol"),
+  );
+  const paragraph = createParagraphNode(inlineChildren);
+
+  return paragraph.content && paragraph.content.length > 0
+    ? [paragraph, ...nestedListNodes]
+    : nestedListNodes.length > 0
+      ? nestedListNodes
+      : [{ type: "paragraph" }];
+}
+
+function createHeadingNode(
+  level: number,
+  children: PlateChildLike[] | undefined,
+): ProseMirrorNodeLike {
+  const content = toInlineProseMirrorNodes(children);
+  return content.length > 0
+    ? { type: "heading", attrs: { level }, content }
+    : { type: "heading", attrs: { level } };
+}
+
+function createBlockquoteNode(children: PlateChildLike[] | undefined): ProseMirrorNodeLike {
+  const content = toInlineProseMirrorNodes(children);
+  return content.length > 0 ? { type: "blockquote", content } : { type: "blockquote" };
+}
+
+function createCodeBlockNode(children: PlateChildLike[] | undefined): ProseMirrorNodeLike {
+  const text = (children ?? [])
+    .map((child) => {
+      if ("children" in child && Array.isArray(child.children)) {
+        return child.children.map(plateNodeToPlainText).join("");
+      }
+
+      return plateNodeToPlainText(child);
+    })
+    .join("\n");
+  const content = textToProseMirrorNodes(text, undefined);
+  return content.length > 0 ? { type: "codeBlock", content } : { type: "codeBlock" };
+}
+
+function createListNode(
+  type: "ul" | "ol",
+  children: PlateChildLike[] | undefined,
+): ProseMirrorNodeLike {
+  const listType = type === "ul" ? "bulletList" : "orderedList";
+  const items = (children ?? []).flatMap((child) => {
+    if ("type" in child && child.type === "li") {
+      return plateElementToProseMirrorNodes(child);
+    }
+
+    return [{ type: "listItem", content: wrapListItemChildren([child]) }];
+  });
+
+  return items.length > 0 ? { type: listType, content: items } : { type: listType };
+}
+
+function plateElementToProseMirrorNodes(element: PlateElementLike): ProseMirrorNodeLike[] {
+  const type = element.type;
+
+  if (!type || type === "p" || type === "paragraph") {
+    return [createParagraphNode(element.children)];
+  }
+
+  if (/^h[1-6]$/.test(type)) {
+    return [createHeadingNode(Number(type.slice(1)), element.children)];
+  }
+
+  if (type === "blockquote") {
+    return [createBlockquoteNode(element.children)];
+  }
+
+  if (type === "code_block") {
+    return [createCodeBlockNode(element.children)];
+  }
+
+  if (type === "ul" || type === "ol") {
+    return [createListNode(type, element.children)];
+  }
+
+  if (type === "li") {
+    return [{ type: "listItem", content: wrapListItemChildren(element.children) }];
+  }
+
+  return [createParagraphNode(element.children)];
+}
+
+/**
+ * Convert Plate/Slate value back into the ProseMirror snapshot shape stored by Convex.
+ * This powers explicit document save/restore flows for the editor route.
+ */
+export function plateValueToProseMirrorSnapshot(value: Value): ProseMirrorSnapshotLike {
+  if (!Array.isArray(value) || value.length === 0) {
+    return { type: "doc", content: [{ type: "paragraph" }] };
+  }
+
+  const content = value.flatMap((node) => {
+    if (node && typeof node === "object" && "type" in node) {
+      return plateElementToProseMirrorNodes(node as PlateElementLike);
+    }
+
+    return [];
+  });
+
+  return content.length > 0
+    ? { type: "doc", content }
+    : { type: "doc", content: [{ type: "paragraph" }] };
 }
 
 /** Check if a node is an empty text node */

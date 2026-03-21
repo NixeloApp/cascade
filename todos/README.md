@@ -26,7 +26,7 @@ Main-page/landing cleanup belongs here too: if the marketing surface is inconsis
 | Order | File | What |
 |-------|------|------|
 | 2.1 | [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Fix screenshot-exposed inconsistencies, broken states, and cross-surface visual drift |
-| 2.2 | [meeting-intelligence.md](./meeting-intelligence.md) | Finish meetings visual QA and unblock meeting-to-doc via editor persistence/save wiring |
+| 2.2 | [meeting-intelligence.md](./meeting-intelligence.md) | Finish meetings visual QA and build meeting-to-doc now that editor persistence/save wiring is closed |
 
 ### Phase 3: Finish Validator Paydown
 
@@ -53,7 +53,7 @@ Non-code-quality items from meetings that run alongside the pipeline.
 
 | File | What |
 |------|------|
-| [meeting-intelligence.md](./meeting-intelligence.md) | Editor persistence, meeting-to-doc, capture strategy, platform breadth, OSS evaluation, agent layer |
+| [meeting-intelligence.md](./meeting-intelligence.md) | Meeting-to-doc, capture strategy, platform breadth, OSS evaluation, agent layer |
 
 ---
 

@@ -67,6 +67,7 @@ interface DocumentHeaderProps {
   onExportMarkdown: () => Promise<void>;
   onShowVersionHistory: () => void;
   editorReady: boolean;
+  syncState?: "ready" | "saving" | "saved" | "error";
 }
 
 interface DocumentHeaderActionsProps {
@@ -80,6 +81,7 @@ interface DocumentHeaderActionsProps {
   onExportMarkdown: () => Promise<void>;
   onShowVersionHistory: () => void;
   editorReady: boolean;
+  syncState?: DocumentHeaderProps["syncState"];
   ownerActions: {
     lockStatus?: LockStatus;
     onTogglePublic: () => Promise<void>;
@@ -87,6 +89,22 @@ interface DocumentHeaderActionsProps {
     onToggleLock?: () => Promise<void>;
     onMoveToProject?: () => void;
   };
+}
+
+function DocumentSyncStatusBadge({ syncState }: { syncState?: DocumentHeaderProps["syncState"] }) {
+  if (syncState === "saving") {
+    return <Badge variant="secondary">Saving…</Badge>;
+  }
+
+  if (syncState === "saved") {
+    return <Badge variant="success">Saved</Badge>;
+  }
+
+  if (syncState === "error") {
+    return <Badge variant="error">Save failed</Badge>;
+  }
+
+  return null;
 }
 
 interface OwnerDocumentActionsProps {
@@ -198,11 +216,14 @@ function DocumentHeaderActions({
   onExportMarkdown,
   onShowVersionHistory,
   editorReady,
+  syncState,
   ownerActions,
 }: DocumentHeaderActionsProps) {
   return (
     <Flex wrap align="center" gap="xs" className="w-full sm:w-auto">
       <PresenceIndicator roomId={document._id} userId={userId} />
+
+      <DocumentSyncStatusBadge syncState={syncState} />
 
       <Tooltip content={isFavorite ? "Remove from favorites" : "Add to favorites"}>
         <IconButton
@@ -305,6 +326,7 @@ export function DocumentHeader({
   onExportMarkdown,
   onShowVersionHistory,
   editorReady,
+  syncState,
 }: DocumentHeaderProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(document.title);
@@ -392,6 +414,7 @@ export function DocumentHeader({
               onExportMarkdown={onExportMarkdown}
               onShowVersionHistory={onShowVersionHistory}
               editorReady={editorReady}
+              syncState={syncState}
               ownerActions={{
                 lockStatus,
                 onTogglePublic,

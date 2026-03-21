@@ -2,7 +2,7 @@
 
 > **Priority:** P1
 > **Status:** In Progress
-> **Last Updated:** 2026-03-20
+> **Last Updated:** 2026-03-21
 
 ### Screenshots & Visual QA
 
@@ -10,13 +10,12 @@
 
 ### Document Editor Dependency (blocks meeting-to-doc)
 
-- [ ] Wire Plate editor to an explicit save/sync path -- the frontend save wiring to `api.prosemirror.*` is not closed
 - [ ] Clarify template/document seeding -- `createDocumentFromTemplate` returns `templateContent` but the Plate workflow has no clean e2e initialization
 - [ ] Separate real collaboration from stubs -- `ConvexYjsProvider` is explicitly a stub, should not be treated as shipped
 
 ### Meeting-to-Doc Flow
 
-- [ ] Add meeting-to-doc flow -- create or append a project document from meeting results (blocked on editor persistence)
+- [ ] Add meeting-to-doc flow -- create or append a project document from meeting results
 
 ### Capture Strategy
 

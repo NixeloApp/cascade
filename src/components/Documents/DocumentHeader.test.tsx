@@ -82,4 +82,29 @@ describe("DocumentHeader", () => {
     expect(screen.getByRole("menuitem", { name: "Move to another project" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Archive document" })).toBeInTheDocument();
   });
+
+  it("surfaces explicit editor sync state in the header chrome", () => {
+    render(
+      <TooltipProvider>
+        <DocumentHeader
+          document={mockDocument}
+          userId="user123"
+          versionCount={5}
+          isFavorite={false}
+          isArchived={false}
+          onTitleEdit={vi.fn()}
+          onTogglePublic={vi.fn()}
+          onToggleFavorite={vi.fn()}
+          onToggleArchive={vi.fn()}
+          onImportMarkdown={vi.fn()}
+          onExportMarkdown={vi.fn()}
+          onShowVersionHistory={vi.fn()}
+          editorReady={false}
+          syncState="saving"
+        />
+      </TooltipProvider>,
+    );
+
+    expect(screen.getByText("Saving…")).toBeInTheDocument();
+  });
 });
