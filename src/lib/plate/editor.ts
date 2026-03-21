@@ -202,6 +202,10 @@ function pmImageToPlate(node: ProseMirrorNodeLike): Array<Record<string, unknown
   ];
 }
 
+function isInlineProseMirrorNode(node: ProseMirrorNodeLike): boolean {
+  return node.type === "text" || node.type === "hardBreak";
+}
+
 function pmPassthroughToPlate(node: ProseMirrorNodeLike): Array<Record<string, unknown>> {
   const { type: pmType, content, attrs, ...rest } = node;
   const result: Record<string, unknown> = { type: pmType, ...rest };
@@ -210,7 +214,13 @@ function pmPassthroughToPlate(node: ProseMirrorNodeLike): Array<Record<string, u
     Object.assign(result, attrs);
   }
 
-  result.children = content ? content.flatMap(toBlockFromNode) : [{ text: "" }];
+  if (!content || content.length === 0) {
+    result.children = [{ text: "" }];
+  } else if (content.every(isInlineProseMirrorNode)) {
+    result.children = toTextLeaves(content);
+  } else {
+    result.children = content.flatMap(toBlockFromNode);
+  }
 
   return [result];
 }

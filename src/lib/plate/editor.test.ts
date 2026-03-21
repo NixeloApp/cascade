@@ -229,5 +229,7 @@ describe("plateValueToProseMirrorSnapshot", () => {
     const mention = restored[0] as Record<string, unknown>;
     expect(mention.type).toBe("mention");
     expect(mention.value).toBe("user-123");
+    // Children must be proper Plate text leaves, not ProseMirror element objects
+    expect(mention.children).toEqual([{ text: "@alice" }]);
   });
 });
