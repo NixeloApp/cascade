@@ -52,6 +52,7 @@ It is also structurally isolated:
 - `vite.config.ts` now sets `injectRegister: false`, so the current production build no longer injects `registerSW.js`.
 - The production build still ships `/service-worker.js` from `public/service-worker.js`.
 - The production build still emits `sw.js` from `vite-plugin-pwa`, but it is not auto-registered by built HTML.
+- E2E-only `window.__convex_test_client` exposure is now scoped to `import.meta.env.MODE === "e2e"`, so normal production builds no longer suppress service-worker registration accidentally.
 - The dead `src/service-worker.ts` worker candidate has been removed so the repo no longer suggests a second custom worker source file.
 
 ### Client-side offline queue
@@ -64,6 +65,8 @@ It is also structurally isolated:
   - `offlineStatus`
   - `queueOfflineMutation()`
   - `processOfflineQueue()`
+- `src/hooks/useOfflineUserSettingsUpdate.ts` now provides the first real queue producer for `userSettings.update`.
+- `src/routes/__root.tsx` now registers the first replay handler and flushes the queue on authenticated app startup and on reconnect.
 - `src/hooks/useOffline.ts` provides React hooks for:
   - online/offline status
   - queue count
@@ -145,6 +148,8 @@ Current queue behavior:
 - validates that queued payloads deserialize to JSON objects
 - routes replay only through explicitly registered handlers
 - records unsupported mutation types as queue failures instead of falsely marking them synced
+- the app now registers a real replay handler for `userSettings.update`
+- queued `userSettings.update` entries can be produced from dashboard layout, theme, and timezone preferences when offline
 
 That makes the current limitation explicit, but it is still not a full backend replay implementation.
 
@@ -157,11 +162,11 @@ That makes the current limitation explicit, but it is still not a full backend r
 - marks unsupported or corrupt entries back to `pending` or `failed` with explicit errors
 
 What it does not do:
-- register any product-level replay handlers yet
+- register replay handlers for most product mutations yet
 - handle server conflicts
 - persist server-generated IDs or reconciliation data
 
-So the queue shape exists, and the failure semantics are now truthful, but the end-to-end replay path is still not shipped.
+So the queue shape exists, the failure semantics are truthful, and one real product replay path now exists, but the broader end-to-end replay architecture is still not fully shipped.
 
 ### 4. Install/update UX is only partially wired
 
@@ -240,16 +245,16 @@ Current direction:
 - [x] Remove the fake `/api/sync` replay assumption from the source tree.
 - [x] Define a replay-handler registry for allowed `mutationType` values.
 - [x] Reject unsupported queued mutation types explicitly.
-- [ ] Ensure replay calls the actual backend mutation and captures success/failure.
+- [x] Wire the first replay handler through a real backend mutation (`userSettings.update`) and capture success/failure.
+- [ ] Extend real replay beyond the initial `userSettings.update` path.
 - [ ] Preserve idempotency where possible.
 - [ ] Record retryable vs permanent failure states clearly.
 - [ ] Handle deleted/archived target entities safely.
 - [x] Add serialization guards so corrupt payloads do not poison the full queue.
-- [ ] Decide whether replay runs:
-  - on `online`
-  - via background sync
-  - on app startup
-  - manually from Settings
+- [x] Run replay on app startup for the current authenticated client path.
+- [x] Run replay on `online` for the current authenticated client path.
+- [ ] Decide whether replay should also run via background sync.
+- [ ] Decide whether replay should also run manually from Settings.
 
 ## Phase 3: Tighten Read Caching And Offline Navigation
 

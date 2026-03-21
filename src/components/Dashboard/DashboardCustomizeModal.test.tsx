@@ -1,10 +1,8 @@
 import userEvent from "@testing-library/user-event";
-import type { ReactMutation } from "convex/react";
-import type { FunctionReference } from "convex/server";
 import type { ReactNode } from "react";
-import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useOfflineUserSettingsUpdate } from "@/hooks/useOfflineUserSettingsUpdate";
 import { render, screen, waitFor } from "@/test/custom-render";
 import { DashboardCustomizeModal } from "./DashboardCustomizeModal";
 
@@ -14,8 +12,11 @@ interface SwitchProps {
 }
 
 vi.mock("@/hooks/useConvexHelpers", () => ({
-  useAuthenticatedMutation: vi.fn(),
   useAuthenticatedQuery: vi.fn(),
+}));
+
+vi.mock("@/hooks/useOfflineUserSettingsUpdate", () => ({
+  useOfflineUserSettingsUpdate: vi.fn(),
 }));
 
 vi.mock("../ui/Switch", () => ({
@@ -38,17 +39,17 @@ vi.mock("../ui/Dialog", () => ({
     ) : null,
 }));
 
-const mockUseAuthenticatedMutation = vi.mocked(useAuthenticatedMutation);
 const mockUseAuthenticatedQuery = vi.mocked(useAuthenticatedQuery);
-
-const mockUpdateSettings = vi.fn() as Mock & ReactMutation<FunctionReference<"mutation">>;
+const mockUseOfflineUserSettingsUpdate = vi.mocked(useOfflineUserSettingsUpdate);
+const mockUpdateSettings = vi.fn();
 
 describe("DashboardCustomizeModal", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseAuthenticatedQuery.mockReturnValue(undefined);
-    mockUseAuthenticatedMutation.mockReturnValue({
-      mutate: mockUpdateSettings,
+    mockUseOfflineUserSettingsUpdate.mockReturnValue({
+      update: mockUpdateSettings,
+      isOnline: true,
       canAct: true,
       isAuthLoading: false,
     });
@@ -83,7 +84,7 @@ describe("DashboardCustomizeModal", () => {
 
   it("persists a toggled preference", async () => {
     const user = userEvent.setup();
-    mockUpdateSettings.mockResolvedValue(undefined);
+    mockUpdateSettings.mockResolvedValue({ queued: false });
 
     render(<DashboardCustomizeModal />);
     await user.click(screen.getByRole("button", { name: /Customize/i }));
@@ -92,13 +93,18 @@ describe("DashboardCustomizeModal", () => {
     await user.click(showStatsSwitch);
 
     await waitFor(() =>
-      expect(mockUpdateSettings).toHaveBeenCalledWith({
-        dashboardLayout: {
-          showStats: false,
-          showRecentActivity: true,
-          showWorkspaces: true,
+      expect(mockUpdateSettings).toHaveBeenCalledWith(
+        {
+          dashboardLayout: {
+            showStats: false,
+            showRecentActivity: true,
+            showWorkspaces: true,
+          },
         },
-      }),
+        {
+          queuedMessage: "Dashboard layout change queued for sync when you are back online",
+        },
+      ),
     );
   });
 

@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
-import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useOfflineUserSettingsUpdate } from "@/hooks/useOfflineUserSettingsUpdate";
 import { Button } from "../ui/Button";
 import { Dialog } from "../ui/Dialog";
 import { Label } from "../ui/Label";
@@ -14,7 +15,7 @@ import { Typography } from "../ui/Typography";
 /** Modal for customizing dashboard widget visibility preferences. */
 export function DashboardCustomizeModal() {
   const userSettings = useAuthenticatedQuery(api.userSettings.get, {});
-  const { mutate: updateSettings } = useAuthenticatedMutation(api.userSettings.update);
+  const { update: updateSettings } = useOfflineUserSettingsUpdate();
   const [open, setOpen] = useState(false);
 
   // Defaults
@@ -36,9 +37,14 @@ export function DashboardCustomizeModal() {
     const newPrefs = { ...preferences, [key]: !preferences[key] };
     setPreferences(newPrefs);
     try {
-      await updateSettings({
-        dashboardLayout: newPrefs,
-      });
+      await updateSettings(
+        {
+          dashboardLayout: newPrefs,
+        },
+        {
+          queuedMessage: "Dashboard layout change queued for sync when you are back online",
+        },
+      );
     } catch {
       // Revert optimistic update on failure
       setPreferences(oldPrefs);

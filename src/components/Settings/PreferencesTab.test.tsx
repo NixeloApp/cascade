@@ -1,5 +1,6 @@
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { useOfflineUserSettingsUpdate } from "@/hooks/useOfflineUserSettingsUpdate";
 import { render, screen } from "@/test/custom-render";
 import { ThemeProvider } from "../../contexts/ThemeContext";
 import { PreferencesTab } from "./PreferencesTab";
@@ -44,7 +45,25 @@ vi.mock("convex/react", () => ({
   useMutation: vi.fn(() => vi.fn()),
 }));
 
+vi.mock("@/hooks/useOfflineUserSettingsUpdate", () => ({
+  useOfflineUserSettingsUpdate: vi.fn(),
+}));
+
+const mockUseOfflineUserSettingsUpdate = vi.mocked(useOfflineUserSettingsUpdate);
+const mockUpdateSettings = vi.fn();
+
 describe("PreferencesTab", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorageMock.clear();
+    mockUseOfflineUserSettingsUpdate.mockReturnValue({
+      update: mockUpdateSettings,
+      isOnline: true,
+      canAct: true,
+      isAuthLoading: false,
+    });
+  });
+
   it("renders theme selection", () => {
     render(
       <ThemeProvider>
@@ -60,6 +79,8 @@ describe("PreferencesTab", () => {
 
   it("changes theme when clicked", async () => {
     const user = userEvent.setup();
+    mockUpdateSettings.mockResolvedValue({ queued: false });
+
     render(
       <ThemeProvider>
         <PreferencesTab />
@@ -70,5 +91,9 @@ describe("PreferencesTab", () => {
     await user.click(darkButton);
 
     expect(localStorageMock.setItem).toHaveBeenCalledWith("nixelo-theme", "dark");
+    expect(mockUpdateSettings).toHaveBeenCalledWith(
+      { theme: "dark" },
+      { queuedMessage: "Theme preference saved for sync when you are back online" },
+    );
   });
 });

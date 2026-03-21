@@ -12,7 +12,8 @@ import { useEffect, useState } from "react";
 import { Flex } from "@/components/ui/Flex";
 import { Icon } from "@/components/ui/Icon";
 import { Stack } from "@/components/ui/Stack";
-import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
+import { useOfflineUserSettingsUpdate } from "@/hooks/useOfflineUserSettingsUpdate";
 import { Monitor, Moon, Sun } from "@/lib/icons";
 import { showError, showSuccess } from "@/lib/toast";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -30,7 +31,7 @@ export function PreferencesTab() {
 
   // Settings from DB
   const userSettings = useAuthenticatedQuery(api.userSettings.get, {});
-  const { mutate: updateSettings } = useAuthenticatedMutation(api.userSettings.update);
+  const { update: updateSettings } = useOfflineUserSettingsUpdate();
 
   // Local state for timezone (defaults to system if not set)
   const [selectedTimezone, setSelectedTimezone] = useState<string>(
@@ -50,14 +51,20 @@ export function PreferencesTab() {
 
   const handleThemeChange = async (value: "light" | "dark" | "system") => {
     setTheme(value); // Update local context
-    await updateSettings({ theme: value }); // Persist to DB
+    await updateSettings(
+      { theme: value },
+      { queuedMessage: "Theme preference saved for sync when you are back online" },
+    );
   };
 
   const handleTimezoneChange = async (value: string) => {
     setSelectedTimezone(value);
     try {
-      await updateSettings({ timezone: value });
-      showSuccess("Timezone updated");
+      const result = await updateSettings(
+        { timezone: value },
+        { queuedMessage: "Timezone change queued for sync when you are back online" },
+      );
+      showSuccess(result.queued ? "Timezone queued for sync" : "Timezone updated");
     } catch (error) {
       showError(error, "Failed to update timezone");
     }
@@ -73,7 +80,7 @@ export function PreferencesTab() {
       }
     }
 
-    await updateSettings({ desktopNotifications: enabled });
+    await updateSettings({ desktopNotifications: enabled }, { allowOfflineQueue: false });
     showSuccess(`Desktop notifications ${enabled ? "enabled" : "disabled"}`);
   };
 
