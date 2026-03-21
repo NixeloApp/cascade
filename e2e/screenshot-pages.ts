@@ -830,6 +830,18 @@ async function runCaptureStep(label: string, fn: () => Promise<void>): Promise<v
   }
 }
 
+async function runRequiredCaptureStep(label: string, fn: () => Promise<void>): Promise<void> {
+  try {
+    await fn();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (isCrashLikeError(message)) {
+      throw error;
+    }
+    throw new Error(`Required capture failed for ${label}: ${message}`);
+  }
+}
+
 async function waitForDuplicateDetectionSearchReady(
   orgSlug: string,
   projectKey: string,
@@ -2350,35 +2362,6 @@ async function openDocumentEditorForCapture(page: Page, docUrl: string): Promise
   await waitForScreenshotReady(page);
 }
 
-async function queueMarkdownFileForImport(
-  page: Page,
-  markdown: string,
-  filename: string,
-): Promise<void> {
-  await page.evaluate(
-    ({ markdown, filename }) => {
-      const file = new File([markdown], filename, { type: "text/markdown" });
-      const originalClick = HTMLInputElement.prototype.click;
-      HTMLInputElement.prototype.click = function (this: HTMLInputElement) {
-        if (this.type === "file") {
-          HTMLInputElement.prototype.click = originalClick;
-          const transfer = new DataTransfer();
-          transfer.items.add(file);
-          Object.defineProperty(this, "files", {
-            configurable: true,
-            value: transfer.files,
-          });
-          this.dispatchEvent(new Event("change", { bubbles: true }));
-          return;
-        }
-
-        return originalClick.call(this);
-      };
-    },
-    { markdown, filename },
-  );
-}
-
 async function getDocumentEditorEditable(page: Page): Promise<Locator> {
   const editable = page.locator("[contenteditable='true']").first();
   await editable.waitFor({ state: "visible", timeout: 8000 });
@@ -2432,24 +2415,105 @@ async function openMarkdownImportPreviewDialog(
   filename: string,
 ): Promise<Locator> {
   await dismissAllDialogs(page);
-  const trigger = page.getByRole("button", { name: /import from markdown/i });
+  const trigger = page.getByRole("button", { name: /import from markdown/i }).first();
   await trigger.waitFor({ state: "visible", timeout: 8000 });
-  await queueMarkdownFileForImport(page, markdown, filename);
-  await trigger.click();
+  await page.evaluate(
+    ({ queuedMarkdown, queuedFilename }) => {
+      window.__NIXELO_E2E_MARKDOWN_IMPORT__ = {
+        markdown: queuedMarkdown,
+        filename: queuedFilename,
+      };
+    },
+    { queuedMarkdown: markdown, queuedFilename: filename },
+  );
+  await trigger.evaluate((button: HTMLElement) => {
+    button.click();
+  });
   const dialog = page.getByRole("dialog", { name: /preview markdown import/i });
   await dialog.waitFor({ state: "visible", timeout: 8000 });
   await waitForAnimation(page);
   return dialog;
 }
 
-async function importMarkdownIntoEditor(
+async function primeDocumentEditorRichContent(page: Page, docUrl: string): Promise<void> {
+  await openDocumentEditorForCapture(page, docUrl);
+  await page.evaluate((markdown) => {
+    window.dispatchEvent(
+      new CustomEvent("nixelo:e2e-set-editor-markdown", {
+        detail: { markdown },
+      }),
+    );
+  }, MARKDOWN_RICH_CONTENT);
+  await page
+    .getByText(/^Release Readiness$/)
+    .first()
+    .waitFor({ state: "visible", timeout: 5000 });
+  await page
+    .getByText(/qa signoff/i)
+    .first()
+    .waitFor({ state: "visible", timeout: 5000 });
+  await page
+    .getByText(/export const shipWindow = "2026-03-25";/i)
+    .first()
+    .waitFor({ state: "visible", timeout: 5000 });
+  await waitForScreenshotReady(page);
+}
+
+async function openDocumentEditorSlashMenuForCapture(page: Page, docUrl: string): Promise<void> {
+  await openDocumentEditorForCapture(page, docUrl);
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event("nixelo:e2e-open-slash-menu"));
+  });
+  await page.locator("[role='option']").first().waitFor({ state: "visible", timeout: 5000 });
+  await waitForScreenshotReady(page);
+}
+
+async function openDocumentEditorMentionPopoverForCapture(
   page: Page,
-  markdown: string,
-  filename: string,
+  docUrl: string,
 ): Promise<void> {
-  const dialog = await openMarkdownImportPreviewDialog(page, markdown, filename);
-  await page.getByRole("button", { name: /import & replace content/i }).click();
-  await dismissIfOpen(page, dialog);
+  await openDocumentEditorForCapture(page, docUrl);
+  await page.evaluate(() => {
+    window.dispatchEvent(
+      new CustomEvent("nixelo:e2e-set-editor-value", {
+        detail: {
+          value: [
+            {
+              type: "paragraph",
+              children: [
+                { text: "Follow up with " },
+                {
+                  type: "mention_input",
+                  trigger: "@",
+                  children: [{ text: "em" }],
+                },
+              ],
+            },
+          ],
+        },
+      }),
+    );
+  });
+  await page.getByRole("combobox").waitFor({ state: "visible", timeout: 5000 });
+  await page.getByRole("combobox").locator("button").first().waitFor({
+    state: "visible",
+    timeout: 5000,
+  });
+  await waitForScreenshotReady(page);
+}
+
+async function openDocumentEditorFloatingToolbarForCapture(
+  page: Page,
+  docUrl: string,
+): Promise<void> {
+  await openDocumentEditorForCapture(page, docUrl);
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event("nixelo:e2e-open-floating-toolbar"));
+  });
+  await page.getByRole("button", { name: /bold/i }).first().waitFor({
+    state: "visible",
+    timeout: 5000,
+  });
   await waitForScreenshotReady(page);
 }
 
@@ -3395,18 +3459,18 @@ async function screenshotFilledStates(
     "document-editor-mention-popover",
   ];
   if (shouldCaptureAny(p, editorTargets)) {
-    const docId =
+    const baseDocId =
       seed.documentIds?.sprintRetrospectiveNotes ??
       seed.documentIds?.projectRequirements ??
       (await discoverDocumentId(page, orgSlug));
-    if (docId) {
-      const docUrl = ROUTES.documents.detail.build(orgSlug, docId);
-      await takeScreenshot(page, p, "document-editor", docUrl);
+    if (baseDocId) {
+      const baseDocUrl = ROUTES.documents.detail.build(orgSlug, baseDocId);
+      await takeScreenshot(page, p, "document-editor", baseDocUrl);
 
       // Document editor interactive states
       if (shouldCapture(p, "document-editor-move-dialog")) {
         await runCaptureStep("document move dialog", async () => {
-          await openDocumentEditorForCapture(page, docUrl);
+          await openDocumentEditorForCapture(page, baseDocUrl);
           await openDocumentActionsMenu(page);
           await page.getByRole("menuitem", { name: /move to another project/i }).click();
           await page
@@ -3419,8 +3483,8 @@ async function screenshotFilledStates(
       }
 
       if (shouldCapture(p, "document-editor-markdown-preview-modal")) {
-        await runCaptureStep("document markdown preview modal", async () => {
-          await openDocumentEditorForCapture(page, docUrl);
+        await runRequiredCaptureStep("document markdown preview modal", async () => {
+          await openDocumentEditorForCapture(page, baseDocUrl);
           const dialog = await openMarkdownImportPreviewDialog(
             page,
             MARKDOWN_IMPORT_PREVIEW,
@@ -3434,7 +3498,7 @@ async function screenshotFilledStates(
 
       if (shouldCapture(p, "document-editor-favorite")) {
         await runCaptureStep("document favorite state", async () => {
-          await openDocumentEditorForCapture(page, docUrl);
+          await openDocumentEditorForCapture(page, baseDocUrl);
           const toggle = page.getByRole("button", { name: /add to favorites/i }).first();
           await toggle.waitFor({ state: "visible", timeout: 8000 });
           await toggle.click();
@@ -3449,7 +3513,7 @@ async function screenshotFilledStates(
 
       if (shouldCapture(p, "document-editor-sidebar-favorites")) {
         await runCaptureStep("document sidebar favorites", async () => {
-          await openDocumentEditorForCapture(page, docUrl);
+          await openDocumentEditorForCapture(page, baseDocUrl);
           const toggle = page.getByRole("button", { name: /add to favorites/i }).first();
           await toggle.waitFor({ state: "visible", timeout: 8000 });
           await toggle.click();
@@ -3466,9 +3530,64 @@ async function screenshotFilledStates(
         });
       }
 
+      if (shouldCapture(p, "document-editor-rich-blocks")) {
+        await runRequiredCaptureStep("document rich blocks", async () => {
+          await primeDocumentEditorRichContent(page, baseDocUrl);
+          await captureCurrentView(page, p, "document-editor-rich-blocks");
+        });
+      }
+
+      if (shouldCapture(p, "document-editor-color-picker")) {
+        await runRequiredCaptureStep("document color picker", async () => {
+          await primeDocumentEditorRichContent(page, baseDocUrl);
+          await getDocumentEditorEditable(page);
+          await selectDocumentEditorText(page);
+          await waitForAnimation(page);
+          const colorButton = page.getByRole("button", { name: /^text color$/i }).first();
+          await colorButton.waitFor({ state: "visible", timeout: 5000 });
+          await colorButton.evaluate((button: HTMLElement) => {
+            button.click();
+          });
+          await page.getByTitle("Red").waitFor({ state: "visible", timeout: 5000 });
+          await waitForScreenshotReady(page);
+          await captureCurrentView(page, p, "document-editor-color-picker");
+          await page.keyboard.press("Escape");
+          await page.mouse.click(10, 10);
+        });
+      }
+
+      // Slash menu — type "/" at end of content
+      if (shouldCapture(p, "document-editor-slash-menu")) {
+        await runRequiredCaptureStep("document slash menu", async () => {
+          await openDocumentEditorSlashMenuForCapture(page, baseDocUrl);
+          await captureCurrentView(page, p, "document-editor-slash-menu");
+          // Dismiss and undo
+          await page.keyboard.press("Escape");
+        });
+      }
+
+      // Floating toolbar — select text in the editor
+      if (shouldCapture(p, "document-editor-floating-toolbar")) {
+        await runRequiredCaptureStep("document floating toolbar", async () => {
+          await openDocumentEditorFloatingToolbarForCapture(page, baseDocUrl);
+          await captureCurrentView(page, p, "document-editor-floating-toolbar");
+          // Click away to deselect
+          await page.mouse.click(10, 10);
+        });
+      }
+
+      // @mention popover — type "@" in editor
+      if (shouldCapture(p, "document-editor-mention-popover")) {
+        await runRequiredCaptureStep("document mention popover", async () => {
+          await openDocumentEditorMentionPopoverForCapture(page, baseDocUrl);
+          await captureCurrentView(page, p, "document-editor-mention-popover");
+          await page.keyboard.press("Escape");
+        });
+      }
+
       if (shouldCapture(p, "document-editor-locked")) {
         await runCaptureStep("document locked state", async () => {
-          await openDocumentEditorForCapture(page, docUrl);
+          await openDocumentEditorForCapture(page, baseDocUrl);
           await openDocumentActionsMenu(page);
           await page.getByRole("menuitem", { name: /^lock document$/i }).click();
           await page
@@ -3485,124 +3604,6 @@ async function screenshotFilledStates(
             .filter({ hasText: /document locked/i })
             .first()
             .waitFor({ state: "hidden", timeout: 5000 });
-        });
-      }
-
-      if (shouldCapture(p, "document-editor-rich-blocks")) {
-        await runCaptureStep("document rich blocks", async () => {
-          await openDocumentEditorForCapture(page, docUrl);
-          await importMarkdownIntoEditor(page, MARKDOWN_RICH_CONTENT, "release-readiness.md");
-          await page
-            .getByText(/qa signoff/i)
-            .first()
-            .waitFor({ state: "visible", timeout: 5000 });
-          await page
-            .getByText(/export const shipWindow = "2026-03-25";/i)
-            .first()
-            .waitFor({ state: "visible", timeout: 5000 });
-          await waitForScreenshotReady(page);
-          await captureCurrentView(page, p, "document-editor-rich-blocks");
-        });
-      }
-
-      if (shouldCapture(p, "document-editor-color-picker")) {
-        await runCaptureStep("document color picker", async () => {
-          await openDocumentEditorForCapture(page, docUrl);
-          await importMarkdownIntoEditor(page, MARKDOWN_RICH_CONTENT, "release-readiness.md");
-          await getDocumentEditorEditable(page);
-          await selectDocumentEditorText(page);
-          const colorButton = page.getByRole("button", { name: /^text color$/i }).first();
-          await colorButton.waitFor({ state: "visible", timeout: 5000 });
-          await colorButton.click();
-          await page.getByTitle("Red").waitFor({ state: "visible", timeout: 5000 });
-          await waitForScreenshotReady(page);
-          await captureCurrentView(page, p, "document-editor-color-picker");
-          await page.keyboard.press("Escape");
-          await page.mouse.click(10, 10);
-        });
-      }
-
-      // Slash menu — type "/" at end of content
-      if (shouldCapture(p, "document-editor-slash-menu")) {
-        await runCaptureStep("document slash menu", async () => {
-          await openDocumentEditorForCapture(page, docUrl);
-          const anchor = page
-            .getByText(/turn the retrospective decisions into linked issue follow-ups/i)
-            .first();
-          await anchor.waitFor({ state: "visible", timeout: 8000 });
-          await anchor.click();
-          await page.keyboard.press("End");
-          await page.keyboard.press("Enter");
-          await page.keyboard.type("/");
-          // Wait for slash menu options to appear
-          await page
-            .locator("[role='option']")
-            .first()
-            .waitFor({ state: "visible", timeout: 5000 });
-          await waitForScreenshotReady(page);
-          await captureCurrentView(page, p, "document-editor-slash-menu");
-          // Dismiss and undo
-          await page.keyboard.press("Escape");
-          await page.keyboard.press("Backspace"); // remove "/"
-          await page.keyboard.press("Backspace"); // remove newline
-        });
-      }
-
-      // Floating toolbar — select text in the editor
-      if (shouldCapture(p, "document-editor-floating-toolbar")) {
-        await runCaptureStep("document floating toolbar", async () => {
-          // Reload to get clean state
-          await page.goto(`${BASE_URL}${docUrl}`, {
-            waitUntil: "domcontentloaded",
-            timeout: 15000,
-          });
-          await waitForExpectedContent(page, docUrl, "document-editor");
-          await waitForScreenshotReady(page);
-          const anchor = page.getByText(/the team closed the auth refresh/i).first();
-          await anchor.waitFor({ state: "visible", timeout: 8000 });
-          await anchor.click({ clickCount: 3 });
-          // Wait for floating toolbar
-          await page
-            .getByRole("button", { name: /bold/i })
-            .first()
-            .waitFor({ state: "visible", timeout: 5000 });
-          await waitForScreenshotReady(page);
-          await captureCurrentView(page, p, "document-editor-floating-toolbar");
-          // Click away to deselect
-          await page.mouse.click(10, 10);
-        });
-      }
-
-      // @mention popover — type "@" in editor
-      if (shouldCapture(p, "document-editor-mention-popover")) {
-        await runCaptureStep("document mention popover", async () => {
-          // Reload to get clean state
-          await page.goto(`${BASE_URL}${docUrl}`, {
-            waitUntil: "domcontentloaded",
-            timeout: 15000,
-          });
-          await waitForExpectedContent(page, docUrl, "document-editor");
-          await waitForScreenshotReady(page);
-          const anchor = page
-            .getByText(/turn the retrospective decisions into linked issue follow-ups/i)
-            .first();
-          await anchor.waitFor({ state: "visible", timeout: 8000 });
-          await anchor.click();
-          await page.keyboard.press("End");
-          await page.keyboard.press("Enter");
-          await page.keyboard.type("@");
-          // Wait for mention combobox or user list
-          await page
-            .locator("[role='combobox']")
-            .or(page.locator("[role='option']").first())
-            .first()
-            .waitFor({ state: "visible", timeout: 5000 });
-          await waitForScreenshotReady(page);
-          await captureCurrentView(page, p, "document-editor-mention-popover");
-          // Dismiss and undo
-          await page.keyboard.press("Escape");
-          await page.keyboard.press("Backspace"); // remove "@"
-          await page.keyboard.press("Backspace"); // remove newline
         });
       }
     }
@@ -4798,7 +4799,10 @@ async function screenshotIssueInteractiveStates(
     await waitForExpectedContent(page, issuesUrl, "issues", prefix);
     await waitForScreenshotReady(page);
 
-    const toggleBtn = page.getByRole("button", { name: /switch to side panel view/i }).first();
+    const toggleBtn = page
+      .getByTestId(TEST_IDS.NAV.MAIN_CONTENT)
+      .getByRole("button", { name: /switch to side panel view/i })
+      .first();
     await toggleBtn.waitFor({ state: "visible", timeout: 8000 });
     await toggleBtn.click();
     await waitForScreenshotReady(page);
@@ -5197,7 +5201,18 @@ async function run(): Promise<void> {
     for (let attempt = 1; attempt <= 2 && !completed; attempt++) {
       const browser = await launchBrowser();
       try {
-        await captureForConfig(browser, config.viewport, config.theme, orgSlug, seedResult);
+        const configSeedResult = await testUserService.seedScreenshotData(SCREENSHOT_USER.email, {
+          orgSlug,
+        });
+        const effectiveSeedResult =
+          configSeedResult.success && configSeedResult.orgSlug ? configSeedResult : seedResult;
+        await captureForConfig(
+          browser,
+          config.viewport,
+          config.theme,
+          orgSlug,
+          effectiveSeedResult,
+        );
         completed = true;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);

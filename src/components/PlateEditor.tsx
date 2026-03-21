@@ -147,6 +147,14 @@ interface MarkdownImportPreview {
   filename: string;
 }
 
+interface E2EEditorMarkdownEventDetail {
+  markdown: string;
+}
+
+interface E2EEditorValueEventDetail {
+  value: Value;
+}
+
 function PlateEditorLoadingState({ versionsLoaded }: PlateEditorLoadingStateProps) {
   return (
     <Flex direction="column" className="h-full bg-ui-bg">
@@ -547,6 +555,45 @@ function LoadedPlateEditor({ documentId, data }: LoadedPlateEditorProps) {
     null,
   );
   const isEmptyEditor = isEmptyValue(editorSeedValue);
+
+  useEffect(() => {
+    const handleE2EEditorMarkdown = (event: Event) => {
+      if (!(event instanceof CustomEvent)) {
+        return;
+      }
+
+      const detail = event.detail as E2EEditorMarkdownEventDetail | undefined;
+      if (typeof detail?.markdown !== "string") {
+        return;
+      }
+
+      try {
+        replaceEditorValue(markdownToValue(detail.markdown));
+      } catch (error) {
+        showError(error, "Failed to load e2e editor markdown");
+      }
+    };
+
+    const handleE2EEditorValue = (event: Event) => {
+      if (!(event instanceof CustomEvent)) {
+        return;
+      }
+
+      const detail = event.detail as E2EEditorValueEventDetail | undefined;
+      if (!Array.isArray(detail?.value)) {
+        return;
+      }
+
+      replaceEditorValue(detail.value);
+    };
+
+    window.addEventListener("nixelo:e2e-set-editor-markdown", handleE2EEditorMarkdown);
+    window.addEventListener("nixelo:e2e-set-editor-value", handleE2EEditorValue);
+    return () => {
+      window.removeEventListener("nixelo:e2e-set-editor-markdown", handleE2EEditorMarkdown);
+      window.removeEventListener("nixelo:e2e-set-editor-value", handleE2EEditorValue);
+    };
+  }, [replaceEditorValue]);
 
   const {
     handleTitleEdit,

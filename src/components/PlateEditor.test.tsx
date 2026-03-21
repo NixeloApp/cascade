@@ -2,7 +2,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import userEvent from "@testing-library/user-event";
 import type { Value } from "platejs";
 import { Plate, usePlateEditor } from "platejs/react";
-import type { PropsWithChildren } from "react";
+import { act, type PropsWithChildren } from "react";
 import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
@@ -198,6 +198,45 @@ describe("PlateEditor", () => {
     expect(mockShowSuccess).toHaveBeenCalledWith("Imported import.md");
     await waitFor(() => {
       expect(screen.queryByText("Preview Markdown Import")).not.toBeInTheDocument();
+    });
+  });
+
+  it("replaces the editor value when the e2e markdown event is dispatched", async () => {
+    mockQueryResults([loadedDocument, false, false, undefined, "user-1", 0, []]);
+
+    render(<PlateEditor documentId={documentId} />);
+
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent("nixelo:e2e-set-editor-markdown", {
+          detail: { markdown: "# Release Readiness\n\n- Ship it" },
+        }),
+      );
+    });
+
+    await waitFor(() => {
+      expect(mockMarkdownToValue).toHaveBeenCalledWith("# Release Readiness\n\n- Ship it");
+    });
+  });
+
+  it("accepts a direct e2e editor value event without reparsing markdown", async () => {
+    mockQueryResults([loadedDocument, false, false, undefined, "user-1", 0, []]);
+
+    render(<PlateEditor documentId={documentId} />);
+    const markdownCallCount = mockMarkdownToValue.mock.calls.length;
+
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent("nixelo:e2e-set-editor-value", {
+          detail: {
+            value: [{ type: "paragraph", children: [{ text: "Injected state" }] }],
+          },
+        }),
+      );
+    });
+
+    await waitFor(() => {
+      expect(mockMarkdownToValue).toHaveBeenCalledTimes(markdownCallCount);
     });
   });
 });

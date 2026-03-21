@@ -92,6 +92,23 @@ function getSelectionRect(): DOMRect | null {
   return rect;
 }
 
+function getFloatingToolbarFallbackRect(): DOMRect | null {
+  const editable = document.querySelector("[contenteditable='true']");
+  if (!(editable instanceof HTMLElement)) {
+    return null;
+  }
+
+  const block =
+    editable.querySelector("p, li, h1, h2, h3, h4, h5, h6, [data-slate-node='element']") ??
+    editable;
+  if (!(block instanceof HTMLElement)) {
+    return null;
+  }
+
+  const rect = block.getBoundingClientRect();
+  return new DOMRect(rect.left + rect.width / 2, rect.top + 24, 1, 1);
+}
+
 /**
  * Floating toolbar component
  * Must be rendered inside Plate context
@@ -118,6 +135,23 @@ export function FloatingToolbar() {
       setOpen(false);
     }
   }, [selection]);
+
+  useEffect(() => {
+    const handleE2EOpenFloatingToolbar = () => {
+      const rect = getFloatingToolbarFallbackRect();
+      if (!rect) {
+        return;
+      }
+
+      setAnchorRect(rect);
+      setOpen(true);
+    };
+
+    window.addEventListener("nixelo:e2e-open-floating-toolbar", handleE2EOpenFloatingToolbar);
+    return () => {
+      window.removeEventListener("nixelo:e2e-open-floating-toolbar", handleE2EOpenFloatingToolbar);
+    };
+  }, []);
 
   // Handle link insertion
   const handleLink = () => {

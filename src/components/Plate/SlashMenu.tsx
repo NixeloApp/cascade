@@ -290,6 +290,23 @@ function detectSlashTrigger(): SlashTriggerResult {
   };
 }
 
+function getSlashMenuFallbackRect(): DOMRect | null {
+  const editable = document.querySelector("[contenteditable='true']");
+  if (!(editable instanceof HTMLElement)) {
+    return null;
+  }
+
+  const block =
+    editable.querySelector("p, li, h1, h2, h3, h4, h5, h6, [data-slate-node='element']") ??
+    editable;
+  if (!(block instanceof HTMLElement)) {
+    return null;
+  }
+
+  const rect = block.getBoundingClientRect();
+  return new DOMRect(rect.left + 24, rect.top + Math.min(rect.height, 32), 1, 1);
+}
+
 /**
  * Delete slash command text from current position back to the slash
  * Returns the number of characters deleted, or 0 if nothing deleted
@@ -364,6 +381,24 @@ export function SlashMenu() {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [open]);
+
+  useEffect(() => {
+    const handleE2EOpenSlashMenu = () => {
+      const rect = getSlashMenuFallbackRect();
+      if (!rect) {
+        return;
+      }
+
+      setSearch("");
+      setAnchorRect(rect);
+      setOpen(true);
+    };
+
+    window.addEventListener("nixelo:e2e-open-slash-menu", handleE2EOpenSlashMenu);
+    return () => {
+      window.removeEventListener("nixelo:e2e-open-slash-menu", handleE2EOpenSlashMenu);
+    };
+  }, []);
 
   // Filter items based on search
   const filteredItems = SLASH_MENU_ITEMS.filter(

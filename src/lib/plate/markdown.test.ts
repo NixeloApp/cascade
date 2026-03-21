@@ -1,9 +1,18 @@
 import type { Value } from "platejs";
-import { describe, expect, it } from "vitest";
-import { markdownToValue, stripFrontmatter, valueToMarkdown } from "./markdown";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  markdownToValue,
+  stripFrontmatter,
+  triggerMarkdownImport,
+  valueToMarkdown,
+} from "./markdown";
 import { NODE_TYPES } from "./plugins";
 
 describe("Plate Markdown utilities", () => {
+  beforeEach(() => {
+    window.__NIXELO_E2E_MARKDOWN_IMPORT__ = null;
+  });
+
   describe("stripFrontmatter", () => {
     it("removes YAML frontmatter from markdown", () => {
       const markdown = `---
@@ -20,6 +29,29 @@ date: 2024-01-01
       const markdown = "# Hello World\n\nSome content.";
       const result = stripFrontmatter(markdown);
       expect(result).toBe(markdown);
+    });
+  });
+
+  describe("triggerMarkdownImport", () => {
+    it("consumes the queued e2e markdown import before falling back to the file picker", () => {
+      const onSelect = vi.fn();
+      const clickSpy = vi.spyOn(HTMLInputElement.prototype, "click").mockImplementation(() => {});
+
+      window.__NIXELO_E2E_MARKDOWN_IMPORT__ = {
+        markdown: "# Release Readiness",
+        filename: "release-readiness.md",
+      };
+
+      triggerMarkdownImport(onSelect);
+
+      expect(clickSpy).not.toHaveBeenCalled();
+      expect(onSelect).toHaveBeenCalledOnce();
+      const file = onSelect.mock.calls[0]?.[0];
+      expect(file).toBeInstanceOf(File);
+      expect(file.name).toBe("release-readiness.md");
+      expect(window.__NIXELO_E2E_MARKDOWN_IMPORT__).toBeNull();
+
+      clickSpy.mockRestore();
     });
   });
 
