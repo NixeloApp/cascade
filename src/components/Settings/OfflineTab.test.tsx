@@ -39,6 +39,11 @@ function createQueueItem(
 }
 
 describe("OfflineTab", () => {
+  const originalServiceWorkerDescriptor = Object.getOwnPropertyDescriptor(
+    navigator,
+    "serviceWorker",
+  );
+
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseOnlineStatus.mockReturnValue(true);
@@ -58,6 +63,17 @@ describe("OfflineTab", () => {
     });
   });
 
+  afterEach(() => {
+    vi.unstubAllGlobals();
+
+    if (originalServiceWorkerDescriptor) {
+      Object.defineProperty(navigator, "serviceWorker", originalServiceWorkerDescriptor);
+      return;
+    }
+
+    Reflect.deleteProperty(navigator, "serviceWorker");
+  });
+
   it("renders the online summary and feature list without a sync queue", () => {
     render(<OfflineTab />);
 
@@ -70,9 +86,28 @@ describe("OfflineTab", () => {
     expect(screen.getByText("Never")).toBeInTheDocument();
     expect(screen.getByText("Service Worker Support")).toBeInTheDocument();
     expect(screen.getAllByText("Unavailable")).toHaveLength(2);
+    expect(screen.getByText("Service worker features are unavailable here")).toBeInTheDocument();
     expect(screen.getByText("Current Verified Capabilities")).toBeInTheDocument();
     expect(screen.getByText("Local Queue Visibility")).toBeInTheDocument();
     expect(screen.queryByText("Local Offline Queue")).not.toBeInTheDocument();
+  });
+
+  it("warns when background sync is unavailable even if service workers exist", () => {
+    Object.defineProperty(navigator, "serviceWorker", {
+      configurable: true,
+      value: {},
+    });
+    vi.stubGlobal("ServiceWorkerRegistration", class ServiceWorkerRegistration {});
+
+    render(<OfflineTab />);
+
+    expect(screen.getByText("Detected")).toBeInTheDocument();
+    expect(screen.getByText("Background sync is best-effort only")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Queued changes replay only while the app is open: on reconnect, on startup, or when you use Process Queue manually.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("shows the loading placeholder for pending changes while sync status loads", () => {

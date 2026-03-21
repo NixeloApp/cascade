@@ -12,6 +12,7 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showInfo } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useOfflineQueue, useOnlineStatus } from "../../hooks/useOffline";
+import { Alert, AlertDescription, AlertTitle } from "../ui/Alert";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
@@ -55,6 +56,27 @@ function formatLastSuccessfulReplay(lastSuccessfulReplayAt: number | null): stri
     : new Date(lastSuccessfulReplayAt).toLocaleString();
 }
 
+function getCapabilityLimitCopy(
+  hasServiceWorkerSupport: boolean,
+  hasBackgroundSyncSupport: boolean,
+): { title: string; body: string } | null {
+  if (!hasServiceWorkerSupport) {
+    return {
+      title: "Service worker features are unavailable here",
+      body: "This browser cannot register the app worker, so offline fallback, install prompts, and push features will not work in this session.",
+    };
+  }
+
+  if (!hasBackgroundSyncSupport) {
+    return {
+      title: "Background sync is best-effort only",
+      body: "Queued changes replay only while the app is open: on reconnect, on startup, or when you use Process Queue manually.",
+    };
+  }
+
+  return null;
+}
+
 /**
  * Offline mode settings tab
  * Extracted from Settings for better organization
@@ -82,6 +104,10 @@ export function OfflineTab() {
     typeof ServiceWorkerRegistration !== "undefined" &&
     hasServiceWorkerSupport &&
     "sync" in ServiceWorkerRegistration.prototype;
+  const capabilityLimitCopy = getCapabilityLimitCopy(
+    hasServiceWorkerSupport,
+    hasBackgroundSyncSupport,
+  );
 
   const handleRefreshQueue = async () => {
     setIsRefreshing(true);
@@ -227,6 +253,12 @@ export function OfflineTab() {
               </Stack>
             </div>
           </Grid>
+          {capabilityLimitCopy && (
+            <Alert variant="warning">
+              <AlertTitle>{capabilityLimitCopy.title}</AlertTitle>
+              <AlertDescription>{capabilityLimitCopy.body}</AlertDescription>
+            </Alert>
+          )}
         </Stack>
       </Card>
 

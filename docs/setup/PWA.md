@@ -180,6 +180,14 @@ The app now binds `beforeinstallprompt` from the root app shell in production, a
 - Automatic install prompt after engagement criteria met
 - Custom install button can trigger prompt programmatically
 
+## Background Sync Reality
+
+Background Sync is not guaranteed across browsers.
+
+- If the browser exposes `SyncManager`, the app can try to schedule replay work through the registered service worker.
+- If Background Sync is unavailable, queued changes are still replayable, but only while the app is open: on authenticated startup, when connectivity returns, or when the user presses `Process Queue` in Settings.
+- If service workers are unavailable entirely, offline fallback, install prompting, and push features should be treated as unsupported in that session.
+
 ## Production Deployment
 
 The service worker only registers in production builds to avoid caching issues during development.
