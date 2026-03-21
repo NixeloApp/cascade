@@ -240,10 +240,10 @@ export class ProjectsPage extends BasePage {
     this.analyticsCompletedSprintsMetric = page.getByTestId(
       TEST_IDS.ANALYTICS.METRIC_COMPLETED_SPRINTS,
     );
-    this.analyticsIssuesByStatusChart = page.getByText("Issues by Status");
-    this.analyticsIssuesByTypeChart = page.getByText("Issues by Type");
-    this.analyticsIssuesByPriorityChart = page.getByText("Issues by Priority");
-    this.analyticsTeamVelocityChart = page.getByText("Team Velocity (Last 10 Sprints)");
+    this.analyticsIssuesByStatusChart = page.getByTestId(TEST_IDS.ANALYTICS.CHART_STATUS);
+    this.analyticsIssuesByTypeChart = page.getByTestId(TEST_IDS.ANALYTICS.CHART_TYPE);
+    this.analyticsIssuesByPriorityChart = page.getByTestId(TEST_IDS.ANALYTICS.CHART_PRIORITY);
+    this.analyticsTeamVelocityChart = page.getByTestId(TEST_IDS.ANALYTICS.CHART_VELOCITY);
     this.analyticsNoCompletedSprintsMessage = page.getByText("No completed sprints yet");
     this.roadmapViewToggle = page.getByRole("group").filter({ hasText: /months|weeks/i });
     this.roadmapEpicFilter = page.getByRole("combobox").filter({ hasText: /epic|all/i });

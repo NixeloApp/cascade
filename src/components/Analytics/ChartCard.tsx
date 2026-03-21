@@ -9,6 +9,7 @@ export function ChartCard({
   title,
   description,
   emptyState,
+  testId,
   children,
 }: {
   title: string | ReactNode;
@@ -18,10 +19,16 @@ export function ChartCard({
     description: string;
     icon?: string | LucideIcon;
   };
+  testId?: string;
   children: React.ReactNode;
 }) {
   return (
-    <AnalyticsSection title={title} description={description} contentClassName="h-64">
+    <AnalyticsSection
+      title={title}
+      description={description}
+      contentClassName="h-64"
+      data-testid={testId}
+    >
       {emptyState ? (
         <EmptyState
           icon={emptyState.icon ?? BarChart3}

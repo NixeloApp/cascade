@@ -541,7 +541,7 @@ export class SettingsPage extends BasePage {
     await expect(this.userManagementHeading).toBeVisible();
     await expect(this.adminUsersTab).toBeVisible();
     await this.adminUsersTab.click();
-    await expect(this.adminUsersTab).toHaveAttribute("aria-selected", "true");
+    await expect(this.adminUsersTab).toHaveAttribute("data-state", "on");
     await expect(this.platformUsersTable).toBeVisible();
   }
 

@@ -286,6 +286,7 @@ export function AnalyticsDashboard({ projectId, projectName, projectKey }: Props
           <ChartCard
             title="Issues by Status"
             description="Where work is currently pooling across the workflow."
+            testId={TEST_IDS.ANALYTICS.CHART_STATUS}
             emptyState={
               statusChartData.length === 0
                 ? {
@@ -302,6 +303,7 @@ export function AnalyticsDashboard({ projectId, projectName, projectKey }: Props
           <ChartCard
             title="Issues by Type"
             description="The current mix of tasks, bugs, stories, and epics."
+            testId={TEST_IDS.ANALYTICS.CHART_TYPE}
             emptyState={
               typeChartData.length === 0
                 ? {
@@ -318,6 +320,7 @@ export function AnalyticsDashboard({ projectId, projectName, projectKey }: Props
           <ChartCard
             title="Issues by Priority"
             description="Whether urgency is clustering in one part of the backlog."
+            testId={TEST_IDS.ANALYTICS.CHART_PRIORITY}
             emptyState={
               priorityChartData.length === 0
                 ? {
@@ -333,6 +336,7 @@ export function AnalyticsDashboard({ projectId, projectName, projectKey }: Props
           <ChartCard
             title="Team Velocity"
             description="Completed sprint throughput over the last 10 sprints."
+            testId={TEST_IDS.ANALYTICS.CHART_VELOCITY}
             emptyState={
               velocityChartData.length === 0
                 ? {

@@ -312,6 +312,11 @@ export const TEST_IDS = {
     PAGE: "analytics-page",
     /** @see src/components/AnalyticsDashboard.tsx - page header */
     PAGE_HEADER: "analytics-page-header",
+    /** @see src/components/AnalyticsDashboard.tsx - chart cards */
+    CHART_STATUS: "analytics-chart-status",
+    CHART_TYPE: "analytics-chart-type",
+    CHART_PRIORITY: "analytics-chart-priority",
+    CHART_VELOCITY: "analytics-chart-velocity",
     /** Metric card labels */
     METRIC_TOTAL_ISSUES: "analytics-metric-total-issues",
     METRIC_UNASSIGNED: "analytics-metric-unassigned",
