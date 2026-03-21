@@ -1,4 +1,5 @@
 import { api } from "@convex/_generated/api";
+import { useState } from "react";
 import { useAuthenticatedMutation } from "@/hooks/useConvexHelpers";
 import { queueUserSettingsUpdate, type UserSettingsUpdateArgs } from "@/lib/offlineUserSettings";
 import { showInfo } from "@/lib/toast";
@@ -13,12 +14,8 @@ interface OfflineUserSettingsUpdateResult {
   queued: boolean;
 }
 
-function canQueueOfflineReplay(isOnline: boolean): boolean {
-  return !isOnline || (typeof navigator !== "undefined" && navigator.onLine === false);
-}
-
 function shouldQueueOfflineUpdate(allowOfflineQueue: boolean, isOnline: boolean): boolean {
-  return allowOfflineQueue && canQueueOfflineReplay(isOnline);
+  return allowOfflineQueue && !isOnline;
 }
 
 async function queueUpdateAndNotify(
@@ -32,9 +29,11 @@ async function queueUpdateAndNotify(
   return { queued: true };
 }
 
+/** Mutation wrapper that queues user-settings updates to IndexedDB when offline. */
 export function useOfflineUserSettingsUpdate() {
   const isOnline = useOnlineStatus();
   const { mutate, canAct, isAuthLoading } = useAuthenticatedMutation(api.userSettings.update);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const update = async (
     args: UserSettingsUpdateArgs,
@@ -46,6 +45,7 @@ export function useOfflineUserSettingsUpdate() {
       return queueUpdateAndNotify(args, options.queuedMessage);
     }
 
+    setIsUpdating(true);
     try {
       await mutate(args);
       return { queued: false };
@@ -55,12 +55,18 @@ export function useOfflineUserSettingsUpdate() {
       }
 
       throw error;
+    } finally {
+      setIsUpdating(false);
     }
   };
+
+  const isLoading = isUpdating || isAuthLoading;
 
   return {
     update,
     isOnline,
+    isUpdating,
+    isLoading,
     canAct,
     isAuthLoading,
   };

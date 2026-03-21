@@ -7,10 +7,12 @@ export const USER_SETTINGS_OFFLINE_MUTATION_TYPE = "userSettings.update";
 
 export type UserSettingsUpdateArgs = FunctionArgs<typeof api.userSettings.update>;
 
+/** Queues a user-settings mutation to IndexedDB for offline replay. */
 export async function queueUserSettingsUpdate(args: UserSettingsUpdateArgs): Promise<number> {
   return queueOfflineMutation(USER_SETTINGS_OFFLINE_MUTATION_TYPE, args);
 }
 
+/** Replays a queued user-settings mutation through the live Convex client. */
 export async function replayUserSettingsUpdate(
   client: ConvexReactClient,
   args: UserSettingsUpdateArgs,

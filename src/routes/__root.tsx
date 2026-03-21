@@ -1,6 +1,6 @@
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { createRootRoute, Outlet } from "@tanstack/react-router";
-import { ConvexReactClient, useConvex, useConvexAuth } from "convex/react";
+import { ConvexReactClient, useConvex } from "convex/react";
 import { CloudOff } from "lucide-react";
 import { useEffect } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Flex } from "@/components/ui/Flex";
 import { IconCircle } from "@/components/ui/IconCircle";
 import { Toaster } from "@/components/ui/Sonner";
+import { useAuthReady } from "@/hooks/useConvexHelpers";
 import { processOfflineQueue, registerOfflineReplayHandler } from "@/lib/offline";
 import {
   replayUserSettingsUpdate,
@@ -122,10 +123,10 @@ function RootComponent() {
 
 function OfflineReplayBootstrap() {
   const convexClient = useConvex();
-  const { isAuthenticated, isLoading } = useConvexAuth();
+  const { isAuthenticated, isAuthLoading } = useAuthReady();
 
   useEffect(() => {
-    if (isLoading || !isAuthenticated) {
+    if (isAuthLoading || !isAuthenticated) {
       return;
     }
 
@@ -133,16 +134,6 @@ function OfflineReplayBootstrap() {
       USER_SETTINGS_OFFLINE_MUTATION_TYPE,
       (args) => replayUserSettingsUpdate(convexClient, args),
     );
-
-    return () => {
-      unregisterUserSettingsReplay();
-    };
-  }, [convexClient, isAuthenticated, isLoading]);
-
-  useEffect(() => {
-    if (isLoading || !isAuthenticated) {
-      return;
-    }
 
     const flushQueue = () => {
       processOfflineQueue().catch((error: unknown) => {
@@ -158,9 +149,10 @@ function OfflineReplayBootstrap() {
 
     window.addEventListener("online", handleOnline);
     return () => {
+      unregisterUserSettingsReplay();
       window.removeEventListener("online", handleOnline);
     };
-  }, [isAuthenticated, isLoading]);
+  }, [convexClient, isAuthenticated, isAuthLoading]);
 
   return null;
 }

@@ -164,9 +164,9 @@ export function OfflineTab() {
           <Flex gap="lg" align="center">
             <div className={cn("p-2", isOnline ? "bg-status-success" : "bg-status-error")}>
               {isOnline ? (
-                <Wifi className="h-6 w-6 text-brand-foreground" />
+                <Wifi className="size-6 text-brand-foreground" />
               ) : (
-                <WifiOff className="h-6 w-6 text-brand-foreground" />
+                <WifiOff className="size-6 text-brand-foreground" />
               )}
             </div>
             <Stack gap="xs">
@@ -329,7 +329,7 @@ export function OfflineTab() {
                 onClick={handleRefreshQueue}
                 isLoading={isRefreshing}
               >
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <Icon icon={RefreshCw} size="sm" />
                 Refresh Queue
               </Button>
             </Flex>
@@ -341,40 +341,40 @@ export function OfflineTab() {
                   onClick={handleProcessQueue}
                   isLoading={isProcessingQueue}
                 >
-                  <RefreshCw className="h-4 w-4 mr-2" />
+                  <Icon icon={RefreshCw} size="sm" />
                   Process Queue
                 </Button>
               </Flex>
             )}
             <Grid cols={1} colsSm={3} gap="md">
-              <div className="p-3 bg-ui-bg-secondary">
+              <Card variant="section" padding="sm">
                 <Stack gap="xs">
                   <Typography variant="small" color="secondary">
                     Pending
                   </Typography>
                   <Typography variant="label">{pendingCount}</Typography>
                 </Stack>
-              </div>
-              <div className="p-3 bg-ui-bg-secondary">
+              </Card>
+              <Card variant="section" padding="sm">
                 <Stack gap="xs">
                   <Typography variant="small" color="secondary">
                     Syncing
                   </Typography>
                   <Typography variant="label">{syncingCount}</Typography>
                 </Stack>
-              </div>
-              <div className="p-3 bg-ui-bg-secondary">
+              </Card>
+              <Card variant="section" padding="sm">
                 <Stack gap="xs">
                   <Typography variant="small" color="secondary">
                     Failed
                   </Typography>
                   <Typography variant="label">{failedCount}</Typography>
                 </Stack>
-              </div>
+              </Card>
             </Grid>
             <Stack gap="sm">
               {queue.slice(0, 5).map((item) => (
-                <div key={item.id} className="p-2 bg-ui-bg-secondary">
+                <Card key={item.id} variant="section" padding="sm">
                   <Stack gap="sm">
                     <Flex justify="between" align="center">
                       <Stack gap="none">
@@ -404,7 +404,7 @@ export function OfflineTab() {
                           onClick={() => handleRetryMutation(item.id ?? 0)}
                           isLoading={activeMutationId === item.id}
                         >
-                          <RotateCcw className="h-4 w-4 mr-2" />
+                          <Icon icon={RotateCcw} size="sm" />
                           Retry
                         </Button>
                         <Button
@@ -413,13 +413,13 @@ export function OfflineTab() {
                           onClick={() => handleDeleteMutation(item.id ?? 0)}
                           isLoading={activeMutationId === item.id}
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
+                          <Icon icon={Trash2} size="sm" />
                           Remove
                         </Button>
                       </Flex>
                     )}
                   </Stack>
-                </div>
+                </Card>
               ))}
               {queue.length > 5 && (
                 <Typography variant="small" color="tertiary" className="text-center pt-2">

@@ -50,6 +50,8 @@ describe("DashboardCustomizeModal", () => {
     mockUseOfflineUserSettingsUpdate.mockReturnValue({
       update: mockUpdateSettings,
       isOnline: true,
+      isUpdating: false,
+      isLoading: false,
       canAct: true,
       isAuthLoading: false,
     });

@@ -9,7 +9,7 @@ const serviceWorkerController = {
 };
 
 vi.mock("@convex/lib/timeUtils", () => ({
-  HOUR: 60 * 60 * 1000,
+  HOUR: 3_600_000,
 }));
 
 describe("serviceWorker helpers", () => {
