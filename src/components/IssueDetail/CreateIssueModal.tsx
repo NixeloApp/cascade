@@ -27,7 +27,15 @@ import { Input, Select } from "@/components/ui/form";
 import { Grid } from "@/components/ui/Grid";
 import { Icon } from "@/components/ui/Icon";
 import { IssueLabelChip } from "@/components/ui/IssueLabelChip";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
+import {
+  Popover,
+  PopoverBody,
+  PopoverContent,
+  PopoverFooter,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/Popover";
 import { SelectItem } from "@/components/ui/Select";
 import { Stack } from "@/components/ui/Stack";
 import { Switch } from "@/components/ui/Switch";
@@ -302,9 +310,11 @@ function CreateIssueLabelsSection({
               <span className="ml-1">New</span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-64">
-            <Stack gap="sm">
-              <Typography variant="label">Create Label</Typography>
+          <PopoverContent align="start" padding="none" className="w-64">
+            <PopoverHeader>
+              <PopoverTitle>Create Label</PopoverTitle>
+            </PopoverHeader>
+            <PopoverBody className="space-y-3">
               <Input
                 placeholder="Label name"
                 value={newLabelName}
@@ -318,26 +328,26 @@ function CreateIssueLabelsSection({
                 autoFocus
               />
               <ColorPicker value={newLabelColor} onChange={onNewLabelColorChange} label="Color" />
-              <Flex justify="end" gap="sm">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => onCreateOpenChange(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={onCreateLabel}
-                  disabled={!newLabelName.trim()}
-                  isLoading={isCreatingLabel}
-                >
-                  Create
-                </Button>
-              </Flex>
-            </Stack>
+            </PopoverBody>
+            <PopoverFooter>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => onCreateOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={onCreateLabel}
+                disabled={!newLabelName.trim()}
+                isLoading={isCreatingLabel}
+              >
+                Create
+              </Button>
+            </PopoverFooter>
           </PopoverContent>
         </Popover>
       </Flex>
@@ -1168,7 +1178,7 @@ export function CreateIssueModal({
 
         <form.Subscribe selector={(state) => state.isSubmitting}>
           {(isSubmitting) => (
-            <Flex align="center" justify="between" className="pt-4">
+            <Flex align="center" justify="between">
               <Switch
                 id="create-another"
                 checked={createAnother}

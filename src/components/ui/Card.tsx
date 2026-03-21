@@ -256,12 +256,6 @@ const cardRecipeVariants = cva("", {
         "rounded-full border-transparent bg-brand-ring px-2 text-xs font-medium text-brand-foreground shadow-none",
       roadmapMonthHeaderCell:
         "rounded-none border-y-0 border-r-0 border-l border-ui-border bg-transparent px-2 py-0 shadow-none",
-      notificationPanelHeader:
-        "sticky top-0 rounded-none border-x-0 border-t-0 bg-ui-bg shadow-none",
-      notificationPanelSectionHeader:
-        "sticky top-0 rounded-none border-x-0 border-t-0 bg-ui-bg shadow-none",
-      notificationPanelFooter:
-        "rounded-none border-x-0 border-b-0 border-t border-ui-border bg-ui-bg shadow-none",
       notificationRow:
         "rounded-none border-x-0 border-t-0 bg-ui-bg shadow-none hover:bg-ui-bg-secondary focus-within:bg-ui-bg-secondary",
       notificationRowUnread:
@@ -431,8 +425,6 @@ const cardRecipeVariants = cva("", {
         "rounded-none border-x-0 border-t-0 border-b border-ui-border-secondary bg-transparent shadow-none hover:bg-ui-bg-secondary",
       sprintWorkloadRowBordered:
         "rounded-none border-x-0 border-b-0 border-t border-ui-border bg-transparent shadow-none hover:bg-ui-bg-secondary",
-      issueDetailSheetHeader:
-        "rounded-none border-x-0 border-t-0 border-b border-ui-border bg-ui-bg shadow-none",
       issueDetailLayoutShell: "rounded-lg border-ui-border bg-ui-bg-elevated shadow-card",
       issueMetadataRow: "rounded-none border-transparent bg-transparent px-0 py-1 shadow-none",
       eventDetailSection:

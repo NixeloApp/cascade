@@ -30,7 +30,6 @@ These are still only partially automated and need explicit cleanup/review:
 - [ ] icon tone/color consistency -- shared semantic icon tones should read as one system, without one-off raw `text-*` icon overrides drifting across pages
 - [ ] remaining raw Tailwind baseline shrink as touched files are cleaned up
 - [ ] shared shell discipline -- stop panel/card nesting and other accidental composition patterns that make surfaces feel inconsistent
-- [ ] modal, drawer, popover, and dropdown content rhythm -- spacing, heading treatment, action rows, and empty/error states should read as one system
 - [ ] "looks polished but not like our product" review pass -- screenshots should catch when a surface is visually coherent but still too custom, decorative, or unlike the real app
 
 ## Done When

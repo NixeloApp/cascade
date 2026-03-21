@@ -14,6 +14,12 @@ import type * as React from "react";
 import { TEST_IDS } from "@/lib/test-ids";
 import { cn } from "@/lib/utils";
 import { Flex } from "./Flex";
+import {
+  overlayDescriptionVariants,
+  overlayDismissButtonClassName,
+  overlaySectionVariants,
+  overlayTitleVariants,
+} from "./OverlayChrome";
 
 const dialogVariants = cva(
   "fixed inset-x-3 top-3 bottom-3 z-50 flex flex-col overscroll-contain overflow-hidden origin-center [perspective:800px] data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out sm:top-1/2 sm:right-auto sm:bottom-auto sm:left-1/2 sm:w-full sm:max-w-dialog-mobile sm:-translate-x-1/2 sm:-translate-y-1/2",
@@ -48,31 +54,6 @@ const dialogSurfaceVariants = cva(
     },
   },
 );
-
-const dialogSectionVariants = cva("", {
-  variants: {
-    recipe: {
-      default: "",
-      command: "",
-    },
-    slot: {
-      header: "border-b border-ui-border-secondary/60 px-4 py-4 sm:px-6 sm:py-5",
-      body: "min-h-0 flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6",
-      footer:
-        "border-t border-ui-border-secondary/60 px-4 py-4 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:px-6",
-    },
-  },
-  compoundVariants: [
-    {
-      recipe: "command",
-      slot: "body",
-      className: "min-h-0 flex-1 overflow-hidden p-0",
-    },
-  ],
-  defaultVariants: {
-    recipe: "default",
-  },
-});
 
 // =============================================================================
 // Dialog - Clean API with required title/description
@@ -159,17 +140,17 @@ function Dialog({
             direction="column"
             gap="xs"
             className={cn(
-              dialogSectionVariants({ recipe, slot: "header" }),
+              overlaySectionVariants({ surface: "modal", slot: "header" }),
               "pr-10 text-center sm:text-left",
               headerClassName,
             )}
           >
-            <DialogPrimitive.Title className="text-xl leading-none font-semibold tracking-tight text-ui-text">
+            <DialogPrimitive.Title className={overlayTitleVariants({ surface: "modal" })}>
               {title}
             </DialogPrimitive.Title>
             <DialogPrimitive.Description
               className={cn(
-                "max-w-2xl text-sm leading-6",
+                overlayDescriptionVariants({ surface: "modal" }),
                 description ? "text-ui-text-secondary" : "sr-only",
               )}
             >
@@ -180,8 +161,9 @@ function Dialog({
           {/* Content */}
           <div
             className={cn(
-              "flex min-h-0 flex-1 flex-col",
-              dialogSectionVariants({ recipe, slot: "body" }),
+              "flex flex-col",
+              overlaySectionVariants({ surface: "modal", slot: "body" }),
+              recipe === "command" ? "overflow-hidden p-0" : "px-4 pb-4 sm:px-6 sm:pb-6",
               bodyClassName,
             )}
           >
@@ -191,7 +173,10 @@ function Dialog({
           {/* Footer */}
           {footer && (
             <Flex
-              className={cn(dialogSectionVariants({ recipe, slot: "footer" }), footerClassName)}
+              className={cn(
+                overlaySectionVariants({ surface: "modal", slot: "footer" }),
+                footerClassName,
+              )}
             >
               {footer}
             </Flex>
@@ -199,7 +184,7 @@ function Dialog({
 
           {/* Close button */}
           {showCloseButton && (
-            <DialogPrimitive.Close className="absolute top-4 right-4 inline-flex h-8 w-8 items-center justify-center rounded-full border border-ui-border-secondary/70 bg-ui-bg-elevated/90 text-ui-text-secondary shadow-soft transition-all hover:border-ui-border-secondary hover:bg-ui-bg-soft hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-brand-ring focus:ring-offset-2 disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
+            <DialogPrimitive.Close className={overlayDismissButtonClassName}>
               <XIcon />
               <span className="sr-only">Close</span>
             </DialogPrimitive.Close>

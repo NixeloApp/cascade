@@ -7,7 +7,7 @@
 
 import type { Id } from "@convex/_generated/dataModel";
 import type { ReactNode } from "react";
-import { Flex, FlexItem } from "@/components/ui/Flex";
+import { Flex } from "@/components/ui/Flex";
 import { Stack } from "@/components/ui/Stack";
 import { useOrganization } from "@/hooks/useOrgContext";
 import { Check, Copy } from "@/lib/icons";
@@ -16,7 +16,6 @@ import { TEST_IDS } from "@/lib/test-ids";
 import { IssueDetailLayout, useIssueDetail } from "./IssueDetail";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
-import { Card } from "./ui/Card";
 import { Icon } from "./ui/Icon";
 import { Sheet } from "./ui/Sheet";
 import { Skeleton, SkeletonText } from "./ui/Skeleton";
@@ -48,15 +47,14 @@ export function IssueDetailSheet({
         description="Loading content..."
         side="right"
         layout="panel"
+        bodyClassName="px-6 pb-6"
         className="w-full sm:max-w-xl lg:max-w-2xl"
       >
-        <Card padding="lg" variant="ghost" radius="none">
-          <Stack as="output" aria-live="polite" aria-busy="true" gap="lg">
-            <span className="sr-only">Loading...</span>
-            <Skeleton className="h-8 w-3/4" />
-            <SkeletonText lines={2} />
-          </Stack>
-        </Card>
+        <Stack as="output" aria-live="polite" aria-busy="true" gap="lg">
+          <span className="sr-only">Loading...</span>
+          <Skeleton className="h-8 w-3/4" />
+          <SkeletonText lines={2} />
+        </Stack>
       </Sheet>
     );
   }
@@ -65,11 +63,10 @@ export function IssueDetailSheet({
 
   // Custom header with issue metadata
   const header = (
-    <Card recipe="issueDetailSheetHeader" padding="lg" radius="none">
-      {/* Issue key and priority */}
-      <Flex align="center" gap="sm">
+    <Stack gap="md">
+      <Flex align="center" gap="sm" wrap>
         <Icon icon={ISSUE_TYPE_ICONS[issue.type]} size="lg" />
-        <Flex align="center" gap="xs">
+        <Flex align="center" gap="xs" wrap>
           <Typography variant="mono">{issue.key}</Typography>
           <Tooltip content={detail.hasCopied ? "Copied!" : "Copy issue key"}>
             <Button
@@ -78,11 +75,11 @@ export function IssueDetailSheet({
               onClick={detail.handleCopyKey}
               aria-label="Copy issue key"
             >
-              {detail.hasCopied ? (
-                <Check className="w-3.5 h-3.5 text-status-success" />
-              ) : (
-                <Copy className="w-3.5 h-3.5" />
-              )}
+              <Icon
+                icon={detail.hasCopied ? Check : Copy}
+                size="xsPlus"
+                tone={detail.hasCopied ? "success" : "secondary"}
+              />
             </Button>
           </Tooltip>
           <Badge size="md" priorityTone={getPriorityBadgeTone(issue.priority)}>
@@ -90,19 +87,17 @@ export function IssueDetailSheet({
           </Badge>
         </Flex>
       </Flex>
-      {/* Issue title */}
-      <Typography as="h2" variant="h5">
-        {issue.title}
-      </Typography>
-      {/* Edit button */}
-      {canEdit && !detail.isEditing && (
-        <Flex>
+      <Flex align="start" justify="between" gap="md" wrap>
+        <Typography as="h2" variant="h5" className="max-w-3xl">
+          {issue.title}
+        </Typography>
+        {canEdit && !detail.isEditing && (
           <Button variant="ghost" size="sm" onClick={detail.handleEdit}>
             Edit
           </Button>
-        </Flex>
-      )}
-    </Card>
+        )}
+      </Flex>
+    </Stack>
   );
 
   return (
@@ -114,14 +109,11 @@ export function IssueDetailSheet({
       side="right"
       layout="panel"
       header={header}
+      bodyClassName="p-0"
       className="w-full sm:max-w-xl lg:max-w-2xl"
       data-testid={TEST_IDS.ISSUE.DETAIL_MODAL}
     >
-      <FlexItem flex="1" className="min-h-0 overflow-y-auto">
-        <Card padding="lg" variant="ghost" radius="none">
-          <IssueDetailLayout detail={detail} billingEnabled={billingEnabled} canEdit={canEdit} />
-        </Card>
-      </FlexItem>
+      <IssueDetailLayout detail={detail} billingEnabled={billingEnabled} canEdit={canEdit} />
     </Sheet>
   );
 }

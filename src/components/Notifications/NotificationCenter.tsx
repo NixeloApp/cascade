@@ -15,10 +15,18 @@ import { Bell, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Flex, FlexItem } from "@/components/ui/Flex";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
+import { Flex } from "@/components/ui/Flex";
+import { Icon } from "@/components/ui/Icon";
+import {
+  Popover,
+  PopoverBody,
+  PopoverContent,
+  PopoverFooter,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/Popover";
 import { Stack } from "@/components/ui/Stack";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Typography } from "@/components/ui/Typography";
@@ -176,7 +184,7 @@ export function NotificationCenter() {
             aria-label={dynamicLabel}
             data-testid={TEST_IDS.HEADER.NOTIFICATION_BUTTON}
           >
-            <Bell className="w-5 h-5" />
+            <Icon icon={Bell} size="md" />
             {/* Unread Badge */}
             {unreadCount != null && unreadCount > 0 && (
               <Badge
@@ -194,16 +202,17 @@ export function NotificationCenter() {
 
       <PopoverContent
         align="end"
+        padding="none"
         recipe="overlayInset"
-        className="max-h-popover-panel w-full max-w-dialog-mobile p-0 sm:w-96"
+        className="max-h-popover-panel w-full max-w-dialog-mobile sm:w-96"
         data-testid={TEST_IDS.HEADER.NOTIFICATION_PANEL}
       >
         <Stack gap="none" className="h-full">
           {/* Header */}
-          <Card recipe="notificationPanelHeader" padding="md" radius="none">
+          <PopoverHeader className="sticky top-0 z-10 bg-ui-bg">
             <Stack gap="sm">
               <Flex align="center" justify="between">
-                <Typography variant="h3">Notifications</Typography>
+                <PopoverTitle as="h3">Notifications</PopoverTitle>
                 {unreadCount != null && unreadCount > 0 && (
                   <Button
                     variant="link"
@@ -239,12 +248,18 @@ export function NotificationCenter() {
                 ))}
               </Flex>
             </Stack>
-          </Card>
+          </PopoverHeader>
 
           {/* Notifications List - Grouped by Date */}
-          <FlexItem flex="1" className="overflow-y-auto scrollbar-subtle">
+          <PopoverBody className="min-h-0 flex-1 overflow-y-auto p-0 scrollbar-subtle">
             {!notifications || notifications.length === 0 ? (
-              <EmptyState icon={Inbox} title="No notifications" />
+              <EmptyState
+                icon={Inbox}
+                title="No notifications"
+                size="compact"
+                surface="bare"
+                className="min-h-56 px-6 py-10"
+              />
             ) : (
               <Stack gap="xs">
                 {orderedGroups.map((group) => {
@@ -254,9 +269,9 @@ export function NotificationCenter() {
                   return (
                     <div key={group} className="animate-fade-in">
                       {/* Group Header */}
-                      <Card recipe="notificationPanelSectionHeader" padding="sm" radius="none">
+                      <PopoverHeader density="compact" className="sticky top-0 z-10 bg-ui-bg">
                         <Typography variant="eyebrow">{DATE_GROUP_LABELS[group]}</Typography>
-                      </Card>
+                      </PopoverHeader>
                       {/* Group Items */}
                       <div className="divide-y divide-ui-border">
                         {groupNotifs.map((notification) => (
@@ -276,11 +291,11 @@ export function NotificationCenter() {
                 })}
               </Stack>
             )}
-          </FlexItem>
+          </PopoverBody>
 
           {/* Footer - View All Link */}
           {orgContext?.orgSlug && (
-            <Card recipe="notificationPanelFooter" padding="sm" radius="none">
+            <PopoverFooter className="bg-ui-bg">
               <Button asChild variant="link" size="none" className="w-full justify-center gap-2">
                 <Link
                   to={ROUTES.notifications.path}
@@ -288,10 +303,10 @@ export function NotificationCenter() {
                   onClick={() => setIsOpen(false)}
                 >
                   View all notifications
-                  <ExternalLink className="h-3.5 w-3.5" />
+                  <Icon icon={ExternalLink} size="xsPlus" />
                 </Link>
               </Button>
-            </Card>
+            </PopoverFooter>
           )}
         </Stack>
       </PopoverContent>
