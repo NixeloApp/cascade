@@ -8,6 +8,18 @@ Purpose:
 - show only remaining work
 - make handoff easy when multiple agents or devices are involved
 
+## Current Branch Snapshot
+
+- branch: `fix-backend`
+- head commit: `5b3be010` (`Recover authenticated routes offline`)
+- worktree: clean
+- latest verified commands on this branch:
+  - `pnpm run typecheck`
+  - `pnpm test --run src/lib/authRecovery.test.ts src/lib/offline.test.ts src/hooks/useConvexHelpers.test.ts src/components/Dashboard.test.tsx`
+  - `pnpm test --run src/hooks/useOfflineUserSettingsUpdate.test.ts src/components/Settings/OfflineTab.test.tsx src/lib/authRecovery.test.ts src/lib/offline.test.ts`
+  - `pnpm exec playwright test -c playwright.preview.config.ts --workers=1`
+- latest preview result: `6/6` tests passed against the built app
+
 ## Current Verified State
 
 What is already true in the repo:
@@ -35,12 +47,13 @@ What is already true in the repo:
 
 Highest-value next move:
 
-- verify installability and push behavior after worker updates, then decide whether to keep manual worker ownership or fully collapse onto one generated/runtime path
+- verify installability in a real Chromium session, then test push behavior after worker replacement before deciding whether to collapse the worker/manifest ownership path
 
 Why:
 
 - the remaining uncertainty is no longer basic implementation truthfulness
 - the main open risk is runtime behavior that still lacks proof in browser conditions: installability and push after worker changes
+- authenticated offline route recovery is no longer the blocker on this branch
 
 ## Remaining Work
 
@@ -98,7 +111,7 @@ Why:
 
 - [ ] One worker path clearly owns runtime behavior.
 - [ ] One manifest path clearly owns install metadata.
-- [ ] Real browser verification confirms install behavior, offline fallback, and replay behavior.
+- [ ] Real browser verification confirms install behavior.
 - [ ] Push behavior is verified after worker changes.
 - [ ] At least one additional mutation family is replayable, or the team explicitly decides to stop at `userSettings.update`.
 - [ ] Docs match the verified runtime.
