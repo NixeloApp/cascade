@@ -155,7 +155,8 @@ describe("GitHubIntegration", () => {
 
     render(<GitHubIntegration />);
 
-    expect(screen.getByText("Connected as @octocat")).toBeInTheDocument();
+    expect(screen.getByText("Connected")).toBeInTheDocument();
+    expect(screen.getByText("@octocat")).toBeInTheDocument();
     expect(screen.getByText("Linked repositories")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Disconnect" }));

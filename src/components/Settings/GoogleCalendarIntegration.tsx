@@ -12,16 +12,54 @@ import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConv
 import { Calendar } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
-import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Card, CardHeader } from "../ui/Card";
+import { Card } from "../ui/Card";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
-import { Flex } from "../ui/Flex";
-import { Icon } from "../ui/Icon";
 import { RadioGroup, RadioGroupItem } from "../ui/RadioGroup";
 import { Stack } from "../ui/Stack";
 import { Switch } from "../ui/Switch";
 import { Typography } from "../ui/Typography";
+import {
+  SettingsIntegrationInset,
+  SettingsIntegrationMeta,
+  SettingsIntegrationSection,
+} from "./SettingsIntegrationSection";
+
+type SyncDirection = "import" | "export" | "bidirectional";
+
+interface GoogleCalendarOAuthData {
+  accessToken: string;
+  expiresAt: number;
+  providerAccountId: string;
+  refreshToken: string;
+}
+
+function isSyncDirection(value: string): value is SyncDirection {
+  return value === "bidirectional" || value === "import" || value === "export";
+}
+
+function parseGoogleCalendarOAuthData(value: unknown): GoogleCalendarOAuthData | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  if (
+    typeof candidate.providerAccountId !== "string" ||
+    typeof candidate.accessToken !== "string" ||
+    typeof candidate.refreshToken !== "string" ||
+    typeof candidate.expiresAt !== "number"
+  ) {
+    return null;
+  }
+
+  return {
+    providerAccountId: candidate.providerAccountId,
+    accessToken: candidate.accessToken,
+    refreshToken: candidate.refreshToken,
+    expiresAt: candidate.expiresAt,
+  };
+}
 /**
  * Google Calendar integration card
  * Extracted from Settings for better organization
@@ -50,15 +88,18 @@ export function GoogleCalendarIntegration() {
 
       if (event.data?.type !== "google-calendar-connected") return;
 
-      const { providerAccountId, accessToken, refreshToken, expiresAt } = event.data.data;
+      const data = parseGoogleCalendarOAuthData(event.data.data);
+      if (!data) {
+        return;
+      }
 
       setIsConnecting(true);
       try {
         await connectGoogle({
-          providerAccountId,
-          accessToken,
-          refreshToken,
-          expiresAt,
+          providerAccountId: data.providerAccountId,
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+          expiresAt: data.expiresAt,
         });
         showSuccess("Google Calendar connected successfully");
       } catch (error) {
@@ -119,7 +160,7 @@ export function GoogleCalendarIntegration() {
     }
   };
 
-  const handleChangeSyncDirection = async (direction: "import" | "export" | "bidirectional") => {
+  const handleChangeSyncDirection = async (direction: SyncDirection) => {
     setIsSaving(true);
     try {
       await updateSyncSettings({
@@ -134,54 +175,54 @@ export function GoogleCalendarIntegration() {
   };
 
   return (
-    <Card padding="lg" data-testid={TEST_IDS.SETTINGS.GOOGLE_CALENDAR_INTEGRATION}>
-      <Stack gap="lg">
-        <CardHeader
-          action={
-            calendarConnection ? (
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={() => setDisconnectConfirmOpen(true)}
-                disabled={isDisconnecting}
-              >
-                {isDisconnecting ? "Disconnecting..." : "Disconnect"}
-              </Button>
-            ) : (
-              <Button variant="primary" size="sm" onClick={handleConnect} disabled={isConnecting}>
-                {isConnecting ? "Connecting..." : "Connect Google"}
-              </Button>
-            )
-          }
-        >
-          <Flex gap="lg" align="center">
-            <Card padding="sm" radius="md" variant="section">
-              <Icon icon={Calendar} size="lg" tone="brand" />
-            </Card>
+    <SettingsIntegrationSection
+      title="Google Calendar"
+      description="Sync meeting and schedule context between Nixelo and Google Calendar."
+      icon={Calendar}
+      iconTone="brand"
+      data-testid={TEST_IDS.SETTINGS.GOOGLE_CALENDAR_INTEGRATION}
+      status={
+        calendarConnection
+          ? { label: "Connected", variant: "success" }
+          : { label: "Not Connected", variant: "neutral" }
+      }
+      action={
+        calendarConnection ? (
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => setDisconnectConfirmOpen(true)}
+            disabled={isDisconnecting}
+          >
+            {isDisconnecting ? "Disconnecting..." : "Disconnect"}
+          </Button>
+        ) : (
+          <Button variant="primary" size="sm" onClick={handleConnect} disabled={isConnecting}>
+            {isConnecting ? "Connecting..." : "Connect Google"}
+          </Button>
+        )
+      }
+      summary={
+        calendarConnection ? (
+          <SettingsIntegrationMeta label="Connected account">
             <Stack gap="xs">
-              <Typography variant="h3">Google Calendar</Typography>
-              <Typography variant="small" color="secondary">
-                Sync calendar events between Nixelo and Google Calendar
-              </Typography>
-            </Stack>
-          </Flex>
-        </CardHeader>
-
-        {calendarConnection && (
-          <Stack gap="xs">
-            <Flex align="center" gap="xs">
-              <Badge variant="success">Connected</Badge>
               <Typography variant="small">{calendarConnection.providerAccountId}</Typography>
-            </Flex>
-            {calendarConnection.lastSyncAt && (
-              <Typography variant="caption" color="tertiary">
-                Last synced: {new Date(calendarConnection.lastSyncAt).toLocaleString()}
-              </Typography>
-            )}
-          </Stack>
-        )}
-      </Stack>
-
+              {calendarConnection.lastSyncAt ? (
+                <Typography variant="caption" color="tertiary">
+                  Last synced: {new Date(calendarConnection.lastSyncAt).toLocaleString()}
+                </Typography>
+              ) : null}
+            </Stack>
+          </SettingsIntegrationMeta>
+        ) : (
+          <SettingsIntegrationMeta label="Connection status">
+            <Typography variant="small" color="secondary">
+              Connect Google Calendar before enabling two-way schedule sync.
+            </Typography>
+          </SettingsIntegrationMeta>
+        )
+      }
+    >
       <ConfirmDialog
         isOpen={disconnectConfirmOpen}
         onClose={() => setDisconnectConfirmOpen(false)}
@@ -193,8 +234,7 @@ export function GoogleCalendarIntegration() {
       />
 
       {calendarConnection && (
-        <Card padding="md" variant="section" className="mt-6">
-          {/* Sync Toggle */}
+        <SettingsIntegrationInset>
           <Stack gap="xl">
             <Switch
               label="Enable Sync"
@@ -211,9 +251,11 @@ export function GoogleCalendarIntegration() {
                 <Typography variant="label">Sync Direction</Typography>
                 <RadioGroup
                   value={calendarConnection.syncDirection}
-                  onValueChange={(value) =>
-                    handleChangeSyncDirection(value as "bidirectional" | "import" | "export")
-                  }
+                  onValueChange={(value) => {
+                    if (isSyncDirection(value)) {
+                      void handleChangeSyncDirection(value);
+                    }
+                  }}
                   disabled={isSaving}
                 >
                   <Card padding="sm" variant="section" hoverable>
@@ -241,8 +283,8 @@ export function GoogleCalendarIntegration() {
               </Stack>
             )}
           </Stack>
-        </Card>
+        </SettingsIntegrationInset>
       )}
-    </Card>
+    </SettingsIntegrationSection>
   );
 }

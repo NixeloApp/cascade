@@ -8,6 +8,7 @@ import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Flex } from "../ui/Flex";
+import { Icon } from "../ui/Icon";
 import { Label } from "../ui/Label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
 import { Stack } from "../ui/Stack";
@@ -16,7 +17,7 @@ import { Typography } from "../ui/Typography";
  * GitHub linked repositories management
  * Extracted from Settings/GitHubIntegration for better organization
  */
-export function LinkedRepositories() {
+export function LinkedRepositories({ showHeading = true }: { showHeading?: boolean }) {
   const [selectedWorkspace, setSelectedWorkspace] = useState<Id<"projects"> | null>(null);
   const [unlinkConfirmOpen, setUnlinkConfirmOpen] = useState(false);
   const [pendingUnlinkId, setPendingUnlinkId] = useState<Id<"githubRepositories"> | null>(null);
@@ -46,7 +47,7 @@ export function LinkedRepositories() {
 
   return (
     <Stack gap="md">
-      <Typography variant="h4">Linked Repositories</Typography>
+      {showHeading ? <Typography variant="h4">Linked Repositories</Typography> : null}
 
       {/* Project selector */}
       <Stack gap="xs">
@@ -81,7 +82,7 @@ export function LinkedRepositories() {
             <Card key={repo._id} padding="sm" className="bg-ui-bg-secondary">
               <Flex justify="between" align="center">
                 <Flex gap="md" align="center">
-                  <Github className="h-5 w-5 text-ui-text-tertiary" />
+                  <Icon icon={Github} size="md" tone="tertiary" />
                   <Stack gap="none">
                     <Typography variant="label">{repo.repoFullName}</Typography>
                     <Typography variant="caption" color="secondary">
@@ -96,7 +97,7 @@ export function LinkedRepositories() {
                   onClick={() => handleUnlinkClick(repo._id)}
                   aria-label={`Unlink ${repo.repoFullName}`}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Icon icon={Trash2} size="sm" />
                 </Button>
               </Flex>
             </Card>

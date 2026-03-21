@@ -11,17 +11,18 @@ import type { Doc, Id } from "@convex/_generated/dataModel";
 import { useForm } from "@tanstack/react-form";
 import { useAction } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { ArrowUpRight, MessageSquare } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useAuthenticatedMutation, useAuthenticatedQuery } from "@/hooks/useConvexHelpers";
 import { toggleInArray } from "@/lib/array-utils";
 import { FormInput } from "@/lib/form";
+import { MessageSquare } from "@/lib/icons";
 import { TEST_IDS } from "@/lib/test-ids";
 import { showError, showSuccess } from "@/lib/toast";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { Card, CardHeader } from "../ui/Card";
+import { Card } from "../ui/Card";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Dialog } from "../ui/Dialog";
 import { EmptyState as EmptyStateBlock } from "../ui/EmptyState";
@@ -29,8 +30,14 @@ import { Flex, FlexItem } from "../ui/Flex";
 import { Checkbox } from "../ui/form/Checkbox";
 import { Select } from "../ui/form/Select";
 import { Grid } from "../ui/Grid";
+import { Icon } from "../ui/Icon";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
+import {
+  SettingsIntegrationInset,
+  SettingsIntegrationMeta,
+  SettingsIntegrationSection,
+} from "./SettingsIntegrationSection";
 
 type PumbleWebhook = Doc<"pumbleWebhooks">;
 type Project = FunctionReturnType<typeof api.projects.getCurrentUserProjects>["page"][number];
@@ -58,6 +65,68 @@ const AVAILABLE_EVENTS = [
   { value: "comment.created", label: "Comment Added" },
 ];
 
+function getPumbleIntegrationStatus(webhooks: PumbleWebhook[] | undefined) {
+  if (webhooks === undefined) {
+    return { label: "Loading", variant: "neutral" as const };
+  }
+
+  if (webhooks.length === 0) {
+    return { label: "Not Configured", variant: "neutral" as const };
+  }
+
+  const activeWebhookCount = webhooks.filter((webhook) => webhook.isActive).length;
+  return {
+    label: `${activeWebhookCount} Active`,
+    variant: activeWebhookCount > 0 ? ("success" as const) : ("warning" as const),
+  };
+}
+
+function getPumbleCoverageSummary(webhooks: PumbleWebhook[] | undefined, projects: Project[]) {
+  if (webhooks === undefined) {
+    return "Loading webhook status...";
+  }
+
+  if (webhooks.length === 0) {
+    return "No webhooks configured yet.";
+  }
+
+  return `${webhooks.length} webhook${webhooks.length === 1 ? "" : "s"} across ${projects.length} available project${projects.length === 1 ? "" : "s"}.`;
+}
+
+interface PumbleIntegrationContentProps {
+  onAddWebhook: () => void;
+  projects: Project[];
+  webhooks: PumbleWebhook[] | undefined;
+}
+
+function PumbleIntegrationContent({
+  onAddWebhook,
+  projects,
+  webhooks,
+}: PumbleIntegrationContentProps) {
+  if (webhooks === undefined) {
+    return (
+      <SettingsIntegrationInset>
+        <Flex align="center" justify="center">
+          <Typography color="tertiary">Loading webhooks...</Typography>
+        </Flex>
+      </SettingsIntegrationInset>
+    );
+  }
+
+  if (webhooks.length === 0) {
+    return <PumbleEmptyState onAddWebhook={onAddWebhook} />;
+  }
+
+  return (
+    <Stack gap="md">
+      {webhooks.map((webhook) => (
+        <WebhookCard key={webhook._id} webhook={webhook} projects={projects} />
+      ))}
+    </Stack>
+  );
+}
+
 /** Pumble webhook integration manager with add/edit/delete functionality. */
 export function PumbleIntegration() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -66,69 +135,51 @@ export function PumbleIntegration() {
   const projects: Project[] = projectsResult?.page ?? [];
 
   return (
-    <Card padding="none" variant="outline" data-testid={TEST_IDS.SETTINGS.PUMBLE_INTEGRATION}>
-      {/* Header */}
-      <CardHeader action={<Button onClick={() => setShowAddModal(true)}>Add Webhook</Button>}>
-        <Flex gap="md" align="center">
-          <Card variant="section" padding="sm" radius="md">
-            <MessageSquare className="h-5 w-5 text-accent" />
-          </Card>
-          <Stack gap="xs">
-            <Typography variant="h3">Pumble Integration</Typography>
-            <Typography variant="small" color="secondary">
-              Send notifications to Pumble channels when issues are created or updated
-            </Typography>
-          </Stack>
-        </Flex>
-      </CardHeader>
+    <SettingsIntegrationSection
+      title="Pumble"
+      description="Route issue events into Pumble channels with project-scoped webhook rules."
+      icon={MessageSquare}
+      iconTone="accent"
+      data-testid={TEST_IDS.SETTINGS.PUMBLE_INTEGRATION}
+      status={getPumbleIntegrationStatus(webhooks)}
+      action={<Button onClick={() => setShowAddModal(true)}>Add Webhook</Button>}
+      summary={
+        <SettingsIntegrationMeta label="Webhook coverage">
+          <Typography variant="small" color="secondary">
+            {getPumbleCoverageSummary(webhooks, projects)}
+          </Typography>
+        </SettingsIntegrationMeta>
+      }
+    >
+      <PumbleIntegrationContent
+        webhooks={webhooks}
+        projects={projects}
+        onAddWebhook={() => setShowAddModal(true)}
+      />
 
-      {/* Content */}
-      <Card padding="lg" radius="none" variant="section">
-        <Stack gap="lg">
-          {webhooks === undefined ? (
-            <Card padding="xl" variant="section">
-              <Flex align="center" justify="center">
-                <Typography color="tertiary">Loading webhooks...</Typography>
-              </Flex>
-            </Card>
-          ) : webhooks.length === 0 ? (
-            <PumbleEmptyState onAddWebhook={() => setShowAddModal(true)} />
-          ) : (
-            <Stack gap="lg">
-              {webhooks.map((webhook) => (
-                <WebhookCard key={webhook._id} webhook={webhook} projects={projects} />
-              ))}
-            </Stack>
-          )}
+      <SettingsIntegrationInset>
+        <Button
+          asChild
+          variant="link"
+          size="none"
+          rightIcon={<Icon icon={ArrowUpRight} size="sm" />}
+        >
+          <a
+            href="https://help.pumble.com/hc/en-us/articles/360041954051-Incoming-webhooks"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            How to create a Pumble incoming webhook
+          </a>
+        </Button>
+      </SettingsIntegrationInset>
 
-          <Card variant="section" padding="sm">
-            <Flex gap="md" align="center">
-              <Button
-                asChild
-                variant="link"
-                size="none"
-                rightIcon={<ArrowUpRight className="h-4 w-4" />}
-              >
-                <a
-                  href="https://help.pumble.com/hc/en-us/articles/360041954051-Incoming-webhooks"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  How to create a Pumble incoming webhook
-                </a>
-              </Button>
-            </Flex>
-          </Card>
-        </Stack>
-      </Card>
-
-      {/* Add Webhook Modal */}
       <AddWebhookModal
         open={showAddModal}
         onOpenChange={setShowAddModal}
         projects={projects || []}
       />
-    </Card>
+    </SettingsIntegrationSection>
   );
 }
 
@@ -197,7 +248,7 @@ function WebhookCard({ webhook, projects }: WebhookCardProps) {
     : "No URL";
 
   return (
-    <Card padding="md" variant="outline" hoverable>
+    <Card padding="md" variant="section">
       <Stack gap="md">
         <Flex justify="between" align="start">
           <FlexItem flex="1">
@@ -234,24 +285,22 @@ function WebhookCard({ webhook, projects }: WebhookCardProps) {
           </Typography>
         )}
 
-        <Card padding="sm" variant="section">
-          <Flex justify="between" align="center" gap="sm" wrap>
-            <Flex gap="sm" wrap>
-              <Button onClick={handleTest} variant="ghost" size="sm">
-                Test Webhook
-              </Button>
-              <Button onClick={handleToggleActive} variant="secondary" size="sm">
-                {webhook.isActive ? "Disable" : "Enable"}
-              </Button>
-              <Button onClick={() => setShowEditModal(true)} variant="secondary" size="sm">
-                Edit
-              </Button>
-            </Flex>
-            <Button onClick={() => setDeleteConfirmOpen(true)} variant="danger" size="sm">
-              Delete
+        <Flex justify="between" align="center" gap="sm" wrap>
+          <Flex gap="sm" wrap>
+            <Button onClick={handleTest} variant="ghost" size="sm">
+              Test Webhook
+            </Button>
+            <Button onClick={handleToggleActive} variant="secondary" size="sm">
+              {webhook.isActive ? "Disable" : "Enable"}
+            </Button>
+            <Button onClick={() => setShowEditModal(true)} variant="secondary" size="sm">
+              Edit
             </Button>
           </Flex>
-        </Card>
+          <Button onClick={() => setDeleteConfirmOpen(true)} variant="danger" size="sm">
+            Delete
+          </Button>
+        </Flex>
       </Stack>
 
       {/* Edit Modal */}

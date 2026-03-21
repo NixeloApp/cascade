@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Card, type CardProps } from "../ui/Card";
 import { Flex, FlexItem } from "../ui/Flex";
 import { Icon } from "../ui/Icon";
+import type { IconTone } from "../ui/icon-tones";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
@@ -11,7 +12,7 @@ interface SettingsSectionProps extends Omit<CardProps, "children"> {
   children: ReactNode;
   description?: ReactNode;
   icon?: LucideIcon;
-  iconTone?: "brand" | "success" | "warning" | "error" | "secondary" | "tertiary" | "info";
+  iconTone?: IconTone;
   title: string;
   titleAdornment?: ReactNode;
 }
@@ -64,7 +65,7 @@ interface SettingsSectionRowProps {
   action?: ReactNode;
   description?: ReactNode;
   icon?: LucideIcon;
-  iconTone?: "brand" | "success" | "warning" | "error" | "secondary" | "tertiary" | "info";
+  iconTone?: IconTone;
   title: string;
 }
 
