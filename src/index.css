@@ -965,6 +965,92 @@ body {
 }
 
 /* Hero section background effects (radial glow + grid pattern) */
+.landing-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 5rem 1.5rem 1.5rem;
+}
+
+.landing-hero-content {
+  position: relative;
+  text-align: center;
+}
+
+.landing-hero-beam {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 100%;
+  max-width: 56rem;
+  height: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--color-landing-accent) 50%, transparent) 50%,
+    transparent 100%
+  );
+}
+
+.landing-hero-badge-row {
+  margin-bottom: 0.75rem;
+  animation: var(--animation-fade-in);
+}
+
+.landing-hero-title {
+  margin-bottom: 0.75rem;
+  color: var(--color-ui-text);
+  line-height: 1;
+  letter-spacing: var(--tracking-tighter);
+  font-size: 2.25rem;
+  font-weight: 700;
+  animation: var(--animation-slide-up);
+  animation-delay: 0.1s;
+  animation-fill-mode: backwards;
+}
+
+.landing-hero-lead {
+  max-width: 48rem;
+  margin: 0 auto 1rem;
+  color: var(--color-ui-text-secondary);
+  line-height: 1.75;
+  font-size: 1.125rem;
+  animation: var(--animation-slide-up);
+  animation-delay: 0.2s;
+  animation-fill-mode: backwards;
+}
+
+.landing-hero-actions {
+  animation: var(--animation-slide-up);
+  animation-delay: 0.3s;
+  animation-fill-mode: backwards;
+}
+
+.landing-hero-stats {
+  margin-top: 0.5rem;
+  color: var(--color-ui-text-secondary);
+  font-size: 0.875rem;
+  animation: var(--animation-slide-up);
+  animation-delay: 0.4s;
+  animation-fill-mode: backwards;
+}
+
+.landing-hero-glow {
+  pointer-events: none;
+  position: absolute;
+  left: 50%;
+  bottom: -5rem;
+  width: 24rem;
+  height: 12rem;
+  transform: translateX(-50%);
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--color-landing-accent) 10%, transparent);
+  filter: blur(var(--blur-glow));
+  animation: var(--animation-slide-up);
+  animation-delay: 0.5s;
+  animation-fill-mode: backwards;
+}
+
 .hero-radial-bg {
   background: radial-gradient(
     ellipse 78% 55% at 50% 0%,
@@ -984,6 +1070,33 @@ body {
 
 :is(.dark, [data-theme="dark"]) .hero-grid-bg {
   opacity: 0.05;
+}
+
+@media (min-width: 640px) {
+  .landing-hero {
+    padding-top: 6rem;
+    padding-bottom: 2rem;
+  }
+
+  .landing-hero-badge-row {
+    margin-bottom: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .landing-hero-title {
+    font-size: 3.75rem;
+  }
+
+  .landing-hero-lead {
+    font-size: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-hero-title {
+    font-size: 4.5rem;
+  }
 }
 
 /* Typography utilities with tight letter-spacing */
