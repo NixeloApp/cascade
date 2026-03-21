@@ -61,20 +61,12 @@ export async function fetchPaginatedQuery<T extends GenericDocument>(
     // We check isDeleted != true to handle both explicit false and undefined (legacy data).
     .filter((q: FilterBuilder<TableInfoFor>) => q.neq(q.field("isDeleted"), true));
 
-  try {
-    return await query.paginate(opts.paginationOpts);
-  } catch (error) {
-    // When a cursor becomes stale (e.g. after a schema migration or index change),
-    // Convex throws an InvalidCursor error. Recover by restarting from the first page.
-    if (isInvalidCursorError(error)) {
-      console.warn("[queryHelpers] Stale cursor detected, restarting pagination from first page");
-      return await query.paginate({
-        ...opts.paginationOpts,
-        cursor: null,
-      });
-    }
-    throw error;
-  }
+  // Let errors (including InvalidCursor) propagate to the client.
+  // The client-side usePaginatedQuery hook handles cursor resets properly
+  // when args change. Server-side silent retry with cursor:null corrupts
+  // pagination state for callers (continueCursor points to page 2 while
+  // callers think they're on their original page).
+  return await query.paginate(opts.paginationOpts);
 }
 
 export function isInvalidCursorError(error: unknown): boolean {

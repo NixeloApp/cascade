@@ -50,7 +50,10 @@ export function useOfflineUserSettingsUpdate() {
       await mutate(args);
       return { queued: false };
     } catch (error) {
-      if (shouldQueueOfflineUpdate(allowOfflineQueue, isOnline)) {
+      // Re-check online status directly via navigator.onLine instead of the
+      // hook's isOnline value, which was captured at render time and may be
+      // stale if the network dropped mid-flight.
+      if (shouldQueueOfflineUpdate(allowOfflineQueue, navigator.onLine)) {
         return queueUpdateAndNotify(args, options.queuedMessage);
       }
 

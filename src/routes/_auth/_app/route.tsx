@@ -121,9 +121,9 @@ function AppLayout() {
   const { pathname } = useLocation();
   const { isAuthLoading, isAuthenticated } = useAuthReady();
   const canRecoverAuthenticatedSession = hasRecoverableAuthenticatedSession();
-  const persistedAppLayoutState = readLocalStorageJson<PersistedAppLayoutState>(
-    APP_LAYOUT_CACHE_STORAGE_KEY,
-  );
+  const persistedAppLayoutState = useRef(
+    readLocalStorageJson<PersistedAppLayoutState>(APP_LAYOUT_CACHE_STORAGE_KEY),
+  ).current;
 
   updateAppSessionState(isAuthenticated, isAuthLoading);
 

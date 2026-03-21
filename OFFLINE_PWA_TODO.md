@@ -147,7 +147,7 @@ These are UI-level improvements that make connectivity blips feel invisible to t
 To prevent scope creep, these are explicitly **out of scope** for the offline lane:
 
 - **Full offline document editing** — would require a CRDT/OT sync layer (e.g., Yjs) on top of BlockNote. Fundamental architecture work, not an incremental addition.
-- **Offline Kanban board manipulation** — needs cached board state + optimistic drag-and-drop + reorder conflict resolution. Complex and low ROI for connectivity blips.
+- **Offline Kanban board manipulation** — would require cached board state + optimistic drag-and-drop + reorder conflict resolution. Complex and low ROI for connectivity blips.
 - **Offline-first data layer** — would require something like `rxdb`, `electric-sql`, or a custom Convex sync adapter. Contradicts the server-authoritative model.
 - **iOS Background Sync** — Safari doesn't support the Background Sync API. Replay only works while the app is open.
 - **Offline project/issue creation** — ID generation, key sequencing (PROJ-123), and cross-entity references make this very complex for marginal benefit.

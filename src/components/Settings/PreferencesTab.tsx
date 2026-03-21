@@ -62,14 +62,19 @@ export function PreferencesTab() {
   };
 
   const handleTimezoneChange = async (value: string) => {
+    const previousTimezone = selectedTimezone;
     setSelectedTimezone(value);
     try {
       const result = await updateSettings(
         { timezone: value },
         { queuedMessage: "Timezone change queued for sync when you are back online" },
       );
-      showSuccess(result.queued ? "Timezone queued for sync" : "Timezone updated");
+      // Only show success when not queued — the hook already showed the queued message
+      if (!result.queued) {
+        showSuccess("Timezone updated");
+      }
     } catch (error) {
+      setSelectedTimezone(previousTimezone);
       showError(error, "Failed to update timezone");
     }
   };

@@ -60,7 +60,7 @@ function startServiceWorkerRegistration() {
         if (newWorker) {
           newWorker.addEventListener("statechange", () => {
             if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-              showUpdateNotification();
+              showUpdateNotification(registration);
             }
           });
         }
@@ -118,7 +118,7 @@ export function clearCache() {
   }
 }
 
-function showUpdateNotification() {
+function showUpdateNotification(registration: ServiceWorkerRegistration) {
   if (getExistingElement("sw-update-banner")) {
     return;
   }
@@ -136,10 +136,10 @@ function showUpdateNotification() {
 
   document.body.appendChild(banner);
 
-  // Handle update button click
+  // Handle update button click — post to the waiting worker, not the active controller
   document.getElementById("sw-update-button")?.addEventListener("click", () => {
-    if (navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({ type: "SKIP_WAITING" });
+    if (registration.waiting) {
+      registration.waiting.postMessage({ type: "SKIP_WAITING" });
     }
   });
 

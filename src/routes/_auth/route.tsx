@@ -36,14 +36,22 @@ function AuthLayout() {
     }
   }, [isAuthenticated, isAuthLoading]);
 
-  if (isAuthLoading && !hasAuthenticatedSession.current && !canRecoverAuthenticatedSession) {
+  if (isAuthLoading) {
+    // While auth is loading, use localStorage markers only to skip the splash screen,
+    // NOT to render protected content. Show the splash screen if we have no recovery signal.
+    if (!hasAuthenticatedSession.current && !canRecoverAuthenticatedSession) {
+      return <AppSplashScreen />;
+    }
+    // Recovery signal exists — render Outlet to avoid layout flash for likely-authenticated users
+    if (hasAuthenticatedSession.current) {
+      return <Outlet />;
+    }
+    // canRecoverAuthenticatedSession is true but no confirmed session yet — show splash
+    // instead of rendering protected content based on a best-effort localStorage marker
     return <AppSplashScreen />;
   }
 
-  if (
-    isAuthenticated ||
-    (isAuthLoading && (hasAuthenticatedSession.current || canRecoverAuthenticatedSession))
-  ) {
+  if (isAuthenticated) {
     return <Outlet />;
   }
 

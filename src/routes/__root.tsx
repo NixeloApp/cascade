@@ -129,9 +129,8 @@ function OfflineReplayBootstrap() {
       return;
     }
 
-    const unregisterUserSettingsReplay = registerOfflineReplayHandler(
-      USER_SETTINGS_OFFLINE_MUTATION_TYPE,
-      (args) => replayUserSettingsUpdate(convexClient, args),
+    registerOfflineReplayHandler(USER_SETTINGS_OFFLINE_MUTATION_TYPE, (args) =>
+      replayUserSettingsUpdate(convexClient, args),
     );
 
     const flushQueue = () => {
@@ -148,7 +147,6 @@ function OfflineReplayBootstrap() {
 
     window.addEventListener("online", handleOnline);
     return () => {
-      unregisterUserSettingsReplay();
       window.removeEventListener("online", handleOnline);
     };
   }, [convexClient, isAuthenticated, isAuthLoading]);

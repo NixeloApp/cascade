@@ -120,6 +120,7 @@ describe("serviceWorker helpers", () => {
     const serviceWorker = await import("./serviceWorker");
 
     const listeners = new Map<string, EventListener>();
+    const waitingWorkerPostMessage = vi.fn();
     const installingWorker = {
       state: "installing",
       addEventListener: vi.fn((event: string, listener: EventListener) => {
@@ -128,13 +129,16 @@ describe("serviceWorker helpers", () => {
     };
     const registrationListenerMap = new Map<string, EventListener>();
 
-    registerMock.mockResolvedValue({
+    const mockRegistration = {
       update: vi.fn(),
       installing: installingWorker,
+      waiting: { postMessage: waitingWorkerPostMessage },
       addEventListener: vi.fn((event: string, listener: EventListener) => {
         registrationListenerMap.set(event, listener);
       }),
-    });
+    };
+
+    registerMock.mockResolvedValue(mockRegistration);
 
     serviceWorker.register();
     await Promise.resolve();
@@ -148,7 +152,7 @@ describe("serviceWorker helpers", () => {
 
     document.getElementById("sw-update-button")?.dispatchEvent(new MouseEvent("click"));
 
-    expect(serviceWorkerController.postMessage).toHaveBeenCalledWith({
+    expect(waitingWorkerPostMessage).toHaveBeenCalledWith({
       type: "SKIP_WAITING",
     });
   });

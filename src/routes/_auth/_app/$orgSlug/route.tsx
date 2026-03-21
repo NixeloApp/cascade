@@ -176,7 +176,7 @@ function OrganizationLayout() {
     return <OrgLoading />;
   }
 
-  if (!(isAuthenticated || organization)) {
+  if (!(isAuthenticated || (isAuthLoading && organization))) {
     return <OrgLoading />;
   }
 
