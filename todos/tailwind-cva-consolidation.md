@@ -31,7 +31,6 @@ Target the remaining raw Tailwind violations by grouping repeated class clusters
 - [ ] For each cluster of 3+ identical class sets, extract a component or add a CVA variant
 - [ ] Tighten raw Tailwind rules on app surfaces -- colors, radius, spacing, and shell treatments should come from owned primitives or explicit variants, not feature-local class clusters
 - [ ] Audit `className` escape-hatch usage on owned primitives -- recurring size/chrome/spacing overrides should become variants instead of one-off patches
-- [ ] Tighten Tailwind consistency on icon sizing and fixed width/height utility usage -- use shared size tokens/components where available instead of ad-hoc `h-* w-*` pairs
 - [ ] Audit landing/main-page files specifically for static layout that should just be Tailwind, not local CVAs or section-specific CSS
 
 ## Phase 2: Consolidate CVA Sprawl

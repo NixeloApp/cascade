@@ -41,7 +41,6 @@ Fetches all data then filters in the component when the filter could be a backen
 - [ ] Add validator coverage for degenerate CVAs -- base-only CVAs, single-use feature CVAs, and local variant wrappers that should be plain components or shared primitives
 - [ ] Ratchet raw Tailwind downward, not just flat -- the baseline should shrink as cleanup lands instead of only blocking regressions
 - [ ] Add validator coverage for primitive-default ownership drift -- shared wrappers should not restate defaults already owned by the primitive they wrap
-- [ ] Tighten raw Tailwind checks around fixed size utilities and icon sizing when owned tokens/components already exist
 - [ ] Add validator coverage that distinguishes real Tailwind-first layout from hidden local style systems (`SECTION_CLASSES`, class-string maps, helper bags) and penalizes the hidden style-system path harder
 
 ## Ratchet Strategy
