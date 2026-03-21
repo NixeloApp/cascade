@@ -54,7 +54,6 @@ Target the remaining raw Tailwind violations by grouping repeated class clusters
 - [ ] Tighten the raw TW validator from advisory to blocking with a ratchet (current baseline: 148 files, fail on increase)
 - [ ] Add a validator that flags repeated primitive `className` overrides for size/chrome/radius/color when an owned variant should exist
 - [ ] Add a validator that flags feature-local CVAs with only base styles or a single live call site
-- [ ] Add validator coverage for section-specific `index.css`/global CSS drift -- page-specific named classes should be rare and justified, not a fallback for avoiding Tailwind or primitive ownership
 - [ ] Tighten validator coverage for hidden feature-local style systems: local class maps/constants that try to replace CVA should be penalized harder than explicit feature-local `cva()`
 
 ## Anti-patterns to Watch

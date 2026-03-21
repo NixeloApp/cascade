@@ -48,10 +48,11 @@
  *  44. Typography drift        — blocks Typography/style drift outside owned primitives
  *  45. Control chrome drift    — blocks owned controls restyled in feature code, including helper-backed Badge color overrides
  *  46. Shared shape drift      — blocks repeated inline entity summary shapes
- *  47. Page layout             — route wrappers should use PageLayout, not ad-hoc max-width shells
- *  48. Raw Date formatting     — use shared date helpers instead of ad-hoc formatting
- *  49. E2E catch swallows      — ratchets silent .catch(() => {}) usage in e2e and screenshot tooling
- *  50. Primitive default ownership — blocks shared wrappers from restating primitive-owned defaults like Typography color="auto"
+ *  47. Global CSS drift        — ratchets page/section-specific named classes in src/index.css
+ *  48. Page layout             — route wrappers should use PageLayout, not ad-hoc max-width shells
+ *  49. Raw Date formatting     — use shared date helpers instead of ad-hoc formatting
+ *  50. E2E catch swallows      — ratchets silent .catch(() => {}) usage in e2e and screenshot tooling
+ *  51. Primitive default ownership — blocks shared wrappers from restating primitive-owned defaults like Typography color="auto"
  *
  * Exit code 1 if any check reports blocking issues.
  *
@@ -292,6 +293,10 @@ const checks = [
   {
     name: "Shared shape drift",
     modulePath: new URL("./validate/check-shared-shape-drift.js", import.meta.url).href,
+  },
+  {
+    name: "Global CSS drift",
+    modulePath: new URL("./validate/check-global-css-drift.js", import.meta.url).href,
   },
   {
     name: "Page layout",
