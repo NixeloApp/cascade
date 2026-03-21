@@ -424,20 +424,32 @@ function usePlateDocumentSync({
   const currentVersionRef = useRef(0);
   const lastSavedContentRef = useRef(getSerializedPlateValue(getInitialValue()));
   const pendingContentRef = useRef<string | null>(null);
+  const hydratedRef = useRef(false);
 
   useEffect(() => {
     if (latestSnapshot === undefined || latestVersion === undefined) {
       return;
     }
 
-    const nextValue = getSeedValueFromSnapshot(latestSnapshot);
     const serializedSnapshot = latestSnapshot
       ? serializeSnapshot(latestSnapshot)
-      : getSerializedPlateValue(nextValue);
+      : getSerializedPlateValue(getInitialValue());
+
+    // After initial hydration, only reset the editor when the incoming
+    // snapshot actually differs from what we last saved. This prevents
+    // our own autosave acknowledgments from remounting the editor and
+    // causing cursor/selection jumps.
+    if (hydratedRef.current && serializedSnapshot === lastSavedContentRef.current) {
+      currentVersionRef.current = latestVersion ?? 0;
+      return;
+    }
+
+    const nextValue = getSeedValueFromSnapshot(latestSnapshot);
 
     currentVersionRef.current = latestVersion ?? 0;
     lastSavedContentRef.current = serializedSnapshot;
     pendingContentRef.current = null;
+    hydratedRef.current = true;
     setEditorSeedValue(nextValue);
     setEditorValue(nextValue);
     setEditorResetKey((prev) => prev + 1);

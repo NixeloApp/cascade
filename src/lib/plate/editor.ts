@@ -75,13 +75,12 @@ interface ProseMirrorMark {
 }
 
 interface ProseMirrorNodeLike {
-  attrs?: {
-    level?: number;
-  };
+  attrs?: Record<string, unknown>;
   content?: ProseMirrorNodeLike[];
   marks?: ProseMirrorMark[];
   text?: string;
   type?: string;
+  [key: string]: unknown;
 }
 
 interface ProseMirrorSnapshotLike {
@@ -101,6 +100,7 @@ interface PlateTextLeaf {
 interface PlateElementLike {
   children?: Array<PlateChildLike>;
   type?: string;
+  [key: string]: unknown;
 }
 
 type PlateChildLike = PlateTextLeaf | PlateElementLike;
@@ -228,6 +228,49 @@ function toBlockFromNode(node: ProseMirrorNodeLike): Array<Record<string, unknow
         children: innerContent,
       },
     ];
+  }
+
+  if (node.type === "table") {
+    const rows = (node.content ?? []).map((row) => {
+      const cells = (row.content ?? []).map((cell) => ({
+        type: cell.type === "tableHeader" ? "th" : "td",
+        children: cell.content ? cell.content.flatMap(toBlockFromNode) : [{ text: "" }],
+      }));
+
+      return { type: "tr", children: cells.length > 0 ? cells : [{ text: "" }] };
+    });
+
+    return [{ type: "table", children: rows.length > 0 ? rows : [{ text: "" }] }];
+  }
+
+  if (node.type === "image") {
+    return [
+      {
+        type: "img",
+        url: (node.attrs?.src as string) ?? "",
+        alt: (node.attrs?.alt as string) ?? "",
+        children: [{ text: "" }],
+      },
+    ];
+  }
+
+  // Restore passthrough nodes: reconstruct the original Plate element from
+  // the opaque ProseMirror representation without data loss.
+  if (node.type && node.type !== "doc") {
+    const { type: pmType, content, attrs, ...rest } = node;
+    const result: Record<string, unknown> = { type: pmType, ...rest };
+
+    if (attrs && typeof attrs === "object") {
+      Object.assign(result, attrs);
+    }
+
+    if (content) {
+      result.children = content.flatMap(toBlockFromNode);
+    } else {
+      result.children = [{ text: "" }];
+    }
+
+    return [result];
   }
 
   return node.content ? toPlateBlocks(node.content) : [];
@@ -402,6 +445,61 @@ function createListNode(
   return items.length > 0 ? { type: listType, content: items } : { type: listType };
 }
 
+function createTableNode(children: PlateChildLike[] | undefined): ProseMirrorNodeLike {
+  const rows = (children ?? [])
+    .filter((child): child is PlateElementLike => "type" in child && child.type === "tr")
+    .map((row) => {
+      const cells = (row.children ?? [])
+        .filter(
+          (cell): cell is PlateElementLike =>
+            "type" in cell && (cell.type === "td" || cell.type === "th"),
+        )
+        .map((cell) => ({
+          type: cell.type === "th" ? "tableHeader" : "tableCell",
+          content: (cell.children ?? []).flatMap((child) => {
+            if ("type" in child && typeof child.type === "string") {
+              return plateElementToProseMirrorNodes(child as PlateElementLike);
+            }
+            return [createParagraphNode([child])];
+          }),
+        }));
+
+      return { type: "tableRow", content: cells.length > 0 ? cells : undefined };
+    });
+
+  return { type: "table", content: rows.length > 0 ? rows : undefined };
+}
+
+function createImageNode(element: PlateElementLike): ProseMirrorNodeLike {
+  const url = typeof element.url === "string" ? element.url : undefined;
+  const alt = typeof element.alt === "string" ? element.alt : undefined;
+
+  return {
+    type: "image",
+    attrs: { src: url, alt },
+  };
+}
+
+function createPassthroughNode(element: PlateElementLike): ProseMirrorNodeLike {
+  const { type, children, ...rest } = element;
+  const node: ProseMirrorNodeLike = { type: type ?? "unknown" };
+
+  if (Object.keys(rest).length > 0) {
+    node.attrs = rest as Record<string, unknown>;
+  }
+
+  if (children && children.length > 0) {
+    node.content = children.flatMap((child) => {
+      if ("type" in child && typeof child.type === "string") {
+        return plateElementToProseMirrorNodes(child as PlateElementLike);
+      }
+      return toInlineProseMirrorNodes([child]);
+    });
+  }
+
+  return node;
+}
+
 function plateElementToProseMirrorNodes(element: PlateElementLike): ProseMirrorNodeLike[] {
   const type = element.type;
 
@@ -429,7 +527,18 @@ function plateElementToProseMirrorNodes(element: PlateElementLike): ProseMirrorN
     return [{ type: "listItem", content: wrapListItemChildren(element.children) }];
   }
 
-  return [createParagraphNode(element.children)];
+  if (type === "table") {
+    return [createTableNode(element.children)];
+  }
+
+  if (type === "img") {
+    return [createImageNode(element)];
+  }
+
+  // Preserve unrecognized element types as opaque ProseMirror nodes so that
+  // round-tripping through snapshot serialization does not silently discard
+  // structure (e.g. mentions, links, todo items, or future block types).
+  return [createPassthroughNode(element)];
 }
 
 /**

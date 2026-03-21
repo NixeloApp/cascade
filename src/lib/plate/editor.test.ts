@@ -171,4 +171,69 @@ describe("plateValueToProseMirrorSnapshot", () => {
       ],
     });
   });
+
+  it("preserves table elements through round-trip", () => {
+    const plateValue = [
+      {
+        type: "table",
+        children: [
+          {
+            type: "tr",
+            children: [{ type: "th", children: [{ type: "p", children: [{ text: "Header" }] }] }],
+          },
+          {
+            type: "tr",
+            children: [{ type: "td", children: [{ type: "p", children: [{ text: "Cell" }] }] }],
+          },
+        ],
+      },
+    ] as const;
+
+    const snapshot = plateValueToProseMirrorSnapshot(plateValue);
+    expect(snapshot.content?.[0].type).toBe("table");
+
+    const restored = proseMirrorSnapshotToValue(snapshot);
+    expect(restored).toHaveLength(1);
+    expect((restored[0] as Record<string, unknown>).type).toBe("table");
+  });
+
+  it("preserves image elements through round-trip", () => {
+    const plateValue = [
+      {
+        type: "img",
+        url: "https://example.com/photo.png",
+        alt: "A photo",
+        children: [{ text: "" }],
+      },
+    ] as const;
+
+    const snapshot = plateValueToProseMirrorSnapshot(plateValue);
+    expect(snapshot.content?.[0].type).toBe("image");
+    expect(snapshot.content?.[0].attrs?.src).toBe("https://example.com/photo.png");
+
+    const restored = proseMirrorSnapshotToValue(snapshot);
+    expect(restored).toHaveLength(1);
+    const img = restored[0] as Record<string, unknown>;
+    expect(img.type).toBe("img");
+    expect(img.url).toBe("https://example.com/photo.png");
+  });
+
+  it("preserves unknown element types via passthrough instead of flattening", () => {
+    const plateValue = [
+      {
+        type: "mention",
+        value: "user-123",
+        children: [{ text: "@alice" }],
+      },
+    ] as const;
+
+    const snapshot = plateValueToProseMirrorSnapshot(plateValue);
+    expect(snapshot.content?.[0].type).toBe("mention");
+
+    const restored = proseMirrorSnapshotToValue(snapshot);
+    expect(restored).toHaveLength(1);
+    const mention = restored[0] as Record<string, unknown>;
+    expect(mention.type).toBe("mention");
+    expect(mention.value).toBe("user-123");
+  });
 });
