@@ -22,10 +22,11 @@ Default to Tailwind for static feature/page layout, reserve `cva()` for shared p
 
 Use screenshots as the review surface, fix obviously broken states, and turn visual weirdness into explicit cleanup items.
 Main-page/landing cleanup belongs here too: if the marketing surface is inconsistent or looks unlike the actual product, treat that as product-quality debt, not decoration.
+This phase also owns screenshot-matrix completeness: page specs should not silently stay desktop-first, and important feature states should not be left uncaptured just because the canonical route screenshot looks acceptable.
 
 | Order | File | What |
 |-------|------|------|
-| 2.1 | [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Fix screenshot-exposed inconsistencies, broken states, and cross-surface visual drift |
+| 2.1 | [visual-consistency-hardening.md](./visual-consistency-hardening.md) | Fix screenshot-exposed inconsistencies, broken states, cross-surface visual drift, and missing tablet/mobile + feature-state screenshot coverage |
 | 2.2 | [meeting-intelligence.md](./meeting-intelligence.md) | Finish meetings visual QA and build meeting-to-doc now that editor persistence/save wiring is closed |
 
 ### Phase 3: Finish Validator Paydown
@@ -42,7 +43,7 @@ Lower priority -- features and documentation that don't block quality.
 
 | Order | File | What |
 |-------|------|------|
-| 4.1 | [feature-docs-expansion.md](./feature-docs-expansion.md) | 21 page spec folders missing CURRENT / IMPLEMENTATION / TARGET docs |
+| 4.1 | [feature-docs-expansion.md](./feature-docs-expansion.md) | Missing page-spec doc triplets plus missing current-feature coverage/state docs for shipped surfaces |
 | 4.2 | [plane-features.md](./plane-features.md) | Gantt polish, intake/triage, deploy boards, stickies, analytics, automation, multi-provider AI, page versions |
 | 4.3 | [cal-com-features.md](./cal-com-features.md) | AI agents/MCP, cancellation reasons (backend done, no UI), workflow translation, custom domain/SMTP, branding |
 | 4.4 | [tech-debt-billing-export.md](./tech-debt-billing-export.md) | PDF export (CSV shipped, no PDF library) |
