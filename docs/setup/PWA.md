@@ -1,10 +1,14 @@
 # PWA (Progressive Web App) Setup
 
-Nixelo has partial PWA infrastructure, but this document is currently under audit.
+Nixelo has partial PWA infrastructure. This guide reflects the current shipped code paths as of 2026-03-20, but some runtime verification work is still outstanding.
+
+Related doc:
+
+- `docs/setup/OFFLINE_ARCHITECTURE.md` for queue ownership and replay flow
 
 ## Current Status
 
-As of 2026-03-20, the repo does not have a single clean PWA ownership path yet.
+As of 2026-03-20, the repo still has split worker generation, but only one app-owned registration path.
 
 What is true right now:
 
@@ -22,19 +26,29 @@ What is true right now:
 - `processOfflineQueue()` in `src/lib/offline.ts` now rejects unsupported replay types explicitly instead of marking them synced without contacting a backend.
 - The first live replay path now exists for `userSettings.update`; queued preference changes flush from the authenticated app shell on startup and reconnect.
 
-Implication:
+Operational implication:
 
-- this document should be treated as implementation guidance in progress, not as a verified description of shipped behavior
+- the effective runtime worker path is `/service-worker.js`
+- the generated `/sw.js` still exists, but is not auto-registered by built HTML
+- build-pipeline cleanup is still incomplete even though runtime registration ownership is mostly stable
 
-Nixelo is intended to support installability, caching, and offline behavior, but the exact worker/manifest ownership is still being cleaned up.
+## What Is Actually Live
 
-## Features Included
+Verified now:
 
-✅ **Offline Support** - Service worker caches assets for offline use
-✅ **Installable** - Users can install Nixelo as a native app
-✅ **Auto-Updates** - Automatic detection and notification of new versions
-✅ **App Shortcuts** - Quick access to common actions from the home screen
-✅ **Responsive** - Optimized for mobile, tablet, and desktop
+- service worker registration from the app shell in production
+- offline fallback page shipping with the worker
+- local IndexedDB mutation queue
+- truthful queue diagnostics in Settings
+- manual queue processing from Settings
+- one real replayable mutation family: `userSettings.update`
+- install/update helper wiring in the app shell
+
+Not yet verified end to end:
+
+- actual install-prompt display under browser installability rules
+- offline route fallback for real app routes in a production browser session
+- push behavior across worker replacement
 
 ## Setup Requirements
 
@@ -78,38 +92,87 @@ The current service worker setup is split. Relevant files:
 - `/src/lib/offlineUserSettings.ts` - First real replayable mutation mapping
 - `/public/service-worker.js` - Worker currently shipped at `/service-worker.js`
 - `/public/offline.html` - Offline fallback page
-- `/public/manifest.json` - PWA manifest configuration
+- `/public/manifest.json` - legacy manifest artifact still emitted during build
 - `/vite.config.ts` - `vite-plugin-pwa` configuration that also emits `/sw.js` and `/manifest.webmanifest`
 
-### 3. Testing Locally
+### 3. Local Verification
 
 To test PWA features locally:
 
 ```bash
-# Build the production version
-npm run build
-
-# Preview the build (service workers only work in production)
-npm run preview
+pnpm build
+pnpm preview
 ```
 
 Then open Chrome DevTools:
-1. Go to **Application** tab
-2. Check **Service Workers** section to verify registration
-3. Check **Manifest** section to verify manifest is loaded
-4. Use **Lighthouse** to audit PWA compliance
+
+1. Go to **Application**.
+2. Check **Service Workers** and confirm `/service-worker.js` owns the scope.
+3. Check **Manifest** and confirm `/manifest.webmanifest` is loaded.
+4. Check **Cache Storage** for offline shell artifacts.
+5. Use **Lighthouse** only after the runtime path above is confirmed.
 
 ### 4. Testing Offline Mode
 
 1. Open the app in production mode
 2. Open Chrome DevTools → Network tab
 3. Check "Offline" checkbox
-4. Reload the page - should show offline page for uncached routes
-5. Navigate to previously visited pages - should work offline
+4. Reload the page and confirm whether uncached routes fall back to `offline.html`
+5. Navigate to previously visited pages and note which routes actually work offline
+
+## Testing Matrix
+
+### Automated checks
+
+Useful current commands:
+
+```bash
+pnpm test --run src/lib/offline.test.ts src/hooks/useOffline.test.ts src/hooks/useOfflineUserSettingsUpdate.test.ts src/components/Settings/OfflineTab.test.tsx src/lib/serviceWorker.test.ts
+pnpm build
+```
+
+Those checks currently cover:
+
+- queue failure classification
+- replay handler registration behavior
+- manual queue processing from Settings
+- last successful replay metadata
+- install/update helper behavior
+
+### Manual browser checks still required
+
+These are still runtime-verification tasks, not solved by unit tests:
+
+1. Confirm install prompt actually appears in a production browser session when installability criteria are met.
+2. Confirm authenticated app routes behave correctly when offline.
+3. Confirm push subscriptions still work after worker updates or cache clears.
+4. Confirm the manually registered `/service-worker.js` is the only worker path affecting runtime behavior.
+
+## Build Pipeline
+
+Current build behavior:
+
+- Vite emits `/manifest.webmanifest`
+- `vite-plugin-pwa` emits `/sw.js`
+- the app still ships `/service-worker.js` from `public/service-worker.js`
+- built HTML links only `/manifest.webmanifest`
+- built HTML no longer injects plugin auto-registration
+
+Current runtime behavior:
+
+- app code registers `/service-worker.js`
+- `navigator.serviceWorker.ready` therefore resolves against the manually registered worker path
+- push and install/update helpers currently assume that registered path is the effective owner
+
+This means the runtime is coherent enough to work on, but the build pipeline is not yet reduced to one obvious worker artifact.
 
 ## Manifest Configuration
 
-The PWA manifest is located at `/public/manifest.json` and includes:
+The current linked manifest path is `/manifest.webmanifest`.
+
+The repo also still contains `/public/manifest.json`, but that file is no longer the linked manifest in built HTML and should be treated as a legacy artifact until cleanup is finished.
+
+Manifest values include:
 
 - App name and description
 - Theme colors
@@ -130,9 +193,9 @@ You can customize these values to match your branding:
 }
 ```
 
-## Service Worker Caching Strategy
+## Caching And Offline Behavior
 
-The service worker uses a **Network First** strategy:
+The shipped worker currently follows a network-first style for navigations and maintains an offline fallback page.
 
 1. **Try network first** - Fetch fresh data when online
 2. **Cache successful responses** - Store for offline use
@@ -146,10 +209,10 @@ On install, the service worker caches:
 - Offline fallback page (`/offline.html`)
 - Manifest file (`/manifest.webmanifest`)
 
-During runtime, it automatically caches:
-- All successfully fetched resources (status 200)
-- Navigation requests
-- API responses (for offline viewing)
+Important limitation:
+
+- the exact boundary between manual worker behavior and generated Workbox behavior still needs runtime verification
+- Convex request caching should not be assumed to be product-correct yet
 
 ### Updating the Service Worker
 
@@ -160,6 +223,29 @@ When you deploy a new version:
    - Skip waiting and activate the new service worker
    - Reload the page with the new version
 3. The old cache will be automatically cleared
+
+## Replay Behavior
+
+Replay is client-driven and best-effort.
+
+Current replay triggers:
+
+- authenticated app startup
+- reconnect after the browser returns online
+- manual `Process Queue` action in Settings
+
+Current live replay coverage:
+
+- `userSettings.update`
+
+Current retry behavior:
+
+- attempts are counted locally
+- unsupported mutation types fail explicitly
+- corrupt payloads fail explicitly
+- there is no documented exponential backoff today
+
+For the full replay model, see `docs/setup/OFFLINE_ARCHITECTURE.md`.
 
 ## Install Prompts
 
@@ -188,18 +274,40 @@ Background Sync is not guaranteed across browsers.
 - If Background Sync is unavailable, queued changes are still replayable, but only while the app is open: on authenticated startup, when connectivity returns, or when the user presses `Process Queue` in Settings.
 - If service workers are unavailable entirely, offline fallback, install prompting, and push features should be treated as unsupported in that session.
 
+## Manual Verification Steps
+
+For a realistic local browser check:
+
+1. Run `pnpm build`.
+2. Run `pnpm preview`.
+3. Open the app in Chromium.
+4. In DevTools → Application → Service Workers, confirm `/service-worker.js` is registered.
+5. In DevTools → Application → Manifest, confirm `/manifest.webmanifest` is loaded.
+6. Go offline in DevTools and verify the settings screen still shows local queue state.
+7. Change a replayable preference while offline.
+8. Reconnect, or use `Process Queue`, and confirm the queue drains.
+9. Confirm `Last Successful Replay` updates.
+10. If testing push, subscribe again after any worker clear or replacement and verify delivery.
+
+## Browser Support And Known Limits
+
+- Chromium browsers give the most complete support path.
+- Safari should be treated as partial support.
+- iOS install remains manual.
+- Background Sync is optional and cannot be relied on for correctness.
+- If service workers are unavailable, offline fallback, install prompts, and push should be considered unsupported for that session.
+
 ## Production Deployment
 
 The service worker only registers in production builds to avoid caching issues during development.
 
-**Vite Configuration:**
-The repo currently ships:
+**Current build output:**
 
 - `/service-worker.js` from `public/service-worker.js`
 - `/sw.js` from `vite-plugin-pwa`
 - `/manifest.webmanifest` as the linked app manifest
 
-The app currently registers only `/service-worker.js` from app code, and built HTML links only `/manifest.webmanifest`. The remaining cleanup target is the unused emitted `/sw.js` and any leftover legacy manifest artifact, not a competing registration path in HTML.
+The app currently registers only `/service-worker.js` from app code. The remaining cleanup target is reducing worker/manifest ambiguity, not solving a double-registration bug in built HTML.
 
 **Deployment Checklist:**
 - ✅ Icons created and placed in `/public/`
@@ -209,22 +317,21 @@ The app currently registers only `/service-worker.js` from app code, and built H
 - ✅ Test install flow on mobile and desktop
 - ✅ Configure HTTPS (required for service workers)
 
-## Browser Support
-
-- ✅ Chrome/Edge 67+ (full support)
-- ✅ Firefox 44+ (service workers only)
-- ✅ Safari 11.1+ (limited PWA support)
-- ✅ Samsung Internet 4+ (full support)
-- ⚠️ iOS Safari requires manual install
-
 ## Troubleshooting
 
 ### Service Worker Not Registering
 
 - Check browser console for errors
-- Ensure running in production mode (`npm run build && npm run preview`)
+- Ensure running in production mode (`pnpm build && pnpm preview`)
 - Verify HTTPS is enabled (required except for localhost)
 - Clear browser cache and hard reload
+
+### Stale Worker Or Cache State
+
+- Use DevTools → Application → Service Workers and unregister old workers
+- Use DevTools → Application → Clear storage when the app is stuck on stale assets
+- Confirm only `/service-worker.js` is currently registered for the app scope
+- Rebuild and preview again before assuming runtime bugs are code regressions
 
 ### Updates Not Showing
 
@@ -232,7 +339,7 @@ The app currently registers only `/service-worker.js` from app code, and built H
 - Use "Clear cache" button in DevTools → Application → Service Workers
 - Or use the `clearCache()` utility function:
   ```js
-  import { clearCache } from './lib/serviceWorker';
+  import { clearCache } from "./lib/serviceWorker";
   clearCache();
   ```
 
@@ -248,7 +355,9 @@ The app currently registers only `/service-worker.js` from app code, and built H
 - Check Network tab in DevTools
 - Verify service worker is activated
 - Check cached resources in DevTools → Application → Cache Storage
-- Verify routes are being cached correctly
+- Verify which routes actually work offline instead of assuming app-wide support
+- Check the Offline settings screen for queue counts, failure state, and last successful replay time
+- If Background Sync is unavailable, keep the app open and use `Process Queue` manually after reconnect
 
 ## Disabling PWA
 

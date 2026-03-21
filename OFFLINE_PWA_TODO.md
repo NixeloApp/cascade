@@ -236,13 +236,13 @@ Non-goals for this lane:
 ## Phase 1: Queue Architecture
 
 - [x] Remove the unused Convex `offlineSync` queue path so the app no longer carries two offline queue models.
-- [ ] Write the intended queue architecture in plain language.
+- [x] Write the intended queue architecture in plain language.
 - [x] Define source of truth for mutation status.
 - [x] Define whether queue visibility in Settings reflects local queue, server queue, or both.
 - [x] Define where retry counting lives. It now lives in the client queue processor in `src/lib/offline.ts`.
-- [ ] Define whether real backoff exists or whether retries remain best-effort only.
+- [x] Define whether real backoff exists or whether retries remain best-effort only.
 - [ ] Define where conflict resolution lives.
-- [ ] Define whether background sync is best-effort only or required behavior.
+- [x] Define whether background sync is best-effort only or required behavior.
 
 Current direction:
 - IndexedDB is the only offline queue source of truth in the app
@@ -348,12 +348,12 @@ Important:
 
 ## Phase 8: Docs And Ops
 
-- [ ] Rewrite `docs/setup/PWA.md` to match the real code paths.
-- [ ] Document the actual service worker build pipeline.
-- [ ] Document browser support and known limitations.
-- [ ] Document local verification steps for offline, update, and push behavior.
-- [ ] Add troubleshooting guidance for stale workers and bad caches.
-- [ ] Add a short architecture note explaining queue ownership and replay flow.
+- [x] Rewrite `docs/setup/PWA.md` to match the real code paths.
+- [x] Document the actual service worker build pipeline.
+- [x] Document browser support and known limitations.
+- [x] Document local verification steps for offline, update, and push behavior.
+- [x] Add troubleshooting guidance for stale workers and bad caches.
+- [x] Add a short architecture note explaining queue ownership and replay flow.
 
 ## Open Questions
 
