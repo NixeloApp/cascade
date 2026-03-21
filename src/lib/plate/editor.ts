@@ -143,134 +143,105 @@ function toTextLeaves(nodes: ProseMirrorNodeLike[] | undefined): Array<Record<st
   return leaves.length > 0 ? leaves : [{ text: "" }];
 }
 
+function pmHeadingToPlate(node: ProseMirrorNodeLike): Array<Record<string, unknown>> {
+  const rawLevel = node.attrs?.level;
+  const level = typeof rawLevel === "number" ? rawLevel : undefined;
+  const headingType = level && level >= 1 && level <= 6 ? (`h${level}` as const) : ("h2" as const);
+
+  return [{ type: headingType, children: toTextLeaves(node.content) }];
+}
+
+function pmListToPlate(
+  plateType: "ul" | "ol",
+  node: ProseMirrorNodeLike,
+): Array<Record<string, unknown>> {
+  return [
+    {
+      type: plateType,
+      children: node.content?.flatMap(toBlockFromNode) ?? [
+        { type: "li", children: [{ text: "" }] },
+      ],
+    },
+  ];
+}
+
+function pmListItemToPlate(node: ProseMirrorNodeLike): Array<Record<string, unknown>> {
+  const innerContent: Array<Record<string, unknown>> = node.content?.flatMap(
+    (child): Array<Record<string, unknown>> => {
+      if (child.type === "paragraph") {
+        return toTextLeaves(child.content);
+      }
+      return toBlockFromNode(child);
+    },
+  ) ?? [{ text: "" }];
+
+  return [{ type: "li", children: innerContent }];
+}
+
+function pmTableToPlate(node: ProseMirrorNodeLike): Array<Record<string, unknown>> {
+  const rows = (node.content ?? []).map((row) => {
+    const cells = (row.content ?? []).map((cell) => ({
+      type: cell.type === "tableHeader" ? "th" : "td",
+      children: cell.content ? cell.content.flatMap(toBlockFromNode) : [{ text: "" }],
+    }));
+
+    return { type: "tr", children: cells.length > 0 ? cells : [{ text: "" }] };
+  });
+
+  return [{ type: "table", children: rows.length > 0 ? rows : [{ text: "" }] }];
+}
+
+function pmImageToPlate(node: ProseMirrorNodeLike): Array<Record<string, unknown>> {
+  return [
+    {
+      type: "img",
+      url: (node.attrs?.src as string) ?? "",
+      alt: (node.attrs?.alt as string) ?? "",
+      children: [{ text: "" }],
+    },
+  ];
+}
+
+function pmPassthroughToPlate(node: ProseMirrorNodeLike): Array<Record<string, unknown>> {
+  const { type: pmType, content, attrs, ...rest } = node;
+  const result: Record<string, unknown> = { type: pmType, ...rest };
+
+  if (attrs && typeof attrs === "object") {
+    Object.assign(result, attrs);
+  }
+
+  result.children = content ? content.flatMap(toBlockFromNode) : [{ text: "" }];
+
+  return [result];
+}
+
+const PM_TO_PLATE_HANDLERS: Record<
+  string,
+  (node: ProseMirrorNodeLike) => Array<Record<string, unknown>>
+> = {
+  heading: pmHeadingToPlate,
+  blockquote: (n) => [{ type: "blockquote", children: toTextLeaves(n.content) }],
+  codeBlock: (n) => [
+    { type: "code_block", children: [{ type: "code_line", children: toTextLeaves(n.content) }] },
+  ],
+  paragraph: (n) => [{ type: "p", children: toTextLeaves(n.content) }],
+  bulletList: (n) => pmListToPlate("ul", n),
+  orderedList: (n) => pmListToPlate("ol", n),
+  listItem: pmListItemToPlate,
+  table: pmTableToPlate,
+  image: pmImageToPlate,
+};
+
 function toBlockFromNode(node: ProseMirrorNodeLike): Array<Record<string, unknown>> {
-  if (node.type === "heading") {
-    const level = node.attrs?.level;
-    const headingType =
-      level && level >= 1 && level <= 6 ? (`h${level}` as const) : ("h2" as const);
-
-    return [
-      {
-        type: headingType,
-        children: toTextLeaves(node.content),
-      },
-    ];
-  }
-
-  if (node.type === "blockquote") {
-    return [
-      {
-        type: "blockquote",
-        children: toTextLeaves(node.content),
-      },
-    ];
-  }
-
-  if (node.type === "codeBlock") {
-    return [
-      {
-        type: "code_block",
-        children: [
-          {
-            type: "code_line",
-            children: toTextLeaves(node.content),
-          },
-        ],
-      },
-    ];
-  }
-
-  if (node.type === "paragraph") {
-    return [
-      {
-        type: "p",
-        children: toTextLeaves(node.content),
-      },
-    ];
-  }
-
-  if (node.type === "bulletList") {
-    return [
-      {
-        type: "ul",
-        children: node.content?.flatMap(toBlockFromNode) ?? [
-          { type: "li", children: [{ text: "" }] },
-        ],
-      },
-    ];
-  }
-
-  if (node.type === "orderedList") {
-    return [
-      {
-        type: "ol",
-        children: node.content?.flatMap(toBlockFromNode) ?? [
-          { type: "li", children: [{ text: "" }] },
-        ],
-      },
-    ];
-  }
-
-  if (node.type === "listItem") {
-    // List items contain paragraphs or other blocks; extract their content
-    const innerContent: Array<Record<string, unknown>> = node.content?.flatMap(
-      (child): Array<Record<string, unknown>> => {
-        if (child.type === "paragraph") {
-          return toTextLeaves(child.content);
-        }
-        return toBlockFromNode(child);
-      },
-    ) ?? [{ text: "" }];
-
-    return [
-      {
-        type: "li",
-        children: innerContent,
-      },
-    ];
-  }
-
-  if (node.type === "table") {
-    const rows = (node.content ?? []).map((row) => {
-      const cells = (row.content ?? []).map((cell) => ({
-        type: cell.type === "tableHeader" ? "th" : "td",
-        children: cell.content ? cell.content.flatMap(toBlockFromNode) : [{ text: "" }],
-      }));
-
-      return { type: "tr", children: cells.length > 0 ? cells : [{ text: "" }] };
-    });
-
-    return [{ type: "table", children: rows.length > 0 ? rows : [{ text: "" }] }];
-  }
-
-  if (node.type === "image") {
-    return [
-      {
-        type: "img",
-        url: (node.attrs?.src as string) ?? "",
-        alt: (node.attrs?.alt as string) ?? "",
-        children: [{ text: "" }],
-      },
-    ];
+  const handler = node.type ? PM_TO_PLATE_HANDLERS[node.type] : undefined;
+  if (handler) {
+    return handler(node);
   }
 
   // Restore passthrough nodes: reconstruct the original Plate element from
   // the opaque ProseMirror representation without data loss.
   if (node.type && node.type !== "doc") {
-    const { type: pmType, content, attrs, ...rest } = node;
-    const result: Record<string, unknown> = { type: pmType, ...rest };
-
-    if (attrs && typeof attrs === "object") {
-      Object.assign(result, attrs);
-    }
-
-    if (content) {
-      result.children = content.flatMap(toBlockFromNode);
-    } else {
-      result.children = [{ text: "" }];
-    }
-
-    return [result];
+    return pmPassthroughToPlate(node);
   }
 
   return node.content ? toPlateBlocks(node.content) : [];
@@ -358,8 +329,9 @@ function toInlineProseMirrorNodes(children: PlateChildLike[] | undefined): Prose
   }
 
   return children.flatMap((child) => {
-    if ("text" in child && typeof child.text === "string") {
-      return textToProseMirrorNodes(child.text, leafToMarks(child));
+    if ("text" in child && typeof (child as PlateTextLeaf).text === "string") {
+      const leaf = child as PlateTextLeaf;
+      return textToProseMirrorNodes(leaf.text ?? "", leafToMarks(leaf));
     }
 
     return textToProseMirrorNodes(plateNodeToPlainText(child), undefined);
