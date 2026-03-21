@@ -13,8 +13,7 @@ Make the product more visually cohesive and more enforceable in code, using the 
 - [ ] Review approved screenshots page by page and turn every visibly broken or weird state into an explicit todo item instead of leaving it as vague review debt
 - [ ] Fix screenshot-exposed broken states before approving new baselines -- missing content, bad shells, off spacing, broken empty states, and modal/popover layout failures should not be normalized
 - [ ] Use screenshot review to find and remove AI-slop patterns -- nested cards, redundant shells, accidental panel-in-panel layouts, and inconsistent control groupings
-- [ ] Main page / landing: make the marketing surface read like the actual product we sell, not a parallel mock design system with bespoke section styling
-- [ ] Main page / landing: reduce bespoke hero/showcase/footer/nav treatments so the page reuses the same visual language and primitive semantics as the app
+- [ ] Main page / landing: finish responsive rhythm review so tablet/mobile keep the product surface authoritative above the fold and the closing sections keep their hierarchy when compressed
 
 ### Screenshot review residue
 
