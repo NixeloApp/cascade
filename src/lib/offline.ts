@@ -189,6 +189,23 @@ class OfflineDB {
     });
   }
 
+  async getQueuedMutations(): Promise<OfflineMutation[]> {
+    const db = await this.open();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(["mutations"], "readonly");
+      const store = transaction.objectStore("mutations");
+      const request = store.getAll();
+
+      request.onsuccess = () => {
+        const mutations = (request.result as OfflineMutation[])
+          .filter((mutation) => mutation.status !== "synced")
+          .sort((left, right) => right.timestamp - left.timestamp);
+        resolve(mutations);
+      };
+      request.onerror = () => reject(request.error);
+    });
+  }
+
   async updateMutationStatus(
     id: number,
     status: OfflineMutation["status"],

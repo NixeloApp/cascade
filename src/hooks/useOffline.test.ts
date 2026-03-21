@@ -2,13 +2,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor } from "@/test/custom-render";
 import { useOfflineQueue, useOfflineSyncStatus } from "./useOffline";
 
-const { mockGetPendingMutations } = vi.hoisted(() => ({
-  mockGetPendingMutations: vi.fn(),
+const { mockGetQueuedMutations } = vi.hoisted(() => ({
+  mockGetQueuedMutations: vi.fn(),
 }));
 
 vi.mock("../lib/offline", () => ({
   offlineDB: {
-    getPendingMutations: mockGetPendingMutations,
+    getQueuedMutations: mockGetQueuedMutations,
+    updateMutationStatus: vi.fn(),
+    deleteMutation: vi.fn(),
+    clearSyncedMutations: vi.fn(),
   },
   offlineStatus: {
     isOnline: true,
@@ -30,7 +33,7 @@ describe("useOffline reliability", () => {
 
   it("logs warning and keeps queue stable when refresh fails", async () => {
     const warnSpy = vi.spyOn(console, "info").mockImplementation(() => {});
-    mockGetPendingMutations.mockRejectedValueOnce(new Error("indexeddb down"));
+    mockGetQueuedMutations.mockRejectedValueOnce(new Error("indexeddb down"));
 
     const { result } = renderHook(() => useOfflineQueue());
 
@@ -46,7 +49,7 @@ describe("useOffline reliability", () => {
 
   it("logs warning and exits loading state when sync status fetch fails", async () => {
     const warnSpy = vi.spyOn(console, "info").mockImplementation(() => {});
-    mockGetPendingMutations.mockRejectedValueOnce(new Error("db blocked"));
+    mockGetQueuedMutations.mockRejectedValueOnce(new Error("db blocked"));
 
     const { result } = renderHook(() => useOfflineSyncStatus());
 
@@ -55,7 +58,7 @@ describe("useOffline reliability", () => {
     });
 
     expect(result.current.count).toBe(EMPTY_QUEUE_COUNT);
-    expect(warnSpy).toHaveBeenCalledWith("[offline] load pending sync mutations failed", {
+    expect(warnSpy).toHaveBeenCalledWith("[offline] refresh queue failed", {
       error: expect.any(Error),
     });
   });

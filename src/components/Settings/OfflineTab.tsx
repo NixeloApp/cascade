@@ -2,16 +2,16 @@
  * Offline Settings Tab
  *
  * Displays connection status and offline sync information.
- * Shows pending changes queue and sync controls.
+ * Shows queued offline changes and sync controls.
  * Lists available offline features and capabilities.
  */
 
-import { Check, RefreshCw, Wifi, WifiOff, X } from "@/lib/icons";
-import { TEST_IDS } from "@/lib/test-ids";
-import { showInfo } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { useOfflineSyncStatus, useOnlineStatus } from "../../hooks/useOffline";
+import { Check, RefreshCw, RotateCcw, Trash2, Wifi, WifiOff, X } from "@/lib/icons";
+import { TEST_IDS } from "@/lib/test-ids";
+import { showError, showInfo } from "@/lib/toast";
+import { cn } from "@/lib/utils";
+import { useOfflineQueue, useOnlineStatus } from "../../hooks/useOffline";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
@@ -21,16 +21,54 @@ import { Icon } from "../ui/Icon";
 import { Stack } from "../ui/Stack";
 import { Typography } from "../ui/Typography";
 
+function getQueueStatusSummary(
+  isOnline: boolean,
+  syncingCount: number,
+  failedCount: number,
+  pendingCount: number,
+): string {
+  if (failedCount > 0) {
+    return "Needs attention";
+  }
+  if (syncingCount > 0) {
+    return "Syncing";
+  }
+  if (pendingCount > 0) {
+    return isOnline ? "Queued" : "Offline";
+  }
+  return isOnline ? "Ready" : "Offline";
+}
+
+function getQueueBadgeVariant(status: "pending" | "syncing" | "failed") {
+  if (status === "failed") {
+    return "error";
+  }
+  if (status === "syncing") {
+    return "info";
+  }
+  return "warning";
+}
+
 /**
  * Offline mode settings tab
  * Extracted from Settings for better organization
  */
 export function OfflineTab() {
   const isOnline = useOnlineStatus();
-  const { pending, count, isLoading, refresh } = useOfflineSyncStatus();
+  const {
+    queue,
+    count,
+    pendingCount,
+    syncingCount,
+    failedCount,
+    isLoading,
+    refresh,
+    retryMutation,
+    deleteMutation,
+  } = useOfflineQueue();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const hasServiceWorkerSupport =
-    typeof navigator !== "undefined" && "serviceWorker" in navigator;
+  const [activeMutationId, setActiveMutationId] = useState<number | null>(null);
+  const hasServiceWorkerSupport = typeof navigator !== "undefined" && "serviceWorker" in navigator;
   const hasBackgroundSyncSupport =
     typeof ServiceWorkerRegistration !== "undefined" &&
     hasServiceWorkerSupport &&
@@ -43,6 +81,30 @@ export function OfflineTab() {
       showInfo("Local offline queue refreshed");
     } finally {
       setIsRefreshing(false);
+    }
+  };
+
+  const handleRetryMutation = async (id: number) => {
+    setActiveMutationId(id);
+    try {
+      await retryMutation(id);
+      showInfo("Queued item marked for retry");
+    } catch (error) {
+      showError(error, "Failed to retry queued item");
+    } finally {
+      setActiveMutationId(null);
+    }
+  };
+
+  const handleDeleteMutation = async (id: number) => {
+    setActiveMutationId(id);
+    try {
+      await deleteMutation(id);
+      showInfo("Queued item removed");
+    } catch (error) {
+      showError(error, "Failed to remove queued item");
+    } finally {
+      setActiveMutationId(null);
     }
   };
 
@@ -79,7 +141,7 @@ export function OfflineTab() {
               <div className="p-4 bg-ui-bg-secondary">
                 <Stack gap="xs">
                   <Typography variant="small" color="secondary">
-                    Pending Changes
+                    Queued Items
                   </Typography>
                   <Typography variant="h2">{isLoading ? "..." : count}</Typography>
                 </Stack>
@@ -89,7 +151,9 @@ export function OfflineTab() {
                   <Typography variant="small" color="secondary">
                     Sync Status
                   </Typography>
-                  <Typography variant="h2">{isOnline ? "Local only" : "Offline"}</Typography>
+                  <Typography variant="h2">
+                    {getQueueStatusSummary(isOnline, syncingCount, failedCount, pendingCount)}
+                  </Typography>
                 </Stack>
               </div>
               <div className="p-4 bg-ui-bg-secondary">
@@ -165,7 +229,8 @@ export function OfflineTab() {
               <Stack gap="xs">
                 <Typography variant="label">Fallback Offline Page</Typography>
                 <Typography variant="small" color="secondary">
-                  The shipped service worker includes an offline fallback page for navigation failures.
+                  The shipped service worker includes an offline fallback page for navigation
+                  failures.
                 </Typography>
               </Stack>
             </Flex>
@@ -204,25 +269,84 @@ export function OfflineTab() {
                 Refresh Queue
               </Button>
             </Flex>
+            <Grid cols={1} colsSm={3} gap="md">
+              <div className="p-3 bg-ui-bg-secondary">
+                <Stack gap="xs">
+                  <Typography variant="small" color="secondary">
+                    Pending
+                  </Typography>
+                  <Typography variant="label">{pendingCount}</Typography>
+                </Stack>
+              </div>
+              <div className="p-3 bg-ui-bg-secondary">
+                <Stack gap="xs">
+                  <Typography variant="small" color="secondary">
+                    Syncing
+                  </Typography>
+                  <Typography variant="label">{syncingCount}</Typography>
+                </Stack>
+              </div>
+              <div className="p-3 bg-ui-bg-secondary">
+                <Stack gap="xs">
+                  <Typography variant="small" color="secondary">
+                    Failed
+                  </Typography>
+                  <Typography variant="label">{failedCount}</Typography>
+                </Stack>
+              </div>
+            </Grid>
             <Stack gap="sm">
-              {pending.slice(0, 5).map((item) => (
+              {queue.slice(0, 5).map((item) => (
                 <div key={item.id} className="p-2 bg-ui-bg-secondary">
-                  <Flex justify="between" align="center">
-                    <Stack gap="none">
-                      <Typography variant="label">{item.mutationType}</Typography>
-                      <Typography variant="caption">
-                        {new Date(item.timestamp).toLocaleString()}
+                  <Stack gap="sm">
+                    <Flex justify="between" align="center">
+                      <Stack gap="none">
+                        <Typography variant="label">{item.mutationType}</Typography>
+                        <Typography variant="caption">
+                          {new Date(item.timestamp).toLocaleString()}
+                        </Typography>
+                      </Stack>
+                      <Badge variant={getQueueBadgeVariant(item.status)} size="md">
+                        {item.status === "syncing"
+                          ? "Syncing"
+                          : item.status === "failed"
+                            ? "Failed"
+                            : "Pending"}
+                      </Badge>
+                    </Flex>
+                    {item.error && (
+                      <Typography variant="caption" color="secondary">
+                        {item.error}
                       </Typography>
-                    </Stack>
-                    <Badge variant="warning" size="md">
-                      Pending
-                    </Badge>
-                  </Flex>
+                    )}
+                    {item.status === "failed" && item.id !== undefined && (
+                      <Flex gap="sm" justify="end">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleRetryMutation(item.id ?? 0)}
+                          isLoading={activeMutationId === item.id}
+                        >
+                          <RotateCcw className="h-4 w-4 mr-2" />
+                          Retry
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteMutation(item.id ?? 0)}
+                          isLoading={activeMutationId === item.id}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Remove
+                        </Button>
+                      </Flex>
+                    )}
+                  </Stack>
                 </div>
               ))}
-              {pending.length > 5 && (
+              {queue.length > 5 && (
                 <Typography variant="small" color="tertiary" className="text-center pt-2">
-                  +{pending.length - 5} more items
+                  +{queue.length - 5} more items
                 </Typography>
               )}
             </Stack>

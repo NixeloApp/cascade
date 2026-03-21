@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { OfflineMutation } from "@/lib/offline";
 import { TEST_IDS } from "@/lib/test-ids";
 import { render, screen } from "@/test/custom-render";
-import { useOfflineSyncStatus, useOnlineStatus } from "../../hooks/useOffline";
+import { useOfflineQueue, useOnlineStatus } from "../../hooks/useOffline";
 import { OfflineTab } from "./OfflineTab";
 
 vi.mock("sonner", () => ({
@@ -15,21 +15,26 @@ vi.mock("sonner", () => ({
 
 vi.mock("../../hooks/useOffline", () => ({
   useOnlineStatus: vi.fn(),
-  useOfflineSyncStatus: vi.fn(),
+  useOfflineQueue: vi.fn(),
 }));
 
 const mockUseOnlineStatus = vi.mocked(useOnlineStatus);
-const mockUseOfflineSyncStatus = vi.mocked(useOfflineSyncStatus);
+const mockUseOfflineQueue = vi.mocked(useOfflineQueue);
 const mockToastInfo = vi.mocked(toast.info);
 
-function createPendingItem(id: number): OfflineMutation {
+function createQueueItem(
+  id: number,
+  status: OfflineMutation["status"] = "pending",
+  error?: string,
+): OfflineMutation {
   return {
     id,
     mutationType: `mutation-${id}`,
     mutationArgs: "{}",
-    status: "pending",
+    status,
     attempts: 0,
     timestamp: 1_700_000_000_000 + id * 1_000,
+    error,
   };
 }
 
@@ -37,11 +42,17 @@ describe("OfflineTab", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseOnlineStatus.mockReturnValue(true);
-    mockUseOfflineSyncStatus.mockReturnValue({
-      pending: [],
+    mockUseOfflineQueue.mockReturnValue({
+      queue: [],
       count: 0,
+      pendingCount: 0,
+      syncingCount: 0,
+      failedCount: 0,
       isLoading: false,
       refresh: vi.fn(),
+      retryMutation: vi.fn(),
+      deleteMutation: vi.fn(),
+      clearSynced: vi.fn(),
     });
   });
 
@@ -50,7 +61,7 @@ describe("OfflineTab", () => {
 
     expect(screen.getByText("Connection Status")).toBeInTheDocument();
     expect(screen.getByText("You are online")).toBeInTheDocument();
-    expect(screen.getByText("Local only")).toBeInTheDocument();
+    expect(screen.getByText("Ready")).toBeInTheDocument();
     expect(screen.getByText("0")).toBeInTheDocument();
     expect(screen.getByText("IndexedDB")).toBeInTheDocument();
     expect(screen.getByText("Service Worker Support")).toBeInTheDocument();
@@ -61,11 +72,17 @@ describe("OfflineTab", () => {
   });
 
   it("shows the loading placeholder for pending changes while sync status loads", () => {
-    mockUseOfflineSyncStatus.mockReturnValue({
-      pending: [],
+    mockUseOfflineQueue.mockReturnValue({
+      queue: [],
       count: 0,
+      pendingCount: 0,
+      syncingCount: 0,
+      failedCount: 0,
       isLoading: true,
       refresh: vi.fn(),
+      retryMutation: vi.fn(),
+      deleteMutation: vi.fn(),
+      clearSynced: vi.fn(),
     });
 
     render(<OfflineTab />);
@@ -74,32 +91,52 @@ describe("OfflineTab", () => {
     expect(screen.queryByText("Local Offline Queue")).not.toBeInTheDocument();
   });
 
-  it("renders the offline queue, truncates the list, and refreshes local queue state", async () => {
+  it("renders queue states, truncates the list, and supports refresh plus failed-item actions", async () => {
     const user = userEvent.setup();
-    const pending = Array.from({ length: 6 }, (_, index) => createPendingItem(index + 1));
+    const queue = [
+      createQueueItem(1, "pending"),
+      createQueueItem(2, "syncing"),
+      createQueueItem(3, "failed", "Unsupported offline mutation type: mutation-3"),
+      createQueueItem(4, "pending"),
+      createQueueItem(5, "pending"),
+      createQueueItem(6, "pending"),
+    ];
     const refresh = vi.fn().mockResolvedValue(undefined);
+    const retryMutation = vi.fn().mockResolvedValue(undefined);
+    const deleteMutation = vi.fn().mockResolvedValue(undefined);
 
     mockUseOnlineStatus.mockReturnValue(false);
-    mockUseOfflineSyncStatus.mockReturnValue({
-      pending,
-      count: pending.length,
+    mockUseOfflineQueue.mockReturnValue({
+      queue,
+      count: queue.length,
+      pendingCount: 4,
+      syncingCount: 1,
+      failedCount: 1,
       isLoading: false,
       refresh,
+      retryMutation,
+      deleteMutation,
+      clearSynced: vi.fn(),
     });
 
     render(<OfflineTab />);
 
     expect(screen.getByText("You are offline")).toBeInTheDocument();
-    expect(screen.getByText("Offline")).toBeInTheDocument();
+    expect(screen.getByText("Needs attention")).toBeInTheDocument();
     expect(screen.getByText("Local Offline Queue")).toBeInTheDocument();
     expect(screen.getByText("6")).toBeInTheDocument();
+    expect(screen.getByText("4")).toBeInTheDocument();
+    expect(screen.getAllByText("1")).toHaveLength(2);
 
     for (let index = 1; index <= 5; index += 1) {
       expect(screen.getByText(`mutation-${index}`)).toBeInTheDocument();
     }
     expect(screen.queryByText("mutation-6")).not.toBeInTheDocument();
     expect(screen.getByText("+1 more items")).toBeInTheDocument();
-    expect(screen.getAllByText("Pending")).toHaveLength(5);
+    expect(screen.getAllByText("Pending")).toHaveLength(4);
+    expect(screen.getAllByText("Syncing")).toHaveLength(2);
+    expect(screen.getAllByText("Failed")).toHaveLength(2);
+    expect(screen.getByText("Unsupported offline mutation type: mutation-3")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Refresh Queue" }));
 
@@ -107,5 +144,11 @@ describe("OfflineTab", () => {
     expect(mockToastInfo).toHaveBeenCalledWith("Local offline queue refreshed", {
       testId: TEST_IDS.TOAST.INFO,
     });
+
+    await user.click(screen.getByRole("button", { name: "Retry" }));
+    expect(retryMutation).toHaveBeenCalledWith(3);
+
+    await user.click(screen.getByRole("button", { name: "Remove" }));
+    expect(deleteMutation).toHaveBeenCalledWith(3);
   });
 });

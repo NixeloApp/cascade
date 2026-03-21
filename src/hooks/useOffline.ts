@@ -5,6 +5,26 @@ function logOfflineError(operation: string, error: unknown) {
   console.info(`[offline] ${operation}`, { error });
 }
 
+function getOfflineQueueCounts(queue: OfflineMutation[]) {
+  return queue.reduce(
+    (counts, mutation) => {
+      if (mutation.status === "pending") {
+        counts.pendingCount += 1;
+      } else if (mutation.status === "syncing") {
+        counts.syncingCount += 1;
+      } else if (mutation.status === "failed") {
+        counts.failedCount += 1;
+      }
+      return counts;
+    },
+    {
+      pendingCount: 0,
+      syncingCount: 0,
+      failedCount: 0,
+    },
+  );
+}
+
 /**
  * Hook to track online/offline status
  */
@@ -25,53 +45,21 @@ export function useOnlineStatus() {
  * Hook to track offline sync queue status
  */
 export function useOfflineSyncStatus() {
-  const [pending, setPending] = useState<OfflineMutation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const refresh = async () => {
-    try {
-      const mutations = await offlineDB.getPendingMutations();
-      setPending(mutations);
-    } catch (error) {
-      logOfflineError("load pending sync mutations failed", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    let mounted = true;
-
-    const loadPending = async () => {
-      try {
-        const mutations = await offlineDB.getPendingMutations();
-        if (mounted) {
-          setPending(mutations);
-          setIsLoading(false);
-        }
-      } catch (error) {
-        logOfflineError("load pending sync mutations failed", error);
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    // Load initially
-    loadPending();
-
-    // Reload every 5 seconds
-    const interval = setInterval(loadPending, 5000);
-
-    return () => {
-      mounted = false;
-      clearInterval(interval);
-    };
-  }, []);
+  const { queue, isLoading, refresh } = useOfflineQueue();
+  const pending = queue.filter((mutation) => mutation.status === "pending");
+  const syncing = queue.filter((mutation) => mutation.status === "syncing");
+  const failed = queue.filter((mutation) => mutation.status === "failed");
+  const counts = getOfflineQueueCounts(queue);
 
   return {
+    items: queue,
     pending,
-    count: pending.length,
+    syncing,
+    failed,
+    count: queue.length,
+    pendingCount: counts.pendingCount,
+    syncingCount: counts.syncingCount,
+    failedCount: counts.failedCount,
     isLoading,
     refresh,
   };
@@ -87,7 +75,7 @@ export function useOfflineQueue() {
   const refresh = async () => {
     setIsLoading(true);
     try {
-      const mutations = await offlineDB.getPendingMutations();
+      const mutations = await offlineDB.getQueuedMutations();
       setQueue(mutations);
     } catch (error) {
       logOfflineError("refresh queue failed", error);
@@ -114,22 +102,42 @@ export function useOfflineQueue() {
   };
 
   useEffect(() => {
+    let mounted = true;
+
     const loadInitial = async () => {
       setIsLoading(true);
       try {
-        const mutations = await offlineDB.getPendingMutations();
-        setQueue(mutations);
+        const mutations = await offlineDB.getQueuedMutations();
+        if (mounted) {
+          setQueue(mutations);
+        }
       } catch (error) {
         logOfflineError("refresh queue failed", error);
       } finally {
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
+
     loadInitial();
+
+    const interval = setInterval(loadInitial, 5000);
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
   }, []);
+
+  const counts = getOfflineQueueCounts(queue);
 
   return {
     queue,
+    count: queue.length,
+    pendingCount: counts.pendingCount,
+    syncingCount: counts.syncingCount,
+    failedCount: counts.failedCount,
     isLoading,
     refresh,
     retryMutation,

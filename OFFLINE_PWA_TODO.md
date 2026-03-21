@@ -78,6 +78,8 @@ It is also structurally isolated:
 - The tab currently reports:
   - browser connectivity
   - local IndexedDB queue state
+  - queued item status breakdown for `pending`, `syncing`, and `failed`
+  - manual retry/remove controls for failed local queue entries
   - detected service worker/background sync capability
 - The tab intentionally avoids claiming verified end-to-end offline replay.
 
@@ -280,9 +282,9 @@ Current direction:
   - local only
   - server only
   - merged
-- [ ] Show failed vs pending vs syncing counts if those states are real.
+- [x] Show failed vs pending vs syncing counts if those states are real.
 - [x] Replace the toast-only queue button with truthful local queue refresh behavior.
-- [ ] Decide whether users can delete or retry queue items manually.
+- [x] Add manual retry/remove controls for failed local queue items.
 - [ ] Surface last successful sync time if it is trustworthy.
 - [ ] Surface browser capability limits when background sync is unsupported.
 
