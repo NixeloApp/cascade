@@ -130,6 +130,12 @@ function toTextLeaf(node: ProseMirrorNodeLike): Array<Record<string, unknown>> {
     return [{ text: "\n" }];
   }
 
+  // Preserve inline element nodes (links, mentions, etc.) as Plate elements
+  // instead of flattening them to plain text.
+  if (node.type && node.type !== "doc" && node.type !== "paragraph") {
+    return pmPassthroughToPlate(node);
+  }
+
   return toTextLeaves(node.content);
 }
 
@@ -342,6 +348,12 @@ function toInlineProseMirrorNodes(children: PlateChildLike[] | undefined): Prose
     if ("text" in child && typeof (child as PlateTextLeaf).text === "string") {
       const leaf = child as PlateTextLeaf;
       return textToProseMirrorNodes(leaf.text ?? "", leafToMarks(leaf));
+    }
+
+    // Preserve inline elements (links, mentions, etc.) as passthrough nodes
+    // instead of flattening them to plain text.
+    if ("type" in child && typeof child.type === "string") {
+      return [createPassthroughNode(child as PlateElementLike)];
     }
 
     return textToProseMirrorNodes(plateNodeToPlainText(child), undefined);

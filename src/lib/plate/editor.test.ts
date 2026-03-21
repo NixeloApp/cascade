@@ -172,6 +172,42 @@ describe("plateValueToProseMirrorSnapshot", () => {
     });
   });
 
+  it("preserves inline elements inside paragraphs through round-trip", () => {
+    const snapshot = plateValueToProseMirrorSnapshot([
+      {
+        type: "p",
+        children: [
+          { text: "Click " },
+          { type: "a", url: "https://example.com", children: [{ text: "here" }] },
+          { text: " or mention " },
+          { type: "mention", value: "user-1", children: [{ text: "@bob" }] },
+        ],
+      },
+    ] as const);
+
+    // Inline elements should be preserved, not flattened to plain text
+    const paragraphContent = snapshot.content?.[0].content ?? [];
+    const linkNode = paragraphContent.find((n) => n.type === "a");
+    expect(linkNode).toBeDefined();
+    expect(linkNode?.attrs?.url).toBe("https://example.com");
+
+    const mentionNode = paragraphContent.find((n) => n.type === "mention");
+    expect(mentionNode).toBeDefined();
+
+    // Round-trip back to Plate
+    const restored = proseMirrorSnapshotToValue(snapshot);
+    expect(restored).toHaveLength(1);
+    const p = restored[0] as Record<string, unknown>;
+    expect(p.type).toBe("p");
+    const children = p.children as Array<Record<string, unknown>>;
+    const restoredLink = children.find((c) => c.type === "a");
+    expect(restoredLink).toBeDefined();
+    expect(restoredLink?.url).toBe("https://example.com");
+    const restoredMention = children.find((c) => c.type === "mention");
+    expect(restoredMention).toBeDefined();
+    expect(restoredMention?.value).toBe("user-1");
+  });
+
   it("preserves table elements through round-trip", () => {
     const snapshot = plateValueToProseMirrorSnapshot([
       {
