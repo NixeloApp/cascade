@@ -12,7 +12,9 @@ interface SectionIntroOwnProps {
   description?: React.ReactNode;
   align?: SectionIntroAlign;
   titleVariant?: TypographyProps["variant"];
+  titleColor?: TypographyProps["color"];
   descriptionVariant?: TypographyProps["variant"];
+  descriptionColor?: TypographyProps["color"];
   titleClassName?: string;
   descriptionClassName?: string;
 }
@@ -26,7 +28,9 @@ export function SectionIntro({
   description,
   align = "start",
   titleVariant = "landingSectionTitle",
+  titleColor = "auto",
   descriptionVariant = "lead",
+  descriptionColor = "auto",
   className,
   titleClassName,
   descriptionClassName,
@@ -48,12 +52,13 @@ export function SectionIntro({
       ) : null}
 
       <Stack gap="sm" align={stackAlign}>
-        <Typography variant={titleVariant} className={titleClassName}>
+        <Typography variant={titleVariant} color={titleColor} className={titleClassName}>
           {title}
         </Typography>
         {description ? (
           <Typography
             variant={descriptionVariant}
+            color={descriptionColor}
             className={cn(align === "center" && "max-w-3xl", descriptionClassName)}
           >
             {description}

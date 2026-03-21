@@ -30,4 +30,18 @@ describe("SectionIntro", () => {
     expect(container.firstChild).toHaveClass("text-center");
     expect(screen.getByRole("heading", { level: 2, name: "Centered Intro" })).toBeInTheDocument();
   });
+
+  it("passes title and description color overrides through to typography", () => {
+    render(
+      <SectionIntro
+        title="Semantic Intro"
+        titleColor="brand"
+        description="Shared section copy."
+        descriptionColor="secondary"
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Semantic Intro" })).toHaveClass("text-brand");
+    expect(screen.getByText("Shared section copy.")).toHaveClass("text-ui-text-secondary");
+  });
 });

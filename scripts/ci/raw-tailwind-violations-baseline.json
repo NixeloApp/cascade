@@ -89,7 +89,7 @@
     "src/components/Landing/HeroSection.tsx": 1,
     "src/components/Landing/NavHeader.tsx": 3,
     "src/components/Landing/PricingSection.tsx": 0,
-    "src/components/Landing/ProductShowcase.tsx": 12,
+    "src/components/Landing/ProductShowcase.tsx": 8,
     "src/components/Landing/WhyChooseSection.tsx": 0,
     "src/components/MentionInput.tsx": 3,
     "src/components/MoveDocumentDialog.tsx": 1,
